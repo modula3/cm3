@@ -463,6 +463,7 @@ static const union {
 #endif // YES_ALIAS
 */
 
+/*
 static const union {
     unsigned long i;
     unsigned int b[2];
@@ -470,6 +471,7 @@ static const union {
 
 #define NAN_WORD0 (EN.b[_00])
 #define NAN_WORD1 (EN.b[_11])
+*/
 
 void M3DtoaStoreincFunction (ULong** a, ULong hi, ULong lo)
 {
