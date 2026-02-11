@@ -9,11 +9,11 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/modula3/cm3/releases/download/d5.11.9
+        default: https://github.com/modula3/cm3/releases/download/d5.11.10
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-AMD64_LINUX-None.tar.xz
+        default: cm3-boot-AMD64_LINUX-d5.11.10.tar.xz
         required: false
         type: string
 
