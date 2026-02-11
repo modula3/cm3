@@ -1735,7 +1735,7 @@ double ratio_D2A(Bigint *a, Bigint *b) {
 
 #ifdef INFNAN_CHECK
 
-int match_D2A(CONST char **sp, char *t) {
+int match_D2A(CONST char **sp, CONST char *t) {
   int c, d;
   CONST char *s = *sp;
 
