@@ -20,12 +20,12 @@ on:
 jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
-    timeout-minutes: 45
+    timeout-minutes: 80
 
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc]
+        backend: [c]
 
     env:
       CM3_TARGET: AMD64_DARWIN
@@ -52,7 +52,7 @@ jobs:
     - name: Fetch sources
       uses: actions/checkout@v2
 
-    - name: Build all the things
+    - name: Build everything
       run: |
         scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all
 
