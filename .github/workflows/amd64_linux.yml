@@ -52,7 +52,7 @@ jobs:
     - name: Fetch sources
       uses: actions/checkout@v2
 
-    - name: Build all the things
+    - name: Build everything
       run: |
         scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all
 

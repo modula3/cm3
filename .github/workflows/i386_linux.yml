@@ -57,7 +57,7 @@ jobs:
         cmake --install ../build
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
-    - name: Build all the things
+    - name: Build everything
       run: |
         scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" -DM3CC_TARGET=I386_LINUX headless -m3gdb
 
