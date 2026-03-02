@@ -21,7 +21,7 @@ Module    ("M3DebugInfo")
 % The version of this binding. Should agree with users installed version.
 VER = "22"
 
-% set this to TRUE if you want to build m3llvm standalone in llvm21 dir
+% set this to TRUE if you want to build m3llvm standalone in llvm22 dir
 STATIC = FALSE
 
 if equal (OS_TYPE, "POSIX")
@@ -43,7 +43,10 @@ if equal (OS_TYPE, "POSIX")
 
   % llvm needs the stdc++ lib and the compression lib z.
   import_lib("stdc++",LIB_DIR1)
+  % apt-get install libz-dev
   import_lib("z",LIB_DIR2)
+  % apt-get install libzstd-dev
+  % import_lib("zstd",LIB_DIR2)
 
 %  these should not be needed
 %  import_lib("dl",LIB_DIR1)
