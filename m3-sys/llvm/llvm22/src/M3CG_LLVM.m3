@@ -152,7 +152,6 @@ REVEAL
       dwarfDbg          := TRUE; (* Dwarf output instead of CodeView *)
       abortInCall := FALSE;      (* kludge to cope with frontend issuing abort
                                     in middle of call *)
-      inInits : BOOLEAN := FALSE;
     METHODS
       allocVar             (v: LvVar) := AllocVar;
       allocVarInEntryBlock (v: LvVar) := AllocVarInEntryBlock;
@@ -984,6 +983,17 @@ PROCEDURE LLvmType (t: Type): LLVM.TypeRef =
     END;
   END LLvmType;
 
+PROCEDURE TypeMask (t: Type): Word.T =
+  BEGIN
+    CASE t OF
+    | Type.Int8, Type.Word8 =>   RETURN 16_FF;
+    | Type.Int16, Type.Word16 => RETURN 16_FFFF;
+    | Type.Int32, Type.Word32 => RETURN 16_FFFFFFFF;
+    | Type.Int64, Type.Word64 => RETURN 16_FFFFFFFFFFFFFFFF;
+    ELSE RETURN 0;
+    END;
+  END TypeMask;
+
 PROCEDURE StructType (self: U; size: ByteSize): LLVM.TypeRef =
   (* A uniqued llvm array type of size bytes. *)
   CONST numElems = 1;
@@ -1776,11 +1786,6 @@ PROCEDURE declare_object (self               : U;
                           super_typename     : Name     ) =
   VAR
     objectRef: ObjectDebug;
-(*
-    parentref : ObjectDebug;
-    superObj : REFANY;
-    found    : BOOLEAN;
-*)
   BEGIN
     objectRef :=
       NEW(ObjectDebug, tUid := t, superType := super, brand := brand,
@@ -2212,8 +2217,8 @@ PROCEDURE begin_init (self: U; v: Var) =
   BEGIN
     (*The curvar is just to track which var is being initd in init_chars etc*)
     self.curVar := v;
-    self.inInits := TRUE;
   END begin_init;
+
 
 (* Now we have all the global vars we can construct the body of the segment and
    initialise the global. *)
@@ -2314,7 +2319,8 @@ PROCEDURE end_init (self: U; v: Var) =
       TYPECASE baseObj OF
       | IntVar (v) =>
           EVAL TInt.ToInt(v.value, int);
-          v.lvVal := LLVM.ConstInt(v.lvTy, VAL(int, LONGINT), TRUE);
+          int := Word.And(int, TypeMask(v.type));
+          v.lvVal := LLVM.ConstInt(v.lvTy, VAL(int, LONGINT), FALSE);
       | ProcVar (v) => proc := NARROW(v.value, LvProc); v.lvVal := proc.lvProc;
       | VarVar (v) =>
           var := NARROW(v.value, LvVar);
@@ -2346,7 +2352,6 @@ PROCEDURE end_init (self: U; v: Var) =
     IF NOT (thisVar.isConst OR thisVar.name = M3ID.NoID) THEN
       DebugGlobals(self);
     END;
-    self.inInits := FALSE;
   END end_init;
 
 PROCEDURE init_int
@@ -4371,7 +4376,7 @@ PROCEDURE insert_n (self: U; t: IType; n: CARDINAL) =
       target := NARROW(s2, LvExpr).lVal;
       target := Extend(target, t, intTy);
       offset := Extend(offset, t, intTy);
-      maskTy := LLVM.IntType(n);
+      maskTy := LLVM.IntTypeInContext(ctx, n);
       mask := LLVM.ConstAllOnes(maskTy);
       mask := LLVM.BuildZExtOrBitCast(builderIR, mask, intTy, "zext");
       res := DoInsert(value, target, mask, offset);
@@ -4394,7 +4399,7 @@ PROCEDURE insert_mn (self: U; t: IType; m, n: CARDINAL) =
       value := NARROW(s0, LvExpr).lVal;
       target := NARROW(s1, LvExpr).lVal;
       offset := LLVM.ConstInt(intTy, VAL(m, LONGINT), TRUE);
-      maskTy := LLVM.IntType(n);
+      maskTy := LLVM.IntTypeInContext(ctx, n);
       mask := LLVM.ConstAllOnes(maskTy);
       mask := LLVM.BuildZExtOrBitCast(builderIR, mask, intTy, "zext");
       res := DoInsert(value, target, mask, offset);
@@ -5491,28 +5496,7 @@ PROCEDURE comment (self: U; a, b, c, d: TEXT := NIL) =
      may be NIL. *)
   VAR
     s: TEXT := "";
-    index : CARDINAL;
   BEGIN
-    IF self.inInits THEN
-      IF TextExtras.FindSub(a, "typecell", index) THEN
-(*
-check index = 2 to guard against names the same then
-extract string _tabcdefgh 8 digit hex number after _t
-this is the uid of the object. look it up and check its type
-is object. actually look up the debug object uid we created during
-debug_object.
-we should now track the current offset with all init_ calls and keep then
-in self.
-This could be bit tricky as its 8 bytes before the next
-init_int with the uid in it but when we have it add  12 or 20 bytes to get
-the size offset
-store the size in the list element for the object we created when
-debugging
-
-*)
-      END;
-    END;
-
     IF self.m3llvmDebugLev > 0 THEN
       IF a # NIL THEN s := s & a; END;
       IF b # NIL THEN s := s & b; END;
