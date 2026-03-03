@@ -56,6 +56,12 @@ MathPosixC__modf_intpart_glue(double x)
 }
 
 
+/* macOS lacks the legacy POSIX drem() and gamma() functions */
+#ifdef __APPLE__
+double drem(double x, double y) { return remainder(x, y); }
+double gamma(double x) { return tgamma(x); }
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -2,6 +2,16 @@ readonly TARGET = "ARM64_DARWIN"
 
 readonly DarwinArch = "arm64"
 
+% Use C compiler (not C++) so that C sources compile as C.
+% Darwin.common's configure_c_compiler() uses g++ -x c++ which breaks
+% standard C idioms like implicit void* conversion.
+SYSTEM_CC = "/usr/bin/cc -g -fPIC -arch arm64 -Wall -Werror -Wno-return-type -Wno-missing-braces -Wno-deprecated-non-prototype -Wno-unused-but-set-variable -Wno-uninitialized -I/opt/homebrew/opt/expat/include"
+% 512 MB is the maximum stack size the Apple linker allows on arm64.
+% For larger stacks, patch LC_MAIN.stacksize directly in the Mach-O binary
+% (the kernel honours any value there regardless of ld's limit).
+SYSTEM_CC_LD = "/usr/bin/cc -g -fPIC -arch arm64 -Wall -Werror -Wno-return-type -Wno-missing-braces -Wno-deprecated-non-prototype -Wl,-stack_size,0x20000000"
+SYSTEM_CC_ASM = "/usr/bin/cc -arch arm64"
+
 include("ARM64.common")
 include("Darwin.common")
 
@@ -9,6 +19,7 @@ M3_PARALLEL_BACK = 20
 
 % Homebrew.
 SYSTEM_LIBS{"ODBC"} = ["-L/opt/homebrew/lib", "-liodbc", "-liodbcinst"]
-SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-L/opt/homebrew/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ]
 SYSTEM_LIBS{"OPENGL"} = [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
 						  "-L/opt/X11/lib", "-lGLU", "-lGL", "-lXext" ]
+SYSTEM_LIBS{"EXPAT"} = ["-L/opt/homebrew/opt/expat/lib", "-lexpat"]
