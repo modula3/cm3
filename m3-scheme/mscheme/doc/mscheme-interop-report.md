@@ -258,8 +258,36 @@ distinguish that.  `ISTYPE` and `TYPECASE` handle all cases safely.
 
 MScheme includes a *stub generator* that processes M3 interface files
 at build time and auto-generates bidirectional binding code.  This is
-the system's most distinctive feature.  The design goal, as stated
-in the sstubgen documentation, is:
+the system's most distinctive feature.
+
+Sstubgen derives directly from the Network Objects stub generator
+(`m3-comm/stubgen`) designed by Susan Owicki and Ted Wobber for
+Birrell et al.'s distributed object system (SRC Report 115, 1994).
+It is not merely modeled on the network objects stubgen -- it shares
+code.  Several source files are identical between the two packages
+(`FRefRefTbl`, `TypeNames`, `ValueProc`), and others (`AstToType`,
+`Type`, `Value`, `StubGenTool`, `StubUtils`) are extended copies.
+Both tools are `M3ToolFrame` extensions that hook into the cm3
+compiler pipeline: they walk the M3 AST using the M3 Toolkit (`m3tk`)
+from Xerox PARC (Mike Jordan, 1992), extract type information via an
+`AstToType` module, and generate code from the type signatures.  The
+network objects stubgen generates marshalling and unmarshalling
+procedures for remote method invocation; sstubgen adds
+`TypeTranslator` and `ValueTranslator` modules that generate
+`ToScheme`/`ToModula` converters and `CallStub` wrappers for Scheme
+interop.
+
+M3tk is a comprehensive Modula-3 front-end toolkit providing a
+generic AST framework, parser, semantic analyzer, and support for
+building compiler extensions.  It was written by Mick Jordan,
+originally at Olivetti Research California and later at DEC SRC, and
+described in his 1990 paper "An Extensible Programming Environment
+for Modula-3" (ACM SDE 4).  It is organized into sub-packages
+(`m3tk-ast`, `m3tk-syn`, `m3tk-sem`, `m3tk-fe`, etc.) and is used
+by both stubgen and sstubgen, as well as by the language server and
+other M3 development tools.
+
+The design goal, as stated in the sstubgen documentation, is:
 
 > "We want to be able to *write Modula-3 code in Scheme.* That is,
 > anything that can be coded in Modula-3 one should be able to code
@@ -413,7 +441,93 @@ multiple interpreters may share a global environment (which uses
 synchronized access).  Environments come in `Safe` (synchronized) and
 `Unsafe` (unsynchronized) variants.
 
-### 2.9 Summary of Key Properties
+### 2.9 C Libraries via M3 as Glue
+
+MScheme can be used even when the goal is simply to call C code from
+Scheme.  Modula-3 serves as a type-safe glue layer: a thin M3
+interface wraps the C functions, and sstubgen auto-exports that
+interface to Scheme.  The programmer never writes Scheme-specific
+binding code.
+
+A concrete example is the `Mpz` module in the `m3utils` tree, which
+wraps the GNU Multiple Precision Arithmetic Library (GMP) for use
+from the CSP compiler's Scheme environment.  The architecture has
+three layers:
+
+**Layer 1: C binding.**  `MpzP.i3` declares GMP functions as
+`EXTERNAL` procedures with C calling convention:
+
+```modula3
+(* MpzP.i3 -- raw C interface *)
+<*EXTERNAL "__gmpz_add"*>
+PROCEDURE c_add(f0: MpzPtrT; f1: MpzPtrT; f2: MpzPtrT);
+
+<*EXTERNAL "__gmpz_mul"*>
+PROCEDURE c_mul(f0: MpzPtrT; f1: MpzPtrT; f2: MpzPtrT);
+
+<*EXTERNAL "mpz_format_decimal"*>
+PROCEDURE format_decimal(z: MpzPtrT): Ctypes.const_char_star;
+```
+
+A small C file (`MpzC.c`) provides helper functions for formatting
+via `gmp_asprintf`.
+
+**Layer 2: Type-safe M3 wrapper.**  `Mpz.i3` defines an opaque
+traced type `T <: REFANY` that wraps the raw `mpz_t`.  The
+implementation (`MpzOps.m3`) extracts the address and calls through
+to layer 1:
+
+```modula3
+(* Mpz.i3 -- public interface *)
+TYPE T <: REFANY;
+PROCEDURE New(): T;
+PROCEDURE add(f0: T; f1: T; f2: T);
+PROCEDURE Format(t: T; base := FormatBase.Decimal): TEXT;
+```
+
+```modula3
+(* MpzOps.m3 -- implementation *)
+PROCEDURE add(f0: T; f1: T; f2: T) =
+  BEGIN P.c_add(ADR(f0.val), ADR(f1.val), ADR(f2.val)) END;
+```
+
+Because `T <: REFANY`, `Mpz.T` values are traced by the M3 garbage
+collector.  The opaque type prevents Scheme (or M3) code from
+accessing the raw `mpz_t` memory directly -- only the operations
+declared in `Mpz.i3` are available.
+
+**Layer 3: Automatic Scheme export.**  Adding `SchemeStubs("Mpz")` to
+the m3makefile causes sstubgen to generate Scheme bindings for every
+procedure in `Mpz.i3`.  From Scheme:
+
+```scheme
+(define a (Mpz.New))
+(define b (Mpz.NewInt 42))
+(define c (Mpz.New))
+(Mpz.add c a b)
+(Mpz.Format c)    ;=> "42"
+```
+
+The `Mpz.T` values flowing through Scheme are the same traced M3
+heap objects -- no copying, no marshaling.  The GC handles their
+lifetime.  The C library's `mpz_t` storage is embedded inside the
+M3 object's record fields and is deallocated when the M3 object is
+collected.
+
+This pattern -- C library, M3 interface, sstubgen -- is general.
+The same approach could wrap SQLite, zlib, OpenSSL, or any C library.
+Modula-3's `EXTERNAL` pragma provides the C binding; its type system
+provides safety; sstubgen provides the Scheme bridge.  The result is
+that MScheme functions as a practical Scheme-with-C-FFI system, even
+though its design is not about C interop at all.
+
+The `Mpz` module is itself partly auto-generated: a Scheme script
+(`make-mpz.scm`) reads GMP's function prototypes and emits `MpzP.i3`,
+`Mpz.i3`, and `MpzOps.m3` -- over 200 functions.  This is a second
+level of code generation: Scheme generates M3 code, then sstubgen
+generates Scheme stubs from that M3 code, closing the loop.
+
+### 2.10 Summary of Key Properties
 
 - **Zero-copy value sharing**: M3 objects are Scheme objects, no
   wrapping needed.
@@ -1082,6 +1196,29 @@ handles the rest.
 
 - Modula3/CM3: Critical Mass Modula-3.
   https://github.com/modula3/cm3
+
+### Network Objects and stub generation
+
+- Birrell, A.D., Nelson, G., Owicki, S., and Wobber, E.  "Network
+  Objects."  DEC Systems Research Center, Report 115, February 1994.
+  Also in *Proceedings of the 14th ACM Symposium on Operating Systems
+  Principles* (SOSP), December 1993; and *Software--Practice and
+  Experience*, 25(S4):87--130, December 1995.
+
+- Birrell, A.D., Evers, D., Nelson, G., Owicki, S., and Wobber, E.
+  "Distributed Garbage Collection for Network Objects."  DEC Systems
+  Research Center, Report 116, December 1993.
+
+### M3 Toolkit (m3tk)
+
+- Jordan, M.  "An Extensible Programming Environment for Modula-3."
+  In *Proceedings of the Fourth ACM SIGSOFT Symposium on Software
+  Development Environments* (SDE 4), Irvine, California, December
+  1990.  *ACM SIGSOFT Software Engineering Notes*, 15(6):66--76.
+
+- Jordan, M. and Robinson, P.  "A Programming Environment for
+  Modula-2."  *Software Engineering Journal*, 3(4):119--126, July
+  1988.
 
 ### MScheme and sstubgen
 
