@@ -8,11 +8,13 @@ March 3, 2026
 MScheme is a Scheme interpreter written in Modula-3, shipped with a stub
 generator (`sstubgen`) that processes Modula-3 interface files and
 produces bidirectional bindings.  It originated as a line-for-line
-translation of Peter Norvig's JScheme (Java) into Modula-3.  JScheme
-itself exploits the same insight on the JVM: because Java's universal
-reference type is `java.lang.Object`, any Java value can be a Scheme
-value without wrapping or boxing.  MScheme carries this principle into
-Modula-3, where `REFANY` plays the role of `Object`.
+translation of Peter Norvig's JScheme (Java) into Modula-3.  The key insight
+that makes JScheme's Java/Scheme interoperability seamless is that
+if the host language has a universal reference type, then every
+host-language value already *is* a valid Scheme value -- no wrapping
+or boxing is needed.  In Java that type is `java.lang.Object`; in
+Modula-3 it is `REFANY`.  MScheme carries this principle into the
+Modula-3 world.
 
 This report describes MScheme's interoperability architecture in
 detail, then compares it to eight other embedding systems that solve
