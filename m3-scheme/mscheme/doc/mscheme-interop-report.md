@@ -5,13 +5,14 @@
 MScheme is a Scheme interpreter written in Modula-3, shipped with a stub
 generator (`sstubgen`) that processes Modula-3 interface files and
 produces bidirectional bindings.  It originated as a line-for-line
-translation of Peter Norvig's JScheme (Java) into Modula-3.  The key
-design insight is that because Modula-3 is a garbage-collected language
-with a universal reference type (`REFANY`), any traced M3 value can
-become a Scheme value without wrapping, boxing, or special-casing.
+translation of Peter Norvig's JScheme (Java) into Modula-3.  JScheme
+itself exploits the same insight on the JVM: because Java's universal
+reference type is `java.lang.Object`, any Java value can be a Scheme
+value without wrapping or boxing.  MScheme carries this principle into
+Modula-3, where `REFANY` plays the role of `Object`.
 
 This report describes the MScheme interop architecture in detail, then
-compares it to seven other embedding/interop systems that solve similar
+compares it to eight other embedding/interop systems that solve similar
 problems in different ways.
 
 ---
@@ -393,7 +394,64 @@ reflection fallback is slow.  Kawa must work within JVM constraints
 trampolining).  The shared-runtime model is fundamentally different
 from all other systems here.
 
-### 3.6 Common Lisp / CFFI
+### 3.6 JScheme (Scheme in Java)
+
+**Core representation**: `java.lang.Object`.  JScheme is a tree-walking
+Scheme interpreter written in Java.  In Norvig's original (1998), all
+numbers are `java.lang.Double`, symbols are interned `java.lang.String`,
+strings are `char[]` (for mutability), pairs are a custom `Pair` class
+with `Object first, rest` fields, and `null` represents the empty list.
+The later Anderson/Hickey version (2003+) switched numbers to `Integer`
+or `Double` as appropriate, symbols to a custom `Symbol` class, and
+strings to `java.lang.String`.
+
+**Wrapping Java objects**: No wrapping needed.  Any Java object is
+already an `Object` and therefore a valid Scheme value.  The evaluator
+treats anything that is not a symbol and not a pair as self-evaluating,
+so a `java.awt.Frame` or `java.util.HashMap` placed into a Scheme
+variable simply evaluates to itself.
+
+**Method dispatch**: Entirely reflection-based.  The later JScheme
+provides a dot-notation syntactic sugar parsed at read time:
+
+```scheme
+(import "java.awt.Font")
+(Font. "Serif" Font.BOLD$ 24)     ; constructor (trailing dot)
+(.setFont component font)         ; instance method (leading dot)
+(.name$ obj)                      ; field access (trailing $)
+(Math.round 123.456)              ; static method (dot in middle)
+```
+
+These desugar into calls to `JavaMethod`, `JavaConstructor`, or
+`JavaField` objects, all of which use `java.lang.reflect` internally.
+Method tables are cached per class in hash tables, and overload
+resolution follows Java's "most specific applicable method" rule at
+runtime.
+
+**Values back to Java**: Scheme values are already `Object`.  Java
+code calls `JScheme.call("proc-name", arg1, arg2)` and receives an
+`Object` result, narrowing via cast.
+
+**Scheme as Java interface**: The `SchemeInvocationHandler` class uses
+`java.lang.reflect.Proxy` to let a Scheme closure implement any Java
+interface, so Scheme callbacks work anywhere Java expects an interface
+(listeners, `Runnable`, etc.).
+
+**Registration**: `(import "java.awt.*")` makes classes available;
+dot-notation symbols are resolved against the import table.  From the
+Java side, `JScheme.setGlobalValue("name", obj)` injects values.
+
+**Key trade-offs**: JScheme achieves the same zero-wrapping interop as
+Kawa -- Java objects *are* Scheme values -- but pays for it with
+reflection overhead on every method call.  Kawa compiles to
+`invokevirtual` bytecode; JScheme interprets and reflects.  The
+simplicity is striking (Norvig's original is ~1700 lines), but the
+performance gap is large.  JScheme is the direct ancestor of MScheme
+and establishes the key principle that MScheme inherits: when the host
+language has a universal reference type and a GC, the embedding
+boundary can be made nearly invisible.
+
+### 3.7 Common Lisp / CFFI
 
 **Core representation**: Tagged Lisp objects (implementation-dependent
 tagging scheme).  Foreign values are `cffi:foreign-pointer` wrappers.
@@ -419,7 +477,7 @@ requires manual struct layout declarations and memory management.
 CLOS provides a powerful "glue" layer but is per-project, not
 standardized for FFI.
 
-### 3.7 Racket FFI
+### 3.8 Racket FFI
 
 **Core representation**: Tagged Racket objects.  C types are
 first-class Racket values: `_int`, `_double`, `_pointer`, `_fun`.
@@ -455,11 +513,11 @@ is whether the host and guest languages *share* their object
 representations or maintain *separate* representations connected by
 a marshaling boundary.
 
-**Shared heap** (MScheme, Kawa): The host language's objects are
-directly usable as scripting language values.  No per-call conversion
-cost.  The garbage collector sees everything.  This is only possible
-when both languages are GC'd and share a runtime (M3 + MScheme) or
-a VM (Java + Kawa).
+**Shared heap** (MScheme, JScheme, Kawa): The host language's objects
+are directly usable as scripting language values.  No per-call
+conversion cost.  The garbage collector sees everything.  This is only
+possible when both languages are GC'd and share a runtime (M3 +
+MScheme) or a VM (Java + JScheme, Java + Kawa).
 
 **Marshaling boundary** (Lua, Guile, Tcl, Python, CFFI, Racket): The
 host creates scripting-language values via conversion APIs.  Every
@@ -480,6 +538,7 @@ that they literally *are* Scheme values, by type identity.
 | Tcl     | String parse on demand                 | String comparison for subcommand   |
 | Python  | `PyArg_ParseTuple` format string       | MRO attribute lookup               |
 | Kawa    | JVM `checkcast` instruction            | `invokevirtual` or reflection      |
+| JScheme | `instanceof` (runtime)                 | Reflection + cached method table   |
 | CFFI    | CLOS `typep` + manual checks           | Generic function dispatch          |
 | Racket  | cpointer tag check                     | Direct call (no dispatch)          |
 
@@ -487,7 +546,7 @@ MScheme benefits from M3's runtime type system: `TYPECASE` is a
 compiler-supported, type-safe downcast with O(1) performance (the
 runtime checks the typecode, which is an integer).  This is
 essentially the same mechanism as Java's `instanceof` check, used by
-Kawa on the JVM.
+Kawa and JScheme on the JVM.
 
 ### 4.3 Automatic Binding Generation
 
@@ -499,6 +558,7 @@ Kawa on the JVM.
 | Tcl     | Partial (critcl, SWIG) | C headers                   | Third-party tools                               |
 | Python  | Partial (Cython, etc.) | C/C++ headers + annotations | Third-party tools                               |
 | Kawa    | Unnecessary            | --                          | Shared JVM class loader                         |
+| JScheme | Unnecessary            | --                          | Reflection on JVM classes at runtime            |
 | CFFI    | No                     | Manual declarations         | Programmer writes `defcfun`                     |
 | Racket  | No                     | Manual declarations         | Programmer writes `define-ffi-definer`          |
 
@@ -522,12 +582,13 @@ needs no generator at all because Java and Scheme share the JVM).
 | Tcl     | None (C)           | Refcounting                | Manual: `Tcl_IncrRefCount`/`Tcl_DecrRefCount`     |
 | Python  | None (C)           | Refcounting + cycle detect | Manual: `Py_INCREF`/`Py_DECREF`                   |
 | Kawa    | JVM GC             | Same GC                    | None needed -- unified heap                       |
+| JScheme | JVM GC             | Same GC                    | None needed -- unified heap                       |
 | CFFI    | CL GC              | Same GC (for CL objects)   | `trivial-garbage:finalize` for foreign ptrs       |
 | Racket  | Precise moving GC  | Same GC                    | Special APIs for C extensions holding Racket refs |
 
-The MScheme/M3 and Kawa/JVM systems share a critical advantage: since
-both languages use the same garbage collector, there is no coordination
-problem.  A Scheme closure that captures an M3 object keeps it alive
+The MScheme/M3, Kawa/JVM, and JScheme/JVM systems share a critical
+advantage: since both languages use the same garbage collector, there
+is no coordination problem.  A Scheme closure that captures an M3 object keeps it alive
 automatically.  An M3 data structure containing Scheme pairs is traced
 correctly.  No reference counting, no prevent-collection guards, no
 weak-reference bridges.
@@ -546,7 +607,7 @@ MScheme, Lua, Guile, Tcl, Python.
 **Pull** (the script declares what it wants from the host):
 CFFI, Racket FFI.
 
-**Neither** (shared runtime): Kawa.
+**Neither** (shared runtime): Kawa, JScheme.
 
 MScheme is firmly push-based, but its push is *automated* via sstubgen.
 The programmer adds `SchemeStubs("InterfaceName")` to the makefile,
@@ -591,7 +652,7 @@ three clusters:
             Kawa  *      |
                          |
       MScheme  *         |
-                         |
+                         |       * JScheme
   -------------------------------------
   low interop cost       |       high interop cost
                          |
@@ -605,6 +666,11 @@ three clusters:
 
 Kawa achieves the ideal: zero setup, zero interop cost.  But it
 requires both languages to run on the JVM.
+
+JScheme shares Kawa's low setup cost (both live on the JVM, no
+bindings to write) but pays a significant interop cost: every Java
+method call goes through reflection, while Kawa compiles to direct
+`invokevirtual` bytecode.
 
 MScheme comes closest to Kawa's position among systems where the host
 language has its own native runtime.  The shared GC eliminates interop
@@ -623,11 +689,24 @@ and at every call boundary (marshaling).
 
 ## 6. Historical Context
 
-MScheme was written in 2007-2008 and has been used in financial
-trading, scientific computing, and hardware design.  Its design
-predates many of the modern FFI systems (Racket's FFI was redesigned
-around 2010; Python's stable ABI came in 3.2/2011; Guile's foreign
-object types replaced SMOBs in 2.0/2011).
+Peter Norvig published JScheme in 1998 as a compact demonstration
+that a useful Scheme interpreter could be written in ~1700 lines of
+Java.  The key architectural insight -- `java.lang.Object` as the
+universal Scheme value -- was implicit in the choice of Java as the
+implementation language.  Ken Anderson (BBN) and Tim Hickey (Brandeis)
+later expanded JScheme with dot-notation syntax, overload resolution,
+and dynamic proxy support for Java interfaces.
+
+MScheme was written in 2007-2008 as a line-for-line translation of
+JScheme into Modula-3.  The translation preserved JScheme's
+fundamental principle (`Object` -> `REFANY`) but added two things
+JScheme lacks: an automatic stub generator (`sstubgen`) and a runtime
+type introspection API.  MScheme has been used in financial trading,
+scientific computing, and hardware design.
+
+The MScheme design predates many of the modern FFI systems (Racket's
+FFI was redesigned around 2010; Python's stable ABI came in 3.2/2011;
+Guile's foreign object types replaced SMOBs in 2.0/2011).
 
 The SSTUBGEN.TXT design document explicitly positions the system's
 goal as making Scheme a viable "main program" language for large M3
@@ -639,6 +718,6 @@ type system.
 
 The closest historical precedent is the Lisp Machine, where Lisp
 *was* the systems language and no interop boundary existed at all.
-MScheme approximates this by making the interop boundary as thin as
-possible: one type alias (`T = REFANY`) and a code generator that
+JScheme approximated this for Java; MScheme approximates it for
+Modula-3 -- one type alias (`T = REFANY`) and a code generator that
 handles the rest.
