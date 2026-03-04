@@ -1,4 +1,7 @@
-# MScheme: Modula-3/Scheme Interop and Comparable Systems
+# MScheme: Modula-3/Scheme Interoperability and Comparable Systems
+
+Mika Nyström and Claude (Anthropic)\
+March 3, 2026
 
 ## 1. Introduction
 
@@ -11,8 +14,9 @@ reference type is `java.lang.Object`, any Java value can be a Scheme
 value without wrapping or boxing.  MScheme carries this principle into
 Modula-3, where `REFANY` plays the role of `Object`.
 
-This report describes the MScheme interop architecture in detail, then
-compares it to eight other embedding/interop systems that solve similar
+This report describes MScheme's interoperability architecture in
+detail, then compares it to eight other embedding systems that solve
+similar
 problems in different ways.
 
 ---
@@ -275,7 +279,7 @@ network objects stubgen generates marshalling and unmarshalling
 procedures for remote method invocation; sstubgen adds
 `TypeTranslator` and `ValueTranslator` modules that generate
 `ToScheme`/`ToModula` converters and `CallStub` wrappers for Scheme
-interop.
+interoperability.
 
 M3tk is a comprehensive Modula-3 front-end toolkit providing a
 generic AST framework, parser, semantic analyzer, and support for
@@ -519,7 +523,7 @@ The same approach could wrap SQLite, zlib, OpenSSL, or any C library.
 Modula-3's `EXTERNAL` pragma provides the C binding; its type system
 provides safety; sstubgen provides the Scheme bridge.  The result is
 that MScheme functions as a practical Scheme-with-C-FFI system, even
-though its design is not about C interop at all.
+though its design is not about C interoperability at all.
 
 The `Mpz` module is itself partly auto-generated: a Scheme script
 (`make-mpz.scm`) reads GMP's function prototypes and emits `MpzP.i3`,
@@ -673,7 +677,7 @@ Java code invokes Scheme functions by calling `apply` on
 **Registration**: None needed -- both languages share the JVM class
 loader and object space.
 
-**Key trade-offs**: Zero-cost interop when types are known, but
+**Key trade-offs**: Zero-cost interoperability when types are known, but
 reflection fallback is slow.  Kawa must work within JVM constraints
 (no true tail calls, no first-class continuations without
 trampolining).  The shared-runtime model is fundamentally different
@@ -726,7 +730,7 @@ interface, so Scheme callbacks work anywhere Java expects an interface
 dot-notation symbols are resolved against the import table.  From the
 Java side, `JScheme.setGlobalValue("name", obj)` injects values.
 
-**Key trade-offs**: JScheme achieves the same zero-wrapping interop as
+**Key trade-offs**: JScheme achieves the same zero-wrapping interoperability as
 Kawa -- Java objects *are* Scheme values -- but pays for it with
 reflection overhead on every method call.  Kawa compiles to
 `invokevirtual` bytecode; JScheme interprets and reflects.  The
@@ -980,7 +984,7 @@ runtime type introspection.
 
 ## 5. Positioning in the Design Space
 
-Plotting the systems on two axes -- *interop cost* (per-call overhead)
+Plotting the systems on two axes -- *per-call cost* (boundary overhead)
 vs. *setup cost* (how much binding code must be written) -- reveals
 three clusters:
 
@@ -992,7 +996,7 @@ three clusters:
       MScheme  *         |
                          |       * JScheme
   -------------------------------------
-  low interop cost       |       high interop cost
+  low per-call cost      |       high per-call cost
                          |
                          |      * Guile
               * CFFI     |      * Lua
@@ -1002,16 +1006,16 @@ three clusters:
                     high setup cost
 ```
 
-Kawa achieves the ideal: zero setup, zero interop cost.  But it
+Kawa achieves the ideal: zero setup, zero per-call cost.  But it
 requires both languages to run on the JVM.
 
 JScheme shares Kawa's low setup cost (both live on the JVM, no
-bindings to write) but pays a significant interop cost: every Java
+bindings to write) but pays a significant per-call cost: every Java
 method call goes through reflection, while Kawa compiles to direct
 `invokevirtual` bytecode.
 
 MScheme comes closest to Kawa's position among systems where the host
-language has its own native runtime.  The shared GC eliminates interop
+language has its own native runtime.  The shared GC eliminates per-call
 cost for value passing, and sstubgen eliminates setup cost for binding
 generation.  The remaining cost is method dispatch (atom comparison),
 which is comparable to Lua's metatable lookup and far cheaper than
@@ -1029,7 +1033,7 @@ and at every call boundary (marshaling).
 
 ### 6.1 Why This Distinction Matters
 
-JScheme and Kawa achieve glueless interop on the JVM.  But the JVM is
+JScheme and Kawa achieve glueless interoperability on the JVM.  But the JVM is
 a virtual machine: Java source compiles to bytecode, which is then
 interpreted or JIT-compiled by the VM at runtime.  The GC, runtime
 type information, and universal reference type (`java.lang.Object`)
@@ -1164,7 +1168,8 @@ significantly less impedance mismatch, thanks to the shared GC and
 type system.
 
 The closest historical precedent is the Lisp Machine, where Lisp
-*was* the systems language and no interop boundary existed at all.
+*was* the systems language and no interoperability boundary existed
+at all.
 JScheme approximated this for Java; MScheme approximates it for
 Modula-3 -- one type alias (`T = REFANY`) and a code generator that
 handles the rest.
