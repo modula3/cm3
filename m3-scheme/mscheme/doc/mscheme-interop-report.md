@@ -599,6 +599,59 @@ most common source of C extension bugs.  In Lua, forgetting to anchor
 a value on the stack or in the registry causes it to be collected while
 C still holds a pointer to it.
 
+The fundamental problem runs deeper than API discipline: C makes
+garbage collection nearly impossible to do correctly.  The language
+permits pointers to be hidden in ways that are both legal and common
+in practice, defeating any collector that tries to find them.
+
+A "conservative" collector like BDW-GC works by scanning the C stack,
+registers, and static data segments for bit patterns that look like
+they might be heap addresses.  This is inherently a heuristic, and it
+fails in both directions.
+
+**False negatives (hidden pointers -- the dangerous case).**  C
+allows a program to store a pointer as an integer (`uintptr_t`), XOR
+two pointers together (XOR linked lists), offset a pointer by a
+constant and recover it later, split a pointer's bytes across
+non-adjacent struct fields, send it through a pipe or socket and read
+it back, or store it in a memory-mapped file.  In all of these cases,
+the pointer exists but does not appear on the stack or in a register
+in a form the collector can recognize.  If the collector runs at that
+moment, it may conclude the object is unreachable and free it.  The
+program then recovers the hidden pointer and dereferences freed
+memory.  This is not a contrived scenario -- XOR-linked lists save
+memory in embedded systems, pointer tagging is used in language
+runtimes (including CPython's own `ob_refcnt` field packing), and
+integer casts are routine in serialization and IPC code.
+
+**False positives (pointer lookalikes -- the slow leak).**  On a
+32-bit system, roughly 1 in 1000 random integers looks like a valid
+heap address.  On 64-bit systems the odds are better but not zero,
+especially for programs that process file offsets, hash values, or
+pixel data in the gigabyte range.  Each false positive pins a dead
+object (and everything it transitively references) in memory
+indefinitely.  Programs that run for a long time with large heaps
+can see unbounded memory growth from these phantom roots.
+
+**No solution within C.**  The C standard deliberately leaves pointer
+representation implementation-defined and permits casts between
+pointers and integers.  A conforming C program can hide a pointer in
+a way that no scanning algorithm can find.  This is not a bug in the
+language -- it is a consequence of C's design as a portable assembly
+language with minimal abstraction over the machine.
+
+Languages like Modula-3 and Java avoid this entirely.  In M3, the
+compiler emits stack frame descriptors that tell the garbage collector
+exactly which stack slots and object fields contain traced references.
+The runtime knows the precise layout of every heap object because
+allocations go through `NEW`, which records the type.  The collector
+does not guess: it follows exactly the traced references and nothing
+else.  No false negatives, no false positives, no heuristics.  Java
+achieves the same property through the JVM's typed operand stack and
+GC maps.  This is what makes the unified-heap architecture of MScheme,
+JScheme, and Kawa possible -- the collector's precision is guaranteed
+by the language, not hoped for by convention.
+
 ### 4.5 Registration Direction: Push vs. Pull
 
 **Push** (the host declares what's available to the script):
@@ -687,7 +740,116 @@ and at every call boundary (marshaling).
 
 ---
 
-## 6. Historical Context
+## 6. Native Code, Not a Virtual Machine
+
+### 6.1 Why This Distinction Matters
+
+JScheme and Kawa achieve glueless interop on the JVM.  But the JVM is
+a virtual machine: Java source compiles to bytecode, which is then
+interpreted or JIT-compiled by the VM at runtime.  The GC, runtime
+type information, and universal reference type (`java.lang.Object`)
+are services provided by the VM, not by the compiled program itself.
+
+Modula-3 is different.  The cm3 compiler emits native machine code --
+x86, x86-64, ARM64, SPARC, PA-RISC, PowerPC -- directly, with no
+intermediate bytecode and no virtual machine.  The generated code
+runs as ordinary machine instructions.  Yet Modula-3 still provides
+precise garbage collection, runtime type discrimination (`TYPECASE`,
+`ISTYPE`, `TYPECODE`), and a universal traced reference type
+(`REFANY`).  It achieves this by having the compiler emit metadata
+alongside the native code: stack frame descriptors that tell the
+runtime exactly which stack slots contain traced references, and type
+descriptors that record the layout of every heap-allocated type.
+
+This means MScheme's Scheme interpreter runs as native machine code
+calling into native machine code, with no VM layer in between.  When
+Scheme code calls an M3 method, it is a direct procedure call -- the
+same calling convention as any M3-to-M3 call.  When the garbage
+collector runs, it traces M3 objects and Scheme pairs with the same
+algorithm, using the same compiler-generated stack maps.  There is no
+bytecode interpreter, no JIT warmup, no tiered compilation.
+
+### 6.2 How Rare Is This Architecture?
+
+The combination of properties that makes MScheme possible is unusual:
+(1) ahead-of-time compilation to native code, (2) precise tracing GC,
+(3) runtime type information with a universal reference type, and
+(4) an embedded interpreter for a *different* language that shares the
+host's values and GC directly, with no marshaling.
+
+Very few languages in history have provided (1)-(3) simultaneously.
+The lineage is essentially Mesa (native code, no GC) to Cedar (added
+GC, `REF ANY`, and RTTI at Xerox PARC in the early 1980s) to
+Modula-2+ (DEC SRC) to Modula-3.  Cedar had the infrastructure to
+support an MScheme-like system -- Paul Rovner's 1985 technical report
+documents the addition of `REF ANY`, runtime types, and traced GC to
+Mesa -- but no one built a full scripting interpreter on top of it.
+The debugger could evaluate expressions in a stopped frame, but that
+is not the same as a general-purpose embedded language.
+
+A survey of other natively-compiled GC'd languages shows why MScheme's
+architecture is hard to replicate:
+
+**Common Lisp (SBCL, CMUCL, etc.).**  The strongest analogue.  SBCL
+compiles to native x86-64 and ARM64 code and has a precise generational
+GC.  Its interpreter (when enabled) shares the exact same heap, the
+same tagged-pointer value representation, and the same collector as
+compiled code.  A Scheme interpreter written in Common Lisp would be
+architecturally identical to MScheme.  However, CL's interpreter is
+self-hosting -- it interprets Common Lisp, not a different language.
+The system is designed for mixed-mode execution of a single language,
+not for embedding a scripting language in a systems language.
+
+**Smalltalk (StrongTalk, Cog/Spur).**  JIT-compiles methods to native
+code; the interpreter and compiled code share a single object space
+with no marshaling boundary.  Again self-hosting: the interpreted
+and compiled languages are the same Smalltalk.  Compilation is JIT
+(at runtime), not AOT (ahead of time).
+
+**Eiffel (EiffelStudio's Melting Ice).**  Compiles Eiffel to C and
+thence to native code ("frozen" code), but also maintains bytecode-
+interpreted "melted" code for rapid development.  Frozen and melted
+code share the same heap and objects.  Self-hosting: the interpreted
+language is Eiffel.
+
+**Julia.**  JIT-compiles to native code via LLVM; `eval` operates in
+the same runtime with the same values.  Self-hosting; JIT, not AOT.
+
+**Go (Yaegi).**  Compiles to native code and has precise GC, but
+Yaegi (a Go interpreter written in Go) wraps values in `reflect.Value`
+at every boundary -- a form of marshaling.  Go also lacks a universal
+reference type; `interface{}` is a two-word pair, not a traced
+pointer.
+
+**Oberon.**  Compiles to native code and has GC, but lacks a universal
+reference type and has no embedded interpreter -- it uses dynamic
+loading of compiled modules instead.
+
+**D, Dylan, OCaml.**  All compile to native code and have GC, but
+none has an embedded interpreter for a different language that shares
+the host heap without marshaling.  OCaml's bytecode toplevel shares
+the heap with loaded `.cmo` modules, but the native-code compiler
+path has no analogous mechanism for a different language.
+
+The pattern that emerges is that self-hosting interpreters in
+natively-compiled languages are not uncommon (CL, Smalltalk, Eiffel,
+Julia all have them), but an interpreter for a *different* language
+that shares the host's heap with zero marshaling overhead is rare.
+The obstacle is not theoretical -- any language with GC, RTTI, and a
+universal reference type could support it -- but practical: very few
+such languages exist, and in those that do, the idea has apparently
+occurred only to the builders of MScheme (and its ancestor JScheme,
+which works on the JVM rather than native code).
+
+MScheme appears to be the only system where an ahead-of-time compiled,
+statically-typed systems language hosts a dynamically-typed interpreted
+scripting language with truly zero marshaling overhead -- no VM, no
+bytecode, no reflection layer, no value conversion, just `T = REFANY`
+and direct procedure calls.
+
+---
+
+## 7. Historical Context
 
 Peter Norvig published JScheme in 1998 as a compact demonstration
 that a useful Scheme interpreter could be written in ~1700 lines of
