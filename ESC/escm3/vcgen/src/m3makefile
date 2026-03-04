@@ -1,0 +1,20 @@
+% ESC/Modula-3 verification condition generator (Scheme)
+%
+% Scheme source files for translating M3 AST + specs into
+% verification conditions for the Simplify theorem prover.
+
+import("libm3")
+
+resource("esc-util.scm")
+resource("esc-gcmd.scm")
+resource("esc-passify.scm")
+resource("esc-wp.scm")
+resource("esc-typegen.scm")
+resource("esc-framegen.scm")
+resource("esc-absfunc.scm")
+resource("esc-bg.scm")
+resource("esc-emit.scm")
+
+bundle("VCGen")
+
+library("vcgen")

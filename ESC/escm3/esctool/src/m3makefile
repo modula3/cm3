@@ -1,0 +1,18 @@
+% ESC/Modula-3 extended static checker driver
+%
+% CLI entry point: parses M3 source with m3tk, extracts ESC
+% annotations, generates verification conditions via Scheme VCG,
+% and checks them with the Simplify theorem prover.
+
+import("libm3")
+import("m3tk")
+import("esclib")
+
+implementation("ESCMain")
+Module("ESCDriver")
+Module("ESCProve")
+Module("ESCReport")
+
+build_standalone()
+
+Program("escm3")

@@ -1,0 +1,17 @@
+% ESC/Modula-3 core library
+%
+% Specification parsing, pragma extraction, type environment,
+% name mapping, and S-expression utilities for ESC verification.
+
+import("libm3")
+import("m3tk")
+
+Interface("ESCSpec")
+Module("ESCError")
+Module("ESCPragma")
+Module("ESCSpecParse")
+Module("ESCTypes")
+Module("ESCNameMap")
+Module("ESCSx")
+
+library("esclib")
