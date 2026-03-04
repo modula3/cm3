@@ -81,20 +81,20 @@ TYPE T = REFANY;
 
 A Scheme value is `REFANY` -- Modula-3's traced, polymorphic reference
 type.  Any heap-allocated M3 value (objects, REFs, TEXTs, arrays)
-already *is* a valid Scheme object.  No wrapper structs, no tag bits
-on the Scheme side, no special allocation paths.  The M3 runtime's
+already *is* a valid Scheme object.  No wrapper structs, tag bits
+on the Scheme side, or special allocation paths.  The M3 runtime's
 garbage collector manages all values uniformly.
 
 Scheme-specific types are defined as ordinary M3 reference types:
 
 | Scheme type  | Modula-3 representation                                  |
 |--------------|----------------------------------------------------------|
-| Number       | `REF LONGREAL` (`SchemeLongReal.T`)                      |
+| Number       | `SchemeLongReal.T = REF LONGREAL`                        |
 | BigInt       | `BigInt.T` (from `cit_util`)                             |
-| Pair         | `REF RECORD first, rest : REFANY END` (`SchemePair.T`)   |
-| Symbol       | `Atom.T` (`SchemeSymbol.T`)                              |
-| Boolean      | `SchemeBoolean.T`                                        |
-| String       | `SchemeString.T`                                         |
+| Pair         | `SchemePair.T = REF RECORD first, rest : REFANY END`     |
+| Symbol       | `SchemeSymbol.T = Atom.T`                                |
+| Boolean      | `SchemeBoolean.T = BRANDED REF BOOLEAN`                  |
+| String       | `SchemeString.T = REF ARRAY OF CHAR`                     |
 | Procedure    | `SchemeProcedure.T` (object with `apply` method)         |
 | Any M3 ref   | Itself -- already `REFANY`                               |
 
@@ -105,8 +105,8 @@ runtime provides for all M3 code.  No parallel type system is needed.
 Modula-3 distinguishes *reference types* (heap-allocated, traced by
 the GC) from *value types* (unboxed scalars, records, arrays).
 Reference types pass through the Scheme boundary unchanged, but
-value types must be boxed into reference types.  The sstubgen-
-generated stubs handle this automatically:
+value types must be boxed into reference types.  The `sstubgen`-generated
+stubs handle this automatically:
 
 | M3 value type   | Scheme representation        | Conversion                         |
 |-----------------|------------------------------|------------------------------------|
@@ -133,7 +133,7 @@ or field-embedded aggregate (like a C struct) and an `ARRAY` is a
 contiguous block of elements with fixed bounds.  Neither is a
 reference -- neither can be `REFANY`.  Rather than boxing them into
 opaque `REF` wrappers (which would make the contents inaccessible to
-Scheme), sstubgen *decomposes* them into Scheme data structures:
+Scheme), `sstubgen` *decomposes* them into Scheme data structures:
 
 **Records become association lists.**  Each field becomes a
 `(name . value)` pair, with the field value converted recursively.
@@ -155,7 +155,7 @@ PROCEDURE ToModula_MyRecord(x: SchemeObject.T): MyRecord =
       p := SchemePair.Pair(p.rest)
     END;
     RETURN res
-  END;
+  END ToModula_MyRecord;
 ```
 
 **Fixed arrays become lists of (index, element) pairs.**  An `ARRAY
@@ -185,12 +185,12 @@ PROCEDURE ToModula_A(x: SchemeObject.T): ARRAY [0..2] OF INTEGER =
       END
     END;
     RETURN res
-  END;
+  END ToModula_A;
 ```
 
 **Multidimensional arrays** are nested.  Modula-3's `ARRAY [0..2],
 [0..3] OF REAL` is equivalent to `ARRAY [0..2] OF ARRAY [0..3] OF
-REAL` -- an array of arrays.  Sstubgen generates converters
+REAL` -- an array of arrays.  `sstubgen` generates converters
 recursively: the outer array's element converter is itself the
 converter for the inner array.  In Scheme, this becomes a list of
 lists: `((0 . ((0 . 1.0) (1 . 2.0) ...)) (1 . ((0 . 3.0) ...)) ...)`.
@@ -198,11 +198,11 @@ lists: `((0 . ((0 . 1.0) (1 . 2.0) ...)) (1 . ((0 . 3.0) ...)) ...)`.
 **Open arrays** (`ARRAY OF T`, with no fixed bounds) cannot exist as
 bare value types -- they exist only as `REF ARRAY OF T` or as formal
 parameters.  As `REF` types, they are already `REFANY` and can be
-passed through the Scheme boundary directly; sstubgen generates
+passed through the Scheme boundary directly; `sstubgen` generates
 converters that treat them as Scheme vectors or lists depending on
 context.
 
-The key design choice is that sstubgen *decomposes* value types into
+The key design choice is that `sstubgen` *decomposes* value types into
 Scheme-native structures rather than wrapping them in opaque
 references.  This means Scheme code can inspect and construct M3
 records and arrays using ordinary Scheme operations (`car`, `cdr`,
@@ -222,7 +222,7 @@ interp.bind("my-driver", myM3Object);
 
 The `bind` method defines a symbol in the global Scheme environment.
 The M3 object `myM3Object` becomes directly accessible in Scheme as
-the value of `my-driver`.  No conversion, no copying, no indirection.
+the value of `my-driver`.  No conversion, copying, or indirection.
 Scheme code manipulating this value is manipulating the exact same M3
 heap object.
 
@@ -311,10 +311,10 @@ MScheme includes a *stub generator* that processes M3 interface files
 at build time and auto-generates bidirectional binding code.  This is
 the system's most distinctive feature.
 
-Sstubgen derives directly from the Network Objects stub generator
+`sstubgen` derives directly from the Network Objects stub generator
 (`m3-comm/stubgen`) designed by Susan Owicki and Ted Wobber for
 Birrell et al.'s distributed object system (SRC Report 115, 1994).
-It is not merely modeled on the network objects stubgen -- it shares
+It is not merely modeled on the network objects `stubgen` -- it shares
 code.  Several source files are identical between the two packages
 (`FRefRefTbl`, `TypeNames`, `ValueProc`), and others (`AstToType`,
 `Type`, `Value`, `StubGenTool`, `StubUtils`) are extended copies.
@@ -322,8 +322,8 @@ Both tools are `M3ToolFrame` extensions that hook into the cm3
 compiler pipeline: they walk the M3 AST using the M3 Toolkit (`m3tk`)
 from Xerox PARC (Mike Jordan, 1992), extract type information via an
 `AstToType` module, and generate code from the type signatures.  The
-network objects stubgen generates marshalling and unmarshalling
-procedures for remote method invocation; sstubgen adds
+network objects `stubgen` generates marshalling and unmarshalling
+procedures for remote method invocation; `sstubgen` adds
 `TypeTranslator` and `ValueTranslator` modules that generate
 `ToScheme`/`ToModula` converters and `CallStub` wrappers for Scheme
 interoperability.
@@ -335,10 +335,10 @@ originally at Olivetti Research California and later at DEC SRC, and
 described in his 1990 paper "An Extensible Programming Environment
 for Modula-3" (ACM SDE 4).  It is organized into sub-packages
 (`m3tk-ast`, `m3tk-syn`, `m3tk-sem`, `m3tk-fe`, etc.) and is used
-by both stubgen and sstubgen, as well as by the language server and
+by both `stubgen` and `sstubgen`, as well as by the language server and
 other M3 development tools.
 
-The design goal, as stated in the sstubgen documentation, is:
+The design goal, as stated in the `sstubgen` documentation, is:
 
 > "We want to be able to *write Modula-3 code in Scheme.* That is,
 > anything that can be coded in Modula-3 one should be able to code
@@ -431,7 +431,7 @@ list of registered stubs, matching the interface name and item name
 by atom identity (pointer comparison), and calls the matching stub
 procedure.
 
-**4. Stub execution.**  The stub procedure -- generated by sstubgen
+**4. Stub execution.**  The stub procedure -- generated by `sstubgen`
 at build time -- unpacks arguments from the Scheme pair list, converts
 each from `SchemeObject.T` to the appropriate M3 type using the
 `ToModula` functions, calls the real M3 procedure, converts the result
@@ -448,7 +448,7 @@ PROCEDURE Stub_Wr_PutText(interp: Scheme.T;
     EXCEPT Wr.Failure(e) =>
         RAISE Scheme.E("Wr.Failure: " & ...)
     END
-  END;
+  END Stub_Wr_PutText;
 ```
 
 For the `wr` argument, which is already a traced reference (`Wr.T` is
@@ -458,8 +458,8 @@ converts the mutable Scheme string (`REF ARRAY OF CHAR`) to an
 immutable M3 `TEXT`.  The return value is a Scheme boolean.
 
 The entire path -- from `Eval` to the actual `Wr.PutText` call -- is
-native M3 procedure calls.  There is no interpreter loop, no bytecode
-dispatch, and no reflection.  The overhead beyond a direct M3 call is:
+native M3 procedure calls.  There is no interpreter loop, bytecode
+dispatch, or reflection.  The overhead beyond a direct M3 call is:
 argument list traversal (walking `SchemePair` cells), type conversion
 (one `NARROW` + one `ToText`), and stub lookup (atom comparison in a
 linked list, typically short).
@@ -496,7 +496,7 @@ synchronized access).  Environments come in `Safe` (synchronized) and
 
 MScheme can be used even when the goal is simply to call C code from
 Scheme.  Modula-3 serves as a type-safe glue layer: a thin M3
-interface wraps the C functions, and sstubgen auto-exports that
+interface wraps the C functions, and `sstubgen` auto-exports that
 interface to Scheme.  The programmer never writes Scheme-specific
 binding code.
 
@@ -539,7 +539,7 @@ PROCEDURE Format(t: T; base := FormatBase.Decimal): TEXT;
 ```modula3
 (* MpzOps.m3 -- implementation *)
 PROCEDURE add(f0: T; f1: T; f2: T) =
-  BEGIN P.c_add(ADR(f0.val), ADR(f1.val), ADR(f2.val)) END;
+  BEGIN P.c_add(ADR(f0.val), ADR(f1.val), ADR(f2.val)) END add;
 ```
 
 Because `T <: REFANY`, `Mpz.T` values are traced by the M3 garbage
@@ -580,7 +580,7 @@ use for any C resource: FFTW plans, file descriptors, database
 handles.
 
 **Layer 3: Automatic Scheme export.**  Adding `SchemeStubs("Mpz")` to
-the m3makefile causes sstubgen to generate Scheme bindings for every
+the m3makefile causes `sstubgen` to generate Scheme bindings for every
 procedure in `Mpz.i3`.  From Scheme:
 
 ```scheme
@@ -592,22 +592,22 @@ procedure in `Mpz.i3`.  From Scheme:
 ```
 
 The `Mpz.T` values flowing through Scheme are the same traced M3
-heap objects -- no copying, no marshaling.  The GC handles their
+heap objects -- no copying or marshaling.  The GC handles their
 lifetime.  The C library's `mpz_t` storage is embedded inside the
 M3 object's record fields and is deallocated when the M3 object is
 collected.
 
-This pattern -- C library, M3 interface, sstubgen -- is general.
+This pattern -- C library, M3 interface, `sstubgen` -- is general.
 The same approach could wrap SQLite, zlib, OpenSSL, or any C library.
 Modula-3's `EXTERNAL` pragma provides the C binding; its type system
-provides safety; sstubgen provides the Scheme bridge.  The result is
+provides safety; `sstubgen` provides the Scheme bridge.  The result is
 that MScheme functions as a practical Scheme-with-C-FFI system, even
 though its design is not about C interoperability at all.
 
 The `Mpz` module is itself partly auto-generated: a Scheme script
 (`make-mpz.scm`) reads GMP's function prototypes and emits `MpzP.i3`,
 `Mpz.i3`, and `MpzOps.m3` -- over 200 functions.  This is a second
-level of code generation: Scheme generates M3 code, then sstubgen
+level of code generation: Scheme generates M3 code, then `sstubgen`
 generates Scheme stubs from that M3 code, closing the loop.
 
 ### 2.10 Summary of Key Properties
@@ -615,7 +615,7 @@ generates Scheme stubs from that M3 code, closing the loop.
 - **Zero-copy value sharing**: M3 objects are Scheme objects, no
   wrapping needed.
 - **Unified GC**: Both languages share the M3 traced heap and garbage
-  collector.  No reference counting, no prevent-collection APIs, no
+  collector.  No reference counting, prevent-collection APIs, or
   weak reference coordination.
 - **Automatic stub generation**: Build-time processing of M3 interfaces
   produces bidirectional bindings with type checking.
@@ -653,8 +653,8 @@ function pops arguments from the stack and pushes results.
 **Key trade-offs**: The stack-based API provides complete ABI isolation
 -- Lua's internal value representation can change without breaking
 extensions.  But every boundary crossing requires explicit push/pop
-operations.  There is no automatic type mapping, no stub generation,
-and no introspection of the host's type system.
+operations.  There is no automatic type mapping, stub generation,
+or introspection of the host's type system.
 
 ### 3.2 GNU Guile (Scheme in C)
 
@@ -758,7 +758,7 @@ loader and object space.
 
 **Key trade-offs**: Zero-cost interoperability when types are known, but
 reflection fallback is slow.  Kawa must work within JVM constraints
-(no true tail calls, no first-class continuations without
+(no true tail calls or first-class continuations without
 trampolining).  The shared-runtime model is fundamentally different
 from all other systems here.
 
@@ -958,7 +958,7 @@ The MScheme/M3, Kawa/JVM, and JScheme/JVM systems share a critical
 advantage: since both languages use the same garbage collector, there
 is no coordination problem.  A Scheme closure that captures an M3 object keeps it alive
 automatically.  An M3 data structure containing Scheme pairs is traced
-correctly.  No reference counting, no prevent-collection guards, no
+correctly.  No reference counting, prevent-collection guards, or
 weak-reference bridges.
 
 This eliminates an entire class of bugs that plagues C-based embedding
@@ -1014,7 +1014,7 @@ exactly which stack slots and object fields contain traced references.
 The runtime knows the precise layout of every heap object because
 allocations go through `NEW`, which records the type.  The collector
 does not guess: it follows exactly the traced references and nothing
-else.  No false negatives, no false positives, no heuristics.  Java
+else.  No false negatives, false positives, or heuristics.  Java
 achieves the same property through the JVM's typed operand stack and
 GC maps.  This is what makes the unified-heap architecture of MScheme,
 JScheme, and Kawa possible -- the collector's precision is guaranteed
@@ -1030,7 +1030,7 @@ CFFI, Racket FFI.
 
 **Neither** (shared runtime): Kawa, JScheme.
 
-MScheme is firmly push-based, but its push is *automated* via sstubgen.
+MScheme is firmly push-based, but its push is *automated* via `sstubgen`.
 The programmer adds `SchemeStubs("InterfaceName")` to the makefile,
 and the build system generates and compiles all binding code.  The
 effect feels almost like Kawa's shared runtime: everything visible in
@@ -1047,7 +1047,7 @@ M3 `TextSeq.T` objects alongside Scheme pairs and numbers.  `map`,
 participate in Scheme's structural equality and serialization (via
 `write` and pickling).
 
-**Scheme closures as M3 callbacks**.  The sstubgen documentation
+**Scheme closures as M3 callbacks**.  The `sstubgen` documentation
 describes how M3 object methods can be overridden with Scheme lambdas,
 enabling a pattern where M3 objects have individual methods replaced
 at runtime -- something M3 itself cannot do (methods are fixed at
@@ -1095,7 +1095,7 @@ method call goes through reflection, while Kawa compiles to direct
 
 MScheme comes closest to Kawa's position among systems where the host
 language has its own native runtime.  The shared GC eliminates per-call
-cost for value passing, and sstubgen eliminates setup cost for binding
+cost for value passing, and `sstubgen` eliminates setup cost for binding
 generation.  The remaining cost is method dispatch (atom comparison),
 which is comparable to Lua's metatable lookup and far cheaper than
 Python's MRO traversal.
@@ -1135,7 +1135,7 @@ Scheme code calls an M3 method, it is a direct procedure call -- the
 same calling convention as any M3-to-M3 call.  When the garbage
 collector runs, it traces M3 objects and Scheme pairs with the same
 algorithm, using the same compiler-generated stack maps.  There is no
-bytecode interpreter, no JIT warmup, no tiered compilation.
+bytecode interpreter, JIT warmup, or tiered compilation.
 
 ### 6.2 How Rare Is This Architecture?
 
@@ -1211,8 +1211,8 @@ which works on the JVM rather than native code).
 
 MScheme appears to be the only system where an ahead-of-time compiled,
 statically-typed systems language hosts a dynamically-typed interpreted
-scripting language with truly zero marshaling overhead -- no VM, no
-bytecode, no reflection layer, no value conversion, just `T = REFANY`
+scripting language with truly zero marshaling overhead -- no VM,
+bytecode, reflection layer, or value conversion, just `T = REFANY`
 and direct procedure calls.
 
 ---
@@ -1304,7 +1304,7 @@ handles the rest.
   Modula-2."  *Software Engineering Journal*, 3(4):119--126, July
   1988.
 
-### MScheme and sstubgen
+### MScheme, `sstubgen`, and `cspc`
 
 - MScheme source code: `cm3/m3-scheme/mscheme/`.  In the CM3
   repository.
@@ -1314,6 +1314,12 @@ handles the rest.
 
 - SchemeM3 README: Embedding guide.
   `cm3/m3-scheme/modula3scheme/src/README`.
+
+- `cspc`: CSP compiler for asynchronous VLSI design.  A Modula-3
+  program embedding MScheme; the compiler itself is written in
+  Scheme, using `sstubgen`-generated stubs to access M3 libraries.
+  `intel-async/async-toolkit/m3utils/m3utils/csp/src/`.  In the
+  async-toolkit repository.
 
 ### JScheme
 
