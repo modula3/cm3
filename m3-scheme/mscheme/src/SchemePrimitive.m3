@@ -145,7 +145,9 @@ TYPE
 
         ChangeGlobalEnv, GetParentEnv,
 
-        DumpEnvironment, LoadEnvironment
+        DumpEnvironment, LoadEnvironment,
+
+        System
   };
 
 REVEAL 
@@ -496,6 +498,7 @@ PROCEDURE InstallDefaultExtendedPrimitives(dd : Definer;
     .defPrim("get-parent-environment", ORD(P.GetParentEnv), dd, 1, 1)
     .defPrim("dump-environment", ORD(P.DumpEnvironment), dd, 1, 1)
     .defPrim("load-environment!", ORD(P.LoadEnvironment), dd, 1, 1)
+    .defPrim("system",           ORD(P.System), dd, 1, 1)
     ;
     RETURN env;
 
@@ -1205,6 +1208,20 @@ PROCEDURE Prims(t          : T;
         P.DumpEnvironment => RETURN DumpEnvironment(interp, x)
       |
         P.LoadEnvironment => RETURN LoadEnvironment(interp, x)
+      |
+        P.System =>
+        TRY
+          VAR
+            cmd := Str(First(args));
+            child := Process.Create(
+                       "/bin/sh", ARRAY OF TEXT{"/bin/sh", "-c", cmd});
+            ret := Process.Wait(child);
+          BEGIN
+            RETURN SchemeLongReal.FromI(ret)
+          END
+        EXCEPT
+          OSError.E(e) => RAISE E("system: " & AL.Format(e))
+        END
       END
     END
   END Prims;

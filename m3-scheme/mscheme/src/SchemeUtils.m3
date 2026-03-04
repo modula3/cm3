@@ -585,8 +585,8 @@ PROCEDURE StringifyB(x      : Object;
           END
         |
           BigInt.T(big) =>
-          WITH txt = BigInt.Format(big, 10) DO
-            Wx.PutText(buf, "<BigInt.T>"); Wx.PutText(buf, txt); 
+          WITH txt = BigInt.FormatLiteral(big, 10) DO
+            Wx.PutText(buf, txt);
           END
         |
           SchemeEnvironmentBinding.T(b) =>
