@@ -16,8 +16,53 @@ Modula-3, where `REFANY` plays the role of `Object`.
 
 This report describes MScheme's interoperability architecture in
 detail, then compares it to eight other embedding systems that solve
-similar
-problems in different ways.
+similar problems in different ways.
+
+### A taste of MScheme
+
+Before diving into the architecture, here is real code from `cspc`,
+the CSP compiler built on MScheme.  This is Scheme code running
+inside a Modula-3 program:
+
+```scheme
+;; Read an environment variable -- Env is an M3 module
+(define *m3utils* (Env.Get "M3UTILS"))
+
+;; Create M3 BigInt objects -- BigInt.T <: REFANY, so they are
+;; ordinary Scheme values
+(define a (BigInt.New 12))
+(define b (BigInt.New 42))
+(BigInt.Equal a b)          ;=> #f
+(BigInt.Format a 10)        ;=> "12"
+
+;; M3 procedures used as first-class Scheme values:
+;; BigInt.Equal and BigInt.Compare are passed directly to lambda
+(define *boolean-binops*
+  (list
+    `(== integer ,BigInt.Equal)
+    `(<  integer ,(lambda (a b) (< (BigInt.Compare a b) 0)))
+    `(>  integer ,(lambda (a b) (> (BigInt.Compare a b) 0)))))
+
+;; Format an integer literal by calling M3's Fmt.Int
+(define (format-int-literal x)
+  (Fmt.Int (BigInt.ToInteger x) 10))
+
+;; Create an M3 object, call its methods from Scheme
+(define the-driver
+  (obj-method-wrap
+    (new-modula-object 'CspCompilerDriver.T)
+    'CspCompilerDriver.T))
+(the-driver 'init "hello.procs")
+(the-driver 'getProcTypes)  ;=> a TextSeq.T (M3 sequence object)
+```
+
+Every value here -- the `BigInt.T` integers, the `TEXT` strings, the
+`CspCompilerDriver.T` object -- is a native Modula-3 heap object.
+None of them are wrapped, copied, or marshaled.  They are Scheme
+values because every M3 reference type already satisfies
+`SchemeObject.T = REFANY`.  The procedure names (`BigInt.Equal`,
+`Fmt.Int`, etc.) were generated automatically by `sstubgen` from
+the corresponding Modula-3 interface files at build time.
 
 ---
 
@@ -499,6 +544,38 @@ Because `T <: REFANY`, `Mpz.T` values are traced by the M3 garbage
 collector.  The opaque type prevents Scheme (or M3) code from
 accessing the raw `mpz_t` memory directly -- only the operations
 declared in `Mpz.i3` are available.
+
+Resource cleanup uses Modula-3's `WeakRef` facility.  When `Mpz.New`
+creates a new wrapper object, it registers a weak-reference callback
+via `WeakRef.FromRef`:
+
+```modula3
+(* Mpz.m3 *)
+PROCEDURE New() : T =
+  VAR res := NEW(T);
+  BEGIN
+    P.c_init(LOOPHOLE(ADR(res.val), P.MpzPtrT));
+    EVAL WeakRef.FromRef(res, CleanUp);
+    set_ui(res, 0);
+    RETURN res
+  END New;
+
+PROCEDURE CleanUp(<*UNUSED*>READONLY w : WeakRef.T; r : REFANY) =
+  BEGIN
+    WITH this = NARROW(r, T) DO
+      P.c_clear(ADR(this.val))
+    END
+  END CleanUp;
+```
+
+When the GC determines that an `Mpz.T` object is unreachable, it
+schedules the `CleanUp` callback, which calls GMP's `mpz_clear` to
+release the C-level memory.  No explicit deallocation is needed
+from either M3 or Scheme code -- the `Mpz.T` values can be passed
+around, stored in lists, and forgotten, just like any other Scheme
+value.  This is the same `WeakRef` mechanism that Modula-3 programs
+use for any C resource: FFTW plans, file descriptors, database
+handles.
 
 **Layer 3: Automatic Scheme export.**  Adding `SchemeStubs("Mpz")` to
 the m3makefile causes sstubgen to generate Scheme bindings for every
