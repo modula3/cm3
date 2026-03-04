@@ -1,0 +1,955 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black,
+}
+
+% Modula-3 listing style
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,PROCEDURE,BEGIN,END,VAR,CONST,TYPE,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,REPEAT,UNTIL,LOOP,EXIT,
+    RETURN,WITH,CASE,OF,LOCK,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    IMPORT,FROM,REVEAL,BRANDED,OBJECT,METHODS,OVERRIDES,
+    ARRAY,RECORD,SET,REF,REFANY,ROOT,UNTRACED,
+    NIL,TRUE,FALSE,AND,OR,NOT,MOD,DIV,IN,
+    GENERIC,UNSAFE,VALUE,READONLY,
+    INTEGER,BOOLEAN,CHAR,TEXT,REAL,LONGREAL,EXTENDED,CARDINAL,MUTEX},
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+  morestring=[d]{"},
+}
+
+% ESC annotation style
+\lstdefinelanguage{ESC}{
+  morekeywords={SPEC,LOOPINV,PRAGMA,
+    REQUIRES,ENSURES,MODIFIES,
+    VAR,MAP,TO,SEQ,
+    ABSTRACT,DEPEND,FUNC,AXIOM,INVARIANT,REP,
+    ALL,EX,RES,FRESH,NUMBER,
+    AND,OR,NOT,IMPLIES,IFF,
+    MEMBER,INSERT,DELETE,sup,
+    CONCAT,SUBARRAY,MIN,MAX,
+    NIL,TRUE,FALSE,INTEGER,BOOLEAN,MUTEX},
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\color{gray},
+  breaklines=true,
+  frame=single,
+  framerule=0.4pt,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+  numbers=none,
+  columns=flexible,
+}
+
+\newcommand{\escm}{ESC/Modula-3}
+\newcommand{\simplify}{\textsc{Simplify}}
+\newcommand{\m}[1]{\texttt{#1}}
+\newcommand{\kw}[1]{\texttt{\textbf{#1}}}
+
+\title{ESC/Modula-3 Mk.\ II}
+\author{Mika Nystr\"om}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\bigskip
+\noindent
+\textbf{Note.}  \escm{} is under active development.
+Phase~0 (pragma extraction and specification parsing) is complete.
+Later phases (verification condition generation, proving, error
+reporting) are in progress.  This manual documents the annotation
+language, the command-line interface, and the overall architecture.
+Sections on VCG and error output will be expanded as those phases
+are completed.
+
+%======================================================================
+\section{Introduction}
+\label{sec:intro}
+
+\escm{} is an Extended Static Checker for Modula-3.  It catches common
+runtime errors at compile time by generating first-order logical
+formulas from annotated source code and discharging them with the
+\simplify{} automatic theorem prover.
+
+Classes of bugs detected:
+\begin{itemize}[nosep]
+  \item Null pointer dereferences (\m{NIL} access)
+  \item Array index out of bounds
+  \item Type-narrowing failures (runtime \m{NARROW} errors)
+  \item Race conditions and locking-order violations
+  \item Violated preconditions, postconditions, and invariants
+\end{itemize}
+
+\subsection{History}
+
+The original ESC/Modula-3 was developed at DEC Systems Research Center
+(later Compaq SRC) from approximately 1991 to 1998 by David Detlefs,
+Greg Nelson, James Saxe, and Rustan Leino.  The companion tool
+ESC/Java~\cite{flanagan:pldi02} followed in 1998--2002.
+
+The system had four major components: (1)~a~front-end that parsed
+Modula-3 with annotations, (2)~a~translator to guarded commands,
+(3)~a~verification condition generator (VCG), and (4)~the \simplify{}
+theorem prover.
+
+When HP absorbed Compaq SRC, the front-end (${\approx}\,34{,}000$
+lines of Modula-3) was never released.  The \simplify{} prover, the
+axiom files encoding Modula-3 semantics, and the annotated standard
+library interfaces survived in the CM3 repository.
+
+This project reconstructs the lost front-end using the surviving
+artifacts as specifications.  The prover is unchanged; the VCG is
+reimplemented using a Modula-3/Scheme hybrid architecture.
+
+%======================================================================
+\section{Building and Running}
+\label{sec:build}
+
+\subsection{Prerequisites}
+
+A working CM3 compiler installation is required.  See the CM3
+\m{CLAUDE.md} for bootstrap instructions.  The \m{cm3} binary
+must be on \m{PATH}.
+
+\subsection{Building \escm{}}
+
+The system comprises four packages, built in dependency order:
+
+\begin{lstlisting}[language={}]
+cd ESC/escm3/esclib/src  && cm3 -build && cm3 -ship
+cd ../../vcgen/src       && cm3 -build && cm3 -ship
+cd ../../esctool/src     && cm3 -build && cm3 -ship
+\end{lstlisting}
+
+The resulting binary is
+\m{esctool/\$\{TARGET\}/escm3}, where \m{TARGET} is the CM3 target
+(e.g., \m{ARM64\_DARWIN}, \m{AMD64\_LINUX}).
+
+\subsection{Building \simplify{}}
+
+The \simplify{} prover lives in \m{ESC/Simplify/} and is built
+separately:
+
+\begin{lstlisting}[language={}]
+cd ESC/Simplify/cgi-utils/src && cm3 -build && cm3 -ship
+cd ../../prover/src           && cm3 -build && cm3 -ship
+cd ../../simplify/src         && cm3 -build && cm3 -ship
+\end{lstlisting}
+
+\subsection{Generating a TFile}
+\label{sec:tfile}
+
+\escm{} uses \m{m3tk} to parse Modula-3 source.  It needs to find
+imported interfaces (e.g., \m{Fmt.i3}, \m{Thread.i3}).  The \m{-T}
+flag points to a \emph{TFile}---a text file mapping unit names to
+directories, in the format consumed by \m{M3DirFindFile.TFinder}.
+
+A TFile lists directories with lines beginning \m{@}, followed by
+the filenames found in each directory.  Example:
+
+\begin{lstlisting}[language={}]
+@ /usr/local/cm3/pkg/libm3/src/fmtlex
+Fmt.i3
+Fmt.m3
+Lex.i3
+@ /usr/local/cm3/pkg/m3core/src/thread/Common
+Thread.i3
+\end{lstlisting}
+
+The test suite includes a pre-populated TFile at
+\m{esctest/test/m3imptab.txt}.
+
+A TFile can be generated from an installed CM3 tree with a shell
+one-liner:
+
+\begin{lstlisting}[language={}]
+M3PKG=$(dirname $(dirname $(which cm3)))/pkg
+find "$M3PKG" -name '*.i3' -o -name '*.ig' -o -name '*.m3' \
+  -o -name '*.mg' | sort | \
+  awk -F/ '{dir=""; for(i=1;i<NF;i++) dir=dir"/"$i;
+            if(dir!=prev){print "@ "dir; prev=dir} print $NF}'
+\end{lstlisting}
+
+\subsection{Running \escm{}}
+
+\begin{lstlisting}[language={}]
+escm3 -i "Fmt" -Tm3imptab.txt
+escm3 -i "Sequence" "SequenceRep" -Tm3imptab.txt
+\end{lstlisting}
+
+Current output (Phase~0) lists extracted annotations with source
+locations:
+
+\begin{lstlisting}[language={}]
+ESC/Modula-3 -- Extended Static Checker
+Scanning for ESC annotations...
+  Fmt:
+    SPEC [19:1] Bool(b) ENSURES RES # NIL
+    SPEC [20:1] Int(n, base) ENSURES RES # NIL
+    ...
+2 unit(s) processed, 14 annotation(s) found.
+\end{lstlisting}
+
+\subsection{Running the test suite}
+
+\begin{lstlisting}[language={}]
+cd ESC/escm3/esctest/test
+make test OUTPUTDIR=ARM64_DARWIN
+\end{lstlisting}
+
+Available targets: \m{test-fmt} (pragma extraction),
+\m{test-list} (interface checking), \m{test-seq} (VC generation),
+\m{test-golden} (golden VC comparison).
+
+%======================================================================
+\section{CLI Reference}
+\label{sec:cli}
+
+\escm{} is built on the \m{M3ToolFrame}/\m{M3CFETool} framework from
+\m{m3tk}.  It inherits the standard m3tk command-line flags.
+
+\subsection{Primary flags}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Flag & Argument & Description \\
+\midrule
+\m{-i} & \m{"Name1" "Name2" \ldots} & Interfaces to check \\
+\m{-m} & \m{"Name1" "Name2" \ldots} & Modules to check \\
+\m{-T}\emph{file} & (prefix) & TFile for source lookup \\
+\m{-D}\emph{path} & (prefix) & Search directory for sources \\
+\m{-pn} & \m{"path1" "path2" \ldots} & Explicit source file paths \\
+\m{-NOSTD} & (flag) & Suppress default library paths \\
+\bottomrule
+\end{tabular}
+\caption{Command-line flags inherited from \m{m3tk}.}
+\label{tab:flags}
+\end{table}
+
+The \m{-i} (Interfaces) and \m{-m} (Modules) flags name compilation
+units by their Modula-3 unit name (not filename).  Multiple names are
+given as separate quoted arguments.
+
+The \m{-T} and \m{-D} flags are \emph{prefix} arguments: the value is
+concatenated directly after the flag letter with no space.  For
+example, \m{-T/tmp/m3imptab.txt} or \m{-D/usr/local/cm3/pkg/libm3/src}.
+Multiple occurrences are allowed.
+
+The \m{-pn} (PathNames) flag provides explicit paths to source files
+as positional arguments.
+
+%======================================================================
+\section{Annotation Language Reference}
+\label{sec:annotations}
+
+\escm{} annotations are embedded in Modula-3 source as pragmas.
+Two pragma keywords are used: \kw{SPEC} for specifications and
+\kw{LOOPINV} for loop invariants.
+
+\subsection{Enabling pragmas}
+
+Before any annotations can appear, the pragma keyword must be
+declared:
+
+\begin{lstlisting}[language=Modula3]
+<*PRAGMA SPEC*>
+<*PRAGMA SPEC, LOOPINV*>
+\end{lstlisting}
+
+This is standard Modula-3 syntax: \m{PRAGMA} declares user-defined
+pragma keywords so the parser will not reject them.
+
+\subsection{Procedure specifications}
+\label{sec:procspec}
+
+A procedure specification declares preconditions, postconditions, and
+frame conditions:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC proc(arg1, arg2, ...)
+       REQUIRES P
+       ENSURES  Q
+       MODIFIES V1, V2, ... *>
+\end{lstlisting}
+
+\begin{description}[nosep,leftmargin=2em]
+  \item[\kw{REQUIRES}] Precondition---the caller's obligation.  Zero
+    or more clauses; implicitly conjoined.
+  \item[\kw{ENSURES}] Postcondition---the callee's guarantee.  Zero
+    or more clauses; implicitly conjoined.
+  \item[\kw{MODIFIES}] Frame condition---the variables or map entries
+    the procedure may change.  Everything not listed is guaranteed
+    unchanged.
+\end{description}
+
+The formal parameter list names the arguments for use in the
+specification body.  For object methods, the receiver is the first
+argument.
+
+\medskip\noindent\textbf{Example.}
+
+\begin{lstlisting}[language=ESC]
+<*SPEC T.addhi(t, x)
+       MODIFIES Data[t]
+       REQUIRES Valid[t]
+       ENSURES NUMBER(Data'[t]) = NUMBER(Data[t])+1
+           AND (ALL [i: INTEGER] 0 <= i AND i < NUMBER(Data[t])
+                  IMPLIES Data'[t][i] = Data[t][i])
+           AND Data'[t][NUMBER(Data[t])] = x *>
+\end{lstlisting}
+
+This specifies that \m{addhi} requires the sequence to be valid,
+modifies only the abstract data, and ensures the new data is the old
+data with element~\m{x} appended.
+
+\subsection{Ghost variables}
+\label{sec:ghost}
+
+Ghost variables exist only in specifications; they have no runtime
+representation.
+
+\medskip\noindent\textbf{Plain ghost variable.}
+
+\begin{lstlisting}[language=ESC]
+<*SPEC VAR Valid: BOOLEAN *>
+\end{lstlisting}
+
+\medskip\noindent\textbf{Mapped variable (per-object abstract state).}
+
+\begin{lstlisting}[language=ESC]
+<*SPEC VAR Valid: MAP T TO BOOLEAN *>
+<*SPEC VAR Data: MAP T TO SEQ[Elem.T] *>
+\end{lstlisting}
+
+A \kw{MAP} variable associates each object of type~\m{T} with a value
+of the range type.  \m{Valid[t]} denotes the value for object~\m{t}.
+A \kw{SEQ} range type models a variable-length sequence.
+
+\subsection{Abstraction functions}
+
+An abstraction function defines a ghost variable in terms of concrete
+fields:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC ABSTRACT Seq.Valid[t: Seq.T]:
+                Seq.Valid[t] IFF
+                      t # NIL AND t.elem # NIL
+                  AND NUMBER(t.elem^) > 0
+                  AND t.st < NUMBER(t.elem^)
+                  AND t.sz <= NUMBER(t.elem^) *>
+\end{lstlisting}
+
+This definition appears in a \kw{REVEAL} section (e.g.,
+\m{SequenceRep.ig}) where the concrete representation is visible.
+The name is fully qualified: \m{Module.Variable}.
+
+\subsection{Abstraction dependencies}
+
+A \kw{DEPEND} declaration lists the concrete fields that an abstract
+variable depends on.  This information is used for frame-condition
+reasoning: modifying a concrete field can affect only those abstract
+variables that depend on it.
+
+\begin{lstlisting}[language=ESC]
+<*SPEC DEPEND Seq.Data[t: Seq.T]:
+              t.st, t.sz, t.elem, RefArray *>
+\end{lstlisting}
+
+\subsection{Specification functions}
+
+A specification-only function can be used in annotations but has no
+runtime code:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC FUNC m(i: INTEGER, n: INTEGER): INTEGER *>
+\end{lstlisting}
+
+Semantics are given by axioms (Section~\ref{sec:axioms}).
+
+\subsection{Axioms}
+\label{sec:axioms}
+
+An axiom asserts a logical fact, typically to define specification
+functions:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC AXIOM (ALL [i: INTEGER, n: INTEGER]
+                i >= n IMPLIES m(i, n) = i - n) *>
+<*SPEC AXIOM (ALL [i: INTEGER, n: INTEGER]
+                i < n IMPLIES m(i, n) = i) *>
+\end{lstlisting}
+
+Axioms are implicitly universally quantified at the top level and are
+added to the prover's background theory.
+
+\subsection{Object invariants}
+
+An invariant must hold at every stable program state:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC INVARIANT (ALL [t1: Seq.T, t2: Seq.T]
+                    t1 # t2 IMPLIES t1.elem # t2.elem) *>
+\end{lstlisting}
+
+\subsection{Representation invariants}
+
+A \kw{REP} declaration specifies a representation invariant for use in
+\kw{REVEAL} sections:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC REP P *>
+\end{lstlisting}
+
+\subsection{Loop invariants}
+
+Loop invariants use the separate \kw{LOOPINV} pragma keyword and
+appear immediately before a \m{WHILE} loop:
+
+\begin{lstlisting}[language=Modula3]
+<*LOOPINV i <= length AND sorted(a, 0, i) *>
+WHILE i < length DO
+  ...
+END;
+\end{lstlisting}
+
+The invariant must hold on entry to the loop, be preserved by each
+iteration, and is assumed to hold on loop exit (conjoined with the
+negated loop condition).
+
+\subsection{Expression sub-language}
+\label{sec:exprs}
+
+Annotations use a first-order expression language embedded in Modula-3
+pragmas.  The following table lists all operators and built-in
+expressions, from lowest to highest precedence.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Operator / Expression & Meaning & Assoc. \\
+\midrule
+\m{E1 IFF E2} & Logical equivalence & --- \\
+\m{E1 IMPLIES E2}, \m{E1 => E2} & Implication & right \\
+\m{E1 OR E2} & Disjunction & left \\
+\m{E1 AND E2} & Conjunction & left \\
+\m{NOT E} & Negation & prefix \\
+\m{E1 = E2}, \m{E1 \# E2} & Equality, inequality & --- \\
+\m{E1 < E2}, \m{E1 <= E2}, \m{E1 > E2}, \m{E1 >= E2}
+  & Relational comparison & --- \\
+\m{E1 + E2}, \m{E1 - E2} & Addition, subtraction & left \\
+\m{E1 * E2} & Multiplication & left \\
+\m{- E} & Unary minus & prefix \\
+\m{E.field} & Field selection & postfix \\
+\m{E[index]} & Array/map indexing & postfix \\
+\m{E\textasciicircum} & Dereference & postfix \\
+\m{V'} & Post-state (primed variable) & postfix \\
+\bottomrule
+\end{tabular}
+\caption{Operators by precedence (lowest first).}
+\label{tab:ops}
+\end{table}
+
+\medskip\noindent\textbf{Quantifiers.}
+
+\begin{lstlisting}[language=ESC]
+ALL [x: T] P          (* universal *)
+ALL [x: T, y: U] P    (* multi-variable *)
+EX  [x: T] P          (* existential *)
+\end{lstlisting}
+
+\medskip\noindent\textbf{Built-in expressions.}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+Expression & Meaning \\
+\midrule
+\m{RES} & Return value of enclosing function \\
+\m{V'[x]} or \m{V'} & Post-state value (after procedure execution) \\
+\m{FRESH(x)} & \m{x} is freshly allocated \\
+\m{NUMBER(a)} & Length of array or sequence \m{a} \\
+\m{SUBARRAY(a, i, n)} & Subarray of \m{a} starting at \m{i}, length \m{n} \\
+\m{CONCAT(a, b)} & Sequence concatenation \\
+\m{MIN(a, b)}, \m{MAX(a, b)} & Minimum, maximum \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Set operations (used for lock levels):}} \\
+\m{MEMBER(x, S)} & \m{x} is a member of set \m{S} \\
+\m{INSERT(x, S)} & Set \m{S} with \m{x} added \\
+\m{DELETE(x, S)} & Set \m{S} with \m{x} removed \\
+\m{sup(S)} & Supremum (maximum element) of \m{S} \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Constants:}} \\
+\m{NIL} & Null reference \\
+\m{TRUE}, \m{FALSE} & Boolean constants \\
+\m{0}, \m{-1}, \m{42}, \ldots & Integer literals \\
+\bottomrule
+\end{tabular}
+\caption{Built-in expressions.}
+\label{tab:builtins}
+\end{table}
+
+\medskip\noindent\textbf{Lock level variable.}\enspace The implicit ghost variable
+\m{LL} denotes the set of locks currently held by a thread.  It is
+used with the set operations to specify locking discipline
+(Section~\ref{sec:thread}).
+
+%======================================================================
+\section{Worked Examples}
+\label{sec:examples}
+
+This section walks through four annotated library interfaces from the
+CM3 standard library.  These annotations were written by the original
+ESC/Modula-3 authors (Detlefs, Nelson, Heydon, McJones) and survive
+in the CM3 source tree.
+
+\subsection{Fmt.i3 --- Simple postconditions}
+\label{sec:fmt}
+
+\begin{lstlisting}[language=ESC]
+<* PRAGMA SPEC *>
+
+<*SPEC Bool(b)       ENSURES RES # NIL *>
+<*SPEC Int(n, base)  ENSURES RES # NIL *>
+<*SPEC Real(x, ...)  ENSURES RES # NIL *>
+\end{lstlisting}
+
+Every formatting procedure guarantees its result is non-nil.  The
+annotation \m{ENSURES RES \# NIL} means: after the call returns, the
+result reference is not \m{NIL}.  This lets the checker suppress
+false null-dereference warnings at call sites that immediately use the
+result (e.g., \m{Wr.PutText(wr, Fmt.Int(n))}).
+
+There are no preconditions (\kw{REQUIRES}) and no frame conditions
+(\kw{MODIFIES}), because formatting is a pure function with no
+side effects on abstract state.
+
+\subsection{List.ig --- Allocation and field access}
+\label{sec:list}
+
+\begin{lstlisting}[language=ESC]
+<* PRAGMA SPEC *>
+
+<*SPEC Cons(head, tail)
+       ENSURES RES # NIL AND FRESH(RES)
+           AND RES.head = head AND RES.tail = tail *>
+\end{lstlisting}
+
+The \m{Cons} specification says:
+\begin{enumerate}[nosep]
+  \item The result is not \m{NIL}.
+  \item The result is \kw{FRESH}---newly allocated, distinct from any
+    pre-existing object.  This is crucial for the checker to know that
+    the new cons cell does not alias any existing data.
+  \item The \m{head} and \m{tail} fields of the result equal the
+    corresponding arguments.
+\end{enumerate}
+
+The \kw{FRESH} predicate is central to reasoning about allocation.
+Without it, the checker could not rule out aliasing between the new
+cell and cells already in the list.
+
+\subsection{Sequence.ig + SequenceRep.ig --- Full data abstraction}
+\label{sec:seq}
+
+This is the richest example, demonstrating ghost variables, mapped
+types, abstraction functions, specification functions, axioms, and
+dependencies.
+
+\medskip\noindent\textbf{Public interface (Sequence.ig).}
+
+\begin{lstlisting}[language=ESC]
+<* PRAGMA SPEC *>
+
+<*SPEC VAR Valid: MAP T TO BOOLEAN *>
+<*SPEC VAR Data:  MAP T TO SEQ[Elem.T] *>
+\end{lstlisting}
+
+Two ghost variables model the abstract state of a sequence object:
+\m{Valid[t]} is a boolean saying whether \m{t} is a well-formed
+sequence, and \m{Data[t]} is the abstract sequence of elements.
+
+\begin{lstlisting}[language=ESC]
+<*SPEC T.addhi(t, x)
+       MODIFIES Data[t]
+       REQUIRES Valid[t]
+       ENSURES NUMBER(Data'[t]) = NUMBER(Data[t])+1
+           AND (ALL [i: INTEGER] 0 <= i AND i < NUMBER(Data[t])
+                  IMPLIES Data'[t][i] = Data[t][i])
+           AND Data'[t][NUMBER(Data[t])] = x *>
+
+<*SPEC T.size(t)
+       REQUIRES Valid[t]
+       ENSURES RES = NUMBER(Data[t]) *>
+
+<*SPEC T.gethi(t)
+       REQUIRES Valid[t] AND NUMBER(Data[t]) > 0
+       ENSURES RES = Data[t][NUMBER(Data[t])-1] *>
+\end{lstlisting}
+
+Key observations:
+\begin{itemize}[nosep]
+  \item \m{MODIFIES Data[t]} restricts the procedure to changing only
+    the data of the specific sequence object~\m{t}.  All other
+    sequences, and \m{Valid[t]} itself, are guaranteed unchanged.
+  \item \m{Data'[t]} denotes the post-state of \m{Data[t]}.  The
+    primed notation makes pre/post reasoning explicit.
+  \item \m{NUMBER(Data[t])} is the length of the abstract sequence.
+  \item The \kw{ALL} quantifier expresses that all existing elements
+    are preserved.
+\end{itemize}
+
+\medskip\noindent\textbf{Representation module (SequenceRep.ig).}
+
+\noindent This interface reveals the concrete type and defines abstraction
+functions linking ghost state to real fields:
+
+\begin{lstlisting}[language=ESC]
+<*SPEC ABSTRACT Seq.Valid[t: Seq.T]:
+                Seq.Valid[t] IFF
+                      t # NIL AND t.elem # NIL
+                  AND NUMBER(t.elem^) > 0
+                  AND t.st < NUMBER(t.elem^)
+                  AND t.sz <= NUMBER(t.elem^) *>
+
+<*SPEC DEPEND Seq.Data[t: Seq.T]:
+              t.st, t.sz, t.elem, RefArray *>
+\end{lstlisting}
+
+The \kw{ABSTRACT} declaration says: ``\m{Valid[t]} is true if and only
+if the concrete fields satisfy these constraints.''  This lets the
+checker verify procedure bodies against their abstract specifications.
+
+The \kw{DEPEND} declaration lists which concrete fields the abstract
+variable \m{Data} depends on.  When a procedure modifies \m{t.st},
+the checker knows only \m{Data[t]} (and other abstract variables
+depending on \m{t.st}) might change.
+
+\begin{lstlisting}[language=ESC]
+<*SPEC FUNC m(i: INTEGER, n: INTEGER): INTEGER *>
+<*SPEC AXIOM (ALL [i: INTEGER, n: INTEGER]
+                i >= n IMPLIES m(i, n) = i - n) *>
+<*SPEC AXIOM (ALL [i: INTEGER, n: INTEGER]
+                i < n IMPLIES m(i, n) = i) *>
+
+<*SPEC ABSTRACT Seq.Data[t: Seq.T]:
+       Seq.Data[t] = Abs(t.elem^, t.st, t.sz) *>
+\end{lstlisting}
+
+The specification function \m{m} is a modular subtraction
+helper defined axiomatically.  It exists only in the specification
+world---there is no runtime code for it.
+
+\subsection{Thread.i3 --- Locking discipline}
+\label{sec:thread}
+
+\begin{lstlisting}[language=ESC]
+<* PRAGMA SPEC *>
+
+<* SPEC FUNC MaxLL(m: MUTEX): BOOLEAN *>
+<* SPEC AXIOM (ALL [m1, m2: MUTEX]
+                   (NOT MaxLL(m1) AND MaxLL(m2)
+                    AND m1 # NIL AND m2 # NIL)
+                   IMPLIES m1 < m2) *>
+
+<* SPEC Acquire(m) MODIFIES LL
+                   REQUIRES sup(LL) < m
+                   ENSURES LL' = INSERT(LL, m) *>
+
+<* SPEC Release(m) MODIFIES LL
+                   REQUIRES MEMBER(m, LL)
+                   ENSURES LL' = DELETE(LL, m) *>
+\end{lstlisting}
+
+This is ESC's locking discipline, which prevents deadlocks by
+enforcing a total order on lock acquisition:
+
+\begin{itemize}[nosep]
+  \item \m{LL} is the implicit ghost variable representing the set of
+    locks currently held by the executing thread.
+  \item \m{Acquire(m)} requires \m{sup(LL) < m}: you may only acquire
+    a lock that is ``higher'' than all currently held locks.  This
+    prevents circular wait.
+  \item \m{Release(m)} requires \m{MEMBER(m, LL)}: you can only
+    release a lock you actually hold.
+  \item \m{MaxLL(m)} marks a mutex as having the maximal lock level,
+    above all non-maximal mutexes.
+  \item Both operations modify only \m{LL}.
+\end{itemize}
+
+This simple protocol is sufficient to prevent deadlocks in programs
+that follow the locking discipline.  The checker verifies compliance
+statically.
+
+%======================================================================
+\section{Architecture Overview}
+\label{sec:arch}
+
+\subsection{Package structure}
+
+\begin{lstlisting}[language={}]
+ESC/escm3/
+  esclib/src/         Core library (7 modules)
+    ESCPragma.m3        Pragma extraction from m3tk AST
+    ESCSpec.i3          AST types for parsed specifications
+    ESCSpecParse.m3     Recursive-descent spec parser (~980 lines)
+    ESCTypes.m3         Type environment from m3tk semantics
+    ESCNameMap.m3       M3-to-Simplify naming conventions
+    ESCSx.m3            S-expression builder for formulas
+    ESCError.m3         Error reporting types
+
+  vcgen/src/          Scheme-based VC generator (9 modules)
+    esc-util.scm        S-expression constructors
+    esc-gcmd.scm        Guarded command translation
+    esc-passify.scm     Assignment passification
+    esc-wp.scm          Weakest-precondition calculus
+    esc-typegen.scm     Type predicate/axiom generation
+    esc-framegen.scm    Frame condition axioms
+    esc-absfunc.scm     Abstraction function constraints
+    esc-bg.scm          Background predicate management
+    esc-emit.scm        Labeled formula serialization
+
+  esctool/src/        CLI driver (4 modules)
+    ESCMain.m3          Entry point (M3ToolFrame-based)
+    ESCDriver.m3        Pipeline orchestrator
+    ESCProve.m3         Simplify prover wrapper
+    ESCReport.m3        Counterexample-to-source mapping
+
+  esctest/test/       Test suite
+    Makefile            Test targets
+    m3imptab.txt        TFile for package resolution
+
+ESC/Simplify/         Simplify theorem prover (75 modules)
+  prover/src/           Core prover library
+  simplify/src/         CLI driver and test suites
+  cgi-utils/src/        CGI/HTML utilities
+\end{lstlisting}
+
+\subsection{Data flow}
+
+The verification pipeline has five stages:
+
+\begin{lstlisting}[language={}]
+  M3 source + <*SPEC*> annotations
+         |
+    [1. ESCPragma]     Extract raw pragma text from m3tk AST
+         |
+    [2. ESCSpecParse]  Parse spec sub-language -> Spec AST
+         |
+    [3. esc-gcmd]      Translate M3 body + specs -> guarded commands
+         |
+    [4. esc-wp]        Weakest precondition -> first-order formula
+         |
+    [5. Simplify]      Prove/refute -> Valid / Invalid + labels
+         |
+    [6. ESCReport]     Map labels -> source-level warnings
+\end{lstlisting}
+
+Stages 1--2 are implemented in Modula-3 (\m{esclib}).  Stages 3--4
+are implemented in Scheme (\m{vcgen}), leveraging mscheme's zero-copy
+interop with Modula-3 data structures.  Stage~5 uses the existing
+\simplify{} prover.  Stage~6 maps counterexample labels back to
+source locations.
+
+\subsection{How \simplify{} fits in}
+
+\simplify{} is a Nelson-Oppen combination of decision procedures:
+\begin{itemize}[nosep]
+  \item \textbf{Congruence closure} for uninterpreted functions and
+    equality
+  \item \textbf{Simplex} for linear arithmetic over integers and
+    rationals
+  \item \textbf{Partial orders} for lock-level reasoning
+  \item \textbf{Pattern-driven quantifier instantiation} using
+    user-supplied \m{PATS}/\m{NOPATS} hints
+\end{itemize}
+
+Input is an S-expression formula.  Output is \m{Valid} (the formula is
+a tautology modulo the background theory), \m{Invalid} (with a
+counterexample context and labels identifying which assertion failed),
+or \m{Unknown} (resource limits exceeded).
+
+The VCG wraps each assertion with a label of the form
+\m{|ERROR.kind.line.col|}.  When \simplify{} reports \m{Invalid}, the
+labels in the counterexample identify the source location and error
+kind (e.g., null dereference, array bounds, precondition violation).
+
+\subsection{Naming conventions}
+
+The \m{ESCNameMap} module translates Modula-3 identifiers to
+\simplify{}'s pipe-delimited naming convention:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+Modula-3 concept & \simplify{} name \\
+\midrule
+Field \m{T.f} in module \m{M} & \m{|M.T.f|} \\
+Type predicate for \m{T} & \m{|Is\$T|} \\
+Spec function \m{f} in \m{M} & \m{|FUNC.M.f|} \\
+Type code for \m{T} & \m{|T.TYPECODE|} \\
+Null & \m{|\$NIL|} \\
+Boolean true/false & \m{|@true|}, \m{|@false|} \\
+\bottomrule
+\end{tabular}
+\caption{Naming conventions.}
+\end{table}
+
+\subsection{The M3/Scheme hybrid}
+
+The VCG uses a hybrid architecture:
+\begin{itemize}[nosep]
+  \item \textbf{Modula-3} handles: parsing (m3tk), type environment
+    construction, prover invocation, error reporting.
+  \item \textbf{Scheme} (via mscheme) handles: symbolic formula
+    construction, guarded command translation, weakest-precondition
+    calculus, S-expression serialization.
+\end{itemize}
+
+This division plays to each language's strengths.  Scheme's
+quasiquoting and pattern matching are natural for building and
+transforming logical formulas.  Modula-3's strong typing and
+efficient data structures suit the compiler infrastructure and prover.
+
+The mscheme interop is zero-copy: Scheme values are Modula-3
+\m{REFANY} values, so m3tk AST nodes pass through Scheme unchanged
+without marshaling.
+
+%======================================================================
+\section{Current Status and Roadmap}
+\label{sec:roadmap}
+
+\subsection{Completed}
+
+\begin{description}[nosep,leftmargin=2em]
+  \item[Phase 0: Pragma extraction.]
+    \m{ESCPragma} walks the m3tk AST and extracts \kw{SPEC} and
+    \kw{LOOPINV} pragmas with source locations.  Working and tested.
+
+  \item[Phase 1: Specification parsing.]
+    \m{ESCSpecParse} implements a recursive-descent parser for the
+    full annotation language (Section~\ref{sec:annotations}).
+    Handles procedure specs, ghost variables, abstraction functions,
+    dependencies, spec functions, axioms, invariants, and loop
+    invariants.  Working and tested against annotated library
+    interfaces.
+\end{description}
+
+\subsection{In progress}
+
+\begin{description}[nosep,leftmargin=2em]
+  \item[Phase 2: Guarded command translation.]
+    Translate Modula-3 procedure bodies and their specifications into
+    guarded commands.  Scheme module \m{esc-gcmd.scm}.
+
+  \item[Phase 3: VC generation.]
+    Apply Flanagan-Saxe compact weakest-precondition calculus to
+    produce near-linear verification conditions.  Scheme module
+    \m{esc-wp.scm}.
+
+  \item[Phase 4: Prover integration.]
+    Wire up \m{ESCProve} to invoke \simplify{} on generated VCs,
+    parse results, and pass counterexample labels to the reporter.
+
+  \item[Phase 5: Error reporting.]
+    Map counterexample labels to human-readable warnings with source
+    locations.  \m{ESCReport} and \m{esc-emit.scm}.
+
+  \item[Phase 6: End-to-end verification.]
+    Verify annotated CM3 library modules (Sequence, List, Thread)
+    against their specifications.
+\end{description}
+
+%======================================================================
+\section{Environment Variables}
+\label{sec:env}
+
+The \simplify{} prover reads environment variables at startup to
+control resource limits and search heuristics.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+Variable & Default & Effect \\
+\midrule
+\m{PROVER\_KILL\_TIME} & $10^9$ & Max seconds per conjecture \\
+\m{PROVER\_KILL\_ITER} & MAXINT & Max search iterations per conjecture \\
+\m{PROVER\_MATCH\_DEPTH} & 3 & Max non-unit matching depth \\
+\m{PROVER\_MAX\_FNUR} & 100 & Max restricted non-unit matching rounds \\
+\m{PROVER\_CC\_LIMIT} & 1 & Max counterexample contexts shown \\
+\m{PROVER\_NO\_PLUNGE} & (unset) & Disable depth-1 plunging \\
+\m{PROVER\_LIT\_SPLIT} & (unset) & Enable literal splitting heuristic \\
+\bottomrule
+\end{tabular}
+\caption{Key \simplify{} environment variables.
+See \m{Prover.i3} for the full list (${\approx}\,40$ variables).}
+\end{table}
+
+%======================================================================
+\begin{thebibliography}{99}
+
+\bibitem{detlefs:src159}
+D.~L.~Detlefs, K.~R.~M.~Leino, G.~Nelson, J.~B.~Saxe.
+\newblock Extended Static Checking.
+\newblock SRC Research Report 159, Compaq, 1998.
+
+\bibitem{leino:cc98}
+K.~R.~M.~Leino, G.~Nelson.
+\newblock An Extended Static Checker for Modula-3.
+\newblock In \emph{Compiler Construction (CC'98)}, LNCS 1383, 1998.
+
+\bibitem{flanagan:pldi02}
+C.~Flanagan, K.~R.~M.~Leino, M.~Lillibridge, G.~Nelson, J.~B.~Saxe,
+R.~Stata.
+\newblock Extended Static Checking for Java.
+\newblock In \emph{PLDI}, 2002.
+
+\bibitem{flanagan:popl01}
+C.~Flanagan, J.~B.~Saxe.
+\newblock Avoiding Exponential Explosion: Generating Compact
+Verification Conditions.
+\newblock In \emph{POPL}, 2001.
+
+\bibitem{detlefs:jacm05}
+D.~L.~Detlefs, G.~Nelson, J.~B.~Saxe.
+\newblock Simplify: A Theorem Prover for Program Checking.
+\newblock \emph{JACM}, 52(3), 2005.
+
+\bibitem{leino:oopsla98}
+K.~R.~M.~Leino.
+\newblock Data Groups: Specifying the Modification of Extended State.
+\newblock In \emph{OOPSLA}, 1998.
+
+\bibitem{leino:toplas02}
+K.~R.~M.~Leino, G.~Nelson.
+\newblock Data Abstraction and Information Hiding.
+\newblock \emph{TOPLAS}, 24(5), 2002.
+
+\end{thebibliography}
+
+\end{document}
