@@ -1258,7 +1258,7 @@ handles the rest.
 ### Modula-3
 
 - Cardelli, L., Donahue, J., Glassman, L., Jordan, M., Kalsow, B.,
-  and Nelson, G.  "Modula-3 Language Definition."  DEC Systems
+  and Nelson, G.  "Modula-3 Report (revised)."  DEC Systems
   Research Center, Report 52, November 1989.
 
 - Cardelli, L., Donahue, J., Jordan, M., Kalsow, B., and Nelson, G.
@@ -1267,7 +1267,7 @@ handles the rest.
   pp. 202--212, 1989.
 
 - Cardelli, L.  "Typeful Programming."  DEC Systems Research Center,
-  Report 45, February 1989.  Revised version in E.J. Neuhold and
+  Report 45, May 1989.  Revised version in E.J. Neuhold and
   M. Paul (eds.), *Formal Description of Programming Concepts*,
   Springer-Verlag, 1991.
 
@@ -1318,11 +1318,11 @@ handles the rest.
 - Norvig, P.  "JScheme: Scheme Implemented in Java."
   https://norvig.com/jscheme.html, 1998.
 
-- Norvig, P.  "Design Notes on JScheme."
+- Norvig, P.  "JScheme: Design Decisions."
   https://norvig.com/jscheme-design.html
 
 - Anderson, K.R., Hickey, T.J., and Norvig, P.  "JScheme."
-  https://jscheme.sourceforge.net/jscheme/main.html.
+  https://www.cs.brandeis.edu/~tim/jscheme/main.html.
   Brandeis University / BBN Technologies, 2003.
 
 ### Cedar and Modula-3 ancestry
@@ -1367,7 +1367,7 @@ handles the rest.
 
 ### Kawa Scheme
 
-- Bothner, P.  "Kawa: Compiling Dynamic Languages to the Java VM."
+- Bothner, P.  "Kawa -- Compiling Dynamic Languages to the Java VM."
   In *Proceedings of the USENIX Annual Technical Conference*,
   FREENIX Track, 1998.
 
@@ -1425,13 +1425,14 @@ handles the rest.
   Applications* (OOPSLA), pp. 215--230, 1993.
 
 - Ungar, D. and Smith, R.B.  "Self: The Power of Simplicity."  In
-  *Proceedings of OOPSLA '87*, pp. 227--242, 1987.
+  *Proceedings of OOPSLA '87*, pp. 227--241, 1987.
 
 ### Oberon
 
 - Wirth, N. and Gutknecht, J.  *Project Oberon: The Design of an
-  Operating System, a Compiler, and a Computer.*  ACM Press /
-  Addison-Wesley, 1992.  Revised edition 2013.
+  Operating System and Compiler.*  ACM Press / Addison-Wesley, 1992.
+  Revised edition (*The Design of an Operating System, a Compiler,
+  and a Computer*), 2013.
 
 ### Other systems cited
 
@@ -1441,5 +1442,5 @@ handles the rest.
 - "Hint: Runtime Haskell Interpreter."
   https://hackage.haskell.org/package/hint
 
-- Flatt, M. and PLT.  *The Racket Guide.*
+- Flatt, M., Findler, R.B., and PLT.  *The Racket Guide.*
   https://docs.racket-lang.org/guide/
