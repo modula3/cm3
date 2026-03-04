@@ -1212,9 +1212,9 @@ PROCEDURE Prims(t          : T;
         P.System =>
         TRY
           VAR
-            cmd := Str(First(args));
+            cmd := SchemeString.ToText(First(args));
             child := Process.Create(
-                       "/bin/sh", ARRAY OF TEXT{"/bin/sh", "-c", cmd});
+                       "/bin/sh", ARRAY OF TEXT{"-c", cmd});
             ret := Process.Wait(child);
           BEGIN
             RETURN SchemeLongReal.FromI(ret)
