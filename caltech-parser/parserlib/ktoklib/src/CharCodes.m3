@@ -12,8 +12,13 @@ IMPORT Fmt;
 PROCEDURE FmtChar(c: CHAR): TEXT =
   BEGIN
     CASE c OF
+    | '\007' => RETURN "\\a";
+    | '\010' => RETURN "\\b";
     | '\t' => RETURN "\\t";
     | '\n' => RETURN "\\n";
+    | '\013' => RETURN "\\v";
+    | '\014' => RETURN "\\f";
+    | '\r' => RETURN "\\r";
     | '\\' => RETURN "\\\\";
     ELSE
       IF ORD(c) < 32 THEN
@@ -66,8 +71,13 @@ PROCEDURE StripDelims(t: TEXT): TEXT =
     IF c = '\134' THEN (*backslash*)
       Get();
       CASE c OF
-      | 'n' => RETURN '\n';
+      | 'a' => RETURN '\007';
+      | 'b' => RETURN '\010';
       | 't' => RETURN '\t';
+      | 'n' => RETURN '\n';
+      | 'v' => RETURN '\013';
+      | 'f' => RETURN '\014';
+      | 'r' => RETURN '\r';
       | '0'..'3' =>
         VAR
           c0 := c;
@@ -90,17 +100,25 @@ PROCEDURE StripDelims(t: TEXT): TEXT =
 
 PROCEDURE GetChar(rd: Rd.T): CHAR RAISES {Rd.EndOfFile} =
   VAR
-    c: CHAR;
+    c, c1, c2: CHAR;
   BEGIN
     c := Rd.GetChar(rd);
     IF c = '\134' THEN (*backslash*)
       c := Rd.GetChar(rd);
       CASE c OF
-      | 'n' => RETURN '\n';
+      | 'a' => RETURN '\007';
+      | 'b' => RETURN '\010';
       | 't' => RETURN '\t';
-      | '0'..'3' => RETURN VAL((ORD(c)-ORD('0')) +
-        (ORD(Rd.GetChar(rd))-ORD('0'))*8 +
-        (ORD(Rd.GetChar(rd))-ORD('0'))*64, CHAR);
+      | 'n' => RETURN '\n';
+      | 'v' => RETURN '\013';
+      | 'f' => RETURN '\014';
+      | 'r' => RETURN '\r';
+      | '0'..'3' =>
+        c1 := Rd.GetChar(rd);
+        c2 := Rd.GetChar(rd);
+        RETURN VAL((ORD(c)-ORD('0'))*64 +
+          (ORD(c1)-ORD('0'))*8 +
+          (ORD(c2)-ORD('0')), CHAR);
       ELSE
       END;
     END;

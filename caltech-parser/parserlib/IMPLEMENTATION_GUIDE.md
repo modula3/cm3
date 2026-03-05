@@ -142,14 +142,24 @@ In practice, the lexer's longest-match semantics handles most of this
 automatically, but listing longer tokens first is a defensive measure and
 improves readability.
 
+### Escape characters in regex patterns
+
+The lexer supports standard C escape characters in character classes and
+string patterns: `\a` (bell), `\b` (backspace), `\t` (tab), `\n` (newline),
+`\v` (vertical tab), `\f` (form feed), `\r` (carriage return), and octal
+escapes `\0xx` (three-digit octal).
+
 ### The `skip` rule
 
 The `skip` expression method is special — it tells the lexer to discard
 the matched text and continue.  Use it for whitespace and comments:
 
 ```
-skip  ([ \t\n]|("/*"([^*]|"*"[^/])*"*/")|("//"[^\n]*"\n"))*
+skip  ([ \t\r\n]|("/*"([^*]|"*"[^/])*"*/")|("//"[^\n]*"\n"))*
 ```
+
+**Tip:** Include `\r` in the skip rule to handle files with CRLF line
+endings (common on Windows and in files from mixed-platform projects).
 
 **Undocumented detail:** The `skip` rule can match zero characters (via
 the outer `*`).  This is fine — the lexer framework handles it correctly.
@@ -555,7 +565,24 @@ loop_statement:
 `$1` is `T_IDENT`, `$2` is `range`, `$3` is `sequential_statement`.
 The `T_SLOOP`, `':'`, and `'>'` tokens are constant and skipped.
 
-### 5. String concatenation in semantic actions
+### 5. Literal `}` in semantic actions
+
+Action blocks in `.e` files are delimited by `{ }`.  A literal `}` in a
+string inside an action will prematurely close the block, causing a
+compile error in the generated code.  For example:
+
+```
+struct_lit  { $$ := "'{" & $1 & "}" }   # BAD: } closes the action
+```
+
+**Workaround:** Avoid literal `}` in action strings.  Use alternative
+representations:
+
+```
+struct_lit  { $$ := "(struct-lit " & $1 & ")" }   # OK
+```
+
+### 6. String concatenation in semantic actions
 
 Building output strings by concatenation (`a & " " & b`) in every
 semantic action is straightforward but can be slow for large parse
@@ -564,7 +591,7 @@ for complex processes.  For a production compiler you might want to
 accumulate into a `TextWr.T` instead, but for moderate-size inputs
 the concatenation approach works fine.
 
-### 6. Multiple start symbols
+### 7. Multiple start symbols
 
 The `%start` directive can list multiple symbols.  This is useful if
 your language has multiple entry points (e.g., a full program vs. a
@@ -603,6 +630,37 @@ When kyacc reports a shift/reduce or reduce/reduce conflict:
 - **Reduce/reduce:** Usually means two rules can both match the same
   input.  This requires grammar restructuring — precedence directives
   don't help.
+
+**Important:** kyacc resolves shift/reduce conflicts by preferring REDUCE
+over SHIFT (opposite of yacc's default).  This means `opt_foo → empty`
+productions can cause problems — the parser reduces `empty` immediately
+rather than shifting to see what comes next.
+
+### The deferred-decision pattern
+
+Because kyacc prefers REDUCE over SHIFT, optional or ambiguous prefixes
+must be handled by deferring the decision.  Instead of:
+
+```
+declaration:
+  x  opt_type T_IDENT    # BAD: opt_type → empty always wins
+```
+
+Use a `_rest` nonterminal to defer:
+
+```
+declaration:
+  ident_start  T_IDENT decl_rest
+
+decl_rest:
+  typed     T_IDENT       # First T_IDENT was the type name
+  bare                     # First T_IDENT was the variable name
+```
+
+This pattern shifts the first `T_IDENT`, then uses the next token to
+decide whether it was a type name or a variable name.  The SV parser
+uses this extensively for port declarations, parameter declarations,
+and wire declarations where the type is optional.
 
 kyacc's error messages include the conflicting state and items, but
 they can be hard to interpret for large grammars.  A useful debugging

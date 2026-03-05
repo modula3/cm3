@@ -62,7 +62,7 @@ will typically end with the following 3 lines:
 
 <PRE>
 char        {%char}
-skip        [ \t]*
+skip        [ \t\r\n]*
 ERROR       [^]
 </PRE>
 
@@ -101,7 +101,7 @@ _TR({NAME})    the expansion of macro _TT(NAME) _TRE
 _TR({%char})    the _TT(%char) macro expands to the class of characters
            which were declared _TT(%char) in the _TI. _TRE
 _TR("[xyz]\"foo") the literal string: <TT>[xyz]"foo</TT> <!-- " -->_TRE
-_TR(\X)        if _TT(X) is an _Q(n) or _Q(t),
+_TR(\X)        if _TT(X) is one of _Q(a), _Q(b), _Q(t), _Q(n), _Q(v), _Q(f), _Q(r),
   then the ANSI-C interpretation of _TT(\x).
   Otherwise, a literal _Q(X) (used to escape
   operators such as _Q(*)) _TRE
