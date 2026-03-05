@@ -1255,6 +1255,15 @@ handles the rest.
 
 ---
 
+## Acknowledgments
+
+Paul McJones provided detailed comments on an earlier draft,
+including the reference to Ellis's Tinylisp and corrections to the
+discussion of m3tk, stub naming conventions, and the role of the
+`interp` and `excH` parameters in generated code.
+
+---
+
 ## Bibliography
 
 ### Modula-3
