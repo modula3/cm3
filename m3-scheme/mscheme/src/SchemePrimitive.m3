@@ -36,7 +36,7 @@ IMPORT SchemeBoolean, CitTextUtils AS TextUtils;
 IMPORT Fmt, Text, Wx, Wr;
 IMPORT Math, Scan, Lex, FloatMode;
 IMPORT Process;
-IMPORT OSError, FileWr, FileRd, AL;
+IMPORT OSError, FileWr, FileRd, AL, File;
 IMPORT Thread;
 IMPORT SchemePair;
 IMPORT CardRefTbl, Random;
@@ -1213,10 +1213,15 @@ PROCEDURE Prims(t          : T;
         TRY
           VAR
             cmd := SchemeString.ToText(First(args));
-            child := Process.Create(
-                       "/bin/sh", ARRAY OF TEXT{"-c", cmd});
-            ret := Process.Wait(child);
+            si, so, se : File.T;
+            child : Process.T;
+            ret : Process.ExitCode;
           BEGIN
+            Process.GetStandardFileHandles(si, so, se);
+            child := Process.Create(
+                       "/bin/sh", ARRAY OF TEXT{"-c", cmd},
+                       stdin := si, stdout := so, stderr := se);
+            ret := Process.Wait(child);
             RETURN SchemeLongReal.FromI(ret)
           END
         EXCEPT
