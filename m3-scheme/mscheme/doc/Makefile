@@ -1,6 +1,8 @@
-SRC  = mscheme-interop-report.md
-TEX  = $(SRC:.md=.tex)
-PDF  = $(SRC:.md=.pdf)
+REPORTS = mscheme-interop-report burroughs-tagged-architecture
+
+SRC  = $(addsuffix .md,$(REPORTS))
+TEX  = $(addsuffix .tex,$(REPORTS))
+PDF  = $(addsuffix .pdf,$(REPORTS))
 
 PANDOC   = pandoc
 PDFLATEX = pdflatex
@@ -12,10 +14,10 @@ PANDOC_FLAGS = --standalone \
 
 all: $(PDF)
 
-$(TEX): $(SRC)
+%.tex: %.md
 	$(PANDOC) $(PANDOC_FLAGS) -o $@ $<
 
-$(PDF): $(TEX)
+%.pdf: %.tex
 	$(PDFLATEX) -halt-on-error $<
 	$(PDFLATEX) $<
 
