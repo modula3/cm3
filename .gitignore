@@ -108,6 +108,7 @@ scripts/python/cm3-boot-
 *.log
 *.out
 *.toc
+*.pdf
 
 # Generated machine-specific file
 m3imptab.txt
