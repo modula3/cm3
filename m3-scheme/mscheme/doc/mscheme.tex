@@ -1,0 +1,2112 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{etoolbox}
+
+%%% ---- Language definitions for listings ----
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,EXPORT,TYPE,CONST,VAR,
+    PROCEDURE,BEGIN,END,IF,THEN,ELSIF,ELSE,WHILE,DO,FOR,TO,BY,
+    REPEAT,UNTIL,LOOP,EXIT,WITH,CASE,OF,RETURN,RAISE,RAISES,
+    TRY,EXCEPT,FINALLY,LOCK,NEW,NARROW,ISTYPE,TYPECASE,TYPECODE,
+    BRANDED,REF,REFANY,OBJECT,METHODS,OVERRIDES,REVEAL,RECORD,
+    ARRAY,SET,NIL,TRUE,FALSE,NOT,AND,OR,IN,MOD,DIV,ABS,
+    FIRST,LAST,NUMBER,ORD,VAL,FLOAT,CEILING,FLOOR,ROUND,TRUNC,
+    ADR,LOOPHOLE,EVAL,EXTERNAL,UNUSED,CARDINAL,INTEGER,LONGINT,
+    REAL,LONGREAL,EXTENDED,BOOLEAN,CHAR,TEXT},
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+  morestring=[d]{"},
+}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,let,let*,letrec,if,cond,else,and,or,
+    not,begin,set!,quote,import,car,cdr,cons,list,map,filter,
+    for-each,apply,eval,display,newline,eq?,eqv?,equal?,null?,
+    pair?,number?,string?,symbol?,boolean?,char?,procedure?},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[d]{"},
+  alsoother={!,?},
+}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  breaklines=true,
+  frame=single,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+  numbers=none,
+  showstringspaces=false,
+  columns=flexible,
+  keepspaces=true,
+  aboveskip=1em,
+  belowskip=1em,
+}
+
+% Prevent code listings and verbatim from breaking across pages
+\BeforeBeginEnvironment{lstlisting}{\begin{minipage}{\linewidth}}
+\AfterEndEnvironment{lstlisting}{\end{minipage}}
+
+%%% ---- Document ----
+
+\title{MScheme: Modula-3/Scheme Interoperability\\and Comparable Systems}
+\author{Mika Nystr\"om \and Claude (Anthropic)}
+\date{March 5, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+MScheme is a Scheme interpreter written in Modula-3.  Because
+Modula-3's universal traced reference type (\texttt{REFANY}) serves
+as the Scheme value type, every host-language object is already a
+valid Scheme value---no wrapping or boxing is needed.  A build-time
+stub generator reads standard Modula-3 interfaces and produces
+bidirectional bindings automatically.  We describe the architecture,
+compare it to ten other embedding systems, and place it in historical
+context.
+\end{abstract}
+
+\tableofcontents
+
+%% ==================================================================
+\section{Introduction}
+\label{sec:intro}
+%% ==================================================================
+
+MScheme is a Scheme interpreter written in Modula-3, shipped with a
+stub generator (\texttt{sstubgen}) that processes Modula-3 interface
+files and produces bidirectional bindings.  It originated as a
+line-for-line translation of Peter Norvig's JScheme
+(Java)~\cite{norvig1998}.  The key insight that makes JScheme's
+Java/Scheme interoperability seamless is that if the host language has
+a universal reference type, then every host-language value already
+\emph{is} a valid Scheme value---no wrapping or boxing is needed.  In
+Java that type is \texttt{java.lang.Object}; in Modula-3 it is
+\texttt{REFANY}.  MScheme carries this principle into the Modula-3
+world.
+
+This report describes MScheme's interoperability architecture in
+detail, compares it to other embedding systems that solve similar
+problems in different ways, and places the design in historical
+context---from its direct predecessor Tinylisp (DEC SRC,
+1989)~\cite{ellis1989} through the Lisp Machines to the broader
+question of how Algol-family languages can support this architecture
+on conventional hardware.
+
+\subsection*{A taste of MScheme}
+
+Before diving into the architecture, here is real code from
+\href{https://github.com/IntelLabs/async-toolkit/tree/main/m3utils/m3utils/csp}{\texttt{cspc}},
+the CSP compiler built on MScheme.  This is Scheme code running
+inside a Modula-3 program:
+
+\begin{lstlisting}[language=Scheme]
+;; Read an environment variable -- Env is an M3 module
+(define *m3utils* (Env.Get "M3UTILS"))
+
+;; Create M3 BigInt objects -- BigInt.T <: REFANY, so they are
+;; ordinary Scheme values
+(define a (BigInt.New 12))
+(define b (BigInt.New 42))
+(BigInt.Equal a b)          ;=> #f
+(BigInt.Format a 10)        ;=> "12"
+
+;; M3 procedures used as first-class Scheme values:
+;; BigInt.Equal and BigInt.Compare are passed directly to lambda
+(define *boolean-binops*
+  (list
+    `(== integer ,BigInt.Equal)
+    `(<  integer ,(lambda (a b) (< (BigInt.Compare a b) 0)))
+    `(>  integer ,(lambda (a b) (> (BigInt.Compare a b) 0)))))
+
+;; Format an integer literal by calling M3's Fmt.Int
+(define (format-int-literal x)
+  (Fmt.Int (BigInt.ToInteger x) 10))
+
+;; Create an M3 object, call its methods from Scheme
+(define the-driver
+  (obj-method-wrap
+    (new-modula-object 'CspCompilerDriver.T)
+    'CspCompilerDriver.T))
+(the-driver 'init "hello.procs")
+(the-driver 'getProcTypes)  ;=> a TextSeq.T (M3 sequence object)
+\end{lstlisting}
+
+Every value here---the \texttt{BigInt.T} integers, the \texttt{TEXT}
+strings, the \texttt{CspCompilerDriver.T} object---is a native
+Modula-3 heap object.  None of them are wrapped, copied, or
+marshaled.  They are Scheme values because every M3 reference type
+already satisfies \texttt{SchemeObject.T = REFANY}.  The procedure
+names (\texttt{BigInt.Equal}, \texttt{Fmt.Int}, etc.)\ were generated
+automatically by \texttt{sstubgen} from the corresponding Modula-3
+interface files at build time.  The generated stub files live in the
+platform-specific build directory (e.g.,
+\texttt{csp/ARM64\_DARWIN/FmtSchemeStubs.m3}).
+
+
+%% ==================================================================
+\section{MScheme Architecture}
+\label{sec:architecture}
+%% ==================================================================
+
+\subsection{The Universal Value Type}
+\label{sec:universal-value}
+
+The foundation of the entire system is one line of Modula-3:
+
+\begin{lstlisting}[language=Modula3]
+(* SchemeObject.i3 *)
+TYPE T = REFANY;
+\end{lstlisting}
+
+A Scheme value is \texttt{REFANY}---Modula-3's traced, polymorphic
+reference type.  Any heap-allocated M3 value (objects, REFs, TEXTs,
+arrays) already \emph{is} a valid Scheme object.  No wrapper structs,
+tag bits on the Scheme side, or special allocation paths.  The M3
+runtime's garbage collector manages all values uniformly.
+
+Scheme-specific types are defined as ordinary M3 reference types:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+Scheme type  & Modula-3 representation \\
+\midrule
+Number       & \texttt{SchemeLongReal.T = REF LONGREAL} \\
+BigInt       & \texttt{BigInt.T} (from \texttt{cit\_util}) \\
+Pair         & \texttt{SchemePair.T = REF RECORD first, rest : REFANY END} \\
+Symbol       & \texttt{SchemeSymbol.T = Atom.T} \\
+Boolean      & \texttt{SchemeBoolean.T = BRANDED REF BOOLEAN} \\
+String       & \texttt{SchemeString.T = REF ARRAY OF CHAR} \\
+Procedure    & \texttt{SchemeProcedure.T} (object with \texttt{apply} method) \\
+Any M3 ref   & Itself---already \texttt{REFANY} \\
+\bottomrule
+\end{tabular}
+\caption{Scheme-specific types as Modula-3 reference types.}
+\label{tab:scheme-types}
+\end{table}
+
+Runtime type discrimination uses Modula-3's \texttt{TYPECASE} (a
+type-safe downcast), \texttt{ISTYPE}, and \texttt{TYPECODE}---the
+same mechanisms the M3 runtime provides for all M3 code.  No parallel
+type system is needed.
+
+Modula-3 distinguishes \emph{reference types} (heap-allocated, traced
+by the GC) from \emph{value types} (unboxed scalars, records,
+arrays).  Reference types pass through the Scheme boundary unchanged,
+but value types must be boxed into reference types.  The
+\texttt{sstubgen}-generated stubs handle this automatically:
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+M3 value type & Scheme representation & Conversion \\
+\midrule
+\texttt{INTEGER}     & \texttt{SchemeLongReal.T} & \texttt{FromI} / \texttt{Int} with range check \\
+\texttt{CARDINAL}    & \texttt{SchemeLongReal.T} & \texttt{FromI} / \texttt{Int} with bounds check \\
+\texttt{LONGINT}     & \texttt{SchemeLongReal.T} & \texttt{FromI} / \texttt{Int} \\
+\texttt{REAL}        & \texttt{SchemeLongReal.T} & \texttt{FromLR(FLOAT(x, LONGREAL))} \\
+\texttt{LONGREAL}    & \texttt{SchemeLongReal.T} & \texttt{FromLR} / \texttt{FromO} \\
+\texttt{EXTENDED}    & \texttt{SchemeLongReal.T} & \texttt{FromLR(FLOAT(x, LONGREAL))} \\
+\texttt{BOOLEAN}     & \texttt{SchemeBoolean.T}  & \texttt{Truth} / \texttt{TruthO} \\
+\texttt{CHAR}        & \texttt{SchemeChar.T} (\texttt{REF CHAR}) & Cached; all 256 values preallocated \\
+\texttt{TEXT}        & \texttt{SchemeString.T}   & \texttt{FromText} / \texttt{ToText} \\
+Enumeration          & \texttt{SchemeLongReal.T} & As ordinal index (0, 1, 2, \ldots) \\
+Subrange             & \texttt{SchemeLongReal.T} & As base type, with bounds check \\
+\bottomrule
+\end{tabular}
+\caption{Value type conversions generated by \texttt{sstubgen}.}
+\label{tab:value-types}
+\end{table}
+
+All six numeric types collapse to a single Scheme type (\texttt{REF
+LONGREAL}).  Common values (0.0, 1.0, $-$1.0, 2.0) are cached to
+reduce allocation.  The \texttt{SchemeChar} module preallocates all
+256 character values at initialization.
+
+Records and arrays require more elaborate treatment because they are
+\emph{aggregate} value types.  In Modula-3, a \texttt{RECORD} is a
+stack-allocated or field-embedded aggregate (like a C struct) and an
+\texttt{ARRAY} is a contiguous block of elements with fixed bounds.
+Neither is a reference---neither can be \texttt{REFANY}.  Rather than
+boxing them into opaque \texttt{REF} wrappers (which would make the
+contents inaccessible to Scheme), \texttt{sstubgen} \emph{decomposes}
+them into Scheme data structures:
+
+\textbf{Records become association lists.}  Each field becomes a
+\texttt{(name . value)} pair, with the field value converted
+recursively.  A record \texttt{RECORD x: INTEGER; y: REAL END} with
+values \texttt{x=3, y=1.5} becomes \texttt{((x . 3.0) (y . 1.5))}.
+The generated \texttt{ToScheme} converter iterates over fields; the
+\texttt{ToModula} converter walks the alist, matching field names by
+symbol identity and assigning back into a stack-allocated M3 record:
+
+\begin{lstlisting}[language=Modula3]
+(* Generated by sstubgen for RECORD x: INTEGER; y: REAL END *)
+PROCEDURE ToModula_MyRecord(x: SchemeObject.T): MyRecord =
+  VAR res: MyRecord; p := SchemePair.Pair(x);
+  BEGIN
+    WHILE p # NIL DO
+      IF    sym_x = First(p.first) THEN res.x := Int(Rest(p.first))
+      ELSIF sym_y = First(p.first) THEN res.y := Float(Rest(p.first))
+      END;
+      p := SchemePair.Pair(p.rest)
+    END;
+    RETURN res
+  END ToModula_MyRecord;
+\end{lstlisting}
+
+\textbf{Fixed arrays become lists of (index, element) pairs.}  An
+\texttt{ARRAY [0..2] OF INTEGER} with values \texttt{\{10, 20, 30\}}
+becomes \texttt{((0 . 10.0) (1 . 20.0) (2 . 30.0))}.  The
+\texttt{ToModula} converter also accepts a simplified form without
+explicit indices---a plain list \texttt{(10.0 20.0 30.0)}---assigning
+elements to successive indices from \texttt{FIRST} to \texttt{LAST}.
+The generated converter handles both forms:
+
+\begin{lstlisting}[language=Modula3]
+(* Generated by sstubgen for ARRAY [0..2] OF INTEGER *)
+PROCEDURE ToModula_A(x: SchemeObject.T): ARRAY [0..2] OF INTEGER =
+  VAR res: ARRAY [0..2] OF INTEGER; p := SchemePair.Pair(x);
+  BEGIN
+    IF p # NIL AND NOT ISTYPE(p.first, SchemePair.T) THEN
+      (* Simple form: (10 20 30) *)
+      FOR i := FIRST(res) TO LAST(res) DO
+        res[i] := Int(p.first); p := SchemePair.Pair(p.rest)
+      END
+    ELSE
+      (* Indexed form: ((0 . 10) (1 . 20) (2 . 30)) *)
+      WHILE p # NIL DO
+        WITH desc = SchemePair.Pair(p.first) DO
+          res[Int(desc.first)] := Int(desc.rest)
+        END;
+        p := SchemePair.Pair(p.rest)
+      END
+    END;
+    RETURN res
+  END ToModula_A;
+\end{lstlisting}
+
+\textbf{Multidimensional arrays} are nested.  Modula-3's
+\texttt{ARRAY [0..2], [0..3] OF REAL} is equivalent to
+\texttt{ARRAY [0..2] OF ARRAY [0..3] OF REAL}---an array of arrays.
+\texttt{sstubgen} generates converters recursively: the outer array's
+element converter is itself the converter for the inner array.  In
+Scheme, this becomes a list of lists:
+\texttt{((0 . ((0 . 1.0) (1 . 2.0) ...)) (1 . ((0 . 3.0) ...)) ...)}.
+
+\textbf{Open arrays} (\texttt{ARRAY OF T}, with no fixed bounds)
+cannot exist as bare value types---they exist only as
+\texttt{REF ARRAY OF T} or as formal parameters.  As \texttt{REF}
+types, they are already \texttt{REFANY} and can be passed through the
+Scheme boundary directly; \texttt{sstubgen} generates converters that
+treat them as Scheme vectors or lists depending on context.
+
+The key design choice is that \texttt{sstubgen} \emph{decomposes}
+value types into Scheme-native structures rather than wrapping them in
+opaque references.  This means Scheme code can inspect and construct
+M3 records and arrays using ordinary Scheme operations (\texttt{car},
+\texttt{cdr}, \texttt{assq}), at the cost of a copy at each boundary
+crossing.
+
+
+\subsection{How M3 Values Enter Scheme}
+\label{sec:values-enter}
+
+Because \texttt{SchemeObject.T = REFANY}, any M3 reference value can
+be passed into Scheme simply by assigning it to a Scheme variable.
+For a host program embedding MScheme:
+
+\begin{lstlisting}[language=Modula3]
+(* From the host M3 program: *)
+VAR interp := NEW(SchemeM3.T).init(paths^);
+interp.bind("my-driver", myM3Object);
+\end{lstlisting}
+
+The \texttt{bind} method defines a symbol in the global Scheme
+environment.  The M3 object \texttt{myM3Object} becomes directly
+accessible in Scheme as the value of \texttt{my-driver}.  No
+conversion, copying, or indirection.  Scheme code manipulating this
+value is manipulating the exact same M3 heap object.
+
+
+\subsection{How Scheme Calls M3 Methods}
+\label{sec:call-methods}
+
+MScheme uses a three-layer dispatch mechanism:
+
+\textbf{Layer~1: Type operations registry}
+(\texttt{SchemeProcedureStubs.m3}, a hand-written module that provides
+the registration framework; the individual dispatch procedures and
+call stubs plugged into it are generated by \texttt{sstubgen}).  For
+each M3 type that should have methods callable from Scheme, operations
+are registered by typecode:
+
+\begin{lstlisting}[language=Modula3]
+SchemeProcedureStubs.RegisterOp(
+    TYPECODE(TextSeq.T),    (* M3 runtime typecode *)
+    "call-method",           (* operation name *)
+    TextSeqCallMethod);      (* M3 procedure to dispatch *)
+\end{lstlisting}
+
+The dispatch procedure receives the interpreter, the M3 object, a
+method name (as an Atom), and the Scheme argument list.  The
+\texttt{interp} parameter is part of the standard signature for all
+dispatch procedures and call stubs; it is passed through to the
+individual method stubs, which may need it for exception handling or
+Scheme callbacks, even when the dispatcher itself does not use it
+directly:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE TextSeqCallMethod(interp : Scheme.T;
+                            object : SchemeObject.T;
+                            args   : SchemeObject.T) : SchemeObject.T
+  RAISES { Scheme.E } =
+VAR name := Scheme.SymbolCheck(SchemeUtils.First(args));
+    rest := SchemeUtils.Rest(args);
+BEGIN
+  IF name = addhi THEN
+    NARROW(object, TextSeq.T).addhi(SchemeUtils.Str(SchemeUtils.First(rest)));
+    RETURN SchemeBoolean.True()
+  ELSIF name = size THEN
+    RETURN SchemeLongReal.FromI(NARROW(object, TextSeq.T).size())
+  ELSIF name = get THEN
+    RETURN NARROW(object, TextSeq.T).get(SchemeLongReal.Int(SchemeUtils.First(rest)))
+  (* ... *)
+  END
+END TextSeqCallMethod;
+\end{lstlisting}
+
+\textbf{Layer~2: Scheme-level wrapper} (\texttt{scheme-lib/src/m3.scm}).
+The \texttt{obj-method-wrap} function creates a closure that dispatches
+method calls through the type operation registry:
+
+\begin{lstlisting}[language=Scheme]
+(define (obj-method-wrap obj type)
+  (lambda args
+    (if (eq? (car args) '*m3*)
+        obj    ; return the raw M3 object
+        (modula-type-op type 'call-method obj (car args) (cdr args)))))
+\end{lstlisting}
+
+\textbf{Layer~3: Application code.}  The result is natural Scheme syntax:
+
+\begin{lstlisting}[language=Scheme]
+(define seq (obj-method-wrap (new-modula-object 'TextSeq.T) 'TextSeq.T))
+(seq 'addhi "hello")
+(seq 'size)           ;=> 1
+(seq 'get 0)          ;=> "hello"
+(seq '*m3*)           ;=> the raw TextSeq.T for passing back to M3
+\end{lstlisting}
+
+The \texttt{'*m3*} convention lets Scheme code extract the underlying
+M3 object to pass it back into M3 methods that expect typed arguments.
+
+
+\subsection{How Scheme Values Return to M3}
+\label{sec:values-return}
+
+Because Scheme values \emph{are} M3 \texttt{REFANY}, return is trivial.
+An M3 method receiving a Scheme value simply narrows it:
+
+\begin{lstlisting}[language=Modula3]
+VAR result := interp.evalInGlobalEnv(someExpr);
+(* result is REFANY -- narrow to expected type: *)
+VAR text := NARROW(result, TEXT);
+\end{lstlisting}
+
+If the Scheme code returned a wrapped M3 object, the narrow succeeds
+and the caller gets back the original M3 object with its original
+type.  If it returned a Scheme-specific type (pair, number), the
+narrow can distinguish that.  \texttt{ISTYPE} and \texttt{TYPECASE}
+handle all cases safely.
+
+
+\subsection{The Stub Generator (sstubgen)}
+\label{sec:sstubgen}
+
+MScheme includes a \emph{stub generator} that processes M3 interface
+files at build time and auto-generates bidirectional binding code.
+This is the system's most distinctive feature.
+
+\texttt{sstubgen} shares substantial code with the Network Objects
+stub generator (\texttt{m3-comm/stubgen})~\cite{birrell1994}.  Both
+are \texttt{M3ToolFrame} extensions that walk the M3 AST using the M3
+Toolkit (m3tk), extract type information via an \texttt{AstToType}
+module, and generate code from the type signatures.  The network
+objects \texttt{stubgen} generates marshalling and unmarshalling
+procedures for remote method invocation; \texttt{sstubgen} adds
+\texttt{TypeTranslator} and \texttt{ValueTranslator} modules that
+generate \texttt{ToScheme}/\texttt{ToModula} converters and
+\texttt{CallStub} wrappers for Scheme interoperability.  (See
+Section~\ref{sec:lineage} for the provenance of \texttt{sstubgen} and
+m3tk.)
+
+The design goal, as stated in the \texttt{sstubgen} documentation, is:
+
+\begin{quote}
+``We want to be able to \emph{write Modula-3 code in Scheme.}  That
+is, anything that can be coded in Modula-3 one should be able to code
+in Scheme.''
+\end{quote}
+
+The stub generator operates in three phases:
+
+\textbf{Phase~1} parses each M3 interface file using the M3 Toolkit
+(m3tk) AST infrastructure.  For each procedure, type, constant, and
+variable in the interface, it extracts type signatures and generates
+an M3 stub module containing:
+
+\begin{itemize}
+\item \emph{ToModula} converters: functions that take a
+  \texttt{SchemeObject.T} and produce the appropriate M3 type (with
+  type-checking and bounds validation).
+\item \emph{ToScheme} converters: functions that take an M3 value and
+  produce a \texttt{SchemeObject.T}.
+\item \emph{CallStub} procedures: wrappers that unpack Scheme
+  arguments, call the real M3 procedure, convert the result, and
+  handle exceptions.
+\item Registration code that plugs these stubs into the runtime
+  registry.
+\end{itemize}
+
+The generated code has two kinds of wrappers: \emph{call stubs} for
+interface procedures and \emph{dispatch procedures} (with associated
+\emph{method stubs}) for object method calls.
+
+A \textbf{call stub} wraps a single M3 procedure.  It receives an
+exception handler (\texttt{excH}) as an explicit parameter because the
+caller (the Scheme evaluator) provides it directly.  The
+\texttt{interp} parameter is needed to invoke the exception handler
+via \texttt{SchemeApply} if the M3 procedure raises.  A generated call
+stub looks like:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE CallStub_Text_Cat(interp : Scheme.T;
+                            args   : SchemeObject.T;
+                            excH   : SchemeObject.T) : SchemeObject.T
+  RAISES { Scheme.E } =
+VAR p := SchemePair.Pair(args);
+    a1 := ToModula_TEXT(First(p));   (* Scheme -> TEXT *)
+    a2 := ToModula_TEXT(Second(p));
+BEGIN
+  RETURN ToScheme_TEXT(Text.Cat(a1, a2))  (* TEXT -> Scheme *)
+END CallStub_Text_Cat;
+\end{lstlisting}
+
+A \textbf{dispatch procedure} routes method calls by name.  It does
+not take \texttt{excH} as a separate parameter; instead, the exception
+handler is packed into the \texttt{args} list (as the third element)
+by the Scheme-level \texttt{obj-method-wrap} caller, and the
+dispatcher extracts it before forwarding to the appropriate method
+stub.  The method stubs themselves have the same signature as call
+stubs, including the \texttt{excH} parameter.
+
+\textbf{Phase~2} collects all stub modules within a package into a
+single \texttt{RegisterStubs()} entry point.
+
+\textbf{Phase~3} links all package-level \texttt{RegisterStubs} into
+the final executable, so that a single call at startup activates all
+bindings.
+
+The m3makefile for the CSP compiler (cspc) shows this in practice:
+
+\begin{lstlisting}[language={}]
+import ("sstubgen")
+SchemeStubs ("CspExpression")
+SchemeStubs ("Fmt")
+SchemeStubs ("Atom")
+SchemeStubs ("Word")
+SchemeStubs ("M3Ident")
+SchemeStubs ("FileWr")
+(* ... 30+ more interfaces ... *)
+ExportSchemeStubs ("cspc")
+\end{lstlisting}
+
+Each \texttt{SchemeStubs} invocation processes one M3 interface.  The
+result is that Scheme code in cspc can call \texttt{Fmt.Int},
+\texttt{Atom.FromText}, \texttt{FileWr.Open}, etc., as naturally as
+M3 code can.
+
+
+\subsection{Call Flow for Interface Procedures}
+\label{sec:call-flow}
+
+When Scheme code evaluates \texttt{(Wr.PutText wr "hello")}, the call
+passes through four layers before reaching the actual M3 procedure.
+Tracing the full path:
+
+\textbf{1.\ Evaluation.}  \texttt{Scheme.Eval} in \texttt{Scheme.m3}
+evaluates the operator position.  The symbol \texttt{Wr.PutText}
+resolves to a \texttt{SchemePrimitive.T} object that was registered at
+startup.  The two argument expressions are evaluated, producing
+\texttt{SchemeObject.T} values.  For two arguments, the evaluator
+calls the optimized \texttt{apply2} method directly.
+
+\textbf{2.\ Primitive dispatch.}
+\texttt{SchemePrimitive.Apply2} validates the argument count and calls
+the main dispatcher (\texttt{Prims}).  Interface procedure stubs are
+registered with IDs above the range of the built-in primitive enum
+\texttt{P}, so the dispatcher recognizes them as extensions and calls
+through to the \texttt{ExtDefiner}:
+
+\begin{lstlisting}[language=Modula3]
+IF t.id > ORD(LAST(P)) THEN
+  RETURN NARROW(t.definer, ExtDefiner).apply(t, interp, args)
+\end{lstlisting}
+
+\textbf{3.\ Stub lookup.}  \texttt{ExtDefiner.apply} looks up the
+procedure ID in a hash table, finds a \texttt{PrimRec} containing the
+qualified name (\texttt{Wr}, \texttt{PutText} as atoms), and calls
+\texttt{SchemeProcedureStubs.CallStubApply}.  This function walks a
+linked list of registered stubs, matching the interface name and item
+name by atom identity (pointer comparison), and calls the matching
+stub procedure.
+
+\textbf{4.\ Stub execution.}  The call stub---generated by
+\texttt{sstubgen} at build time---unpacks arguments from the Scheme
+pair list, converts each from \texttt{SchemeObject.T} to the
+appropriate M3 type using the \texttt{ToModula} functions, calls the
+real M3 procedure, converts the result back via \texttt{ToScheme}, and
+handles any M3 exceptions.  The \texttt{interp} parameter is needed to
+invoke the Scheme-level exception handler via \texttt{SchemeApply} if
+the M3 procedure raises; the \texttt{excH} parameter is the exception
+handler closure itself:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE CallStub_Wr_PutText(interp: Scheme.T;
+    args, excH: SchemeObject.T): SchemeObject.T RAISES {Scheme.E} =
+  VAR wr  := NARROW(First(args), Wr.T);           (* REFANY -> Wr.T *)
+      txt := SchemeString.ToText(Second(args));    (* SchemeString -> TEXT *)
+  BEGIN
+    TRY Wr.PutText(wr, txt);                      (* actual M3 call *)
+        RETURN SchemeBoolean.True()
+    EXCEPT Wr.Failure(e) =>
+        EVAL SchemeApply.OneArg(interp, excH, ...)
+    END
+  END CallStub_Wr_PutText;
+\end{lstlisting}
+
+(All generated call stubs follow the
+\texttt{CallStub\_\textit{Interface}\_\textit{Procedure}} naming
+convention; method stubs use
+\texttt{MethodStub\_\textit{Type}\_\textit{Method}}.)
+
+For the \texttt{wr} argument, which is already a traced reference
+(\texttt{Wr.T} is an object type), the conversion is just a
+\texttt{NARROW}---a type-checked pointer cast, no data copying.  For
+the \texttt{txt} argument, \texttt{ToText} converts the mutable
+Scheme string (\texttt{REF ARRAY OF CHAR}) to an immutable M3
+\texttt{TEXT}.  The return value is a Scheme boolean.
+
+The entire path---from \texttt{Eval} to the actual \texttt{Wr.PutText}
+call---is native M3 procedure calls.  There is no interpreter loop,
+bytecode dispatch, or reflection.  The overhead beyond a direct M3
+call is: argument list traversal (walking \texttt{SchemePair} cells),
+type conversion (one \texttt{NARROW} + one \texttt{ToText}), and stub
+lookup (atom comparison in a linked list, typically short).
+
+
+\subsection{Runtime Type Introspection from Scheme}
+\label{sec:introspection}
+
+MScheme exposes M3's runtime type system to Scheme via primitives:
+
+\begin{lstlisting}[language=Scheme]
+(rttype-typecode obj)          ; get an object's runtime typecode
+(rttype-supertype tc)          ; get a typecode's supertype
+(rttype-issubtype? tc1 tc2)    ; subtype relationship
+(rttype-maxtypecode)           ; highest allocated typecode
+(rtbrand-getname tc)           ; get the brand string for a type
+(modula-type-class tc)         ; classification (object, ref, etc.)
+(list-modula-type-ops tc)      ; list registered operations
+(list-modula-types)            ; list all registered type names
+(typename->typecode 'Foo.T)    ; look up typecode by name
+\end{lstlisting}
+
+This allows Scheme code to introspect M3 objects, walk the type
+hierarchy, and discover available methods---something that M3 code
+itself can do only in limited ways.
+
+
+\subsection{Concurrency Model}
+\label{sec:concurrency}
+
+MScheme is designed for multi-threaded M3 programs.  The key design
+rule: a single \texttt{Scheme.T} interpreter instance is
+single-threaded, but multiple interpreters may share a global
+environment.  A global environment is a
+\texttt{SchemeEnvironment.T}---the root of a chain of lexical scoping
+frames that holds all top-level bindings (primitives, stub
+registrations, and user-defined globals).  Environments come in
+\texttt{Safe} (synchronized) and \texttt{Unsafe} (unsynchronized)
+variants; sharing a global environment across threads requires the
+\texttt{Safe} variant.
+
+
+\subsection{C Libraries via M3 as Glue}
+\label{sec:c-libraries}
+
+MScheme can be used even when the goal is simply to call C code from
+Scheme.  Modula-3 serves as a type-safe glue layer: a thin M3
+interface wraps the C functions, and \texttt{sstubgen} auto-exports
+that interface to Scheme.  The programmer never writes
+Scheme-specific binding code.
+
+A concrete example is the \texttt{Mpz} module in the \texttt{m3utils}
+tree, which wraps the GNU Multiple Precision Arithmetic Library (GMP)
+for use from the CSP compiler's Scheme environment.  The architecture
+has three layers:
+
+\textbf{Layer~1: C binding.}  \texttt{MpzP.i3} declares GMP functions
+as \texttt{EXTERNAL} procedures with C calling convention:
+
+\begin{lstlisting}[language=Modula3]
+(* MpzP.i3 -- raw C interface *)
+<*EXTERNAL "__gmpz_add"*>
+PROCEDURE c_add(f0: MpzPtrT; f1: MpzPtrT; f2: MpzPtrT);
+
+<*EXTERNAL "__gmpz_mul"*>
+PROCEDURE c_mul(f0: MpzPtrT; f1: MpzPtrT; f2: MpzPtrT);
+
+<*EXTERNAL "mpz_format_decimal"*>
+PROCEDURE format_decimal(z: MpzPtrT): Ctypes.const_char_star;
+\end{lstlisting}
+
+A small C file (\texttt{MpzC.c}) provides helper functions for
+formatting via \texttt{gmp\_asprintf}.
+
+\textbf{Layer~2: Type-safe M3 wrapper.}  \texttt{Mpz.i3} defines an
+opaque traced type \texttt{T <: REFANY} that wraps the raw
+\texttt{mpz\_t}.  The implementation (\texttt{MpzOps.m3}) extracts the
+address and calls through to layer~1:
+
+\begin{lstlisting}[language=Modula3]
+(* Mpz.i3 -- public interface *)
+TYPE T <: REFANY;
+PROCEDURE New(): T;
+PROCEDURE add(f0: T; f1: T; f2: T);
+PROCEDURE Format(t: T; base := FormatBase.Decimal): TEXT;
+\end{lstlisting}
+
+The concrete type is revealed in \texttt{MpzRep.i3}:
+
+\begin{lstlisting}[language=Modula3]
+(* MpzRep.i3 -- concrete revelation *)
+REVEAL
+  Mpz.T = BRANDED Mpz.Brand OBJECT
+    val : Val;
+  END;
+
+TYPE
+  Val = RECORD
+    w : ARRAY [0..2] OF Word.T;
+    (* this will be cast to an mpz_t, and it is AT LEAST big enough. *)
+  END;
+\end{lstlisting}
+
+The \texttt{val} field embeds the GMP \texttt{mpz\_t} storage directly
+in the M3 heap object.  The implementation extracts its address for C
+calls:
+
+\begin{lstlisting}[language=Modula3]
+(* MpzOps.m3 -- implementation *)
+PROCEDURE add(f0: T; f1: T; f2: T) =
+  BEGIN P.c_add(ADR(f0.val), ADR(f1.val), ADR(f2.val)) END add;
+\end{lstlisting}
+
+Because \texttt{T <: REFANY}, \texttt{Mpz.T} values are traced by the
+M3 garbage collector.  The opaque type prevents Scheme (or M3) code
+from accessing the raw \texttt{mpz\_t} memory directly---only the
+operations declared in \texttt{Mpz.i3} are available.
+
+Resource cleanup uses Modula-3's \texttt{WeakRef} facility.  When
+\texttt{Mpz.New} creates a new wrapper object, it registers a
+weak-reference callback via \texttt{WeakRef.FromRef}:
+
+\begin{lstlisting}[language=Modula3]
+(* Mpz.m3 *)
+PROCEDURE New() : T =
+  VAR res := NEW(T);
+  BEGIN
+    P.c_init(LOOPHOLE(ADR(res.val), P.MpzPtrT));
+    EVAL WeakRef.FromRef(res, CleanUp);
+    set_ui(res, 0);
+    RETURN res
+  END New;
+
+PROCEDURE CleanUp(<*UNUSED*>READONLY w : WeakRef.T; r : REFANY) =
+  BEGIN
+    WITH this = NARROW(r, T) DO
+      P.c_clear(ADR(this.val))
+    END
+  END CleanUp;
+\end{lstlisting}
+
+When the GC determines that an \texttt{Mpz.T} object is unreachable,
+it schedules the \texttt{CleanUp} callback, which calls GMP's
+\texttt{mpz\_clear} to release the C-level memory.  No explicit
+deallocation is needed from either M3 or Scheme code---the
+\texttt{Mpz.T} values can be passed around, stored in lists, and
+forgotten, just like any other Scheme value.  This is the same
+\texttt{WeakRef} mechanism that Modula-3 programs use for any C
+resource: FFTW plans, file descriptors, database handles.
+
+\textbf{Layer~3: Automatic Scheme export.}  Adding
+\texttt{SchemeStubs("Mpz")} to the m3makefile causes \texttt{sstubgen}
+to generate Scheme bindings for every procedure in \texttt{Mpz.i3}.
+From Scheme:
+
+\begin{lstlisting}[language=Scheme]
+(define a (Mpz.New))
+(define b (Mpz.NewInt 42))
+(define c (Mpz.New))
+(Mpz.add c a b)
+(Mpz.Format c)    ;=> "42"
+\end{lstlisting}
+
+The \texttt{Mpz.T} values flowing through Scheme are the same traced
+M3 heap objects---no copying or marshaling.  The GC handles their
+lifetime.  The C library's \texttt{mpz\_t} storage is embedded inside
+the M3 object's record fields and is deallocated when the M3 object
+is collected.
+
+This pattern---C library, M3 interface, \texttt{sstubgen}---is
+general.  The same approach could wrap SQLite, zlib, OpenSSL, or any
+C library.  Modula-3's \texttt{EXTERNAL} pragma provides the C
+binding; its type system provides safety; \texttt{sstubgen} provides
+the Scheme bridge.  The result is that MScheme functions as a
+practical Scheme-with-C-FFI system, even though its design is not
+about C interoperability at all.
+
+The \texttt{Mpz} module is itself partly auto-generated: a Scheme
+script (\texttt{make-mpz.scm}) reads GMP's function prototypes and
+emits \texttt{MpzP.i3}, \texttt{Mpz.i3}, and
+\texttt{MpzOps.m3}---over 200 functions.  This is a second level of
+code generation: Scheme generates M3 code, then \texttt{sstubgen}
+generates Scheme stubs from that M3 code, closing the loop.
+
+
+\subsection{Summary of Key Properties}
+\label{sec:summary}
+
+\begin{itemize}
+\item \textbf{Zero-copy value sharing}: M3 objects are Scheme objects,
+  no wrapping needed.
+\item \textbf{Unified GC}: Both languages share the M3 traced heap
+  and garbage collector.  No reference counting, prevent-collection
+  APIs, or weak reference coordination.
+\item \textbf{Automatic stub generation}: Build-time processing of M3
+  interfaces produces bidirectional bindings with type checking.
+\item \textbf{Runtime type introspection}: Scheme code can query the
+  M3 type system, discovering types and operations dynamically.
+\item \textbf{Method dispatch via typecode}: $O(n)$ scan of
+  registered operations per typecode, then atom comparison for method
+  name.
+\end{itemize}
+
+
+%% ==================================================================
+\section{Comparable Systems}
+\label{sec:comparable}
+%% ==================================================================
+
+\subsection{Lua/C (Lua C API)}
+\label{sec:lua}
+
+\textbf{Core representation}: A \emph{stack} of tagged union values
+(\texttt{TValue} internally).  The C API never exposes \texttt{TValue}
+directly; all value exchange is through positional stack slots.
+
+\textbf{Wrapping C objects}: \texttt{lua\_newuserdata(L, size)}
+allocates a GC-managed memory block.  A \emph{metatable} (a Lua
+table) is attached to define behavior.  The \texttt{\_\_index}
+metamethod routes field/method lookups to a table of C functions.
+\texttt{\_\_gc} provides a destructor.
+
+\textbf{Method dispatch}: When Lua code calls
+\texttt{obj:method(args)}, the VM performs a metatable lookup for
+\texttt{\_\_index}, finds the method in the method table, and calls
+the C function with the Lua state.  The C function pops arguments from
+the stack and pushes results.
+
+\textbf{Values back to C}: Typed accessors read stack slots:
+\texttt{lua\_tonumber}, \texttt{lua\_tostring},
+\texttt{lua\_touserdata}.
+
+\textbf{Registration}: C functions are registered via arrays of
+\texttt{luaL\_Reg} structs, or individually with
+\texttt{lua\_pushcfunction}.
+
+\textbf{Key trade-offs}: The stack-based API provides complete ABI
+isolation---Lua's internal value representation can change without
+breaking extensions.  But every boundary crossing requires explicit
+push/pop operations.  There is no automatic type mapping, stub
+generation, or introspection of the host's type system.
+
+
+\subsection{GNU Guile (Scheme in C)}
+\label{sec:guile}
+
+\textbf{Core representation}: \texttt{SCM}, a machine-word-sized
+tagged value.  Fixnums, characters, and booleans are encoded in tag
+bits.  Heap objects (pairs, foreign objects, strings) are tagged
+pointers.
+
+\textbf{Wrapping C objects}: \emph{Foreign object types} replace the
+older SMOB mechanism.
+\texttt{scm\_make\_foreign\_object\_type} defines a type with named
+slots and a finalizer.  Instances store C pointers in slots.
+
+\textbf{Method dispatch}: Typically via named procedures
+(\texttt{my-object-get-x}).  Optional GOOPS integration (CLOS-style
+generic functions with multiple dispatch) is possible but uncommon for
+foreign objects.
+
+\textbf{Values back to C}: \texttt{scm\_to\_int(val)},
+\texttt{scm\_to\_double(val)}, etc.  Every function takes and returns
+\texttt{SCM}.
+
+\textbf{Registration}:
+\texttt{scm\_c\_define\_gfunc("name", nreq, nopt, nrest, cfunc)}
+registers a C function as a Scheme procedure in the current module.
+
+\textbf{Key trade-offs}: The uniform \texttt{SCM} type is simpler
+than Lua's stack (no positional bookkeeping), but every C function
+must do its own type checking.  Guile's conservative GC (BDW-GC) is
+very friendly to C embedders---no need to track roots manually.  But
+Guile provides no automatic stub generation from C header files.
+
+
+\subsection{Tcl/C}
+\label{sec:tcl}
+
+\textbf{Core representation}: \texttt{Tcl\_Obj*}, a dual-ported value
+with both a string representation and a cached native (``internal'')
+representation.  Conversions between the two forms are lazy and
+cached.  Reference counted (no GC).
+
+\textbf{Wrapping C objects}: Tcl uses the ``command-as-object''
+pattern.  Creating an object registers a new Tcl command named after
+it.  The \texttt{ClientData} (a \texttt{void*}) stored with the
+command points to the C struct.  ``Methods'' are subcommands:
+\texttt{.button configure -text "OK"}.
+
+\textbf{Method dispatch}: String-based.  The first argument to the
+object's command is the subcommand name, matched by string comparison
+or hash lookup.  Object identity is a string name.
+
+\textbf{Registration}:
+\texttt{Tcl\_CreateObjCommand(interp, "name", func, clientData,
+  deleteProc)}.
+
+\textbf{Key trade-offs}: ``Everything is a string'' gives
+extraordinary composability but loses type safety.  Reference counting
+provides deterministic destruction but cannot handle cycles.  The
+command-as-object pattern is elegant and uniform but means object
+identity is a string, and there is no direct pointer from Tcl to C
+memory without going through command lookup.
+
+
+\subsection{CPython Extension API}
+\label{sec:cpython}
+
+\textbf{Core representation}: \texttt{PyObject*}, a heap-allocated
+struct with a reference count and a pointer to a
+\texttt{PyTypeObject}.
+
+\textbf{Wrapping C objects}: The embedder fills out a
+\texttt{PyTypeObject} struct with dozens of slots:
+\texttt{tp\_methods} (method table), \texttt{tp\_getset} (computed
+properties), \texttt{tp\_members} (direct struct field access by
+offset), \texttt{tp\_dealloc} (destructor), plus slots for numeric,
+sequence, mapping, iterator, and async protocols.
+
+\textbf{Method dispatch}: Attribute lookup via the type's method
+resolution order (MRO).  If the name is found in
+\texttt{tp\_methods}, a bound method object is created wrapping the C
+function.
+
+\textbf{Values back to C}: \texttt{PyLong\_AsLong(obj)},
+\texttt{PyFloat\_AsDouble(obj)},
+\texttt{PyArg\_ParseTuple(args, "is|d", ...)}.
+
+\textbf{Registration}: Module initialization fills a
+\texttt{PyModuleDef} struct and registers types with
+\texttt{PyType\_Ready}.
+
+\textbf{Key trade-offs}: Maximum control over Python's internals, but
+the reference counting discipline is notoriously error-prone.  Every
+boundary crossing allocates heap objects.  Defining even a simple type
+requires filling many \texttt{PyTypeObject} slots.  The API is
+primarily designed for \emph{extending} Python, not for
+\emph{embedding} it.
+
+
+\subsection{Kawa Scheme (JVM)}
+\label{sec:kawa}
+
+\textbf{Core representation}: \texttt{java.lang.Object}.  Kawa
+compiles Scheme to JVM bytecode; Scheme values are Java objects.
+
+\textbf{Wrapping Java objects}: No wrapping needed.  Java objects are
+directly usable in Kawa Scheme.
+\texttt{(define pt (java.awt.Point 10 20))} creates a Java
+\texttt{Point}.  \texttt{pt:x} accesses the field.
+
+\textbf{Method dispatch}: When the type is known at compile time, Kawa
+generates \texttt{invokevirtual} bytecode---as efficient as Java.
+When unknown, it falls back to reflection.  Type annotations
+(\texttt{::java.awt.Point}) guide the compiler.
+
+\textbf{Values back to Java}: Scheme values are already JVM objects.
+Java code invokes Scheme functions by calling \texttt{apply} on
+\texttt{gnu.mapping.Procedure} objects.
+
+\textbf{Registration}: None needed---both languages share the JVM
+class loader and object space.
+
+\textbf{Key trade-offs}: Zero-cost interoperability when types are
+known, but reflection fallback is slow.  Kawa must work within JVM
+constraints (no true tail calls or first-class continuations without
+trampolining).  The shared-runtime model is fundamentally different
+from all other systems here.
+
+
+\subsection{JScheme (Scheme in Java)}
+\label{sec:jscheme}
+
+\textbf{Core representation}: \texttt{java.lang.Object}.  JScheme is
+a tree-walking Scheme interpreter written in Java.  In Norvig's
+original (1998)~\cite{norvig1998}, all numbers are
+\texttt{java.lang.Double}, symbols are interned
+\texttt{java.lang.String}, strings are \texttt{char[]} (for
+mutability), pairs are a custom \texttt{Pair} class with
+\texttt{Object first, rest} fields, and \texttt{null} represents the
+empty list.  The later Anderson/Hickey version
+(2003+)~\cite{anderson2003} switched numbers to \texttt{Integer} or
+\texttt{Double} as appropriate, symbols to a custom \texttt{Symbol}
+class, and strings to \texttt{java.lang.String}.
+
+\textbf{Wrapping Java objects}: No wrapping needed.  Any Java object
+is already an \texttt{Object} and therefore a valid Scheme value.  The
+evaluator treats anything that is not a symbol and not a pair as
+self-evaluating, so a \texttt{java.awt.Frame} or
+\texttt{java.util.HashMap} placed into a Scheme variable simply
+evaluates to itself.
+
+\textbf{Method dispatch}: Entirely reflection-based.  The later
+JScheme provides a dot-notation syntactic sugar parsed at read time:
+
+\begin{lstlisting}[language=Scheme]
+(import "java.awt.Font")
+(Font. "Serif" Font.BOLD$ 24)     ; constructor (trailing dot)
+(.setFont component font)         ; instance method (leading dot)
+(.name$ obj)                      ; field access (trailing $)
+(Math.round 123.456)              ; static method (dot in middle)
+\end{lstlisting}
+
+These desugar into calls to \texttt{JavaMethod},
+\texttt{JavaConstructor}, or \texttt{JavaField} objects, all of which
+use \texttt{java.lang.reflect} internally.  Method tables are cached
+per class in hash tables, and overload resolution follows Java's
+``most specific applicable method'' rule at runtime.
+
+\textbf{Values back to Java}: Scheme values are already
+\texttt{Object}.  Java code calls
+\texttt{JScheme.call("proc-name", arg1, arg2)} and receives an
+\texttt{Object} result, narrowing via cast.
+
+\textbf{Scheme as Java interface}: The
+\texttt{SchemeInvocationHandler} class uses
+\texttt{java.lang.reflect.Proxy} to let a Scheme closure implement
+any Java interface, so Scheme callbacks work anywhere Java expects an
+interface (listeners, \texttt{Runnable}, etc.).
+
+\textbf{Registration}: \texttt{(import "java.awt.*")} makes classes
+available; dot-notation symbols are resolved against the import table.
+From the Java side, \texttt{JScheme.setGlobalValue("name", obj)}
+injects values.
+
+\textbf{Key trade-offs}: JScheme achieves the same zero-wrapping
+interoperability as Kawa---Java objects \emph{are} Scheme values---but
+pays for it with reflection overhead on every method call.  Kawa
+compiles to \texttt{invokevirtual} bytecode; JScheme interprets and
+reflects.  The simplicity is striking (Norvig's original is
+\textasciitilde1700 lines), but the performance gap is large.  JScheme
+is the direct ancestor of MScheme and establishes the key principle
+that MScheme inherits: when the host language has a universal reference
+type and a GC, the embedding boundary can be made nearly invisible.
+
+
+\subsection{Common Lisp / CFFI}
+\label{sec:cffi}
+
+\textbf{Core representation}: Tagged Lisp objects
+(implementation-dependent tagging scheme).  Foreign values are
+\texttt{cffi:foreign-pointer} wrappers.
+
+\textbf{Wrapping C objects}: The programmer wraps foreign pointers in
+CLOS objects and defines generic functions that call through to C.
+\texttt{trivial-garbage:finalize} attaches destructors.
+
+\textbf{Method dispatch}: Generic functions with CLOS multiple
+dispatch.  Methods dispatch on the classes of \emph{all} arguments,
+not just the receiver.
+
+\textbf{Values back to C}:
+\texttt{cffi:foreign-slot-value} reads struct fields by declared
+offset.  \texttt{defcfun} defines C function bindings with automatic
+marshaling.
+
+\textbf{Registration}: \emph{Pull-based}---the Lisp side declares C
+bindings with \texttt{defcfun}, \texttt{defcstruct},
+\texttt{defcenum}.  The C library is unmodified.
+
+\textbf{Key trade-offs}: CFFI is portable across CL implementations
+but requires manual struct layout declarations and memory management.
+CLOS provides a powerful ``glue'' layer but is per-project, not
+standardized for FFI.
+
+
+\subsection{Racket FFI}
+\label{sec:racket-ffi}
+
+\textbf{Core representation}: Tagged Racket objects.  C types are
+first-class Racket values: \texttt{\_int}, \texttt{\_double},
+\texttt{\_pointer}, \texttt{\_fun}.
+
+\textbf{Wrapping C objects}:
+\texttt{define-cpointer-type} creates tagged pointer types.
+\texttt{define-cstruct} auto-generates constructors, accessors, and
+mutators.  Custom type combinators (\texttt{make-ctype}) attach
+conversion functions to base C types.
+
+\textbf{Method dispatch}: Not object-oriented at the FFI layer.
+Operations on foreign values are called as procedures.
+
+\textbf{Values back to C}: \texttt{\_fun} type descriptors handle all
+marshaling declaratively.
+\texttt{(\_fun \_string \_int -> \_bool)} specifies argument and
+return conversions.
+
+\textbf{Registration}: \emph{Pull-based}---\texttt{get-ffi-obj} or
+\texttt{define-ffi-definer} declares bindings.  The C library is
+unmodified.
+
+\textbf{Key trade-offs}: The most algebraic and composable FFI design.
+Types as values enable declarative marshaling.  Tagged pointers add
+safety.  But the C library must be described entirely from the Racket
+side, and per-call marshaling overhead is significant for tight loops.
+
+
+\subsection{Tinylisp (Modula-2+)}
+\label{sec:tinylisp}
+
+\textbf{Core representation}: \texttt{REFANY}.  Tinylisp (DEC Systems
+Research Center, 1989)~\cite{ellis1989} is a Lisp implemented in
+Modula-2+, the SRC dialect of Modula-2 that added garbage collection,
+exception handling, \texttt{REFANY}, and \texttt{TYPECASE}.  Symbolic
+expressions are ordinary Modula-2+ ref types: \texttt{Ref.Integer},
+\texttt{Ref.LongReal}, \texttt{Ref.Boolean}, \texttt{Ref.Char},
+\texttt{Text.T}, \texttt{SxSymbol.T}, \texttt{List.T},
+\texttt{Ref.Vector}.  Any application's opaque-ref type is directly
+usable as a Tinylisp value---a \texttt{Wire.T} or \texttt{Wr.T} is a
+first-class s-expression, just as an \texttt{Mpz.T} is a first-class
+MScheme value.
+
+\textbf{Wrapping Modula-2+ objects}: No wrapping needed.  Any traced
+reference is already \texttt{REFANY} and therefore a valid Tinylisp
+value.
+
+\textbf{Method dispatch}: Via generated stubs.  A \emph{stub compiler}
+(\texttt{compile\_tli}) processes hand-written \texttt{.tli} (TinyLisp
+Interface) files and generates Modula-2+ stub procedures that
+dynamically check argument counts and types, convert between
+s-expression types and Modula-2+ value types, and call the
+corresponding procedures.  A \texttt{.tli} file declares modules,
+types, exceptions, and procedures in s-expression syntax:
+
+\begin{lstlisting}[language=Scheme]
+(MODULE Text Lisp)
+(TYPE T)
+(EXCEPTION EndOfFile)
+(PROCEDURE FromChar (CHAR) "Text.T")
+(PROCEDURE Length ("Text.T") INTEGER)
+(PROCEDURE SubText ("Text.T" INTEGER & INTEGER) "Text.T")
+\end{lstlisting}
+
+\textbf{Values back to Modula-2+}: Scheme values are already
+\texttt{REFANY}.  The stubs narrow them via \texttt{TYPECASE} for
+value types (\texttt{INTEGER}, \texttt{CHAR}, \texttt{BOOLEAN}, etc.)
+and \texttt{NARROW} for reference types.
+
+\textbf{Registration}: The generated stubs register procedures at
+startup, similar to MScheme's approach.
+
+\textbf{Execution model}: Unlike MScheme's tree-walking interpreter,
+Tinylisp compiled expressions directly into machine code at runtime
+(an on-the-fly compiler), making Tinylisp-to-Tinylisp calls roughly
+as fast as Modula-2+ calls.
+
+\textbf{Key trade-offs}: Tinylisp achieves the same zero-wrapping,
+shared-heap architecture as MScheme---the underlying mechanism
+(\texttt{REFANY} + tracing GC + \texttt{TYPECASE}) is identical.  The
+key difference is in stub generation: Tinylisp requires a hand-written
+\texttt{.tli} file (essentially a manual transliteration of the
+Modula-2+ \texttt{.def} file with type annotations), while MScheme's
+\texttt{sstubgen} reads the standard M3 \texttt{.i3} interface files
+directly via m3tk.  Tinylisp is also faster at the Lisp level
+(compiled vs.\ interpreted) but was designed as a lightweight extension
+language rather than a full Scheme.
+
+
+%% ==================================================================
+\section{Comparative Analysis}
+\label{sec:analysis}
+%% ==================================================================
+
+\subsection{The Central Trade-off: Shared Heap vs.\ Marshaling Boundary}
+\label{sec:shared-heap}
+
+The most fundamental architectural difference across these systems is
+whether the host and guest languages \emph{share} their object
+representations or maintain \emph{separate} representations connected
+by a marshaling boundary.
+
+\textbf{Shared heap} (MScheme, Tinylisp, JScheme, Kawa): The host
+language's objects are directly usable as scripting language values.
+No per-call conversion cost.  The garbage collector sees everything.
+This is only possible when both languages are GC'd and share a runtime
+(M3 + MScheme, Modula-2+ + Tinylisp) or a VM (Java + JScheme, Java +
+Kawa).
+
+\textbf{Marshaling boundary} (Lua, Guile, Tcl, Python, CFFI, Racket):
+The host creates scripting-language values via conversion APIs.  Every
+boundary crossing allocates and converts.  The two sides maintain
+separate type systems and (often) separate memory management.
+
+MScheme's \texttt{SchemeObject.T = REFANY} and Tinylisp's use of
+\texttt{REFANY} are the extreme cases of shared heap: it is not that
+host objects are \emph{wrapped} as Lisp/Scheme values, but that they
+literally \emph{are} Lisp/Scheme values, by type identity.
+
+
+\subsection{Type Safety and Dispatch Cost}
+\label{sec:type-safety}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+System   & Type check at boundary                 & Method dispatch cost \\
+\midrule
+MScheme  & \texttt{TYPECASE} (M3 runtime typecheck)      & Atom comparison per registered op \\
+Tinylisp & \texttt{TYPECASE} (M2+ runtime typecheck)     & Stub dispatch (compiled) \\
+Lua      & Metatable lookup + manual C-side checks & Hash lookup in metatable \\
+Guile    & Manual \texttt{SCM} type predicates           & Symbol lookup in module \\
+Tcl      & String parse on demand                 & String comparison for subcommand \\
+Python   & \texttt{PyArg\_ParseTuple} format string       & MRO attribute lookup \\
+Kawa     & JVM \texttt{checkcast} instruction            & \texttt{invokevirtual} or reflection \\
+JScheme  & \texttt{instanceof} (runtime)                 & Reflection + cached method table \\
+CFFI     & CLOS \texttt{typep} + manual checks           & Generic function dispatch \\
+Racket   & cpointer tag check                     & Direct call (no dispatch) \\
+\bottomrule
+\end{tabular}
+\caption{Type safety and dispatch cost across systems.}
+\label{tab:type-safety}
+\end{table}
+
+MScheme benefits from M3's runtime type system: \texttt{TYPECASE} is a
+compiler-supported, type-safe downcast with $O(1)$ performance (the
+runtime checks the typecode, which is an integer).  This is
+essentially the same mechanism as Java's \texttt{instanceof} check,
+used by Kawa and JScheme on the JVM.
+
+
+\subsection{Automatic Binding Generation}
+\label{sec:auto-binding}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+System   & Auto-generation? & Input & Mechanism \\
+\midrule
+MScheme  & Yes (\texttt{sstubgen})       & M3 \texttt{.i3} interface files    & M3 Toolkit AST parsing + code gen \\
+Tinylisp & Yes (\texttt{compile\_tli})   & Hand-written \texttt{.tli} files   & Stub compiler generates M2+ stubs \\
+Lua      & No                     & ---                           & Manual C code \\
+Guile    & Partial (g-wrap)       & C headers                   & Third-party tool, not standard \\
+Tcl      & Partial (critcl, SWIG) & C headers                   & Third-party tools \\
+Python   & Partial (Cython, etc.) & C/C++ headers + annotations & Third-party tools \\
+Kawa     & Unnecessary            & ---                           & Shared JVM class loader \\
+JScheme  & Unnecessary            & ---                           & Reflection on JVM classes at runtime \\
+CFFI     & No                     & Manual declarations         & Programmer writes \texttt{defcfun} \\
+Racket   & No                     & Manual declarations         & Programmer writes \texttt{define-ffi-definer} \\
+\bottomrule
+\end{tabular}
+\caption{Automatic binding generation across systems.}
+\label{tab:auto-binding}
+\end{table}
+
+MScheme's \texttt{sstubgen} is notable because it is a
+\emph{first-party} tool that ships with the interpreter, processes the
+host language's standard interface files, and generates complete
+bidirectional bindings.  The equivalent in the Python world would be a
+tool that reads \texttt{.pyi} stub files and generates complete C
+extension modules automatically.
+
+The closest comparable systems are SWIG (which processes C/C++ headers
+to generate bindings for multiple target languages) and Kawa (which
+needs no generator at all because Java and Scheme share the JVM).
+
+
+\subsection{GC Coordination}
+\label{sec:gc-coordination}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+System   & Host GC            & Guest GC                   & Coordination \\
+\midrule
+MScheme  & M3 traced refs     & Same GC                    & None needed---unified heap \\
+Tinylisp & M2+ traced refs    & Same GC                    & None needed---unified heap \\
+Lua      & None (C)           & Incremental mark-sweep     & Explicit: stack + registry roots \\
+Guile    & None (C)           & Conservative (BDW-GC)      & Automatic: scans C stack conservatively \\
+Tcl      & None (C)           & Refcounting                & Manual: \texttt{Tcl\_IncrRefCount}/\texttt{Tcl\_DecrRefCount} \\
+Python   & None (C)           & Refcounting + cycle detect & Manual: \texttt{Py\_INCREF}/\texttt{Py\_DECREF} \\
+Kawa     & JVM GC             & Same GC                    & None needed---unified heap \\
+JScheme  & JVM GC             & Same GC                    & None needed---unified heap \\
+CFFI     & CL GC              & Same GC (for CL objects)   & \texttt{trivial-garbage:finalize} for foreign ptrs \\
+Racket   & Precise moving GC  & Same GC                    & Special APIs for C extensions holding Racket refs \\
+\bottomrule
+\end{tabular}
+\caption{GC coordination across systems.}
+\label{tab:gc-coordination}
+\end{table}
+
+The MScheme/M3, Tinylisp/M2+, Kawa/JVM, and JScheme/JVM systems
+share a critical advantage: since both languages use the same garbage
+collector, there is no coordination problem.  A Scheme closure that
+captures an M3 object keeps it alive automatically.  An M3 data
+structure containing Scheme pairs is traced correctly.  No reference
+counting, prevent-collection guards, or weak-reference bridges.
+
+This eliminates an entire class of bugs that plagues C-based embedding
+systems.  In CPython, getting reference counts wrong is the single
+most common source of C extension bugs.  In Lua, forgetting to anchor
+a value on the stack or in the registry causes it to be collected while
+C still holds a pointer to it.
+
+The fundamental problem runs deeper than API discipline, and
+understanding it clarifies why the shared-heap architecture is confined
+to a small set of languages: C makes garbage collection nearly
+impossible to do correctly.  The language permits pointers to be hidden
+in ways that are both legal and common in practice, defeating any
+collector that tries to find them.
+
+A ``conservative'' collector like BDW-GC works by scanning the C
+stack, registers, and static data segments for bit patterns that look
+like they might be heap addresses.  This is inherently a heuristic,
+and it fails in both directions.
+
+\textbf{False negatives (hidden pointers---the dangerous case).}  C
+allows a program to store a pointer as an integer
+(\texttt{uintptr\_t}), XOR two pointers together (XOR linked lists),
+offset a pointer by a constant and recover it later, split a pointer's
+bytes across non-adjacent struct fields, send it through a pipe or
+socket and read it back, or store it in a memory-mapped file.  In all
+of these cases, the pointer exists but does not appear on the stack or
+in a register in a form the collector can recognize.  If the collector
+runs at that moment, it may conclude the object is unreachable and
+free it.  The program then recovers the hidden pointer and
+dereferences freed memory.  This is not a contrived scenario---XOR-linked
+lists save memory in embedded systems, pointer tagging is used in
+language runtimes (including CPython's own \texttt{ob\_refcnt} field
+packing), and integer casts are routine in serialization and IPC code.
+
+\textbf{False positives (pointer lookalikes---the slow leak).}  On a
+32-bit system, roughly 1 in 1000 random integers looks like a valid
+heap address.  On 64-bit systems the odds are better but not zero,
+especially for programs that process file offsets, hash values, or
+pixel data in the gigabyte range.  Each false positive pins a dead
+object (and everything it transitively references) in memory
+indefinitely.  Programs that run for a long time with large heaps can
+see unbounded memory growth from these phantom roots.
+
+\textbf{No solution within C.}  The C standard deliberately leaves
+pointer representation implementation-defined and permits casts
+between pointers and integers.  A conforming C program can hide a
+pointer in a way that no scanning algorithm can find.  This is not a
+bug in the language---it is a consequence of C's design as a portable
+assembly language with minimal abstraction over the machine.
+
+Languages like Modula-3 and Java avoid this entirely.  In M3, the
+compiler emits stack frame descriptors that tell the garbage collector
+exactly which stack slots and object fields contain traced references.
+The runtime knows the precise layout of every heap object because
+allocations go through \texttt{NEW}, which records the type.  The
+collector does not guess: it follows exactly the traced references and
+nothing else.  No false negatives, false positives, or heuristics.
+Java achieves the same property through the JVM's typed operand stack
+and GC maps.  This is what makes the unified-heap architecture of
+MScheme, JScheme, and Kawa possible---the collector's precision is
+guaranteed by the language, not hoped for by convention.
+
+
+\subsection{Registration Direction: Push vs.\ Pull}
+\label{sec:registration}
+
+\textbf{Push} (the host declares what's available to the script):
+MScheme, Tinylisp, Lua, Guile, Tcl, Python.
+
+\textbf{Pull} (the script declares what it wants from the host):
+CFFI, Racket FFI.
+
+\textbf{Neither} (shared runtime): Kawa, JScheme.
+
+MScheme is firmly push-based, but its push is \emph{automated} via
+\texttt{sstubgen}.  The programmer adds
+\texttt{SchemeStubs("InterfaceName")} to the makefile, and the build
+system generates and compiles all binding code.  The effect feels
+almost like Kawa's shared runtime: everything visible in M3 interfaces
+becomes visible in Scheme.
+
+
+\subsection{Expressiveness at the Boundary}
+\label{sec:expressiveness}
+
+MScheme's design allows patterns that are difficult or impossible in
+most other systems:
+
+\textbf{M3 objects as first-class Scheme data.}  A Scheme list can
+contain M3 \texttt{TextSeq.T} objects alongside Scheme pairs and
+numbers.  \texttt{map}, \texttt{filter}, and \texttt{for-each} work
+on these mixed lists.  The M3 objects participate in Scheme's
+structural equality and serialization (via \texttt{write} and
+pickling).
+
+\textbf{Scheme closures as M3 callbacks.}  The \texttt{sstubgen}
+documentation describes how M3 object methods can be overridden with
+Scheme lambdas, enabling a pattern where M3 objects have individual
+methods replaced at runtime---something M3 itself cannot do (methods
+are fixed at object allocation time).
+
+\textbf{Runtime discovery.}  Scheme code can enumerate all registered
+M3 types, query their supertypes, and list available operations.  This
+enables Scheme-level metaprogramming over the M3 type system---writing
+generic operations that work on any M3 object based on runtime type
+introspection.
+
+
+%% ==================================================================
+\section{Positioning in the Design Space}
+\label{sec:positioning}
+%% ==================================================================
+
+Plotting the systems on two axes---\emph{per-call cost} (boundary
+overhead) vs.\ \emph{setup cost} (how much binding code must be
+written)---reveals three clusters:
+
+\begin{samepage}
+\begin{verbatim}
+                    low setup cost
+                         |
+            Kawa  *      |
+                         |
+      MScheme  *         |
+    Tinylisp  *          |       * JScheme
+  -------------------------------------
+  low per-call cost      |       high per-call cost
+                         |
+                         |      * Guile
+              * CFFI     |      * Lua
+              * Racket   |      * Tcl
+                         |      * Python/C
+                         |
+                    high setup cost
+\end{verbatim}
+\end{samepage}
+
+Kawa achieves the ideal: zero setup, zero per-call cost.  But it
+requires both languages to run on the JVM.
+
+JScheme shares Kawa's low setup cost (both live on the JVM, no
+bindings to write) but pays a significant per-call cost: every Java
+method call goes through reflection, while Kawa compiles to direct
+\texttt{invokevirtual} bytecode.
+
+MScheme and Tinylisp occupy a similar region: both achieve very low
+per-call cost through the shared \texttt{REFANY} heap, and both have
+stub generators that reduce setup cost.  MScheme's \texttt{sstubgen}
+reduces setup cost further by reading standard \texttt{.i3} files
+directly, while Tinylisp's \texttt{compile\_tli} requires hand-written
+\texttt{.tli} files.  Tinylisp compensates with lower per-call
+overhead at the Lisp level (compiled vs.\ interpreted).
+
+MScheme comes closest to Kawa's position among systems where the host
+language has its own native runtime.  The shared GC eliminates
+per-call cost for value passing, and \texttt{sstubgen} eliminates
+setup cost for binding generation.  The remaining cost is method
+dispatch (atom comparison), which is comparable to Lua's metatable
+lookup and far cheaper than Python's MRO traversal.
+
+The C-hosted systems (Lua, Guile, Tcl, Python) all pay for the
+impedance mismatch between a non-GC host and a GC'd guest.  CFFI and
+Racket minimize setup cost on the host side (the C library is
+unmodified) but pay for it on the scripting side (manual declarations)
+and at every call boundary (marshaling).
+
+
+%% ==================================================================
+\section{Native Code, Not a Virtual Machine}
+\label{sec:native-code}
+%% ==================================================================
+
+The preceding analysis groups MScheme with JScheme and Kawa as
+``shared heap'' systems.  But there is a further distinction that
+separates MScheme from its JVM counterparts, and connects it to a much
+smaller lineage.
+
+
+\subsection{Why This Distinction Matters}
+\label{sec:why-native}
+
+JScheme and Kawa achieve glueless interoperability on the JVM.  But
+the JVM is a virtual machine: Java source compiles to bytecode, which
+is then interpreted or JIT-compiled by the VM at runtime.  The GC,
+runtime type information, and universal reference type
+(\texttt{java.lang.Object}) are services provided by the VM, not by
+the compiled program itself.
+
+Modula-3 is different.  The cm3 compiler emits native machine code---x86,
+x86-64, ARM64, SPARC, PA-RISC, PowerPC---directly, with no
+intermediate bytecode and no virtual machine.  The generated code runs
+as ordinary machine instructions.  Yet Modula-3 still provides precise
+garbage collection, runtime type discrimination (\texttt{TYPECASE},
+\texttt{ISTYPE}, \texttt{TYPECODE}), and a universal traced reference
+type (\texttt{REFANY}).  It achieves this by having the compiler emit
+metadata alongside the native code: stack frame descriptors that tell
+the runtime exactly which stack slots contain traced references, and
+type descriptors that record the layout of every heap-allocated type.
+
+This means MScheme's Scheme interpreter runs as native machine code
+calling into native machine code, with no VM layer in between.  When
+Scheme code calls an M3 method, it is a direct procedure call---the
+same calling convention as any M3-to-M3 call.  When the garbage
+collector runs, it traces M3 objects and Scheme pairs with the same
+algorithm, using the same compiler-generated stack maps.  There is no
+bytecode interpreter, JIT warmup, or tiered compilation.
+
+
+\subsection{How Rare Is This Architecture?}
+\label{sec:how-rare}
+
+The combination of properties that makes MScheme possible is unusual:
+(1)~ahead-of-time compilation to native code, (2)~precise tracing GC,
+(3)~runtime type information with a universal reference type, and
+(4)~an embedded interpreter for a \emph{different} language that
+shares the host's values and GC directly, with no marshaling.
+
+Very few languages in history have provided (1)--(3) simultaneously.
+The lineage leading to Modula-3---Mesa $\to$ Cedar $\to$ Modula-2+
+$\to$ Modula-3---is one of the few that does (see
+Section~\ref{sec:mesa-cedar}).
+
+A survey of other natively-compiled GC'd languages shows why MScheme's
+architecture is hard to replicate:
+
+\textbf{Common Lisp (SBCL, CMUCL, etc.).}  The strongest analogue.
+SBCL compiles to native x86-64 and ARM64 code and has a precise
+generational GC.  Its interpreter (when enabled) shares the exact same
+heap, the same tagged-pointer value representation, and the same
+collector as compiled code.  A Scheme interpreter written in Common
+Lisp would be architecturally identical to MScheme.  However, CL's
+interpreter is self-hosting---it interprets Common Lisp, not a
+different language.  The system is designed for mixed-mode execution of
+a single language, not for embedding a scripting language in a systems
+language.
+
+\textbf{Smalltalk (StrongTalk, Cog/Spur).}  JIT-compiles methods to
+native code; the interpreter and compiled code share a single object
+space with no marshaling boundary.  Again self-hosting: the
+interpreted and compiled languages are the same Smalltalk.
+Compilation is JIT (at runtime), not AOT (ahead of time).
+
+\textbf{Eiffel (EiffelStudio's Melting Ice).}  Compiles Eiffel to C
+and thence to native code (``frozen'' code), but also maintains
+bytecode-interpreted ``melted'' code for rapid development.  Frozen
+and melted code share the same heap and objects.  Self-hosting: the
+interpreted language is Eiffel.
+
+\textbf{Julia.}  JIT-compiles to native code via LLVM; \texttt{eval}
+operates in the same runtime with the same values.  Self-hosting; JIT,
+not AOT.
+
+\textbf{Go (Yaegi).}  Compiles to native code and has precise GC, but
+Yaegi (a Go interpreter written in Go) wraps values in
+\texttt{reflect.Value} at every boundary---a form of marshaling.  Go
+also lacks a universal reference type; \texttt{interface\{\}} is a
+two-word pair, not a traced pointer.
+
+\textbf{Oberon.}  Compiles to native code and has GC, but lacks a
+universal reference type and has no embedded interpreter---it uses
+dynamic loading of compiled modules instead.
+
+\textbf{D, Dylan, OCaml.}  All compile to native code and have GC,
+but none has an embedded interpreter for a different language that
+shares the host heap without marshaling.  OCaml's bytecode toplevel
+shares the heap with loaded \texttt{.cmo} modules, but the
+native-code compiler path has no analogous mechanism for a different
+language.
+
+The pattern that emerges is that self-hosting interpreters in
+natively-compiled languages are not uncommon (CL, Smalltalk, Eiffel,
+Julia all have them), but an interpreter for a \emph{different}
+language that shares the host's heap with zero marshaling overhead is
+rare.  The obstacle is not theoretical---any language with GC, RTTI,
+and a universal reference type could support it---but practical: very
+few such languages exist, and in those that do, the idea has seldom
+been pursued.  The one important exception---Tinylisp
+(Section~\ref{sec:tinylisp})---exploits the same mechanism in
+Modula-2+, the direct ancestor of Modula-3.
+
+
+%% ==================================================================
+\section{Design Philosophy: Value Types and the Lisp Machine}
+\label{sec:philosophy}
+%% ==================================================================
+
+The SSTUBGEN.TXT design document explicitly positions the system's
+goal as making Scheme a viable ``main program'' language for large M3
+applications: the libraries are in M3, the orchestration is in Scheme.
+This is the same pattern later popularized by Lua in game engines and
+Python in scientific computing---but MScheme achieves it with
+significantly less impedance mismatch, thanks to the shared GC and
+type system.
+
+Why do so few languages provide the features that make this
+architecture possible?  The answer leads to a deeper question about
+language design and the relationship between MScheme's architecture
+and the Lisp Machine.
+
+The Lisp Machine is the ultimate precedent for glueless
+interoperability: Lisp \emph{was} the systems language and no
+interoperability boundary existed at all.  But the Lisp Machine also
+illustrates the cost of the approach the Algol family avoids.  As
+Nelson observes in \emph{Systems Programming with
+Modula-3}~\cite{nelson1991}:
+
+\begin{quote}
+At the other extreme are languages like Lisp, ML, Smalltalk, and CLU,
+whose programming models originate from mathematics.\ [\ldots]\ These
+languages have beautiful programming models, but they tend to be
+difficult to implement efficiently, because the uniform treatment of
+values in the programming model invites a runtime system in which
+values are uniformly represented by pointers.  If the implementer
+doesn't take steps to avoid it, as simple a statement as
+\texttt{n := n + 1} could require an allocation, a method lookup, or
+both.
+\end{quote}
+
+The Lisp Machine solved this in hardware.  The Symbolics 3600
+(Moon~\cite{moon1985}) and its successor the Ivory (I-Machine) use
+tagged words: every machine word carries a data type tag (4 bits on
+the 3600, 6 bits on the Ivory) alongside 32 bits of data or address.
+Twenty-two of the Ivory's type codes designate \emph{immediate}
+values---fixnums, single-precision floats, characters, small
+ratios---where the data is encoded directly in the word.  Fixnum
+arithmetic is a register-to-register operation; \texttt{n + 1}
+requires no allocation and no GC involvement.  The remaining 33 type
+codes designate \emph{pointer} values---lists, arrays, symbols,
+closures, bignums---where the 32-bit field is a heap address.
+CDR-coding compresses list cells to roughly half the space of naive
+linked lists.  Hardware-assisted ephemeral garbage collection reduces
+the cost of short-lived heap allocations.  Common Lisp's
+\texttt{dynamic-extent} declaration allows the compiler to
+stack-allocate objects known not to escape their enclosing scope.  With
+all of these mechanisms, Lisp Machines do handle fixnum-intensive code
+efficiently---but they achieve it through \emph{dedicated hardware}
+that conventional machines lack.
+
+Tagged-pointer hardware has a longer history---the Burroughs B5000
+(1961) and B6500/B6700 (1969)~\cite{organick1973} tagged every word
+for machine-level integrity---but the Lisp Machines were the first to
+tag by \emph{user-level data type} (fixnum, cons, symbol, closure),
+enabling the hardware to dispatch on language-level types directly.
+
+The Algol family, to which Modula-3 belongs, takes the opposite
+approach: instead of solving the problem in hardware, the \emph{language
+itself} distinguishes value types from reference types.  In Modula-3,
+\texttt{INTEGER}, \texttt{REAL}, \texttt{BOOLEAN}, \texttt{CHAR},
+records, and fixed arrays are value types---stack-allocated, unboxed,
+and invisible to the garbage collector.  Only reference types
+(\texttt{REF}, \texttt{OBJECT}, \texttt{TEXT}) participate in the
+traced heap.  This means that most of a typical M3 systems
+program---local variables, loop counters, parameter passing, record
+manipulation---never touches the GC at all.  The garbage collector
+runs only for heap-allocated reference types, and the compiler needs
+no special optimization or declarations to achieve this: the type
+system guarantees it statically.
+
+This is exactly the property that makes MScheme's architecture
+practical for systems programming.  The Scheme interpreter and its
+data structures (pairs, closures, environments) live in the traced
+heap and are managed by the GC, but the M3 code that the Scheme stubs
+call into can be dominated by stack-allocated value types.  The
+boundary between ``GC'd scripting world'' and ``stack-allocated systems
+world'' is not a marshaling barrier---it is the ordinary Modula-3 type
+system, which \texttt{sstubgen} navigates automatically by generating
+\texttt{ToScheme}/\texttt{ToModula} converters that box and unbox
+value types at the boundary while passing reference types through
+unchanged.  (JScheme and Kawa on the JVM face a version of the same
+issue---the JVM boxes primitives like \texttt{int} to
+\texttt{Integer}---but Java's autoboxing covers only a fixed set of
+primitive types, while \texttt{sstubgen} handles the full M3 type
+system including user-defined records, enumerations, subranges, and
+multidimensional arrays.)
+
+The Lisp Machine achieved glueless interoperability by making Lisp the
+only language.  JScheme approximated it for Java on the JVM.  MScheme
+approximates it for Modula-3 on conventional hardware---one type alias
+(\texttt{T = REFANY}), a language that distinguishes values from
+references, and a code generator that handles the rest.
+
+
+%% ==================================================================
+\section{Historical Lineage}
+\label{sec:lineage}
+%% ==================================================================
+
+\subsection{The Mesa/Cedar/Modula-2+/Modula-3 Language Family}
+\label{sec:mesa-cedar}
+
+The language features that make MScheme and Tinylisp possible---\texttt{REFANY},
+precise tracing GC, \texttt{TYPECASE}---trace a specific lineage
+through four decades of systems programming language design.
+
+\textbf{Mesa} (Xerox PARC, 1970s) was a systems language for the Alto
+and later the Dorado.  It compiled to native code and had strong
+typing, but no garbage collection and no universal reference type.
+
+\textbf{Cedar} (Xerox PARC, early 1980s) extended Mesa with garbage
+collection, \texttt{REF ANY}, and runtime type
+information~\cite{rovner1985}.  Cedar had the infrastructure to
+support an MScheme-like system---a universal traced reference type and
+a precise GC---but no one built a full scripting interpreter on top of
+it.  The debugger could evaluate expressions in a stopped frame, but
+that is not the same as a general-purpose embedded language.
+
+\textbf{Modula-2+} (DEC Systems Research Center, mid-1980s) was DEC
+SRC's dialect of Modula-2, adding garbage collection, exception
+handling, opaque types, \texttt{REFANY}, and \texttt{TYPECASE}---the
+features Cedar had pioneered, adapted to a Wirth-family language.  It
+was the implementation language for SRC's systems infrastructure and
+the language in which Tinylisp was written.
+
+\textbf{Modula-3} (DEC SRC / Olivetti Research Center,
+1989)~\cite{cardelli1989report} refined Modula-2+ into a clean design
+with a formal specification.  The Modula-3 Report codified the type
+system, the \texttt{REFANY} mechanism, and the \texttt{TYPECASE}
+dispatch that make MScheme's architecture possible.
+
+
+\subsection{From JScheme to MScheme}
+\label{sec:jscheme-to-mscheme}
+
+Peter Norvig published JScheme in 1998~\cite{norvig1998} as a compact
+demonstration that a useful Scheme interpreter could be written in
+\textasciitilde1700 lines of Java.  The key architectural insight---\texttt{java.lang.Object}
+as the universal Scheme value---was implicit in the choice of Java as
+the implementation language.  Ken Anderson (BBN) and Tim Hickey
+(Brandeis) later expanded JScheme~\cite{anderson2003} with
+dot-notation syntax, overload resolution, and dynamic proxy support
+for Java interfaces.
+
+MScheme was written in 2007--2008 as a line-for-line translation of
+JScheme into Modula-3.  The translation preserved JScheme's
+fundamental principle (\texttt{Object} $\to$ \texttt{REFANY}) but
+added two things JScheme lacks: an automatic stub generator
+(\texttt{sstubgen}) and a runtime type introspection API.  MScheme has
+been used in financial trading, scientific computing, and hardware
+design.
+
+The MScheme design predates many of the modern FFI systems (Racket's
+FFI was redesigned around 2010; Python's stable ABI came in 3.2/2011;
+Guile's foreign object types replaced SMOBs in 2.0/2011).
+
+MScheme was not aware of Tinylisp; the parallel development reflects
+the fact that the architecture is essentially forced once the host
+language provides \texttt{REFANY} and GC.
+
+
+\subsection{The sstubgen and m3tk Provenance}
+\label{sec:sstubgen-provenance}
+
+\texttt{sstubgen} derives directly from the Network Objects stub
+generator (\texttt{m3-comm/stubgen}) designed by Susan Owicki and Ted
+Wobber for Birrell et al.'s distributed object
+system~\cite{birrell1994}.  It is not merely modeled on the network
+objects \texttt{stubgen}---it shares code.  Several source files are
+identical between the two packages (\texttt{FRefRefTbl},
+\texttt{TypeNames}, \texttt{ValueProc}), and others
+(\texttt{AstToType}, \texttt{Type}, \texttt{Value},
+\texttt{StubGenTool}, \texttt{StubUtils}) are extended copies.
+
+M3tk is a comprehensive Modula-3 front-end toolkit providing a generic
+AST framework, parser, semantic analyzer, and support for building
+compiler extensions.  It was written by Mick Jordan, originally at the
+Olivetti Research Center (ORC) in Menlo Park, California, and later at
+DEC SRC, and described in his 1990 paper ``An Extensible Programming
+Environment for Modula-3''~\cite{jordan1990}.  M3tk began life as part
+of Olivetti's full Modula-3 compiler; the cm3 compiler (Bill Kalsow's
+SRC compiler lineage) does not use m3tk itself, but the Network
+Objects \texttt{stubgen} does, and \texttt{sstubgen} inherits that
+dependency.  M3tk is organized into sub-packages (\texttt{m3tk-ast},
+\texttt{m3tk-syn}, \texttt{m3tk-sem}, \texttt{m3tk-fe}, etc.)\ and is
+used by both \texttt{stubgen} and \texttt{sstubgen}, as well as by
+the language server and other M3 development tools.
+
+
+%% ==================================================================
+\section*{Acknowledgments}
+%% ==================================================================
+
+Paul McJones provided detailed comments on an earlier draft, including
+the reference to Ellis's Tinylisp and corrections to the discussion
+of m3tk, stub naming conventions, and the role of the \texttt{interp}
+and \texttt{excH} parameters in generated code.
+
+
+%% ==================================================================
+\begin{thebibliography}{99}
+%% ==================================================================
+
+%% --- Modula-3 ---
+
+\bibitem{cardelli1989report}
+L.~Cardelli, J.~Donahue, L.~Glassman, M.~Jordan, B.~Kalsow, and
+G.~Nelson.
+\newblock Modula-3 Report (revised).
+\newblock DEC Systems Research Center, Report~52, November 1989.
+
+\bibitem{cardelli1989types}
+L.~Cardelli, J.~Donahue, M.~Jordan, B.~Kalsow, and G.~Nelson.
+\newblock The {Modula-3} type system.
+\newblock In \emph{Conference Record of the Sixteenth Annual ACM
+  Symposium on Principles of Programming Languages}, pp.~202--212,
+  1989.
+
+\bibitem{cardelli1989typeful}
+L.~Cardelli.
+\newblock Typeful programming.
+\newblock DEC Systems Research Center, Report~45, May 1989.
+\newblock Revised version in E.\,J.\ Neuhold and M.\ Paul (eds.),
+  \emph{Formal Description of Programming Concepts},
+  Springer-Verlag, 1991.
+
+\bibitem{nelson1991}
+G.~Nelson (ed.).
+\newblock \emph{Systems Programming with Modula-3.}
+\newblock Prentice Hall, 1991.
+
+\bibitem{harbison1992}
+S.\,P.\ Harbison.
+\newblock \emph{Modula-3.}
+\newblock Prentice Hall, 1992.
+
+\bibitem{cm3}
+Modula3/CM3: Critical Mass Modula-3.
+\newblock \url{https://github.com/modula3/cm3}
+
+%% --- Network Objects and stub generation ---
+
+\bibitem{birrell1994}
+A.\,D.\ Birrell, G.~Nelson, S.~Owicki, and E.~Wobber.
+\newblock Network objects.
+\newblock DEC Systems Research Center, Report~115, February 1994.
+\newblock Also in \emph{Proc.\ 14th ACM SOSP}, December 1993; and
+  \emph{Software---Practice and Experience},
+  25(S4):87--130, December 1995.
+
+\bibitem{birrell1993gc}
+A.\,D.\ Birrell, D.~Evers, G.~Nelson, S.~Owicki, and E.~Wobber.
+\newblock Distributed garbage collection for network objects.
+\newblock DEC Systems Research Center, Report~116, December 1993.
+
+%% --- M3 Toolkit ---
+
+\bibitem{jordan1990}
+M.~Jordan.
+\newblock An extensible programming environment for {Modula-3}.
+\newblock In \emph{Proc.\ Fourth ACM SIGSOFT Symposium on Software
+  Development Environments} (SDE~4), Irvine, California, December
+  1990.
+\newblock \emph{ACM SIGSOFT Software Engineering Notes},
+  15(6):66--76.
+
+\bibitem{jordan1988}
+M.~Jordan and P.~Robinson.
+\newblock A programming environment for {Modula-2}.
+\newblock \emph{Software Engineering Journal}, 3(4):119--126, July
+  1988.
+
+%% --- MScheme, sstubgen, cspc ---
+
+\bibitem{mscheme}
+MScheme source code: \texttt{cm3/m3-scheme/mscheme/}.
+\newblock In the CM3 repository.
+
+\bibitem{sstubgen-txt}
+SSTUBGEN.TXT: Design document for the Scheme stub generator.
+\newblock \texttt{cm3/m3-scheme/sstubgen/src/SSTUBGEN.TXT}.
+
+\bibitem{schemem3-readme}
+SchemeM3 README: Embedding guide.
+\newblock \texttt{cm3/m3-scheme/modula3scheme/src/README}.
+
+\bibitem{cspc}
+\texttt{cspc}: CSP compiler for asynchronous VLSI design.
+\newblock \texttt{intel-async/async-toolkit/m3utils/m3utils/csp/src/}.
+\newblock In the async-toolkit repository.
+
+%% --- JScheme ---
+
+\bibitem{norvig1998}
+P.~Norvig.
+\newblock {JScheme}: {Scheme} implemented in {Java}.
+\newblock \url{https://norvig.com/jscheme.html}, 1998.
+
+\bibitem{norvig-design}
+P.~Norvig.
+\newblock {JScheme}: Design decisions.
+\newblock \url{https://norvig.com/jscheme-design.html}
+
+\bibitem{anderson2003}
+K.\,R.\ Anderson, T.\,J.\ Hickey, and P.~Norvig.
+\newblock {JScheme}.
+\newblock \url{https://www.cs.brandeis.edu/~tim/jscheme/main.html}.
+\newblock Brandeis University / BBN Technologies, 2003.
+
+%% --- Tinylisp and Modula-2+ ---
+
+\bibitem{ellis1989}
+J.~Ellis.
+\newblock Tinylisp reference manual.
+\newblock Systems Research Center, Digital Equipment Corporation,
+  January 26, 1989.
+\newblock \url{https://softwarepreservation.computerhistory.org/LISP/dec/Ellis-Tinylisp-1989.pdf}
+
+\bibitem{m2plus}
+Modula-2+ manuals and related materials.
+\newblock \url{https://softwarepreservation.computerhistory.org/modula2+/}
+
+%% --- Cedar and Modula-3 ancestry ---
+
+\bibitem{rovner1985}
+P.~Rovner.
+\newblock On adding garbage collection and runtime types to a
+  strongly-typed, statically-checked, concurrent language.
+\newblock Xerox PARC, CSL-84-7, July 1985.
+
+\bibitem{lampson1983}
+B.\,W.\ Lampson.
+\newblock A description of the {Cedar} language.
+\newblock Xerox PARC, CSL-83-15, December 1983.
+
+%% --- Lua ---
+
+\bibitem{lua-manual}
+R.~Ierusalimschy, L.\,H.\ de~Figueiredo, and W.~Celes.
+\newblock \emph{Lua 5.4 Reference Manual.}
+\newblock \url{https://www.lua.org/manual/5.4/}
+
+\bibitem{lua-pil}
+R.~Ierusalimschy.
+\newblock \emph{Programming in Lua}, 4th edition.
+\newblock Lua.org, 2016.
+
+\bibitem{lua-evolution}
+R.~Ierusalimschy, L.\,H.\ de~Figueiredo, and W.~Celes.
+\newblock The evolution of {Lua}.
+\newblock In \emph{Proc.\ Third ACM SIGPLAN Conference on History of
+  Programming Languages} (HOPL~III), 2007.
+
+%% --- GNU Guile ---
+
+\bibitem{guile-manual}
+\emph{GNU Guile Reference Manual}, version~3.0.
+\newblock \url{https://www.gnu.org/software/guile/manual/}
+
+%% --- Tcl/Tk ---
+
+\bibitem{ousterhout1994}
+J.\,K.\ Ousterhout.
+\newblock \emph{Tcl and the Tk Toolkit.}
+\newblock Addison-Wesley, 1994.
+
+\bibitem{tcl-doc}
+\emph{Tcl/Tk Documentation.}
+\newblock \url{https://www.tcl-lang.org/doc/}
+
+%% --- CPython ---
+
+\bibitem{python-capi}
+\emph{Python/C API Reference Manual.}
+\newblock \url{https://docs.python.org/3/c-api/}
+
+\bibitem{python-extending}
+\emph{Extending and Embedding the Python Interpreter.}
+\newblock \url{https://docs.python.org/3/extending/}
+
+%% --- Kawa Scheme ---
+
+\bibitem{bothner1998}
+P.~Bothner.
+\newblock {Kawa}---compiling dynamic languages to the {Java VM}.
+\newblock In \emph{Proc.\ USENIX Annual Technical Conference},
+  FREENIX Track, 1998.
+
+\bibitem{kawa-manual}
+\emph{The Kawa Scheme Language.}
+\newblock \url{https://www.gnu.org/software/kawa/}
+
+%% --- Common Lisp CFFI ---
+
+\bibitem{cffi}
+\emph{CFFI: The Common Foreign Function Interface.}
+\newblock \url{https://cffi.common-lisp.dev/}
+
+\bibitem{cffi-manual}
+\emph{CFFI User Manual.}
+\newblock \url{https://cffi.common-lisp.dev/manual/cffi-manual.html}
+
+%% --- Racket FFI ---
+
+\bibitem{barzilay2004}
+E.~Barzilay and D.~Orlovsky.
+\newblock Foreign interface for {PLT Scheme}.
+\newblock In \emph{Proc.\ Fifth ACM SIGPLAN Workshop on Scheme and
+  Functional Programming}, 2004.
+
+\bibitem{racket-ffi}
+\emph{The Racket Foreign Interface.}
+\newblock \url{https://docs.racket-lang.org/foreign/}
+
+%% --- Conservative garbage collection ---
+
+\bibitem{boehm1988}
+H.-J.\ Boehm and M.~Weiser.
+\newblock Garbage collection in an uncooperative environment.
+\newblock \emph{Software---Practice and Experience},
+  18(9):807--820, September 1988.
+
+\bibitem{boehm1991}
+H.-J.\ Boehm, A.\,J.\ Demers, and S.~Shenker.
+\newblock Mostly parallel garbage collection.
+\newblock In \emph{Proc.\ ACM SIGPLAN '91 Conference on Programming
+  Language Design and Implementation}, pp.~157--164, 1991.
+
+%% --- SBCL ---
+
+\bibitem{sbcl-manual}
+\emph{SBCL User Manual.}
+\newblock \url{https://www.sbcl.org/manual/}
+
+\bibitem{sbcl-source}
+Steel Bank Common Lisp source.
+\newblock \url{https://github.com/sbcl/sbcl}
+
+%% --- Eiffel ---
+
+\bibitem{meyer1997}
+B.~Meyer.
+\newblock \emph{Object-Oriented Software Construction}, 2nd edition.
+\newblock Prentice Hall, 1997.
+
+\bibitem{melting-ice}
+Melting Ice Technology.
+\newblock \url{https://www.eiffel.org/doc/eiffelstudio/Melting_Ice_Technology}
+
+%% --- Smalltalk and StrongTalk ---
+
+\bibitem{bracha1993}
+G.~Bracha and D.~Griswold.
+\newblock Strongtalk: Typechecking {Smalltalk} in a production
+  environment.
+\newblock In \emph{Proc.\ ACM Conference on Object-Oriented
+  Programming, Systems, Languages and Applications} (OOPSLA),
+  pp.~215--230, 1993.
+
+\bibitem{ungar1987}
+D.~Ungar and R.\,B.\ Smith.
+\newblock Self: The power of simplicity.
+\newblock In \emph{Proc.\ OOPSLA~'87}, pp.~227--241, 1987.
+
+%% --- Oberon ---
+
+\bibitem{wirth1992}
+N.~Wirth and J.~Gutknecht.
+\newblock \emph{Project Oberon: The Design of an Operating System and
+  Compiler.}
+\newblock ACM Press / Addison-Wesley, 1992.
+\newblock Revised edition (\emph{The Design of an Operating System, a
+  Compiler, and a Computer}), 2013.
+
+%% --- Lisp Machines and tagged architectures ---
+
+\bibitem{moon1985}
+D.\,A.\ Moon.
+\newblock Architecture of the {Symbolics}~3600.
+\newblock In \emph{Proc.\ 12th Annual International Symposium on
+  Computer Architecture} (ISCA), pp.~76--83, 1985.
+
+\bibitem{organick1973}
+E.\,I.\ Organick.
+\newblock \emph{Computer System Organization: The B5700/B6700 Series.}
+\newblock Academic Press, 1973.
+
+\bibitem{levy1984}
+H.\,M.\ Levy.
+\newblock \emph{Capability-Based Computer Systems.}
+\newblock Digital Press, 1984.
+\newblock Chapter~2 covers the Burroughs B5000 and B6500 tagged
+  architectures.
+
+%% --- Other systems cited ---
+
+\bibitem{yaegi}
+Traefik.
+\newblock Yaegi: Another elegant {Go} interpreter.
+\newblock \url{https://github.com/traefik/yaegi}
+
+\bibitem{hint}
+Hint: Runtime {Haskell} interpreter.
+\newblock \url{https://hackage.haskell.org/package/hint}
+
+\bibitem{racket-guide}
+M.~Flatt, R.\,B.\ Findler, and PLT.
+\newblock \emph{The Racket Guide.}
+\newblock \url{https://docs.racket-lang.org/guide/}
+
+\end{thebibliography}
+
+\end{document}
