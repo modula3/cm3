@@ -24,7 +24,7 @@
   (lambda (s i)
     (let loop ((s s) (i i))
       (if (= i 0) s
-          (loop (cdr s) (+ i 1))))))
+          (loop (cdr s) (- i 1))))))
 
 (define ormap
   (lambda (f l)
