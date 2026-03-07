@@ -10,9 +10,22 @@ pointers stored in `[SP-128, SP)`.
 `test-redzone.c` confirms this: 16 values written to the red zone are
 completely invisible to the GC scan range.
 
+`test-gc-redzone.c` goes further: it simulates the full GC cycle (suspend
+workers, scan stacks, "collect" unreachable objects) and demonstrates that
+with `M3_STACK_ADJUST=0`, heap pointers stored only in the red zone are
+missed by the scan, and the objects are prematurely collected.  Results:
+
+- **M3_STACK_ADJUST=0**: ~80% corruption rate (1626/2000 cycles corrupt)
+- **M3_STACK_ADJUST=128**: 0% corruption rate (5000/5000 cycles clean)
+
 If the GC misses a heap pointer that is only live in the red zone, it may
 collect the object.  The subsequent use-after-free can manifest as SIGILL
 (PAC authentication failure on corrupted pointers) or SIGSEGV.
+
+`test-gc-m3/` is a Modula-3 stress test (8 threads x 100K iterations x
+20-node linked lists).  It doesn't currently trigger the bug because the
+C backend generates non-leaf functions for allocation-heavy code, but it
+serves as a regression test after applying the fix.
 
 ## Fix 1: M3_STACK_ADJUST (critical, one-line fix)
 
