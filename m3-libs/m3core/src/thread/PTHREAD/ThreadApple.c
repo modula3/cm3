@@ -103,7 +103,7 @@ typedef struct arm_thread_state m3_thread_state_t;
 typedef _STRUCT_ARM_THREAD_STATE64 m3_thread_state_t;
 #define M3_THREAD_STATE            ARM_THREAD_STATE64
 #define M3_THREAD_STATE_COUNT      ARM_THREAD_STATE64_COUNT
-#define M3_STACK_ADJUST            0
+#define M3_STACK_ADJUST            128 /* ARM64 red zone: 128 bytes below SP */
 #endif /* arm64 */
 
 void
