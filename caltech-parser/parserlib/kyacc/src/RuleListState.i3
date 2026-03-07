@@ -23,4 +23,9 @@ PROCEDURE Step(a: T; code: INTEGER; symName: TEXT): Action;
 PROCEDURE Equal(a, b: T): BOOLEAN;
 PROCEDURE Hash(a: T): INTEGER;
 PROCEDURE Format(a: T): TEXT;
+PROCEDURE CollectRelevantCodes(self: T; relevant: REF ARRAY OF BOOLEAN);
+(* Set relevant[code] := TRUE for each symbol code at a dot position *)
+PROCEDURE QuickAction(self: T; code: INTEGER): Action;
+(* Fast action for a code known NOT to match any mark's dot position.
+   Returns Reduce(finish), Accept, or Error. *)
 END RuleListState.

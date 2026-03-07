@@ -359,6 +359,29 @@ PROCEDURE ConflictWarn(self: T; a, b: Rule.T; bKind: TEXT) =
     END;
   END ConflictWarn;
 
+PROCEDURE CollectRelevantCodes(self: T; relevant: REF ARRAY OF BOOLEAN) =
+  VAR
+    cur := self.marksList;
+  BEGIN
+    WHILE cur # NIL DO
+      relevant[Sym.GetCode(cur.head.current.cell.head)] := TRUE;
+      cur := cur.tail;
+    END;
+  END CollectRelevantCodes;
+
+PROCEDURE QuickAction(self: T; code: INTEGER): Action =
+  VAR
+    dummy: RuleList.T;
+  BEGIN
+    IF self.start = StartStatus.SingleStartSym THEN
+      RETURN Action{PDATrans.ActKind.Accept};
+    END;
+    IF self.finish # NIL AND NOT self.call.get(code, dummy) THEN
+      RETURN Action{PDATrans.ActKind.Reduce, rule := self.finish};
+    END;
+    RETURN Action{PDATrans.ActKind.Error};
+  END QuickAction;
+
 PROCEDURE Equal(a, b: T): BOOLEAN =
   BEGIN
     IF a.finish # b.finish THEN RETURN FALSE END;

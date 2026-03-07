@@ -119,6 +119,8 @@ PROCEDURE BuildStatesList(self: T) =
     code: INTEGER;
     warnings := NEW(TextTextTbl.Default).init();
     expandEstimate: INTEGER := 32;
+    maxCode: INTEGER := 0;
+    relevant: REF ARRAY OF BOOLEAN;
   PROCEDURE GetState(state: RuleListState.T): INTEGER =
     VAR
       result: INTEGER;
@@ -133,6 +135,12 @@ PROCEDURE BuildStatesList(self: T) =
       RETURN result;
     END GetState;
   BEGIN
+    (* Find maximum symbol code for the relevant-codes array *)
+    FOR i := 0 TO LAST(self.codes^) DO
+      IF self.codes[i] > maxCode THEN maxCode := self.codes[i]; END;
+    END;
+    relevant := NEW(REF ARRAY OF BOOLEAN, maxCode + 1);
+
     curState := RuleListState.New(self.rules, warnings);
     RuleListState.Expand(curState, expandEstimate);
     EVAL GetState(curState);
@@ -144,9 +152,20 @@ PROCEDURE BuildStatesList(self: T) =
 (*        Term.WrLn("CurState = " & Fmt.Int(curState.ID) & ": " &
           RuleListState.Format(curState)); *)
         curTransList := NIL;
+
+        (* Collect symbols at dot positions in this state's marks *)
+        FOR j := 0 TO LAST(relevant^) DO relevant[j] := FALSE; END;
+        RuleListState.CollectRelevantCodes(curState, relevant);
+
         FOR i := 0 TO LAST(self.codes^) DO
           code := self.codes[i];
-          action := RuleListState.Step(curState, code, self.symNames[code]);
+          IF relevant[code] THEN
+            (* Symbol appears at a dot position: full Step analysis *)
+            action := RuleListState.Step(curState, code, self.symNames[code]);
+          ELSE
+            (* Symbol not at any dot position: cheap default action *)
+            action := RuleListState.QuickAction(curState, code);
+          END;
           curTrans.code := code;
           curTrans.kind := action.kind;
           CASE action.kind OF
@@ -158,7 +177,7 @@ PROCEDURE BuildStatesList(self: T) =
           ELSE
             curTrans.target := 0;
           END;
-(*          Term.WrLn("Make PDATrans: " & Fmt.Int(curState.ID) & ": " & 
+(*          Term.WrLn("Make PDATrans: " & Fmt.Int(curState.ID) & ": " &
             PDATrans.Format(curTrans)); *)
           IF action.kind # PDATrans.ActKind.Error THEN
             curTransList := PDATransList.Cons(curTrans, curTransList);
