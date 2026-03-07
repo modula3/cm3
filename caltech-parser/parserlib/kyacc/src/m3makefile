@@ -5,6 +5,8 @@ import("cit_util")
 import("ktoklib")
 import("kyacclib")
 
+m3_optimize("T")
+
 table("IntRuleList", "Integer", "RuleList")
 module("RuleListState")
 module("Pos")
