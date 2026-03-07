@@ -1,0 +1,6 @@
+INTERFACE RedZone;
+
+<*EXTERNAL RedZoneHold*>
+PROCEDURE Hold(obj: ADDRESS; flag: UNTRACED REF INTEGER): ADDRESS;
+
+END RedZone.
