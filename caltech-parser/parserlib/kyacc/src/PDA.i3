@@ -18,6 +18,7 @@ TYPE
   END;
 PROCEDURE New(rules: RuleList.T;
               tok: TokSpec.T;
-              codeTbl: TextIntTbl.T): T;
+              codeTbl: TextIntTbl.T;
+              lalr: BOOLEAN := FALSE): T;
 PROCEDURE Test(self: T);
 END PDA.

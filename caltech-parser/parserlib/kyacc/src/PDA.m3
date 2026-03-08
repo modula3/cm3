@@ -22,6 +22,7 @@ IMPORT Term;
 IMPORT Fmt;
 IMPORT FmtTable;
 IMPORT Sym;
+IMPORT LALR;
 IMPORT Scan, Stdio, Rd, Thread, FloatMode, Lex, Wr;
 <* FATAL Wr.Failure, FloatMode.Trap, Lex.Error *>
 
@@ -33,6 +34,7 @@ REVEAL
     symNames: REF ARRAY OF TEXT; (* indexed by code *)
     numStates: INTEGER := 0;
     statesList: PDATransListList.T := NIL;
+    lalr: BOOLEAN := FALSE;
   OVERRIDES
     fmtSymbols := FormatSymbols;
     symInfo := SymInfo;
@@ -82,7 +84,7 @@ PROCEDURE BuildCodes(self: T; codeTbl: TextIntTbl.T) =
     END;
     <* ASSERT numTotal = numChar + numOther *>
     <* ASSERT self.codes[0] = 0 *>
-    
+
     self.symNames := NEW(REF ARRAY OF TEXT, maxOther+1);
     FOR c := FIRST(CHAR) TO LAST(CHAR) DO
       IF c IN charCodes THEN
@@ -106,6 +108,15 @@ PROCEDURE Warn(warnings: TextTextTbl.T) =
     END;
   END Warn;
 
+PROCEDURE BuildStatesListLALR(self: T) =
+  VAR
+    warnings := NEW(TextTextTbl.Default).init();
+  BEGIN
+    self.statesList := LALR.Build(self.rules, self.codes, self.symNames,
+                                  warnings, self.numStates);
+    Warn(warnings);
+  END BuildStatesListLALR;
+
 PROCEDURE BuildStatesList(self: T) =
   VAR
     boundary: RuleListStateList.T := NIL;
@@ -119,8 +130,6 @@ PROCEDURE BuildStatesList(self: T) =
     code: INTEGER;
     warnings := NEW(TextTextTbl.Default).init();
     expandEstimate: INTEGER := 32;
-    maxCode: INTEGER := 0;
-    relevant: REF ARRAY OF BOOLEAN;
   PROCEDURE GetState(state: RuleListState.T): INTEGER =
     VAR
       result: INTEGER;
@@ -131,16 +140,9 @@ PROCEDURE BuildStatesList(self: T) =
         EVAL stateTab.put(state, result);
         boundary := RuleListStateList.Cons(state, boundary);
       END;
- (*     Term.WrLn("GetState="&Fmt.Int(result));state.ID := result; *)
       RETURN result;
     END GetState;
   BEGIN
-    (* Find maximum symbol code for the relevant-codes array *)
-    FOR i := 0 TO LAST(self.codes^) DO
-      IF self.codes[i] > maxCode THEN maxCode := self.codes[i]; END;
-    END;
-    relevant := NEW(REF ARRAY OF BOOLEAN, maxCode + 1);
-
     curState := RuleListState.New(self.rules, warnings);
     RuleListState.Expand(curState, expandEstimate);
     EVAL GetState(curState);
@@ -149,23 +151,10 @@ PROCEDURE BuildStatesList(self: T) =
       boundary := NIL;
       REPEAT
         curState := cur.head;
-(*        Term.WrLn("CurState = " & Fmt.Int(curState.ID) & ": " &
-          RuleListState.Format(curState)); *)
         curTransList := NIL;
-
-        (* Collect symbols at dot positions in this state's marks *)
-        FOR j := 0 TO LAST(relevant^) DO relevant[j] := FALSE; END;
-        RuleListState.CollectRelevantCodes(curState, relevant);
-
         FOR i := 0 TO LAST(self.codes^) DO
           code := self.codes[i];
-          IF relevant[code] THEN
-            (* Symbol appears at a dot position: full Step analysis *)
-            action := RuleListState.Step(curState, code, self.symNames[code]);
-          ELSE
-            (* Symbol not at any dot position: cheap default action *)
-            action := RuleListState.QuickAction(curState, code);
-          END;
+          action := RuleListState.Step(curState, code, self.symNames[code]);
           curTrans.code := code;
           curTrans.kind := action.kind;
           CASE action.kind OF
@@ -177,8 +166,6 @@ PROCEDURE BuildStatesList(self: T) =
           ELSE
             curTrans.target := 0;
           END;
-(*          Term.WrLn("Make PDATrans: " & Fmt.Int(curState.ID) & ": " &
-            PDATrans.Format(curTrans)); *)
           IF action.kind # PDATrans.ActKind.Error THEN
             curTransList := PDATransList.Cons(curTrans, curTransList);
           END;
@@ -212,12 +199,17 @@ PROCEDURE BuildStatesArray(self: T) =
 
 PROCEDURE New(rules: RuleList.T;
               tok: TokSpec.T;
-              codeTbl: TextIntTbl.T): T =
+              codeTbl: TextIntTbl.T;
+              lalr: BOOLEAN := FALSE): T =
   VAR
-    self := NEW(T, rules := rules, tok := tok);                
+    self := NEW(T, rules := rules, tok := tok, lalr := lalr);
   BEGIN
     BuildCodes(self, codeTbl);
-    BuildStatesList(self);
+    IF self.lalr THEN
+      BuildStatesListLALR(self);
+    ELSE
+      BuildStatesList(self);
+    END;
     BuildStatesArray(self);
     RETURN self;
   END New;

@@ -21,6 +21,7 @@ IMPORT Fmt;
 
 VAR
   Debug := Env.Get("yaccDEBUG") # NIL;
+  LALR := Env.Get("yaccLALR") # NIL;
 
   Form := yaccformBundle.Get();
   tp := TokParams.Get("yacc", ".y", "Parse.i3");
@@ -79,11 +80,15 @@ PROCEDURE Subs(): TextSubs.T =
     yp := NEW(YaccParse.T).init(rd, tok, tp.outBase);
     rules := yp.getRules();
     numRules := RuleList.Length(rules);
-    pda := PDA.New(rules, tok, yp.getCodes());
-    lastShift := pda.lastShift;
-    lastReduce := lastShift + numRules + 1;
+    pda: PDA.T;
+    lastShift: INTEGER;
+    lastReduce: INTEGER;
     numSym, lastSymCode: INTEGER;
   BEGIN
+    IF LALR THEN Term.WrLn("kyacc: LALR mode enabled"); END;
+    pda := PDA.New(rules, tok, yp.getCodes(), LALR);
+    lastShift := pda.lastShift;
+    lastReduce := lastShift + numRules + 1;
     RenumberRules(yp.getRules(), lastShift+1);
     subs.add("\\\n", "");
     subs.add("%tok", tp.tokOutBase);
