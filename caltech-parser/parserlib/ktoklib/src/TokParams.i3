@@ -4,6 +4,7 @@
 
 INTERFACE TokParams;
 IMPORT TokSpec;
+IMPORT ParseParams;
 TYPE
   T = RECORD
     (* names of files *)
@@ -14,6 +15,12 @@ TYPE
   END;
 PROCEDURE Get(progName, inSuffix, outSuffix: TEXT;
               specifyTok: BOOLEAN := TRUE): T;
+
+PROCEDURE GetPP(progName, inSuffix, outSuffix: TEXT;
+                specifyTok: BOOLEAN := TRUE;
+                VAR pp: ParseParams.T): T;
+(* Like Get, but returns the ParseParams.T without calling finish().
+   The caller can consume additional keywords before calling pp.finish(). *)
 
 PROCEDURE ReadTokens(tp: T): TokSpec.T;
 

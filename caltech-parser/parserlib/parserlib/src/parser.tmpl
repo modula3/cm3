@@ -8,6 +8,8 @@ if not defined("_PARSER_TOP")
   _PARSER_TOP = TOP & SL & "parserlib"
 end
 
+_PARSER_EXTRA_YACC_ARGS = []
+
 if not defined("_PARSER_CMDS")
 %	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "ktok"
 %	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "klex"
@@ -57,6 +59,9 @@ readonly proc _xCons(tok_nm, tok_spec, out_nm, out_spec, kind, vis) is
 		if not equal(kind, "t")
 		    args += ["-t", tok_source, "-ti3", tok_nm & ".i3"]
 		end
+		if equal(kind, "y")
+		    args += _PARSER_EXTRA_YACC_ARGS
+		end
 		_exec([_PARSER_CMDS{kind}, args])
 	end
 	if equal(vis, VISIBLE)
@@ -81,6 +86,9 @@ readonly proc _dxCons(tok_nm, tok_spec, out_nm, out_spec, kind, vis) is
 		local args = [out_source, "-o", out_nm & ".i3"]
 		if not equal(kind, "t")
 		    args += ["-t", tok_source, "-ti3", tok_nm & ".i3"]
+		end
+		if equal(kind, "y")
+		    args += _PARSER_EXTRA_YACC_ARGS
 		end
 		_exec([_PARSER_CMDS{kind}, args])
 	end
@@ -186,6 +194,16 @@ readonly proc parser_named(tok_nm, tok_spec, out_nm, out_spec) is
 	_pConsUn(tok_nm, tok_spec, out_nm, out_spec, HIDDEN) end
 readonly proc Parser_named(tok_nm, tok_spec, out_nm, out_spec) is
 	_pConsUn(tok_nm, tok_spec, out_nm, out_spec, VISIBLE) end
+readonly proc parserLALR(tok, spec) is
+	_PARSER_EXTRA_YACC_ARGS = ["-lalr"]
+	_pConsUn(tok, spec, HIDDEN)
+	_PARSER_EXTRA_YACC_ARGS = []
+end
+readonly proc ParserLALR(tok, spec) is
+	_PARSER_EXTRA_YACC_ARGS = ["-lalr"]
+	_pConsUn(tok, spec, VISIBLE)
+	_PARSER_EXTRA_YACC_ARGS = []
+end
 readonly proc derived_parser(tok, spec, vis) is _dpConsUn(tok, spec, vis) end
 readonly proc derived_parser_named(tok_nm, tok_spec, out_nm, out_spec, vis) is
         _dpConsUn(tok_nm, tok_spec, out_nm, out_spec, vis) end

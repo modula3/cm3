@@ -4,7 +4,8 @@
 
 MODULE Main;
 IMPORT TokParams;
-IMPORT FileWr, Wr, Thread, OSError;
+IMPORT ParseParams;
+IMPORT FileWr, Wr, Thread, OSError, Process;
 IMPORT FileRdErr;
 IMPORT Pathname;
 IMPORT TextSubs;
@@ -16,15 +17,22 @@ IMPORT PDATransListFlat;
 IMPORT RuleList;
 IMPORT Fmt;
 
- IMPORT Term, PDATransListOp, Env; 
+ IMPORT Term, PDATransListOp, Env;
 <* FATAL Thread.Alerted, Wr.Failure, OSError.E *>
 
 VAR
   Debug := Env.Get("yaccDEBUG") # NIL;
   LALR := Env.Get("yaccLALR") # NIL;
 
+  pp: ParseParams.T;
   Form := yaccformBundle.Get();
-  tp := TokParams.Get("yacc", ".y", "Parse.i3");
+  tp := TokParams.GetPP("yacc", ".y", "Parse.i3", pp := pp);
+
+PROCEDURE ConsumeExtraFlags() =
+  BEGIN
+    IF pp.keywordPresent("-lalr") THEN LALR := TRUE; END;
+    TRY pp.finish(); EXCEPT ParseParams.Error => Process.Exit(1); END;
+  END ConsumeExtraFlags;
 PROCEDURE RenumberRules(rules: RuleList.T; inc: INTEGER) =
   VAR
     cur := rules;
@@ -85,6 +93,7 @@ PROCEDURE Subs(): TextSubs.T =
     lastReduce: INTEGER;
     numSym, lastSymCode: INTEGER;
   BEGIN
+    ConsumeExtraFlags();
     IF LALR THEN Term.WrLn("kyacc: LALR mode enabled"); END;
     pda := PDA.New(rules, tok, yp.getCodes(), LALR);
     lastShift := pda.lastShift;

@@ -25,10 +25,10 @@ PROCEDURE Base(t, suffix: TEXT): TEXT =
     END;
   END Base;
 
-PROCEDURE Get(progName, inSuffix, outSuffix: TEXT;
-              specifyTok: BOOLEAN := TRUE): T =
+PROCEDURE GetPP(progName, inSuffix, outSuffix: TEXT;
+                specifyTok: BOOLEAN := TRUE;
+                VAR pp: ParseParams.T): T =
   VAR
-    pp := NEW(ParseParams.T).init(Stdio.stderr);
     result: T;
     usage := progName & " mylang" & inSuffix;
     base: TEXT;
@@ -54,6 +54,7 @@ PROCEDURE Get(progName, inSuffix, outSuffix: TEXT;
       END;
     END RemoveDirsAndExt;
   BEGIN
+    pp := NEW(ParseParams.T).init(Stdio.stderr);
     IF specifyTok THEN
       usage := usage & "  [ -t mylang.t [-ti3 mylangTok.i3] ]";
     END;
@@ -61,7 +62,7 @@ PROCEDURE Get(progName, inSuffix, outSuffix: TEXT;
     TRY
       result.source := pp.getNext();
       SetBaseFrom(result.source, inSuffix);
-      
+
       IF pp.keywordPresent("-o") THEN
         result.out := pp.getNext();
       ELSIF base # NIL THEN
@@ -92,14 +93,29 @@ PROCEDURE Get(progName, inSuffix, outSuffix: TEXT;
 
       RemoveDirsAndExt(result.out, result.outBase);
       RemoveDirsAndExt(result.tokOut, result.tokOutBase);
-      pp.finish();
     EXCEPT
     | ParseParams.Error =>
       Wr.PutText(Stdio.stderr, usage);
       Process.Exit(1);
     END;
     RETURN result;
+  END GetPP;
+
+PROCEDURE Get(progName, inSuffix, outSuffix: TEXT;
+              specifyTok: BOOLEAN := TRUE): T =
+  VAR
+    pp: ParseParams.T;
+    result := GetPP(progName, inSuffix, outSuffix, specifyTok, pp);
+  BEGIN
+    TRY
+      pp.finish();
+    EXCEPT
+    | ParseParams.Error =>
+      Process.Exit(1);
+    END;
+    RETURN result;
   END Get;
+
 PROCEDURE ReadTokens(tp: T): TokSpec.T =
   VAR
     rd := FileRdErr.Open(tp.tokSource);
