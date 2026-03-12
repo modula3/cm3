@@ -41,12 +41,12 @@ if equal (OS_TYPE, "POSIX")
     LIB_DIR2 = "/lib"
   end
 
-  % llvm needs the stdc++ lib and the compression lib z.
+  % llvm needs the stdc++ lib and the compression libs z and zstd.
   import_lib("stdc++",LIB_DIR1)
   % apt-get install libz-dev
   import_lib("z",LIB_DIR2)
   % apt-get install libzstd-dev
-  % import_lib("zstd",LIB_DIR2)
+  import_lib("zstd",LIB_DIR2)
 
 %  these should not be needed
 %  import_lib("dl",LIB_DIR1)
