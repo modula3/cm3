@@ -40,6 +40,24 @@ PROCEDURE Hash(a : T) : Word.T;
 PROCEDURE Size(a : T) : CARDINAL;
   (* number of nodes in structure *)
 
+(* garbage collection support *)
+
+PROCEDURE ClearCaches();
+  (* Clear all operation caches (And, Or, Not, MakeTrue, MakeFalse).
+     Unique tables are preserved so existing BDD references remain valid.
+     O(number of variables). *)
+
+PROCEDURE MarkRoot(t : T);
+  (* Add t to the GC root set for the next CollectGarbage call. *)
+
+PROCEDURE UnmarkRoots();
+  (* Clear the GC root set. *)
+
+PROCEDURE CollectGarbage();
+  (* Mark-and-sweep: traverse from marked roots, rebuild unique tables
+     keeping only reachable nodes, and clear all operation caches.
+     Clears the GC root set when done. *)
+
 CONST
   Brand = "BDD 0.1";
 

@@ -13,6 +13,7 @@ IMPORT Fmt; FROM Fmt IMPORT Int;
 TYPE
   Op = { And, Not, Or, MakeTrue, MakeFalse };
   Pair = BDDPair.T;
+  RootList = REF RECORD root: Root; tail: RootList END;
 
 REVEAL
   T = BRANDED Brand OBJECT
@@ -354,25 +355,98 @@ PROCEDURE InitTab(r : Root) =
     EVAL BDDTripleHash.Put(r.tab, Pair { true, false }, (r));
   END InitTab;
 
-PROCEDURE New(name : TEXT) : T = 
-  VAR res : Root := NEW(Root).init(); BEGIN 
+PROCEDURE New(name : TEXT) : T =
+  VAR res : Root := NEW(Root).init(); BEGIN
     res.name := name;
     res.root := res;
-    res.l := true; res.r := false; 
+    res.l := true; res.r := false;
     <*ASSERT nextId >= 2*>
     res.id := nextId;
-(*
-    res.tab := NEW(BDDTripleHash.Default).init(1);
-    EVAL BDDTripleHash.Put(res.tab, Pair { res.l, res.r }, (res));
-*)
-(*
-    FOR i := FIRST(res.cache) TO LAST(res.cache) DO
-      res.cache[i] := NEW(BDDTripleHash.Default).init(64)
-    END;
-*)
     INC(nextId);
+    allRoots := NEW(RootList, root := res, tail := allRoots);
     RETURN res
   END New;
+
+PROCEDURE ClearCaches() =
+  VAR p := allRoots;
+  BEGIN
+    WHILE p # NIL DO
+      FOR op := FIRST(Op) TO LAST(Op) DO
+        p.root.cache[op] := NIL
+      END;
+      p := p.tail
+    END
+  END ClearCaches;
+
+PROCEDURE MarkRoot(t : T) =
+  BEGIN
+    IF gcRoots = NIL THEN gcRoots := NEW(BDDSetDef.T).init() END;
+    EVAL gcRoots.insert(t)
+  END MarkRoot;
+
+PROCEDURE UnmarkRoots() =
+  BEGIN
+    gcRoots := NIL
+  END UnmarkRoots;
+
+PROCEDURE CollectGarbage() =
+  VAR
+    live := NEW(BDDSetDef.T).init();
+
+  PROCEDURE Mark(b : T) =
+    BEGIN
+      IF b = NIL THEN RETURN END;
+      IF live.insert(b) THEN RETURN END;  (* already visited *)
+      IF b = true OR b = false THEN RETURN END;
+      IF NOT ISTYPE(b, Root) THEN
+        Mark(b.l); Mark(b.r)
+      END
+    END Mark;
+
+  VAR
+    p     : RootList;
+    iter  : BDDTripleHash.Iterator;
+    key   : BDDPair.T;
+    val   : T;
+  BEGIN
+    (* Mark from user-specified roots *)
+    IF gcRoots # NIL THEN
+      VAR gci := gcRoots.iterate(); gb : T;
+      BEGIN
+        WHILE gci.next(gb) DO Mark(gb) END
+      END
+    END;
+
+    (* Also mark true, false, and all Root (variable) nodes *)
+    Mark(true); Mark(false);
+    p := allRoots;
+    WHILE p # NIL DO Mark(p.root); p := p.tail END;
+
+    (* Sweep: rebuild unique tables keeping only live entries *)
+    p := allRoots;
+    WHILE p # NIL DO
+      IF p.root.tab # NIL THEN
+        VAR oldTab := p.root.tab;
+            newTab := NEW(BDDTripleHash.Default).init(oldTab.size());
+        BEGIN
+          iter := oldTab.iterate();
+          WHILE iter.next(key, val) DO
+            IF live.member(val) THEN
+              EVAL BDDTripleHash.Put(newTab, key, val)
+            END
+          END;
+          p.root.tab := newTab
+        END
+      END;
+      FOR op := FIRST(Op) TO LAST(Op) DO
+        p.root.cache[op] := NIL
+      END;
+      p := p.tail
+    END;
+
+    (* Clear GC root marks *)
+    gcRoots := NIL
+  END CollectGarbage;
 
 PROCEDURE Format(x : T; symtab : REFANY := NIL; pfx : TEXT := "") : TEXT =
   VAR nm : TEXT;
@@ -401,6 +475,8 @@ PROCEDURE Format(x : T; symtab : REFANY := NIL; pfx : TEXT := "") : TEXT =
 VAR
   true, false : Root;
   nextId : CARDINAL;
+  allRoots : RootList := NIL;
+  gcRoots  : BDDSetDef.T := NIL;
 
 PROCEDURE Size(b1 : T) : CARDINAL =
   VAR seen := NEW(BDDSetDef.T).init();
