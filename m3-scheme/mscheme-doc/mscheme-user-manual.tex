@@ -1,0 +1,2032 @@
+%%
+%% MScheme: Comprehensive User Manual
+%%
+\documentclass[12pt]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,define-global-symbol,
+    import,module,library,program,SchemeStubs,Smodule,ExportSchemeStubs,
+    importSchemeStubs},
+  sensitive=true,
+  morecomment=[l]{;},
+  morecomment=[l]{\%},
+  morestring=[b]",
+  literate={lambda}{$\lambda$}1,
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,CHAR,TEXT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,
+    ISTYPE,NARROW,TYPECODE},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  MScheme User Manual}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\chapter{Introduction}
+%======================================================================
+
+MScheme is a Scheme interpreter written in Modula-3, designed to serve
+as an embedded scripting and glue language for Modula-3 applications.
+It originated as a line-for-line translation of Peter Norvig's JScheme
+(Java, circa~1998) into Modula-3, and has been substantially extended
+with an automatic stub generator, a module system, and numerous
+Modula-3 integration features.
+
+MScheme follows the \emph{Revised$^4$ Report on the Algorithmic Language
+Scheme (R4RS)}~\cite{r4rs} with extensions.  It is not a complete R5RS
+implementation.  Notable limitations inherited from JScheme include:
+
+\begin{itemize}
+\item Only one numeric type: IEEE~754 double precision ({\tt LONGREAL}).
+\item {\tt call-with-current-continuation} only unwinds the stack
+  (no full continuations).
+\item The Modula-3 call stack is used for Scheme control flow, limiting
+  recursion depth to available stack space.
+\end{itemize}
+
+Despite these limitations, MScheme has been used to build substantial
+production systems in financial trading, VLSI and circuit design (the Intel
+asynchronous circuit tools), and scientific computing.
+
+\section{Key Architectural Insight}
+
+The central design feature of MScheme is that Modula-3's universal
+traced reference type {\tt REFANY} serves directly as the Scheme value
+type:
+
+\begin{lstlisting}[language=Modula3]
+(* SchemeObject.i3 *)
+TYPE T = REFANY;
+\end{lstlisting}
+
+Because every Modula-3 heap-allocated object is already a valid {\tt REFANY},
+it is already a valid Scheme value.  No wrapping, boxing, or marshaling
+is needed to pass Modula-3 objects into Scheme or vice versa.  The Modula-3
+garbage collector manages both Modula-3 and Scheme data uniformly.
+
+This ``zero-impedance'' property distinguishes MScheme from
+C-hosted embedding systems like Lua, Guile, Tcl, and CPython, where
+every boundary crossing requires explicit conversion.  It is shared
+only with the earlier DEC SRC ``Tinylisp'' system (Modula-2+, 1989)
+and with JScheme and Kawa on the JVM.
+
+\section{Components}
+
+The MScheme system consists of several CM3 packages:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Package} & \textbf{Description} \\
+\midrule
+{\tt mscheme}         & Core Scheme interpreter \\
+{\tt modula3scheme}   & Modula-3 integration layer \\
+{\tt sstubgen}        & Stub generator tool and build-system templates \\
+{\tt scheme-lib}      & Bundled Scheme library files \\
+{\tt schemereadline}  & Interactive readline interface \\
+{\tt schemesig}       & Signal handling \\
+{\tt mscheme-interactive}   & Basic interactive interpreter \\
+{\tt mscheme-interactive\_r} & Interactive interpreter with GNU Readline \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+%======================================================================
+\chapter{Getting Started}
+%======================================================================
+
+\section{Running the Interactive Interpreter}
+
+The simplest way to use MScheme is to run one of the interactive
+interpreters:
+
+\begin{lstlisting}[language={}]
+$ mscheme-interactive_r
+>
+\end{lstlisting}
+
+This gives you a Scheme REPL (Read-Eval-Print Loop).  The prompt is
+``{\tt >}''.  The result of the last evaluated expression is always
+stored in the variable {\tt bang-bang} (interactive REPL only,
+not available in loaded files).
+
+\section{Environment Variables}
+
+\begin{description}
+\item[{\tt MSCHEMEPATH}] Colon-separated list of directories to search
+  when {\tt load} is called.  Default is ``{\tt .}'' (current directory).
+\item[{\tt NOMSCHEMETRACEBACKS}] If set (to any value), disables error
+  tracebacks.
+\end{description}
+
+\section{Loading Files}
+
+\begin{lstlisting}[language=Scheme]
+(load "myfile.scm")
+\end{lstlisting}
+
+Files are searched along {\tt **scheme-load-path**}, which is
+initialized from {\tt MSCHEMEPATH}.  If the file is not found on disk,
+MScheme checks its bundled library (see Chapter~\ref{ch:libraries}).
+The load path can be extended at runtime:
+
+\begin{lstlisting}[language=Scheme]
+(set! **scheme-load-path**
+      (cons "/my/extra/path" **scheme-load-path**))
+\end{lstlisting}
+
+Absolute paths and tilde-expansion are supported:
+
+\begin{lstlisting}[language=Scheme]
+(load "/usr/local/share/mylib.scm")
+(load "~/scripts/util.scm")
+\end{lstlisting}
+
+\section{The Module System}\label{sec:modules}
+
+MScheme provides a simple module system via {\tt require-modules}:
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "basic-defs" "m3" "hashtable" "set" "display")
+\end{lstlisting}
+
+Each argument is either a bundled library name (without {\tt .scm}
+extension) or a file path.  Modules are loaded at most once---repeated
+{\tt require-modules} calls for an already-loaded module are no-ops.
+This prevents loading loops.
+
+\medskip\noindent\textbf{Important:}\ The {\tt require-modules} function is not available
+by default in a bare {\tt Scheme.T}.  It is loaded when the string
+{\tt "require"} is passed as the first file to the interpreter's
+{\tt init()} method.  The {\tt SchemeM3.T} and the interactive
+interpreters load it automatically.
+
+
+%======================================================================
+\chapter{Scheme Language Reference}
+%======================================================================
+
+MScheme implements R4RS with extensions.  This chapter documents
+the differences from and additions to standard Scheme.
+
+\section{Special Forms}
+
+The following special forms are recognized by the evaluator:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Form} & \textbf{Description} \\
+\midrule
+{\tt (quote x)}                  & Standard quote \\
+{\tt (if test then else)}        & Conditional \\
+{\tt (cond clause \ldots)}       & Multi-way conditional (with {\tt else} and {\tt =>}) \\
+{\tt (begin expr \ldots)}        & Sequential evaluation \\
+{\tt (define var val)}           & Definition \\
+{\tt (define (name args) body)}  & Procedure definition sugar \\
+{\tt (set! var val)}             & Assignment \\
+{\tt (lambda args body)}         & Closure creation \\
+{\tt (macro args body)}          & Macro definition (non-hygienic) \\
+{\tt (eval expr)}                & Evaluate in current environment \\
+{\tt (current-environment)}      & Return current lexical environment \\
+{\tt (unwind-protect e c h)}     & Exception handling \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Macros}
+
+MScheme uses the JScheme-style {\tt macro} form, which is a
+non-hygienic, procedural macro:
+
+\begin{lstlisting}[language=Scheme]
+(define when
+  (macro (test . body)
+    `(if ,test (begin ,@body))))
+\end{lstlisting}
+
+The standard macros {\tt let}, {\tt let*}, {\tt letrec}, {\tt case},
+{\tt do}, {\tt delay}, {\tt and}, {\tt or}, and {\tt quasiquote} are
+all defined as macros in {\tt SchemePrimitives.i3}.  The {\tt time}
+macro measures execution time:
+
+\begin{lstlisting}[language=Scheme]
+(time (fibonacci 30))
+\end{lstlisting}
+
+R5RS hygienic macros ({\tt syntax-rules}) are available via:
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "mbe")
+\end{lstlisting}
+
+\subsection{{\tt unwind-protect}}
+
+MScheme provides an {\tt unwind-protect} special form for exception handling:
+
+\begin{lstlisting}[language=Scheme]
+(unwind-protect
+  protected-expression
+  cleanup-expression     ; always runs (like "finally")
+  error-expression)      ; runs only on exception
+\end{lstlisting}
+
+
+\section{Built-In Primitives}\label{sec:primitives}
+
+\subsection{Arithmetic and Comparison}
+
+\begin{lstlisting}[language=Scheme]
++  -  *  /  =  <  >  <=  >=
+abs  floor  ceiling  round  truncate
+max  min  quotient  remainder  div  modulo
+sqrt  expt  exp  log
+sin  cos  tan  asin  acos  atan
+sinh  cosh  tanh  asinh  acosh  atanh
+gcd  lcm
+odd?  even?  zero?  positive?  negative?
+number?  integer?  exact?  inexact?
+number->string  string->number
+\end{lstlisting}
+
+All numbers are IEEE~754 double precision.  {\tt exact?}, {\tt
+rational?}, and {\tt integer?} all test whether the number has no
+fractional part.  {\tt complex?}, {\tt real?}, and {\tt number?} are
+equivalent.
+
+\subsection{Pairs and Lists}
+
+\begin{lstlisting}[language=Scheme]
+cons  car  cdr  set-car!  set-cdr!
+cadr  caddr  caar  cdar  cddr  ; ...all c[ad]{2,4}r
+pair?  null?  list?
+list  length  append  reverse
+list-ref  list-tail
+member  memq  memv  assoc  assq  assv
+map  for-each  apply
+_list*  ; (_list* 1 2 3) => (1 2 . 3)
+\end{lstlisting}
+
+\subsection{Booleans, Strings, Characters, Vectors, Symbols}
+
+All R4RS predicates, accessors, and mutators are provided:
+{\tt boolean?}, {\tt eq?}, {\tt eqv?}, {\tt equal?},
+{\tt string?}, {\tt string-length}, {\tt string-ref}, {\tt string-set!},
+{\tt substring}, {\tt string-append}, {\tt string->list}, {\tt list->string},
+{\tt string->symbol}, {\tt symbol->string},
+{\tt char?}, {\tt char->integer}, {\tt integer->char},
+{\tt vector?}, {\tt make-vector}, {\tt vector-ref}, {\tt vector-set!},
+{\tt vector->list}, {\tt list->vector},
+plus all string and character comparison predicates including
+case-insensitive variants.
+
+\subsection{I/O}
+
+\begin{lstlisting}[language=Scheme]
+read  read-char  peek-char  write  display  newline
+write-char  load
+input-port?  output-port?  eof-object?
+current-input-port  current-output-port
+open-input-file  close-input-port
+open-output-file  close-output-port
+call-with-input-file  call-with-output-file
+display-noflush  write-noflush  ; no flush variants
+\end{lstlisting}
+
+\subsection{Control}
+
+\begin{lstlisting}[language=Scheme]
+call-with-current-continuation  ; alias: call/cc
+force  eval
+\end{lstlisting}
+
+{\tt eval} can take an optional environment argument.
+
+\subsection{MScheme Extensions}\label{sec:extensions}
+
+MScheme extends R4RS with the following procedures, grouped by category.
+
+\subsubsection{Error Handling and Diagnostics}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (error msg \ldots)}]
+  Signal an error.  All arguments are {\tt display}ed into the
+  error message.  Raises {\tt Scheme.E}.
+\item[{\tt (exit)} / {\tt (exit code)}]
+  Exit the process.  {\it code\/} defaults to~0.
+\item[{\tt (set-warnings-are-errors!~b)}]
+  When {\it b\/} is {\tt \#t}, warnings become errors.
+\item[{\tt (enable-tracebacks!)} / {\tt (disable-tracebacks!)}]
+  Enable or suppress stack tracebacks on error.
+  Tracebacks are enabled by default.
+\item[{\tt (set-rt-error-mapping!~b)}]
+  When {\tt \#t} (default), Modula-3 runtime errors (array bounds,
+  narrow failure, etc.) are caught and re-raised as {\tt Scheme.E}
+  exceptions.  When {\tt \#f}, they crash the process.
+\end{description}
+
+\subsubsection{Memoization}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (eq?-memo proc)}]
+  Return a memoized version of the single-argument procedure
+  {\it proc}.  The cache is keyed by {\tt eq?} identity on the
+  argument, so it is suitable for memoizing over Modula-3 object
+  references or symbols.
+\item[{\tt (equal?-memo proc)}]
+  Like {\tt eq?-memo}, but the cache is keyed by {\tt equal?}, so
+  it works for strings, lists, and other structural values.
+\end{description}
+
+\noindent Example:
+\begin{lstlisting}[language=Scheme]
+(define slow-fib
+  (lambda (n)
+    (if (< n 2) n
+        (+ (fast-fib (- n 1)) (fast-fib (- n 2))))))
+(define fast-fib (equal?-memo slow-fib))
+(fast-fib 100)  ; instant
+\end{lstlisting}
+
+\subsubsection{Formatting and Introspection}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (fmtreal val style prec)}]
+  Format a floating-point number.  {\it style\/} is one of the symbols
+  {\tt 'auto}, {\tt 'fix}, or {\tt 'sci}.  {\it prec\/} is the number of
+  digits after the decimal point.  Returns a Modula-3 {\tt TEXT}.
+\item[{\tt (stringify obj)}]
+  Convert any Scheme object to its printed representation as a
+  string (like {\tt write}, but returns a string instead of writing
+  to a port).
+\item[{\tt (refrecord-format obj)}]
+  Introspect a Modula-3 {\tt REF RECORD} value and return its
+  field structure as a Scheme list.
+\item[{\tt (macro-expand expr)}]
+  Expand one level of macro application in {\it expr}.
+\item[{\tt (string-havesub? str sub)}]
+  Return {\tt \#t} if the string {\it sub\/} occurs as a substring
+  of {\it str}.
+\end{description}
+
+\subsubsection{Numeric Type Conversions}
+
+MScheme's native number type is {\tt LONGREAL}.
+These procedures perform explicit narrowing for Modula-3 interop.
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (number->LONGREAL x)}]
+  Identity on the numeric value (MScheme numbers are already
+  {\tt LONGREAL}).  Useful as an explicit type annotation when passing
+  to stubs that distinguish {\tt REAL} vs.\ {\tt LONGREAL}.
+\item[{\tt (number->REAL x)}]
+  Narrow {\it x\/} from {\tt LONGREAL} to {\tt REAL} (single
+  precision).  May lose precision.
+\item[{\tt (number->EXTENDED x)}]
+  Narrow {\it x\/} to {\tt EXTENDED} (extended precision on
+  platforms that support it).
+\end{description}
+
+\subsubsection{Environment Manipulation}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (dump-environment wr)}]
+  Serialize (pickle) the entire global environment to the Modula-3
+  writer {\it wr\/} (a {\tt Wr.T}, not a filename).  Captures all
+  top-level bindings, including closures.
+\item[{\tt (load-environment! rd)}]
+  Deserialize (unpickle) a global environment from the Modula-3
+  reader {\it rd\/} (a {\tt Rd.T}), replacing the current global
+  environment.
+\item[{\tt (change-global-environment! env)}]
+  Replace the interpreter's global environment with {\it env}, which
+  must be an environment object (as returned by
+  {\tt current-environment}).  All subsequent top-level evaluations
+  use the new environment.
+\item[{\tt (get-parent-environment env)}]
+  Return the parent (enclosing) environment of {\it env}.  Returns
+  {\tt \#f} if {\it env\/} is the top-level environment.
+\item[{\tt (global-exists? sym)}]
+  Return {\tt \#t} if the symbol {\it sym\/} is bound in the global
+  environment.
+\item[{\tt (define-global-symbol sym val)}]
+  Bind {\it sym\/} to {\it val\/} in the global environment,
+  regardless of the current lexical scope.
+\end{description}
+
+\subsubsection{Random Numbers and Timing}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (random)}]
+  Return a uniformly distributed random {\tt LONGREAL} in
+  $[0, 1)$.
+\item[{\tt (normal)} / {\tt (normal mean stddev)}]
+  Return a normally distributed random number.  With no arguments,
+  mean is~0 and standard deviation is~1.
+\item[{\tt (time-call thunk)} / {\tt (time-call thunk label)}]
+  Call {\it thunk\/} (a zero-argument procedure) and return
+  its result, printing the elapsed time.  If {\it label\/} is
+  provided, it prefixes the timing output.
+\end{description}
+
+\subsubsection{System Interaction}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (system cmd)}]
+  Execute the shell command {\it cmd\/} (a string) and return its
+  output as a {\tt TEXT}.
+\item[{\tt (read-big-int)} / {\tt (read-big-int port)}]
+  Read an arbitrary-precision integer from the current input port
+  or a specified port.  Returns a {\tt BigInt.T}.
+\item[{\tt (jailbreak proc)}]
+  Escape hatch for sandboxed interpreters.  Allows a single
+  procedure {\it proc\/} to be used to add extensions to a
+  locked-down {\tt Scheme.T} that was created with
+  {\tt SandboxDefiner}.
+\end{description}
+
+\subsubsection{Low-Level Modula-3 Interop}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (modula-3-op name obj)}]
+  Low-level method dispatch: invoke the method {\it name\/}
+  (a symbol) on the Modula-3 object {\it obj}.
+\item[{\tt (encode-pickle-vector obj)}]
+  Serialize a Modula-3 object to a byte vector ({\tt REF ARRAY OF
+  CHAR}) using the M3 pickle protocol.
+\item[{\tt (decode-pickle-vector vec)}]
+  Deserialize a Modula-3 object from a byte vector previously
+  produced by {\tt encode-pickle-vector}.
+\end{description}
+
+\subsubsection{Debugging}
+
+\nopagebreak[4]
+\begin{description}
+\item[{\tt (debug-setenv name value)}]
+  Set the Debug module environment variable {\it name\/} to
+  {\it value}.
+\item[{\tt (debug-clearenv name)}]
+  Clear the Debug module environment variable {\it name}.
+\item[{\tt (debug-haveenv name)}]
+  Return {\tt \#t} if the Debug environment variable {\it name\/}
+  is set.
+\item[{\tt (stdio-stderr)}]
+  Return the process's standard error stream as a {\tt Wr.T}.
+  Useful for directing debug output separately from
+  {\tt current-output-port}.
+\end{description}
+
+
+%======================================================================
+\chapter{Bundled Scheme Libraries}\label{ch:libraries}
+%======================================================================
+
+Libraries are bundled into the MScheme executable via {\tt m3bundle}
+and can be loaded by name without a file extension.  They reside in\\
+{\tt m3-scheme/scheme-lib/src/}.
+
+\section{{\tt require} --- Module System}
+
+Loaded automatically by {\tt SchemeM3.T}.  Provides {\tt require-modules}
+(see Section~\ref{sec:modules}).
+
+\section{{\tt basic-defs} --- Utility Functions}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "basic-defs")
+\end{lstlisting}
+
+\noindent Provides:
+\begin{itemize}
+\item {\tt (nth lst n)} --- zero-indexed list access
+\item {\tt (mem? eq-fn x lst)} --- generic membership test
+\item {\tt (member? x lst)} --- {\tt equal?}-based membership
+\item {\tt (filter pred lst)} --- filter list by predicate
+\item {\tt (accumulate op init seq)} --- fold right (SICP-style)
+\item {\tt (identity x)} --- identity function
+\item {\tt (last lst)}, {\tt (all-except-last lst)}
+\item {\tt (head n lst)}, {\tt (tail n lst)} --- first/last $n$ elements
+\item {\tt (uniq eq-fn lst)} --- remove duplicates
+\item {\tt (map2 op-normal op-last lst)} --- map with different op for last
+\end{itemize}
+
+Also loads {\tt basic-mbe} (hygienic macro support primitives).
+
+\section{{\tt display} --- Output Helpers}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "display")
+\end{lstlisting}
+
+\noindent Provides:
+\begin{itemize}
+\item {\tt dnl} --- the newline character ({\tt \#\textbackslash newline}),
+  used as a separator
+\item {\tt (dis arg1 arg2 \ldots\ [port])} --- display multiple items,
+  optionally to a given port
+\end{itemize}
+
+\noindent Example:
+\begin{lstlisting}[language=Scheme]
+(dis "Hello, " name "!" dnl)
+(dis "x = " x ", y = " y dnl)
+\end{lstlisting}
+
+\section{{\tt hashtable} --- Hash Tables}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "hashtable")
+\end{lstlisting}
+
+Creates message-passing hash table objects:
+
+\begin{lstlisting}[language=Scheme]
+(define tbl (make-hash-table 100 my-hash-fn))
+(tbl 'add-entry! "key" "value")
+(tbl 'retrieve "key")          ; => "value"
+(tbl 'update-entry! "key" "new-value")
+(tbl 'delete-entry! "key")
+(tbl 'keys)                    ; => list of all keys
+(tbl 'values)                  ; => list of all values
+(tbl 'size)                    ; => number of entries
+(tbl 'clear!)                  ; remove all entries
+(tbl 'rehash! new-size)        ; resize
+\end{lstlisting}
+
+\noindent Convenience constructor:
+\begin{lstlisting}[language=Scheme]
+(define tbl (make-string-hash-table 100))
+\end{lstlisting}
+
+\noindent The sentinel {\tt '*hash-table-search-failed*} is returned
+for missing keys.  Test with {\tt eq?}:
+\begin{lstlisting}[language=Scheme]
+(if (not (eq? (tbl 'retrieve k)
+              '*hash-table-search-failed*))
+    (tbl 'retrieve k)
+    default-value)
+\end{lstlisting}
+
+\section{{\tt set} --- Sets}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "set")
+\end{lstlisting}
+
+Creates message-passing set objects built on hash tables:
+
+\begin{lstlisting}[language=Scheme]
+(define s (make-symbol-set 100))
+(s 'insert! 'foo)         ; returns #f if new
+(s 'member? 'foo)         ; => #t
+(s 'delete! 'foo)
+(s 'keys)                 ; list of elements
+(s 'size)
+(s 'copy)
+(s 'union other-set)
+(s 'intersection other-set)
+(s 'diff other-set)       ; set difference
+\end{lstlisting}
+
+Also provides {\tt make-symbol-hash-table} and {\tt make-string-set}.
+
+\section{{\tt struct} --- Record Types}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "struct")
+\end{lstlisting}
+
+Defines record-like structured types with message-passing access:
+
+\begin{lstlisting}[language=Scheme]
+(define point-type
+  (make-struct-type 'point
+    `((x 0) (y 0) (label "origin"))))
+
+(define p (point-type 'new))
+(p 'get 'x)              ; => 0
+(p 'set! 'x 42)
+(p 'get 'x)              ; => 42
+(p 'inc! 'x)             ; increment by 1
+(p 'inc! 'x 10)          ; increment by 10
+(p 'inc! 'x (lambda (v) (* v 2)))
+(p 'display)             ; => ((x . 106) (y . 0) ...)
+(p 'copy)                ; deep copy
+(p 'set 'x 99)           ; functional update (new copy)
+(p 'type)                ; => the type object
+(p 'reset!)              ; reset to initial values
+\end{lstlisting}
+
+Dynamic initializers: if a field's default is a procedure, it is called
+(with no arguments) to produce each new value:
+
+\begin{lstlisting}[language=Scheme]
+(make-struct-type 'thing
+  `((id  ,(lambda () (random)))
+    (data ())))
+\end{lstlisting}
+
+Retrieve a type by name with {\tt (get-struct-type 'point)}.
+
+\section{{\tt m3} --- Modula-3 Bindings}\label{sec:m3lib}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "m3")
+\end{lstlisting}
+
+This is the critical library for Modula-3 interoperation.  It installs
+all registered Scheme procedure stubs as top-level Scheme bindings
+using the convention {\tt Interface.Procedure}:
+
+\begin{lstlisting}[language=Scheme]
+; Before "m3": must use raw stub call
+(scheme-procedure-stubs-call '(Fmt . Int) (list 42) '())
+
+; After "m3": direct call
+(Fmt.Int 42)
+\end{lstlisting}
+
+Also provides the key helper:
+\begin{lstlisting}[language=Scheme]
+(obj-method-wrap obj 'TypeName.T)
+\end{lstlisting}
+
+And introspection utilities {\tt schemify}, {\tt have-type-ops?},
+{\tt closest-opped-supertype}, {\tt closest-type-op}.
+
+\section{Other Libraries}
+
+\begin{itemize}
+\item {\tt mergesort} --- merge sort for lists
+\item {\tt mbe} --- R5RS hygienic macros ({\tt syntax-rules})
+\item {\tt time} --- time formatting utilities
+\item {\tt exit} --- exit handlers
+\item {\tt gnuplot} --- gnuplot integration
+\item {\tt history} --- command history
+\item {\tt scodegen} --- SQL schema code generation (Hibernate-inspired)
+\end{itemize}
+
+
+%======================================================================
+\chapter{Modula-3 Integration}\label{ch:m3interop}
+%======================================================================
+
+This is the heart of MScheme's value.  The system provides transparent
+bidirectional bindings between Scheme and Modula-3.
+
+\section{Zero-Copy Value Sharing}
+
+Because {\tt SchemeObject.T = REFANY}, and all Modula-3 heap objects
+are {\tt REFANY}, \emph{Modula-3 objects are Scheme values without any
+conversion.}  When a stub-generated procedure returns a Modula-3
+object, the exact same heap pointer is the Scheme value.  When Scheme
+passes that value back to Modula-3, no conversion occurs.
+
+Only Modula-3 value types ({\tt INTEGER}, {\tt REAL}, {\tt BOOLEAN},
+{\tt CHAR}, records, arrays) require boxing and unboxing at the
+boundary, and this is handled automatically by the generated stubs.
+
+\section{The Stub Generator ({\tt sstubgen})}\label{sec:sstubgen}
+
+\subsection{How It Works}
+
+{\tt sstubgen} is a build-time tool that reads Modula-3 {\tt .i3}
+interface files via the M3 Toolkit ({\tt m3tk})~\cite{m3tk} and generates:
+
+\begin{enumerate}
+\item \textbf{Type converters} --- {\tt ToModula} (Scheme$\to$M3, with
+  type and bounds checking) and {\tt ToScheme} (M3$\to$Scheme) for
+  each type.
+\item \textbf{Procedure call stubs} --- wrappers that unpack Scheme
+  argument lists, convert types, call the M3 procedure, and convert
+  the result.
+\item \textbf{Object method dispatch} --- for M3 object types,
+  generates method dispatch tables accessible via {\tt modula-type-op}.
+\item \textbf{Constructor registration} --- {\tt new-modula-object}
+  support for object types.
+\item \textbf{Type metadata} --- runtime type information (fields,
+  methods, supertypes) pickled and registered for introspection.
+\end{enumerate}
+
+The {\tt sstubgen} tool shares a design lineage with the DEC~SRC
+network objects stub generator ({\tt stubgen})~\cite{netobj}, both
+based on the M3 Toolkit.
+
+\subsection{Build System Integration}
+
+Stub generation is automated by the Quake template
+{\tt schemestubs.tmpl}, which defines the following build directives:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Directive} & \textbf{Description} \\
+\midrule
+{\tt SchemeStubs("Foo")}           & Generate stubs for {\tt Foo.i3} \\
+{\tt Smodule("Foo")}               & {\tt Module} + {\tt SchemeStubs} \\
+{\tt Sinterface("Foo")}            & {\tt Interface} + {\tt SchemeStubs} \\
+{\tt Ssequence("K","V")}           & {\tt Sequence} + {\tt SchemeStubs("KSeq")} \\
+{\tt ExportSchemeStubs("prog")}    & Export stubs for linking (phase~2) \\
+{\tt importSchemeStubs()}          & Import stubs from dependencies (phase~3) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Three-Phase Stub Generation}
+
+\begin{enumerate}
+\item \textbf{Phase~1} ({\tt make-standard-stuff}): For each {\tt
+  SchemeStubs("Foo")} call, {\tt sstubgen} processes {\tt Foo.i3} and
+  generates {\tt FooSchemeStubs.i3} and {\tt FooSchemeStubs.m3}.
+  These register procedures, types, and operations at module
+  initialization time.
+
+\item \textbf{Phase~2} ({\tt write-scheme-package-exports}): For each
+  {\tt ExportSchemeStubs("prog")}, generates an interface that lists
+  all stub modules in this package.
+
+\item \textbf{Phase~3} ({\tt importSchemeStubs}): Pulls in stub
+  exports from all imported packages, ensuring all stubs are linked
+  into the executable.
+\end{enumerate}
+
+\subsection{Worked Example: Stub Generation for {\tt Fmt}}\label{sec:fmtexample}
+
+This section traces the complete stub-generation pipeline for
+{\tt Fmt.i3}, the standard Modula-3 formatting interface.
+
+\paragraph{Step 1: The Modula-3 interface.}
+The relevant declarations in {\tt Fmt.i3}:
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE Fmt;
+
+TYPE Base = [2..16];
+TYPE Style = {Sci, Fix, Auto};
+TYPE Align = {Left, Right};
+
+PROCEDURE Bool(b: BOOLEAN): TEXT;
+PROCEDURE Int(n: INTEGER; base: Base := 10): TEXT;
+PROCEDURE LongReal(x: LONGREAL; style := Style.Auto;
+    prec: CARDINAL := 15; literal := FALSE): TEXT;
+PROCEDURE Pad(text: TEXT; length: CARDINAL;
+    padChar: CHAR := ' '; align: Align := Align.Right): TEXT;
+\end{lstlisting}
+
+\paragraph{Step 2: The {\tt m3makefile} directive.}
+A single line causes stubs to be generated at build time:
+
+\begin{lstlisting}[language={}]
+SchemeStubs ("Fmt")
+\end{lstlisting}
+
+\paragraph{Step 3: The generated code.}
+{\tt sstubgen} produces {\tt FmtSchemeStubs.m3} containing three
+kinds of generated code:
+
+\medskip\noindent\textbf{(a) Procedure call stubs.}\  Each M3 procedure gets a wrapper
+that unpacks a Scheme argument list, converts types, calls the M3
+procedure, and converts the result:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE CallStub_Fmt_Int(
+    interp : Scheme.T;
+    args : SchemeObject.T;
+    excHandler : SchemeObject.T) : SchemeObject.T
+  RAISES { Scheme.E } =
+  PROCEDURE Next() : SchemeObject.T RAISES { Scheme.E } =
+    BEGIN
+      TRY RETURN SchemeUtils.First(p__)
+      FINALLY p__ := SchemePair.Pair(
+                       SchemeUtils.Rest(p__))
+      END
+    END Next;
+  VAR p__ := SchemePair.Pair(args);
+  BEGIN
+    TRY
+      VAR formal_n :=
+            SchemeModula3Types.ToModula_INTEGER(Next());
+          formal_base := ToModula_Fmt_Base(Next());
+      BEGIN
+        WITH res = SchemeModula3Types.ToScheme_TEXT(
+                     Fmt.Int(formal_n, formal_base)) DO
+          RETURN res
+        END
+      END
+    EXCEPT END;
+    RETURN SchemeBoolean.False()
+  END CallStub_Fmt_Int;
+\end{lstlisting}
+
+\noindent The key pattern: {\tt Next()} walks the Scheme argument
+list, {\tt ToModula\_*} functions convert each argument, and
+{\tt ToScheme\_TEXT} wraps the result.
+
+\medskip\noindent\textbf{(b) Type converters.}\  Subranges are validated at the
+boundary:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE ToModula_Fmt_Base(x : SchemeObject.T)
+    : Fmt.Base  RAISES { Scheme.E } =
+  BEGIN
+    WITH baseVal =
+           SchemeModula3Types.ToModula_INTEGER(x) DO
+      IF baseVal < FIRST(Fmt.Base)
+      OR baseVal > LAST(Fmt.Base) THEN
+        RAISE Scheme.E("Value out of range for "
+          & "Fmt.Base :" & SchemeUtils.Stringify(x))
+      END;
+      RETURN baseVal
+    END
+  END ToModula_Fmt_Base;
+\end{lstlisting}
+
+\noindent Enumerations are mapped to Scheme symbols:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE ToModula_Fmt_Style(x : SchemeObject.T)
+    : Fmt.Style  RAISES { Scheme.E } =
+  BEGIN
+    CONST
+      Name = ARRAY Fmt.Style OF TEXT
+               { "Sci", "Fix", "Auto" };
+    BEGIN
+      FOR i := FIRST(Name) TO LAST(Name) DO
+        IF SchemeSymbol.FromText(Name[i]) = x THEN
+          RETURN i
+        END
+      END;
+      RAISE Scheme.E("Not a value of Fmt.Style : "
+        & SchemeUtils.Stringify(x))
+    END
+  END ToModula_Fmt_Style;
+\end{lstlisting}
+
+\medskip\noindent\textbf{(c) Registration.}\  A {\tt RegisterStubs}
+procedure, called at module initialization, registers every stub
+with the Scheme runtime:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE RegisterStubs() =
+  BEGIN
+    SchemeProcedureStubs.Register(
+      NEW(SchemeProcedureStubs.Qid,
+        intf := Atom.FromText("Fmt"),
+        item := Atom.FromText("Int")),
+      CallStub_Fmt_Int);
+    (* ... one call per procedure ... *)
+  END RegisterStubs;
+\end{lstlisting}
+
+\paragraph{Step 4: Using from Scheme.}
+After {\tt (require-modules "m3")}, all registered stubs are
+available:
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "m3")
+(Fmt.Int 42)                    ; => "42"
+(Fmt.Int 255 16)                ; => "ff"
+(Fmt.Bool #t)                   ; => "TRUE"
+(Fmt.LongReal 3.14159 'Fix 2 #f)  ; => "3.14"
+(Fmt.Pad "hi" 10 #\space 'Left)   ; => "hi        "
+\end{lstlisting}
+
+\paragraph{Key observations.}
+\begin{itemize}
+\item Enumerations ({\tt Style}, {\tt Align}) become Scheme symbols:
+  {\tt 'Sci}, {\tt 'Fix}, {\tt 'Auto}, {\tt 'Left}, {\tt 'Right}.
+\item Subranges ({\tt Base = [2..16]}) are validated at the stub
+  boundary; passing~1 or~17 raises a Scheme error.
+\item {\tt TEXT} $\leftrightarrow$ Scheme string conversion is
+  transparent---no explicit marshaling needed.
+\item Default arguments are flattened by {\tt sstubgen}: all
+  parameters must be provided explicitly from Scheme.
+  For example, {\tt Fmt.LongReal} requires four arguments, not one.
+\end{itemize}
+
+
+\subsection{Example {\tt m3makefile}}
+
+\begin{lstlisting}[language={}]
+import ("mscheme")
+import ("modula3scheme")
+import ("sstubgen")
+
+Smodule ("MyCompiler")         % Module + SchemeStubs
+SchemeStubs ("MyAST")          % stubs only
+SchemeStubs ("Text")           % standard library
+SchemeStubs ("Fmt")
+
+ExportSchemeStubs ("myapp")
+importSchemeStubs()
+
+implementation ("Main")
+program ("myapp")
+\end{lstlisting}
+
+\section{Using Modula-3 Bindings from Scheme}\label{sec:usingm3}
+
+After loading the {\tt "m3"} library
+(Section~\ref{sec:m3lib}), all stub-registered procedures become
+available as {\tt InterfaceName.ProcedureName}:
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "m3")
+
+;; Call Fmt.Int from M3's standard library
+(Fmt.Int 42)              ; => "42"
+(Fmt.Int 255 16)          ; => "ff"
+
+;; String operations
+(Text.Length "hello")     ; => 5
+(Text.Sub "hello" 1 3)   ; => "ell"
+
+;; Environment variables
+(Env.Get "HOME")          ; => "/home/user"
+
+;; File I/O through M3
+(define wr (FileWr.Open "/tmp/test.txt"))
+(Wr.PutText wr "Hello, world!\n")
+(Wr.Close wr)
+\end{lstlisting}
+
+\section{Working with Modula-3 Objects}
+
+\subsection{Creating Objects}
+
+\begin{lstlisting}[language=Scheme]
+(define obj (new-modula-object 'MyClass.T))
+\end{lstlisting}
+
+The type name uses the {\tt Interface.Type} convention.
+Initialization arguments may be passed as additional arguments.
+
+\subsection{Method Calls via {\tt obj-method-wrap}}
+
+The {\tt obj-method-wrap} function creates a Scheme closure that
+dispatches method calls on a Modula-3 object:
+
+\begin{lstlisting}[language=Scheme]
+(define wrapped (obj-method-wrap raw-obj 'TypeName.T))
+(wrapped 'methodName arg1 arg2 ...)
+\end{lstlisting}
+
+The special symbol {\tt '*m3*} retrieves the underlying Modula-3 object:
+\begin{lstlisting}[language=Scheme]
+(wrapped '*m3*)  ; => the raw M3 REFANY
+\end{lstlisting}
+
+\subsection{Complete Example}
+
+\begin{lstlisting}[language=Scheme]
+;; Create a text sequence (TextSeq.T from libm3)
+(define seq (obj-method-wrap
+              (new-modula-object 'TextSeq.T)
+              'TextSeq.T))
+(seq 'addhi "hello")
+(seq 'addhi "world")
+(seq 'size)           ; => 2
+(seq 'get 0)          ; => "hello"
+(seq 'get 1)          ; => "world"
+\end{lstlisting}
+
+\subsection{Convenience Pattern: {\tt init-seq}}
+
+A common pattern in applications wraps sequence creation:
+
+\begin{lstlisting}[language=Scheme]
+(define (init-seq type-name)
+  (let ((res (obj-method-wrap
+               (new-modula-object type-name)
+               type-name)))
+    (obj-method-wrap (res 'init 10) type-name)))
+
+(define stmts (init-seq 'CspStatementSeq.T))
+(stmts 'addhi some-statement)
+(stmts '*m3*)     ; get the raw M3 sequence
+\end{lstlisting}
+
+\section{Low-Level Stub API}
+
+These primitives underlie the {\tt "m3"} library and are available
+even without loading it:
+
+\begin{lstlisting}[language=Scheme]
+;; List all registered procedure stubs
+(scheme-procedure-stubs-list)
+; => ((Fmt . Int) (Fmt . LongReal) (Text . Length) ...)
+
+;; Call a stub directly
+(scheme-procedure-stubs-call '(Fmt . Int) (list 42) '())
+
+;; List all types that can be "new"ed
+(newable-types)
+
+;; Create a new M3 object
+(new-modula-object 'TypeName.T)
+
+;; Call an operation on an M3 object by typecode
+(modula-type-op tc-or-symbol 'op-name object args ...)
+
+;; List operations for a typecode
+(list-modula-type-ops typecode)
+
+;; Type system introspection
+(list-modula-types)
+(typename->typecode 'TypeName.T)
+(rttype-typecode obj)
+(rttype-maxtypecode)
+(rttype-supertype tc)
+(rttype-issubtype? tc1 tc2)
+(rttype-ndimensions tc)
+(rtbrand-getname tc)
+(modula-type-class 'TypeName.T)
+\end{lstlisting}
+
+\section{{\tt SchemeM3.T} Extended Primitives}
+
+When using {\tt SchemeM3.T} (the standard extended interpreter), these
+additional primitives are available:
+
+\begin{lstlisting}[language=Scheme]
+;; System utilities
+(gc)                          ; force GC
+(timenow)                     ; Unix epoch time
+(time->string time [tz])      ; "2024-MAR-14 10:30:00.000"
+(time->list time [tz])        ; (year month day wday hr min sec)
+(hostname)                    ; machine hostname (returns symbol)
+(getunixpid)                  ; Unix PID
+
+;; Formatting
+(stringify obj)               ; like write, returns string
+(fmtreal value 'style prec)  ; 'auto, 'fix, or 'sci
+
+;; File operations
+(filewr-open filename)
+(filewr-open 'append filename)
+(wr-close wr)
+(remove-file path)
+(fs-rename old new)
+(cmp-files f1 f2)             ; binary compare
+(fs-status-modificationtime path)
+
+;; Debugging
+(debug-setlevel n)
+(debug-addstream wr)
+(debug-remstream wr)
+(stdio-stderr)
+
+;; Network Objects
+(netobj-export-global-environment "name")
+\end{lstlisting}
+
+\section{Asynchronous Execution}
+
+MScheme provides thread-based asynchronous execution:
+
+\begin{lstlisting}[language=Scheme]
+;; Schedule procedure to run at a future time
+(define (my-func) (+ 40 2))
+(define h (at-run (+ (timenow) 5.0) my-func callback))
+(at-join h)               ; wait for result => 42
+
+;; Periodic execution (every 10 seconds)
+(define (check-something) (display ".") #t)
+(define clk (clock-run 10.0 check-something err-handler))
+;; runs until procedure returns #f
+(clock-stop clk)
+(clock-list)               ; list active clocks
+\end{lstlisting}
+
+\section{Running Shell Commands}
+
+\begin{lstlisting}[language=Scheme]
+(run-command "ls" "-la" "/tmp")
+(run-command-with-timeout 30 "make" "-j4")
+(system "echo hello")     ; returns output as text
+\end{lstlisting}
+
+
+%======================================================================
+\chapter{BigInt Support}
+%======================================================================
+
+MScheme integrates with the {\tt BigInt} module for
+arbitrary-precision integer arithmetic.  After loading stubs:
+
+\begin{lstlisting}[language=Scheme]
+(define a (BigInt.New 12345678901234567890))
+(define b (BigInt.New 98765432109876543210))
+
+(BigInt.Add a b)
+(BigInt.Mul a b)
+(BigInt.Div a b)
+(BigInt.Mod a b)
+(BigInt.Compare a b)      ; => -1, 0, or 1
+(BigInt.Equal a b)        ; => #t or #f
+(BigInt.Format a 10)      ; => "12345678901234567890"
+(BigInt.Format a 16)      ; hex string
+(BigInt.ToInteger a)      ; => Scheme number (if fits)
+(BigInt.IsT x)            ; => #t if BigInt
+(BigInt.Shift a n)        ; left shift
+(BigInt.And a b)           (BigInt.Or a b)
+(BigInt.Xor a b)           (BigInt.Not a)
+(BigInt.GetAbsMsb a)      ; highest set bit position
+(BigInt.ScanBased "ff" 16 #f)  ; parse string
+\end{lstlisting}
+
+BigInts can be read from input ports:
+\begin{lstlisting}[language=Scheme]
+(read-big-int)            ; from current input
+(read-big-int port)       ; from specific port
+\end{lstlisting}
+
+
+%======================================================================
+\chapter{Wrapping C Libraries}\label{ch:clibrary}
+%======================================================================
+
+One of MScheme's most powerful capabilities is making C libraries
+accessible from Scheme with full garbage-collected memory management
+and no unsafe code visible to the Scheme programmer.  This chapter
+uses the GMP (GNU Multiple Precision) integer library as a
+complete, working example.
+
+\section{The Pattern}
+
+The integration follows a layered architecture:
+
+\begin{center}
+\begin{tabular}{ccc}
+\textbf{Layer} & & \textbf{Artifact} \\
+\midrule
+C library & $\longrightarrow$ & {\tt libgmp.a} \\
+C helpers & $\longrightarrow$ & {\tt MpzC.c} \\
+{\tt <*EXTERNAL*>} bindings & $\longrightarrow$ & {\tt MpzP.i3} \\
+Safe M3 wrapper + WeakRef & $\longrightarrow$ & {\tt Mpz.m3} \\
+Type revelation & $\longrightarrow$ & {\tt MpzRep.i3} \\
+{\tt SchemeStubs("Mpz")} & $\longrightarrow$ & {\tt MpzSchemeStubs.m3} \\
+Scheme code & $\longrightarrow$ & {\tt (Mpz.add c a b)} \\
+\end{tabular}
+\end{center}
+
+\noindent Each layer adds safety.  The Scheme programmer at the top
+sees only safe, garbage-collected objects.
+
+\section{Layer 1: C Interface}
+
+{\tt MpzP.i3} declares Modula-3 bindings to C functions using the
+{\tt <*EXTERNAL*>} pragma.  Each declaration names the C symbol
+explicitly:
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE MpzP;
+IMPORT Word, Ctypes;
+
+TYPE MpzPtrT = ADDRESS;
+
+<*EXTERNAL "__gmpz_init"*>
+PROCEDURE c_init(f0: MpzPtrT);
+
+<*EXTERNAL "__gmpz_clear"*>
+PROCEDURE c_clear(f0: MpzPtrT);
+
+<*EXTERNAL "__gmpz_add"*>
+PROCEDURE c_add(f0: MpzPtrT; f1: MpzPtrT;
+                f2: MpzPtrT);
+
+<*EXTERNAL "__gmpz_set_si"*>
+PROCEDURE c_set_si(f0: MpzPtrT; f1: INTEGER);
+
+<*EXTERNAL "__gmpz_cmp"*>
+PROCEDURE c_cmp(f0: MpzPtrT; f1: MpzPtrT)
+    : Ctypes.int;
+
+(* formatting helpers -- implemented in MpzC.c *)
+<*EXTERNAL mpz_format_decimal*>
+PROCEDURE format_decimal(z: MpzPtrT)
+    : Ctypes.const_char_star;
+
+<*EXTERNAL mpz_free_formatted*>
+PROCEDURE free_formatted(f0: Ctypes.char_star);
+\end{lstlisting}
+
+\noindent The C helper {\tt MpzC.c} provides formatting functions
+that GMP does not directly expose:
+
+\begin{lstlisting}[language={}]
+/* MpzC.c */
+#include <gmp.h>
+
+char *mpz_format_decimal(const mpz_t z) {
+  char *p;
+  gmp_asprintf(&p, "%Zd", z);
+  return p;
+}
+
+void mpz_free_formatted(char *p) {
+  void (*freefunc)(void *, size_t);
+  mp_get_memory_functions(NULL, NULL, &freefunc);
+  freefunc(p, 0);
+}
+\end{lstlisting}
+
+\section{Layer 2: Safe Wrapper with Garbage Collection}
+
+The key module is {\tt Mpz.m3}.  It wraps every C operation in a
+safe Modula-3 procedure and---crucially---uses {\tt WeakRef} to
+ensure that GMP memory is freed when the Modula-3 garbage collector
+reclaims the object:
+
+\begin{lstlisting}[language=Modula3]
+UNSAFE MODULE Mpz;
+IMPORT MpzRep, MpzP AS P, WeakRef, M3toC;
+
+PROCEDURE New() : T =
+  VAR res := NEW(T);
+  BEGIN
+    P.c_init(LOOPHOLE(ADR(res.val), P.MpzPtrT));
+    EVAL WeakRef.FromRef(res, CleanUp);
+    set_ui(res, 0);
+    RETURN res
+  END New;
+
+PROCEDURE CleanUp(
+    <*UNUSED*> READONLY w: WeakRef.T;
+    r: REFANY) =
+  BEGIN
+    WITH this = NARROW(r, T) DO
+      P.c_clear(ADR(this.val))
+    END
+  END CleanUp;
+
+PROCEDURE FormatDecimal(t: T) : TEXT =
+  VAR cs := P.format_decimal(ADR(t.val));
+  BEGIN
+    TRY
+      RETURN M3toC.CopyStoT(cs)
+    FINALLY
+      P.free_formatted(cs)
+    END
+  END FormatDecimal;
+\end{lstlisting}
+
+\noindent The critical line is:
+\begin{lstlisting}[language=Modula3]
+EVAL WeakRef.FromRef(res, CleanUp);
+\end{lstlisting}
+
+\noindent This registers {\tt CleanUp} as a weak-reference callback.
+When the garbage collector determines that the {\tt Mpz.T} object is
+unreachable, it schedules a call to {\tt CleanUp}, which calls
+{\tt gmpz\_clear} to free the C-allocated memory.  The Scheme (or
+Modula-3) programmer never needs to call a ``free'' or ``dispose''
+function.
+
+\paragraph{{\tt WeakRef} API summary.}
+
+\begin{lstlisting}[language=Modula3]
+(* WeakRef.i3 *)
+PROCEDURE FromRef(r: REFANY;
+    p: CleanUpProc := NIL): T;
+PROCEDURE ToRef(w: T): REFANY;
+TYPE CleanUpProc =
+    PROCEDURE(READONLY w: T; r: REFANY);
+\end{lstlisting}
+
+\noindent {\tt FromRef} creates a weak reference and associates
+a cleanup procedure.  {\tt ToRef} dereferences a weak reference,
+returning {\tt NIL} if the referent has been collected.
+
+\section{Layer 3: Type Revelation}
+
+{\tt MpzRep.i3} reveals the opaque type {\tt Mpz.T} as a branded
+object containing the C {\tt mpz\_t} struct inline:
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE MpzRep;
+IMPORT Mpz, Word;
+
+REVEAL
+  Mpz.T = BRANDED Mpz.Brand OBJECT
+    val : Val;
+  END;
+
+TYPE
+  Val = RECORD
+    w : ARRAY [0..2] OF Word.T;
+    (* cast to mpz_t -- at least big enough *)
+  END;
+END MpzRep.
+\end{lstlisting}
+
+\noindent The three-word array is large enough to hold the GMP
+{\tt mpz\_t} structure on all supported platforms.  The {\tt BRANDED}
+keyword ensures type safety---different {\tt Mpz.T} values cannot be
+confused with other {\tt REFANY} values at runtime.
+
+\section{Layer 4: Build Integration}
+
+The {\tt m3makefile} for the {\tt mpz} package:
+
+\begin{lstlisting}[language={}]
+import ("libm3")
+import ("m3core")
+
+if SYSTEM_LIBS contains "MPZ"
+  import_sys_lib ("MPZ")
+  c_source ("MpzC")
+end
+
+Interface ("MpzP")
+interface ("MpzRep")
+Module ("Mpz")
+library ("mpz")
+\end{lstlisting}
+
+\noindent The conditional {\tt if SYSTEM\_LIBS contains "MPZ"}
+allows the package to build without GMP installed (the C source
+is simply skipped).  The top-level {\tt m3overrides} file defines:
+\begin{lstlisting}[language={}]
+SYSTEM_LIBS{"MPZ"} = [ "-lgmp" ]
+\end{lstlisting}
+
+\section{Layer 5: Scheme Stub Generation}
+
+In the application that wants to expose {\tt Mpz} to Scheme, the
+{\tt m3makefile} adds:
+
+\begin{lstlisting}[language={}]
+import ("mpz")
+SchemeStubs ("Mpz")
+ExportSchemeStubs ("myapp")
+importSchemeStubs ()
+\end{lstlisting}
+
+\noindent {\tt sstubgen} reads {\tt Mpz.i3} and generates call stubs
+for every procedure: {\tt New}, {\tt add}, {\tt mul}, {\tt cmp},
+{\tt FormatDecimal}, etc.
+
+\section{Layer 6: Using from Scheme}
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "m3")
+
+;; Create three GMP integers
+(define a (Mpz.New))
+(define b (Mpz.New))
+(define c (Mpz.New))
+
+;; Set values
+(Mpz.set_si a 42)
+(Mpz.set_si b 100)
+
+;; Arithmetic (result stored in first argument)
+(Mpz.add c a b)
+(Mpz.FormatDecimal c)       ; => "142"
+
+;; More operations
+(Mpz.mul c a b)
+(Mpz.FormatDecimal c)       ; => "4200"
+
+(Mpz.pow_ui c a 10)
+(Mpz.FormatDecimal c)       ; => "17490122876983048192"
+
+;; Comparison
+(Mpz.cmp a b)               ; => -1  (a < b)
+
+;; When a, b, c become unreachable, the GC calls
+;; CleanUp which calls gmpz_clear -- no manual
+;; memory management needed.
+\end{lstlisting}
+
+\section{Why This Matters}
+
+\begin{center}
+\fbox{\parbox{0.85\textwidth}{
+\textbf{Key insight:}\  The Scheme programmer manipulates C library
+objects (GMP arbitrary-precision integers) without any awareness of
+C memory management.  The Modula-3 garbage collector, via
+{\tt WeakRef}, automatically calls {\tt gmpz\_clear} when objects
+become unreachable.  The Scheme programmer sees only safe,
+garbage-collected values.
+
+\medskip
+This pattern generalizes to any C library.  The recipe is:
+\begin{enumerate}
+\item Declare {\tt <*EXTERNAL*>} bindings in a private {\tt .i3}
+\item Write a safe wrapper module that calls {\tt WeakRef.FromRef}
+  in the constructor and {\tt c\_clear}/{\tt c\_free} in the
+  cleanup procedure
+\item Reveal the opaque type to contain the C struct
+\item Run {\tt SchemeStubs} on the safe public interface
+\end{enumerate}
+
+\noindent The result is that Scheme inherits the full power of the C
+library with the safety of garbage-collected Modula-3.
+}}
+\end{center}
+
+
+%======================================================================
+\chapter{Embedding MScheme in Applications}
+%======================================================================
+
+\section{Basic Embedding}
+
+\begin{lstlisting}[language=Modula3]
+IMPORT Scheme, SchemeM3, SchemeStubs;
+IMPORT SchemeReadLine, ReadLine;
+
+BEGIN
+  (* Register all auto-generated stubs *)
+  SchemeStubs.RegisterStubs();
+
+  (* Create interpreter with startup files *)
+  WITH scm = NEW(SchemeM3.T).init(
+    ARRAY OF TEXT { "setup.scm" }^) DO
+
+    (* Enter interactive REPL *)
+    SchemeReadLine.MainLoop(
+      NEW(ReadLine.Default).init(), scm)
+  END
+END
+\end{lstlisting}
+
+\section{Programmatic Evaluation}
+
+\begin{lstlisting}[language=Modula3]
+(* Evaluate an expression *)
+VAR result := scm.loadEvalText("(+ 1 2 3)");
+(* result is SchemeObject.T = REFANY *)
+
+(* Extract a number *)
+VAR n := SchemeLongReal.FromO(result);  (* 6.0d0 *)
+
+(* Bind a value into Scheme *)
+scm.bind("my-var", SchemeLongReal.FromI(42));
+
+(* Load and evaluate a file *)
+EVAL scm.loadFile(SchemeString.FromText("mycode.scm"));
+\end{lstlisting}
+
+\section{Defining Custom Primitives}
+
+\begin{lstlisting}[language=Modula3]
+IMPORT SchemePrimitive, SchemeProcedure, SchemeM3;
+
+(* Get the extensible primitive definer *)
+VAR prims := SchemeM3.GetPrims();
+
+(* Add a custom primitive *)
+prims.addPrim("my-add",
+  NEW(SchemeProcedure.T, apply := MyAddApply),
+  2, 2);  (* exactly 2 args *)
+
+PROCEDURE MyAddApply(
+    <*UNUSED*> p: SchemeProcedure.T;
+    <*UNUSED*> interp: Scheme.T;
+    args: Scheme.Object): Scheme.Object
+  RAISES { Scheme.E } =
+BEGIN
+  WITH x = SchemeLongReal.FromO(SchemeUtils.First(args)),
+       y = SchemeLongReal.FromO(SchemeUtils.Second(args)) DO
+    RETURN SchemeLongReal.FromLR(x + y)
+  END
+END MyAddApply;
+\end{lstlisting}
+
+\section{Security: The Sandbox}
+
+MScheme provides three levels of primitive access:
+
+\begin{enumerate}
+\item \textbf{SandboxDefiner} --- No file I/O, no system access.  Safe
+  for untrusted code.
+\item \textbf{DefaultDefiner} --- Full file I/O and extensions.
+\item \textbf{ExtDefiner} --- All of the above plus user-defined primitives.
+\end{enumerate}
+
+\begin{lstlisting}[language=Modula3]
+(* Create a sandboxed interpreter *)
+VAR scm := NEW(Scheme.T);
+scm.setPrimitives(
+  NEW(SchemePrimitive.SandboxDefiner));
+EVAL scm.init(ARRAY OF TEXT {}, NIL);
+\end{lstlisting}
+
+
+%======================================================================
+\chapter{Real-World Usage Patterns}
+%======================================================================
+
+\section{The Hybrid Application Pattern}\label{sec:hybrid}
+
+The most effective way to use MScheme is as a hybrid architecture:
+performance-critical libraries are coded in Modula-3 (or wrapped
+from~C), while the application itself is assembled in Scheme.  The
+Modula-3 code provides speed, type safety, and access to low-level
+facilities; the Scheme code provides rapid iteration, exploratory
+programming, and concise high-level composition.
+
+This pattern is particularly powerful for scientific and engineering
+applications, where numerically intensive kernels must be fast but
+the top-level workflow changes frequently during development.
+
+\subsection{Architecture}
+
+A typical hybrid application has three components:
+
+\begin{enumerate}
+\item \textbf{M3 library modules} --- Compiled, type-safe,
+  performance-critical code.  Numerical algorithms, data tables,
+  I/O parsers, and C library wrappers.
+\item \textbf{A thin M3 main program} --- Registers stubs, creates
+  a Scheme interpreter, and enters the REPL or loads the application
+  script.
+\item \textbf{Scheme application code} --- Orchestrates the
+  libraries, implements the top-level algorithm, handles
+  command-line arguments, and produces output.
+\end{enumerate}
+
+\noindent The M3 code changes rarely and is compiled once.  The
+Scheme code can be edited and reloaded interactively without
+recompilation.
+
+\subsection{Example: {\tt photopic}}
+
+The {\tt photopic} application computes photometric quantities
+for visible light: luminous efficacy, CIE color coordinates, Color
+Rendering Index (CRI), and optimal light spectra via constrained
+optimization.
+
+\paragraph{M3 libraries (compiled, fast).}
+The performance-critical code is in Modula-3 modules that provide
+lookup tables with interpolation and physics computations:
+
+\begin{center}
+\begin{tabular}{lp{3in}}
+\toprule
+\textbf{Module} & \textbf{Role} \\
+\midrule
+{\tt Blackbody} & Planck radiance $B_\nu(T,\nu)$ \\
+{\tt CieSpectrum} & CIE photopic/scotopic efficiency (41-point table, interpolated) \\
+{\tt CieXyz} & CIE 1931 XYZ color matching functions (471-point table) \\
+{\tt Tcs} & Test Color Sample reflectances (14 samples $\times$ 471 wavelengths) \\
+{\tt TempUv} & Correlated Color Temperature $\leftrightarrow$ MacAdam~$uv$ lookup \\
+{\tt ParametricSpectrum} & Parameterized spectrum representation for optimization \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent These modules are pure Modula-3, compiled to native code.
+The inner loops---integrating a spectrum against the CIE color
+matching functions, for instance---run at full compiled speed.
+
+\paragraph{The main program (thin M3 shell).}
+{\tt Main.m3} is minimal: it registers stubs, creates a Scheme
+interpreter, and enters the REPL:
+
+\begin{lstlisting}[language=Modula3]
+MODULE Main;
+IMPORT SchemeStubs, SchemeM3, SchemeReadLine, ReadLine;
+
+BEGIN
+  SchemeStubs.RegisterStubs();
+  WITH scm = NEW(SchemeM3.T).init(
+    ARRAY OF TEXT { "require", "m3" }^) DO
+    SchemeReadLine.MainLoop(
+      NEW(ReadLine.Default).init(), scm)
+  END
+END Main.
+\end{lstlisting}
+
+\paragraph{The {\tt m3makefile} (wiring it all together).}
+The build file compiles the M3 modules and generates Scheme stubs
+for every interface the application wants to call from Scheme:
+
+\begin{lstlisting}[language={}]
+import ("mscheme")
+import ("modula3scheme")
+import ("sstubgen")
+import ("integrate")
+import ("cobyla")
+
+Module ("CieSpectrum")
+Module ("CieXyz")
+Module ("Blackbody")
+Module ("Tcs")
+Module ("TempUv")
+Module ("ParametricSpectrum")
+
+SchemeStubs ("CieSpectrum")
+SchemeStubs ("CieXyz")
+SchemeStubs ("Blackbody")
+SchemeStubs ("Tcs")
+SchemeStubs ("TempUv")
+SchemeStubs ("ParametricSpectrum")
+SchemeStubs ("Math")
+SchemeStubs ("Fmt")
+SchemeStubs ("NR4p4")
+SchemeStubs ("COBYLA_M3")
+% ... plus I/O stubs: FileWr, Wr, Rd, etc.
+
+ExportSchemeStubs ("photopic")
+importSchemeStubs ()
+
+implementation ("Main")
+program ("photopic")
+\end{lstlisting}
+
+\noindent Note how both domain-specific modules ({\tt CieSpectrum},
+{\tt Blackbody}) and standard library modules ({\tt Math}, {\tt Fmt},
+{\tt NR4p4}) get stubs generated.  After compilation, all are callable
+from Scheme.
+
+\paragraph{The Scheme application (the actual program).}
+The entire application logic lives in {\tt photopic.scm}
+($\sim$800~lines of Scheme).  It uses the compiled M3 modules as
+building blocks:
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "display" "m3")
+
+;; Physical constants
+(define c 299792458.0)       ; speed of light
+(define h 6.62607015e-34)    ; Planck's constant
+(define l0 380e-9)           ; blue limit of vision
+(define l1 770e-9)           ; red limit of vision
+
+;; Blackbody radiance per wavelength -- calls compiled M3
+(define (make-Bl T)
+  (lambda (l)
+    (let ((nu (/ c l)))
+      (/ (Blackbody.PlanckRadiance T nu)
+         (/ c (* nu nu))))))
+
+;; Numerical integration -- calls compiled M3 (Romberg)
+(define (integrate f a b)
+  (NR4p4.QromoMidpoint (make-lrfunc-obj f) a b))
+
+;; Luminous efficacy -- integrates spectrum against CIE data
+(define (calc-lumens f)
+  (integrate
+    (lambda (x) (* (f x) (CieSpectrum.PhotoConv x)))
+    l0 l1))
+
+;; CIE XYZ color coordinates
+(define (calc-Yxy spectrum)
+  (let* ((xint (get-channel-integral spectrum 'x))
+         (yint (get-channel-integral spectrum 'y))
+         (zint (get-channel-integral spectrum 'z)))
+    (xyz->Yxy (list xint yint zint))))
+\end{lstlisting}
+
+\noindent The CRI calculation---the core algorithm---is about
+50~lines of Scheme that composes these primitives.  For each of
+14~test color samples, it computes reflected spectra under reference
+and test illuminants, transforms through CIE color spaces, and
+computes color differences.  All the inner-loop numerical work
+(interpolation, Planck's law, integration) runs as compiled M3; the
+orchestration is Scheme.
+
+\paragraph{Why this works well.}
+\begin{itemize}
+\item \textbf{Development speed:}\  The algorithm can be modified by
+  editing {\tt photopic.scm} and calling {\tt (load "photopic.scm")}
+  in the REPL---no recompilation, no relinking.
+\item \textbf{Performance:}\  Tight numerical loops (spectrum
+  integration, table interpolation) run at compiled speed.
+  Only the top-level control flow pays the Scheme overhead.
+\item \textbf{Exploratory use:}\  From the REPL, one can
+  interactively compute the CRI of any spectrum, plot data to files,
+  or run optimization sweeps---without writing a {\tt main} procedure.
+\item \textbf{Code generation:}\  The Scheme code can even generate
+  Modula-3 source.  In {\tt photopic}, a Scheme function computes
+  a temperature-to-UV lookup table and writes it out as a Modula-3
+  {\tt CONST} array, which is then compiled into the next build.
+\end{itemize}
+
+\bigskip
+The rest of this chapter documents specific patterns from the CSP
+compiler ({\tt cspc}), the most extensive user of MScheme, with over
+80 {\tt SchemeStubs} declarations and approximately 40 Scheme source
+files.
+
+\section{Application Startup}
+
+\begin{lstlisting}[language=Scheme]
+; setup.scm -- loaded at startup
+(require-modules "basic-defs" "m3" "hashtable" "set" "display")
+
+; Extend load path to find application Scheme files
+(define *m3utils* (Env.Get "M3UTILS"))
+(set! **scheme-load-path**
+      (cons (string-append *m3utils* "/csp/src")
+            **scheme-load-path**))
+
+; Load the compiler
+(load "cspc.scm")
+\end{lstlisting}
+
+\section{AST Construction}
+
+Building Modula-3 AST nodes from Scheme:
+
+\begin{lstlisting}[language=Scheme]
+(CspAst.SkipStmt)
+(CspAst.AssignmentStmt lhs-expr rhs-expr)
+(CspAst.IntegerExpr 42)
+(CspAst.BooleanExpr #t)
+(CspAst.IdentifierExpr "x")
+
+;; Building sequences
+(define seq (init-seq 'CspStatementSeq.T))
+(seq 'addhi stmt1)
+(seq 'addhi stmt2)
+(CspAst.SequentialStmt (seq '*m3*))
+\end{lstlisting}
+
+\section{Round-Trip Between Representations}
+
+A common pattern uses Scheme s-expressions as an intermediate
+representation, converting to/from Modula-3 AST nodes:
+
+\begin{lstlisting}[language=Scheme]
+;; M3 -> Scheme: get s-expression form
+(define lisp-form
+  ((obj-method-wrap m3-obj 'CspSyntax.T) 'lisp))
+
+;; Transform in Scheme
+(define edited (simplify-stmt lisp-form))
+
+;; Scheme -> M3: convert back
+(define new-m3 (convert-stmt edited))
+\end{lstlisting}
+
+\section{Code Generation}
+
+The CSP compiler generates complete {\tt m3makefile} entries and
+Modula-3 source from Scheme, demonstrating meta-programming capabilities:
+
+\begin{lstlisting}[language=Scheme]
+(define wr (FileWr.Open "src/m3makefile"))
+(Wr.PutText wr "import (\"mscheme\")\n")
+
+(map (lambda (mod)
+       (Wr.PutText wr
+         (string-append "Smodule (\"" mod "\")\n")))
+     module-names)
+
+(map (lambda (sym)
+       (Wr.PutText wr
+         (string-append "SchemeStubs(\""
+           (symbol->string sym) "\")\n")))
+     *the-stubs*)
+
+(Wr.PutText wr "ExportSchemeStubs (\"sim\")\n")
+(Wr.PutText wr "importSchemeStubs ()\n")
+(Wr.Close wr)
+\end{lstlisting}
+
+
+%======================================================================
+\chapter{Environment and Debugging}
+%======================================================================
+
+\section{The Global Environment}
+
+Every {\tt Scheme.T} has a global environment where top-level
+definitions live.  The special variable {\tt *the-global-environment*}
+refers to it.
+
+\section{Error Handling}
+
+Errors raise {\tt Scheme.E} with a text message.  In the REPL, a
+traceback is printed:
+
+\begin{lstlisting}[language={}]
+> (car 42)
+EXCEPTION! expected a pair, got: 42
+(called from) eval (car 42)
+\end{lstlisting}
+
+Control tracebacks with {\tt (enable-tracebacks!)} and
+{\tt (disable-tracebacks!)}.
+
+Control Modula-3 runtime error mapping:
+\begin{lstlisting}[language=Scheme]
+(set-rt-error-mapping! #f)
+;; M3 runtime errors crash instead of becoming Scheme.E
+\end{lstlisting}
+
+\section{Pickling (State Persistence)}
+
+Scheme environments can be saved and restored:
+
+\begin{lstlisting}[language=Scheme]
+;; Save
+(define wr (FileWr.Open "state.pkl"))
+(dump-environment wr)
+(wr-close wr)
+
+;; Restore
+(define rd (FileRd.Open "state.pkl"))
+(load-environment! rd)
+\end{lstlisting}
+
+
+%======================================================================
+\chapter{Concurrency Model}
+%======================================================================
+
+A single {\tt Scheme.T} instance is always single-threaded.  Its
+methods must not be called concurrently from different threads.
+However, the system supports:
+
+\begin{itemize}
+\item Multiple interpreters sharing a \emph{synchronized} global
+  environment (using {\tt SchemeNavigatorEnvironment}).
+\item Thread-safe ``navigable'' environments for cooperative
+  interpreters.
+\item The {\tt at-run} and {\tt clock-run} primitives, which create
+  background Modula-3 threads that evaluate Scheme expressions.
+\item Export of the global environment as a Network Object
+  ({\tt netobj-export-global-environment}), enabling remote Scheme
+  access over the network following the DEC~SRC Network Objects
+  protocol~\cite{netobj}.
+\end{itemize}
+
+
+%======================================================================
+\appendix
+\chapter{Quick Reference Card}
+
+\begin{lstlisting}[language=Scheme]
+;; Module system
+(require-modules "m3" "basic-defs" "display" "hashtable")
+
+;; Load path
+(set! **scheme-load-path**
+      (cons "dir" **scheme-load-path**))
+
+;; M3 procedure calls (after loading "m3")
+(InterfaceName.ProcName arg1 arg2 ...)
+
+;; M3 objects
+(define obj (new-modula-object 'TypeName.T))
+(define w (obj-method-wrap obj 'TypeName.T))
+(w 'method-name arg1 arg2 ...)
+(w '*m3*)                    ; raw M3 object
+
+;; Hash tables
+(define h (make-hash-table size hash-fn))
+(h 'add-entry! key value)
+(h 'retrieve key)
+(h 'keys)
+
+;; Display
+(dis "output" var dnl)       ; print with newline
+
+;; Type introspection
+(rttype-typecode obj)
+(list-modula-types)
+(list-modula-type-ops tc)
+
+;; Timing
+(time expr)
+(timenow)
+
+;; I/O
+(define wr (FileWr.Open "file"))
+(Wr.PutText wr "text")
+(Wr.Close wr)
+
+;; Shell
+(system "command")
+\end{lstlisting}
+
+\chapter{{\tt m3makefile} Cheat Sheet}
+
+\begin{lstlisting}[language={}]
+% Import mscheme packages
+import ("mscheme")
+import ("modula3scheme")
+import ("sstubgen")
+
+% Generate stubs for an interface
+SchemeStubs ("MyInterface")
+
+% Module + stubs combined
+Smodule ("MyModule")
+
+% Interface + stubs combined
+Sinterface ("MyInterface")
+
+% Sequence + stubs
+Ssequence ("Key", "Value")
+
+% Export stubs from this package
+ExportSchemeStubs ("my-program-name")
+
+% Import stubs from other packages
+importSchemeStubs()
+
+% Build the program
+implementation ("Main")
+program ("my-program-name")
+\end{lstlisting}
+
+
+%======================================================================
+\newpage
+{
+\frenchspacing
+\begin{thebibliography}{99}
+
+\bibitem{r4rs} William Clinger and Jonathan Rees, eds.
+Revised$^4$ Report on the Algorithmic Language Scheme.  1991.
+
+\bibitem{r5rs} Richard Kelsey, William Clinger, and Jonathan Rees, eds.
+Revised$^5$ Report on the Algorithmic Language Scheme.  1998.
+
+\bibitem{sicp2} Hal Abelson and Gerald Jay Sussman with Julie Sussman.
+{\it Structure and Interpretation of Computer Programs,} second edition.
+Cambridge, Mass.:\ MIT Press, 1996.
+
+\bibitem{spwm3} Greg~Nelson, ed.  {\it Systems Programming with Modula-3.}
+Englewood Cliffs, N.J.:\ Prentice-Hall, 1991.
+
+\bibitem{netobj} Andrew~Birrell, Greg~Nelson, Susan~Owicki, and Edward~Wobber.
+{\it Network Objects,} digital SRC Research Report~115.
+Palo Alto, Calif.:\ Digital Equipment Corporation, 1994 (revised 1995).
+
+\bibitem{m3tk} Mick Jordan.  An extensible programming environment for Modula-3.
+{\it Proceedings of the Fourth ACM SIGSOFT Symposium on Software
+Development Environments,} Irvine, Calif., 1990.
+
+\bibitem{jscheme} Peter Norvig.  JScheme.
+{\tt https://norvig.com/jscheme.html}
+
+\bibitem{scheme-initial-report} Gerald Jay Sussman and Guy L.~Steele.
+Scheme: An Interpreter For Extended Lambda Calculus.
+MIT~AI Memo AIM-349.  December 1975.
+
+\end{thebibliography}
+}
+
+\end{document}

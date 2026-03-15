@@ -27,7 +27,7 @@ PRIMS=prims.tex
 .dvi.ps: 
 	$(DVIPS) -tletter $*.dvi 
 
-all: pdfs
+all: pdfs mscheme-user-manual.pdf
 
 pdfs: run.done $(TARGETS)
 
@@ -45,8 +45,13 @@ $(MAIN).dvi: $(MAIN).tex $(GENFIGURES) $(OTHERSRCS)
 .fig.eps:
 	fig2dev -L eps $*.fig $*.eps
 
+mscheme-user-manual.pdf: mscheme-user-manual.tex
+	pdflatex -interaction=nonstopmode mscheme-user-manual.tex
+	pdflatex -interaction=nonstopmode mscheme-user-manual.tex
+
 clean::
 	rm -f $(MAIN).ps $(TARGETS) *.log *.aux *~ *.dvi *.toc $(GENFIGURES) *.lot *.lof
+	rm -f mscheme-user-manual.pdf mscheme-user-manual.out
 	rm -rf $(DERIVED)
 	rm -f src/prims.tex
 	rm -f *.done
