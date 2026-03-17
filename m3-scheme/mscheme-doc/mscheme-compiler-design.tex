@@ -672,9 +672,15 @@ Variable reference (parameter) &
 Variable reference (free, pre-resolved) &
   Emit \texttt{freeVars[i].get()} or a direct quick-array read. \\
 Known primitive call &
-  Inline the primitive operation. \\
+  Fetch the primitive via \texttt{freeVars[i].get()}, then call.
+  The binding indirection preserves redefinition semantics
+  (see \S\ref{sec:redefinition}). \\
 Known closure call &
-  Direct procedure call, bypassing TYPECASE dispatch. \\
+  Fetch the closure via \texttt{freeVars[i].get()}, then call
+  \texttt{.apply()}.  Same binding indirection.  The TYPECASE
+  dispatch is not eliminated, but the eval-loop overhead
+  (type dispatch, special-form checks, argument-list construction)
+  is. \\
 Self-tail-call &
   Emit \texttt{LOOP} with argument reassignment. \\
 \bottomrule
@@ -755,7 +761,7 @@ compilability boundary:
 \item If the operator is a special form $\Rightarrow$ compile the
   corresponding control-flow pattern.
 \item If the operator is a known procedure $\Rightarrow$ compile a
-  direct call or inline.
+  call through the binding (see \S\ref{sec:redefinition}).
 \item If the operator is a macro $\Rightarrow$ expand at compile time,
   then compile the expansion.
 \item If the operator is unknown (not bound at closure-creation time)
@@ -769,6 +775,143 @@ compile can be delegated to the interpreter by emitting a call to
 \texttt{interp.eval(quoted\_expr, env)}.  This provides a graceful
 degradation path: the compiler handles what it can, and the
 interpreter handles the rest.
+
+%======================================================================
+\chapter{Redefinition Semantics}
+\label{ch:redef}
+%======================================================================
+
+A Scheme program may redefine any top-level symbol at any time.
+When \texttt{foo} is redefined, all subsequent calls to \texttt{foo}
+must dispatch to the new definition.  This is a fundamental semantic
+requirement, and the compiler must preserve it.  Both compiled and
+interpreted callers of \texttt{foo} must see the new value.
+
+\section{How the Interpreter Handles Redefinition}
+
+In the current interpreter, redefinition is always visible because
+of how the binding optimization works.  A
+\texttt{SchemeEnvironmentBinding.T} object points to the
+\emph{cell} in the environment where the variable is stored, not
+to the \emph{value} itself.  When \texttt{(set!\ foo new-proc)} or
+\texttt{(define foo new-proc)} mutates the cell, every subsequent
+call to \texttt{binding.get()} returns the new value.
+
+For closures that were not subject to the binding optimization
+(because the symbol was unbound at closure-creation time), the
+evaluator falls back to \texttt{env.lookup(sym)}, which traverses
+the live environment and also sees the new value.
+
+In both cases, redefinition is immediately visible to all clients.
+
+\section{Three Levels of Compilation Aggressiveness}
+\label{sec:redefinition}
+
+A compiler for Scheme must choose how aggressively it resolves
+call targets.  There are three levels, with increasing performance
+but decreasing compatibility with redefinition:
+
+\begin{description}
+\item[Level 1: Call through the Binding.]
+  Compiled code fetches the current value of the callee from the
+  \texttt{SchemeEnvironmentBinding.T} on every call:
+
+\begin{lstlisting}[language=Modula3]
+(* compiled call to foo *)
+VAR proc := self.freeVars[3].get();
+BEGIN
+  RETURN NARROW(proc, SchemeProcedure.T).apply(interp, args)
+END
+\end{lstlisting}
+
+  The Binding points to the environment cell.  If \texttt{foo} is
+  redefined, the next call sees the new value.  This is semantically
+  identical to the interpreter.  Both compiled and interpreted
+  callers of \texttt{foo} see the redefinition immediately.
+
+  The cost is one pointer dereference plus one indexed array read
+  (for quick-array bindings) per call---negligible compared to the
+  eval-loop overhead being eliminated.
+
+\item[Level 2: Direct call.]
+  The compiler resolves the callee at compile time and emits a
+  direct procedure call:
+
+\begin{lstlisting}[language=Modula3]
+(* compiled direct call to foo's compiled body *)
+RETURN Apply1_foo(self_foo, interp, arg1)
+\end{lstlisting}
+
+  This is faster (no indirection), but \textbf{broken under
+  redefinition}: the old code is baked into the caller.  Redefining
+  \texttt{foo} has no effect on this caller.
+
+\item[Level 3: Inlining.]
+  The compiler splices the callee's body into the caller.
+  Redefinition is completely invisible---the old logic is
+  permanently embedded.
+\end{description}
+
+\section{Design Decision: Level 1 Only}
+
+This compiler adopts \textbf{Level 1 exclusively}.  All calls to
+free variables go through \texttt{SchemeEnvironmentBinding.T}
+objects.  No call targets are resolved beyond the binding cell.
+No inlining across closure boundaries is performed.
+
+This decision has several consequences:
+
+\begin{enumerate}
+\item \textbf{Redefinition always works.}  The compiler preserves
+  the same semantics as the interpreter.  A user who redefines
+  \texttt{foo} at the REPL sees the new definition take effect
+  immediately, regardless of whether callers are compiled or
+  interpreted.
+
+\item \textbf{Compiled and interpreted code interoperate freely.}
+  A compiled caller can call an interpreted callee (by fetching it
+  via \texttt{.get()} and calling \texttt{.apply()}).  An
+  interpreted caller can call a compiled callee (it is just a
+  \texttt{SchemeProcedure.T} subtype).  Redefinition can replace
+  a compiled procedure with an interpreted one or vice versa, and
+  all clients adapt transparently.
+
+\item \textbf{The performance benefit is still substantial.}
+  The overhead eliminated by compilation is not the one pointer
+  dereference per call (which Level~2 would remove).  It is the
+  five-way type dispatch, the 14 special-form comparisons, the
+  operator TYPECASE, the primitive CASE dispatch, and the
+  argument-list cons-cell allocation---all of which are eliminated
+  by Level~1 compilation.
+
+\item \textbf{The \texttt{SchemeEnvironmentBinding.T} abstraction
+  is reused.}  The same Binding objects that \texttt{DoBindings}
+  already creates for the interpreter's optimization serve as the
+  indirection cells for compiled code.  No new mechanism is needed.
+
+\item \textbf{Level 2 and Level 3 remain available as future
+  optimizations.}  If profiling reveals that a specific call site
+  is a bottleneck \emph{and} the user can guarantee that the callee
+  will not be redefined (e.g., via an explicit \texttt{(declare
+  (constant foo))} annotation), the compiler could be extended to
+  emit direct calls or inlined code for those specific sites.
+  But this is strictly opt-in and is not part of the initial design.
+\end{enumerate}
+
+\section{Self-Tail-Calls: An Exception}
+
+One case where the compiler \emph{can} safely bypass the binding
+is self-tail-calls.  When a function calls itself in tail position,
+the compiler knows the target is the same compiled body and can
+emit a \texttt{LOOP} with argument reassignment.  This does not
+violate redefinition semantics: if the function redefines itself
+during execution (via \texttt{set!} on its own name), the
+recursive call was already in progress and the new definition
+takes effect on the \emph{next} external call, not the current
+tail-recursive loop.  This matches the interpreter's behavior,
+where \texttt{EvalInternal}'s \texttt{LOOP} evaluates
+\texttt{c.body} (captured at closure-creation time), not a fresh
+lookup of the function's name.
 
 %======================================================================
 \chapter{Runtime Support}
