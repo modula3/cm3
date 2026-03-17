@@ -1264,28 +1264,19 @@ PROCEDURE Apply1_factorial(self : Compiled_factorial;
                            interp : Scheme.T;
                            n : Object) : Object
   RAISES { E } =
-VAR n_val := n;
 BEGIN
-  LOOP
-    (* (= n 0) *)
-    IF SchemeBoolean.TruthO(
-         SchemeLongReal.NumEq(n_val, self.k[1])) THEN
-      RETURN self.k[0]  (* 1 *)
-    ELSE
-      (* (* n (factorial (- n 1))) *)
-      VAR n_minus_1 := SchemeLongReal.Sub(
-                          n_val, self.k[0]);
-          (* fetch factorial via Binding -- Level 1 *)
-          fact_proc := self.fv[0].get();
-      BEGIN
-        (* Not a self-tail-call in general, but
-           the compiler detects that fv[0] was
-           bound to THIS procedure at registration
-           time and the call is in tail position,
-           so it emits a LOOP instead: *)
-        n_val := n_minus_1
-        (* and loops *)
-      END
+  IF SchemeBoolean.TruthO(
+       SchemeLongReal.NumEq(n, self.k[1])) THEN
+    RETURN self.k[0]  (* 1 *)
+  ELSE
+    (* n * factorial(n - 1) *)
+    VAR n_minus_1 := SchemeLongReal.Sub(n, self.k[0]);
+        (* fetch factorial via Binding -- Level 1 *)
+        fact_proc := self.fv[0].get();
+        sub_result := NARROW(fact_proc,
+          SchemeProcedure.T).apply1(interp, n_minus_1);
+    BEGIN
+      RETURN SchemeLongReal.Mul(n, sub_result)
     END
   END
 END Apply1_factorial;
