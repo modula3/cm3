@@ -1,0 +1,1519 @@
+%%
+%% MScheme Internals: A Technical Report on the Interpreter Implementation
+%%
+\documentclass[12pt]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{amssymb}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,unwind-protect,eval,
+    current-environment},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,CHAR,TEXT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,
+    ISTYPE,NARROW,TYPECODE},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  MScheme Internals\\[0.5em]
+  \large A Technical Report on the Interpreter Implementation}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\chapter{Introduction}
+%======================================================================
+
+MScheme is a Scheme interpreter written in Modula-3 that implements a
+dialect largely in line with the Revised$^4$ Report on the Algorithmic
+Language Scheme (R4RS).  It originated as a line-for-line translation
+of Peter Norvig's JScheme---a compact Scheme interpreter written in
+Java---into Modula-3, with subsequent additions including a binding
+optimization pass at closure-creation time, Modula-3 interoperability
+via a stub generator, and various system extensions.
+
+This report examines the internal implementation of the interpreter
+in detail: the type system, the reader, the evaluator's main loop,
+the environment and scoping mechanism, the ``partial compilation''
+that resolves variable references at closure-creation time, the
+primitive system, and memory management.  The Modula-3 stub-generation
+system is mentioned where relevant but is not the focus.
+
+\paragraph{Source organization.}
+The core interpreter lives in the CM3 package \texttt{mscheme/src/}.
+The principal files are:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{File} & \textbf{Role} \\
+\midrule
+\texttt{Scheme.i3}, \texttt{Scheme.m3} & Interpreter object and main eval loop \\
+\texttt{SchemeClass.i3} & Revealed private fields of \texttt{Scheme.T} \\
+\texttt{SchemeObject.i3} & The universal value type \\
+\texttt{SchemeSymbol.i3/.m3} & Symbol (interned atom) representation \\
+\texttt{SchemeEnvironment.i3/.m3} & Environment abstraction and scope chain \\
+\texttt{SchemeEnvironmentUnsafe.m3} & Unsynchronized environment implementation \\
+\texttt{SchemeEnvironmentInstanceRep.i3} & Revealed environment storage layout \\
+\texttt{SchemeEnvironmentBinding.i3/.m3} & First-class binding cells \\
+\texttt{SchemeClosure.i3/.m3} & Closures, binding optimization \\
+\texttt{SchemeClosureClass.i3} & Revealed closure fields \\
+\texttt{SchemePair.i3/.m3} & Cons cells \\
+\texttt{SchemePrimitive.i3/.m3} & Built-in primitive procedures \\
+\texttt{SchemePrimitives.i3} & Standard library macros (Scheme source) \\
+\texttt{SchemeInputPort.i3/.m3} & Reader (lexer and parser) \\
+\texttt{SchemeProcedure.i3/.m3} & Abstract procedure type \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%======================================================================
+\chapter{The Type System}
+\label{ch:types}
+%======================================================================
+
+\section{The Universal Value Type}
+
+The foundational design decision is stated in \texttt{SchemeObject.i3}:
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE SchemeObject;
+TYPE T = REFANY;
+END SchemeObject.
+\end{lstlisting}
+
+Every Scheme value is a Modula-3 \texttt{REFANY}---a traced, garbage-collected
+reference to any heap-allocated object.  This means that any Modula-3 heap
+object is already a valid Scheme value without wrapping or marshaling.
+Type dispatch throughout the interpreter uses Modula-3's
+\texttt{ISTYPE}/\texttt{NARROW} runtime type tests, which check the
+object's typecode (a small integer stored in the heap header).
+
+\section{Concrete Types}
+
+The mapping between Scheme types and Modula-3 representations is:
+
+\begin{center}
+\begin{longtable}{lll}
+\toprule
+\textbf{Scheme type} & \textbf{Modula-3 type} & \textbf{Notes} \\
+\midrule
+\endhead
+pair & \texttt{SchemePair.T = REF RECORD first, rest : REFANY END}
+     & Cons cell \\
+empty list & \texttt{NIL}
+           & The Modula-3 null pointer \\
+boolean & \texttt{SchemeBoolean.T}
+        & Interned singletons \\
+number & \texttt{SchemeLongReal.T = REF LONGREAL}
+       & IEEE~754 double only \\
+string & \texttt{SchemeString.T = REF ARRAY OF CHAR}
+       & Mutable character array \\
+character & \texttt{SchemeChar.T = REF CHAR}
+          & Boxed character \\
+symbol & \texttt{SchemeSymbol.T = Atom.T}
+       & Interned text (see \S\ref{sec:symbols}) \\
+vector & \texttt{REF ARRAY OF REFANY}
+       & \\
+closure & \texttt{SchemeClosure.T}
+        & See Chapter~\ref{ch:closures} \\
+macro & \texttt{SchemeMacro.T <: SchemeClosure.T}
+      & \\
+primitive & \texttt{SchemePrimitive.T}
+          & See Chapter~\ref{ch:primitives} \\
+input port & \texttt{SchemeInputPort.T}
+           & Wraps \texttt{Rd.T} \\
+output port & \texttt{Wr.T}
+            & Directly; no wrapper \\
+environment & \texttt{SchemeEnvironment.T}
+            & Extends \texttt{NetObj.T} \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+Several points deserve attention:
+
+\begin{itemize}
+\item \textbf{Booleans} are interned singletons accessed via
+  \texttt{SchemeBoolean.True()} and \texttt{SchemeBoolean.False()}.
+  Truth testing is \texttt{x $\neq$ False()}---anything other than
+  \texttt{\#f} is truthy, per the Scheme specification.
+
+\item \textbf{Numbers} use a single representation: \texttt{REF LONGREAL}.
+  There is no exact/inexact distinction and no bignum support for
+  arithmetic (though \texttt{BigInt.T} appears in the pickling code).
+
+\item \textbf{Output ports} are raw Modula-3 \texttt{Wr.T} writers.
+  A Modula-3 writer \emph{is} a Scheme output port with no wrapping.
+
+\item \textbf{Environments} extend \texttt{NetObj.T}, meaning they can in
+  principle be shared across address spaces via Modula-3's network objects
+  protocol.
+\end{itemize}
+
+\section{Symbols and Interning}
+\label{sec:symbols}
+
+Symbols are represented as CM3 atoms:
+
+\begin{lstlisting}[language=Modula3]
+(* SchemeSymbol.i3 *)
+TYPE T = Atom.T;
+CONST Symbol = Atom.FromText;
+CONST ToText = Atom.ToText;
+\end{lstlisting}
+
+The \texttt{Atom} module in the CM3 standard library maintains a
+process-wide hash table of interned strings.  \texttt{Atom.FromText(t)}
+returns the unique, canonical \texttt{Atom.T} for the text \texttt{t};
+calling it twice with equal text returns the \emph{same pointer}.
+Consequently:
+
+\begin{enumerate}
+\item Symbol identity is \textbf{pointer equality} (\texttt{=} in
+  Modula-3).  No string comparison is ever needed after interning.
+\item Symbols created by different reader invocations, in different
+  threads, or by generated stubs all resolve to the same object.
+\item The special-form symbols used by the evaluator (\texttt{SYMquote},
+  \texttt{SYMif}, \texttt{SYMlambda}, etc.) are interned once at module
+  initialization time and thereafter compared by pointer identity in the
+  main eval loop.
+\end{enumerate}
+
+The helper \texttt{SymEq(a, b)} interns \texttt{b} and does pointer
+comparison---this is used in display code where a text literal is more
+readable than a pre-interned variable.
+
+%======================================================================
+\chapter{The Reader}
+\label{ch:reader}
+%======================================================================
+
+The reader is implemented in \texttt{SchemeInputPort.m3}.  It wraps a
+Modula-3 \texttt{Rd.T} (reader stream) and provides the Scheme
+\texttt{read} operation, producing S-expressions from character input.
+
+\section{Internal State}
+
+\begin{lstlisting}[language=Modula3]
+REVEAL T = ... OBJECT
+    rd : Rd.T;
+    isPushedToken, isPushedChar := FALSE;
+    pushedToken : Object := NIL;
+    pushedChar : INTEGER := -1;
+    lNo := 1;             (* line number for error messages *)
+    helpfulText : TEXT;   (* e.g., filename, for diagnostics *)
+  END;
+\end{lstlisting}
+
+The reader maintains a one-token and one-character pushback buffer.
+Character input uses \texttt{UnsafeRd.FastGetChar} for performance
+(bypasses per-character locking), with a line counter incremented on
+each newline.  EOF is represented as the integer $-1$.
+
+\section{Tokenization}
+
+The tokenizer (\texttt{NextToken}) classifies input characters as follows:
+
+\begin{enumerate}
+\item \textbf{Whitespace} is skipped.
+\item \textbf{Single-character tokens}: \texttt{(}, \texttt{)}, \texttt{'},
+  and \texttt{`} return pre-interned sentinel symbols
+  (\texttt{LP}, \texttt{RP}, \texttt{SQ}, \texttt{BQ}).
+\item \textbf{Comma}: reads one character ahead to distinguish \texttt{,}
+  from \texttt{,@}.
+\item \textbf{Semicolon}: line comment; skips to end of line, then recurses.
+\item \textbf{Double quote}: reads a string literal, handling backslash
+  escapes (\texttt{\textbackslash n}, \texttt{\textbackslash t},
+  \texttt{\textbackslash\textbackslash}, \texttt{\textbackslash "}),
+  and returns a \texttt{SchemeString.T} (\texttt{REF ARRAY OF CHAR}).
+\item \textbf{Hash prefix} (\texttt{\#}): dispatches on the following
+  character---\texttt{\#t}/\texttt{\#f} for booleans,
+  \texttt{\#(} for vectors, \texttt{\#\textbackslash} for character
+  literals (with special handling of \texttt{\#\textbackslash space}
+  and \texttt{\#\textbackslash newline}).
+\item \textbf{Default case} (identifiers and numbers): characters are
+  accumulated in a lightweight \texttt{Wx} buffer (a growable
+  \texttt{REF ARRAY OF CHAR} with amortized-constant append) until a
+  delimiter or whitespace is encountered.  The resulting text is then:
+  \begin{itemize}
+  \item Parsed as a \texttt{LONGREAL} if it begins with a digit, sign,
+    or decimal point, and contains no non-numeric characters other
+    than~\texttt{e}.
+  \item Otherwise, interned as a symbol via \texttt{Atom.FromText}.
+  \end{itemize}
+\end{enumerate}
+
+\section{List Reading}
+
+The procedure \texttt{ReadTail2} reads the elements of a list after the
+opening parenthesis.  It is iterative (not recursive) to avoid stack
+overflow on long lists:
+
+\begin{enumerate}
+\item Read tokens in a loop, pushing each back and calling \texttt{DoRead}
+  to parse a complete sub-expression.
+\item Prepend each element to an accumulator list \texttt{res} (building
+  the list in reverse).
+\item On encountering \texttt{)}, stop and set the tail to \texttt{NIL}.
+\item On encountering \texttt{.}, read one more expression as the dotted
+  tail, then expect~\texttt{)}.
+\item Finally, destructively reverse the accumulated list with
+  \texttt{ReverseD} and splice the dotted tail (if any) onto the
+  last~\texttt{rest} field.
+\end{enumerate}
+
+An older recursive \texttt{ReadTail} exists in the source but is marked
+\texttt{<*UNUSED*>}.
+
+\section{The Top-Level Read Dispatch}
+
+The \texttt{DoRead} procedure dispatches on the first token:
+
+\begin{lstlisting}[language=Modula3]
+WITH token = t.nextToken(...) DO
+  IF    token = LP    THEN RETURN t.readTail(...)
+  ELSIF token = RP    THEN t.warn("Extra ) ignored"); ...
+  ELSIF token = SQ    THEN RETURN List2(quote, t.doRead(...))
+  ELSIF token = BQ    THEN RETURN List2(quasiquote, t.doRead(...))
+  ELSIF token = COM   THEN RETURN List2(unquote, t.doRead(...))
+  ELSIF token = COMAT THEN RETURN List2(unquote-splicing, t.doRead(...))
+  ELSE  RETURN token
+  END
+END
+\end{lstlisting}
+
+Quote abbreviations (\texttt{'}, \texttt{`}, \texttt{,}, \texttt{,@})
+are expanded by the reader into their \texttt{(quote~\ldots)} /
+\texttt{(quasiquote~\ldots)} forms.
+
+%======================================================================
+\chapter{The Evaluator}
+\label{ch:eval}
+%======================================================================
+
+The evaluator is the heart of the interpreter.  It lives in
+\texttt{Scheme.m3} and consists of two procedures: a thin wrapper
+\texttt{Eval} that provides traceback generation, and the core
+\texttt{EvalInternal} that implements the actual dispatch loop.
+
+\section{Traceback Generation: \texttt{Eval}}
+
+\texttt{Eval} calls \texttt{EvalInternal} inside a \texttt{TRY}/\texttt{EXCEPT}
+block.  If \texttt{EvalInternal} raises the exception \texttt{E(txt)},
+\texttt{Eval} appends a traceback line:
+
+\begin{lstlisting}[language=Modula3]
+RAISE E(txt & "\n(called from) eval " &
+        TruncateText(Stringify(x), MaxPerLine))
+\end{lstlisting}
+
+As each stack frame unwinds, the exception text accumulates a trace.
+The trace is capped at \texttt{MaxTraceback} (4096 bytes) to prevent
+runaway growth.  A special sentinel string \texttt{"CallCC123"} is passed
+through without annotation---this is the internal protocol used by
+\texttt{call/cc} (see \S\ref{sec:callcc}).
+
+On the first error, \texttt{Eval} saves the faulting environment and
+expression in \texttt{t.errorEnvironment} and \texttt{t.errorEvalX} for
+post-mortem inspection from the REPL.
+
+Tracebacks can be disabled globally by setting the environment variable
+\texttt{NOMSCHEMETRACEBACKS}.
+
+\section{The Main Loop: \texttt{EvalInternal}}
+\label{sec:evalinternal}
+
+\texttt{EvalInternal} takes three arguments: the interpreter \texttt{t},
+an expression \texttt{x}, and an environment \texttt{env}.  Its overall
+structure is an infinite \texttt{LOOP}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE EvalInternal(t : T; x : Object;
+                       env : SchemeEnvironment.Instance) : Object
+  RAISES { E } =
+VAR
+  envIsLocallyMade := FALSE;
+  savedEnv : SchemeEnvironment.Instance := NIL;
+BEGIN
+  LOOP
+    (* dispatch on the type of x *)
+    ...
+  END
+END EvalInternal;
+\end{lstlisting}
+
+The \texttt{LOOP} is the mechanism for tail-call optimization: instead of
+making a recursive call in tail position, the code assigns new values to
+\texttt{x} and \texttt{env} and goes around the loop again.  The local
+variables \texttt{envIsLocallyMade} and \texttt{savedEnv} support
+environment recycling across tail calls (see \S\ref{sec:envrecycle}).
+
+\subsection{Type Dispatch}
+
+At the top of each iteration, the evaluator dispatches on the type
+of~\texttt{x}:
+
+\begin{lstlisting}[language=Modula3]
+IF x = NIL THEN
+  RETURN NIL
+ELSIF ISTYPE(x, Symbol) THEN
+  RETURN env.lookup(x)
+ELSIF ISTYPE(x, Binding) THEN
+  RETURN NARROW(x, Binding).get()
+ELSIF NOT ISTYPE(x, Pair) THEN
+  RETURN x                     (* self-evaluating *)
+ELSE
+  (* x is a Pair: special form or application *)
+  ...
+END
+\end{lstlisting}
+
+\begin{description}
+\item[\texttt{NIL}] The empty list is self-evaluating.
+\item[\texttt{Symbol}] A variable reference---looked up via the
+  environment's scope chain (\texttt{env.lookup}).
+\item[\texttt{Binding}] A pre-resolved variable reference (see
+  Chapter~\ref{ch:closures}).  The value is fetched directly from the
+  binding cell, bypassing the scope chain entirely.
+\item[\texttt{Not a Pair}] Numbers, strings, booleans, characters,
+  vectors, and any other non-pair, non-symbol objects are self-evaluating.
+\item[\texttt{Pair}] An application or special form.
+\end{description}
+
+The \texttt{Binding} case is central to understanding MScheme's
+performance.  When a closure is created, free variable references in its
+body are replaced with \texttt{SchemeEnvironmentBinding.T} objects that
+hold a direct pointer to the environment cell.  At eval time, the
+evaluator recognizes these objects and calls \texttt{.get()} in constant
+time---no scope-chain traversal is needed.
+
+\subsection{Special Forms}
+
+When \texttt{x} is a pair, the evaluator extracts the first element
+(\texttt{fn}) and checks it against pre-interned special-form symbols.
+Since symbols are interned atoms, this check is pointer comparison.
+The special forms are:
+
+\begin{description}
+\item[\texttt{quote}] Returns the second element of the form unevaluated.
+
+\item[\texttt{begin}] Evaluates all sub-expressions except the last,
+  then sets \texttt{x} to the last expression and loops (tail-call
+  optimization):
+\begin{lstlisting}[language=Modula3]
+WHILE Rest(args) # NIL DO
+  EVAL t.eval(First(args), env);
+  args := Rest(args)
+END;
+x := First(args)   (* tail position *)
+\end{lstlisting}
+
+\item[\texttt{define}] Two syntactic forms are supported:
+  \texttt{(define var val)} stores the value of \texttt{val} in the
+  current environment under \texttt{var}, and
+  \texttt{(define (f params...) body...)} is sugar for
+  \texttt{(define f (lambda (params...) body...))}.  In both cases,
+  if the value is an anonymous procedure, it is named after the
+  variable.
+
+\item[\texttt{set!}] Evaluates the value, then walks the scope chain
+  to find the frame where the variable is defined and mutates it there.
+  Raises an error if the variable is unbound.
+
+\item[\texttt{if}] Evaluates the test expression; then sets \texttt{x}
+  to either the consequent or the alternative and loops:
+\begin{lstlisting}[language=Modula3]
+IF TruthO(t.eval(First(args), env)) THEN
+  x := Second(args)
+ELSE
+  x := Third(args)
+END
+\end{lstlisting}
+
+\item[\texttt{cond}] Delegates to a helper \texttt{ReduceCond} that
+  desugars into an expression the main loop can handle (a \texttt{quote},
+  a function application, or a \texttt{begin} form).  The result is
+  assigned back to~\texttt{x} for tail-call optimization.  The
+  \texttt{=>} syntax is supported: \texttt{(cond (test => proc))}
+  applies \texttt{proc} to the test value.
+
+\item[\texttt{lambda}] Creates a new closure (see
+  Chapter~\ref{ch:closures}) and marks the current environment as
+  ``assigned'' (\texttt{env.assigned := TRUE}), preventing it from
+  being recycled by the tail-call optimizer.
+
+\item[\texttt{macro}] Like \texttt{lambda} but creates a
+  \texttt{SchemeMacro.T}.  Also sets \texttt{env.assigned := TRUE}.
+
+\item[\texttt{eval}] Double-evaluation: evaluates the argument to
+  obtain an expression, then sets \texttt{x} to that expression and
+  loops.
+
+\item[\texttt{current-environment}] Returns the current environment
+  object as a first-class value.
+
+\item[\texttt{unwind-protect}] A three-argument form
+  \texttt{(unwind-protect body cleanup handler)} that evaluates
+  \texttt{body} in a \texttt{TRY} block, executes \texttt{cleanup}
+  unconditionally (as a \texttt{FINALLY}), and optionally catches
+  exceptions via \texttt{handler}.
+\end{description}
+
+\subsection{Procedure Application}
+
+If \texttt{fn} is not a special-form symbol, it is evaluated
+to obtain a procedure.  The evaluator then uses a \texttt{TYPECASE}
+to dispatch on the procedure type.
+
+\subsubsection{Closure Application and Tail-Call Optimization}
+\label{sec:closure-apply}
+
+When a closure is called, the evaluator avoids a recursive call by
+setting \texttt{x~:= c.body} and \texttt{env} to a new environment
+frame binding the closure's parameters to the (evaluated) arguments,
+then continuing the loop.  This is the core tail-call optimization
+for closures.
+
+The environment for the call is managed carefully to minimize allocation:
+
+\begin{lstlisting}[language=Modula3]
+VAR newEnv : SchemeEnvironment.Instance;
+BEGIN
+  IF savedEnv # NIL THEN
+    newEnv := savedEnv;  savedEnv := NIL
+  ELSE
+    newEnv := NEW(SchemeEnvironment.Unsafe)
+  END;
+
+  IF envIsLocallyMade AND NOT env.assigned THEN
+    savedEnv := env       (* save for reuse on next tail call *)
+  END;
+
+  env := newEnv.initEval(c.params, args, env, t, c.env);
+  envIsLocallyMade := TRUE;
+
+  IF savedEnv # NIL AND savedEnv.assigned THEN
+    savedEnv := NIL       (* captured; cannot reuse *)
+  END
+END
+\end{lstlisting}
+
+The variable \texttt{savedEnv} caches a previously allocated environment
+frame.  If one is available, it is reused rather than allocating a new
+object.  The current environment can be saved for future reuse only if
+(a)~it was created inside this invocation of \texttt{EvalInternal}
+(\texttt{envIsLocallyMade}) and (b)~it has not been captured by a closure
+(\texttt{NOT env.assigned}).  This recycling is safe because a locally-made,
+unassigned environment has no external references---it was created for
+the previous tail call and is now dead.
+
+After \texttt{initEval}, the code re-checks \texttt{savedEnv.assigned}
+because \texttt{initEval} evaluates the arguments, which might create
+closures that capture the saved environment.
+
+\subsubsection{Macro Expansion}
+
+When the evaluated operator is a macro, the evaluator calls
+\texttt{m.expand(t, x, args)}, which applies the macro transformer
+to the arguments \emph{unevaluated}.  The returned expression is
+assigned to~\texttt{x} and the loop continues, giving tail-call
+optimization for the expansion result.
+
+\subsubsection{Non-Closure Procedure Application}
+
+For primitives and other procedure types, the evaluator provides
+arity-specific fast paths:
+
+\begin{lstlisting}[language=Modula3]
+TYPECASE args OF
+  NULL => (* zero args: general path *)
+| Pair(pp) =>
+    IF pp.rest = NIL THEN
+      RETURN p.apply1(t, EvalInternal(t, pp.first, env))
+    ELSIF ISTYPE(pp.rest, Pair) AND
+          NARROW(pp.rest, Pair).rest = NIL THEN
+      RETURN p.apply2(t,
+        EvalInternal(t, pp.first, env),
+        EvalInternal(t, NARROW(pp.rest, Pair).first, env))
+    END
+ELSE END;
+RETURN p.apply(t, t.evalList(args, env))
+\end{lstlisting}
+
+The \texttt{apply1} and \texttt{apply2} methods avoid constructing
+an argument list entirely.  For the one-argument and two-argument
+cases---which account for a large fraction of primitive
+calls---no cons cells are allocated for the argument list.
+
+The general \texttt{apply} path calls \texttt{evalList} to evaluate
+all arguments and build a proper list, then passes it to
+\texttt{p.apply}.
+
+\subsection{Argument List Evaluation: \texttt{EvalList2}}
+\label{sec:evallist}
+
+The procedure \texttt{EvalList2} evaluates each element of a list and
+builds a new list of results.  It uses \texttt{GetCons} (from the
+free-pair pool; see \S\ref{sec:conspools}) for cons cell allocation and
+builds the result list tail-first to avoid reversing:
+
+\begin{lstlisting}[language=Modula3]
+WITH new = GetCons(t) DO
+  new.first := t.eval(pair.first, env);
+  new.rest := NIL;
+  IF res = NIL THEN
+    ptr := new;  res := ptr
+  ELSE
+    ptr.rest := new;  ptr := new
+  END
+END
+\end{lstlisting}
+
+A pointer \texttt{ptr} tracks the last cons cell, allowing constant-time
+append to the tail.
+
+%======================================================================
+\chapter{The Environment System}
+\label{ch:env}
+%======================================================================
+
+\section{Type Hierarchy}
+
+The environment type hierarchy uses Modula-3's multi-level opaque type
+revelation:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Type} & \textbf{Adds} \\
+\midrule
+\texttt{SchemeEnvironmentSuper.T = NetObj.T} & Network object root \\
+\texttt{SchemeEnvironment.T} & \texttt{lookup}, \texttt{bind}, \texttt{define}, \texttt{set}, \texttt{defPrim} \\
+\texttt{SchemeEnvironment.PubInstance} & \texttt{assigned} flag; \texttt{init}, \texttt{initEval}, \texttt{initEmpty} \\
+\texttt{SchemeEnvironmentClass.Private} & \texttt{put}, \texttt{get} (internal storage API) \\
+\texttt{SchemeEnvironmentInstanceRep.Rep} & \texttt{dictionary}, \texttt{quick}, \texttt{parent}, \texttt{dead} \\
+\texttt{SchemeEnvironment.Instance} & The fully-revealed concrete type \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two concrete subtypes exist: \texttt{Unsafe} (no synchronization, used
+for local frames and the default global environment) and \texttt{Safe}
+(mutex-protected, for shared or network-exported environments).
+
+\section{Storage: The Quick Array and Hash Table}
+\label{sec:quickarray}
+
+Each environment frame stores bindings in a two-tier structure, defined
+in \texttt{SchemeEnvironmentInstanceRep.i3}:
+
+\begin{lstlisting}[language=Modula3]
+CONST QuickVars = 10;
+TYPE QuickMap = RECORD var : Symbol; val : Object END;
+
+TYPE Rep = ... OBJECT
+    dictionary : AtomRefTbl.T;
+    quick : ARRAY [0..QuickVars - 1] OF QuickMap;
+    parent : SchemeEnvironment.T;
+    dead := FALSE;
+    assigned := FALSE;
+  END;
+\end{lstlisting}
+
+The \texttt{quick} array holds the first 10 bindings inline as
+\texttt{(symbol, value)} pairs.  This is a linear-scanned array
+but is cache-friendly and fast for small environments.  Since most
+lambda parameter lists have fewer than~10 entries, the hash table
+is rarely needed for local frames.
+
+The \texttt{dictionary} field is a hash table (\texttt{AtomRefTbl.T},
+keyed by \texttt{Atom.T}) that is lazily allocated only when the quick
+array overflows.
+
+\subsection{\texttt{put}: Storing a Binding}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE UnsafePut(t : Instance; var : Symbol;
+                    READONLY val : Object) =
+BEGIN
+  FOR i := FIRST(t.quick) TO LAST(t.quick) DO
+    IF t.quick[i].var = var OR t.quick[i].var = NIL THEN
+      t.quick[i].var := var;
+      t.quick[i].val := val;
+      RETURN
+    END
+  END;
+  (* quick array full: spill to hash table *)
+  IF t.dictionary = NIL THEN
+    t.dictionary := NEW(AtomRefTbl.Default).init()
+  END;
+  EVAL t.dictionary.put(var, val)
+END UnsafePut;
+\end{lstlisting}
+
+The scan looks for either a matching variable (update in place) or a
+\texttt{NIL} slot (insert).  The comparison \texttt{t.quick[i].var = var}
+is pointer equality on interned atoms.
+
+\subsection{\texttt{get}: Retrieving a Binding}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE UnsafeGet(t : Instance; var : Symbol;
+                    VAR val : Object) : BOOLEAN =
+BEGIN
+  IF var = NIL THEN RETURN FALSE END;
+  FOR i := FIRST(t.quick) TO LAST(t.quick) DO
+    IF t.quick[i].var = var THEN
+      val := t.quick[i].val; RETURN TRUE
+    END
+  END;
+  IF t.dictionary # NIL THEN
+    RETURN t.dictionary.get(var, val)
+  ELSE
+    RETURN FALSE
+  END
+END UnsafeGet;
+\end{lstlisting}
+
+Linear scan of the quick array, then fallback to the hash table.
+
+\subsection{\texttt{lookup}: Scope Chain Traversal}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Lookup(t : Instance; symbol : Symbol) : Object
+  RAISES { E } =
+VAR o : Object;
+BEGIN
+  <*ASSERT NOT t.dead*>
+  IF t.get(symbol, o) THEN RETURN o END;
+  IF t.parent # NIL THEN
+    RETURN t.parent.lookup(symbol)
+  ELSE
+    RETURN Error("Unbound variable in lookup: " &
+                 Stringify(symbol))
+  END
+END Lookup;
+\end{lstlisting}
+
+Classic lexical scoping: search the local frame, then walk up the
+parent chain.  The \texttt{dead} assertion guards against use-after-recycle
+bugs (see \S\ref{sec:envrecycle}).
+
+\section{\texttt{define} and \texttt{set!}}
+
+\texttt{Define} always stores in the \emph{local} frame.  It also
+names anonymous procedures:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Define(t : Instance; var, val : Object) : Object =
+BEGIN
+  t.put(var, val);
+  TYPECASE val OF SchemeProcedure.T(p) =>
+    IF p.name = "anonymous procedure" THEN
+      p.name := SchemeSymbol.ToText(var)
+    END
+  ELSE END;
+  ...
+END Define;
+\end{lstlisting}
+
+\texttt{Set} walks the scope chain to find the frame where the variable
+is defined, then mutates it there.  If the variable is unbound everywhere,
+it raises an error.
+
+\section{The \texttt{assigned} Flag}
+\label{sec:assigned}
+
+The boolean field \texttt{assigned} on each environment frame records
+whether the frame has been captured by a closure.  It is set to
+\texttt{TRUE} whenever a \texttt{lambda} or \texttt{macro} form is
+evaluated in that environment, and also during the closure binding
+optimization in \texttt{SchemeClosure.Init}.
+
+The flag serves a single purpose: it tells the tail-call optimizer in
+\texttt{EvalInternal} whether an environment frame can be recycled.
+An environment that has been ``assigned'' (captured) may be reachable
+from a closure and must not be overwritten.
+
+\section{Environment Initialization}
+\label{sec:envinit}
+
+Environments are initialized via three methods:
+
+\begin{description}
+\item[\texttt{initEmpty(parent)}] Clears all quick slots to \texttt{NIL},
+  nils out the dictionary, and sets the parent pointer.  Used when
+  recycling an environment frame.
+
+\item[\texttt{init(vars, vals, parent)}] Creates a frame and populates
+  it by walking two parallel lists: parameter names and argument values.
+  If \texttt{vars} is a bare symbol (rather than a pair), it receives
+  all remaining values as a list (rest-argument binding).
+
+\item[\texttt{initEval(vars, argsToEval, evalEnv, interp, parent)}]
+  Like \texttt{init}, but evaluates each argument expression in
+  \texttt{evalEnv} before binding.  This is the path used by the
+  tail-call optimizer, and it avoids constructing an intermediate
+  argument list that \texttt{evalList} would produce.
+\end{description}
+
+The \texttt{initEval} method calls \texttt{InitDictEval2}, which
+evaluates arguments one at a time:
+
+\begin{lstlisting}[language=Modula3]
+LOOP
+  IF vars = NIL AND argsToEval = NIL THEN RETURN TRUE
+  ELSIF vars # NIL AND ISTYPE(vars, Symbol) THEN
+    t.put(vars, interp.evalList(argsToEval, evalEnv));
+    RETURN TRUE                     (* rest-arg *)
+  ELSIF vars # NIL AND argsToEval # NIL AND ... THEN
+    t.put(varp.first, interp.eval(argp.first, evalEnv));
+    vars := varp.rest;
+    argsToEval := argp.rest
+  ELSE
+    RETURN FALSE                    (* arity mismatch *)
+  END
+END
+\end{lstlisting}
+
+This avoids the cons-cell allocation that \texttt{evalList} would
+require: arguments are evaluated and stored directly into the new
+environment frame.
+
+\section{Environment Recycling}
+\label{sec:envrecycle}
+
+As described in \S\ref{sec:closure-apply}, the tail-call optimizer
+maintains a \texttt{savedEnv} variable that caches one environment
+frame for reuse.  The frame is reused by calling \texttt{initEmpty}
+to clear its contents, rather than allocating a new object.
+
+The \texttt{dead} field (set during \texttt{initEmpty} and cleared
+afterward, or used as a debugging assertion) helps catch bugs where
+a recycled environment is accidentally accessed.
+
+%======================================================================
+\chapter{The Binding Optimization}
+\label{ch:closures}
+%======================================================================
+
+This chapter describes the ``partial compilation'' that occurs when a
+closure is created.  It is the most distinctive optimization in MScheme
+and the key to understanding its performance characteristics.
+
+\section{Overview}
+
+When the evaluator encounters a \texttt{lambda} form, it does not
+simply store the parameter list and body verbatim.  Instead, it walks
+the body and \textbf{replaces free variable references (symbols) with
+\texttt{SchemeEnvironmentBinding.T} objects} that point directly to the
+environment cell where each variable lives.  At subsequent evaluation
+time, these binding objects are recognized by the evaluator's type
+dispatch and resolved in constant time---no scope-chain walk is
+needed.
+
+This is a form of compile-time name resolution: the ``compilation''
+happens once, when the closure is created, and the benefit is
+amortized over every subsequent call to the closure.
+
+\section{The Closure Object}
+
+A closure's private fields (from \texttt{SchemeClosureClass.i3}):
+
+\begin{lstlisting}[language=Modula3]
+Private = SchemeClosure.Public OBJECT
+  params, body : SchemeObject.T;
+  env          : SchemeEnvironment.Instance;
+END;
+\end{lstlisting}
+
+\texttt{params} is the parameter list (a proper list of symbols, or a
+list ending with a dotted symbol for rest arguments).  \texttt{body} is
+the (possibly transformed) body expression.  \texttt{env} is the
+lexical environment at the point of closure creation.
+
+\section{The \texttt{Init} Procedure}
+
+\texttt{SchemeClosure.Init} in \texttt{SchemeClosure.m3} takes a
+\texttt{bind} parameter.  When \texttt{bind} is \texttt{TRUE} (which
+it is for \texttt{lambda}; macros pass \texttt{FALSE}), the binding
+optimization is performed.
+
+The core logic is in the nested procedure \texttt{DoBindings}, which
+walks the body recursively:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE DoBindings(body : Pair;
+                     VAR wasDefine : BOOLEAN) : Object =
+\end{lstlisting}
+
+For each element of the body:
+
+\begin{enumerate}
+\item If it is a \textbf{Pair} (sub-expression): recurse.
+
+\item If it is a \textbf{Symbol in the first (operator) position}:
+  \begin{itemize}
+  \item If it is a special-form symbol (\texttt{IsSpecialForm(sym)}),
+    bail out---return the body unchanged.  Special forms have non-standard
+    evaluation rules and their arguments must not be pre-resolved.
+  \item If it is a macro or unknown binding (\texttt{IsMacroOrUnknown(sym)}),
+    bail out.  Unknown symbols might refer to macros not yet defined;
+    pre-resolving them would be incorrect.
+  \item If it is \texttt{define}, set \texttt{wasDefine := TRUE} and
+    bail out.  A \texttt{define} introduces new bindings that would
+    invalidate subsequent pre-resolutions.
+  \end{itemize}
+
+\item If it is a \textbf{Symbol that is a parameter of this lambda}
+  (\texttt{MemberP(sym, params)}): leave it alone.  It will be bound
+  in the new local environment at call time.
+
+\item If it is a \textbf{Symbol that is a free variable}: call
+  \texttt{env.bind(sym)} to obtain a \texttt{SchemeEnvironmentBinding.T}
+  object, and replace the symbol in the body with this object.
+
+\item If \texttt{env.bind} fails (variable not found in any enclosing
+  scope): bail out and return the original body unchanged.
+
+\item \textbf{Non-symbol, non-pair elements} (numbers, strings, etc.)
+  are left as-is; they are self-evaluating.
+\end{enumerate}
+
+The macro-or-unknown check is:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE IsMacroOrUnknown(sym : SchemeSymbol.T) : BOOLEAN =
+BEGIN
+  IF NOT env.haveBinding(sym) THEN
+    RETURN TRUE    (* unknown = might be a macro later *)
+  ELSE
+    RETURN ISTYPE(env.lookup(sym), SchemeMacro.T)
+  END
+END IsMacroOrUnknown;
+\end{lstlisting}
+
+This is conservative: if a symbol is not currently bound, it might be
+a macro that will be defined later (e.g., by a \texttt{load}).  In
+that case, pre-resolving it would be wrong.  The code errs on the side
+of caution and leaves the symbol as-is.
+
+\subsection{Multi-Expression Bodies}
+
+The outer wrapper \texttt{MapBindings} iterates over each top-level
+expression in a multi-expression body.  If any expression is or
+contains a \texttt{define}, processing stops and all subsequent
+expressions are left unchanged.  This is because \texttt{define}
+introduces new bindings into the scope, potentially shadowing names
+that were already pre-resolved.
+
+\subsection{Body Wrapping}
+
+After binding resolution, the body is packaged:
+
+\begin{lstlisting}[language=Modula3]
+env.assigned := TRUE;
+t.params := params;
+t.env := env;
+IF body # NIL AND ISTYPE(body, Pair)
+   AND Rest(body) = NIL THEN
+  t.body := First(DoBindings(body, dummy))
+ELSIF ISTYPE(body, Pair) THEN
+  t.body := Cons(SYMbegin, MapBindings(body))
+ELSE
+  t.body := Cons(SYMbegin, body)
+END;
+\end{lstlisting}
+
+A single-expression body is unwrapped from its list (avoiding a
+\texttt{begin} form).  Multi-expression bodies are wrapped in
+\texttt{(begin~\ldots)}.
+
+\section{The Binding Object}
+\label{sec:bindingobj}
+
+\texttt{SchemeEnvironmentBinding.T} is an abstract object type:
+
+\begin{lstlisting}[language=Modula3]
+TYPE T = OBJECT METHODS
+    name()  : SchemeSymbol.T;
+    env()   : SchemeObject.T;
+    get()   : SchemeObject.T;
+    setB(to : SchemeObject.T);
+  END;
+\end{lstlisting}
+
+The \texttt{Unsafe} environment provides an optimized implementation
+called \texttt{MyBinding}:
+
+\begin{lstlisting}[language=Modula3]
+TYPE MyBinding = SchemeEnvironmentBinding.T OBJECT
+    e : Unsafe;
+    s : Symbol;
+    q : [-1..LAST(CARDINAL)] := -1;
+  OVERRIDES
+    get  := SBGet;
+    setB := SBSetB;
+  END;
+\end{lstlisting}
+
+The field \texttt{q} is the index into the quick array at the time
+the binding was created.  When \texttt{q $\neq -1$}, the binding's
+\texttt{get} method is a single indexed read:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE SBGet(sb : MyBinding) : Object =
+VAR v : Object;
+BEGIN
+  IF sb.q # -1 THEN
+    RETURN sb.e.quick[sb.q].val    (* direct array access *)
+  END;
+  WITH gotit = sb.e.get(sb.s, v) DO
+    <*ASSERT gotit*>
+    RETURN v
+  END
+END SBGet;
+\end{lstlisting}
+
+This is the fastest possible variable access in MScheme: one pointer
+dereference to the environment object, one indexed read from a
+fixed-size array.  No hash lookup, no scope chain traversal.
+
+The \texttt{Safe} environment provides a simpler \texttt{SimpleBinding}
+that does not cache the quick-array index but still avoids the scope
+chain walk by holding a direct pointer to the environment frame.
+
+\section{How Bindings Are Created}
+
+The \texttt{GetBinding} method on an \texttt{Unsafe} environment:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE GetBinding(t : Instance; sym : Symbol) : Binding
+  RAISES { E } =
+BEGIN
+  FOR i := FIRST(t.quick) TO LAST(t.quick) DO
+    IF t.quick[i].var = sym THEN
+      RETURN NEW(MyBinding, e := t, q := i, s := sym)
+    END
+  END;
+  IF t.get(sym, o) THEN
+    RETURN NEW(MyBinding, e := t, s := sym)
+  END;
+  IF t.parent # NIL THEN
+    RETURN t.parent.bind(sym)
+  ELSE
+    RETURN Error("Unbound variable: " & Stringify(sym))
+  END
+END GetBinding;
+\end{lstlisting}
+
+If the variable is found in the quick array, the binding caches the
+index \texttt{q}.  If it is in the hash table, \texttt{q} remains
+$-1$ and subsequent accesses go through \texttt{get}.  If it is not
+in the local frame, the search continues up the parent chain---but
+the returned binding will point to whichever ancestor frame holds
+the variable.
+
+\section{When Binding Fails}
+
+The binding optimization is deliberately conservative.  It bails out
+(leaving the original symbol in place) in several situations:
+
+\begin{itemize}
+\item The operator position of a form is a special-form symbol.
+\item The operator is a macro or is currently unbound (might become
+  a macro later).
+\item A \texttt{define} appears in the body, potentially introducing
+  new bindings.
+\item A free variable is not found in any enclosing scope.
+\end{itemize}
+
+In all these cases, the closure falls back to ordinary symbol lookup
+at evaluation time.  The optimization is purely opportunistic; its
+absence does not affect correctness.
+
+\section{Interaction with \texttt{set!}}
+
+The \texttt{setB} method on a binding mutates the value in the
+environment frame.  For \texttt{MyBinding}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE SBSetB(sb : MyBinding; to : Object) =
+BEGIN
+  IF sb.q # -1 THEN
+    sb.e.quick[sb.q].val := to
+  ELSE
+    sb.e.put(sb.s, to)
+  END
+END SBSetB;
+\end{lstlisting}
+
+This means that \texttt{set!} on a pre-resolved variable is also
+a constant-time operation---no scope chain walk is needed.
+
+%======================================================================
+\chapter{The Primitive System}
+\label{ch:primitives}
+%======================================================================
+
+\section{The Procedure Type}
+
+All callable objects in MScheme extend \texttt{SchemeProcedure.T}:
+
+\begin{lstlisting}[language=Modula3]
+TYPE T <: Public;
+Public = OBJECT METHODS
+    format() : TEXT;
+    apply(interp : Scheme.T; args : Object) : Object
+      RAISES { E };
+    apply1(interp : Scheme.T; a1 : Object) : Object
+      RAISES { E };
+    apply2(interp : Scheme.T; a1, a2 : Object) : Object
+      RAISES { E };
+  END;
+\end{lstlisting}
+
+The \texttt{apply1} and \texttt{apply2} methods exist for the
+arity-specific optimizations described in \S\ref{sec:evalinternal}.
+The default implementations wrap their arguments into a list and
+call~\texttt{apply}; \texttt{SchemePrimitive.T} overrides them to
+use the cons-cell pool.
+
+Each procedure also carries a \texttt{name} field (defaulting to
+\texttt{"anonymous procedure"}) used in error messages and tracebacks.
+
+\section{Primitive Registration}
+
+A \texttt{SchemePrimitive.T} carries an integer ID, a reference to
+its \texttt{Definer}, and min/max argument counts.  Primitives are
+registered in layered \texttt{InstallPrimitives} procedures:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Layer} & \textbf{Contents} \\
+\midrule
+\texttt{InstallSandboxPrimitives} & $\sim$170 safe primitives (R4RS core) \\
+\texttt{InstallFileIOPrimitives} & File I/O (\texttt{open-input-file}, etc.) \\
+\texttt{InstallNorvigPrimitives} & JScheme extensions (\texttt{new}, \texttt{class}, \texttt{exit}) \\
+\texttt{InstallDefaultExtendedPrimitives} & MScheme extensions (\texttt{random}, \texttt{system}, etc.) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Each primitive is installed via \texttt{env.defPrim(name, id, definer,
+minArgs, maxArgs)}, which interns the name as a symbol, creates a
+\texttt{SchemePrimitive.T} with the given ID, and defines it in the
+environment.
+
+\section{Dispatch}
+
+The dispatch hub is the procedure \texttt{Prims}, which uses a
+\texttt{CASE} statement on an enumeration type \texttt{P}:
+
+\begin{lstlisting}[language=Modula3]
+CASE VAL(t.id, P) OF
+  P.Eq   => RETURN NumCompare(args, '=')
+| P.Lt   => RETURN NumCompare(args, '<')
+| P.Car  => RETURN PedanticFirst(x)
+| P.Cons => RETURN Cons(x, y, interp)
+| ...
+END
+\end{lstlisting}
+
+For user-defined extension primitives (registered via
+\texttt{ExtDefiner.addPrim}), the ID is a random integer above
+\texttt{ORD(LAST(P))}, and dispatch goes through a hash table lookup:
+
+\begin{lstlisting}[language=Modula3]
+IF t.id > ORD(LAST(P)) THEN
+  RETURN NARROW(t.definer, ExtDefiner).apply(t, interp, args)
+\end{lstlisting}
+
+\section{Arity-Optimized Dispatch}
+
+\texttt{SchemePrimitive.T} overrides \texttt{apply1} and \texttt{apply2}
+to use the cons-cell pool:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Apply1(t : T; interp : Scheme.T; a1 : Object)
+  : Object RAISES { E } =
+VAR d1 := GetCons(interp); free := DefFree;
+BEGIN
+  d1.first := a1;  d1.rest := NIL;
+  WITH res = Prims(t, interp, d1, a1, NIL, free) DO
+    IF free THEN ReturnCons(interp, d1) END;
+    RETURN res
+  END
+END Apply1;
+\end{lstlisting}
+
+The temporary cons cell is allocated from the pool and returned after
+the call.  The \texttt{free} flag tracks whether the primitive captured
+the argument list (e.g., \texttt{list} or \texttt{append} would set
+\texttt{free := FALSE}), in which case the cell must not be recycled.
+
+\section{Standard Library Macros}
+
+The interface \texttt{SchemePrimitives.i3} contains a single constant
+\texttt{Code}: a long \texttt{TEXT} of Scheme source code that is
+evaluated at interpreter initialization time.  It defines the following
+standard forms as macros:
+
+\begin{center}
+\begin{tabular}{lp{9cm}}
+\toprule
+\textbf{Form} & \textbf{Expansion strategy} \\
+\midrule
+\texttt{or} & Expands to \texttt{(cond (a) (b) (c) ...)} \\
+\texttt{and} & Recursive: \texttt{(if a (and b c) \#f)} \\
+\texttt{quasiquote} & Recursive expander tracking nesting depth \\
+\texttt{let} & \texttt{((lambda (vars...) body...) vals...)}; supports named \texttt{let} via \texttt{set!} \\
+\texttt{let*} & Nested \texttt{let}s, one per binding \\
+\texttt{letrec} & Binds all to \texttt{\#f}, then \texttt{set!}s all \\
+\texttt{case} & \texttt{cond} with \texttt{member} tests \\
+\texttt{do} & \texttt{letrec}-based tail-recursive loop \\
+\texttt{delay} & Creates a memoizing thunk via \texttt{make-promise} \\
+\texttt{time} & Wraps in \texttt{time-call} primitive \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These are non-hygienic procedural macros (JScheme-style).  R5RS
+hygienic macros (\texttt{syntax-rules}) are available by loading the
+bundled \texttt{mbe} library.
+
+Also defined are convenience aliases:
+\texttt{call/cc} for \texttt{call-with-current-continuation},
+\texttt{first}/\texttt{rest} for \texttt{car}/\texttt{cdr},
+\texttt{second} for \texttt{cadr}, and \texttt{third} for \texttt{caddr}.
+
+%======================================================================
+\chapter{Memory Management}
+\label{ch:memory}
+%======================================================================
+
+MScheme relies on the Modula-3 traced-heap garbage collector for all
+memory management.  However, it supplements the GC with two
+application-level optimizations to reduce allocation pressure.
+
+\section{The Cons Cell Free List}
+\label{sec:conspools}
+
+The interpreter object maintains a singly-linked free list of recycled
+cons cells:
+
+\begin{lstlisting}[language=Modula3]
+(* SchemeClass.i3 *)
+Private = Scheme.Public OBJECT
+  freePairs : SchemePair.T := NIL;
+  ...
+END;
+\end{lstlisting}
+
+\subsection{\texttt{GetCons}: Allocation}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE GetCons(t : T) : Pair =
+BEGIN
+  IF t.freePairs # NIL THEN
+    VAR res := t.freePairs;
+    BEGIN
+      t.freePairs := res.rest;
+      RETURN res
+    END
+  END;
+  RETURN NEW(Pair)
+END GetCons;
+\end{lstlisting}
+
+Pops the head of the free list if available; otherwise allocates a new
+pair from the GC heap.
+
+\subsection{\texttt{ReturnCons}: Deallocation}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE ReturnCons(t : T; cons : Pair) =
+BEGIN
+  IF cons = NIL THEN RETURN END;
+  VAR p : Pair := cons;
+  BEGIN
+    WHILE p.rest # NIL DO
+      p.first := SYMrip;    (* poison *)
+      p := p.rest
+    END;
+    p.first := SYMrip;
+    p.rest := t.freePairs;  (* splice onto free list *)
+    t.freePairs := cons
+  END
+END ReturnCons;
+\end{lstlisting}
+
+The entire chain of cons cells is returned in one operation.  Each
+cell's \texttt{first} field is overwritten with the poison symbol
+\texttt{SYMrip} (the string \texttt{"####r.i.p.-dead-cons-cell####"}).
+This is a debugging aid: if a recycled cell is accidentally read, the
+poison value will be conspicuous in output.
+
+\subsection{Where Recycling Occurs}
+
+Cons cells from the pool are used in:
+
+\begin{itemize}
+\item \texttt{EvalList2} (argument list evaluation)
+\item \texttt{SchemePrimitive.Apply1} and \texttt{Apply2} (temporary
+  argument packaging for primitive dispatch)
+\item Various utility functions (\texttt{Cons}, \texttt{List2}, etc.)
+  that accept an interpreter parameter
+\end{itemize}
+
+The pool is per-interpreter-instance and is explicitly not thread-safe.
+
+\section{Scratch Buffers}
+
+The interpreter object also carries reusable scratch buffers:
+
+\begin{lstlisting}[language=Modula3]
+wx : Wx.T := NIL;       (* string builder *)
+refseq : RefSeq.T := NIL;  (* sequence builder *)
+\end{lstlisting}
+
+These are available to primitives for string construction and sequence
+building, avoiding repeated heap allocation for temporary buffers.
+
+%======================================================================
+\chapter{The REPL}
+\label{ch:repl}
+%======================================================================
+
+\section{The Read-Eval-Write Loop}
+
+The REPL is implemented in \texttt{Scheme.ReadEvalWriteLoop}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE ReadEvalWriteLoop(t : T; int : Interrupter)
+  RAISES { Wr.Failure } =
+BEGIN
+  t.setInterrupter(int);
+  t.bind(SchemeSymbol.Symbol("bang-bang"), NIL);
+  LOOP
+    Wr.PutText(t.output, ">");
+    Wr.Flush(t.output);
+    TRY
+      WITH x = t.input.read() DO
+        IF SchemeInputPort.IsEOF(x) THEN RETURN END;
+        WITH res = t.evalInGlobalEnv(x) DO
+          EVAL SchemeUtils.Write(res, t.output, TRUE);
+          EVAL t.globalEnvironment.set(
+            SchemeSymbol.Symbol("bang-bang"), res)
+        END
+      END
+    EXCEPT
+      E(e) =>
+        Wr.PutText(t.output, "EXCEPTION! " & e & "\n")
+    END;
+    Wr.PutText(t.output, "\n");
+    Wr.Flush(t.output)
+  END
+END ReadEvalWriteLoop;
+\end{lstlisting}
+
+Key details:
+
+\begin{itemize}
+\item The prompt is \texttt{">"} (no trailing space).
+\item The variable \texttt{bang-bang} holds the result of the last
+  successful evaluation, analogous to \texttt{\_} or \texttt{!!}
+  in other REPLs.
+\item Reading is done via \texttt{t.input.read()}, which invokes
+  the full Scheme reader described in Chapter~\ref{ch:reader}.
+\item Evaluation is always in the global environment.
+\item Results are displayed with \texttt{SchemeUtils.Write} in
+  ``quoted'' mode (\texttt{TRUE} second argument), meaning strings
+  are printed with quotes and special characters escaped.
+\item Exceptions are caught and displayed as
+  \texttt{"EXCEPTION!~"} followed by the error text, which includes
+  accumulated tracebacks.
+\item The loop terminates only on EOF from the input port.
+\end{itemize}
+
+\section{Interpreter Initialization}
+
+The initialization sequence (\texttt{Init2}) proceeds as follows:
+
+\begin{enumerate}
+\item Create the input port (wrapping a \texttt{Rd.T}) and set the
+  output writer.
+\item Create or accept a global environment (\texttt{Unsafe} by default).
+\item Bind the search path variable \texttt{**scheme-load-path**} from the
+  environment variable \texttt{MSCHEMEPATH} (default: \texttt{"."}).
+  The path is colon-separated.
+\item Install primitives via the configured \texttt{Definer}.
+\item Evaluate the standard library macros from \texttt{SchemePrimitives.Code}.
+\item Load any user-specified files.
+\item Bind \texttt{*the-global-environment*} to the global environment
+  itself.
+\end{enumerate}
+
+\section{File Loading}
+
+\texttt{LoadFile} searches for files in this order:
+
+\begin{enumerate}
+\item If the path is absolute (\texttt{/}), open directly.
+\item If it starts with \texttt{\~{}}, expand the home directory.
+\item Otherwise, search the \texttt{**scheme-load-path**} list, trying
+  each directory as a prefix.
+\item If not found on disk, try the \texttt{SchemeDefsBundle}---a
+  resource bundle of \texttt{.scm} files compiled into the binary
+  via \texttt{m3bundle}.
+\end{enumerate}
+
+%======================================================================
+\chapter{Continuations and \texttt{call/cc}}
+\label{sec:callcc}
+%======================================================================
+
+MScheme inherits the main limitation of JScheme: because the Modula-3
+call stack is used as the Scheme call stack, full
+\texttt{call-with-current-continuation} is not available.
+The implementation uses an exception-based mechanism.
+
+When \texttt{call/cc} is invoked, a \texttt{SchemeContinuation.T} is
+created that, when called, raises the exception \texttt{Scheme.E} with
+the sentinel text \texttt{"CallCC123"}.  The \texttt{call/cc} primitive
+catches this specific exception and extracts the continuation value.
+
+This means continuations can only be used for \emph{escape}
+(unwinding the stack); they cannot be re-invoked after the dynamic
+extent of the \texttt{call/cc} has ended.  The sentinel string
+\texttt{"CallCC123"} is recognized by the traceback mechanism in
+\texttt{Eval} and passed through without annotation.
+
+%======================================================================
+\chapter{Summary of Design Patterns}
+\label{ch:summary}
+%======================================================================
+
+The following patterns characterize MScheme's implementation:
+
+\begin{enumerate}
+\item \textbf{Tail-call optimization via loop.}  The main \texttt{LOOP}
+  in \texttt{EvalInternal} implements proper tail calls for
+  \texttt{begin}, \texttt{if}, \texttt{cond}, closure application,
+  and macro expansion by mutating \texttt{x} and \texttt{env} and
+  continuing the loop.
+
+\item \textbf{Binding pre-resolution.}  At closure creation time, free
+  variable symbols are replaced with binding objects that hold direct
+  pointers to the environment slot.  This reduces variable lookup from
+  $O(\text{scope-depth} \times 10)$ to~$O(1)$.
+
+\item \textbf{Quick array.}  The first 10 bindings in each environment
+  frame are stored in a fixed inline array, avoiding hash-table
+  allocation for small environments (which is nearly all of them).
+
+\item \textbf{Environment recycling.}  Locally-created environment
+  frames that have not been captured by closures (\texttt{assigned =
+  FALSE}) are saved and reused on subsequent tail calls.
+
+\item \textbf{Cons cell free list.}  A per-interpreter free list of
+  cons cells reduces GC pressure.  Cells are poisoned on return for
+  debugging safety.
+
+\item \textbf{Arity-specific dispatch.}  One-argument and two-argument
+  primitive calls use dedicated \texttt{apply1}/\texttt{apply2} paths
+  that avoid argument-list construction entirely.
+
+\item \textbf{Symbol interning.}  All symbols are Modula-3 atoms with
+  process-wide uniqueness, making symbol comparison a single pointer
+  test.
+
+\item \textbf{\texttt{REFANY} as the universal type.}  The identity
+  \texttt{SchemeObject.T = REFANY} means Modula-3 objects pass into
+  and out of Scheme without marshaling, and the Modula-3 GC manages
+  both Scheme and Modula-3 data uniformly.
+\end{enumerate}
+
+%======================================================================
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+%======================================================================
+
+\begin{enumerate}
+\item William Clinger and Jonathan Rees (eds.),
+  \emph{Revised$^4$ Report on the Algorithmic Language Scheme},
+  ACM Lisp Pointers~IV(3), July--September 1991.
+
+\item Peter Norvig, ``JScheme: Scheme in Java,''
+  \url{https://norvig.com/jscheme.html}, 1998.
+  MScheme originated as a line-for-line translation of JScheme into
+  Modula-3.  The eval-loop structure, the use of the host language's
+  call stack as the Scheme call stack, the procedural macro system,
+  the \texttt{call/cc} limitation, and the standard-library macros
+  defined as source text are all inherited from JScheme.
+
+\item Peter Norvig, ``(An ((Even Better) Lisp) Interpreter (in Python)),''
+  \url{https://norvig.com/lispy2.html}, 2010.
+  Describes a similar small-Scheme-in-a-host-language design,
+  including the trampoline-based tail-call optimization pattern
+  that MScheme also uses.
+
+\item Greg Nelson (ed.), \emph{Systems Programming with Modula-3},
+  Prentice Hall, 1991.
+  The definitive reference for the Modula-3 language and its design
+  rationale, including the type system, opaque types, garbage
+  collection, and the exception model.
+
+\item Samuel P.\ Harbison, \emph{Modula-3}, Prentice Hall, 1992.
+  A practical reference for Modula-3 language features used throughout:
+  \texttt{REFANY}, traced references, \texttt{BRANDED}, object types
+  with method overrides, and multi-level type revelation.
+\end{enumerate}
+
+\end{document}
