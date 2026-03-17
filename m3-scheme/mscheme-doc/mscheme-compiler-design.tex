@@ -1062,6 +1062,355 @@ Once the basic compilation pipeline works:
 \end{itemize}
 
 %======================================================================
+\chapter{Build System Integration}
+\label{ch:build}
+%======================================================================
+
+The CM3 build system already supports a pattern for generating
+Modula-3 source code at build time via Quake templates.  The
+\texttt{SchemeStubs} mechanism in \texttt{sstubgen} uses this pattern
+to generate M3 stubs from M3 interfaces.  The Scheme compiler can
+use the same pattern in reverse: generating M3 code from Scheme
+source.
+
+\section{The \texttt{SchemeStubs} Pattern}
+
+The existing stub-generation system uses a three-phase build
+protocol, driven by Quake directives in the \texttt{m3makefile}:
+
+\begin{description}
+\item[Phase 1: \texttt{SchemeStubs("Foo")}]
+  Runs the \texttt{sstubgen} tool on the interface \texttt{Foo.i3}.
+  The tool parses the M3 interface using \texttt{m3tk}, walks the
+  AST, and emits \texttt{FooSchemeStubs.i3} and
+  \texttt{FooSchemeStubs.m3} into the build directory.  The Quake
+  directive then calls \texttt{derived\_interface} and
+  \texttt{derived\_implementation} to register the generated files
+  for compilation by cm3.
+
+\item[Phase 2: \texttt{ExportSchemeStubs("prog")}]
+  Aggregates all per-interface stub modules generated in Phase~1
+  into a package-level registration module
+  \texttt{prog\_\_SCHEMEEXPORTS\_\_.m3}, which calls each stub
+  module's \texttt{RegisterStubs()} in sequence.
+
+\item[Phase 3: \texttt{importSchemeStubs()}]
+  Scans the link context (\texttt{.M3IMPTAB}) for all packages
+  that exported Scheme stubs, and generates a top-level aggregator
+  \texttt{SchemeStubs.m3} that chains all packages' registrations.
+  The executable's \texttt{Main} module calls
+  \texttt{SchemeStubs.RegisterStubs()} at startup.
+\end{description}
+
+The key CM3 build-system primitives used are:
+\begin{itemize}
+\item \texttt{\_exec([...])}: runs an external tool during the Quake
+  evaluation phase (before cm3 compiles anything).
+\item \texttt{stale(target, source)}: skips re-generation if the
+  output is newer than the input (incremental builds).
+\item \texttt{derived\_interface(name, VISIBLE)} and
+  \texttt{derived\_implementation(name)}: register generated source
+  files for compilation by cm3.
+\item \texttt{template("foo")}: loads \texttt{foo.tmpl} and makes
+  its Quake procedures available.
+\end{itemize}
+
+\section{The \texttt{scheme()} Directive}
+
+A new Quake template, \texttt{schemecompile.tmpl}, would define
+the \texttt{scheme()} directive.  The three-phase protocol maps
+directly onto the existing pattern:
+
+\subsection{Phase 1: \texttt{scheme("mylib")}}
+
+\begin{lstlisting}
+readonly proc scheme(nam) is
+    local src = path_of(nam & ".scm")
+    local out = nam & "Compiled"
+
+    if stale(out & ".i3", src)
+        > "schemecompile.scm" in
+            write ("(compile-scheme-file \""
+                   & nam & "\")", CR)
+        end
+        _exec([_SCHEMECOMPILER,
+               "-nointeractive",
+               "-scm", _SCHEMECOMPILERSCM,
+               "schemecompile.scm", _SEXIT])
+    end
+
+    compiled_intfs = compiled_intfs & " " & out
+    derived_interface(out, VISIBLE)
+    derived_implementation(out)
+end
+\end{lstlisting}
+
+This runs the Scheme compiler tool on \texttt{mylib.scm} and emits
+\texttt{mylibCompiled.i3} and \texttt{mylibCompiled.m3} into the
+build directory.  The \texttt{stale} guard ensures the compiler is
+only re-run when the Scheme source changes.
+
+The compiler tool is itself an MScheme program---it reads
+\texttt{.scm} files, walks the S-expression AST, and emits M3
+source text using the same string-building pattern that
+\texttt{sstubgen.scm} and \texttt{scodegen.scm} already use.
+
+\subsection{Phase 2: \texttt{ExportSchemeCompiled("prog")}}
+
+Aggregates all \texttt{scheme()} outputs from the current package
+into a single registration module:
+
+\begin{lstlisting}
+readonly proc ExportSchemeCompiled(package) is
+    local tgt = package & "__SCHEMECOMPILED__"
+    (* generate tgt.i3 and tgt.m3 that call
+       RegisterCompiled() on each compiled module *)
+    ...
+    derived_interface(tgt, VISIBLE)
+    derived_implementation(tgt)
+end
+\end{lstlisting}
+
+\subsection{Phase 3: \texttt{importSchemeCompiled()}}
+
+Scans the link context for all packages that exported compiled
+Scheme code and generates a top-level aggregator, exactly as
+\texttt{importSchemeStubs()} does.
+
+\section{Generated Code Structure}
+
+For a Scheme source file \texttt{mylib.scm} containing:
+
+\begin{lstlisting}[language=Scheme]
+(define (add1 x) (+ x 1))
+
+(define (apply-foo x) (foo x))
+
+(define (factorial n)
+  (if (= n 0)
+      1
+      (* n (factorial (- n 1)))))
+\end{lstlisting}
+
+The compiler would emit \texttt{mylibCompiled.i3}:
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE mylibCompiled;
+IMPORT SchemeEnvironment;
+PROCEDURE RegisterCompiled(env : SchemeEnvironment.T);
+END mylibCompiled.
+\end{lstlisting}
+
+And \texttt{mylibCompiled.m3}:
+
+\begin{lstlisting}[language=Modula3]
+MODULE mylibCompiled;
+IMPORT Scheme, SchemeSymbol, SchemeProcedure,
+       SchemeEnvironmentBinding, SchemeBoolean,
+       SchemeLongReal, SchemeEnvironment;
+FROM Scheme IMPORT E, Object;
+
+(* --- Constants --- *)
+VAR
+  C0 : Object; (* 1, as SchemeLongReal *)
+  C1 : Object; (* 0, as SchemeLongReal *)
+
+(* === add1 === *)
+TYPE Compiled_add1 = SchemeProcedure.T OBJECT
+    k : REF ARRAY OF Object;           (* constants *)
+    fv : REF ARRAY OF
+             SchemeEnvironmentBinding.T; (* free vars *)
+  OVERRIDES
+    apply1 := Apply1_add1;
+  END;
+
+PROCEDURE Apply1_add1(self : Compiled_add1;
+                      interp : Scheme.T;
+                      x : Object) : Object
+  RAISES { E } =
+BEGIN
+  (* (+ x 1) -- + is a known primitive *)
+  RETURN SchemeLongReal.Add(x, self.k[0])
+END Apply1_add1;
+
+(* === apply-foo === *)
+TYPE Compiled_apply_foo = SchemeProcedure.T OBJECT
+    fv : REF ARRAY OF
+             SchemeEnvironmentBinding.T;
+  OVERRIDES
+    apply1 := Apply1_apply_foo;
+  END;
+
+PROCEDURE Apply1_apply_foo(self : Compiled_apply_foo;
+                           interp : Scheme.T;
+                           x : Object) : Object
+  RAISES { E } =
+VAR proc := self.fv[0].get(); (* fetch foo via Binding *)
+BEGIN
+  RETURN NARROW(proc,
+    SchemeProcedure.T).apply1(interp, x)
+END Apply1_apply_foo;
+
+(* === factorial === *)
+TYPE Compiled_factorial = SchemeProcedure.T OBJECT
+    k : REF ARRAY OF Object;
+    fv : REF ARRAY OF
+             SchemeEnvironmentBinding.T;
+  OVERRIDES
+    apply1 := Apply1_factorial;
+  END;
+
+PROCEDURE Apply1_factorial(self : Compiled_factorial;
+                           interp : Scheme.T;
+                           n : Object) : Object
+  RAISES { E } =
+VAR n_val := n;
+BEGIN
+  LOOP
+    (* (= n 0) *)
+    IF SchemeBoolean.TruthO(
+         SchemeLongReal.NumEq(n_val, self.k[1])) THEN
+      RETURN self.k[0]  (* 1 *)
+    ELSE
+      (* (* n (factorial (- n 1))) *)
+      VAR n_minus_1 := SchemeLongReal.Sub(
+                          n_val, self.k[0]);
+          (* fetch factorial via Binding -- Level 1 *)
+          fact_proc := self.fv[0].get();
+      BEGIN
+        (* Not a self-tail-call in general, but
+           the compiler detects that fv[0] was
+           bound to THIS procedure at registration
+           time and the call is in tail position,
+           so it emits a LOOP instead: *)
+        n_val := n_minus_1
+        (* and loops *)
+      END
+    END
+  END
+END Apply1_factorial;
+
+(* === Registration === *)
+PROCEDURE RegisterCompiled(
+    env : SchemeEnvironment.T) =
+BEGIN
+  C0 := SchemeLongReal.FromLR(1.0d0);
+  C1 := SchemeLongReal.FromLR(0.0d0);
+
+  WITH k = NEW(REF ARRAY OF Object, 1) DO
+    k[0] := C0;
+    env.define(SchemeSymbol.Symbol("add1"),
+      NEW(Compiled_add1, k := k,
+          name := "add1"))
+  END;
+
+  WITH fv = NEW(REF ARRAY OF
+       SchemeEnvironmentBinding.T, 1) DO
+    fv[0] := env.bind(SchemeSymbol.Symbol("foo"));
+    env.define(SchemeSymbol.Symbol("apply-foo"),
+      NEW(Compiled_apply_foo, fv := fv,
+          name := "apply-foo"))
+  END;
+
+  WITH k = NEW(REF ARRAY OF Object, 2),
+       fv = NEW(REF ARRAY OF
+            SchemeEnvironmentBinding.T, 1) DO
+    k[0] := C0;  k[1] := C1;
+    env.define(SchemeSymbol.Symbol("factorial"),
+      NEW(Compiled_factorial, k := k, fv := fv,
+          name := "factorial"));
+    (* Now that factorial is defined, bind fv[0]
+       to its own Binding for self-tail-call *)
+    fv[0] := env.bind(
+               SchemeSymbol.Symbol("factorial"))
+  END
+END RegisterCompiled;
+
+BEGIN END mylibCompiled.
+\end{lstlisting}
+
+\section{Key Design Points}
+
+\begin{enumerate}
+\item \textbf{The compiler tool is an MScheme program.}
+  It reads \texttt{.scm} files, walks the AST (extending the
+  analysis that \texttt{DoBindings} already performs), and emits
+  Modula-3 source text.  This follows the established pattern:
+  \texttt{sstubgen} is an MScheme program that reads M3 interfaces
+  and emits M3 stubs; the Scheme compiler reads Scheme source and
+  emits M3 compiled procedures.
+
+\item \textbf{Binding capture happens at registration time.}
+  The \texttt{RegisterCompiled} procedure calls \texttt{env.bind()}
+  on the live global environment to obtain
+  \texttt{SchemeEnvironmentBinding.T} objects.  This is identical
+  to the moment when \texttt{SchemeClosure.Init} calls
+  \texttt{DoBindings} for an interpreted closure---the same
+  environment, the same Binding objects, the same semantics.
+
+\item \textbf{Incremental builds.}  The \texttt{stale()} guard
+  ensures the Scheme compiler is only re-run when the \texttt{.scm}
+  source changes.  The generated \texttt{.m3} files are then
+  recompiled by cm3 only if they changed (the standard CM3
+  incremental build).
+
+\item \textbf{Mixed compiled and interpreted definitions.}
+  A single package can contain both \texttt{scheme("mylib")} (compiled)
+  and \texttt{.scm} files loaded at runtime via \texttt{loadFile}
+  (interpreted).  The compiled definitions are installed by
+  \texttt{RegisterCompiled} at startup; interpreted definitions are
+  loaded later.  Both coexist in the same global environment.
+
+\item \textbf{Interpackage dependencies.}  The three-phase
+  aggregation ensures that all compiled Scheme code from all
+  transitively imported packages is registered before the
+  application's \texttt{Main} module runs.  Module initialization
+  order is handled by CM3's \texttt{RTLinker}, which topologically
+  sorts the dependency graph.
+
+\item \textbf{No new tools beyond MScheme itself.}  The compiler
+  tool is built as an MScheme program using the existing
+  \texttt{mscheme-interactive} infrastructure.  The Quake template
+  invokes it via \texttt{\_exec}, just as \texttt{SchemeStubs}
+  invokes \texttt{sstubgen}.
+\end{enumerate}
+
+\section{Example \texttt{m3makefile}}
+
+A package using both Scheme compilation and M3 stub generation:
+
+\begin{lstlisting}
+import("sstubgen")
+import("mscheme")
+import("modula3scheme")
+import("schemecompile")     (* new: loads the template *)
+
+template("schemestubs")
+template("schemecompile")   (* new: defines scheme() *)
+
+Module("AppLogic")
+SchemeStubs("AppLogic")     (* M3 -> Scheme stubs *)
+
+scheme("mathlib")           (* Scheme -> M3 compiled *)
+scheme("filters")
+
+ExportSchemeStubs("myapp")
+ExportSchemeCompiled("myapp")
+
+importSchemeStubs()
+importSchemeCompiled()
+
+implementation("Main")
+program("myapp")
+\end{lstlisting}
+
+In this example, \texttt{AppLogic.i3} is a Modula-3 interface
+whose procedures are exported to Scheme via stubs, while
+\texttt{mathlib.scm} and \texttt{filters.scm} are Scheme source
+files compiled to native Modula-3 code.  Both kinds of bindings
+are registered in the global environment at startup.
+
+%======================================================================
 \chapter*{References}
 \addcontentsline{toc}{chapter}{References}
 %======================================================================
