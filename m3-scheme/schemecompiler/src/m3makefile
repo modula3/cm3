@@ -1,0 +1,12 @@
+/* MScheme Level 1 Compiler -- quake template package */
+
+import("cit_util")
+
+template("scheme")
+
+ship_source("compiler.scm")
+ship_source("test-input.scm")
+
+interface("SchemeCompiler")
+
+library("schemecompiler")

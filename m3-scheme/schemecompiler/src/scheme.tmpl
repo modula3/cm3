@@ -1,0 +1,25 @@
+/* Quake template for MScheme Level 1 Compiler integration.
+   Usage in m3makefile:
+     import("schemecompiler")
+     scheme("CompiledFoo", "foo.scm")
+   Compiles foo.scm to derived CompiledFoo.i3 and CompiledFoo.m3. */
+
+_SCHEME_MSCHEME  = PKG_INSTALL & SL & "mscheme-interactive" & SL & BUILD_DIR & SL & "mscheme"
+_SCHEME_COMPILER = PKG_INSTALL & SL & "schemecompiler" & SL & "src" & SL & "compiler.scm"
+_SCHEME_EXIT     = "exit"
+
+readonly proc scheme(module_name, scm_file) is
+  local src = path_of(scm_file)
+  if stale(module_name & ".i3", src)
+    local build_scm = module_name & "_scompile.scm"
+    > build_scm in
+      write("(load \"" & _SCHEME_COMPILER & "\")", CR)
+      write("(compile-file \"" & src & "\" \"" & module_name & "\")", CR)
+    end
+    _exec([_SCHEME_MSCHEME, build_scm, _SCHEME_EXIT])
+  end
+  derived_interface(module_name, VISIBLE)
+  derived_implementation(module_name)
+end
+
+Scheme = scheme

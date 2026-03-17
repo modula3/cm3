@@ -1,0 +1,13 @@
+/* Test program for MScheme Level 1 Compiler */
+
+import("libm3")
+import("cit_util")
+import("mscheme")
+import("modula3scheme")
+import("schemecompiler")
+
+scheme("CompiledTest", "test-input.scm")
+
+implementation("Main")
+
+program("comptest")

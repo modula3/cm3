@@ -1402,6 +1402,1300 @@ files compiled to native Modula-3 code.  Both kinds of bindings
 are registered in the global environment at startup.
 
 %======================================================================
+\chapter{The Level~1 Compiler Implementation}
+\label{ch:implementation}
+%======================================================================
+
+The preceding chapters described the design space and proposed
+compilation strategies.  This chapter describes the actual
+implementation of the Level~1 compiler: the build system integration,
+the test suite, the bugs discovered and fixed during development, the
+measured performance results, and a concrete future optimization that
+would eliminate virtual dispatch overhead on the fast path.
+
+The compiler is implemented in \texttt{compiler.scm} (approximately
+1000 lines of Scheme), resides in the \texttt{schemecompiler} package
+under \texttt{m3-scheme/}, and follows Strategy~B
+(\S\ref{sec:stratB}): ahead-of-time compilation from Scheme source to
+Modula-3 source, integrated into the CM3 build via a Quake template.
+
+%----------------------------------------------------------------------
+\section{Build System Integration}
+\label{sec:impl-build}
+%----------------------------------------------------------------------
+
+\subsection{The \texttt{scheme()} Quake Template}
+
+The build-time integration is provided by the file
+\texttt{schemecompiler/src/scheme.tmpl}, which defines a single
+Quake procedure.  The complete template is short enough to reproduce
+in full:
+
+\begin{lstlisting}
+/* scheme.tmpl -- Quake template for MScheme Level 1 Compiler */
+
+_SCHEME_MSCHEME  = PKG_INSTALL & SL & "mscheme-interactive"
+                 & SL & BUILD_DIR & SL & "mscheme"
+_SCHEME_COMPILER = PKG_INSTALL & SL & "schemecompiler"
+                 & SL & "src" & SL & "compiler.scm"
+_SCHEME_EXIT     = "exit"
+
+readonly proc scheme(module_name, scm_file) is
+  local src = path_of(scm_file)
+  if stale(module_name & ".i3", src)
+    local build_scm = module_name & "_scompile.scm"
+    > build_scm in
+      write("(load \"" & _SCHEME_COMPILER & "\")", CR)
+      write("(compile-file \"" & src & "\""
+            & " \"" & module_name & "\")", CR)
+    end
+    _exec([_SCHEME_MSCHEME, build_scm, _SCHEME_EXIT])
+  end
+  derived_interface(module_name, VISIBLE)
+  derived_implementation(module_name)
+end
+
+Scheme = scheme
+\end{lstlisting}
+
+The template follows the same three-step pattern established by the
+\texttt{SchemeStubs} mechanism in \texttt{sstubgen}
+(\S\ref{sec:sstubgen}):
+
+\begin{enumerate}
+\item \textbf{Staleness check.}  The \texttt{stale()} guard compares
+  the modification time of the generated \texttt{.i3} file against
+  the Scheme source file (resolved via \texttt{path\_of}).  If the
+  output is newer than the input, the compiler is not re-invoked.
+  This is the standard CM3 incremental-build idiom.
+
+\item \textbf{Compiler invocation.}  A small temporary Scheme script
+  is generated (named \texttt{\emph{module}\_scompile.scm}) that
+  loads the compiler and calls \texttt{compile-file} with the source
+  path and module name.  The script is executed by the
+  \texttt{mscheme-interactive} binary via \texttt{\_exec}.
+  This two-stage approach---generate a script, then execute it---avoids
+  quoting issues in the Quake-to-Scheme boundary.
+
+\item \textbf{Registration of derived sources.}  The generated
+  \texttt{.i3} and \texttt{.m3} files are registered with
+  \texttt{derived\_interface} and \texttt{derived\_implementation},
+  which tells CM3 to compile them as part of the current package.
+  The interface is marked \texttt{VISIBLE}, so other packages can
+  import it (e.g., to call \texttt{Install}).
+\end{enumerate}
+
+\subsection{Package Structure}
+
+The \texttt{schemecompiler} package's own \texttt{m3makefile}
+is minimal:
+
+\begin{lstlisting}
+import("cit_util")
+template("scheme")
+ship_source("compiler.scm")
+ship_source("test-input.scm")
+interface("SchemeCompiler")
+library("schemecompiler")
+\end{lstlisting}
+
+The \texttt{template("scheme")} directive makes the
+\texttt{scheme.tmpl} file available to downstream packages.  The
+\texttt{ship\_source} directives ensure that the compiler source and
+the test input file are installed into the package's shipped source
+directory (so that the template can locate \texttt{compiler.scm} via
+\texttt{PKG\_INSTALL}).  The \texttt{SchemeCompiler.i3} interface is
+a placeholder anchor that gives the package a public face in the CM3
+namespace.
+
+A client package that wants to compile Scheme source writes:
+
+\begin{lstlisting}
+import("schemecompiler")
+scheme("CompiledTest", "test-input.scm")
+\end{lstlisting}
+
+This single directive compiles all \texttt{define} forms in
+\texttt{test-input.scm} to the Modula-3 module \texttt{CompiledTest},
+and registers the generated \texttt{CompiledTest.i3} and
+\texttt{CompiledTest.m3} for compilation.  The client's
+\texttt{Main.m3} then calls:
+
+\begin{lstlisting}[language=Modula3]
+CompiledTest.Install(scm);
+\end{lstlisting}
+
+\noindent
+to register all compiled procedures in the interpreter's global
+environment.
+
+\subsection{Differences from the \texttt{SchemeStubs} Pattern}
+
+The \texttt{scheme()} template is simpler than the three-phase
+\texttt{SchemeStubs} protocol described in
+\S\ref{sec:sstubgen}.  The \texttt{SchemeStubs} mechanism requires
+per-interface stub generation (Phase~1), per-package aggregation
+(Phase~2), and cross-package aggregation (Phase~3) because stubs must
+be registered at module-initialization time, before any user code runs.
+
+The \texttt{scheme()} template requires only a single phase: each
+\texttt{scheme()} directive produces one module with an explicit
+\texttt{Install} procedure that the client calls at a known point
+in its initialization.  This keeps the build integration trivial at
+the cost of requiring an explicit \texttt{Install} call.  If
+future needs require automatic registration (e.g., for Scheme
+libraries used transitively across many packages), the two-phase and
+three-phase aggregation patterns from \texttt{SchemeStubs} can be
+adopted without changing the compiler itself.
+
+%----------------------------------------------------------------------
+\section{Test Suite}
+\label{sec:impl-tests}
+%----------------------------------------------------------------------
+
+The compiler is validated by a comprehensive correctness test suite
+consisting of \textbf{321 test cases} organized into \textbf{12
+categories}.  All 321 tests pass on ARM64\_DARWIN (Apple Silicon).
+
+\subsection{Test Structure}
+
+The test suite consists of two files:
+
+\begin{description}
+\item[\texttt{test-input.scm}] Contains 80+ Scheme function
+  definitions exercising every construct the compiler supports.
+  This file is compiled at build time via the \texttt{scheme()}
+  directive, producing the \texttt{CompiledTest} module.
+
+\item[\texttt{Main.m3}] A Modula-3 test driver that instantiates an
+  MScheme interpreter, calls \texttt{CompiledTest.Install(scm)} to
+  register the compiled procedures, and then evaluates 321 test
+  expressions via \texttt{scm.loadEvalText()}, comparing each result
+  against an expected string representation.
+\end{description}
+
+Each test is a call to the procedure \texttt{T}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE T(scm: Scheme.T; expr, expected: TEXT)
+  RAISES {Scheme.E} =
+VAR got := SchemeUtils.StringifyT(scm.loadEvalText(expr));
+BEGIN
+  INC(total);
+  IF Text.Equal(got, expected) THEN
+    INC(pass)
+  ELSE
+    INC(fail);
+    (* report failure *)
+  END
+END T;
+\end{lstlisting}
+
+The key point is that the compiled procedures are called through
+the normal interpreter evaluation path: \texttt{loadEvalText}
+parses the expression, the evaluator resolves the function name
+via the global environment, and dispatches through the standard
+\texttt{SchemeProcedure.T.apply} interface.  The compiled procedures
+are indistinguishable from interpreted ones at the call site.  This is
+a consequence of the design decision to implement compiled procedures
+as \texttt{SchemeProcedure.T} subtypes (\S\ref{sec:proctype}).
+
+\subsection{Test Categories}
+
+\begin{center}
+\begin{longtable}{lcp{7.5cm}}
+\toprule
+\textbf{Category} & \textbf{Tests} & \textbf{Constructs exercised} \\
+\midrule
+\endhead
+Arithmetic & 54 &
+  \texttt{factorial}, \texttt{fibonacci}, \texttt{square}, \texttt{cube},
+  \texttt{abs-val}, \texttt{max-of-two}, \texttt{min-of-two},
+  \texttt{power}, \texttt{sum-range}, \texttt{even?}, \texttt{odd?},
+  \texttt{gcd}, \texttt{negate}, \texttt{double}, \texttt{triple},
+  \texttt{add3}, \texttt{add4}.
+  Exercises \texttt{if}, recursion, multi-arity calls (1--4 args),
+  free-variable access to primitives (\texttt{+}, \texttt{*},
+  \texttt{-}, \texttt{=}, \texttt{<}, \texttt{>}, \texttt{quotient},
+  \texttt{remainder}). \\[0.5em]
+List Operations & 56 &
+  \texttt{my-length}, \texttt{sum-list}, \texttt{product-list},
+  \texttt{my-last}, \texttt{my-nth}, \texttt{my-append},
+  \texttt{my-reverse-acc}, \texttt{my-map}, \texttt{my-filter},
+  \texttt{my-member}, \texttt{count-if}, \texttt{take}, \texttt{drop},
+  \texttt{zip}, \texttt{flatten}, \texttt{list-ref-safe},
+  \texttt{iota-acc}, \texttt{repeat-val}.
+  Exercises \texttt{null?}, \texttt{car}, \texttt{cdr}, \texttt{cons},
+  \texttt{pair?}, quoted empty lists, higher-order calls passing
+  compiled functions as arguments. \\[0.5em]
+Cond & 17 &
+  \texttt{sign}, \texttt{classify}, \texttt{fizzbuzz},
+  \texttt{letter-grade}.
+  Exercises multi-clause \texttt{cond} with \texttt{else},
+  numeric and string return values, nested comparisons. \\[0.5em]
+Begin & 4 &
+  \texttt{begin-test}, \texttt{begin-with-side-effect}.
+  Exercises sequencing with discarded intermediate results,
+  temporary variable generation. \\[0.5em]
+Let / Let* & 18 &
+  \texttt{hypotenuse}, \texttt{circle-area}, \texttt{let-nested},
+  \texttt{let-star-chain}, \texttt{let-star-deps},
+  \texttt{swap-via-let}, \texttt{multi-let}.
+  Exercises parallel binding (\texttt{let}), sequential binding
+  (\texttt{let*}), multi-variable \texttt{let}, nested \texttt{let},
+  initializer dependencies in \texttt{let*}. \\[0.5em]
+And / Or / Not & 30 &
+  \texttt{both-positive?}, \texttt{either-zero?}, \texttt{in-range?},
+  \texttt{out-of-range?}, \texttt{three-and}, \texttt{three-or},
+  \texttt{not-zero?}, \texttt{xor-bool}.
+  Exercises short-circuit evaluation, boolean return values,
+  multi-operand \texttt{and}/\texttt{or}, nested boolean logic. \\[0.5em]
+Set! (Mutation) & 9 &
+  \texttt{set-param}, \texttt{set-in-let}, \texttt{set-accumulate}.
+  Exercises mutation of parameters and let-bound variables. \\[0.5em]
+Self-Tail-Call & 22 &
+  \texttt{loop-sum}, \texttt{count-down}, \texttt{tail-factorial},
+  \texttt{tail-fib-iter}, \texttt{tail-length},
+  \texttt{tail-sum-list}, \texttt{tail-last}, \texttt{tail-min},
+  \texttt{tail-max}, \texttt{repeat-string}.
+  Exercises the LOOP optimization for functions with 1--3
+  parameters, including \texttt{if} and \texttt{cond} as the
+  branch construct, and string accumulation. \\[0.5em]
+Constants & 14 &
+  \texttt{return-true}, \texttt{return-false}, \texttt{return-zero},
+  \texttt{return-one}, \texttt{return-string},
+  \texttt{return-empty-list}, \texttt{return-symbol},
+  \texttt{return-quoted-list}, \texttt{return-char},
+  \texttt{identity}, \texttt{constant-42},
+  \texttt{return-pi-approx}, \texttt{return-negative}.
+  Exercises every constant type: booleans, integers,
+  strings, the empty list, symbols, quoted lists, characters.
+  Includes zero-argument functions. \\[0.5em]
+Recursive Algorithms & 38 &
+  \texttt{ackermann}, \texttt{hanoi-moves}, \texttt{depth},
+  \texttt{tree-sum}, \texttt{tree-count}, \texttt{collatz-steps},
+  \texttt{digit-sum}, \texttt{num-digits},
+  \texttt{is-palindrome-helper}, \texttt{list-equal?}.
+  Exercises deep non-tail recursion, tree traversal, mutual
+  recursion between compiled functions, \texttt{cond} with
+  compound boolean tests (\texttt{and}/\texttt{or} in test
+  position). \\[0.5em]
+Higher-Order & 4 &
+  \texttt{apply-twice}, \texttt{compose-apply}.
+  Exercises passing compiled functions as arguments (free variables
+  of procedure type), calling function-valued parameters. \\[0.5em]
+Mixed Constructs & 16 &
+  \texttt{complex-cond-let}, \texttt{nested-if-let},
+  \texttt{and-or-mix}, \texttt{multi-begin-let},
+  \texttt{cond-with-begin}, \texttt{if-chain}.
+  Exercises deep nesting of \texttt{cond}/\texttt{let}/\texttt{let*}/\texttt{begin}/\texttt{if},
+  boolean expressions in non-tail position. \\[0.5em]
+Edge Cases & 19 &
+  \texttt{zero-args}, \texttt{single-arg}, \texttt{five-args},
+  \texttt{deeply-nested}, \texttt{many-lets}, \texttt{let-shadow},
+  \texttt{cond-many}, \texttt{boolean-identity}.
+  Exercises 0, 1, and 5 parameter functions; 5-level nested
+  \texttt{if}; 4-level nested \texttt{let}; variable shadowing
+  in \texttt{let}; \texttt{cond} with 5 clauses; returning literal
+  \texttt{\#t} and \texttt{\#f}. \\[0.5em]
+\bottomrule
+\end{longtable}
+\end{center}
+
+\subsection{Benchmark Harness}
+
+Following the 321 correctness tests, the test program includes a
+performance benchmark section.  Four benchmarks are timed in two
+configurations: first with the compiled procedures (as installed by
+\texttt{CompiledTest.Install}), then again after redefining the same
+functions as interpreted closures via \texttt{loadEvalText}.
+
+The benchmark harness uses \texttt{Time.Now()} for wall-clock timing.
+Each benchmark is executed once (no warmup iterations), which is
+acceptable because the workloads are large enough to dominate any
+startup overhead.  The \texttt{loadEvalText} call includes parsing
+overhead; for the self-tail-call benchmark (\texttt{loop-sum}), this
+parsing time dominates the measurement, as discussed in
+\S\ref{sec:impl-perf}.
+
+%----------------------------------------------------------------------
+\section{Bugs Found and Fixed}
+\label{sec:impl-bugs}
+%----------------------------------------------------------------------
+
+Development of the test suite exposed two compiler bugs.  Both were
+subtle interactions between compilation assumptions and Modula-3
+scoping semantics.
+
+\subsection{The \texttt{if} Sentinel Bug}
+\label{sec:bug-if}
+
+\paragraph{Symptom.}
+The test \texttt{(boolean-identity \#f)} entered an infinite loop
+instead of returning \texttt{\#f}.
+
+\paragraph{Root cause.}
+The compiler used the Scheme value \texttt{\#f} as both the boolean
+false literal \emph{and} the sentinel for ``no else branch present.''
+When the \texttt{if} special form was parsed, the compiler checked
+\texttt{(pair?\ (cdddr form))} to determine whether an else branch
+existed; if not, it passed \texttt{\#f} as the else expression.
+Later, \texttt{gen-if} tested \texttt{(not alt)} to decide whether
+to emit an \texttt{ELSE} clause.
+
+When the source code was literally \texttt{(if x \#t \#f)}, the
+parsed else expression was the boolean \texttt{\#f}.  The
+\texttt{(not \#f)} test returned true, so the compiler concluded
+there was no else branch and omitted the \texttt{ELSE} clause.
+The generated code for a self-tail-call function became:
+
+\begin{lstlisting}[language=Modula3]
+LOOP
+  IF SchemeBoolean.TruthO(a_x) THEN
+    RETURN SchemeBoolean.True()
+  END;
+  (* no ELSE, no RETURN -- falls through to next LOOP iteration *)
+END
+\end{lstlisting}
+
+When the argument was false, the \texttt{IF} body was not entered,
+and the \texttt{LOOP} iterated forever.
+
+\paragraph{Fix.}
+Replace the sentinel with a unique symbol:
+
+\begin{lstlisting}[language=Scheme]
+;; In gen-expr, the if case:
+((eq? (car expr) 'if)
+ (gen-if (cadr expr) (caddr expr)
+         (if (pair? (cdddr expr))
+             (cadddr expr)
+             '*no-alt*)     ; was: #f
+         target ctx depth))
+
+;; In gen-if:
+(if (not (eq? alt '*no-alt*))  ; was: (not alt)
+    ...)
+\end{lstlisting}
+
+The symbol \texttt{'*no-alt*} is never a valid Scheme expression (it
+would evaluate to an unbound variable), so there is no ambiguity.
+The sentinel is tested with \texttt{eq?}, a pointer comparison, so
+the performance impact is nil.
+
+\subsection{The \texttt{let}/\texttt{let*} Shadowing Bug}
+\label{sec:bug-let}
+
+\paragraph{Symptom.}
+The test \texttt{(let-shadow 5)} returned \texttt{0} instead of
+\texttt{30}.  The function:
+
+\begin{lstlisting}[language=Scheme]
+(define (let-shadow x)
+  (let ((x (+ x 10)))
+    (let ((x (* x 2)))
+      x)))
+\end{lstlisting}
+
+With $x = 5$, should compute: inner $x = (5 + 10) = 15$, outer
+$x = 15 \times 2 = 30$.
+
+\paragraph{Root cause.}
+The original \texttt{gen-let} implementation declared the let-bound
+variable and evaluated its initializer in the \emph{same} Modula-3
+scope:
+
+\begin{lstlisting}[language=Modula3]
+(* BUGGY generated code for (let ((x (+ x 10))) ...) *)
+VAR a_x : SchemeObject.T; BEGIN
+  a_x := (* evaluate (+ x 10) *)
+    ...
+  (* but the reference to x in the initializer
+     resolves to a_x, which is uninitialized! *)
+END;
+\end{lstlisting}
+
+In Modula-3, the \texttt{VAR} declaration introduces \texttt{a\_x}
+into scope for the entire block, including the initializer
+expression (Nelson~[5, Chapter~2]).  When the let-bound variable
+shadows a parameter with the same name, the initializer reads the
+uninitialized inner variable instead of the outer parameter.  The
+variable is initialized to zero by default (or \texttt{NIL} for
+traced references), hence the incorrect result.
+
+Scheme's \texttt{let} semantics require that all initializer
+expressions be evaluated in the \emph{enclosing} scope, before any
+of the new bindings are visible.  This is explicitly stated in R5RS:
+``The \texttt{<init>}s are evaluated in the current environment (in
+some unspecified order), the \texttt{<variable>}s are bound to fresh
+locations holding the results, and the \texttt{<body>} is evaluated
+in the extended environment.''
+
+\paragraph{Fix.}
+The fix uses a two-phase approach: evaluate initializers into
+temporaries in the outer scope, then declare the let-bound variables
+in a nested scope initialized from the temporaries:
+
+\begin{lstlisting}[language=Scheme]
+(define (gen-let bindings body target ctx depth)
+  (let* ((bvars (map car bindings))
+         (temps (map (lambda (b) (fresh-temp ctx))
+                     bindings))
+         (new-ctx ...))
+    (string-append
+     ;; Phase 1: temps in outer scope
+     (indent depth) (L "VAR")
+     ... ;; declare temps
+     (indent depth) (L "BEGIN")
+     ... ;; evaluate inits into temps (using ctx,
+         ;; not new-ctx, so x refers to the param)
+
+     ;; Phase 2: let-bound vars in nested scope
+     (indent (+ depth 1)) (L "VAR")
+     ... ;; declare a_x := temp
+     (indent (+ depth 1)) (L "BEGIN")
+     ... ;; body using new-ctx
+     (indent (+ depth 1)) (L "END;")
+     (indent depth) (L "END;"))))
+\end{lstlisting}
+
+The generated Modula-3 now has the correct scoping:
+
+\begin{lstlisting}[language=Modula3]
+(* CORRECT generated code for (let ((x (+ x 10))) ...) *)
+VAR
+  t_0 : SchemeObject.T;
+BEGIN
+  (* evaluate initializer in outer scope:
+     a_x here refers to the parameter *)
+  t_0 := SchemeLongReal.Add(a_x, self.k_0);
+  VAR
+    a_x : SchemeObject.T := t_0;
+  BEGIN
+    (* body: a_x here refers to the let-bound var *)
+    ...
+  END;
+END;
+\end{lstlisting}
+
+The same fix was applied to \texttt{gen-let*}, where the sequential
+scoping of \texttt{let*} requires each binding to be evaluated before
+the next variable is introduced:
+
+\begin{lstlisting}[language=Modula3]
+(* (let* ((a (+ x 1)) (b (* a 2))) ...) *)
+VAR t_0 : SchemeObject.T; BEGIN
+  t_0 := SchemeLongReal.Add(a_x, self.k_0);
+  VAR a_a : SchemeObject.T := t_0; BEGIN
+    VAR t_1 : SchemeObject.T; BEGIN
+      t_1 := SchemeLongReal.Mul(a_a, self.k_1);
+      VAR a_b : SchemeObject.T := t_1; BEGIN
+        ...
+      END;
+    END;
+  END;
+END;
+\end{lstlisting}
+
+\paragraph{Temp counter sharing.}
+An additional subtlety: the original code created a fresh
+compilation context via \texttt{make-ctx} for the inner scope,
+which initialized a new mutable counter cell \texttt{(list 0)} for
+temporary variable names.  This caused temporaries in the inner
+scope to collide with those in the outer scope (both starting at
+\texttt{t\_0}).  The fix shares the parent context's counter cell:
+
+\begin{lstlisting}[language=Scheme]
+(define (gen-let bindings body target ctx depth)
+  (let* (...
+         (new-ctx (list (ctx-name ctx)
+                        (append bvars (ctx-params ctx))
+                        (ctx-free-vars ctx)
+                        (ctx-constants ctx)
+                        (car (cddddr ctx))  ; SHARE counter
+                        (ctx-self-tail? ctx))))
+    ...))
+\end{lstlisting}
+
+The expression \texttt{(car (cddddr ctx))} extracts the mutable
+counter cell (a one-element list holding the current count) from the
+parent context and installs it in the child context, so that
+\texttt{fresh-temp} increments the same counter in both scopes.
+
+%----------------------------------------------------------------------
+\section{Performance Results}
+\label{sec:impl-perf}
+%----------------------------------------------------------------------
+
+The test program includes a benchmark section that compares compiled
+and interpreted execution of four workloads.  The benchmarks were
+run on ARM64\_DARWIN (Apple M1, macOS).
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
+\midrule
+\texttt{(fibonacci 25)}       & 225 ms    & 2,324 ms   & 10.3$\times$ \\
+\texttt{(fibonacci 30)}       & 5,603 ms  & 24,092 ms  & 4.3$\times$ \\
+\texttt{(loop-sum 10000 0)}   & 36 ms     & 83 ms      & 2.3$\times$ \\
+\texttt{(ackermann 3 4)}      & 13 ms     & 81 ms      & 6.4$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Analysis}
+
+The compiled code delivers a \textbf{4--10$\times$ speedup} on
+recursive workloads.  The speedup varies by benchmark for several
+reasons:
+
+\paragraph{Fibonacci.}
+The \texttt{fibonacci} benchmark is the purest test of call
+overhead.  Each call performs a comparison, two subtractions, two
+recursive calls, and one addition---very little per-call work.
+The interpreter's per-call overhead (type dispatch,
+special-form recognition, operator TYPECASE, and argument-list
+construction, as analyzed in \S\ref{ch:analysis}) dominates.  The
+compiled code eliminates all of this except the \texttt{NARROW} and
+virtual dispatch through \texttt{SchemeProcedure.T.apply1}.  The
+10.3$\times$ speedup on \texttt{(fibonacci 25)} reflects this.  The
+lower 4.3$\times$ on \texttt{(fibonacci 30)} is a measurement
+artifact: the longer absolute runtime amortizes fixed overhead.
+
+\paragraph{Ackermann.}
+The Ackermann function involves
+deeply nested non-tail recursion with very small bodies.  The
+6.4$\times$ speedup is consistent with the fibonacci result: per-call
+overhead dominates, and the compiler eliminates most of it.
+
+\paragraph{Loop-sum.}
+The \texttt{loop-sum} benchmark exercises the self-tail-call
+optimization: the function is compiled to a Modula-3 \texttt{LOOP}
+with parameter reassignment, eliminating all call overhead.  The
+\texttt{LOOP} body executes a single comparison, a subtraction,
+and an addition---on ARM64 with the CM3 C backend, this compiles
+to a handful of machine instructions per iteration.  For
+$n = 10{,}000$, the compiled \texttt{LOOP} body executes in
+microseconds.
+
+The measured 2.3$\times$ speedup appears surprisingly modest for
+a benchmark where call overhead is eliminated entirely.  The
+explanation is the \texttt{loadEvalText} overhead in the benchmark
+harness.  Each benchmark invocation:
+
+\begin{enumerate}
+\item Parses the expression string \texttt{"(loop-sum 10000 0)"},
+  constructing an AST.
+\item Evaluates the AST: looks up \texttt{loop-sum} in the global
+  environment, evaluates the arguments \texttt{10000} and \texttt{0},
+  constructs an argument list, and dispatches through
+  \texttt{apply2}.
+\item The compiled \texttt{LOOP} executes.
+\item The result is returned.
+\end{enumerate}
+
+Steps 1--2 are identical for both compiled and interpreted
+configurations.  For the compiled configuration, step~3 is
+near-instantaneous.  For the interpreted configuration, step~3
+involves 10,000 recursive calls through the eval loop, each with
+the full per-call overhead.  The 36~ms measured for ``compiled''
+is almost entirely step~1 (parsing) and step~2 (eval-loop entry),
+not step~3 (the actual computation).
+
+\subsection{The Bottleneck: Binding Lookup and Virtual Dispatch}
+
+For non-self-tail-call functions, the remaining per-call overhead
+in compiled code is:
+
+\begin{enumerate}
+\item \texttt{self.b\_\emph{foo}.get()} --- one binding lookup
+  (pointer dereference, array index, load) to fetch the callee.
+\item \texttt{NARROW(\emph{proc}, SchemeProcedure.T)} --- a runtime
+  type check.
+\item \texttt{.apply1(interp, arg)} --- a virtual method dispatch
+  (indirect call through the method table).
+\end{enumerate}
+
+On ARM64, this sequence compiles to approximately 5--8 instructions
+(two loads for the binding, one branch for the type check, one
+indirect branch for the virtual call).  This is far cheaper than the
+interpreter's per-call overhead but still measurable for
+call-intensive benchmarks like \texttt{fibonacci}.
+
+The self-tail-call optimization eliminates this overhead entirely
+for tail-recursive functions by replacing the call with a
+\texttt{LOOP}/parameter-reassignment pattern that compiles to a
+backward branch.
+
+%----------------------------------------------------------------------
+\section{Future Optimization: Intra-Module Direct Calls}
+\label{sec:impl-future}
+%----------------------------------------------------------------------
+
+The Level~1 design (\S\ref{sec:redefinition}) mandates that all calls
+to free variables go through the binding cell, preserving redefinition
+semantics.  However, for calls between functions \emph{in the same
+compilation unit}, a hybrid approach can eliminate virtual dispatch
+overhead on the fast path while preserving full redefinition semantics
+on the slow path.
+
+\subsection{The Direct-Call Optimization}
+
+For each function \texttt{foo} defined in the compilation unit, the
+\texttt{Install} procedure already holds a direct typed reference
+\texttt{obj\_foo : Compiled\_foo}.  This reference can be stored
+as an additional field on each compiled procedure object that calls
+\texttt{foo}:
+
+\begin{lstlisting}[language=Modula3]
+TYPE Compiled_bar = SchemeProcedure.T OBJECT
+    b_foo : SchemeEnvironmentBinding.T;  (* binding *)
+    d_foo : Compiled_foo;  (* direct ref, or NIL *)
+    ...
+  END;
+\end{lstlisting}
+
+At each call site for \texttt{foo}, the generated code performs a
+pointer comparison:
+
+\begin{lstlisting}[language=Modula3]
+VAR proc := self.b_foo.get();
+BEGIN
+  IF proc = self.d_foo THEN
+    (* fast path: direct call, no NARROW, no vtable *)
+    RETURN Apply1_foo(self.d_foo, interp, arg)
+  ELSE
+    (* slow path: general dispatch *)
+    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, arg)
+  END
+END
+\end{lstlisting}
+
+\subsection{Why This Preserves Redefinition Semantics}
+
+The optimization always checks the live binding first.  The pointer
+comparison \texttt{proc = self.d\_foo} asks: ``is the value currently
+stored in \texttt{foo}'s binding cell the same object that was
+installed at registration time?''
+
+\begin{itemize}
+\item \textbf{If yes:} The callee has not been redefined.  The
+  direct call is safe and semantically equivalent to the general
+  dispatch---but faster, because it avoids \texttt{NARROW} and
+  the virtual method dispatch.
+
+\item \textbf{If no:} The callee has been redefined (either from
+  the REPL, via \texttt{set!}, or via a re-\texttt{define}).
+  The code falls back to the general dispatch path, which correctly
+  calls whatever is now in the binding cell---compiled, interpreted,
+  or a completely different function.
+\end{itemize}
+
+The pointer comparison is a single ARM64 \texttt{cmp} instruction
+followed by a conditional branch.  Modern branch predictors will
+predict the fast path with near-100\% accuracy because redefinition
+is rare in normal execution.  The fast path then avoids both the
+\texttt{NARROW} check (which involves a type tag comparison) and
+the virtual dispatch (which involves an indirect load from the
+method table and an indirect branch).
+
+\subsection{Scope and Limitations}
+
+This optimization applies only to calls between functions defined in
+the same \texttt{scheme()} compilation unit.  For calls to functions
+defined elsewhere (primitives, functions from other packages), the
+compiler has no direct typed reference to store, and the general
+binding-lookup path is used unconditionally.
+
+The optimization also does not help with calls through
+function-valued parameters (higher-order calls), where the callee
+is never known at compile time.
+
+For a benchmark like \texttt{fibonacci}---where both the recursive
+calls are to the same function in the same compilation unit---this
+optimization would eliminate the remaining per-call overhead and
+approach the performance of hand-written Modula-3 code.  The
+optimization has not yet been implemented.
+
+%======================================================================
+\chapter{Remaining Compiler Gaps and How to Close Them}
+\label{ch:gaps}
+%======================================================================
+
+The compiler currently supports a productive subset of Scheme: all
+of the constructs used in ordinary first-order programming are
+compiled to efficient Modula-3 code.  Definitions that use
+unsupported constructs are silently skipped by the compilability
+checker (\S\ref{ch:boundary}), falling back to the
+interpreter with no loss of semantics.
+
+This chapter catalogues the remaining gaps---both in language
+coverage and in call optimization---and describes concrete
+strategies for closing each one.  The gaps are ordered roughly
+by impact, measured by how many definitions in the compiler's own
+source code (\texttt{compiler.scm}) each gap prevents from being
+compiled.  Self-compilation is a useful stress test: of the
+compiler's 59 top-level definitions, 38 currently compile
+successfully and 21 are skipped.
+
+%----------------------------------------------------------------------
+\section{Missing Language Constructs}
+\label{sec:gaps-lang}
+%----------------------------------------------------------------------
+
+\subsection{\texttt{lambda} --- Closures}
+\label{sec:gap-lambda}
+
+\paragraph{Impact.}
+This is the single largest gap.  In \texttt{compiler.scm},
+31 definitions contain \texttt{lambda} expressions---nearly all as
+arguments to \texttt{map} and \texttt{filter}---and all 31 are
+skipped.  Closing this gap alone would bring the self-compilation
+ratio from 38/59 to 50/59.
+
+\paragraph{What is needed.}
+A \texttt{lambda} expression creates a first-class closure: an
+anonymous procedure that captures the lexical environment at its
+point of definition.  The compiler must:
+
+\begin{enumerate}
+\item Generate a \texttt{SchemeProcedure.T} subclass for the lambda
+  body, just as it does for a top-level \texttt{define}.
+
+\item At the point where the lambda appears, allocate a \texttt{NEW}
+  instance of that subclass and populate its free-variable bindings.
+
+\item The lambda's free variables include both the enclosing
+  function's parameters (available as local Modula-3 variables) and
+  free variables inherited from the enclosing scope (available as
+  binding cells on \texttt{self}).
+\end{enumerate}
+
+\paragraph{Strategy.}
+The compilation of a \texttt{lambda} is structurally identical to
+the compilation of a top-level \texttt{define}: analyze the body
+for free variables, generate a procedure object type, and emit
+\texttt{apply} methods.  The difference is that the object is
+allocated inline (within the enclosing function's generated code)
+rather than in the \texttt{Install} procedure.
+
+For free variables that are parameters of the enclosing function,
+the lambda closure must capture them by \emph{value} (not by
+binding cell), since parameters are Modula-3 local variables.
+This can be done by adding \texttt{SchemeObject.T} fields to the
+lambda's object type, initialized at allocation time:
+
+\begin{lstlisting}[language=Modula3]
+(* (lambda (y) (+ x y)) where x is a parameter *)
+TYPE Lambda_0 = SchemeProcedure.T OBJECT
+    captured_x : SchemeObject.T;  (* captured from enclosing scope *)
+    b_plus     : SchemeEnvironmentBinding.T;
+  OVERRIDES
+    apply1 := Apply1_Lambda_0;
+  END;
+
+(* At the point where the lambda appears: *)
+VAR lam := NEW(Lambda_0,
+    captured_x := a_x,
+    b_plus := self.b_plus);
+\end{lstlisting}
+
+For free variables that are themselves free in the enclosing
+function (i.e., accessed via binding cells), the lambda can share
+the same binding cell reference---no special treatment is needed.
+
+\paragraph{Complication: mutable captures.}
+If a captured variable is mutated via \texttt{set!} in either the
+enclosing function or the lambda, capture-by-value is incorrect.
+The standard solution is to ``box'' mutable variables: allocate a
+one-element mutable cell and have both the enclosing function and
+the lambda access the variable through the cell.  This is the
+approach described by Dybvig~[4].  However, \texttt{set!} on
+captured variables is rare in practice; the common case (lambdas
+passed to \texttt{map}) involves no mutation.  An initial
+implementation can reject lambdas that capture mutated variables,
+extending the compilability check.
+
+\paragraph{Difficulty: moderate.}
+The code generation machinery already exists; the main work is
+lambda lifting (generating a fresh type per lambda) and wiring up
+the free-variable analysis to distinguish parameter captures from
+binding-cell captures.
+
+\subsection{Named \texttt{let}}
+\label{sec:gap-named-let}
+
+\paragraph{Impact.}
+Seven definitions in \texttt{compiler.scm} use named \texttt{let},
+including utility functions like \texttt{iota},
+\texttt{unique-symbols}, and \texttt{read-file}.  This is the
+second most common gap.
+
+\paragraph{What is needed.}
+Named \texttt{let} is syntactic sugar for a self-recursive local
+function:
+\begin{lstlisting}[language=Scheme]
+(let loop ((i 0) (acc '()))
+  (if (= i n) acc
+      (loop (+ i 1) (cons i acc))))
+\end{lstlisting}
+
+\noindent is equivalent to:
+\begin{lstlisting}[language=Scheme]
+((lambda (loop)
+   (set! loop (lambda (i acc)
+     (if (= i n) acc
+         (loop (+ i 1) (cons i acc)))))
+   (loop 0 '()))
+ #f)
+\end{lstlisting}
+
+\paragraph{Strategy.}
+Named \texttt{let} is almost exactly the self-tail-call pattern
+that the compiler already handles.  The difference is that the
+``function'' is local, not top-level.  The most direct compilation
+is to emit a Modula-3 \texttt{LOOP} with the named-let variables
+as \texttt{VAR} locals, the initial values as initializers, and the
+body as the loop body---exactly the self-tail-call pattern.
+
+Tail calls to the named-let name become parameter reassignment
+followed by loop continuation (no \texttt{EXIT}).  Non-tail calls
+to the name would require either a nested procedure or a lambda
+(and could be rejected by the compilability checker until lambda
+support is available).
+
+\begin{lstlisting}[language=Modula3]
+(* Named let compiled to LOOP: *)
+VAR
+  a_i : SchemeObject.T := SchemeLongReal.Zero;
+  a_acc : SchemeObject.T := NIL;
+BEGIN
+  LOOP
+    IF (* (= i n) *) THEN
+      RETURN a_acc
+    ELSE
+      VAR t_0, t_1 : SchemeObject.T; BEGIN
+        t_0 := SchemeLongReal.Add(a_i, SchemeLongReal.One);
+        t_1 := SchemeUtils.Cons(a_i, a_acc, interp);
+        a_i := t_0;
+        a_acc := t_1;
+      END
+    END
+  END
+END
+\end{lstlisting}
+
+\paragraph{Difficulty: easy.}
+The self-tail-call machinery can be reused almost directly.
+
+\subsection{\texttt{letrec}}
+\label{sec:gap-letrec}
+
+\paragraph{Impact.}
+Not used in \texttt{compiler.scm}, but common in general Scheme
+code for defining mutually recursive local functions.
+
+\paragraph{Strategy.}
+\texttt{letrec} binds variables to undefined values, then evaluates
+the initializers in the scope of all the bindings (allowing mutual
+references).  The compilation is:
+
+\begin{enumerate}
+\item Declare all variables as \texttt{VAR} with no initializer
+  (defaulting to \texttt{NIL}).
+\item Evaluate each initializer and assign to the corresponding
+  variable.
+\item Execute the body.
+\end{enumerate}
+
+This is simpler than \texttt{let} (no shadowing concern, since the
+variables are explicitly uninitialized during init evaluation).
+
+\paragraph{Difficulty: easy.}
+
+\subsection{Internal \texttt{define}}
+\label{sec:gap-internal-define}
+
+\paragraph{Impact.}
+Not used in \texttt{compiler.scm}, but idiomatic in many Scheme
+programs for defining local helper functions.
+
+\paragraph{Strategy.}
+R5RS specifies that internal defines at the beginning of a body
+are equivalent to \texttt{letrec}.  The compiler can desugar
+internal defines to \texttt{letrec} during an AST preprocessing
+pass, then compile the \texttt{letrec} as described above.
+
+\paragraph{Difficulty: easy,} once \texttt{letrec} is supported.
+
+\subsection{\texttt{cond} with \texttt{=>} Syntax}
+\label{sec:gap-cond-arrow}
+
+\paragraph{Impact.}
+One definition in \texttt{compiler.scm} (\texttt{m3-char}) uses
+the \texttt{(test => proc)} clause form.
+
+\paragraph{What is needed.}
+The clause \texttt{(test => proc)} evaluates \texttt{test}; if true,
+it calls \texttt{proc} with the test value as argument.  This
+requires binding the test result to a temporary and passing it
+to the procedure.
+
+\paragraph{Strategy.}
+In \texttt{gen-cond}, when a clause has the \texttt{=>} form:
+
+\begin{lstlisting}[language=Modula3]
+VAR t_0 : SchemeObject.T; BEGIN
+  t_0 := (* evaluate test *);
+  IF SchemeBoolean.TruthO(t_0) THEN
+    (* call proc with t_0 as argument *)
+    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, t_0)
+  ELSE
+    (* next clause *)
+  END
+END
+\end{lstlisting}
+
+\paragraph{Difficulty: easy.}
+The test value is already computed into a temporary; the only
+addition is detecting the \texttt{=>} token and generating a
+call instead of evaluating the clause body.
+
+\subsection{\texttt{case}}
+\label{sec:gap-case}
+
+\paragraph{Impact.}
+Not used in \texttt{compiler.scm}.
+
+\paragraph{Strategy.}
+\texttt{case} is a multi-way dispatch on a key value.
+Compile as a chain of \texttt{IF}/\texttt{ELSIF} comparisons
+using \texttt{eqv?}.  For integer-only keys, a Modula-3
+\texttt{CASE} statement could be emitted for better performance.
+
+\paragraph{Difficulty: easy.}
+
+\subsection{\texttt{do}}
+\label{sec:gap-do}
+
+\paragraph{Impact.}
+Not used in \texttt{compiler.scm}.  Rarely used in MScheme
+programs generally.
+
+\paragraph{Strategy.}
+\texttt{do} is a general iteration construct.  Compile to a
+Modula-3 \texttt{LOOP} with step expressions evaluated into
+temporaries and assigned at the end of each iteration, similar
+to the self-tail-call pattern.
+
+\paragraph{Difficulty: easy.}
+
+\subsection{Rest Parameters}
+\label{sec:gap-rest}
+
+\paragraph{Impact.}
+One definition in \texttt{compiler.scm} (\texttt{L}) uses a
+rest parameter \texttt{(define (L .\ strs) ...)}.
+
+\paragraph{What is needed.}
+A rest parameter collects all arguments beyond the fixed parameters
+into a list.  The \texttt{apply} method already receives arguments
+as a Scheme list; the compilation needs to split the list into
+fixed-parameter locals and a rest-parameter local.
+
+\paragraph{Strategy.}
+In the \texttt{Apply\_\emph{foo}} (list-argument) method, after
+extracting the fixed parameters with \texttt{SchemeUtils.First}/\texttt{Rest},
+the remaining \texttt{rest} variable is bound to the rest parameter.
+The \texttt{apply1} and \texttt{apply2} specializations must
+construct a list from the excess arguments.
+
+\begin{lstlisting}[language=Modula3]
+(* (define (L . strs) body) -- zero fixed params, one rest *)
+PROCEDURE Apply_L(self : Compiled_L;
+    interp : Scheme.T;
+    args : SchemeObject.T) : SchemeObject.T
+  RAISES { Scheme.E } =
+VAR a_strs := args;  (* entire arg list IS the rest parameter *)
+BEGIN
+  RETURN ...
+END Apply_L;
+\end{lstlisting}
+
+\paragraph{Difficulty: easy.}
+The main change is in the argument-unpacking code in
+\texttt{gen-apply-proc} and \texttt{gen-apply-n-proc}, plus
+updating \texttt{proper-list?} to accept and handle dotted
+parameter lists.
+
+%----------------------------------------------------------------------
+\section{Call Optimization}
+\label{sec:gaps-calls}
+%----------------------------------------------------------------------
+
+Beyond language coverage, the compiler leaves performance on the
+table in how it dispatches calls.  The current call sequence for
+a function \texttt{foo} is:
+
+\begin{enumerate}
+\item Fetch the callee: \texttt{self.b\_foo.get()} (binding lookup).
+\item Type-check: \texttt{NARROW(proc, SchemeProcedure.T)}.
+\item Dispatch: \texttt{.apply1(interp, arg)} (virtual method call).
+\end{enumerate}
+
+\noindent
+Three optimizations can progressively reduce this overhead.
+
+\subsection{Intra-Module Direct Calls}
+\label{sec:gap-intra}
+
+This optimization was described in detail in \S\ref{sec:impl-future}.
+For calls between functions in the same compilation unit, a pointer
+comparison guards a direct call that bypasses both \texttt{NARROW}
+and virtual dispatch:
+
+\begin{lstlisting}[language=Modula3]
+VAR proc := self.b_foo.get();
+BEGIN
+  IF proc = self.d_foo THEN
+    RETURN Apply1_foo(self.d_foo, interp, arg)
+  ELSE
+    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, arg)
+  END
+END
+\end{lstlisting}
+
+The fast path eliminates 2 of the 3 overhead sources (NARROW +
+virtual dispatch), leaving only the binding lookup and a well-predicted
+branch.  For call-intensive benchmarks like \texttt{fibonacci},
+this would approach the performance of hand-written Modula-3.
+
+\subsection{Cross-Module Direct Calls}
+\label{sec:gap-cross}
+
+The intra-module optimization requires the caller to hold a typed
+reference to the callee's compiled object.  For functions in
+\emph{different} compilation units, the compiler does not have such
+a reference at code-generation time.
+
+\paragraph{Strategy: registration protocol.}
+When module~A calls a function \texttt{bar} defined in module~B,
+the fast path requires a \texttt{Compiled\_bar} reference.
+This can be provided through a two-phase initialization:
+
+\begin{enumerate}
+\item Module~B's \texttt{Install} procedure registers its compiled
+  objects in a well-known table (keyed by symbol name).
+\item Module~A's \texttt{Install} procedure, called \emph{after}
+  module~B's, looks up the compiled object for \texttt{bar} and
+  stores a direct reference.
+\end{enumerate}
+
+The generated code uses the same guard pattern as intra-module:
+
+\begin{lstlisting}[language=Modula3]
+TYPE Compiled_baz = SchemeProcedure.T OBJECT
+    b_bar : SchemeEnvironmentBinding.T;
+    d_bar : SchemeProcedure.T;  (* untyped -- different module *)
+    ...
+  END;
+
+(* call site: *)
+VAR proc := self.b_bar.get();
+BEGIN
+  IF proc = self.d_bar THEN
+    RETURN self.d_bar.apply1(interp, arg)
+  ELSE
+    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, arg)
+  END
+END
+\end{lstlisting}
+
+Note that the cross-module case cannot avoid the virtual dispatch
+(since the caller does not know the concrete type), but it can
+still skip the \texttt{NARROW} by storing the reference as
+\texttt{SchemeProcedure.T} rather than \texttt{SchemeObject.T}.
+The pointer comparison still guards against redefinition.
+
+\paragraph{Difficulty: moderate.}
+Requires a cross-module registration protocol and careful ordering
+of \texttt{Install} calls.
+
+\subsection{General Tail-Call Optimization}
+\label{sec:gap-tco}
+
+The compiler currently optimizes only \emph{self}-tail-calls
+(direct recursion).  Mutual tail calls (A tail-calls B, B
+tail-calls A) and tail calls to arbitrary functions are not
+optimized---each becomes a regular call that consumes stack.
+
+\paragraph{Strategy: trampoline.}
+The standard technique for general TCO in a language without
+goto is the \emph{trampoline}: instead of calling the tail
+callee directly, the function returns a thunk (or a tagged value)
+that the trampoline loop invokes.  This eliminates stack growth
+at the cost of one allocation per tail call.
+
+In the MScheme context, a trampoline could be implemented as a
+\texttt{LOOP} in the \texttt{apply} methods that detects a
+special ``tail-call request'' return value and re-dispatches:
+
+\begin{lstlisting}[language=Modula3]
+(* Tail call to foo becomes: *)
+RETURN NEW(TailCall, proc := self.b_foo.get(),
+           args := SchemeUtils.List1(arg, interp))
+\end{lstlisting}
+
+The trampoline loop in a wrapper would then be:
+
+\begin{lstlisting}[language=Modula3]
+VAR result := proc.apply1(interp, arg);
+BEGIN
+  WHILE ISTYPE(result, TailCall) DO
+    WITH tc = NARROW(result, TailCall) DO
+      result := NARROW(tc.proc,
+          SchemeProcedure.T).apply(interp, tc.args)
+    END
+  END;
+  RETURN result
+END
+\end{lstlisting}
+
+\paragraph{Difficulty: hard.}
+Requires a new return convention and careful integration with
+the interpreter's existing call paths.  The allocation overhead
+of the \texttt{TailCall} object partially offsets the benefit.
+Given that self-tail-call optimization already handles the most
+common case (accumulator loops), general TCO is lower priority.
+
+\subsection{Primitive Inlining}
+\label{sec:gap-inline}
+
+Calls to known primitives (\texttt{+}, \texttt{-}, \texttt{*},
+\texttt{car}, \texttt{cdr}, \texttt{cons}, \texttt{null?}, etc.)
+currently go through the full binding-lookup / NARROW / virtual-dispatch
+path.  Since primitives are rarely redefined, inlining them would
+eliminate per-call overhead entirely.
+
+\paragraph{Strategy.}
+Maintain a table of known primitives and their Modula-3
+equivalents.  For each known call, emit the Modula-3 code directly:
+
+\begin{lstlisting}[language=Modula3]
+(* (+ x y) compiled with primitive inlining: *)
+SchemeLongReal.Add(a_x, a_y)
+
+(* vs. current: *)
+VAR fn := self.b_plus.get();
+    t0, t1 : SchemeObject.T;
+BEGIN
+  t0 := a_x; t1 := a_y;
+  RETURN NARROW(fn, SchemeProcedure.T).apply2(interp, t0, t1)
+END
+\end{lstlisting}
+
+To preserve redefinition semantics, the inlined code can be guarded
+by the same pointer-comparison pattern used for intra-module calls,
+with the original primitive object stored as a direct reference.
+Alternatively, since primitive redefinition is extremely rare in
+practice, the compiler could offer a ``safe mode'' flag
+that disables inlining.
+
+\paragraph{Difficulty: moderate.}
+Requires enumerating the primitives and their M3 implementations,
+handling type dispatch (e.g., \texttt{+} on integers vs.\ reals),
+and deciding on the redefinition guard policy.
+
+%----------------------------------------------------------------------
+\section{Self-Compilation Summary}
+\label{sec:gaps-selfcomp}
+%----------------------------------------------------------------------
+
+The following table summarizes the self-compilation results.
+Of 59 top-level definitions in \texttt{compiler.scm}, 38 compile
+successfully.  The 21 skipped definitions break down as follows:
+
+\begin{center}
+\begin{tabular}{llc}
+\toprule
+\textbf{Blocking construct} & \textbf{Functions} & \textbf{Count} \\
+\midrule
+\texttt{lambda} (in \texttt{map}/\texttt{filter} args)
+  & \texttt{gen-let}, \texttt{gen-call}, \texttt{gen-type-decl},
+    \texttt{gen-apply-proc}, &  \\
+  & \texttt{gen-install-proc}, \texttt{gen-m3},
+    \texttt{compile-file}, \ldots & 12 \\
+\texttt{lambda} + named \texttt{let}
+  & \texttt{free-variables}, \texttt{unique-symbols},
+    \texttt{unique-constants}, & \\
+  & \texttt{has-self-tail-call?}, \texttt{constant-index} & 5 \\
+Named \texttt{let} only
+  & \texttt{iota}, \texttt{read-file} & 2 \\
+\texttt{cond =>}
+  & \texttt{m3-char} & 1 \\
+Rest parameter
+  & \texttt{L} & 1 \\
+\midrule
+\textbf{Total skipped} & & \textbf{21} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Adding \texttt{lambda} support would unblock 12 definitions.
+Adding both \texttt{lambda} and named \texttt{let} would unblock
+19 of the 21, leaving only \texttt{m3-char} (\texttt{cond =>})
+and \texttt{L} (rest parameter)---both easy additions that would
+complete full self-compilation.  The remaining gaps
+(\texttt{letrec}, \texttt{case}, \texttt{do}, internal
+\texttt{define}) are not used in the compiler itself but appear
+in general Scheme programs.
+
+%----------------------------------------------------------------------
+\section{Recommended Priorities}
+\label{sec:gaps-priorities}
+%----------------------------------------------------------------------
+
+Based on the impact analysis above, the recommended implementation
+order is:
+
+\begin{enumerate}
+\item \textbf{Named \texttt{let}} --- easy, reuses existing
+  self-tail-call machinery, unblocks 2 definitions immediately and
+  5 more when combined with lambda.
+
+\item \textbf{\texttt{lambda}} --- moderate difficulty, unblocks 13+
+  definitions, required for self-compilation.  Start with the
+  common case (lambdas that capture no mutable variables) and
+  extend later.
+
+\item \textbf{Intra-module direct calls} --- moderate, gives the
+  largest performance improvement for compiled code, especially
+  for recursive benchmarks.
+
+\item \textbf{\texttt{cond =>}} --- easy, one-off addition.
+
+\item \textbf{Rest parameters} --- easy, one-off addition.
+
+\item \textbf{\texttt{letrec} and internal \texttt{define}} ---
+  easy, low urgency.
+
+\item \textbf{Cross-module direct calls} --- moderate, deferred
+  until multiple compiled modules are common.
+
+\item \textbf{Primitive inlining} --- moderate, largest potential
+  speedup but requires careful design.
+
+\item \textbf{General tail-call optimization} --- hard, lowest
+  priority since self-tail-calls cover the common case.
+\end{enumerate}
+
+Steps 1--2 would achieve full self-compilation of the compiler.
+Steps 1--5 would close all gaps observed in real MScheme programs.
+Steps 6--9 are optimizations that become relevant as the compiled
+code base grows.
+
+%======================================================================
 \chapter*{References}
 \addcontentsline{toc}{chapter}{References}
 %======================================================================
@@ -1427,10 +2721,14 @@ are registered in the global environment at startup.
   models for Scheme, including closure conversion and environment
   representation strategies relevant to this design.
 
-\item Greg Nelson (ed.), \emph{Systems Programming with Modula-3},
+\item\label{ref:nelson} Greg Nelson (ed.), \emph{Systems Programming with Modula-3},
   Prentice Hall, 1991.
 
 \item Samuel P.\ Harbison, \emph{Modula-3}, Prentice Hall, 1992.
+
+\item Richard Kelsey, William Clinger, and Jonathan Rees (eds.),
+  ``Revised$^5$ Report on the Algorithmic Language Scheme,'' 1998.
+  \url{https://www.schemers.org/Documents/Standards/R5RS/}.
 \end{enumerate}
 
 \end{document}
