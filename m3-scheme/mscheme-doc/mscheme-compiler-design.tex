@@ -1,0 +1,953 @@
+%%
+%% MScheme Compiler Design: From Binding Optimization to Native Code
+%%
+\documentclass[12pt]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{amssymb}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,unwind-protect,eval,
+    current-environment},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,CHAR,TEXT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,
+    ISTYPE,NARROW,TYPECODE,ADDRESS},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{C}{
+  morekeywords={typedef,char,int,void,if,else,return,while,for,
+    extern,static,struct,union,const,unsigned,signed,long,double},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  MScheme Compiler Design\\[0.5em]
+  \large From Binding Optimization to Native Code Generation}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\chapter{Introduction}
+%======================================================================
+
+The MScheme interpreter contains an optimization called the
+\emph{binding optimization}, described in detail in the companion
+report \emph{MScheme Internals}.  When a closure is created, the
+\texttt{SchemeClosure.Init} procedure walks the body and replaces
+free variable symbols with \texttt{SchemeEnvironmentBinding.T}
+objects that point directly to the environment cell where each
+variable lives.  At evaluation time, these binding objects are
+recognized by the evaluator and resolved in constant time, bypassing
+the scope-chain traversal.
+
+This document explores the question: can this optimization be
+extended into a framework for compiling Scheme closures to native
+Modula-3 (or C) code?
+
+We begin by analyzing what work the evaluator performs at runtime
+that could instead be resolved statically (\S\ref{ch:analysis}),
+then review existing infrastructure in CM3 that supports this goal
+(\S\ref{ch:infra}), including a prior incomplete attempt from 2009
+(\S\ref{sec:prior}).  We then propose three concrete compilation
+strategies (\S\ref{ch:strategies}), classify Scheme constructs by
+their compilability (\S\ref{ch:boundary}), and sketch the runtime
+support needed (\S\ref{ch:runtime}).
+
+%======================================================================
+\chapter{Analysis: What the Eval Loop Does That a Compiler Could Eliminate}
+\label{ch:analysis}
+%======================================================================
+
+The core evaluator, \texttt{EvalInternal} in \texttt{Scheme.m3},
+repeats five categories of work on every iteration of its main loop.
+All of them are partially or fully resolvable at compile time.
+
+\section{Type Dispatch}
+\label{sec:typedispatch}
+
+Every iteration begins with a five-way type test:
+
+\begin{lstlisting}[language=Modula3]
+IF x = NIL THEN
+  RETURN NIL
+ELSIF ISTYPE(x, Symbol) THEN
+  RETURN env.lookup(x)
+ELSIF ISTYPE(x, Binding) THEN
+  RETURN NARROW(x, Binding).get()
+ELSIF NOT ISTYPE(x, Pair) THEN
+  RETURN x                     (* self-evaluating *)
+ELSE
+  (* x is a Pair: special form or application *)
+END
+\end{lstlisting}
+
+A compiler walking the source AST knows at compile time which branch
+each sub-expression falls into.  A number literal is always
+self-evaluating.  A symbol is always a variable reference.  A list
+starting with \texttt{if} is always the \texttt{if} special form.
+The type dispatch can be fully eliminated.
+
+\section{Special-Form Recognition}
+\label{sec:sfrecog}
+
+When \texttt{x} is a pair, the evaluator extracts the first element
+and compares it against 14 pre-interned special-form symbols:
+
+\begin{lstlisting}[language=Modula3]
+IF    fn = SYMquote THEN ...
+ELSIF fn = SYMbegin THEN ...
+ELSIF fn = SYMdefine THEN ...
+ELSIF fn = SYMsetB THEN ...
+ELSIF fn = SYMif THEN ...
+ELSIF fn = SYMcond THEN ...
+ELSIF fn = SYMlambda THEN ...
+ELSIF fn = SYMmacro THEN ...
+...
+\end{lstlisting}
+
+These are pointer comparisons against interned atoms---fast, but
+unnecessary.  A compiler recognizes \texttt{if} syntactically and
+emits the corresponding control flow directly.  No chain of runtime
+comparisons is needed.
+
+\section{Operator Type Dispatch}
+\label{sec:opdispatch}
+
+After recognizing that a form is an application (not a special form),
+the evaluator performs a \texttt{TYPECASE} on the evaluated operator:
+
+\begin{lstlisting}[language=Modula3]
+TYPECASE fn OF
+  Closure(c) => (* env setup, tail-call opt *)
+| Macro(m)   => x := m.expand(t, x, args)
+| Procedure(p) => RETURN p.apply(...)
+ELSE RAISE E("Not a procedure")
+END
+\end{lstlisting}
+
+For calls to known functions---which are the common case in
+well-structured code---the operator type is statically known.
+A call to a known closure can be compiled as a direct procedure
+call.  A call to a known primitive (e.g., \texttt{+}) can be
+inlined entirely.
+
+\section{Primitive Dispatch}
+\label{sec:primdispatch}
+
+The primitive system uses a \texttt{CASE} statement over
+$\sim$170 enumerated values:
+
+\begin{lstlisting}[language=Modula3]
+CASE VAL(t.id, P) OF
+  P.Plus  => RETURN PrimPlus(args)
+| P.Minus => RETURN PrimMinus(args)
+| P.Car   => RETURN PedanticFirst(x)
+| ...
+END
+\end{lstlisting}
+
+When the compiler knows that a call is to the primitive \texttt{+},
+it can emit the addition directly, bypassing the dispatch table,
+the arity check, and the argument-list unpacking.
+
+\section{Argument List Construction}
+\label{sec:arglist}
+
+The evaluator calls \texttt{evalList} to evaluate all arguments and
+build a cons-cell list, which is then passed to the procedure's
+\texttt{apply} method.  The \texttt{apply1}/\texttt{apply2}
+fast paths mitigate this for small arities, but a compiled call
+needs no intermediate list at all---arguments are passed directly
+as Modula-3 procedure parameters or in a fixed-size array.
+
+\section{Summary}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Eval loop work} & \textbf{Per-iteration cost} & \textbf{Compiled} \\
+\midrule
+Type dispatch & 3--5 ISTYPE checks & Eliminated \\
+Special-form recognition & up to 14 pointer comparisons & Eliminated \\
+Operator TYPECASE & 1 runtime type test & Eliminated for known calls \\
+Primitive CASE dispatch & 1 table lookup & Inlined \\
+Argument list (evalList) & $n$ cons allocations & Direct passing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The binding optimization already eliminates variable-lookup overhead.
+A compiler extends this to eliminate \emph{all} of the above.
+
+%======================================================================
+\chapter{Existing Infrastructure}
+\label{ch:infra}
+%======================================================================
+
+Several pieces of infrastructure in the CM3 ecosystem and in MScheme
+itself support the construction of a compiler.
+
+\section{The \texttt{SchemeProcedure.T} Interface}
+\label{sec:proctype}
+
+All callable objects in MScheme extend \texttt{SchemeProcedure.T}:
+
+\begin{lstlisting}[language=Modula3]
+TYPE T <: Public;
+Public = OBJECT METHODS
+    apply(interp : Scheme.T; args : Object) : Object
+      RAISES { E };
+    apply1(interp : Scheme.T; a1 : Object) : Object
+      RAISES { E };
+    apply2(interp : Scheme.T; a1, a2 : Object) : Object
+      RAISES { E };
+  END;
+\end{lstlisting}
+
+A compiled Scheme function can be a new subtype of
+\texttt{SchemeProcedure.T} whose \texttt{apply} method is generated
+native code.  Since the evaluator dispatches through this interface,
+compiled and interpreted closures can call each other seamlessly---no
+bridging code is needed.
+
+\section{Dynamic Loading: \texttt{m3dl}}
+\label{sec:m3dl}
+
+The CM3 package \texttt{m3-libs/m3dl} provides Modula-3 bindings to
+POSIX dynamic linking:
+
+\begin{lstlisting}[language=Modula3]
+(* DL.i3 *)
+PROCEDURE Open(fileName : TEXT; flag : INTEGER) : ADDRESS
+  RAISES { OpenFail };
+PROCEDURE Sym(handle : ADDRESS; symbol : TEXT) : ADDRESS
+  RAISES { SymbolError };
+PROCEDURE Close(handle : ADDRESS) : INTEGER;
+\end{lstlisting}
+
+This wraps \texttt{dlopen}/\texttt{dlsym}/\texttt{dlclose} and
+can load any shared library (\texttt{.so}/\texttt{.dylib}) at
+runtime.  On Windows, equivalent functionality is available via
+\texttt{WinBase.LoadLibrary} and \texttt{WinBase.GetProcAddress}.
+
+For Modula-3 shared libraries, \texttt{RTLinker.AddUnit} can
+integrate a dynamically loaded module into the running runtime,
+including type registration and module initialization.
+
+\section{Shared Library Building}
+
+CM3 fully supports building position-independent shared libraries on
+all major platforms.  The \texttt{-fPIC} flag is applied by default
+to all generated code.  On Darwin:
+
+\begin{lstlisting}
+cc -dynamiclib -o libfoo.dylib foo.o
+\end{lstlisting}
+
+On Linux:
+
+\begin{lstlisting}
+cc -shared -o libfoo.so foo.o
+\end{lstlisting}
+
+This means both C and Modula-3 code can be compiled into loadable
+shared libraries at runtime.
+
+\section{Conservative Garbage Collection}
+\label{sec:gc}
+
+The Modula-3 garbage collector scans the C stack conservatively.
+Local variables in C functions that hold traced references
+(\texttt{REFANY}, i.e., \texttt{ADDRESS} in the C backend) are
+found by the stack scanner without any special annotations.  This
+means that \textbf{compiled C code is automatically GC-safe}---no
+write barriers, root registration, or GC cooperation protocol is
+needed.
+
+This is the single most important enabler for a Scheme-to-C
+compilation strategy.
+
+\section{The Stub Generator as a Model}
+\label{sec:sstubgen}
+
+The \texttt{sstubgen} tool and the \texttt{scodegen.scm} library
+already demonstrate the pattern of generating Modula-3 source code
+from Scheme.  The stub generator parses Modula-3 interfaces using
+\texttt{m3tk}, constructs Scheme data structures representing the
+types and procedures, and then uses Scheme code to emit \texttt{.m3}
+files that bridge between Scheme and Modula-3.
+
+A Scheme compiler would use the same pattern: walk a Scheme AST
+and emit source code (Modula-3 or C) implementing the computation.
+
+\section{The 2009 Compiler Prototype}
+\label{sec:prior}
+
+An incomplete compiler prototype exists in the tree at
+\texttt{sstubgen/example/src/}, dating from June 2009.  It consists
+of three files that together sketch a complete design.
+
+\subsection{\texttt{CompilerHooks.i3}: The Runtime Framework}
+
+This interface defines the calling convention for compiled procedures:
+
+\begin{lstlisting}[language=Modula3]
+TYPE
+  Frame = ARRAY OF REFANY;
+
+  LocalProcedure = PROCEDURE (
+    VAR args : ARRAY OF REFANY;
+    g : Getter; s : Setter;
+    c : Copier; a : Adapter) : LocalProcedureResult
+    RAISES { E };
+\end{lstlisting}
+
+The key design elements:
+
+\begin{description}
+\item[\texttt{Frame}] Arguments and locals are stored in a flat
+  \texttt{ARRAY OF REFANY}.  Slot~0 is reserved for a pointer to
+  the enclosing frame (the ``up pointer''), slots $1 \ldots N$ hold
+  arguments, and slots $N{+}1 \ldots N{+}M$ hold local variables
+  introduced by \texttt{define}.
+
+\item[\texttt{Getter/Setter}] Callbacks for accessing variables in
+  enclosing scopes by \texttt{(up, pos)} coordinates, where
+  \texttt{up} is the number of enclosing frames to traverse and
+  \texttt{pos} is the slot index within that frame.
+
+\item[\texttt{Copier}] Copies frames from a given depth upward,
+  used when a closure captures variables from an enclosing scope.
+
+\item[\texttt{Adapter}] Converts the flat frame representation
+  back into a \texttt{SchemeEnvironment.T}, needed when compiled
+  code calls \texttt{current-environment} or falls back to the
+  interpreter.
+
+\item[\texttt{LocalProcedureResult}] A record supporting three
+  outcomes: a direct result, a tail call to another
+  \texttt{LocalProcedure} (with up to 10 arguments inline), or
+  a tail call with a heap-allocated argument array.
+\end{description}
+
+\subsection{\texttt{CompiledStuff.m3}: Hand-Compiled Example}
+
+This file shows what a compiled version of
+\texttt{(define (f n) (if (= 0 n) 1 (f (- n 1))))} would look
+like, in two versions:
+
+\paragraph{Version 1: Tail call via result.}
+Returns a \texttt{Result} record with \texttt{tailCall.f := CP}
+(a self-reference), letting an outer trampoline loop handle the
+tail call.
+
+\paragraph{Version 2: Self-tail-call optimized.}
+When the compiler detects that the tail call is to the same function,
+it emits a \texttt{LOOP} that reassigns the arguments and iterates:
+
+\begin{lstlisting}[language=Modula3]
+VAR args2 := args;
+BEGIN
+  LOOP
+    IF TruthO(PrimEquals(..., Constants[0], args2[1])) THEN
+      RETURN Result { result := Constants[1] }
+    ELSE
+      args2 := ARRAY OF ... { PrimMinus(..., args2[1], Constants[1]) }
+    END
+  END
+END
+\end{lstlisting}
+
+This is the same tail-call-via-loop pattern used by the interpreter's
+\texttt{EvalInternal}, but applied at compile time to the specific
+function body.
+
+\subsection{\texttt{compiler.scm}: The Scheme-Side Compiler}
+
+This file implements (incompletely) the analysis and code generation
+phases:
+
+\begin{itemize}
+\item \textbf{Closure introspection}: Uses \texttt{modula-type-op}
+  to access the \texttt{params}, \texttt{body}, and \texttt{env}
+  fields of a live \texttt{SchemeClosure.T} object.
+
+\item \textbf{Compile-time environments}: Maintains a list of
+  frames, where each frame is a list of symbols.
+  \texttt{search-var} resolves a symbol to \texttt{(frame-index
+  . slot-index)} coordinates.
+
+\item \textbf{Macro expansion}: Detects macros at compile time and
+  expands them before analysis.
+
+\item \textbf{Code generation}: The function
+  \texttt{make-lambda-wrapper} emits Modula-3 procedure text with
+  \texttt{Getter}/\texttt{Setter}/\texttt{Copier}/\texttt{Adapter}
+  callbacks, argument unpacking, and arity checking.
+
+\item \textbf{Bytecode sketch}: Functions \texttt{push-x} and
+  \texttt{push-pair-x} emit a stack-machine instruction sequence
+  (\texttt{push-constant}, \texttt{push-value}, \texttt{push-global},
+  \texttt{push-primitive}, \texttt{pop}).
+\end{itemize}
+
+The prototype was not completed.  It handles \texttt{quote},
+\texttt{begin}, \texttt{define}, \texttt{set!}, and \texttt{if}
+(via desugaring to \texttt{cond}), but the \texttt{cond} and
+\texttt{lambda} cases are empty stubs.
+
+
+%======================================================================
+\chapter{Proposed Compilation Strategies}
+\label{ch:strategies}
+%======================================================================
+
+We identify three viable strategies, ranging from simplest to most
+ambitious.
+
+\section{Strategy A: Template-Based Compilation}
+\label{sec:stratA}
+
+This strategy extends the 2009 \texttt{CompilerHooks.i3} approach.
+Rather than generating code per-closure, a fixed set of
+pre-compiled Modula-3 template procedures are parameterized at
+runtime by:
+
+\begin{itemize}
+\item A flat \texttt{ARRAY OF REFANY} frame for arguments and locals.
+\item \texttt{Getter}/\texttt{Setter} callbacks for lexical variable
+  access.
+\item A constants array.
+\item A bytecode or instruction sequence describing the computation.
+\end{itemize}
+
+The ``compilation'' step produces a compact representation (essentially
+bytecode) that the template procedures interpret---but at far lower
+overhead than the full eval loop, because type dispatch, special-form
+recognition, and operator dispatch are already resolved.
+
+\paragraph{Advantages.}
+No external compiler needed at runtime.  No dynamic loading.
+Can be implemented entirely within the existing MScheme build.
+Incremental: can coexist with the interpreter.
+
+\paragraph{Disadvantages.}
+Still interpreted (at a lower level).  Limited optimization
+opportunities.  The bytecode interpreter adds its own dispatch
+overhead.
+
+\section{Strategy B: Emit Modula-3 Source (Ahead-of-Time)}
+\label{sec:stratB}
+
+Use the pattern already established by \texttt{sstubgen} and
+\texttt{scodegen.scm}: walk the Scheme AST, emit \texttt{.i3}
+and \texttt{.m3} files defining \texttt{SchemeProcedure.T}
+subtypes, and compile them into the application with \texttt{cm3}.
+
+The generated procedure would look like:
+
+\begin{lstlisting}[language=Modula3]
+TYPE Compiled_f = SchemeProcedure.T OBJECT
+    bindings : REF ARRAY OF SchemeEnvironmentBinding.T;
+    constants : REF ARRAY OF SchemeObject.T;
+  OVERRIDES
+    apply  := Apply_f;
+    apply1 := Apply1_f;
+  END;
+
+PROCEDURE Apply1_f(self : Compiled_f;
+                   interp : Scheme.T;
+                   n : SchemeObject.T) : SchemeObject.T
+  RAISES { Scheme.E } =
+VAR n_val := n;
+BEGIN
+  LOOP
+    IF SchemeBoolean.TruthO(
+         SchemeLongReal.NumEq(self.constants[0], n_val)) THEN
+      RETURN self.constants[1]
+    ELSE
+      n_val := SchemeLongReal.Sub(n_val, self.constants[1])
+    END
+  END
+END Apply1_f;
+\end{lstlisting}
+
+\paragraph{Advantages.}
+Full native code.  The CM3 optimizer can further improve the output.
+Type-safe: generated code is checked by the Modula-3 compiler.
+Can leverage M3's exception model for \texttt{unwind-protect}.
+
+\paragraph{Disadvantages.}
+Ahead-of-time only---requires knowing which functions to compile
+before the application is built.  Suitable for library code and
+known hot paths, not for dynamically-defined functions.
+
+\section{Strategy C: Emit C, Compile and Load Dynamically (JIT)}
+\label{sec:stratC}
+
+This is the most ambitious strategy.  At runtime, when a closure is
+created (or when it becomes ``hot''):
+
+\begin{enumerate}
+\item Walk the closure's body AST, as \texttt{DoBindings} already does.
+\item Emit a C source file implementing the function body.
+\item Invoke the system C compiler: \texttt{cc -shared -O2 -o /tmp/f.dylib /tmp/f.c}
+\item Load the shared library via \texttt{DL.Open}.
+\item Look up the compiled function via \texttt{DL.Sym}.
+\item Wrap the function pointer in a \texttt{CompiledProcedure}
+  object (a subtype of \texttt{SchemeProcedure.T}).
+\item Replace the interpreted closure with the compiled version.
+\end{enumerate}
+
+\subsection{The C Calling Convention}
+
+A compiled C function would have the following signature:
+
+\begin{lstlisting}[language=C]
+typedef char* SchemeObject;  /* = REFANY = ADDRESS */
+
+SchemeObject compiled_f(
+    SchemeObject interp,      /* Scheme.T */
+    SchemeObject *args,       /* evaluated argument array */
+    int nargs,
+    SchemeObject *free_vars,  /* pre-resolved bindings */
+    SchemeObject *constants   /* literal pool */
+);
+\end{lstlisting}
+
+The C code would call back into Modula-3 helper routines through
+thin \texttt{<*EXTERNAL*>} wrappers for operations that cannot be
+inlined:
+
+\begin{lstlisting}[language=C]
+/* Declared in a helper M3 module, callable from C */
+extern SchemeObject MScm_Truth(SchemeObject x);
+extern SchemeObject MScm_NumAdd(SchemeObject a, SchemeObject b);
+extern SchemeObject MScm_NumEq(SchemeObject a, SchemeObject b);
+extern SchemeObject MScm_Car(SchemeObject pair);
+extern SchemeObject MScm_Cdr(SchemeObject pair);
+extern SchemeObject MScm_Cons(SchemeObject a, SchemeObject b,
+                              SchemeObject interp);
+extern SchemeObject MScm_Apply(SchemeObject interp,
+                               SchemeObject proc,
+                               SchemeObject args);
+extern SchemeObject MScm_EnvLookup(SchemeObject env,
+                                   SchemeObject sym);
+\end{lstlisting}
+
+GC safety is free (see \S\ref{sec:gc}): the conservative stack
+scanner finds all traced references in C stack frames.
+
+\subsection{The Modula-3 Wrapper}
+
+\begin{lstlisting}[language=Modula3]
+TYPE CompiledProcedure = SchemeProcedure.T OBJECT
+    cFunc     : ADDRESS;  (* function pointer *)
+    constants : REF ARRAY OF SchemeObject.T;
+    freeVars  : REF ARRAY OF SchemeEnvironmentBinding.T;
+  OVERRIDES
+    apply  := CompiledApply;
+    apply1 := CompiledApply1;
+    apply2 := CompiledApply2;
+  END;
+\end{lstlisting}
+
+The \texttt{CompiledApply} method evaluates arguments (if not
+already evaluated), marshals them into a C-compatible array, calls
+the C function pointer, and returns the result.  Exception handling
+stays in Modula-3: the C functions return a sentinel (e.g.,
+\texttt{NULL}) to signal an error, and the wrapper raises
+\texttt{Scheme.E}.
+
+\paragraph{Advantages.}
+True JIT compilation.  Can compile hot functions discovered at
+runtime.  The system C compiler provides serious optimization
+(\texttt{-O2}).  Compiled and interpreted code interoperate
+seamlessly via \texttt{SchemeProcedure.T}.
+
+\paragraph{Disadvantages.}
+Compilation latency (invoking \texttt{cc} takes tens of
+milliseconds).  Requires a C compiler on the target system.
+Platform-specific shared library conventions.  Error reporting
+from compiled code is more complex.
+
+\subsection{Tiered Execution}
+
+Compilation latency suggests a tiered approach:
+
+\begin{enumerate}
+\item All closures start interpreted (as today).
+\item A call counter or profiling hook identifies hot closures.
+\item Hot closures are compiled in a background thread.
+\item Once compiled, the closure object is replaced with the
+  compiled version.
+\end{enumerate}
+
+The existing \texttt{SchemeClosure.T} could be extended with a
+call counter field, or a separate profiling primitive could be
+provided.
+
+%======================================================================
+\chapter{The Compilability Boundary}
+\label{ch:boundary}
+%======================================================================
+
+Not all Scheme constructs can be compiled to static code.  The
+binding optimization in \texttt{SchemeClosure.Init} already
+identifies the boundary through its bail-out conditions.
+A compiler extends these conditions into a full classification.
+
+\section{Easily Compilable Constructs}
+
+\begin{center}
+\begin{longtable}{lp{9cm}}
+\toprule
+\textbf{Construct} & \textbf{Compilation strategy} \\
+\midrule
+\endhead
+Self-evaluating literals &
+  Emit a reference into the constants array. \\
+\texttt{quote} &
+  Emit a reference to the quoted datum in the constants array. \\
+\texttt{if} &
+  Emit \texttt{IF \ldots\ THEN \ldots\ ELSE \ldots\ END}. \\
+\texttt{cond} &
+  Emit cascaded \texttt{IF}/\texttt{ELSIF}. \\
+\texttt{begin} &
+  Emit sequential statements. \\
+\texttt{lambda} &
+  Generate a new \texttt{CompiledProcedure} or
+  \texttt{SchemeClosure.T} (with the captured environment). \\
+\texttt{set!} on a known binding &
+  Emit \texttt{binding.setB(val)} or a direct array write. \\
+Variable reference (parameter) &
+  Emit \texttt{args[i]}. \\
+Variable reference (free, pre-resolved) &
+  Emit \texttt{freeVars[i].get()} or a direct quick-array read. \\
+Known primitive call &
+  Inline the primitive operation. \\
+Known closure call &
+  Direct procedure call, bypassing TYPECASE dispatch. \\
+Self-tail-call &
+  Emit \texttt{LOOP} with argument reassignment. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section{Compilable with Caveats}
+
+\begin{center}
+\begin{longtable}{lp{9cm}}
+\toprule
+\textbf{Construct} & \textbf{Difficulty} \\
+\midrule
+\endhead
+\texttt{define} in body &
+  Compilable as a local variable assignment, but subsequent
+  expressions cannot have their bindings pre-resolved (same
+  limitation as the current \texttt{DoBindings}).  The compiler
+  must fall back to interpreter-style lookup for later references
+  to the defined name. \\
+\texttt{unwind-protect} &
+  Compilable using Modula-3's \texttt{TRY}/\texttt{FINALLY}/\texttt{EXCEPT}
+  or C's \texttt{setjmp}/\texttt{longjmp} (less clean). \\
+\texttt{set!} on unknown binding &
+  Must fall back to \texttt{env.set()} method call. \\
+Calls to unknown functions &
+  Must use the full \texttt{SchemeProcedure.T.apply()} dispatch.
+  Still faster than the interpreter because the arguments are
+  already evaluated and the operator is already resolved. \\
+Closures capturing mutable variables &
+  Need a shared mutable cell.  The existing
+  \texttt{SchemeEnvironmentBinding.T} with \texttt{get()}/\texttt{setB()}
+  already provides this, but the direct quick-array optimization
+  is lost when variables are captured across closure boundaries. \\
+Variadic functions &
+  Need runtime list construction for the rest parameter. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section{Must Remain Interpreted}
+
+\begin{center}
+\begin{longtable}{lp{9cm}}
+\toprule
+\textbf{Construct} & \textbf{Reason} \\
+\midrule
+\endhead
+\texttt{eval} &
+  By definition requires the interpreter.  Can be compiled as a
+  call to \texttt{interp.eval()}, but the argument expression is
+  unknown at compile time. \\
+\texttt{current-environment} &
+  A compiled function uses native variables, not a
+  \texttt{SchemeEnvironment.Instance}.  Materializing an environment
+  on demand requires the \texttt{Adapter} callback from
+  \texttt{CompilerHooks.i3}---feasible but complex. \\
+Top-level \texttt{define} &
+  Adds bindings to the global environment at runtime.  The
+  \texttt{define} itself compiles as \texttt{env.define(sym, val)},
+  but the newly-defined name cannot be inlined by already-compiled
+  code. \\
+Reflective closure access &
+  Code that introspects closure internals (e.g.,
+  \texttt{get-proc-body}) expects the \texttt{params}/\texttt{body}
+  fields of \texttt{SchemeClosure.T}.  A compiled closure does not
+  have a meaningful \texttt{body} field. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\section{The Key Invariant}
+
+The binding optimization's bail-out conditions already identify the
+compilability boundary:
+
+\begin{itemize}
+\item If the operator is a special form $\Rightarrow$ compile the
+  corresponding control-flow pattern.
+\item If the operator is a known procedure $\Rightarrow$ compile a
+  direct call or inline.
+\item If the operator is a macro $\Rightarrow$ expand at compile time,
+  then compile the expansion.
+\item If the operator is unknown (not bound at closure-creation time)
+  $\Rightarrow$ fall back to runtime dispatch.
+\item If \texttt{define} appears $\Rightarrow$ stop optimizing
+  subsequent expressions (or fall back to runtime for new bindings).
+\end{itemize}
+
+The compiler need not handle every case.  Any expression it cannot
+compile can be delegated to the interpreter by emitting a call to
+\texttt{interp.eval(quoted\_expr, env)}.  This provides a graceful
+degradation path: the compiler handles what it can, and the
+interpreter handles the rest.
+
+%======================================================================
+\chapter{Runtime Support}
+\label{ch:runtime}
+%======================================================================
+
+\section{The \texttt{CompiledProcedure} Type}
+
+The central new type is a subtype of \texttt{SchemeProcedure.T}:
+
+\begin{lstlisting}[language=Modula3]
+TYPE CompiledProcedure = SchemeProcedure.T OBJECT
+    constants : REF ARRAY OF SchemeObject.T;
+    freeVars  : REF ARRAY OF SchemeEnvironmentBinding.T;
+  OVERRIDES
+    apply  := CompiledApply;
+    apply1 := CompiledApply1;
+    apply2 := CompiledApply2;
+  END;
+\end{lstlisting}
+
+For Strategy C (JIT), an additional \texttt{cFunc : ADDRESS} field
+holds the dynamically-loaded function pointer.
+
+The \texttt{constants} array holds all literal values referenced
+by the function body: numbers, strings, quoted data, and interned
+symbols.  These are allocated once and shared across all invocations.
+
+The \texttt{freeVars} array holds \texttt{SchemeEnvironmentBinding.T}
+objects for captured free variables.  These are the same binding
+objects that \texttt{DoBindings} already creates---the compiler
+simply stores them in an array rather than embedding them in the
+AST.
+
+\section{Interpreter Fallback}
+
+Any compiled procedure that encounters a construct it cannot handle
+natively falls back to the interpreter:
+
+\begin{lstlisting}[language=Modula3]
+(* In generated code: *)
+result := interp.eval(quotedExpr, env)
+\end{lstlisting}
+
+For Strategy C, the C code calls a helper:
+
+\begin{lstlisting}[language=C]
+result = MScm_Eval(interp, quoted_expr, env);
+\end{lstlisting}
+
+This requires materializing a \texttt{SchemeEnvironment.T} from the
+compiled frame.  The \texttt{Adapter} callback in
+\texttt{CompilerHooks.i3} was designed for this: it converts the flat
+frame array into a proper environment object that the interpreter
+can traverse.
+
+\section{Trampoline for Tail Calls}
+
+For Strategy A and Strategy C, a trampoline loop is needed to handle
+tail calls between compiled procedures without growing the stack:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Trampoline(proc : CompiledProcedure;
+                     args : REF ARRAY OF SchemeObject.T;
+                     interp : Scheme.T) : SchemeObject.T
+  RAISES { Scheme.E } =
+VAR result : LocalProcedureResult;
+BEGIN
+  result := proc.call(args);
+  WHILE result.tailProc # NIL DO
+    result := result.tailProc.call(result.tailArgs)
+  END;
+  RETURN result.result
+END Trampoline;
+\end{lstlisting}
+
+Self-tail-calls (the most common case) are optimized to a loop
+within the compiled function body itself, as shown in
+\texttt{CompiledStuff.m3}.
+
+\section{Exception Handling}
+
+Scheme exceptions (\texttt{Scheme.E}) are Modula-3 exceptions.
+In Strategies A and B, compiled code raises and catches them
+natively.  In Strategy C (C code), exceptions require a protocol:
+
+\begin{enumerate}
+\item Helper functions return a sentinel value (e.g., a specific
+  tagged pointer) to signal an exception.
+\item The C function checks the return value and returns the
+  sentinel to its caller.
+\item The Modula-3 wrapper in \texttt{CompiledApply} checks the
+  final result and raises \texttt{Scheme.E} if needed.
+\end{enumerate}
+
+Alternatively, \texttt{setjmp}/\texttt{longjmp} could be used for
+non-local exits from C code, but this interacts poorly with the
+Modula-3 exception model and is not recommended.
+
+%======================================================================
+\chapter{Recommended Approach}
+\label{ch:recommendation}
+%======================================================================
+
+We recommend a phased implementation:
+
+\paragraph{Phase 1: Strategy B (Ahead-of-Time).}
+Implement a Scheme-to-Modula-3 code generator, driven from Scheme
+(like \texttt{scodegen.scm}), that compiles known library functions
+and hot paths at build time.  This requires:
+
+\begin{itemize}
+\item A compiler pass extending \texttt{DoBindings} to emit M3 source
+  rather than transform the AST in place.
+\item A \texttt{CompiledProcedure} type in a new \texttt{mscheme-compiler}
+  package.
+\item Quake build templates (analogous to \texttt{SchemeStubs} in
+  \texttt{schemestubs.tmpl}) that invoke the compiler during the
+  build.
+\end{itemize}
+
+This phase delivers immediate performance benefits for numerical
+and list-processing code with no runtime complexity.
+
+\paragraph{Phase 2: Strategy C (JIT).}
+Add dynamic compilation for closures identified as hot at runtime.
+This requires:
+
+\begin{itemize}
+\item A Scheme-to-C emitter (reusing the Phase 1 analysis).
+\item A thin M3 helper library with \texttt{<*EXTERNAL*>} wrappers
+  for the primitives.
+\item Integration with \texttt{m3dl} for loading compiled code.
+\item A call-counting or profiling mechanism to identify hot closures.
+\item A compilation thread pool to avoid blocking the interpreter.
+\end{itemize}
+
+\paragraph{Phase 3: Optimization.}
+Once the basic compilation pipeline works:
+
+\begin{itemize}
+\item Type specialization for numeric code (avoid boxing when the
+  compiler can prove a variable is always a \texttt{LONGREAL}).
+\item Inlining of small known callees.
+\item Constant folding and dead-code elimination.
+\item Escape analysis to stack-allocate environments that do not
+  escape (extending the \texttt{assigned} flag mechanism).
+\end{itemize}
+
+%======================================================================
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+%======================================================================
+
+\begin{enumerate}
+\item The companion report: \emph{MScheme Internals: A Technical
+  Report on the Interpreter Implementation}, March 2026.  Describes
+  the binding optimization, evaluator loop, environment system, and
+  primitive dispatch in full detail.
+
+\item Peter Norvig, ``JScheme: Scheme in Java,''
+  \url{https://norvig.com/jscheme.html}, 1998.
+  The origin of the MScheme design.
+
+\item Marc Feeley and Guy Lapalme, ``Using Closures for Code
+  Generation,'' \emph{Computer Languages}, 12(1):47--66, 1987.
+  Describes the technique of compiling Scheme to closures, which is
+  closely related to the approach proposed here.
+
+\item R.\ Kent Dybvig, \emph{Three Implementation Models for Scheme},
+  PhD thesis, University of North Carolina at Chapel Hill, 1987.
+  Describes heap-based, stack-based, and string-based implementation
+  models for Scheme, including closure conversion and environment
+  representation strategies relevant to this design.
+
+\item Greg Nelson (ed.), \emph{Systems Programming with Modula-3},
+  Prentice Hall, 1991.
+
+\item Samuel P.\ Harbison, \emph{Modula-3}, Prentice Hall, 1992.
+\end{enumerate}
+
+\end{document}

@@ -27,7 +27,7 @@ PRIMS=prims.tex
 .dvi.ps: 
 	$(DVIPS) -tletter $*.dvi 
 
-all: pdfs mscheme-user-manual.pdf mscheme-internals.pdf
+all: pdfs mscheme-user-manual.pdf mscheme-internals.pdf mscheme-compiler-design.pdf
 
 pdfs: run.done $(TARGETS)
 
@@ -53,10 +53,15 @@ mscheme-internals.pdf: mscheme-internals.tex
 	pdflatex -interaction=nonstopmode mscheme-internals.tex
 	pdflatex -interaction=nonstopmode mscheme-internals.tex
 
+mscheme-compiler-design.pdf: mscheme-compiler-design.tex
+	pdflatex -interaction=nonstopmode mscheme-compiler-design.tex
+	pdflatex -interaction=nonstopmode mscheme-compiler-design.tex
+
 clean::
 	rm -f $(MAIN).ps $(TARGETS) *.log *.aux *~ *.dvi *.toc $(GENFIGURES) *.lot *.lof
 	rm -f mscheme-user-manual.pdf mscheme-user-manual.out
 	rm -f mscheme-internals.pdf mscheme-internals.out
+	rm -f mscheme-compiler-design.pdf mscheme-compiler-design.out
 	rm -rf $(DERIVED)
 	rm -f src/prims.tex
 	rm -f *.done
