@@ -369,18 +369,47 @@
       (caddr (cddddr (cddddr ctx)))
       #f))
 
+;;;
+;;; Procedure-level declaration accumulator.
+;;; All temps and vars are collected here during code generation,
+;;; then emitted as a single VAR block at procedure top level.
+;;; This avoids deeply nested VAR BEGIN...END blocks that overflow
+;;; CM3's Scope.NameToPrefix stack.
+;;;
+
+(define *proc-decls* '())  ;; list of (name . type) pairs
+
+(define (emit-decl name . opt-type)
+  (let ((type (if (null? opt-type) "SchemeObject.T" (car opt-type))))
+    (set! *proc-decls* (cons (cons name type) *proc-decls*))))
+
+(define (gen-with-decls thunk)
+  ;; Save *proc-decls*, run thunk (which accumulates decls via fresh-temp/
+  ;; fresh-var), restore.  Returns (decls-list . body-code-string).
+  (let ((saved *proc-decls*))
+    (set! *proc-decls* '())
+    (let ((body-code (thunk)))
+      (let ((decls (reverse *proc-decls*)))
+        (set! *proc-decls* saved)
+        (cons decls body-code)))))
+
 (define (fresh-temp ctx)
   (let* ((counter-cell (ctx-temp-counter ctx))
          (n (car counter-cell)))
     (set-car! counter-cell (+ n 1))
-    (string-append "t_" (number->string n))))
+    (let ((name (string-append "t_" (number->string n))))
+      (emit-decl name)
+      name)))
 
-(define (fresh-var ctx)
-  ;; Generate a fresh name for a let/let*-bound variable
+(define (fresh-var ctx . opt-type)
+  ;; Generate a fresh name for a let/let*-bound variable.
+  ;; Optional type argument (default "SchemeObject.T") for BOOLEAN loop flags.
   (let* ((counter-cell (ctx-var-counter ctx))
          (n (car counter-cell)))
     (set-car! counter-cell (+ n 1))
-    (string-append "v_" (number->string n))))
+    (let ((name (string-append "v_" (number->string n))))
+      (apply emit-decl name opt-type)
+      name)))
 
 (define (make-extended-ctx ctx new-param-map)
   ;; Create a new context with an updated param-map (for let/let* bindings).
@@ -561,20 +590,18 @@
          (indent depth) (L "END;"))
         (let ((tmp (fresh-temp ctx)))
           (string-append
-           (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-           (gen-expr test tmp ctx (+ depth 1))
-           (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
-           (gen-expr con target ctx (+ depth 2))
+           (gen-expr test tmp ctx depth)
+           (indent depth) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
+           (gen-expr con target ctx (+ depth 1))
            (if (not (eq? alt '*no-alt*))
                (string-append
-                (indent (+ depth 1)) (L "ELSE")
-                (gen-expr alt target ctx (+ depth 2)))
+                (indent depth) (L "ELSE")
+                (gen-expr alt target ctx (+ depth 1)))
                (if target
                    (string-append
-                    (indent (+ depth 1)) (L "ELSE")
-                    (emit-assign target "NIL" (+ depth 2)))
+                    (indent depth) (L "ELSE")
+                    (emit-assign target "NIL" (+ depth 1)))
                    ""))
-           (indent (+ depth 1)) (L "END")
            (indent depth) (L "END;"))))))
 
 ;;;
@@ -592,14 +619,12 @@
                      depth)
         (let ((proc-tmp (fresh-temp ctx)))
           (string-append
-           (indent depth) (L "VAR " proc-tmp " : SchemeObject.T; BEGIN")
-           (gen-expr proc-expr proc-tmp ctx (+ depth 1))
+           (gen-expr proc-expr proc-tmp ctx depth)
            (emit-assign target
                         (string-append "NARROW(" proc-tmp
                                        ", SchemeProcedure.T).apply1(interp, "
                                        test-tmp ")")
-                        (+ depth 1))
-           (indent depth) (L "END;"))))))
+                        depth))))))
 
 (define (gen-cond-rest rest target ctx depth)
   ;; Generate ELSE + rest clauses or ELSE NIL, shared by normal and arrow clauses
@@ -627,12 +652,10 @@
          ((and (pair? (cdr clause)) (eq? (cadr clause) '=>))
           (let ((test-tmp (fresh-temp ctx)))
             (string-append
-             (indent depth) (L "VAR " test-tmp " : SchemeObject.T; BEGIN")
-             (gen-expr (car clause) test-tmp ctx (+ depth 1))
-             (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" test-tmp ") THEN")
-             (gen-cond-arrow-call (caddr clause) test-tmp target ctx (+ depth 2))
-             (gen-cond-rest rest target ctx (+ depth 1))
-             (indent depth) (L "END;"))))
+             (gen-expr (car clause) test-tmp ctx depth)
+             (indent depth) (L "IF SchemeBoolean.TruthO(" test-tmp ") THEN")
+             (gen-cond-arrow-call (caddr clause) test-tmp target ctx (+ depth 1))
+             (gen-cond-rest rest target ctx depth))))
          (else
           (let ((test-val (gen-value (car clause) ctx depth)))
               (if test-val
@@ -652,22 +675,20 @@
                         (indent depth) (L "END;"))))
                   (let ((tmp (fresh-temp ctx)))
                     (string-append
-                     (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-                     (gen-expr (car clause) tmp ctx (+ depth 1))
-                     (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
-                     (gen-begin (cdr clause) target ctx (+ depth 2))
+                     (gen-expr (car clause) tmp ctx depth)
+                     (indent depth) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
+                     (gen-begin (cdr clause) target ctx (+ depth 1))
                      (if (null? rest)
                          (if target
                              (string-append
-                              (indent (+ depth 1)) (L "ELSE")
-                              (emit-assign target "NIL" (+ depth 2))
-                              (indent (+ depth 1)) (L "END"))
-                             (string-append (indent (+ depth 1)) (L "END")))
+                              (indent depth) (L "ELSE")
+                              (emit-assign target "NIL" (+ depth 1))
+                              (indent depth) (L "END;"))
+                             (string-append (indent depth) (L "END;")))
                          (string-append
-                          (indent (+ depth 1)) (L "ELSE")
-                          (gen-cond rest target ctx (+ depth 2))
-                          (indent (+ depth 1)) (L "END")))
-                     (indent depth) (L "END;"))))))))))
+                          (indent depth) (L "ELSE")
+                          (gen-cond rest target ctx (+ depth 1))
+                          (indent depth) (L "END;"))))))))))))
 
 ;;;
 ;;; ==================== Begin ====================
@@ -685,10 +706,8 @@
           (else
            (let ((discard (fresh-temp ctx)))
              (string-append
-              (indent depth) (L "VAR " discard " : SchemeObject.T; BEGIN")
-              (gen-expr (car exprs) discard ctx (+ depth 1))
-              (gen-begin (cdr exprs) target ctx (+ depth 1))
-              (indent depth) (L "END;"))))))))
+              (gen-expr (car exprs) discard ctx depth)
+              (gen-begin (cdr exprs) target ctx depth))))))))
 
 ;;;
 ;;; ==================== Let ====================
@@ -703,28 +722,16 @@
                     (append new-entries (ctx-param-map ctx)))))
     (string-append
      ;; Evaluate init expressions into temps (outer scope, no shadowing)
-     (indent depth) (L "VAR")
-     (apply string-append
-            (map (lambda (tmp)
-                   (string-append (indent (+ depth 1))
-                                  (L tmp " : SchemeObject.T;")))
-                 temps))
-     (indent depth) (L "BEGIN")
      (apply string-append
             (map (lambda (b tmp)
-                   (gen-expr (cadr b) tmp ctx (+ depth 1)))
+                   (gen-expr (cadr b) tmp ctx depth))
                  bindings temps))
-     ;; Declare let-bound variables in nested scope, init from temps
-     (indent (+ depth 1)) (L "VAR")
+     ;; Assign temps to let-bound variables
      (apply string-append
             (map (lambda (m3n tmp)
-                   (string-append (indent (+ depth 2))
-                                  (L m3n " : SchemeObject.T := " tmp ";")))
+                   (string-append (indent depth) (L m3n " := " tmp ";")))
                  bvar-m3names temps))
-     (indent (+ depth 1)) (L "BEGIN")
-     (gen-begin body target new-ctx (+ depth 2))
-     (indent (+ depth 1)) (L "END;")
-     (indent depth) (L "END;"))))
+     (gen-begin body target new-ctx depth))))
 
 ;;;
 ;;; ==================== Named Let ====================
@@ -760,47 +767,32 @@
   (let* ((bvars (map car bindings))
          (temps (map (lambda (b) (fresh-temp ctx)) bindings))
          (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
-         (loop-flag (if target (fresh-var ctx) #f))
+         (loop-flag (if target (fresh-var ctx "BOOLEAN") #f))
          (loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names loop-flag)))
     (string-append
      ;; Evaluate init expressions in outer scope
-     (indent depth) (L "VAR")
-     (apply string-append
-            (map (lambda (tmp)
-                   (string-append (indent (+ depth 1))
-                                  (L tmp " : SchemeObject.T;")))
-                 temps))
-     (indent depth) (L "BEGIN")
      (apply string-append
             (map (lambda (b tmp)
-                   (gen-expr (cadr b) tmp ctx (+ depth 1)))
+                   (gen-expr (cadr b) tmp ctx depth))
                  bindings temps))
-     ;; Declare loop variables in nested scope, init from temps
-     (indent (+ depth 1)) (L "VAR")
+     ;; Assign temps to loop variables
      (apply string-append
             (map (lambda (m3n tmp)
-                   (string-append (indent (+ depth 2))
-                                  (L m3n " : SchemeObject.T := " tmp ";")))
+                   (string-append (indent depth) (L m3n " := " tmp ";")))
                  bvar-m3names temps))
-     (if loop-flag
-         (string-append (indent (+ depth 2))
-                        (L loop-flag " : BOOLEAN := TRUE;"))
-         "")
-     (indent (+ depth 1)) (L "BEGIN")
      (if loop-flag
          ;; Non-tail: WHILE loop with boolean flag
          (string-append
-          (indent (+ depth 2)) (L "WHILE " loop-flag " DO")
-          (indent (+ depth 3)) (L loop-flag " := FALSE;")
-          (gen-begin body target loop-ctx (+ depth 3))
-          (indent (+ depth 2)) (L "END;"))
+          (indent depth) (L loop-flag " := TRUE;")
+          (indent depth) (L "WHILE " loop-flag " DO")
+          (indent (+ depth 1)) (L loop-flag " := FALSE;")
+          (gen-begin body target loop-ctx (+ depth 1))
+          (indent depth) (L "END;"))
          ;; Tail: infinite LOOP (exits via RETURN)
          (string-append
-          (indent (+ depth 2)) (L "LOOP")
-          (gen-begin body target loop-ctx (+ depth 3))
-          (indent (+ depth 2)) (L "END")))
-     (indent (+ depth 1)) (L "END;")
-     (indent depth) (L "END;"))))
+          (indent depth) (L "LOOP")
+          (gen-begin body target loop-ctx (+ depth 1))
+          (indent depth) (L "END;"))))))
 
 ;;;
 ;;; ==================== Let* ====================
@@ -816,15 +808,11 @@
              (new-ctx (make-extended-ctx ctx
                         (cons (cons bvar bvar-m3name) (ctx-param-map ctx)))))
         (string-append
-         ;; Evaluate init in outer scope (into temp)
-         (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-         (gen-expr (cadr b) tmp ctx (+ depth 1))
-         ;; Declare let*-bound variable in nested scope, init from temp
-         (indent (+ depth 1)) (L "VAR " bvar-m3name
-                                  " : SchemeObject.T := " tmp "; BEGIN")
-         (gen-let* (cdr bindings) body target new-ctx (+ depth 2))
-         (indent (+ depth 1)) (L "END;")
-         (indent depth) (L "END;")))))
+         ;; Evaluate init into temp
+         (gen-expr (cadr b) tmp ctx depth)
+         ;; Assign temp to let*-bound variable
+         (indent depth) (L bvar-m3name " := " tmp ";")
+         (gen-let* (cdr bindings) body target new-ctx depth)))))
 
 ;;;
 ;;; ==================== Letrec ====================
@@ -840,21 +828,18 @@
          (new-ctx (make-extended-ctx ctx
                     (append new-entries (ctx-param-map ctx)))))
     (string-append
-     (indent depth) (L "VAR")
+     ;; Initialize letrec vars to NIL
      (apply string-append
             (map (lambda (m3n)
-                   (string-append (indent (+ depth 1))
-                                  (L m3n " : SchemeObject.T := NIL;")))
+                   (string-append (indent depth) (L m3n " := NIL;")))
                  bvar-m3names))
-     (indent depth) (L "BEGIN")
      ;; Assign init values (all vars in scope via new-ctx)
      (apply string-append
             (map (lambda (b m3n)
-                   (gen-expr (cadr b) m3n new-ctx (+ depth 1)))
+                   (gen-expr (cadr b) m3n new-ctx depth))
                  bindings bvar-m3names))
      ;; Evaluate body
-     (gen-begin body target new-ctx (+ depth 1))
-     (indent depth) (L "END;"))))
+     (gen-begin body target new-ctx depth))))
 
 ;;;
 ;;; ==================== Case ====================
@@ -902,15 +887,12 @@
     (if key-val
         (let ((key-tmp (fresh-temp ctx)))
           (string-append
-           (indent depth) (L "VAR " key-tmp " : SchemeObject.T := " key-val "; BEGIN")
-           (gen-case-clauses clauses key-tmp target ctx (+ depth 1))
-           (indent depth) (L "END;")))
+           (indent depth) (L key-tmp " := " key-val ";")
+           (gen-case-clauses clauses key-tmp target ctx depth)))
         (let ((key-tmp (fresh-temp ctx)))
           (string-append
-           (indent depth) (L "VAR " key-tmp " : SchemeObject.T; BEGIN")
-           (gen-expr key-expr key-tmp ctx (+ depth 1))
-           (gen-case-clauses clauses key-tmp target ctx (+ depth 1))
-           (indent depth) (L "END;"))))))
+           (gen-expr key-expr key-tmp ctx depth)
+           (gen-case-clauses clauses key-tmp target ctx depth))))))
 
 ;;;
 ;;; ==================== Do ====================
@@ -929,55 +911,43 @@
          (stepped (filter (lambda (spec) (pair? (cddr spec))) var-specs)))
     (string-append
      ;; Evaluate inits in outer scope
-     (indent depth) (L "VAR")
-     (apply string-append
-            (map (lambda (m3n) (string-append
-                                (indent (+ depth 1))
-                                (L m3n " : SchemeObject.T;")))
-                 var-m3names))
-     (indent depth) (L "BEGIN")
      (apply string-append
             (map (lambda (spec m3n)
-                   (gen-expr (cadr spec) m3n ctx (+ depth 1)))
+                   (gen-expr (cadr spec) m3n ctx depth))
                  var-specs var-m3names))
      ;; LOOP
-     (indent (+ depth 1)) (L "LOOP")
+     (indent depth) (L "LOOP")
      ;; Test condition
-     (let ((test-val (gen-value test-expr new-ctx (+ depth 2))))
+     (let ((test-val (gen-value test-expr new-ctx (+ depth 1))))
        (if test-val
            (string-append
-            (indent (+ depth 2)) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
+            (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
             ;; Exit expressions (last one is the result)
             (if (null? exit-exprs)
                 (string-append
-                 (emit-assign target "NIL" (+ depth 3))
-                 (indent (+ depth 3)) (L "EXIT;"))
+                 (emit-assign target "NIL" (+ depth 2))
+                 (indent (+ depth 2)) (L "EXIT;"))
                 (string-append
-                 (gen-begin exit-exprs target new-ctx (+ depth 3))
-                 (indent (+ depth 3)) (L "EXIT;")))
-            (indent (+ depth 2)) (L "END;"))
+                 (gen-begin exit-exprs target new-ctx (+ depth 2))
+                 (indent (+ depth 2)) (L "EXIT;")))
+            (indent (+ depth 1)) (L "END;"))
            (let ((test-tmp (fresh-temp new-ctx)))
              (string-append
-              (indent (+ depth 2)) (L "VAR " test-tmp " : SchemeObject.T; BEGIN")
-              (gen-expr test-expr test-tmp new-ctx (+ depth 3))
-              (indent (+ depth 3)) (L "IF SchemeBoolean.TruthO(" test-tmp ") THEN")
+              (gen-expr test-expr test-tmp new-ctx (+ depth 1))
+              (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" test-tmp ") THEN")
               (if (null? exit-exprs)
                   (string-append
-                   (emit-assign target "NIL" (+ depth 4))
-                   (indent (+ depth 4)) (L "EXIT;"))
+                   (emit-assign target "NIL" (+ depth 2))
+                   (indent (+ depth 2)) (L "EXIT;"))
                   (string-append
-                   (gen-begin exit-exprs target new-ctx (+ depth 4))
-                   (indent (+ depth 4)) (L "EXIT;")))
-              (indent (+ depth 3)) (L "END")
-              (indent (+ depth 2)) (L "END;")))))
+                   (gen-begin exit-exprs target new-ctx (+ depth 2))
+                   (indent (+ depth 2)) (L "EXIT;")))
+              (indent (+ depth 1)) (L "END;")))))
      ;; Body (side effects, result discarded)
      (if (null? body)
          ""
          (let ((discard (fresh-temp new-ctx)))
-           (string-append
-            (indent (+ depth 2)) (L "VAR " discard " : SchemeObject.T; BEGIN")
-            (gen-begin body discard new-ctx (+ depth 3))
-            (indent (+ depth 2)) (L "END;"))))
+           (gen-begin body discard new-ctx (+ depth 1))))
      ;; Step assignments (parallel: evaluate all steps, then assign)
      (if (null? stepped)
          ""
@@ -986,24 +956,15 @@
                                      (cdr (assq (car s) new-entries)))
                                    stepped)))
            (string-append
-            (indent (+ depth 2)) (L "VAR")
-            (apply string-append
-                   (map (lambda (tmp) (string-append
-                                       (indent (+ depth 3))
-                                       (L tmp " : SchemeObject.T;")))
-                        step-temps))
-            (indent (+ depth 2)) (L "BEGIN")
             (apply string-append
                    (map (lambda (spec tmp)
-                          (gen-expr (caddr spec) tmp new-ctx (+ depth 3)))
+                          (gen-expr (caddr spec) tmp new-ctx (+ depth 1)))
                         stepped step-temps))
             (apply string-append
                    (map (lambda (m3n tmp)
                           (string-append
-                           (indent (+ depth 3)) (L m3n " := " tmp ";")))
-                        step-m3names step-temps))
-            (indent (+ depth 2)) (L "END;"))))
-     (indent (+ depth 1)) (L "END")
+                           (indent (+ depth 1)) (L m3n " := " tmp ";")))
+                        step-m3names step-temps)))))
      (indent depth) (L "END;"))))
 
 ;;;
@@ -1017,13 +978,11 @@
     (else
      (let ((tmp (fresh-temp ctx)))
        (string-append
-        (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-        (gen-expr (car exprs) tmp ctx (+ depth 1))
-        (indent (+ depth 1)) (L "IF NOT SchemeBoolean.TruthO(" tmp ") THEN")
-        (emit-assign target tmp (+ depth 2))
-        (indent (+ depth 1)) (L "ELSE")
-        (gen-and (cdr exprs) target ctx (+ depth 2))
-        (indent (+ depth 1)) (L "END")
+        (gen-expr (car exprs) tmp ctx depth)
+        (indent depth) (L "IF NOT SchemeBoolean.TruthO(" tmp ") THEN")
+        (emit-assign target tmp (+ depth 1))
+        (indent depth) (L "ELSE")
+        (gen-and (cdr exprs) target ctx (+ depth 1))
         (indent depth) (L "END;"))))))
 
 (define (gen-or exprs target ctx depth)
@@ -1033,13 +992,11 @@
     (else
      (let ((tmp (fresh-temp ctx)))
        (string-append
-        (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-        (gen-expr (car exprs) tmp ctx (+ depth 1))
-        (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
-        (emit-assign target tmp (+ depth 2))
-        (indent (+ depth 1)) (L "ELSE")
-        (gen-or (cdr exprs) target ctx (+ depth 2))
-        (indent (+ depth 1)) (L "END")
+        (gen-expr (car exprs) tmp ctx depth)
+        (indent depth) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
+        (emit-assign target tmp (+ depth 1))
+        (indent depth) (L "ELSE")
+        (gen-or (cdr exprs) target ctx (+ depth 1))
         (indent depth) (L "END;"))))))
 
 ;;;
@@ -1055,13 +1012,11 @@
                      depth)
         (let ((tmp (fresh-temp ctx)))
           (string-append
-           (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-           (gen-expr expr tmp ctx (+ depth 1))
+           (gen-expr expr tmp ctx depth)
            (emit-assign target
                         (string-append "SchemeBoolean.Truth(NOT SchemeBoolean.TruthO("
                                        tmp "))")
-                        (+ depth 1))
-           (indent depth) (L "END;"))))))
+                        depth))))))
 
 ;;;
 ;;; ==================== Set! ====================
@@ -1080,14 +1035,12 @@
          (if target (emit-assign target "NIL" depth) ""))
         (let ((tmp (fresh-temp ctx)))
           (string-append
-           (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
-           (gen-expr val tmp ctx (+ depth 1))
+           (gen-expr val tmp ctx depth)
            (if param-entry
-               (string-append (indent (+ depth 1)) (L (cdr param-entry) " := " tmp ";"))
-               (string-append (indent (+ depth 1))
+               (string-append (indent depth) (L (cdr param-entry) " := " tmp ";"))
+               (string-append (indent depth)
                               (L "self." (cdr fv-entry) ".setB(" tmp ");")))
-           (if target (emit-assign target "NIL" (+ depth 1)) "")
-           (indent depth) (L "END;"))))))
+           (if target (emit-assign target "NIL" depth) ""))))))
 
 ;;;
 ;;; ==================== Procedure Call ====================
@@ -1114,25 +1067,23 @@
                  "NARROW(" fn-temp ", SchemeProcedure.T).apply(interp, "
                  (gen-make-list arg-temps) ")")))))
         (string-append
-         (indent depth) (L "VAR")
-         (indent (+ depth 1)) (L fn-temp " : SchemeObject.T"
-                                 (if fn-val (string-append " := " fn-val) "")
-                                 ";")
+         ;; Initialize fn and arg temps (values known at this point)
+         (if fn-val
+             (string-append (indent depth) (L fn-temp " := " fn-val ";"))
+             "")
          (apply string-append
                 (map (lambda (tmp val)
-                       (string-append
-                        (indent (+ depth 1)) (L tmp " : SchemeObject.T"
-                                                (if val (string-append " := " val) "")
-                                                ";")))
+                       (if val
+                           (string-append (indent depth) (L tmp " := " val ";"))
+                           ""))
                      arg-temps arg-vals))
-         (indent depth) (L "BEGIN")
-         (if fn-val "" (gen-expr fn fn-temp ctx (+ depth 1)))
+         ;; Evaluate non-value fn and args
+         (if fn-val "" (gen-expr fn fn-temp ctx depth))
          (apply string-append
                 (map (lambda (arg tmp val)
-                       (if val "" (gen-expr arg tmp ctx (+ depth 1))))
+                       (if val "" (gen-expr arg tmp ctx depth)))
                      args arg-temps arg-vals))
-         (emit-assign target call-expr (+ depth 1))
-         (indent depth) (L "END;"))))))
+         (emit-assign target call-expr depth))))))
 
 (define (gen-make-list temps)
   (if (null? temps)
@@ -1157,33 +1108,22 @@
                            (cons (string-append "a_" (number->string i)) acc))))))
          (all-temps (map (lambda (p) (fresh-temp ctx)) params)))
     (string-append
-     (indent depth) (L "VAR")
-     (apply string-append
-            (map (lambda (tmp)
-                   (string-append (indent (+ depth 1))
-                                  (L tmp " : SchemeObject.T;")))
-                 all-temps))
-     (indent depth) (L "BEGIN")
      (apply string-append
             (map (lambda (arg tmp)
                    (let ((val (gen-value arg ctx depth)))
                      (if val
-                         (string-append
-                          (indent (+ depth 1)) (L tmp " := " val ";"))
-                         (gen-expr arg tmp ctx (+ depth 1)))))
+                         (string-append (indent depth) (L tmp " := " val ";"))
+                         (gen-expr arg tmp ctx depth))))
                  args all-temps))
      (apply string-append
             (map (lambda (m3n tmp)
-                   (string-append
-                    (indent (+ depth 1))
-                    (L m3n " := " tmp ";")))
+                   (string-append (indent depth) (L m3n " := " tmp ";")))
                  param-m3names all-temps))
      ;; For non-tail named let: set loop flag to continue WHILE
      (let ((flag (ctx-loop-flag ctx)))
        (if flag
-           (string-append (indent (+ depth 1)) (L flag " := TRUE;"))
-           ""))
-     (indent depth) (L "END;"))))
+           (string-append (indent depth) (L flag " := TRUE;"))
+           "")))))
 
 ;;;
 ;;; ==================== Compile a Single Define ====================
@@ -1284,29 +1224,42 @@
                              params)))
     ;; For rest-param functions, Apply_ has the body; no ApplyN needed
     (if rest-param ""
-    (string-append
-     (L "PROCEDURE Apply" (number->string nparams) "_" m3name
-        "(self : Compiled_" m3name ";")
-     (L "    interp : Scheme.T")
-     (apply string-append
-            (map (lambda (m3n)
-                   (L "    ; " m3n " : SchemeObject.T"))
-                 param-m3names))
-     (L "    ) : SchemeObject.T")
-     (L "  RAISES { Scheme.E } =")
-     (if self-tail
-         (string-append
-          (L "  BEGIN")
-          (L "    LOOP")
-          (gen-expr body #f ctx 3)
-          (L "    END")
-          (L "  END Apply" (number->string nparams) "_" m3name ";")
-          NL)
-         (string-append
-          (L "  BEGIN")
-          (gen-expr body #f ctx 2)
-          (L "  END Apply" (number->string nparams) "_" m3name ";")
-          NL))))))
+    (let* ((result (gen-with-decls
+                    (lambda ()
+                      (gen-expr body #f ctx (if self-tail 3 2)))))
+           (decls (car result))
+           (body-code (cdr result)))
+      (string-append
+       (L "PROCEDURE Apply" (number->string nparams) "_" m3name
+          "(self : Compiled_" m3name ";")
+       (L "    interp : Scheme.T")
+       (apply string-append
+              (map (lambda (m3n)
+                     (L "    ; " m3n " : SchemeObject.T"))
+                   param-m3names))
+       (L "    ) : SchemeObject.T")
+       (L "  RAISES { Scheme.E } =")
+       (if (null? decls)
+           ""
+           (string-append
+            (L "  VAR")
+            (apply string-append
+                   (map (lambda (d)
+                          (L "    " (car d) " : " (cdr d) ";"))
+                        decls))))
+       (if self-tail
+           (string-append
+            (L "  BEGIN")
+            (L "    LOOP")
+            body-code
+            (L "    END")
+            (L "  END Apply" (number->string nparams) "_" m3name ";")
+            NL)
+           (string-append
+            (L "  BEGIN")
+            body-code
+            (L "  END Apply" (number->string nparams) "_" m3name ";")
+            NL)))))))
 
 (define (gen-apply1-proc proc)
   (let* ((m3name (cdr (assq 'm3name proc)))
@@ -1361,7 +1314,11 @@
      (L "  RAISES { Scheme.E } =")
      (if rest-param
          ;; Rest-param function: Apply_ is the primary method with body
-         (let ((body (cdr (assq 'body proc))))
+         (let* ((body (cdr (assq 'body proc)))
+                (result (gen-with-decls
+                         (lambda () (gen-expr body #f ctx 2))))
+                (decls (car result))
+                (body-code (cdr result)))
            (string-append
             (L "  VAR")
             (L "    rest := args;")
@@ -1370,6 +1327,11 @@
                           (L "    " m3n " : SchemeObject.T;"))
                         param-m3names))
             (L "    " rest-m3name " : SchemeObject.T;")
+            ;; Hoisted body declarations
+            (apply string-append
+                   (map (lambda (d)
+                          (L "    " (car d) " : " (cdr d) ";"))
+                        decls))
             (L "  BEGIN")
             ;; Extract fixed params
             (apply string-append
@@ -1380,7 +1342,7 @@
                         param-m3names))
             ;; Rest param gets remaining args
             (L "    " rest-m3name " := rest;")
-            (gen-expr body #f ctx 2)
+            body-code
             (L "  END Apply_" m3name ";")
             NL))
          ;; Normal function: Apply_ delegates to ApplyN

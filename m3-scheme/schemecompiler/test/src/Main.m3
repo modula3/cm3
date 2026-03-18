@@ -494,6 +494,8 @@ BEGIN
       T(scm, "(lambda-let-bound 0)", "30");
       T(scm, "(internal-define-simple 5)", "15");
       T(scm, "(internal-define-simple 0)", "10");
+      T(scm, "(lambda-map-sum 0)", "0");
+      T(scm, "(lambda-map-sum 3)", "9");
 
       (* ======== Redefinition Semantics ======== *)
       Section("Redefinition Semantics");
@@ -542,6 +544,7 @@ BEGIN
       VAR t0 : Time.T;
           cFib25, iFib25, cFib30, iFib30 : LONGREAL;
           cLoop, iLoop, cAck, iAck : LONGREAL;
+          cLam, hLam, iLam : LONGREAL;
       BEGIN
         (* -- Benchmark compiled procedures (already installed) -- *)
         Wr.PutText(Stdio.stdout, "Timing compiled...\n");
@@ -563,7 +566,20 @@ BEGIN
         EVAL scm.loadEvalText("(ackermann 3 4)");
         cAck := (Time.Now() - t0) * 1.0D3;
 
-        (* -- Redefine as interpreted -- *)
+        t0 := Time.Now();
+        EVAL scm.loadEvalText("(lambda-map-sum 10000)");
+        cLam := (Time.Now() - t0) * 1.0D3;
+
+        (* -- Half-compiled: lambda-map-sum interpreted, my-map still compiled -- *)
+        Wr.PutText(Stdio.stdout, "Timing half-compiled (pre-lambda scenario)...\n");
+        Wr.Flush(Stdio.stdout);
+        EVAL scm.loadEvalText(
+          "(define (lambda-map-sum n) (let loop ((i n) (acc 0)) (if (= i 0) acc (loop (- i 1) (+ acc (car (my-map (lambda (x) (+ x i)) '(1))))))))");
+        t0 := Time.Now();
+        EVAL scm.loadEvalText("(lambda-map-sum 10000)");
+        hLam := (Time.Now() - t0) * 1.0D3;
+
+        (* -- Redefine all as interpreted -- *)
         Wr.PutText(Stdio.stdout, "Redefining as interpreted...\n");
         Wr.Flush(Stdio.stdout);
 
@@ -573,6 +589,8 @@ BEGIN
           "(define (loop-sum n acc) (if (= n 0) acc (loop-sum (- n 1) (+ acc n))))");
         EVAL scm.loadEvalText(
           "(define (ackermann m n) (cond ((= m 0) (+ n 1)) ((= n 0) (ackermann (- m 1) 1)) (else (ackermann (- m 1) (ackermann m (- n 1))))))");
+        EVAL scm.loadEvalText(
+          "(define (my-map f lst) (if (null? lst) '() (cons (f (car lst)) (my-map f (cdr lst)))))");
 
         (* -- Benchmark interpreted procedures -- *)
         Wr.PutText(Stdio.stdout, "Timing interpreted...\n");
@@ -594,6 +612,10 @@ BEGIN
         EVAL scm.loadEvalText("(ackermann 3 4)");
         iAck := (Time.Now() - t0) * 1.0D3;
 
+        t0 := Time.Now();
+        EVAL scm.loadEvalText("(lambda-map-sum 10000)");
+        iLam := (Time.Now() - t0) * 1.0D3;
+
         (* -- Results -- *)
         Wr.PutText(Stdio.stdout, "\n");
         Wr.PutText(Stdio.stdout,
@@ -607,6 +629,17 @@ BEGIN
         PrintRow("(fibonacci 30)", cFib30, iFib30);
         PrintRow("(loop-sum 10000 0)", cLoop, iLoop);
         PrintRow("(ackermann 3 4)", cAck, iAck);
+        PrintRow("(lambda-map-sum 10000)", cLam, iLam);
+        Wr.PutText(Stdio.stdout, "\n");
+        Wr.PutText(Stdio.stdout,
+          "Lambda breakdown (lambda-map-sum 10000):\n");
+        Wr.PutText(Stdio.stdout,
+          "  Fully compiled:   " & Fmt.LongReal(cLam, Fmt.Style.Fix, 2) & " ms\n");
+        Wr.PutText(Stdio.stdout,
+          "  Half (pre-lambda): " & Fmt.LongReal(hLam, Fmt.Style.Fix, 2) & " ms\n");
+        Wr.PutText(Stdio.stdout,
+          "  Fully interpreted: " & Fmt.LongReal(iLam, Fmt.Style.Fix, 2) & " ms\n");
+        Wr.Flush(Stdio.stdout);
       END
     END
   EXCEPT Scheme.E(err) =>

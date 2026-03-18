@@ -802,3 +802,11 @@
 (define (internal-define-simple x)
   (define (helper y) (+ x y))
   (helper 10))
+
+;; Lambda-heavy benchmark: map-sum applies a lambda over a list and sums
+(define (lambda-map-sum n)
+  (let loop ((i n) (acc 0))
+    (if (= i 0)
+        acc
+        (loop (- i 1)
+              (+ acc (car (my-map (lambda (x) (+ x i)) '(1))))))))

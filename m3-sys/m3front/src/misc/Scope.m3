@@ -404,7 +404,7 @@ PROCEDURE NameToPrefix (v: Value.T;
       END;
       INC (count);
 
-      p.top := count; 
+      p.top := count;
       DEC (count);
       p.stk [count] := v.name;
       t := v.scope;
