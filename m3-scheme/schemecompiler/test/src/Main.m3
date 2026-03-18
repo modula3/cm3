@@ -474,6 +474,41 @@ BEGIN
       T(scm, "(named-let-nontail 10)", "55");
       T(scm, "(named-let-nontail 100)", "5050");
 
+      (* ======== Redefinition Semantics ======== *)
+      Section("Redefinition Semantics");
+
+      (* Baseline: compiled chain redef-outer -> redef-middle -> redef-inner *)
+      (* redef-outer(5) = (redef-middle(5)) * 3 = (redef-inner(5) + 1) * 3
+                        = (50 + 1) * 3 = 153 *)
+      T(scm, "(redef-inner 5)", "50");
+      T(scm, "(redef-middle 5)", "51");
+      T(scm, "(redef-outer 5)", "153");
+
+      (* Redefine the innermost function to multiply by 100 *)
+      EVAL scm.loadEvalText(
+        "(define (redef-inner x) (* x 100))");
+
+      (* Compiled redef-middle and redef-outer should see the new redef-inner
+         because they look up redef-inner through the environment binding. *)
+      T(scm, "(redef-inner 5)", "500");
+      T(scm, "(redef-middle 5)", "501");
+      T(scm, "(redef-outer 5)", "1503");
+
+      (* Redefine the middle function *)
+      EVAL scm.loadEvalText(
+        "(define (redef-middle x) (- (redef-inner x)))");
+
+      (* Compiled redef-outer should see new redef-middle *)
+      T(scm, "(redef-middle 5)", "-500");
+      T(scm, "(redef-outer 5)", "-1500");
+
+      (* Restore originals for subsequent runs *)
+      EVAL scm.loadEvalText(
+        "(define (redef-inner x) (* x 10))");
+      EVAL scm.loadEvalText(
+        "(define (redef-middle x) (+ (redef-inner x) 1))");
+      T(scm, "(redef-outer 5)", "153");
+
       (* Summary *)
       Wr.PutText(Stdio.stdout, "\n========================================\n");
       Wr.PutText(Stdio.stdout, "Total: " & Fmt.Int(total)

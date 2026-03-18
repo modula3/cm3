@@ -734,3 +734,18 @@
           (begin (set! result (+ result i))
                  (loop (+ i 1)))))
     result))
+
+;;;
+;;; ==================== Redefinition Semantics ====================
+;;;
+
+;; Chain of compiled functions for testing redefinition visibility.
+;; redef-inner is a free variable of redef-middle;
+;; redef-middle is a free variable of redef-outer.
+;; Redefining redef-inner should be visible through the whole chain.
+
+(define (redef-inner x) (* x 10))
+
+(define (redef-middle x) (+ (redef-inner x) 1))
+
+(define (redef-outer x) (* (redef-middle x) 3))

@@ -913,6 +913,22 @@ where \texttt{EvalInternal}'s \texttt{LOOP} evaluates
 \texttt{c.body} (captured at closure-creation time), not a fresh
 lookup of the function's name.
 
+The same optimization applies to named \texttt{let} loops:
+\texttt{(let loop ((i 0)) \ldots\ (loop (+ i 1)))} compiles as
+a \texttt{LOOP} with variable reassignment, bypassing the
+environment entirely.  Since the loop name is lexically scoped to
+the \texttt{let} body, it is never visible in the environment and
+cannot be redefined, so there is no semantic concern.
+
+\paragraph{Non-tail self-recursion.}
+By contrast, when a function calls itself in \emph{non}-tail
+position (e.g., \texttt{(* n (factorial (- n 1)))}), the call
+goes through the binding as usual.  If \texttt{factorial} is
+redefined between two recursive invocations, the new definition
+\emph{is} visible.  The test suite exercises this: it redefines
+callees between calls and verifies that compiled callers see the
+new definitions.
+
 %======================================================================
 \chapter{Runtime Support}
 \label{ch:runtime}
