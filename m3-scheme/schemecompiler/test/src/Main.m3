@@ -474,6 +474,27 @@ BEGIN
       T(scm, "(named-let-nontail 10)", "55");
       T(scm, "(named-let-nontail 100)", "5050");
 
+      Section("Lambda");
+      T(scm, "(lambda-callback '())", "()");
+      T(scm, "(lambda-callback '(1 2 3))", "(2 3 4)");
+      T(scm, "(lambda-callback '(10 20 30))", "(11 21 31)");
+      T(scm, "(lambda-capture-param 10 '(1 2 3))", "(11 12 13)");
+      T(scm, "(lambda-capture-param 0 '(5 10))", "(5 10)");
+      T(scm, "(lambda-capture-param 100 '(1))", "(101)");
+      T(scm, "(lambda-capture-let '(1 2 3))", "(101 102 103)");
+      T(scm, "(lambda-capture-let '())", "()");
+      T(scm, "(lambda-capture-binding '(1 2 3 4))", "(1 4 9 16)");
+      T(scm, "(lambda-capture-binding '())", "()");
+      T(scm, "(lambda-2param '(1 2 3))", "(2 4 6)");
+      T(scm, "(lambda-rest-test)", "40");
+      T(scm, "(lambda-in-cond #t '(1 2 3))", "(2 3 4)");
+      T(scm, "(lambda-in-cond #f '(1 2 3))", "(2 4 6)");
+      T(scm, "(lambda-no-capture)", "42");
+      T(scm, "(lambda-let-bound 5)", "40");
+      T(scm, "(lambda-let-bound 0)", "30");
+      T(scm, "(internal-define-simple 5)", "15");
+      T(scm, "(internal-define-simple 0)", "10");
+
       (* ======== Redefinition Semantics ======== *)
       Section("Redefinition Semantics");
 

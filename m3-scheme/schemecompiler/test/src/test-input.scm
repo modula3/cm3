@@ -749,3 +749,56 @@
 (define (redef-middle x) (+ (redef-inner x) 1))
 
 (define (redef-outer x) (* (redef-middle x) 3))
+
+;;;
+;;; ==================== Lambda ====================
+;;;
+
+;; Lambda as callback to higher-order function
+(define (lambda-callback lst)
+  (my-map (lambda (x) (+ x 1)) lst))
+
+;; Lambda capturing a function parameter
+(define (lambda-capture-param x lst)
+  (my-map (lambda (y) (+ x y)) lst))
+
+;; Lambda capturing a let-bound variable
+(define (lambda-capture-let lst)
+  (let ((offset 100))
+    (my-map (lambda (x) (+ x offset)) lst)))
+
+;; Lambda capturing a free variable (binding cell)
+(define (lambda-capture-binding lst)
+  (my-map (lambda (x) (* x x)) lst))
+
+;; Two-parameter lambda
+(define (lambda-2param lst)
+  (my-map (lambda (x) (+ x x)) lst))
+
+;; Lambda with rest parameter
+(define (lambda-rest-test)
+  (let ((f (lambda (x . rest)
+             (if (null? rest) x (+ x (car rest))))))
+    (+ (f 10) (f 10 20))))
+
+;; Lambda in conditional branch
+(define (lambda-in-cond flag lst)
+  (my-map (if flag
+              (lambda (x) (+ x 1))
+              (lambda (x) (* x 2)))
+          lst))
+
+;; Lambda with no captures
+(define (lambda-no-capture)
+  (let ((f (lambda (x) (+ x 1))))
+    (f 41)))
+
+;; Lambda as let-bound function
+(define (lambda-let-bound x)
+  (let ((add-x (lambda (y) (+ x y))))
+    (+ (add-x 10) (add-x 20))))
+
+;; Internal define (non-recursive)
+(define (internal-define-simple x)
+  (define (helper y) (+ x y))
+  (helper 10))

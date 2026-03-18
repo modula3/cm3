@@ -164,12 +164,20 @@
     ((eq? (car expr) 'set!)
      (append (if (memq (cadr expr) bound) '() (list (cadr expr)))
              (free-variables (caddr expr) bound)))
+    ((eq? (car expr) 'lambda)
+     (let ((lam-params (all-params (cadr expr))))
+       (free-vars-body (cddr expr)
+                       (append lam-params bound))))
     (else
      ;; application: all subexpressions
      (apply append (map (lambda (e) (free-variables e bound)) expr)))))
 
 (define (free-vars-body exprs bound)
-  (apply append (map (lambda (e) (free-variables e bound)) exprs)))
+  ;; Handle internal defines by desugaring to let+lambda
+  (let ((desugared (desugar-internal-defines exprs)))
+    (if desugared
+        (apply append (map (lambda (e) (free-variables e bound)) desugared))
+        (apply append (map (lambda (e) (free-variables e bound)) exprs)))))
 
 (define (unique-symbols lst)
   (let loop ((rest lst) (seen '()) (acc '()))
@@ -197,6 +205,7 @@
                                (append (map (lambda (d) d) (car clause))  ;; datums as constants
                                        (apply append (map collect-constants (cdr clause))))))
                          (cddr expr)))))
+    ((eq? (car expr) 'lambda) '())  ;; lambda manages its own constants
     (else (apply append (map collect-constants expr)))))
 
 (define (unique-constants lst)
@@ -204,6 +213,74 @@
     (cond ((null? rest) (reverse acc))
           ((member? (car rest) acc) (loop (cdr rest) acc))
           (else (loop (cdr rest) (cons (car rest) acc))))))
+
+(define (intersection lst1 lst2)
+  ;; Return elements of lst1 that also appear in lst2 (using memq)
+  (filter (lambda (x) (memq x lst2)) lst1))
+
+(define (set!-targets expr)
+  ;; Return list of symbols that are targets of set! anywhere in expr.
+  ;; Does NOT recurse into nested lambda bodies (lambda creates new scope).
+  (cond
+    ((not (pair? expr)) '())
+    ((eq? (car expr) 'quote) '())
+    ((eq? (car expr) 'lambda) '())  ;; opaque boundary
+    ((eq? (car expr) 'set!)
+     (cons (cadr expr) (set!-targets (caddr expr))))
+    (else (apply append (map set!-targets expr)))))
+
+(define (expr-has-lambda-capturing? expr vars)
+  ;; Does expr contain a lambda that captures any of vars?
+  (cond
+    ((not (pair? expr)) #f)
+    ((eq? (car expr) 'quote) #f)
+    ((eq? (car expr) 'lambda)
+     (let* ((lam-params (all-params (cadr expr)))
+            (lam-body (if (null? (cdddr expr)) (caddr expr)
+                          (cons 'begin (cddr expr))))
+            (captures (free-variables lam-body lam-params)))
+       (not (null? (intersection captures vars)))))
+    (else (or (expr-has-lambda-capturing? (car expr) vars)
+              (expr-has-lambda-capturing? (cdr expr) vars)))))
+
+(define (desugar-internal-defines exprs)
+  ;; Collect leading internal (define (name params...) body...) forms.
+  ;; Returns desugared expr list (let+lambda), or #f if not applicable.
+  ;; Only handles non-recursive defines (desugars to let, not letrec).
+  (let collect ((es exprs) (defs '()))
+    (if (and (pair? es)
+             (pair? (car es))
+             (eq? (caar es) 'define)
+             (pair? (cadar es))      ;; function define: (define (name ...) ...)
+             (pair? (cddar es)))     ;; has body
+        (collect (cdr es) (cons (car es) defs))
+        (if (or (null? defs) (null? es))  ;; need defs AND remaining body
+            #f
+            (let* ((rdefs (reverse defs))
+                   (names (map caadr rdefs))
+                   (all-free
+                    (apply append
+                           (map (lambda (d)
+                                  (let ((params (cdadr d))
+                                        (body (if (null? (cdddr d))
+                                                  (caddr d)
+                                                  (cons 'begin (cddr d)))))
+                                    (free-variables body (all-params params))))
+                                rdefs))))
+              (if (not (null? (intersection names all-free)))
+                  #f  ;; some define is recursive -- needs letrec (Phase 2)
+                  (let ((bindings
+                         (map (lambda (d)
+                                (let ((name (caadr d))
+                                      (params (cdadr d))
+                                      (body (if (null? (cdddr d))
+                                                (caddr d)
+                                                (cons 'begin (cddr d)))))
+                                  (list name
+                                        (cons 'lambda
+                                              (cons params (list body))))))
+                              rdefs)))
+                    (list (append (list 'let bindings) es)))))))))
 
 (define (has-self-tail-call? expr name)
   (cond
@@ -242,6 +319,7 @@
        (if (null? clauses) #f
            (or (has-self-tail-call? (last (car clauses)) name)
                (loop (cdr clauses))))))
+    ((eq? (car expr) 'lambda) #f)  ;; opaque boundary
     ((eq? (car expr) 'and) #f)
     ((eq? (car expr) 'or) #f)
     ((eq? (car expr) 'set!) #f)
@@ -446,6 +524,9 @@
      (gen-set! (cadr expr) (caddr expr) target ctx depth))
     ((eq? (car expr) 'not)
      (gen-not (cadr expr) target ctx depth))
+    ;; Lambda expression
+    ((eq? (car expr) 'lambda)
+     (gen-lambda expr target ctx depth))
     ;; Self-tail-call or named-let loop continuation
     ((and (ctx-self-tail? ctx)
           (pair? expr)
@@ -593,18 +674,21 @@
 ;;;
 
 (define (gen-begin exprs target ctx depth)
-  (cond
-    ((null? exprs)
-     (emit-assign target "NIL" depth))
-    ((null? (cdr exprs))
-     (gen-expr (car exprs) target ctx depth))
-    (else
-     (let ((discard (fresh-temp ctx)))
-       (string-append
-        (indent depth) (L "VAR " discard " : SchemeObject.T; BEGIN")
-        (gen-expr (car exprs) discard ctx (+ depth 1))
-        (gen-begin (cdr exprs) target ctx (+ depth 1))
-        (indent depth) (L "END;"))))))
+  (let ((desugared (desugar-internal-defines exprs)))
+    (if desugared
+        (gen-begin desugared target ctx depth)
+        (cond
+          ((null? exprs)
+           (emit-assign target "NIL" depth))
+          ((null? (cdr exprs))
+           (gen-expr (car exprs) target ctx depth))
+          (else
+           (let ((discard (fresh-temp ctx)))
+             (string-append
+              (indent depth) (L "VAR " discard " : SchemeObject.T; BEGIN")
+              (gen-expr (car exprs) discard ctx (+ depth 1))
+              (gen-begin (cdr exprs) target ctx (+ depth 1))
+              (indent depth) (L "END;"))))))))
 
 ;;;
 ;;; ==================== Let ====================
@@ -1135,6 +1219,19 @@
 ;;; ==================== Module Generation ====================
 ;;;
 
+;;;
+;;; ==================== Lambda Accumulator ====================
+;;;
+;;; During code generation, lambda expressions are discovered and
+;;; accumulated here. After all top-level procedure bodies are
+;;; generated, the accumulated lambda types and procedures are
+;;; collected and emitted in the module.
+;;;
+
+(define *lambda-types* '())    ;; list of type declaration strings
+(define *lambda-procs* '())    ;; list of procedure definition strings
+(define *lambda-counter* 0)    ;; serial counter for lam0, lam1, ...
+
 (define (iota n)
   (let loop ((i 0) (acc '()))
     (if (= i n) (reverse acc)
@@ -1400,6 +1497,140 @@
                       (else (list->string (list c)))))
               (string->list s))))
 
+;;;
+;;; ==================== Lambda Code Generation ====================
+;;;
+
+(define (gen-lambda-type-decl m3name binding-caps value-caps constants nparams rest-param)
+  ;; Generate type declaration for a lambda closure type.
+  (string-append
+   (L "  Compiled_" m3name " = SchemeProcedure.T OBJECT")
+   (apply string-append
+          (map (lambda (bc i)
+                 (L "    b_" (number->string i) " : SchemeEnvironmentBinding.T;"))
+               binding-caps (iota (length binding-caps))))
+   (apply string-append
+          (map (lambda (vc i)
+                 (L "    cap_" (number->string i) " : SchemeObject.T;"))
+               value-caps (iota (length value-caps))))
+   (apply string-append
+          (map (lambda (c i)
+                 (L "    k_" (number->string i) " : SchemeObject.T;"))
+               constants (iota (length constants))))
+   (L "  OVERRIDES")
+   (L "    apply := Apply_" m3name ";")
+   (if rest-param
+       (string-append
+        (L "    apply1 := Apply1_" m3name ";")
+        (L "    apply2 := Apply2_" m3name ";"))
+       (cond
+         ((= nparams 1)
+          (L "    apply1 := Apply1_" m3name ";"))
+         ((>= nparams 2)
+          (string-append
+           (L "    apply1 := Apply1_" m3name ";")
+           (L "    apply2 := Apply2_" m3name ";")))
+         (else "")))
+   (L "  END;")
+   NL))
+
+(define (gen-lambda-new m3name binding-caps value-caps constants ctx)
+  ;; Generate a NEW expression to instantiate a lambda closure.
+  (string-append
+   "NEW(Compiled_" m3name
+   ", name := \"lambda (compiled)\""
+   ;; Binding captures: copy binding cell from enclosing function
+   (apply string-append
+          (map (lambda (sym i)
+                 (let ((fv-entry (assq sym (ctx-fv-map ctx))))
+                   (string-append ", b_" (number->string i)
+                                  " := self." (cdr fv-entry))))
+               binding-caps (iota (length binding-caps))))
+   ;; Value captures: snapshot current value from enclosing scope
+   (apply string-append
+          (map (lambda (sym i)
+                 (string-append ", cap_" (number->string i)
+                                " := " (var-ref sym ctx)))
+               value-caps (iota (length value-caps))))
+   ;; Constants
+   (apply string-append
+          (map (lambda (c i)
+                 (string-append ", k_" (number->string i)
+                                " := " (constant-to-m3 c)))
+               constants (iota (length constants))))
+   ")"))
+
+(define (gen-lambda expr target ctx depth)
+  ;; Compile a lambda expression to a closure instantiation.
+  ;; Accumulates the closure type and apply procedures into *lambda-types*
+  ;; and *lambda-procs* for later inclusion in the module.
+  (let* ((raw-params (cadr expr))
+         (parsed (parse-params raw-params))
+         (lam-params (car parsed))
+         (lam-rest-param (cdr parsed))
+         (all-lam-params (if lam-rest-param
+                             (append lam-params (list lam-rest-param))
+                             lam-params))
+         (lam-body (if (null? (cdddr expr)) (caddr expr)
+                       (cons 'begin (cddr expr))))
+         ;; Compute captures
+         (captures (unique-symbols (free-variables lam-body all-lam-params)))
+         (binding-caps (filter (lambda (s) (assq s (ctx-fv-map ctx))) captures))
+         (value-caps (filter (lambda (s) (assq s (ctx-param-map ctx))) captures))
+         ;; Lambda's own constants
+         (lam-constants (unique-constants (collect-constants lam-body)))
+         ;; Serial number
+         (serial *lambda-counter*)
+         (_ (set! *lambda-counter* (+ serial 1)))
+         (lam-m3name (string-append "lam" (number->string serial)))
+         (nparams (length lam-params))
+         ;; Build lambda context (include rest param in param-map)
+         (lam-param-map (append
+                         (build-indexed-map all-lam-params "a_")
+                         (build-indexed-map value-caps "self.cap_")))
+         (lam-fv-map (build-indexed-map binding-caps "b_"))
+         (lam-ctx (list (string->symbol lam-m3name)
+                        all-lam-params '() lam-constants
+                        (list 0) #f  ;; no self-tail-call for anonymous lambda
+                        lam-param-map lam-fv-map
+                        (list 0) #f #f))
+         ;; Build proc alist for gen-apply-* functions
+         (proc (list (cons 'body lam-body)
+                     (cons 'm3name lam-m3name)
+                     (cons 'params lam-params)
+                     (cons 'nparams nparams)
+                     (cons 'rest-param lam-rest-param)
+                     (cons 'free-vars '())
+                     (cons 'constants lam-constants)
+                     (cons 'self-tail #f)
+                     (cons 'ctx lam-ctx))))
+    ;; Accumulate type declaration
+    (set! *lambda-types*
+      (cons (gen-lambda-type-decl lam-m3name binding-caps value-caps
+                                  lam-constants nparams lam-rest-param)
+            *lambda-types*))
+    ;; Accumulate apply procedures
+    (set! *lambda-procs*
+      (cons (let ((np nparams)
+                  (rp lam-rest-param))
+              (string-append
+               (gen-apply-n-proc proc)
+               (gen-apply-proc proc)
+               (if rp
+                   (string-append
+                    (gen-apply1-proc proc)
+                    (gen-apply2-proc proc))
+                   (cond ((= np 1) "")
+                         ((= np 2) (gen-apply1-proc proc))
+                         (else (string-append
+                                (gen-apply1-proc proc)
+                                (gen-apply2-proc proc)))))))
+            *lambda-procs*))
+    ;; Generate instantiation at this site
+    (emit-assign target
+      (gen-lambda-new lam-m3name binding-caps value-caps lam-constants ctx)
+      depth)))
+
 (define (gen-module module-name procs)
   (let ((i3 (gen-i3 module-name))
         (m3 (gen-m3 module-name procs)))
@@ -1416,39 +1647,53 @@
    (L "END " module-name ".")))
 
 (define (gen-m3 module-name procs)
-  (string-append
-   (L "(* Generated by MScheme Level 1 Compiler *)")
-   (L "MODULE " module-name ";")
-   NL
-   (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
-   (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
-   (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal;")
-   (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
-   (L "FROM Scheme IMPORT Object;")
-   NL
-   (L "TYPE")
-   (apply string-append (map gen-type-decl procs))
-   (apply string-append
-          (map (lambda (proc)
-                 (let ((np (cdr (assq 'nparams proc)))
-                       (rp (cdr (assq 'rest-param proc))))
-                   (string-append
-                    (gen-apply-n-proc proc)
-                    (gen-apply-proc proc)
-                    (if rp
-                        ;; Rest-param: always emit apply1 and apply2 stubs
-                        (string-append
-                         (gen-apply1-proc proc)
-                         (gen-apply2-proc proc))
-                        (cond ((= np 1) "")
-                              ((= np 2) (gen-apply1-proc proc))
-                              (else (string-append
-                                     (gen-apply1-proc proc)
-                                     (gen-apply2-proc proc))))))))
-               procs))
-   (gen-install-proc procs module-name)
-   (L "BEGIN")
-   (L "END " module-name ".")))
+  ;; Two-phase generation: generate procedure bodies first (which discovers
+  ;; and accumulates lambda closures), then assemble the complete module.
+  (set! *lambda-types* '())
+  (set! *lambda-procs* '())
+  (set! *lambda-counter* 0)
+  (let* ((type-decls (apply string-append (map gen-type-decl procs)))
+         ;; Generate all procedure bodies -- this triggers lambda discovery
+         (proc-bodies
+          (apply string-append
+                 (map (lambda (proc)
+                        (let ((np (cdr (assq 'nparams proc)))
+                              (rp (cdr (assq 'rest-param proc))))
+                          (string-append
+                           (gen-apply-n-proc proc)
+                           (gen-apply-proc proc)
+                           (if rp
+                               ;; Rest-param: always emit apply1 and apply2 stubs
+                               (string-append
+                                (gen-apply1-proc proc)
+                                (gen-apply2-proc proc))
+                               (cond ((= np 1) "")
+                                     ((= np 2) (gen-apply1-proc proc))
+                                     (else (string-append
+                                            (gen-apply1-proc proc)
+                                            (gen-apply2-proc proc))))))))
+                      procs)))
+         ;; Collect accumulated lambda declarations
+         (lam-type-decls (apply string-append (reverse *lambda-types*)))
+         (lam-proc-bodies (apply string-append (reverse *lambda-procs*))))
+    (string-append
+     (L "(* Generated by MScheme Level 1 Compiler *)")
+     (L "MODULE " module-name ";")
+     NL
+     (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
+     (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
+     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal;")
+     (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
+     (L "FROM Scheme IMPORT Object;")
+     NL
+     (L "TYPE")
+     type-decls
+     lam-type-decls        ;; lambda types follow regular types
+     proc-bodies           ;; regular procs (contain lambda NEW expressions)
+     lam-proc-bodies       ;; lambda apply procedures
+     (gen-install-proc procs module-name)
+     (L "BEGIN")
+     (L "END " module-name "."))))
 
 ;;;
 ;;; ==================== Compilability Check ====================
@@ -1463,19 +1708,19 @@
         ((pair? x) (proper-list? (cdr x)))
         (else #f)))
 
-(define (cond-clauses-compilable? clauses)
+(define (cond-clauses-compilable? clauses mutated)
   ;; Check that all cond clauses are compilable, including => syntax
   (cond ((null? clauses) #t)
         ((eq? (car (car clauses)) 'else)
-         (exprs-compilable? (cdr (car clauses))))
+         (exprs-compilable? (cdr (car clauses)) mutated))
         ((and (pair? (cdr (car clauses)))
               (eq? (cadr (car clauses)) '=>))
          ;; (test => proc) -- accept if test and proc compilable
-         (and (expr-compilable? (caar clauses))
-              (expr-compilable? (caddr (car clauses)))
-              (cond-clauses-compilable? (cdr clauses))))
-        (else (and (exprs-compilable? (car clauses))
-                   (cond-clauses-compilable? (cdr clauses))))))
+         (and (expr-compilable? (caar clauses) mutated)
+              (expr-compilable? (caddr (car clauses)) mutated)
+              (cond-clauses-compilable? (cdr clauses) mutated)))
+        (else (and (exprs-compilable? (car clauses) mutated)
+                   (cond-clauses-compilable? (cdr clauses) mutated)))))
 
 ;; Helper: does sym not appear anywhere in expr? (for named-let checking)
 (define (nlc-not-in? sym expr)
@@ -1566,24 +1811,25 @@
   ;; Verify that loop-name only appears in tail-call position in body.
   (nlc-in-tail? loop-name body))
 
-(define (do-bindings-compilable? bindings)
+(define (do-bindings-compilable? bindings mutated)
   ;; (var init step) or (var init)
   (cond ((null? bindings) #t)
-        (else (and (expr-compilable? (cadr (car bindings)))  ;; init
+        (else (and (expr-compilable? (cadr (car bindings)) mutated)  ;; init
                    (or (null? (cddr (car bindings)))          ;; no step
-                       (expr-compilable? (caddr (car bindings))))  ;; step
-                   (do-bindings-compilable? (cdr bindings))))))
+                       (expr-compilable? (caddr (car bindings)) mutated))  ;; step
+                   (do-bindings-compilable? (cdr bindings) mutated)))))
 
-(define (case-clauses-compilable? clauses)
+(define (case-clauses-compilable? clauses mutated)
   (cond ((null? clauses) #t)
         ((eq? (car (car clauses)) 'else)
-         (exprs-compilable? (cdr (car clauses))))
+         (exprs-compilable? (cdr (car clauses)) mutated))
         ((not (pair? (car (car clauses)))) #f)  ;; datums must be a list
-        (else (and (exprs-compilable? (cdr (car clauses)))
-                   (case-clauses-compilable? (cdr clauses))))))
+        (else (and (exprs-compilable? (cdr (car clauses)) mutated)
+                   (case-clauses-compilable? (cdr clauses) mutated)))))
 
-(define (expr-compilable? expr)
+(define (expr-compilable? expr mutated)
   ;; Return #t if expr uses only constructs the compiler handles.
+  ;; mutated is the list of symbols targeted by set! in the enclosing function body.
   (cond
     ((symbol? expr) #t)
     ((number? expr) #t)
@@ -1592,64 +1838,85 @@
     ((char? expr) #t)
     ((not (pair? expr)) #t)
     ((eq? (car expr) 'quote) #t)
-    ((eq? (car expr) 'lambda) #f)     ;; closures not supported
-    ((eq? (car expr) 'define) #f)     ;; internal define not supported
+    ((eq? (car expr) 'lambda)
+     (let* ((lam-params (all-params (cadr expr)))
+            (lam-body (if (null? (cdddr expr)) (caddr expr)
+                          (cons 'begin (cddr expr))))
+            (captures (free-variables lam-body lam-params))
+            (body-mutated (set!-targets lam-body)))
+       (and
+         ;; No capture is mutated in enclosing scope
+         (null? (intersection captures mutated))
+         ;; No capture is mutated in lambda body
+         (null? (intersection captures body-mutated))
+         ;; Lambda body is compilable (with its own mutation set)
+         (expr-compilable? lam-body body-mutated))))
+    ((eq? (car expr) 'define) #f)     ;; internal define handled by begin desugaring
     ((eq? (car expr) 'do)
-     (and (do-bindings-compilable? (cadr expr))    ;; var specs
-          (exprs-compilable? (caddr expr))         ;; (test exit-expr ...)
-          (exprs-compilable? (cdddr expr))))
+     (and (do-bindings-compilable? (cadr expr) mutated)    ;; var specs
+          (exprs-compilable? (caddr expr) mutated)         ;; (test exit-expr ...)
+          (exprs-compilable? (cdddr expr) mutated)))
     ((eq? (car expr) 'case)
-     (and (expr-compilable? (cadr expr))  ;; key expression
-          (case-clauses-compilable? (cddr expr))))
+     (and (expr-compilable? (cadr expr) mutated)  ;; key expression
+          (case-clauses-compilable? (cddr expr) mutated)))
     ((eq? (car expr) 'letrec)
-     (and (let-bindings-compilable? (cadr expr))
-          (exprs-compilable? (cddr expr))))
+     (let ((bvars (map car (cadr expr))))
+       (and ;; No lambda in init expressions captures a letrec-bound var
+            (not (let check ((bs (cadr expr)))
+                   (if (null? bs) #f
+                       (or (expr-has-lambda-capturing? (cadr (car bs)) bvars)
+                           (check (cdr bs))))))
+            (let-bindings-compilable? (cadr expr) mutated)
+            (exprs-compilable? (cddr expr) mutated))))
     ((eq? (car expr) 'if)
      (and (pair? (cddr expr))             ;; must have consequent
-          (expr-compilable? (cadr expr))
-          (expr-compilable? (caddr expr))
+          (expr-compilable? (cadr expr) mutated)
+          (expr-compilable? (caddr expr) mutated)
           (or (not (pair? (cdddr expr)))
-              (expr-compilable? (cadddr expr)))))
+              (expr-compilable? (cadddr expr) mutated))))
     ((eq? (car expr) 'cond)
-     (cond-clauses-compilable? (cdr expr)))
+     (cond-clauses-compilable? (cdr expr) mutated))
     ((eq? (car expr) 'begin)
-     (exprs-compilable? (cdr expr)))
+     (let ((desugared (desugar-internal-defines (cdr expr))))
+       (if desugared
+           (exprs-compilable? desugared mutated)
+           (exprs-compilable? (cdr expr) mutated))))
     ((eq? (car expr) 'let)
      (if (symbol? (cadr expr))
          ;; Named let: (let name ((var init) ...) body)
-         (and (let-bindings-compilable? (caddr expr))
-              (exprs-compilable? (cdddr expr))
+         (and (let-bindings-compilable? (caddr expr) mutated)
+              (exprs-compilable? (cdddr expr) mutated)
               ;; All calls to loop name must be in tail position
               (named-let-calls-ok? (cadr expr)
                                    (if (null? (cddddr expr))
                                        (cadddr expr)
                                        (cons 'begin (cdddr expr)))))
-         (and (let-bindings-compilable? (cadr expr))
-              (exprs-compilable? (cddr expr)))))
+         (and (let-bindings-compilable? (cadr expr) mutated)
+              (exprs-compilable? (cddr expr) mutated))))
     ((eq? (car expr) 'let*)
-     (and (let-bindings-compilable? (cadr expr))
-          (exprs-compilable? (cddr expr))))
+     (and (let-bindings-compilable? (cadr expr) mutated)
+          (exprs-compilable? (cddr expr) mutated)))
     ((eq? (car expr) 'and)
-     (exprs-compilable? (cdr expr)))
+     (exprs-compilable? (cdr expr) mutated))
     ((eq? (car expr) 'or)
-     (exprs-compilable? (cdr expr)))
+     (exprs-compilable? (cdr expr) mutated))
     ((eq? (car expr) 'not)
-     (expr-compilable? (cadr expr)))
+     (expr-compilable? (cadr expr) mutated))
     ((eq? (car expr) 'set!)
-     (expr-compilable? (caddr expr)))
+     (expr-compilable? (caddr expr) mutated))
     ;; Application: all subexpressions must be compilable
-    (else (exprs-compilable? expr))))
+    (else (exprs-compilable? expr mutated))))
 
-(define (exprs-compilable? exprs)
+(define (exprs-compilable? exprs mutated)
   (cond ((null? exprs) #t)
         ((not (pair? exprs)) #t)
-        (else (and (expr-compilable? (car exprs))
-                   (exprs-compilable? (cdr exprs))))))
+        (else (and (expr-compilable? (car exprs) mutated)
+                   (exprs-compilable? (cdr exprs) mutated)))))
 
-(define (let-bindings-compilable? bindings)
+(define (let-bindings-compilable? bindings mutated)
   (cond ((null? bindings) #t)
-        (else (and (expr-compilable? (cadr (car bindings)))
-                   (let-bindings-compilable? (cdr bindings))))))
+        (else (and (expr-compilable? (cadr (car bindings)) mutated)
+                   (let-bindings-compilable? (cdr bindings) mutated)))))
 
 (define (parse-params param-list)
   ;; Split a possibly-dotted parameter list into (fixed-params . rest-param-or-#f).
@@ -1673,15 +1940,16 @@
   ;; Accepts both proper and dotted parameter lists.
   (if (null? (cddr form))
       #f  ;; no body: (define (name params))
-      (let ((sig (cadr form))
-            (body (if (null? (cdddr form))
-                      (caddr form)
-                      (cons 'begin (cddr form)))))
+      (let* ((sig (cadr form))
+             (body (if (null? (cdddr form))
+                       (caddr form)
+                       (cons 'begin (cddr form))))
+             (mutated (set!-targets body)))
         (and (or (proper-list? (cdr sig))
                  ;; dotted param list: must end in a symbol
                  (symbol? (let tail ((x (cdr sig)))
                             (if (pair? x) (tail (cdr x)) x))))
-             (expr-compilable? body)))))
+             (expr-compilable? body mutated)))))
 
 ;;;
 ;;; ==================== Deduplication ====================
