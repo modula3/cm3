@@ -578,3 +578,159 @@
 
 (define (boolean-identity x)
   (if x #t #f))
+
+;;;
+;;; ==================== Cond => ====================
+;;;
+
+(define (cond-arrow-test x)
+  ;; (cond (test => proc)) -- passes test value to proc if truthy
+  (cond ((assq x '((a . 1) (b . 2) (c . 3))) => cdr)
+        (else #f)))
+
+;;;
+;;; ==================== Letrec ====================
+;;;
+
+(define (letrec-simple x)
+  (letrec ((a (+ x 1))
+           (b (+ x 2)))
+    (+ a b)))
+
+(define (letrec-even-odd n)
+  ;; Mutual recursion via letrec -- tests that vars are in scope during init
+  ;; (but here we just use values, not lambdas)
+  (letrec ((base (if (= n 0) 1 0))
+           (sign (if (< n 0) -1 1)))
+    (+ base sign)))
+
+;;;
+;;; ==================== Case ====================
+;;;
+
+(define (day-type day)
+  (case day
+    ((monday tuesday wednesday thursday friday) "weekday")
+    ((saturday sunday) "weekend")
+    (else "unknown")))
+
+(define (case-number x)
+  (case x
+    ((1) "one")
+    ((2 3) "two-or-three")
+    ((4 5 6) "four-to-six")
+    (else "other")))
+
+(define (case-symbol x)
+  (case x
+    ((red) 1)
+    ((green) 2)
+    ((blue) 3)
+    (else 0)))
+
+;;;
+;;; ==================== Do Loops ====================
+;;;
+
+(define (do-sum-to n)
+  ;; Sum from 1 to n using do loop
+  (do ((i 1 (+ i 1))
+       (acc 0 (+ acc i)))
+      ((> i n) acc)))
+
+(define (do-countdown n)
+  ;; Count down, return 0
+  (do ((i n (- i 1)))
+      ((= i 0) 0)))
+
+(define (do-list-reverse lst)
+  ;; Reverse a list using do
+  (do ((rest lst (cdr rest))
+       (acc '() (cons (car rest) acc)))
+      ((null? rest) acc)))
+
+(define (do-factorial n)
+  ;; Factorial using do
+  (do ((i 1 (+ i 1))
+       (acc 1 (* acc i)))
+      ((> i n) acc)))
+
+;;;
+;;; ==================== Rest Parameters ====================
+;;;
+
+(define (rest-sum . args)
+  ;; Sum all arguments
+  (do ((rest args (cdr rest))
+       (acc 0 (+ acc (car rest))))
+      ((null? rest) acc)))
+
+(define (rest-first-or-default default . args)
+  ;; Return first arg if any, else default
+  (if (null? args)
+      default
+      (car args)))
+
+(define (rest-count . args)
+  ;; Count arguments
+  (do ((rest args (cdr rest))
+       (n 0 (+ n 1)))
+      ((null? rest) n)))
+
+;;;
+;;; ==================== Named Let ====================
+;;;
+
+(define (named-let-sum n)
+  ;; Sum 1..n using named let
+  (let loop ((i n) (acc 0))
+    (if (= i 0)
+        acc
+        (loop (- i 1) (+ acc i)))))
+
+(define (named-let-length lst)
+  ;; Length using named let
+  (let loop ((rest lst) (n 0))
+    (if (null? rest)
+        n
+        (loop (cdr rest) (+ n 1)))))
+
+(define (named-let-reverse lst)
+  ;; Reverse using named let
+  (let loop ((rest lst) (acc '()))
+    (if (null? rest)
+        acc
+        (loop (cdr rest) (cons (car rest) acc)))))
+
+(define (named-let-iota n)
+  ;; Build (1 2 ... n) using named let
+  (let loop ((i n) (acc '()))
+    (if (= i 0)
+        acc
+        (loop (- i 1) (cons i acc)))))
+
+(define (named-let-find x lst)
+  ;; Find x in lst, return #t/#f
+  (let loop ((rest lst))
+    (cond ((null? rest) #f)
+          ((equal? x (car rest)) #t)
+          (else (loop (cdr rest))))))
+
+(define (named-let-map-square lst)
+  ;; Map square over list using named let
+  (let loop ((rest lst) (acc '()))
+    (if (null? rest)
+        (let loop2 ((r acc) (out '()))
+          (if (null? r)
+              out
+              (loop2 (cdr r) (cons (car r) out))))
+        (loop (cdr rest) (cons (* (car rest) (car rest)) acc)))))
+
+(define (named-let-nontail n)
+  ;; Named let in non-tail position: sum 1..n using side effects
+  (let ((result 0))
+    (let loop ((i 1))
+      (if (<= i n)
+          (begin (set! result (+ result i))
+                 (loop (+ i 1)))))
+    result))

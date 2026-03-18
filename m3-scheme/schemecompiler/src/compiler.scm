@@ -47,11 +47,18 @@
 ;;;
 
 (define (parse-define form)
-  ;; Returns (name params body) or #f
+  ;; Returns (name params body rest-param-or-#f) or #f
+  ;; params is always a proper list (rest param, if any, is separate)
   (if (and (pair? form) (eq? (car form) 'define) (pair? (cadr form)))
-      (list (caadr form) (cdadr form) (if (null? (cdddr form))
-                                          (caddr form)
-                                          (cons 'begin (cddr form))))
+      (let* ((raw-params (cdadr form))
+             (parsed (parse-params raw-params))
+             (fixed-params (car parsed))
+             (rest-param (cdr parsed)))
+        (list (caadr form) fixed-params
+              (if (null? (cdddr form))
+                  (caddr form)
+                  (cons 'begin (cddr form)))
+              rest-param))
       #f))
 
 (define (free-variables expr bound)
@@ -72,20 +79,39 @@
             (map (lambda (clause)
                    (if (eq? (car clause) 'else)
                        (free-vars-body (cdr clause) bound)
-                       (append (free-variables (car clause) bound)
-                               (free-vars-body (cdr clause) bound))))
+                       (if (and (pair? (cdr clause))
+                                (eq? (cadr clause) '=>))
+                           ;; (test => proc)
+                           (append (free-variables (car clause) bound)
+                                   (free-variables (caddr clause) bound))
+                           (append (free-variables (car clause) bound)
+                                   (free-vars-body (cdr clause) bound)))))
                  (cdr expr))))
     ((eq? (car expr) 'begin)
      (free-vars-body (cdr expr) bound))
     ((eq? (car expr) 'let)
-     (let* ((bindings (cadr expr))
-            (bvars (map car bindings))
-            (inits-free (apply append
-                              (map (lambda (b)
-                                     (free-variables (cadr b) bound))
-                                   bindings))))
-       (append inits-free
-               (free-vars-body (cddr expr) (append bvars bound)))))
+     (if (symbol? (cadr expr))
+         ;; Named let: (let name ((var init) ...) body)
+         (let* ((loop-name (cadr expr))
+                (bindings (caddr expr))
+                (bvars (map car bindings))
+                (inits-free (apply append
+                                  (map (lambda (b)
+                                         (free-variables (cadr b) bound))
+                                       bindings)))
+                ;; loop name and loop vars are bound in body
+                (inner-bound (cons loop-name (append bvars bound))))
+           (append inits-free
+                   (free-vars-body (cdddr expr) inner-bound)))
+         ;; Regular let
+         (let* ((bindings (cadr expr))
+                (bvars (map car bindings))
+                (inits-free (apply append
+                                  (map (lambda (b)
+                                         (free-variables (cadr b) bound))
+                                       bindings))))
+           (append inits-free
+                   (free-vars-body (cddr expr) (append bvars bound))))))
     ((eq? (car expr) 'let*)
      (let loop ((bindings (cadr expr))
                 (bound bound)
@@ -95,6 +121,42 @@
            (loop (cdr bindings)
                  (cons (caar bindings) bound)
                  (append acc (free-variables (cadar bindings) bound))))))
+    ((eq? (car expr) 'do)
+     ;; (do ((var init step) ...) (test exit-expr ...) body ...)
+     (let* ((bindings (cadr expr))
+            (do-vars (map car bindings))
+            (inits-free (apply append
+                              (map (lambda (b)
+                                     (free-variables (cadr b) bound))
+                                   bindings)))
+            (inner-bound (append do-vars bound))
+            (steps-free (apply append
+                              (map (lambda (b)
+                                     (if (pair? (cddr b))
+                                         (free-variables (caddr b) inner-bound)
+                                         '()))
+                                   bindings)))
+            (test-clause (caddr expr))
+            (test-free (free-vars-body test-clause inner-bound))
+            (body-free (free-vars-body (cdddr expr) inner-bound)))
+       (append inits-free steps-free test-free body-free)))
+    ((eq? (car expr) 'case)
+     (append (free-variables (cadr expr) bound)  ;; key expression
+             (apply append
+                    (map (lambda (clause)
+                           (if (eq? (car clause) 'else)
+                               (free-vars-body (cdr clause) bound)
+                               ;; datums are constants, not variable refs
+                               (free-vars-body (cdr clause) bound)))
+                         (cddr expr)))))
+    ((eq? (car expr) 'letrec)
+     (let* ((bindings (cadr expr))
+            (bvars (map car bindings))
+            (inner-bound (append bvars bound)))
+       (append (apply append
+                      (map (lambda (b) (free-variables (cadr b) inner-bound))
+                           bindings))
+               (free-vars-body (cddr expr) inner-bound))))
     ((eq? (car expr) 'and)
      (apply append (map (lambda (e) (free-variables e bound)) (cdr expr))))
     ((eq? (car expr) 'or)
@@ -125,6 +187,16 @@
     ((char? expr) (list expr))
     ((not (pair? expr)) '())
     ((eq? (car expr) 'quote) (list (cadr expr)))
+    ((eq? (car expr) 'case)
+     ;; Key expression + datums (implicitly quoted) + clause bodies
+     (append (collect-constants (cadr expr))
+             (apply append
+                    (map (lambda (clause)
+                           (if (eq? (car clause) 'else)
+                               (apply append (map collect-constants (cdr clause)))
+                               (append (map (lambda (d) d) (car clause))  ;; datums as constants
+                                       (apply append (map collect-constants (cdr clause))))))
+                         (cddr expr)))))
     (else (apply append (map collect-constants expr)))))
 
 (define (unique-constants lst)
@@ -150,9 +222,26 @@
      (if (null? (cdr expr)) #f
          (has-self-tail-call? (last (cdr expr)) name)))
     ((eq? (car expr) 'let)
-     (has-self-tail-call? (last (cddr expr)) name))
+     (if (symbol? (cadr expr))
+         ;; Named let: if loop name shadows function name, don't look inside
+         (if (eq? (cadr expr) name) #f
+             (has-self-tail-call? (last (cdddr expr)) name))
+         (has-self-tail-call? (last (cddr expr)) name)))
     ((eq? (car expr) 'let*)
      (has-self-tail-call? (last (cddr expr)) name))
+    ((eq? (car expr) 'letrec)
+     (has-self-tail-call? (last (cddr expr)) name))
+    ((eq? (car expr) 'do)
+     ;; Exit expressions are in tail position
+     (let ((test-clause (caddr expr)))
+       (if (pair? (cdr test-clause))
+           (has-self-tail-call? (last (cdr test-clause)) name)
+           #f)))
+    ((eq? (car expr) 'case)
+     (let loop ((clauses (cddr expr)))
+       (if (null? clauses) #f
+           (or (has-self-tail-call? (last (car clauses)) name)
+               (loop (cdr clauses))))))
     ((eq? (car expr) 'and) #f)
     ((eq? (car expr) 'or) #f)
     ((eq? (car expr) 'set!) #f)
@@ -162,7 +251,7 @@
 ;;;
 ;;; ==================== Compilation Context ====================
 ;;;
-;;; Context structure (9-element list):
+;;; Context structure (10-element list):
 ;;;   0: name       - Scheme symbol of the function being compiled
 ;;;   1: params     - list of parameter symbols (original, for self-tail-call)
 ;;;   2: free-vars  - list of free variable symbols
@@ -172,6 +261,8 @@
 ;;;   6: param-map  - alist mapping symbols to M3 variable names
 ;;;   7: fv-map     - alist mapping free-var symbols to M3 field names
 ;;;   8: var-ctr    - mutable cell (list of int) for let-bound variables
+;;;   9: reassign   - list of M3 var names for tail-call reassignment, or #f
+;;;  10: loop-flag  - M3 BOOLEAN var name for non-tail named-let WHILE, or #f
 ;;;
 
 (define (make-ctx name params free-vars constants self-tail?)
@@ -181,7 +272,9 @@
           (list 0)      ;; temp counter (mutable cell)
           self-tail?
           param-map fv-map
-          (list 0))))   ;; var counter (mutable cell)
+          (list 0)      ;; var counter (mutable cell)
+          #f            ;; reassign-vars (default: use a_N)
+          #f)))         ;; loop-flag (default: none)
 
 (define (ctx-name ctx) (car ctx))
 (define (ctx-params ctx) (cadr ctx))
@@ -192,6 +285,11 @@
 (define (ctx-param-map ctx) (caddr (cddddr ctx)))
 (define (ctx-fv-map ctx) (cadddr (cddddr ctx)))
 (define (ctx-var-counter ctx) (car (cddddr (cddddr ctx))))
+(define (ctx-reassign-vars ctx) (cadr (cddddr (cddddr ctx))))
+(define (ctx-loop-flag ctx)
+  (if (pair? (cddr (cddddr (cddddr ctx))))
+      (caddr (cddddr (cddddr ctx)))
+      #f))
 
 (define (fresh-temp ctx)
   (let* ((counter-cell (ctx-temp-counter ctx))
@@ -217,7 +315,9 @@
         (ctx-self-tail? ctx)
         new-param-map
         (ctx-fv-map ctx)
-        (ctx-var-counter ctx)))
+        (ctx-var-counter ctx)
+        (ctx-reassign-vars ctx)
+        (ctx-loop-flag ctx)))
 
 ;;;
 ;;; ==================== Variable and Constant References ====================
@@ -231,8 +331,13 @@
         (let ((f (assq sym (ctx-fv-map ctx))))
           (if f
               (string-append "self." (cdr f) ".get()")
-              (string-append "self." (cdr (assq sym (ctx-fv-map ctx)))
-                             ".get()"))))))
+              (begin
+                (display "ERROR: var-ref: symbol not found: ")
+                (display sym)
+                (display " in function ")
+                (display (ctx-name ctx))
+                (newline)
+                (string-append "self.UNKNOWN_" (symbol->string sym) ".get()")))))))
 
 (define (constant-index val ctx)
   (let loop ((cs (ctx-constants ctx)) (i 0))
@@ -321,9 +426,18 @@
     ((eq? (car expr) 'begin)
      (gen-begin (cdr expr) target ctx depth))
     ((eq? (car expr) 'let)
-     (gen-let (cadr expr) (cddr expr) target ctx depth))
+     (if (symbol? (cadr expr))
+         ;; Named let: (let name ((var init) ...) body)
+         (gen-named-let (cadr expr) (caddr expr) (cdddr expr) target ctx depth)
+         (gen-let (cadr expr) (cddr expr) target ctx depth)))
     ((eq? (car expr) 'let*)
      (gen-let* (cadr expr) (cddr expr) target ctx depth))
+    ((eq? (car expr) 'letrec)
+     (gen-letrec (cadr expr) (cddr expr) target ctx depth))
+    ((eq? (car expr) 'case)
+     (gen-case (cadr expr) (cddr expr) target ctx depth))
+    ((eq? (car expr) 'do)
+     (gen-do (cadr expr) (caddr expr) (cdddr expr) target ctx depth))
     ((eq? (car expr) 'and)
      (gen-and (cdr expr) target ctx depth))
     ((eq? (car expr) 'or)
@@ -332,11 +446,11 @@
      (gen-set! (cadr expr) (caddr expr) target ctx depth))
     ((eq? (car expr) 'not)
      (gen-not (cadr expr) target ctx depth))
-    ;; Self-tail-call in tail position
-    ((and (not target)
-          (ctx-self-tail? ctx)
+    ;; Self-tail-call or named-let loop continuation
+    ((and (ctx-self-tail? ctx)
           (pair? expr)
-          (eq? (car expr) (ctx-name ctx)))
+          (eq? (car expr) (ctx-name ctx))
+          (or (not target) (ctx-loop-flag ctx)))
      (gen-self-tail-call (cdr expr) ctx depth))
     ;; General procedure call
     ((pair? expr)
@@ -386,14 +500,60 @@
 ;;; ==================== Cond ====================
 ;;;
 
+(define (gen-cond-arrow-call proc-expr test-tmp target ctx depth)
+  ;; Generate code for (cond (test => proc)): call proc with test value
+  (let ((proc-val (gen-value proc-expr ctx depth)))
+    (if proc-val
+        (emit-assign target
+                     (string-append "NARROW(" proc-val
+                                    ", SchemeProcedure.T).apply1(interp, "
+                                    test-tmp ")")
+                     depth)
+        (let ((proc-tmp (fresh-temp ctx)))
+          (string-append
+           (indent depth) (L "VAR " proc-tmp " : SchemeObject.T; BEGIN")
+           (gen-expr proc-expr proc-tmp ctx (+ depth 1))
+           (emit-assign target
+                        (string-append "NARROW(" proc-tmp
+                                       ", SchemeProcedure.T).apply1(interp, "
+                                       test-tmp ")")
+                        (+ depth 1))
+           (indent depth) (L "END;"))))))
+
+(define (gen-cond-rest rest target ctx depth)
+  ;; Generate ELSE + rest clauses or ELSE NIL, shared by normal and arrow clauses
+  (if (null? rest)
+      (if target
+          (string-append
+           (indent depth) (L "ELSE")
+           (emit-assign target "NIL" (+ depth 1))
+           (indent depth) (L "END;"))
+          (string-append (indent depth) (L "END;")))
+      (string-append
+       (indent depth) (L "ELSE")
+       (gen-cond rest target ctx (+ depth 1))
+       (indent depth) (L "END;"))))
+
 (define (gen-cond clauses target ctx depth)
   (if (null? clauses)
       (emit-assign target "NIL" depth)
       (let ((clause (car clauses))
             (rest (cdr clauses)))
-        (if (eq? (car clause) 'else)
-            (gen-begin (cdr clause) target ctx depth)
-            (let ((test-val (gen-value (car clause) ctx depth)))
+        (cond
+         ((eq? (car clause) 'else)
+          (gen-begin (cdr clause) target ctx depth))
+         ;; Arrow clause: (test => proc)
+         ((and (pair? (cdr clause)) (eq? (cadr clause) '=>))
+          (let ((test-tmp (fresh-temp ctx)))
+            (string-append
+             (indent depth) (L "VAR " test-tmp " : SchemeObject.T; BEGIN")
+             (gen-expr (car clause) test-tmp ctx (+ depth 1))
+             (indent (+ depth 1)) (L "IF SchemeBoolean.TruthO(" test-tmp ") THEN")
+             (gen-cond-arrow-call (caddr clause) test-tmp target ctx (+ depth 2))
+             (gen-cond-rest rest target ctx (+ depth 1))
+             (indent depth) (L "END;"))))
+         (else
+          (let ((test-val (gen-value (car clause) ctx depth)))
               (if test-val
                   (string-append
                    (indent depth) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
@@ -426,7 +586,7 @@
                           (indent (+ depth 1)) (L "ELSE")
                           (gen-cond rest target ctx (+ depth 2))
                           (indent (+ depth 1)) (L "END")))
-                     (indent depth) (L "END;")))))))))
+                     (indent depth) (L "END;"))))))))))
 
 ;;;
 ;;; ==================== Begin ====================
@@ -483,6 +643,82 @@
      (indent depth) (L "END;"))))
 
 ;;;
+;;; ==================== Named Let ====================
+;;;
+
+(define (make-named-let-ctx ctx loop-name loop-params loop-m3names loop-flag)
+  ;; Create a context for named-let body:
+  ;; - ctx-name = loop-name (so gen-expr detects loop tail calls)
+  ;; - ctx-self-tail? = #t
+  ;; - ctx-params = loop-params (for gen-self-tail-call arg count)
+  ;; - ctx-reassign-vars = loop-m3names (reassign targets)
+  ;; - ctx-loop-flag = loop-flag (BOOLEAN var name for non-tail WHILE, or #f)
+  ;; - param-map extended with loop var -> M3 name mappings
+  (let ((new-entries (map cons loop-params loop-m3names)))
+    (list loop-name
+          loop-params
+          (ctx-free-vars ctx)
+          (ctx-constants ctx)
+          (ctx-temp-counter ctx)
+          #t  ;; self-tail? = #t for the loop
+          (append new-entries (ctx-param-map ctx))
+          (ctx-fv-map ctx)
+          (ctx-var-counter ctx)
+          loop-m3names       ;; reassign-vars
+          loop-flag)))       ;; loop-flag
+
+(define (gen-named-let loop-name bindings body target ctx depth)
+  ;; (let loop ((var init) ...) body)
+  ;; Compiled as: evaluate inits, declare loop vars, LOOP/WHILE, body.
+  ;; Tail calls to loop-name become variable reassignment.
+  ;; When target = #f (tail position): uses LOOP (exits via RETURN).
+  ;; When target != #f (non-tail): uses WHILE with boolean flag.
+  (let* ((bvars (map car bindings))
+         (temps (map (lambda (b) (fresh-temp ctx)) bindings))
+         (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
+         (loop-flag (if target (fresh-var ctx) #f))
+         (loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names loop-flag)))
+    (string-append
+     ;; Evaluate init expressions in outer scope
+     (indent depth) (L "VAR")
+     (apply string-append
+            (map (lambda (tmp)
+                   (string-append (indent (+ depth 1))
+                                  (L tmp " : SchemeObject.T;")))
+                 temps))
+     (indent depth) (L "BEGIN")
+     (apply string-append
+            (map (lambda (b tmp)
+                   (gen-expr (cadr b) tmp ctx (+ depth 1)))
+                 bindings temps))
+     ;; Declare loop variables in nested scope, init from temps
+     (indent (+ depth 1)) (L "VAR")
+     (apply string-append
+            (map (lambda (m3n tmp)
+                   (string-append (indent (+ depth 2))
+                                  (L m3n " : SchemeObject.T := " tmp ";")))
+                 bvar-m3names temps))
+     (if loop-flag
+         (string-append (indent (+ depth 2))
+                        (L loop-flag " : BOOLEAN := TRUE;"))
+         "")
+     (indent (+ depth 1)) (L "BEGIN")
+     (if loop-flag
+         ;; Non-tail: WHILE loop with boolean flag
+         (string-append
+          (indent (+ depth 2)) (L "WHILE " loop-flag " DO")
+          (indent (+ depth 3)) (L loop-flag " := FALSE;")
+          (gen-begin body target loop-ctx (+ depth 3))
+          (indent (+ depth 2)) (L "END;"))
+         ;; Tail: infinite LOOP (exits via RETURN)
+         (string-append
+          (indent (+ depth 2)) (L "LOOP")
+          (gen-begin body target loop-ctx (+ depth 3))
+          (indent (+ depth 2)) (L "END")))
+     (indent (+ depth 1)) (L "END;")
+     (indent depth) (L "END;"))))
+
+;;;
 ;;; ==================== Let* ====================
 ;;;
 
@@ -505,6 +741,186 @@
          (gen-let* (cdr bindings) body target new-ctx (+ depth 2))
          (indent (+ depth 1)) (L "END;")
          (indent depth) (L "END;")))))
+
+;;;
+;;; ==================== Letrec ====================
+;;;
+
+(define (gen-letrec bindings body target ctx depth)
+  ;; (letrec ((var init) ...) body)
+  ;; All vars are in scope during init evaluation.
+  ;; Declare vars as NIL, assign init values, evaluate body.
+  (let* ((bvars (map car bindings))
+         (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
+         (new-entries (map cons bvars bvar-m3names))
+         (new-ctx (make-extended-ctx ctx
+                    (append new-entries (ctx-param-map ctx)))))
+    (string-append
+     (indent depth) (L "VAR")
+     (apply string-append
+            (map (lambda (m3n)
+                   (string-append (indent (+ depth 1))
+                                  (L m3n " : SchemeObject.T := NIL;")))
+                 bvar-m3names))
+     (indent depth) (L "BEGIN")
+     ;; Assign init values (all vars in scope via new-ctx)
+     (apply string-append
+            (map (lambda (b m3n)
+                   (gen-expr (cadr b) m3n new-ctx (+ depth 1)))
+                 bindings bvar-m3names))
+     ;; Evaluate body
+     (gen-begin body target new-ctx (+ depth 1))
+     (indent depth) (L "END;"))))
+
+;;;
+;;; ==================== Case ====================
+;;;
+
+(define (gen-case-clauses clauses key-tmp target ctx depth)
+  ;; Generate IF/ELSIF chain for case clauses
+  (if (null? clauses)
+      (emit-assign target "NIL" depth)
+      (let ((clause (car clauses))
+            (rest (cdr clauses)))
+        (if (eq? (car clause) 'else)
+            (gen-begin (cdr clause) target ctx depth)
+            ;; datums: ((d1 d2 ...) body ...)
+            (let* ((datums (car clause))
+                   (datum-tests
+                    (apply string-append
+                           (let loop ((ds datums) (first #t) (acc '()))
+                             (if (null? ds) (reverse acc)
+                                 (loop (cdr ds) #f
+                                       (cons (string-append
+                                              (if first "" " OR ")
+                                              "SchemeUtils.Eqv("
+                                              key-tmp ", "
+                                              (constant-ref (car ds) ctx) ")")
+                                             acc)))))))
+              (string-append
+               (indent depth) (L "IF " datum-tests " THEN")
+               (gen-begin (cdr clause) target ctx (+ depth 1))
+               (if (null? rest)
+                   (if target
+                       (string-append
+                        (indent depth) (L "ELSE")
+                        (emit-assign target "NIL" (+ depth 1))
+                        (indent depth) (L "END;"))
+                       (string-append (indent depth) (L "END;")))
+                   (string-append
+                    (indent depth) (L "ELSE")
+                    (gen-case-clauses rest key-tmp target ctx (+ depth 1))
+                    (indent depth) (L "END;")))))))))
+
+(define (gen-case key-expr clauses target ctx depth)
+  ;; (case key ((d1 d2) body1) ((d3) body2) (else body3))
+  (let ((key-val (gen-value key-expr ctx depth)))
+    (if key-val
+        (let ((key-tmp (fresh-temp ctx)))
+          (string-append
+           (indent depth) (L "VAR " key-tmp " : SchemeObject.T := " key-val "; BEGIN")
+           (gen-case-clauses clauses key-tmp target ctx (+ depth 1))
+           (indent depth) (L "END;")))
+        (let ((key-tmp (fresh-temp ctx)))
+          (string-append
+           (indent depth) (L "VAR " key-tmp " : SchemeObject.T; BEGIN")
+           (gen-expr key-expr key-tmp ctx (+ depth 1))
+           (gen-case-clauses clauses key-tmp target ctx (+ depth 1))
+           (indent depth) (L "END;"))))))
+
+;;;
+;;; ==================== Do ====================
+;;;
+
+(define (gen-do var-specs test-clause body target ctx depth)
+  ;; (do ((var init step) ...) (test exit-expr ...) body ...)
+  (let* ((do-vars (map car var-specs))
+         (var-m3names (map (lambda (v) (fresh-var ctx)) do-vars))
+         (new-entries (map cons do-vars var-m3names))
+         (new-ctx (make-extended-ctx ctx
+                    (append new-entries (ctx-param-map ctx))))
+         (test-expr (car test-clause))
+         (exit-exprs (cdr test-clause))
+         ;; Which vars have step expressions?
+         (stepped (filter (lambda (spec) (pair? (cddr spec))) var-specs)))
+    (string-append
+     ;; Evaluate inits in outer scope
+     (indent depth) (L "VAR")
+     (apply string-append
+            (map (lambda (m3n) (string-append
+                                (indent (+ depth 1))
+                                (L m3n " : SchemeObject.T;")))
+                 var-m3names))
+     (indent depth) (L "BEGIN")
+     (apply string-append
+            (map (lambda (spec m3n)
+                   (gen-expr (cadr spec) m3n ctx (+ depth 1)))
+                 var-specs var-m3names))
+     ;; LOOP
+     (indent (+ depth 1)) (L "LOOP")
+     ;; Test condition
+     (let ((test-val (gen-value test-expr new-ctx (+ depth 2))))
+       (if test-val
+           (string-append
+            (indent (+ depth 2)) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
+            ;; Exit expressions (last one is the result)
+            (if (null? exit-exprs)
+                (string-append
+                 (emit-assign target "NIL" (+ depth 3))
+                 (indent (+ depth 3)) (L "EXIT;"))
+                (string-append
+                 (gen-begin exit-exprs target new-ctx (+ depth 3))
+                 (indent (+ depth 3)) (L "EXIT;")))
+            (indent (+ depth 2)) (L "END;"))
+           (let ((test-tmp (fresh-temp new-ctx)))
+             (string-append
+              (indent (+ depth 2)) (L "VAR " test-tmp " : SchemeObject.T; BEGIN")
+              (gen-expr test-expr test-tmp new-ctx (+ depth 3))
+              (indent (+ depth 3)) (L "IF SchemeBoolean.TruthO(" test-tmp ") THEN")
+              (if (null? exit-exprs)
+                  (string-append
+                   (emit-assign target "NIL" (+ depth 4))
+                   (indent (+ depth 4)) (L "EXIT;"))
+                  (string-append
+                   (gen-begin exit-exprs target new-ctx (+ depth 4))
+                   (indent (+ depth 4)) (L "EXIT;")))
+              (indent (+ depth 3)) (L "END")
+              (indent (+ depth 2)) (L "END;")))))
+     ;; Body (side effects, result discarded)
+     (if (null? body)
+         ""
+         (let ((discard (fresh-temp new-ctx)))
+           (string-append
+            (indent (+ depth 2)) (L "VAR " discard " : SchemeObject.T; BEGIN")
+            (gen-begin body discard new-ctx (+ depth 3))
+            (indent (+ depth 2)) (L "END;"))))
+     ;; Step assignments (parallel: evaluate all steps, then assign)
+     (if (null? stepped)
+         ""
+         (let* ((step-temps (map (lambda (s) (fresh-temp new-ctx)) stepped))
+                (step-m3names (map (lambda (s)
+                                     (cdr (assq (car s) new-entries)))
+                                   stepped)))
+           (string-append
+            (indent (+ depth 2)) (L "VAR")
+            (apply string-append
+                   (map (lambda (tmp) (string-append
+                                       (indent (+ depth 3))
+                                       (L tmp " : SchemeObject.T;")))
+                        step-temps))
+            (indent (+ depth 2)) (L "BEGIN")
+            (apply string-append
+                   (map (lambda (spec tmp)
+                          (gen-expr (caddr spec) tmp new-ctx (+ depth 3)))
+                        stepped step-temps))
+            (apply string-append
+                   (map (lambda (m3n tmp)
+                          (string-append
+                           (indent (+ depth 3)) (L m3n " := " tmp ";")))
+                        step-m3names step-temps))
+            (indent (+ depth 2)) (L "END;"))))
+     (indent (+ depth 1)) (L "END")
+     (indent depth) (L "END;"))))
 
 ;;;
 ;;; ==================== And / Or ====================
@@ -646,14 +1062,15 @@
 ;;;
 
 (define (gen-self-tail-call args ctx depth)
-  ;; Always target the original parameter names (a_0, a_1, ...)
-  ;; regardless of let-shadowing in the current scope.
+  ;; Reassign to the correct M3 variable names and loop.
+  ;; Uses ctx-reassign-vars if set (for named let), otherwise a_0, a_1, ...
   (let* ((params (ctx-params ctx))
          (param-m3names
-           (let loop ((ps params) (i 0) (acc '()))
-             (if (null? ps) (reverse acc)
-                 (loop (cdr ps) (+ i 1)
-                       (cons (string-append "a_" (number->string i)) acc)))))
+           (or (ctx-reassign-vars ctx)
+               (let loop ((ps params) (i 0) (acc '()))
+                 (if (null? ps) (reverse acc)
+                     (loop (cdr ps) (+ i 1)
+                           (cons (string-append "a_" (number->string i)) acc))))))
          (all-temps (map (lambda (p) (fresh-temp ctx)) params)))
     (string-append
      (indent depth) (L "VAR")
@@ -677,6 +1094,11 @@
                     (indent (+ depth 1))
                     (L m3n " := " tmp ";")))
                  param-m3names all-temps))
+     ;; For non-tail named let: set loop flag to continue WHILE
+     (let ((flag (ctx-loop-flag ctx)))
+       (if flag
+           (string-append (indent (+ depth 1)) (L flag " := TRUE;"))
+           ""))
      (indent depth) (L "END;"))))
 
 ;;;
@@ -688,10 +1110,14 @@
          (name (car parsed))
          (params (cadr parsed))
          (body (caddr parsed))
-         (free-vars (unique-symbols (free-variables body params)))
+         (rest-param (cadddr parsed))
+         ;; All params including rest param for free-variable analysis
+         (all-ps (if rest-param (append params (list rest-param)) params))
+         (free-vars (unique-symbols (free-variables body all-ps)))
          (constants (unique-constants (collect-constants body)))
-         (self-tail (has-self-tail-call? body name))
-         (ctx (make-ctx name params free-vars constants self-tail))
+         ;; Disable self-tail-call for rest-param functions
+         (self-tail (if rest-param #f (has-self-tail-call? body name)))
+         (ctx (make-ctx name all-ps free-vars constants self-tail))
          (m3name (string-append "p" (number->string serial)))
          (nparams (length params)))
     (list
@@ -699,6 +1125,7 @@
      (cons 'm3name m3name)
      (cons 'params params)
      (cons 'nparams nparams)
+     (cons 'rest-param rest-param)
      (cons 'free-vars free-vars)
      (cons 'constants constants)
      (cons 'self-tail self-tail)
@@ -717,7 +1144,8 @@
   (let* ((m3name (cdr (assq 'm3name proc)))
          (free-vars (cdr (assq 'free-vars proc)))
          (constants (cdr (assq 'constants proc)))
-         (nparams (cdr (assq 'nparams proc))))
+         (nparams (cdr (assq 'nparams proc)))
+         (rest-param (cdr (assq 'rest-param proc))))
     (string-append
      (L "  Compiled_" m3name " = SchemeProcedure.T OBJECT")
      (apply string-append
@@ -730,14 +1158,19 @@
                  constants (iota (length constants))))
      (L "  OVERRIDES")
      (L "    apply := Apply_" m3name ";")
-     (cond
-       ((= nparams 1)
-        (L "    apply1 := Apply1_" m3name ";"))
-       ((>= nparams 2)
-        (string-append
-         (L "    apply1 := Apply1_" m3name ";")
-         (L "    apply2 := Apply2_" m3name ";")))
-       (else ""))
+     (if rest-param
+         ;; Rest-param: always override apply1 and apply2 (delegate to Apply_)
+         (string-append
+          (L "    apply1 := Apply1_" m3name ";")
+          (L "    apply2 := Apply2_" m3name ";"))
+         (cond
+           ((= nparams 1)
+            (L "    apply1 := Apply1_" m3name ";"))
+           ((>= nparams 2)
+            (string-append
+             (L "    apply1 := Apply1_" m3name ";")
+             (L "    apply2 := Apply2_" m3name ";")))
+           (else "")))
      (L "  END;")
      NL)))
 
@@ -745,12 +1178,15 @@
   (let* ((m3name (cdr (assq 'm3name proc)))
          (params (cdr (assq 'params proc)))
          (nparams (cdr (assq 'nparams proc)))
+         (rest-param (cdr (assq 'rest-param proc)))
          (ctx (cdr (assq 'ctx proc)))
          (self-tail (cdr (assq 'self-tail proc)))
          (body (cdr (assq 'body proc)))
          (param-m3names (map (lambda (p)
                                (cdr (assq p (ctx-param-map ctx))))
                              params)))
+    ;; For rest-param functions, Apply_ has the body; no ApplyN needed
+    (if rest-param ""
     (string-append
      (L "PROCEDURE Apply" (number->string nparams) "_" m3name
         "(self : Compiled_" m3name ";")
@@ -773,12 +1209,13 @@
           (L "  BEGIN")
           (gen-expr body #f ctx 2)
           (L "  END Apply" (number->string nparams) "_" m3name ";")
-          NL)))))
+          NL))))))
 
 (define (gen-apply1-proc proc)
   (let* ((m3name (cdr (assq 'm3name proc)))
-         (nparams (cdr (assq 'nparams proc))))
-    (if (= nparams 1)
+         (nparams (cdr (assq 'nparams proc)))
+         (rest-param (cdr (assq 'rest-param proc))))
+    (if (and (= nparams 1) (not rest-param))
         ""
         (string-append
          (L "PROCEDURE Apply1_" m3name "(self : Compiled_" m3name ";")
@@ -793,8 +1230,9 @@
 
 (define (gen-apply2-proc proc)
   (let* ((m3name (cdr (assq 'm3name proc)))
-         (nparams (cdr (assq 'nparams proc))))
-    (if (= nparams 2)
+         (nparams (cdr (assq 'nparams proc)))
+         (rest-param (cdr (assq 'rest-param proc))))
+    (if (and (= nparams 2) (not rest-param))
         ""
         (string-append
          (L "PROCEDURE Apply2_" m3name "(self : Compiled_" m3name ";")
@@ -811,43 +1249,72 @@
   (let* ((m3name (cdr (assq 'm3name proc)))
          (params (cdr (assq 'params proc)))
          (nparams (cdr (assq 'nparams proc)))
+         (rest-param (cdr (assq 'rest-param proc)))
          (ctx (cdr (assq 'ctx proc)))
          (param-m3names (map (lambda (p)
                                (cdr (assq p (ctx-param-map ctx))))
-                             params)))
+                             params))
+         (rest-m3name (if rest-param
+                         (cdr (assq rest-param (ctx-param-map ctx)))
+                         #f)))
     (string-append
      (L "PROCEDURE Apply_" m3name "(self : Compiled_" m3name ";")
      (L "    interp : Scheme.T;")
      (L "    args : SchemeObject.T) : SchemeObject.T")
      (L "  RAISES { Scheme.E } =")
-     (if (= nparams 0)
-         (string-append
-          (L "  BEGIN")
-          (L "    RETURN Apply0_" m3name "(self, interp)")
-          (L "  END Apply_" m3name ";")
-          NL)
-         (string-append
-          (L "  VAR")
-          (L "    rest := args;")
-          (apply string-append
-                 (map (lambda (m3n)
-                        (L "    " m3n " : SchemeObject.T;"))
-                      param-m3names))
-          (L "  BEGIN")
-          (apply string-append
-                 (map (lambda (m3n i)
-                        (string-append
-                         (L "    " m3n " := SchemeUtils.First(rest);")
-                         (if (< i (- nparams 1))
-                             (L "    rest := SchemeUtils.Rest(rest);")
-                             "")))
-                      param-m3names (iota nparams)))
-          (L "    RETURN Apply" (number->string nparams) "_" m3name "(self, interp"
-             (apply string-append
-                    (map (lambda (m3n) (string-append ", " m3n)) param-m3names))
-             ")")
-          (L "  END Apply_" m3name ";")
-          NL)))))
+     (if rest-param
+         ;; Rest-param function: Apply_ is the primary method with body
+         (let ((body (cdr (assq 'body proc))))
+           (string-append
+            (L "  VAR")
+            (L "    rest := args;")
+            (apply string-append
+                   (map (lambda (m3n)
+                          (L "    " m3n " : SchemeObject.T;"))
+                        param-m3names))
+            (L "    " rest-m3name " : SchemeObject.T;")
+            (L "  BEGIN")
+            ;; Extract fixed params
+            (apply string-append
+                   (map (lambda (m3n)
+                          (string-append
+                           (L "    " m3n " := SchemeUtils.First(rest);")
+                           (L "    rest := SchemeUtils.Rest(rest);")))
+                        param-m3names))
+            ;; Rest param gets remaining args
+            (L "    " rest-m3name " := rest;")
+            (gen-expr body #f ctx 2)
+            (L "  END Apply_" m3name ";")
+            NL))
+         ;; Normal function: Apply_ delegates to ApplyN
+         (if (= nparams 0)
+             (string-append
+              (L "  BEGIN")
+              (L "    RETURN Apply0_" m3name "(self, interp)")
+              (L "  END Apply_" m3name ";")
+              NL)
+             (string-append
+              (L "  VAR")
+              (L "    rest := args;")
+              (apply string-append
+                     (map (lambda (m3n)
+                            (L "    " m3n " : SchemeObject.T;"))
+                          param-m3names))
+              (L "  BEGIN")
+              (apply string-append
+                     (map (lambda (m3n i)
+                            (string-append
+                             (L "    " m3n " := SchemeUtils.First(rest);")
+                             (if (< i (- nparams 1))
+                                 (L "    rest := SchemeUtils.Rest(rest);")
+                                 "")))
+                          param-m3names (iota nparams)))
+              (L "    RETURN Apply" (number->string nparams) "_" m3name "(self, interp"
+                 (apply string-append
+                        (map (lambda (m3n) (string-append ", " m3n)) param-m3names))
+                 ")")
+              (L "  END Apply_" m3name ";")
+              NL))))))
 
 (define (gen-install-proc procs module-name)
   (string-append
@@ -963,15 +1430,21 @@
    (apply string-append (map gen-type-decl procs))
    (apply string-append
           (map (lambda (proc)
-                 (string-append
-                  (gen-apply-n-proc proc)
-                  (gen-apply-proc proc)
-                  (let ((np (cdr (assq 'nparams proc))))
-                    (cond ((= np 1) "")
-                          ((= np 2) (gen-apply1-proc proc))
-                          (else (string-append
-                                 (gen-apply1-proc proc)
-                                 (gen-apply2-proc proc)))))))
+                 (let ((np (cdr (assq 'nparams proc)))
+                       (rp (cdr (assq 'rest-param proc))))
+                   (string-append
+                    (gen-apply-n-proc proc)
+                    (gen-apply-proc proc)
+                    (if rp
+                        ;; Rest-param: always emit apply1 and apply2 stubs
+                        (string-append
+                         (gen-apply1-proc proc)
+                         (gen-apply2-proc proc))
+                        (cond ((= np 1) "")
+                              ((= np 2) (gen-apply1-proc proc))
+                              (else (string-append
+                                     (gen-apply1-proc proc)
+                                     (gen-apply2-proc proc))))))))
                procs))
    (gen-install-proc procs module-name)
    (L "BEGIN")
@@ -991,15 +1464,123 @@
         (else #f)))
 
 (define (cond-clauses-compilable? clauses)
-  ;; Reject cond clauses that use => syntax
+  ;; Check that all cond clauses are compilable, including => syntax
   (cond ((null? clauses) #t)
         ((eq? (car (car clauses)) 'else)
          (exprs-compilable? (cdr (car clauses))))
         ((and (pair? (cdr (car clauses)))
               (eq? (cadr (car clauses)) '=>))
-         #f)
+         ;; (test => proc) -- accept if test and proc compilable
+         (and (expr-compilable? (caar clauses))
+              (expr-compilable? (caddr (car clauses)))
+              (cond-clauses-compilable? (cdr clauses))))
         (else (and (exprs-compilable? (car clauses))
                    (cond-clauses-compilable? (cdr clauses))))))
+
+;; Helper: does sym not appear anywhere in expr? (for named-let checking)
+(define (nlc-not-in? sym expr)
+  (cond
+    ((symbol? expr) (not (eq? expr sym)))
+    ((not (pair? expr)) #t)
+    ((eq? (car expr) 'quote) #t)
+    (else (and (nlc-not-in? sym (car expr)) (nlc-not-in? sym (cdr expr))))))
+
+(define (nlc-all-not-in? sym lst)
+  (cond ((null? lst) #t)
+        ((not (pair? lst)) (nlc-not-in? sym lst))
+        (else (and (nlc-not-in? sym (car lst)) (nlc-all-not-in? sym (cdr lst))))))
+
+(define (nlc-not-in-bindings? sym bindings)
+  (cond ((null? bindings) #t)
+        (else (and (nlc-not-in? sym (cadr (car bindings)))
+                   (nlc-not-in-bindings? sym (cdr bindings))))))
+
+(define (nlc-in-tail-body? sym exprs)
+  (cond ((null? exprs) #t)
+        ((null? (cdr exprs)) (nlc-in-tail? sym (car exprs)))
+        (else (and (nlc-not-in? sym (car exprs))
+                   (nlc-in-tail-body? sym (cdr exprs))))))
+
+(define (nlc-in-tail? sym expr)
+  ;; Does expr use sym only in tail-call position?
+  (cond
+    ((symbol? expr) (not (eq? expr sym)))  ;; name used as value = bad
+    ((not (pair? expr)) #t)
+    ((eq? (car expr) 'quote) #t)
+    ((eq? (car expr) 'if)
+     (and (nlc-not-in? sym (cadr expr))
+          (nlc-in-tail? sym (caddr expr))
+          (or (not (pair? (cdddr expr)))
+              (nlc-in-tail? sym (cadddr expr)))))
+    ((eq? (car expr) 'cond)
+     (let loop ((clauses (cdr expr)))
+       (if (null? clauses) #t
+           (and (if (eq? (car (car clauses)) 'else)
+                    (nlc-in-tail-body? sym (cdr (car clauses)))
+                    (and (nlc-not-in? sym (car (car clauses)))
+                         (nlc-in-tail-body? sym (cdr (car clauses)))))
+                (loop (cdr clauses))))))
+    ((eq? (car expr) 'begin)
+     (nlc-in-tail-body? sym (cdr expr)))
+    ((eq? (car expr) 'let)
+     (if (symbol? (cadr expr))
+         ;; nested named let — sym is shadowed if same name;
+         ;; if different name, reject: cross-loop calls can't be compiled
+         (if (eq? (cadr expr) sym) #t
+             (and (nlc-not-in-bindings? sym (caddr expr))
+                  (nlc-all-not-in? sym (cdddr expr))))
+         (and (nlc-not-in-bindings? sym (cadr expr))
+              (nlc-in-tail-body? sym (cddr expr)))))
+    ((eq? (car expr) 'let*)
+     (and (nlc-not-in-bindings? sym (cadr expr))
+          (nlc-in-tail-body? sym (cddr expr))))
+    ((eq? (car expr) 'letrec)
+     (and (nlc-not-in-bindings? sym (cadr expr))
+          (nlc-in-tail-body? sym (cddr expr))))
+    ((eq? (car expr) 'and) (nlc-all-not-in? sym (cdr expr)))
+    ((eq? (car expr) 'or) (nlc-all-not-in? sym (cdr expr)))
+    ((eq? (car expr) 'not) (nlc-not-in? sym (cadr expr)))
+    ((eq? (car expr) 'set!) (nlc-not-in? sym (caddr expr)))
+    ((eq? (car expr) 'case)
+     (and (nlc-not-in? sym (cadr expr))
+          (let loop ((clauses (cddr expr)))
+            (if (null? clauses) #t
+                (and (if (eq? (car (car clauses)) 'else)
+                         (nlc-in-tail-body? sym (cdr (car clauses)))
+                         (nlc-in-tail-body? sym (cdr (car clauses))))
+                     (loop (cdr clauses)))))))
+    ((eq? (car expr) 'do)
+     (and (nlc-all-not-in? sym (map cadr (cadr expr)))
+          (nlc-all-not-in? sym (filter pair? (map cddr (cadr expr))))
+          (nlc-in-tail-body? sym (cdr (caddr expr)))
+          (nlc-all-not-in? sym (cdddr expr))))
+    ;; Application
+    ((eq? (car expr) sym)
+     ;; Tail call to sym — check args don't use name
+     (nlc-all-not-in? sym (cdr expr)))
+    (else
+     ;; Other call: name must not appear anywhere
+     (nlc-all-not-in? sym expr))))
+
+(define (named-let-calls-ok? loop-name body)
+  ;; Verify that loop-name only appears in tail-call position in body.
+  (nlc-in-tail? loop-name body))
+
+(define (do-bindings-compilable? bindings)
+  ;; (var init step) or (var init)
+  (cond ((null? bindings) #t)
+        (else (and (expr-compilable? (cadr (car bindings)))  ;; init
+                   (or (null? (cddr (car bindings)))          ;; no step
+                       (expr-compilable? (caddr (car bindings))))  ;; step
+                   (do-bindings-compilable? (cdr bindings))))))
+
+(define (case-clauses-compilable? clauses)
+  (cond ((null? clauses) #t)
+        ((eq? (car (car clauses)) 'else)
+         (exprs-compilable? (cdr (car clauses))))
+        ((not (pair? (car (car clauses)))) #f)  ;; datums must be a list
+        (else (and (exprs-compilable? (cdr (car clauses)))
+                   (case-clauses-compilable? (cdr clauses))))))
 
 (define (expr-compilable? expr)
   ;; Return #t if expr uses only constructs the compiler handles.
@@ -1013,9 +1594,16 @@
     ((eq? (car expr) 'quote) #t)
     ((eq? (car expr) 'lambda) #f)     ;; closures not supported
     ((eq? (car expr) 'define) #f)     ;; internal define not supported
-    ((eq? (car expr) 'do) #f)         ;; do loop not supported
-    ((eq? (car expr) 'case) #f)       ;; case not supported
-    ((eq? (car expr) 'letrec) #f)     ;; letrec not supported
+    ((eq? (car expr) 'do)
+     (and (do-bindings-compilable? (cadr expr))    ;; var specs
+          (exprs-compilable? (caddr expr))         ;; (test exit-expr ...)
+          (exprs-compilable? (cdddr expr))))
+    ((eq? (car expr) 'case)
+     (and (expr-compilable? (cadr expr))  ;; key expression
+          (case-clauses-compilable? (cddr expr))))
+    ((eq? (car expr) 'letrec)
+     (and (let-bindings-compilable? (cadr expr))
+          (exprs-compilable? (cddr expr))))
     ((eq? (car expr) 'if)
      (and (pair? (cddr expr))             ;; must have consequent
           (expr-compilable? (cadr expr))
@@ -1028,7 +1616,14 @@
      (exprs-compilable? (cdr expr)))
     ((eq? (car expr) 'let)
      (if (symbol? (cadr expr))
-         #f  ;; named let not supported
+         ;; Named let: (let name ((var init) ...) body)
+         (and (let-bindings-compilable? (caddr expr))
+              (exprs-compilable? (cdddr expr))
+              ;; All calls to loop name must be in tail position
+              (named-let-calls-ok? (cadr expr)
+                                   (if (null? (cddddr expr))
+                                       (cadddr expr)
+                                       (cons 'begin (cdddr expr)))))
          (and (let-bindings-compilable? (cadr expr))
               (exprs-compilable? (cddr expr)))))
     ((eq? (car expr) 'let*)
@@ -1056,15 +1651,36 @@
         (else (and (expr-compilable? (cadr (car bindings)))
                    (let-bindings-compilable? (cdr bindings))))))
 
+(define (parse-params param-list)
+  ;; Split a possibly-dotted parameter list into (fixed-params . rest-param-or-#f).
+  ;; (a b c) => ((a b c) . #f)
+  ;; (a b . rest) => ((a b) . rest)
+  (let loop ((pl param-list) (acc '()))
+    (cond ((null? pl) (cons (reverse acc) #f))
+          ((pair? pl) (loop (cdr pl) (cons (car pl) acc)))
+          ((symbol? pl) (cons (reverse acc) pl))
+          (else (cons (reverse acc) #f)))))
+
+(define (all-params param-list)
+  ;; Convert a possibly-dotted parameter list to a proper list of all param symbols.
+  (let ((parsed (parse-params param-list)))
+    (if (cdr parsed)
+        (append (car parsed) (list (cdr parsed)))
+        (car parsed))))
+
 (define (define-compilable? form)
   ;; Check that a (define (name params...) body) form can be compiled.
+  ;; Accepts both proper and dotted parameter lists.
   (if (null? (cddr form))
       #f  ;; no body: (define (name params))
       (let ((sig (cadr form))
             (body (if (null? (cdddr form))
                       (caddr form)
                       (cons 'begin (cddr form)))))
-        (and (proper-list? (cdr sig))       ;; no rest parameters
+        (and (or (proper-list? (cdr sig))
+                 ;; dotted param list: must end in a symbol
+                 (symbol? (let tail ((x (cdr sig)))
+                            (if (pair? x) (tail (cdr x)) x))))
              (expr-compilable? body)))))
 
 ;;;

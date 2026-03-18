@@ -399,6 +399,81 @@ BEGIN
       T(scm, "(boolean-identity #t)", "#t");
       T(scm, "(boolean-identity #f)", "#f");
 
+      Section("Cond =>");
+      T(scm, "(cond-arrow-test 'a)", "1");
+      T(scm, "(cond-arrow-test 'b)", "2");
+      T(scm, "(cond-arrow-test 'c)", "3");
+      T(scm, "(cond-arrow-test 'd)", "#f");
+
+      Section("Letrec");
+      T(scm, "(letrec-simple 5)", "13");
+      T(scm, "(letrec-simple 0)", "3");
+      T(scm, "(letrec-simple 10)", "23");
+      T(scm, "(letrec-even-odd 0)", "2");
+      T(scm, "(letrec-even-odd 5)", "1");
+      T(scm, "(letrec-even-odd -3)", "-1");
+
+      Section("Case");
+      T(scm, "(day-type 'monday)", "weekday");
+      T(scm, "(day-type 'friday)", "weekday");
+      T(scm, "(day-type 'saturday)", "weekend");
+      T(scm, "(day-type 'sunday)", "weekend");
+      T(scm, "(day-type 'holiday)", "unknown");
+      T(scm, "(case-number 1)", "one");
+      T(scm, "(case-number 2)", "two-or-three");
+      T(scm, "(case-number 3)", "two-or-three");
+      T(scm, "(case-number 5)", "four-to-six");
+      T(scm, "(case-number 7)", "other");
+      T(scm, "(case-symbol 'red)", "1");
+      T(scm, "(case-symbol 'green)", "2");
+      T(scm, "(case-symbol 'blue)", "3");
+      T(scm, "(case-symbol 'yellow)", "0");
+
+      Section("Do Loops");
+      T(scm, "(do-sum-to 0)", "0");
+      T(scm, "(do-sum-to 10)", "55");
+      T(scm, "(do-sum-to 100)", "5050");
+      T(scm, "(do-countdown 5)", "0");
+      T(scm, "(do-countdown 0)", "0");
+      T(scm, "(do-list-reverse '())", "()");
+      T(scm, "(do-list-reverse '(1 2 3))", "(3 2 1)");
+      T(scm, "(do-list-reverse '(a b c d))", "(d c b a)");
+      T(scm, "(do-factorial 0)", "1");
+      T(scm, "(do-factorial 5)", "120");
+      T(scm, "(do-factorial 10)", "3628800");
+
+      Section("Rest Parameters");
+      T(scm, "(rest-sum)", "0");
+      T(scm, "(rest-sum 1 2 3)", "6");
+      T(scm, "(rest-sum 10 20 30 40)", "100");
+      T(scm, "(rest-first-or-default 99)", "99");
+      T(scm, "(rest-first-or-default 99 42)", "42");
+      T(scm, "(rest-first-or-default 99 1 2 3)", "1");
+      T(scm, "(rest-count)", "0");
+      T(scm, "(rest-count 'a)", "1");
+      T(scm, "(rest-count 'a 'b 'c)", "3");
+
+      Section("Named Let");
+      T(scm, "(named-let-sum 0)", "0");
+      T(scm, "(named-let-sum 10)", "55");
+      T(scm, "(named-let-sum 100)", "5050");
+      T(scm, "(named-let-length '())", "0");
+      T(scm, "(named-let-length '(a b c))", "3");
+      T(scm, "(named-let-length '(1 2 3 4 5))", "5");
+      T(scm, "(named-let-reverse '())", "()");
+      T(scm, "(named-let-reverse '(1 2 3))", "(3 2 1)");
+      T(scm, "(named-let-iota 0)", "()");
+      T(scm, "(named-let-iota 5)", "(1 2 3 4 5)");
+      T(scm, "(named-let-find 3 '(1 2 3 4))", "#t");
+      T(scm, "(named-let-find 5 '(1 2 3 4))", "#f");
+      T(scm, "(named-let-find 1 '())", "#f");
+      T(scm, "(named-let-map-square '())", "()");
+      T(scm, "(named-let-map-square '(1 2 3))", "(1 4 9)");
+      T(scm, "(named-let-map-square '(2 5))", "(4 25)");
+      T(scm, "(named-let-nontail 0)", "0");
+      T(scm, "(named-let-nontail 10)", "55");
+      T(scm, "(named-let-nontail 100)", "5050");
+
       (* Summary *)
       Wr.PutText(Stdio.stdout, "\n========================================\n");
       Wr.PutText(Stdio.stdout, "Total: " & Fmt.Int(total)
