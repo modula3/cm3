@@ -225,7 +225,7 @@ PROCEDURE TName (u: U;  t: Type) =
 
 PROCEDURE Flt (u: U;  READONLY f: Target.Float) =
   VAR
-    buf : ARRAY [0..BYTESIZE (EXTENDED)] OF TFloat.Byte;
+    buf : ARRAY [0..4 * BYTESIZE (REAL)] OF TFloat.Byte;
     len := TFloat.ToBytes (f, buf);
   BEGIN
     OutB (u, ORD (TFloat.Prec (f)));

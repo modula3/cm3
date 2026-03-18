@@ -118,7 +118,7 @@ CONST start = ARRAY OF TEXT{"AMD64", "86",
   END IsX86orAmd64;
 
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
-  VAR sys := 0;  max_align := 64;
+  VAR sys := 0;  max_align := 128;
       casePreservedSystem := system;
   BEGIN
     (* lookup the system -- linear search *)
@@ -156,7 +156,16 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Typenames := TRUE;          (* on declare_param, etc. *)
     END;
 
+    IF Text.Equal(OS_name, "WIN32") AND
+       NOT (backend_mode IN  BackendStAloneLlvmSet) THEN 
+      (* treat EXTENDED AS LONGREAL *)
+      Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8,
+                     Float{Precision.Extended, 0, -1.79769313486231570x+308},
+                     Float{Precision.Extended, 0, 1.79769313486231570x+308}};
+    END;
+
     (* There is no portable stack walker, and therefore few systems have one.
+       Addendum: Actually libunwind circa 2010 is mostly portable.
        Having a stack walker theoretically speeds up everything nicely.  If
        you are familiar with NT exception handling, all but x86 have a stack
        walker.  Not having a stack walker means that functions that have
@@ -172,15 +181,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        PopEFrame effectively recorded.
 
        NT/x86 has a highly optimized equivalent of PushEFrame / PopEFrame, not
-       currently used by Modula-3. *)
+       currently used by Modula-3.
+
+       AMD64_LINUX has a stack walker see m3core for details. *)
 
     Has_stack_walker          := FALSE;
 
     (* add the system-specific customization *)
 
     (* 32bit or 64bit *)
-	IF (TextUtils.StartsWith(system, "ALPHA") OR TextUtils.Contains(system, "64"))
-		AND NOT TextUtils.Contains(system, "32") THEN (* possibly IA64, Alpha *)
+    IF (TextUtils.StartsWith(system, "ALPHA") OR
+        TextUtils.Contains(system, "64")) AND NOT
+        TextUtils.Contains(system, "32") THEN (* possibly IA64, Alpha *)
       Init64();
     ELSIF backend_mode # M3BackendMode_t.C THEN
       (* Change only alignment.  Size is always 64:

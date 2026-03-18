@@ -7,7 +7,7 @@
 
 MODULE ExtendedFloat;
 
-(* This module implements the operations on IEEE extended precisionreals 
+(* This module implements the operations on IEEE extended precision reals 
    that do not depend on the operating system. 
    We assume that EXTENDED = LONGREAL. *)
 

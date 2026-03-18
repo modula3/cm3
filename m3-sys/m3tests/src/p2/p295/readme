@@ -1,0 +1,7 @@
+This test is checking a crash using the integrated backend on win32.
+This is a cutdown version of the original crash in m3-tools/m3tk
+in m3tk/backend/M3CBackendC.m3 
+
+It was the result of fixing previous errors where extra typecases were added
+to that module. Other backends are unaffected.
+

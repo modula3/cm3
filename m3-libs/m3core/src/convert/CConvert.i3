@@ -11,8 +11,9 @@
 
 INTERFACE CConvert;
 
-FROM Ctypes IMPORT float, double, long_double, int, int_star,
+FROM Ctypes IMPORT float, double, long_double, int, int_star, void_star,
                    char_star, char_star_star, const_char_star;
+
 
 (* Returns a nearest machine number to the input decimal string
    (or sets errno to ERANGE).  With IEEE arithmetic, ties are broken
@@ -42,10 +43,10 @@ PROCEDURE dtoa (d: double;  mode: int;  ndigits: int;  decpt: int_star;
 (* Converts a C double to an ASCII string. *)
 
 <* EXTERNAL m3_qtoa *>
-PROCEDURE qtoa (q: long_double; mode: int; ndigits: int;
+PROCEDURE qtoa (q: void_star; mode: int; ndigits: int;
                 decpt: int_star; sign: int_star;
                 rve: char_star_star): char_star;
-(* Converts a C long_double ( __float128 ) to an ASCII string. *)
+(* Converts a C ( _Float128 ) to an ASCII string. *)
 
 (* Arguments ndigits, decpt, sign are similar to those
    of ecvt and fcvt; trailing zeros are suppressed from
