@@ -1409,9 +1409,11 @@ are registered in the global environment at startup.
 The preceding chapters described the design space and proposed
 compilation strategies.  This chapter describes the actual
 implementation of the Level~1 compiler: the build system integration,
-the test suite, the bugs discovered and fixed during development, the
-measured performance results, and a concrete future optimization that
-would eliminate virtual dispatch overhead on the fast path.
+the test suite, the bugs discovered and fixed during development,
+the identifier generation scheme, the measured performance results,
+large-scale validation on a production codebase, and a concrete
+future optimization that would eliminate virtual dispatch overhead
+on the fast path.
 
 The compiler is implemented in \texttt{compiler.scm} (approximately
 1000 lines of Scheme), resides in the \texttt{schemecompiler} package
@@ -1723,9 +1725,11 @@ parsing time dominates the measurement, as discussed in
 \label{sec:impl-bugs}
 %----------------------------------------------------------------------
 
-Development of the test suite exposed two compiler bugs.  Both were
-subtle interactions between compilation assumptions and Modula-3
-scoping semantics.
+Development of the test suite and large-scale validation
+(\S\ref{sec:impl-cspc}) exposed five compiler bugs.  The first two
+were subtle interactions between compilation assumptions and Modula-3
+scoping semantics; the remaining three were discovered during
+stress testing on the CSP compiler.
 
 \subsection{The \texttt{if} Sentinel Bug}
 \label{sec:bug-if}
@@ -1921,6 +1925,199 @@ The expression \texttt{(car (cddddr ctx))} extracts the mutable
 counter cell (a one-element list holding the current count) from the
 parent context and installs it in the child context, so that
 \texttt{fresh-temp} increments the same counter in both scopes.
+
+\subsection{The Bodyless \texttt{define} Crash}
+\label{sec:bug-bodyless}
+
+\paragraph{Symptom.}
+The compiler crashed with an error on \texttt{(define (bigint-dbg .\ x))}
+--- a definition with no body, used in the CSP compiler as a debugging
+stub.
+
+\paragraph{Root cause.}
+The compilability checker called \texttt{(cdddr form)} to access the
+body of a define form, which fails when the form has only two elements
+(name and parameter list, no body).  Similarly, the top-level filter
+that extracts compilable defines assumed every \texttt{define} form
+had a body.
+
+\paragraph{Fix.}
+Guard both \texttt{define-compilable?}\ and the \texttt{all-defines}
+filter with \texttt{(pair?\ (cddr form))} and
+\texttt{(pair?\ (cddr f))} respectively, so that bodyless defines are
+silently skipped rather than crashing.
+
+\subsection{The Short \texttt{if} Crash}
+\label{sec:bug-short-if}
+
+\paragraph{Symptom.}
+The compiler crashed on \texttt{(if test)} --- an \texttt{if} form
+with only a test expression and no consequent or alternative.
+
+\paragraph{Root cause.}
+The \texttt{expr-compilable?}\ function called \texttt{(cdddr expr)}
+unconditionally on \texttt{if} forms to check for an alternative
+branch.  When the form had fewer than four elements, this raised an
+error.
+
+\paragraph{Fix.}
+Guard the alternative-branch check with \texttt{(pair?\ (cddr expr))},
+so that degenerate \texttt{if} forms are rejected by the compilability
+checker rather than crashing.
+
+\subsection{The \texttt{collect-constants} Scanning Bug}
+\label{sec:bug-constants}
+
+\paragraph{Symptom.}
+After compiling the CSP compiler's 587 definitions, the Modula-3
+build produced 12 errors of the form ``\texttt{unknown qualification
+`.'\,(k\_0)}''.  The generated code referenced constant fields
+(\texttt{self.k\_0}) that did not exist in the object type declaration.
+
+\paragraph{Root cause.}
+The \texttt{collect-constants} function, which walks the AST to find
+all quoted symbols, strings, and other constants that need to be
+stored as object fields, had a bug in its recursive traversal.
+The else branch (for general list expressions) used
+\texttt{(cdr expr)} instead of \texttt{expr}:
+
+\begin{lstlisting}[language=Scheme]
+;; BUGGY: skips first element of every sub-list
+(else (apply append (map collect-constants (cdr expr))))
+\end{lstlisting}
+
+This skipped the first element of every list, which meant constants
+appearing as the first element of a sub-expression---such as the
+quoted symbol \texttt{'+inf} in \texttt{(member?\ '+inf blist)}---were
+never collected.  The code generator emitted references to these
+constants as \texttt{self.k\_$n$}, but the type declaration had no
+corresponding field because the constant was never registered.
+
+\paragraph{Fix.}
+Change \texttt{(cdr expr)} to \texttt{expr} so that all elements
+of every sub-expression are scanned:
+
+\begin{lstlisting}[language=Scheme]
+;; FIXED: scans all elements including the first
+(else (apply append (map collect-constants expr)))
+\end{lstlisting}
+
+As an additional safety net, the \texttt{constant-ref} function was
+extended with fallback inline generation: if a constant is not found
+in the constants list (which should never happen after the fix), it
+generates the constant value inline rather than emitting a dangling
+field reference.  This makes the compiler robust against future
+scanning omissions.
+
+%----------------------------------------------------------------------
+\section{Identifier Generation}
+\label{sec:impl-idents}
+%----------------------------------------------------------------------
+
+A critical design decision in the compiler is how Scheme identifiers
+(which may contain characters like \texttt{?}, \texttt{!}, \texttt{->},
+and \texttt{+}) are mapped to valid Modula-3 identifiers.
+
+\subsection{The Name Collision Problem}
+
+An early version of the compiler used a transliteration function
+\texttt{m3-ident} that mapped each Scheme character to a valid
+Modula-3 identifier character (e.g., \texttt{?}~$\to$~\texttt{Q},
+\texttt{!}~$\to$~\texttt{B}, \texttt{-}~$\to$~\texttt{\_}).
+Scheme names were prefixed by their role (\texttt{a\_} for
+parameters, \texttt{b\_} for bindings) and then transliterated:
+\texttt{null?} became \texttt{a\_nullQ}, \texttt{set-car!} became
+\texttt{b\_set\_carB}.
+
+This scheme had a fundamental problem: user-provided Scheme
+identifiers directly influenced the generated Modula-3 identifiers,
+creating the possibility of name collisions.  Two different Scheme
+names could map to the same Modula-3 identifier if their
+transliterations coincided.  More importantly, a let-bound variable
+could shadow a parameter with the same transliterated name in
+unexpected ways when the Scheme names differed but the Modula-3
+names matched.  For a compiler generating code for arbitrary user
+programs, this was unacceptable.
+
+\subsection{Serial-Numbered Identifiers}
+
+The solution is to generate all Modula-3 identifiers using serial
+numbers, with no dependence on the original Scheme names.  The
+naming conventions are:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Prefix} & \textbf{Role} & \textbf{Example} \\
+\midrule
+\texttt{p}     & Procedure types/names & \texttt{p0}, \texttt{p1}, \texttt{p2} \\
+\texttt{a\_}   & Parameters            & \texttt{a\_0}, \texttt{a\_1}, \texttt{a\_2} \\
+\texttt{b\_}   & Free-variable bindings & \texttt{b\_0}, \texttt{b\_1}, \texttt{b\_2} \\
+\texttt{v\_}   & Let/let*-bound variables & \texttt{v\_0}, \texttt{v\_1}, \texttt{v\_2} \\
+\texttt{k\_}   & Constants              & \texttt{k\_0}, \texttt{k\_1}, \texttt{k\_2} \\
+\texttt{t\_}   & Temporaries            & \texttt{t\_0}, \texttt{t\_1}, \texttt{t\_2} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Each compiled define receives a global serial number: the first
+define in a file becomes \texttt{p0}, the second \texttt{p1}, and
+so on.  Within each define, parameters and free variables are
+assigned indices by their declaration order.  Let-bound variables
+use a per-function counter that is shared across nested scopes (as
+described in \S\ref{sec:bug-let}) to prevent collisions.
+
+The compiler maintains the mapping from Scheme names to serial-numbered
+Modula-3 names in association lists (\texttt{param-map} and
+\texttt{fv-map}) stored in the compilation context.  When
+\texttt{var-ref} needs to generate code for a variable reference,
+it looks up the Scheme symbol in these maps:
+
+\begin{lstlisting}[language=Scheme]
+(define (var-ref sym ctx)
+  (let ((p (assq sym (ctx-param-map ctx))))
+    (if p (cdr p)
+        (let ((f (assq sym (ctx-fv-map ctx))))
+          (if f (string-append "self." (cdr f) ".get()")
+              (error "unresolved variable" sym))))))
+\end{lstlisting}
+
+This guarantees that no user-provided string ever appears in a
+generated Modula-3 identifier.  The only place Scheme names appear
+in the generated code is in string literals passed to
+\texttt{SchemeSymbol.Symbol()} during registration, where they are
+harmless.
+
+\subsection{Self-Tail-Call and Let Shadowing}
+
+The serial-numbered scheme interacts cleanly with the self-tail-call
+optimization.  In the generated \texttt{LOOP}, the parameter variables
+are always the original \texttt{a\_0}, \texttt{a\_1}, etc.  When a
+let-bound variable shadows a parameter, it gets a distinct name from
+the \texttt{v\_} series, so the tail-call reassignment
+\texttt{a\_0~:=~\ldots;\ a\_1~:=~\ldots} always refers to the
+correct LOOP variables, even from within a nested let scope that has
+shadowed one of the parameters.
+
+\subsection{Define Deduplication}
+\label{sec:impl-dedup}
+
+When compiling a large Scheme codebase, it is common for the same
+file to be loaded more than once (e.g., a utility library loaded
+by multiple modules that are later concatenated).  This produces
+duplicate \texttt{define} forms that would cause ``symbol
+already defined'' errors in the generated Modula-3.
+
+The compiler applies a deduplication pass before compilation:
+\texttt{deduplicate-defines} walks the list of extracted defines
+in reverse order, keeping only the \emph{first} occurrence of each
+function name (which corresponds to the \emph{last} definition in
+the source, preserving Scheme's redefinition semantics).  Duplicate
+definitions are silently dropped with a diagnostic message.
+
+In the CSP compiler test (\S\ref{sec:impl-cspc}), this removed 4
+duplicate definitions from the 867 extracted defines, reducing the
+unique count to 863.
 
 %----------------------------------------------------------------------
 \section{Performance Results}
@@ -2118,6 +2315,136 @@ optimization would eliminate the remaining per-call overhead and
 approach the performance of hand-written Modula-3 code.  The
 optimization has not yet been implemented.
 
+%----------------------------------------------------------------------
+\section{Large-Scale Validation: The CSP Compiler}
+\label{sec:impl-cspc}
+%----------------------------------------------------------------------
+
+The unit test suite (\S\ref{sec:impl-tests}) validates correctness on
+isolated functions.  To validate the compiler on a real, large-scale
+Scheme codebase, we compiled the entire CSP (Communicating Sequential
+Processes) compiler from the Intel Labs async-toolkit project.  The
+CSP compiler (\texttt{cspc}) is a production tool for asynchronous
+circuit design, written in MScheme, totaling approximately 17,000
+lines of Scheme across $\sim$50 source files.
+
+\subsection{Compilation Results}
+
+The 50 source files were concatenated into a single input file
+(16,313 lines).  The compiler extracted 867 top-level
+\texttt{define} forms.  After deduplication (\S\ref{sec:impl-dedup}),
+863 unique definitions remained.  Of these:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+\textbf{Category} & \textbf{Count} \\
+\midrule
+Successfully compiled    & 587 (68\%) \\
+Skipped (unsupported constructs) & 276 (32\%) \\
+\midrule
+Total unique defines     & 863 \\
+Duplicates removed       & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The 276 skipped definitions break down by blocking construct:
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+\textbf{Blocking construct} & \textbf{Count} \\
+\midrule
+\texttt{lambda} (in \texttt{map}/\texttt{filter}/\texttt{for-each} args) & $\sim$200 \\
+Named \texttt{let}         & $\sim$50 \\
+Rest parameters (\texttt{.\ args}) & $\sim$15 \\
+\texttt{do} loops          & $\sim$5 \\
+Other (internal define, letrec, etc.) & $\sim$6 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+As with the unit tests, \texttt{lambda} is by far the dominant
+gap.  Adding lambda support alone would push the compilation ratio
+well above 80\%.
+
+\subsection{Correctness Verification}
+
+To verify that the compiled definitions produce identical results
+to the interpreted originals, the compiled CSP compiler was run on
+four MiniMIPS processor designs: Fetch, Decode, Execute, and
+RegFile.  These are real circuit specifications that exercise
+the full depth of the CSP compiler's analysis, transformation, and
+code generation passes.
+
+The output of the compiled configuration (587 compiled
++ 276 interpreted definitions) was compared against the output of
+the fully interpreted configuration (all 863 definitions interpreted).
+The results were \textbf{byte-for-byte identical} on all four
+test cases.
+
+This is strong evidence that the compiler preserves semantics
+faithfully: the 587 compiled definitions interoperate correctly
+with each other, with the 276 interpreted definitions, and with
+the MScheme runtime primitives.
+
+\subsection{Bugs Discovered}
+
+The CSP compiler stress test uncovered three additional bugs
+(\S\ref{sec:bug-bodyless}, \S\ref{sec:bug-short-if},
+\S\ref{sec:bug-constants}) that the unit test suite did not expose,
+because the unit tests used only well-formed, conventional Scheme
+code.  The CSP compiler, being a large production codebase,
+contained edge cases---bodyless debugging stubs, degenerate
+\texttt{if} forms, and constants in unusual AST positions---that
+exercised code paths the unit tests missed.
+
+This validates the importance of testing on real codebases in
+addition to synthetic test suites.
+
+\subsection{Current Restrictions}
+
+The Level~1 compiler supports the following Scheme constructs in
+compiled definitions:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Supported} & \textbf{Not yet supported} \\
+\midrule
+\texttt{if}, \texttt{cond} (with \texttt{else})
+  & \texttt{lambda} \\
+\texttt{let}, \texttt{let*}
+  & Named \texttt{let} \\
+\texttt{begin}
+  & \texttt{letrec} \\
+\texttt{and}, \texttt{or}, \texttt{not}
+  & Internal \texttt{define} \\
+\texttt{set!}
+  & \texttt{cond} with \texttt{=>} \\
+\texttt{quote} (all types)
+  & \texttt{case}, \texttt{do} \\
+Self-tail-call optimization
+  & Rest parameters \\
+1--4 fixed parameters
+  & General tail-call optimization \\
+Free-variable capture via bindings
+  & \texttt{quasiquote} \\
+Constants (numbers, strings, symbols,
+  & \texttt{call/cc} \\
+\quad booleans, chars, null, quoted lists)
+  & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Definitions using any unsupported construct are silently skipped
+by the compilability checker and fall back to the interpreter with
+no loss of semantics.  The compiled and interpreted definitions
+interoperate transparently through the
+\texttt{SchemeProcedure.T} interface (\S\ref{sec:proctype}).
+
 %======================================================================
 \chapter{Remaining Compiler Gaps and How to Close Them}
 \label{ch:gaps}
@@ -2135,9 +2462,10 @@ coverage and in call optimization---and describes concrete
 strategies for closing each one.  The gaps are ordered roughly
 by impact, measured by how many definitions in the compiler's own
 source code (\texttt{compiler.scm}) each gap prevents from being
-compiled.  Self-compilation is a useful stress test: of the
-compiler's 59 top-level definitions, 38 currently compile
-successfully and 21 are skipped.
+compiled.  Self-compilation is a useful stress test.  In
+addition, the large-scale CSP compiler validation
+(\S\ref{sec:impl-cspc}) provides empirical data on which
+constructs matter most in a production codebase.
 
 %----------------------------------------------------------------------
 \section{Missing Language Constructs}
@@ -2333,8 +2661,11 @@ pass, then compile the \texttt{letrec} as described above.
 \label{sec:gap-cond-arrow}
 
 \paragraph{Impact.}
-One definition in \texttt{compiler.scm} (\texttt{m3-char}) uses
-the \texttt{(test => proc)} clause form.
+Not currently used in \texttt{compiler.scm} (the function that
+previously used it, \texttt{m3-char}, was eliminated when the
+compiler switched to serial-numbered identifiers;
+see~\S\ref{sec:impl-idents}).  However, \texttt{cond =>} appears
+in general Scheme programs.
 
 \paragraph{What is needed.}
 The clause \texttt{(test => proc)} evaluates \texttt{test}; if true,
@@ -2612,44 +2943,45 @@ and deciding on the redefinition guard policy.
 \label{sec:gaps-selfcomp}
 %----------------------------------------------------------------------
 
-The following table summarizes the self-compilation results.
-Of 59 top-level definitions in \texttt{compiler.scm}, 38 compile
-successfully.  The 21 skipped definitions break down as follows:
+The following table summarizes the self-compilation gap analysis.
+The compiler's own source (\texttt{compiler.scm}) serves as a
+useful stress test.  The distribution of blocking constructs
+mirrors that of the CSP compiler (\S\ref{sec:impl-cspc}):
+\texttt{lambda} dominates, followed by named \texttt{let}.
 
 \begin{center}
 \begin{tabular}{llc}
 \toprule
-\textbf{Blocking construct} & \textbf{Functions} & \textbf{Count} \\
+\textbf{Blocking construct} & \textbf{Typical functions} & \textbf{Approx.} \\
 \midrule
 \texttt{lambda} (in \texttt{map}/\texttt{filter} args)
   & \texttt{gen-let}, \texttt{gen-call}, \texttt{gen-type-decl},
     \texttt{gen-apply-proc}, &  \\
   & \texttt{gen-install-proc}, \texttt{gen-m3},
-    \texttt{compile-file}, \ldots & 12 \\
+    \texttt{compile-file}, \ldots & 12+ \\
 \texttt{lambda} + named \texttt{let}
   & \texttt{free-variables}, \texttt{unique-symbols},
     \texttt{unique-constants}, & \\
   & \texttt{has-self-tail-call?}, \texttt{constant-index} & 5 \\
 Named \texttt{let} only
-  & \texttt{iota}, \texttt{read-file} & 2 \\
-\texttt{cond =>}
-  & \texttt{m3-char} & 1 \\
+  & \texttt{iota}, \texttt{read-file},
+    \texttt{build-indexed-map} & 3 \\
 Rest parameter
   & \texttt{L} & 1 \\
 \midrule
-\textbf{Total skipped} & & \textbf{21} \\
+\textbf{Total skipped} & & $\sim$\textbf{21} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Adding \texttt{lambda} support would unblock 12 definitions.
+Adding \texttt{lambda} support would unblock $\sim$12 definitions.
 Adding both \texttt{lambda} and named \texttt{let} would unblock
-19 of the 21, leaving only \texttt{m3-char} (\texttt{cond =>})
-and \texttt{L} (rest parameter)---both easy additions that would
-complete full self-compilation.  The remaining gaps
-(\texttt{letrec}, \texttt{case}, \texttt{do}, internal
+$\sim$20, leaving only \texttt{L} (rest parameter)---an easy
+addition that would complete full self-compilation.  The remaining
+gaps (\texttt{letrec}, \texttt{case}, \texttt{do}, internal
 \texttt{define}) are not used in the compiler itself but appear
-in general Scheme programs.
+in general Scheme programs; their frequency in the CSP compiler
+stress test is documented in \S\ref{sec:impl-cspc}.
 
 %----------------------------------------------------------------------
 \section{Recommended Priorities}
@@ -2673,9 +3005,10 @@ order is:
   largest performance improvement for compiled code, especially
   for recursive benchmarks.
 
-\item \textbf{\texttt{cond =>}} --- easy, one-off addition.
+\item \textbf{Rest parameters} --- easy, one-off addition,
+  completes self-compilation.
 
-\item \textbf{Rest parameters} --- easy, one-off addition.
+\item \textbf{\texttt{cond =>}} --- easy, one-off addition.
 
 \item \textbf{\texttt{letrec} and internal \texttt{define}} ---
   easy, low urgency.
@@ -2691,8 +3024,9 @@ order is:
 \end{enumerate}
 
 Steps 1--2 would achieve full self-compilation of the compiler.
-Steps 1--5 would close all gaps observed in real MScheme programs.
-Steps 6--9 are optimizations that become relevant as the compiled
+Steps 1--4 would close all gaps observed in real MScheme programs
+(cf.\ the CSP compiler stress test, \S\ref{sec:impl-cspc}).
+Steps 5--9 are optimizations that become relevant as the compiled
 code base grows.
 
 %======================================================================

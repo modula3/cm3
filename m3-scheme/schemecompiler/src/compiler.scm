@@ -9,6 +9,14 @@
 ;;
 ;; Self-tail-calls are optimized to LOOP with parameter reassignment.
 ;;
+;; All generated M3 identifiers use serial numbers to prevent collisions:
+;;   Procedures: p0, p1, ...
+;;   Parameters: a_0, a_1, ...
+;;   Free-var bindings: b_0, b_1, ...
+;;   Constants: k_0, k_1, ...
+;;   Let-bound vars: v_0, v_1, ...
+;;   Temporaries: t_0, t_1, ...
+;;
 ;; Copyright (c) 2026 Mika Nystrom.  All rights reserved.
 ;;
 
@@ -24,25 +32,15 @@
 ;;; ==================== Identifier Mapping ====================
 ;;;
 
-(define *m3-ident-table*
-  '((#\+ . "plus") (#\- . "minus") (#\* . "star") (#\/ . "slash")
-    (#\= . "eq") (#\< . "lt") (#\> . "gt") (#\! . "B") (#\? . "Q")
-    (#\. . "_dot_") (#\@ . "_at_") (#\~ . "_tilde_") (#\^ . "_caret_")
-    (#\% . "_pct_") (#\& . "_amp_")))
-
-(define (m3-char c)
-  (cond ((assq c *m3-ident-table*) => cdr)
-        ((or (and (char>=? c #\a) (char<=? c #\z))
-             (and (char>=? c #\A) (char<=? c #\Z))
-             (and (char>=? c #\0) (char<=? c #\9))
-             (char=? c #\_))
-         (list->string (list c)))
-        (else (string-append "_" (number->string (char->integer c))))))
-
-(define (m3-ident sym)
-  ;; Convert a Scheme symbol to a legal Modula-3 identifier
-  (let ((s (if (symbol? sym) (symbol->string sym) sym)))
-    (apply string-append (map m3-char (string->list s)))))
+(define (build-indexed-map syms prefix)
+  ;; Build an alist mapping symbols to prefix+index strings:
+  ;; ((sym0 . "prefix0") (sym1 . "prefix1") ...)
+  (let loop ((ss syms) (i 0) (acc '()))
+    (if (null? ss) (reverse acc)
+        (loop (cdr ss) (+ i 1)
+              (cons (cons (car ss)
+                          (string-append prefix (number->string i)))
+                    acc)))))
 
 ;;;
 ;;; ==================== AST Analysis ====================
@@ -127,7 +125,7 @@
     ((char? expr) (list expr))
     ((not (pair? expr)) '())
     ((eq? (car expr) 'quote) (list (cadr expr)))
-    (else (apply append (map collect-constants (cdr expr))))))
+    (else (apply append (map collect-constants expr)))))
 
 (define (unique-constants lst)
   (let loop ((rest lst) (acc '()))
@@ -164,9 +162,26 @@
 ;;;
 ;;; ==================== Compilation Context ====================
 ;;;
+;;; Context structure (9-element list):
+;;;   0: name       - Scheme symbol of the function being compiled
+;;;   1: params     - list of parameter symbols (original, for self-tail-call)
+;;;   2: free-vars  - list of free variable symbols
+;;;   3: constants  - list of constant values
+;;;   4: temp-ctr   - mutable cell (list of int) for temporary variables
+;;;   5: self-tail? - boolean, has self-tail-call optimization
+;;;   6: param-map  - alist mapping symbols to M3 variable names
+;;;   7: fv-map     - alist mapping free-var symbols to M3 field names
+;;;   8: var-ctr    - mutable cell (list of int) for let-bound variables
+;;;
 
 (define (make-ctx name params free-vars constants self-tail?)
-  (list name params free-vars constants (list 0) self-tail?))
+  (let ((param-map (build-indexed-map params "a_"))
+        (fv-map (build-indexed-map free-vars "b_")))
+    (list name params free-vars constants
+          (list 0)      ;; temp counter (mutable cell)
+          self-tail?
+          param-map fv-map
+          (list 0))))   ;; var counter (mutable cell)
 
 (define (ctx-name ctx) (car ctx))
 (define (ctx-params ctx) (cadr ctx))
@@ -174,25 +189,50 @@
 (define (ctx-constants ctx) (cadddr ctx))
 (define (ctx-temp-counter ctx) (car (cddddr ctx)))
 (define (ctx-self-tail? ctx) (cadr (cddddr ctx)))
+(define (ctx-param-map ctx) (caddr (cddddr ctx)))
+(define (ctx-fv-map ctx) (cadddr (cddddr ctx)))
+(define (ctx-var-counter ctx) (car (cddddr (cddddr ctx))))
 
 (define (fresh-temp ctx)
-  (let* ((counter-cell (car (cddddr ctx)))
+  (let* ((counter-cell (ctx-temp-counter ctx))
          (n (car counter-cell)))
     (set-car! counter-cell (+ n 1))
     (string-append "t_" (number->string n))))
+
+(define (fresh-var ctx)
+  ;; Generate a fresh name for a let/let*-bound variable
+  (let* ((counter-cell (ctx-var-counter ctx))
+         (n (car counter-cell)))
+    (set-car! counter-cell (+ n 1))
+    (string-append "v_" (number->string n))))
+
+(define (make-extended-ctx ctx new-param-map)
+  ;; Create a new context with an updated param-map (for let/let* bindings).
+  ;; Temp and var counters are shared (mutable cells).
+  (list (ctx-name ctx)
+        (ctx-params ctx)
+        (ctx-free-vars ctx)
+        (ctx-constants ctx)
+        (ctx-temp-counter ctx)
+        (ctx-self-tail? ctx)
+        new-param-map
+        (ctx-fv-map ctx)
+        (ctx-var-counter ctx)))
 
 ;;;
 ;;; ==================== Variable and Constant References ====================
 ;;;
 
 (define (var-ref sym ctx)
-  (cond
-    ((memq sym (ctx-params ctx))
-     (string-append "a_" (m3-ident sym)))
-    ((memq sym (ctx-free-vars ctx))
-     (string-append "self.b_" (m3-ident sym) ".get()"))
-    (else
-     (string-append "self.b_" (m3-ident sym) ".get()"))))
+  ;; Look up a variable: check param-map (locals + params) first, then fv-map
+  (let ((p (assq sym (ctx-param-map ctx))))
+    (if p
+        (cdr p)
+        (let ((f (assq sym (ctx-fv-map ctx))))
+          (if f
+              (string-append "self." (cdr f) ".get()")
+              (string-append "self." (cdr (assq sym (ctx-fv-map ctx)))
+                             ".get()"))))))
 
 (define (constant-index val ctx)
   (let loop ((cs (ctx-constants ctx)) (i 0))
@@ -210,6 +250,15 @@
                (string-append "SchemeLongReal.FromI(" (number->string val) ")"))
               ((number? val)
                (string-append "SchemeLongReal.FromLR(" (number->string val) "d0)"))
+              ((symbol? val)
+               (string-append "SchemeSymbol.Symbol(\""
+                              (symbol->string val) "\")"))
+              ((string? val)
+               (string-append "SchemeString.FromText(\""
+                              (m3-escape-string val) "\")"))
+              ((boolean? val)
+               (if val "SchemeBoolean.True()" "SchemeBoolean.False()"))
+              ((null? val) "NIL")
               (else (string-append "self.k_" (number->string 0)))))))
 
 ;;;
@@ -404,12 +453,10 @@
 (define (gen-let bindings body target ctx depth)
   (let* ((bvars (map car bindings))
          (temps (map (lambda (b) (fresh-temp ctx)) bindings))
-         (new-ctx (list (ctx-name ctx)
-                        (append bvars (ctx-params ctx))
-                        (ctx-free-vars ctx)
-                        (ctx-constants ctx)
-                        (car (cddddr ctx))
-                        (ctx-self-tail? ctx))))
+         (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
+         (new-entries (map cons bvars bvar-m3names))
+         (new-ctx (make-extended-ctx ctx
+                    (append new-entries (ctx-param-map ctx)))))
     (string-append
      ;; Evaluate init expressions into temps (outer scope, no shadowing)
      (indent depth) (L "VAR")
@@ -426,11 +473,10 @@
      ;; Declare let-bound variables in nested scope, init from temps
      (indent (+ depth 1)) (L "VAR")
      (apply string-append
-            (map (lambda (b tmp)
+            (map (lambda (m3n tmp)
                    (string-append (indent (+ depth 2))
-                                  (L "a_" (m3-ident (car b))
-                                     " : SchemeObject.T := " tmp ";")))
-                 bindings temps))
+                                  (L m3n " : SchemeObject.T := " tmp ";")))
+                 bvar-m3names temps))
      (indent (+ depth 1)) (L "BEGIN")
      (gen-begin body target new-ctx (+ depth 2))
      (indent (+ depth 1)) (L "END;")
@@ -446,18 +492,15 @@
       (let* ((b (car bindings))
              (bvar (car b))
              (tmp (fresh-temp ctx))
-             (new-ctx (list (ctx-name ctx)
-                            (cons bvar (ctx-params ctx))
-                            (ctx-free-vars ctx)
-                            (ctx-constants ctx)
-                            (car (cddddr ctx))
-                            (ctx-self-tail? ctx))))
+             (bvar-m3name (fresh-var ctx))
+             (new-ctx (make-extended-ctx ctx
+                        (cons (cons bvar bvar-m3name) (ctx-param-map ctx)))))
         (string-append
          ;; Evaluate init in outer scope (into temp)
          (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
          (gen-expr (cadr b) tmp ctx (+ depth 1))
          ;; Declare let*-bound variable in nested scope, init from temp
-         (indent (+ depth 1)) (L "VAR a_" (m3-ident bvar)
+         (indent (+ depth 1)) (L "VAR " bvar-m3name
                                   " : SchemeObject.T := " tmp "; BEGIN")
          (gen-let* (cdr bindings) body target new-ctx (+ depth 2))
          (indent (+ depth 1)) (L "END;")
@@ -525,22 +568,24 @@
 ;;;
 
 (define (gen-set! var val target ctx depth)
-  (let ((val-str (gen-value val ctx depth)))
+  (let* ((val-str (gen-value val ctx depth))
+         (param-entry (assq var (ctx-param-map ctx)))
+         (fv-entry (if (not param-entry) (assq var (ctx-fv-map ctx)) #f)))
     (if val-str
         (string-append
-         (if (memq var (ctx-params ctx))
-             (string-append (indent depth) (L "a_" (m3-ident var) " := " val-str ";"))
+         (if param-entry
+             (string-append (indent depth) (L (cdr param-entry) " := " val-str ";"))
              (string-append (indent depth)
-                            (L "self.b_" (m3-ident var) ".setB(" val-str ");")))
+                            (L "self." (cdr fv-entry) ".setB(" val-str ");")))
          (if target (emit-assign target "NIL" depth) ""))
         (let ((tmp (fresh-temp ctx)))
           (string-append
            (indent depth) (L "VAR " tmp " : SchemeObject.T; BEGIN")
            (gen-expr val tmp ctx (+ depth 1))
-           (if (memq var (ctx-params ctx))
-               (string-append (indent (+ depth 1)) (L "a_" (m3-ident var) " := " tmp ";"))
+           (if param-entry
+               (string-append (indent (+ depth 1)) (L (cdr param-entry) " := " tmp ";"))
                (string-append (indent (+ depth 1))
-                              (L "self.b_" (m3-ident var) ".setB(" tmp ");")))
+                              (L "self." (cdr fv-entry) ".setB(" tmp ");")))
            (if target (emit-assign target "NIL" (+ depth 1)) "")
            (indent depth) (L "END;"))))))
 
@@ -601,7 +646,14 @@
 ;;;
 
 (define (gen-self-tail-call args ctx depth)
+  ;; Always target the original parameter names (a_0, a_1, ...)
+  ;; regardless of let-shadowing in the current scope.
   (let* ((params (ctx-params ctx))
+         (param-m3names
+           (let loop ((ps params) (i 0) (acc '()))
+             (if (null? ps) (reverse acc)
+                 (loop (cdr ps) (+ i 1)
+                       (cons (string-append "a_" (number->string i)) acc)))))
          (all-temps (map (lambda (p) (fresh-temp ctx)) params)))
     (string-append
      (indent depth) (L "VAR")
@@ -620,18 +672,18 @@
                          (gen-expr arg tmp ctx (+ depth 1)))))
                  args all-temps))
      (apply string-append
-            (map (lambda (param tmp)
+            (map (lambda (m3n tmp)
                    (string-append
                     (indent (+ depth 1))
-                    (L "a_" (m3-ident param) " := " tmp ";")))
-                 params all-temps))
+                    (L m3n " := " tmp ";")))
+                 param-m3names all-temps))
      (indent depth) (L "END;"))))
 
 ;;;
 ;;; ==================== Compile a Single Define ====================
 ;;;
 
-(define (compile-define form)
+(define (compile-define form serial)
   (let* ((parsed (parse-define form))
          (name (car parsed))
          (params (cadr parsed))
@@ -640,7 +692,7 @@
          (constants (unique-constants (collect-constants body)))
          (self-tail (has-self-tail-call? body name))
          (ctx (make-ctx name params free-vars constants self-tail))
-         (m3name (m3-ident name))
+         (m3name (string-append "p" (number->string serial)))
          (nparams (length params)))
     (list
      (cons 'name name)
@@ -669,9 +721,9 @@
     (string-append
      (L "  Compiled_" m3name " = SchemeProcedure.T OBJECT")
      (apply string-append
-            (map (lambda (fv)
-                   (L "    b_" (m3-ident fv) " : SchemeEnvironmentBinding.T;"))
-                 free-vars))
+            (map (lambda (fv i)
+                   (L "    b_" (number->string i) " : SchemeEnvironmentBinding.T;"))
+                 free-vars (iota (length free-vars))))
      (apply string-append
             (map (lambda (c i)
                    (L "    k_" (number->string i) " : SchemeObject.T;"))
@@ -695,15 +747,18 @@
          (nparams (cdr (assq 'nparams proc)))
          (ctx (cdr (assq 'ctx proc)))
          (self-tail (cdr (assq 'self-tail proc)))
-         (body (cdr (assq 'body proc))))
+         (body (cdr (assq 'body proc)))
+         (param-m3names (map (lambda (p)
+                               (cdr (assq p (ctx-param-map ctx))))
+                             params)))
     (string-append
      (L "PROCEDURE Apply" (number->string nparams) "_" m3name
         "(self : Compiled_" m3name ";")
      (L "    interp : Scheme.T")
      (apply string-append
-            (map (lambda (p)
-                   (L "    ; a_" (m3-ident p) " : SchemeObject.T"))
-                 params))
+            (map (lambda (m3n)
+                   (L "    ; " m3n " : SchemeObject.T"))
+                 param-m3names))
      (L "    ) : SchemeObject.T")
      (L "  RAISES { Scheme.E } =")
      (if self-tail
@@ -755,7 +810,11 @@
 (define (gen-apply-proc proc)
   (let* ((m3name (cdr (assq 'm3name proc)))
          (params (cdr (assq 'params proc)))
-         (nparams (cdr (assq 'nparams proc))))
+         (nparams (cdr (assq 'nparams proc)))
+         (ctx (cdr (assq 'ctx proc)))
+         (param-m3names (map (lambda (p)
+                               (cdr (assq p (ctx-param-map ctx))))
+                             params)))
     (string-append
      (L "PROCEDURE Apply_" m3name "(self : Compiled_" m3name ";")
      (L "    interp : Scheme.T;")
@@ -771,21 +830,21 @@
           (L "  VAR")
           (L "    rest := args;")
           (apply string-append
-                 (map (lambda (p)
-                        (L "    a_" (m3-ident p) " : SchemeObject.T;"))
-                      params))
+                 (map (lambda (m3n)
+                        (L "    " m3n " : SchemeObject.T;"))
+                      param-m3names))
           (L "  BEGIN")
           (apply string-append
-                 (map (lambda (p i)
+                 (map (lambda (m3n i)
                         (string-append
-                         (L "    a_" (m3-ident p) " := SchemeUtils.First(rest);")
+                         (L "    " m3n " := SchemeUtils.First(rest);")
                          (if (< i (- nparams 1))
                              (L "    rest := SchemeUtils.Rest(rest);")
                              "")))
-                      params (iota nparams)))
+                      param-m3names (iota nparams)))
           (L "    RETURN Apply" (number->string nparams) "_" m3name "(self, interp"
              (apply string-append
-                    (map (lambda (p) (string-append ", a_" (m3-ident p))) params))
+                    (map (lambda (m3n) (string-append ", " m3n)) param-m3names))
              ")")
           (L "  END Apply_" m3name ";")
           NL)))))
@@ -821,11 +880,11 @@
                     (L "    obj_" m3name " := NEW(Compiled_" m3name
                        ", name := \"" (symbol->string name) " (compiled)\");")
                     (apply string-append
-                           (map (lambda (fv)
-                                  (L "    obj_" m3name ".b_" (m3-ident fv)
+                           (map (lambda (fv i)
+                                  (L "    obj_" m3name ".b_" (number->string i)
                                      " := env.bind(SchemeSymbol.Symbol(\""
                                      (symbol->string fv) "\"));"))
-                                free-vars))
+                                free-vars (iota (length free-vars))))
                     (apply string-append
                            (map (lambda (c i)
                                   (L "    obj_" m3name ".k_"
@@ -958,7 +1017,8 @@
     ((eq? (car expr) 'case) #f)       ;; case not supported
     ((eq? (car expr) 'letrec) #f)     ;; letrec not supported
     ((eq? (car expr) 'if)
-     (and (expr-compilable? (cadr expr))
+     (and (pair? (cddr expr))             ;; must have consequent
+          (expr-compilable? (cadr expr))
           (expr-compilable? (caddr expr))
           (or (not (pair? (cdddr expr)))
               (expr-compilable? (cadddr expr)))))
@@ -998,12 +1058,30 @@
 
 (define (define-compilable? form)
   ;; Check that a (define (name params...) body) form can be compiled.
-  (let ((sig (cadr form))
-        (body (if (null? (cdddr form))
-                  (caddr form)
-                  (cons 'begin (cddr form)))))
-    (and (proper-list? (cdr sig))       ;; no rest parameters
-         (expr-compilable? body))))
+  (if (null? (cddr form))
+      #f  ;; no body: (define (name params))
+      (let ((sig (cadr form))
+            (body (if (null? (cdddr form))
+                      (caddr form)
+                      (cons 'begin (cddr form)))))
+        (and (proper-list? (cdr sig))       ;; no rest parameters
+             (expr-compilable? body)))))
+
+;;;
+;;; ==================== Deduplication ====================
+;;;
+
+(define (deduplicate-defines defs)
+  ;; Keep only the last definition of each name (Scheme semantics:
+  ;; later define shadows earlier).  This handles files that are loaded
+  ;; multiple times in a concatenated input.
+  (let loop ((rest (reverse defs)) (seen '()) (acc '()))
+    (if (null? rest)
+        acc
+        (let ((name (caadr (car rest))))
+          (if (memq name seen)
+              (loop (cdr rest) seen acc)
+              (loop (cdr rest) (cons name seen) (cons (car rest) acc)))))))
 
 ;;;
 ;;; ==================== Top-Level Entry Points ====================
@@ -1013,17 +1091,23 @@
   (let* ((forms (read-file input-file))
          (all-defines (filter (lambda (f)
                                 (and (pair? f) (eq? (car f) 'define)
-                                     (pair? (cadr f))))
+                                     (pair? (cadr f))
+                                     (pair? (cddr f))))  ;; has body
                               forms))
-         (supported (filter define-compilable? all-defines))
+         (deduped (deduplicate-defines all-defines))
+         (supported (filter define-compilable? deduped))
          (skipped (filter (lambda (f) (not (define-compilable? f)))
-                          all-defines))
-         (procs (map (lambda (form)
-                       (let* ((parsed (parse-define form))
-                              (body (caddr parsed))
-                              (compiled (compile-define form)))
-                         (cons (cons 'body body) compiled)))
-                     supported))
+                          deduped))
+         (procs (let loop ((defs supported) (serial 0) (acc '()))
+                  (if (null? defs)
+                      (reverse acc)
+                      (let* ((form (car defs))
+                             (parsed (parse-define form))
+                             (body (caddr parsed))
+                             (compiled (compile-define form serial)))
+                        (loop (cdr defs) (+ serial 1)
+                              (cons (cons (cons 'body body) compiled)
+                                    acc))))))
          (module (gen-module module-name procs))
          (i3-text (cdr (assq 'i3 module)))
          (m3-text (cdr (assq 'm3 module)))
@@ -1038,12 +1122,20 @@
     (display "Compiled ")
     (display (length supported))
     (display " of ")
-    (display (length all-defines))
-    (display " defines to ")
+    (display (length deduped))
+    (display " unique defines to ")
     (display i3-file)
     (display " and ")
     (display m3-file)
     (newline)
+    (if (not (= (length all-defines) (length deduped)))
+        (begin
+          (display "  (Deduplicated: ")
+          (display (length all-defines))
+          (display " total defines, ")
+          (display (- (length all-defines) (length deduped)))
+          (display " duplicates removed)")
+          (newline)))
     (if (not (null? skipped))
         (begin
           (display "  Skipped (unsupported constructs): ")
@@ -1063,15 +1155,21 @@
   (let* ((forms (read-file input-file))
          (all-defines (filter (lambda (f)
                                 (and (pair? f) (eq? (car f) 'define)
-                                     (pair? (cadr f))))
+                                     (pair? (cadr f))
+                                     (pair? (cddr f))))  ;; has body
                               forms))
-         (supported (filter define-compilable? all-defines))
-         (procs (map (lambda (form)
-                       (let* ((parsed (parse-define form))
-                              (body (caddr parsed))
-                              (compiled (compile-define form)))
-                         (cons (cons 'body body) compiled)))
-                     supported))
+         (deduped (deduplicate-defines all-defines))
+         (supported (filter define-compilable? deduped))
+         (procs (let loop ((defs supported) (serial 0) (acc '()))
+                  (if (null? defs)
+                      (reverse acc)
+                      (let* ((form (car defs))
+                             (parsed (parse-define form))
+                             (body (caddr parsed))
+                             (compiled (compile-define form serial)))
+                        (loop (cdr defs) (+ serial 1)
+                              (cons (cons (cons 'body body) compiled)
+                                    acc))))))
          (module (gen-module module-name procs)))
     (display "=== ")
     (display module-name)
