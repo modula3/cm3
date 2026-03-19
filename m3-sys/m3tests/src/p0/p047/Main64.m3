@@ -6,7 +6,7 @@
 
 UNSAFE MODULE Main64 EXPORTS Main;
 
-FROM Test IMPORT checkI,checkR,checkL,checkX,checkN,done;
+FROM Test IMPORT checkI,checkR,checkL,checkN,done;
 
 TYPE
   Int32 = [0..16_7FFFFFFF];
@@ -21,7 +21,6 @@ PROCEDURE Test() =
     a : ADDRESS;
     r1 : REAL;
     l1 : LONGREAL;
-    e1 : EXTENDED;
     int32 : Int32;
     rec32 : Rec32;
   BEGIN
@@ -30,7 +29,8 @@ PROCEDURE Test() =
     checkI (BITSIZE(LONGINT), 64);
     checkI (BITSIZE(ADDRESS), 64);
     checkI (BITSIZE(int32), 32);
-    checkI (BITSIZE(LONGREAL), BITSIZE(EXTENDED));
+    checkI (BITSIZE(LONGREAL), 64);
+    checkI (BITSIZE(EXTENDED), 128);
     checkI (BITSIZE(LONGINT), BITSIZE(INTEGER));
 
     (* REAL *)
