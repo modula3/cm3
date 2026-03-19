@@ -134,6 +134,38 @@ self-evaluating.  A symbol is always a variable reference.  A list
 starting with \texttt{if} is always the \texttt{if} special form.
 The type dispatch can be fully eliminated.
 
+\subsection{Syntactic Keywords are Reserved}
+\label{sec:keywords-reserved}
+
+The compiler assumes that the R4RS syntactic keywords---\texttt{and},
+\texttt{begin}, \texttt{case}, \texttt{cond}, \texttt{define},
+\texttt{delay}, \texttt{do}, \texttt{if}, \texttt{lambda},
+\texttt{let}, \texttt{let*}, \texttt{letrec}, \texttt{or},
+\texttt{quote}, \texttt{set!}---have their standard meanings and are
+never shadowed by variable bindings.  This is mandated by
+R4RS~\S2.1:\footnote{William Clinger and Jonathan Rees~(eds.),
+\emph{Revised$^4$ Report on the Algorithmic Language Scheme},
+ACM Lisp Pointers~IV(3), July--September 1991.}
+
+\begin{quote}
+``Certain identifiers are reserved for use as syntactic keywords
+and may not be used as variables.''
+\end{quote}
+
+R4RS goes on to note that ``some implementations allow all
+identifiers, including syntactic keywords, to be used as variables''
+but calls this out as creating ``ambiguities in the language.''
+The MScheme interpreter is such an implementation: it permits
+redefining \texttt{and}, \texttt{or}, \texttt{not}, \texttt{let},
+\texttt{let*}, \texttt{case}, and~\texttt{do} as ordinary
+procedures, while \texttt{if}, \texttt{begin}, \texttt{lambda},
+\texttt{set!}, and~\texttt{quote} are hardcoded and cannot be
+overridden.
+
+The compiler follows R4RS and treats all syntactic keywords as
+reserved.  Programs that redefine any of these names will produce
+different results when compiled than when interpreted.
+
 \section{Special-Form Recognition}
 \label{sec:sfrecog}
 
@@ -919,6 +951,26 @@ a \texttt{LOOP} with variable reassignment, bypassing the
 environment entirely.  Since the loop name is lexically scoped to
 the \texttt{let} body, it is never visible in the environment and
 cannot be redefined, so there is no semantic concern.
+
+\paragraph{Tail position.}
+The \texttt{has-self-tail-call?} predicate determines whether a
+function body contains a self-call in tail position.  The following
+forms propagate tail position to their sub-expressions:
+\texttt{if} (consequent and alternative),
+\texttt{cond} (last expression of each clause),
+\texttt{case} (last expression of each clause),
+\texttt{begin} (last expression),
+\texttt{let}, \texttt{let*}, \texttt{letrec} (body),
+\texttt{do} (exit expressions),
+\texttt{and} (last argument),
+and \texttt{or} (last argument).
+The treatment of \texttt{and}/\texttt{or} as tail-propagating is
+valid because R4RS reserves these as syntactic keywords
+(see~\S\ref{sec:keywords-reserved}): they always have their
+standard short-circuit semantics, so the last argument is genuinely
+in tail position.  If they could be redefined as procedures, the
+last argument would be an operand evaluated before the call, not
+a tail expression.
 
 \paragraph{Non-tail self-recursion.}
 By contrast, when a function calls itself in \emph{non}-tail

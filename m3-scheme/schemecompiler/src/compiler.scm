@@ -320,8 +320,12 @@
            (or (has-self-tail-call? (last (car clauses)) name)
                (loop (cdr clauses))))))
     ((eq? (car expr) 'lambda) #f)  ;; opaque boundary
-    ((eq? (car expr) 'and) #f)
-    ((eq? (car expr) 'or) #f)
+    ((eq? (car expr) 'and)
+     (if (null? (cdr expr)) #f
+         (has-self-tail-call? (last (cdr expr)) name)))
+    ((eq? (car expr) 'or)
+     (if (null? (cdr expr)) #f
+         (has-self-tail-call? (last (cdr expr)) name)))
     ((eq? (car expr) 'set!) #f)
     ((and (pair? expr) (eq? (car expr) name)) #t)
     (else #f)))
@@ -1032,7 +1036,7 @@
              (string-append (indent depth) (L (cdr param-entry) " := " val-str ";"))
              (string-append (indent depth)
                             (L "self." (cdr fv-entry) ".setB(" val-str ");")))
-         (if target (emit-assign target "NIL" depth) ""))
+         (emit-assign target "NIL" depth))
         (let ((tmp (fresh-temp ctx)))
           (string-append
            (gen-expr val tmp ctx depth)
@@ -1040,7 +1044,7 @@
                (string-append (indent depth) (L (cdr param-entry) " := " tmp ";"))
                (string-append (indent depth)
                               (L "self." (cdr fv-entry) ".setB(" tmp ");")))
-           (if target (emit-assign target "NIL" depth) ""))))))
+           (emit-assign target "NIL" depth))))))
 
 ;;;
 ;;; ==================== Procedure Call ====================
@@ -1744,8 +1748,8 @@
     ((eq? (car expr) 'letrec)
      (and (nlc-not-in-bindings? sym (cadr expr))
           (nlc-in-tail-body? sym (cddr expr))))
-    ((eq? (car expr) 'and) (nlc-all-not-in? sym (cdr expr)))
-    ((eq? (car expr) 'or) (nlc-all-not-in? sym (cdr expr)))
+    ((eq? (car expr) 'and) (nlc-in-tail-body? sym (cdr expr)))
+    ((eq? (car expr) 'or) (nlc-in-tail-body? sym (cdr expr)))
     ((eq? (car expr) 'not) (nlc-not-in? sym (cadr expr)))
     ((eq? (car expr) 'set!) (nlc-not-in? sym (caddr expr)))
     ((eq? (car expr) 'case)
