@@ -16,6 +16,7 @@ IMPORT SchemeM3;
 IMPORT SchemeNavigatorEnvironment;
 IMPORT ParseParams, Stdio;
 IMPORT SchemeInteraction;
+IMPORT SchemeCompiled; <*NOWARN*>
 
 <*FATAL Thread.Alerted*>
 

@@ -1484,7 +1484,7 @@ future optimization that would eliminate virtual dispatch overhead
 on the fast path.
 
 The compiler is implemented in \texttt{compiler.scm} (approximately
-1000 lines of Scheme), resides in the \texttt{schemecompiler} package
+2,200 lines of Scheme), resides in the \texttt{schemecompiler} package
 under \texttt{m3-scheme/}, and follows Strategy~B
 (\S\ref{sec:stratB}): ahead-of-time compilation from Scheme source to
 Modula-3 source, integrated into the CM3 build via a Quake template.
@@ -1624,8 +1624,8 @@ adopted without changing the compiler itself.
 %----------------------------------------------------------------------
 
 The compiler is validated by a comprehensive correctness test suite
-consisting of \textbf{321 test cases} organized into \textbf{12
-categories}.  All 321 tests pass on ARM64\_DARWIN (Apple Silicon).
+consisting of \textbf{414 test cases}.
+All 414 tests pass on ARM64\_DARWIN (Apple Silicon).
 
 \subsection{Test Structure}
 
@@ -1639,7 +1639,7 @@ The test suite consists of two files:
 
 \item[\texttt{Main.m3}] A Modula-3 test driver that instantiates an
   MScheme interpreter, calls \texttt{CompiledTest.Install(scm)} to
-  register the compiled procedures, and then evaluates 321 test
+  register the compiled procedures, and then evaluates test
   expressions via \texttt{scm.loadEvalText()}, comparing each result
   against an expected string representation.
 \end{description}
@@ -1774,8 +1774,8 @@ Edge Cases & 19 &
 
 \subsection{Benchmark Harness}
 
-Following the 321 correctness tests, the test program includes a
-performance benchmark section.  Four benchmarks are timed in two
+Following the correctness tests, the test program includes a
+performance benchmark section.  Five benchmarks are timed in two
 configurations: first with the compiled procedures (as installed by
 \texttt{CompiledTest.Install}), then again after redefining the same
 functions as interpreted closures via \texttt{loadEvalText}.
@@ -2037,7 +2037,7 @@ checker rather than crashing.
 \label{sec:bug-constants}
 
 \paragraph{Symptom.}
-After compiling the CSP compiler's 587 definitions, the Modula-3
+After compiling the CSP compiler's definitions, the Modula-3
 build produced 12 errors of the form ``\texttt{unknown qualification
 `.'\,(k\_0)}''.  The generated code referenced constant fields
 (\texttt{self.k\_0}) that did not exist in the object type declaration.
@@ -2183,9 +2183,10 @@ function name (which corresponds to the \emph{last} definition in
 the source, preserving Scheme's redefinition semantics).  Duplicate
 definitions are silently dropped with a diagnostic message.
 
-In the CSP compiler test (\S\ref{sec:impl-cspc}), this removed 4
-duplicate definitions from the 867 extracted defines, reducing the
-unique count to 863.
+When the CSP compiler was first compiled as a single concatenated
+file (before per-module compilation was introduced), deduplication
+removed 4 duplicate definitions from 867 extracted defines,
+reducing the unique count to 863.
 
 %----------------------------------------------------------------------
 \section{Performance Results}
@@ -2193,21 +2194,29 @@ unique count to 863.
 %----------------------------------------------------------------------
 
 The test program includes a benchmark section that compares compiled
-and interpreted execution of four workloads.  The benchmarks were
-run on ARM64\_DARWIN (Apple M1, macOS).
+and interpreted execution of five workloads.  The benchmarks were
+run on ARM64\_DARWIN (Apple M4, macOS).
 
 \begin{center}
 \begin{tabular}{lccc}
 \toprule
 \textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
 \midrule
-\texttt{(fibonacci 25)}       & 225 ms    & 2,324 ms   & 10.3$\times$ \\
-\texttt{(fibonacci 30)}       & 5,603 ms  & 24,092 ms  & 4.3$\times$ \\
-\texttt{(loop-sum 10000 0)}   & 36 ms     & 83 ms      & 2.3$\times$ \\
-\texttt{(ackermann 3 4)}      & 13 ms     & 81 ms      & 6.4$\times$ \\
+\texttt{(fibonacci 25)}       & 148 ms    & 672 ms   & 4.5$\times$ \\
+\texttt{(fibonacci 30)}       & 1,635 ms  & 7,156 ms  & 4.4$\times$ \\
+\texttt{(loop-sum 10000 0)}   & 6 ms      & 32 ms      & 5.5$\times$ \\
+\texttt{(ackermann 3 4)}      & 6 ms      & 28 ms      & 4.4$\times$ \\
+\texttt{(lambda-map-sum 10000)} & 28 ms   & 142 ms     & 5.1$\times$ \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+The \texttt{lambda-map-sum} benchmark exercises lambda closures
+and higher-order calls (\texttt{map} over a list with an
+accumulating lambda).  The 5.1$\times$ speedup shows that the
+lambda compilation machinery---closure allocation, free-variable
+capture, and the \texttt{apply} method dispatch---delivers
+performance comparable to the other benchmarks.
 
 \subsection{Analysis}
 
@@ -2269,6 +2278,7 @@ is almost entirely step~1 (parsing) and step~2 (eval-loop entry),
 not step~3 (the actual computation).
 
 \subsection{The Bottleneck: Binding Lookup and Virtual Dispatch}
+\label{sec:impl-bottleneck}
 
 For non-self-tail-call functions, the remaining per-call overhead
 in compiled code is:
@@ -2398,64 +2408,135 @@ lines of Scheme across $\sim$50 source files.
 
 \subsection{Compilation Results}
 
-The 50 source files were concatenated into a single input file
-(16,313 lines).  The compiler extracted 867 top-level
-\texttt{define} forms.  After deduplication (\S\ref{sec:impl-dedup}),
-863 unique definitions remained.  Of these:
+The $\sim$50 source files are compiled individually as separate
+modules during the \texttt{cm3} build.  Across all modules, the
+compiler processes approximately 1,236 top-level \texttt{define}
+forms.  Of these:
 
 \begin{center}
 \begin{tabular}{lr}
 \toprule
 \textbf{Category} & \textbf{Count} \\
 \midrule
-Successfully compiled    & 587 (68\%) \\
-Skipped (unsupported constructs) & 276 (32\%) \\
+Successfully compiled    & 724 (59\%) \\
+Skipped (passthrough to interpreter) & 512 (41\%) \\
 \midrule
-Total unique defines     & 863 \\
-Duplicates removed       & 4 \\
+Total defines     & $\sim$1,236 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The 276 skipped definitions break down by blocking construct:
-
-\begin{center}
-\begin{tabular}{lc}
-\toprule
-\textbf{Blocking construct} & \textbf{Count} \\
-\midrule
-\texttt{lambda} (in \texttt{map}/\texttt{filter}/\texttt{for-each} args) & $\sim$200 \\
-Named \texttt{let}         & $\sim$50 \\
-Rest parameters (\texttt{.\ args}) & $\sim$15 \\
-\texttt{do} loops          & $\sim$5 \\
-Other (internal define, letrec, etc.) & $\sim$6 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-As with the unit tests, \texttt{lambda} is by far the dominant
-gap.  Adding lambda support alone would push the compilation ratio
-well above 80\%.
+The remaining skipped definitions are blocked primarily by
+\texttt{quasiquote} (used in template-based code generation)
+and by patterns not yet handled by the compilability checker
+(e.g., complex \texttt{apply} patterns, higher-order functions
+that take variable numbers of procedure arguments).
+Key modules achieve high compilation ratios:
+\texttt{simplify} (7/7), \texttt{expr} (15/15),
+\texttt{symbolic} (26/27), \texttt{product} (12/13),
+\texttt{visit} (12/13), \texttt{higher\_order} (23/23),
+\texttt{saturation} (9/10).
 
 \subsection{Correctness Verification}
 
 To verify that the compiled definitions produce identical results
 to the interpreted originals, the compiled CSP compiler was run on
-four MiniMIPS processor designs: Fetch, Decode, Execute, and
-RegFile.  These are real circuit specifications that exercise
-the full depth of the CSP compiler's analysis, transformation, and
-code generation passes.
+all seven MiniMIPS processor designs (MemStage, DataMem, Decode,
+Fetch, Execute, RegFile, Writeback).  These are real circuit
+specifications that exercise the full depth of the CSP compiler's
+analysis, transformation, and code generation passes.
 
-The output of the compiled configuration (587 compiled
-+ 276 interpreted definitions) was compared against the output of
-the fully interpreted configuration (all 863 definitions interpreted).
-The results were \textbf{byte-for-byte identical} on all four
-test cases.
+The output of the compiled configuration was compared against the
+output of the fully interpreted configuration (all definitions
+interpreted via \texttt{MSCHEME\_INTERPRETED=1}).
+The results were \textbf{byte-for-byte identical} on all seven
+processes, verified by SHA-1 checksum of all generated Modula-3
+source files.
 
 This is strong evidence that the compiler preserves semantics
-faithfully: the 587 compiled definitions interoperate correctly
-with each other, with the 276 interpreted definitions, and with
+faithfully: the compiled definitions interoperate correctly
+with each other, with the interpreted (passthrough) definitions, and with
 the MScheme runtime primitives.
+
+\subsection{End-to-End Performance}
+\label{sec:impl-cspc-perf}
+
+To measure the performance impact of compilation on a real workload,
+the full MiniMIPS processor design (seven processes: MemStage,
+DataMem, Decode, Fetch, Execute, RegFile, Writeback) was compiled
+by \texttt{cspc} in two configurations: compiled mode (using
+\texttt{SchemeCompiledRegistry} for all available compiled
+definitions) and interpreted mode (forcing all definitions through
+the interpreter via \texttt{MSCHEME\_INTERPRETED=1}).
+The output of both runs was verified to be byte-for-byte identical.
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
+\midrule
+MiniMIPS (7 processes) & 46.5\,s & 86.5\,s & 1.86$\times$ \\
+HelloWorld (1 process) & 0.73\,s & 1.48\,s & 2.0$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The per-process breakdown for MiniMIPS (compiled mode) shows that
+\texttt{compile!} dominates, accounting for approximately 88\%\ of
+total time:
+
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Process} & \textbf{loaddata} & \textbf{compile} & \textbf{codegen} & \textbf{total} \\
+\midrule
+MemStage  & 0.02\,s &  1.69\,s & 0.30\,s &  2.01\,s \\
+DataMem   & 0.01\,s &  5.92\,s & 0.75\,s &  6.68\,s \\
+Decode    & 0.01\,s &  1.76\,s & 0.33\,s &  2.09\,s \\
+Fetch     & 0.00\,s &  1.07\,s & 0.09\,s &  1.17\,s \\
+Execute   & 0.04\,s & 29.06\,s & 3.70\,s & 32.79\,s \\
+RegFile   & 0.00\,s &  0.99\,s & 0.10\,s &  1.10\,s \\
+Writeback & 0.00\,s &  0.35\,s & 0.12\,s &  0.47\,s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The Execute process dominates the workload (70\%\ of total time),
+reflecting the combinational complexity of the ALU.  Comparing the
+\texttt{compile!} phase across modes---29.1\,s compiled versus
+49.1\,s interpreted---yields a 1.69$\times$ speedup on the hottest
+phase.  The \texttt{codegen} phase shows 2.2$\times$ and
+\texttt{loaddata} shows 4.3$\times$.
+
+The 1.86$\times$ overall speedup is lower than the 4--5$\times$
+seen in micro-benchmarks because:
+
+\begin{itemize}
+\item Not all functions are compiled.  Of the $\sim$\,900 unique
+  definitions in the CSP compiler's 50 source files, approximately
+  60\%\ are compiled natively.  The remainder fall through to the
+  interpreter as passthrough definitions---still executed, but at
+  interpreter speed.
+
+\item The hottest inner loops (the AST visitor walkers
+  \texttt{prepostvisit-stmt}, \texttt{prepostvisit-expr}, and
+  their callees) are now compiled, but they call out to both
+  compiled and interpreted code through the general
+  \texttt{SchemeProcedure.T} dispatch path.  Each cross-boundary
+  call incurs the full binding-lookup + NARROW + virtual-dispatch
+  overhead (\S\ref{sec:impl-bottleneck}).
+
+\item The \texttt{compile!} phase is dominated by abstract
+  interpretation over large ASTs (thousands of nodes per process),
+  where per-node overhead accumulates but individual node processing
+  involves substantial work beyond the call overhead that compilation
+  eliminates.
+\end{itemize}
+
+Further speedup from intra-module direct calls
+(\S\ref{sec:gap-intra}) would reduce the per-call overhead on the
+fast path and is expected to deliver the most significant additional
+improvement.
 
 \subsection{Bugs Discovered}
 
@@ -2473,7 +2554,7 @@ addition to synthetic test suites.
 
 \subsection{Current Restrictions}
 
-The Level~1 compiler supports the following Scheme constructs in
+The Level~1 compiler supports a broad subset of Scheme in
 compiled definitions:
 
 \begin{center}
@@ -2481,26 +2562,30 @@ compiled definitions:
 \toprule
 \textbf{Supported} & \textbf{Not yet supported} \\
 \midrule
-\texttt{if}, \texttt{cond} (with \texttt{else})
-  & \texttt{lambda} \\
-\texttt{let}, \texttt{let*}
-  & Named \texttt{let} \\
-\texttt{begin}
-  & \texttt{letrec} \\
-\texttt{and}, \texttt{or}, \texttt{not}
-  & Internal \texttt{define} \\
-\texttt{set!}
-  & \texttt{cond} with \texttt{=>} \\
-\texttt{quote} (all types)
-  & \texttt{case}, \texttt{do} \\
-Self-tail-call optimization
-  & Rest parameters \\
-1--4 fixed parameters
-  & General tail-call optimization \\
-Free-variable capture via bindings
+\texttt{if}, \texttt{cond} (with \texttt{else} and \texttt{=>})
   & \texttt{quasiquote} \\
-Constants (numbers, strings, symbols,
+\texttt{let}, \texttt{let*}, named \texttt{let}
   & \texttt{call/cc} \\
+\texttt{letrec}, internal \texttt{define}
+  & General tail-call optimization \\
+\texttt{lambda} (closures with captures)
+  & \\
+\texttt{case}, \texttt{do}
+  & \\
+\texttt{begin}, \texttt{and}, \texttt{or}, \texttt{not}
+  & \\
+\texttt{set!} (local and free variables)
+  & \\
+\texttt{quote} (all types)
+  & \\
+Self-tail-call optimization
+  & \\
+Fixed and rest parameters
+  & \\
+Free-variable capture (by value and by binding)
+  & \\
+Constants (numbers, strings, symbols,
+  & \\
 \quad booleans, chars, null, quoted lists)
   & \\
 \bottomrule
@@ -2512,330 +2597,214 @@ by the compilability checker and fall back to the interpreter with
 no loss of semantics.  The compiled and interpreted definitions
 interoperate transparently through the
 \texttt{SchemeProcedure.T} interface (\S\ref{sec:proctype}).
+The only construct of practical significance that remains
+unsupported is \texttt{quasiquote}, which blocks one definition
+in the compiler itself (\texttt{form->string}) and a handful of
+definitions in the CSP compiler that use template-based code
+generation.
 
 %======================================================================
-\chapter{Remaining Compiler Gaps and How to Close Them}
+\chapter{Implemented Language Extensions}
+\label{ch:implemented}
+%======================================================================
+
+The following language constructs were added to the Level~1 compiler
+after the initial release.  Each was a gap identified in the original
+design; this chapter documents the implementation approach taken
+for each.
+
+%----------------------------------------------------------------------
+\section{Closures (\texttt{lambda})}
+\label{sec:gap-lambda}
+%----------------------------------------------------------------------
+
+Lambda was the single largest gap in the original compiler.
+The implementation follows the flat-closure strategy described
+in Chapter~\ref{ch:analysis}: each \texttt{lambda} expression
+generates a \texttt{SchemeProcedure.T} subclass (named
+\texttt{Compiled\_lam\emph{N}}) with typed fields for captured
+variables.
+
+Captures are classified into two categories:
+
+\begin{description}
+\item[Binding captures (\texttt{b\_\emph{N}} fields)]
+  Variables that are free in the enclosing function (accessed via
+  \texttt{SchemeEnvironmentBinding.T} cells).  The lambda shares
+  the same binding cell reference---mutations are visible in both
+  directions.
+
+\item[Value captures (\texttt{cap\_\emph{N}} fields)]
+  Variables that are parameters or \texttt{let}-bound locals of
+  the enclosing function.  These are captured by value
+  (\texttt{SchemeObject.T} snapshot at closure-creation time).
+\end{description}
+
+The closure type declaration and \texttt{apply} methods are
+accumulated during code generation and emitted after the
+enclosing function's procedures, exactly as for top-level
+\texttt{define} forms.  Lambdas may nest to arbitrary depth;
+each level captures from its immediately enclosing scope.
+
+Adding lambda support raised the compiler's self-compilation
+ratio from 38/59 to 93/100 (in combination with the other
+constructs described below) and the CSP compiler ratio
+from 68\%\ to approximately 59\% of a larger total
+(many previously-skipped functions now compile, but the
+per-module compilation also discovered additional definitions).
+
+%----------------------------------------------------------------------
+\section{Named \texttt{let}}
+\label{sec:gap-named-let}
+%----------------------------------------------------------------------
+
+Named \texttt{let} is compiled to a Modula-3 \texttt{LOOP} with
+parameter reassignment, reusing the self-tail-call machinery.
+Tail calls to the loop name become variable reassignment followed
+by \texttt{LOOP} continuation.
+
+For named \texttt{let} in non-tail position (where \texttt{RETURN}
+cannot be used to exit the loop), the compiler emits a
+\texttt{WHILE} loop controlled by a boolean flag variable.  The
+result is assigned to a target temporary and the flag is set to
+\texttt{FALSE} to exit.
+
+%----------------------------------------------------------------------
+\section{\texttt{letrec} and Internal \texttt{define}}
+\label{sec:gap-letrec}
+%----------------------------------------------------------------------
+
+\texttt{letrec} binds variables to undefined values, then evaluates
+the initializers in the scope of all the bindings (allowing mutual
+references).  Internal \texttt{define} forms are desugared to
+\texttt{letrec} (or \texttt{let} when non-recursive) by hoisting
+all defines from the body.
+
+The key implementation challenge is that lambda initializers in a
+\texttt{letrec} may capture sibling bindings that have not yet been
+assigned.  If the bindings were plain Modula-3 local variables,
+capture-by-value would snapshot \texttt{NIL}.  The solution uses
+\texttt{LetrecCell}---a lightweight \texttt{SchemeEnvironmentBinding.T}
+subtype generated inline in each compiled module:
+
+\begin{lstlisting}[language=Modula3]
+TYPE LetrecCell = SchemeEnvironmentBinding.T OBJECT
+    val : SchemeObject.T;
+  OVERRIDES
+    get := LCGet; setB := LCSet; ...
+  END;
+\end{lstlisting}
+
+Each \texttt{letrec}-bound variable is allocated as a
+\texttt{LetrecCell} initialized to \texttt{NIL}.  The cells are
+added to the compiler's free-variable map, so lambdas in the
+init expressions capture them by \emph{reference} (as
+\texttt{b\_\emph{N}} binding fields) rather than by value.
+After all initializers are evaluated, each cell is set via
+\texttt{.setB()}.  When the lambdas are later called, they see the
+correct values through the binding cell indirection.
+
+\texttt{LetrecCell.get()} and \texttt{.setB()} are direct field
+accesses---no environment hash-table lookup is involved---so the
+overhead relative to plain local variables is minimal (one extra
+pointer dereference per access).
+
+%----------------------------------------------------------------------
+\section{Other Constructs}
+\label{sec:gap-other}
+%----------------------------------------------------------------------
+
+\paragraph{\texttt{cond} with \texttt{=>}.}
+The clause \texttt{(test => proc)} evaluates \texttt{test}; if
+truthy, it calls \texttt{proc} with the test value as argument.
+The implementation binds the test result to a temporary and
+dispatches through \texttt{apply1}.
+
+\paragraph{\texttt{case}.}
+Compiled as a chain of \texttt{IF}/\texttt{ELSIF} comparisons
+using \texttt{SchemeUtils.Eqv}.
+
+\paragraph{\texttt{do}.}
+Compiled to a Modula-3 \texttt{LOOP} with step expressions
+evaluated into temporaries and assigned at the end of each
+iteration, following the self-tail-call pattern.
+
+\paragraph{Rest parameters.}
+Functions with dotted parameter lists
+\texttt{(define (f a b .\ rest) ...)} are compiled with the
+\texttt{Apply} (list-argument) method extracting fixed parameters
+via \texttt{SchemeUtils.First}/\texttt{Rest} and binding the
+remainder to the rest parameter.  The \texttt{apply1} and
+\texttt{apply2} specializations construct a list from excess
+arguments.
+
+\paragraph{\texttt{and}/\texttt{or} in tail position.}
+The last argument of \texttt{and} and \texttt{or} is now
+recognized as a tail position, allowing named-\texttt{let}
+loop calls there.  This unblocked several recursive
+predicates in the compiler itself.
+
+%======================================================================
+\chapter{Remaining Compiler Gaps}
 \label{ch:gaps}
 %======================================================================
 
-The compiler currently supports a productive subset of Scheme: all
-of the constructs used in ordinary first-order programming are
-compiled to efficient Modula-3 code.  Definitions that use
-unsupported constructs are silently skipped by the compilability
-checker (\S\ref{ch:boundary}), falling back to the
-interpreter with no loss of semantics.
+With the language extensions described in
+Chapter~\ref{ch:implemented}, the compiler now handles all
+commonly-used Scheme constructs.  The compiler self-compiles
+101 of 102 definitions (only \texttt{form->string} is skipped
+due to \texttt{quasiquote}).  Definitions that use unsupported
+constructs are silently skipped by the compilability checker
+(\S\ref{ch:boundary}), falling back to the interpreter with no
+loss of semantics.
 
-This chapter catalogues the remaining gaps---both in language
-coverage and in call optimization---and describes concrete
-strategies for closing each one.  The gaps are ordered roughly
-by impact, measured by how many definitions in the compiler's own
-source code (\texttt{compiler.scm}) each gap prevents from being
-compiled.  Self-compilation is a useful stress test.  In
-addition, the large-scale CSP compiler validation
-(\S\ref{sec:impl-cspc}) provides empirical data on which
-constructs matter most in a production codebase.
+This chapter catalogues the remaining gaps---primarily in call
+optimization---and describes concrete strategies for closing each
+one.
 
 %----------------------------------------------------------------------
 \section{Missing Language Constructs}
 \label{sec:gaps-lang}
 %----------------------------------------------------------------------
 
-\subsection{\texttt{lambda} --- Closures}
-\label{sec:gap-lambda}
+\subsection{\texttt{quasiquote}}
+\label{sec:gap-quasiquote}
 
 \paragraph{Impact.}
-This is the single largest gap.  In \texttt{compiler.scm},
-31 definitions contain \texttt{lambda} expressions---nearly all as
-arguments to \texttt{map} and \texttt{filter}---and all 31 are
-skipped.  Closing this gap alone would bring the self-compilation
-ratio from 38/59 to 50/59.
-
-\paragraph{What is needed.}
-A \texttt{lambda} expression creates a first-class closure: an
-anonymous procedure that captures the lexical environment at its
-point of definition.  The compiler must:
-
-\begin{enumerate}
-\item Generate a \texttt{SchemeProcedure.T} subclass for the lambda
-  body, just as it does for a top-level \texttt{define}.
-
-\item At the point where the lambda appears, allocate a \texttt{NEW}
-  instance of that subclass and populate its free-variable bindings.
-
-\item The lambda's free variables include both the enclosing
-  function's parameters (available as local Modula-3 variables) and
-  free variables inherited from the enclosing scope (available as
-  binding cells on \texttt{self}).
-\end{enumerate}
+One definition in the compiler (\texttt{form->string}) uses
+\texttt{quasiquote}, and a handful of CSP compiler modules
+use it for template-based code generation.
 
 \paragraph{Strategy.}
-The compilation of a \texttt{lambda} is structurally identical to
-the compilation of a top-level \texttt{define}: analyze the body
-for free variables, generate a procedure object type, and emit
-\texttt{apply} methods.  The difference is that the object is
-allocated inline (within the enclosing function's generated code)
-rather than in the \texttt{Install} procedure.
-
-For free variables that are parameters of the enclosing function,
-the lambda closure must capture them by \emph{value} (not by
-binding cell), since parameters are Modula-3 local variables.
-This can be done by adding \texttt{SchemeObject.T} fields to the
-lambda's object type, initialized at allocation time:
-
-\begin{lstlisting}[language=Modula3]
-(* (lambda (y) (+ x y)) where x is a parameter *)
-TYPE Lambda_0 = SchemeProcedure.T OBJECT
-    captured_x : SchemeObject.T;  (* captured from enclosing scope *)
-    b_plus     : SchemeEnvironmentBinding.T;
-  OVERRIDES
-    apply1 := Apply1_Lambda_0;
-  END;
-
-(* At the point where the lambda appears: *)
-VAR lam := NEW(Lambda_0,
-    captured_x := a_x,
-    b_plus := self.b_plus);
-\end{lstlisting}
-
-For free variables that are themselves free in the enclosing
-function (i.e., accessed via binding cells), the lambda can share
-the same binding cell reference---no special treatment is needed.
-
-\paragraph{Complication: mutable captures.}
-If a captured variable is mutated via \texttt{set!} in either the
-enclosing function or the lambda, capture-by-value is incorrect.
-The standard solution is to ``box'' mutable variables: allocate a
-one-element mutable cell and have both the enclosing function and
-the lambda access the variable through the cell.  This is the
-approach described by Dybvig~[4].  However, \texttt{set!} on
-captured variables is rare in practice; the common case (lambdas
-passed to \texttt{map}) involves no mutation.  An initial
-implementation can reject lambdas that capture mutated variables,
-extending the compilability check.
+\texttt{quasiquote} is a reader macro that expands to nested
+\texttt{cons}, \texttt{list}, and \texttt{append} calls.
+The expansion can be performed as a desugaring pass before
+compilation, converting quasiquoted forms to ordinary
+\texttt{list}/\texttt{cons}/\texttt{append} expressions
+that the compiler already handles.
 
 \paragraph{Difficulty: moderate.}
-The code generation machinery already exists; the main work is
-lambda lifting (generating a fresh type per lambda) and wiring up
-the free-variable analysis to distinguish parameter captures from
-binding-cell captures.
+The expansion rules for nested quasiquote are subtle
+(R5RS~\S7.1.4), but the resulting expressions are straightforward
+to compile.
 
-\subsection{Named \texttt{let}}
-\label{sec:gap-named-let}
-
-\paragraph{Impact.}
-Seven definitions in \texttt{compiler.scm} use named \texttt{let},
-including utility functions like \texttt{iota},
-\texttt{unique-symbols}, and \texttt{read-file}.  This is the
-second most common gap.
-
-\paragraph{What is needed.}
-Named \texttt{let} is syntactic sugar for a self-recursive local
-function:
-\begin{lstlisting}[language=Scheme]
-(let loop ((i 0) (acc '()))
-  (if (= i n) acc
-      (loop (+ i 1) (cons i acc))))
-\end{lstlisting}
-
-\noindent is equivalent to:
-\begin{lstlisting}[language=Scheme]
-((lambda (loop)
-   (set! loop (lambda (i acc)
-     (if (= i n) acc
-         (loop (+ i 1) (cons i acc)))))
-   (loop 0 '()))
- #f)
-\end{lstlisting}
-
-\paragraph{Strategy.}
-Named \texttt{let} is almost exactly the self-tail-call pattern
-that the compiler already handles.  The difference is that the
-``function'' is local, not top-level.  The most direct compilation
-is to emit a Modula-3 \texttt{LOOP} with the named-let variables
-as \texttt{VAR} locals, the initial values as initializers, and the
-body as the loop body---exactly the self-tail-call pattern.
-
-Tail calls to the named-let name become parameter reassignment
-followed by loop continuation (no \texttt{EXIT}).  Non-tail calls
-to the name would require either a nested procedure or a lambda
-(and could be rejected by the compilability checker until lambda
-support is available).
-
-\begin{lstlisting}[language=Modula3]
-(* Named let compiled to LOOP: *)
-VAR
-  a_i : SchemeObject.T := SchemeLongReal.Zero;
-  a_acc : SchemeObject.T := NIL;
-BEGIN
-  LOOP
-    IF (* (= i n) *) THEN
-      RETURN a_acc
-    ELSE
-      VAR t_0, t_1 : SchemeObject.T; BEGIN
-        t_0 := SchemeLongReal.Add(a_i, SchemeLongReal.One);
-        t_1 := SchemeUtils.Cons(a_i, a_acc, interp);
-        a_i := t_0;
-        a_acc := t_1;
-      END
-    END
-  END
-END
-\end{lstlisting}
-
-\paragraph{Difficulty: easy.}
-The self-tail-call machinery can be reused almost directly.
-
-\subsection{\texttt{letrec}}
-\label{sec:gap-letrec}
+\subsection{\texttt{call/cc}}
+\label{sec:gap-callcc}
 
 \paragraph{Impact.}
-Not used in \texttt{compiler.scm}, but common in general Scheme
-code for defining mutually recursive local functions.
+Not used in any current MScheme codebase.
 
-\paragraph{Strategy.}
-\texttt{letrec} binds variables to undefined values, then evaluates
-the initializers in the scope of all the bindings (allowing mutual
-references).  The compilation is:
-
-\begin{enumerate}
-\item Declare all variables as \texttt{VAR} with no initializer
-  (defaulting to \texttt{NIL}).
-\item Evaluate each initializer and assign to the corresponding
-  variable.
-\item Execute the body.
-\end{enumerate}
-
-This is simpler than \texttt{let} (no shadowing concern, since the
-variables are explicitly uninitialized during init evaluation).
-
-\paragraph{Difficulty: easy.}
-
-\subsection{Internal \texttt{define}}
-\label{sec:gap-internal-define}
-
-\paragraph{Impact.}
-Not used in \texttt{compiler.scm}, but idiomatic in many Scheme
-programs for defining local helper functions.
-
-\paragraph{Strategy.}
-R5RS specifies that internal defines at the beginning of a body
-are equivalent to \texttt{letrec}.  The compiler can desugar
-internal defines to \texttt{letrec} during an AST preprocessing
-pass, then compile the \texttt{letrec} as described above.
-
-\paragraph{Difficulty: easy,} once \texttt{letrec} is supported.
-
-\subsection{\texttt{cond} with \texttt{=>} Syntax}
-\label{sec:gap-cond-arrow}
-
-\paragraph{Impact.}
-Not currently used in \texttt{compiler.scm} (the function that
-previously used it, \texttt{m3-char}, was eliminated when the
-compiler switched to serial-numbered identifiers;
-see~\S\ref{sec:impl-idents}).  However, \texttt{cond =>} appears
-in general Scheme programs.
-
-\paragraph{What is needed.}
-The clause \texttt{(test => proc)} evaluates \texttt{test}; if true,
-it calls \texttt{proc} with the test value as argument.  This
-requires binding the test result to a temporary and passing it
-to the procedure.
-
-\paragraph{Strategy.}
-In \texttt{gen-cond}, when a clause has the \texttt{=>} form:
-
-\begin{lstlisting}[language=Modula3]
-VAR t_0 : SchemeObject.T; BEGIN
-  t_0 := (* evaluate test *);
-  IF SchemeBoolean.TruthO(t_0) THEN
-    (* call proc with t_0 as argument *)
-    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, t_0)
-  ELSE
-    (* next clause *)
-  END
-END
-\end{lstlisting}
-
-\paragraph{Difficulty: easy.}
-The test value is already computed into a temporary; the only
-addition is detecting the \texttt{=>} token and generating a
-call instead of evaluating the clause body.
-
-\subsection{\texttt{case}}
-\label{sec:gap-case}
-
-\paragraph{Impact.}
-Not used in \texttt{compiler.scm}.
-
-\paragraph{Strategy.}
-\texttt{case} is a multi-way dispatch on a key value.
-Compile as a chain of \texttt{IF}/\texttt{ELSIF} comparisons
-using \texttt{eqv?}.  For integer-only keys, a Modula-3
-\texttt{CASE} statement could be emitted for better performance.
-
-\paragraph{Difficulty: easy.}
-
-\subsection{\texttt{do}}
-\label{sec:gap-do}
-
-\paragraph{Impact.}
-Not used in \texttt{compiler.scm}.  Rarely used in MScheme
-programs generally.
-
-\paragraph{Strategy.}
-\texttt{do} is a general iteration construct.  Compile to a
-Modula-3 \texttt{LOOP} with step expressions evaluated into
-temporaries and assigned at the end of each iteration, similar
-to the self-tail-call pattern.
-
-\paragraph{Difficulty: easy.}
-
-\subsection{Rest Parameters}
-\label{sec:gap-rest}
-
-\paragraph{Impact.}
-One definition in \texttt{compiler.scm} (\texttt{L}) uses a
-rest parameter \texttt{(define (L .\ strs) ...)}.
-
-\paragraph{What is needed.}
-A rest parameter collects all arguments beyond the fixed parameters
-into a list.  The \texttt{apply} method already receives arguments
-as a Scheme list; the compilation needs to split the list into
-fixed-parameter locals and a rest-parameter local.
-
-\paragraph{Strategy.}
-In the \texttt{Apply\_\emph{foo}} (list-argument) method, after
-extracting the fixed parameters with \texttt{SchemeUtils.First}/\texttt{Rest},
-the remaining \texttt{rest} variable is bound to the rest parameter.
-The \texttt{apply1} and \texttt{apply2} specializations must
-construct a list from the excess arguments.
-
-\begin{lstlisting}[language=Modula3]
-(* (define (L . strs) body) -- zero fixed params, one rest *)
-PROCEDURE Apply_L(self : Compiled_L;
-    interp : Scheme.T;
-    args : SchemeObject.T) : SchemeObject.T
-  RAISES { Scheme.E } =
-VAR a_strs := args;  (* entire arg list IS the rest parameter *)
-BEGIN
-  RETURN ...
-END Apply_L;
-\end{lstlisting}
-
-\paragraph{Difficulty: easy.}
-The main change is in the argument-unpacking code in
-\texttt{gen-apply-proc} and \texttt{gen-apply-n-proc}, plus
-updating \texttt{proper-list?} to accept and handle dotted
-parameter lists.
+\paragraph{Difficulty: hard.}
+Requires continuation capture, which is fundamentally at odds
+with the compiled code's use of the native call stack.
 
 %----------------------------------------------------------------------
 \section{Call Optimization}
 \label{sec:gaps-calls}
 %----------------------------------------------------------------------
 
-Beyond language coverage, the compiler leaves performance on the
-table in how it dispatches calls.  The current call sequence for
-a function \texttt{foo} is:
+The compiler leaves performance on the table in how it dispatches
+calls.  The current call sequence for a function \texttt{foo} is:
 
 \begin{enumerate}
 \item Fetch the callee: \texttt{self.b\_foo.get()} (binding lookup).
@@ -3007,95 +2976,43 @@ handling type dispatch (e.g., \texttt{+} on integers vs.\ reals),
 and deciding on the redefinition guard policy.
 
 %----------------------------------------------------------------------
-\section{Self-Compilation Summary}
+\section{Self-Compilation Status}
 \label{sec:gaps-selfcomp}
 %----------------------------------------------------------------------
 
-The following table summarizes the self-compilation gap analysis.
-The compiler's own source (\texttt{compiler.scm}) serves as a
-useful stress test.  The distribution of blocking constructs
-mirrors that of the CSP compiler (\S\ref{sec:impl-cspc}):
-\texttt{lambda} dominates, followed by named \texttt{let}.
-
-\begin{center}
-\begin{tabular}{llc}
-\toprule
-\textbf{Blocking construct} & \textbf{Typical functions} & \textbf{Approx.} \\
-\midrule
-\texttt{lambda} (in \texttt{map}/\texttt{filter} args)
-  & \texttt{gen-let}, \texttt{gen-call}, \texttt{gen-type-decl},
-    \texttt{gen-apply-proc}, &  \\
-  & \texttt{gen-install-proc}, \texttt{gen-m3},
-    \texttt{compile-file}, \ldots & 12+ \\
-\texttt{lambda} + named \texttt{let}
-  & \texttt{free-variables}, \texttt{unique-symbols},
-    \texttt{unique-constants}, & \\
-  & \texttt{has-self-tail-call?}, \texttt{constant-index} & 5 \\
-Named \texttt{let} only
-  & \texttt{iota}, \texttt{read-file},
-    \texttt{build-indexed-map} & 3 \\
-Rest parameter
-  & \texttt{L} & 1 \\
-\midrule
-\textbf{Total skipped} & & $\sim$\textbf{21} \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-Adding \texttt{lambda} support would unblock $\sim$12 definitions.
-Adding both \texttt{lambda} and named \texttt{let} would unblock
-$\sim$20, leaving only \texttt{L} (rest parameter)---an easy
-addition that would complete full self-compilation.  The remaining
-gaps (\texttt{letrec}, \texttt{case}, \texttt{do}, internal
-\texttt{define}) are not used in the compiler itself but appear
-in general Scheme programs; their frequency in the CSP compiler
-stress test is documented in \S\ref{sec:impl-cspc}.
+The compiler compiles \textbf{101 of 102} definitions in its own
+source (\texttt{compiler.scm}).  The single remaining uncompiled
+function is \texttt{form->string}, which uses \texttt{quasiquote}.
 
 %----------------------------------------------------------------------
 \section{Recommended Priorities}
 \label{sec:gaps-priorities}
 %----------------------------------------------------------------------
 
-Based on the impact analysis above, the recommended implementation
-order is:
+The remaining gaps, ordered by expected impact:
 
 \begin{enumerate}
-\item \textbf{Named \texttt{let}} --- easy, reuses existing
-  self-tail-call machinery, unblocks 2 definitions immediately and
-  5 more when combined with lambda.
-
-\item \textbf{\texttt{lambda}} --- moderate difficulty, unblocks 13+
-  definitions, required for self-compilation.  Start with the
-  common case (lambdas that capture no mutable variables) and
-  extend later.
-
-\item \textbf{Intra-module direct calls} --- moderate, gives the
-  largest performance improvement for compiled code, especially
-  for recursive benchmarks.
-
-\item \textbf{Rest parameters} --- easy, one-off addition,
-  completes self-compilation.
-
-\item \textbf{\texttt{cond =>}} --- easy, one-off addition.
-
-\item \textbf{\texttt{letrec} and internal \texttt{define}} ---
-  easy, low urgency.
-
-\item \textbf{Cross-module direct calls} --- moderate, deferred
-  until multiple compiled modules are common.
+\item \textbf{Intra-module direct calls} --- moderate difficulty,
+  largest expected performance improvement for compiled code.
+  A pointer comparison guards a direct call that bypasses both
+  \texttt{NARROW} and virtual dispatch on the fast path
+  (\S\ref{sec:gap-intra}).
 
 \item \textbf{Primitive inlining} --- moderate, largest potential
-  speedup but requires careful design.
+  speedup but requires careful design (\S\ref{sec:gap-inline}).
+
+\item \textbf{Cross-module direct calls} --- moderate, deferred
+  until multiple compiled modules are common
+  (\S\ref{sec:gap-cross}).
+
+\item \textbf{\texttt{quasiquote}} --- moderate, would complete
+  self-compilation and unblock template-heavy CSP modules
+  (\S\ref{sec:gap-quasiquote}).
 
 \item \textbf{General tail-call optimization} --- hard, lowest
-  priority since self-tail-calls cover the common case.
+  priority since self-tail-calls cover the common case
+  (\S\ref{sec:gap-tco}).
 \end{enumerate}
-
-Steps 1--2 would achieve full self-compilation of the compiler.
-Steps 1--4 would close all gaps observed in real MScheme programs
-(cf.\ the CSP compiler stress test, \S\ref{sec:impl-cspc}).
-Steps 5--9 are optimizations that become relevant as the compiled
-code base grows.
 
 %======================================================================
 \chapter*{References}

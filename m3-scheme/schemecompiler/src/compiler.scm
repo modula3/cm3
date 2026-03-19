@@ -28,6 +28,29 @@
 ;; Append newline to string (line terminator helper)
 (define (L . strs) (string-append (apply string-append strs) NL))
 
+;; Extract the basename from a file path (everything after last /)
+(define (path-basename path)
+  (let loop ((chars (string->list path)) (acc '()))
+    (cond ((null? chars) (list->string acc))
+          ((char=? (car chars) #\/)
+           (loop (cdr chars) '()))
+          (else (loop (cdr chars) (append acc (list (car chars))))))))
+
+;; Strip .scm extension from a filename, or return #f if not present
+(define (strip-scm-extension name)
+  (let ((chars (string->list name)))
+    (let ((len (length chars)))
+      (if (and (>= len 4)
+               (char=? (list-ref chars (- len 4)) #\.)
+               (char=? (list-ref chars (- len 3)) #\s)
+               (char=? (list-ref chars (- len 2)) #\c)
+               (char=? (list-ref chars (- len 1)) #\m))
+          (list->string (let loop ((i 0) (rest chars) (acc '()))
+                          (if (= i (- len 4))
+                              (reverse acc)
+                              (loop (+ i 1) (cdr rest) (cons (car rest) acc)))))
+          #f))))
+
 ;;;
 ;;; ==================== Identifier Mapping ====================
 ;;;
@@ -244,43 +267,50 @@
               (expr-has-lambda-capturing? (cdr expr) vars)))))
 
 (define (desugar-internal-defines exprs)
-  ;; Collect leading internal (define (name params...) body...) forms.
-  ;; Returns desugared expr list (let+lambda), or #f if not applicable.
-  ;; Only handles non-recursive defines (desugars to let, not letrec).
-  (let collect ((es exprs) (defs '()))
-    (if (and (pair? es)
-             (pair? (car es))
-             (eq? (caar es) 'define)
-             (pair? (cadar es))      ;; function define: (define (name ...) ...)
-             (pair? (cddar es)))     ;; has body
-        (collect (cdr es) (cons (car es) defs))
-        (if (or (null? defs) (null? es))  ;; need defs AND remaining body
-            #f
-            (let* ((rdefs (reverse defs))
-                   (names (map caadr rdefs))
-                   (all-free
-                    (apply append
-                           (map (lambda (d)
-                                  (let ((params (cdadr d))
-                                        (body (if (null? (cdddr d))
-                                                  (caddr d)
-                                                  (cons 'begin (cddr d)))))
-                                    (free-variables body (all-params params))))
-                                rdefs))))
-              (if (not (null? (intersection names all-free)))
-                  #f  ;; some define is recursive -- needs letrec (Phase 2)
-                  (let ((bindings
-                         (map (lambda (d)
-                                (let ((name (caadr d))
-                                      (params (cdadr d))
-                                      (body (if (null? (cdddr d))
-                                                (caddr d)
-                                                (cons 'begin (cddr d)))))
-                                  (list name
-                                        (cons 'lambda
-                                              (cons params (list body))))))
-                              rdefs)))
-                    (list (append (list 'let bindings) es)))))))))
+  ;; Collect ALL internal (define (name params...) body...) forms from
+  ;; anywhere in exprs.  Hoists them into a single letrec (or let if
+  ;; non-recursive) at the top, with remaining forms as body.
+  ;; Returns desugared expr list, or #f if no defines found.
+  (let* ((defs (filter (lambda (e)
+                         (and (pair? e)
+                              (eq? (car e) 'define)
+                              (pair? (cdr e))
+                              (pair? (cadr e))     ;; function define
+                              (pair? (cddr e))))   ;; has body
+                       exprs))
+         (rest (filter (lambda (e)
+                         (not (and (pair? e)
+                                   (eq? (car e) 'define)
+                                   (pair? (cdr e))
+                                   (pair? (cadr e))
+                                   (pair? (cddr e)))))
+                       exprs)))
+    (if (or (null? defs) (null? rest))
+        #f
+        (let* ((names (map caadr defs))
+               (all-free
+                (apply append
+                       (map (lambda (d)
+                              (let ((params (cdadr d))
+                                    (body (if (null? (cdddr d))
+                                              (caddr d)
+                                              (cons 'begin (cddr d)))))
+                                (free-variables body (all-params params))))
+                            defs)))
+               (recursive (not (null? (intersection names all-free))))
+               (let-form (if recursive 'letrec 'let))
+               (bindings
+                (map (lambda (d)
+                       (let ((name (caadr d))
+                             (params (cdadr d))
+                             (body (if (null? (cdddr d))
+                                       (caddr d)
+                                       (cons 'begin (cddr d)))))
+                         (list name
+                               (cons 'lambda
+                                     (cons params (list body))))))
+                     defs)))
+          (list (append (list let-form bindings) rest))))))
 
 (define (has-self-tail-call? expr name)
   (cond
@@ -341,7 +371,7 @@
 ;;;   4: temp-ctr   - mutable cell (list of int) for temporary variables
 ;;;   5: self-tail? - boolean, has self-tail-call optimization
 ;;;   6: param-map  - alist mapping symbols to M3 variable names
-;;;   7: fv-map     - alist mapping free-var symbols to M3 field names
+;;;   7: fv-map     - alist mapping free-var symbols to M3 binding paths
 ;;;   8: var-ctr    - mutable cell (list of int) for let-bound variables
 ;;;   9: reassign   - list of M3 var names for tail-call reassignment, or #f
 ;;;  10: loop-flag  - M3 BOOLEAN var name for non-tail named-let WHILE, or #f
@@ -349,7 +379,7 @@
 
 (define (make-ctx name params free-vars constants self-tail?)
   (let ((param-map (build-indexed-map params "a_"))
-        (fv-map (build-indexed-map free-vars "b_")))
+        (fv-map (build-indexed-map free-vars "self.b_")))
     (list name params free-vars constants
           (list 0)      ;; temp counter (mutable cell)
           self-tail?
@@ -430,18 +460,34 @@
         (ctx-reassign-vars ctx)
         (ctx-loop-flag ctx)))
 
+(define (make-extended-ctx-fv ctx new-param-map new-fv-map)
+  ;; Create a new context with updated param-map AND fv-map.
+  ;; Used by gen-letrec to add binding cells visible to lambda captures.
+  (list (ctx-name ctx)
+        (ctx-params ctx)
+        (ctx-free-vars ctx)
+        (ctx-constants ctx)
+        (ctx-temp-counter ctx)
+        (ctx-self-tail? ctx)
+        new-param-map
+        new-fv-map
+        (ctx-var-counter ctx)
+        (ctx-reassign-vars ctx)
+        (ctx-loop-flag ctx)))
+
 ;;;
 ;;; ==================== Variable and Constant References ====================
 ;;;
 
 (define (var-ref sym ctx)
   ;; Look up a variable: check param-map (locals + params) first, then fv-map
+  ;; fv-map values are full binding paths (e.g. "self.b_0" or "lb_0")
   (let ((p (assq sym (ctx-param-map ctx))))
     (if p
         (cdr p)
         (let ((f (assq sym (ctx-fv-map ctx))))
           (if f
-              (string-append "self." (cdr f) ".get()")
+              (string-append (cdr f) ".get()")
               (begin
                 (display "ERROR: var-ref: symbol not found: ")
                 (display sym)
@@ -577,7 +623,14 @@
 ;;;
 
 (define (gen-if test con alt target ctx depth)
-  (let ((test-val (gen-value test ctx depth)))
+  (let ((test-val (gen-value test ctx depth))
+        (no-alt-else (if target
+                         (string-append
+                          (indent depth) (L "ELSE")
+                          (emit-assign target "NIL" (+ depth 1)))
+                         (string-append
+                          (indent depth) (L "ELSE")
+                          (emit-assign #f "NIL" (+ depth 1))))))
     (if test-val
         (string-append
          (indent depth) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
@@ -586,11 +639,7 @@
              (string-append
               (indent depth) (L "ELSE")
               (gen-expr alt target ctx (+ depth 1)))
-             (if target
-                 (string-append
-                  (indent depth) (L "ELSE")
-                  (emit-assign target "NIL" (+ depth 1)))
-                 ""))
+             no-alt-else)
          (indent depth) (L "END;"))
         (let ((tmp (fresh-temp ctx)))
           (string-append
@@ -601,11 +650,7 @@
                (string-append
                 (indent depth) (L "ELSE")
                 (gen-expr alt target ctx (+ depth 1)))
-               (if target
-                   (string-append
-                    (indent depth) (L "ELSE")
-                    (emit-assign target "NIL" (+ depth 1)))
-                   ""))
+               no-alt-else)
            (indent depth) (L "END;"))))))
 
 ;;;
@@ -633,12 +678,10 @@
 (define (gen-cond-rest rest target ctx depth)
   ;; Generate ELSE + rest clauses or ELSE NIL, shared by normal and arrow clauses
   (if (null? rest)
-      (if target
-          (string-append
-           (indent depth) (L "ELSE")
-           (emit-assign target "NIL" (+ depth 1))
-           (indent depth) (L "END;"))
-          (string-append (indent depth) (L "END;")))
+      (string-append
+       (indent depth) (L "ELSE")
+       (emit-assign target "NIL" (+ depth 1))
+       (indent depth) (L "END;"))
       (string-append
        (indent depth) (L "ELSE")
        (gen-cond rest target ctx (+ depth 1))
@@ -667,12 +710,10 @@
                    (indent depth) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
                    (gen-begin (cdr clause) target ctx (+ depth 1))
                    (if (null? rest)
-                       (if target
-                           (string-append
-                            (indent depth) (L "ELSE")
-                            (emit-assign target "NIL" (+ depth 1))
-                            (indent depth) (L "END;"))
-                           (string-append (indent depth) (L "END;")))
+                       (string-append
+                        (indent depth) (L "ELSE")
+                        (emit-assign target "NIL" (+ depth 1))
+                        (indent depth) (L "END;"))
                        (string-append
                         (indent depth) (L "ELSE")
                         (gen-cond rest target ctx (+ depth 1))
@@ -683,12 +724,10 @@
                      (indent depth) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
                      (gen-begin (cdr clause) target ctx (+ depth 1))
                      (if (null? rest)
-                         (if target
-                             (string-append
-                              (indent depth) (L "ELSE")
-                              (emit-assign target "NIL" (+ depth 1))
-                              (indent depth) (L "END;"))
-                             (string-append (indent depth) (L "END;")))
+                         (string-append
+                          (indent depth) (L "ELSE")
+                          (emit-assign target "NIL" (+ depth 1))
+                          (indent depth) (L "END;"))
                          (string-append
                           (indent depth) (L "ELSE")
                           (gen-cond rest target ctx (+ depth 1))
@@ -822,26 +861,42 @@
 ;;; ==================== Letrec ====================
 ;;;
 
+(define (fresh-binding ctx)
+  ;; Generate a fresh SchemeEnvironmentBinding.T local variable.
+  (let* ((counter-cell (ctx-var-counter ctx))
+         (n (car counter-cell)))
+    (set-car! counter-cell (+ n 1))
+    (let ((name (string-append "lb_" (number->string n))))
+      (emit-decl name "SchemeEnvironmentBinding.T")
+      name)))
+
 (define (gen-letrec bindings body target ctx depth)
   ;; (letrec ((var init) ...) body)
   ;; All vars are in scope during init evaluation.
-  ;; Declare vars as NIL, assign init values, evaluate body.
+  ;; Uses SchemeEnvironmentBinding.T cells so lambdas in init expressions
+  ;; can capture sibling letrec-bound variables by reference.
   (let* ((bvars (map car bindings))
-         (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
-         (new-entries (map cons bvars bvar-m3names))
-         (new-ctx (make-extended-ctx ctx
-                    (append new-entries (ctx-param-map ctx)))))
+         (bvar-bindings (map (lambda (bv) (fresh-binding ctx)) bvars))
+         ;; fv-map entries: lambdas capture these as binding cells
+         (new-fv-entries (map cons bvars bvar-bindings))
+         (new-ctx (make-extended-ctx-fv ctx
+                    (ctx-param-map ctx)
+                    (append new-fv-entries (ctx-fv-map ctx)))))
     (string-append
-     ;; Initialize letrec vars to NIL
+     ;; Initialize binding cells
      (apply string-append
-            (map (lambda (m3n)
-                   (string-append (indent depth) (L m3n " := NIL;")))
-                 bvar-m3names))
-     ;; Assign init values (all vars in scope via new-ctx)
+            (map (lambda (bn)
+                   (string-append (indent depth)
+                                  (L bn " := NEW(LetrecCell, val := NIL);")))
+                 bvar-bindings))
+     ;; Assign init values via setB (all vars in scope via new-ctx)
      (apply string-append
-            (map (lambda (b m3n)
-                   (gen-expr (cadr b) m3n new-ctx depth))
-                 bindings bvar-m3names))
+            (map (lambda (b bn)
+                   (let ((tmp (fresh-temp ctx)))
+                     (string-append
+                      (gen-expr (cadr b) tmp new-ctx depth)
+                      (indent depth) (L bn ".setB(" tmp ");"))))
+                 bindings bvar-bindings))
      ;; Evaluate body
      (gen-begin body target new-ctx depth))))
 
@@ -874,12 +929,10 @@
                (indent depth) (L "IF " datum-tests " THEN")
                (gen-begin (cdr clause) target ctx (+ depth 1))
                (if (null? rest)
-                   (if target
-                       (string-append
-                        (indent depth) (L "ELSE")
-                        (emit-assign target "NIL" (+ depth 1))
-                        (indent depth) (L "END;"))
-                       (string-append (indent depth) (L "END;")))
+                   (string-append
+                    (indent depth) (L "ELSE")
+                    (emit-assign target "NIL" (+ depth 1))
+                    (indent depth) (L "END;"))
                    (string-append
                     (indent depth) (L "ELSE")
                     (gen-case-clauses rest key-tmp target ctx (+ depth 1))
@@ -1035,7 +1088,7 @@
          (if param-entry
              (string-append (indent depth) (L (cdr param-entry) " := " val-str ";"))
              (string-append (indent depth)
-                            (L "self." (cdr fv-entry) ".setB(" val-str ");")))
+                            (L (cdr fv-entry) ".setB(" val-str ");")))
          (emit-assign target "NIL" depth))
         (let ((tmp (fresh-temp ctx)))
           (string-append
@@ -1043,7 +1096,7 @@
            (if param-entry
                (string-append (indent depth) (L (cdr param-entry) " := " tmp ";"))
                (string-append (indent depth)
-                              (L "self." (cdr fv-entry) ".setB(" tmp ");")))
+                              (L (cdr fv-entry) ".setB(" tmp ");")))
            (emit-assign target "NIL" depth))))))
 
 ;;;
@@ -1217,6 +1270,8 @@
 
 (define (gen-apply-n-proc proc)
   (let* ((m3name (cdr (assq 'm3name proc)))
+         (name-pair (assq 'name proc))
+         (name (if name-pair (cdr name-pair) #f))
          (params (cdr (assq 'params proc)))
          (nparams (cdr (assq 'nparams proc)))
          (rest-param (cdr (assq 'rest-param proc)))
@@ -1234,6 +1289,13 @@
            (decls (car result))
            (body-code (cdr result)))
       (string-append
+       (if name
+           (L "(* Scheme: (define (" (symbol->string name)
+              (apply string-append
+                     (map (lambda (p) (string-append " " (symbol->string p)))
+                          params))
+              ") ...) *)")
+           "")
        (L "PROCEDURE Apply" (number->string nparams) "_" m3name
           "(self : Compiled_" m3name ";")
        (L "    interp : Scheme.T")
@@ -1301,6 +1363,8 @@
 
 (define (gen-apply-proc proc)
   (let* ((m3name (cdr (assq 'm3name proc)))
+         (name-pair (assq 'name proc))
+         (name (if name-pair (cdr name-pair) #f))
          (params (cdr (assq 'params proc)))
          (nparams (cdr (assq 'nparams proc)))
          (rest-param (cdr (assq 'rest-param proc)))
@@ -1312,6 +1376,13 @@
                          (cdr (assq rest-param (ctx-param-map ctx)))
                          #f)))
     (string-append
+     (if (and rest-param name)
+         (L "(* Scheme: (define (" (symbol->string name)
+            (apply string-append
+                   (map (lambda (p) (string-append " " (symbol->string p)))
+                        params))
+            " . " (symbol->string rest-param) ") ...) *)")
+         "")
      (L "PROCEDURE Apply_" m3name "(self : Compiled_" m3name ";")
      (L "    interp : Scheme.T;")
      (L "    args : SchemeObject.T) : SchemeObject.T")
@@ -1379,7 +1450,41 @@
               (L "  END Apply_" m3name ";")
               NL))))))
 
-(define (gen-install-proc procs module-name preamble)
+(define (gen-install-one-proc proc)
+  ;; Generate the create/configure/define block for a single compiled proc
+  (let* ((m3name (cdr (assq 'm3name proc)))
+         (name (cdr (assq 'name proc)))
+         (free-vars (cdr (assq 'free-vars proc)))
+         (constants (cdr (assq 'constants proc))))
+    (string-append
+     (L "    (* " (symbol->string name) " *)")
+     (L "    obj_" m3name " := NEW(Compiled_" m3name
+        ", name := \"" (symbol->string name) " (compiled)\");")
+     (apply string-append
+            (map (lambda (fv i)
+                   (L "    obj_" m3name ".b_" (number->string i)
+                      " := env.bind(SchemeSymbol.Symbol(\""
+                      (symbol->string fv) "\"));"))
+                 free-vars (iota (length free-vars))))
+     (apply string-append
+            (map (lambda (c i)
+                   (L "    obj_" m3name ".k_"
+                      (number->string i) " := "
+                      (constant-to-m3 c) ";"))
+                 constants (iota (length constants))))
+     (L "    EVAL env.define(SchemeSymbol.Symbol(\""
+        (symbol->string name) "\"), obj_" m3name ");")
+     NL)))
+
+(define (gen-install-proc procs module-name ordered source-basename)
+  ;; Collect all external free variables: used by compiled procs but
+  ;; not defined by any compiled proc in this module.  These must be
+  ;; forward-declared so env.bind() can find them.
+  (let* ((defined-names (map (lambda (p) (cdr (assq 'name p))) procs))
+         (all-free (apply append (map (lambda (p) (cdr (assq 'free-vars p))) procs)))
+         (external-free (filter (lambda (fv) (not (memq fv defined-names)))
+                                all-free))
+         (unique-external (deduplicate-syms external-free)))
   (string-append
    (L "PROCEDURE Install(interp : Scheme.T) RAISES { Scheme.E } =")
    (L "  VAR")
@@ -1390,53 +1495,47 @@
                    (L "    obj_" m3name " : Compiled_" m3name ";")))
                procs))
    (L "  BEGIN")
-   ;; Emit preamble dependency loading (require-modules, load)
-   (if (null? preamble)
+   ;; Forward-declare all compiled procedure names so mutually
+   ;; recursive bindings can be resolved before any code runs.
+   ;; Also forward-declare external free variables so env.bind()
+   ;; can find them (they may be defined later by other modules).
+   (if (and (null? procs) (null? unique-external))
        ""
        (string-append
-        (L "    (* Dependencies *)")
+        (L "    (* forward declarations *)")
         (apply string-append
-               (map (lambda (form)
-                      (L "    EVAL interp.loadEvalText(\""
-                         (m3-escape-string (form->string form)) "\");"))
-                    preamble))))
-   ;; Forward-declare all procedure names so self-recursive and
-   ;; mutually recursive bindings can be resolved
-   (L "    (* forward declarations *)")
+               (map (lambda (proc)
+                      (let ((name (cdr (assq 'name proc))))
+                        (L "    EVAL env.define(SchemeSymbol.Symbol(\""
+                           (symbol->string name) "\"), NIL);")))
+                    procs))
+        (apply string-append
+               (map (lambda (fv)
+                      (L "    IF NOT env.haveBinding(SchemeSymbol.Symbol(\""
+                         (symbol->string fv)
+                         "\")) THEN EVAL env.define(SchemeSymbol.Symbol(\""
+                         (symbol->string fv) "\"), NIL) END;"))
+                    unique-external))
+        NL))
+   ;; Replay all top-level forms in source order:
+   ;; compiled defines are installed natively, everything else
+   ;; is evaluated via loadEvalText.
    (apply string-append
-          (map (lambda (proc)
-                 (let ((name (cdr (assq 'name proc))))
-                   (L "    EVAL env.define(SchemeSymbol.Symbol(\""
-                      (symbol->string name) "\"), NIL);")))
-               procs))
-   NL
-   (apply string-append
-          (map (lambda (proc)
-                 (let* ((m3name (cdr (assq 'm3name proc)))
-                        (name (cdr (assq 'name proc)))
-                        (free-vars (cdr (assq 'free-vars proc)))
-                        (constants (cdr (assq 'constants proc))))
-                   (string-append
-                    (L "    obj_" m3name " := NEW(Compiled_" m3name
-                       ", name := \"" (symbol->string name) " (compiled)\");")
-                    (apply string-append
-                           (map (lambda (fv i)
-                                  (L "    obj_" m3name ".b_" (number->string i)
-                                     " := env.bind(SchemeSymbol.Symbol(\""
-                                     (symbol->string fv) "\"));"))
-                                free-vars (iota (length free-vars))))
-                    (apply string-append
-                           (map (lambda (c i)
-                                  (L "    obj_" m3name ".k_"
-                                     (number->string i) " := "
-                                     (constant-to-m3 c) ";"))
-                                constants (iota (length constants))))
-                    (L "    EVAL env.define(SchemeSymbol.Symbol(\""
-                       (symbol->string name) "\"), obj_" m3name ");")
-                    NL)))
-               procs))
+          (map (lambda (entry)
+                 (if (eq? (car entry) 'compiled)
+                     (gen-install-one-proc (cdr entry))
+                     (L "    EVAL interp.loadEvalText(\""
+                        (m3-escape-string (form->string (cdr entry))) "\");")))
+               ordered))
    (L "  END Install;")
-   NL))
+   NL)))
+
+(define (deduplicate-syms lst)
+  ;; Remove duplicate symbols from a list, preserving order
+  (let loop ((rest lst) (seen '()) (acc '()))
+    (cond ((null? rest) (reverse acc))
+          ((memq (car rest) seen) (loop (cdr rest) seen acc))
+          (else (loop (cdr rest) (cons (car rest) seen) (cons (car rest) acc))))))
 
 (define (constant-to-m3 c)
   (cond
@@ -1473,14 +1572,36 @@
                       (else (list->string (list c)))))
               (string->list s))))
 
+(define (scheme-escape-string s)
+  ;; Escape a string for Scheme string literal (quotes and backslashes)
+  (apply string-append
+         (map (lambda (c)
+                (cond ((char=? c #\") (list->string (list #\\ #\")))
+                      ((char=? c #\\) (list->string (list #\\ #\\)))
+                      (else (list->string (list c)))))
+              (string->list s))))
+
 (define (form->string form)
   ;; Serialize a Scheme form to readable text (for embedding in M3 source)
   (cond
-    ((string? form) (string-append "\"" form "\""))
+    ((string? form) (string-append "\"" (scheme-escape-string form) "\""))
     ((symbol? form) (symbol->string form))
     ((number? form) (number->string form))
     ((null? form) "()")
     ((boolean? form) (if form "#t" "#f"))
+    ((char? form)
+     (cond ((char=? form #\newline) "#\\newline")
+           ((char=? form #\space) "#\\space")
+           ((char=? form (integer->char 9)) "#\\tab")
+           (else (string-append "#\\" (list->string (list form))))))
+    ((vector? form)
+     (string-append "#("
+       (let loop ((i 0) (acc ""))
+         (if (= i (vector-length form))
+             (string-append acc ")")
+             (loop (+ i 1)
+                   (string-append acc (if (= i 0) "" " ")
+                                 (form->string (vector-ref form i))))))))
     ((pair? form)
      (string-append "(" (form->string (car form))
                     (let loop ((rest (cdr form)))
@@ -1489,6 +1610,21 @@
                                                          (loop (cdr rest))))
                             (else (string-append " . " (form->string rest) ")"))))))
     (else "")))
+
+(define (build-ordered forms supported compiled-procs)
+  ;; Build an ordered list of tagged entries from all top-level forms.
+  ;; Each entry is ('compiled . proc-alist) or ('passthrough . form).
+  ;; supported and compiled-procs are in source order (subsets of forms).
+  (let loop ((fs forms) (ss supported) (cs compiled-procs) (acc '()))
+    (if (null? fs)
+        (reverse acc)
+        (if (and (not (null? ss)) (eq? (car fs) (car ss)))
+            ;; This form is a compiled define
+            (loop (cdr fs) (cdr ss) (cdr cs)
+                  (cons (cons 'compiled (car cs)) acc))
+            ;; Everything else is passthrough
+            (loop (cdr fs) ss cs
+                  (cons (cons 'passthrough (car fs)) acc))))))
 
 ;;;
 ;;; ==================== Lambda Code Generation ====================
@@ -1532,12 +1668,12 @@
   (string-append
    "NEW(Compiled_" m3name
    ", name := \"lambda (compiled)\""
-   ;; Binding captures: copy binding cell from enclosing function
+   ;; Binding captures: copy binding cell from enclosing scope
    (apply string-append
           (map (lambda (sym i)
                  (let ((fv-entry (assq sym (ctx-fv-map ctx))))
                    (string-append ", b_" (number->string i)
-                                  " := self." (cdr fv-entry))))
+                                  " := " (cdr fv-entry))))
                binding-caps (iota (length binding-caps))))
    ;; Value captures: snapshot current value from enclosing scope
    (apply string-append
@@ -1581,7 +1717,7 @@
          (lam-param-map (append
                          (build-indexed-map all-lam-params "a_")
                          (build-indexed-map value-caps "self.cap_")))
-         (lam-fv-map (build-indexed-map binding-caps "b_"))
+         (lam-fv-map (build-indexed-map binding-caps "self.b_"))
          (lam-ctx (list (string->symbol lam-m3name)
                         all-lam-params '() lam-constants
                         (list 0) #f  ;; no self-tail-call for anonymous lambda
@@ -1624,9 +1760,9 @@
       (gen-lambda-new lam-m3name binding-caps value-caps lam-constants ctx)
       depth)))
 
-(define (gen-module module-name procs preamble)
+(define (gen-module module-name procs ordered source-basename)
   (let ((i3 (gen-i3 module-name))
-        (m3 (gen-m3 module-name procs preamble)))
+        (m3 (gen-m3 module-name procs ordered source-basename)))
     (list (cons 'i3 i3) (cons 'm3 m3))))
 
 (define (gen-i3 module-name)
@@ -1639,7 +1775,7 @@
    NL
    (L "END " module-name ".")))
 
-(define (gen-m3 module-name procs preamble)
+(define (gen-m3 module-name procs ordered source-basename)
   ;; Two-phase generation: generate procedure bodies first (which discovers
   ;; and accumulates lambda closures), then assemble the complete module.
   (set! *lambda-types* '())
@@ -1683,12 +1819,38 @@
      (L "TYPE")
      type-decls
      lam-type-decls        ;; lambda types follow regular types
+     ;; LetrecCell: lightweight binding cell for letrec-bound variables
+     (L "  LetrecCell = SchemeEnvironmentBinding.T OBJECT")
+     (L "    val : SchemeObject.T;")
+     (L "  OVERRIDES")
+     (L "    name := LCName; env := LCEnv; get := LCGet; setB := LCSet;")
+     (L "  END;")
+     NL
+     ;; LetrecCell method implementations
+     (L "PROCEDURE LCName(<*UNUSED*> c : LetrecCell) : SchemeSymbol.T =")
+     (L "  BEGIN RETURN NIL END LCName;")
+     (L "PROCEDURE LCEnv(<*UNUSED*> c : LetrecCell) : SchemeObject.T =")
+     (L "  BEGIN RETURN NIL END LCEnv;")
+     (L "PROCEDURE LCGet(c : LetrecCell) : SchemeObject.T =")
+     (L "  BEGIN RETURN c.val END LCGet;")
+     (L "PROCEDURE LCSet(c : LetrecCell; v : SchemeObject.T) =")
+     (L "  BEGIN c.val := v END LCSet;")
+     NL
      proc-bodies           ;; regular procs (contain lambda NEW expressions)
      lam-proc-bodies       ;; lambda apply procedures
-     (gen-install-proc procs module-name preamble)
+     (gen-install-proc procs module-name ordered source-basename)
      (L "BEGIN")
      (L "  SchemeCompiledRegistry.Register(\"" module-name "\", Install);")
      (L "  SchemeCompiledRegistry.Register(\"" module-name ".scm\", Install);")
+     (if (and source-basename
+              (not (string=? source-basename (string-append module-name ".scm"))))
+         (string-append
+          (L "  SchemeCompiledRegistry.Register(\"" source-basename "\", Install);")
+          (let ((bare (strip-scm-extension source-basename)))
+            (if bare
+                (L "  SchemeCompiledRegistry.Register(\"" bare "\", Install);")
+                "")))
+         "")
      (L "END " module-name "."))))
 
 ;;;
@@ -1824,8 +1986,6 @@
                    (case-clauses-compilable? (cdr clauses) mutated)))))
 
 (define (expr-compilable? expr mutated)
-  ;; Return #t if expr uses only constructs the compiler handles.
-  ;; mutated is the list of symbols targeted by set! in the enclosing function body.
   (cond
     ((symbol? expr) #t)
     ((number? expr) #t)
@@ -1838,15 +1998,10 @@
      (let* ((lam-params (all-params (cadr expr)))
             (lam-body (if (null? (cdddr expr)) (caddr expr)
                           (cons 'begin (cddr expr))))
-            (captures (free-variables lam-body lam-params))
             (body-mutated (set!-targets lam-body)))
-       (and
-         ;; No capture is mutated in enclosing scope
-         (null? (intersection captures mutated))
-         ;; No capture is mutated in lambda body
-         (null? (intersection captures body-mutated))
-         ;; Lambda body is compilable (with its own mutation set)
-         (expr-compilable? lam-body body-mutated))))
+       ;; Level 1: all captures are by reference (env.bind()),
+       ;; so mutation of captured variables is safe.
+       (expr-compilable? lam-body body-mutated)))
     ((eq? (car expr) 'define) #f)     ;; internal define handled by begin desugaring
     ((eq? (car expr) 'do)
      (and (do-bindings-compilable? (cadr expr) mutated)    ;; var specs
@@ -1856,14 +2011,8 @@
      (and (expr-compilable? (cadr expr) mutated)  ;; key expression
           (case-clauses-compilable? (cddr expr) mutated)))
     ((eq? (car expr) 'letrec)
-     (let ((bvars (map car (cadr expr))))
-       (and ;; No lambda in init expressions captures a letrec-bound var
-            (not (let check ((bs (cadr expr)))
-                   (if (null? bs) #f
-                       (or (expr-has-lambda-capturing? (cadr (car bs)) bvars)
-                           (check (cdr bs))))))
-            (let-bindings-compilable? (cadr expr) mutated)
-            (exprs-compilable? (cddr expr) mutated))))
+     (and (let-bindings-compilable? (cadr expr) mutated)
+          (exprs-compilable? (cddr expr) mutated)))
     ((eq? (car expr) 'if)
      (and (pair? (cddr expr))             ;; must have consequent
           (expr-compilable? (cadr expr) mutated)
@@ -1900,6 +2049,8 @@
      (expr-compilable? (cadr expr) mutated))
     ((eq? (car expr) 'set!)
      (expr-compilable? (caddr expr) mutated))
+    ;; Quasiquote is a macro not handled by the compiler
+    ((eq? (car expr) 'quasiquote) #f)
     ;; Application: all subexpressions must be compilable
     (else (exprs-compilable? expr mutated))))
 
@@ -1969,11 +2120,6 @@
 
 (define (compile-file input-file module-name)
   (let* ((forms (read-file input-file))
-         (preamble (filter (lambda (f)
-                             (and (pair? f)
-                                  (or (eq? (car f) 'require-modules)
-                                      (eq? (car f) 'load))))
-                           forms))
          (all-defines (filter (lambda (f)
                                 (and (pair? f) (eq? (car f) 'define)
                                      (pair? (cadr f))
@@ -1983,17 +2129,22 @@
          (supported (filter define-compilable? deduped))
          (skipped (filter (lambda (f) (not (define-compilable? f)))
                           deduped))
-         (procs (let loop ((defs supported) (serial 0) (acc '()))
-                  (if (null? defs)
-                      (reverse acc)
-                      (let* ((form (car defs))
-                             (parsed (parse-define form))
-                             (body (caddr parsed))
-                             (compiled (compile-define form serial)))
-                        (loop (cdr defs) (+ serial 1)
-                              (cons (cons (cons 'body body) compiled)
-                                    acc))))))
-         (module (gen-module module-name procs preamble))
+         (compiled-procs
+          (let loop ((defs supported) (serial 0) (acc '()))
+            (if (null? defs)
+                (reverse acc)
+                (let* ((form (car defs))
+                       (parsed (parse-define form))
+                       (body (caddr parsed))
+                       (compiled (compile-define form serial)))
+                  (loop (cdr defs) (+ serial 1)
+                        (cons (cons (cons 'body body) compiled)
+                              acc))))))
+         (source-basename (path-basename input-file))
+         (ordered (build-ordered forms supported compiled-procs))
+         (procs (map cdr (filter (lambda (e) (eq? (car e) 'compiled))
+                                 ordered)))
+         (module (gen-module module-name procs ordered source-basename))
          (i3-text (cdr (assq 'i3 module)))
          (m3-text (cdr (assq 'm3 module)))
          (i3-file (string-append module-name ".i3"))
@@ -2038,11 +2189,6 @@
 
 (define (compile-and-show input-file module-name)
   (let* ((forms (read-file input-file))
-         (preamble (filter (lambda (f)
-                             (and (pair? f)
-                                  (or (eq? (car f) 'require-modules)
-                                      (eq? (car f) 'load))))
-                           forms))
          (all-defines (filter (lambda (f)
                                 (and (pair? f) (eq? (car f) 'define)
                                      (pair? (cadr f))
@@ -2050,17 +2196,22 @@
                               forms))
          (deduped (deduplicate-defines all-defines))
          (supported (filter define-compilable? deduped))
-         (procs (let loop ((defs supported) (serial 0) (acc '()))
-                  (if (null? defs)
-                      (reverse acc)
-                      (let* ((form (car defs))
-                             (parsed (parse-define form))
-                             (body (caddr parsed))
-                             (compiled (compile-define form serial)))
-                        (loop (cdr defs) (+ serial 1)
-                              (cons (cons (cons 'body body) compiled)
-                                    acc))))))
-         (module (gen-module module-name procs preamble)))
+         (compiled-procs
+          (let loop ((defs supported) (serial 0) (acc '()))
+            (if (null? defs)
+                (reverse acc)
+                (let* ((form (car defs))
+                       (parsed (parse-define form))
+                       (body (caddr parsed))
+                       (compiled (compile-define form serial)))
+                  (loop (cdr defs) (+ serial 1)
+                        (cons (cons (cons 'body body) compiled)
+                              acc))))))
+         (source-basename (path-basename input-file))
+         (ordered (build-ordered forms supported compiled-procs))
+         (procs (map cdr (filter (lambda (e) (eq? (car e) 'compiled))
+                                 ordered)))
+         (module (gen-module module-name procs ordered source-basename)))
     (display "=== ")
     (display module-name)
     (display ".i3 ===")

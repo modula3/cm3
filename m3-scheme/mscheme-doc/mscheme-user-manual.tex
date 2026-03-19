@@ -631,9 +631,9 @@ Creates message-passing set objects built on hash tables:
 
 \begin{lstlisting}[language=Scheme]
 (define s (make-symbol-set 100))
-(s 'insert! 'foo)         ; returns #f if new
-(s 'member? 'foo)         ; => #t
-(s 'delete! 'foo)
+(s 'insert! 'apple)       ; returns #f if new
+(s 'member? 'apple)       ; => #t
+(s 'delete! 'apple)
 (s 'keys)                 ; list of elements
 (s 'size)
 (s 'copy)
@@ -776,9 +776,9 @@ Stub generation is automated by the Quake template
 \toprule
 \textbf{Directive} & \textbf{Description} \\
 \midrule
-{\tt SchemeStubs("Foo")}           & Generate stubs for {\tt Foo.i3} \\
-{\tt Smodule("Foo")}               & {\tt Module} + {\tt SchemeStubs} \\
-{\tt Sinterface("Foo")}            & {\tt Interface} + {\tt SchemeStubs} \\
+{\tt SchemeStubs("Fmt")}           & Generate stubs for {\tt Fmt.i3} \\
+{\tt Smodule("Fmt")}               & {\tt Module} + {\tt SchemeStubs} \\
+{\tt Sinterface("Fmt")}            & {\tt Interface} + {\tt SchemeStubs} \\
 {\tt Ssequence("K","V")}           & {\tt Sequence} + {\tt SchemeStubs("KSeq")} \\
 {\tt ExportSchemeStubs("prog")}    & Export stubs for linking (phase~2) \\
 {\tt importSchemeStubs()}          & Import stubs from dependencies (phase~3) \\
@@ -790,8 +790,8 @@ Stub generation is automated by the Quake template
 
 \begin{enumerate}
 \item \textbf{Phase~1} ({\tt make-standard-stuff}): For each {\tt
-  SchemeStubs("Foo")} call, {\tt sstubgen} processes {\tt Foo.i3} and
-  generates {\tt FooSchemeStubs.i3} and {\tt FooSchemeStubs.m3}.
+  SchemeStubs("Fmt")} call, {\tt sstubgen} processes {\tt Fmt.i3} and
+  generates {\tt FmtSchemeStubs.i3} and {\tt FmtSchemeStubs.m3}.
   These register procedures, types, and operations at module
   initialization time.
 
@@ -1571,6 +1571,285 @@ EVAL scm.init(ARRAY OF TEXT {}, NIL);
 
 
 %======================================================================
+\chapter{The MScheme Compiler}\label{ch:compiler}
+%======================================================================
+
+MScheme includes a Level~1 ahead-of-time compiler that translates
+Scheme source files into Modula-3 source code.  The compiled code
+is linked into your application and executes 4--10$\times$ faster than
+the interpreter on typical workloads.  The compiler preserves
+redefinition semantics: compiled functions look up their callees through
+live environment bindings, so \texttt{set!}\ and interpreter-side
+\texttt{define} continue to work correctly.
+
+The compiler is described in detail in the companion document
+\emph{MScheme Compiler Design: From Binding Optimization to
+Native Code Generation}.  This chapter covers practical usage.
+
+\section{Quick Start}
+
+Suppose you have a Scheme library \texttt{mathlib.scm}:
+
+\begin{lstlisting}[language=Scheme]
+(require-modules "basic-defs")
+
+(define (factorial n)
+  (if (= n 0) 1 (* n (factorial (- n 1)))))
+
+(define (fibonacci n)
+  (if (< n 2) n (+ (fibonacci (- n 1))
+                    (fibonacci (- n 2)))))
+\end{lstlisting}
+
+To compile it, add these lines to your \texttt{m3makefile}:
+
+\begin{lstlisting}[language={}]
+import("schemecompiler")
+
+scheme("mathlib")
+\end{lstlisting}
+
+That's it.  At build time, \texttt{cm3} invokes the MScheme compiler
+to produce \texttt{mathlib.i3} and \texttt{mathlib.m3} as derived
+sources.  At runtime, the compiled module self-registers in a global
+table.  When Scheme code executes
+\texttt{(require-modules "mathlib")} or \texttt{(load "mathlib.scm")},
+the compiled version is used automatically---no source file is read,
+no parsing occurs.
+
+\section{Build System Integration}
+
+The \texttt{schemecompiler} package provides a Quake template
+(\texttt{scheme.tmpl}) with three entry points:
+
+\begin{center}
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{Directive} & \textbf{Effect} \\
+\midrule
+\texttt{scheme("mathlib")} &
+  Compile \texttt{mathlib.scm} to \texttt{mathlib.i3}/\texttt{mathlib.m3}.
+  The interface is \texttt{HIDDEN} (internal to the package). \\
+\texttt{Scheme("mathlib")} &
+  Same, but the interface is \texttt{VISIBLE} (exported).
+  Other packages can \texttt{IMPORT mathlib} and call
+  \texttt{mathlib.Install(interp)} directly. \\
+\texttt{\_scheme\_compile("MathLib", "math-library.scm", HIDDEN)} &
+  Explicit form for when the module name differs from the
+  \texttt{.scm} filename. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The \texttt{scheme}/\texttt{Scheme} naming follows the CM3
+convention where a capitalized directive exports the interface
+(cf.\ \texttt{Module}/\texttt{module},
+\texttt{Interface}/\texttt{interface}).
+
+\subsection{What the Build Does}
+
+When \texttt{cm3} processes \texttt{scheme("mathlib")}, the Quake
+template:
+
+\begin{enumerate}
+\item Checks if \texttt{mathlib.i3} is stale relative to \texttt{mathlib.scm}.
+\item If so, writes a small bootstrap script that loads the compiler
+  and calls \texttt{(compile-file "mathlib.scm" "mathlib")}.
+\item Invokes the MScheme interpreter (\texttt{mscheme}) on that
+  script.
+\item Registers the derived \texttt{mathlib.i3} and \texttt{mathlib.m3}
+  with the build system for compilation and linking.
+\end{enumerate}
+
+Incremental builds only re-run the Scheme compiler when the source
+\texttt{.scm} file changes.
+
+\section{Transparent Loading via the Registry}\label{sec:registry}
+
+Each compiled module registers itself at Modula-3 module initialization
+time (in the \texttt{BEGIN} block of the generated \texttt{.m3} file):
+
+\begin{lstlisting}[language=Modula3]
+BEGIN
+  SchemeCompiledRegistry.Register("mathlib", Install);
+  SchemeCompiledRegistry.Register("mathlib.scm", Install);
+END mathlib.
+\end{lstlisting}
+
+The interpreter's \texttt{LoadFile} procedure checks this registry
+before looking for a file on disk or in the bundled defaults.  If
+the name matches a registered module, the compiled \texttt{Install}
+procedure is called directly.
+
+This means:
+\begin{itemize}
+\item \texttt{(load "mathlib.scm")} uses the compiled version.
+\item \texttt{(require-modules "mathlib")} uses the compiled version.
+\item No source file needs to be present at runtime.
+\item The deduplication list in \texttt{require-modules} prevents
+  double-installation, just as it prevents double-loading.
+\end{itemize}
+
+The \texttt{SchemeCompiledRegistry} interface is simple:
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE SchemeCompiledRegistry;
+IMPORT Scheme;
+
+TYPE Installer = PROCEDURE(interp : Scheme.T) RAISES { Scheme.E };
+
+PROCEDURE Register(name : TEXT; installer : Installer);
+PROCEDURE Lookup(name : TEXT) : Installer;  (* NIL if not found *)
+
+END SchemeCompiledRegistry.
+\end{lstlisting}
+
+If you use \texttt{Scheme("mathlib")} (visible interface), you can also
+call \texttt{mathlib.Install(interp)} explicitly from Modula-3 code.
+This is useful for modules that must be installed before
+the first \texttt{(require-modules ...)} call.
+
+\subsection{Reload Semantics}\label{sec:reload}
+
+Compiled modules remain registered for the lifetime of the process.
+Every call to \texttt{(load "mathlib.scm")} invokes the compiled
+\texttt{Install} procedure, even if the module has already been loaded
+once.  The \texttt{Install} procedure re-runs completely each time:
+passthrough forms (such as \texttt{(define a 0)}) are re-evaluated,
+and compiled procedures are re-installed into the environment.
+
+This preserves the standard Scheme reload semantics.  For example:
+
+\begin{lstlisting}
+> (load "mathlib.scm")    ; a is bound to 0
+> (set! a 1)              ; mutate a
+> a
+1
+> (load "mathlib.scm")    ; reload: a is reset to 0
+> a
+0
+\end{lstlisting}
+
+\noindent The behavior is identical whether \texttt{mathlib.scm} is
+compiled or interpreted: the module is re-executed from the top, all
+definitions are re-established, and any mutations made since the
+previous load are overwritten.
+
+Note that \texttt{require-modules} maintains its own deduplication
+list, so \texttt{(require-modules "mathlib")} loads the module at most
+once per session regardless of how many times it is called.
+Reloading via \texttt{load} bypasses this deduplication and always
+re-executes the module.
+
+\section{Dependencies and Preamble}
+
+When a compiled module's source file contains top-level
+\texttt{require-modules} or \texttt{load} forms, the compiler
+extracts them and emits them at the start of the \texttt{Install}
+procedure as \texttt{loadEvalText} calls:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Install(interp : Scheme.T) RAISES { Scheme.E } =
+  VAR ...
+  BEGIN
+    (* Dependencies *)
+    EVAL interp.loadEvalText("(require-modules \"basic-defs\")");
+    (* forward declarations *)
+    ...
+  END Install;
+\end{lstlisting}
+
+If a dependency is itself a compiled module, the registry intercepts
+the \texttt{require-modules} call and uses the compiled version
+recursively.  The \texttt{require-modules} deduplication list
+prevents infinite loops and redundant loading.
+
+\section{Supported Constructs}
+
+The Level~1 compiler handles the following Scheme constructs:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Category} & \textbf{Constructs} \\
+\midrule
+Control flow & \texttt{if}, \texttt{cond}, \texttt{case}, \texttt{and}, \texttt{or}, \texttt{not} \\
+Binding      & \texttt{let}, \texttt{let*}, \texttt{letrec}, named \texttt{let} \\
+Sequencing   & \texttt{begin} \\
+Mutation     & \texttt{set!} \\
+Iteration    & \texttt{do}, self-tail-calls (compiled to \texttt{LOOP}) \\
+Closures     & \texttt{lambda}, internal \texttt{define} \\
+Parameters   & Fixed arity, rest parameters (\texttt{.}~notation) \\
+Constants    & Numbers, strings, booleans, characters, symbols, quoted lists \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Top-level \texttt{define} forms whose bodies use only
+these constructs are compiled.  Forms using unsupported constructs
+(\texttt{eval}, \texttt{current-environment}, reflective closure
+access) are silently skipped---the interpreter handles them as usual
+at load time.  The compiler reports which definitions were compiled
+and which were skipped.
+
+\section{Performance}
+
+On ARM64\_DARWIN (Apple M4), the compiler delivers
+\textbf{4--10$\times$} speedups on recursive workloads:
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
+\midrule
+\texttt{(fibonacci 25)}       & 225\,ms    & 2,324\,ms   & 10$\times$ \\
+\texttt{(ackermann 3 4)}      & 13\,ms     & 81\,ms      & 6$\times$ \\
+\texttt{(loop-sum 10000 0)}   & 36\,ms     & 83\,ms      & 2$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Self-tail-calls benefit particularly from compilation: they are
+converted to Modula-3 \texttt{LOOP} statements, eliminating all
+call overhead.  The modest measured speedup for \texttt{loop-sum}
+reflects \texttt{loadEvalText} parsing overhead in the benchmark
+harness, not the compiled loop body itself (which executes in
+microseconds).
+
+Compiled and interpreted code coexist freely.  A compiled function
+can call an interpreted one (through the environment binding), and
+vice versa.  This enables incremental compilation: compile the
+hot spots and leave the rest interpreted.
+
+\section{Limitations}
+
+\begin{itemize}
+\item \textbf{Top-level defines only.}  The compiler processes
+  \texttt{(define (name params...) body)} forms at the top level.
+  It does not compile standalone expressions, variable definitions,
+  or macro definitions.
+
+\item \textbf{No general tail-call optimization.}  Only self-tail-calls
+  are optimized to \texttt{LOOP}.  Mutual recursion and tail calls to
+  other functions use normal Modula-3 calls (consuming stack).
+
+\item \textbf{No \texttt{eval} or \texttt{current-environment}.}
+  Definitions that use these forms are silently left to the
+  interpreter.
+
+\item \textbf{No \texttt{call/cc}.}  MScheme's continuations are
+  limited to stack unwinding; compiled code has the same limitation.
+
+\item \textbf{Redefinition cost.}  Every inter-procedure call goes
+  through a binding indirection (\texttt{binding.get()} followed by
+  \texttt{NARROW} and virtual dispatch).  This is the cost of
+  preserving correct redefinition semantics.  A future Level~2
+  compiler could optimize intra-module calls with a fast-path
+  pointer comparison.
+\end{itemize}
+
+
+%======================================================================
 \chapter{Real-World Usage Patterns}
 %======================================================================
 
@@ -1985,6 +2264,11 @@ ExportSchemeStubs ("my-program-name")
 
 % Import stubs from other packages
 importSchemeStubs()
+
+% Compile Scheme source to Modula-3
+import ("schemecompiler")
+scheme ("mylib")             % compiles mylib.scm, HIDDEN interface
+Scheme ("mylib")             % compiles mylib.scm, VISIBLE interface
 
 % Build the program
 implementation ("Main")

@@ -1,8 +1,37 @@
 /* MScheme Level 1 Compiler -- quake template package */
 
 import("cit_util")
+import("mscheme")
+import("scheme-lib")
 
 template("scheme")
+
+/* Self-compile the compiler */
+scheme("compiler")
+
+/* Compile scheme-lib modules */
+local slib = PKG_INSTALL & SL & "scheme-lib" & SL & "src"
+_scheme_compile_path("require",     slib & SL & "require.scm",     HIDDEN)
+_scheme_compile_path("exit",        slib & SL & "exit.scm",        HIDDEN)
+_scheme_compile_path("basic_mbe",   slib & SL & "basic-mbe.scm",   HIDDEN)
+_scheme_compile_path("basic_defs",  slib & SL & "basic-defs.scm",  HIDDEN)
+_scheme_compile_path("display",     slib & SL & "display.scm",     HIDDEN)
+_scheme_compile_path("hashtable",   slib & SL & "hashtable.scm",   HIDDEN)
+_scheme_compile_path("set_lib",     slib & SL & "set.scm",         HIDDEN)
+_scheme_compile_path("mergesort",   slib & SL & "mergesort.scm",   HIDDEN)
+_scheme_compile_path("time_lib",    slib & SL & "time.scm",        HIDDEN)
+_scheme_compile_path("history",     slib & SL & "history.scm",     HIDDEN)
+_scheme_compile_path("struct",      slib & SL & "struct.scm",      HIDDEN)
+_scheme_compile_path("m3_lib",      slib & SL & "m3.scm",          HIDDEN)
+_scheme_compile_path("gnuplot",     slib & SL & "gnuplot.scm",     HIDDEN)
+_scheme_compile_path("mbe",         slib & SL & "mbe.scm",         HIDDEN)
+_scheme_compile_path("addresses",   slib & SL & "addresses.scm",   HIDDEN)
+_scheme_compile_path("scodegen",    slib & SL & "scodegen.scm",    HIDDEN)
+_scheme_compile_path("pregexp",     slib & SL & "pregexp" & SL & "pregexp.scm", HIDDEN)
+_scheme_compile_path("marketdata_hfdate_conversion",
+                     slib & SL & "marketdata-hfdate-conversion.scm", HIDDEN)
+
+LinkCompiledScheme()
 
 ship_source("compiler.scm")
 ship_source("test-input.scm")
