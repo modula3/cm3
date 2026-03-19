@@ -1379,7 +1379,7 @@
               (L "  END Apply_" m3name ";")
               NL))))))
 
-(define (gen-install-proc procs module-name)
+(define (gen-install-proc procs module-name preamble)
   (string-append
    (L "PROCEDURE Install(interp : Scheme.T) RAISES { Scheme.E } =")
    (L "  VAR")
@@ -1390,6 +1390,16 @@
                    (L "    obj_" m3name " : Compiled_" m3name ";")))
                procs))
    (L "  BEGIN")
+   ;; Emit preamble dependency loading (require-modules, load)
+   (if (null? preamble)
+       ""
+       (string-append
+        (L "    (* Dependencies *)")
+        (apply string-append
+               (map (lambda (form)
+                      (L "    EVAL interp.loadEvalText(\""
+                         (m3-escape-string (form->string form)) "\");"))
+                    preamble))))
    ;; Forward-declare all procedure names so self-recursive and
    ;; mutually recursive bindings can be resolved
    (L "    (* forward declarations *)")
@@ -1462,6 +1472,23 @@
                       ((char=? c #\newline) (list->string (list #\\ #\n)))
                       (else (list->string (list c)))))
               (string->list s))))
+
+(define (form->string form)
+  ;; Serialize a Scheme form to readable text (for embedding in M3 source)
+  (cond
+    ((string? form) (string-append "\"" form "\""))
+    ((symbol? form) (symbol->string form))
+    ((number? form) (number->string form))
+    ((null? form) "()")
+    ((boolean? form) (if form "#t" "#f"))
+    ((pair? form)
+     (string-append "(" (form->string (car form))
+                    (let loop ((rest (cdr form)))
+                      (cond ((null? rest) ")")
+                            ((pair? rest) (string-append " " (form->string (car rest))
+                                                         (loop (cdr rest))))
+                            (else (string-append " . " (form->string rest) ")"))))))
+    (else "")))
 
 ;;;
 ;;; ==================== Lambda Code Generation ====================
@@ -1597,9 +1624,9 @@
       (gen-lambda-new lam-m3name binding-caps value-caps lam-constants ctx)
       depth)))
 
-(define (gen-module module-name procs)
+(define (gen-module module-name procs preamble)
   (let ((i3 (gen-i3 module-name))
-        (m3 (gen-m3 module-name procs)))
+        (m3 (gen-m3 module-name procs preamble)))
     (list (cons 'i3 i3) (cons 'm3 m3))))
 
 (define (gen-i3 module-name)
@@ -1612,7 +1639,7 @@
    NL
    (L "END " module-name ".")))
 
-(define (gen-m3 module-name procs)
+(define (gen-m3 module-name procs preamble)
   ;; Two-phase generation: generate procedure bodies first (which discovers
   ;; and accumulates lambda closures), then assemble the complete module.
   (set! *lambda-types* '())
@@ -1650,6 +1677,7 @@
      (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
      (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
+     (L "IMPORT SchemeCompiledRegistry;")
      (L "FROM Scheme IMPORT Object;")
      NL
      (L "TYPE")
@@ -1657,8 +1685,10 @@
      lam-type-decls        ;; lambda types follow regular types
      proc-bodies           ;; regular procs (contain lambda NEW expressions)
      lam-proc-bodies       ;; lambda apply procedures
-     (gen-install-proc procs module-name)
+     (gen-install-proc procs module-name preamble)
      (L "BEGIN")
+     (L "  SchemeCompiledRegistry.Register(\"" module-name "\", Install);")
+     (L "  SchemeCompiledRegistry.Register(\"" module-name ".scm\", Install);")
      (L "END " module-name "."))))
 
 ;;;
@@ -1939,6 +1969,11 @@
 
 (define (compile-file input-file module-name)
   (let* ((forms (read-file input-file))
+         (preamble (filter (lambda (f)
+                             (and (pair? f)
+                                  (or (eq? (car f) 'require-modules)
+                                      (eq? (car f) 'load))))
+                           forms))
          (all-defines (filter (lambda (f)
                                 (and (pair? f) (eq? (car f) 'define)
                                      (pair? (cadr f))
@@ -1958,7 +1993,7 @@
                         (loop (cdr defs) (+ serial 1)
                               (cons (cons (cons 'body body) compiled)
                                     acc))))))
-         (module (gen-module module-name procs))
+         (module (gen-module module-name procs preamble))
          (i3-text (cdr (assq 'i3 module)))
          (m3-text (cdr (assq 'm3 module)))
          (i3-file (string-append module-name ".i3"))
@@ -2003,6 +2038,11 @@
 
 (define (compile-and-show input-file module-name)
   (let* ((forms (read-file input-file))
+         (preamble (filter (lambda (f)
+                             (and (pair? f)
+                                  (or (eq? (car f) 'require-modules)
+                                      (eq? (car f) 'load))))
+                           forms))
          (all-defines (filter (lambda (f)
                                 (and (pair? f) (eq? (car f) 'define)
                                      (pair? (cadr f))
@@ -2020,7 +2060,7 @@
                         (loop (cdr defs) (+ serial 1)
                               (cons (cons (cons 'body body) compiled)
                                     acc))))))
-         (module (gen-module module-name procs)))
+         (module (gen-module module-name procs preamble)))
     (display "=== ")
     (display module-name)
     (display ".i3 ===")

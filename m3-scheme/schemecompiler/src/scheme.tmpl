@@ -1,14 +1,19 @@
 /* Quake template for MScheme Level 1 Compiler integration.
    Usage in m3makefile:
      import("schemecompiler")
-     scheme("CompiledFoo", "foo.scm")
-   Compiles foo.scm to derived CompiledFoo.i3 and CompiledFoo.m3. */
+     scheme("foo")              -- compiles foo.scm, HIDDEN interface
+     Scheme("foo")              -- compiles foo.scm, VISIBLE interface
+
+   For cases where the .scm filename differs from the module name,
+   use the internal helper directly:
+     _scheme_compile("CompiledFoo", "foo.scm", HIDDEN)
+     _scheme_compile("CompiledFoo", "foo.scm", VISIBLE) */
 
 _SCHEME_MSCHEME  = PKG_INSTALL & SL & "mscheme-interactive" & SL & BUILD_DIR & SL & "mscheme"
 _SCHEME_COMPILER = PKG_INSTALL & SL & "schemecompiler" & SL & "src" & SL & "compiler.scm"
 _SCHEME_EXIT     = "exit"
 
-readonly proc scheme(module_name, scm_file) is
+readonly proc _scheme_compile(module_name, scm_file, visibility) is
   local src = path_of(scm_file)
   if stale(module_name & ".i3", src)
     local build_scm = module_name & "_scompile.scm"
@@ -18,8 +23,14 @@ readonly proc scheme(module_name, scm_file) is
     end
     _exec([_SCHEME_MSCHEME, build_scm, _SCHEME_EXIT])
   end
-  derived_interface(module_name, VISIBLE)
+  derived_interface(module_name, visibility)
   derived_implementation(module_name)
 end
 
-Scheme = scheme
+readonly proc scheme(module_name) is
+  _scheme_compile(module_name, module_name & ".scm", HIDDEN)
+end
+
+readonly proc Scheme(module_name) is
+  _scheme_compile(module_name, module_name & ".scm", VISIBLE)
+end

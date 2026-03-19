@@ -6,7 +6,7 @@ import("mscheme")
 import("modula3scheme")
 import("schemecompiler")
 
-scheme("CompiledTest", "test-input.scm")
+_scheme_compile("CompiledTest", "test-input.scm", HIDDEN)
 
 implementation("Main")
 

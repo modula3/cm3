@@ -87,6 +87,8 @@ List("SchemeConvertHooks","SchemeConvertHooks")
 
 c_source("schemeUnixDeps")
 
+Module("SchemeCompiledRegistry")
+
 library ("mscheme")
 
 end

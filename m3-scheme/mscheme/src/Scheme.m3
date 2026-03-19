@@ -25,6 +25,7 @@ IMPORT SchemeProfiler;
 IMPORT SchemeUnixDeps;
 IMPORT SchemeEnvironmentBinding;
 IMPORT SchemeEnvironmentInstanceRep; (* for pickling *)
+IMPORT SchemeCompiledRegistry;
 IMPORT Pickle;
 IMPORT BigInt;
 IMPORT TextWr;
@@ -304,6 +305,13 @@ PROCEDURE FileOpen(t : T; name : Pathname.T) : FileRec
 PROCEDURE LoadFile(t : T; fileName : Object) : Object RAISES { E } =
   BEGIN
     WITH name = SchemeUtils.StringifyQ(fileName,FALSE) DO
+      (* Check compiled module registry first *)
+      VAR installer := SchemeCompiledRegistry.Lookup(name); BEGIN
+        IF installer # NIL THEN
+          installer(t);
+          RETURN SchemeString.FromText(name)
+        END
+      END;
       TRY
         VAR rec := FileOpen(t, name);
         BEGIN
