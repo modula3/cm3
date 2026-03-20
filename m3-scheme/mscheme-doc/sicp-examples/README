@@ -32,3 +32,77 @@ Note: Chapters 4 and 5 are self-contained systems (a Scheme interpreter
 and a register-machine simulator) that define their own eval/apply.
 They are not meant to be loaded into a running session alongside
 chapters 1-3.
+
+
+Compatibility Layer (sicp-compat.scm)
+--------------------------------------
+
+The chapter files are unmodified from the CMU source.  All adaptations
+from MIT Scheme to MScheme's R4RS live in sicp-compat.scm:
+
+  nil, t            MIT Scheme booleans -> '() and #t
+  sequence          (sequence e1 e2 ...) -> (begin e1 e2 ...)
+  princ, print      MIT Scheme output -> display, write+newline
+  1+, -1+           MIT Scheme arithmetic primitives
+  atom?             (not (pair? x))
+  runtime           MIT Scheme process timer -> MScheme's timenow
+  cons-stream,      MIT Scheme lazy streams implemented via
+    head, tail,       MScheme's delay/force
+    the-empty-stream,
+    empty-stream?
+  assq              Override: returns '() on miss (MIT Scheme
+                      convention) instead of #f (R4RS).  SICP's
+                      chapter 3 table code tests (null? (assq ...))
+                      which would crash on #f.
+  sicp-random       (random n) returning integer 0..n-1
+
+
+Test Suite (run-tests.scm)
+---------------------------
+
+113 tests covering all five chapters.  Run with:
+
+  cd sicp-examples
+  mscheme run-tests.scm
+
+The test suite copies definitions verbatim from the chapter files and
+adds assert-equal checks.  The following items are intentionally skipped:
+
+  Chapter 1
+    (define (p) (p))          Infinite loop (used to illustrate
+                                applicative vs. normal order).
+
+  Chapter 2
+    Redefinitions of + and *  The generic arithmetic system redefines
+                                the built-in arithmetic operators.
+                                Loading these would break the rest
+                                of the session.
+    put/get dispatch table    Used in the data-directed programming
+                                sections but defined later in chapter 3.
+                                Tests that depend on put/get are deferred
+                                to the chapter 3 section.
+    put-coercion,             Referenced but never defined in the CMU
+      get-coercion              source (left as exercises).
+
+  Chapter 3
+    Standalone expressions    Expressions like (set-front-ptr! ...)
+                                that modify earlier data structures
+                                without a testable return value.
+
+  Chapter 4
+    eval/apply redefinition   The metacircular evaluator redefines
+                                eval and apply.  The test suite
+                                exercises the evaluator's internals
+                                (lookup, extend-environment, etc.)
+                                without installing the full eval loop.
+    collect macro             Used in the logic programming section
+                                but never defined in the CMU source.
+
+  Chapter 5
+    define-machine DSL        Register machine definition macro; a
+                                DSL-within-a-DSL that would require
+                                its own macro system to run.
+    =zero?,                   Referenced in the compiler section but
+      greatest-common-divisor   left as exercises or assumed from
+                                earlier context not present in the
+                                extracted code.
