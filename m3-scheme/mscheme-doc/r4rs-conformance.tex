@@ -1,0 +1,724 @@
+%%
+%% MScheme R4RS Conformance Report
+%%
+\documentclass[12pt]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{enumitem}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,define-global-symbol,
+    import,module,library,program,SchemeStubs,Smodule,ExportSchemeStubs,
+    importSchemeStubs},
+  sensitive=true,
+  morecomment=[l]{;},
+  morecomment=[l]{\%},
+  morestring=[b]",
+  literate={lambda}{$\lambda$}1,
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,CHAR,TEXT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,
+    ISTYPE,NARROW,TYPECODE},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  MScheme R4RS Conformance Report}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\chapter{Introduction}
+%======================================================================
+
+This report is a systematic audit of MScheme against the
+\emph{Revised$^4$ Report on the Algorithmic Language Scheme
+(R4RS)}~\cite{r4rs}.  MScheme is a Scheme interpreter written in
+Modula-3~\cite{spwm3}, descended from Peter Norvig's
+JScheme~\cite{jscheme}.
+
+The audit is based on source code review of the interpreter
+({\tt mscheme/src/}) and the Scheme compiler
+({\tt schemecompiler/src/}).  Each section of R4RS is examined
+in turn for:
+
+\begin{enumerate}
+\item \textbf{Completeness} --- which required and optional features
+  are present, and which are missing.
+\item \textbf{Implementation-defined behavior} --- where R4RS grants
+  freedom to the implementation and how MScheme exercises that freedom.
+\item \textbf{Deviations} --- cases where MScheme's behavior differs
+  from R4RS requirements.
+\end{enumerate}
+
+Section~\ref{ch:extensions} catalogs MScheme extensions beyond the
+scope of R4RS.
+
+%======================================================================
+\chapter{Lexical Conventions (R4RS \S2)}
+%======================================================================
+
+\section{Identifiers}
+
+MScheme identifiers follow R4RS conventions.  The extended alphabetic
+characters ({\tt !\ \$\ \%\ \&\ *\ /\ :\ <\ =\ >\ ?\ \textasciitilde\
+\textasciicircum\ \_}) are accepted as part of identifiers.
+
+Identifiers are case-insensitive: the reader converts all symbols to
+lower case (conformant with R4RS~\S2).
+
+\section{Comments}
+
+Line comments beginning with {\tt ;} are supported (conformant).
+
+\section{String Literals}
+
+The escape sequences {\tt \textbackslash"} and {\tt \textbackslash\textbackslash}
+work correctly.  The sequence {\tt \textbackslash n} in a string literal produces
+the literal character~{\tt n}, \emph{not} a newline.  This is conformant:
+R4RS~\S2 only requires {\tt \textbackslash"} and {\tt \textbackslash\textbackslash}.
+
+\section{Number Literal Prefixes}
+
+\begin{itemize}
+\item {\tt \#d} (decimal): silently accepted (no-op, since decimal is the default).
+\item {\tt \#e} (exact) and {\tt \#i} (inexact): silently ignored.  Since
+  MScheme has no exact/inexact distinction, this is harmless.
+\item {\tt \#b} (binary), {\tt \#o} (octal), {\tt \#x} (hexadecimal):
+  emit a warning ``not implemented'' and fall through to decimal parsing.
+\end{itemize}
+
+\noindent
+The {\tt string->number} procedure, by contrast, fully supports radix
+2--16 via its optional second argument.
+
+\section{Character Literals}
+
+{\tt \#\textbackslash\emph{c}}, {\tt \#\textbackslash space}, and
+{\tt \#\textbackslash newline} are all supported (conformant).
+
+\section{Vector Literals}
+
+{\tt \#(\ldots)} vector literals are supported (conformant).
+
+%======================================================================
+\chapter{Expressions and Special Forms (R4RS \S4)}
+%======================================================================
+
+\section{Primitive Expression Types}
+
+All R4RS primitive expression types are present:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Form} & \textbf{Status} \\
+\midrule
+Variable reference & Present \\
+{\tt (quote \emph{datum})} & Present \\
+{\tt (lambda \emph{formals} \emph{body})} & Present (incl.\ rest args) \\
+{\tt (if \emph{test} \emph{consequent} \emph{alternate})} & Present \\
+{\tt (set!\ \emph{variable} \emph{expression})} & Present \\
+Procedure call & Present \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Derived Expression Types}
+
+All R4RS derived expression types are implemented as macros in
+{\tt SchemePrimitives.i3}:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Form} & \textbf{Status} \\
+\midrule
+{\tt cond} & Present (incl.\ {\tt =>} syntax) \\
+{\tt case} & Present (see deviation below) \\
+{\tt and}, {\tt or} & Present \\
+{\tt let}, {\tt let*}, {\tt letrec} & Present \\
+Named {\tt let} & Present \\
+{\tt begin} & Present \\
+{\tt do} & Present \\
+{\tt delay} & Present \\
+{\tt quasiquote} & Present \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Deviation: {\tt case} macro.}
+The {\tt case} macro expansion uses {\tt member} (which calls
+{\tt equal?}) to test clause membership.  R4RS~\S4.2.1 specifies
+that the keys are compared using {\tt eqv?}, so the correct
+procedure would be {\tt memv}.  In practice this only matters for
+number comparisons where {\tt equal?} and {\tt eqv?} might differ
+(e.g., with exact/inexact distinctions), which MScheme does not
+have, so the deviation is benign.
+
+\paragraph{{\tt cond} with {\tt =>}.}
+The {\tt =>} syntax in {\tt cond} clauses is handled directly in the
+evaluator ({\tt Scheme.m3}, {\tt ReduceCond}), not via macro
+expansion.
+
+\section{Internal Definitions}
+
+Internal {\tt define} forms at the beginning of a lambda body are
+supported.  They are handled at runtime by the evaluator.
+{\tt SchemeClosure.Init} recognizes internal definitions but does not
+convert them to an equivalent {\tt letrec}; instead, it disables its
+body optimization pass and lets the defines fall through to the
+normal evaluation path (conformant in behavior with R4RS~\S5.2.2,
+though not via the transformation suggested by the report).
+
+\section{Tail Recursion}
+
+MScheme implements proper tail recursion via a {\tt LOOP} in the main
+evaluator.  The following positions are recognized as tail positions
+(conformant with R4RS~\S3.5):
+
+\begin{itemize}
+\item Last expression in a {\tt lambda} body.
+\item Both branches of {\tt if}.
+\item Last selected branch of {\tt cond}.
+\item Last expression in {\tt and} / {\tt or}.
+\item Last expression in {\tt begin}, {\tt let}, {\tt let*}, {\tt letrec}.
+\item Body of named {\tt let}.
+\item Last expression in the {\tt when} clause of {\tt do}.
+\end{itemize}
+
+%======================================================================
+\chapter{Standard Procedures (R4RS \S6)}
+%======================================================================
+
+This chapter reviews each subsection of R4RS~\S6.
+
+%----------------------------------------------------------------------
+\section{Booleans (\S6.1)}
+%----------------------------------------------------------------------
+
+{\tt not} and {\tt boolean?} are present.  Complete.
+
+%----------------------------------------------------------------------
+\section{Equivalence Predicates (\S6.2)}
+%----------------------------------------------------------------------
+
+{\tt eq?}, {\tt eqv?}, and {\tt equal?} are all present.
+
+\paragraph{Note.} {\tt eqv?} compares {\tt LONGREAL} values directly.
+Since MScheme has no exact/inexact distinction, {\tt (eqv?\ 1\ 1.0)}
+is {\tt \#t}.  See Section~\ref{sec:impl-defined} for further
+discussion.
+
+%----------------------------------------------------------------------
+\section{Pairs and Lists (\S6.3)}
+%----------------------------------------------------------------------
+
+All R4RS pair and list procedures are present:
+
+\begin{itemize}[nosep]
+\item {\tt cons}, {\tt car}, {\tt cdr}, {\tt set-car!}, {\tt set-cdr!}
+\item All 28 {\tt c\ldots r} compositions ({\tt caar} through {\tt cddddr})
+\item {\tt null?}, {\tt list?}, {\tt list}, {\tt length}, {\tt append},
+  {\tt reverse}
+\item {\tt list-tail}, {\tt list-ref}
+\item {\tt memq}, {\tt memv}, {\tt member}
+\item {\tt assq}, {\tt assv}, {\tt assoc}
+\end{itemize}
+
+\noindent Complete.
+
+%----------------------------------------------------------------------
+\section{Symbols (\S6.4)}
+%----------------------------------------------------------------------
+
+{\tt symbol?}, {\tt symbol->string}, {\tt string->symbol} are present.
+Complete.
+
+%----------------------------------------------------------------------
+\section{Numbers (\S6.5)}
+\label{sec:numbers}
+%----------------------------------------------------------------------
+
+This is the area of greatest divergence from R4RS.
+
+\subsection{Number Tower}
+
+MScheme has a single numeric type: IEEE~754 double precision
+(Modula-3 {\tt LONGREAL}).  There are no exact integers, no rationals,
+and no complex numbers.  This means:
+
+\begin{itemize}
+\item {\tt complex?} = {\tt real?} = {\tt number?} (all return {\tt \#t}
+  for any number).
+\item {\tt exact?} = {\tt integer?} = {\tt rational?} (true when the
+  double value is integer-valued).
+\item {\tt inexact?} returns {\tt \#t} when the value is \emph{not}
+  integer-valued.
+\end{itemize}
+
+R4RS acknowledges that an implementation ``may use fixnums, flonums,
+or perhaps some other representation'' but expects at least an
+exact/inexact distinction.  MScheme collapses this distinction
+entirely.
+
+\subsection{Arithmetic and Comparisons}
+
+All R4RS arithmetic operations are present: {\tt +}, {\tt -}, {\tt *},
+{\tt /}, {\tt =}, {\tt <}, {\tt >}, {\tt <=}, {\tt >=}.
+
+Multi-argument forms work correctly.  Division by zero
+signals an error.
+
+\subsection{Rounding, GCD, LCM}
+
+{\tt floor}, {\tt ceiling}, {\tt truncate}, {\tt round},
+{\tt gcd}, {\tt lcm} are all present.
+
+\subsection{Transcendentals}
+
+{\tt exp}, {\tt log}, {\tt sin}, {\tt cos}, {\tt tan}, {\tt asin},
+{\tt acos}, {\tt atan}, {\tt sqrt}, {\tt expt} are present.
+
+\paragraph{Deviation.}
+{\tt atan} accepts only one argument.  The two-argument form
+{\tt (atan \emph{y} \emph{x})} required by R4RS is missing.
+
+\subsection{Number I/O}
+
+{\tt number->string} and {\tt string->number} are present.  Both
+support the optional radix argument with bases 2--16.
+
+\subsection{Missing Procedures}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Procedure} & \textbf{R4RS Status} & \textbf{Notes} \\
+\midrule
+{\tt exact->inexact} & Essential & Missing \\
+{\tt inexact->exact} & Essential & Missing \\
+{\tt numerator} & Non-essential & Missing \\
+{\tt denominator} & Non-essential & Missing \\
+{\tt rationalize} & Non-essential & Missing \\
+{\tt make-rectangular} & Non-essential & No complex numbers \\
+{\tt make-polar} & Non-essential & No complex numbers \\
+{\tt real-part} & Non-essential & No complex numbers \\
+{\tt imag-part} & Non-essential & No complex numbers \\
+{\tt magnitude} & Non-essential & No complex numbers \\
+{\tt angle} & Non-essential & No complex numbers \\
+2-arg {\tt atan} & Essential & Missing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+{\tt exact->inexact} and {\tt inexact->exact} are marked essential in
+R4RS.  They could be trivially implemented as identity functions given
+MScheme's single-type number representation.  The two-argument form of
+{\tt atan} could be implemented via {\tt Math.atan2}.
+
+%----------------------------------------------------------------------
+\section{Characters (\S6.6)}
+%----------------------------------------------------------------------
+
+All R4RS character procedures are present:
+
+\begin{itemize}[nosep]
+\item {\tt char?}
+\item Comparisons: {\tt char=?}, {\tt char<?}, {\tt char>?},
+  {\tt char<=?}, {\tt char>=?}
+\item Case-insensitive comparisons: {\tt char-ci=?}, {\tt char-ci<?},
+  {\tt char-ci>?}, {\tt char-ci<=?}, {\tt char-ci>=?}
+\item {\tt char-alphabetic?}, {\tt char-numeric?}, {\tt char-whitespace?},
+  {\tt char-upper-case?}, {\tt char-lower-case?}
+\item {\tt char->integer}, {\tt integer->char}
+\item {\tt char-upcase}, {\tt char-downcase}
+\end{itemize}
+
+\noindent
+Complete.  Character ordering is based on the Modula-3 {\tt CHAR}
+ordinal (ISO~Latin-1, a superset of ASCII).
+
+%----------------------------------------------------------------------
+\section{Strings (\S6.7)}
+%----------------------------------------------------------------------
+
+Present:
+\begin{itemize}[nosep]
+\item {\tt string?}, {\tt make-string}, {\tt string}
+\item {\tt string-length}, {\tt string-ref}, {\tt string-set!}
+\item Comparisons: {\tt string=?}, {\tt string<?}, {\tt string>?},
+  {\tt string<=?}, {\tt string>=?}
+\item Case-insensitive comparisons: {\tt string-ci=?}, {\tt string-ci<?},
+  {\tt string-ci>?}, {\tt string-ci<=?}, {\tt string-ci>=?}
+\item {\tt substring}, {\tt string-append}
+\item {\tt string->list}, {\tt list->string}
+\end{itemize}
+
+\paragraph{Missing (non-essential).}
+{\tt string-copy} and {\tt string-fill!}.
+
+%----------------------------------------------------------------------
+\section{Vectors (\S6.8)}
+%----------------------------------------------------------------------
+
+Present:
+\begin{itemize}[nosep]
+\item {\tt vector?}, {\tt make-vector}, {\tt vector}
+\item {\tt vector-length}, {\tt vector-ref}, {\tt vector-set!}
+\item {\tt vector->list}, {\tt list->vector}
+\end{itemize}
+
+\paragraph{Missing (non-essential).}
+{\tt vector-fill!}.
+
+%----------------------------------------------------------------------
+\section{Control Features (\S6.9)}
+%----------------------------------------------------------------------
+
+{\tt procedure?}, {\tt apply}, {\tt map}, {\tt for-each}, {\tt force}
+are all present.
+
+\subsection{{\tt call-with-current-continuation}}
+
+{\tt call-with-current-continuation} (also available as {\tt call/cc})
+is present but with significant limitations:
+
+\begin{enumerate}
+\item \textbf{Escape-only.}  The captured continuation can only be used
+  to exit the {\tt call/cc} form.  It cannot be invoked after the
+  {\tt call/cc} expression has returned.  The continuation is
+  implemented via Modula-3 exception unwinding.
+
+\item \textbf{Fixed marker.}  The implementation uses a fixed string
+  marker {\tt "CallCC123"} to identify the exception frame.  This
+  means that nested {\tt call/cc} invocations share the same marker
+  and may not behave correctly.
+
+\item \textbf{No re-entry.}  Continuations cannot be stored and later
+  invoked to re-enter a computation.  This rules out coroutines,
+  cooperative multitasking, and other advanced control flow patterns
+  that rely on full continuations.
+\end{enumerate}
+
+\noindent
+These limitations are inherited from JScheme.  R4RS requires full
+continuations, so this is a known deviation.  In practice, escape
+continuations suffice for most error-handling and early-return use
+cases.
+
+%----------------------------------------------------------------------
+\section{Input and Output (\S6.10)}
+%----------------------------------------------------------------------
+
+\subsection{Present Procedures}
+
+\begin{itemize}[nosep]
+\item Ports: {\tt input-port?}, {\tt output-port?},
+  {\tt current-input-port}, {\tt current-output-port}
+\item File ports: {\tt open-input-file}, {\tt open-output-file},
+  {\tt close-input-port}, {\tt close-output-port}
+\item File context: {\tt call-with-input-file}, {\tt call-with-output-file}
+\item Reading: {\tt read}, {\tt read-char}, {\tt peek-char},
+  {\tt eof-object?}
+\item Writing: {\tt write}, {\tt display}, {\tt newline}, {\tt write-char}
+\item Loading: {\tt load}
+\end{itemize}
+
+\paragraph{Note.}
+{\tt write-char} is mapped to the {\tt display} primitive.  This is
+correct behavior for characters: {\tt display} writes a character
+without the {\tt \#\textbackslash} prefix.
+
+\subsection{Missing (Non-essential)}
+
+\begin{itemize}[nosep]
+\item {\tt with-input-from-file}, {\tt with-output-to-file}
+\item {\tt char-ready?}
+\item {\tt transcript-on}, {\tt transcript-off}
+\end{itemize}
+
+%======================================================================
+\chapter{Implementation-Defined Behavior}
+\label{sec:impl-defined}
+%======================================================================
+
+R4RS leaves many details to the implementation.  This section
+documents MScheme's choices, organized as a numbered list with R4RS
+section references.
+
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=3em]
+
+\item \textbf{Empty list truthiness} (\S3.2).
+  R4RS permits {\tt '()} to count as false.  In MScheme, only {\tt \#f}
+  is false; {\tt '()} is true.
+  \emph{Source:} {\tt SchemeBoolean.m3}: {\tt TruthO(x) = (x \# LFalse)}.
+
+\item \textbf{Number representation} (\S6.5).
+  All numbers are IEEE~754 {\tt LONGREAL} (double precision).  There is
+  no exact/inexact distinction at the type level.
+
+\item \textbf{{\tt exact?}\ semantics} (\S6.5.5).
+  Returns {\tt \#t} when the double value is integer-valued, specifically
+  when {\tt d = FLOAT(ROUND(d))} and {\tt ABS(d) < 10\textsuperscript{17}}.
+  Functionally equivalent to {\tt integer?}.
+
+\item \textbf{{\tt eqv?}\ on numbers} (\S6.2).
+  Compares {\tt LONGREAL} values directly.  Since there is no
+  exact/inexact distinction, {\tt (eqv?\ 1\ 1.0)} evaluates to
+  {\tt \#t}.  R4RS says {\tt eqv?}\ on numbers of different exactness
+  returns {\tt \#f}.
+
+\item \textbf{{\tt set!}\ return value} (\S4.1.6).
+  Returns the assigned value.  R4RS says the result is ``unspecified.''
+
+\item \textbf{{\tt define} return value} (\S5.2).
+  Returns the symbol being defined.  R4RS says the result is ``unspecified.''
+
+\item \textbf{{\tt if} without alternate} (\S4.1.5).
+  Returns {\tt '()} (the empty list) when the test is false.  R4RS says
+  the result is ``unspecified.''
+
+\item \textbf{Character ordering} (\S6.6).
+  Based on the Modula-3 {\tt CHAR} ordinal, which is ISO~Latin-1
+  (a superset of ASCII).
+
+\item \textbf{{\tt eqv?}\ on characters} (\S6.2).
+  Characters are represented as shared singletons (an array of 256
+  pre-allocated character objects).  Characters with the same code point
+  are always {\tt eqv?}.
+
+\item \textbf{{\tt eqv?}\ on empty strings and vectors} (\S6.2).
+  Identity comparison.  Two separately allocated empty strings (or
+  empty vectors) are \emph{not} {\tt eqv?}.
+
+\item \textbf{{\tt map} evaluation order} (\S6.9).
+  Elements are processed left to right.  This is an implementation
+  artifact; R4RS does not specify the order.
+
+\item \textbf{Tail positions} (\S4).
+  Proper tail recursion is implemented.  The tail positions recognized
+  are listed in Section~3.4 of this report.
+
+\item \textbf{{\tt call-with-current-continuation}} (\S6.9).
+  Escape-only continuations via Modula-3 exception unwinding.  Fixed
+  marker {\tt "CallCC123"}.  Cannot be invoked after the {\tt call/cc}
+  has returned.  Nested {\tt call/cc} has issues with the shared marker.
+  See Section~4.10.1 for details.
+
+\item \textbf{{\tt write-char}} (\S6.10.3).
+  Implemented by delegating to {\tt display}, which is correct for
+  characters (writes the character without the {\tt \#\textbackslash}
+  prefix).
+
+\item \textbf{{\tt load}} (\S6.10.4).
+  Searches {\tt **scheme-load-path**}, checks {\tt SchemeCompiledRegistry}
+  for compiled modules, falls back to bundled source.  Returns the filename
+  (R4RS says the return value is ``unspecified'').
+
+\end{enumerate}
+
+%======================================================================
+\chapter{Gaps Summary}
+%======================================================================
+
+Table~\ref{tab:gaps} summarizes all missing or incomplete features.
+
+\begin{table}[ht]
+\centering
+\caption{Missing and incomplete R4RS features.}
+\label{tab:gaps}
+\begin{tabular}{lll}
+\toprule
+\textbf{Procedure / Feature} & \textbf{R4RS Status} & \textbf{Notes} \\
+\midrule
+\multicolumn{3}{l}{\emph{Essential, missing}} \\
+\addlinespace
+{\tt exact->inexact}   & Essential & Trivial to add (identity fn) \\
+{\tt inexact->exact}   & Essential & Trivial to add (identity fn) \\
+2-arg {\tt atan}       & Essential & Use {\tt Math.atan2} \\
+\addlinespace
+\midrule
+\multicolumn{3}{l}{\emph{Non-essential, missing}} \\
+\addlinespace
+{\tt string-copy}           & Non-essential & --- \\
+{\tt string-fill!}          & Non-essential & --- \\
+{\tt vector-fill!}          & Non-essential & --- \\
+{\tt char-ready?}           & Non-essential & --- \\
+{\tt with-input-from-file}  & Non-essential & --- \\
+{\tt with-output-to-file}   & Non-essential & --- \\
+{\tt transcript-on}         & Non-essential & --- \\
+{\tt transcript-off}        & Non-essential & --- \\
+{\tt numerator}             & Non-essential & No rationals \\
+{\tt denominator}           & Non-essential & No rationals \\
+{\tt rationalize}           & Non-essential & No rationals \\
+{\tt make-rectangular}      & Non-essential & No complex numbers \\
+{\tt make-polar}            & Non-essential & No complex numbers \\
+{\tt real-part}             & Non-essential & No complex numbers \\
+{\tt imag-part}             & Non-essential & No complex numbers \\
+{\tt magnitude}             & Non-essential & No complex numbers \\
+{\tt angle}                 & Non-essential & No complex numbers \\
+\addlinespace
+\midrule
+\multicolumn{3}{l}{\emph{Partial / deviant}} \\
+\addlinespace
+{\tt case} macro            & --- & Uses {\tt equal?} not {\tt eqv?} \\
+{\tt \#b}/{\tt \#o}/{\tt \#x} literals & --- & Warning, not implemented \\
+{\tt \#e}/{\tt \#i} prefixes  & --- & Silently ignored \\
+{\tt call/cc}               & Essential & Escape-only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%======================================================================
+\chapter{Extensions Beyond R4RS}
+\label{ch:extensions}
+%======================================================================
+
+MScheme provides a number of features beyond R4RS.
+Table~\ref{tab:extensions} catalogs them.
+
+\begin{longtable}{ll}
+\caption{MScheme extensions.}
+\label{tab:extensions} \\
+\toprule
+\textbf{Name} & \textbf{Description} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Name} & \textbf{Description} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+{\tt macro}                 & User-defined syntactic transformers \\
+{\tt unwind-protect}        & Exception-safe cleanup \\
+{\tt current-environment}   & Access lexical environment \\
+{\tt error}                 & Raise error with message \\
+{\tt exit}                  & Terminate interpreter \\
+{\tt system}                & Shell command execution \\
+{\tt random}, {\tt normal}  & Random number generation \\
+{\tt time}                  & Benchmarking macro \\
+{\tt require-modules}       & Module loading system \\
+{\tt eval}                  & Eval with optional environment \\
+\addlinespace
+\multicolumn{2}{l}{\emph{Mathematics}} \\
+\addlinespace
+{\tt sinh}, {\tt cosh}, {\tt tanh}    & Hyperbolic trigonometry \\
+{\tt asinh}, {\tt acosh}, {\tt atanh}  & Inverse hyperbolic trigonometry \\
+\addlinespace
+\multicolumn{2}{l}{\emph{Modula-3 interop}} \\
+\addlinespace
+{\tt number->LONGREAL}      & Convert to Modula-3 {\tt LONGREAL} \\
+{\tt number->EXTENDED}      & Convert to Modula-3 {\tt EXTENDED} \\
+{\tt number->REAL}          & Convert to Modula-3 {\tt REAL} \\
+\addlinespace
+\multicolumn{2}{l}{\emph{String/list extensions}} \\
+\addlinespace
+{\tt string-havesub?}       & Substring search \\
+{\tt read-big-int}          & Big integer input \\
+\addlinespace
+\multicolumn{2}{l}{\emph{Debugging and meta-programming}} \\
+\addlinespace
+{\tt macro-expand}          & Macro debugging \\
+{\tt dump-environment}      & Environment serialization \\
+{\tt load-environment!}     & Environment deserialization \\
+\addlinespace
+\multicolumn{2}{l}{\emph{Performance}} \\
+\addlinespace
+{\tt eq?-memo}              & Memoization ({\tt eq?} keys) \\
+{\tt equal?-memo}           & Memoization ({\tt equal?} keys) \\
+{\tt write-noflush}         & Write without flushing \\
+{\tt display-noflush}       & Display without flushing \\
+\end{longtable}
+
+%======================================================================
+\chapter{Conclusion}
+%======================================================================
+
+MScheme is a substantially complete R4RS implementation suitable for
+practical Scheme programming.  All expression types and special forms
+are present.  The standard library covers booleans, equivalence
+predicates, pairs and lists, symbols, characters, strings, vectors,
+control features, and I/O in full or near-full compliance.
+
+The main gaps lie in three areas:
+
+\begin{enumerate}
+\item \textbf{Numeric tower.}  The use of a single {\tt LONGREAL}
+  type means there is no exact/inexact distinction, no rational
+  arithmetic, and no complex numbers.  Three essential procedures
+  ({\tt exact->inexact}, {\tt inexact->exact}, 2-arg {\tt atan}) are
+  missing but would be trivial to add.
+
+\item \textbf{Continuations.}  {\tt call-with-current-continuation}
+  provides only escape continuations, not full continuations.  This is
+  a fundamental limitation of the implementation strategy (Modula-3
+  exception unwinding) and is shared with the ancestor JScheme.
+
+\item \textbf{Non-essential I/O and utility procedures.}  A handful of
+  non-essential procedures ({\tt string-copy}, {\tt vector-fill!},
+  {\tt with-input-from-file}, etc.) are missing.  These are
+  straightforward to add.
+\end{enumerate}
+
+\noindent
+MScheme compensates for these gaps with a rich set of extensions,
+including a macro system, module system, Modula-3 interoperation, and
+automatic stub generation, making it well suited to its primary role
+as an embedded scripting language for Modula-3 applications.
+
+\begin{thebibliography}{99}
+
+\bibitem{r4rs} William Clinger and Jonathan Rees, eds.
+Revised$^4$ Report on the Algorithmic Language Scheme.  1991.
+
+\bibitem{spwm3} Greg~Nelson, ed.  {\it Systems Programming with Modula-3.}
+Englewood Cliffs, N.J.:\ Prentice-Hall, 1991.
+
+\bibitem{jscheme} Peter Norvig.  JScheme.
+{\tt https://norvig.com/jscheme.html}
+
+\end{thebibliography}
+
+\end{document}
