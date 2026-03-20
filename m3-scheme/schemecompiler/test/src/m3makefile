@@ -6,6 +6,8 @@ import("mscheme")
 import("modula3scheme")
 import("schemecompiler")
 
+m3_optimize("T")
+
 _scheme_compile("CompiledTest", "test-input.scm", HIDDEN)
 
 implementation("Main")

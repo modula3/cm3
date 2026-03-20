@@ -363,7 +363,7 @@
 ;;;
 ;;; ==================== Compilation Context ====================
 ;;;
-;;; Context structure (10-element list):
+;;; Context structure (12-element list):
 ;;;   0: name       - Scheme symbol of the function being compiled
 ;;;   1: params     - list of parameter symbols (original, for self-tail-call)
 ;;;   2: free-vars  - list of free variable symbols
@@ -375,6 +375,7 @@
 ;;;   8: var-ctr    - mutable cell (list of int) for let-bound variables
 ;;;   9: reassign   - list of M3 var names for tail-call reassignment, or #f
 ;;;  10: loop-flag  - M3 BOOLEAN var name for non-tail named-let WHILE, or #f
+;;;  11: unboxed    - alist mapping param symbols to LONGREAL M3 var names
 ;;;
 
 (define (make-ctx name params free-vars constants self-tail?)
@@ -386,7 +387,8 @@
           param-map fv-map
           (list 0)      ;; var counter (mutable cell)
           #f            ;; reassign-vars (default: use a_N)
-          #f)))         ;; loop-flag (default: none)
+          #f            ;; loop-flag (default: none)
+          '())));       ;; unboxed-params (default: none)
 
 (define (ctx-name ctx) (car ctx))
 (define (ctx-params ctx) (cadr ctx))
@@ -402,6 +404,12 @@
   (if (pair? (cddr (cddddr (cddddr ctx))))
       (caddr (cddddr (cddddr ctx)))
       #f))
+
+(define (ctx-unboxed ctx)
+  (if (and (pair? (cddr (cddddr (cddddr ctx))))
+           (pair? (cdddr (cddddr (cddddr ctx)))))
+      (cadddr (cddddr (cddddr ctx)))
+      '()))
 
 ;;;
 ;;; Procedure-level declaration accumulator.
@@ -458,7 +466,8 @@
         (ctx-fv-map ctx)
         (ctx-var-counter ctx)
         (ctx-reassign-vars ctx)
-        (ctx-loop-flag ctx)))
+        (ctx-loop-flag ctx)
+        (ctx-unboxed ctx)))
 
 (define (make-extended-ctx-fv ctx new-param-map new-fv-map)
   ;; Create a new context with updated param-map AND fv-map.
@@ -473,28 +482,33 @@
         new-fv-map
         (ctx-var-counter ctx)
         (ctx-reassign-vars ctx)
-        (ctx-loop-flag ctx)))
+        (ctx-loop-flag ctx)
+        (ctx-unboxed ctx)))
 
 ;;;
 ;;; ==================== Variable and Constant References ====================
 ;;;
 
 (define (var-ref sym ctx)
-  ;; Look up a variable: check param-map (locals + params) first, then fv-map
+  ;; Look up a variable: check unboxed (LONGREAL) first, then param-map, then fv-map.
+  ;; Unboxed params are re-boxed via SchemeLongReal.FromLR() when used generically.
   ;; fv-map values are full binding paths (e.g. "self.b_0" or "lb_0")
-  (let ((p (assq sym (ctx-param-map ctx))))
-    (if p
-        (cdr p)
-        (let ((f (assq sym (ctx-fv-map ctx))))
-          (if f
-              (string-append (cdr f) ".get()")
-              (begin
-                (display "ERROR: var-ref: symbol not found: ")
-                (display sym)
-                (display " in function ")
-                (display (ctx-name ctx))
-                (newline)
-                (string-append "self.UNKNOWN_" (symbol->string sym) ".get()")))))))
+  (let ((u (assq sym (ctx-unboxed ctx))))
+    (if u
+        (string-append "SchemeLongReal.FromLR(" (cdr u) ")")
+        (let ((p (assq sym (ctx-param-map ctx))))
+          (if p
+              (cdr p)
+              (let ((f (assq sym (ctx-fv-map ctx))))
+                (if f
+                    (string-append (cdr f) ".get()")
+                    (begin
+                      (display "ERROR: var-ref: symbol not found: ")
+                      (display sym)
+                      (display " in function ")
+                      (display (ctx-name ctx))
+                      (newline)
+                      (string-append "self.UNKNOWN_" (symbol->string sym) ".get()")))))))))
 
 (define (constant-index val ctx)
   (let loop ((cs (ctx-constants ctx)) (i 0))
@@ -623,35 +637,90 @@
 ;;;
 
 (define (gen-if test con alt target ctx depth)
-  (let ((test-val (gen-value test ctx depth))
-        (no-alt-else (if target
-                         (string-append
-                          (indent depth) (L "ELSE")
-                          (emit-assign target "NIL" (+ depth 1)))
-                         (string-append
-                          (indent depth) (L "ELSE")
-                          (emit-assign #f "NIL" (+ depth 1))))))
-    (if test-val
-        (string-append
-         (indent depth) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
-         (gen-expr con target ctx (+ depth 1))
-         (if (not (eq? alt '*no-alt*))
+  (cond
+    ;; (not ...) flipping: (if (not test) a b) → (if test b a)
+    ((and (pair? test) (eq? (car test) 'not)
+          (pair? (cdr test)) (null? (cddr test))
+          (not (eq? alt '*no-alt*)))
+     (gen-if (cadr test) alt con target ctx depth))
+
+    ;; Inline bool test: predicate in if-test position
+    ((try-inline-bool-test test ctx depth)
+     => (lambda (result)
+          (let ((pre-code (car result))
+                (bool-expr (cdr result))
+                (no-alt-else (if target
+                                 (string-append
+                                  (indent depth) (L "ELSE")
+                                  (emit-assign target "NIL" (+ depth 1)))
+                                 (string-append
+                                  (indent depth) (L "ELSE")
+                                  (emit-assign #f "NIL" (+ depth 1))))))
+            (string-append
+             pre-code
+             (indent depth) (L "IF " bool-expr " THEN")
+             (gen-expr con target ctx (+ depth 1))
+             (if (not (eq? alt '*no-alt*))
+                 (string-append
+                  (indent depth) (L "ELSE")
+                  (gen-expr alt target ctx (+ depth 1)))
+                 no-alt-else)
+             (indent depth) (L "END;")))))
+
+    ;; Compound and/or in if-test position
+    ((try-inline-compound-bool-test test ctx depth)
+     => (lambda (result)
+          (let ((pre-code (car result))
+                (bool-expr (cdr result))
+                (no-alt-else (if target
+                                 (string-append
+                                  (indent depth) (L "ELSE")
+                                  (emit-assign target "NIL" (+ depth 1)))
+                                 (string-append
+                                  (indent depth) (L "ELSE")
+                                  (emit-assign #f "NIL" (+ depth 1))))))
+            (string-append
+             pre-code
+             (indent depth) (L "IF " bool-expr " THEN")
+             (gen-expr con target ctx (+ depth 1))
+             (if (not (eq? alt '*no-alt*))
+                 (string-append
+                  (indent depth) (L "ELSE")
+                  (gen-expr alt target ctx (+ depth 1)))
+                 no-alt-else)
+             (indent depth) (L "END;")))))
+
+    ;; Fallback: existing TruthO-based test
+    (else
+     (let ((test-val (gen-value test ctx depth))
+           (no-alt-else (if target
+                            (string-append
+                             (indent depth) (L "ELSE")
+                             (emit-assign target "NIL" (+ depth 1)))
+                            (string-append
+                             (indent depth) (L "ELSE")
+                             (emit-assign #f "NIL" (+ depth 1))))))
+       (if test-val
+           (string-append
+            (indent depth) (L "IF SchemeBoolean.TruthO(" test-val ") THEN")
+            (gen-expr con target ctx (+ depth 1))
+            (if (not (eq? alt '*no-alt*))
+                (string-append
+                 (indent depth) (L "ELSE")
+                 (gen-expr alt target ctx (+ depth 1)))
+                no-alt-else)
+            (indent depth) (L "END;"))
+           (let ((tmp (fresh-temp ctx)))
              (string-append
-              (indent depth) (L "ELSE")
-              (gen-expr alt target ctx (+ depth 1)))
-             no-alt-else)
-         (indent depth) (L "END;"))
-        (let ((tmp (fresh-temp ctx)))
-          (string-append
-           (gen-expr test tmp ctx depth)
-           (indent depth) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
-           (gen-expr con target ctx (+ depth 1))
-           (if (not (eq? alt '*no-alt*))
-               (string-append
-                (indent depth) (L "ELSE")
-                (gen-expr alt target ctx (+ depth 1)))
-               no-alt-else)
-           (indent depth) (L "END;"))))))
+              (gen-expr test tmp ctx depth)
+              (indent depth) (L "IF SchemeBoolean.TruthO(" tmp ") THEN")
+              (gen-expr con target ctx (+ depth 1))
+              (if (not (eq? alt '*no-alt*))
+                  (string-append
+                   (indent depth) (L "ELSE")
+                   (gen-expr alt target ctx (+ depth 1)))
+                  no-alt-else)
+              (indent depth) (L "END;"))))))))
 
 ;;;
 ;;; ==================== Cond ====================
@@ -756,31 +825,93 @@
 ;;; ==================== Let ====================
 ;;;
 
+;;; Detect let-bound variables needing binding cells:
+;;; A let-bound variable that is both set!-targeted AND captured by a lambda
+;;; must use a SchemeEnvironmentBinding.T cell (like letrec) so the lambda
+;;; sees mutations.
+
+(define (set!-targets expr)
+  ;; Return list of symbols that are set! targets anywhere in expr.
+  (cond
+    ((not (pair? expr)) '())
+    ((eq? (car expr) 'quote) '())
+    ((eq? (car expr) 'set!)
+     (cons (cadr expr) (set!-targets (caddr expr))))
+    (else (append (set!-targets (car expr))
+                  (set!-targets (cdr expr))))))
+
+(define (lambda-captured-vars expr vars)
+  ;; Return subset of vars that appear free inside any lambda in expr.
+  (cond
+    ((not (pair? expr)) '())
+    ((eq? (car expr) 'quote) '())
+    ((eq? (car expr) 'lambda)
+     (let ((lam-params (let ((p (cadr expr)))
+                         (cond ((symbol? p) (list p))
+                               ((pair? p)
+                                (let loop ((x p) (acc '()))
+                                  (cond ((null? x) acc)
+                                        ((symbol? x) (cons x acc))
+                                        (else (loop (cdr x) (cons (car x) acc))))))
+                               (else '())))))
+       ;; vars that appear in the lambda body but are NOT lambda params
+       (filter (lambda (v)
+                 (and (not (memq v lam-params))
+                      (expr-has-symbol? (cddr expr) v)))
+               vars)))
+    (else (append (lambda-captured-vars (car expr) vars)
+                  (lambda-captured-vars (cdr expr) vars)))))
+
+(define (needs-binding-cell? var body)
+  ;; True if var is both set!-targeted AND captured by a lambda in body.
+  (and (memq var (set!-targets body))
+       (memq var (lambda-captured-vars body (list var)))))
+
 (define (gen-let bindings body target ctx depth)
   (let* ((bvars (map car bindings))
+         (body-expr (if (null? (cdr body)) (car body) (cons 'begin body)))
+         ;; Detect vars needing binding cells (set! + lambda-capture)
+         (cell-vars (filter (lambda (v) (needs-binding-cell? v body-expr)) bvars))
          (temps (map (lambda (b) (fresh-temp ctx)) bindings))
-         (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
-         (new-entries (map cons bvars bvar-m3names))
-         (new-ctx (make-extended-ctx ctx
-                    (append new-entries (ctx-param-map ctx)))))
+         ;; For cell-vars: allocate binding cells; for others: regular vars
+         (bvar-m3names (map (lambda (bv)
+                              (if (memq bv cell-vars)
+                                  (fresh-binding ctx)
+                                  (fresh-var ctx)))
+                            bvars))
+         ;; Cell-vars go into fv-map (captured by reference), others into param-map
+         (new-param-entries (filter (lambda (e) (not (memq (car e) cell-vars)))
+                                   (map cons bvars bvar-m3names)))
+         (new-fv-entries (filter (lambda (e) (memq (car e) cell-vars))
+                                (map cons bvars bvar-m3names)))
+         (new-ctx (if (null? cell-vars)
+                      (make-extended-ctx ctx
+                        (append (map cons bvars bvar-m3names) (ctx-param-map ctx)))
+                      (make-extended-ctx-fv ctx
+                        (append new-param-entries (ctx-param-map ctx))
+                        (append new-fv-entries (ctx-fv-map ctx))))))
     (string-append
      ;; Evaluate init expressions into temps (outer scope, no shadowing)
      (apply string-append
             (map (lambda (b tmp)
                    (gen-expr (cadr b) tmp ctx depth))
                  bindings temps))
-     ;; Assign temps to let-bound variables
+     ;; Initialize: binding cells get NEW(LetrecCell); regular vars get assignment
      (apply string-append
-            (map (lambda (m3n tmp)
-                   (string-append (indent depth) (L m3n " := " tmp ";")))
-                 bvar-m3names temps))
+            (map (lambda (bv m3n tmp)
+                   (if (memq bv cell-vars)
+                       (string-append
+                        (indent depth) (L m3n " := NEW(LetrecCell, val := " tmp ");"))
+                       (string-append (indent depth) (L m3n " := " tmp ";"))))
+                 bvars bvar-m3names temps))
      (gen-begin body target new-ctx depth))))
 
 ;;;
 ;;; ==================== Named Let ====================
 ;;;
 
-(define (make-named-let-ctx ctx loop-name loop-params loop-m3names loop-flag)
+(define (make-named-let-ctx ctx loop-name loop-params loop-m3names loop-flag
+                            . opt-unboxed)
   ;; Create a context for named-let body:
   ;; - ctx-name = loop-name (so gen-expr detects loop tail calls)
   ;; - ctx-self-tail? = #t
@@ -788,7 +919,9 @@
   ;; - ctx-reassign-vars = loop-m3names (reassign targets)
   ;; - ctx-loop-flag = loop-flag (BOOLEAN var name for non-tail WHILE, or #f)
   ;; - param-map extended with loop var -> M3 name mappings
-  (let ((new-entries (map cons loop-params loop-m3names)))
+  ;; - opt-unboxed: optional unboxed-params alist
+  (let ((new-entries (map cons loop-params loop-m3names))
+        (unboxed (if (null? opt-unboxed) '() (car opt-unboxed))))
     (list loop-name
           loop-params
           (ctx-free-vars ctx)
@@ -799,7 +932,8 @@
           (ctx-fv-map ctx)
           (ctx-var-counter ctx)
           loop-m3names       ;; reassign-vars
-          loop-flag)))       ;; loop-flag
+          loop-flag          ;; loop-flag
+          unboxed)));        ;; unboxed-params
 
 (define (gen-named-let loop-name bindings body target ctx depth)
   ;; (let loop ((var init) ...) body)
@@ -811,18 +945,40 @@
          (temps (map (lambda (b) (fresh-temp ctx)) bindings))
          (bvar-m3names (map (lambda (bv) (fresh-var ctx)) bvars))
          (loop-flag (if target (fresh-var ctx "BOOLEAN") #f))
-         (loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names loop-flag)))
+         ;; Build a temporary ctx for analyzing the loop body
+         (tmp-loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names loop-flag))
+         ;; Analyze which named-let vars can be unboxed
+         (loop-body (if (null? (cdr body)) (car body) (cons 'begin body)))
+         (unboxed (analyze-numeric-params bvars loop-body loop-name tmp-loop-ctx))
+         ;; Allocate LONGREAL vars for unboxed params
+         (nr-vars (map (lambda (u)
+                         (let ((nr-name (fresh-var ctx "LONGREAL")))
+                           (cons (car u) nr-name)))
+                       unboxed))
+         ;; Build the real loop context with unboxed info
+         (loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names
+                                        loop-flag nr-vars)))
     (string-append
      ;; Evaluate init expressions in outer scope
      (apply string-append
             (map (lambda (b tmp)
                    (gen-expr (cadr b) tmp ctx depth))
                  bindings temps))
-     ;; Assign temps to loop variables
+     ;; Assign temps to loop variables (boxed)
      (apply string-append
             (map (lambda (m3n tmp)
                    (string-append (indent depth) (L m3n " := " tmp ";")))
                  bvar-m3names temps))
+     ;; Initialize unboxed LONGREAL vars by narrowing from boxed temps
+     (apply string-append
+            (map (lambda (u)
+                   (let* ((param-sym (car u))
+                          (nr-name (cdr u))
+                          (m3n (cdr (assq param-sym
+                                         (map cons bvars bvar-m3names)))))
+                     (string-append (indent depth)
+                                    (L nr-name " := NARROW(" m3n ", SchemeLongReal.T)^;"))))
+                 nr-vars))
      (if loop-flag
          ;; Non-tail: WHILE loop with boolean flag
          (string-append
@@ -1104,6 +1260,8 @@
 ;;;
 
 (define (gen-call fn args target ctx depth)
+  (let ((inline-result (try-inline-primitive fn args target ctx depth)))
+    (or inline-result
   (let ((nargs (length args)))
     (let* ((arg-temps (map (lambda (a) (fresh-temp ctx)) args))
            (fn-temp (fresh-temp ctx))
@@ -1140,7 +1298,44 @@
                 (map (lambda (arg tmp val)
                        (if val "" (gen-expr arg tmp ctx depth)))
                      args arg-temps arg-vals))
-         (emit-assign target call-expr depth))))))
+         ;; Direct call optimization: if fn is a module-defined proc
+         ;; not shadowed by a local, emit pointer-compare guard.
+         (let ((direct-info
+                (and (symbol? fn)
+                     (not (assq fn (ctx-param-map ctx)))
+                     (assq fn (ctx-fv-map ctx))
+                     (let ((mp (assq fn *module-procs*)))
+                       (and mp (cdr mp))))))
+           (if direct-info
+               (let* ((callee-m3 (car direct-info))
+                      (callee-np (cadr direct-info))
+                      (callee-rp (caddr direct-info))
+                      (direct-var (string-append "direct_" callee-m3))
+                      (direct-call-expr
+                       (cond
+                         ((= nargs 1)
+                          (string-append "Apply1_" callee-m3
+                            "(" direct-var ", interp, "
+                            (car arg-temps) ")"))
+                         ((and (= nargs 2)
+                               (or (not (= callee-np 1)) callee-rp))
+                          (string-append "Apply2_" callee-m3
+                            "(" direct-var ", interp, "
+                            (car arg-temps) ", " (cadr arg-temps) ")"))
+                         ((and (= nargs 0) (= callee-np 0) (not callee-rp))
+                          (string-append "Apply0_" callee-m3
+                            "(" direct-var ", interp)"))
+                         (else
+                          (string-append "Apply_" callee-m3
+                            "(" direct-var ", interp, "
+                            (gen-make-list arg-temps) ")")))))
+                 (string-append
+                  (indent depth) (L "IF " fn-temp " = " direct-var " THEN")
+                  (emit-assign target direct-call-expr (+ depth 1))
+                  (indent depth) (L "ELSE")
+                  (emit-assign target call-expr (+ depth 1))
+                  (indent depth) (L "END;")))
+               (emit-assign target call-expr depth))))))))))
 
 (define (gen-make-list temps)
   (if (null? temps)
@@ -1150,32 +1345,626 @@
        ", interp)")))
 
 ;;;
+;;; ==================== Numeric Unboxing Analysis ====================
+;;;
+;;; Determines which parameters of a self-tail-call loop can be kept as
+;;; unboxed LONGREAL values, eliminating heap allocation in the loop body.
+;;;
+
+(define *numeric-ops* '(+ - * quotient remainder))
+(define *numeric-cmp-ops* '(= < > <= >=))
+(define *all-numeric-ops* '(+ - * quotient remainder = < > <= >=))
+
+(define (expr-numeric-for-param? expr param params ctx)
+  ;; Is expr used in a numeric-only way for param?
+  ;; Returns #t if every occurrence of param in expr is in a numeric context.
+  ;; Bare symbol references to param are allowed because var-ref auto-wraps
+  ;; unboxed params with SchemeLongReal.FromLR() (re-boxing at return/escape).
+  ;; ctx is used to check whether function names are free vars (inlineable).
+  (cond
+    ((symbol? expr) #t)  ;; Bare ref OK: var-ref handles re-boxing
+    ((number? expr) #t)
+    ((string? expr) #t)
+    ((boolean? expr) #t)
+    ((char? expr) #t)
+    ((not (pair? expr)) #t)
+    ((eq? (car expr) 'quote) #t)
+    ((eq? (car expr) 'if)
+     (and (expr-numeric-for-param? (cadr expr) param params ctx)
+          (expr-numeric-for-param? (caddr expr) param params ctx)
+          (or (not (pair? (cdddr expr)))
+              (expr-numeric-for-param? (cadddr expr) param params ctx))))
+    ((eq? (car expr) 'cond)
+     (let loop ((clauses (cdr expr)))
+       (if (null? clauses) #t
+           (and (let ((clause (car clauses)))
+                  (if (eq? (car clause) 'else)
+                      (exprs-numeric-for-param? (cdr clause) param params ctx)
+                      (and (expr-numeric-for-param? (car clause) param params ctx)
+                           (exprs-numeric-for-param? (cdr clause) param params ctx))))
+                (loop (cdr clauses))))))
+    ((eq? (car expr) 'begin)
+     (exprs-numeric-for-param? (cdr expr) param params ctx))
+    ((eq? (car expr) 'let)
+     (if (symbol? (cadr expr))
+         ;; Named let: conservative — param must not appear
+         (not (expr-has-symbol? expr param))
+         (and (let loop ((bs (cadr expr)))
+                (if (null? bs) #t
+                    (and (expr-numeric-for-param? (cadar bs) param params ctx)
+                         (loop (cdr bs)))))
+              (exprs-numeric-for-param? (cddr expr) param params ctx))))
+    ((eq? (car expr) 'let*)
+     (and (let loop ((bs (cadr expr)))
+            (if (null? bs) #t
+                (and (expr-numeric-for-param? (cadar bs) param params ctx)
+                     (loop (cdr bs)))))
+          (exprs-numeric-for-param? (cddr expr) param params ctx)))
+    ((eq? (car expr) 'letrec)
+     ;; Conservative: param must not appear in letrec
+     (not (expr-has-symbol? expr param)))
+    ((eq? (car expr) 'and)
+     (exprs-numeric-for-param? (cdr expr) param params ctx))
+    ((eq? (car expr) 'or)
+     (exprs-numeric-for-param? (cdr expr) param params ctx))
+    ((eq? (car expr) 'not)
+     (expr-numeric-for-param? (cadr expr) param params ctx))
+    ((eq? (car expr) 'set!)
+     (expr-numeric-for-param? (caddr expr) param params ctx))
+    ((eq? (car expr) 'lambda)
+     ;; Lambda captures: param must not appear at all
+     (not (expr-has-symbol? expr param)))
+    ;; Application: check if this is an inlineable numeric op
+    ((and (pair? expr) (symbol? (car expr))
+          (memq (car expr) *all-numeric-ops*)
+          (not (assq (car expr) (ctx-param-map ctx)))
+          (assq (car expr) (ctx-fv-map ctx)))
+     ;; Numeric primitive: all args can contain param (numeric context)
+     (let loop ((args (cdr expr)))
+       (if (null? args) #t
+           (and (arg-numeric-for-param? (car args) param params ctx)
+                (loop (cdr args))))))
+    ;; Self-tail-call: param can appear in the position of a numeric param
+    ((and (pair? expr) (symbol? (car expr))
+          (eq? (car expr) (ctx-name ctx)))
+     ;; Self-tail-call: check that param only appears in its own position
+     ;; or in a numeric expression passed to a numeric position.
+     ;; For now, conservatively check all args.
+     (let loop ((args (cdr expr)))
+       (if (null? args) #t
+           (and (arg-numeric-for-param? (car args) param params ctx)
+                (loop (cdr args))))))
+    (else
+     ;; General application or unknown form: param must not appear
+     (not (expr-has-symbol? expr param)))))
+
+(define (arg-numeric-for-param? expr param params ctx)
+  ;; Is expr a numeric-context use of param?
+  ;; param can appear directly (as a numeric value) or inside a numeric op.
+  (cond
+    ((eq? expr param) #t)  ;; direct use as arg to numeric op = OK
+    ((symbol? expr) #t)    ;; some other symbol, fine
+    ((number? expr) #t)
+    ((not (pair? expr))  #t)
+    ((eq? (car expr) 'quote) #t)
+    ;; Nested numeric op: (+ param 1) etc.
+    ((and (symbol? (car expr))
+          (memq (car expr) *all-numeric-ops*)
+          (not (assq (car expr) (ctx-param-map ctx)))
+          (assq (car expr) (ctx-fv-map ctx)))
+     (let loop ((args (cdr expr)))
+       (if (null? args) #t
+           (and (arg-numeric-for-param? (car args) param params ctx)
+                (loop (cdr args))))))
+    ;; Other expression: param must not appear
+    (else (not (expr-has-symbol? expr param)))))
+
+(define (expr-has-symbol? expr sym)
+  ;; Does sym appear anywhere in expr?
+  (cond
+    ((eq? expr sym) #t)
+    ((symbol? expr) #f)
+    ((not (pair? expr)) #f)
+    ((eq? (car expr) 'quote) #f)
+    (else (or (expr-has-symbol? (car expr) sym)
+              (expr-has-symbol? (cdr expr) sym)))))
+
+(define (exprs-numeric-for-param? exprs param params ctx)
+  (cond ((null? exprs) #t)
+        ((not (pair? exprs)) #t)
+        (else (and (expr-numeric-for-param? (car exprs) param params ctx)
+                   (exprs-numeric-for-param? (cdr exprs) param params ctx)))))
+
+(define (tail-call-arg-numeric? expr params ctx)
+  ;; Is expr a numeric-valued expression (suitable for assigning to an
+  ;; unboxed param in a self-tail-call)?
+  ;; Returns #t if expr is: a number literal, a param, or an arithmetic expr.
+  (cond
+    ((number? expr) #t)
+    ((and (symbol? expr) (memq expr params)) #t)
+    ((not (pair? expr)) #f)
+    ((and (symbol? (car expr))
+          (memq (car expr) *numeric-ops*)
+          (not (assq (car expr) (ctx-param-map ctx)))
+          (assq (car expr) (ctx-fv-map ctx)))
+     ;; Arithmetic op: recursively check args
+     (let loop ((args (cdr expr)))
+       (if (null? args) #t
+           (and (tail-call-arg-numeric? (car args) params ctx)
+                (loop (cdr args))))))
+    (else #f)))
+
+(define (collect-tail-call-args-for-param expr name param-index params)
+  ;; Collect all expressions that are passed as the param-index'th argument
+  ;; in self-tail-calls to name throughout body expr.
+  (cond
+    ((not (pair? expr)) '())
+    ((eq? (car expr) 'quote) '())
+    ((eq? (car expr) 'lambda) '())  ;; opaque boundary
+    ((and (eq? (car expr) name)
+          (= (length (cdr expr)) (length params)))
+     ;; Self-tail-call: extract the arg at param-index
+     (let ((arg (list-ref (cdr expr) param-index)))
+       (cons arg
+             (apply append
+                    (map (lambda (a) (collect-tail-call-args-for-param a name param-index params))
+                         (cdr expr))))))
+    (else
+     (apply append
+            (map (lambda (sub) (collect-tail-call-args-for-param sub name param-index params))
+                 expr)))))
+
+(define (has-forcing-numeric-use? expr param ctx)
+  ;; Does param appear in at least one "forcing" numeric context in expr?
+  ;; A forcing context is: arg to +,-,*,quotient,remainder,=,<,>,<=,>=
+  ;; This ensures the param MUST be numeric (NARROW would fail otherwise),
+  ;; justifying the unboxing NARROW at procedure entry.
+  (cond
+    ((not (pair? expr)) #f)
+    ((eq? (car expr) 'quote) #f)
+    ((eq? (car expr) 'lambda) #f)  ;; opaque boundary
+    ((and (symbol? (car expr))
+          (memq (car expr) *all-numeric-ops*)
+          (not (assq (car expr) (ctx-param-map ctx)))
+          (assq (car expr) (ctx-fv-map ctx)))
+     ;; Numeric op: check if param appears as an argument
+     (or (let loop ((args (cdr expr)))
+           (if (null? args) #f
+               (or (eq? (car args) param)
+                   (loop (cdr args)))))
+         ;; Also check sub-expressions recursively
+         (let loop ((subs expr))
+           (if (null? subs) #f
+               (or (has-forcing-numeric-use? (car subs) param ctx)
+                   (has-forcing-numeric-use? (cdr subs) param ctx))))))
+    (else
+     (or (has-forcing-numeric-use? (car expr) param ctx)
+         (has-forcing-numeric-use? (cdr expr) param ctx)))))
+
+(define (analyze-numeric-params params body name ctx)
+  ;; Returns an alist mapping numeric-only param symbols to LONGREAL var names.
+  ;; A param is numeric-only if:
+  ;; 1. Every use in body is in a numeric-compatible context
+  ;; 2. At least one use is a "forcing" numeric context (arithmetic/comparison)
+  ;; 3. Every value assigned to it in self-tail-calls is a numeric expression
+  ;; Condition 2 ensures the param MUST be numeric, so the entry NARROW is safe.
+  (if (null? params) '()
+      (let loop ((ps params) (i 0) (nr-idx 0) (acc '()))
+        (if (null? ps) (reverse acc)
+            (let* ((param (car ps))
+                   (numeric-use (expr-numeric-for-param? body param params ctx))
+                   (forcing (has-forcing-numeric-use? body param ctx))
+                   (tail-args (collect-tail-call-args-for-param body name i params))
+                   (numeric-assigns
+                    (let aloop ((tas tail-args))
+                      (if (null? tas) #t
+                          (and (tail-call-arg-numeric? (car tas) params ctx)
+                               (aloop (cdr tas)))))))
+              (if (and numeric-use forcing numeric-assigns)
+                  (loop (cdr ps) (+ i 1) (+ nr-idx 1)
+                        (cons (cons param
+                                    (string-append "nr_" (number->string nr-idx)))
+                              acc))
+                  (loop (cdr ps) (+ i 1) nr-idx acc)))))))
+
+(define (gen-numeric-value expr ctx)
+  ;; Returns a LONGREAL M3 expression string for a simple value, or #f.
+  (cond
+    ((number? expr)
+     (cond ((= expr 0) "0.0d0")
+           ((= expr 1) "1.0d0")
+           ((integer? expr)
+            (string-append (number->string expr) ".0d0"))
+           (else (string-append (number->string expr) "d0"))))
+    ((symbol? expr)
+     (let ((u (assq expr (ctx-unboxed ctx))))
+       (if u (cdr u) #f)))
+    (else #f)))
+
+;;;
+;;; ==================== Inline Built-in Primitives ====================
+;;;
+;;; Unconditionally inline calls to known built-in primitives when:
+;;;   1. The function name is a symbol
+;;;   2. Not shadowed by a local (not in param-map)
+;;;   3. Is a free variable (in fv-map — i.e. comes from the environment)
+;;;   4. Has a known inline expansion at this arity
+;;;
+;;; No guard for redefinition — user accepts that (set! null? ...) in
+;;; compiled modules is unsupported.
+;;;
+
+(define (arg-as-longreal scheme-arg m3-expr . opt-ctx)
+  ;; If scheme-arg is a compile-time number, emit literal LONGREAL.
+  ;; If scheme-arg is an unboxed param (in ctx), use its LONGREAL name directly.
+  ;; Otherwise, emit NARROW(m3-expr, SchemeLongReal.T)^.
+  (cond
+    ((number? scheme-arg)
+     (cond ((= scheme-arg 0) "0.0d0")
+           ((= scheme-arg 1) "1.0d0")
+           ((integer? scheme-arg)
+            (string-append (number->string scheme-arg) ".0d0"))
+           (else (string-append (number->string scheme-arg) "d0"))))
+    ((and (not (null? opt-ctx))
+          (symbol? scheme-arg)
+          (assq scheme-arg (ctx-unboxed (car opt-ctx))))
+     => (lambda (u) (cdr u)))
+    (else
+     (string-append "NARROW(" m3-expr ", SchemeLongReal.T)^"))))
+
+(define (gen-inline-expr fn-name nargs arg-exprs scheme-args ctx)
+  ;; Returns an M3 expression string for inlined primitive, or #f.
+  ;; arg-exprs: list of M3 expression strings for evaluated args.
+  ;; scheme-args: list of original Scheme arg expressions (for constant detection).
+  ;; ctx: compilation context (for unboxed param lookup in arg-as-longreal).
+  (cond
+    ;; --- Unary predicates ---
+    ((and (eq? fn-name 'null?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " = NIL)"))
+    ((and (eq? fn-name 'pair?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemePair.T))"))
+    ((and (eq? fn-name 'number?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeLongReal.T))"))
+    ((and (eq? fn-name 'boolean?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs)
+                    " = SchemeBoolean.True() OR " (car arg-exprs)
+                    " = SchemeBoolean.False())"))
+    ((and (eq? fn-name 'symbol?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeSymbol.T))"))
+    ((and (eq? fn-name 'string?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeString.T))"))
+    ((and (eq? fn-name 'char?) (= nargs 1))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeChar.T))"))
+    ;; --- Accessors ---
+    ((and (eq? fn-name 'car) (= nargs 1))
+     (string-append "SchemeUtils.PedanticFirst(" (car arg-exprs) ")"))
+    ((and (eq? fn-name 'cdr) (= nargs 1))
+     (string-append "SchemeUtils.PedanticRest(" (car arg-exprs) ")"))
+    ((and (eq? fn-name 'cadr) (= nargs 1))
+     (string-append "SchemeUtils.PedanticFirst(SchemeUtils.PedanticRest("
+                    (car arg-exprs) "))"))
+    ;; --- Constructor ---
+    ((and (eq? fn-name 'cons) (= nargs 2))
+     (string-append "SchemeUtils.Cons(" (car arg-exprs) ", "
+                    (cadr arg-exprs) ", interp)"))
+    ;; --- Binary arithmetic ---
+    ((and (eq? fn-name '+) (= nargs 2))
+     (string-append "SchemeLongReal.FromLR("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " + "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name '-) (= nargs 2))
+     (string-append "SchemeLongReal.FromLR("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " - "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name '*) (= nargs 2))
+     (string-append "SchemeLongReal.FromLR("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " * "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name 'quotient) (= nargs 2))
+     (string-append "SchemeLongReal.FromLR(FLOAT(TRUNC("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    ") DIV TRUNC("
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    "), LONGREAL))"))
+    ((and (eq? fn-name 'remainder) (= nargs 2))
+     (string-append "SchemeLongReal.FromLR(FLOAT(TRUNC("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    ") MOD TRUNC("
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    "), LONGREAL))"))
+    ;; --- Binary comparisons ---
+    ((and (eq? fn-name '=) (= nargs 2))
+     (string-append "SchemeBoolean.Truth("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " = "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name '<) (= nargs 2))
+     (string-append "SchemeBoolean.Truth("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " < "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name '>) (= nargs 2))
+     (string-append "SchemeBoolean.Truth("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " > "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name '<=) (= nargs 2))
+     (string-append "SchemeBoolean.Truth("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " <= "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ((and (eq? fn-name '>=) (= nargs 2))
+     (string-append "SchemeBoolean.Truth("
+                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " >= "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
+                    ")"))
+    ;; --- eq? ---
+    ((and (eq? fn-name 'eq?) (= nargs 2))
+     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " = "
+                    (cadr arg-exprs) ")"))
+    (else #f)))
+
+(define (gen-inline-bool-expr fn-name nargs arg-exprs scheme-args ctx)
+  ;; Returns an M3 BOOLEAN expression string (without Truth wrapping), or #f.
+  ;; Used by gen-if for boolean fusion.
+  (cond
+    ((and (eq? fn-name 'null?) (= nargs 1))
+     (string-append (car arg-exprs) " = NIL"))
+    ((and (eq? fn-name 'pair?) (= nargs 1))
+     (string-append (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemePair.T)"))
+    ((and (eq? fn-name 'number?) (= nargs 1))
+     (string-append (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeLongReal.T)"))
+    ((and (eq? fn-name 'boolean?) (= nargs 1))
+     (string-append (car arg-exprs) " = SchemeBoolean.True() OR "
+                    (car arg-exprs) " = SchemeBoolean.False()"))
+    ((and (eq? fn-name 'symbol?) (= nargs 1))
+     (string-append (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeSymbol.T)"))
+    ((and (eq? fn-name 'string?) (= nargs 1))
+     (string-append (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeString.T)"))
+    ((and (eq? fn-name 'char?) (= nargs 1))
+     (string-append (car arg-exprs) " # NIL AND ISTYPE("
+                    (car arg-exprs) ", SchemeChar.T)"))
+    ((and (eq? fn-name '=) (= nargs 2))
+     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " = "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+    ((and (eq? fn-name '<) (= nargs 2))
+     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " < "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+    ((and (eq? fn-name '>) (= nargs 2))
+     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " > "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+    ((and (eq? fn-name '<=) (= nargs 2))
+     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " <= "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+    ((and (eq? fn-name '>=) (= nargs 2))
+     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
+                    " >= "
+                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+    ((and (eq? fn-name 'eq?) (= nargs 2))
+     (string-append (car arg-exprs) " = " (cadr arg-exprs)))
+    (else #f)))
+
+(define (is-inlineable-primitive? fn-name nargs)
+  ;; Quick check: is this primitive inlineable at this arity?
+  (and (memq fn-name '(null? pair? number? boolean? symbol? string? char?
+                        car cdr cadr cons
+                        + - * quotient remainder
+                        = < > <= >= eq?))
+       (or (and (memq fn-name '(null? pair? number? boolean? symbol? string?
+                                 char? car cdr cadr))
+                (= nargs 1))
+           (and (memq fn-name '(cons + - * quotient remainder = < > <= >= eq?))
+                (= nargs 2)))))
+
+(define (try-inline-primitive fn args target ctx depth)
+  ;; Try to inline a built-in primitive call. Returns M3 code string or #f.
+  (and (symbol? fn)
+       (not (assq fn (ctx-param-map ctx)))   ;; not shadowed by local
+       (assq fn (ctx-fv-map ctx))            ;; is a free variable
+       (let ((nargs (length args)))
+         (and (is-inlineable-primitive? fn nargs)
+              ;; Evaluate each arg: use gen-value for simple, temp for complex
+              (let loop ((as args) (m3s '()) (pre '()))
+                (if (null? as)
+                    (let* ((arg-exprs (reverse m3s))
+                           (inline-expr (gen-inline-expr fn nargs arg-exprs args ctx)))
+                      (and inline-expr
+                           (string-append
+                            (apply string-append (reverse pre))
+                            (emit-assign target inline-expr depth))))
+                    (let ((v (gen-value (car as) ctx depth)))
+                      (if v
+                          (loop (cdr as) (cons v m3s) pre)
+                          (let ((tmp (fresh-temp ctx)))
+                            (loop (cdr as)
+                                  (cons tmp m3s)
+                                  (cons (gen-expr (car as) tmp ctx depth)
+                                        pre)))))))))))
+
+(define (try-inline-bool-test test ctx depth)
+  ;; Try to inline a predicate call as a raw M3 BOOLEAN expression.
+  ;; Returns (pre-code . bool-expr) or #f.
+  ;; pre-code is M3 code to evaluate complex args into temps.
+  (and (pair? test)
+       (symbol? (car test))
+       (not (assq (car test) (ctx-param-map ctx)))
+       (assq (car test) (ctx-fv-map ctx))
+       (let* ((fn-name (car test))
+              (args (cdr test))
+              (nargs (length args)))
+         (and (is-inlineable-primitive? fn-name nargs)
+              (let loop ((as args) (m3s '()) (pre '()))
+                (if (null? as)
+                    (let* ((arg-exprs (reverse m3s))
+                           (bool-expr (gen-inline-bool-expr fn-name nargs
+                                                            arg-exprs args ctx)))
+                      (and bool-expr
+                           (cons (apply string-append (reverse pre))
+                                 bool-expr)))
+                    (let ((v (gen-value (car as) ctx depth)))
+                      (if v
+                          (loop (cdr as) (cons v m3s) pre)
+                          (let ((tmp (fresh-temp ctx)))
+                            (loop (cdr as)
+                                  (cons tmp m3s)
+                                  (cons (gen-expr (car as) tmp ctx depth)
+                                        pre)))))))))))
+
+(define (try-inline-compound-bool-test test ctx depth)
+  ;; Try to inline (and t1 t2 ...) or (or t1 t2 ...) in if-test position
+  ;; as a compound M3 BOOLEAN expression. Returns (pre-code . bool-expr) or #f.
+  ;; Only applies when ALL sub-test pre-codes are empty (all args are gen-values).
+  (and (pair? test)
+       (or (eq? (car test) 'and) (eq? (car test) 'or))
+       (pair? (cdr test))          ;; at least one sub-test
+       (let* ((combiner (car test))
+              (sub-tests (cdr test))
+              (m3-op (if (eq? combiner 'and) " AND " " OR ")))
+         (let loop ((ts sub-tests) (bools '()))
+           (if (null? ts)
+               ;; All sub-tests inlined successfully
+               (if (null? bools)
+                   #f
+                   (let combine ((bs (reverse bools)) (acc #f))
+                     (if (null? bs)
+                         (cons "" acc)  ;; empty pre-code
+                         (if (not acc)
+                             (combine (cdr bs) (car bs))
+                             (combine (cdr bs)
+                                      (string-append "(" acc ")" m3-op
+                                                     "(" (car bs) ")"))))))
+               ;; Try to inline next sub-test
+               (let ((inlined (try-inline-bool-test (car ts) ctx depth)))
+                 (if (and inlined (string=? (car inlined) ""))
+                     ;; No pre-code — safe to combine
+                     (loop (cdr ts) (cons (cdr inlined) bools))
+                     ;; Sub-test couldn't be inlined or has pre-code;
+                     ;; try TruthO fallback for simple expressions
+                     (let ((v (gen-value (car ts) ctx depth)))
+                       (if v
+                           (loop (cdr ts)
+                                 (cons (string-append "SchemeBoolean.TruthO(" v ")")
+                                       bools))
+                           #f)))))))))  ;; give up on compound inlining
+
+;;;
 ;;; ==================== Self-Tail-Call ====================
 ;;;
+
+(define (gen-numeric-inline expr ctx)
+  ;; Try to evaluate a Scheme arithmetic expression directly as a LONGREAL
+  ;; M3 expression string. Returns the expression string or #f.
+  ;; Handles: numeric literals, unboxed params, and arithmetic ops on those.
+  (cond
+    ((number? expr) (gen-numeric-value expr ctx))
+    ((symbol? expr)
+     (let ((u (assq expr (ctx-unboxed ctx))))
+       (if u (cdr u) #f)))
+    ((and (pair? expr) (symbol? (car expr))
+          (memq (car expr) *numeric-ops*)
+          (not (assq (car expr) (ctx-param-map ctx)))
+          (assq (car expr) (ctx-fv-map ctx))
+          (= (length (cdr expr)) 2))
+     (let ((left (gen-numeric-inline (cadr expr) ctx))
+           (right (gen-numeric-inline (caddr expr) ctx)))
+       (and left right
+            (let ((op (cond ((eq? (car expr) '+) " + ")
+                            ((eq? (car expr) '-) " - ")
+                            ((eq? (car expr) '*) " * ")
+                            (else #f))))
+              (if op
+                  (string-append "(" left op right ")")
+                  ;; quotient/remainder need TRUNC/FLOAT
+                  (let ((m3-op (if (eq? (car expr) 'quotient) " DIV " " MOD ")))
+                    (string-append "FLOAT(TRUNC(" left ")" m3-op "TRUNC(" right "), LONGREAL)")))))))
+    (else #f)))
 
 (define (gen-self-tail-call args ctx depth)
   ;; Reassign to the correct M3 variable names and loop.
   ;; Uses ctx-reassign-vars if set (for named let), otherwise a_0, a_1, ...
+  ;; For unboxed params: use LONGREAL temps and direct numeric evaluation.
   (let* ((params (ctx-params ctx))
+         (unboxed (ctx-unboxed ctx))
          (param-m3names
            (or (ctx-reassign-vars ctx)
                (let loop ((ps params) (i 0) (acc '()))
                  (if (null? ps) (reverse acc)
                      (loop (cdr ps) (+ i 1)
                            (cons (string-append "a_" (number->string i)) acc))))))
-         (all-temps (map (lambda (p) (fresh-temp ctx)) params)))
+         ;; For unboxed params, allocate LONGREAL temps; otherwise SchemeObject.T temps
+         (all-temps (map (lambda (p)
+                           (let ((u (assq p unboxed)))
+                             (if u
+                                 (fresh-var ctx "LONGREAL")
+                                 (fresh-temp ctx))))
+                         params)))
     (string-append
-     (apply string-append
-            (map (lambda (arg tmp)
-                   (let ((val (gen-value arg ctx depth)))
-                     (if val
-                         (string-append (indent depth) (L tmp " := " val ";"))
-                         (gen-expr arg tmp ctx depth))))
-                 args all-temps))
-     (apply string-append
-            (map (lambda (m3n tmp)
-                   (string-append (indent depth) (L m3n " := " tmp ";")))
-                 param-m3names all-temps))
+     ;; Evaluate args into temps.  Walk params/args/temps in lockstep;
+     ;; stop at the shortest list (args may be shorter than params for
+     ;; variadic tail calls detected by has-self-tail-call?).
+     (let eval-loop ((ps params) (as args) (ts all-temps) (acc ""))
+       (if (or (null? ps) (null? as) (null? ts))
+           acc
+           (let* ((param (car ps)) (arg (car as)) (tmp (car ts))
+                  (u (assq param unboxed))
+                  (code
+                   (if u
+                       ;; Unboxed param: try numeric inline, fallback to gen-expr + NARROW
+                       (let ((nr (gen-numeric-inline arg ctx)))
+                         (if nr
+                             (string-append (indent depth) (L tmp " := " nr ";"))
+                             ;; Fallback: evaluate to boxed, then narrow
+                             (let ((box-tmp (fresh-temp ctx)))
+                               (let ((val (gen-value arg ctx depth)))
+                                 (string-append
+                                  (if val
+                                      (string-append (indent depth) (L box-tmp " := " val ";"))
+                                      (gen-expr arg box-tmp ctx depth))
+                                  (indent depth) (L tmp " := NARROW(" box-tmp ", SchemeLongReal.T)^;"))))))
+                       ;; Normal boxed param
+                       (let ((val (gen-value arg ctx depth)))
+                         (if val
+                             (string-append (indent depth) (L tmp " := " val ";"))
+                             (gen-expr arg tmp ctx depth))))))
+             (eval-loop (cdr ps) (cdr as) (cdr ts)
+                        (string-append acc code)))))
+     ;; Reassign: for unboxed params, assign to nr_N; for boxed, assign to param M3 name
+     ;; Only reassign params that had corresponding args above.
+     (let reassign-loop ((ps params) (ms param-m3names) (ts all-temps)
+                         (as args) (acc ""))
+       (if (or (null? ps) (null? ms) (null? ts) (null? as))
+           acc
+           (let* ((param (car ps)) (m3n (car ms)) (tmp (car ts))
+                  (u (assq param unboxed))
+                  (code (if u
+                            (string-append (indent depth) (L (cdr u) " := " tmp ";"))
+                            (string-append (indent depth) (L m3n " := " tmp ";")))))
+             (reassign-loop (cdr ps) (cdr ms) (cdr ts) (cdr as)
+                            (string-append acc code)))))
      ;; For non-tail named let: set loop flag to continue WHILE
      (let ((flag (ctx-loop-flag ctx)))
        (if flag
@@ -1199,6 +1988,13 @@
          ;; Disable self-tail-call for rest-param functions
          (self-tail (if rest-param #f (has-self-tail-call? body name)))
          (ctx (make-ctx name all-ps free-vars constants self-tail))
+         ;; Numeric unboxing analysis: only for self-tail-call functions
+         (unboxed (if self-tail
+                      (analyze-numeric-params params body name ctx)
+                      '()))
+         ;; Store unboxed info in the context (field 11)
+         (_ (if (not (null? unboxed))
+                (set-car! (cdddr (cddddr (cddddr ctx))) unboxed)))
          (m3name (string-append "p" (number->string serial)))
          (nparams (length params)))
     (list
@@ -1228,6 +2024,7 @@
 (define *lambda-types* '())    ;; list of type declaration strings
 (define *lambda-procs* '())    ;; list of procedure definition strings
 (define *lambda-counter* 0)    ;; serial counter for lam0, lam1, ...
+(define *module-procs* '())    ;; alist: name-symbol → (m3name nparams rest-param)
 
 (define (iota n)
   (let loop ((i 0) (acc '()))
@@ -1278,6 +2075,7 @@
          (ctx (cdr (assq 'ctx proc)))
          (self-tail (cdr (assq 'self-tail proc)))
          (body (cdr (assq 'body proc)))
+         (unboxed (ctx-unboxed ctx))
          (param-m3names (map (lambda (p)
                                (cdr (assq p (ctx-param-map ctx))))
                              params)))
@@ -1287,7 +2085,10 @@
                     (lambda ()
                       (gen-expr body #f ctx (if self-tail 3 2)))))
            (decls (car result))
-           (body-code (cdr result)))
+           (body-code (cdr result))
+           ;; Merge unboxed LONGREAL declarations into decls
+           (nr-decls (map (lambda (u) (cons (cdr u) "LONGREAL")) unboxed))
+           (all-decls (append nr-decls decls)))
       (string-append
        (if name
            (L "(* Scheme: (define (" (symbol->string name)
@@ -1305,17 +2106,25 @@
                    param-m3names))
        (L "    ) : SchemeObject.T")
        (L "  RAISES { Scheme.E } =")
-       (if (null? decls)
+       (if (null? all-decls)
            ""
            (string-append
             (L "  VAR")
             (apply string-append
                    (map (lambda (d)
                           (L "    " (car d) " : " (cdr d) ";"))
-                        decls))))
+                        all-decls))))
        (if self-tail
            (string-append
             (L "  BEGIN")
+            ;; Narrowing assignments for unboxed params before LOOP
+            (apply string-append
+                   (map (lambda (u)
+                          (let* ((param-sym (car u))
+                                 (nr-name (cdr u))
+                                 (a-name (cdr (assq param-sym (ctx-param-map ctx)))))
+                            (L "    " nr-name " := NARROW(" a-name ", SchemeLongReal.T)^;")))
+                        unboxed))
             (L "    LOOP")
             body-code
             (L "    END")
@@ -1474,6 +2283,7 @@
                  constants (iota (length constants))))
      (L "    EVAL env.define(SchemeSymbol.Symbol(\""
         (symbol->string name) "\"), obj_" m3name ");")
+     (L "    direct_" m3name " := obj_" m3name ";")
      NL)))
 
 (define (gen-install-proc procs module-name ordered source-basename)
@@ -1722,7 +2532,7 @@
                         all-lam-params '() lam-constants
                         (list 0) #f  ;; no self-tail-call for anonymous lambda
                         lam-param-map lam-fv-map
-                        (list 0) #f #f))
+                        (list 0) #f #f '()))
          ;; Build proc alist for gen-apply-* functions
          (proc (list (cons 'body lam-body)
                      (cons 'm3name lam-m3name)
@@ -1781,6 +2591,13 @@
   (set! *lambda-types* '())
   (set! *lambda-procs* '())
   (set! *lambda-counter* 0)
+  (set! *module-procs*
+    (map (lambda (proc)
+           (list (cdr (assq 'name proc))
+                 (cdr (assq 'm3name proc))
+                 (cdr (assq 'nparams proc))
+                 (cdr (assq 'rest-param proc))))
+         procs))
   (let* ((type-decls (apply string-append (map gen-type-decl procs)))
          ;; Generate all procedure bodies -- this triggers lambda discovery
          (proc-bodies
@@ -1811,7 +2628,7 @@
      NL
      (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
      (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
-     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal;")
+     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
      (L "IMPORT SchemeCompiledRegistry;")
      (L "FROM Scheme IMPORT Object;")
@@ -1826,6 +2643,16 @@
      (L "    name := LCName; env := LCEnv; get := LCGet; setB := LCSet;")
      (L "  END;")
      NL
+     ;; Module-level VARs for direct call optimization
+     (if (null? procs) ""
+         (string-append
+          (L "VAR")
+          (apply string-append
+                 (map (lambda (proc)
+                        (let ((m3name (cdr (assq 'm3name proc))))
+                          (L "  direct_" m3name " : Compiled_" m3name ";")))
+                      procs))
+          NL))
      ;; LetrecCell method implementations
      (L "PROCEDURE LCName(<*UNUSED*> c : LetrecCell) : SchemeSymbol.T =")
      (L "  BEGIN RETURN NIL END LCName;")

@@ -497,6 +497,16 @@ BEGIN
       T(scm, "(lambda-map-sum 0)", "0");
       T(scm, "(lambda-map-sum 3)", "9");
 
+      Section("Mutual Recursion");
+      T(scm, "(mut-f 0)", "1");
+      T(scm, "(mut-f 1)", "1");
+      T(scm, "(mut-f 5)", "8");
+      T(scm, "(mut-f 10)", "89");
+      T(scm, "(mut-g 0)", "1");
+      T(scm, "(mut-g 1)", "1");
+      T(scm, "(mut-g 5)", "8");
+      T(scm, "(mut-g 10)", "89");
+
       (* ======== Redefinition Semantics ======== *)
       Section("Redefinition Semantics");
 
@@ -639,6 +649,126 @@ BEGIN
           "  Half (pre-lambda): " & Fmt.LongReal(hLam, Fmt.Style.Fix, 2) & " ms\n");
         Wr.PutText(Stdio.stdout,
           "  Fully interpreted: " & Fmt.LongReal(iLam, Fmt.Style.Fix, 2) & " ms\n");
+        Wr.Flush(Stdio.stdout);
+      END;
+
+      (* ======== Mutual Recursion: Three-Way Benchmark ======== *)
+      Section("Mutual Recursion: Direct Calls vs General Dispatch vs Interpreted");
+      Wr.PutText(Stdio.stdout,
+        "mut-f and mut-g are mutually recursive (cannot use LOOP optimization).\n");
+      Wr.PutText(Stdio.stdout,
+        "Three modes: compiled+direct, compiled+general-dispatch, interpreted.\n\n");
+      Wr.Flush(Stdio.stdout);
+      VAR t0m : Time.T;
+          dMut25, gMut25, iMut25 : LONGREAL;
+          dMut28, gMut28, iMut28 : LONGREAL;
+      BEGIN
+        (* -- Mode 1: Compiled with direct calls (as-is from Install) -- *)
+        Wr.PutText(Stdio.stdout, "1. Compiled + direct calls...\n");
+        Wr.Flush(Stdio.stdout);
+
+        t0m := Time.Now();
+        EVAL scm.loadEvalText("(mut-f 25)");
+        dMut25 := (Time.Now() - t0m) * 1.0D3;
+
+        t0m := Time.Now();
+        EVAL scm.loadEvalText("(mut-f 28)");
+        dMut28 := (Time.Now() - t0m) * 1.0D3;
+
+        (* -- Mode 2: Compiled bodies, but defeat direct-call pointer check.
+              Wrap each binding in a forwarding lambda so binding.get() != direct_pN.
+              Compiled bodies still run, but every cross-call goes through
+              NARROW + virtual dispatch + thin interpreted wrapper. -- *)
+        Wr.PutText(Stdio.stdout, "2. Compiled + general dispatch (wrapper)...\n");
+        Wr.Flush(Stdio.stdout);
+
+        EVAL scm.loadEvalText(
+          "(let ((of mut-f) (og mut-g))"
+          & " (set! mut-f (lambda (n) (of n)))"
+          & " (set! mut-g (lambda (n) (og n))))");
+
+        t0m := Time.Now();
+        EVAL scm.loadEvalText("(mut-f 25)");
+        gMut25 := (Time.Now() - t0m) * 1.0D3;
+
+        t0m := Time.Now();
+        EVAL scm.loadEvalText("(mut-f 28)");
+        gMut28 := (Time.Now() - t0m) * 1.0D3;
+
+        (* -- Mode 3: Fully interpreted -- *)
+        Wr.PutText(Stdio.stdout, "3. Fully interpreted...\n");
+        Wr.Flush(Stdio.stdout);
+
+        EVAL scm.loadEvalText(
+          "(define (mut-f n)"
+          & " (if (< n 2) 1 (+ (mut-g (- n 1)) (mut-g (- n 2)))))");
+        EVAL scm.loadEvalText(
+          "(define (mut-g n)"
+          & " (if (< n 2) 1 (+ (mut-f (- n 1)) (mut-f (- n 2)))))");
+
+        t0m := Time.Now();
+        EVAL scm.loadEvalText("(mut-f 25)");
+        iMut25 := (Time.Now() - t0m) * 1.0D3;
+
+        t0m := Time.Now();
+        EVAL scm.loadEvalText("(mut-f 28)");
+        iMut28 := (Time.Now() - t0m) * 1.0D3;
+
+        (* -- Results table -- *)
+        Wr.PutText(Stdio.stdout, "\n");
+        Wr.PutText(Stdio.stdout,
+          Fmt.Pad("Benchmark", 20)
+          & Fmt.Pad("Direct", 12, align := Fmt.Align.Right)
+          & Fmt.Pad("General", 12, align := Fmt.Align.Right)
+          & Fmt.Pad("Interp", 12, align := Fmt.Align.Right)
+          & Fmt.Pad("D/G", 8, align := Fmt.Align.Right)
+          & Fmt.Pad("D/I", 8, align := Fmt.Align.Right)
+          & "\n");
+        Wr.PutText(Stdio.stdout,
+          "------------------------------------------------------------------------\n");
+
+        VAR dg25, di25, dg28, di28: TEXT;
+        BEGIN
+          IF dMut25 > 0.001D0 THEN
+            dg25 := Fmt.LongReal(gMut25/dMut25, Fmt.Style.Fix, 1) & "x"
+          ELSE dg25 := "n/a" END;
+          IF dMut25 > 0.001D0 THEN
+            di25 := Fmt.LongReal(iMut25/dMut25, Fmt.Style.Fix, 1) & "x"
+          ELSE di25 := "n/a" END;
+          IF dMut28 > 0.001D0 THEN
+            dg28 := Fmt.LongReal(gMut28/dMut28, Fmt.Style.Fix, 1) & "x"
+          ELSE dg28 := "n/a" END;
+          IF dMut28 > 0.001D0 THEN
+            di28 := Fmt.LongReal(iMut28/dMut28, Fmt.Style.Fix, 1) & "x"
+          ELSE di28 := "n/a" END;
+
+          Wr.PutText(Stdio.stdout,
+            Fmt.Pad("(mut-f 25)", 20)
+            & Fmt.Pad(Fmt.LongReal(dMut25, Fmt.Style.Fix, 1) & " ms", 12, align := Fmt.Align.Right)
+            & Fmt.Pad(Fmt.LongReal(gMut25, Fmt.Style.Fix, 1) & " ms", 12, align := Fmt.Align.Right)
+            & Fmt.Pad(Fmt.LongReal(iMut25, Fmt.Style.Fix, 1) & " ms", 12, align := Fmt.Align.Right)
+            & Fmt.Pad(dg25, 8, align := Fmt.Align.Right)
+            & Fmt.Pad(di25, 8, align := Fmt.Align.Right)
+            & "\n");
+          Wr.PutText(Stdio.stdout,
+            Fmt.Pad("(mut-f 28)", 20)
+            & Fmt.Pad(Fmt.LongReal(dMut28, Fmt.Style.Fix, 1) & " ms", 12, align := Fmt.Align.Right)
+            & Fmt.Pad(Fmt.LongReal(gMut28, Fmt.Style.Fix, 1) & " ms", 12, align := Fmt.Align.Right)
+            & Fmt.Pad(Fmt.LongReal(iMut28, Fmt.Style.Fix, 1) & " ms", 12, align := Fmt.Align.Right)
+            & Fmt.Pad(dg28, 8, align := Fmt.Align.Right)
+            & Fmt.Pad(di28, 8, align := Fmt.Align.Right)
+            & "\n");
+        END;
+
+        Wr.PutText(Stdio.stdout, "\n");
+        Wr.PutText(Stdio.stdout,
+          "D/G = general dispatch slowdown vs direct calls\n");
+        Wr.PutText(Stdio.stdout,
+          "D/I = interpreted slowdown vs direct calls\n");
+        Wr.PutText(Stdio.stdout,
+          "Note: general dispatch mode uses thin forwarding lambdas\n");
+        Wr.PutText(Stdio.stdout,
+          "      that defeat the pointer check but add ~1 interp call/crossing.\n");
         Wr.Flush(Stdio.stdout);
       END
     END

@@ -810,3 +810,17 @@
         acc
         (loop (- i 1)
               (+ acc (car (my-map (lambda (x) (+ x i)) '(1))))))))
+
+;;;
+;;; ==================== Mutual Recursion ====================
+;;;
+;;; Two mutually recursive functions for benchmarking direct calls.
+;;; mut-f calls mut-g and vice versa -- true mutual recursion
+;;; that cannot be optimized into a self-tail-call LOOP.
+;;; Values follow Fibonacci: mut-f(n) = mut-g(n) = fib(n+1).
+
+(define (mut-f n)
+  (if (< n 2) 1 (+ (mut-g (- n 1)) (mut-g (- n 2)))))
+
+(define (mut-g n)
+  (if (< n 2) 1 (+ (mut-f (- n 1)) (mut-f (- n 2)))))
