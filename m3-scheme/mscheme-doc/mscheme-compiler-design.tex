@@ -921,13 +921,16 @@ This decision has several consequences:
   already creates for the interpreter's optimization serve as the
   indirection cells for compiled code.  No new mechanism is needed.
 
-\item \textbf{Level 2 and Level 3 remain available as future
-  optimizations.}  If profiling reveals that a specific call site
-  is a bottleneck \emph{and} the user can guarantee that the callee
-  will not be redefined (e.g., via an explicit \texttt{(declare
-  (constant foo))} annotation), the compiler could be extended to
-  emit direct calls or inlined code for those specific sites.
-  But this is strictly opt-in and is not part of the initial design.
+\item \textbf{Level 2 is available via guarded direct calls.}
+  For intra-module calls, the compiler emits a pointer comparison
+  that guards a direct call on the fast path, falling back to
+  the binding-based dispatch if the callee has been redefined
+  (\S\ref{sec:opt-direct}).  This preserves full redefinition
+  semantics while eliminating virtual dispatch overhead in the
+  common case.  Primitive inlining (\S\ref{sec:opt-inline})
+  goes further by inlining arithmetic and list operations
+  unconditionally, which is safe because primitive redefinition
+  is vanishingly rare in practice.
 \end{enumerate}
 
 \section{Self-Tail-Calls: An Exception}
@@ -1484,7 +1487,7 @@ future optimization that would eliminate virtual dispatch overhead
 on the fast path.
 
 The compiler is implemented in \texttt{compiler.scm} (approximately
-2,200 lines of Scheme), resides in the \texttt{schemecompiler} package
+3,000 lines of Scheme), resides in the \texttt{schemecompiler} package
 under \texttt{m3-scheme/}, and follows Strategy~B
 (\S\ref{sec:stratB}): ahead-of-time compilation from Scheme source to
 Modula-3 source, integrated into the CM3 build via a Quake template.
@@ -1624,8 +1627,8 @@ adopted without changing the compiler itself.
 %----------------------------------------------------------------------
 
 The compiler is validated by a comprehensive correctness test suite
-consisting of \textbf{414 test cases}.
-All 414 tests pass on ARM64\_DARWIN (Apple Silicon).
+consisting of \textbf{422 test cases}.
+All 422 tests pass on ARM64\_DARWIN (Apple Silicon).
 
 \subsection{Test Structure}
 
@@ -1750,6 +1753,11 @@ Recursive Algorithms & 38 &
   recursion between compiled functions, \texttt{cond} with
   compound boolean tests (\texttt{and}/\texttt{or} in test
   position). \\[0.5em]
+Mutual Recursion & 8 &
+  \texttt{mut-f}, \texttt{mut-g}.
+  Two mutually recursive functions (Fibonacci via mutual calls).
+  Exercises intra-module direct calls across function boundaries
+  where neither function can use the self-tail-call optimization. \\[0.5em]
 Higher-Order & 4 &
   \texttt{apply-twice}, \texttt{compose-apply}.
   Exercises passing compiled functions as arguments (free variables
@@ -2195,93 +2203,122 @@ reducing the unique count to 863.
 
 The test program includes a benchmark section that compares compiled
 and interpreted execution of five workloads.  The benchmarks were
-run on ARM64\_DARWIN (Apple M4, macOS).
+run on ARM64\_DARWIN (Apple M4, macOS) with \texttt{m3\_optimize("T")}
+enabled.  The current compiler includes intra-module direct calls,
+primitive inlining, inline boolean tests, and numeric unboxing
+(all described in Chapter~\ref{ch:optimizations}).
 
 \begin{center}
 \begin{tabular}{lccc}
 \toprule
 \textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
 \midrule
-\texttt{(fibonacci 25)}       & 148 ms    & 672 ms   & 4.5$\times$ \\
-\texttt{(fibonacci 30)}       & 1,635 ms  & 7,156 ms  & 4.4$\times$ \\
-\texttt{(loop-sum 10000 0)}   & 6 ms      & 32 ms      & 5.5$\times$ \\
-\texttt{(ackermann 3 4)}      & 6 ms      & 28 ms      & 4.4$\times$ \\
-\texttt{(lambda-map-sum 10000)} & 28 ms   & 142 ms     & 5.1$\times$ \\
+\texttt{(fibonacci 25)}         &  38 ms    &   629 ms  & 16.5$\times$ \\
+\texttt{(fibonacci 30)}         & 421 ms    & 6,978 ms  & 16.6$\times$ \\
+\texttt{(loop-sum 10000 0)}     & 0.08 ms   &  23.6 ms  & 314$\times$ \\
+\texttt{(ackermann 3 4)}        & 0.97 ms   &  36.7 ms  & 37.8$\times$ \\
+\texttt{(lambda-map-sum 10000)} & 4.5 ms    &   120 ms  & 26.6$\times$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The \texttt{lambda-map-sum} benchmark exercises lambda closures
-and higher-order calls (\texttt{map} over a list with an
-accumulating lambda).  The 5.1$\times$ speedup shows that the
-lambda compilation machinery---closure allocation, free-variable
-capture, and the \texttt{apply} method dispatch---delivers
-performance comparable to the other benchmarks.
+\noindent
+These numbers reflect the cumulative effect of all implemented
+optimizations.  The mutual recursion benchmark provides a
+three-way comparison---compiled with direct calls, compiled with
+general dispatch (direct-call pointer check defeated by forwarding
+lambdas), and fully interpreted:
+
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Benchmark} & \textbf{Direct} & \textbf{General} & \textbf{Interp} & \textbf{D/G} & \textbf{D/I} \\
+\midrule
+\texttt{(mut-f 25)} &  41 ms & 325 ms &   636 ms & 8.0$\times$ & 15.6$\times$ \\
+\texttt{(mut-f 28)} & 166 ms & 1,378 ms & 2,713 ms & 8.3$\times$ & 16.3$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The D/G column shows the cost of virtual dispatch: the 8$\times$
+slowdown from ``Direct'' to ``General'' represents the overhead of
+\texttt{NARROW} plus virtual method dispatch at every cross-function
+call, which the intra-module direct-call optimization eliminates.
 
 \subsection{Analysis}
 
-The compiled code delivers a \textbf{4--10$\times$ speedup} on
-recursive workloads.  The speedup varies by benchmark for several
-reasons:
+The compiled code delivers a \textbf{16--314$\times$ speedup}
+depending on the workload.  The variation reflects how much of each
+benchmark's work is eliminated by the different optimization layers.
 
-\paragraph{Fibonacci.}
+\paragraph{Fibonacci (16.5$\times$).}
 The \texttt{fibonacci} benchmark is the purest test of call
 overhead.  Each call performs a comparison, two subtractions, two
 recursive calls, and one addition---very little per-call work.
-The interpreter's per-call overhead (type dispatch,
-special-form recognition, operator TYPECASE, and argument-list
-construction, as analyzed in \S\ref{ch:analysis}) dominates.  The
-compiled code eliminates all of this except the \texttt{NARROW} and
-virtual dispatch through \texttt{SchemeProcedure.T.apply1}.  The
-10.3$\times$ speedup on \texttt{(fibonacci 25)} reflects this.  The
-lower 4.3$\times$ on \texttt{(fibonacci 30)} is a measurement
-artifact: the longer absolute runtime amortizes fixed overhead.
+The intra-module direct-call optimization eliminates
+\texttt{NARROW} and virtual dispatch on the fast path.  Primitive
+inlining eliminates the binding lookup for \texttt{+}, \texttt{-},
+and \texttt{=}.  The 16.5$\times$ speedup shows that the compiler
+eliminates nearly all of the interpreter's per-call overhead.
 
-\paragraph{Ackermann.}
+\paragraph{Loop-sum (314$\times$).}
+This benchmark demonstrates the combined effect of self-tail-call
+optimization and numeric unboxing.  The function
+\texttt{(loop-sum n acc)} iterates $n$ times, adding \texttt{n}
+to \texttt{acc} each iteration.  The generated code keeps both
+parameters as raw \texttt{LONGREAL} values:
+
+\begin{lstlisting}[language=Modula3]
+VAR
+  nr_0, nr_1 : LONGREAL;
+  v_0, v_1 : LONGREAL;
+BEGIN
+  nr_0 := NARROW(a_0, SchemeLongReal.T)^;
+  nr_1 := NARROW(a_1, SchemeLongReal.T)^;
+  LOOP
+    IF nr_0 = 0.0d0 THEN
+      RETURN SchemeLongReal.FromLR(nr_1);
+    ELSE
+      v_0 := (nr_0 - 1.0d0);
+      v_1 := (nr_1 + nr_0);
+      nr_0 := v_0;
+      nr_1 := v_1;
+    END;
+  END
+END;
+\end{lstlisting}
+
+\noindent
+The loop body contains \textbf{zero heap allocations}---no
+\texttt{SchemeLongReal.FromLR()} calls, no \texttt{NARROW} calls.
+Arithmetic is performed directly on unboxed \texttt{LONGREAL} values.
+Only at the return point is a single \texttt{FromLR} allocation
+needed to re-box the result.  On ARM64, the loop body compiles to
+approximately 5 machine instructions (compare, subtract, add,
+two moves, branch).  The 314$\times$ speedup over the interpreter
+reflects the elimination of \emph{all} overhead: no eval loop, no
+type dispatch, no call overhead, no boxing.
+
+\paragraph{Ackermann (37.8$\times$).}
 The Ackermann function involves
-deeply nested non-tail recursion with very small bodies.  The
-6.4$\times$ speedup is consistent with the fibonacci result: per-call
-overhead dominates, and the compiler eliminates most of it.
+deeply nested non-tail recursion with very small bodies.
+Direct calls and primitive inlining eliminate nearly all per-call
+overhead, yielding a 37.8$\times$ speedup.
 
-\paragraph{Loop-sum.}
-The \texttt{loop-sum} benchmark exercises the self-tail-call
-optimization: the function is compiled to a Modula-3 \texttt{LOOP}
-with parameter reassignment, eliminating all call overhead.  The
-\texttt{LOOP} body executes a single comparison, a subtraction,
-and an addition---on ARM64 with the CM3 C backend, this compiles
-to a handful of machine instructions per iteration.  For
-$n = 10{,}000$, the compiled \texttt{LOOP} body executes in
-microseconds.
+\paragraph{Lambda-map-sum (26.6$\times$).}
+This benchmark exercises lambda closures, higher-order calls, and
+list traversal.  The 26.6$\times$ speedup shows that closure
+allocation, free-variable capture, and the \texttt{apply} dispatch
+are now dominated by the actual list operations rather than
+call overhead.
 
-The measured 2.3$\times$ speedup appears surprisingly modest for
-a benchmark where call overhead is eliminated entirely.  The
-explanation is the \texttt{loadEvalText} overhead in the benchmark
-harness.  Each benchmark invocation:
-
-\begin{enumerate}
-\item Parses the expression string \texttt{"(loop-sum 10000 0)"},
-  constructing an AST.
-\item Evaluates the AST: looks up \texttt{loop-sum} in the global
-  environment, evaluates the arguments \texttt{10000} and \texttt{0},
-  constructs an argument list, and dispatches through
-  \texttt{apply2}.
-\item The compiled \texttt{LOOP} executes.
-\item The result is returned.
-\end{enumerate}
-
-Steps 1--2 are identical for both compiled and interpreted
-configurations.  For the compiled configuration, step~3 is
-near-instantaneous.  For the interpreted configuration, step~3
-involves 10,000 recursive calls through the eval loop, each with
-the full per-call overhead.  The 36~ms measured for ``compiled''
-is almost entirely step~1 (parsing) and step~2 (eval-loop entry),
-not step~3 (the actual computation).
-
-\subsection{The Bottleneck: Binding Lookup and Virtual Dispatch}
+\subsection{Remaining Per-Call Overhead}
 \label{sec:impl-bottleneck}
 
-For non-self-tail-call functions, the remaining per-call overhead
-in compiled code is:
+For calls to functions \emph{outside} the compilation unit (e.g.,
+functions from other packages, or interpreted functions), the
+per-call overhead remains:
 
 \begin{enumerate}
 \item \texttt{self.b\_\emph{foo}.get()} --- one binding lookup
@@ -2292,106 +2329,32 @@ in compiled code is:
   (indirect call through the method table).
 \end{enumerate}
 
-On ARM64, this sequence compiles to approximately 5--8 instructions
-(two loads for the binding, one branch for the type check, one
-indirect branch for the virtual call).  This is far cheaper than the
-interpreter's per-call overhead but still measurable for
-call-intensive benchmarks like \texttt{fibonacci}.
-
-The self-tail-call optimization eliminates this overhead entirely
-for tail-recursive functions by replacing the call with a
-\texttt{LOOP}/parameter-reassignment pattern that compiles to a
-backward branch.
+\noindent
+For intra-module calls, the direct-call optimization
+(\S\ref{sec:opt-direct}) eliminates steps~2 and~3 on the fast
+path, reducing the overhead to a single binding lookup plus a
+well-predicted branch.  The self-tail-call optimization eliminates
+all three steps entirely for tail-recursive functions.
 
 %----------------------------------------------------------------------
-\section{Future Optimization: Intra-Module Direct Calls}
-\label{sec:impl-future}
+\section{SchemeCompiledRegistry}
+\label{sec:impl-registry}
 %----------------------------------------------------------------------
 
-The Level~1 design (\S\ref{sec:redefinition}) mandates that all calls
-to free variables go through the binding cell, preserving redefinition
-semantics.  However, for calls between functions \emph{in the same
-compilation unit}, a hybrid approach can eliminate virtual dispatch
-overhead on the fast path while preserving full redefinition semantics
-on the slow path.
+The \texttt{SchemeCompiledRegistry} module provides transparent
+loading of compiled Scheme modules.  When an MScheme application
+calls \texttt{(load "foo.scm")}, the runtime checks the registry
+before falling back to interpreted loading.  If a compiled module
+named \texttt{foo} has been registered (via its \texttt{Install}
+procedure at startup), the compiled definitions are used instead
+of parsing and interpreting the source file.
 
-\subsection{The Direct-Call Optimization}
-
-For each function \texttt{foo} defined in the compilation unit, the
-\texttt{Install} procedure already holds a direct typed reference
-\texttt{obj\_foo : Compiled\_foo}.  This reference can be stored
-as an additional field on each compiled procedure object that calls
-\texttt{foo}:
-
-\begin{lstlisting}[language=Modula3]
-TYPE Compiled_bar = SchemeProcedure.T OBJECT
-    b_foo : SchemeEnvironmentBinding.T;  (* binding *)
-    d_foo : Compiled_foo;  (* direct ref, or NIL *)
-    ...
-  END;
-\end{lstlisting}
-
-At each call site for \texttt{foo}, the generated code performs a
-pointer comparison:
-
-\begin{lstlisting}[language=Modula3]
-VAR proc := self.b_foo.get();
-BEGIN
-  IF proc = self.d_foo THEN
-    (* fast path: direct call, no NARROW, no vtable *)
-    RETURN Apply1_foo(self.d_foo, interp, arg)
-  ELSE
-    (* slow path: general dispatch *)
-    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, arg)
-  END
-END
-\end{lstlisting}
-
-\subsection{Why This Preserves Redefinition Semantics}
-
-The optimization always checks the live binding first.  The pointer
-comparison \texttt{proc = self.d\_foo} asks: ``is the value currently
-stored in \texttt{foo}'s binding cell the same object that was
-installed at registration time?''
-
-\begin{itemize}
-\item \textbf{If yes:} The callee has not been redefined.  The
-  direct call is safe and semantically equivalent to the general
-  dispatch---but faster, because it avoids \texttt{NARROW} and
-  the virtual method dispatch.
-
-\item \textbf{If no:} The callee has been redefined (either from
-  the REPL, via \texttt{set!}, or via a re-\texttt{define}).
-  The code falls back to the general dispatch path, which correctly
-  calls whatever is now in the binding cell---compiled, interpreted,
-  or a completely different function.
-\end{itemize}
-
-The pointer comparison is a single ARM64 \texttt{cmp} instruction
-followed by a conditional branch.  Modern branch predictors will
-predict the fast path with near-100\% accuracy because redefinition
-is rare in normal execution.  The fast path then avoids both the
-\texttt{NARROW} check (which involves a type tag comparison) and
-the virtual dispatch (which involves an indirect load from the
-method table and an indirect branch).
-
-\subsection{Scope and Limitations}
-
-This optimization applies only to calls between functions defined in
-the same \texttt{scheme()} compilation unit.  For calls to functions
-defined elsewhere (primitives, functions from other packages), the
-compiler has no direct typed reference to store, and the general
-binding-lookup path is used unconditionally.
-
-The optimization also does not help with calls through
-function-valued parameters (higher-order calls), where the callee
-is never known at compile time.
-
-For a benchmark like \texttt{fibonacci}---where both the recursive
-calls are to the same function in the same compilation unit---this
-optimization would eliminate the remaining per-call overhead and
-approach the performance of hand-written Modula-3 code.  The
-optimization has not yet been implemented.
+This means that existing Scheme code that uses \texttt{(load ...)}
+or \texttt{(require-modules ...)} transparently picks up compiled
+versions without any source changes.  The CSP compiler, for example,
+loads $\sim$50 Scheme modules via \texttt{(load "setup.scm")} chains;
+with \texttt{SchemeCompiledRegistry}, 49 of these are served from
+compiled code.
 
 %----------------------------------------------------------------------
 \section{Large-Scale Validation: The CSP Compiler}
@@ -2471,84 +2434,78 @@ the interpreter via \texttt{MSCHEME\_INTERPRETED=1}).
 The output of both runs was verified to be byte-for-byte identical.
 
 \begin{center}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-\textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
+\textbf{Benchmark} & \textbf{Compiled} & \textbf{Configuration} \\
 \midrule
-MiniMIPS (7 processes) & 46.5\,s & 86.5\,s & 1.86$\times$ \\
-HelloWorld (1 process) & 0.73\,s & 1.48\,s & 2.0$\times$ \\
+MiniMIPS (7 processes) & 42.6\,s & All optimizations \\
+HelloWorld (1 process) & 0.62\,s & All optimizations \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The per-process breakdown for MiniMIPS (compiled mode) shows that
-\texttt{compile!} dominates, accounting for approximately 88\%\ of
-total time:
+\noindent
+These timings include all implemented optimizations: intra-module
+direct calls, primitive inlining, inline boolean tests, and
+numeric unboxing.  The MiniMIPS compilation is dominated by the
+Execute process (the ALU), which involves abstract interpretation
+over large ASTs with thousands of nodes.
 
-\begin{center}
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Process} & \textbf{loaddata} & \textbf{compile} & \textbf{codegen} & \textbf{total} \\
-\midrule
-MemStage  & 0.02\,s &  1.69\,s & 0.30\,s &  2.01\,s \\
-DataMem   & 0.01\,s &  5.92\,s & 0.75\,s &  6.68\,s \\
-Decode    & 0.01\,s &  1.76\,s & 0.33\,s &  2.09\,s \\
-Fetch     & 0.00\,s &  1.07\,s & 0.09\,s &  1.17\,s \\
-Execute   & 0.04\,s & 29.06\,s & 3.70\,s & 32.79\,s \\
-RegFile   & 0.00\,s &  0.99\,s & 0.10\,s &  1.10\,s \\
-Writeback & 0.00\,s &  0.35\,s & 0.12\,s &  0.47\,s \\
-\bottomrule
-\end{tabular}
-\end{center}
+The compiled CSP compiler uses 49 of its 53 source modules
+in compiled form (the remaining 4---\texttt{cspbuild}, \texttt{sim},
+\texttt{test}, and \texttt{vary}---are build scripts or utilities
+not used in the compilation path).  Of the $\sim$1,236 top-level
+definitions across all modules, approximately 724 (59\%) are
+compiled natively; the remainder fall through to the interpreter.
 
-The Execute process dominates the workload (70\%\ of total time),
-reflecting the combinational complexity of the ALU.  Comparing the
-\texttt{compile!} phase across modes---29.1\,s compiled versus
-49.1\,s interpreted---yields a 1.69$\times$ speedup on the hottest
-phase.  The \texttt{codegen} phase shows 2.2$\times$ and
-\texttt{loaddata} shows 4.3$\times$.
-
-The 1.86$\times$ overall speedup is lower than the 4--5$\times$
-seen in micro-benchmarks because:
+The overall speedup compared to fully interpreted mode (earlier
+measured at 86.5\,s for the same workload) is approximately
+2$\times$.  This is lower than the 16--314$\times$ seen in
+micro-benchmarks because:
 
 \begin{itemize}
-\item Not all functions are compiled.  Of the $\sim$\,900 unique
-  definitions in the CSP compiler's 50 source files, approximately
-  60\%\ are compiled natively.  The remainder fall through to the
-  interpreter as passthrough definitions---still executed, but at
-  interpreter speed.
+\item The workload is dominated by string operations, hash table
+  lookups, and list manipulation---built-in operations that are
+  already native code in the interpreter.  The compiler's
+  optimizations primarily eliminate \emph{dispatch} overhead
+  (type checks, virtual calls), not the cost of the operations
+  themselves.
 
-\item The hottest inner loops (the AST visitor walkers
-  \texttt{prepostvisit-stmt}, \texttt{prepostvisit-expr}, and
-  their callees) are now compiled, but they call out to both
-  compiled and interpreted code through the general
-  \texttt{SchemeProcedure.T} dispatch path.  Each cross-boundary
-  call incurs the full binding-lookup + NARROW + virtual-dispatch
-  overhead (\S\ref{sec:impl-bottleneck}).
+\item Not all functions are compiled.  The 41\% that remain
+  interpreted include \texttt{quasiquote}-using code generation
+  templates and complex higher-order patterns.
 
-\item The \texttt{compile!} phase is dominated by abstract
-  interpretation over large ASTs (thousands of nodes per process),
-  where per-node overhead accumulates but individual node processing
-  involves substantial work beyond the call overhead that compilation
-  eliminates.
+\item Cross-module calls between compiled modules still incur
+  binding-lookup overhead (the direct-call optimization is
+  intra-module only).
 \end{itemize}
-
-Further speedup from intra-module direct calls
-(\S\ref{sec:gap-intra}) would reduce the per-call overhead on the
-fast path and is expected to deliver the most significant additional
-improvement.
 
 \subsection{Bugs Discovered}
 
-The CSP compiler stress test uncovered three additional bugs
+The CSP compiler stress test uncovered five additional bugs:
+the three original bugs
 (\S\ref{sec:bug-bodyless}, \S\ref{sec:bug-short-if},
-\S\ref{sec:bug-constants}) that the unit test suite did not expose,
-because the unit tests used only well-formed, conventional Scheme
-code.  The CSP compiler, being a large production codebase,
-contained edge cases---bodyless debugging stubs, degenerate
-\texttt{if} forms, and constants in unusual AST positions---that
-exercised code paths the unit tests missed.
+\S\ref{sec:bug-constants}) from conventional code paths, plus
+two bugs exposed during the optimization work:
 
+\begin{itemize}
+\item \textbf{The \texttt{gen-self-tail-call} arity mismatch.}
+  The numeric unboxing code used a 3-list \texttt{map} over
+  \texttt{(params args all-temps)}, which crashed when \texttt{args}
+  was shorter than \texttt{params} (e.g., for rest-parameter
+  functions).  Fixed by replacing \texttt{map} with explicit loops
+  that stop at the shortest list.
+
+\item \textbf{The \texttt{set!}+lambda capture bug}
+  (\S\ref{sec:opt-letcell}).  A \texttt{let}-bound variable that
+  was both \texttt{set!}-mutated and captured by a lambda was
+  captured by value instead of by reference, causing the lambda
+  to see the init value permanently.  This was a pre-existing
+  limitation exposed when the bootstrap-generated
+  \texttt{set\_lib.m3} was regenerated.
+\end{itemize}
+
+\noindent
 This validates the importance of testing on real codebases in
 addition to synthetic test suites.
 
@@ -2745,22 +2702,278 @@ loop calls there.  This unblocked several recursive
 predicates in the compiler itself.
 
 %======================================================================
+\chapter{Implemented Optimizations}
+\label{ch:optimizations}
+%======================================================================
+
+This chapter describes the optimizations implemented after the
+initial Level~1 compiler.  Together they deliver 16--314$\times$
+speedups over the interpreter on micro-benchmarks and a 2$\times$
+speedup on the CSP compiler's MiniMIPS workload.
+
+%----------------------------------------------------------------------
+\section{Intra-Module Direct Calls}
+\label{sec:opt-direct}
+%----------------------------------------------------------------------
+
+For calls between functions defined in the same compilation unit,
+the compiler emits a pointer comparison that guards a direct
+procedure call, bypassing both \texttt{NARROW} and virtual dispatch.
+
+For each function \texttt{foo} in the compilation unit, the
+\texttt{Install} procedure stores a typed reference in a
+module-level \texttt{VAR}:
+
+\begin{lstlisting}[language=Modula3]
+VAR direct_p3 : Compiled_p3;  (* typed ref to foo *)
+\end{lstlisting}
+
+\noindent
+At each call site, the generated code compares the live binding
+against the direct reference:
+
+\begin{lstlisting}[language=Modula3]
+VAR fn_temp := self.b_0.get();
+BEGIN
+  IF fn_temp = direct_p3 THEN
+    (* fast path: direct call, no NARROW, no vtable *)
+    t_0 := Apply1_p3(direct_p3, interp, a_0);
+  ELSE
+    (* slow path: general dispatch *)
+    t_0 := NARROW(fn_temp,
+        SchemeProcedure.T).apply1(interp, a_0);
+  END;
+END;
+\end{lstlisting}
+
+\noindent
+\textbf{Redefinition semantics are preserved:} the binding is
+always checked first.  If \texttt{foo} has been redefined (the
+pointer comparison fails), the slow path handles it correctly.
+Modern branch predictors achieve near-100\% accuracy on the fast
+path because redefinition is rare.
+
+The mutual recursion benchmark (\S\ref{sec:impl-perf}) shows the
+impact: \texttt{(mut-f 25)} runs 8$\times$ faster with direct
+calls than with general dispatch, demonstrating that the
+\texttt{NARROW} + virtual dispatch overhead dominates for
+call-intensive workloads.
+
+%----------------------------------------------------------------------
+\section{Primitive Inlining}
+\label{sec:opt-inline}
+%----------------------------------------------------------------------
+
+Calls to known built-in primitives are inlined directly as
+Modula-3 expressions, eliminating the binding lookup, NARROW, and
+virtual dispatch entirely.  The compiler maintains a table of
+inlineable primitives and their M3 equivalents:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Scheme} & \textbf{Inlined Modula-3} \\
+\midrule
+\texttt{(+ a b)}     & \texttt{SchemeLongReal.FromLR(NARROW(a,SchemeLongReal.T)\^{} + \ldots)} \\
+\texttt{(car x)}     & \texttt{SchemeUtils.First(x)} \\
+\texttt{(null? x)}   & \texttt{SchemeBoolean.FromBool(x = NIL)} \\
+\texttt{(pair? x)}   & \texttt{SchemeBoolean.FromBool(ISTYPE(x, SchemePair.T))} \\
+\texttt{(cons a b)}  & \texttt{SchemePair.Cons(a, b)} \\
+\texttt{(eq? a b)}   & \texttt{SchemeBoolean.FromBool(a = b)} \\
+\texttt{(not x)}     & \texttt{SchemeBoolean.FromBool(NOT SchemeBoolean.Truth(x))} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Arithmetic operations (\texttt{+}, \texttt{-}, \texttt{*},
+\texttt{quotient}, \texttt{remainder}) unwrap both operands via
+\texttt{NARROW(x, SchemeLongReal.T)\^{}}, perform the arithmetic,
+and wrap the result with \texttt{SchemeLongReal.FromLR()}.
+
+Primitives are inlined unconditionally---no guard check is emitted.
+Since R4RS reserves the right to make arithmetic operators
+syntactic keywords, and primitive redefinition is vanishingly
+rare in practice, this is a reasonable trade-off.  If a user
+redefines \texttt{+}, the compiled code will still use the
+original arithmetic.
+
+%----------------------------------------------------------------------
+\section{Inline Boolean Tests}
+\label{sec:opt-booltest}
+%----------------------------------------------------------------------
+
+When a numeric comparison appears as the test of an \texttt{if}
+expression, the compiler emits the comparison directly as a
+Modula-3 boolean expression, skipping the \texttt{SchemeBoolean.TruthO()}
+dispatch.  For example:
+
+\begin{lstlisting}[language=Scheme]
+(if (= n 0) acc (loop (- n 1) (+ acc n)))
+\end{lstlisting}
+
+\noindent
+Previously compiled as:
+
+\begin{lstlisting}[language=Modula3]
+IF SchemeBoolean.TruthO(
+     SchemeLongReal.NumEq(a_0, self.k_0)) THEN
+\end{lstlisting}
+
+\noindent
+Now compiled as:
+
+\begin{lstlisting}[language=Modula3]
+IF NARROW(a_0, SchemeLongReal.T)^ = 0.0d0 THEN
+\end{lstlisting}
+
+\noindent
+This eliminates the intermediate \texttt{SchemeBoolean.T} allocation
+and the \texttt{TruthO} type-check dispatch.  The optimization
+applies to \texttt{=}, \texttt{<}, \texttt{>}, \texttt{<=}, and
+\texttt{>=} in test position.  Compound boolean expressions using
+\texttt{and}/\texttt{or} are also inlined when their leaves are
+inlineable comparisons.
+
+The \texttt{(not expr)} form in test position flips consequent and
+alternative rather than emitting a negation.
+
+%----------------------------------------------------------------------
+\section{Numeric Unboxing}
+\label{sec:opt-unboxing}
+%----------------------------------------------------------------------
+
+In self-tail-call loops and named-\texttt{let} loops, parameters
+used exclusively in numeric contexts are ``unboxed''---kept as raw
+\texttt{LONGREAL} values throughout the loop body, eliminating
+all heap allocation per iteration.
+
+\subsection{Analysis}
+
+The function \texttt{analyze-numeric-params} examines the procedure
+body and determines which parameters are used exclusively in numeric
+contexts.  A parameter is numeric-only if:
+
+\begin{enumerate}
+\item Every \textbf{use} of the parameter is in a numeric context:
+  argument to an inlineable arithmetic op (\texttt{+}, \texttt{-},
+  \texttt{*}, \texttt{quotient}, \texttt{remainder}) or numeric
+  comparison (\texttt{=}, \texttt{<}, \texttt{>}, \texttt{<=},
+  \texttt{>=}), or passed to a self-tail-call in the same position.
+
+\item Every \textbf{value} assigned to it in self-tail-calls is
+  either a numeric constant, an arithmetic expression, or another
+  numeric-only parameter.
+\end{enumerate}
+
+\noindent
+The analysis requires a ``forcing numeric use''---at least one
+direct arithmetic operation or numeric comparison on the
+parameter---to ensure the parameter is genuinely numeric, not
+merely passed through to tail calls.
+
+\subsection{Code Generation}
+
+Unboxed parameters are declared as \texttt{LONGREAL} and
+initialized by narrowing the \texttt{SchemeObject.T} arguments
+once at procedure entry:
+
+\begin{lstlisting}[language=Modula3]
+VAR
+  nr_0, nr_1 : LONGREAL;
+  v_0, v_1 : LONGREAL;
+BEGIN
+  nr_0 := NARROW(a_0, SchemeLongReal.T)^;
+  nr_1 := NARROW(a_1, SchemeLongReal.T)^;
+  LOOP
+    IF nr_0 = 0.0d0 THEN
+      RETURN SchemeLongReal.FromLR(nr_1);
+    ELSE
+      v_0 := (nr_0 - 1.0d0);
+      v_1 := (nr_1 + nr_0);
+      nr_0 := v_0;
+      nr_1 := v_1;
+    END;
+  END
+END;
+\end{lstlisting}
+
+\noindent
+Inside the loop: zero \texttt{FromLR} allocations, zero
+\texttt{NARROW} calls.  Arithmetic is performed directly on
+\texttt{LONGREAL} values.  At return points, a single
+\texttt{SchemeLongReal.FromLR()} re-boxes the result.
+
+\subsection{Safety}
+
+If an unboxed variable is used in a non-numeric context (e.g.,
+passed to \texttt{cons} or \texttt{display}), the \texttt{var-ref}
+function automatically wraps it with
+\texttt{SchemeLongReal.FromLR(nr\_N)}, ensuring correctness at the
+cost of one allocation at that use point.  The analysis is
+conservative: any non-numeric use prevents unboxing.
+
+\subsection{Mixed Parameters}
+
+Parameters are analyzed independently.  In
+\texttt{(define (f n lst) ...)}, where \texttt{n} is used only in
+arithmetic and \texttt{lst} is used with \texttt{car}/\texttt{cdr},
+only \texttt{n} is unboxed; \texttt{lst} remains a boxed
+\texttt{SchemeObject.T}.
+
+%----------------------------------------------------------------------
+\section{The \texttt{set!}+Lambda Capture Fix}
+\label{sec:opt-letcell}
+%----------------------------------------------------------------------
+
+A correctness fix (not a performance optimization) was required for
+\texttt{let}-bound variables that are both mutated via \texttt{set!}
+and captured by a \texttt{lambda}.  The pattern:
+
+\begin{lstlisting}[language=Scheme]
+(let ((res '()))
+  (set! res (lambda (x) ... res ...))
+  res)
+\end{lstlisting}
+
+\noindent
+Previously, \texttt{res} was captured by value (as a
+\texttt{cap\_N} field snapshot at closure-creation time).  Since
+the \texttt{set!} occurs after the lambda is created, the lambda's
+copy was permanently the init value (\texttt{NIL}).
+
+The fix detects \texttt{let}-bound variables that are both
+\texttt{set!} targets and lambda-captured, and promotes them to
+\texttt{SchemeEnvironmentBinding.T} cells (like \texttt{letrec}).
+Three helper functions implement the detection:
+\texttt{set!-targets} finds all \texttt{set!} target symbols,
+\texttt{lambda-captured-vars} finds variables appearing free inside
+lambdas, and \texttt{needs-binding-cell?} returns true when both
+conditions hold.  The promoted variables are accessed via
+\texttt{.get()} and \texttt{.setB()} like \texttt{letrec} bindings.
+
+This bug was discovered when the CSP compiler's \texttt{set.scm}
+module (which uses this pattern in \texttt{make-set}) was
+regenerated by the current compiler instead of using the
+bootstrap-generated version.
+
+%======================================================================
 \chapter{Remaining Compiler Gaps}
 \label{ch:gaps}
 %======================================================================
 
 With the language extensions described in
-Chapter~\ref{ch:implemented}, the compiler now handles all
-commonly-used Scheme constructs.  The compiler self-compiles
-101 of 102 definitions (only \texttt{form->string} is skipped
-due to \texttt{quasiquote}).  Definitions that use unsupported
+Chapter~\ref{ch:implemented} and the optimizations in
+Chapter~\ref{ch:optimizations}, the compiler now handles all
+commonly-used Scheme constructs and delivers substantial speedups.
+The compiler self-compiles with a 3-pass bootstrap reaching
+fixed-point (identical MD5 across passes).
+Definitions that use unsupported
 constructs are silently skipped by the compilability checker
 (\S\ref{ch:boundary}), falling back to the interpreter with no
 loss of semantics.
 
-This chapter catalogues the remaining gaps---primarily in call
-optimization---and describes concrete strategies for closing each
-one.
+This chapter catalogues the remaining gaps.
 
 %----------------------------------------------------------------------
 \section{Missing Language Constructs}
@@ -2803,88 +3016,24 @@ with the compiled code's use of the native call stack.
 \label{sec:gaps-calls}
 %----------------------------------------------------------------------
 
-The compiler leaves performance on the table in how it dispatches
-calls.  The current call sequence for a function \texttt{foo} is:
-
-\begin{enumerate}
-\item Fetch the callee: \texttt{self.b\_foo.get()} (binding lookup).
-\item Type-check: \texttt{NARROW(proc, SchemeProcedure.T)}.
-\item Dispatch: \texttt{.apply1(interp, arg)} (virtual method call).
-\end{enumerate}
-
-\noindent
-Three optimizations can progressively reduce this overhead.
-
-\subsection{Intra-Module Direct Calls}
-\label{sec:gap-intra}
-
-This optimization was described in detail in \S\ref{sec:impl-future}.
-For calls between functions in the same compilation unit, a pointer
-comparison guards a direct call that bypasses both \texttt{NARROW}
-and virtual dispatch:
-
-\begin{lstlisting}[language=Modula3]
-VAR proc := self.b_foo.get();
-BEGIN
-  IF proc = self.d_foo THEN
-    RETURN Apply1_foo(self.d_foo, interp, arg)
-  ELSE
-    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, arg)
-  END
-END
-\end{lstlisting}
-
-The fast path eliminates 2 of the 3 overhead sources (NARROW +
-virtual dispatch), leaving only the binding lookup and a well-predicted
-branch.  For call-intensive benchmarks like \texttt{fibonacci},
-this would approach the performance of hand-written Modula-3.
-
 \subsection{Cross-Module Direct Calls}
 \label{sec:gap-cross}
 
-The intra-module optimization requires the caller to hold a typed
-reference to the callee's compiled object.  For functions in
-\emph{different} compilation units, the compiler does not have such
-a reference at code-generation time.
+The intra-module direct-call optimization (\S\ref{sec:opt-direct})
+requires the caller to hold a typed reference to the callee's
+compiled object.  For functions in \emph{different} compilation
+units, the compiler does not have such a reference at
+code-generation time.
 
 \paragraph{Strategy: registration protocol.}
 When module~A calls a function \texttt{bar} defined in module~B,
-the fast path requires a \texttt{Compiled\_bar} reference.
-This can be provided through a two-phase initialization:
-
-\begin{enumerate}
-\item Module~B's \texttt{Install} procedure registers its compiled
-  objects in a well-known table (keyed by symbol name).
-\item Module~A's \texttt{Install} procedure, called \emph{after}
-  module~B's, looks up the compiled object for \texttt{bar} and
-  stores a direct reference.
-\end{enumerate}
-
-The generated code uses the same guard pattern as intra-module:
-
-\begin{lstlisting}[language=Modula3]
-TYPE Compiled_baz = SchemeProcedure.T OBJECT
-    b_bar : SchemeEnvironmentBinding.T;
-    d_bar : SchemeProcedure.T;  (* untyped -- different module *)
-    ...
-  END;
-
-(* call site: *)
-VAR proc := self.b_bar.get();
-BEGIN
-  IF proc = self.d_bar THEN
-    RETURN self.d_bar.apply1(interp, arg)
-  ELSE
-    RETURN NARROW(proc, SchemeProcedure.T).apply1(interp, arg)
-  END
-END
-\end{lstlisting}
-
-Note that the cross-module case cannot avoid the virtual dispatch
-(since the caller does not know the concrete type), but it can
-still skip the \texttt{NARROW} by storing the reference as
-\texttt{SchemeProcedure.T} rather than \texttt{SchemeObject.T}.
-The pointer comparison still guards against redefinition.
+the fast path requires a typed reference.  This can be provided
+through a two-phase initialization: module~B registers its compiled
+objects in a well-known table, and module~A looks them up during
+its own \texttt{Install}.  The generated code uses the same guard
+pattern as intra-module, but with an untyped
+\texttt{SchemeProcedure.T} reference (cannot avoid virtual dispatch
+across modules, but can skip \texttt{NARROW}).
 
 \paragraph{Difficulty: moderate.}
 Requires a cross-module registration protocol and careful ordering
@@ -2905,84 +3054,11 @@ callee directly, the function returns a thunk (or a tagged value)
 that the trampoline loop invokes.  This eliminates stack growth
 at the cost of one allocation per tail call.
 
-In the MScheme context, a trampoline could be implemented as a
-\texttt{LOOP} in the \texttt{apply} methods that detects a
-special ``tail-call request'' return value and re-dispatches:
-
-\begin{lstlisting}[language=Modula3]
-(* Tail call to foo becomes: *)
-RETURN NEW(TailCall, proc := self.b_foo.get(),
-           args := SchemeUtils.List1(arg, interp))
-\end{lstlisting}
-
-The trampoline loop in a wrapper would then be:
-
-\begin{lstlisting}[language=Modula3]
-VAR result := proc.apply1(interp, arg);
-BEGIN
-  WHILE ISTYPE(result, TailCall) DO
-    WITH tc = NARROW(result, TailCall) DO
-      result := NARROW(tc.proc,
-          SchemeProcedure.T).apply(interp, tc.args)
-    END
-  END;
-  RETURN result
-END
-\end{lstlisting}
-
 \paragraph{Difficulty: hard.}
 Requires a new return convention and careful integration with
-the interpreter's existing call paths.  The allocation overhead
-of the \texttt{TailCall} object partially offsets the benefit.
-Given that self-tail-call optimization already handles the most
-common case (accumulator loops), general TCO is lower priority.
-
-\subsection{Primitive Inlining}
-\label{sec:gap-inline}
-
-Calls to known primitives (\texttt{+}, \texttt{-}, \texttt{*},
-\texttt{car}, \texttt{cdr}, \texttt{cons}, \texttt{null?}, etc.)
-currently go through the full binding-lookup / NARROW / virtual-dispatch
-path.  Since primitives are rarely redefined, inlining them would
-eliminate per-call overhead entirely.
-
-\paragraph{Strategy.}
-Maintain a table of known primitives and their Modula-3
-equivalents.  For each known call, emit the Modula-3 code directly:
-
-\begin{lstlisting}[language=Modula3]
-(* (+ x y) compiled with primitive inlining: *)
-SchemeLongReal.Add(a_x, a_y)
-
-(* vs. current: *)
-VAR fn := self.b_plus.get();
-    t0, t1 : SchemeObject.T;
-BEGIN
-  t0 := a_x; t1 := a_y;
-  RETURN NARROW(fn, SchemeProcedure.T).apply2(interp, t0, t1)
-END
-\end{lstlisting}
-
-To preserve redefinition semantics, the inlined code can be guarded
-by the same pointer-comparison pattern used for intra-module calls,
-with the original primitive object stored as a direct reference.
-Alternatively, since primitive redefinition is extremely rare in
-practice, the compiler could offer a ``safe mode'' flag
-that disables inlining.
-
-\paragraph{Difficulty: moderate.}
-Requires enumerating the primitives and their M3 implementations,
-handling type dispatch (e.g., \texttt{+} on integers vs.\ reals),
-and deciding on the redefinition guard policy.
-
-%----------------------------------------------------------------------
-\section{Self-Compilation Status}
-\label{sec:gaps-selfcomp}
-%----------------------------------------------------------------------
-
-The compiler compiles \textbf{101 of 102} definitions in its own
-source (\texttt{compiler.scm}).  The single remaining uncompiled
-function is \texttt{form->string}, which uses \texttt{quasiquote}.
+the interpreter's existing call paths.  Given that self-tail-call
+optimization already handles the most common case (accumulator
+loops), general TCO is lower priority.
 
 %----------------------------------------------------------------------
 \section{Recommended Priorities}
@@ -2992,18 +3068,9 @@ function is \texttt{form->string}, which uses \texttt{quasiquote}.
 The remaining gaps, ordered by expected impact:
 
 \begin{enumerate}
-\item \textbf{Intra-module direct calls} --- moderate difficulty,
-  largest expected performance improvement for compiled code.
-  A pointer comparison guards a direct call that bypasses both
-  \texttt{NARROW} and virtual dispatch on the fast path
-  (\S\ref{sec:gap-intra}).
-
-\item \textbf{Primitive inlining} --- moderate, largest potential
-  speedup but requires careful design (\S\ref{sec:gap-inline}).
-
-\item \textbf{Cross-module direct calls} --- moderate, deferred
-  until multiple compiled modules are common
-  (\S\ref{sec:gap-cross}).
+\item \textbf{Cross-module direct calls} --- moderate difficulty,
+  would extend the intra-module direct-call benefit across package
+  boundaries (\S\ref{sec:gap-cross}).
 
 \item \textbf{\texttt{quasiquote}} --- moderate, would complete
   self-compilation and unblock template-heavy CSP modules
