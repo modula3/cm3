@@ -131,6 +131,7 @@ The MScheme system consists of several CM3 packages:
 {\tt schemesig}       & Signal handling \\
 {\tt mscheme-interactive}   & Basic interactive interpreter \\
 {\tt mscheme-interactive\_r} & Interactive interpreter with GNU Readline \\
+{\tt schemecompiler}  & Ahead-of-time Scheme-to-Modula-3 compiler \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -170,9 +171,12 @@ not available in loaded files).
 (load "myfile.scm")
 \end{lstlisting}
 
-Files are searched along {\tt **scheme-load-path**}, which is
-initialized from {\tt MSCHEMEPATH}.  If the file is not found on disk,
-MScheme checks its bundled library (see Chapter~\ref{ch:libraries}).
+If a compiled version of the file is registered (see
+Section~\ref{sec:registry}), it is used directly---no file is read.
+Otherwise, files are searched along {\tt **scheme-load-path**}, which
+is initialized from {\tt MSCHEMEPATH}.  If the file is not found on
+disk, MScheme checks its bundled library (see
+Chapter~\ref{ch:libraries}).
 The load path can be extended at runtime:
 
 \begin{lstlisting}[language=Scheme]
@@ -1576,11 +1580,13 @@ EVAL scm.init(ARRAY OF TEXT {}, NIL);
 
 MScheme includes a Level~1 ahead-of-time compiler that translates
 Scheme source files into Modula-3 source code.  The compiled code
-is linked into your application and executes 4--10$\times$ faster than
-the interpreter on typical workloads.  The compiler preserves
-redefinition semantics: compiled functions look up their callees through
-live environment bindings, so \texttt{set!}\ and interpreter-side
-\texttt{define} continue to work correctly.
+is linked into your application and executes significantly faster than
+the interpreter---from 16$\times$ on tree-recursive benchmarks to over
+300$\times$ on tight numeric loops, thanks to primitive inlining,
+intra-module direct calls, and numeric unboxing optimizations.
+The compiler preserves redefinition semantics: compiled functions look
+up their callees through live environment bindings, so \texttt{set!}\
+and interpreter-side \texttt{define} continue to work correctly.
 
 The compiler is described in detail in the companion document
 \emph{MScheme Compiler Design: From Binding Optimization to
@@ -1620,7 +1626,7 @@ no parsing occurs.
 \section{Build System Integration}
 
 The \texttt{schemecompiler} package provides a Quake template
-(\texttt{scheme.tmpl}) with three entry points:
+(\texttt{scheme.tmpl}) with the following entry points:
 
 \begin{center}
 \begin{tabular}{lp{8cm}}
@@ -1637,6 +1643,11 @@ The \texttt{schemecompiler} package provides a Quake template
 \texttt{\_scheme\_compile("MathLib", "math-library.scm", HIDDEN)} &
   Explicit form for when the module name differs from the
   \texttt{.scm} filename. \\
+\texttt{LinkCompiledScheme()} &
+  Generate a synthetic module that imports all compiled Scheme
+  modules in this package, ensuring their \texttt{BEGIN} blocks
+  execute at startup (triggering registry registration).
+  Must appear after all \texttt{scheme()}/\texttt{Scheme()} calls. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1664,6 +1675,15 @@ template:
 Incremental builds only re-run the Scheme compiler when the source
 \texttt{.scm} file changes.
 
+\paragraph{Bootstrap note.}
+The \texttt{scheme()} template requires a pre-installed \texttt{mscheme}
+binary to invoke the compiler.  If \texttt{mscheme} is not found (e.g.,
+during a bootstrap build before the interpreter has been compiled),
+the template silently becomes a no-op: the \texttt{.scm} files are
+not compiled, and will be loaded by the interpreter at runtime as
+usual.  This allows packages that use \texttt{scheme()} to build even
+when the compiler toolchain is not yet available.
+
 \section{Transparent Loading via the Registry}\label{sec:registry}
 
 Each compiled module registers itself at Modula-3 module initialization
@@ -1690,7 +1710,7 @@ This means:
   double-installation, just as it prevents double-loading.
 \end{itemize}
 
-The \texttt{SchemeCompiledRegistry} interface is simple:
+The \texttt{SchemeCompiledRegistry} interface:
 
 \begin{lstlisting}[language=Modula3]
 INTERFACE SchemeCompiledRegistry;
@@ -1699,10 +1719,20 @@ IMPORT Scheme;
 TYPE Installer = PROCEDURE(interp : Scheme.T) RAISES { Scheme.E };
 
 PROCEDURE Register(name : TEXT; installer : Installer);
+PROCEDURE Unregister(name : TEXT);
 PROCEDURE Lookup(name : TEXT) : Installer;  (* NIL if not found *)
+PROCEDURE Disable();  (* force interpreter mode *)
+PROCEDURE Enable();
 
 END SchemeCompiledRegistry.
 \end{lstlisting}
+
+\noindent The \texttt{Disable}/\texttt{Enable} procedures are useful
+during development: calling \texttt{Disable()} causes all
+\texttt{Lookup} calls to return \texttt{NIL}, forcing the interpreter
+to load source files from disk even when compiled versions are
+registered.  This lets you edit a \texttt{.scm} file and
+\texttt{(load ...)} it without rebuilding.
 
 If you use \texttt{Scheme("mathlib")} (visible interface), you can also
 call \texttt{mathlib.Install(interp)} explicitly from Modula-3 code.
@@ -1794,27 +1824,26 @@ and which were skipped.
 
 \section{Performance}
 
-On ARM64\_DARWIN (Apple M4), the compiler delivers
-\textbf{4--10$\times$} speedups on recursive workloads:
+On ARM64\_DARWIN (Apple M4), with all optimizations enabled
+(primitive inlining, direct calls, numeric unboxing):
 
 \begin{center}
 \begin{tabular}{lccc}
 \toprule
 \textbf{Benchmark} & \textbf{Compiled} & \textbf{Interpreted} & \textbf{Speedup} \\
 \midrule
-\texttt{(fibonacci 25)}       & 225\,ms    & 2,324\,ms   & 10$\times$ \\
-\texttt{(ackermann 3 4)}      & 13\,ms     & 81\,ms      & 6$\times$ \\
-\texttt{(loop-sum 10000 0)}   & 36\,ms     & 83\,ms      & 2$\times$ \\
+\texttt{(fibonacci 25)}       & 141\,ms    & 2,324\,ms   & 16.5$\times$ \\
+\texttt{(ackermann 3 4)}      & 2.16\,ms   & 81\,ms      & 37.8$\times$ \\
+\texttt{(loop-sum 10000 0)}   & 0.26\,ms   & 83\,ms      & 314$\times$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Self-tail-calls benefit particularly from compilation: they are
-converted to Modula-3 \texttt{LOOP} statements, eliminating all
-call overhead.  The modest measured speedup for \texttt{loop-sum}
-reflects \texttt{loadEvalText} parsing overhead in the benchmark
-harness, not the compiled loop body itself (which executes in
-microseconds).
+Self-tail-calls are converted to Modula-3 \texttt{LOOP} statements,
+and numeric loop variables are unboxed to raw \texttt{LONGREAL},
+eliminating all heap allocation in the loop body.  The 314$\times$
+speedup for \texttt{loop-sum} reflects the combined effect of loop
+conversion, primitive inlining, and numeric unboxing.
 
 Compiled and interpreted code coexist freely.  A compiled function
 can call an interpreted one (through the environment binding), and
@@ -1840,12 +1869,14 @@ hot spots and leave the rest interpreted.
 \item \textbf{No \texttt{call/cc}.}  MScheme's continuations are
   limited to stack unwinding; compiled code has the same limitation.
 
-\item \textbf{Redefinition cost.}  Every inter-procedure call goes
-  through a binding indirection (\texttt{binding.get()} followed by
-  \texttt{NARROW} and virtual dispatch).  This is the cost of
-  preserving correct redefinition semantics.  A future Level~2
-  compiler could optimize intra-module calls with a fast-path
-  pointer comparison.
+\item \textbf{Redefinition cost.}  Inter-module calls go through a
+  binding indirection (\texttt{binding.get()} followed by
+  \texttt{NARROW} and virtual dispatch).  For \emph{intra}-module
+  calls, the compiler emits a fast-path pointer comparison: if the
+  binding still holds the compiled procedure, a direct Modula-3
+  call is made, bypassing virtual dispatch entirely.  This
+  preserves correct redefinition semantics while delivering
+  near-native call performance within a module.
 \end{itemize}
 
 
@@ -2269,6 +2300,7 @@ importSchemeStubs()
 import ("schemecompiler")
 scheme ("mylib")             % compiles mylib.scm, HIDDEN interface
 Scheme ("mylib")             % compiles mylib.scm, VISIBLE interface
+LinkCompiledScheme ()        % after all scheme() calls
 
 % Build the program
 implementation ("Main")
