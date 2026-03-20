@@ -1,0 +1,34 @@
+SICP First Edition Examples
+===========================
+
+Program examples from:
+
+  Harold Abelson and Gerald Jay Sussman with Julie Sussman.
+  Structure and Interpretation of Computer Programs.
+  Cambridge, Mass.: MIT Press, 1985.  ISBN 0-262-01077-1.
+
+Source: CMU AI Repository (1995)
+  https://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/lang/scheme/bookcode/sicp/
+
+The first edition predates R4RS and uses MIT Scheme conventions.
+Load sicp-compat.scm first to get the compatibility definitions
+(nil, t, sequence, princ, print, 1+, -1+, atom?, cons-stream,
+head, tail, the-empty-stream, etc.).
+
+  (load "sicp-compat.scm")
+  (load "chapter1.scm")
+
+Each chapter file contains all examples from that chapter, marked
+with ;;; Section N.N.N comments.  Definitions are cumulative and
+often redefined (e.g., factorial appears in several variants).
+
+Chapter 1: Building Abstractions with Procedures
+Chapter 2: Building Abstractions with Data
+Chapter 3: Modularity, Objects, and State
+Chapter 4: Metalinguistic Abstraction (metacircular evaluator, logic programming)
+Chapter 5: Computing with Register Machines (simulator, compiler)
+
+Note: Chapters 4 and 5 are self-contained systems (a Scheme interpreter
+and a register-machine simulator) that define their own eval/apply.
+They are not meant to be loaded into a running session alongside
+chapters 1-3.
