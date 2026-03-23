@@ -121,10 +121,13 @@ R4RS~\S2 only requires {\tt \textbackslash"} and {\tt \textbackslash\textbacksla
 
 \begin{itemize}
 \item {\tt \#d} (decimal): silently accepted (no-op, since decimal is the default).
-\item {\tt \#e} (exact) and {\tt \#i} (inexact): silently ignored.  Since
-  MScheme has no exact/inexact distinction, this is harmless.
+\item {\tt \#e} (exact) and {\tt \#i} (inexact): accepted (no-op).  Since
+  MScheme has no exact/inexact distinction, these are harmless.
+\item Combined prefixes (e.g., {\tt \#e\#x1F}, {\tt \#x\#e1F}) are
+  supported in any order, per R4RS~\S2.
 \item {\tt \#b} (binary), {\tt \#o} (octal), {\tt \#x} (hexadecimal):
-  emit a warning ``not implemented'' and fall through to decimal parsing.
+  supported.  The token following the prefix is parsed as an integer in
+  the corresponding base.
 \end{itemize}
 
 \noindent
@@ -186,14 +189,9 @@ Named {\tt let} & Present \\
 \end{tabular}
 \end{center}
 
-\paragraph{Deviation: {\tt case} macro.}
-The {\tt case} macro expansion uses {\tt member} (which calls
-{\tt equal?}) to test clause membership.  R4RS~\S4.2.1 specifies
-that the keys are compared using {\tt eqv?}, so the correct
-procedure would be {\tt memv}.  In practice this only matters for
-number comparisons where {\tt equal?} and {\tt eqv?} might differ
-(e.g., with exact/inexact distinctions), which MScheme does not
-have, so the deviation is benign.
+\paragraph{{\tt case} macro.}
+The {\tt case} macro expansion uses {\tt memv} (which calls
+{\tt eqv?}) to test clause membership, as specified by R4RS~\S4.2.1.
 
 \paragraph{{\tt cond} with {\tt =>}.}
 The {\tt =>} syntax in {\tt cond} clauses is handled directly in the
@@ -328,6 +326,17 @@ signals an error.
 {\tt number->string} and {\tt string->number} are present.  Both
 support the optional radix argument with bases 2--16.
 
+\subsection{Present Procedures (Recently Added)}
+
+The following essential procedures are now present:
+\begin{itemize}[nosep]
+\item {\tt exact->inexact}, {\tt inexact->exact} --- implemented as
+  identity functions (correct given MScheme's single-type number
+  representation).  Defined in {\tt SchemePrimitives.i3}.
+\item 2-arg {\tt (atan $y$ $x$)} --- delegates to {\tt Math.atan2}.
+  The 1-arg form is unchanged.
+\end{itemize}
+
 \subsection{Missing Procedures}
 
 \begin{center}
@@ -335,27 +344,18 @@ support the optional radix argument with bases 2--16.
 \toprule
 \textbf{Procedure} & \textbf{R4RS Status} & \textbf{Notes} \\
 \midrule
-{\tt exact->inexact} & Essential & Missing \\
-{\tt inexact->exact} & Essential & Missing \\
-{\tt numerator} & Non-essential & Missing \\
-{\tt denominator} & Non-essential & Missing \\
-{\tt rationalize} & Non-essential & Missing \\
+{\tt numerator} & Non-essential & No rationals \\
+{\tt denominator} & Non-essential & No rationals \\
+{\tt rationalize} & Non-essential & No rationals \\
 {\tt make-rectangular} & Non-essential & No complex numbers \\
 {\tt make-polar} & Non-essential & No complex numbers \\
 {\tt real-part} & Non-essential & No complex numbers \\
 {\tt imag-part} & Non-essential & No complex numbers \\
 {\tt magnitude} & Non-essential & No complex numbers \\
 {\tt angle} & Non-essential & No complex numbers \\
-2-arg {\tt atan} & Essential & Missing \\
 \bottomrule
 \end{tabular}
 \end{center}
-
-\noindent
-{\tt exact->inexact} and {\tt inexact->exact} are marked essential in
-R4RS.  They could be trivially implemented as identity functions given
-MScheme's single-type number representation.  The two-argument form of
-{\tt atan} could be implemented via {\tt Math.atan2}.
 
 %----------------------------------------------------------------------
 \section{Characters (\S6.6)}
@@ -395,8 +395,9 @@ Present:
 \item {\tt string->list}, {\tt list->string}
 \end{itemize}
 
-\paragraph{Missing (non-essential).}
-{\tt string-copy} and {\tt string-fill!}.
+\noindent
+{\tt string-copy} and {\tt string-fill!} are also present
+(defined in {\tt SchemePrimitives.i3}).
 
 %----------------------------------------------------------------------
 \section{Vectors (\S6.8)}
@@ -409,8 +410,8 @@ Present:
 \item {\tt vector->list}, {\tt list->vector}
 \end{itemize}
 
-\paragraph{Missing (non-essential).}
-{\tt vector-fill!}.
+\noindent
+{\tt vector-fill!} is also present (defined in {\tt SchemePrimitives.i3}).
 
 %----------------------------------------------------------------------
 \section{Control Features (\S6.9)}
@@ -470,11 +471,15 @@ cases.
 correct behavior for characters: {\tt display} writes a character
 without the {\tt \#\textbackslash} prefix.
 
+\noindent
+{\tt with-input-from-file}, {\tt with-output-to-file}, and
+{\tt char-ready?}  are present as built-in primitives.  The
+{\tt with-*} procedures save and restore {\tt interp.input}/{\tt
+  interp.output} in a {\tt TRY\ldots FINALLY} block.
+
 \subsection{Missing (Non-essential)}
 
 \begin{itemize}[nosep]
-\item {\tt with-input-from-file}, {\tt with-output-to-file}
-\item {\tt char-ready?}
 \item {\tt transcript-on}, {\tt transcript-off}
 \end{itemize}
 
@@ -572,21 +577,8 @@ Table~\ref{tab:gaps} summarizes all missing or incomplete features.
 \toprule
 \textbf{Procedure / Feature} & \textbf{R4RS Status} & \textbf{Notes} \\
 \midrule
-\multicolumn{3}{l}{\emph{Essential, missing}} \\
-\addlinespace
-{\tt exact->inexact}   & Essential & Trivial to add (identity fn) \\
-{\tt inexact->exact}   & Essential & Trivial to add (identity fn) \\
-2-arg {\tt atan}       & Essential & Use {\tt Math.atan2} \\
-\addlinespace
-\midrule
 \multicolumn{3}{l}{\emph{Non-essential, missing}} \\
 \addlinespace
-{\tt string-copy}           & Non-essential & --- \\
-{\tt string-fill!}          & Non-essential & --- \\
-{\tt vector-fill!}          & Non-essential & --- \\
-{\tt char-ready?}           & Non-essential & --- \\
-{\tt with-input-from-file}  & Non-essential & --- \\
-{\tt with-output-to-file}   & Non-essential & --- \\
 {\tt transcript-on}         & Non-essential & --- \\
 {\tt transcript-off}        & Non-essential & --- \\
 {\tt numerator}             & Non-essential & No rationals \\
@@ -600,11 +592,8 @@ Table~\ref{tab:gaps} summarizes all missing or incomplete features.
 {\tt angle}                 & Non-essential & No complex numbers \\
 \addlinespace
 \midrule
-\multicolumn{3}{l}{\emph{Partial / deviant}} \\
+\multicolumn{3}{l}{\emph{Partial / limitation}} \\
 \addlinespace
-{\tt case} macro            & --- & Uses {\tt equal?} not {\tt eqv?} \\
-{\tt \#b}/{\tt \#o}/{\tt \#x} literals & --- & Warning, not implemented \\
-{\tt \#e}/{\tt \#i} prefixes  & --- & Silently ignored \\
 {\tt call/cc}               & Essential & Escape-only \\
 \bottomrule
 \end{tabular}
@@ -635,7 +624,7 @@ Table~\ref{tab:extensions} catalogs them.
 {\tt unwind-protect}        & Exception-safe cleanup \\
 {\tt current-environment}   & Access lexical environment \\
 {\tt error}                 & Raise error with message \\
-{\tt exit}                  & Terminate interpreter \\
+{\tt exit}                  & Terminate process; optional integer exit code (default~0) \\
 {\tt system}                & Shell command execution \\
 {\tt random}, {\tt normal}  & Random number generation \\
 {\tt time}                  & Benchmarking macro \\
@@ -682,27 +671,31 @@ are present.  The standard library covers booleans, equivalence
 predicates, pairs and lists, symbols, characters, strings, vectors,
 control features, and I/O in full or near-full compliance.
 
-The main gaps lie in three areas:
+The remaining gaps lie in two areas:
 
 \begin{enumerate}
 \item \textbf{Numeric tower.}  The use of a single {\tt LONGREAL}
   type means there is no exact/inexact distinction, no rational
-  arithmetic, and no complex numbers.  Three essential procedures
-  ({\tt exact->inexact}, {\tt inexact->exact}, 2-arg {\tt atan}) are
-  missing but would be trivial to add.
+  arithmetic, and no complex numbers.  The previously missing essential
+  procedures ({\tt exact->inexact}, {\tt inexact->exact}, 2-arg
+  {\tt atan}) have been added, as have the {\tt \#b}/{\tt \#o}/{\tt
+    \#x} literal prefixes and combined R4RS number prefixes.  The
+  remaining missing procedures ({\tt numerator}, {\tt denominator},
+  complex number operations) are non-essential and inherently
+  unsupported by the single-type representation.
 
 \item \textbf{Continuations.}  {\tt call-with-current-continuation}
   provides only escape continuations, not full continuations.  This is
   a fundamental limitation of the implementation strategy (Modula-3
   exception unwinding) and is shared with the ancestor JScheme.
-
-\item \textbf{Non-essential I/O and utility procedures.}  A handful of
-  non-essential procedures ({\tt string-copy}, {\tt vector-fill!},
-  {\tt with-input-from-file}, etc.) are missing.  These are
-  straightforward to add.
 \end{enumerate}
 
 \noindent
+All essential R4RS procedures are now present.  The only non-essential
+procedures still missing are {\tt transcript-on}/{\tt transcript-off}
+and the rational/complex number operations that are inherently
+unsupported by MScheme's number representation.
+
 MScheme compensates for these gaps with a rich set of extensions,
 including a macro system, module system, Modula-3 interoperation, and
 automatic stub generation, making it well suited to its primary role

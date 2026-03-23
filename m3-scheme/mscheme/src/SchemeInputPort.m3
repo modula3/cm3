@@ -67,7 +67,8 @@ REVEAL
     peekCh   :=  PeekCh;
     read     :=  Read;
     readBigInt := ReadBigInt;
-    close    :=  Close;
+    close      :=  Close;
+    charReady  :=  CharReady;
   END;
 
 PROCEDURE UnNil( txt : TEXT) : TEXT = 
@@ -141,6 +142,16 @@ PROCEDURE PeekChar(t : T) : Object RAISES { E } =
       IF p = ChEOF THEN RETURN EOF ELSE RETURN IChr(p) END
     END
   END PeekChar;
+
+PROCEDURE CharReady(t : T) : BOOLEAN RAISES { E } =
+  BEGIN
+    IF t.isPushedChar THEN RETURN TRUE END;
+    TRY
+      RETURN Rd.CharsReady(t.rd) > 0
+    EXCEPT
+      Rd.Failure(err) => RAISE E("char-ready?: Rd.Failure: " & AL.Format(err))
+    END
+  END CharReady;
 
 PROCEDURE PushChar(t : T; ch : INTEGER) : INTEGER =
   BEGIN
@@ -395,13 +406,13 @@ PROCEDURE NextToken(t          : T;
           ORD('(') =>
             EVAL t.pushChar(ch);
             RETURN ListToVector(t.doRead(bigInt, bigIntBase))
-        | 
+        |
           ORD(BSC) =>
             ch := t.getCh();
             IF VAL(ch,CHAR) IN SET OF CHAR { 's', 'S', 'n', 'N' } THEN
               EVAL t.pushChar(ch);
               WITH token = t.nextToken(bigInt, bigIntBase) DO
-                IF    token = SPACE THEN RETURN Character(' ') 
+                IF    token = SPACE THEN RETURN Character(' ')
                 ELSIF token = NEWLINE THEN RETURN Character('\n')
                 ELSE
                   (* this isn't right.. if we're parsing "#\n", for
@@ -426,14 +437,34 @@ PROCEDURE NextToken(t          : T;
               RETURN IChr(ch)
             END
         |
-          ORD('e'), ORD('i'), ORD('d') => RETURN t.nextToken(bigInt, bigIntBase)
-        |
+          ORD('e'), ORD('i'), ORD('d'),
           ORD('b'), ORD('o'), ORD('x') =>
-            t.warn("#" & Text.FromChar(VAL(ch,CHAR)) & 
-                      " not implemented, ignored");
-            RETURN t.nextToken(bigInt, bigIntBase)
+            (* R4RS number prefixes: #e #i #d #b #o #x
+               Combined prefixes allowed in any order, e.g. #e#x1F *)
+            VAR base := bigIntBase;
+            BEGIN
+              LOOP
+                CASE ch OF
+                  ORD('e'), ORD('i'), ORD('d') => (* exactness/default: no-op *)
+                |
+                  ORD('b') => base := 2
+                |
+                  ORD('o') => base := 8
+                |
+                  ORD('x') => base := 16
+                ELSE
+                  EXIT
+                END;
+                ch := t.getCh();
+                IF ch # ORD('#') THEN EXIT END;
+                ch := t.getCh()
+              END;
+              (* ch is the first char after the prefix(es); push it back *)
+              EVAL t.pushChar(ch);
+              RETURN t.nextToken(bigInt, base)
+            END
         ELSE
-          t.warn("#" & Text.FromChar(VAL(ch,CHAR)) & 
+          t.warn("#" & Text.FromChar(VAL(ch,CHAR)) &
                     " not recognized, ignored");
           RETURN t.nextToken(bigInt, bigIntBase)
         END
@@ -457,30 +488,45 @@ PROCEDURE NextToken(t          : T;
 
         EVAL t.pushChar(ch);
 
-        IF c IN NumberChars THEN
+        IF c IN NumberChars OR bigIntBase # 10 THEN
           WITH txt = WxToText(wx) DO
-            (* note we are stricter than Modula-3 here.
-               we allow only "e" as the exponent marker.  Not E, d, D, x, or X. *)
-
-            IF bigInt OR NOT HaveAlphasOtherThane(txt) THEN
-              (* attempt to parse as a decimal number..! *)
+            IF bigIntBase # 10 THEN
+              (* non-decimal radix from #b/#o/#x prefix: parse as integer *)
+              EVAL WxReset(wx);
+              TRY
+                IF bigInt THEN
+                  RETURN BigInt.ScanBased(txt, defaultBase := bigIntBase)
+                ELSE
+                  WITH i = Scan.Int(txt, bigIntBase),
+                       lrp = NEW(SchemeLongReal.T) DO
+                    lrp^ := FLOAT(i, LONGREAL);
+                    RETURN lrp
+                  END
+                END
+              EXCEPT
+                Lex.Error, FloatMode.Trap =>
+                  WxPutText(wx, txt) (* restore END *);
+              END
+            ELSIF bigInt OR NOT HaveAlphasOtherThane(txt) THEN
+              (* note we are stricter than Modula-3 here.
+                 we allow only "e" as the exponent marker.  Not E, d, D, x, or X. *)
               EVAL WxReset(wx);
               TRY
                 IF bigInt THEN
                   RETURN BigInt.ScanBased(txt, defaultBase := 10)
                 ELSE
-                  WITH lr = Scan.LongReal(txt), 
+                  WITH lr = Scan.LongReal(txt),
                        lrp = NEW(SchemeLongReal.T) DO
                     lrp^ := lr;
                     RETURN lrp
                   END
                 END
               EXCEPT
-                Lex.Error, FloatMode.Trap => 
+                Lex.Error, FloatMode.Trap =>
                   WxPutText(wx, txt) (* restore END *);
               END
             END
-          END 
+          END
         END;
 
         IF CaseInsensitive THEN

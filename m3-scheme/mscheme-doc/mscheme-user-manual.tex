@@ -295,13 +295,25 @@ sinh  cosh  tanh  asinh  acosh  atanh
 gcd  lcm
 odd?  even?  zero?  positive?  negative?
 number?  integer?  exact?  inexact?
+exact->inexact  inexact->exact
 number->string  string->number
 \end{lstlisting}
 
 All numbers are IEEE~754 double precision.  {\tt exact?}, {\tt
 rational?}, and {\tt integer?} all test whether the number has no
 fractional part.  {\tt complex?}, {\tt real?}, and {\tt number?} are
-equivalent.
+equivalent.  {\tt exact->inexact} and {\tt inexact->exact} are
+identity functions.
+
+{\tt atan} accepts one or two arguments: {\tt (atan $x$)} computes
+$\arctan x$; {\tt (atan $y$ $x$)} computes $\arctan(y/x)$ with
+correct quadrant (delegates to {\tt Math.atan2}).
+
+Number literals may carry R4RS radix prefixes: {\tt \#b} (binary),
+{\tt \#o} (octal), {\tt \#d} (decimal, default), and {\tt \#x}
+(hexadecimal).  Exactness prefixes {\tt \#e} and {\tt \#i} are
+accepted but are no-ops.  Combined prefixes such as {\tt \#e\#xFF} or
+{\tt \#x\#e1F} are supported in any order.
 
 \subsection{Pairs and Lists}
 
@@ -321,11 +333,12 @@ _list*  ; (_list* 1 2 3) => (1 2 . 3)
 All R4RS predicates, accessors, and mutators are provided:
 {\tt boolean?}, {\tt eq?}, {\tt eqv?}, {\tt equal?},
 {\tt string?}, {\tt string-length}, {\tt string-ref}, {\tt string-set!},
-{\tt substring}, {\tt string-append}, {\tt string->list}, {\tt list->string},
+{\tt substring}, {\tt string-append}, {\tt string-copy}, {\tt string-fill!},
+{\tt string->list}, {\tt list->string},
 {\tt string->symbol}, {\tt symbol->string},
-{\tt char?}, {\tt char->integer}, {\tt integer->char},
+{\tt char?}, {\tt char->integer}, {\tt integer->char}, {\tt char-ready?},
 {\tt vector?}, {\tt make-vector}, {\tt vector-ref}, {\tt vector-set!},
-{\tt vector->list}, {\tt list->vector},
+{\tt vector-fill!}, {\tt vector->list}, {\tt list->vector},
 plus all string and character comparison predicates including
 case-insensitive variants.
 
@@ -339,6 +352,7 @@ current-input-port  current-output-port
 open-input-file  close-input-port
 open-output-file  close-output-port
 call-with-input-file  call-with-output-file
+with-input-from-file  with-output-to-file
 display-noflush  write-noflush  ; no flush variants
 \end{lstlisting}
 
@@ -362,8 +376,10 @@ MScheme extends R4RS with the following procedures, grouped by category.
 \item[{\tt (error msg \ldots)}]
   Signal an error.  All arguments are {\tt display}ed into the
   error message.  Raises {\tt Scheme.E}.
-\item[{\tt (exit)} / {\tt (exit code)}]
-  Exit the process.  {\it code\/} defaults to~0.
+\item[{\tt (exit)} / {\tt (exit {\it code})}]
+  Exit the process immediately via {\tt Process.Exit}.
+  {\it code\/} is an integer Unix exit code; it defaults to~0.
+  Convention: zero indicates success, non-zero indicates failure.
 \item[{\tt (set-warnings-are-errors!~b)}]
   When {\it b\/} is {\tt \#t}, warnings become errors.
 \item[{\tt (enable-tracebacks!)} / {\tt (disable-tracebacks!)}]

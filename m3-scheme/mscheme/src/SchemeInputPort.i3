@@ -31,6 +31,8 @@ TYPE
 
     getCh() : INTEGER RAISES { E } ;     (* java style Reader.read *)
                            (* override this if desired, see ChEOF *)
+
+    charReady() : BOOLEAN RAISES { E };  (* R4RS char-ready? *)
   END;
 
   (* overriders need to override the methods in 

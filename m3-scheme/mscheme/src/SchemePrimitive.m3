@@ -147,7 +147,11 @@ TYPE
 
         DumpEnvironment, LoadEnvironment,
 
-        System
+        System,
+
+        WithInputFromFile, WithOutputToFile,
+
+        CharReadyQ
   };
 
 REVEAL 
@@ -284,7 +288,7 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("assoc",          ORD(P.Assoc), dd,    2)
     .defPrim("assq",           ORD(P.AssQ), dd,     2)
     .defPrim("assv",           ORD(P.AssV), dd,     2)
-    .defPrim("atan",           ORD(P.Atan), dd,     1)
+    .defPrim("atan",           ORD(P.Atan), dd,     1, 2)
     .defPrim("boolean?",       ORD(P.BooleanQ), dd, 1)
     .defPrim("caaaar",         ORD(P.Cxr), dd,      1)
     .defPrim("caaadr",         ORD(P.Cxr), dd,      1)
@@ -444,7 +448,10 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("write",          ORD(P.Write), dd,    1, 2)
     .defPrim("write-noflush",          ORD(P.WriteNoFlush), dd,    1, 2)
     .defPrim("write-char",     ORD(P.Display), dd,  1, 2)
+    .defPrim("with-input-from-file", ORD(P.WithInputFromFile), dd, 2)
+    .defPrim("with-output-to-file", ORD(P.WithOutputToFile), dd, 2)
     .defPrim("write-char-noflush",     ORD(P.DisplayNoFlush), dd,  1, 2)
+    .defPrim("char-ready?",    ORD(P.CharReadyQ), dd, 0, 1)
     .defPrim("zero?",          ORD(P.ZeroQ), dd,    1)
     .defPrim("eq?-memo",       ORD(P.EqMemo), dd, 1, 1)
     .defPrim("equal?-memo",       ORD(P.EqualMemo), dd, 1, 1)
@@ -855,7 +862,10 @@ PROCEDURE Prims(t          : T;
       |
         P.Asin => RETURN FromLR(Math.asin(FromO(x)))
       |
-        P.Atan => RETURN FromLR(Math.atan(FromO(x)))
+        P.Atan =>
+        IF y = NIL THEN RETURN FromLR(Math.atan(FromO(x)))
+        ELSE RETURN FromLR(Math.atan2(FromO(x), FromO(y)))
+        END
       |
         
         P.NumberToString => RETURN NumberToString(x,y)
@@ -1113,6 +1123,43 @@ PROCEDURE Prims(t          : T;
           RETURN z
         END
 
+      |
+        P.WithInputFromFile =>
+        VAR p : SchemeInputPort.T := NIL;
+            saved := interp.input;
+        BEGIN
+          TRY p := OpenInputFile(x);
+            interp.input := p;
+            z := Proc(y).apply(interp, NIL)
+          FINALLY
+            interp.input := saved;
+            IF p # NIL THEN EVAL p.close() END
+          END;
+          RETURN z
+        END
+      |
+        P.WithOutputToFile =>
+        VAR p : Wr.T := NIL;
+            saved := interp.output;
+        BEGIN
+          TRY p := OpenOutputFile(x);
+            interp.output := p;
+            z := Proc(y).apply(interp, NIL)
+          FINALLY
+            interp.output := saved;
+            IF p # NIL THEN
+              TRY
+                Wr.Close(p)
+              EXCEPT
+                Wr.Failure(err) => RAISE E("with-output-to-file: on close, Wr.Failure: " & AL.Format(err))
+              END
+            END
+          END;
+          RETURN z
+        END
+      |
+        P.CharReadyQ =>
+        RETURN Truth(InPort(x, interp).charReady())
       |
         P.Tanh => RETURN FromLR(Math.tanh(FromO(x)))
       |
