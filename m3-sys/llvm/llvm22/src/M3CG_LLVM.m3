@@ -150,6 +150,8 @@ REVEAL
       seenConst         := FALSE;
       debugObj : ROOT;
       dwarfDbg          := TRUE; (* Dwarf output instead of CodeView *)
+      debugType: TEXT;
+      debugVer : CARDINAL;       (* Debug version *)
       abortInCall := FALSE;      (* kludge to cope with frontend issuing abort
                                     in middle of call *)
     METHODS
@@ -729,9 +731,19 @@ PROCEDURE IsWindows (targetTriple: TEXT): BOOLEAN =
   END IsWindows;
 
 PROCEDURE SetDebugType (self: U) =
+  CONST
+    dwarf = "Dwarf Version";
+    codeview = "CodeView";
   BEGIN
     (* On POSIX systems output DWARF, on Windows its CodeView *)
     IF self.isWindows THEN self.dwarfDbg := FALSE; END;
+    IF self.dwarfDbg THEN
+      self.debugType := dwarf;
+      self.debugVer := DC.DWARF_VERSION; 
+    ELSE
+      self.debugType := codeview;
+      self.debugVer := 1; (* codeview is not properly documented. *)
+    END;
   END SetDebugType;
 
 (*
@@ -5707,28 +5719,17 @@ PROCEDURE fetch_and_op
 PROCEDURE CreateModuleFlags (self: U) =
   CONST
     behave = LLVM.ModuleFlagBehaviour.LLVMModuleFlagBehaviorWarning;
-    dwarf = "Dwarf Version";
-    codeview = "CodeView";
     debugInfoVer = "Debug Info Version";
     wchar = "wchar_size";
     picLevel = "PIC Level";
     pieLevel = "PIE Level";
-  VAR
-    debugType : TEXT;
-    debugVer : INTEGER;
+    picVal = 2L;
+    pieVal = 2L;
   BEGIN
-    IF self.dwarfDbg THEN
-      debugType := dwarf;
-      debugVer := DC.DWARF_VERSION; 
-    ELSE
-      debugType := codeview;
-      debugVer := 1;
-      (* fixme get proper version number *)
-    END;
-
-    LLVM.AddModuleFlag(modRef, behave, debugType, Text.Length(debugType),
+    LLVM.AddModuleFlag(modRef, behave,
+                       self.debugType, Text.Length(self.debugType),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
-                       VAL(debugVer, LONGINT), TRUE)));
+                       VAL(self.debugVer, LONGINT), TRUE)));
     LLVM.AddModuleFlag(modRef, behave, debugInfoVer, Text.Length(debugInfoVer),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        VAL(M3DIB.LLVMDebugMetadataVersion(), LONGINT), TRUE)));
@@ -5738,10 +5739,10 @@ PROCEDURE CreateModuleFlags (self: U) =
     (* just copying C PIC and PIE levels, not sure where we get these vals *)
     LLVM.AddModuleFlag(modRef, behave, picLevel, Text.Length(picLevel),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
-                       2L, TRUE)));
+                       picVal, TRUE)));
     LLVM.AddModuleFlag(modRef, behave, pieLevel, Text.Length(pieLevel),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
-                       2L, TRUE)));
+                       pieVal, TRUE)));
   END CreateModuleFlags;
 
 PROCEDURE CalcPaths (self: U): TEXT =
@@ -5775,42 +5776,36 @@ PROCEDURE DebugInit (self: U) =
     srcFile, chkSum: TEXT;
     rd             : Rd.T;
   BEGIN
-    self.setDebugType();
     InitUids(self);
     IF NOT self.genDebug THEN RETURN; END;
+
+    self.setDebugType();
 
     srcFile := CalcPaths(self);
 
     self.debugRef := M3DIB.LLVMCreateDIBuilder(modRef);
 
-    (* generate checksum for codeview *)
-    IF NOT self.dwarfDbg THEN    (* and maybe for dwarf >= ver 5 *)
+    (* generate checksum for codeview and dwarf after ver 4 *)
+    IF NOT self.dwarfDbg OR self.debugVer >= 5 THEN
       rd := FileRd.Open(srcFile);
-      (* dont grab entire source for checksum s := Rd.GetText(Rd.Length(rd)) *)
       chkSum := MD5.FromFile(rd);
       Rd.Close(rd);
+      self.fileRef := M3DIB.CreateFileWithChecksum(self.debugRef,
+                        Filename := self.debFile,
+                        FilenameLen := Text.Length(self.debFile),
+                        Directory := self.debDir,
+                        DirectoryLen := Text.Length(self.debDir),
+                        ChecksumKind := M3DIB.LLVMChecksumKind.CSK_MD5,
+                        Checksum := chkSum,
+                        ChecksumLen := Text.Length(chkSum),
+                        Source := NIL,
+                        SourceLen := 0);
+    ELSE
+      self.fileRef := M3DIB.CreateFile(self.debugRef, Filename := self.debFile,
+                        FilenameLen := Text.Length(self.debFile),
+                        Directory := self.debDir,
+                        DirectoryLen := Text.Length(self.debDir));
     END;
-
-    (* FIXME add checksum to CreateFile when DIBuilder
-        has the optional parms - see below *)
-    self.fileRef := M3DIB.CreateFile(self.debugRef, Filename := self.debFile,
-                                     FilenameLen := Text.Length(self.debFile),
-                                     Directory := self.debDir,
-                                     DirectoryLen := Text.Length(self.debDir));
-
-(* fixme for dwarf v 5 add checksum
-
-    self.fileRef := M3DIB.CreateFileWithChecksum(self.debugRef,
-                          Filename := self.debFile,
-                          FilenameLen := Text.Length(self.debFile),
-                          Directory := self.debDir,
-                          DirectoryLen := Text.Length(self.debDir),
-                          ChecksumKind := M3DIB.LLVMChecksumKind.CSK_MD5,
-                          Checksum := chkSum,
-                          ChecksumLen := Text.Length(chkSum),
-                          Source := NIL,
-                          SourceLen := 0);
-*)
 
     self.cuRef :=
       M3DIB.CreateCompileUnit(
