@@ -1011,8 +1011,16 @@ PROCEDURE Prims(t          : T;
           END
         END
       |
-        P.Remainder => RETURN FromLR(FLOAT(TRUNC(FromO(x)) MOD TRUNC(FromO(y)), LONGREAL))
-        (* this must be wrong for negative y *)
+        P.Remainder =>
+          WITH a = TRUNC(FromO(x)), b = TRUNC(FromO(y)),
+               r = a MOD b DO
+            (* MOD has divisor's sign; remainder needs dividend's sign *)
+            IF r # 0 AND (r > 0) # (a > 0) THEN
+              RETURN FromLR(FLOAT(r - b, LONGREAL))
+            ELSE
+              RETURN FromLR(FLOAT(r, LONGREAL))
+            END
+          END
       |
         P.IntDiv => RETURN FromLR(FLOAT(TRUNC(FromO(x)) DIV TRUNC(FromO(y)), LONGREAL))
       |

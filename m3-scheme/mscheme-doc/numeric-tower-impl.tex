@@ -1,0 +1,909 @@
+%%
+%% Concrete Implementation Proposal: Numeric Tower Phase 1
+%%
+%% Companion to "Design Considerations for a Full Numeric Tower in MScheme"
+%%
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,define-global-symbol,
+    exact->inexact,inexact->exact,make-rectangular,make-polar,
+    real-part,imag-part,magnitude,angle,numerator,denominator,
+    rationalize,number->string,string->number},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+  literate={lambda}{$\lambda$}1,
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,EXTENDED,
+    CHAR,TEXT,LONGINT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,DIV,MOD,
+    ISTYPE,NARROW,TYPECODE,GENERIC,ADDRESS,BITS,BITSIZE},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  Numeric Tower Phase~1:\\Implementation Proposal}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\section{Overview}
+\label{sec:overview}
+%======================================================================
+
+This document is the companion to \emph{Design Considerations for a
+Full Numeric Tower in MScheme}, which analyzes the design space.
+Here we give a concrete, code-level implementation plan for Phase~1:
+exact integers (fixnum and bignum).  Sections are organized by
+subsystem, each listing the files to create or modify, the
+interfaces involved, and Modula-3 code sketches.  The overall goal
+is R5RS-conformant exact/inexact integer semantics with minimal
+disruption to the existing codebase.
+
+Phase~1 is self-contained and does not require Phases~2--4
+(rationals, complex numbers, compiler unboxing optimizations).
+
+%======================================================================
+\section{Build Instructions}
+\label{sec:build}
+%======================================================================
+
+All MScheme packages live under {\tt m3-scheme/} in the CM3 tree.
+The CM3 compiler must be on your path (or referenced by absolute
+path).
+
+%----------------------------------------------------------------------
+\subsection{Building MScheme}
+%----------------------------------------------------------------------
+
+\begin{lstlisting}[language={}]
+# Set up
+export CM3=/Users/mika/cm3/install/bin/cm3
+
+# Build the mscheme library
+cd m3-scheme/mscheme
+$CM3 -build
+$CM3 -ship
+
+# Build the mscheme-interactive binary
+cd ../mscheme-interactive
+$CM3 -build
+
+# The binary is at:
+#   mscheme-interactive/ARM64_DARWIN/mscheme
+\end{lstlisting}
+
+\noindent \textbf{Important:} after modifying {\tt mscheme} (the
+library), you must {\tt \$CM3 -ship} it before rebuilding
+{\tt mscheme-interactive}, because the binary links against the
+shipped shared library ({\tt libmscheme.5.dylib}), not the local
+{\tt .a} archive.  If the binary appears not to pick up your
+changes, this is almost certainly the reason.
+
+%----------------------------------------------------------------------
+\subsection{Running Tests}
+%----------------------------------------------------------------------
+
+\begin{lstlisting}[language={}]
+cd m3-scheme/mscheme-doc
+
+# Numeric tower tests (Phase 1 target: 158/158)
+mscheme test-numeric-tower.scm
+
+# R4RS conformance tests (must stay at 95/95)
+mscheme test-r4rs-gaps.scm
+
+# Existing manual examples
+mscheme test-examples.scm
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Building the Compiler}
+%----------------------------------------------------------------------
+
+The MScheme compiler is a separate package that depends on the
+mscheme library.
+
+\begin{lstlisting}[language={}]
+# Build the compiler package
+cd m3-scheme/schemecompiler
+$CM3 -build
+$CM3 -ship
+
+# Build the compiled-mscheme binary
+cd ../mscheme-interactive_r
+$CM3 -build
+\end{lstlisting}
+
+\noindent The compiled binary is at
+{\tt mscheme-interactive\_r/ARM64\_DARWIN/mscheme}.
+
+%----------------------------------------------------------------------
+\subsection{Bootstrap Rebuild}
+%----------------------------------------------------------------------
+
+When modifying the compiler itself ({\tt compiler.scm}), a
+two-phase bootstrap is needed:
+
+\begin{lstlisting}[language={}]
+# Phase B: compile new compiler under old compiler
+cd m3-scheme/schemecompiler
+$CM3 -build && $CM3 -ship
+cd ../mscheme-interactive_r
+$CM3 -build
+
+# Phase C: recompile compiler under itself
+cd ../schemecompiler
+$CM3 -build && $CM3 -ship
+cd ../mscheme-interactive_r
+$CM3 -build
+\end{lstlisting}
+
+%======================================================================
+\section{New {\tt SchemeInt} Interface and Module}
+\label{sec:impl-schemeint}
+%======================================================================
+
+A new module {\tt SchemeInt} encapsulates all exact-integer
+operations.  It is the single point of contact for creating,
+testing, and operating on fixnums and bignums.
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeInt.i3} (new)
+\item {\tt mscheme/src/SchemeInt.m3} (new)
+\end{itemize}
+
+\medskip\noindent\textbf{Interface.}
+\begin{lstlisting}[language=Modula3]
+INTERFACE SchemeInt;
+IMPORT SchemeObject;
+
+TYPE T = REF INTEGER;  (* fixnum *)
+
+PROCEDURE FromI(x: INTEGER): SchemeObject.T;
+  (* Cache [-256..256]; allocate outside that range. *)
+
+PROCEDURE IsInt(x: SchemeObject.T): BOOLEAN;
+  (* TRUE iff x is REF INTEGER. *)
+
+PROCEDURE IsExactInt(x: SchemeObject.T): BOOLEAN;
+  (* TRUE iff x is REF INTEGER or Mpz.T. *)
+
+PROCEDURE ToInteger(x: SchemeObject.T): INTEGER;
+  (* Extract value from REF INTEGER.  Checked runtime
+     error if x is not REF INTEGER. *)
+
+PROCEDURE Add(a, b: INTEGER): SchemeObject.T;
+PROCEDURE Sub(a, b: INTEGER): SchemeObject.T;
+PROCEDURE Mul(a, b: INTEGER): SchemeObject.T;
+  (* Overflow-checked via Word; promote to Mpz.T
+     on overflow. *)
+
+END SchemeInt.
+\end{lstlisting}
+
+\paragraph{Overflow detection.}
+CM3 integer overflow is undefined behavior (see the design report,
+Section~5.2).  The fixnum arithmetic procedures must therefore
+detect overflow \emph{before} it occurs, or use {\tt Word}-based
+unsigned arithmetic with post-hoc sign reconstruction.  A robust
+approach uses the {\tt Word} module:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: INTEGER): SchemeObject.T =
+  VAR sum := Word.Plus(a, b);
+      sa  := Word.And(a, SignBit);
+      sb  := Word.And(b, SignBit);
+      ss  := Word.And(sum, SignBit);
+  BEGIN
+    (* Overflow iff both operands have the same sign
+       and the result has a different sign. *)
+    IF Word.And(Word.Not(Word.Xor(sa, sb)),
+                Word.Xor(sa, ss)) # 0 THEN
+      (* Promote to bignum *)
+      WITH ma = Mpz.InitSet(a), mb = Mpz.InitSet(b) DO
+        Mpz.Add(ma, ma, mb);
+        RETURN ma
+      END
+    ELSE
+      RETURN FromI(LOOPHOLE(sum, INTEGER))
+    END
+  END Add;
+\end{lstlisting}
+
+\noindent Subtraction is analogous (overflow when signs differ and
+result sign disagrees with the first operand).  Multiplication
+requires a wider intermediate result; on 64-bit targets the
+simplest correct approach is to promote both operands to {\tt
+Mpz.T}, multiply, and demote if the result fits:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Mul(a, b: INTEGER): SchemeObject.T =
+  VAR ma := Mpz.InitSet(a);
+      mb := Mpz.InitSet(b);
+  BEGIN
+    Mpz.Mul(ma, ma, mb);
+    IF Mpz.FitsInteger(ma) THEN
+      RETURN FromI(Mpz.ToInteger(ma))
+    ELSE
+      RETURN ma
+    END
+  END Mul;
+\end{lstlisting}
+
+\noindent This is not the fastest possible approach---for
+multiplication, a hardware-level widening multiply would be
+preferable---but it is correct and simple.  Optimization can follow
+once the tower is functional.
+
+\paragraph{Fixnum cache.}
+The cache is initialized at module load time:
+
+\begin{lstlisting}[language=Modula3]
+VAR cache: ARRAY [-256..256] OF SchemeObject.T;
+
+PROCEDURE FromI(x: INTEGER): SchemeObject.T =
+  BEGIN
+    IF x >= -256 AND x <= 256 THEN
+      RETURN cache[x]
+    ELSE
+      WITH r = NEW(REF INTEGER) DO r^ := x; RETURN r END
+    END
+  END FromI;
+
+BEGIN
+  FOR i := -256 TO 256 DO
+    WITH r = NEW(REF INTEGER) DO
+      r^ := i; cache[i] := r
+    END
+  END
+END SchemeInt.
+\end{lstlisting}
+
+%======================================================================
+\section{Modified {\tt SchemeLongReal} (Backward-Compatible Bridge)}
+\label{sec:impl-longreal}
+%======================================================================
+
+The existing {\tt SchemeLongReal.FromO} procedure is the
+backward-compatibility linchpin: all existing Modula-3 code that
+consumes Scheme numbers calls it.  Two procedures need extension.
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeLongReal.m3} (modify)
+\end{itemize}
+
+\medskip\noindent\textbf{{\tt FromO} extension.}
+\begin{lstlisting}[language=Modula3]
+PROCEDURE FromO(x: SchemeObject.T): LONGREAL =
+  BEGIN
+    TYPECASE x OF
+    | REF INTEGER (ri) => RETURN FLOAT(ri^, LONGREAL);
+    | Mpz.T (m)        => RETURN Mpz.GetD(m);
+    | SchemeLongReal.T (lr) => RETURN lr.val;
+    ELSE
+      RAISE E("not a number")
+    END
+  END FromO;
+\end{lstlisting}
+
+\noindent The two new branches ({\tt REF INTEGER} and {\tt Mpz.T})
+are inserted \emph{before} the existing {\tt SchemeLongReal.T}
+branch.  Existing callers that pass {\tt SchemeLongReal.T} values
+are unaffected.
+
+\medskip\noindent\textbf{{\tt Int} extension.}
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Int(x: SchemeObject.T): INTEGER =
+  BEGIN
+    TYPECASE x OF
+    | REF INTEGER (ri) => RETURN ri^;
+    | Mpz.T (m)        => RETURN Mpz.ToInteger(m);
+    | SchemeLongReal.T (lr) =>
+        RETURN ROUND(lr.val)
+    ELSE
+      RAISE E("not a number")
+    END
+  END Int;
+\end{lstlisting}
+
+%======================================================================
+\section{Reader Changes ({\tt SchemeInputPort.m3})}
+\label{sec:impl-reader}
+%======================================================================
+
+The reader currently parses all numeric literals as {\tt LONGREAL}.
+After the change, the parser distinguishes integer literals from
+floating-point literals.
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeInputPort.m3} (modify)
+\end{itemize}
+
+\paragraph{Dispatch rule.}
+\begin{enumerate}[nosep]
+\item If the token contains a decimal point or exponent marker
+  ({\tt e}, {\tt E}, {\tt s}, {\tt f}, {\tt d}, {\tt l}),
+  parse as {\tt LONGREAL} via {\tt Scan.LongReal} and return
+  {\tt SchemeLongReal.FromLR(...)}.  This path is unchanged.
+
+\item If the token is a pure integer (digits with optional sign,
+  no~`.', no exponent), parse as {\tt INTEGER} via {\tt Scan.Int}
+  and return {\tt SchemeInt.FromI(...)}.  If {\tt Scan.Int} raises
+  a range error (value exceeds {\tt LAST(INTEGER)}), fall through
+  to the bignum path: parse with {\tt Mpz.InitSetStr}.
+
+\item The {\tt \#e} (exact) prefix forces the integer parse path
+  even when the token would otherwise parse as a float:
+  {\tt \#e3.14} $\to$ {\tt SchemeInt.FromI(3)} (truncation).
+
+\item The {\tt \#i} (inexact) prefix forces the {\tt LONGREAL} path
+  even for integer tokens: {\tt \#i42} $\to$
+  {\tt SchemeLongReal.FromLR(42.0d0)}.
+
+\item Non-decimal bases ({\tt \#b}, {\tt \#o}, {\tt \#x}) continue
+  to use {\tt Scan.Int} with the appropriate base parameter, now
+  returning {\tt SchemeInt.FromI}.
+
+\item R7RS special float literals: {\tt +inf.0}, {\tt -inf.0},
+  {\tt +nan.0} are recognized and return the corresponding
+  IEEE~754 values.  Also accept {\tt Infinity}, {\tt -Infinity},
+  {\tt NaN} (CM3 {\tt Fmt} convention) for backward compatibility.
+\end{enumerate}
+
+%======================================================================
+\section{Printer Changes ({\tt SchemeUtils.m3})}
+\label{sec:impl-printer}
+%======================================================================
+
+The {\tt StringifyB} procedure (and its callers {\tt Stringify},
+{\tt Display}) must recognize the new types.
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeUtils.m3} (modify)
+\end{itemize}
+
+\paragraph{New {\tt TYPECASE} branches.}
+Insert before the existing {\tt SchemeLongReal.T} branch:
+
+\begin{lstlisting}[language=Modula3]
+| REF INTEGER (ri) =>
+    Wr.PutText(wr, Fmt.Int(ri^))
+
+| Mpz.T (m) =>
+    Wr.PutText(wr, Mpz.Format(m, base := 10))
+\end{lstlisting}
+
+\noindent Exact integers print without a decimal point, satisfying
+the R5RS requirement that {\tt (display 42)} prints {\tt 42}, not
+{\tt 42.0} or {\tt 42.}.
+
+%======================================================================
+\section{Predicate Changes ({\tt SchemePrimitive.m3})}
+\label{sec:impl-predicates}
+%======================================================================
+
+R5RS defines a hierarchy of numeric predicates with precise
+semantics.  The current implementation collapses all of them to
+``is it a {\tt SchemeLongReal.T}?''  Table~\ref{tab:predicates}
+shows the required dispatch.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Predicate} & {\tt REF INTEGER} & {\tt Mpz.T} &
+  {\tt SchemeLongReal.T} \\
+\midrule
+{\tt number?}   & \checkmark & \checkmark & \checkmark \\
+{\tt complex?}  & \checkmark & \checkmark & \checkmark \\
+{\tt real?}     & \checkmark & \checkmark & \checkmark \\
+{\tt rational?} & \checkmark & \checkmark & if integer-valued \\
+{\tt integer?}  & \checkmark & \checkmark & if integer-valued \\
+{\tt exact?}    & \checkmark & \checkmark &  \\
+{\tt inexact?}  &            &            & \checkmark \\
+\bottomrule
+\end{tabular}
+\caption{Predicate dispatch for the three-level numeric tower.
+  ``If integer-valued'' tests {\tt x = FLOOR(x)} and finiteness.}
+\label{tab:predicates}
+\end{table}
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemePrimitive.m3} (modify)
+\end{itemize}
+
+%======================================================================
+\section{Arithmetic Dispatch ({\tt SchemePrimitive.m3})}
+\label{sec:impl-arith}
+%======================================================================
+
+The central arithmetic dispatcher, currently {\tt NumCompute},
+must be rewritten to handle the three-level tower.
+
+\paragraph{Dispatch logic for binary operations.}
+\begin{enumerate}[nosep]
+\item If both operands are {\tt REF INTEGER}: extract values,
+  call {\tt SchemeInt.Add}/{\tt Sub}/{\tt Mul} (with overflow
+  promotion).
+
+\item If both operands are exact integers but at least one is
+  {\tt Mpz.T}: promote the fixnum to {\tt Mpz.T}, perform the
+  GMP operation, demote to fixnum if the result fits.
+
+\item If any operand is {\tt SchemeLongReal.T} (inexact): coerce
+  all operands to {\tt LONGREAL} via {\tt SchemeLongReal.FromO},
+  perform the operation, return {\tt SchemeLongReal.FromLR(result)}.
+  This is the \emph{exactness contagion} rule.
+\end{enumerate}
+
+\paragraph{Division.}
+The {\tt /} operator has special semantics:
+\begin{itemize}[nosep]
+\item If both operands are exact integers and the division is
+  exact (zero remainder), return an exact integer.
+\item If both operands are exact integers and the division is
+  not exact, return an inexact {\tt LONGREAL}.  (Phase~2 would
+  return an exact rational instead.)
+\item If any operand is inexact, return inexact.
+\end{itemize}
+
+\paragraph{Integer-only operations.}
+{\tt quotient}, {\tt remainder}, and {\tt modulo} require exact
+integer operands and signal an error on inexact arguments.  {\tt
+gcd} and {\tt lcm} similarly operate on exact integers, using
+{\tt Mpz.Gcd} and {\tt Mpz.Lcm} for the bignum case.
+
+\paragraph{Comparison dispatch.}
+{\tt NumCompare} follows the same three-level dispatch.  For
+mixed exact/inexact comparisons, the exact operand is converted
+to {\tt LONGREAL} before comparison.  (A more precise approach
+would compare without conversion, but this suffices for Phase~1.)
+
+%======================================================================
+\section{{\tt eqv?}\ Changes ({\tt SchemeUtils.m3})}
+\label{sec:impl-eqv}
+%======================================================================
+
+R5RS specifies that {\tt eqv?}\ on numbers compares both value
+\emph{and} exactness.  In particular:
+
+\begin{lstlisting}[language=Scheme]
+(eqv? 1 1)     ;=> #t
+(eqv? 1 1.0)   ;=> #f  (different exactness)
+(eqv? 1.0 1.0) ;=> #t
+\end{lstlisting}
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeUtils.m3} (modify)
+\end{itemize}
+
+\paragraph{New {\tt TYPECASE} branch.}
+In the {\tt EqvP} procedure (or equivalent), add:
+\begin{lstlisting}[language=Modula3]
+IF ISTYPE(a, REF INTEGER) AND ISTYPE(b, REF INTEGER) THEN
+  RETURN NARROW(a, REF INTEGER)^ = NARROW(b, REF INTEGER)^
+ELSIF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
+  (* Both exact; compare via Mpz if needed *)
+  RETURN MpzEqual(a, b)
+ELSIF SchemeInt.IsExactInt(a) # SchemeInt.IsExactInt(b) THEN
+  (* One exact, one inexact: always #f *)
+  RETURN FALSE
+END
+\end{lstlisting}
+
+%======================================================================
+\section{Compiler Changes ({\tt compiler.scm})}
+\label{sec:impl-compiler}
+%======================================================================
+
+The MScheme compiler emits Modula-3 code.  Its numeric code
+generation must be updated to use {\tt SchemeInt} for exact
+integer constants and to add fixnum fast paths for inline
+arithmetic.
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt schemecompiler/compiler.scm} (modify)
+\end{itemize}
+
+\subsection{Constant References}
+
+The {\tt constant-ref} procedure currently emits
+{\tt SchemeLongReal.FromI($n$)} for all integer constants.
+After the change:
+
+\begin{itemize}[nosep]
+\item Integer constants $\to$ {\tt SchemeInt.FromI($n$)}
+\item Floating-point constants $\to$ {\tt SchemeLongReal.FromLR($n$d0)}
+  (unchanged)
+\end{itemize}
+
+\noindent The module's {\tt IMPORT} list must be extended to include
+{\tt SchemeInt}.
+
+\subsection{Inline Arithmetic Fast Path}
+
+The compiler currently inlines arithmetic operations by unboxing
+to {\tt LONGREAL}.  The fixnum fast path wraps the existing code:
+
+\begin{lstlisting}[language=Modula3]
+IF ISTYPE(a, SchemeInt.T) AND ISTYPE(b, SchemeInt.T) THEN
+  result := SchemeInt.Add(
+    NARROW(a, SchemeInt.T)^,
+    NARROW(b, SchemeInt.T)^)
+ELSE
+  result := SchemePrimitive.NumAdd(a, b)
+END
+\end{lstlisting}
+
+\paragraph{Gradual overflow.}
+The {\tt ELSE} branch must \emph{not} unconditionally coerce to
+{\tt LONGREAL}.  Consider an accumulator loop that gradually
+overflows fixnum range: {\tt SchemeInt.Add} promotes the result
+to {\tt Mpz.T}, but on the next iteration that bignum reaches
+the {\tt ELSE} branch.  If the {\tt ELSE} branch converts to
+{\tt LONGREAL} via {\tt SchemeLongReal.FromO}, exactness is
+silently lost.  Instead, the {\tt ELSE} branch must call the
+interpreter's full arithmetic dispatch (here shown as
+{\tt SchemePrimitive.NumAdd}), which handles all three levels
+of the tower correctly: fixnum~$\times$~bignum,
+bignum~$\times$~bignum, and any~$\times$~inexact.
+
+This means the inline fast path is a \emph{fixnum-only} fast
+path.  When either operand is not a fixnum, the general dispatch
+handles it.  This is slightly slower than the old all-{\tt LONGREAL}
+path for mixed-type cases, but it is \emph{correct}---exactness
+is never silently lost.
+
+\paragraph{Self-tail-call loops.}
+The existing {\tt LONGREAL} unboxing in self-tail-call
+loops is \textbf{not changed} in Phase~1.  This means compiled
+tight loops that the compiler has already identified as
+{\tt LONGREAL}-typed still operate at native {\tt LONGREAL} speed.
+The fixnum fast path applies only to the general-case inline
+arithmetic (non-loop contexts, or loops where the compiler
+cannot prove {\tt LONGREAL} typing).
+
+\subsection{Inline Predicates}
+
+Type predicates can be inlined more precisely:
+\begin{itemize}[nosep]
+\item {\tt (number?\ $x$)} $\to$ {\tt ISTYPE($x$, SchemeInt.T)} or
+  {\tt ISTYPE($x$, Mpz.T)} or\\
+  {\tt ISTYPE($x$, SchemeLongReal.T)}
+\item {\tt (integer?\ $x$)} $\to$ {\tt ISTYPE($x$, SchemeInt.T)} or
+  {\tt ISTYPE($x$, Mpz.T)}
+\item {\tt (exact?\ $x$)} $\to$ same as {\tt integer?} (Phase~1)
+\end{itemize}
+
+%======================================================================
+\section{Build System ({\tt m3makefile})}
+\label{sec:impl-buildsys}
+%======================================================================
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/m3makefile} (modify)
+\end{itemize}
+
+\medskip\noindent\textbf{Changes.}
+\begin{lstlisting}
+Module("SchemeInt")
+import("mpz")      % for Mpz.T access
+\end{lstlisting}
+
+\noindent The {\tt mpz} package is already available in the CM3
+tree ({\tt m3-libs/mpz}).  The {\tt import} directive makes its
+interface visible to the mscheme package.
+
+%======================================================================
+\section{Bootstrap Sequence}
+\label{sec:impl-bootstrap}
+%======================================================================
+
+Because the MScheme compiler is self-hosting (written in Scheme,
+compiled by itself), introducing a new numeric representation
+requires a careful bootstrap.  The sequence has three phases:
+
+\paragraph{Phase~A: Interpreter only.}
+Add the {\tt SchemeInt} module and modify the interpreter's reader,
+printer, predicates, and arithmetic dispatch.  The compiler
+continues to emit {\tt SchemeLongReal}-based code.  Test the
+interpreter thoroughly: all existing tests must pass (with updated
+expected outputs for integer printing), and new exact-integer tests
+must pass.
+
+\paragraph{Phase~B: Compiler modification.}
+Modify {\tt compiler.scm} to emit {\tt SchemeInt}-based code (as
+described in Section~\ref{sec:impl-compiler}).  Compile the new
+compiler using the \emph{old} compiler (which still uses
+{\tt LONGREAL} semantics internally).  The resulting binary is a
+``Phase~B compiler'' that emits numeric-tower code but was itself
+compiled under {\tt LONGREAL} semantics.  Test this compiler.
+
+\paragraph{Phase~C: Self-compilation.}
+Use the Phase~B compiler to compile itself.  The resulting binary
+is now a fully numeric-tower-aware compiler, compiled under
+numeric-tower semantics.  This is the production compiler.
+
+\medskip\noindent
+The two-phase bootstrap (B~$\to$~C) is necessary because the
+compiler's own intermediate computations (e.g., counting
+arguments, computing offsets) will behave differently under exact
+integer semantics than under {\tt LONGREAL} semantics---even
+though the results should be identical for values within the
+{\tt LONGREAL} integer range.  The Phase~C recompilation confirms
+that the compiler is a fixed point.
+
+%======================================================================
+\section{What Phase~1 Does \emph{Not} Change}
+\label{sec:impl-not}
+%======================================================================
+
+\begin{itemize}
+\item \textbf{No rationals.}  Exact division of non-divisible
+  integers returns inexact {\tt LONGREAL}.  Phase~2 would
+  introduce {\tt BigRational} or {\tt Mpq.T}.
+
+\item \textbf{No complex numbers.}  Phase~3 would add
+  {\tt SchemeComplex.T}.
+
+\item \textbf{No compiler {\tt INTEGER} unboxing.}  The compiler's
+  self-tail-call optimization continues to unbox to {\tt LONGREAL}.
+  Adding {\tt INTEGER} unboxing is a Phase~4 optimization.
+
+\item \textbf{No SRFI-151 bitwise operations.}  However, the
+  foundation is laid: {\tt Mpz.T} supports two's complement
+  bitwise operations natively.  Adding {\tt bitwise-and},
+  {\tt bitwise-or}, {\tt arithmetic-shift}, etc.\ is
+  straightforward once exact integers exist.
+\end{itemize}
+
+%======================================================================
+\section{Ancillary Fixes}
+\label{sec:impl-ancillary}
+%======================================================================
+
+Several pre-existing conformance issues surfaced during test
+development.  These are independent of the exact-integer work but
+should be fixed as part of Phase~1.
+
+\subsection{Infinity and NaN Read Syntax (R7RS)}
+
+MScheme prints IEEE~754 special values using Modula-3's {\tt Fmt}
+conventions: {\tt Infinity}, {\tt -Infinity}, {\tt NaN}.  However,
+the reader cannot parse these back---they are treated as symbols.
+R7RS (\S7.1.1) specifies the syntax {\tt +inf.0}, {\tt -inf.0},
+{\tt +nan.0}.
+
+\paragraph{Changes.}
+\begin{itemize}[nosep]
+\item \textbf{Reader} ({\tt SchemeInputPort.m3}): recognize
+  {\tt +inf.0}, {\tt -inf.0}, {\tt +nan.0} as numeric literals
+  returning the corresponding IEEE~754 {\tt LONGREAL} values.
+  Also accept {\tt Infinity}, {\tt -Infinity}, {\tt NaN} for
+  backward compatibility with existing output.
+\item \textbf{Printer} ({\tt SchemeUtils.m3}): change the
+  output of special float values from {\tt Infinity}/{\tt NaN}
+  to {\tt +inf.0}/{\tt -inf.0}/{\tt +nan.0} (R7RS style).
+  This ensures that {\tt (read (write x))} round-trips.
+\end{itemize}
+
+\noindent No {\tt .scm} file in the CM3 tree currently references
+{\tt Infinity}, {\tt NaN}, or the R7RS forms, so the output change
+is safe.
+
+\subsection{Banker's Rounding ({\tt round})}
+
+R5RS~\S6.2.5 specifies that {\tt round} uses half-to-even
+(banker's rounding): {\tt (round 2.5)} $\to$ {\tt 2.0}.
+MScheme delegates to Modula-3's {\tt ROUND}, which uses
+half-away-from-zero: {\tt (round 2.5)} $\to$ {\tt 3.0}.
+
+\paragraph{Fix.}
+Replace the {\tt P.Round} implementation in {\tt SchemePrimitive.m3}
+with explicit half-to-even logic:
+
+\begin{lstlisting}[language=Modula3]
+P.Round =>
+  WITH d = FromO(x),
+       r = FLOAT(ROUND(d), LONGREAL) DO
+    (* If exactly halfway, round to even *)
+    IF ABS(d - r) = 0.5d0 AND
+       FLOAT(ROUND(r / 2.0d0), LONGREAL) * 2.0d0 # r THEN
+      RETURN FromLR(r - FLOAT(ORD(d > 0.0d0) * 2 - 1, LONGREAL))
+    ELSE
+      RETURN FromLR(r)
+    END
+  END
+\end{lstlisting}
+
+\noindent Alternatively, use {\tt FLOOR(d + 0.5)} with an even-check
+when {\tt d} is a half-integer.
+
+\subsection{{\tt remainder} Sign Convention}
+
+R5RS specifies that {\tt remainder} returns a result with the sign
+of the \emph{dividend} (first argument).  MScheme used Modula-3's
+{\tt MOD}, which gives the \emph{divisor}'s sign.
+\textbf{Already fixed} (see {\tt SchemePrimitive.m3}).
+
+%======================================================================
+\section{Summary of File Changes}
+\label{sec:impl-summary}
+%======================================================================
+
+Table~\ref{tab:files} lists all files created or modified in Phase~1.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{llp{6cm}}
+\toprule
+\textbf{File} & \textbf{Action} & \textbf{Change} \\
+\midrule
+{\tt SchemeInt.i3} & New & Exact integer interface \\
+{\tt SchemeInt.m3} & New & Fixnum cache, overflow-checked
+  arithmetic, bignum promotion \\
+{\tt SchemeLongReal.m3} & Modify & {\tt FromO}, {\tt Int}:
+  add {\tt REF INTEGER} and {\tt Mpz.T} branches \\
+{\tt SchemeInputPort.m3} & Modify & Reader: integer vs.\ float
+  dispatch; {\tt +inf.0}/{\tt +nan.0} syntax \\
+{\tt SchemeUtils.m3} & Modify & Printer: {\tt REF INTEGER} and
+  {\tt Mpz.T} branches; {\tt eqv?}\ exactness;
+  R7RS Inf/NaN output \\
+{\tt SchemePrimitive.m3} & Modify & Predicates, arithmetic
+  dispatch, comparison dispatch, banker's rounding \\
+{\tt compiler.scm} & Modify & {\tt constant-ref}, inline
+  arithmetic, inline predicates \\
+{\tt mscheme/src/m3makefile} & Modify & Add {\tt Module("SchemeInt")},
+  {\tt import("mpz")} \\
+\bottomrule
+\end{tabular}
+\caption{Files created or modified in Phase~1.}
+\label{tab:files}
+\end{table}
+
+%======================================================================
+\section{Phase~1 Test Suite}
+\label{sec:impl-tests}
+%======================================================================
+
+A test-first approach: the file {\tt mscheme-doc/test-numeric-tower.scm}
+contains 347~tests that define the target behavior for Phase~1.
+Run with:
+\begin{lstlisting}
+mscheme test-numeric-tower.scm
+\end{lstlisting}
+
+\noindent Against the current (pre-tower) MScheme, 287 tests pass
+and 60~fail.  The failures fall into these categories, each
+corresponding to a subsystem that Phase~1 must modify:
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcp{6.5cm}}
+\toprule
+\textbf{Category} & \textbf{Fails} & \textbf{Root Cause} \\
+\midrule
+{\tt inexact?}\ predicates &
+  10 & Integer-valued floats ({\tt 0.0}, {\tt 1.0}, {\tt 1e10})
+       not recognized as inexact \\
+{\tt eqv?}\ across exactness &
+  2 & {\tt (eqv?\ 1 1.0)} returns {\tt \#t}; should be {\tt \#f} \\
+Exactness contagion &
+  6 & {\tt (+ 1 2.0)} not recognized as inexact \\
+Bignum exactness &
+  15 & {\tt (expt 2 62)} et al.\ return {\tt Mpz.T} but
+      {\tt exact?}\ does not recognize it \\
+Fixnum cache {\tt eq?} &
+  4 & No fixnum cache; {\tt REF INTEGER} freshly allocated \\
+{\tt \#i} prefix &
+  1 & {\tt \#i1} does not force inexact \\
+Bignum precision &
+  5 & Bignums compared/printed via {\tt LONGREAL} lose
+      precision (e.g.\ {\tt 2\^{}100 = 2\^{}100+1}) \\
+Banker's rounding &
+  4 & {\tt ROUND} uses half-away-from-zero, not half-to-even \\
+Division by zero &
+  4 & Returns {\tt Inf} instead of raising an error \\
+Bignum {\tt gcd}/{\tt lcm} &
+  4 & Overflow in {\tt TRUNC} when operands exceed
+      {\tt LAST(INTEGER)} \\
+30! exactness &
+  3 & Factorial computed via {\tt LONGREAL}; loses precision
+      beyond $2^{53}$ \\
+Bignum print round-trip &
+  2 & Bignums print in exponential notation via {\tt LONGREAL} \\
+\bottomrule
+\end{tabular}
+\caption{Test failure breakdown against pre-tower MScheme (287/347 passing).}
+\label{tab:failures}
+\end{table}
+
+\noindent The tests are organized in 24~sections:
+
+\begin{enumerate}[nosep]
+\item Exact/inexact predicates
+\item Number type predicates ({\tt number?}, {\tt integer?}, {\tt real?}, etc.)
+\item Printing (exact integers without decimal point)
+\item {\tt eqv?}\ exactness semantics
+\item Arithmetic exactness preservation and contagion
+\item Exact integer arithmetic (basic operations)
+\item Division semantics (exact vs.\ inexact result)
+\item {\tt gcd} and {\tt lcm}
+\item Comparisons across exactness
+\item {\tt exact->inexact} / {\tt inexact->exact}
+\item Bit-boundary rollover (31/32/63/64-bit boundaries, {\tt LONGREAL} precision)
+\item Infinity and NaN (IEEE~754 special values)
+\item Rounding procedures ({\tt floor}, {\tt ceiling}, {\tt truncate}, {\tt round})
+\item Fixnum cache identity ({\tt eq?})
+\item Reader exactness prefixes ({\tt \#e}, {\tt \#i})
+\item Non-decimal base literals ({\tt \#b}, {\tt \#o}, {\tt \#x})
+\item {\tt number->string} / {\tt string->number}
+\item Edge cases (zero, {\tt max}/{\tt min}, {\tt abs})
+\item Error cases (type errors, division by zero)
+\item Negative bignum arithmetic
+\item Mixed fixnum/bignum operations
+\item Bignum comparisons
+\item Bignum print/read round-trip
+\item {\tt expt} edge cases ({\tt 0\^{}0}, {\tt -1\^{}$n$}, negative exponents)
+\item {\tt min}/{\tt max} with bignums
+\item Zero/one-arg arithmetic (negation, reciprocal)
+\end{enumerate}
+
+\noindent As each subsystem is modified, the corresponding test
+sections should go from failing to passing.  When all 347~tests
+pass, Phase~1 is complete.
+
+\end{document}
