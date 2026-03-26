@@ -1,0 +1,20 @@
+/* numtest -- mscheme with compiled numeric test suites */
+
+import("libm3")
+import("parseparams")
+import("cit_common")
+import("schemesig")
+import("cit_util")
+import("mscheme")
+import("modula3scheme")
+import("schemecompiler")
+
+_scheme_compile("CompiledNumTower",  "test-numeric-tower.scm",  HIDDEN)
+_scheme_compile("CompiledExamples",  "test-examples.scm",       HIDDEN)
+_scheme_compile("CompiledR4rsGaps",  "test-r4rs-gaps.scm",      HIDDEN)
+
+LinkCompiledSchemeAs("NumtestCompiled")
+
+implementation("Main")
+
+program("numtest")
