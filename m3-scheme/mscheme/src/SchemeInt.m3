@@ -46,33 +46,47 @@ PROCEDURE ToInteger(x: SchemeObject.T): INTEGER =
   END ToInteger;
 
 PROCEDURE Add(a, b: INTEGER): SchemeObject.T =
-  VAR
-    ma := Mpz.NewInt(a);
-    mb := Mpz.NewInt(b);
-    mr := Mpz.New();
   BEGIN
-    Mpz.add(mr, ma, mb);
-    RETURN MpzToScheme(mr)
+    IF (a > 0 AND b > 0 AND a > LAST(INTEGER) - b) OR
+       (a < 0 AND b < 0 AND a < FIRST(INTEGER) - b) THEN
+      VAR ma := Mpz.NewInt(a); mb := Mpz.NewInt(b); mr := Mpz.New();
+      BEGIN
+        Mpz.add(mr, ma, mb); RETURN MpzToScheme(mr)
+      END
+    ELSE
+      RETURN FromI(a + b)
+    END
   END Add;
 
 PROCEDURE Sub(a, b: INTEGER): SchemeObject.T =
-  VAR
-    ma := Mpz.NewInt(a);
-    mb := Mpz.NewInt(b);
-    mr := Mpz.New();
   BEGIN
-    Mpz.sub(mr, ma, mb);
-    RETURN MpzToScheme(mr)
+    IF (b > 0 AND a < FIRST(INTEGER) + b) OR
+       (b < 0 AND a > LAST(INTEGER) + b) THEN
+      VAR ma := Mpz.NewInt(a); mb := Mpz.NewInt(b); mr := Mpz.New();
+      BEGIN
+        Mpz.sub(mr, ma, mb); RETURN MpzToScheme(mr)
+      END
+    ELSE
+      RETURN FromI(a - b)
+    END
   END Sub;
 
+CONST
+  (* If both operands fit in 32-bit signed, the product fits in 64-bit signed *)
+  Mul32Lo = -2147483648;
+  Mul32Hi =  2147483647;
+
 PROCEDURE Mul(a, b: INTEGER): SchemeObject.T =
-  VAR
-    ma := Mpz.NewInt(a);
-    mb := Mpz.NewInt(b);
-    mr := Mpz.New();
   BEGIN
-    Mpz.mul(mr, ma, mb);
-    RETURN MpzToScheme(mr)
+    IF a >= Mul32Lo AND a <= Mul32Hi AND
+       b >= Mul32Lo AND b <= Mul32Hi THEN
+      RETURN FromI(a * b)
+    ELSE
+      VAR ma := Mpz.NewInt(a); mb := Mpz.NewInt(b); mr := Mpz.New();
+      BEGIN
+        Mpz.mul(mr, ma, mb); RETURN MpzToScheme(mr)
+      END
+    END
   END Mul;
 
 PROCEDURE ToMpz(x: SchemeObject.T): Mpz.T =

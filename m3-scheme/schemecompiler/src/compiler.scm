@@ -947,9 +947,9 @@
          (loop-flag (if target (fresh-var ctx "BOOLEAN") #f))
          ;; Build a temporary ctx for analyzing the loop body
          (tmp-loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names loop-flag))
-         ;; Analyze which named-let vars can be unboxed
+         ;; Numeric unboxing disabled: produces inexact results with numeric tower
          (loop-body (if (null? (cdr body)) (car body) (cons 'begin body)))
-         (unboxed (analyze-numeric-params bvars loop-body loop-name tmp-loop-ctx))
+         (unboxed '())
          ;; Allocate LONGREAL vars for unboxed params
          (nr-vars (map (lambda (u)
                          (let ((nr-name (fresh-var ctx "LONGREAL")))
@@ -1945,10 +1945,8 @@
          ;; Disable self-tail-call for rest-param functions
          (self-tail (if rest-param #f (has-self-tail-call? body name)))
          (ctx (make-ctx name all-ps free-vars constants self-tail))
-         ;; Numeric unboxing analysis: only for self-tail-call functions
-         (unboxed (if self-tail
-                      (analyze-numeric-params params body name ctx)
-                      '()))
+         ;; Numeric unboxing disabled: produces inexact results with numeric tower
+         (unboxed '())
          ;; Store unboxed info in the context (field 11)
          (_ (if (not (null? unboxed))
                 (set-car! (cdddr (cddddr (cddddr ctx))) unboxed)))
