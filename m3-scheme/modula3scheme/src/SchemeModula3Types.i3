@@ -1,7 +1,7 @@
 (* $Id$ *)
 
 INTERFACE SchemeModula3Types;
-IMPORT SchemeObject, Scheme, SchemePrimitive;
+IMPORT SchemeObject, Scheme, SchemePrimitive, Mpz;
 
 (* convert to and from Modula-3 base types *)
 
@@ -39,10 +39,15 @@ PROCEDURE ToScheme_BOOLEAN(b : BOOLEAN) : SchemeObject.T;
   (* returns a SchemeBoolean.T *)
 
 PROCEDURE ToScheme_CARDINAL(c : CARDINAL) : SchemeObject.T;
-  (* returns a SchemeLongReal.T *)
+  (* returns a SchemeInt.T (exact integer) *)
 
 PROCEDURE ToScheme_INTEGER(i : INTEGER) : SchemeObject.T;
-  (* returns a SchemeLongReal.T *)
+  (* returns a SchemeInt.T (exact integer) *)
+
+PROCEDURE ToScheme_Mpz_T(m : Mpz.T) : SchemeObject.T;
+  (* returns an exact integer (SchemeInt.T or Mpz.T) *)
+
+PROCEDURE ToModula_Mpz_T(x : SchemeObject.T) : Mpz.T RAISES { Scheme.E };
 
 (**********************************************************************)
 
@@ -82,7 +87,7 @@ TYPE
            T_REFANY , T_EXTENDED , T_REAL ,
            T_LONGREAL , T_CHAR , T_BOOLEAN ,
            T_CARDINAL , T_INTEGER,
-           T_NULL};
+           T_NULL, T_Mpz_T};
 
 CONST Name = ARRAY Type OF TEXT { "LONGINT", "WIDECHAR",
                                   
@@ -91,7 +96,7 @@ CONST Name = ARRAY Type OF TEXT { "LONGINT", "WIDECHAR",
                                   "REFANY" , "EXTENDED" , "REAL" ,
                                   "LONGREAL" , "CHAR" , "BOOLEAN" ,
                                   "CARDINAL" , "INTEGER",
-                                  "NULL" };
+                                  "NULL", "Mpz_T" };
 
 TYPE 
   Mode = { Reference, Concrete }; 

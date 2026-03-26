@@ -504,7 +504,10 @@
           (extract-field 'overrides t))))
 
 (define (unprotected-format-type t env)
-  (cond ((is-basetype t) => 
+  ;; For opaque basetypes (like Mpz.T), skip the basetype internal name
+  ;; and fall through to name-based formatting which produces correct M3 syntax
+  (cond ((let ((bt (is-basetype t)))
+           (and bt (not (eq? 'Opaque (car t))) bt)) =>
                          (lambda(x)(string-append " " (symbol->string x) " ")))
         ((have-field? 'alias t) (string-type-alias t "." env))
         ((and (have-field? 'name t)(not (null? (extract-field 'name t)))) 
@@ -916,11 +919,15 @@
   ;; returns string name of basetype or #f
 
   (define (is-opaque-basetype)
-    ;; special handling for opaques, by name
-    (let loop ((p the-basetypes))
-      (cond ((null? p) #f)
-            ((equal? (cdar p) type) (caar p))
-            (else (loop (cdr p))))))
+    ;; special handling for opaques, by name (Qid comparison)
+    (let ((type-name (extract-field 'name type)))
+      (let loop ((p the-basetypes))
+        (cond ((null? p) #f)
+              ((and (pair? (cdar p))
+                    (eq? 'Opaque (car (cdar p)))
+                    (equal? (extract-field 'name (cdar p)) type-name))
+               (caar p))
+              (else (loop (cdr p)))))))
 
   
 

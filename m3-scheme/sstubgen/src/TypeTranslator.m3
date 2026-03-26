@@ -418,7 +418,17 @@ PROCEDURE AddBasetypes() =
 
     Add("NULL",         Type.null);
     Add("TEXT",         Type.text);
-    Add("MUTEX",        Type.mutex)
+    Add("MUTEX",        Type.mutex);
+
+    Add("Mpz_T",        NEW(Type.Opaque,
+                             name := NEW(Qid,
+                                         intf := Atom.FromText("Mpz"),
+                                         item := Atom.FromText("T")),
+                             traced := TRUE,
+                             branded := FALSE,
+                             brand := NIL,
+                             revIntf := NIL,
+                             revealedSuperType := Type.refany))
   END AddBasetypes;
 
 BEGIN

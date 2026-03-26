@@ -4,6 +4,7 @@ MODULE SchemeModula3Types;
 FROM SchemeUtils IMPORT Stringify;
 IMPORT Scheme;
 IMPORT SchemeObject, SchemeString, SchemeBoolean, SchemeLongReal, SchemeChar;
+IMPORT SchemeInt, Mpz;
 IMPORT SchemePrimitive;
 FROM Scheme IMPORT E, Object;
 IMPORT SchemeProcedure, SchemeSymbol;
@@ -43,10 +44,13 @@ PROCEDURE ToScheme_BOOLEAN(b : BOOLEAN) : SchemeObject.T =
   BEGIN RETURN SchemeBoolean.Truth(b) END ToScheme_BOOLEAN;
 
 PROCEDURE ToScheme_CARDINAL(c : CARDINAL) : SchemeObject.T =
-  BEGIN RETURN SchemeLongReal.FromI(c) END ToScheme_CARDINAL;
+  BEGIN RETURN SchemeInt.FromI(c) END ToScheme_CARDINAL;
 
 PROCEDURE ToScheme_INTEGER(i : INTEGER) : SchemeObject.T =
-  BEGIN RETURN SchemeLongReal.FromI(i) END ToScheme_INTEGER;
+  BEGIN RETURN SchemeInt.FromI(i) END ToScheme_INTEGER;
+
+PROCEDURE ToScheme_Mpz_T(m : Mpz.T) : SchemeObject.T =
+  BEGIN RETURN SchemeInt.MpzToScheme(m) END ToScheme_Mpz_T;
 
 (**********************************************************************)
 
@@ -106,35 +110,81 @@ PROCEDURE ToModula_BOOLEAN(b : SchemeObject.T) : BOOLEAN RAISES { } =
 
 PROCEDURE ToModula_CARDINAL(c : SchemeObject.T) : CARDINAL RAISES { Scheme.E }=
   BEGIN
-    WITH flt = SchemeLongReal.FromO(c) DO
-      IF flt < FLOAT(FIRST(CARDINAL),LONGREAL) OR flt > FLOAT(LAST(CARDINAL),LONGREAL) THEN
-        RAISE Scheme.E("CARDINAL out of range : " & Stringify(c))
-      END;
-
-      WITH int = ROUND(flt) DO
-        IF FLOAT(int,LONGREAL) # flt THEN
-          RAISE Scheme.E("Not an integer : " & Stringify(c))
+    TYPECASE c OF
+      SchemeInt.T(ri) =>
+        IF ri^ < 0 THEN
+          RAISE Scheme.E("CARDINAL out of range : " & Stringify(c))
         END;
-        RETURN int
+        RETURN ri^
+    | Mpz.T(m) =>
+      IF Mpz.fits_slong_p(m) # 0 THEN
+        WITH i = Mpz.get_si(m) DO
+          IF i < 0 THEN
+            RAISE Scheme.E("CARDINAL out of range : " & Stringify(c))
+          END;
+          RETURN i
+        END
+      ELSE
+        RAISE Scheme.E("CARDINAL out of range : " & Stringify(c))
+      END
+    ELSE
+      WITH flt = SchemeLongReal.FromO(c) DO
+        IF flt < FLOAT(FIRST(CARDINAL),LONGREAL) OR
+           flt > FLOAT(LAST(CARDINAL),LONGREAL) THEN
+          RAISE Scheme.E("CARDINAL out of range : " & Stringify(c))
+        END;
+        WITH int = ROUND(flt) DO
+          IF FLOAT(int,LONGREAL) # flt THEN
+            RAISE Scheme.E("Not an integer : " & Stringify(c))
+          END;
+          RETURN int
+        END
       END
     END
   END ToModula_CARDINAL;
 
 PROCEDURE ToModula_INTEGER(c : SchemeObject.T) : INTEGER RAISES { Scheme.E }=
   BEGIN
-    WITH flt = SchemeLongReal.FromO(c) DO
-      IF flt < FLOAT(FIRST(INTEGER),LONGREAL) OR flt > FLOAT(LAST(INTEGER),LONGREAL) THEN
+    TYPECASE c OF
+      SchemeInt.T(ri) => RETURN ri^
+    | Mpz.T(m) =>
+      IF Mpz.fits_slong_p(m) # 0 THEN
+        RETURN Mpz.get_si(m)
+      ELSE
         RAISE Scheme.E("INTEGER out of range : " & Stringify(c))
-      END;
-
-      WITH int = ROUND(flt) DO
-        IF FLOAT(int,LONGREAL) # flt THEN
-          RAISE Scheme.E("Not an integer : " & Stringify(c))
+      END
+    ELSE
+      WITH flt = SchemeLongReal.FromO(c) DO
+        IF flt < FLOAT(FIRST(INTEGER),LONGREAL) OR
+           flt > FLOAT(LAST(INTEGER),LONGREAL) THEN
+          RAISE Scheme.E("INTEGER out of range : " & Stringify(c))
         END;
-        RETURN int
+        WITH int = ROUND(flt) DO
+          IF FLOAT(int,LONGREAL) # flt THEN
+            RAISE Scheme.E("Not an integer : " & Stringify(c))
+          END;
+          RETURN int
+        END
       END
     END
   END ToModula_INTEGER;
+
+PROCEDURE ToModula_Mpz_T(x : SchemeObject.T) : Mpz.T RAISES { Scheme.E } =
+  BEGIN
+    TYPECASE x OF
+      SchemeInt.T(ri) => RETURN Mpz.NewInt(ri^)
+    | Mpz.T(m) => RETURN m
+    ELSE
+      WITH flt = SchemeLongReal.FromO(x) DO
+        WITH int = ROUND(flt) DO
+          IF FLOAT(int, LONGREAL) # flt THEN
+            RAISE Scheme.E("Not an integer : " & Stringify(x))
+          END;
+          RETURN Mpz.NewInt(int)
+        END
+      END
+    END
+  END ToModula_Mpz_T;
 
 PROCEDURE Extend(prims : SchemePrimitive.ExtDefiner)  : SchemePrimitive.ExtDefiner =
   BEGIN 

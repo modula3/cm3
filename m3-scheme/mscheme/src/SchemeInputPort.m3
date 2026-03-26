@@ -543,13 +543,17 @@ PROCEDURE NextToken(t          : T;
                   END
               END
             ELSIF bigInt THEN
-              (* legacy read-big-int path: produce Mpz.T *)
+              (* read-big-int path: replaces BigInt.ScanBased.
+                 Handles base_value notation (e.g. "10_65536", "16_FF")
+                 and plain decimal integers.  Returns native exact
+                 integers (SchemeInt or Mpz.T for overflow).
+                 Raises Lex.Error for non-numeric tokens like "-", "+". *)
               EVAL WxReset(wx);
-              VAR m: Object; BEGIN
-                TRY m := Mpz.InitScan(txt, 10)
-                EXCEPT ELSE m := NIL END;
-                IF m # NIL THEN RETURN m END;
-                WxPutText(wx, txt) (* restore *)
+              TRY
+                RETURN ScanBased(txt, 10)
+              EXCEPT
+                Lex.Error, FloatMode.Trap =>
+                  WxPutText(wx, txt) (* restore *)
               END
             ELSIF NOT HaveAlphasOtherThane(txt) THEN
               (* decimal number: check if pure integer or float *)
@@ -627,6 +631,60 @@ PROCEDURE IsPureInteger(txt : TEXT) : BOOLEAN =
     END;
     RETURN TRUE
   END IsPureInteger;
+
+PROCEDURE ScanBased(txt : TEXT; defaultBase : CARDINAL) : Object
+  RAISES { Lex.Error, FloatMode.Trap } =
+  (* Replaces BigInt.ScanBased: parses base_value notation
+     (e.g. "10_65536" = 65536, "16_FF" = 255) and plain decimals.
+     Returns SchemeInt or Mpz.T.  Raises Lex.Error for non-numbers. *)
+  VAR
+    neg := FALSE;
+    start : TEXT := txt;
+  BEGIN
+    IF Text.Length(txt) = 0 THEN RAISE Lex.Error END;
+    IF Text.GetChar(txt, 0) = '-' THEN
+      neg := TRUE;
+      start := Text.Sub(txt, 1)
+    ELSIF Text.GetChar(txt, 0) = '+' THEN
+      start := Text.Sub(txt, 1)
+    END;
+    IF Text.Length(start) = 0 THEN RAISE Lex.Error END;
+
+    VAR upos := Text.FindChar(start, '_');
+        base := defaultBase;
+        valueTxt := start;
+    BEGIN
+      IF upos >= 1 AND upos < Text.Length(start) - 1 THEN
+        base := Scan.Int(Text.Sub(start, 0, upos));
+        valueTxt := Text.Sub(start, upos + 1)
+      END;
+
+      IF base < 2 OR base > 36 THEN RAISE Lex.Error END;
+
+      IF base <= 16 THEN
+        (* Scan.Int handles bases 2..16 *)
+        TRY
+          VAR i := Scan.Int(valueTxt, base); BEGIN
+            IF neg THEN i := -i END;
+            RETURN SchemeInt.FromI(i)
+          END
+        EXCEPT
+          Lex.Error, FloatMode.Trap =>
+            (* overflow or parse error: fall through to Mpz *)
+        END
+      END;
+
+      (* bases 17..36 or INTEGER overflow: use Mpz.
+         Mpz.init_set_str returns 0 on success, -1 on failure. *)
+      VAR m := Mpz.New(); BEGIN
+        IF Mpz.set_str(m, valueTxt, base) # 0 THEN
+          RAISE Lex.Error
+        END;
+        IF neg THEN Mpz.neg(m, m) END;
+        RETURN SchemeInt.MpzToScheme(m)
+      END
+    END
+  END ScanBased;
 
 PROCEDURE CharSeqToArray(seq : CharSeq.T) : String =
   BEGIN
