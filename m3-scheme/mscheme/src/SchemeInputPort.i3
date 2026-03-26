@@ -9,7 +9,6 @@
 INTERFACE SchemeInputPort;
 IMPORT Rd, SchemeObject, SchemeBoolean, SchemeSymbol;
 FROM Scheme IMPORT E;
-IMPORT BigInt;
 
 TYPE
   T <: Public;

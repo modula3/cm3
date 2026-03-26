@@ -11,7 +11,7 @@ IMPORT Scan;
 FROM SchemeUtils IMPORT Error, StringifyT;
 FROM Scheme IMPORT Object, E;
 IMPORT Lex, FloatMode;
-IMPORT SchemeInt, Mpz, BigInt;
+IMPORT SchemeInt, SchemeExact;
 
 PROCEDURE FromI(x : INTEGER) : T = 
   BEGIN RETURN FromLR(FLOAT(x,LONGREAL)) END FromI;
@@ -35,11 +35,9 @@ PROCEDURE FromO(x : Object) : LONGREAL RAISES { E } =
   BEGIN
     TYPECASE x OF
       NULL => RETURN FromO(Error("expected a number, got: ()"))
-    | SchemeInt.T(ri) => RETURN FLOAT(ri^, LONGREAL)
-    | Mpz.T(m) => RETURN Mpz.get_d(m)
     | T(lr) => RETURN lr^
-    | BigInt.T(b) => RETURN BigInt.ToLongReal(b)
     ELSE
+      IF SchemeExact.Is(x) THEN RETURN SchemeExact.ToLongReal(x) END;
       RETURN FromO(Error("expected a number, got: " & StringifyT(x)))
     END
   END FromO;
@@ -58,17 +56,6 @@ PROCEDURE Int(x : Object; roundOK : BOOLEAN) : INTEGER RAISES { E } =
   BEGIN
     TYPECASE x OF
       SchemeInt.T(ri) => RETURN ri^
-    | Mpz.T(m) =>
-      IF Mpz.fits_slong_p(m) # 0 THEN
-        RETURN Mpz.get_si(m)
-      ELSE
-        RETURN Int(Error("number out of range : " & StringifyT(x)),FALSE)
-      END
-    | BigInt.T(b) =>
-      TRY RETURN BigInt.ToInteger(b)
-      EXCEPT BigInt.OutOfRange =>
-        RETURN Int(Error("number out of range : " & StringifyT(x)),FALSE)
-      END
     ELSE
       WITH lr = FromO(x) DO
         IF lr < FLOAT(FIRST(INTEGER),LONGREAL)

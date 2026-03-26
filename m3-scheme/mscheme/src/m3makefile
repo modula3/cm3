@@ -67,6 +67,10 @@ Module("SchemeLongReal")
 
 Module("SchemeInt")
 
+Module("SchemeExact")
+Module("SchemeInexact")
+Module("SchemeNumber")
+
 Module("SchemeChar")
 
 Module("SchemeSymbol")

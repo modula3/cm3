@@ -15,7 +15,7 @@ PROCEDURE IsExactInt(x: SchemeObject.T): BOOLEAN;
   (* TRUE iff REF INTEGER or Mpz.T *)
 
 PROCEDURE IsNumber(x: SchemeObject.T): BOOLEAN;
-  (* TRUE for REF INTEGER, Mpz.T, BigInt.T, or SchemeLongReal.T *)
+  (* TRUE for REF INTEGER, Mpz.T, or SchemeLongReal.T *)
 
 PROCEDURE ToInteger(x: SchemeObject.T): INTEGER;
   (* Extract INTEGER from REF INTEGER or small Mpz.T.

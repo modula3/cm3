@@ -1,7 +1,7 @@
 (* Copyright (c) 2026, Mika Nystrom.  All rights reserved. *)
 
 MODULE SchemeInt;
-IMPORT SchemeObject, Mpz, SchemeLongReal, BigInt;
+IMPORT SchemeObject, Mpz, SchemeLongReal;
 
 CONST
   CacheLo = -256;
@@ -32,7 +32,7 @@ PROCEDURE IsExactInt(x: SchemeObject.T): BOOLEAN =
 PROCEDURE IsNumber(x: SchemeObject.T): BOOLEAN =
   BEGIN
     RETURN x # NIL AND (ISTYPE(x, T) OR ISTYPE(x, Mpz.T) OR
-                         ISTYPE(x, SchemeLongReal.T) OR ISTYPE(x, BigInt.T))
+                         ISTYPE(x, SchemeLongReal.T))
   END IsNumber;
 
 PROCEDURE ToInteger(x: SchemeObject.T): INTEGER =

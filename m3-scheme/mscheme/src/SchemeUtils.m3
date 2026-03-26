@@ -8,25 +8,21 @@
 
 MODULE SchemeUtils;
 IMPORT Scheme, SchemeInputPort, SchemeClass, SchemeSymbol;
-IMPORT Wr, Fmt, Wx, Stdio, Text;
+IMPORT Wr, Wx, Stdio;
 FROM Scheme IMPORT Object, E;
 FROM SchemeChar IMPORT Char;
-IMPORT SchemeLongReal, SchemeChar, SchemePair;
+IMPORT SchemeChar, SchemePair;
 IMPORT AL;
 IMPORT Thread;
 IMPORT SchemeBoolean;
 IMPORT SchemeProcedure,SchemeProcedureClass;
 IMPORT Debug;
 IMPORT RefSeq, RefPair, RefPairSeq;
-IMPORT Scan;
-IMPORT Lex, FloatMode;
 IMPORT SchemeEnvironmentBinding;
 IMPORT SchemeConvertHooks;
-IMPORT BigInt;
-IMPORT SchemeInt, Mpz;
+IMPORT SchemeExact, SchemeInexact, SchemeNumber;
 
 TYPE Boolean = SchemeBoolean.T;
-     LongReal = SchemeLongReal.T;
 
 <* FATAL Thread.Alerted *>
 
@@ -400,31 +396,14 @@ PROCEDURE Equal(x, y : Object; stack : RefPairSeq.T := NIL) : BOOLEAN =
 
 PROCEDURE EqualLeaf(x, y : Object) : BOOLEAN =
   BEGIN
+    IF SchemeExact.Is(x) THEN
+      RETURN SchemeExact.Is(y) AND SchemeExact.Compare(x, y) = 0
+    ELSIF SchemeInexact.Is(x) THEN
+      RETURN SchemeInexact.Is(y) AND SchemeInexact.Compare(x, y) = 0
+    END;
     TYPECASE x OF
-      SchemeInt.T(rx) =>
-      TYPECASE y OF
-        SchemeInt.T(ry) => RETURN rx^ = ry^
-      | Mpz.T(my) =>
-        WITH mx = Mpz.NewInt(rx^) DO RETURN Mpz.cmp(mx, my) = 0 END
-      ELSE
-        RETURN FALSE
-      END
-    |
-      Mpz.T(mx) =>
-      TYPECASE y OF
-        SchemeInt.T(ry) =>
-        WITH my = Mpz.NewInt(ry^) DO RETURN Mpz.cmp(mx, my) = 0 END
-      | Mpz.T(my) => RETURN Mpz.cmp(mx, my) = 0
-      ELSE
-        RETURN FALSE
-      END
-    |
-      LongReal(lr) =>
-      IF NOT ISTYPE(y,LongReal) THEN RETURN FALSE END;
-      RETURN lr^ = NARROW(y,LongReal)^
-    |
       String(sx) =>
-      TYPECASE y OF 
+      TYPECASE y OF
         String(sy) =>
         IF NUMBER(sx^) # NUMBER(sy^) THEN RETURN FALSE END;
         FOR i := FIRST(sx^) TO LAST(sx^) DO
@@ -441,29 +420,11 @@ PROCEDURE EqualLeaf(x, y : Object) : BOOLEAN =
 
 PROCEDURE Eqv(x, y : Object) : BOOLEAN =
   BEGIN
-    TYPECASE x OF
-      NULL => RETURN x = y
-    |
-      SchemeInt.T(rx) =>
-      TYPECASE y OF
-        SchemeInt.T(ry) => RETURN rx^ = ry^
-      | Mpz.T(my) =>
-        WITH mx = Mpz.NewInt(rx^) DO RETURN Mpz.cmp(mx, my) = 0 END
-      ELSE
-        RETURN FALSE
-      END
-    |
-      Mpz.T(mx) =>
-      TYPECASE y OF
-        SchemeInt.T(ry) =>
-        WITH my = Mpz.NewInt(ry^) DO RETURN Mpz.cmp(mx, my) = 0 END
-      | Mpz.T(my) => RETURN Mpz.cmp(mx, my) = 0
-      ELSE
-        RETURN FALSE
-      END
-    |
-      SchemeLongReal.T(lx) =>
-      TYPECASE y OF SchemeLongReal.T(ly) => RETURN lx^ = ly^ ELSE RETURN FALSE END
+    IF x = NIL THEN RETURN x = y END;
+    IF SchemeExact.Is(x) THEN
+      RETURN SchemeExact.Is(y) AND SchemeExact.Compare(x, y) = 0
+    ELSIF SchemeInexact.Is(x) THEN
+      RETURN SchemeInexact.Is(y) AND SchemeInexact.Compare(x, y) = 0
     ELSE
       RETURN x = y
     END
@@ -586,39 +547,16 @@ PROCEDURE StringifyB(x      : Object;
     
     seen.addhi(x);
     TRY
-      IF x = NIL THEN 
+      IF x = NIL THEN
         Put("()")
+      ELSIF SchemeNumber.Is(x) THEN
+        Put(SchemeNumber.Format(x))
       ELSE
         TYPECASE x OF
           TEXT(txt) => (* really should not normally happen *)
           Wx.PutText(buf, "<Modula-3 TEXT \"");
           Wx.PutText(buf, txt);
           Wx.PutText(buf, "\">")
-        |
-          SchemeInt.T(ri) =>
-          Wx.PutInt(buf, ri^)
-        |
-          Mpz.T(m) =>
-          Put(Mpz.FormatDecimal(m))
-        |
-          SchemeLongReal.T(lr) =>
-          WITH txt = Fmt.LongReal(lr^) DO
-            Put(txt);
-            (* Ensure a decimal point so inexact numbers are distinguishable
-               from exact integers.  Skip for NaN/Infinity. *)
-            IF Text.FindChar(txt, '.') < 0 AND
-               Text.FindChar(txt, 'e') < 0 AND
-               Text.FindChar(txt, 'E') < 0 AND
-               Text.FindChar(txt, 'N') < 0 AND
-               Text.FindChar(txt, 'I') < 0 THEN
-              Put(".0")
-            END
-          END
-        |
-          BigInt.T(big) =>
-          WITH txt = BigInt.FormatLiteral(big, 10) DO
-            Wx.PutText(buf, txt);
-          END
         |
           SchemeEnvironmentBinding.T(b) =>
           PutC('<'); Put(SchemeSymbol.ToText(b.name())); PutC('>')

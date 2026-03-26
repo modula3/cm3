@@ -21,7 +21,6 @@ IMPORT SchemeString;
 IMPORT SchemePair, SchemeUtils;
 IMPORT SchemeInputPortClass;
 IMPORT Fmt;
-IMPORT BigInt;
 IMPORT SchemeInt, Mpz;
 (*IMPORT Debug;*)
 
@@ -43,17 +42,17 @@ REVEAL
   METHODS
 
     nextToken(bigInt     : BOOLEAN;
-              bigIntBase : BigInt.PrintBase;
+              bigIntBase : [2..36];
               wx         : Wx                := NIL) : Object
       RAISES { E } := NextToken;
 
     readTail(bigInt     : BOOLEAN;
-             bigIntBase : BigInt.PrintBase;
+             bigIntBase : [2..36];
              wx         : Wx) : Object RAISES { E } := ReadTail2;
 
     warn(msg : TEXT) RAISES { E } := MyWarn;
 
-    doRead(bigInt : BOOLEAN; bigIntBase : BigInt.PrintBase) : Object RAISES { E } := DoRead;
+    doRead(bigInt : BOOLEAN; bigIntBase : [2..36]) : Object RAISES { E } := DoRead;
   OVERRIDES
     fastGetCh := FastGetCh;
     lock      := Lock;
@@ -186,7 +185,7 @@ PROCEDURE PeekCh(t : T) : INTEGER RAISES { E } =
 *)
   END PeekCh;
 
-PROCEDURE DoRead(t : T; bigInt : BOOLEAN; bigIntBase : BigInt.PrintBase := 10) : Object RAISES { E } =
+PROCEDURE DoRead(t : T; bigInt : BOOLEAN; bigIntBase : [2..36] := 10) : Object RAISES { E } =
 
   CONST Symbol = SchemeSymbol.Symbol;
 
@@ -243,7 +242,7 @@ PROCEDURE IsEOF(x : Object) : BOOLEAN = BEGIN RETURN x = EOF END IsEOF;
 
 PROCEDURE ReadTail2(t          : T; 
                     bigInt     : BOOLEAN;
-                    bigIntBase : BigInt.PrintBase;
+                    bigIntBase : [2..36];
                     wx         : Wx) : Object
   RAISES { E } =
   VAR token := t.nextToken(bigInt, bigIntBase, wx);
@@ -297,7 +296,7 @@ PROCEDURE ReverseD(p : SchemePair.T) : SchemePair.T =
 <*UNUSED*>
 PROCEDURE ReadTail(t          : T;
                    bigInt     : BOOLEAN;
-                   bigIntBase : BigInt.PrintBase;
+                   bigIntBase : [2..36];
                    wx         : Wx) : Object RAISES { E } =
   VAR
     token := t.nextToken(bigInt, bigIntBase, wx);
@@ -324,7 +323,7 @@ PROCEDURE ReadTail(t          : T;
 
 PROCEDURE NextToken(t          : T;
                     bigInt     : BOOLEAN;
-                    bigIntBase : BigInt.PrintBase;
+                    bigIntBase : [2..36];
                     wx         : Wx) : Object RAISES { E } =
 
   CONST Symbol = SchemeSymbol.Symbol;
