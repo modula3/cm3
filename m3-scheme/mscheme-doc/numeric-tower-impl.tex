@@ -906,4 +906,205 @@ Bignum print round-trip &
 sections should go from failing to passing.  When all 347~tests
 pass, Phase~1 is complete.
 
+%======================================================================
+\section{Future: Operation Without GMP}
+\label{sec:no-gmp}
+%======================================================================
+
+The current implementation requires GMP ({\tt libgmp}) for bignum
+arithmetic via the {\tt Mpz} package.  This is a hard dependency:
+without GMP, {\tt mscheme} will not link.  There are good reasons
+to make this optional---GMP is not universally available on all
+targets, and some deployments prefer minimal external dependencies.
+
+\subsection{The Problem}
+
+GMP enters MScheme through two paths:
+\begin{enumerate}[nosep]
+\item \textbf{Bignum representation.}  {\tt Mpz.T} is used as the
+  bignum type throughout the numeric tower.  Whenever a fixnum
+  operation overflows {\tt INTEGER} range, the result is promoted
+  to {\tt Mpz.T}.
+\item \textbf{Fixnum overflow detection.}  {\tt SchemeInt.Add},
+  {\tt Sub}, and {\tt Mul} call {\tt Mpz.NewInt}, {\tt Mpz.add},
+  etc.\ in their overflow paths.
+\end{enumerate}
+
+\noindent Both paths go through the {\tt Mpz} interface, which
+wraps GMP's C API via {\tt MpzC.c}.
+
+\subsection{Proposed Solution: Dummy {\tt Mpz} Backend}
+
+The cleanest approach is a \emph{dummy} {\tt Mpz} implementation
+that provides the same interface but without GMP:
+
+\begin{itemize}
+\item \textbf{{\tt Mpz.T}} becomes a wrapper around the existing
+  {\tt BigInt.T} type (already present in the CM3 tree as
+  {\tt m3-libs/arithmetic/src/basictypes/biginteger/BigInt.i3}).
+  {\tt BigInt} is a pure-Modula-3 arbitrary-precision integer
+  implementation---slower than GMP but with no external
+  dependencies.
+
+\item A new package {\tt m3-libs/mpz-fallback} provides the same
+  {\tt Mpz.i3} interface, implemented in terms of {\tt BigInt.T}
+  operations.  The {\tt m3makefile} selects which {\tt mpz}
+  implementation to use based on whether {\tt SYSTEM\_LIBS}
+  contains {\tt "MPZ"}:
+
+\begin{lstlisting}[language={}]
+if SYSTEM_LIBS contains "MPZ"
+  import("mpz")          % GMP-backed
+else
+  import("mpz-fallback")  % BigInt-backed
+end
+\end{lstlisting}
+
+\item Alternatively, and perhaps more simply, the {\tt mpz}
+  package itself could detect the absence of GMP at build time
+  and substitute {\tt BigInt} internally.  This would require no
+  changes to downstream packages.
+\end{itemize}
+
+\paragraph{Engineering considerations.}
+\begin{itemize}[nosep]
+\item The {\tt Mpz} interface is relatively small: {\tt New},
+  {\tt NewInt}, {\tt add}, {\tt sub}, {\tt mul}, {\tt tdiv\_q},
+  {\tt tdiv\_r}, {\tt cmp}, {\tt get\_d}, {\tt get\_si},
+  {\tt fits\_long\_p}, {\tt set\_str}, {\tt get\_str}, and a few
+  others.  Wrapping {\tt BigInt} to provide these is
+  straightforward.
+
+\item Performance impact: GMP is typically 5--50$\times$ faster
+  than a pure-M3 bignum for large operands.  For MScheme's
+  typical use (bignums arising from factorial, combinatorial
+  computations, and exact arithmetic with moderate-sized
+  integers), the difference is unlikely to matter.  The fixnum
+  fast path handles the vast majority of integer operations.
+
+\item The {\tt BigInt.T} type is already recognized by the
+  numeric tower ({\tt SchemeLongReal.FromO}, {\tt SchemeUtils.StringifyB},
+  {\tt SchemeInputPort.m3}) as a fallback number type.  It would
+  become the primary bignum type in the no-GMP configuration.
+\end{itemize}
+
+%======================================================================
+\section{Future: MPFR for Configurable-Accuracy Inexact Arithmetic}
+\label{sec:mpfr}
+%======================================================================
+
+The current inexact representation is {\tt SchemeLongReal.T}, a
+boxed IEEE~754 64-bit {\tt LONGREAL}.  This gives approximately
+15--16 decimal digits of precision.  For scientific and financial
+applications, configurable precision would be valuable.
+
+\subsection{Motivation}
+
+R5RS does not mandate any particular precision for inexact
+numbers, but it does require that {\tt (inexact->exact x)}
+recover an exact rational equivalent.  With {\tt LONGREAL},
+precision is fixed at~53 binary digits.  MPFR (the GNU
+Multiple Precision Floating-Point Reliable library) provides
+correctly-rounded arbitrary-precision floating-point arithmetic,
+allowing the user to choose the working precision.
+
+Use cases:
+\begin{itemize}[nosep]
+\item \textbf{High-precision constants}: computing $\pi$, $e$,
+  or other mathematical constants to hundreds of digits.
+\item \textbf{Numerical stability}: algorithms that are sensitive
+  to rounding (e.g., ill-conditioned linear systems, polynomial
+  root-finding) benefit from extra precision.
+\item \textbf{Interval arithmetic}: combined with directed
+  rounding modes, MPFR can bound the error in a computation.
+\item \textbf{Verification}: compare {\tt LONGREAL} results
+  against higher-precision MPFR results to estimate error.
+\end{itemize}
+
+\subsection{Architecture}
+
+MPFR is already available as a CM3 system library ({\tt "MPFR"}
+in {\tt SYSTEM\_LIBS}, linking {\tt -lmpfr}).  The integration
+would follow the same pattern as {\tt Mpz}:
+
+\begin{enumerate}
+\item \textbf{New package {\tt m3-libs/mpfr}}.  A Modula-3
+  binding to the MPFR C library, providing {\tt Mpfr.T} as an
+  opaque type with operations {\tt add}, {\tt sub}, {\tt mul},
+  {\tt div}, {\tt sqrt}, {\tt cmp}, etc.
+
+\item \textbf{New type {\tt SchemeMpfr.T}}.  A boxed MPFR value
+  serving as a third inexact numeric type alongside
+  {\tt SchemeLongReal.T}.  Or, more ambitiously, {\tt SchemeMpfr.T}
+  \emph{replaces} {\tt SchemeLongReal.T} as the sole inexact type,
+  with {\tt LONGREAL}-precision (53~bits) as the default.
+
+\item \textbf{Configurable precision}.  A Scheme-accessible
+  parameter controls the working precision:
+\begin{lstlisting}[language=Scheme]
+(current-precision)           ;=> 53  (default, LONGREAL equivalent)
+(set-precision! 256)          ; switch to 256-bit mantissa
+(* (atan 1) 4)                ;=> 3.14159265358979323846...  (76 digits)
+\end{lstlisting}
+
+\item \textbf{Exactness contagion unchanged}.  The exact/inexact
+  distinction is orthogonal to precision: exact integers remain
+  {\tt SchemeInt.T}/{\tt Mpz.T}, and inexact numbers are MPFR
+  values at the current working precision.  Mixing exact and
+  inexact still coerces to inexact.
+\end{enumerate}
+
+\subsection{Engineering Considerations}
+
+\begin{itemize}
+\item \textbf{Optional dependency}.  Like GMP, MPFR should be
+  optional.  When {\tt SYSTEM\_LIBS} does not contain {\tt "MPFR"},
+  MScheme falls back to {\tt LONGREAL} as today.  The conditional
+  import mechanism is the same as for {\tt mpz}:
+\begin{lstlisting}[language={}]
+if SYSTEM_LIBS contains "MPFR"
+  import("mpfr")
+end
+\end{lstlisting}
+
+\item \textbf{Performance}.  MPFR at 53-bit precision is
+  typically 3--10$\times$ slower than hardware {\tt LONGREAL}.
+  For default precision, it may be preferable to keep
+  {\tt SchemeLongReal.T} as a fast path and only use MPFR
+  when higher precision is requested.
+
+\item \textbf{Interaction with the compiler}.  The compiler's
+  self-tail-call {\tt LONGREAL} unboxing (currently disabled
+  for correctness) would not apply to MPFR values.  If MPFR
+  becomes the default inexact type, the compiler would need
+  a separate unboxing strategy, or simply rely on the generic
+  dispatch.
+
+\item \textbf{MPFR depends on GMP}.  The MPFR library itself
+  requires GMP, so enabling MPFR implies GMP is available.
+  The dependency chain is: {\tt mpfr} $\to$ {\tt mpz} $\to$
+  {\tt libgmp}.
+
+\item \textbf{Transcendental functions}.  MPFR provides correctly
+  rounded {\tt sin}, {\tt cos}, {\tt exp}, {\tt log}, etc.  This
+  is a significant advantage over {\tt LONGREAL}, where the C
+  library's {\tt libm} implementations may not be correctly
+  rounded in the last bit.
+\end{itemize}
+
+\subsection{Phase Placement}
+
+MPFR integration is a natural Phase~5 addition, after:
+\begin{itemize}[nosep]
+\item Phase~1 (exact integers) --- \textbf{complete}
+\item Phase~2 (exact rationals via {\tt Mpq.T})
+\item Phase~3 (complex numbers)
+\item Phase~4 (compiler {\tt INTEGER} unboxing optimization)
+\item Phase~5 (MPFR configurable inexact precision)
+\end{itemize}
+
+\noindent However, the {\tt Mpfr} bindings package can be
+developed independently and shipped as a standalone library
+before being integrated into MScheme.
+
 \end{document}

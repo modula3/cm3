@@ -49,6 +49,7 @@ SYSTEM_LIBS =
     "X11"        : [  "-L/usr/X11R6/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ],
 %    "READLINE"   : [ "-lreadline" ], % breaks CM3 compile in the github system?
     "MPFR"       : [ "-lmpfr" ],
+    "MPZ"        : [ "-lgmp" ],
     "EXPAT"      : [ "-lexpat" ]
 }
 
@@ -60,7 +61,7 @@ end
 if not defined ("SYSTEM_LIBORDER")
     SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "MYSQL",
                         "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC",
-                        "READLINE", "EXPAT", "MPFR", "UNWIND", "LIBC" ]
+                        "READLINE", "EXPAT", "MPFR", "MPZ", "UNWIND", "LIBC" ]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---

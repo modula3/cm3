@@ -1,10 +1,5 @@
 /* Test program for MScheme Level 1 Compiler */
 
-if not SYSTEM_LIBS contains "MPZ"
-  SYSTEM_LIBS{"MPZ"} = [ "-L/opt/homebrew/lib", "-lgmp" ]
-  SYSTEM_LIBORDER += [ "MPZ" ]
-end
-
 import("libm3")
 import("cit_util")
 import("mscheme")

@@ -207,6 +207,9 @@ end
 
 configure_system_libs()
 
+internal_configure_system_lib("MPFR", TRUE, ["-lmpfr"])
+internal_configure_system_lib("MPZ", TRUE, ["-lgmp"])
+
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
@@ -221,6 +224,8 @@ SYSTEM_LIBORDER =
 %   "POSTGRES95",
     "FLEX-BISON",
     "LEX-YACC",
+    "MPFR",
+    "MPZ",
     "LIBC"
 ]
 

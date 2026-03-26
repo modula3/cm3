@@ -8,16 +8,6 @@ import ("libm3")
 import ("m3core")
 import ("cit_util")
 
-if not defined("SYSTEM_LIBS")
-  SYSTEM_LIBS{"MPZ"} = [ "-L/opt/homebrew/lib", "-lgmp" ]
-  SYSTEM_LIBORDER += [ "MPZ" ]
-end
-
-if not SYSTEM_LIBS contains "MPZ"
-  SYSTEM_LIBS{"MPZ"} = [ "-L/opt/homebrew/lib", "-lgmp" ]
-  SYSTEM_LIBORDER += [ "MPZ" ]
-end
-
 import_sys_lib ("MPZ")
 c_source("MpzC")
 
