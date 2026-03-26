@@ -11,7 +11,7 @@ IMPORT SchemePair, SchemeObject;
 IMPORT Value;
 FROM Value IMPORT Ordinal, Float, LongFloat, Extended, ArrayOrRecord, Set,
                   Txt, Null, Proc, Longint;
-IMPORT SchemeString, SchemeLongReal, SchemeSymbol;
+IMPORT SchemeString, SchemeLongReal, SchemeSymbol, SchemeInt;
 IMPORT TypeTranslator;
 IMPORT Type;
 FROM SchemeUtils IMPORT List2;
@@ -85,8 +85,8 @@ PROCEDURE ConvertSetArray(READONLY a: ARRAY OF Value.Ordinal):SchemeObject.T =
 PROCEDURE LR(f : LONGREAL) : SchemeObject.T = 
   BEGIN RETURN SchemeLongReal.FromLR(f) END LR;
 
-PROCEDURE LRI(i : INTEGER) : SchemeObject.T = 
-  BEGIN RETURN SchemeLongReal.FromI(i) END LRI;
+PROCEDURE LRI(i : INTEGER) : SchemeObject.T =
+  BEGIN RETURN SchemeInt.FromI(i) END LRI;
 
 PROCEDURE P(tag : TEXT; what : SchemeObject.T) : SchemePair.T =
   BEGIN

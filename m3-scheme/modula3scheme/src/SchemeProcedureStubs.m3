@@ -10,7 +10,7 @@ IMPORT SchemePrimitive;
 IMPORT SchemePair;
 IMPORT Debug;
 IMPORT RT0;
-IMPORT CardRefTbl, Atom, SchemeObject, SchemeLongReal, Fmt;
+IMPORT CardRefTbl, Atom, SchemeObject, SchemeLongReal, SchemeInt, Fmt;
 IMPORT AtomCardTbl;
 IMPORT SchemeBoolean;
 IMPORT Pickle, SchemeVector, TextRd, TextWr, Text;
@@ -357,7 +357,7 @@ PROCEDURE WritePickleApply(<*UNUSED*>proc : SchemeProcedure.T;
     WITH txt = TextWr.ToText(wr),
          vec = NEW(SchemeVector.T, Text.Length(txt)) DO
       FOR i := 0 TO Text.Length(txt)-1 DO
-        vec[i] := SchemeLongReal.FromI(ORD(Text.GetChar(txt,i)))
+        vec[i] := SchemeInt.FromI(ORD(Text.GetChar(txt,i)))
       END;
       RETURN vec
     END
@@ -372,7 +372,7 @@ PROCEDURE ReadPickleApply(<*UNUSED*>proc : SchemeProcedure.T;
     chars := NEW(REF ARRAY OF CHAR, NUMBER(vec^));
   BEGIN
     FOR i := FIRST(chars^) TO LAST(chars^) DO
-      WITH c = SchemeLongReal.Int(vec[i]) DO
+      WITH c = SchemeInt.ToInteger(vec[i]) DO
         IF c < ORD(FIRST(CHAR)) OR c > ORD(LAST(CHAR)) THEN
           RAISE E("Vector entry out of range : " & Stringify(First(args)))
         END;

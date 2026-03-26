@@ -8,7 +8,7 @@ MODULE TypeTranslator;
  *)
 
 IMPORT Type, SchemeObject;
-IMPORT SchemeLongReal, Atom, SchemePair, SchemeSymbol;
+IMPORT Atom, SchemePair, SchemeSymbol, SchemeInt;
 IMPORT SchemeBoolean;
 FROM Type IMPORT Qid, Field, Method, Signature, Formal, Exception, Mode;
 FROM Type IMPORT MethodDefault, MethodDefault1, MethodDefault2;
@@ -27,8 +27,8 @@ PROCEDURE F(name : TEXT;
 PROCEDURE B(b : BOOLEAN) : SchemeObject.T =
   BEGIN RETURN SchemeBoolean.Truth(b) END B;
 
-PROCEDURE LRI(i : INTEGER) : SchemeLongReal.T =
-  BEGIN RETURN SchemeLongReal.FromI(i) END LRI;
+PROCEDURE LRI(i : INTEGER) : SchemeObject.T =
+  BEGIN RETURN SchemeInt.FromI(i) END LRI;
 
 TYPE 
   Rec = REF RECORD

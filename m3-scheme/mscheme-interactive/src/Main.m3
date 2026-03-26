@@ -12,6 +12,7 @@ IMPORT SchemeM3, Scheme, Params, Pathname, Csighandler;
 IMPORT Debug, OSError, Wr, AL;
 IMPORT SchemeNavigatorEnvironment, SchemeEnvironment;
 IMPORT ParseParams, Stdio;
+IMPORT TextRd, SchemeInputPort;
 
 TYPE 
   Interrupter = Scheme.Interrupter OBJECT
@@ -31,13 +32,17 @@ PROCEDURE Interrupt(<*UNUSED*>i : Interrupter) : BOOLEAN =
 
 VAR
   env : SchemeEnvironment.T := NEW(SchemeNavigatorEnvironment.T).initEmpty();
-BEGIN 
+  evalExpr : TEXT := NIL;
+BEGIN
   Csighandler.install_int_handler();
 
   TRY
     WITH pp = NEW(ParseParams.T).init(Stdio.stderr) DO
       IF pp.keywordPresent("-unsafeenv") THEN
         env := NEW(SchemeEnvironment.Unsafe).initEmpty();
+      END;
+      IF pp.keywordPresent("-e") THEN
+        evalExpr := pp.getNext()
       END;
 
       pp.skipParsed();
@@ -48,7 +53,12 @@ BEGIN
 
     TRY
       WITH scm = NEW(SchemeM3.T).init(arr^,globalEnv := env) DO
-        scm.readEvalWriteLoop(NEW(Interrupter))
+        IF evalExpr # NIL THEN
+          EVAL scm.loadPort(NEW(SchemeInputPort.T).init(
+                              NEW(TextRd.T).init(evalExpr)))
+        ELSE
+          scm.readEvalWriteLoop(NEW(Interrupter))
+        END
       END
     EXCEPT
       Scheme.E(err) =>

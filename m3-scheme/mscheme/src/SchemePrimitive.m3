@@ -153,7 +153,10 @@ TYPE
 
         CharReadyQ,
 
-        ExactToInexact, InexactToExact
+        ExactToInexact, InexactToExact,
+
+        BitwiseAnd, BitwiseIor, BitwiseXor, BitwiseNot,
+        ArithmeticShift, IntegerLength
   };
 
 REVEAL 
@@ -459,6 +462,12 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("inexact->exact", ORD(P.InexactToExact), dd, 1)
     .defPrim("eq?-memo",       ORD(P.EqMemo), dd, 1, 1)
     .defPrim("equal?-memo",       ORD(P.EqualMemo), dd, 1, 1)
+    .defPrim("bitwise-and",    ORD(P.BitwiseAnd), dd, 0, n)
+    .defPrim("bitwise-ior",    ORD(P.BitwiseIor), dd, 0, n)
+    .defPrim("bitwise-xor",    ORD(P.BitwiseXor), dd, 0, n)
+    .defPrim("bitwise-not",    ORD(P.BitwiseNot), dd, 1)
+    .defPrim("arithmetic-shift", ORD(P.ArithmeticShift), dd, 2)
+    .defPrim("integer-length", ORD(P.IntegerLength), dd, 1)
     ;
     
     RETURN env
@@ -615,9 +624,50 @@ PROCEDURE CheckVectorIdx(vec : Vector; idx : INTEGER) RAISES { E } =
     END
   END CheckVectorIdx;
 
-PROCEDURE Prims(t          : T; 
-                interp     : Scheme.T; 
-                args, x, y : Object; 
+PROCEDURE BitwiseNary(args : Object; op : CHAR) : Object RAISES { E } =
+  (* N-ary bitwise: 'A'=and, 'O'=ior, 'X'=xor *)
+  VAR
+    result : Mpz.T;
+    first := TRUE;
+  BEGIN
+    IF args = NIL THEN
+      (* identity elements *)
+      CASE op OF
+        'A' => RETURN SchemeInt.FromI(-1)
+      | 'O' => RETURN SchemeInt.FromI(0)
+      | 'X' => RETURN SchemeInt.FromI(0)
+      ELSE <* ASSERT FALSE *>
+      END
+    END;
+
+    WHILE args # NIL AND ISTYPE(args, SchemePair.T) DO
+      WITH a = First(args) DO
+        IF NOT SchemeInt.IsExactInt(a) THEN
+          RETURN Error("bitwise op: not an exact integer: " & Stringify(List1(a)))
+        END;
+        IF first THEN
+          result := SchemeInt.ToMpz(a);
+          first := FALSE
+        ELSE
+          VAR mt := SchemeInt.ToMpz(a); mr := Mpz.New(); BEGIN
+            CASE op OF
+              'A' => Mpz.and(mr, result, mt)
+            | 'O' => Mpz.ior(mr, result, mt)
+            | 'X' => Mpz.xor(mr, result, mt)
+            ELSE <* ASSERT FALSE *>
+            END;
+            result := mr
+          END
+        END
+      END;
+      args := Rest(args)
+    END;
+    RETURN SchemeInt.MpzToScheme(result)
+  END BitwiseNary;
+
+PROCEDURE Prims(t          : T;
+                interp     : Scheme.T;
+                args, x, y : Object;
                 VAR free   : BOOLEAN) : Object
   RAISES { E } =
   VAR z : Object;
@@ -1481,6 +1531,55 @@ PROCEDURE Prims(t          : T;
           END
         EXCEPT
           OSError.E(e) => RAISE E("system: " & AL.Format(e))
+        END
+      |
+        P.BitwiseAnd =>
+        free := FALSE;
+        RETURN BitwiseNary(args, 'A')
+      |
+        P.BitwiseIor =>
+        free := FALSE;
+        RETURN BitwiseNary(args, 'O')
+      |
+        P.BitwiseXor =>
+        free := FALSE;
+        RETURN BitwiseNary(args, 'X')
+      |
+        P.BitwiseNot =>
+        IF NOT SchemeInt.IsExactInt(x) THEN
+          RETURN Error("bitwise-not: not an exact integer: " & Stringify(List1(x)))
+        END;
+        VAR mx := SchemeInt.ToMpz(x); mr := Mpz.New(); BEGIN
+          Mpz.com(mr, mx);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.ArithmeticShift =>
+        IF NOT SchemeInt.IsExactInt(x) OR NOT SchemeInt.IsExactInt(y) THEN
+          RETURN Error("arithmetic-shift: not exact integers")
+        END;
+        VAR
+          mx := SchemeInt.ToMpz(x);
+          mr := Mpz.New();
+          my := SchemeInt.ToMpz(y);
+        BEGIN
+          Mpz.ShiftMpz(mr, mx, my);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.IntegerLength =>
+        IF NOT SchemeInt.IsExactInt(x) THEN
+          RETURN Error("integer-length: not an exact integer: " & Stringify(List1(x)))
+        END;
+        VAR mx := SchemeInt.ToMpz(x); BEGIN
+          IF Mpz.cmp(mx, MpzZero) < 0 THEN
+            Mpz.com(mx, mx)  (* ~x for negative numbers *)
+          END;
+          IF Mpz.cmp(mx, MpzZero) = 0 THEN
+            RETURN SchemeInt.FromI(0)
+          ELSE
+            RETURN SchemeInt.FromI(Mpz.sizeinbase(mx, 2))
+          END
         END
       END
     END
