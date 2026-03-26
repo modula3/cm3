@@ -1,5 +1,10 @@
 /* MScheme Level 1 Compiler -- quake template package */
 
+if not SYSTEM_LIBS contains "MPZ"
+  SYSTEM_LIBS{"MPZ"} = [ "-L/opt/homebrew/lib", "-lgmp" ]
+  SYSTEM_LIBORDER += [ "MPZ" ]
+end
+
 import("cit_util")
 import("mscheme")
 import("scheme-lib")

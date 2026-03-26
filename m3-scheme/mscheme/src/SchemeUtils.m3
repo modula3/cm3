@@ -8,7 +8,7 @@
 
 MODULE SchemeUtils;
 IMPORT Scheme, SchemeInputPort, SchemeClass, SchemeSymbol;
-IMPORT Wr, Fmt, Wx, Stdio;
+IMPORT Wr, Fmt, Wx, Stdio, Text;
 FROM Scheme IMPORT Object, E;
 FROM SchemeChar IMPORT Char;
 IMPORT SchemeLongReal, SchemeChar, SchemePair;
@@ -23,6 +23,7 @@ IMPORT Lex, FloatMode;
 IMPORT SchemeEnvironmentBinding;
 IMPORT SchemeConvertHooks;
 IMPORT BigInt;
+IMPORT SchemeInt, Mpz;
 
 TYPE Boolean = SchemeBoolean.T;
      LongReal = SchemeLongReal.T;
@@ -400,6 +401,24 @@ PROCEDURE Equal(x, y : Object; stack : RefPairSeq.T := NIL) : BOOLEAN =
 PROCEDURE EqualLeaf(x, y : Object) : BOOLEAN =
   BEGIN
     TYPECASE x OF
+      SchemeInt.T(rx) =>
+      TYPECASE y OF
+        SchemeInt.T(ry) => RETURN rx^ = ry^
+      | Mpz.T(my) =>
+        WITH mx = Mpz.NewInt(rx^) DO RETURN Mpz.cmp(mx, my) = 0 END
+      ELSE
+        RETURN FALSE
+      END
+    |
+      Mpz.T(mx) =>
+      TYPECASE y OF
+        SchemeInt.T(ry) =>
+        WITH my = Mpz.NewInt(ry^) DO RETURN Mpz.cmp(mx, my) = 0 END
+      | Mpz.T(my) => RETURN Mpz.cmp(mx, my) = 0
+      ELSE
+        RETURN FALSE
+      END
+    |
       LongReal(lr) =>
       IF NOT ISTYPE(y,LongReal) THEN RETURN FALSE END;
       RETURN lr^ = NARROW(y,LongReal)^
@@ -425,9 +444,26 @@ PROCEDURE Eqv(x, y : Object) : BOOLEAN =
     TYPECASE x OF
       NULL => RETURN x = y
     |
-      SchemeLongReal.T(lx) => 
+      SchemeInt.T(rx) =>
+      TYPECASE y OF
+        SchemeInt.T(ry) => RETURN rx^ = ry^
+      | Mpz.T(my) =>
+        WITH mx = Mpz.NewInt(rx^) DO RETURN Mpz.cmp(mx, my) = 0 END
+      ELSE
+        RETURN FALSE
+      END
+    |
+      Mpz.T(mx) =>
+      TYPECASE y OF
+        SchemeInt.T(ry) =>
+        WITH my = Mpz.NewInt(ry^) DO RETURN Mpz.cmp(mx, my) = 0 END
+      | Mpz.T(my) => RETURN Mpz.cmp(mx, my) = 0
+      ELSE
+        RETURN FALSE
+      END
+    |
+      SchemeLongReal.T(lx) =>
       TYPECASE y OF SchemeLongReal.T(ly) => RETURN lx^ = ly^ ELSE RETURN FALSE END
-      (* chars are shared in our system, no need to check values here *)
     ELSE
       RETURN x = y
     END
@@ -559,29 +595,24 @@ PROCEDURE StringifyB(x      : Object;
           Wx.PutText(buf, txt);
           Wx.PutText(buf, "\">")
         |
+          SchemeInt.T(ri) =>
+          Wx.PutInt(buf, ri^)
+        |
+          Mpz.T(m) =>
+          Put(Mpz.FormatDecimal(m))
+        |
           SchemeLongReal.T(lr) =>
-          IF FLOAT(ROUND(lr^),LONGREAL) = lr^ THEN
-            Wx.PutInt(buf,(ROUND(lr^)))
-          ELSIF FLOAT(LAST(CARDINAL),LONGREAL) = lr^ THEN
-            (* tricky special case for 64-bit machines.  Possible loss
-               of precision! *)
-            Wx.PutInt(buf,LAST(CARDINAL))
-          ELSIF ABS(lr^) > 1.0d10 AND 
-                lr^ >= FLOAT(FIRST(INTEGER), LONGREAL) AND  
-                lr^ <= FLOAT(LAST(INTEGER), LONGREAL) THEN
-            <*FATAL FloatMode.Trap, Lex.Error*> (* must be able to parse Fmt *)
-            BEGIN WITH o  = Fmt.LongReal(ABS(lr^)),
-                 s  = Scan.LongReal(o),
-                 o1 = Fmt.LongReal(ABS(lr^)-1.0d0),
-                 s1 = Scan.LongReal(o1) DO
-              IF s = s1 THEN
-                Wx.PutInt(buf, ROUND(lr^))
-              ELSE
-                Put(Fmt.LongReal(lr^))
-              END
-            END END (* BEGIN WITH *)
-          ELSE
-            Put(Fmt.LongReal(lr^))
+          WITH txt = Fmt.LongReal(lr^) DO
+            Put(txt);
+            (* Ensure a decimal point so inexact numbers are distinguishable
+               from exact integers.  Skip for NaN/Infinity. *)
+            IF Text.FindChar(txt, '.') < 0 AND
+               Text.FindChar(txt, 'e') < 0 AND
+               Text.FindChar(txt, 'E') < 0 AND
+               Text.FindChar(txt, 'N') < 0 AND
+               Text.FindChar(txt, 'I') < 0 THEN
+              Put(".0")
+            END
           END
         |
           BigInt.T(big) =>

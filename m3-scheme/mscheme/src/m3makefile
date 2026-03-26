@@ -19,6 +19,11 @@ import ("m3core")
 import ("cit_util")
 import ("scheme-lib")
 import ("netobj")
+if not SYSTEM_LIBS contains "MPZ"
+  SYSTEM_LIBS{"MPZ"} = [ "-L/opt/homebrew/lib", "-lgmp" ]
+  SYSTEM_LIBORDER += [ "MPZ" ]
+end
+import ("mpz")
 
 Module("Scheme")
 Module("SchemeProfiler")
@@ -63,6 +68,8 @@ Interface("SchemeEnvironmentBinding")
 Module("SchemeBoolean")
 
 Module("SchemeLongReal")
+
+Module("SchemeInt")
 
 Module("SchemeChar")
 

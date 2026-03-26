@@ -147,9 +147,6 @@ CONST
 
 (* ;;;;;;;;;;;;;;;; R4RS gap fillers *)
 
-"(define (exact->inexact x) x)\n" &
-"(define (inexact->exact x) x)\n" &
-
 "(define (string-copy s) (substring s 0 (string-length s)))\n" &
 
 "(define (string-fill! s c)\n" &

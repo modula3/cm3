@@ -11,6 +11,7 @@ IMPORT Scan;
 FROM SchemeUtils IMPORT Error, StringifyT;
 FROM Scheme IMPORT Object, E;
 IMPORT Lex, FloatMode;
+IMPORT SchemeInt, Mpz, BigInt;
 
 PROCEDURE FromI(x : INTEGER) : T = 
   BEGIN RETURN FromLR(FLOAT(x,LONGREAL)) END FromI;
@@ -32,8 +33,14 @@ PROCEDURE FromLR(x : LONGREAL) : T =
 
 PROCEDURE FromO(x : Object) : LONGREAL RAISES { E } =
   BEGIN
-    IF x # NIL AND ISTYPE(x,T) THEN RETURN NARROW(x,T)^ 
-    ELSE RETURN FromO(Error("expected a double, got: " & StringifyT(x)))
+    TYPECASE x OF
+      NULL => RETURN FromO(Error("expected a number, got: ()"))
+    | SchemeInt.T(ri) => RETURN FLOAT(ri^, LONGREAL)
+    | Mpz.T(m) => RETURN Mpz.get_d(m)
+    | T(lr) => RETURN lr^
+    | BigInt.T(b) => RETURN BigInt.ToLongReal(b)
+    ELSE
+      RETURN FromO(Error("expected a number, got: " & StringifyT(x)))
     END
   END FromO;
 
@@ -49,18 +56,33 @@ PROCEDURE Card(x : Object; roundOK : BOOLEAN) : CARDINAL RAISES { E } =
 
 PROCEDURE Int(x : Object; roundOK : BOOLEAN) : INTEGER RAISES { E } =
   BEGIN
-    WITH lr = FromO(x) DO
-      IF lr < FLOAT(FIRST(INTEGER),LONGREAL) 
-        OR 
-         lr > FLOAT(LAST(INTEGER),LONGREAL) THEN
+    TYPECASE x OF
+      SchemeInt.T(ri) => RETURN ri^
+    | Mpz.T(m) =>
+      IF Mpz.fits_slong_p(m) # 0 THEN
+        RETURN Mpz.get_si(m)
+      ELSE
         RETURN Int(Error("number out of range : " & StringifyT(x)),FALSE)
-      END;
-
-      WITH res = ROUND(lr) DO
-        IF NOT roundOK AND FLOAT(res,LONGREAL) # lr THEN
-          RETURN Int(Error("not an integer : " & StringifyT(x)),FALSE)
+      END
+    | BigInt.T(b) =>
+      TRY RETURN BigInt.ToInteger(b)
+      EXCEPT BigInt.OutOfRange =>
+        RETURN Int(Error("number out of range : " & StringifyT(x)),FALSE)
+      END
+    ELSE
+      WITH lr = FromO(x) DO
+        IF lr < FLOAT(FIRST(INTEGER),LONGREAL)
+          OR
+           lr > FLOAT(LAST(INTEGER),LONGREAL) THEN
+          RETURN Int(Error("number out of range : " & StringifyT(x)),FALSE)
         END;
-        RETURN res
+
+        WITH res = ROUND(lr) DO
+          IF NOT roundOK AND FLOAT(res,LONGREAL) # lr THEN
+            RETURN Int(Error("not an integer : " & StringifyT(x)),FALSE)
+          END;
+          RETURN res
+        END
       END
     END
   END Int;

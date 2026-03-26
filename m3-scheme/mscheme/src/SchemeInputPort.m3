@@ -7,7 +7,7 @@
 *)
 
 MODULE SchemeInputPort;
-IMPORT AL, Rd, UnsafeRd, RdClass;
+IMPORT AL, Rd, UnsafeRd, RdClass, Math;
 FROM SchemeUtils IMPORT Error, Warn, Cons, List2, ListToVector, Stringify;
 FROM Scheme IMPORT Object, E;
 IMPORT SchemeLongReal;
@@ -22,6 +22,7 @@ IMPORT SchemePair, SchemeUtils;
 IMPORT SchemeInputPortClass;
 IMPORT Fmt;
 IMPORT BigInt;
+IMPORT SchemeInt, Mpz;
 (*IMPORT Debug;*)
 
 REVEAL RdClass.Private <: MUTEX; (* see cryptic SRC comments *)
@@ -442,10 +443,13 @@ PROCEDURE NextToken(t          : T;
             (* R4RS number prefixes: #e #i #d #b #o #x
                Combined prefixes allowed in any order, e.g. #e#x1F *)
             VAR base := bigIntBase;
+                exactness := ORD('d'); (* default *)
             BEGIN
               LOOP
                 CASE ch OF
-                  ORD('e'), ORD('i'), ORD('d') => (* exactness/default: no-op *)
+                  ORD('e'), ORD('i') => exactness := ch
+                |
+                  ORD('d') => (* default radix, keep current base *)
                 |
                   ORD('b') => base := 2
                 |
@@ -461,7 +465,38 @@ PROCEDURE NextToken(t          : T;
               END;
               (* ch is the first char after the prefix(es); push it back *)
               EVAL t.pushChar(ch);
-              RETURN t.nextToken(bigInt, base)
+              WITH result = t.nextToken(bigInt, base) DO
+                IF exactness = ORD('e') THEN
+                  (* force exact *)
+                  IF SchemeInt.IsExactInt(result) THEN
+                    RETURN result
+                  ELSIF ISTYPE(result, SchemeLongReal.T) THEN
+                    WITH lr = NARROW(result, SchemeLongReal.T)^ DO
+                      IF Math.floor(lr) = lr AND
+                         lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
+                         lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+                        RETURN SchemeInt.FromI(ROUND(lr))
+                      ELSE
+                        WITH m = Mpz.New() DO
+                          Mpz.set_d(m, lr);
+                          RETURN SchemeInt.MpzToScheme(m)
+                        END
+                      END
+                    END
+                  ELSE
+                    RETURN result
+                  END
+                ELSIF exactness = ORD('i') THEN
+                  (* force inexact *)
+                  IF SchemeInt.IsExactInt(result) THEN
+                    RETURN SchemeLongReal.FromLR(SchemeLongReal.FromO(result))
+                  ELSE
+                    RETURN result
+                  END
+                ELSE
+                  RETURN result
+                END
+              END
             END
         ELSE
           t.warn("#" & Text.FromChar(VAL(ch,CHAR)) &
@@ -491,39 +526,62 @@ PROCEDURE NextToken(t          : T;
         IF c IN NumberChars OR bigIntBase # 10 THEN
           WITH txt = WxToText(wx) DO
             IF bigIntBase # 10 THEN
-              (* non-decimal radix from #b/#o/#x prefix: parse as integer *)
+              (* non-decimal radix from #b/#o/#x prefix: parse as exact integer *)
               EVAL WxReset(wx);
               TRY
-                IF bigInt THEN
-                  RETURN BigInt.ScanBased(txt, defaultBase := bigIntBase)
-                ELSE
-                  WITH i = Scan.Int(txt, bigIntBase),
-                       lrp = NEW(SchemeLongReal.T) DO
-                    lrp^ := FLOAT(i, LONGREAL);
-                    RETURN lrp
-                  END
+                WITH i = Scan.Int(txt, bigIntBase) DO
+                  RETURN SchemeInt.FromI(i)
                 END
               EXCEPT
                 Lex.Error, FloatMode.Trap =>
-                  WxPutText(wx, txt) (* restore END *);
+                  (* overflow or parse error, try Mpz *)
+                  VAR m: Object; BEGIN
+                    TRY m := Mpz.InitScan(txt, bigIntBase)
+                    EXCEPT ELSE m := NIL END;
+                    IF m # NIL THEN RETURN m END;
+                    WxPutText(wx, txt) (* restore *)
+                  END
               END
-            ELSIF bigInt OR NOT HaveAlphasOtherThane(txt) THEN
-              (* note we are stricter than Modula-3 here.
-                 we allow only "e" as the exponent marker.  Not E, d, D, x, or X. *)
+            ELSIF bigInt THEN
+              (* legacy read-big-int path: produce Mpz.T *)
               EVAL WxReset(wx);
-              TRY
-                IF bigInt THEN
-                  RETURN BigInt.ScanBased(txt, defaultBase := 10)
-                ELSE
+              VAR m: Object; BEGIN
+                TRY m := Mpz.InitScan(txt, 10)
+                EXCEPT ELSE m := NIL END;
+                IF m # NIL THEN RETURN m END;
+                WxPutText(wx, txt) (* restore *)
+              END
+            ELSIF NOT HaveAlphasOtherThane(txt) THEN
+              (* decimal number: check if pure integer or float *)
+              EVAL WxReset(wx);
+              IF IsPureInteger(txt) THEN
+                (* no decimal point, no exponent: parse as exact integer *)
+                TRY
+                  WITH i = Scan.Int(txt) DO
+                    RETURN SchemeInt.FromI(i)
+                  END
+                EXCEPT
+                  Lex.Error, FloatMode.Trap =>
+                    (* overflow, try Mpz *)
+                    VAR m: Object; BEGIN
+                      TRY m := Mpz.InitScan(txt, 10)
+                      EXCEPT ELSE m := NIL END;
+                      IF m # NIL THEN RETURN m END;
+                      WxPutText(wx, txt) (* restore *)
+                    END
+                END
+              ELSE
+                (* has decimal point or exponent: inexact *)
+                TRY
                   WITH lr = Scan.LongReal(txt),
                        lrp = NEW(SchemeLongReal.T) DO
                     lrp^ := lr;
                     RETURN lrp
                   END
+                EXCEPT
+                  Lex.Error, FloatMode.Trap =>
+                    WxPutText(wx, txt) (* restore *);
                 END
-              EXCEPT
-                Lex.Error, FloatMode.Trap =>
-                  WxPutText(wx, txt) (* restore END *);
               END
             END
           END
@@ -549,6 +607,26 @@ PROCEDURE HaveAlphasOtherThane(txt : TEXT) : BOOLEAN =
     END;
     RETURN FALSE
   END HaveAlphasOtherThane;
+
+PROCEDURE IsPureInteger(txt : TEXT) : BOOLEAN =
+  (* TRUE if txt looks like an integer: optional sign, then all digits.
+     No decimal point, no exponent. *)
+  VAR
+    start := 0;
+    len := Text.Length(txt);
+  BEGIN
+    IF len = 0 THEN RETURN FALSE END;
+    IF Text.GetChar(txt, 0) = '+' OR Text.GetChar(txt, 0) = '-' THEN
+      start := 1
+    END;
+    IF start >= len THEN RETURN FALSE END;
+    FOR i := start TO len-1 DO
+      WITH c = Text.GetChar(txt, i) DO
+        IF c < '0' OR c > '9' THEN RETURN FALSE END
+      END
+    END;
+    RETURN TRUE
+  END IsPureInteger;
 
 PROCEDURE CharSeqToArray(seq : CharSeq.T) : String =
   BEGIN

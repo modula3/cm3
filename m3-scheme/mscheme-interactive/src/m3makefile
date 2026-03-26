@@ -7,6 +7,11 @@ if defined("pm3_version")
 end
 
 
+if not SYSTEM_LIBS contains "MPZ"
+  SYSTEM_LIBS{"MPZ"} = [ "-L/opt/homebrew/lib", "-lgmp" ]
+  SYSTEM_LIBORDER += [ "MPZ" ]
+end
+
 import("libm3")
 import("cit_util")
 import("mscheme")

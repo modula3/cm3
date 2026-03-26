@@ -45,12 +45,14 @@
 
 (section "exact->inexact / inexact->exact")
 
-(test "exact->inexact integer" 42 (exact->inexact 42))
+(test "exact->inexact integer" 42.0 (exact->inexact 42))
 (test "exact->inexact float" 3.14 (exact->inexact 3.14))
-(test "exact->inexact zero" 0 (exact->inexact 0))
-(test "exact->inexact negative" -7 (exact->inexact -7))
+(test "exact->inexact zero" 0.0 (exact->inexact 0))
+(test "exact->inexact negative" -7.0 (exact->inexact -7))
+(test-true "inexact? exact->inexact" (inexact? (exact->inexact 42)))
 (test "inexact->exact integer" 42 (inexact->exact 42))
-(test "inexact->exact float" 3.14 (inexact->exact 3.14))
+(test "inexact->exact int float" 42 (inexact->exact 42.0))
+(test-true "exact? inexact->exact" (exact? (inexact->exact 42.0)))
 (test "inexact->exact zero" 0 (inexact->exact 0))
 (test "inexact->exact negative" -7 (inexact->exact -7))
 
@@ -61,7 +63,7 @@
 (section "2-arg atan (atan2)")
 
 ;; 1-arg atan still works
-(test "atan 0" 0 (atan 0))
+(test "atan 0" 0.0 (atan 0))
 (test "atan 1 ~ pi/4" #t (< (abs (- (atan 1) 0.7853981633974483)) 1e-10))
 
 ;; 2-arg atan
@@ -313,9 +315,9 @@
 
 (test "#e42" 42 #e42)
 (test "#e-7" -7 #e-7)
-(test "#i42" 42 #i42)
+(test "#i42" 42.0 #i42)
 (test "#i3.14" 3.14 #i3.14)
-(test "#i-7" -7 #i-7)
+(test "#i-7" -7.0 #i-7)
 
 ;;; ============================================================
 ;;; Combined prefixes (R4RS allows any order)
@@ -325,12 +327,12 @@
 
 (test "#e#x1F" 31 #e#x1F)
 (test "#x#e1F" 31 #x#e1F)
-(test "#i#xFF" 255 #i#xFF)
-(test "#x#iFF" 255 #x#iFF)
+(test "#i#xFF" 255.0 #i#xFF)
+(test "#x#iFF" 255.0 #x#iFF)
 (test "#e#b1010" 10 #e#b1010)
 (test "#b#e1010" 10 #b#e1010)
-(test "#i#o77" 63 #i#o77)
-(test "#o#i77" 63 #o#i77)
+(test "#i#o77" 63.0 #i#o77)
+(test "#o#i77" 63.0 #o#i77)
 (test "#e#d42" 42 #e#d42)
 (test "#d#e42" 42 #d#e42)
 

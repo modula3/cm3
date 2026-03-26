@@ -520,10 +520,10 @@
   (let ((idx (constant-index val ctx)))
     (if idx
         (string-append "self.k_" (number->string idx))
-        (cond ((and (integer? val) (= val 0)) "SchemeLongReal.Zero")
-              ((and (integer? val) (= val 1)) "SchemeLongReal.One")
+        (cond ((and (integer? val) (= val 0)) "SchemeInt.Zero")
+              ((and (integer? val) (= val 1)) "SchemeInt.One")
               ((integer? val)
-               (string-append "SchemeLongReal.FromI(" (number->string val) ")"))
+               (string-append "SchemeInt.FromI(" (number->string val) ")"))
               ((number? val)
                (string-append "SchemeLongReal.FromLR(" (number->string val) "d0)"))
               ((symbol? val)
@@ -977,7 +977,7 @@
                           (m3n (cdr (assq param-sym
                                          (map cons bvars bvar-m3names)))))
                      (string-append (indent depth)
-                                    (L nr-name " := NARROW(" m3n ", SchemeLongReal.T)^;"))))
+                                    (L nr-name " := SchemeLongReal.FromO(" m3n ");"))))
                  nr-vars))
      (if loop-flag
          ;; Non-tail: WHILE loop with boolean flag
@@ -1597,7 +1597,7 @@
 (define (arg-as-longreal scheme-arg m3-expr . opt-ctx)
   ;; If scheme-arg is a compile-time number, emit literal LONGREAL.
   ;; If scheme-arg is an unboxed param (in ctx), use its LONGREAL name directly.
-  ;; Otherwise, emit NARROW(m3-expr, SchemeLongReal.T)^.
+  ;; Otherwise, emit SchemeLongReal.FromO(m3-expr).
   (cond
     ((number? scheme-arg)
      (cond ((= scheme-arg 0) "0.0d0")
@@ -1610,7 +1610,7 @@
           (assq scheme-arg (ctx-unboxed (car opt-ctx))))
      => (lambda (u) (cdr u)))
     (else
-     (string-append "NARROW(" m3-expr ", SchemeLongReal.T)^"))))
+     (string-append "SchemeLongReal.FromO(" m3-expr ")"))))
 
 (define (gen-inline-expr fn-name nargs arg-exprs scheme-args ctx)
   ;; Returns an M3 expression string for inlined primitive, or #f.
@@ -1625,8 +1625,7 @@
      (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemePair.T))"))
     ((and (eq? fn-name 'number?) (= nargs 1))
-     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
-                    (car arg-exprs) ", SchemeLongReal.T))"))
+     (string-append "SchemeBoolean.Truth(SchemeInt.IsNumber(" (car arg-exprs) "))"))
     ((and (eq? fn-name 'boolean?) (= nargs 1))
      (string-append "SchemeBoolean.Truth(" (car arg-exprs)
                     " = SchemeBoolean.True() OR " (car arg-exprs)
@@ -1654,66 +1653,30 @@
                     (cadr arg-exprs) ", interp)"))
     ;; --- Binary arithmetic ---
     ((and (eq? fn-name '+) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " + "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemePrimitive.NumericAdd("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '-) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " - "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemePrimitive.NumericSub("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '*) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " * "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
-    ((and (eq? fn-name 'quotient) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR(FLOAT(TRUNC("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    ") DIV TRUNC("
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    "), LONGREAL))"))
-    ((and (eq? fn-name 'remainder) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR(FLOAT(TRUNC("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    ") MOD TRUNC("
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    "), LONGREAL))"))
+     (string-append "SchemePrimitive.NumericMul("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ;; --- Binary comparisons ---
     ((and (eq? fn-name '=) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " = "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericEQ("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '<) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " < "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericLT("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '>) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " > "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericGT("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '<=) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " <= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericLE("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '>=) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " >= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericGE("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ;; --- eq? ---
     ((and (eq? fn-name 'eq?) (= nargs 2))
      (string-append "SchemeBoolean.Truth(" (car arg-exprs) " = "
@@ -1730,8 +1693,7 @@
      (string-append (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemePair.T)"))
     ((and (eq? fn-name 'number?) (= nargs 1))
-     (string-append (car arg-exprs) " # NIL AND ISTYPE("
-                    (car arg-exprs) ", SchemeLongReal.T)"))
+     (string-append "SchemeInt.IsNumber(" (car arg-exprs) ")"))
     ((and (eq? fn-name 'boolean?) (= nargs 1))
      (string-append (car arg-exprs) " = SchemeBoolean.True() OR "
                     (car arg-exprs) " = SchemeBoolean.False()"))
@@ -1745,25 +1707,20 @@
      (string-append (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemeChar.T)"))
     ((and (eq? fn-name '=) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " = "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericEQ("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '<) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " < "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericLT("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '>) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " > "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericGT("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '<=) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " <= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericLE("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '>=) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " >= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericGE("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name 'eq?) (= nargs 2))
      (string-append (car arg-exprs) " = " (cadr arg-exprs)))
     (else #f)))
@@ -1772,12 +1729,12 @@
   ;; Quick check: is this primitive inlineable at this arity?
   (and (memq fn-name '(null? pair? number? boolean? symbol? string? char?
                         car cdr cadr cons
-                        + - * quotient remainder
+                        + - *
                         = < > <= >= eq?))
        (or (and (memq fn-name '(null? pair? number? boolean? symbol? string?
                                  char? car cdr cadr))
                 (= nargs 1))
-           (and (memq fn-name '(cons + - * quotient remainder = < > <= >= eq?))
+           (and (memq fn-name '(cons + - * = < > <= >= eq?))
                 (= nargs 2)))))
 
 (define (try-inline-primitive fn args target ctx depth)
@@ -1944,7 +1901,7 @@
                                   (if val
                                       (string-append (indent depth) (L box-tmp " := " val ";"))
                                       (gen-expr arg box-tmp ctx depth))
-                                  (indent depth) (L tmp " := NARROW(" box-tmp ", SchemeLongReal.T)^;"))))))
+                                  (indent depth) (L tmp " := SchemeLongReal.FromO(" box-tmp ");"))))))
                        ;; Normal boxed param
                        (let ((val (gen-value arg ctx depth)))
                          (if val
@@ -2123,7 +2080,7 @@
                           (let* ((param-sym (car u))
                                  (nr-name (cdr u))
                                  (a-name (cdr (assq param-sym (ctx-param-map ctx)))))
-                            (L "    " nr-name " := NARROW(" a-name ", SchemeLongReal.T)^;")))
+                            (L "    " nr-name " := SchemeLongReal.FromO(" a-name ");")))
                         unboxed))
             (L "    LOOP")
             body-code
@@ -2349,10 +2306,10 @@
 
 (define (constant-to-m3 c)
   (cond
-    ((and (integer? c) (= c 0)) "SchemeLongReal.Zero")
-    ((and (integer? c) (= c 1)) "SchemeLongReal.One")
+    ((and (integer? c) (= c 0)) "SchemeInt.Zero")
+    ((and (integer? c) (= c 1)) "SchemeInt.One")
     ((integer? c)
-     (string-append "SchemeLongReal.FromI(" (number->string c) ")"))
+     (string-append "SchemeInt.FromI(" (number->string c) ")"))
     ((number? c)
      (string-append "SchemeLongReal.FromLR(" (number->string c) "d0)"))
     ((string? c)
@@ -2628,7 +2585,7 @@
      NL
      (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
      (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
-     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair;")
+     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair, SchemeInt, SchemePrimitive;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
      (L "IMPORT SchemeCompiledRegistry;")
      (L "FROM Scheme IMPORT Object;")
