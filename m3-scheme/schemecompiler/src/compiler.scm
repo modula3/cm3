@@ -523,9 +523,9 @@
         (cond ((and (integer? val) (= val 0)) "SchemeInt.Zero")
               ((and (integer? val) (= val 1)) "SchemeInt.One")
               ((integer? val)
-               (string-append "SchemeInt.FromI(" (number->string val) ")"))
+               (string-append "SchemeInt.FromI(" (number-to-m3-integer val) ")"))
               ((number? val)
-               (string-append "SchemeLongReal.FromLR(" (number->string val) "d0)"))
+               (string-append "SchemeLongReal.FromLR(" (number-to-m3-longreal val) ")"))
               ((symbol? val)
                (string-append "SchemeSymbol.Symbol(\""
                               (symbol->string val) "\")"))
@@ -536,6 +536,43 @@
                (if val "SchemeBoolean.True()" "SchemeBoolean.False()"))
               ((null? val) "NIL")
               (else (string-append "self.k_" (number->string 0)))))))
+
+;;;
+;;; ==================== M3 Number Literal Formatting ====================
+;;;
+
+;; Format a number as a valid M3 LONGREAL literal.
+;; M3 syntax: digits.digits{d,D}[sign]digits  e.g. 1.0d-6, 3.14d0
+;; Scheme's number->string may produce "1e-6" which is NOT valid M3.
+(define (number-to-m3-longreal n)
+  (let* ((x (exact->inexact n))
+         (s (number->string x))
+         (chars (string->list s)))
+    (list->string
+     (reverse
+      (let loop ((cs chars) (acc '()) (seen-dot #f) (in-exp #f))
+        (cond
+          ((null? cs)
+           (if in-exp
+               acc                                ;; already has exponent
+               (if seen-dot
+                   (cons #\0 (cons #\d acc))      ;; 3.14 → 3.14d0
+                   (cons #\0 (cons #\d (cons #\0 (cons #\. acc))))))) ;; 42 → 42.0d0
+          ((and (not in-exp) (or (char=? (car cs) #\e) (char=? (car cs) #\E)))
+           (if seen-dot
+               (loop (cdr cs) (cons #\d acc) #t #t)
+               (loop (cdr cs) (cons #\d (cons #\0 (cons #\. acc))) #t #t)))
+          ((char=? (car cs) #\.)
+           (loop (cdr cs) (cons #\. acc) #t in-exp))
+          (else
+           (loop (cdr cs) (cons (car cs) acc) seen-dot in-exp))))))))
+
+;; Format a number as a valid M3 INTEGER literal.
+;; Handles inexact integers like 2.0 → "2" and 1e9 → "1000000000".
+(define (number-to-m3-integer n)
+  (if (exact? n)
+      (number->string n)
+      (number->string (inexact->exact (round n)))))
 
 ;;;
 ;;; ==================== Code Generation Helpers ====================
@@ -2307,9 +2344,9 @@
     ((and (integer? c) (= c 0)) "SchemeInt.Zero")
     ((and (integer? c) (= c 1)) "SchemeInt.One")
     ((integer? c)
-     (string-append "SchemeInt.FromI(" (number->string c) ")"))
+     (string-append "SchemeInt.FromI(" (number-to-m3-integer c) ")"))
     ((number? c)
-     (string-append "SchemeLongReal.FromLR(" (number->string c) "d0)"))
+     (string-append "SchemeLongReal.FromLR(" (number-to-m3-longreal c) ")"))
     ((string? c)
      (string-append "SchemeString.FromText(\"" (m3-escape-string c) "\")"))
     ((boolean? c)

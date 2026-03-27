@@ -31,7 +31,7 @@ _scheme_compile_path("pregexp",     slib & SL & "pregexp" & SL & "pregexp.scm", 
 _scheme_compile_path("marketdata_hfdate_conversion",
                      slib & SL & "marketdata-hfdate-conversion.scm", HIDDEN)
 
-LinkCompiledScheme()
+LinkCompiledSchemeAs("SchemeLibCompiled")
 
 ship_source("compiler.scm")
 ship_source("test-input.scm")

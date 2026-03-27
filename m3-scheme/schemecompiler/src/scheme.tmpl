@@ -72,11 +72,13 @@ readonly proc _scheme_compile_path(module_name, abs_src_path, visibility) is
 end
 
 readonly proc scheme(module_name) is
-  _scheme_compile(module_name, module_name & ".scm", HIDDEN)
+  local m3name = subst_chars(module_name, "-", "_")
+  _scheme_compile(m3name, module_name & ".scm", HIDDEN)
 end
 
 readonly proc Scheme(module_name) is
-  _scheme_compile(module_name, module_name & ".scm", VISIBLE)
+  local m3name = subst_chars(module_name, "-", "_")
+  _scheme_compile(m3name, module_name & ".scm", VISIBLE)
 end
 
 readonly proc LinkCompiledSchemeAs(unit_name) is
