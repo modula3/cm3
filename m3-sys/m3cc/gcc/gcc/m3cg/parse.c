@@ -5146,6 +5146,7 @@ M3CG_HANDLER (MAX) { m3_minmax (type, 0); }
 
 M3CG_HANDLER (ROUND)
 {
+/* not just yet needs more testing
   //Use the builtins for rounding.
   m3_start_call ();
   m3_pop_param (src_t);
@@ -5162,12 +5163,14 @@ M3CG_HANDLER (ROUND)
     }
   }
   EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t, EXPR_REF (-1));
+*/
 
 /*
   original code which produces erroneous results on 64 bit architectures
   for all odd integers as floats beyond about 2^16. In those cases the
   number is rounded up when it should not, as there is no fractional part.
   See test p126.
+*/
 
   REAL_VALUE_TYPE r;
 
@@ -5189,7 +5192,7 @@ M3CG_HANDLER (ROUND)
                              m3_build2 (PLUS_EXPR, src_t, arg,
                                         m3_build3 (COND_EXPR, src_t,
                                                    cond, pos, neg)));
-*/
+
 }
 
 M3CG_HANDLER (TRUNC)
