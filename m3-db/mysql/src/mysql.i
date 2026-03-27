@@ -92,6 +92,7 @@
 %ignore mariadb_load_defaults;
 %ignore ma_thread_init;
 %ignore ma_thread_end;
+%ignore MARIADB_X509_INFO;
 
 //only inserted if swigged with -generatem3make
 %insert(m3makefile) %{
