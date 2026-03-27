@@ -2113,8 +2113,13 @@ PROCEDURE NumComputeExact(args : Object; op : CHAR; start : Object) : Object
                 result := SchemeInt.MpzToScheme(mq)
               ELSE
                 (* not exact: switch to inexact *)
-                RETURN NumComputeInexact(Rest(args), op,
-                         FromO(result) / FromO(arg))
+                WITH q = FromO(result) / FromO(arg) DO
+                  IF Rest(args) = NIL THEN
+                    RETURN FromLR(q)
+                  ELSE
+                    RETURN NumComputeInexact(Rest(args), op, q)
+                  END
+                END
               END
             END
           | 'X' => (* max *)

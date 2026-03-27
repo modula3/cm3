@@ -894,6 +894,164 @@
 (test-true  "exact? (/ 120 2 3 4)"  (exact? (/ 120 2 3 4)))
 
 ;;; ============================================================
+;;; 25. Non-commutative operator argument ordering
+;;; ============================================================
+
+(section "non-commutative argument ordering")
+
+;; ---- Subtraction: (- a b) = a - b ----
+
+;; Unary (negation)
+(test       "(- 1) = -1"           -1      (- 1))
+(test       "(- -1) = 1"          1       (- -1))
+(test       "(- 7) = -7"          -7      (- 7))
+(test       "(- 1.0) = -1.0"     -1.0    (- 1.0))
+(test       "(- 3.14) = -3.14"   -3.14   (- 3.14))
+
+;; Binary: argument order matters
+(test       "(- 10 3) = 7"        7       (- 10 3))
+(test       "(- 3 10) = -7"       -7      (- 3 10))
+(test       "(- 1 0) = 1"         1       (- 1 0))
+(test       "(- 0 1) = -1"        -1      (- 0 1))
+(test       "(- 100 1) = 99"      99      (- 100 1))
+(test       "(- 1 100) = -99"     -99     (- 1 100))
+
+;; Binary inexact
+(test       "(- 10.0 3.0) = 7.0"  7.0     (- 10.0 3.0))
+(test       "(- 3.0 10.0) = -7.0" -7.0    (- 3.0 10.0))
+
+;; Binary mixed exact/inexact
+(test       "(- 10 3.0) = 7.0"    7.0     (- 10 3.0))
+(test       "(- 3.0 10) = -7.0"   -7.0    (- 3.0 10))
+
+;; Multi-arg: (- a b c) = a - b - c
+(test       "(- 20 3 7) = 10"     10      (- 20 3 7))
+(test       "(- 1 2 3) = -4"      -4      (- 1 2 3))
+(test       "(- 100 10 20 30) = 40" 40     (- 100 10 20 30))
+
+;; Bignum subtraction ordering
+(test       "(- big 1) > 0"       #t      (> (- big 1) 0))
+(test       "(- 1 big) < 0"       #t      (< (- 1 big) 0))
+
+;; ---- Division: (/ a b) = a / b ----
+
+;; Unary (reciprocal)
+(test       "(/ 1) = 1"           1       (/ 1))
+(test       "(/ -1) = -1"         -1      (/ -1))
+(test       "(/ 2) = 0.5"         0.5     (/ 2))
+(test       "(/ 4) = 0.25"        0.25    (/ 4))
+(test       "(/ 10) = 0.1"        0.1     (/ 10))
+(test       "(/ 0.5) = 2.0"       2.0     (/ 0.5))
+(test       "(/ 0.25) = 4.0"      4.0     (/ 0.25))
+(test       "(/ 2.0) = 0.5"       0.5     (/ 2.0))
+(test       "(/ -2) = -0.5"       -0.5    (/ -2))
+(test       "(/ -0.5) = -2.0"     -2.0    (/ -0.5))
+(test-error "(/ 0)"               (lambda () (/ 0)))
+(test-error "(/ 0.0)"             (lambda () (/ 0.0)))
+
+;; Binary: argument order matters — THIS IS THE BUG
+;; (/ a b) must return a/b, not b/a
+(test       "(/ 1 3) ~ 0.333"     #t      (< (abs (- (/ 1 3) 0.333333333333333)) 1e-10))
+(test       "(/ 3 1) = 3"         3       (/ 3 1))
+(test       "(/ 7 2) = 3.5"       3.5     (/ 7 2))
+(test       "(/ 2 7) ~ 0.286"     #t      (< (abs (- (/ 2 7) 0.285714285714286)) 1e-10))
+(test       "(/ 1 10) = 0.1"      0.1     (/ 1 10))
+(test       "(/ 10 1) = 10"       10      (/ 10 1))
+(test       "(/ 2 8) = 0.25"      0.25    (/ 2 8))
+(test       "(/ 8 2) = 4"         4       (/ 8 2))
+(test       "(/ 100 3) ~ 33.3"    #t      (< (abs (- (/ 100 3) 33.3333333333333)) 1e-10))
+(test       "(/ 3 100) = 0.03"    0.03    (/ 3 100))
+
+;; Binary exact division (zero remainder)
+(test       "(/ 6 2) = 3"         3       (/ 6 2))
+(test       "(/ 2 6) ~ 0.333"     #t      (< (abs (- (/ 2 6) 0.333333333333333)) 1e-10))
+(test       "(/ 12 3) = 4"        4       (/ 12 3))
+(test       "(/ 3 12) = 0.25"     0.25    (/ 3 12))
+(test-true  "exact? (/ 6 2)"     (exact? (/ 6 2)))
+(test-true  "exact? (/ 12 3)"    (exact? (/ 12 3)))
+
+;; Binary inexact
+(test       "(/ 1.0 3.0) ~ 0.333" #t     (< (abs (- (/ 1.0 3.0) 0.333333333333333)) 1e-10))
+(test       "(/ 3.0 1.0) = 3.0"   3.0    (/ 3.0 1.0))
+(test       "(/ 7.0 2.0) = 3.5"   3.5    (/ 7.0 2.0))
+(test       "(/ 2.0 7.0) ~ 0.286" #t     (< (abs (- (/ 2.0 7.0) 0.285714285714286)) 1e-10))
+
+;; Binary mixed exact/inexact
+(test       "(/ 1 3.0) ~ 0.333"   #t     (< (abs (- (/ 1 3.0) 0.333333333333333)) 1e-10))
+(test       "(/ 1.0 3) ~ 0.333"   #t     (< (abs (- (/ 1.0 3) 0.333333333333333)) 1e-10))
+(test       "(/ 7.0 2) = 3.5"     3.5    (/ 7.0 2))
+(test       "(/ 7 2.0) = 3.5"     3.5    (/ 7 2.0))
+
+;; Multi-arg: (/ a b c) = (a / b) / c = a / (b * c)
+(test       "(/ 120 2 3) = 20"    20      (/ 120 2 3))
+(test       "(/ 120 3 2) = 20"    20      (/ 120 3 2))
+(test       "(/ 100 5 4) = 5"     5       (/ 100 5 4))
+(test       "(/ 1 2 5) = 0.1"     0.1     (/ 1 2 5))
+(test       "(/ 1 3 7) ~ 0.048"   #t      (< (abs (- (/ 1 3 7) (/ 1.0 21.0))) 1e-10))
+
+;; Division by zero
+(test-error "(/ 1 0)"             (lambda () (/ 1 0)))
+(test-error "(/ 7 0)"             (lambda () (/ 7 0)))
+
+;; Negative division ordering
+(test       "(/ -6 2) = -3"       -3      (/ -6 2))
+(test       "(/ 6 -2) = -3"       -3      (/ 6 -2))
+(test       "(/ -6 -2) = 3"       3       (/ -6 -2))
+(test       "(/ -1 3) ~ -0.333"   #t      (< (abs (- (/ -1 3) -0.333333333333333)) 1e-10))
+(test       "(/ 1 -3) ~ -0.333"   #t      (< (abs (- (/ 1 -3) -0.333333333333333)) 1e-10))
+
+;; Bignum division ordering
+(test       "(/ big 2) = 2^99"    (expt 2 99) (/ big 2))
+(test       "(/ 2 big) ~ 0"       #t      (< (/ 2 big) 1e-20))
+
+;; ---- quotient: asymmetric ----
+
+(test       "(quotient 10 3) = 3"  3      (quotient 10 3))
+(test       "(quotient 3 10) = 0"  0      (quotient 3 10))
+(test       "(quotient 17 5) = 3"  3      (quotient 17 5))
+(test       "(quotient 5 17) = 0"  0      (quotient 5 17))
+(test       "(quotient -17 5) = -3" -3    (quotient -17 5))
+(test       "(quotient 17 -5) = -3" -3    (quotient 17 -5))
+(test       "(quotient -17 -5) = 3" 3     (quotient -17 -5))
+
+;; ---- remainder: asymmetric ----
+
+(test       "(remainder 10 3) = 1"  1     (remainder 10 3))
+(test       "(remainder 3 10) = 3"  3     (remainder 3 10))
+(test       "(remainder 17 5) = 2"  2     (remainder 17 5))
+(test       "(remainder 5 17) = 5"  5     (remainder 5 17))
+(test       "(remainder -17 5) = -2" -2   (remainder -17 5))
+(test       "(remainder 17 -5) = 2"  2    (remainder 17 -5))
+
+;; ---- modulo: asymmetric ----
+
+(test       "(modulo 10 3) = 1"     1     (modulo 10 3))
+(test       "(modulo 3 10) = 3"     3     (modulo 3 10))
+(test       "(modulo 17 5) = 2"     2     (modulo 17 5))
+(test       "(modulo 5 17) = 5"     5     (modulo 5 17))
+(test       "(modulo -17 5) = 3"    3     (modulo -17 5))
+(test       "(modulo 17 -5) = -3"   -3    (modulo 17 -5))
+
+;; ---- expt: asymmetric ----
+
+(test       "(expt 2 3) = 8"        8     (expt 2 3))
+(test       "(expt 3 2) = 9"        9     (expt 3 2))
+(test       "(expt 2 10) = 1024"    1024  (expt 2 10))
+(test       "(expt 10 2) = 100"     100   (expt 10 2))
+(test       "(expt 2 0) = 1"        1     (expt 2 0))
+(test       "(expt 0 2) = 0"        0     (expt 0 2))
+(test       "(expt 5 3) = 125"      125   (expt 5 3))
+(test       "(expt 3 5) = 243"      243   (expt 3 5))
+
+;; expt with inexact
+(test       "(expt 2.0 3) = 8.0"    8.0   (expt 2.0 3))
+(test       "(expt 2 3.0) = 8.0"    8.0   (expt 2 3.0))
+
+;; expt with negative exponent
+(test       "(expt 2 -1) = 0.5"     0.5   (expt 2 -1))
+(test       "(expt 2 -3) = 0.125"   0.125 (expt 2 -3))
+
+;;; ============================================================
 ;;; Summary
 ;;; ============================================================
 
