@@ -5,15 +5,13 @@
 UNSAFE MODULE RTExStack EXPORTS RTException;
 
 IMPORT RT0, RTOS, RTError, RTIO, RTStack, RTParams, RTEHScan;
-IMPORT RTProcedureSRC;
+IMPORT RTProcedureSRC, Cstring;
 FROM RT0 IMPORT RaiseActivation;
-(*
-IMPORT Cstring;
-*)
 
 
 VAR
   DEBUG := FALSE;
+  dump_enabled := FALSE;
 
 EXCEPTION
   OUCH; (* to keep the compiler from complaining *)
@@ -102,10 +100,8 @@ PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
 
 (*----------------------------------------------------------- diagnostics ---*)
 
-(*
 VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
                                      'p','r','o','c','e','d','u','r','e'};
-*)
 
 PROCEDURE DumpStack () =
   BEGIN
@@ -119,10 +115,12 @@ PROCEDURE PrintStack (uid : INTEGER) =
     name: RTProcedureSRC.Name;
     scan : BOOLEAN;
   BEGIN
+    IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
+
     RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
-    RTIO.PutText ("----PC----      ----SP----      --------Procedure--------\n");
+    RTIO.PutText ("----PC----      ----SP----  \n");
 
     RTStack.CurrentFrame (here);
     RTStack.PreviousFrame (here, f); (* skip self *)
@@ -130,33 +128,22 @@ PROCEDURE PrintStack (uid : INTEGER) =
     WHILE (f.pc # NIL) DO
 
       IF f.lsda # NIL THEN
-        IF uid # 0 THEN
-          (* scan the dwarf eh scopes found by the unwinder *)
-          scan := RTEHScan.ScanEHTable(f, uid);
-          IF scan THEN
-            (* print the exception stuff. Fixme. Would have to modify
-               ScanEHTable to take a parameter to dump its debug info. *)
-          END;
-        END;
+        (* scan the dwarf eh scopes found by the unwinder *)
+        scan := RTEHScan.ScanEHTable(f, uid);
+        RTIO.PutText ("\n");
       END;
 
       (* print the procedure's frame *)
-      (* This is only approximate. The pc will be the one after the call that
-         results in the chain leading to crash (which prints this trace).
-         And call instructions can vary in size. *)
       RTIO.PutAddr (f.pc - CallInstructionSize, 10);
       RTIO.PutText ("  ");
       RTIO.PutAddr (f.sp, 10);
 
       name := RTStack.ProcName (f);
-      RTIO.PutText ("  [");
       IF (name # NIL)
-        (* not sure why they were checking for "static procedure" probably
-           an artifact of an old architecture/os *)
-        (* AND Cstring.memcmp (name, ADR(NoName), NUMBER(NoName)) # 0 *) THEN
-        RTIO.PutString (name);
+        AND Cstring.memcmp (name, ADR(NoName), NUMBER(NoName)) # 0 THEN
+        RTIO.PutText ("  [");  RTIO.PutString (name);  RTIO.PutText ("]");
       END;
-      RTIO.PutText ("]\n");
+      RTIO.PutText ("\n");
 
       (* try the previous frame *)
       RTStack.PreviousFrame (f, f);
@@ -193,6 +180,7 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
   END PutExcept;
 
 BEGIN
+  dump_enabled := RTParams.IsPresent ("stackdump");
   DEBUG := RTParams.IsPresent ("debugex");
   <*ASSERT RTStack.Has_walker*>
 END RTExStack.

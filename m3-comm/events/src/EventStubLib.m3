@@ -793,18 +793,8 @@ PROCEDURE OutLongreal(c: Handle; i: LONGREAL)
 
 PROCEDURE InExtended(c: Handle): EXTENDED
     RAISES {Event.Error, Rd.Failure, Thread.Alerted} =
-  VAR i : EXTENDED;
   BEGIN
-    IF c.event.hdr.rep.floatFmt # NativeRep.floatFmt THEN
-      RaiseUnsupportedDataRep();
-    END;
-    IF FastGetSub(c,
-        LOOPHOLE(i, ARRAY [0..BYTESIZE(EXTENDED)-1] OF CHAR)) #
-                       BYTESIZE(EXTENDED) THEN
-      RaiseUnmarshalFailure();
-    END;
-    IF NOT NativeEndian(c.event.hdr.rep) THEN i := SwapExtended(i); END;
-    RETURN i;
+    RETURN LOOPHOLE(InLongreal(c), EXTENDED);
   END InExtended;
 
 PROCEDURE OutExtended(c: Handle; i: EXTENDED)
@@ -986,20 +976,6 @@ PROCEDURE SwapLongReal(i: LONGREAL) : LONGREAL =
     END;
     RETURN res;
   END SwapLongReal;
-
-PROCEDURE SwapExtended(i: EXTENDED) : EXTENDED =
-  TYPE Ptr = UNTRACED REF RECORD a, b, c, d: Int32; END;
-  VAR
-    x : EXTENDED;
-    p := LOOPHOLE(ADR(i), Ptr);
-    r := LOOPHOLE(ADR(x), Ptr);
-  BEGIN
-    r.a := Swap.Swap4(p.d);
-    r.b := Swap.Swap4(p.c);
-    r.c := Swap.Swap4(p.b);
-    r.d := Swap.Swap4(p.a);
-    RETURN x;
-  END SwapExtended;
 
 PROCEDURE NativeEndian(rep: DataRep) : BOOLEAN =
   BEGIN

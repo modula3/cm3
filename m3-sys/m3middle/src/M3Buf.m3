@@ -150,18 +150,10 @@ PROCEDURE PutIntt (t: T;  READONLY i: Target.Int) =
 
 PROCEDURE PutFloat (t: T;  READONLY f: Target.Float) =
   <*FATAL Convert.Failed*>
-  VAR len: INTEGER;  buf: ARRAY [0..4 * BITSIZE(REAL) + 3] OF CHAR;
+  VAR len: INTEGER;  buf: ARRAY [0..BITSIZE(EXTENDED) + 3] OF CHAR;
   BEGIN
     <*ASSERT f.exponent = 0*>
-    IF f.pre = Target.Precision.Short THEN
-      len := Convert.FromFloat (
-               buf, FLOAT(f.fraction, REAL), 13, Convert.Style.Sci);
-    ELSIF f.pre = Target.Precision.Long THEN
-      len := Convert.FromLongFloat (
-               buf, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
-    ELSE
-      len := Convert.FromExtended (buf, f.fraction, 36, Convert.Style.Sci);
-    END;
+    len := Convert.FromExtended (buf, f.fraction, 13, Convert.Style.Sci);
     PutSub (t, SUBARRAY (buf, 0, len));
   END PutFloat;
 

@@ -1,5 +1,9 @@
-(* Copyright (C) 2026 Peter McKinna. All rights reserved. *)
-(* See file COPYRIGHT-BSD for details. *)
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Fri Feb 25 12:10:51 PST 1994 by kalsow                   *)
+(*      modified on Fri May  7 15:57:56 PDT 1993 by muller                   *)
 
 INTERFACE ExtendedRep;
 

@@ -9451,30 +9451,6 @@ build_common_builtin_nodes (void)
 			    "memset", ECF_NOTHROW | ECF_LEAF);
     }
 
-  if (!builtin_decl_explicit_p (BUILT_IN_LROUNDF))
-    {
-      ftype = build_function_type_list (long_integer_type_node, float_type_node,
-				        NULL_TREE);
-      local_define_builtin ("__builtin_lroundf", ftype, BUILT_IN_LROUNDF,
-			    "lroundf", ECF_NOTHROW | ECF_LEAF);
-    }
-
-  if (!builtin_decl_explicit_p (BUILT_IN_LROUND))
-    {
-      ftype = build_function_type_list (long_integer_type_node, double_type_node,
-				        NULL_TREE);
-      local_define_builtin ("__builtin_lround", ftype, BUILT_IN_LROUND,
-			    "lround", ECF_NOTHROW | ECF_LEAF);
-    }
-
-  if (!builtin_decl_explicit_p (BUILT_IN_LROUNDL))
-    {
-      ftype = build_function_type_list (long_integer_type_node, long_double_type_node,
-				        NULL_TREE);
-      local_define_builtin ("__builtin_lroundl", ftype, BUILT_IN_LROUNDL,
-			    "lroundl", ECF_NOTHROW | ECF_LEAF);
-    }
-
   if (!builtin_decl_explicit_p (BUILT_IN_ALLOCA))
     {
       ftype = build_function_type_list (ptr_type_node,

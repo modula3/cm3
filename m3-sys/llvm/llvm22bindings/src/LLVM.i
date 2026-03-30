@@ -354,8 +354,6 @@ DoEnum(LLVMAtomicOrdering);
 DoEnum(LLVMAtomicRMWBinOp);
 DoEnum(LLVMTailCallKind);
 DoEnum(LLVMCallConv);
-DoEnum(LLVMDbgRecordKind);
-DoEnum(LLVMDenormalModeKind);
 
 DoEnum(LLVMByteOrdering);
 %typemap("m3wraprettype")   enum LLVMByteOrdering   %{uint32_t%}
@@ -401,17 +399,20 @@ DoEnum(LLVMByteOrdering);
 %ignore LLVMInitializeNativeAsmPrinter;
 %ignore LLVMInitializeNativeDisassembler;
 
-//ignore these until ver greater than 22
-%ignore LLVMCreateDenormalFPEnvAttribute;
-%ignore LLVMSetSwitchCaseValue;
-%ignore LLVMGetSwitchCaseValue;
-%ignore LLVMDbgVariableRecordGetVariable;
-%ignore LLVMDbgVariableRecordGetValue;
-%ignore LLVMDbgVariableRecordGetExpression;
-%ignore LLVMDbgRecordGetKind;
-%ignore LLVMDbgRecordGetDebugLoc;
-
 %include <Core.h>
 %include <BitWriter.h>
 %include <Target.h>
 
+/**
+ * these implemented in extras.c need to go in Core.h
+ * for the moment to avoid dependency on user needing llvm include files
+ * installed they are commented out.
+ *
+ */
+/**
+ * Return a value for a 128 bit float represented as 2 64 bit quantities
+ * this function is for future reference if we ever get 128 bit float support
+ * in the front end and it should be in Core.cpp.
+ *
+ */
+//LLVMValueRef LLVMConstQuad(LLVMContextRef C, const uint64_t qi[2]);

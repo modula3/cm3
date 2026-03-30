@@ -20,7 +20,7 @@ UNSAFE MODULE TextToFloat;
 IMPORT Word,Text;
 IMPORT DragonInt AS DI;
 IMPORT FloatUtils AS FU;
-IMPORT RealRep, LongRealRep (*, ExtendedRep*);
+IMPORT RealRep, LongRealRep, ExtendedRep;
 
 CONST
   MaxString = 100;
@@ -1060,9 +1060,9 @@ PROCEDURE Arr32toLongReal(bits : DI.RefInt32; exp, k : INTEGER) : LongRealRep.T 
     RETURN long;
   END Arr32toLongReal;
   
-PROCEDURE Arr32toQuad(bits : DI.RefInt32; exp, k : INTEGER) : Extended_T =
+PROCEDURE Arr32toQuad(bits : DI.RefInt32; exp, k : INTEGER) : ExtendedRep.T =
   VAR
-    ext : Extended_T;
+    ext : ExtendedRep.T;
   BEGIN
     ext.sign := 0; 
     IF Word.And(k, STRTOG_Neg) = STRTOG_Neg THEN
@@ -1104,8 +1104,7 @@ PROCEDURE Arr32toQuad(bits : DI.RefInt32; exp, k : INTEGER) : Extended_T =
     RETURN ext;
   END Arr32toQuad;
 
-PROCEDURE StrToReal(in : TEXT; rounding : RoundingModes;
-                    VAR real : RealRep.T) : INTEGER =
+PROCEDURE StrToReal(in : TEXT; rounding : RoundingModes; VAR real : RealRep.T) : INTEGER =
   VAR
     ret,exp : INTEGER;
     bits : DI.RefInt32;
@@ -1118,8 +1117,7 @@ PROCEDURE StrToReal(in : TEXT; rounding : RoundingModes;
     RETURN ret;
 END StrToReal;
 
-PROCEDURE StrToLongReal(in : TEXT; rounding : RoundingModes;
-                        VAR long : LongRealRep.T) : INTEGER =
+PROCEDURE StrToLongReal(in : TEXT; rounding : RoundingModes; VAR long : LongRealRep.T) : INTEGER =
   VAR
     ret,exp : INTEGER;
     bits : DI.RefInt32;
@@ -1131,8 +1129,7 @@ PROCEDURE StrToLongReal(in : TEXT; rounding : RoundingModes;
     RETURN ret;
   END StrToLongReal;
 
-PROCEDURE StrToExtended(in : TEXT; rounding : RoundingModes;
-                        VAR quad : Extended_T) : INTEGER =
+PROCEDURE StrToExtended(in : TEXT; rounding : RoundingModes; VAR quad : ExtendedRep.T) : INTEGER =
   VAR
     ret,exp : INTEGER;
     bits : DI.RefInt32;

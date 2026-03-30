@@ -1,3 +1,0 @@
-implementation("Main")
-build_standalone()
-include ("../../Test.common")

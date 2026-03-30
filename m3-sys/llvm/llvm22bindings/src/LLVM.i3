@@ -358,11 +358,6 @@ TYPE
     {XXXX_0, LLVMGEPFlagInBounds, LLVMGEPFlagNUSW, XXXX_3, LLVMGEPFlagNUW};
 
 
-TYPE
-  LLVMDbgRecordKind = {LLVMDbgRecordLabel, LLVMDbgRecordDeclare,
-                       LLVMDbgRecordValue, LLVMDbgRecordAssign};
-
-
 (**
  * @}
   * Deallocate and destroy all ManagedStatic variables.
@@ -395,6 +390,13 @@ PROCEDURE DisposeMessage (Message: TEXT; );
  *)
 
 PROCEDURE ContextCreate (): ContextRef;
+
+
+(**
+ * Obtain the global context instance.
+ *)
+
+PROCEDURE GetGlobalContext (): ContextRef;
 
 
 (**
@@ -485,6 +487,8 @@ PROCEDURE GetDiagInfoSeverity (DI: DiagnosticInfoRef; ):
 PROCEDURE GetMDKindIDInContext
   (context: ContextRef; Name: TEXT; SLen: uint32_t; ): uint32_t;
 
+PROCEDURE GetMDKindID (Name: TEXT; SLen: uint32_t; ): uint32_t;
+
 
 (**
  * Maps a synchronization scope name to a ID unique within this context.
@@ -564,12 +568,6 @@ PROCEDURE CreateConstantRangeAttribute
    LowerWords, UpperWords: REF ARRAY OF uint64_t; ): AttributeRef;
 
 
-TYPE
-  LLVMDenormalModeKind =
-    {LLVMDenormalModeKindIEEE, LLVMDenormalModeKindPreserveSign,
-     LLVMDenormalModeKindPositiveZero, LLVMDenormalModeKindDynamic};
-
-
 (**
  * Create a string attribute.
  *)
@@ -613,6 +611,21 @@ PROCEDURE IsTypeAttribute (A: AttributeRef; ): BOOLEAN;
  *)
 
 PROCEDURE GetTypeByName2 (context: ContextRef; Name: TEXT; ): TypeRef;
+
+
+(**
+ * @}
+ *
+ * Create a new, empty module in the global context.
+ *
+ * This is equivalent to calling LLVMModuleCreateWithNameInContext with
+ * LLVMGetGlobalContext() as the context parameter.
+ *
+ * Every invocation should be paired with LLVMDisposeModule() or memory
+ * will be leaked.
+ *)
+
+PROCEDURE ModuleCreateWithName (ModuleID: TEXT; ): ModuleRef;
 
 
 (**
@@ -1302,6 +1315,26 @@ PROCEDURE Int128TypeInContext (context: ContextRef; ): TypeRef;
 PROCEDURE IntTypeInContext (context: ContextRef; NumBits: uint32_t; ):
   TypeRef;
 
+
+(**
+ * Obtain an integer type from the global context with a specified bit
+ * width.
+ *)
+
+PROCEDURE Int1Type (): TypeRef;
+
+PROCEDURE Int8Type (): TypeRef;
+
+PROCEDURE Int16Type (): TypeRef;
+
+PROCEDURE Int32Type (): TypeRef;
+
+PROCEDURE Int64Type (): TypeRef;
+
+PROCEDURE Int128Type (): TypeRef;
+
+PROCEDURE IntType (NumBits: uint32_t; ): TypeRef;
+
 PROCEDURE GetIntTypeWidth (IntegerTy: TypeRef; ): uint32_t;
 
 
@@ -1355,6 +1388,27 @@ PROCEDURE FP128TypeInContext (context: ContextRef; ): TypeRef;
  *)
 
 PROCEDURE PPCFP128TypeInContext (context: ContextRef; ): TypeRef;
+
+
+(**
+ * Obtain a floating point type from the global context.
+ *
+ * These map to the functions in this group of the same name.
+ *)
+
+PROCEDURE HalfType (): TypeRef;
+
+PROCEDURE BFloatType (): TypeRef;
+
+PROCEDURE FloatType (): TypeRef;
+
+PROCEDURE DoubleType (): TypeRef;
+
+PROCEDURE X86FP80Type (): TypeRef;
+
+PROCEDURE FP128Type (): TypeRef;
+
+PROCEDURE PPCFP128Type (): TypeRef;
 
 
 (**
@@ -1425,6 +1479,17 @@ PROCEDURE StructTypeInContext (context     : ContextRef;
                                ElementCount: uint32_t;
                                Packed      : BOOLEAN;              ):
   TypeRef;
+
+
+(**
+ * Create a new structure type in the global context.
+ *
+ * @see llvm::StructType::create()
+ *)
+
+PROCEDURE StructType (ElementTypes: UNTRACED REF TypeRef;
+                      ElementCount: uint32_t;
+                      Packed      : BOOLEAN;              ): TypeRef;
 
 
 (**
@@ -1755,6 +1820,18 @@ PROCEDURE TokenTypeInContext (context: ContextRef; ): TypeRef;
  *)
 
 PROCEDURE MetadataTypeInContext (context: ContextRef; ): TypeRef;
+
+
+(**
+ * These are similar to the above functions except they operate on the
+ * global context.
+ *)
+
+PROCEDURE VoidType (): TypeRef;
+
+PROCEDURE LabelType (): TypeRef;
+
+PROCEDURE X86AMXType (): TypeRef;
 
 
 (**
@@ -2418,6 +2495,20 @@ PROCEDURE ConstStringInContext2 (context          : ContextRef;
 
 
 (**
+ * Create a ConstantDataSequential with string content in the global context.
+ *
+ * This is the same as LLVMConstStringInContext except it operates on the
+ * global context.
+ *
+ * @see LLVMConstStringInContext()
+ * @see llvm::ConstantDataArray::getString()
+ *)
+
+PROCEDURE ConstString
+  (Str: TEXT; Length: uint32_t; DontNullTerminate: BOOLEAN; ): ValueRef;
+
+
+(**
  * Returns true if the specified constant is an array of i8.
  *
  * @see ConstantDataSequential::getAsString()
@@ -2458,6 +2549,20 @@ PROCEDURE ConstStructInContext (context     : ContextRef;
                                 Count       : uint32_t;
                                 Packed      : BOOLEAN;               ):
   ValueRef;
+
+
+(**
+ * Create a ConstantStruct in the global Context.
+ *
+ * This is the same as LLVMConstStructInContext except it operates on the
+ * global Context.
+ *
+ * @see LLVMConstStructInContext()
+ *)
+
+PROCEDURE ConstStruct (ConstantVals: UNTRACED REF ValueRef;
+                       Count       : uint32_t;
+                       Packed      : BOOLEAN;               ): ValueRef;
 
 
 (**
@@ -3503,10 +3608,21 @@ PROCEDURE MDStringInContext
   (context: ContextRef; Str: TEXT; SLen: uint32_t; ): ValueRef;
 
 
+(** Deprecated: Use LLVMMDStringInContext2 instead. *)
+
+PROCEDURE MDString (Str: TEXT; SLen: uint32_t; ): ValueRef;
+
+
 (** Deprecated: Use LLVMMDNodeInContext2 instead. *)
 
 PROCEDURE MDNodeInContext
   (context: ContextRef; Vals: UNTRACED REF ValueRef; Count: uint32_t; ):
+  ValueRef;
+
+
+(** Deprecated: Use LLVMMDNodeInContext2 instead. *)
+
+PROCEDURE MDNode (Vals: UNTRACED REF ValueRef; Count: uint32_t; ):
   ValueRef;
 
 
@@ -3740,6 +3856,16 @@ PROCEDURE AppendBasicBlockInContext
 
 
 (**
+ * Append a basic block to the end of a function using the global
+ * context.
+ *
+ * @see llvm::BasicBlock::Create()
+ *)
+
+PROCEDURE AppendBasicBlock (Fn: ValueRef; Name: TEXT; ): BasicBlockRef;
+
+
+(**
  * Insert a basic block in a function before another basic block.
  *
  * The function to add to is determined by the function of the
@@ -3750,6 +3876,16 @@ PROCEDURE AppendBasicBlockInContext
 
 PROCEDURE InsertBasicBlockInContext
   (context: ContextRef; BB: BasicBlockRef; Name: TEXT; ): BasicBlockRef;
+
+
+(**
+ * Insert a basic block in a function using the global context.
+ *
+ * @see llvm::BasicBlock::Create()
+ *)
+
+PROCEDURE InsertBasicBlock (InsertBeforeBB: BasicBlockRef; Name: TEXT; ):
+  BasicBlockRef;
 
 
 (**
@@ -4448,6 +4584,8 @@ PROCEDURE GetIndices (Inst: ValueRef; ): UNTRACED REF uint32_t;
  *)
 
 PROCEDURE CreateBuilderInContext (context: ContextRef; ): BuilderRef;
+
+PROCEDURE CreateBuilder (): BuilderRef;
 
 
 (**
@@ -5523,6 +5661,13 @@ PROCEDURE ByteOrder (TD: TargetDataRef; ): uint32_t;
     *)
 
 PROCEDURE PointerSize (TD: TargetDataRef; ): uint32_t;
+
+
+(** Returns the integer type that is the same size as a pointer on a target.
+    * See the method llvm::DataLayout::getIntPtrType.
+    *)
+
+PROCEDURE IntPtrType (TD: TargetDataRef; ): TypeRef;
 
 
 (** Returns the integer type that is the same size as a pointer on a target.

@@ -310,8 +310,8 @@ M3CG (ABS, MTYPE (type))
 M3CG (MAX, MTYPE (type))
 M3CG (MIN, MTYPE (type))
 M3CG (ROUND,
-      MTYPE2 (src_t, src_T)
-      MTYPE2 (dst_t, dst_T))
+      MTYPE (src_t)
+      MTYPE (dst_t))
 M3CG (TRUNC,
       MTYPE (src_t)
       MTYPE (dst_t))

@@ -7,7 +7,7 @@
 
 UNSAFE MODULE IEEESpecial;
 
-IMPORT RealRep, LongRealRep, ExtendedRep;
+IMPORT RealRep, LongRealRep;
 
 BEGIN
   LOOPHOLE (RealNegInf, RealRep.T) := RealRep.NegInf;
@@ -18,7 +18,7 @@ BEGIN
   LOOPHOLE (LongPosInf, LongRealRep.T) := LongRealRep.PosInf;
   LOOPHOLE (LongNan,    LongRealRep.T) := LongRealRep.Nan;
 
-  LOOPHOLE (ExtdNegInf, ExtendedRep.T) := ExtendedRep.NegInf;
-  LOOPHOLE (ExtdPosInf, ExtendedRep.T) := ExtendedRep.PosInf;
-  LOOPHOLE (ExtdNan,    ExtendedRep.T) := ExtendedRep.Nan;
+  LOOPHOLE (ExtdNegInf, LongRealRep.T) := LongRealRep.NegInf;
+  LOOPHOLE (ExtdPosInf, LongRealRep.T) := LongRealRep.PosInf;
+  LOOPHOLE (ExtdNan,    LongRealRep.T) := LongRealRep.Nan;
 END IEEESpecial.
