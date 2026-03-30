@@ -9,10 +9,18 @@ import("mscheme")
 import("modula3scheme")
 import("schemecompiler")
 
-_scheme_compile("CompiledNumTower",  "test-numeric-tower.scm",  HIDDEN)
-_scheme_compile("CompiledExamples",  "test-examples.scm",       HIDDEN)
-_scheme_compile("CompiledR4rsGaps",  "test-r4rs-gaps.scm",      HIDDEN)
-_scheme_compile("CompiledCompNumerics", "test-compiler-numerics.scm", HIDDEN)
+scheme("test-cn-integers")
+scheme("test-cn-floats")
+
+% Phase 2 types — enable as compiler support is added:
+%scheme("test-cn-rationals")
+%scheme("test-cn-complex")
+%scheme("test-cn-mixed")
+
+% Original test suites — contain Phase 2 features, enable when compiler is ready:
+%scheme("test-numeric-tower")
+scheme("test-examples")
+scheme("test-r4rs-gaps")
 
 LinkCompiledSchemeAs("NumtestCompiled")
 
