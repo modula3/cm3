@@ -187,6 +187,10 @@
     ((eq? (car expr) 'set!)
      (append (if (memq (cadr expr) bound) '() (list (cadr expr)))
              (free-variables (caddr expr) bound)))
+    ((eq? (car expr) 'unwind-protect)
+     (append (free-variables (cadr expr) bound)
+             (free-variables (caddr expr) bound)
+             (free-variables (cadddr expr) bound)))
     ((eq? (car expr) 'lambda)
      (let ((lam-params (all-params (cadr expr))))
        (free-vars-body (cddr expr)
@@ -662,6 +666,9 @@
      (gen-or (cdr expr) target ctx depth))
     ((eq? (car expr) 'set!)
      (gen-set! (cadr expr) (caddr expr) target ctx depth))
+    ((eq? (car expr) 'unwind-protect)
+     (gen-unwind-protect (cadr expr) (caddr expr) (cadddr expr)
+                         target ctx depth))
     ((eq? (car expr) 'not)
      (gen-not (cadr expr) target ctx depth))
     ;; Lambda expression
@@ -678,6 +685,28 @@
      (gen-call (car expr) (cdr expr) target ctx depth))
     (else
      (emit-assign target "NIL" depth))))
+
+;;;
+;;; ==================== Unwind-Protect ====================
+;;;
+;;; (unwind-protect body no-exception-value exception-handler)
+;;; Semantics: evaluate body for side effects.
+;;; If no exception: return no-exception-value.
+;;; If exception: evaluate exception-handler, return its value.
+
+(define (gen-unwind-protect body no-exn-val handler target ctx depth)
+  (let ((body-tmp (fresh-temp ctx)))
+    (string-append
+     (indent depth) (L "TRY")
+     ;; Evaluate body for side effects (result discarded)
+     (gen-expr body body-tmp ctx (+ depth 1))
+     ;; No exception: assign no-exception-value
+     (gen-expr no-exn-val target ctx (+ depth 1))
+     (indent depth) (L "EXCEPT")
+     (indent depth) (L "| Scheme.E =>")
+     ;; Exception caught: evaluate handler
+     (gen-expr handler target ctx (+ depth 2))
+     (indent depth) (L "END;"))))
 
 ;;;
 ;;; ==================== If ====================
@@ -2904,6 +2933,11 @@
      (expr-compilable? (cadr expr) mutated))
     ((eq? (car expr) 'set!)
      (expr-compilable? (caddr expr) mutated))
+    ((eq? (car expr) 'unwind-protect)
+     (and (pair? (cddr expr)) (pair? (cdddr expr))
+          (expr-compilable? (cadr expr) mutated)
+          (expr-compilable? (caddr expr) mutated)
+          (expr-compilable? (cadddr expr) mutated)))
     ;; Quasiquote is a macro not handled by the compiler
     ((eq? (car expr) 'quasiquote) #f)
     ;; Application: all subexpressions must be compilable
