@@ -2533,6 +2533,8 @@ compiled definitions:
   & \\
 \texttt{set!} (local and free variables)
   & \\
+\texttt{unwind-protect} (via \texttt{TRY}/\texttt{EXCEPT})
+  & \\
 \texttt{quote} (all types)
   & \\
 Self-tail-call optimization
@@ -2787,9 +2789,12 @@ inlineable primitives and their M3 equivalents:
 
 \noindent
 Arithmetic operations (\texttt{+}, \texttt{-}, \texttt{*},
-\texttt{quotient}, \texttt{remainder}) unwrap both operands via
-\texttt{NARROW(x, SchemeLongReal.T)\^{}}, perform the arithmetic,
-and wrap the result with \texttt{SchemeLongReal.FromLR()}.
+\texttt{quotient}, \texttt{remainder}) delegate to
+\texttt{SchemePrimitive.NumericAdd/Sub/Mul}, which in turn call
+\texttt{SchemeNumber.Add/Sub/Mul}.  This handles the full numeric
+tower (exact integers, rationals, inexact reals, MPFR, complex)
+with correct contagion rules.  The \texttt{number?} predicate
+compiles to \texttt{SchemeNumber.Is()}, recognizing all numeric types.
 
 Primitives are inlined unconditionally---no guard check is emitted.
 Since R4RS reserves the right to make arithmetic operators

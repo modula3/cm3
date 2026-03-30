@@ -81,7 +81,9 @@ Scheme (R4RS)}~\cite{r4rs} with extensions.  It is not a complete R5RS
 implementation.  Notable limitations inherited from JScheme include:
 
 \begin{itemize}
-\item Only one numeric type: IEEE~754 double precision ({\tt LONGREAL}).
+\item Full numeric tower: exact integers (fixnum/bignum), exact rationals,
+  inexact reals ({\tt LONGREAL}), arbitrary-precision floats (MPFR),
+  and complex numbers.
 \item {\tt call-with-current-continuation} only unwinds the stack
   (no full continuations).
 \item The Modula-3 call stack is used for Scheme control flow, limiting
@@ -299,11 +301,20 @@ exact->inexact  inexact->exact
 number->string  string->number
 \end{lstlisting}
 
-All numbers are IEEE~754 double precision.  {\tt exact?}, {\tt
-rational?}, and {\tt integer?} all test whether the number has no
-fractional part.  {\tt complex?}, {\tt real?}, and {\tt number?} are
-equivalent.  {\tt exact->inexact} and {\tt inexact->exact} are
-identity functions.
+MScheme implements the full R4RS numeric tower.  Exact integers
+(fixnums and GMP bignums), exact rationals, inexact {\tt LONGREAL}
+values, MPFR arbitrary-precision floats, and complex numbers are
+all supported.  {\tt exact?} returns {\tt \#t} for integers and
+rationals; {\tt inexact?} for floats.  {\tt rational?} is true for
+integers and exact rationals.  {\tt complex?} is true for all
+numbers (per R4RS); {\tt real?} excludes complex values with nonzero
+imaginary part.  {\tt exact->inexact} converts exact values to
+{\tt LONGREAL}; {\tt inexact->exact} converts integer-valued floats
+back to exact integers.
+
+Additional numeric operations include: {\tt numerator},
+{\tt denominator}, {\tt make-rectangular}, {\tt make-polar},
+{\tt real-part}, {\tt imag-part}, {\tt magnitude}, {\tt angle}.
 
 {\tt atan} accepts one or two arguments: {\tt (atan $x$)} computes
 $\arctan x$; {\tt (atan $y$ $x$)} computes $\arctan(y/x)$ with
@@ -439,8 +450,9 @@ MScheme extends R4RS with the following procedures, grouped by category.
 
 \subsubsection{Numeric Type Conversions}
 
-MScheme's native number type is {\tt LONGREAL}.
-These procedures perform explicit narrowing for Modula-3 interop.
+MScheme's numeric tower includes exact integers, exact rationals,
+inexact {\tt LONGREAL}, MPFR floats, and complex numbers.
+These procedures perform explicit type conversions for Modula-3 interop.
 
 \nopagebreak[4]
 \begin{description}

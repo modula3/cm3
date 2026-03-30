@@ -121,8 +121,8 @@ R4RS~\S2 only requires {\tt \textbackslash"} and {\tt \textbackslash\textbacksla
 
 \begin{itemize}
 \item {\tt \#d} (decimal): silently accepted (no-op, since decimal is the default).
-\item {\tt \#e} (exact) and {\tt \#i} (inexact): accepted (no-op).  Since
-  MScheme has no exact/inexact distinction, these are harmless.
+\item {\tt \#e} (exact) and {\tt \#i} (inexact): accepted.  {\tt \#e}
+  produces an exact integer; {\tt \#i} produces an inexact {\tt LONGREAL}.
 \item Combined prefixes (e.g., {\tt \#e\#x1F}, {\tt \#x\#e1F}) are
   supported in any order, per R4RS~\S2.
 \item {\tt \#b} (binary), {\tt \#o} (octal), {\tt \#x} (hexadecimal):
@@ -242,10 +242,10 @@ This chapter reviews each subsection of R4RS~\S6.
 
 {\tt eq?}, {\tt eqv?}, and {\tt equal?} are all present.
 
-\paragraph{Note.} {\tt eqv?} compares {\tt LONGREAL} values directly.
-Since MScheme has no exact/inexact distinction, {\tt (eqv?\ 1\ 1.0)}
-is {\tt \#t}.  See Section~\ref{sec:impl-defined} for further
-discussion.
+\paragraph{Note.} {\tt eqv?} uses {\tt eq?} identity for numbers of the
+same type.  Since {\tt 1} is now exact ({\tt SchemeInt.T}) and {\tt 1.0}
+is inexact ({\tt SchemeLongReal.T}), {\tt (eqv?\ 1\ 1.0)} is {\tt \#f},
+conforming to R4RS.
 
 %----------------------------------------------------------------------
 \section{Pairs and Lists (\S6.3)}
@@ -281,23 +281,25 @@ This is the area of greatest divergence from R4RS.
 
 \subsection{Number Tower}
 
-MScheme has a single numeric type: IEEE~754 double precision
-(Modula-3 {\tt LONGREAL}).  There are no exact integers, no rationals,
-and no complex numbers.  This means:
-
+MScheme implements a full numeric tower:
 \begin{itemize}
-\item {\tt complex?} = {\tt real?} = {\tt number?} (all return {\tt \#t}
-  for any number).
-\item {\tt exact?} = {\tt integer?} = {\tt rational?} (true when the
-  double value is integer-valued).
-\item {\tt inexact?} returns {\tt \#t} when the value is \emph{not}
-  integer-valued.
+\item \textbf{Exact integers}: fixnums ({\tt SchemeInt.T = REF INTEGER},
+  cached $[-256..256]$) and bignums ({\tt Mpz.T}, GMP
+  arbitrary-precision).
+\item \textbf{Exact rationals}: {\tt SchemeRational.T} with {\tt Mpz.T}
+  numerator and denominator, always in lowest terms.
+\item \textbf{Inexact reals}: {\tt SchemeLongReal.T = REF LONGREAL}
+  (IEEE~754 double precision).
+\item \textbf{Arbitrary-precision floats}: {\tt SchemeMpfr.T} (MPFR
+  wrapper with configurable precision).
+\item \textbf{Complex numbers}: {\tt SchemeComplex.T} with real and
+  imaginary parts as arbitrary Scheme numeric values.
 \end{itemize}
 
-R4RS acknowledges that an implementation ``may use fixnums, flonums,
-or perhaps some other representation'' but expects at least an
-exact/inexact distinction.  MScheme collapses this distinction
-entirely.
+\noindent The exact/inexact distinction is correctly maintained:
+{\tt exact?} returns {\tt \#t} for integers and rationals, {\tt \#f}
+for inexact reals.  Arithmetic follows R4RS contagion rules: exact
+operations stay exact, and mixing exact with inexact produces inexact.
 
 \subsection{Arithmetic and Comparisons}
 
@@ -330,9 +332,9 @@ support the optional radix argument with bases 2--16.
 
 The following essential procedures are now present:
 \begin{itemize}[nosep]
-\item {\tt exact->inexact}, {\tt inexact->exact} --- implemented as
-  identity functions (correct given MScheme's single-type number
-  representation).  Defined in {\tt SchemePrimitives.i3}.
+\item {\tt exact->inexact} --- converts exact integers and rationals
+  to {\tt LONGREAL}.  {\tt inexact->exact} converts integer-valued
+  floats to exact integers.
 \item 2-arg {\tt (atan $y$ $x$)} --- delegates to {\tt Math.atan2}.
   The 1-arg form is unchanged.
 \end{itemize}
@@ -500,17 +502,19 @@ section references.
   \emph{Source:} {\tt SchemeBoolean.m3}: {\tt TruthO(x) = (x \# LFalse)}.
 
 \item \textbf{Number representation} (\S6.5).
-  All numbers are IEEE~754 {\tt LONGREAL} (double precision).  There is
-  no exact/inexact distinction at the type level.
+  Full numeric tower: exact integers ({\tt SchemeInt.T}, {\tt Mpz.T}),
+  exact rationals ({\tt SchemeRational.T}), inexact reals
+  ({\tt SchemeLongReal.T}), MPFR floats ({\tt SchemeMpfr.T}),
+  and complex numbers ({\tt SchemeComplex.T}).
 
 \item \textbf{{\tt exact?}\ semantics} (\S6.5.5).
-  Returns {\tt \#t} when the double value is integer-valued, specifically
-  when {\tt d = FLOAT(ROUND(d))} and {\tt ABS(d) < 10\textsuperscript{17}}.
-  Functionally equivalent to {\tt integer?}.
+  Returns {\tt \#t} for exact integers and exact rationals;
+  {\tt \#f} for inexact reals, MPFR floats, and complex numbers
+  with inexact parts.
 
 \item \textbf{{\tt eqv?}\ on numbers} (\S6.2).
-  Compares {\tt LONGREAL} values directly.  Since there is no
-  exact/inexact distinction, {\tt (eqv?\ 1\ 1.0)} evaluates to
+  Uses {\tt eq?} identity for same-type numbers.  Since exact and
+  inexact are distinct types, {\tt (eqv?\ 1\ 1.0)} evaluates to
   {\tt \#t}.  R4RS says {\tt eqv?}\ on numbers of different exactness
   returns {\tt \#f}.
 
@@ -674,15 +678,14 @@ control features, and I/O in full or near-full compliance.
 The remaining gaps lie in two areas:
 
 \begin{enumerate}
-\item \textbf{Numeric tower.}  The use of a single {\tt LONGREAL}
-  type means there is no exact/inexact distinction, no rational
-  arithmetic, and no complex numbers.  The previously missing essential
-  procedures ({\tt exact->inexact}, {\tt inexact->exact}, 2-arg
-  {\tt atan}) have been added, as have the {\tt \#b}/{\tt \#o}/{\tt
-    \#x} literal prefixes and combined R4RS number prefixes.  The
-  remaining missing procedures ({\tt numerator}, {\tt denominator},
-  complex number operations) are non-essential and inherently
-  unsupported by the single-type representation.
+\item \textbf{Numeric tower.}  MScheme now implements the full R4RS
+  numeric tower: exact integers (fixnum/bignum), exact rationals,
+  inexact reals, arbitrary-precision floats (MPFR), and complex
+  numbers.  All R4RS numeric procedures are present, including
+  {\tt numerator}, {\tt denominator}, {\tt make-rectangular},
+  {\tt make-polar}, {\tt real-part}, {\tt imag-part}, {\tt magnitude},
+  and {\tt angle}.  Reader syntax for rationals ({\tt 1/3}) and
+  complex literals ({\tt 3+4i}) is supported.
 
 \item \textbf{Continuations.}  {\tt call-with-current-continuation}
   provides only escape continuations, not full continuations.  This is

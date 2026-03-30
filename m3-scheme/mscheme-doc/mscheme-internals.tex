@@ -149,8 +149,18 @@ empty list & \texttt{NIL}
            & The Modula-3 null pointer \\
 boolean & \texttt{SchemeBoolean.T}
         & Interned singletons \\
-number & \texttt{SchemeLongReal.T = REF LONGREAL}
-       & IEEE~754 double only \\
+fixnum & \texttt{SchemeInt.T = REF INTEGER}
+       & Cached $[-256..256]$ \\
+bignum & \texttt{Mpz.T}
+       & GMP arbitrary-precision \\
+rational & \texttt{SchemeRational.T}
+         & Exact num/den as \texttt{Mpz.T} \\
+inexact real & \texttt{SchemeLongReal.T = REF LONGREAL}
+             & IEEE~754 double \\
+mpfr float & \texttt{SchemeMpfr.T}
+           & MPFR, configurable precision \\
+complex & \texttt{SchemeComplex.T}
+        & re/im as \texttt{SchemeObject.T} \\
 string & \texttt{SchemeString.T = REF ARRAY OF CHAR}
        & Mutable character array \\
 character & \texttt{SchemeChar.T = REF CHAR}
@@ -183,9 +193,12 @@ Several points deserve attention:
   Truth testing is \texttt{x $\neq$ False()}---anything other than
   \texttt{\#f} is truthy, per the Scheme specification.
 
-\item \textbf{Numbers} use a single representation: \texttt{REF LONGREAL}.
-  There is no exact/inexact distinction and no bignum support for
-  arithmetic (though \texttt{BigInt.T} appears in the pickling code).
+\item \textbf{Numbers} use a full numeric tower: exact integers
+  (\texttt{SchemeInt.T} for fixnums, \texttt{Mpz.T} for bignums),
+  exact rationals (\texttt{SchemeRational.T}), inexact reals
+  (\texttt{SchemeLongReal.T}), MPFR floats (\texttt{SchemeMpfr.T}),
+  and complex numbers (\texttt{SchemeComplex.T}).  The
+  \texttt{SchemeNumber} module provides unified arithmetic dispatch.
 
 \item \textbf{Output ports} are raw Modula-3 \texttt{Wr.T} writers.
   A Modula-3 writer \emph{is} a Scheme output port with no wrapping.
