@@ -28,6 +28,7 @@ IMPORT RTType, RTBrand;
 IMPORT FileRd, Rd;
 IMPORT SchemeAtRun;
 IMPORT SchemeCommandRunner;
+IMPORT SchemeModula3Types;
 
 <* FATAL Thread.Alerted *>
 
@@ -777,5 +778,6 @@ BEGIN
   SchemeEnvironment.ExtendWithIntrospectionPrimitives(prims)  ;
   prims := SchemeProcedureStubs.Extend(prims);
   prims := SchemeAtRun.Extend(prims);
-  prims := SchemeCommandRunner.Extend(NEW(SchemeCommandRunner.TextOutputParser),prims)
+  prims := SchemeCommandRunner.Extend(NEW(SchemeCommandRunner.TextOutputParser),prims);
+  prims := SchemeModula3Types.Extend(prims)
 END SchemeM3.

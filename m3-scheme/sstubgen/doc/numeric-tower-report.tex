@@ -1,0 +1,781 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries,
+  commentstyle=\color{gray},
+  frame=single,
+  breaklines=true
+}
+
+\title{Updating \texttt{sstubgen} and \texttt{SchemeModula3Types}\\
+  for the mscheme Numeric Tower}
+\author{Design Report}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+
+%======================================================================
+\section{Background}
+
+The mscheme Scheme interpreter, embedded in Modula-3 via the
+\texttt{modula3scheme} package, recently acquired a full numeric tower.
+Previously, all Scheme numbers were represented as \texttt{LONGREAL}
+(IEEE~754 double-precision).  Now:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Scheme type} & \textbf{M3 type} & \textbf{Description} \\
+\midrule
+Fixnum   & \texttt{REF INTEGER} (\texttt{SchemeInt.T}) & Exact integer, cached $[-256..256]$ \\
+Bignum   & \texttt{Mpz.T}       & GMP arbitrary-precision integer \\
+Inexact  & \texttt{REF LONGREAL} (\texttt{SchemeLongReal.T}) & IEEE~754 float \\
+\midrule
+\multicolumn{3}{l}{\emph{Extended types (library-provided, not part of core tower):}} \\
+BigInt   & \texttt{BigInt.T}     & caltech-parser arbitrary-precision integer \\
+Mpfr     & \texttt{Mpfr.T}      & MPFR arbitrary-precision float \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The auto-stub generator \texttt{sstubgen} and the base-type converter
+library \texttt{SchemeModula3Types} were written before this change and
+assume all numbers are \texttt{LONGREAL}.  This causes two classes of
+bugs:
+
+\begin{enumerate}
+\item \textbf{Precision loss.}  Integers converted through
+  \texttt{LONGREAL} lose precision beyond 53~bits.  For 64-bit
+  \texttt{INTEGER} and \texttt{LONGINT}, this is catastrophic for large
+  values.
+\item \textbf{Type mismatch.}  Generated converters for opaque types
+  (e.g.\ \texttt{Mpz.T}) use \texttt{TYPECASE} to match only the exact
+  target type.  A Scheme fixnum (\texttt{REF INTEGER}) or bignum
+  (\texttt{Mpz.T}) passed where \texttt{BigInt.T} is expected causes a
+  runtime error, because the converter does not know these are
+  compatible numeric representations.
+\end{enumerate}
+
+%======================================================================
+\section{Current State: What's Wrong}
+
+\subsection{ToScheme direction (M3 $\to$ Scheme)}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{M3 type} & \textbf{Current code} & \textbf{Bug} \\
+\midrule
+\texttt{INTEGER}  & \texttt{SchemeLongReal.FromI(i)} & Creates inexact float, not exact integer \\
+\texttt{CARDINAL} & \texttt{SchemeLongReal.FromI(c)} & Same \\
+\texttt{LONGINT}  & \texttt{FLOAT(x\^{}, LONGREAL)} & Catastrophic: loses bits beyond $2^{53}$ \\
+\texttt{LONGREAL} & \texttt{SchemeLongReal.FromLR(l)} & Correct \\
+\texttt{REAL}     & \texttt{SchemeLongReal.FromLR(...)} & Correct \\
+\texttt{EXTENDED} & \texttt{SchemeLongReal.FromLR(...)} & Correct \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{ToModula direction (Scheme $\to$ M3)}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{M3 type} & \textbf{Current code} & \textbf{Bug} \\
+\midrule
+\texttt{INTEGER}  & \texttt{SchemeLongReal.FromO} $\to$ \texttt{ROUND} & Lossy: round-trips through double \\
+\texttt{CARDINAL} & Same as \texttt{INTEGER} & Same \\
+\texttt{LONGINT}  & Same through \texttt{LONGREAL} & Catastrophic loss \\
+\texttt{LONGREAL} & \texttt{SchemeLongReal.FromO(l)} & Correct (already handles all types) \\
+\texttt{REAL}     & \texttt{FLOAT(FromO, REAL)} & Correct \\
+\texttt{EXTENDED} & \texttt{FLOAT(FromO, EXTENDED)} & Correct \\
+\texttt{Mpz.T}   & \texttt{TYPECASE} only & Rejects \texttt{REF INTEGER} fixnums \\
+\texttt{BigInt.T} & \texttt{TYPECASE} only & Rejects fixnums and \texttt{Mpz.T} \\
+\texttt{Mpfr.T}  & \texttt{TYPECASE} only & Rejects all numeric types \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The floating-point types (\texttt{LONGREAL}, \texttt{REAL},
+\texttt{EXTENDED}) are already correct because
+\texttt{SchemeLongReal.FromO} already dispatches on all numeric tower
+types internally:
+\begin{lstlisting}
+TYPECASE x OF
+  SchemeInt.T(ri) => RETURN FLOAT(ri^, LONGREAL)
+| Mpz.T(m)       => RETURN Mpz.get_d(m)
+| T(lr)           => RETURN lr^
+| BigInt.T(b)     => RETURN BigInt.ToLongReal(b)
+END
+\end{lstlisting}
+
+\subsection{sstubgen-generated code for opaque types}
+
+For an opaque type like \texttt{Mpz.T}, sstubgen generates:
+
+\begin{lstlisting}
+PROCEDURE ToModula_Mpz_T(x : SchemeObject.T) : Mpz.T
+    RAISES { Scheme.E } =
+  BEGIN
+    IF x # NIL AND ISTYPE(x, REF Mpz.T) THEN
+      RETURN NARROW(x,REF Mpz.T)^
+    END;
+    TYPECASE x OF
+      Mpz.T(xx) => RETURN xx
+    ELSE
+      IF SchemeConvertHooks.AttemptConvertToModula(
+           TYPECODE(Mpz.T), x) THEN
+        RETURN x
+      ELSE
+        RAISE Scheme.E("Not of type Mpz.T : " & ...)
+      END
+    END
+  END ToModula_Mpz_T;
+\end{lstlisting}
+
+The \texttt{TYPECASE} matches only \texttt{Mpz.T} exactly.  A
+\texttt{REF INTEGER} (fixnum) or \texttt{REF LONGREAL} is rejected.
+The \texttt{SchemeConvertHooks} fallback is available but no hooks are
+registered for numeric conversions.
+
+%======================================================================
+\section{Design: Correct Conversions}
+
+Every conversion between a Scheme numeric value and an M3 numeric type
+should succeed whenever the value is representable in the target type.
+The following tables define the correct behavior.
+
+\subsection{ToScheme (M3 $\to$ Scheme)}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{M3 type} & \textbf{Scheme result} & \textbf{Implementation} \\
+\midrule
+\texttt{INTEGER}  & Exact fixnum or bignum & \texttt{SchemeInt.FromI(x)} \\
+\texttt{CARDINAL} & Exact fixnum or bignum & \texttt{SchemeInt.FromI(x)} \\
+\texttt{LONGINT}  & Exact fixnum or bignum & See \S\ref{sec:longint} \\
+\texttt{REAL}     & Inexact float & \texttt{SchemeLongReal.FromLR(FLOAT(x,LONGREAL))} \\
+\texttt{LONGREAL} & Inexact float & \texttt{SchemeLongReal.FromLR(x)} \\
+\texttt{EXTENDED} & Inexact float & \texttt{SchemeLongReal.FromLR(FLOAT(x,LONGREAL))} \\
+\texttt{Mpz.T}   & Exact fixnum or bignum & \texttt{SchemeInt.MpzToScheme(x)} \\
+\texttt{BigInt.T} & Exact fixnum or bignum & Convert to Mpz, then demote \\
+\texttt{Mpfr.T}  & Inexact float & \texttt{SchemeLongReal.FromLR(Mpfr.GetLR(x))} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{LONGINT}\label{sec:longint}
+
+On 64-bit platforms, \texttt{LONGINT} $=$ \texttt{INTEGER} $= 64$-bit
+signed.  On 32-bit platforms, \texttt{LONGINT} is 64-bit while
+\texttt{INTEGER} is 32-bit.  The correct conversion is: if the value
+fits in \texttt{INTEGER}, use \texttt{SchemeInt.FromI}; otherwise,
+create an \texttt{Mpz.T} via \texttt{Mpz.NewInt} (which accepts
+\texttt{INTEGER}).  For values outside \texttt{INTEGER} range on
+32-bit, we need \texttt{Mpz.set\_si64} or equivalent.
+
+In practice, CM3's current 64-bit targets have
+\texttt{LONGINT}~$=$~\texttt{INTEGER}, so this is identity.  The
+implementation uses \texttt{VAL(x, INTEGER)} which is a no-op on 64-bit
+and a checked runtime error on 32-bit if the value is out of range.
+
+\subsection{ToModula (Scheme $\to$ M3)}
+
+\subsubsection{Built-in integer types}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Source Scheme type} & \textbf{Action for target \texttt{INTEGER}} \\
+\midrule
+\texttt{REF INTEGER} (fixnum) & Direct: \texttt{ri\^{}} \\
+\texttt{Mpz.T} (bignum) & Range check via \texttt{fits\_slong\_p}, then \texttt{get\_si} \\
+\texttt{REF LONGREAL} (float) & Check integral, range check, \texttt{ROUND} \\
+\texttt{BigInt.T} & Falls through to \texttt{SchemeLongReal.FromO} path \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Same logic for \texttt{CARDINAL} with unsigned range check
+($[0..\mathtt{LAST(CARDINAL)}]$, enforced via \texttt{fits\_slong\_p}
+followed by a sign check) and \texttt{LONGINT} with appropriate range.
+
+\subsubsection{Built-in floating types}
+
+\texttt{LONGREAL}, \texttt{REAL}, \texttt{EXTENDED}: no change needed.
+\texttt{SchemeLongReal.FromO} already handles all numeric tower types
+correctly.  Range checking for \texttt{REAL}/\texttt{EXTENDED} is
+implicit in the \texttt{FLOAT} conversion (overflow $\to$ $\pm\infty$).
+
+\subsubsection{Library numeric types}
+
+For \texttt{Mpz.T}, the converter accepts any Scheme numeric value
+that is representable as an integer:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Source} & \textbf{$\to$ Mpz.T} \\
+\midrule
+\texttt{REF INTEGER}   & \texttt{Mpz.NewInt(ri\^{})} \\
+\texttt{Mpz.T}         & Identity \\
+\texttt{REF LONGREAL}  & Check integral, \texttt{ROUND}, \texttt{Mpz.NewInt} \\
+\texttt{BigInt.T}       & Falls through to float path \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%======================================================================
+\section{Architecture}
+
+The conversion system has three layers, and each needs targeted changes:
+
+\subsection{Layer 1: \texttt{SchemeModula3Types} (base type converters)}
+
+\textbf{File:} \texttt{m3-scheme/modula3scheme/src/SchemeModula3Types.m3}
+
+This module provides hand-written converters for built-in M3 types.
+These are called directly by sstubgen-generated code when the type is
+recognized as a ``base type.''
+
+\textbf{Changes:}
+\begin{itemize}
+\item Add \texttt{IMPORT SchemeInt, Mpz} to the module.
+\item \texttt{ToScheme\_INTEGER}: change from \texttt{SchemeLongReal.FromI}
+  to \texttt{SchemeInt.FromI}.
+\item \texttt{ToScheme\_CARDINAL}: same.
+\item \texttt{ToModula\_INTEGER}: rewrite to dispatch on
+  \texttt{SchemeInt.T}, \texttt{Mpz.T}, then fall back to
+  \texttt{SchemeLongReal.FromO} for floats.
+\item \texttt{ToModula\_CARDINAL}: same with unsigned range check.
+\end{itemize}
+
+\texttt{ToModula\_LONGINT} (in \texttt{SchemeModula3TypesCM3.m3})
+similarly rewritten to dispatch on exact integers first, with the
+\texttt{LONGREAL} path as a fallback.
+
+Implemented \texttt{ToModula\_INTEGER}:
+\begin{lstlisting}
+PROCEDURE ToModula_INTEGER(c : SchemeObject.T)
+    : INTEGER RAISES { Scheme.E } =
+  BEGIN
+    TYPECASE c OF
+      SchemeInt.T(ri) => RETURN ri^
+    | Mpz.T(m) =>
+      IF Mpz.fits_slong_p(m) # 0 THEN
+        RETURN Mpz.get_si(m)
+      ELSE
+        RAISE Scheme.E("INTEGER out of range : "
+                        & Stringify(c))
+      END
+    ELSE
+      WITH flt = SchemeLongReal.FromO(c) DO
+        IF flt < FLOAT(FIRST(INTEGER), LONGREAL) OR
+           flt > FLOAT(LAST(INTEGER), LONGREAL) THEN
+          RAISE Scheme.E("INTEGER out of range : "
+                          & Stringify(c))
+        END;
+        WITH int = ROUND(flt) DO
+          IF FLOAT(int, LONGREAL) # flt THEN
+            RAISE Scheme.E("Not an integer : "
+                            & Stringify(c))
+          END;
+          RETURN int
+        END
+      END
+    END
+  END ToModula_INTEGER;
+\end{lstlisting}
+
+\subsection{Layer 2: \texttt{Mpz.T} as a recognized base type}
+
+Since \texttt{Mpz} is already a transitive dependency of
+\texttt{modula3scheme} (via \texttt{mscheme} $\to$ \texttt{mpz}), we
+add \texttt{Mpz.T} as a recognized base type.
+
+\textbf{In \texttt{SchemeModula3Types.i3/.m3}:}
+\begin{itemize}
+\item Add \texttt{ToScheme\_Mpz\_T} and \texttt{ToModula\_Mpz\_T} procedures.
+\item Add \texttt{T\_Mpz\_T} to the \texttt{Type} enum, \texttt{Name}
+  array, and \texttt{ProcMode} array (mode: \texttt{Concrete}, since
+  \texttt{Mpz.T} is already a reference type).
+\end{itemize}
+
+\textbf{In \texttt{TypeTranslator.m3} (sstubgen):}
+\begin{itemize}
+\item Add \texttt{Mpz.T} to \texttt{AddBasetypes} as a
+  \texttt{Type.Opaque} with \texttt{revealedSuperType = Type.refany}
+  and name \texttt{Qid(intf="Mpz", item="T")}.
+\end{itemize}
+
+\textbf{In \texttt{sstubgen.scm}:}
+\begin{itemize}
+\item Modify \texttt{is-opaque-basetype} to compare by Qid name rather
+  than full structural equality.  The previous code used
+  \texttt{equal?}\ on the entire type S-expression, which worked for
+  built-in opaques (\texttt{TEXT}, \texttt{MUTEX}) because they resolve
+  to singleton \texttt{Type.T} objects (same M3 pointer $\to$ same
+  memoized S-expression).  For non-built-in opaques like \texttt{Mpz.T},
+  the parser creates a fresh \texttt{Type.Opaque}, so the S-expressions
+  are structurally equivalent but identity-distinct.  Name-based matching
+  is more robust and matches the existing comment (``special handling for
+  opaques, by name'').
+\end{itemize}
+
+Implemented converters:
+\begin{lstlisting}
+PROCEDURE ToScheme_Mpz_T(m : Mpz.T) : SchemeObject.T =
+  BEGIN RETURN SchemeInt.MpzToScheme(m) END;
+
+PROCEDURE ToModula_Mpz_T(x : SchemeObject.T)
+    : Mpz.T RAISES { Scheme.E } =
+  BEGIN
+    TYPECASE x OF
+      SchemeInt.T(ri) => RETURN Mpz.NewInt(ri^)
+    | Mpz.T(m) => RETURN m
+    ELSE
+      WITH flt = SchemeLongReal.FromO(x) DO
+        WITH int = ROUND(flt) DO
+          IF FLOAT(int, LONGREAL) # flt THEN
+            RAISE Scheme.E("Not an integer : "
+                            & Stringify(x))
+          END;
+          RETURN Mpz.NewInt(int)
+        END
+      END
+    END
+  END ToModula_Mpz_T;
+\end{lstlisting}
+
+\subsection{Layer 3: \texttt{SchemeConvertHooks} for \texttt{BigInt.T} and \texttt{Mpfr.T}}
+
+\texttt{BigInt} lives in \texttt{caltech-parser/cit\_util} and
+\texttt{Mpfr} in \texttt{caltech-other/mpfr}.  These are \emph{not}
+dependencies of \texttt{modula3scheme}, so they cannot be added as base
+types there.  Instead, we use the existing hook mechanism.
+
+\textbf{Approach:} Each package that exposes \texttt{BigInt.T} or
+\texttt{Mpfr.T} to Scheme registers conversion hooks at initialization
+time.
+
+\textbf{For BigInt.T}, register hooks during \texttt{BigIntSchemeStubs}
+initialization (or in the program's startup code):
+
+\begin{lstlisting}
+(* REF INTEGER -> BigInt.T *)
+SchemeConvertHooks.RegisterToModula(
+  TYPECODE(REF INTEGER),
+  TYPECODE(BigInt.T),
+  NEW(SchemeConvertHooks.T,
+      convert := FixnumToBigInt));
+
+(* Mpz.T -> BigInt.T *)
+SchemeConvertHooks.RegisterToModula(
+  TYPECODE(Mpz.T),
+  TYPECODE(BigInt.T),
+  NEW(SchemeConvertHooks.T,
+      convert := MpzToBigInt));
+\end{lstlisting}
+
+Similarly for \texttt{Mpfr.T}, with converters that accept integer and
+float Scheme values and produce \texttt{Mpfr.T} at appropriate
+precision.
+
+\textbf{Note on the ToScheme direction:} The sstubgen-generated
+\texttt{ToScheme} for opaque types simply returns the object
+(\texttt{RETURN x}).  This is acceptable for \texttt{BigInt.T} and
+\texttt{Mpfr.T} since they are \texttt{<: REFANY = SchemeObject.T}.
+However, Scheme code that receives a \texttt{BigInt.T} will find that
+\texttt{(number? x)} returns \texttt{\#t} (since
+\texttt{SchemeInt.IsNumber} recognizes \texttt{BigInt.T}), but
+arithmetic operations may produce unexpected results.  A
+\texttt{ToScheme} hook that converts \texttt{BigInt.T} to the native
+exact integer representation would be cleaner.
+
+%======================================================================
+\section{Range Checking and Special Values}
+
+\subsection{Integer range checking}
+
+The \texttt{ToModula\_INTEGER} and \texttt{ToModula\_CARDINAL}
+converters use a three-tier dispatch:
+
+\begin{enumerate}
+\item \textbf{Fixnum} (\texttt{SchemeInt.T}): Direct extraction via
+  \texttt{ri\^{}}.  For \texttt{CARDINAL}, a sign check is required
+  since fixnums can be negative.  No overflow possible since fixnums
+  are \texttt{REF INTEGER} and \texttt{INTEGER} $=$ \texttt{CARDINAL}
+  in range for non-negative values.
+
+\item \textbf{Bignum} (\texttt{Mpz.T}): Range check via
+  \texttt{Mpz.fits\_slong\_p} (for \texttt{INTEGER}) or
+  \texttt{Mpz.fits\_slong\_p} plus sign check (for \texttt{CARDINAL}).
+  The GMP \texttt{fits\_slong\_p} function returns non-zero iff the
+  value fits in a C \texttt{signed long}, which on 64-bit platforms is
+  the same range as \texttt{INTEGER}.
+
+  \textbf{Portability note:} On hypothetical 32-bit platforms where
+  \texttt{INTEGER} is 32-bit and C \texttt{long} is also 32-bit,
+  \texttt{fits\_slong\_p} correctly checks the 32-bit range.  On
+  platforms where C \texttt{long} differs from M3 \texttt{INTEGER}
+  (none currently exist in CM3), an additional range check would be
+  needed after \texttt{get\_si}.
+
+\item \textbf{Float} (\texttt{REF LONGREAL} and others): Falls through
+  to \texttt{SchemeLongReal.FromO} which handles all numeric types.
+  The resulting \texttt{LONGREAL} is range-checked against
+  \texttt{FLOAT(FIRST(INTEGER), LONGREAL)} /
+  \texttt{FLOAT(LAST(INTEGER), LONGREAL)}, then checked for integrality
+  via \texttt{FLOAT(ROUND(flt), LONGREAL) = flt}.  This correctly
+  rejects NaN (which fails all comparisons), $\pm\infty$ (which fails
+  the range check), and non-integral values like \texttt{3.5}.
+\end{enumerate}
+
+\subsection{Floating-point special values}
+
+The \texttt{SchemeLongReal.FromO} path correctly handles IEEE~754
+special values:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Value} & \textbf{Behavior in integer converter} & \textbf{Behavior in float converter} \\
+\midrule
+NaN            & Rejected (fails range check) & Passed through \\
+$+\infty$      & Rejected (fails range check) & Passed through \\
+$-\infty$      & Rejected (fails range check) & Passed through \\
+$-0.0$         & Accepted as integer 0        & Passed through as $-0.0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The treatment of $-0.0$ is correct: \texttt{ROUND(-0.0) = 0} and
+\texttt{FLOAT(0, LONGREAL) = -0.0} is false in IEEE~754 strict mode,
+but CM3's \texttt{FLOAT} produces \texttt{+0.0} for integer~0, so
+the integrality check would actually \emph{reject} $-0.0$.  This is
+acceptable: $-0.0$ is an inexact float and should not silently convert
+to an exact integer.
+
+\subsection{Mpz.T range checking}
+
+The \texttt{ToModula\_Mpz\_T} converter accepts any exact integer
+without range issues (Mpz is arbitrary-precision).  For the float
+fallback path, the converter calls \texttt{ROUND(flt)} which returns
+an \texttt{INTEGER}, then converts to \texttt{Mpz.T} via
+\texttt{Mpz.NewInt}.  This means the float-to-Mpz path is limited
+to the \texttt{INTEGER} range.  For truly large float values (beyond
+$2^{63}$), the \texttt{ROUND} would fail.  This is acceptable because:
+\begin{itemize}
+\item Floats beyond $2^{53}$ have lost all sub-integer precision
+\item The only sensible path for large integers is through exact
+  representations (fixnum or bignum), not through floats
+\item A future \texttt{Mpz.set\_d} binding could handle the
+  float-to-arbitrary-precision case if needed
+\end{itemize}
+
+%======================================================================
+\section{Future Numeric Tower Extensions}
+\label{sec:future}
+
+The current work addresses the core numeric tower (fixnum, bignum,
+inexact float) and integrates \texttt{Mpz.T} as a base type.  Three
+additional types merit discussion for future integration:
+\texttt{Mpfr.T} (arbitrary-precision float), rational numbers, and
+complex numbers.
+
+\subsection{Mpfr.T: Arbitrary-precision floats}
+
+\texttt{Mpfr.T} wraps the MPFR library, providing arbitrary-precision
+floating-point arithmetic.  Unlike \texttt{BigInt.T} (which is being
+superseded by \texttt{Mpz.T}), \texttt{Mpfr.T} fills a genuine gap
+in the numeric tower: there is no other representation for
+high-precision inexact real numbers.
+
+\subsubsection{Bidirectional conversion}
+
+\texttt{Mpfr.T} should support full bidirectional conversion:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Direction} & \textbf{Source} & \textbf{Target / Action} \\
+\midrule
+\multirow{3}{*}{$\to$ Mpfr.T} & REF INTEGER (fixnum) & \texttt{Mpfr.SetInt(m, ri\^{})} \\
+ & Mpz.T (bignum) & \texttt{Mpfr.SetMpz(m, mpz)} \\
+ & REF LONGREAL (float) & \texttt{Mpfr.SetLR(m, lr\^{})} \\
+\midrule
+\multirow{1}{*}{Mpfr.T $\to$} & (any context) & \texttt{SchemeLongReal.FromLR(Mpfr.GetLR(m))} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Precision questions}
+
+When converting \emph{to} \texttt{Mpfr.T}, what precision should the
+result have?  Options:
+
+\begin{enumerate}
+\item \textbf{Default precision}: Use MPFR's global default (typically
+  53~bits, matching \texttt{LONGREAL}).  Simple but defeats the purpose
+  of using Mpfr in the first place.
+\item \textbf{Source-appropriate}: Match the precision to the source ---
+  53~bits for \texttt{LONGREAL}, exact for integers (enough bits to
+  represent the value).  Better, but the caller likely wants a specific
+  precision.
+\item \textbf{Caller-specified}: Require the caller to provide the
+  precision.  This is cleanest but doesn't fit the auto-converter
+  framework, which has no way to pass extra parameters.
+\end{enumerate}
+
+The pragmatic choice is option~1 (MPFR default precision) for the
+auto-converter, with explicit Scheme-callable procedures for
+precision-controlled construction.  The auto-converter serves the
+common case where \texttt{Mpfr.T} appears in a Modula-3 interface and
+the caller passes a Scheme number; full precision control is available
+through the Mpfr Scheme bindings.
+
+\subsubsection{Special values}
+
+MPFR supports NaN, $\pm\infty$, and signed zeros, matching IEEE~754
+semantics.  The conversion from \texttt{LONGREAL} preserves these:
+\texttt{Mpfr.SetLR} handles NaN and infinities correctly.  The
+conversion \emph{from} \texttt{Mpfr.T} to \texttt{LONGREAL} via
+\texttt{Mpfr.GetLR} also preserves special values, with overflow
+(Mpfr value outside \texttt{LONGREAL} range) producing $\pm\infty$.
+
+\subsubsection{Implementation path}
+
+Since \texttt{Mpfr} is not a dependency of \texttt{modula3scheme},
+\texttt{Mpfr.T} conversion should use \texttt{SchemeConvertHooks}
+(Layer~3), registered by the package that provides \texttt{Mpfr}
+Scheme stubs.  Alternatively, if \texttt{Mpfr.T} becomes common
+enough, it could be promoted to a base type (like \texttt{Mpz.T}),
+but this would add MPFR as a dependency of \texttt{modula3scheme}.
+
+\subsection{Rational numbers}
+
+A Scheme-standard rational number type (\texttt{exact rational},
+e.g.\ $3/7$) is not currently part of mscheme.  If added, it would
+likely be represented as:
+
+\begin{lstlisting}
+(* In a hypothetical SchemeRational module *)
+TYPE T = REF RECORD num, den : Mpz.T END;
+  (* or wrapping GMP's mpq_t *)
+\end{lstlisting}
+
+\subsubsection{Why exact match, not bidirectional}
+
+Rational numbers should \textbf{not} participate in automatic
+bidirectional numeric conversion for the stub generator.  The reasons:
+
+\begin{enumerate}
+\item \textbf{No natural M3 target type.}  There is no built-in
+  Modula-3 rational type.  Converting $3/7$ to \texttt{INTEGER} (by
+  truncation or rounding) is lossy and surprising.  Converting to
+  \texttt{LONGREAL} ($\approx 0.4286$) is also lossy.
+
+\item \textbf{Ambiguous intent.}  If a Scheme rational $3/7$ is passed
+  where \texttt{LONGREAL} is expected, should the converter truncate,
+  round, or reject?  The stub generator cannot know the caller's intent.
+
+\item \textbf{Type safety.}  Modula-3 interfaces that accept
+  \texttt{LONGREAL} expect IEEE~754 semantics.  Silently converting
+  a rational to a float could mask precision issues that the caller
+  should handle explicitly.
+\end{enumerate}
+
+\subsubsection{Convenience functions}
+
+Instead of auto-conversion, provide explicit M3-side convenience
+functions:
+
+\begin{lstlisting}
+(* In SchemeRational or similar *)
+PROCEDURE ToLongReal(r : T) : LONGREAL;
+  (* Exact division: num/den as LONGREAL *)
+
+PROCEDURE ToInteger(r : T) : INTEGER RAISES { Scheme.E };
+  (* Error if not an integer rational *)
+
+PROCEDURE FromInteger(i : INTEGER) : T;
+  (* Creates i/1 *)
+
+PROCEDURE FromLongReal(lr : LONGREAL) : T;
+  (* Best rational approximation *)
+\end{lstlisting}
+
+Scheme code can use these explicitly: \texttt{(rational->real r)} or
+\texttt{(exact->inexact r)}.  The auto-generated stubs would treat
+\texttt{SchemeRational.T} as an opaque type with exact \texttt{TYPECASE}
+matching, which is correct: if a procedure expects a rational, pass a
+rational.
+
+\subsection{Complex numbers}
+
+A Scheme complex number type (e.g.\ $3+4i$) would likely be:
+
+\begin{lstlisting}
+TYPE T = REF RECORD re, im : LONGREAL END;
+  (* or REF RECORD re, im : SchemeObject.T END
+     for exact complex like 3/7+2i *)
+\end{lstlisting}
+
+\subsubsection{Why exact match, not bidirectional}
+
+Like rationals, complex numbers should use exact \texttt{TYPECASE}
+matching, not automatic numeric conversion:
+
+\begin{enumerate}
+\item \textbf{Dimension mismatch.}  A complex number has two
+  components; an \texttt{INTEGER} or \texttt{LONGREAL} has one.
+  Auto-converting $3+4i$ to \texttt{LONGREAL} (by taking the real
+  part?\ the magnitude?) is ambiguous and error-prone.
+
+\item \textbf{No natural M3 type.}  Modula-3 has no built-in complex
+  type.  Any complex representation is library-defined and should be
+  matched exactly.
+
+\item \textbf{Real-valued complex.}  The one tempting case is $3+0i$
+  (a complex with zero imaginary part).  Even here, auto-conversion
+  is dangerous: it changes the type of the value, which may affect
+  dispatch in the M3 code.
+\end{enumerate}
+
+\subsubsection{Convenience functions}
+
+\begin{lstlisting}
+(* In SchemeComplex or similar *)
+PROCEDURE RealPart(c : T) : LONGREAL;
+PROCEDURE ImagPart(c : T) : LONGREAL;
+PROCEDURE FromReals(re, im : LONGREAL) : T;
+PROCEDURE Magnitude(c : T) : LONGREAL;
+PROCEDURE Phase(c : T) : LONGREAL;
+
+PROCEDURE IsReal(c : T) : BOOLEAN;
+  (* TRUE iff im = 0.0 *)
+PROCEDURE ToReal(c : T) : LONGREAL RAISES { Scheme.E };
+  (* Error if im # 0.0 *)
+\end{lstlisting}
+
+\subsubsection{Interaction with the auto-converter}
+
+When complex numbers appear in Scheme and are passed to M3 stubs
+expecting \texttt{LONGREAL}, the auto-generated \texttt{TYPECASE}
+will fall through to the \texttt{ELSE} branch (since
+\texttt{SchemeComplex.T} is not recognized by
+\texttt{SchemeLongReal.FromO}).  This will produce a clear error
+message.  If desired, a \texttt{SchemeConvertHooks} registration
+could be added to convert real-valued complex numbers to
+\texttt{LONGREAL}, but this should be opt-in, not default.
+
+\subsection{Summary of future type integration}
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+\textbf{Type} & \textbf{Auto-convert?} & \textbf{Mechanism} & \textbf{Rationale} \\
+\midrule
+\texttt{Mpfr.T}   & Yes, bidirectional & SchemeConvertHooks & Natural float extension \\
+Rational           & No, exact match    & TYPECASE only      & Lossy conversion ambiguous \\
+Complex            & No, exact match    & TYPECASE only      & Dimension mismatch \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The key principle: automatic conversion is appropriate when the source
+and target types represent the same mathematical domain (integers,
+reals) at different precisions.  It is inappropriate when the types
+represent different mathematical structures (rationals $\not\subset$
+integers; complex $\not\subset$ reals in a type-safe sense).
+
+%======================================================================
+\section{Summary of Changes}
+
+\begin{center}
+\begin{longtable}{lll}
+\toprule
+\textbf{File} & \textbf{Package} & \textbf{Change} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{c}{\emph{(continued)}} \\
+\toprule
+\textbf{File} & \textbf{Package} & \textbf{Change} \\
+\midrule
+\endhead
+\texttt{SchemeModula3Types.i3} & modula3scheme & Add Mpz.T converters, \\
+ & & update comments, \\
+ & & add T\_Mpz\_T to Type enum \\
+\texttt{SchemeModula3Types.m3} & modula3scheme & Rewrite INTEGER/CARDINAL \\
+ & & converters; \\
+ & & add Mpz.T converters \\
+\texttt{SchemeModula3TypesCM3.m3} & modula3scheme & Rewrite LONGINT converters \\
+\texttt{m3makefile} & modula3scheme & Add \texttt{import("mpz")} \\
+\texttt{TypeTranslator.m3} & sstubgen & Add Mpz.T to basetypes \\
+\texttt{sstubgen.scm} & sstubgen & Name-based opaque matching \\
+\texttt{SchemeConvertHooks.m3} & mscheme & No changes needed \\
+ & & (existing mechanism suffices) \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+%======================================================================
+\section{Immediate Priority: Unblock cspc}
+
+The immediate blocker for the cspc BigInt removal project is that
+\texttt{cspgrammar} uses \texttt{BigInt.T} in its interfaces
+(\texttt{CspExpression.i3}, \texttt{CspAst.i3}, \texttt{CspType.i3},
+\texttt{CspInterval.i3}, etc.).  Replacing \texttt{BigInt.T} with
+\texttt{Mpz.T} requires that \texttt{ToModula\_Mpz\_T} accept
+\texttt{REF INTEGER} fixnums.
+
+The minimal path to unblock cspc is:
+\begin{enumerate}
+\item Implement Layer~1 (fix INTEGER/CARDINAL) and Layer~2 (add Mpz.T
+  as base type) in \texttt{SchemeModula3Types}.
+\item Update \texttt{TypeTranslator.m3} so sstubgen recognizes
+  \texttt{Mpz.T}.
+\item Modify \texttt{is-opaque-basetype} in \texttt{sstubgen.scm} for
+  robust name-based matching of non-built-in opaque basetypes.
+\item Rebuild sstubgen, then rebuild cspc (which will regenerate stubs
+  with the new Mpz.T converter).
+\item Replace \texttt{BigInt.T} $\to$ \texttt{Mpz.T} in cspgrammar and
+  cspsimlib interfaces.
+\end{enumerate}
+
+Layer~3 (BigInt.T/Mpfr.T hooks) is not needed for cspc since we are
+\emph{removing} BigInt.T from the interfaces, not keeping it.  It is
+needed for any other packages that still expose BigInt.T or Mpfr.T to
+Scheme.
+
+%======================================================================
+\section{Verification}
+
+\begin{enumerate}
+\item Rebuild modula3scheme: \\
+  \texttt{cd \~{}/cm3/cm3 \&\& scripts/do-pkg.sh buildship modula3scheme}
+\item Rebuild sstubgen: \\
+  \texttt{scripts/do-pkg.sh buildship sstubgen}
+\item Test basic number round-tripping in mscheme REPL:
+\begin{lstlisting}
+> (scheme-modula-conversion-mode 'INTEGER)
+;; should return 'Concrete
+> (scheme-modula-conversion-mode 'Mpz_T)
+;; should return 'Concrete
+> (exact? 42)  ;; should be #t
+\end{lstlisting}
+\item Rebuild cspgrammar, cspsimlib, cspc.
+\item Run cspc test suite.
+\end{enumerate}
+
+\end{document}

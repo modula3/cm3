@@ -1,20 +1,19 @@
 (* Copyright (c) 2026, Mika Nystrom.  All rights reserved. *)
 
-(* Exact-integer abstraction.  Operates on SchemeObject.T values
-   that are fixnums (REF INTEGER) or bignums (Mpz.T), without
-   exposing which.  Phase 2 will extend to exact rationals. *)
+(* Exact-number abstraction.  Operates on SchemeObject.T values
+   that are fixnums (REF INTEGER), bignums (Mpz.T), or exact
+   rationals (SchemeRational.T). *)
 
 INTERFACE SchemeExact;
 IMPORT SchemeObject;
 
 (* Predicate *)
 PROCEDURE Is(x: SchemeObject.T): BOOLEAN;
-  (* TRUE iff x is an exact integer (fixnum or bignum) *)
+  (* TRUE iff x is exact: integer or rational *)
 
 PROCEDURE IsInteger(x: SchemeObject.T): BOOLEAN;
-  (* TRUE iff x is an exact integer.
-     (Same as Is in Phase 1; differs from Is in Phase 2
-      when exact rationals are added.) *)
+  (* TRUE iff x is an exact integer (fixnum or bignum).
+     FALSE for rationals (rationals with den=1 are demoted). *)
 
 (* Sign predicates — operands must be exact *)
 PROCEDURE IsZero(x: SchemeObject.T): BOOLEAN;

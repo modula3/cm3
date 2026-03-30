@@ -1,7 +1,7 @@
 (* $Id$ *)
 
 INTERFACE SchemeModula3Types;
-IMPORT SchemeObject, Scheme, SchemePrimitive, Mpz;
+IMPORT SchemeObject, Scheme, SchemePrimitive, Mpz, Mpfr;
 
 (* convert to and from Modula-3 base types *)
 
@@ -49,6 +49,12 @@ PROCEDURE ToScheme_Mpz_T(m : Mpz.T) : SchemeObject.T;
 
 PROCEDURE ToModula_Mpz_T(x : SchemeObject.T) : Mpz.T RAISES { Scheme.E };
 
+PROCEDURE ToScheme_Mpfr_T(m : Mpfr.T) : SchemeObject.T;
+  (* returns a SchemeMpfr.T (preserves precision) *)
+
+PROCEDURE ToModula_Mpfr_T(x : SchemeObject.T) : Mpfr.T RAISES { Scheme.E };
+  (* accepts any numeric type; converts to Mpfr.T *)
+
 (**********************************************************************)
 
 PROCEDURE ToModula_MUTEX(m : SchemeObject.T) : MUTEX RAISES { Scheme.E };
@@ -87,7 +93,7 @@ TYPE
            T_REFANY , T_EXTENDED , T_REAL ,
            T_LONGREAL , T_CHAR , T_BOOLEAN ,
            T_CARDINAL , T_INTEGER,
-           T_NULL, T_Mpz_T};
+           T_NULL, T_Mpz_T, T_Mpfr_T};
 
 CONST Name = ARRAY Type OF TEXT { "LONGINT", "WIDECHAR",
                                   
@@ -96,7 +102,7 @@ CONST Name = ARRAY Type OF TEXT { "LONGINT", "WIDECHAR",
                                   "REFANY" , "EXTENDED" , "REAL" ,
                                   "LONGREAL" , "CHAR" , "BOOLEAN" ,
                                   "CARDINAL" , "INTEGER",
-                                  "NULL", "Mpz_T" };
+                                  "NULL", "Mpz_T", "Mpfr_T" };
 
 TYPE 
   Mode = { Reference, Concrete }; 

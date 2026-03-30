@@ -22,6 +22,7 @@ IMPORT SchemePair, SchemeUtils;
 IMPORT SchemeInputPortClass;
 IMPORT Fmt;
 IMPORT SchemeInt, Mpz;
+IMPORT SchemeRational, SchemeComplex, SchemeExact, IEEESpecial;
 (*IMPORT Debug;*)
 
 REVEAL RdClass.Private <: MUTEX; (* see cryptic SRC comments *)
@@ -467,7 +468,7 @@ PROCEDURE NextToken(t          : T;
               WITH result = t.nextToken(bigInt, base) DO
                 IF exactness = ORD('e') THEN
                   (* force exact *)
-                  IF SchemeInt.IsExactInt(result) THEN
+                  IF SchemeExact.Is(result) THEN
                     RETURN result
                   ELSIF ISTYPE(result, SchemeLongReal.T) THEN
                     WITH lr = NARROW(result, SchemeLongReal.T)^ DO
@@ -487,8 +488,8 @@ PROCEDURE NextToken(t          : T;
                   END
                 ELSIF exactness = ORD('i') THEN
                   (* force inexact *)
-                  IF SchemeInt.IsExactInt(result) THEN
-                    RETURN SchemeLongReal.FromLR(SchemeLongReal.FromO(result))
+                  IF SchemeExact.Is(result) THEN
+                    RETURN SchemeLongReal.FromLR(SchemeExact.ToLongReal(result))
                   ELSE
                     RETURN result
                   END
@@ -555,7 +556,7 @@ PROCEDURE NextToken(t          : T;
                   WxPutText(wx, txt) (* restore *)
               END
             ELSIF NOT HaveAlphasOtherThane(txt) THEN
-              (* decimal number: check if pure integer or float *)
+              (* decimal number: check if pure integer, rational, or float *)
               EVAL WxReset(wx);
               IF IsPureInteger(txt) THEN
                 (* no decimal point, no exponent: parse as exact integer *)
@@ -574,7 +575,11 @@ PROCEDURE NextToken(t          : T;
                     END
                 END
               ELSE
-                (* has decimal point or exponent: inexact *)
+                (* Try rational (e.g. "1/3", "-7/4") before float *)
+                WITH r = TryParseRational(txt) DO
+                  IF r # NIL THEN RETURN r END
+                END;
+                (* Try float (has decimal point or exponent) *)
                 TRY
                   WITH lr = Scan.LongReal(txt),
                        lrp = NEW(SchemeLongReal.T) DO
@@ -586,6 +591,13 @@ PROCEDURE NextToken(t          : T;
                     WxPutText(wx, txt) (* restore *);
                 END
               END
+            END;
+            (* Phase 2: try special float, complex for tokens with alphas *)
+            WITH s = TryParseSpecialFloat(txt) DO
+              IF s # NIL THEN RETURN s END
+            END;
+            WITH z = TryParseComplex(txt) DO
+              IF z # NIL THEN RETURN z END
             END
           END
         END;
@@ -684,6 +696,177 @@ PROCEDURE ScanBased(txt : TEXT; defaultBase : CARDINAL) : Object
       END
     END
   END ScanBased;
+
+(* --- Phase 2 number parsing helpers --- *)
+
+PROCEDURE TryParseRational(txt: TEXT): Object =
+  (* Try to parse txt as [+-]digits/digits.  Returns NIL on failure. *)
+  VAR len := Text.Length(txt);
+      slashPos := -1;
+      start := 0;
+      neg := FALSE;
+  BEGIN
+    IF len < 3 THEN RETURN NIL END;
+    IF Text.GetChar(txt, 0) = '-' THEN
+      neg := TRUE; start := 1
+    ELSIF Text.GetChar(txt, 0) = '+' THEN
+      start := 1
+    END;
+    IF start >= len THEN RETURN NIL END;
+    (* Find the slash *)
+    FOR i := start TO len - 1 DO
+      IF Text.GetChar(txt, i) = '/' THEN slashPos := i; EXIT END
+    END;
+    IF slashPos < start + 1 OR slashPos >= len - 1 THEN RETURN NIL END;
+    (* Verify numerator digits (after optional sign) *)
+    FOR i := start TO slashPos - 1 DO
+      WITH c = Text.GetChar(txt, i) DO
+        IF c < '0' OR c > '9' THEN RETURN NIL END
+      END
+    END;
+    (* Verify denominator digits *)
+    FOR i := slashPos + 1 TO len - 1 DO
+      WITH c = Text.GetChar(txt, i) DO
+        IF c < '0' OR c > '9' THEN RETURN NIL END
+      END
+    END;
+    (* Parse numerator (digits only) and denominator *)
+    VAR num := Mpz.New();
+        den := Mpz.New();
+        numDigits := Text.Sub(txt, start, slashPos - start);
+        denTxt := Text.Sub(txt, slashPos + 1);
+    BEGIN
+      IF Mpz.set_str(num, numDigits, 10) # 0 THEN RETURN NIL END;
+      IF neg THEN Mpz.neg(num, num) END;
+      IF Mpz.set_str(den, denTxt, 10) # 0 THEN RETURN NIL END;
+      IF Mpz.cmp_d(den, 0.0d0) = 0 THEN RETURN NIL END;
+      RETURN SchemeRational.New(num, den)
+    END
+  END TryParseRational;
+
+PROCEDURE TryParseSpecialFloat(txt: TEXT): Object =
+  (* Parse +inf.0, -inf.0, +nan.0 *)
+  BEGIN
+    IF Text.Equal(txt, "+inf.0") THEN
+      RETURN SchemeLongReal.FromLR(IEEESpecial.LongPosInf)
+    ELSIF Text.Equal(txt, "-inf.0") THEN
+      RETURN SchemeLongReal.FromLR(IEEESpecial.LongNegInf)
+    ELSIF Text.Equal(txt, "+nan.0") THEN
+      RETURN SchemeLongReal.FromLR(IEEESpecial.LongNan)
+    ELSE
+      RETURN NIL
+    END
+  END TryParseSpecialFloat;
+
+PROCEDURE TryParseReal(txt: TEXT): Object =
+  (* Try to parse txt as an integer, rational, or float.
+     Returns NIL on failure. *)
+  BEGIN
+    IF Text.Length(txt) = 0 THEN RETURN NIL END;
+    (* Try integer *)
+    IF IsPureInteger(txt) THEN
+      TRY
+        RETURN SchemeInt.FromI(Scan.Int(txt))
+      EXCEPT Lex.Error, FloatMode.Trap =>
+        TRY
+          RETURN SchemeInt.MpzToScheme(Mpz.InitScan(txt, 10))
+        EXCEPT ELSE (* fall through *) END
+      END
+    END;
+    (* Try rational *)
+    WITH r = TryParseRational(txt) DO
+      IF r # NIL THEN RETURN r END
+    END;
+    (* Try float *)
+    IF NOT HaveAlphasOtherThane(txt) THEN
+      TRY
+        RETURN SchemeLongReal.FromLR(Scan.LongReal(txt))
+      EXCEPT Lex.Error, FloatMode.Trap => (* fall through *) END
+    END;
+    (* Try special float *)
+    WITH s = TryParseSpecialFloat(txt) DO
+      IF s # NIL THEN RETURN s END
+    END;
+    RETURN NIL
+  END TryParseReal;
+
+PROCEDURE TryParseComplex(txt: TEXT): Object =
+  (* Try to parse txt as a complex number: a+bi, a-bi, +bi, -bi, +i, -i.
+     Returns NIL on failure. *)
+  VAR len := Text.Length(txt);
+      splitPos := -1;
+  BEGIN
+    IF len < 2 THEN RETURN NIL END;
+    (* Must end with 'i' *)
+    IF Text.GetChar(txt, len - 1) # 'i' THEN RETURN NIL END;
+    VAR body := Text.Sub(txt, 0, len - 1);
+        bodyLen := len - 1;
+    BEGIN
+      (* Special cases: just "i" → symbol, not complex *)
+      IF bodyLen = 0 THEN RETURN NIL END;
+
+      (* "+i" or "-i" *)
+      IF bodyLen = 1 THEN
+        IF Text.GetChar(body, 0) = '+' THEN
+          RETURN SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(1))
+        ELSIF Text.GetChar(body, 0) = '-' THEN
+          RETURN SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(-1))
+        ELSE
+          RETURN NIL
+        END
+      END;
+
+      (* Find the split point: scan from right for +/- not preceded by e/E *)
+      FOR i := bodyLen - 1 TO 1 BY -1 DO
+        WITH c = Text.GetChar(body, i) DO
+          IF c = '+' OR c = '-' THEN
+            IF i > 0 THEN
+              WITH prev = Text.GetChar(body, i - 1) DO
+                IF prev # 'e' AND prev # 'E' THEN
+                  splitPos := i; EXIT
+                END
+              END
+            ELSE
+              splitPos := i; EXIT
+            END
+          END
+        END
+      END;
+
+      VAR realTxt, imagTxt: TEXT;
+          realPart, imagPart: Object;
+      BEGIN
+        IF splitPos > 0 THEN
+          realTxt := Text.Sub(body, 0, splitPos);
+          imagTxt := Text.Sub(body, splitPos);
+        ELSE
+          (* No split found: pure imaginary (e.g. "+2i" → body = "+2") *)
+          realTxt := NIL;
+          imagTxt := body;
+        END;
+
+        (* Parse imaginary part *)
+        IF Text.Equal(imagTxt, "+") THEN
+          imagPart := SchemeInt.FromI(1)
+        ELSIF Text.Equal(imagTxt, "-") THEN
+          imagPart := SchemeInt.FromI(-1)
+        ELSE
+          imagPart := TryParseReal(imagTxt);
+          IF imagPart = NIL THEN RETURN NIL END
+        END;
+
+        (* Parse real part *)
+        IF realTxt = NIL THEN
+          realPart := SchemeInt.Zero
+        ELSE
+          realPart := TryParseReal(realTxt);
+          IF realPart = NIL THEN RETURN NIL END
+        END;
+
+        RETURN SchemeComplex.New(realPart, imagPart)
+      END
+    END
+  END TryParseComplex;
 
 PROCEDURE CharSeqToArray(seq : CharSeq.T) : String =
   BEGIN

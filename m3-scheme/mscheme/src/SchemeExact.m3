@@ -1,11 +1,12 @@
 (* Copyright (c) 2026, Mika Nystrom.  All rights reserved. *)
 
 MODULE SchemeExact;
-IMPORT SchemeObject, SchemeInt, Mpz, Fmt;
+IMPORT SchemeObject, SchemeInt, SchemeRational, Mpz, Fmt;
 
 PROCEDURE Is(x: SchemeObject.T): BOOLEAN =
   BEGIN
-    RETURN SchemeInt.IsExactInt(x)
+    RETURN SchemeInt.IsExactInt(x) OR
+           (x # NIL AND ISTYPE(x, SchemeRational.T))
   END Is;
 
 PROCEDURE IsInteger(x: SchemeObject.T): BOOLEAN =
@@ -15,20 +16,44 @@ PROCEDURE IsInteger(x: SchemeObject.T): BOOLEAN =
 
 PROCEDURE IsZero(x: SchemeObject.T): BOOLEAN =
   BEGIN
-    RETURN SchemeInt.IsZero(x)
+    TYPECASE x OF
+      SchemeRational.T(r) => RETURN SchemeRational.IsZero(r)
+    ELSE
+      RETURN SchemeInt.IsZero(x)
+    END
   END IsZero;
 
 PROCEDURE IsPositive(x: SchemeObject.T): BOOLEAN =
   BEGIN
-    RETURN SchemeInt.IsPositive(x)
+    TYPECASE x OF
+      SchemeRational.T(r) => RETURN SchemeRational.IsPositive(r)
+    ELSE
+      RETURN SchemeInt.IsPositive(x)
+    END
   END IsPositive;
 
 PROCEDURE IsNegative(x: SchemeObject.T): BOOLEAN =
   BEGIN
-    RETURN SchemeInt.IsNegative(x)
+    TYPECASE x OF
+      SchemeRational.T(r) => RETURN SchemeRational.IsNegative(r)
+    ELSE
+      RETURN SchemeInt.IsNegative(x)
+    END
   END IsNegative;
 
-PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T =
+(* Helper: ensure operand is rational.  If it's an integer,
+   promote to rational with denominator 1. *)
+PROCEDURE ToRat(x: SchemeObject.T): SchemeRational.T =
+  BEGIN
+    TYPECASE x OF
+      SchemeRational.T(r) => RETURN r
+    ELSE
+      RETURN SchemeRational.FromInt(x)
+    END
+  END ToRat;
+
+(* Integer-only arithmetic (fixnum x fixnum, fixnum x bignum, etc.) *)
+PROCEDURE IntAdd(a, b: SchemeObject.T): SchemeObject.T =
   BEGIN
     TYPECASE a OF
       SchemeInt.T(ra) =>
@@ -54,9 +79,9 @@ PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T =
       END
     ELSE <* ASSERT FALSE *>
     END
-  END Add;
+  END IntAdd;
 
-PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T =
+PROCEDURE IntSub(a, b: SchemeObject.T): SchemeObject.T =
   BEGIN
     TYPECASE a OF
       SchemeInt.T(ra) =>
@@ -82,9 +107,9 @@ PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T =
       END
     ELSE <* ASSERT FALSE *>
     END
-  END Sub;
+  END IntSub;
 
-PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T =
+PROCEDURE IntMul(a, b: SchemeObject.T): SchemeObject.T =
   BEGIN
     TYPECASE a OF
       SchemeInt.T(ra) =>
@@ -110,17 +135,58 @@ PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T =
       END
     ELSE <* ASSERT FALSE *>
     END
+  END IntMul;
+
+(* Dispatch: if either operand is rational, promote both and
+   use rational arithmetic.  Otherwise use integer arithmetic. *)
+
+PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T =
+  BEGIN
+    IF ISTYPE(a, SchemeRational.T) OR
+       ISTYPE(b, SchemeRational.T) THEN
+      RETURN SchemeRational.Add(ToRat(a), ToRat(b))
+    ELSE
+      RETURN IntAdd(a, b)
+    END
+  END Add;
+
+PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T =
+  BEGIN
+    IF ISTYPE(a, SchemeRational.T) OR
+       ISTYPE(b, SchemeRational.T) THEN
+      RETURN SchemeRational.Sub(ToRat(a), ToRat(b))
+    ELSE
+      RETURN IntSub(a, b)
+    END
+  END Sub;
+
+PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T =
+  BEGIN
+    IF ISTYPE(a, SchemeRational.T) OR
+       ISTYPE(b, SchemeRational.T) THEN
+      RETURN SchemeRational.Mul(ToRat(a), ToRat(b))
+    ELSE
+      RETURN IntMul(a, b)
+    END
   END Mul;
 
 PROCEDURE Div(a, b: SchemeObject.T): SchemeObject.T =
+  (* Phase 2: exact division now returns exact rational.
+     a/b is constructed as rational and normalized;
+     if the result is an integer, New demotes it. *)
   VAR
-    ma := SchemeInt.ToMpz(a);
-    mb := SchemeInt.ToMpz(b);
-    mq := Mpz.New();
+    num, den: Mpz.T;
   BEGIN
-    <* ASSERT Mpz.cmp(mb, MpzZero) # 0 *>
-    Mpz.tdiv_q(mq, ma, mb);
-    RETURN SchemeInt.MpzToScheme(mq)
+    IF ISTYPE(a, SchemeRational.T) OR
+       ISTYPE(b, SchemeRational.T) THEN
+      RETURN SchemeRational.Div(ToRat(a), ToRat(b))
+    ELSE
+      (* Both are integers: construct num/den rational *)
+      num := Mpz.New(); Mpz.set(num, SchemeInt.ToMpz(a));
+      den := Mpz.New(); Mpz.set(den, SchemeInt.ToMpz(b));
+      <* ASSERT Mpz.cmp(den, MpzZero) # 0 *>
+      RETURN SchemeRational.New(num, den)
+    END
   END Div;
 
 PROCEDURE Rem(a, b: SchemeObject.T): SchemeObject.T =
@@ -136,13 +202,18 @@ PROCEDURE Rem(a, b: SchemeObject.T): SchemeObject.T =
 
 PROCEDURE Neg(a: SchemeObject.T): SchemeObject.T =
   BEGIN
-    RETURN Sub(SchemeInt.Zero, a)
+    TYPECASE a OF
+      SchemeRational.T(r) => RETURN SchemeRational.Neg(r)
+    ELSE
+      RETURN IntSub(SchemeInt.Zero, a)
+    END
   END Neg;
 
 PROCEDURE Abs(a: SchemeObject.T): SchemeObject.T =
   BEGIN
     TYPECASE a OF
-      SchemeInt.T(ri) =>
+      SchemeRational.T(r) => RETURN SchemeRational.Abs(r)
+    | SchemeInt.T(ri) =>
       IF ri^ >= 0 THEN RETURN a
       ELSIF ri^ = FIRST(INTEGER) THEN
         (* -FIRST(INTEGER) overflows INTEGER; promote *)
@@ -162,7 +233,12 @@ PROCEDURE Abs(a: SchemeObject.T): SchemeObject.T =
 
 PROCEDURE Compare(a, b: SchemeObject.T): INTEGER =
   BEGIN
-    RETURN SchemeInt.Compare(a, b)
+    IF ISTYPE(a, SchemeRational.T) OR
+       ISTYPE(b, SchemeRational.T) THEN
+      RETURN SchemeRational.Compare(ToRat(a), ToRat(b))
+    ELSE
+      RETURN SchemeInt.Compare(a, b)
+    END
   END Compare;
 
 PROCEDURE ToInteger(x: SchemeObject.T): INTEGER =
@@ -173,7 +249,8 @@ PROCEDURE ToInteger(x: SchemeObject.T): INTEGER =
 PROCEDURE ToLongReal(x: SchemeObject.T): LONGREAL =
   BEGIN
     TYPECASE x OF
-      SchemeInt.T(ri) => RETURN FLOAT(ri^, LONGREAL)
+      SchemeRational.T(r) => RETURN SchemeRational.ToLongReal(r)
+    | SchemeInt.T(ri) => RETURN FLOAT(ri^, LONGREAL)
     | Mpz.T(m) => RETURN Mpz.get_d(m)
     ELSE
       <* ASSERT FALSE *>
@@ -183,7 +260,8 @@ PROCEDURE ToLongReal(x: SchemeObject.T): LONGREAL =
 PROCEDURE Format(x: SchemeObject.T): TEXT =
   BEGIN
     TYPECASE x OF
-      SchemeInt.T(ri) =>
+      SchemeRational.T(r) => RETURN SchemeRational.Format(r)
+    | SchemeInt.T(ri) =>
       RETURN Fmt.Int(ri^)
     | Mpz.T(m) =>
       RETURN Mpz.FormatDecimal(m)

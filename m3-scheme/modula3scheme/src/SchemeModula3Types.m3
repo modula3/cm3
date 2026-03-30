@@ -4,11 +4,11 @@ MODULE SchemeModula3Types;
 FROM SchemeUtils IMPORT Stringify;
 IMPORT Scheme;
 IMPORT SchemeObject, SchemeString, SchemeBoolean, SchemeLongReal, SchemeChar;
-IMPORT SchemeInt, Mpz;
+IMPORT SchemeInt, Mpz, Mpfr, SchemeMpfr, SchemeRational;
 IMPORT SchemePrimitive;
 FROM Scheme IMPORT E, Object;
 IMPORT SchemeProcedure, SchemeSymbol;
-FROM SchemeUtils IMPORT First;
+FROM SchemeUtils IMPORT First, Rest;
 
 PROCEDURE ToScheme_MUTEX(m : MUTEX) : SchemeObject.T =
   BEGIN RETURN m END ToScheme_MUTEX;
@@ -186,11 +186,91 @@ PROCEDURE ToModula_Mpz_T(x : SchemeObject.T) : Mpz.T RAISES { Scheme.E } =
     END
   END ToModula_Mpz_T;
 
+PROCEDURE ToScheme_Mpfr_T(m : Mpfr.T) : SchemeObject.T =
+  BEGIN
+    RETURN SchemeMpfr.FromMpfr(m)
+  END ToScheme_Mpfr_T;
+
+PROCEDURE ToModula_Mpfr_T(x : SchemeObject.T) : Mpfr.T RAISES { Scheme.E } =
+  BEGIN
+    TYPECASE x OF
+      SchemeMpfr.T(sm) => RETURN sm.val
+    | SchemeLongReal.T(lr) =>
+      (* convert LONGREAL to Mpfr with 53-bit precision *)
+      VAR m := Mpfr.New(53); BEGIN
+        EVAL Mpfr.SetLR(m, lr^);
+        RETURN m
+      END
+    | SchemeInt.T(ri) =>
+      VAR m := Mpfr.New(64); BEGIN
+        EVAL Mpfr.SetInt(m, ri^);
+        RETURN m
+      END
+    | Mpz.T(mz) =>
+      (* convert via LONGREAL — loses precision for very large numbers *)
+      VAR m := Mpfr.New(64); BEGIN
+        EVAL Mpfr.SetLR(m, Mpz.get_d(mz));
+        RETURN m
+      END
+    | SchemeRational.T(r) =>
+      (* compute num/den as Mpfr *)
+      VAR prec : CARDINAL := 128;
+          mNum := Mpfr.New(prec);
+          mDen := Mpfr.New(prec);
+          result := Mpfr.New(prec);
+      BEGIN
+        EVAL Mpfr.SetLR(mNum, Mpz.get_d(r.num));
+        EVAL Mpfr.SetLR(mDen, Mpz.get_d(r.den));
+        EVAL Mpfr.Div(result, mNum, mDen);
+        RETURN result
+      END
+    ELSE
+      RAISE Scheme.E("expected a number for Mpfr.T: " & Stringify(x))
+    END
+  END ToModula_Mpfr_T;
+
+PROCEDURE InteropRoundtripApply(<*UNUSED*>p : SchemeProcedure.T;
+                                <*UNUSED*>interp : Scheme.T;
+                                args : Object) : Object RAISES { E } =
+  VAR
+    sym := Scheme.SymbolCheck(First(args));
+    val := First(Rest(args));
+  BEGIN
+    IF sym = SchemeSymbol.FromText("INTEGER") THEN
+      RETURN ToScheme_INTEGER(ToModula_INTEGER(val))
+    ELSIF sym = SchemeSymbol.FromText("CARDINAL") THEN
+      RETURN ToScheme_CARDINAL(ToModula_CARDINAL(val))
+    ELSIF sym = SchemeSymbol.FromText("LONGREAL") THEN
+      RETURN ToScheme_LONGREAL(ToModula_LONGREAL(val))
+    ELSIF sym = SchemeSymbol.FromText("REAL") THEN
+      RETURN ToScheme_REAL(ToModula_REAL(val))
+    ELSIF sym = SchemeSymbol.FromText("EXTENDED") THEN
+      RETURN ToScheme_EXTENDED(ToModula_EXTENDED(val))
+    ELSIF sym = SchemeSymbol.FromText("Mpz_T") THEN
+      RETURN ToScheme_Mpz_T(ToModula_Mpz_T(val))
+    ELSIF sym = SchemeSymbol.FromText("Mpfr_T") THEN
+      RETURN ToScheme_Mpfr_T(ToModula_Mpfr_T(val))
+    ELSIF sym = SchemeSymbol.FromText("TEXT") THEN
+      RETURN ToScheme_TEXT(ToModula_TEXT(val))
+    ELSIF sym = SchemeSymbol.FromText("BOOLEAN") THEN
+      RETURN ToScheme_BOOLEAN(ToModula_BOOLEAN(val))
+    ELSIF sym = SchemeSymbol.FromText("CHAR") THEN
+      RETURN ToScheme_CHAR(ToModula_CHAR(val))
+    ELSIF sym = SchemeSymbol.FromText("REFANY") THEN
+      RETURN ToScheme_REFANY(ToModula_REFANY(val))
+    ELSE
+      RAISE Scheme.E("interop-roundtrip: unknown type: " & Stringify(sym))
+    END
+  END InteropRoundtripApply;
+
 PROCEDURE Extend(prims : SchemePrimitive.ExtDefiner)  : SchemePrimitive.ExtDefiner =
-  BEGIN 
-    prims.addPrim("scheme-modula-conversion-mode", NEW(SchemeProcedure.T, 
-                                                       apply := ConversionModeApply), 
+  BEGIN
+    prims.addPrim("scheme-modula-conversion-mode", NEW(SchemeProcedure.T,
+                                                       apply := ConversionModeApply),
                   1, 1);
+    prims.addPrim("interop-roundtrip", NEW(SchemeProcedure.T,
+                                           apply := InteropRoundtripApply),
+                  2, 2);
     RETURN prims
   END Extend;
 

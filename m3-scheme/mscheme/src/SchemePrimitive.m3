@@ -45,6 +45,8 @@ IMPORT XTime AS Time;
 IMPORT RefRecord;
 IMPORT SchemeClosure;
 IMPORT SchemeInt, Mpz;
+IMPORT SchemeExact, SchemeInexact, SchemeNumber;
+IMPORT SchemeRational, SchemeMpfr, SchemeComplex, Mpfr;
 IMPORT Pickle, Rd;
 
 <* FATAL Thread.Alerted *>
@@ -156,7 +158,14 @@ TYPE
         ExactToInexact, InexactToExact,
 
         BitwiseAnd, BitwiseIor, BitwiseXor, BitwiseNot,
-        ArithmeticShift, IntegerLength
+        ArithmeticShift, IntegerLength,
+
+        (* Phase 2: rationals, mpfr, complex *)
+        Numerator, Denominator,
+        MakeMpfr, MpfrPrecision,
+        MakeRectangular, MakePolar, RealPart, ImagPart,
+        MagnitudeP, AngleP,
+        RationalQ, RealQ, ComplexQ
   };
 
 REVEAL 
@@ -345,7 +354,7 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("char>=?",        ORD(P.CharCmpGe), dd,2)
     .defPrim("char>?",         ORD(P.CharCmpGt), dd,2)
     .defPrim("char?",          ORD(P.CharQ), dd,    1)
-    .defPrim("complex?",       ORD(P.NumberQ), dd,  1)
+    .defPrim("complex?",       ORD(P.ComplexQ), dd,  1)
     .defPrim("cons",           ORD(P.Cons), dd,     2)
     .defPrim("cos",            ORD(P.Cos), dd,      1)
     .defPrim("display",        ORD(P.Display), dd,  1, 2)
@@ -397,11 +406,11 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("positive?",      ORD(P.PositiveQ), dd,1)
     .defPrim("procedure?",     ORD(P.ProcedureQ),dd,1)
     .defPrim("quotient",       ORD(P.Quotient), dd, 2)
-    .defPrim("rational?",      ORD(P.NumberQ), dd,1)
+    .defPrim("rational?",      ORD(P.RationalQ), dd,1)
     .defPrim("read",           ORD(P.Read), dd,     0, 1)
     .defPrim("read-big-int",   ORD(P.ReadBigInt), dd,     0, 1)
     .defPrim("read-char",      ORD(P.ReadChar), dd, 0, 1)
-    .defPrim("real?",          ORD(P.NumberQ), dd,  1)
+    .defPrim("real?",          ORD(P.RealQ), dd,  1)
     .defPrim("remainder",      ORD(P.Remainder), dd,2)
     .defPrim("reverse",        ORD(P.Reverse), dd,  1)
     .defPrim("round",          ORD(P.Round), dd,    1)
@@ -468,6 +477,16 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("bitwise-not",    ORD(P.BitwiseNot), dd, 1)
     .defPrim("arithmetic-shift", ORD(P.ArithmeticShift), dd, 2)
     .defPrim("integer-length", ORD(P.IntegerLength), dd, 1)
+    .defPrim("numerator",      ORD(P.Numerator), dd, 1)
+    .defPrim("denominator",    ORD(P.Denominator), dd, 1)
+    .defPrim("make-mpfr",      ORD(P.MakeMpfr), dd, 2)
+    .defPrim("mpfr-precision", ORD(P.MpfrPrecision), dd, 1)
+    .defPrim("make-rectangular", ORD(P.MakeRectangular), dd, 2)
+    .defPrim("make-polar",     ORD(P.MakePolar), dd, 2)
+    .defPrim("real-part",      ORD(P.RealPart), dd, 1)
+    .defPrim("imag-part",      ORD(P.ImagPart), dd, 1)
+    .defPrim("magnitude",      ORD(P.MagnitudeP), dd, 1)
+    .defPrim("angle",          ORD(P.AngleP), dd, 1)
     ;
     
     RETURN env
@@ -752,7 +771,7 @@ PROCEDURE Prims(t          : T;
       |
         P.NullQ => RETURN Truth(x = NIL)
       |
-        P.NumberQ => RETURN Truth(SchemeInt.IsNumber(x))
+        P.NumberQ => RETURN Truth(SchemeNumber.Is(x))
       |
         P.PairQ => RETURN Truth(x # NIL AND ISTYPE(x,Pair))
       |
@@ -815,7 +834,9 @@ PROCEDURE Prims(t          : T;
         P.BooleanQ => RETURN Truth(x = True() OR x = False())
       |
         P.Sqrt =>
-        IF SchemeInt.IsExactInt(x) AND NOT SchemeInt.IsNegative(x) THEN
+        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Sqrt(m)
+        ELSE END;
+        IF SchemeExact.IsInteger(x) AND NOT SchemeExact.IsNegative(x) THEN
           VAR
             mx := SchemeInt.ToMpz(x);
             mr := Mpz.New();
@@ -978,15 +999,30 @@ PROCEDURE Prims(t          : T;
         P.StringToSymbol => 
         RETURN SchemeSymbol.Symbol(Text.FromChars(Str(x)^))
       |
-        P.Exp => RETURN FromLR(Math.exp(FromO(x)))
+        P.Exp =>
+        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Exp(m)
+        ELSE RETURN FromLR(Math.exp(FromO(x)))
+        END
       |
-        P.Log => RETURN FromLR(Math.log(FromO(x)))
+        P.Log =>
+        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Log(m)
+        ELSE RETURN FromLR(Math.log(FromO(x)))
+        END
       |
-        P.Sin => RETURN FromLR(Math.sin(FromO(x)))
+        P.Sin =>
+        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Sin(m)
+        ELSE RETURN FromLR(Math.sin(FromO(x)))
+        END
       |
-        P.Cos => RETURN FromLR(Math.cos(FromO(x)))
+        P.Cos =>
+        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Cos(m)
+        ELSE RETURN FromLR(Math.cos(FromO(x)))
+        END
       |
-        P.Tan => RETURN FromLR(Math.tan(FromO(x)))
+        P.Tan =>
+        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Tan(m)
+        ELSE RETURN FromLR(Math.tan(FromO(x)))
+        END
       |
         P.Acos => RETURN FromLR(Math.acos(FromO(x)))
       |
@@ -1315,19 +1351,36 @@ PROCEDURE Prims(t          : T;
       |
         P.StringCiCmpLe => RETURN Truth(StringCompare(x, y, TRUE) <= 0)
       |
-        P.InexactQ => RETURN Truth(x # NIL AND ISTYPE(x, SchemeLongReal.T))
+        P.InexactQ => RETURN Truth(SchemeNumber.IsInexact(x))
       |
-        P.ExactQ => RETURN Truth(SchemeInt.IsExactInt(x))
+        P.ExactQ => RETURN Truth(SchemeNumber.IsExact(x))
       |
         P.IntegerQ =>
-        IF SchemeInt.IsExactInt(x) THEN RETURN Truth(TRUE)
-        ELSIF x # NIL AND ISTYPE(x, SchemeLongReal.T) THEN
-          WITH lr = NARROW(x, SchemeLongReal.T)^ DO
+        IF SchemeExact.IsInteger(x) THEN RETURN Truth(TRUE)
+        ELSIF SchemeInexact.Is(x) THEN
+          WITH lr = SchemeInexact.ToLongReal(x) DO
             RETURN Truth(lr = FLOAT(ROUND(lr), LONGREAL))
           END
         ELSE
           RETURN Truth(FALSE)
         END
+      |
+        P.RationalQ =>
+        (* rational? is true for integers, rationals, and integer-valued inexact *)
+        IF SchemeExact.Is(x) THEN RETURN Truth(TRUE)
+        ELSIF SchemeInexact.Is(x) THEN
+          WITH lr = SchemeInexact.ToLongReal(x) DO
+            RETURN Truth(lr = FLOAT(ROUND(lr), LONGREAL))
+          END
+        ELSE
+          RETURN Truth(FALSE)
+        END
+      |
+        P.RealQ =>
+        RETURN Truth(SchemeExact.Is(x) OR SchemeInexact.Is(x))
+      |
+        P.ComplexQ =>
+        RETURN Truth(SchemeNumber.Is(x))
       |
         P.CallWithInputFile =>
         VAR p : SchemeInputPort.T := NIL;
@@ -1492,14 +1545,20 @@ PROCEDURE Prims(t          : T;
         P.LoadEnvironment => RETURN LoadEnvironment(interp, x)
       |
         P.ExactToInexact =>
-        RETURN SchemeLongReal.FromLR(FromO(x))
+        IF SchemeExact.Is(x) THEN
+          RETURN SchemeLongReal.FromLR(SchemeExact.ToLongReal(x))
+        ELSE
+          RETURN x (* already inexact *)
+        END
       |
         P.InexactToExact =>
-        IF SchemeInt.IsExactInt(x) THEN
+        IF SchemeExact.Is(x) THEN
           RETURN x
         ELSE
           WITH lr = FromO(x) DO
             IF Math.floor(lr) # lr THEN
+              (* Non-integer inexact: convert to exact rational.
+                 Use the IEEE 754 representation: lr = m * 2^e *)
               RETURN Error("inexact->exact: not an integer: " & Stringify(List1(x)))
             ELSIF lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
                   lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
@@ -1581,6 +1640,97 @@ PROCEDURE Prims(t          : T;
             RETURN SchemeInt.FromI(Mpz.sizeinbase(mx, 2))
           END
         END
+      |
+        P.Numerator =>
+        TYPECASE x OF
+          SchemeRational.T(r) =>
+          RETURN SchemeRational.Numerator(r)
+        ELSE
+          IF SchemeExact.IsInteger(x) THEN RETURN x
+          ELSIF SchemeInexact.Is(x) THEN
+            WITH lr = SchemeInexact.ToLongReal(x) DO
+              RETURN FromLR(FLOAT(ROUND(lr), LONGREAL))
+            END
+          ELSE
+            RETURN Error("numerator: not a number: " & Stringify(List1(x)))
+          END
+        END
+      |
+        P.Denominator =>
+        TYPECASE x OF
+          SchemeRational.T(r) =>
+          RETURN SchemeRational.Denominator(r)
+        ELSE
+          IF SchemeExact.IsInteger(x) THEN RETURN SchemeInt.One
+          ELSIF SchemeInexact.Is(x) THEN
+            RETURN FromLR(1.0d0)
+          ELSE
+            RETURN Error("denominator: not a number: " & Stringify(List1(x)))
+          END
+        END
+      |
+        P.MakeMpfr =>
+        VAR prec := SchemeLongReal.Int(y, TRUE); BEGIN
+          IF prec <= 0 THEN
+            RETURN Error("make-mpfr: precision must be positive")
+          END;
+          TYPECASE x OF
+            SchemeMpfr.T(m) =>
+            (* Re-round to new precision *)
+            VAR r := SchemeMpfr.New(prec); BEGIN
+              EVAL Mpfr.Set(r.val, m.val);
+              RETURN r
+            END
+          ELSE
+            IF SchemeExact.Is(x) THEN
+              RETURN SchemeMpfr.FromExact(x, prec)
+            ELSIF SchemeInexact.Is(x) THEN
+              RETURN SchemeMpfr.FromLR(SchemeInexact.ToLongReal(x), prec)
+            ELSE
+              RETURN Error("make-mpfr: not a number: " & Stringify(List1(x)))
+            END
+          END
+        END
+      |
+        P.MpfrPrecision =>
+        TYPECASE x OF
+          SchemeMpfr.T(m) =>
+          RETURN SchemeInt.FromI(SchemeMpfr.GetPrec(m))
+        ELSE
+          RETURN Error("mpfr-precision: not an mpfr value: " & Stringify(List1(x)))
+        END
+      |
+        P.MakeRectangular =>
+        RETURN SchemeComplex.MakeRectangular(x, y)
+      |
+        P.MakePolar =>
+        RETURN SchemeComplex.MakePolar(x, y)
+      |
+        P.RealPart =>
+        TYPECASE x OF
+          SchemeComplex.T(c) =>
+          RETURN SchemeComplex.RealPart(c)
+        ELSE
+          IF SchemeNumber.Is(x) THEN RETURN x
+          ELSE RETURN Error("real-part: not a number: " & Stringify(List1(x)))
+          END
+        END
+      |
+        P.ImagPart =>
+        TYPECASE x OF
+          SchemeComplex.T(c) =>
+          RETURN SchemeComplex.ImagPart(c)
+        ELSE
+          IF SchemeNumber.Is(x) THEN RETURN SchemeInt.Zero
+          ELSE RETURN Error("imag-part: not a number: " & Stringify(List1(x)))
+          END
+        END
+      |
+        P.MagnitudeP =>
+        RETURN SchemeComplex.Magnitude(x)
+      |
+        P.AngleP =>
+        RETURN SchemeComplex.Angle(x)
       END
     END
   END Prims;
@@ -1785,11 +1935,11 @@ PROCEDURE MemberAssoc(obj, list : Object; m, eq : CHAR) : Object RAISES { E } =
 PROCEDURE NumCompare(args : Object; op : CHAR) : Object RAISES { E } =
 
   PROCEDURE CmpTwo(a, b : Object) : INTEGER RAISES { E } =
-    VAR aExact := SchemeInt.IsExactInt(a);
-        bExact := SchemeInt.IsExactInt(b);
+    VAR aExact := SchemeExact.Is(a);
+        bExact := SchemeExact.Is(b);
     BEGIN
       IF aExact AND bExact THEN
-        RETURN SchemeInt.Compare(a, b)
+        RETURN SchemeExact.Compare(a, b)
       ELSE
         WITH ax = FromO(a), bx = FromO(b) DO
           IF ax # ax OR bx # bx THEN
@@ -1808,29 +1958,38 @@ PROCEDURE NumCompare(args : Object; op : CHAR) : Object RAISES { E } =
       VAR
         a := First(args);
         b : Object;
-        c : INTEGER;
       BEGIN
         args := Rest(args);
         b := First(args);
-        c := CmpTwo(a, b);
 
-        IF c = LAST(INTEGER) THEN
-          (* NaN: all comparisons are false, except maybe = for NaN *)
-          IF op = '=' THEN RETURN False() END;
-          RETURN False()
-        END;
-        CASE op OF
-          '>' => IF NOT c >  0 THEN RETURN False() END
-        |
-          '<' => IF NOT c <  0 THEN RETURN False() END
-        |
-          '=' => IF NOT c =  0 THEN RETURN False() END
-        |
-          'L' => IF NOT c <= 0 THEN RETURN False() END
-        |
-          'G' => IF NOT c >= 0 THEN RETURN False() END
+        (* Complex numbers: only = is defined, ordering is an error *)
+        IF ISTYPE(a, SchemeComplex.T) OR ISTYPE(b, SchemeComplex.T) THEN
+          IF op = '=' THEN
+            IF NOT SchemeNumber.Equal(a, b) THEN RETURN False() END
+          ELSE
+            RAISE E("ordering comparisons not defined for complex numbers")
+          END
         ELSE
-          <* ASSERT FALSE *>
+          VAR c := CmpTwo(a, b);
+          BEGIN
+            IF c = LAST(INTEGER) THEN
+              (* NaN: all comparisons are false *)
+              RETURN False()
+            END;
+            CASE op OF
+              '>' => IF NOT c >  0 THEN RETURN False() END
+            |
+              '<' => IF NOT c <  0 THEN RETURN False() END
+            |
+              '=' => IF NOT c =  0 THEN RETURN False() END
+            |
+              'L' => IF NOT c <= 0 THEN RETURN False() END
+            |
+              'G' => IF NOT c >= 0 THEN RETURN False() END
+            ELSE
+              <* ASSERT FALSE *>
+            END
+          END
         END
       END
     END;
@@ -1838,11 +1997,11 @@ PROCEDURE NumCompare(args : Object; op : CHAR) : Object RAISES { E } =
   END NumCompare;
       
 PROCEDURE HasInexact(args : Object) : BOOLEAN =
-  (* Scan arg list for any inexact (SchemeLongReal.T) *)
+  (* Scan arg list for any inexact (SchemeLongReal.T or SchemeMpfr.T) *)
   VAR p := args;
   BEGIN
     WHILE p # NIL AND ISTYPE(p, SchemePair.T) DO
-      IF ISTYPE(NARROW(p, SchemePair.T).first, SchemeLongReal.T) THEN
+      IF SchemeInexact.Is(NARROW(p, SchemePair.T).first) THEN
         RETURN TRUE
       END;
       p := Rest(p)
@@ -1852,86 +2011,17 @@ PROCEDURE HasInexact(args : Object) : BOOLEAN =
 
 PROCEDURE ExactAdd(a, b : Object) : Object =
   BEGIN
-    TYPECASE a OF
-      SchemeInt.T(ra) =>
-      TYPECASE b OF
-        SchemeInt.T(rb) => RETURN SchemeInt.Add(ra^, rb^)
-      | Mpz.T(mb) =>
-        VAR ma := Mpz.NewInt(ra^); mr := Mpz.New(); BEGIN
-          Mpz.add(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      ELSE <* ASSERT FALSE *>
-      END
-    | Mpz.T(ma) =>
-      TYPECASE b OF
-        SchemeInt.T(rb) =>
-        VAR mb := Mpz.NewInt(rb^); mr := Mpz.New(); BEGIN
-          Mpz.add(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      | Mpz.T(mb) =>
-        VAR mr := Mpz.New(); BEGIN
-          Mpz.add(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      ELSE <* ASSERT FALSE *>
-      END
-    ELSE <* ASSERT FALSE *>
-    END
+    RETURN SchemeExact.Add(a, b)
   END ExactAdd;
 
 PROCEDURE ExactSub(a, b : Object) : Object =
   BEGIN
-    TYPECASE a OF
-      SchemeInt.T(ra) =>
-      TYPECASE b OF
-        SchemeInt.T(rb) => RETURN SchemeInt.Sub(ra^, rb^)
-      | Mpz.T(mb) =>
-        VAR ma := Mpz.NewInt(ra^); mr := Mpz.New(); BEGIN
-          Mpz.sub(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      ELSE <* ASSERT FALSE *>
-      END
-    | Mpz.T(ma) =>
-      TYPECASE b OF
-        SchemeInt.T(rb) =>
-        VAR mb := Mpz.NewInt(rb^); mr := Mpz.New(); BEGIN
-          Mpz.sub(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      | Mpz.T(mb) =>
-        VAR mr := Mpz.New(); BEGIN
-          Mpz.sub(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      ELSE <* ASSERT FALSE *>
-      END
-    ELSE <* ASSERT FALSE *>
-    END
+    RETURN SchemeExact.Sub(a, b)
   END ExactSub;
 
 PROCEDURE ExactMul(a, b : Object) : Object =
   BEGIN
-    TYPECASE a OF
-      SchemeInt.T(ra) =>
-      TYPECASE b OF
-        SchemeInt.T(rb) => RETURN SchemeInt.Mul(ra^, rb^)
-      | Mpz.T(mb) =>
-        VAR ma := Mpz.NewInt(ra^); mr := Mpz.New(); BEGIN
-          Mpz.mul(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      ELSE <* ASSERT FALSE *>
-      END
-    | Mpz.T(ma) =>
-      TYPECASE b OF
-        SchemeInt.T(rb) =>
-        VAR mb := Mpz.NewInt(rb^); mr := Mpz.New(); BEGIN
-          Mpz.mul(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      | Mpz.T(mb) =>
-        VAR mr := Mpz.New(); BEGIN
-          Mpz.mul(mr, ma, mb); RETURN SchemeInt.MpzToScheme(mr)
-        END
-      ELSE <* ASSERT FALSE *>
-      END
-    ELSE <* ASSERT FALSE *>
-    END
+    RETURN SchemeExact.Mul(a, b)
   END ExactMul;
 
 (* --- Generic two-argument arithmetic for compiled code --- *)
@@ -2028,10 +2118,58 @@ PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
     END
   END DoAbs;
 
+PROCEDURE HasComplex(args : Object) : BOOLEAN =
+  (* Scan arg list for any SchemeComplex.T *)
+  VAR p := args;
+  BEGIN
+    WHILE p # NIL AND ISTYPE(p, SchemePair.T) DO
+      IF ISTYPE(NARROW(p, SchemePair.T).first, SchemeComplex.T) THEN
+        RETURN TRUE
+      END;
+      p := Rest(p)
+    END;
+    RETURN FALSE
+  END HasComplex;
+
+PROCEDURE NumComputeComplex(args : Object; op : CHAR; start : Object) : Object
+  RAISES { E } =
+  (* Fold over args using SchemeNumber dispatch which handles complex *)
+  VAR result := start;
+  BEGIN
+    IF args = NIL THEN
+      CASE op OF
+        '-' => RETURN SchemeNumber.Neg(result)
+      | '/' =>
+        RETURN SchemeNumber.Div(SchemeInt.One, result)
+      | 'X', 'N' => RETURN result
+      ELSE
+        RETURN result
+      END
+    ELSE
+      WHILE args # NIL AND ISTYPE(args, SchemePair.T) DO
+        WITH arg = NARROW(args, SchemePair.T).first DO
+          CASE op OF
+            '+' => result := SchemeNumber.Add(result, arg)
+          | '-' => result := SchemeNumber.Sub(result, arg)
+          | '*' => result := SchemeNumber.Mul(result, arg)
+          | '/' => result := SchemeNumber.Div(result, arg)
+          | 'X', 'N' =>
+            RAISE E("max/min not defined for complex numbers")
+          ELSE <* ASSERT FALSE *>
+          END
+        END;
+        args := Rest(args)
+      END;
+      RETURN result
+    END
+  END NumComputeComplex;
+
 PROCEDURE NumComputeStart(args : Object; op : CHAR; start : Object) : Object
   RAISES { E } =
   BEGIN
-    IF NOT HasInexact(args) AND SchemeInt.IsExactInt(start) THEN
+    IF ISTYPE(start, SchemeComplex.T) OR HasComplex(args) THEN
+      RETURN NumComputeComplex(args, op, start)
+    ELSIF NOT HasInexact(args) AND SchemeExact.Is(start) THEN
       (* exact path *)
       RETURN NumComputeExact(args, op, start)
     ELSE
@@ -2049,7 +2187,9 @@ PROCEDURE NumCompute(args : Object; op : CHAR) : Object
       | '*' => RETURN SchemeInt.One
       ELSE <* ASSERT FALSE *>
       END
-    ELSIF NOT HasInexact(args) AND SchemeInt.IsExactInt(First(args)) THEN
+    ELSIF HasComplex(args) THEN
+      RETURN NumComputeComplex(Rest(args), op, First(args))
+    ELSIF NOT HasInexact(args) AND SchemeExact.Is(First(args)) THEN
       RETURN NumComputeExact(Rest(args), op, First(args))
     ELSE
       RETURN NumComputeInexact(Rest(args), op, FromO(First(args)))
@@ -2066,21 +2206,11 @@ PROCEDURE NumComputeExact(args : Object; op : CHAR; start : Object) : Object
       CASE op OF
         '-' => RETURN ExactSub(SchemeInt.Zero, result)
       | '/' =>
-        (* 1/x -- if x divides 1 exactly, return exact, else inexact *)
-        IF SchemeInt.IsExactInt(result) THEN
-          TYPECASE result OF
-            SchemeInt.T(ri) =>
-            IF ri^ = 1 THEN RETURN SchemeInt.One
-            ELSIF ri^ = -1 THEN RETURN SchemeInt.NegOne
-            ELSIF ri^ = 0 THEN RETURN Error("/: division by zero")
-            ELSE RETURN FromLR(1.0d0 / FromO(result))
-            END
-          ELSE
-            RETURN FromLR(1.0d0 / FromO(result))
-          END
-        ELSE
-          RETURN FromLR(1.0d0 / FromO(result))
-        END
+        (* 1/x — Phase 2: return exact rational *)
+        IF SchemeExact.IsZero(result) THEN
+          RETURN Error("/: division by zero")
+        END;
+        RETURN SchemeExact.Div(SchemeExact.One, result)
       | 'X', 'N' => RETURN result
       ELSE
         RETURN result
@@ -2088,44 +2218,25 @@ PROCEDURE NumComputeExact(args : Object; op : CHAR; start : Object) : Object
     ELSE
       WHILE args # NIL AND ISTYPE(args, SchemePair.T) DO
         WITH arg = NARROW(args, SchemePair.T).first DO
-          IF NOT SchemeInt.IsExactInt(arg) THEN
+          IF NOT SchemeExact.Is(arg) THEN
             (* switch to inexact path *)
             RETURN NumComputeInexact(Rest(args), op,
                      InexactOp(op, FromO(result), FromO(arg)))
           END;
           CASE op OF
-            '+' => result := ExactAdd(result, arg)
-          | '-' => result := ExactSub(result, arg)
-          | '*' => result := ExactMul(result, arg)
+            '+' => result := SchemeExact.Add(result, arg)
+          | '-' => result := SchemeExact.Sub(result, arg)
+          | '*' => result := SchemeExact.Mul(result, arg)
           | '/' =>
-            IF SchemeInt.IsZero(arg) THEN
+            IF SchemeExact.IsZero(arg) THEN
               RETURN Error("/: division by zero")
             END;
-            (* check if division is exact *)
-            VAR
-              mr := SchemeInt.ToMpz(result);
-              md := SchemeInt.ToMpz(arg);
-              mq := Mpz.New();
-              mrem := Mpz.New();
-            BEGIN
-              Mpz.tdiv_qr(mq, mrem, mr, md);
-              IF Mpz.cmp(mrem, MpzZero) = 0 THEN
-                result := SchemeInt.MpzToScheme(mq)
-              ELSE
-                (* not exact: switch to inexact *)
-                WITH q = FromO(result) / FromO(arg) DO
-                  IF Rest(args) = NIL THEN
-                    RETURN FromLR(q)
-                  ELSE
-                    RETURN NumComputeInexact(Rest(args), op, q)
-                  END
-                END
-              END
-            END
+            (* Phase 2: exact division returns exact rational *)
+            result := SchemeExact.Div(result, arg)
           | 'X' => (* max *)
-            IF SchemeInt.Compare(arg, result) > 0 THEN result := arg END
+            IF SchemeExact.Compare(arg, result) > 0 THEN result := arg END
           | 'N' => (* min *)
-            IF SchemeInt.Compare(arg, result) < 0 THEN result := arg END
+            IF SchemeExact.Compare(arg, result) < 0 THEN result := arg END
           ELSE
             <* ASSERT FALSE *>
           END
