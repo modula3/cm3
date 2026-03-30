@@ -1063,13 +1063,6 @@ Table~\ref{tab:to-modula} shows the conversion matrix.
   have already been demoted).
 \item \textbf{EXTENDED}: same conversion path as {\tt REAL}
   (via {\tt SchemeLongReal.FromO}, then {\tt FLOAT} to target).
-  \emph{Note:} as of CM3 d5.12, {\tt EXTENDED} is IEEE~754
-  binary128 (128-bit quadruple precision) on platforms that
-  support it, no longer identical to {\tt LONGREAL}.
-  The {\tt ToScheme\_EXTENDED} direction demotes to {\tt LONGREAL}
-  (64-bit), losing precision for values that use the extra bits.
-  A future enhancement could use {\tt SchemeMpfr.T} with 113-bit
-  precision to represent {\tt EXTENDED} values losslessly.
 \item \textbf{TEXT}: only accepts {\tt SchemeString.T};
   all other types raise an exception.
 \item \textbf{BOOLEAN}: {\tt TruthO} returns {\tt TRUE} for every
