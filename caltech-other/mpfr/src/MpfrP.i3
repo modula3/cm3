@@ -1,5 +1,5 @@
 INTERFACE MpfrP;
-FROM Ctypes IMPORT int, char_star;
+FROM Ctypes IMPORT int, long, char_star;
 FROM Cstddef IMPORT size_t;
 IMPORT Word;
 
@@ -7,7 +7,7 @@ CONST PrecFormat32 = 2;
 CONST PrecFormat64 = 3; 
       
 TYPE T         = MpfrPtrT; (* mpfr_ptr_t_star *)
-     Prec      = int;     (* MPFR_PREC_T -- iff GetPrecFormat returns 2. *)
+     Prec      = long;     (* MPFR_PREC_T -- C long, per _MPFR_PREC_FORMAT *)
      Rnd       = int;     (* enum for rounding mode *)
      Exp       = Prec;
      exp_star  = ADDRESS;

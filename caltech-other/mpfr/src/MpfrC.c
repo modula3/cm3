@@ -1,5 +1,9 @@
 #include <mpfr.h>
+#ifdef __APPLE__
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 #include <stdio.h>
 
 mpfr_ptr 
