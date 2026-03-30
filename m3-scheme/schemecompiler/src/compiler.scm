@@ -2413,6 +2413,11 @@
      (string-append "(make-rectangular "
                     (form->string (real-part form)) " "
                     (form->string (imag-part form)) ")"))
+    ((and (number? form) (exact? form) (not (integer? form)))
+     ;; Exact rational: emit num/den
+     (string-append (number->string (numerator form))
+                    "/"
+                    (number->string (denominator form))))
     ((number? form)
      (let ((s (number->string form)))
        (cond ((string=? s "Infinity")  "+inf.0")

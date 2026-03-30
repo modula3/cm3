@@ -15,7 +15,8 @@ PROCEDURE Is(x: SchemeObject.T): BOOLEAN =
 PROCEDURE IsExact(x: SchemeObject.T): BOOLEAN =
   BEGIN
     TYPECASE x OF
-      SchemeComplex.T(c) =>
+      NULL => RETURN FALSE
+    | SchemeComplex.T(c) =>
       RETURN SchemeExact.Is(c.re) AND SchemeExact.Is(c.im)
     ELSE
       RETURN SchemeExact.Is(x)
@@ -25,7 +26,8 @@ PROCEDURE IsExact(x: SchemeObject.T): BOOLEAN =
 PROCEDURE IsInexact(x: SchemeObject.T): BOOLEAN =
   BEGIN
     TYPECASE x OF
-      SchemeComplex.T(c) =>
+      NULL => RETURN FALSE
+    | SchemeComplex.T(c) =>
       RETURN SchemeInexact.Is(c.re) OR SchemeInexact.Is(c.im)
     ELSE
       RETURN SchemeInexact.Is(x)
@@ -49,7 +51,8 @@ PROCEDURE CheckNumber(x: SchemeObject.T) RAISES {E} =
 PROCEDURE ToComplex(x: SchemeObject.T): SchemeComplex.T =
   BEGIN
     TYPECASE x OF
-      SchemeComplex.T(c) => RETURN c
+      NULL => RETURN NEW(SchemeComplex.T, re := SchemeInt.Zero, im := SchemeInt.Zero)
+    | SchemeComplex.T(c) => RETURN c
     ELSE
       RETURN NEW(SchemeComplex.T, re := x, im := SchemeInt.Zero)
     END
@@ -143,8 +146,8 @@ PROCEDURE RealDiv(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
-    IF ISTYPE(a, SchemeComplex.T) OR
-       ISTYPE(b, SchemeComplex.T) THEN
+    IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
+       (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Add(ToComplex(a), ToComplex(b))
     END;
     RETURN RealAdd(a, b)
@@ -152,8 +155,8 @@ PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
-    IF ISTYPE(a, SchemeComplex.T) OR
-       ISTYPE(b, SchemeComplex.T) THEN
+    IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
+       (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Sub(ToComplex(a), ToComplex(b))
     END;
     RETURN RealSub(a, b)
@@ -161,8 +164,8 @@ PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
-    IF ISTYPE(a, SchemeComplex.T) OR
-       ISTYPE(b, SchemeComplex.T) THEN
+    IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
+       (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Mul(ToComplex(a), ToComplex(b))
     END;
     RETURN RealMul(a, b)
@@ -170,8 +173,8 @@ PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Div(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
-    IF ISTYPE(a, SchemeComplex.T) OR
-       ISTYPE(b, SchemeComplex.T) THEN
+    IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
+       (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Div(ToComplex(a), ToComplex(b))
     END;
     RETURN RealDiv(a, b)
@@ -180,7 +183,8 @@ PROCEDURE Div(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 PROCEDURE Neg(a: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
     TYPECASE a OF
-      SchemeComplex.T(c) => RETURN SchemeComplex.Neg(c)
+      NULL => CheckNumber(a); RETURN NIL
+    | SchemeComplex.T(c) => RETURN SchemeComplex.Neg(c)
     ELSE
       IF SchemeExact.Is(a) THEN
         RETURN SchemeExact.Neg(a)
@@ -195,7 +199,8 @@ PROCEDURE Neg(a: SchemeObject.T): SchemeObject.T RAISES {E} =
 PROCEDURE Abs(a: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
     TYPECASE a OF
-      SchemeComplex.T(c) =>
+      NULL => CheckNumber(a); RETURN NIL
+    | SchemeComplex.T(c) =>
       RETURN SchemeComplex.Magnitude(c)
     ELSE
       IF SchemeExact.Is(a) THEN
@@ -212,8 +217,8 @@ PROCEDURE Abs(a: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Compare(a, b: SchemeObject.T): INTEGER RAISES {E} =
   BEGIN
-    IF ISTYPE(a, SchemeComplex.T) OR
-       ISTYPE(b, SchemeComplex.T) THEN
+    IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
+       (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RAISE E("ordering not defined for complex numbers")
     END;
     IF SchemeExact.Is(a) THEN
@@ -236,10 +241,10 @@ PROCEDURE Compare(a, b: SchemeObject.T): INTEGER RAISES {E} =
 
 PROCEDURE Equal(a, b: SchemeObject.T): BOOLEAN RAISES {E} =
   BEGIN
-    IF ISTYPE(a, SchemeComplex.T) OR
-       ISTYPE(b, SchemeComplex.T) THEN
-      IF ISTYPE(a, SchemeComplex.T) AND
-         ISTYPE(b, SchemeComplex.T) THEN
+    IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
+       (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
+      IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) AND
+         (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
         RETURN SchemeComplex.Equal(
                  NARROW(a, SchemeComplex.T),
                  NARROW(b, SchemeComplex.T))
@@ -290,7 +295,8 @@ PROCEDURE ToInteger(x: SchemeObject.T): INTEGER RAISES {E} =
 PROCEDURE Format(x: SchemeObject.T): TEXT =
   BEGIN
     TYPECASE x OF
-      SchemeComplex.T(c) => RETURN SchemeComplex.Format(c)
+      NULL => RETURN "()"
+    | SchemeComplex.T(c) => RETURN SchemeComplex.Format(c)
     ELSE
       IF SchemeExact.Is(x) THEN
         RETURN SchemeExact.Format(x)
