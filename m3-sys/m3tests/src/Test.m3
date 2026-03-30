@@ -96,8 +96,8 @@ PROCEDURE checkL (c, shouldBe: LONGREAL) =
 PROCEDURE checkX (c, shouldBe: EXTENDED) =
   BEGIN
     IF NOT c = shouldBe THEN
-      Err (Fmt.LongReal (FLOAT (c, LONGREAL)), " instead of ",
-           Fmt.LongReal (FLOAT (shouldBe, LONGREAL)));
+      Err (Fmt.Extended (FLOAT (c, EXTENDED)), " instead of ",
+           Fmt.Extended (FLOAT (shouldBe, EXTENDED)));
     END;
   END checkX;
 

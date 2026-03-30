@@ -1,7 +1,9 @@
 #include <limits.h>
 
-#define LONG_DOUBLE_SIZE 64
-//#define LONG_DOUBLE_SIZE 128
+//determine the size of EXTENDED type whether it is the same as LONGREAL
+//at 64 bits or quad size at 128 bits
+//#define LONG_DOUBLE_SIZE 64
+#define LONG_DOUBLE_SIZE 128
 
 #if UCHAR_MAX == 0x0FFUL
 typedef   signed char        INT8;

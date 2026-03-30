@@ -50,11 +50,6 @@ PROCEDURE ContextCreate (): ContextRef =
     RETURN LLVMRaw.ContextCreate();
   END ContextCreate;
 
-PROCEDURE GetGlobalContext (): ContextRef =
-  BEGIN
-    RETURN LLVMRaw.GetGlobalContext();
-  END GetGlobalContext;
-
 PROCEDURE ContextSetDiagnosticHandler (context: ContextRef;
                                        Handler: DiagnosticHandler;
                                        DiagnosticContext: ADDRESS; ) =
@@ -127,17 +122,6 @@ PROCEDURE GetMDKindIDInContext
     M3toC.FreeSharedS(Name, arg2);
     RETURN result;
   END GetMDKindIDInContext;
-
-PROCEDURE GetMDKindID (Name: TEXT; SLen: uint32_t; ): uint32_t =
-  VAR
-    arg1  : C.char_star;
-    result: uint32_t;
-  BEGIN
-    arg1 := M3toC.SharedTtoS(Name);
-    result := LLVMRaw.GetMDKindID(arg1, SLen);
-    M3toC.FreeSharedS(Name, arg1);
-    RETURN result;
-  END GetMDKindID;
 
 PROCEDURE GetSyncScopeID (context: ContextRef; Name: TEXT; SLen: Word.T; ):
   uint32_t =
@@ -265,17 +249,6 @@ PROCEDURE GetTypeByName2 (context: ContextRef; Name: TEXT; ): TypeRef =
     M3toC.FreeSharedS(Name, arg2);
     RETURN result;
   END GetTypeByName2;
-
-PROCEDURE ModuleCreateWithName (ModuleID: TEXT; ): ModuleRef =
-  VAR
-    arg1  : C.char_star;
-    result: ModuleRef;
-  BEGIN
-    arg1 := M3toC.SharedTtoS(ModuleID);
-    result := LLVMRaw.ModuleCreateWithName(arg1);
-    M3toC.FreeSharedS(ModuleID, arg1);
-    RETURN result;
-  END ModuleCreateWithName;
 
 PROCEDURE ModuleCreateWithNameInContext
   (ModuleID: TEXT; context: ContextRef; ): ModuleRef =
@@ -824,41 +797,6 @@ PROCEDURE IntTypeInContext (context: ContextRef; NumBits: uint32_t; ):
     RETURN LLVMRaw.IntTypeInContext(context, NumBits);
   END IntTypeInContext;
 
-PROCEDURE Int1Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.Int1Type();
-  END Int1Type;
-
-PROCEDURE Int8Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.Int8Type();
-  END Int8Type;
-
-PROCEDURE Int16Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.Int16Type();
-  END Int16Type;
-
-PROCEDURE Int32Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.Int32Type();
-  END Int32Type;
-
-PROCEDURE Int64Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.Int64Type();
-  END Int64Type;
-
-PROCEDURE Int128Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.Int128Type();
-  END Int128Type;
-
-PROCEDURE IntType (NumBits: uint32_t; ): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.IntType(NumBits);
-  END IntType;
-
 PROCEDURE GetIntTypeWidth (IntegerTy: TypeRef; ): uint32_t =
   BEGIN
     RETURN LLVMRaw.GetIntTypeWidth(IntegerTy);
@@ -899,41 +837,6 @@ PROCEDURE PPCFP128TypeInContext (context: ContextRef; ): TypeRef =
     RETURN LLVMRaw.PPCFP128TypeInContext(context);
   END PPCFP128TypeInContext;
 
-PROCEDURE HalfType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.HalfType();
-  END HalfType;
-
-PROCEDURE BFloatType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.BFloatType();
-  END BFloatType;
-
-PROCEDURE FloatType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.FloatType();
-  END FloatType;
-
-PROCEDURE DoubleType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.DoubleType();
-  END DoubleType;
-
-PROCEDURE X86FP80Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.X86FP80Type();
-  END X86FP80Type;
-
-PROCEDURE FP128Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.FP128Type();
-  END FP128Type;
-
-PROCEDURE PPCFP128Type (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.PPCFP128Type();
-  END PPCFP128Type;
-
 PROCEDURE FunctionType (ReturnType: TypeRef;
                         ParamTypes: UNTRACED REF TypeRef;
                         ParamCount: uint32_t;
@@ -973,13 +876,6 @@ PROCEDURE StructTypeInContext (context     : ContextRef;
     RETURN LLVMRaw.StructTypeInContext(
              context, ElementTypes, ElementCount, Packed);
   END StructTypeInContext;
-
-PROCEDURE StructType (ElementTypes: UNTRACED REF TypeRef;
-                      ElementCount: uint32_t;
-                      Packed      : BOOLEAN;              ): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.StructType(ElementTypes, ElementCount, Packed);
-  END StructType;
 
 PROCEDURE StructCreateNamed (context: ContextRef; Name: TEXT; ): TypeRef =
   VAR
@@ -1160,21 +1056,6 @@ PROCEDURE MetadataTypeInContext (context: ContextRef; ): TypeRef =
   BEGIN
     RETURN LLVMRaw.MetadataTypeInContext(context);
   END MetadataTypeInContext;
-
-PROCEDURE VoidType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.VoidType();
-  END VoidType;
-
-PROCEDURE LabelType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.LabelType();
-  END LabelType;
-
-PROCEDURE X86AMXType (): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.X86AMXType();
-  END X86AMXType;
 
 PROCEDURE TargetExtTypeInContext (context       : ContextRef;
                                   Name          : TEXT;
@@ -1961,18 +1842,6 @@ PROCEDURE ConstStringInContext2 (context          : ContextRef;
     RETURN result;
   END ConstStringInContext2;
 
-PROCEDURE ConstString
-  (Str: TEXT; Length: uint32_t; DontNullTerminate: BOOLEAN; ): ValueRef =
-  VAR
-    arg1  : C.char_star;
-    result: ValueRef;
-  BEGIN
-    arg1 := M3toC.SharedTtoS(Str);
-    result := LLVMRaw.ConstString(arg1, Length, DontNullTerminate);
-    M3toC.FreeSharedS(Str, arg1);
-    RETURN result;
-  END ConstString;
-
 PROCEDURE IsConstantString (c: ValueRef; ): BOOLEAN =
   BEGIN
     RETURN LLVMRaw.IsConstantString(c);
@@ -2001,13 +1870,6 @@ PROCEDURE ConstStructInContext (context     : ContextRef;
     RETURN
       LLVMRaw.ConstStructInContext(context, ConstantVals, Count, Packed);
   END ConstStructInContext;
-
-PROCEDURE ConstStruct (ConstantVals: UNTRACED REF ValueRef;
-                       Count       : uint32_t;
-                       Packed      : BOOLEAN;               ): ValueRef =
-  BEGIN
-    RETURN LLVMRaw.ConstStruct(ConstantVals, Count, Packed);
-  END ConstStruct;
 
 PROCEDURE ConstArray (ElementTy   : TypeRef;
                       ConstantVals: UNTRACED REF ValueRef;
@@ -2986,29 +2848,12 @@ PROCEDURE MDStringInContext
     RETURN result;
   END MDStringInContext;
 
-PROCEDURE MDString (Str: TEXT; SLen: uint32_t; ): ValueRef =
-  VAR
-    arg1  : C.char_star;
-    result: ValueRef;
-  BEGIN
-    arg1 := M3toC.SharedTtoS(Str);
-    result := LLVMRaw.MDString(arg1, SLen);
-    M3toC.FreeSharedS(Str, arg1);
-    RETURN result;
-  END MDString;
-
 PROCEDURE MDNodeInContext
   (context: ContextRef; Vals: UNTRACED REF ValueRef; Count: uint32_t; ):
   ValueRef =
   BEGIN
     RETURN LLVMRaw.MDNodeInContext(context, Vals, Count);
   END MDNodeInContext;
-
-PROCEDURE MDNode (Vals: UNTRACED REF ValueRef; Count: uint32_t; ):
-  ValueRef =
-  BEGIN
-    RETURN LLVMRaw.MDNode(Vals, Count);
-  END MDNode;
 
 PROCEDURE CreateOperandBundle (Tag    : TEXT;
                                TagLen : Word.T;
@@ -3152,17 +2997,6 @@ PROCEDURE AppendBasicBlockInContext
     RETURN result;
   END AppendBasicBlockInContext;
 
-PROCEDURE AppendBasicBlock (Fn: ValueRef; Name: TEXT; ): BasicBlockRef =
-  VAR
-    arg2  : C.char_star;
-    result: BasicBlockRef;
-  BEGIN
-    arg2 := M3toC.SharedTtoS(Name);
-    result := LLVMRaw.AppendBasicBlock(Fn, arg2);
-    M3toC.FreeSharedS(Name, arg2);
-    RETURN result;
-  END AppendBasicBlock;
-
 PROCEDURE InsertBasicBlockInContext
   (context: ContextRef; BB: BasicBlockRef; Name: TEXT; ): BasicBlockRef =
   VAR
@@ -3174,18 +3008,6 @@ PROCEDURE InsertBasicBlockInContext
     M3toC.FreeSharedS(Name, arg3);
     RETURN result;
   END InsertBasicBlockInContext;
-
-PROCEDURE InsertBasicBlock (InsertBeforeBB: BasicBlockRef; Name: TEXT; ):
-  BasicBlockRef =
-  VAR
-    arg2  : C.char_star;
-    result: BasicBlockRef;
-  BEGIN
-    arg2 := M3toC.SharedTtoS(Name);
-    result := LLVMRaw.InsertBasicBlock(InsertBeforeBB, arg2);
-    M3toC.FreeSharedS(Name, arg2);
-    RETURN result;
-  END InsertBasicBlock;
 
 PROCEDURE DeleteBasicBlock (BB: BasicBlockRef; ) =
   BEGIN
@@ -3592,11 +3414,6 @@ PROCEDURE CreateBuilderInContext (context: ContextRef; ): BuilderRef =
   BEGIN
     RETURN LLVMRaw.CreateBuilderInContext(context);
   END CreateBuilderInContext;
-
-PROCEDURE CreateBuilder (): BuilderRef =
-  BEGIN
-    RETURN LLVMRaw.CreateBuilder();
-  END CreateBuilder;
 
 PROCEDURE PositionBuilder
   (Builder: BuilderRef; Block: BasicBlockRef; Instr: ValueRef; ) =
@@ -5552,11 +5369,6 @@ PROCEDURE PointerSize (TD: TargetDataRef; ): uint32_t =
   BEGIN
     RETURN LLVMRaw.PointerSize(TD);
   END PointerSize;
-
-PROCEDURE IntPtrType (TD: TargetDataRef; ): TypeRef =
-  BEGIN
-    RETURN LLVMRaw.IntPtrType(TD);
-  END IntPtrType;
 
 PROCEDURE IntPtrTypeInContext (context: ContextRef; TD: TargetDataRef; ):
   TypeRef =

@@ -1697,14 +1697,13 @@ class MakeBootstrapCommand(ConciergeCommand):
         # Copy generated C files to bootstrap.
         package_dirs = []
         for package_path in self.get_package_paths(packages):
-            cmakelists = Path(package_path) / "CMakeLists.txt"
+            cmakelists = self.source() / Path(package_path) / "CMakeLists.txt"
             if not cmakelists.is_file():
                 continue
             package_dir = bootstrap_dir / Path(package_path).name
             self.mkdir(package_dir)
             self.cp(cmakelists, package_dir)
             package_dirs.append(package_dir.name)
-
             package_sources = []
             if not self.no_action():
                 for file in self.build(package_path).iterdir():

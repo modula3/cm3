@@ -30,9 +30,6 @@ PROCEDURE DisposeMessage (Message: C.char_star; );
 <* EXTERNAL LLVMContextCreate *>
 PROCEDURE ContextCreate (): ADDRESS;
 
-<* EXTERNAL LLVMGetGlobalContext *>
-PROCEDURE GetGlobalContext (): ADDRESS;
-
 <* EXTERNAL LLVMContextSetDiagnosticHandler *>
 PROCEDURE ContextSetDiagnosticHandler
   (C: ADDRESS; VAR Handler: ADDRESS; DiagnosticContext: ADDRESS; );
@@ -65,10 +62,6 @@ PROCEDURE GetDiagInfoSeverity (DI: ADDRESS; ): C.int;
 <* EXTERNAL LLVMGetMDKindIDInContext *>
 PROCEDURE GetMDKindIDInContext
   (C: ADDRESS; Name: C.char_star; SLen: C.unsigned_int; ): C.unsigned_int;
-
-<* EXTERNAL LLVMGetMDKindID *>
-PROCEDURE GetMDKindID (Name: C.char_star; SLen: C.unsigned_int; ):
-  C.unsigned_int;
 
 <* EXTERNAL LLVMGetSyncScopeID *>
 PROCEDURE GetSyncScopeID (C: ADDRESS; Name: C.char_star; SLen: Word.T; ):
@@ -131,9 +124,6 @@ PROCEDURE IsTypeAttribute (A: ADDRESS; ): BOOLEAN;
 
 <* EXTERNAL LLVMGetTypeByName2 *>
 PROCEDURE GetTypeByName2 (C: ADDRESS; Name: C.char_star; ): ADDRESS;
-
-<* EXTERNAL LLVMModuleCreateWithName *>
-PROCEDURE ModuleCreateWithName (ModuleID: C.char_star; ): ADDRESS;
 
 <* EXTERNAL LLVMModuleCreateWithNameInContext *>
 PROCEDURE ModuleCreateWithNameInContext
@@ -389,27 +379,6 @@ PROCEDURE Int128TypeInContext (C: ADDRESS; ): ADDRESS;
 PROCEDURE IntTypeInContext (C: ADDRESS; NumBits: C.unsigned_int; ):
   ADDRESS;
 
-<* EXTERNAL LLVMInt1Type *>
-PROCEDURE Int1Type (): ADDRESS;
-
-<* EXTERNAL LLVMInt8Type *>
-PROCEDURE Int8Type (): ADDRESS;
-
-<* EXTERNAL LLVMInt16Type *>
-PROCEDURE Int16Type (): ADDRESS;
-
-<* EXTERNAL LLVMInt32Type *>
-PROCEDURE Int32Type (): ADDRESS;
-
-<* EXTERNAL LLVMInt64Type *>
-PROCEDURE Int64Type (): ADDRESS;
-
-<* EXTERNAL LLVMInt128Type *>
-PROCEDURE Int128Type (): ADDRESS;
-
-<* EXTERNAL LLVMIntType *>
-PROCEDURE IntType (NumBits: C.unsigned_int; ): ADDRESS;
-
 <* EXTERNAL LLVMGetIntTypeWidth *>
 PROCEDURE GetIntTypeWidth (IntegerTy: ADDRESS; ): C.unsigned_int;
 
@@ -434,27 +403,6 @@ PROCEDURE FP128TypeInContext (C: ADDRESS; ): ADDRESS;
 <* EXTERNAL LLVMPPCFP128TypeInContext *>
 PROCEDURE PPCFP128TypeInContext (C: ADDRESS; ): ADDRESS;
 
-<* EXTERNAL LLVMHalfType *>
-PROCEDURE HalfType (): ADDRESS;
-
-<* EXTERNAL LLVMBFloatType *>
-PROCEDURE BFloatType (): ADDRESS;
-
-<* EXTERNAL LLVMFloatType *>
-PROCEDURE FloatType (): ADDRESS;
-
-<* EXTERNAL LLVMDoubleType *>
-PROCEDURE DoubleType (): ADDRESS;
-
-<* EXTERNAL LLVMX86FP80Type *>
-PROCEDURE X86FP80Type (): ADDRESS;
-
-<* EXTERNAL LLVMFP128Type *>
-PROCEDURE FP128Type (): ADDRESS;
-
-<* EXTERNAL LLVMPPCFP128Type *>
-PROCEDURE PPCFP128Type (): ADDRESS;
-
 <* EXTERNAL LLVMFunctionType *>
 PROCEDURE FunctionType (ReturnType: ADDRESS;
                         ParamTypes: ADDRESS;
@@ -478,11 +426,6 @@ PROCEDURE StructTypeInContext (C           : ADDRESS;
                                ElementTypes: ADDRESS;
                                ElementCount: C.unsigned_int;
                                Packed      : BOOLEAN;        ): ADDRESS;
-
-<* EXTERNAL LLVMStructType *>
-PROCEDURE StructType
-  (ElementTypes: ADDRESS; ElementCount: C.unsigned_int; Packed: BOOLEAN; ):
-  ADDRESS;
 
 <* EXTERNAL LLVMStructCreateNamed *>
 PROCEDURE StructCreateNamed (C: ADDRESS; Name: C.char_star; ): ADDRESS;
@@ -590,15 +533,6 @@ PROCEDURE TokenTypeInContext (C: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL LLVMMetadataTypeInContext *>
 PROCEDURE MetadataTypeInContext (C: ADDRESS; ): ADDRESS;
-
-<* EXTERNAL LLVMVoidType *>
-PROCEDURE VoidType (): ADDRESS;
-
-<* EXTERNAL LLVMLabelType *>
-PROCEDURE LabelType (): ADDRESS;
-
-<* EXTERNAL LLVMX86AMXType *>
-PROCEDURE X86AMXType (): ADDRESS;
 
 <* EXTERNAL LLVMTargetExtTypeInContext *>
 PROCEDURE TargetExtTypeInContext (    C             : ADDRESS;
@@ -1050,11 +984,6 @@ PROCEDURE ConstStringInContext2 (C                : ADDRESS;
                                  DontNullTerminate: BOOLEAN;     ):
   ADDRESS;
 
-<* EXTERNAL LLVMConstString *>
-PROCEDURE ConstString
-  (Str: C.char_star; Length: C.unsigned_int; DontNullTerminate: BOOLEAN; ):
-  ADDRESS;
-
 <* EXTERNAL LLVMIsConstantString *>
 PROCEDURE IsConstantString (c: ADDRESS; ): BOOLEAN;
 
@@ -1070,11 +999,6 @@ PROCEDURE ConstStructInContext (C           : ADDRESS;
                                 ConstantVals: ADDRESS;
                                 Count       : C.unsigned_int;
                                 Packed      : BOOLEAN;        ): ADDRESS;
-
-<* EXTERNAL LLVMConstStruct *>
-PROCEDURE ConstStruct
-  (ConstantVals: ADDRESS; Count: C.unsigned_int; Packed: BOOLEAN; ):
-  ADDRESS;
 
 <* EXTERNAL LLVMConstArray *>
 PROCEDURE ConstArray
@@ -1594,15 +1518,9 @@ PROCEDURE ReplaceMDNodeOperandWith
 PROCEDURE MDStringInContext
   (C: ADDRESS; Str: C.char_star; SLen: C.unsigned_int; ): ADDRESS;
 
-<* EXTERNAL LLVMMDString *>
-PROCEDURE MDString (Str: C.char_star; SLen: C.unsigned_int; ): ADDRESS;
-
 <* EXTERNAL LLVMMDNodeInContext *>
 PROCEDURE MDNodeInContext
   (C: ADDRESS; Vals: ADDRESS; Count: C.unsigned_int; ): ADDRESS;
-
-<* EXTERNAL LLVMMDNode *>
-PROCEDURE MDNode (Vals: ADDRESS; Count: C.unsigned_int; ): ADDRESS;
 
 <* EXTERNAL LLVMCreateOperandBundle *>
 PROCEDURE CreateOperandBundle (Tag    : C.char_star;
@@ -1678,15 +1596,8 @@ PROCEDURE CreateBasicBlockInContext (C: ADDRESS; Name: C.char_star; ):
 PROCEDURE AppendBasicBlockInContext (C, Fn: ADDRESS; Name: C.char_star; ):
   ADDRESS;
 
-<* EXTERNAL LLVMAppendBasicBlock *>
-PROCEDURE AppendBasicBlock (Fn: ADDRESS; Name: C.char_star; ): ADDRESS;
-
 <* EXTERNAL LLVMInsertBasicBlockInContext *>
 PROCEDURE InsertBasicBlockInContext (C, BB: ADDRESS; Name: C.char_star; ):
-  ADDRESS;
-
-<* EXTERNAL LLVMInsertBasicBlock *>
-PROCEDURE InsertBasicBlock (InsertBeforeBB: ADDRESS; Name: C.char_star; ):
   ADDRESS;
 
 <* EXTERNAL LLVMDeleteBasicBlock *>
@@ -1925,9 +1836,6 @@ PROCEDURE GetIndices (Inst: ADDRESS; ): UNTRACED REF C.unsigned_int;
 
 <* EXTERNAL LLVMCreateBuilderInContext *>
 PROCEDURE CreateBuilderInContext (C: ADDRESS; ): ADDRESS;
-
-<* EXTERNAL LLVMCreateBuilder *>
-PROCEDURE CreateBuilder (): ADDRESS;
 
 <* EXTERNAL LLVMPositionBuilder *>
 PROCEDURE PositionBuilder (Builder, Block, Instr: ADDRESS; );
@@ -2733,9 +2641,6 @@ PROCEDURE ByteOrder (TD: ADDRESS; ): C.int;
 
 <* EXTERNAL LLVMPointerSize *>
 PROCEDURE PointerSize (TD: ADDRESS; ): C.unsigned_int;
-
-<* EXTERNAL LLVMIntPtrType *>
-PROCEDURE IntPtrType (TD: ADDRESS; ): ADDRESS;
 
 <* EXTERNAL LLVMIntPtrTypeInContext *>
 PROCEDURE IntPtrTypeInContext (C: ADDRESS; TD: ADDRESS; ): ADDRESS;

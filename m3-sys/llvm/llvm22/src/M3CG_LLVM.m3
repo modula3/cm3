@@ -150,9 +150,10 @@ REVEAL
       seenConst         := FALSE;
       debugObj : ROOT;
       dwarfDbg          := TRUE; (* Dwarf output instead of CodeView *)
+      debugType: TEXT;
+      debugVer : CARDINAL;       (* Debug version *)
       abortInCall := FALSE;      (* kludge to cope with frontend issuing abort
                                     in middle of call *)
-      inInits : BOOLEAN := FALSE;
     METHODS
       allocVar             (v: LvVar) := AllocVar;
       allocVarInEntryBlock (v: LvVar) := AllocVarInEntryBlock;
@@ -730,9 +731,19 @@ PROCEDURE IsWindows (targetTriple: TEXT): BOOLEAN =
   END IsWindows;
 
 PROCEDURE SetDebugType (self: U) =
+  CONST
+    dwarf = "Dwarf Version";
+    codeview = "CodeView";
   BEGIN
     (* On POSIX systems output DWARF, on Windows its CodeView *)
     IF self.isWindows THEN self.dwarfDbg := FALSE; END;
+    IF self.dwarfDbg THEN
+      self.debugType := dwarf;
+      self.debugVer := DC.DWARF_VERSION; 
+    ELSE
+      self.debugType := codeview;
+      self.debugVer := 1; (* codeview is not properly documented. *)
+    END;
   END SetDebugType;
 
 (*
@@ -983,6 +994,17 @@ PROCEDURE LLvmType (t: Type): LLVM.TypeRef =
     | Type.Void => RETURN LLVM.VoidTypeInContext(ctx);
     END;
   END LLvmType;
+
+PROCEDURE TypeMask (t: Type): Word.T =
+  BEGIN
+    CASE t OF
+    | Type.Int8, Type.Word8 =>   RETURN 16_FF;
+    | Type.Int16, Type.Word16 => RETURN 16_FFFF;
+    | Type.Int32, Type.Word32 => RETURN 16_FFFFFFFF;
+    | Type.Int64, Type.Word64 => RETURN 16_FFFFFFFFFFFFFFFF;
+    ELSE RETURN 0;
+    END;
+  END TypeMask;
 
 PROCEDURE StructType (self: U; size: ByteSize): LLVM.TypeRef =
   (* A uniqued llvm array type of size bytes. *)
@@ -1776,11 +1798,6 @@ PROCEDURE declare_object (self               : U;
                           super_typename     : Name     ) =
   VAR
     objectRef: ObjectDebug;
-(*
-    parentref : ObjectDebug;
-    superObj : REFANY;
-    found    : BOOLEAN;
-*)
   BEGIN
     objectRef :=
       NEW(ObjectDebug, tUid := t, superType := super, brand := brand,
@@ -2212,8 +2229,8 @@ PROCEDURE begin_init (self: U; v: Var) =
   BEGIN
     (*The curvar is just to track which var is being initd in init_chars etc*)
     self.curVar := v;
-    self.inInits := TRUE;
   END begin_init;
+
 
 (* Now we have all the global vars we can construct the body of the segment and
    initialise the global. *)
@@ -2314,7 +2331,8 @@ PROCEDURE end_init (self: U; v: Var) =
       TYPECASE baseObj OF
       | IntVar (v) =>
           EVAL TInt.ToInt(v.value, int);
-          v.lvVal := LLVM.ConstInt(v.lvTy, VAL(int, LONGINT), TRUE);
+          int := Word.And(int, TypeMask(v.type));
+          v.lvVal := LLVM.ConstInt(v.lvTy, VAL(int, LONGINT), FALSE);
       | ProcVar (v) => proc := NARROW(v.value, LvProc); v.lvVal := proc.lvProc;
       | VarVar (v) =>
           var := NARROW(v.value, LvVar);
@@ -2346,7 +2364,6 @@ PROCEDURE end_init (self: U; v: Var) =
     IF NOT (thisVar.isConst OR thisVar.name = M3ID.NoID) THEN
       DebugGlobals(self);
     END;
-    self.inInits := FALSE;
   END end_init;
 
 PROCEDURE init_int
@@ -4371,7 +4388,7 @@ PROCEDURE insert_n (self: U; t: IType; n: CARDINAL) =
       target := NARROW(s2, LvExpr).lVal;
       target := Extend(target, t, intTy);
       offset := Extend(offset, t, intTy);
-      maskTy := LLVM.IntType(n);
+      maskTy := LLVM.IntTypeInContext(ctx, n);
       mask := LLVM.ConstAllOnes(maskTy);
       mask := LLVM.BuildZExtOrBitCast(builderIR, mask, intTy, "zext");
       res := DoInsert(value, target, mask, offset);
@@ -4394,7 +4411,7 @@ PROCEDURE insert_mn (self: U; t: IType; m, n: CARDINAL) =
       value := NARROW(s0, LvExpr).lVal;
       target := NARROW(s1, LvExpr).lVal;
       offset := LLVM.ConstInt(intTy, VAL(m, LONGINT), TRUE);
-      maskTy := LLVM.IntType(n);
+      maskTy := LLVM.IntTypeInContext(ctx, n);
       mask := LLVM.ConstAllOnes(maskTy);
       mask := LLVM.BuildZExtOrBitCast(builderIR, mask, intTy, "zext");
       res := DoInsert(value, target, mask, offset);
@@ -5491,28 +5508,7 @@ PROCEDURE comment (self: U; a, b, c, d: TEXT := NIL) =
      may be NIL. *)
   VAR
     s: TEXT := "";
-    index : CARDINAL;
   BEGIN
-    IF self.inInits THEN
-      IF TextExtras.FindSub(a, "typecell", index) THEN
-(*
-check index = 2 to guard against names the same then
-extract string _tabcdefgh 8 digit hex number after _t
-this is the uid of the object. look it up and check its type
-is object. actually look up the debug object uid we created during
-debug_object.
-we should now track the current offset with all init_ calls and keep then
-in self.
-This could be bit tricky as its 8 bytes before the next
-init_int with the uid in it but when we have it add  12 or 20 bytes to get
-the size offset
-store the size in the list element for the object we created when
-debugging
-
-*)
-      END;
-    END;
-
     IF self.m3llvmDebugLev > 0 THEN
       IF a # NIL THEN s := s & a; END;
       IF b # NIL THEN s := s & b; END;
@@ -5723,28 +5719,17 @@ PROCEDURE fetch_and_op
 PROCEDURE CreateModuleFlags (self: U) =
   CONST
     behave = LLVM.ModuleFlagBehaviour.LLVMModuleFlagBehaviorWarning;
-    dwarf = "Dwarf Version";
-    codeview = "CodeView";
     debugInfoVer = "Debug Info Version";
     wchar = "wchar_size";
     picLevel = "PIC Level";
     pieLevel = "PIE Level";
-  VAR
-    debugType : TEXT;
-    debugVer : INTEGER;
+    picVal = 2L;
+    pieVal = 2L;
   BEGIN
-    IF self.dwarfDbg THEN
-      debugType := dwarf;
-      debugVer := DC.DWARF_VERSION; 
-    ELSE
-      debugType := codeview;
-      debugVer := 1;
-      (* fixme get proper version number *)
-    END;
-
-    LLVM.AddModuleFlag(modRef, behave, debugType, Text.Length(debugType),
+    LLVM.AddModuleFlag(modRef, behave,
+                       self.debugType, Text.Length(self.debugType),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
-                       VAL(debugVer, LONGINT), TRUE)));
+                       VAL(self.debugVer, LONGINT), TRUE)));
     LLVM.AddModuleFlag(modRef, behave, debugInfoVer, Text.Length(debugInfoVer),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
                        VAL(M3DIB.LLVMDebugMetadataVersion(), LONGINT), TRUE)));
@@ -5754,10 +5739,10 @@ PROCEDURE CreateModuleFlags (self: U) =
     (* just copying C PIC and PIE levels, not sure where we get these vals *)
     LLVM.AddModuleFlag(modRef, behave, picLevel, Text.Length(picLevel),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
-                       2L, TRUE)));
+                       picVal, TRUE)));
     LLVM.AddModuleFlag(modRef, behave, pieLevel, Text.Length(pieLevel),
                        LLVM.ValueAsMetadata( LLVM.ConstInt(I32Type,
-                       2L, TRUE)));
+                       pieVal, TRUE)));
   END CreateModuleFlags;
 
 PROCEDURE CalcPaths (self: U): TEXT =
@@ -5791,42 +5776,36 @@ PROCEDURE DebugInit (self: U) =
     srcFile, chkSum: TEXT;
     rd             : Rd.T;
   BEGIN
-    self.setDebugType();
     InitUids(self);
     IF NOT self.genDebug THEN RETURN; END;
+
+    self.setDebugType();
 
     srcFile := CalcPaths(self);
 
     self.debugRef := M3DIB.LLVMCreateDIBuilder(modRef);
 
-    (* generate checksum for codeview *)
-    IF NOT self.dwarfDbg THEN    (* and maybe for dwarf >= ver 5 *)
+    (* generate checksum for codeview and dwarf after ver 4 *)
+    IF NOT self.dwarfDbg OR self.debugVer >= 5 THEN
       rd := FileRd.Open(srcFile);
-      (* dont grab entire source for checksum s := Rd.GetText(Rd.Length(rd)) *)
       chkSum := MD5.FromFile(rd);
       Rd.Close(rd);
+      self.fileRef := M3DIB.CreateFileWithChecksum(self.debugRef,
+                        Filename := self.debFile,
+                        FilenameLen := Text.Length(self.debFile),
+                        Directory := self.debDir,
+                        DirectoryLen := Text.Length(self.debDir),
+                        ChecksumKind := M3DIB.LLVMChecksumKind.CSK_MD5,
+                        Checksum := chkSum,
+                        ChecksumLen := Text.Length(chkSum),
+                        Source := NIL,
+                        SourceLen := 0);
+    ELSE
+      self.fileRef := M3DIB.CreateFile(self.debugRef, Filename := self.debFile,
+                        FilenameLen := Text.Length(self.debFile),
+                        Directory := self.debDir,
+                        DirectoryLen := Text.Length(self.debDir));
     END;
-
-    (* FIXME add checksum to CreateFile when DIBuilder
-        has the optional parms - see below *)
-    self.fileRef := M3DIB.CreateFile(self.debugRef, Filename := self.debFile,
-                                     FilenameLen := Text.Length(self.debFile),
-                                     Directory := self.debDir,
-                                     DirectoryLen := Text.Length(self.debDir));
-
-(* fixme for dwarf v 5 add checksum
-
-    self.fileRef := M3DIB.CreateFileWithChecksum(self.debugRef,
-                          Filename := self.debFile,
-                          FilenameLen := Text.Length(self.debFile),
-                          Directory := self.debDir,
-                          DirectoryLen := Text.Length(self.debDir),
-                          ChecksumKind := M3DIB.LLVMChecksumKind.CSK_MD5,
-                          Checksum := chkSum,
-                          ChecksumLen := Text.Length(chkSum),
-                          Source := NIL,
-                          SourceLen := 0);
-*)
 
     self.cuRef :=
       M3DIB.CreateCompileUnit(

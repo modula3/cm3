@@ -188,8 +188,8 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
-CONST MaxAlignment  = 8;
-CONST MaxAlignMask  = 2_0111;     (* bit mask to capture MaxAlignment *)
+CONST MaxAlignment  = 16;
+CONST MaxAlignMask  = 2_1111;     (* bit mask to capture MaxAlignment *)
 TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
 
 VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
