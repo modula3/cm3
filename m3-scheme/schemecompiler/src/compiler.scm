@@ -524,6 +524,16 @@
               ((and (integer? val) (= val 1)) "SchemeInt.One")
               ((integer? val)
                (string-append "SchemeInt.FromI(" (number-to-m3-integer val) ")"))
+              ((and (number? val) (not (real? val)))
+               ;; Complex constant
+               (string-append "SchemeComplex.MakeRectangular("
+                              (constant-ref (real-part val) ctx) ", "
+                              (constant-ref (imag-part val) ctx) ")"))
+              ((and (exact? val) (not (integer? val)))
+               ;; Exact rational (not integer — integers caught above)
+               (string-append "SchemeRational.New(Mpz.NewInt("
+                              (number->string (numerator val)) "), Mpz.NewInt("
+                              (number->string (denominator val)) "))"))
               ((number? val)
                (string-append "SchemeLongReal.FromLR(" (number-to-m3-longreal val) ")"))
               ((symbol? val)
@@ -1662,7 +1672,7 @@
      (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemePair.T))"))
     ((and (eq? fn-name 'number?) (= nargs 1))
-     (string-append "SchemeBoolean.Truth(SchemeInt.IsNumber(" (car arg-exprs) "))"))
+     (string-append "SchemeBoolean.Truth(SchemeNumber.Is(" (car arg-exprs) "))"))
     ((and (eq? fn-name 'boolean?) (= nargs 1))
      (string-append "SchemeBoolean.Truth(" (car arg-exprs)
                     " = SchemeBoolean.True() OR " (car arg-exprs)
@@ -1730,7 +1740,7 @@
      (string-append (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemePair.T)"))
     ((and (eq? fn-name 'number?) (= nargs 1))
-     (string-append "SchemeInt.IsNumber(" (car arg-exprs) ")"))
+     (string-append "SchemeNumber.Is(" (car arg-exprs) ")"))
     ((and (eq? fn-name 'boolean?) (= nargs 1))
      (string-append (car arg-exprs) " = SchemeBoolean.True() OR "
                     (car arg-exprs) " = SchemeBoolean.False()"))
@@ -2345,6 +2355,16 @@
     ((and (integer? c) (= c 1)) "SchemeInt.One")
     ((integer? c)
      (string-append "SchemeInt.FromI(" (number-to-m3-integer c) ")"))
+    ((and (number? c) (not (real? c)))
+     ;; Complex constant
+     (string-append "SchemeComplex.MakeRectangular("
+                    (constant-to-m3 (real-part c)) ", "
+                    (constant-to-m3 (imag-part c)) ")"))
+    ((and (exact? c) (not (integer? c)))
+     ;; Exact rational
+     (string-append "SchemeRational.New(Mpz.NewInt("
+                    (number->string (numerator c)) "), Mpz.NewInt("
+                    (number->string (denominator c)) "))"))
     ((number? c)
      (string-append "SchemeLongReal.FromLR(" (number-to-m3-longreal c) ")"))
     ((string? c)
@@ -2388,7 +2408,17 @@
   (cond
     ((string? form) (string-append "\"" (scheme-escape-string form) "\""))
     ((symbol? form) (symbol->string form))
-    ((number? form) (number->string form))
+    ((and (number? form) (not (real? form)))
+     ;; Complex (has nonzero imaginary part): emit (make-rectangular re im)
+     (string-append "(make-rectangular "
+                    (form->string (real-part form)) " "
+                    (form->string (imag-part form)) ")"))
+    ((number? form)
+     (let ((s (number->string form)))
+       (cond ((string=? s "Infinity")  "+inf.0")
+             ((string=? s "-Infinity") "-inf.0")
+             ((string=? s "NaN")       "+nan.0")
+             (else s))))
     ((null? form) "()")
     ((boolean? form) (if form "#t" "#f"))
     ((char? form)
@@ -2621,6 +2651,7 @@
      (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
      (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
      (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair, SchemeInt, SchemePrimitive;")
+     (L "IMPORT SchemeNumber, SchemeExact, SchemeRational, SchemeMpfr, SchemeComplex, Mpz;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
      (L "IMPORT SchemeCompiledRegistry;")
      (L "FROM Scheme IMPORT Object;")

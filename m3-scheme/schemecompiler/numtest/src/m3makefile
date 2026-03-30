@@ -13,10 +13,9 @@ scheme("test-cn-integers")
 scheme("test-cn-floats")
 scheme("test-cn-exceptions")
 
-% Phase 2 types — enable as compiler support is added:
-%scheme("test-cn-rationals")
-%scheme("test-cn-complex")
-%scheme("test-cn-mixed")
+scheme("test-cn-rationals")
+scheme("test-cn-complex")
+scheme("test-cn-mixed")
 
 % Original test suites — contain Phase 2 features, enable when compiler is ready:
 %scheme("test-numeric-tower")

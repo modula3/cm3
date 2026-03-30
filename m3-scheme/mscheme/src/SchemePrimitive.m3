@@ -2027,76 +2027,28 @@ PROCEDURE ExactMul(a, b : Object) : Object =
 (* --- Generic two-argument arithmetic for compiled code --- *)
 
 PROCEDURE NumericAdd(a, b : Object) : Object RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN ExactAdd(a, b)
-    ELSE
-      RETURN FromLR(FromO(a) + FromO(b))
-    END
-  END NumericAdd;
+  BEGIN RETURN SchemeNumber.Add(a, b) END NumericAdd;
 
 PROCEDURE NumericSub(a, b : Object) : Object RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN ExactSub(a, b)
-    ELSE
-      RETURN FromLR(FromO(a) - FromO(b))
-    END
-  END NumericSub;
+  BEGIN RETURN SchemeNumber.Sub(a, b) END NumericSub;
 
 PROCEDURE NumericMul(a, b : Object) : Object RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN ExactMul(a, b)
-    ELSE
-      RETURN FromLR(FromO(a) * FromO(b))
-    END
-  END NumericMul;
+  BEGIN RETURN SchemeNumber.Mul(a, b) END NumericMul;
 
 PROCEDURE NumericEQ(a, b : Object) : BOOLEAN RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN SchemeInt.Compare(a, b) = 0
-    ELSE
-      RETURN FromO(a) = FromO(b)
-    END
-  END NumericEQ;
+  BEGIN RETURN SchemeNumber.Equal(a, b) END NumericEQ;
 
 PROCEDURE NumericLT(a, b : Object) : BOOLEAN RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN SchemeInt.Compare(a, b) < 0
-    ELSE
-      RETURN FromO(a) < FromO(b)
-    END
-  END NumericLT;
+  BEGIN RETURN SchemeNumber.Compare(a, b) < 0 END NumericLT;
 
 PROCEDURE NumericGT(a, b : Object) : BOOLEAN RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN SchemeInt.Compare(a, b) > 0
-    ELSE
-      RETURN FromO(a) > FromO(b)
-    END
-  END NumericGT;
+  BEGIN RETURN SchemeNumber.Compare(a, b) > 0 END NumericGT;
 
 PROCEDURE NumericLE(a, b : Object) : BOOLEAN RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN SchemeInt.Compare(a, b) <= 0
-    ELSE
-      RETURN FromO(a) <= FromO(b)
-    END
-  END NumericLE;
+  BEGIN RETURN SchemeNumber.Compare(a, b) <= 0 END NumericLE;
 
 PROCEDURE NumericGE(a, b : Object) : BOOLEAN RAISES { E } =
-  BEGIN
-    IF SchemeInt.IsExactInt(a) AND SchemeInt.IsExactInt(b) THEN
-      RETURN SchemeInt.Compare(a, b) >= 0
-    ELSE
-      RETURN FromO(a) >= FromO(b)
-    END
-  END NumericGE;
+  BEGIN RETURN SchemeNumber.Compare(a, b) >= 0 END NumericGE;
 
 PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
   BEGIN
