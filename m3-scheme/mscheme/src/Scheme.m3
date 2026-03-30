@@ -27,7 +27,6 @@ IMPORT SchemeEnvironmentBinding;
 IMPORT SchemeEnvironmentInstanceRep; (* for pickling *)
 IMPORT SchemeCompiledRegistry;
 IMPORT Pickle;
-IMPORT BigInt;
 IMPORT TextWr;
 FROM Fmt IMPORT F;
 
@@ -912,13 +911,7 @@ TYPE
 PROCEDURE PRRead(pr : PickleReader) : REFANY
   RAISES { Pickle.Error, Rd.EndOfFile, Rd.Failure } =
   BEGIN
-    WITH draft = Pickle.Reader.read(pr) DO
-      IF draft # NIL AND ISTYPE(draft, BigInt.T) THEN
-        RETURN BigInt.Uniq(draft)
-      ELSE
-        RETURN draft
-      END
-    END
+    RETURN Pickle.Reader.read(pr)
   END PRRead;
   
 PROCEDURE UnpickleGlobalEnv(self : T; from : Rd.T)

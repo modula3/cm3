@@ -81,7 +81,9 @@ Scheme (R4RS)}~\cite{r4rs} with extensions.  It is not a complete R5RS
 implementation.  Notable limitations inherited from JScheme include:
 
 \begin{itemize}
-\item Only one numeric type: IEEE~754 double precision ({\tt LONGREAL}).
+\item Full numeric tower: exact integers (fixnum/bignum), exact rationals,
+  inexact reals ({\tt LONGREAL}), arbitrary-precision floats (MPFR),
+  and complex numbers.
 \item {\tt call-with-current-continuation} only unwinds the stack
   (no full continuations).
 \item The Modula-3 call stack is used for Scheme control flow, limiting
@@ -295,13 +297,34 @@ sinh  cosh  tanh  asinh  acosh  atanh
 gcd  lcm
 odd?  even?  zero?  positive?  negative?
 number?  integer?  exact?  inexact?
+exact->inexact  inexact->exact
 number->string  string->number
 \end{lstlisting}
 
-All numbers are IEEE~754 double precision.  {\tt exact?}, {\tt
-rational?}, and {\tt integer?} all test whether the number has no
-fractional part.  {\tt complex?}, {\tt real?}, and {\tt number?} are
-equivalent.
+MScheme implements the full R4RS numeric tower.  Exact integers
+(fixnums and GMP bignums), exact rationals, inexact {\tt LONGREAL}
+values, MPFR arbitrary-precision floats, and complex numbers are
+all supported.  {\tt exact?} returns {\tt \#t} for integers and
+rationals; {\tt inexact?} for floats.  {\tt rational?} is true for
+integers and exact rationals.  {\tt complex?} is true for all
+numbers (per R4RS); {\tt real?} excludes complex values with nonzero
+imaginary part.  {\tt exact->inexact} converts exact values to
+{\tt LONGREAL}; {\tt inexact->exact} converts integer-valued floats
+back to exact integers.
+
+Additional numeric operations include: {\tt numerator},
+{\tt denominator}, {\tt make-rectangular}, {\tt make-polar},
+{\tt real-part}, {\tt imag-part}, {\tt magnitude}, {\tt angle}.
+
+{\tt atan} accepts one or two arguments: {\tt (atan $x$)} computes
+$\arctan x$; {\tt (atan $y$ $x$)} computes $\arctan(y/x)$ with
+correct quadrant (delegates to {\tt Math.atan2}).
+
+Number literals may carry R4RS radix prefixes: {\tt \#b} (binary),
+{\tt \#o} (octal), {\tt \#d} (decimal, default), and {\tt \#x}
+(hexadecimal).  Exactness prefixes {\tt \#e} and {\tt \#i} are
+accepted but are no-ops.  Combined prefixes such as {\tt \#e\#xFF} or
+{\tt \#x\#e1F} are supported in any order.
 
 \subsection{Pairs and Lists}
 
@@ -321,11 +344,12 @@ _list*  ; (_list* 1 2 3) => (1 2 . 3)
 All R4RS predicates, accessors, and mutators are provided:
 {\tt boolean?}, {\tt eq?}, {\tt eqv?}, {\tt equal?},
 {\tt string?}, {\tt string-length}, {\tt string-ref}, {\tt string-set!},
-{\tt substring}, {\tt string-append}, {\tt string->list}, {\tt list->string},
+{\tt substring}, {\tt string-append}, {\tt string-copy}, {\tt string-fill!},
+{\tt string->list}, {\tt list->string},
 {\tt string->symbol}, {\tt symbol->string},
-{\tt char?}, {\tt char->integer}, {\tt integer->char},
+{\tt char?}, {\tt char->integer}, {\tt integer->char}, {\tt char-ready?},
 {\tt vector?}, {\tt make-vector}, {\tt vector-ref}, {\tt vector-set!},
-{\tt vector->list}, {\tt list->vector},
+{\tt vector-fill!}, {\tt vector->list}, {\tt list->vector},
 plus all string and character comparison predicates including
 case-insensitive variants.
 
@@ -339,6 +363,7 @@ current-input-port  current-output-port
 open-input-file  close-input-port
 open-output-file  close-output-port
 call-with-input-file  call-with-output-file
+with-input-from-file  with-output-to-file
 display-noflush  write-noflush  ; no flush variants
 \end{lstlisting}
 
@@ -362,8 +387,10 @@ MScheme extends R4RS with the following procedures, grouped by category.
 \item[{\tt (error msg \ldots)}]
   Signal an error.  All arguments are {\tt display}ed into the
   error message.  Raises {\tt Scheme.E}.
-\item[{\tt (exit)} / {\tt (exit code)}]
-  Exit the process.  {\it code\/} defaults to~0.
+\item[{\tt (exit)} / {\tt (exit {\it code})}]
+  Exit the process immediately via {\tt Process.Exit}.
+  {\it code\/} is an integer Unix exit code; it defaults to~0.
+  Convention: zero indicates success, non-zero indicates failure.
 \item[{\tt (set-warnings-are-errors!~b)}]
   When {\it b\/} is {\tt \#t}, warnings become errors.
 \item[{\tt (enable-tracebacks!)} / {\tt (disable-tracebacks!)}]
@@ -423,8 +450,9 @@ MScheme extends R4RS with the following procedures, grouped by category.
 
 \subsubsection{Numeric Type Conversions}
 
-MScheme's native number type is {\tt LONGREAL}.
-These procedures perform explicit narrowing for Modula-3 interop.
+MScheme's numeric tower includes exact integers, exact rationals,
+inexact {\tt LONGREAL}, MPFR floats, and complex numbers.
+These procedures perform explicit type conversions for Modula-3 interop.
 
 \nopagebreak[4]
 \begin{description}
@@ -1643,14 +1671,29 @@ The \texttt{schemecompiler} package provides a Quake template
 \texttt{\_scheme\_compile("MathLib", "math-library.scm", HIDDEN)} &
   Explicit form for when the module name differs from the
   \texttt{.scm} filename. \\
+\texttt{LinkCompiledSchemeAs("MyCompiled")} &
+  Generate a synthetic module named \texttt{MyCompiled} that imports
+  all compiled Scheme modules in this package, ensuring their
+  \texttt{BEGIN} blocks execute at startup (triggering registry
+  registration).  Must appear after all
+  \texttt{scheme()}/\texttt{Scheme()} calls.
+  Each package that compiles Scheme \emph{must} use a unique name
+  to avoid duplicate-unit errors at link time. \\
 \texttt{LinkCompiledScheme()} &
-  Generate a synthetic module that imports all compiled Scheme
-  modules in this package, ensuring their \texttt{BEGIN} blocks
-  execute at startup (triggering registry registration).
-  Must appear after all \texttt{scheme()}/\texttt{Scheme()} calls. \\
+  Shorthand for \texttt{LinkCompiledSchemeAs("SchemeCompiled")}.
+  Only suitable when a single package in the program compiles
+  Scheme; prefer the \texttt{As} variant in general. \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\paragraph{Hyphenated filenames.}
+\texttt{scheme("fold-constants")} automatically converts hyphens to
+underscores in the Modula-3 module name, generating
+\texttt{fold\_constants.i3}/\texttt{.m3}.  The compiled module
+registers under both the underscored name and the original hyphenated
+filename, so \texttt{(load "fold-constants.scm")} finds the compiled
+version at runtime.
 
 The \texttt{scheme}/\texttt{Scheme} naming follows the CM3
 convention where a capitalized directive exports the interface
@@ -1674,6 +1717,23 @@ template:
 
 Incremental builds only re-run the Scheme compiler when the source
 \texttt{.scm} file changes.
+
+\paragraph{Linking the compiled modules.}
+The \texttt{LinkCompiledSchemeAs} directive generates a linker module
+(e.g., \texttt{MyCompiled.i3}/\texttt{.m3}) that \texttt{IMPORT}s
+every compiled Scheme module.  However, Modula-3 only initializes
+modules reachable from \texttt{Main}'s import graph.  You must add an
+explicit import in your main module:
+
+\begin{lstlisting}[language=Modula3]
+(* Force compiled Scheme modules to be linked and registered *)
+IMPORT MyCompiled; <*NOWARN*>
+\end{lstlisting}
+
+\noindent Without this \texttt{IMPORT}, the compiled modules are dead
+code: they are linked into the binary but never initialized, and the
+interpreter will load \texttt{.scm} files from disk as if no
+compilation had occurred.
 
 \paragraph{Bootstrap note.}
 The \texttt{scheme()} template requires a pre-installed \texttt{mscheme}
@@ -1733,6 +1793,18 @@ during development: calling \texttt{Disable()} causes all
 to load source files from disk even when compiled versions are
 registered.  This lets you edit a \texttt{.scm} file and
 \texttt{(load ...)} it without rebuilding.
+
+\paragraph{Environment variable.}
+Setting the \texttt{MSCHEME\_INTERPRETED} environment variable
+(to any value) disables the compiled registry at startup.  This is
+equivalent to calling \texttt{Disable()} before any Scheme code runs:
+
+\begin{lstlisting}[language=sh]
+env MSCHEME_INTERPRETED=1 ./myprogram -scm
+\end{lstlisting}
+
+\noindent This is useful for debugging or verifying that interpreted
+and compiled behavior are identical without recompiling.
 
 If you use \texttt{Scheme("mathlib")} (visible interface), you can also
 call \texttt{mathlib.Install(interp)} explicitly from Modula-3 code.
@@ -2300,11 +2372,14 @@ importSchemeStubs()
 import ("schemecompiler")
 scheme ("mylib")             % compiles mylib.scm, HIDDEN interface
 Scheme ("mylib")             % compiles mylib.scm, VISIBLE interface
-LinkCompiledScheme ()        % after all scheme() calls
+LinkCompiledSchemeAs ("MyCompiled")  % after all scheme() calls
 
 % Build the program
 implementation ("Main")
 program ("my-program-name")
+
+% In Main.m3, add:
+%   IMPORT MyCompiled; <*NOWARN*>
 \end{lstlisting}
 
 

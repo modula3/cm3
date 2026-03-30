@@ -1,4 +1,4 @@
-REPORTS = mscheme-interop-report burroughs-tagged-architecture
+REPORTS = burroughs-tagged-architecture
 
 SRC  = $(addsuffix .md,$(REPORTS))
 TEX  = $(addsuffix .tex,$(REPORTS))

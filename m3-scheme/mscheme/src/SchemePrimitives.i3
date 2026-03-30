@@ -106,7 +106,7 @@ CONST
     "(define (do-case case)\n" &
       "(cond ((not (pair? case)) (error \"bad syntax in case\" case))\n" &
 	    "((eq? (first case) 'else) case)\n" &
-	    "(else `((member __exp__ ',(first case)) . ,(rest case)))))\n" &
+	    "(else `((memv __exp__ ',(first case)) . ,(rest case)))))\n" &
     "`(let ((__exp__ ,exp)) (cond . ,(map do-case cases)))))\n" &
 
 "(define do\n" &
@@ -144,6 +144,20 @@ CONST
 			   "(set! result x)\n" &
 			   "result)))))))\n" &
     "`(,make-promise (lambda () ,exp))))\n" &
+
+(* ;;;;;;;;;;;;;;;; R4RS gap fillers *)
+
+"(define (string-copy s) (substring s 0 (string-length s)))\n" &
+
+"(define (string-fill! s c)\n" &
+"  (do ((i 0 (+ i 1)))\n" &
+"      ((= i (string-length s)) s)\n" &
+"    (string-set! s i c)))\n" &
+
+"(define (vector-fill! v x)\n" &
+"  (do ((i 0 (+ i 1)))\n" &
+"      ((= i (vector-length v)) v)\n" &
+"    (vector-set! v i x)))\n" &
 
 (* ;;;;;;;;;;;;;;;; Extensions *)
 

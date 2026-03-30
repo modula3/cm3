@@ -19,6 +19,8 @@ import ("m3core")
 import ("cit_util")
 import ("scheme-lib")
 import ("netobj")
+import ("mpz")
+import ("mpfr")
 
 Module("Scheme")
 Module("SchemeProfiler")
@@ -63,6 +65,15 @@ Interface("SchemeEnvironmentBinding")
 Module("SchemeBoolean")
 
 Module("SchemeLongReal")
+
+Module("SchemeInt")
+Module("SchemeRational")
+Module("SchemeMpfr")
+
+Module("SchemeExact")
+Module("SchemeInexact")
+Module("SchemeNumber")
+Module("SchemeComplex")
 
 Module("SchemeChar")
 

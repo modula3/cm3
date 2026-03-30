@@ -187,6 +187,10 @@
     ((eq? (car expr) 'set!)
      (append (if (memq (cadr expr) bound) '() (list (cadr expr)))
              (free-variables (caddr expr) bound)))
+    ((eq? (car expr) 'unwind-protect)
+     (append (free-variables (cadr expr) bound)
+             (free-variables (caddr expr) bound)
+             (free-variables (cadddr expr) bound)))
     ((eq? (car expr) 'lambda)
      (let ((lam-params (all-params (cadr expr))))
        (free-vars-body (cddr expr)
@@ -520,12 +524,22 @@
   (let ((idx (constant-index val ctx)))
     (if idx
         (string-append "self.k_" (number->string idx))
-        (cond ((and (integer? val) (= val 0)) "SchemeLongReal.Zero")
-              ((and (integer? val) (= val 1)) "SchemeLongReal.One")
+        (cond ((and (integer? val) (= val 0)) "SchemeInt.Zero")
+              ((and (integer? val) (= val 1)) "SchemeInt.One")
               ((integer? val)
-               (string-append "SchemeLongReal.FromI(" (number->string val) ")"))
+               (string-append "SchemeInt.FromI(" (number-to-m3-integer val) ")"))
+              ((and (number? val) (not (real? val)))
+               ;; Complex constant
+               (string-append "SchemeComplex.MakeRectangular("
+                              (constant-ref (real-part val) ctx) ", "
+                              (constant-ref (imag-part val) ctx) ")"))
+              ((and (exact? val) (not (integer? val)))
+               ;; Exact rational (not integer — integers caught above)
+               (string-append "SchemeRational.New(Mpz.NewInt("
+                              (number->string (numerator val)) "), Mpz.NewInt("
+                              (number->string (denominator val)) "))"))
               ((number? val)
-               (string-append "SchemeLongReal.FromLR(" (number->string val) "d0)"))
+               (string-append "SchemeLongReal.FromLR(" (number-to-m3-longreal val) ")"))
               ((symbol? val)
                (string-append "SchemeSymbol.Symbol(\""
                               (symbol->string val) "\")"))
@@ -536,6 +550,43 @@
                (if val "SchemeBoolean.True()" "SchemeBoolean.False()"))
               ((null? val) "NIL")
               (else (string-append "self.k_" (number->string 0)))))))
+
+;;;
+;;; ==================== M3 Number Literal Formatting ====================
+;;;
+
+;; Format a number as a valid M3 LONGREAL literal.
+;; M3 syntax: digits.digits{d,D}[sign]digits  e.g. 1.0d-6, 3.14d0
+;; Scheme's number->string may produce "1e-6" which is NOT valid M3.
+(define (number-to-m3-longreal n)
+  (let* ((x (exact->inexact n))
+         (s (number->string x))
+         (chars (string->list s)))
+    (list->string
+     (reverse
+      (let loop ((cs chars) (acc '()) (seen-dot #f) (in-exp #f))
+        (cond
+          ((null? cs)
+           (if in-exp
+               acc                                ;; already has exponent
+               (if seen-dot
+                   (cons #\0 (cons #\d acc))      ;; 3.14 → 3.14d0
+                   (cons #\0 (cons #\d (cons #\0 (cons #\. acc))))))) ;; 42 → 42.0d0
+          ((and (not in-exp) (or (char=? (car cs) #\e) (char=? (car cs) #\E)))
+           (if seen-dot
+               (loop (cdr cs) (cons #\d acc) #t #t)
+               (loop (cdr cs) (cons #\d (cons #\0 (cons #\. acc))) #t #t)))
+          ((char=? (car cs) #\.)
+           (loop (cdr cs) (cons #\. acc) #t in-exp))
+          (else
+           (loop (cdr cs) (cons (car cs) acc) seen-dot in-exp))))))))
+
+;; Format a number as a valid M3 INTEGER literal.
+;; Handles inexact integers like 2.0 → "2" and 1e9 → "1000000000".
+(define (number-to-m3-integer n)
+  (if (exact? n)
+      (number->string n)
+      (number->string (inexact->exact (round n)))))
 
 ;;;
 ;;; ==================== Code Generation Helpers ====================
@@ -615,6 +666,9 @@
      (gen-or (cdr expr) target ctx depth))
     ((eq? (car expr) 'set!)
      (gen-set! (cadr expr) (caddr expr) target ctx depth))
+    ((eq? (car expr) 'unwind-protect)
+     (gen-unwind-protect (cadr expr) (caddr expr) (cadddr expr)
+                         target ctx depth))
     ((eq? (car expr) 'not)
      (gen-not (cadr expr) target ctx depth))
     ;; Lambda expression
@@ -631,6 +685,28 @@
      (gen-call (car expr) (cdr expr) target ctx depth))
     (else
      (emit-assign target "NIL" depth))))
+
+;;;
+;;; ==================== Unwind-Protect ====================
+;;;
+;;; (unwind-protect body no-exception-value exception-handler)
+;;; Semantics: evaluate body for side effects.
+;;; If no exception: return no-exception-value.
+;;; If exception: evaluate exception-handler, return its value.
+
+(define (gen-unwind-protect body no-exn-val handler target ctx depth)
+  (let ((body-tmp (fresh-temp ctx)))
+    (string-append
+     (indent depth) (L "TRY")
+     ;; Evaluate body for side effects (result discarded)
+     (gen-expr body body-tmp ctx (+ depth 1))
+     ;; No exception: assign no-exception-value
+     (gen-expr no-exn-val target ctx (+ depth 1))
+     (indent depth) (L "EXCEPT")
+     (indent depth) (L "| Scheme.E =>")
+     ;; Exception caught: evaluate handler
+     (gen-expr handler target ctx (+ depth 2))
+     (indent depth) (L "END;"))))
 
 ;;;
 ;;; ==================== If ====================
@@ -947,9 +1023,9 @@
          (loop-flag (if target (fresh-var ctx "BOOLEAN") #f))
          ;; Build a temporary ctx for analyzing the loop body
          (tmp-loop-ctx (make-named-let-ctx ctx loop-name bvars bvar-m3names loop-flag))
-         ;; Analyze which named-let vars can be unboxed
+         ;; Numeric unboxing disabled: produces inexact results with numeric tower
          (loop-body (if (null? (cdr body)) (car body) (cons 'begin body)))
-         (unboxed (analyze-numeric-params bvars loop-body loop-name tmp-loop-ctx))
+         (unboxed '())
          ;; Allocate LONGREAL vars for unboxed params
          (nr-vars (map (lambda (u)
                          (let ((nr-name (fresh-var ctx "LONGREAL")))
@@ -977,7 +1053,7 @@
                           (m3n (cdr (assq param-sym
                                          (map cons bvars bvar-m3names)))))
                      (string-append (indent depth)
-                                    (L nr-name " := NARROW(" m3n ", SchemeLongReal.T)^;"))))
+                                    (L nr-name " := SchemeLongReal.FromO(" m3n ");"))))
                  nr-vars))
      (if loop-flag
          ;; Non-tail: WHILE loop with boolean flag
@@ -1597,7 +1673,7 @@
 (define (arg-as-longreal scheme-arg m3-expr . opt-ctx)
   ;; If scheme-arg is a compile-time number, emit literal LONGREAL.
   ;; If scheme-arg is an unboxed param (in ctx), use its LONGREAL name directly.
-  ;; Otherwise, emit NARROW(m3-expr, SchemeLongReal.T)^.
+  ;; Otherwise, emit SchemeLongReal.FromO(m3-expr).
   (cond
     ((number? scheme-arg)
      (cond ((= scheme-arg 0) "0.0d0")
@@ -1610,7 +1686,7 @@
           (assq scheme-arg (ctx-unboxed (car opt-ctx))))
      => (lambda (u) (cdr u)))
     (else
-     (string-append "NARROW(" m3-expr ", SchemeLongReal.T)^"))))
+     (string-append "SchemeLongReal.FromO(" m3-expr ")"))))
 
 (define (gen-inline-expr fn-name nargs arg-exprs scheme-args ctx)
   ;; Returns an M3 expression string for inlined primitive, or #f.
@@ -1625,8 +1701,7 @@
      (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemePair.T))"))
     ((and (eq? fn-name 'number?) (= nargs 1))
-     (string-append "SchemeBoolean.Truth(" (car arg-exprs) " # NIL AND ISTYPE("
-                    (car arg-exprs) ", SchemeLongReal.T))"))
+     (string-append "SchemeBoolean.Truth(SchemeNumber.Is(" (car arg-exprs) "))"))
     ((and (eq? fn-name 'boolean?) (= nargs 1))
      (string-append "SchemeBoolean.Truth(" (car arg-exprs)
                     " = SchemeBoolean.True() OR " (car arg-exprs)
@@ -1654,66 +1729,30 @@
                     (cadr arg-exprs) ", interp)"))
     ;; --- Binary arithmetic ---
     ((and (eq? fn-name '+) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " + "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemePrimitive.NumericAdd("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '-) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " - "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemePrimitive.NumericSub("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '*) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " * "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
-    ((and (eq? fn-name 'quotient) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR(FLOAT(TRUNC("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    ") DIV TRUNC("
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    "), LONGREAL))"))
-    ((and (eq? fn-name 'remainder) (= nargs 2))
-     (string-append "SchemeLongReal.FromLR(FLOAT(TRUNC("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    ") MOD TRUNC("
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    "), LONGREAL))"))
+     (string-append "SchemePrimitive.NumericMul("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ;; --- Binary comparisons ---
     ((and (eq? fn-name '=) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " = "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericEQ("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '<) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " < "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericLT("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '>) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " > "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericGT("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '<=) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " <= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericLE("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ((and (eq? fn-name '>=) (= nargs 2))
-     (string-append "SchemeBoolean.Truth("
-                    (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " >= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)
-                    ")"))
+     (string-append "SchemeBoolean.Truth(SchemePrimitive.NumericGE("
+                    (car arg-exprs) ", " (cadr arg-exprs) "))"))
     ;; --- eq? ---
     ((and (eq? fn-name 'eq?) (= nargs 2))
      (string-append "SchemeBoolean.Truth(" (car arg-exprs) " = "
@@ -1730,8 +1769,7 @@
      (string-append (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemePair.T)"))
     ((and (eq? fn-name 'number?) (= nargs 1))
-     (string-append (car arg-exprs) " # NIL AND ISTYPE("
-                    (car arg-exprs) ", SchemeLongReal.T)"))
+     (string-append "SchemeNumber.Is(" (car arg-exprs) ")"))
     ((and (eq? fn-name 'boolean?) (= nargs 1))
      (string-append (car arg-exprs) " = SchemeBoolean.True() OR "
                     (car arg-exprs) " = SchemeBoolean.False()"))
@@ -1745,25 +1783,20 @@
      (string-append (car arg-exprs) " # NIL AND ISTYPE("
                     (car arg-exprs) ", SchemeChar.T)"))
     ((and (eq? fn-name '=) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " = "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericEQ("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '<) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " < "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericLT("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '>) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " > "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericGT("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '<=) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " <= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericLE("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name '>=) (= nargs 2))
-     (string-append (arg-as-longreal (car scheme-args) (car arg-exprs) ctx)
-                    " >= "
-                    (arg-as-longreal (cadr scheme-args) (cadr arg-exprs) ctx)))
+     (string-append "SchemePrimitive.NumericGE("
+                    (car arg-exprs) ", " (cadr arg-exprs) ")"))
     ((and (eq? fn-name 'eq?) (= nargs 2))
      (string-append (car arg-exprs) " = " (cadr arg-exprs)))
     (else #f)))
@@ -1772,12 +1805,12 @@
   ;; Quick check: is this primitive inlineable at this arity?
   (and (memq fn-name '(null? pair? number? boolean? symbol? string? char?
                         car cdr cadr cons
-                        + - * quotient remainder
+                        + - *
                         = < > <= >= eq?))
        (or (and (memq fn-name '(null? pair? number? boolean? symbol? string?
                                  char? car cdr cadr))
                 (= nargs 1))
-           (and (memq fn-name '(cons + - * quotient remainder = < > <= >= eq?))
+           (and (memq fn-name '(cons + - * = < > <= >= eq?))
                 (= nargs 2)))))
 
 (define (try-inline-primitive fn args target ctx depth)
@@ -1944,7 +1977,7 @@
                                   (if val
                                       (string-append (indent depth) (L box-tmp " := " val ";"))
                                       (gen-expr arg box-tmp ctx depth))
-                                  (indent depth) (L tmp " := NARROW(" box-tmp ", SchemeLongReal.T)^;"))))))
+                                  (indent depth) (L tmp " := SchemeLongReal.FromO(" box-tmp ");"))))))
                        ;; Normal boxed param
                        (let ((val (gen-value arg ctx depth)))
                          (if val
@@ -1988,10 +2021,8 @@
          ;; Disable self-tail-call for rest-param functions
          (self-tail (if rest-param #f (has-self-tail-call? body name)))
          (ctx (make-ctx name all-ps free-vars constants self-tail))
-         ;; Numeric unboxing analysis: only for self-tail-call functions
-         (unboxed (if self-tail
-                      (analyze-numeric-params params body name ctx)
-                      '()))
+         ;; Numeric unboxing disabled: produces inexact results with numeric tower
+         (unboxed '())
          ;; Store unboxed info in the context (field 11)
          (_ (if (not (null? unboxed))
                 (set-car! (cdddr (cddddr (cddddr ctx))) unboxed)))
@@ -2123,7 +2154,7 @@
                           (let* ((param-sym (car u))
                                  (nr-name (cdr u))
                                  (a-name (cdr (assq param-sym (ctx-param-map ctx)))))
-                            (L "    " nr-name " := NARROW(" a-name ", SchemeLongReal.T)^;")))
+                            (L "    " nr-name " := SchemeLongReal.FromO(" a-name ");")))
                         unboxed))
             (L "    LOOP")
             body-code
@@ -2349,12 +2380,22 @@
 
 (define (constant-to-m3 c)
   (cond
-    ((and (integer? c) (= c 0)) "SchemeLongReal.Zero")
-    ((and (integer? c) (= c 1)) "SchemeLongReal.One")
+    ((and (integer? c) (= c 0)) "SchemeInt.Zero")
+    ((and (integer? c) (= c 1)) "SchemeInt.One")
     ((integer? c)
-     (string-append "SchemeLongReal.FromI(" (number->string c) ")"))
+     (string-append "SchemeInt.FromI(" (number-to-m3-integer c) ")"))
+    ((and (number? c) (not (real? c)))
+     ;; Complex constant
+     (string-append "SchemeComplex.MakeRectangular("
+                    (constant-to-m3 (real-part c)) ", "
+                    (constant-to-m3 (imag-part c)) ")"))
+    ((and (exact? c) (not (integer? c)))
+     ;; Exact rational
+     (string-append "SchemeRational.New(Mpz.NewInt("
+                    (number->string (numerator c)) "), Mpz.NewInt("
+                    (number->string (denominator c)) "))"))
     ((number? c)
-     (string-append "SchemeLongReal.FromLR(" (number->string c) "d0)"))
+     (string-append "SchemeLongReal.FromLR(" (number-to-m3-longreal c) ")"))
     ((string? c)
      (string-append "SchemeString.FromText(\"" (m3-escape-string c) "\")"))
     ((boolean? c)
@@ -2396,7 +2437,22 @@
   (cond
     ((string? form) (string-append "\"" (scheme-escape-string form) "\""))
     ((symbol? form) (symbol->string form))
-    ((number? form) (number->string form))
+    ((and (number? form) (not (real? form)))
+     ;; Complex (has nonzero imaginary part): emit (make-rectangular re im)
+     (string-append "(make-rectangular "
+                    (form->string (real-part form)) " "
+                    (form->string (imag-part form)) ")"))
+    ((and (number? form) (exact? form) (not (integer? form)))
+     ;; Exact rational: emit num/den
+     (string-append (number->string (numerator form))
+                    "/"
+                    (number->string (denominator form))))
+    ((number? form)
+     (let ((s (number->string form)))
+       (cond ((string=? s "Infinity")  "+inf.0")
+             ((string=? s "-Infinity") "-inf.0")
+             ((string=? s "NaN")       "+nan.0")
+             (else s))))
     ((null? form) "()")
     ((boolean? form) (if form "#t" "#f"))
     ((char? form)
@@ -2628,7 +2684,8 @@
      NL
      (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
      (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
-     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair;")
+     (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair, SchemeInt, SchemePrimitive;")
+     (L "IMPORT SchemeNumber, SchemeExact, SchemeRational, SchemeMpfr, SchemeComplex, Mpz;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
      (L "IMPORT SchemeCompiledRegistry;")
      (L "FROM Scheme IMPORT Object;")
@@ -2876,6 +2933,11 @@
      (expr-compilable? (cadr expr) mutated))
     ((eq? (car expr) 'set!)
      (expr-compilable? (caddr expr) mutated))
+    ((eq? (car expr) 'unwind-protect)
+     (and (pair? (cddr expr)) (pair? (cdddr expr))
+          (expr-compilable? (cadr expr) mutated)
+          (expr-compilable? (caddr expr) mutated)
+          (expr-compilable? (cadddr expr) mutated)))
     ;; Quasiquote is a macro not handled by the compiler
     ((eq? (car expr) 'quasiquote) #f)
     ;; Application: all subexpressions must be compilable

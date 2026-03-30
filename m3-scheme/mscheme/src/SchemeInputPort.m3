@@ -7,7 +7,7 @@
 *)
 
 MODULE SchemeInputPort;
-IMPORT AL, Rd, UnsafeRd, RdClass;
+IMPORT AL, Rd, UnsafeRd, RdClass, Math;
 FROM SchemeUtils IMPORT Error, Warn, Cons, List2, ListToVector, Stringify;
 FROM Scheme IMPORT Object, E;
 IMPORT SchemeLongReal;
@@ -21,7 +21,8 @@ IMPORT SchemeString;
 IMPORT SchemePair, SchemeUtils;
 IMPORT SchemeInputPortClass;
 IMPORT Fmt;
-IMPORT BigInt;
+IMPORT SchemeInt, Mpz;
+IMPORT SchemeRational, SchemeComplex, SchemeExact, IEEESpecial;
 (*IMPORT Debug;*)
 
 REVEAL RdClass.Private <: MUTEX; (* see cryptic SRC comments *)
@@ -42,17 +43,17 @@ REVEAL
   METHODS
 
     nextToken(bigInt     : BOOLEAN;
-              bigIntBase : BigInt.PrintBase;
+              bigIntBase : [2..36];
               wx         : Wx                := NIL) : Object
       RAISES { E } := NextToken;
 
     readTail(bigInt     : BOOLEAN;
-             bigIntBase : BigInt.PrintBase;
+             bigIntBase : [2..36];
              wx         : Wx) : Object RAISES { E } := ReadTail2;
 
     warn(msg : TEXT) RAISES { E } := MyWarn;
 
-    doRead(bigInt : BOOLEAN; bigIntBase : BigInt.PrintBase) : Object RAISES { E } := DoRead;
+    doRead(bigInt : BOOLEAN; bigIntBase : [2..36]) : Object RAISES { E } := DoRead;
   OVERRIDES
     fastGetCh := FastGetCh;
     lock      := Lock;
@@ -67,7 +68,8 @@ REVEAL
     peekCh   :=  PeekCh;
     read     :=  Read;
     readBigInt := ReadBigInt;
-    close    :=  Close;
+    close      :=  Close;
+    charReady  :=  CharReady;
   END;
 
 PROCEDURE UnNil( txt : TEXT) : TEXT = 
@@ -142,6 +144,16 @@ PROCEDURE PeekChar(t : T) : Object RAISES { E } =
     END
   END PeekChar;
 
+PROCEDURE CharReady(t : T) : BOOLEAN RAISES { E } =
+  BEGIN
+    IF t.isPushedChar THEN RETURN TRUE END;
+    TRY
+      RETURN Rd.CharsReady(t.rd) > 0
+    EXCEPT
+      Rd.Failure(err) => RAISE E("char-ready?: Rd.Failure: " & AL.Format(err))
+    END
+  END CharReady;
+
 PROCEDURE PushChar(t : T; ch : INTEGER) : INTEGER =
   BEGIN
     t.isPushedChar := TRUE;
@@ -174,7 +186,7 @@ PROCEDURE PeekCh(t : T) : INTEGER RAISES { E } =
 *)
   END PeekCh;
 
-PROCEDURE DoRead(t : T; bigInt : BOOLEAN; bigIntBase : BigInt.PrintBase := 10) : Object RAISES { E } =
+PROCEDURE DoRead(t : T; bigInt : BOOLEAN; bigIntBase : [2..36] := 10) : Object RAISES { E } =
 
   CONST Symbol = SchemeSymbol.Symbol;
 
@@ -231,7 +243,7 @@ PROCEDURE IsEOF(x : Object) : BOOLEAN = BEGIN RETURN x = EOF END IsEOF;
 
 PROCEDURE ReadTail2(t          : T; 
                     bigInt     : BOOLEAN;
-                    bigIntBase : BigInt.PrintBase;
+                    bigIntBase : [2..36];
                     wx         : Wx) : Object
   RAISES { E } =
   VAR token := t.nextToken(bigInt, bigIntBase, wx);
@@ -285,7 +297,7 @@ PROCEDURE ReverseD(p : SchemePair.T) : SchemePair.T =
 <*UNUSED*>
 PROCEDURE ReadTail(t          : T;
                    bigInt     : BOOLEAN;
-                   bigIntBase : BigInt.PrintBase;
+                   bigIntBase : [2..36];
                    wx         : Wx) : Object RAISES { E } =
   VAR
     token := t.nextToken(bigInt, bigIntBase, wx);
@@ -312,7 +324,7 @@ PROCEDURE ReadTail(t          : T;
 
 PROCEDURE NextToken(t          : T;
                     bigInt     : BOOLEAN;
-                    bigIntBase : BigInt.PrintBase;
+                    bigIntBase : [2..36];
                     wx         : Wx) : Object RAISES { E } =
 
   CONST Symbol = SchemeSymbol.Symbol;
@@ -395,13 +407,13 @@ PROCEDURE NextToken(t          : T;
           ORD('(') =>
             EVAL t.pushChar(ch);
             RETURN ListToVector(t.doRead(bigInt, bigIntBase))
-        | 
+        |
           ORD(BSC) =>
             ch := t.getCh();
             IF VAL(ch,CHAR) IN SET OF CHAR { 's', 'S', 'n', 'N' } THEN
               EVAL t.pushChar(ch);
               WITH token = t.nextToken(bigInt, bigIntBase) DO
-                IF    token = SPACE THEN RETURN Character(' ') 
+                IF    token = SPACE THEN RETURN Character(' ')
                 ELSIF token = NEWLINE THEN RETURN Character('\n')
                 ELSE
                   (* this isn't right.. if we're parsing "#\n", for
@@ -426,14 +438,68 @@ PROCEDURE NextToken(t          : T;
               RETURN IChr(ch)
             END
         |
-          ORD('e'), ORD('i'), ORD('d') => RETURN t.nextToken(bigInt, bigIntBase)
-        |
+          ORD('e'), ORD('i'), ORD('d'),
           ORD('b'), ORD('o'), ORD('x') =>
-            t.warn("#" & Text.FromChar(VAL(ch,CHAR)) & 
-                      " not implemented, ignored");
-            RETURN t.nextToken(bigInt, bigIntBase)
+            (* R4RS number prefixes: #e #i #d #b #o #x
+               Combined prefixes allowed in any order, e.g. #e#x1F *)
+            VAR base := bigIntBase;
+                exactness := ORD('d'); (* default *)
+            BEGIN
+              LOOP
+                CASE ch OF
+                  ORD('e'), ORD('i') => exactness := ch
+                |
+                  ORD('d') => (* default radix, keep current base *)
+                |
+                  ORD('b') => base := 2
+                |
+                  ORD('o') => base := 8
+                |
+                  ORD('x') => base := 16
+                ELSE
+                  EXIT
+                END;
+                ch := t.getCh();
+                IF ch # ORD('#') THEN EXIT END;
+                ch := t.getCh()
+              END;
+              (* ch is the first char after the prefix(es); push it back *)
+              EVAL t.pushChar(ch);
+              WITH result = t.nextToken(bigInt, base) DO
+                IF exactness = ORD('e') THEN
+                  (* force exact *)
+                  IF SchemeExact.Is(result) THEN
+                    RETURN result
+                  ELSIF ISTYPE(result, SchemeLongReal.T) THEN
+                    WITH lr = NARROW(result, SchemeLongReal.T)^ DO
+                      IF Math.floor(lr) = lr AND
+                         lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
+                         lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+                        RETURN SchemeInt.FromI(ROUND(lr))
+                      ELSE
+                        WITH m = Mpz.New() DO
+                          Mpz.set_d(m, lr);
+                          RETURN SchemeInt.MpzToScheme(m)
+                        END
+                      END
+                    END
+                  ELSE
+                    RETURN result
+                  END
+                ELSIF exactness = ORD('i') THEN
+                  (* force inexact *)
+                  IF SchemeExact.Is(result) THEN
+                    RETURN SchemeLongReal.FromLR(SchemeExact.ToLongReal(result))
+                  ELSE
+                    RETURN result
+                  END
+                ELSE
+                  RETURN result
+                END
+              END
+            END
         ELSE
-          t.warn("#" & Text.FromChar(VAL(ch,CHAR)) & 
+          t.warn("#" & Text.FromChar(VAL(ch,CHAR)) &
                     " not recognized, ignored");
           RETURN t.nextToken(bigInt, bigIntBase)
         END
@@ -457,30 +523,83 @@ PROCEDURE NextToken(t          : T;
 
         EVAL t.pushChar(ch);
 
-        IF c IN NumberChars THEN
+        IF c IN NumberChars OR bigIntBase # 10 THEN
           WITH txt = WxToText(wx) DO
-            (* note we are stricter than Modula-3 here.
-               we allow only "e" as the exponent marker.  Not E, d, D, x, or X. *)
-
-            IF bigInt OR NOT HaveAlphasOtherThane(txt) THEN
-              (* attempt to parse as a decimal number..! *)
+            IF bigIntBase # 10 THEN
+              (* non-decimal radix from #b/#o/#x prefix: parse as exact integer *)
               EVAL WxReset(wx);
               TRY
-                IF bigInt THEN
-                  RETURN BigInt.ScanBased(txt, defaultBase := 10)
-                ELSE
-                  WITH lr = Scan.LongReal(txt), 
+                WITH i = Scan.Int(txt, bigIntBase) DO
+                  RETURN SchemeInt.FromI(i)
+                END
+              EXCEPT
+                Lex.Error, FloatMode.Trap =>
+                  (* overflow or parse error, try Mpz *)
+                  VAR m: Object; BEGIN
+                    TRY m := Mpz.InitScan(txt, bigIntBase)
+                    EXCEPT ELSE m := NIL END;
+                    IF m # NIL THEN RETURN m END;
+                    WxPutText(wx, txt) (* restore *)
+                  END
+              END
+            ELSIF bigInt THEN
+              (* read-big-int path: replaces BigInt.ScanBased.
+                 Handles base_value notation (e.g. "10_65536", "16_FF")
+                 and plain decimal integers.  Returns native exact
+                 integers (SchemeInt or Mpz.T for overflow).
+                 Raises Lex.Error for non-numeric tokens like "-", "+". *)
+              EVAL WxReset(wx);
+              TRY
+                RETURN ScanBased(txt, 10)
+              EXCEPT
+                Lex.Error, FloatMode.Trap =>
+                  WxPutText(wx, txt) (* restore *)
+              END
+            ELSIF NOT HaveAlphasOtherThane(txt) THEN
+              (* decimal number: check if pure integer, rational, or float *)
+              EVAL WxReset(wx);
+              IF IsPureInteger(txt) THEN
+                (* no decimal point, no exponent: parse as exact integer *)
+                TRY
+                  WITH i = Scan.Int(txt) DO
+                    RETURN SchemeInt.FromI(i)
+                  END
+                EXCEPT
+                  Lex.Error, FloatMode.Trap =>
+                    (* overflow, try Mpz *)
+                    VAR m: Object; BEGIN
+                      TRY m := Mpz.InitScan(txt, 10)
+                      EXCEPT ELSE m := NIL END;
+                      IF m # NIL THEN RETURN m END;
+                      WxPutText(wx, txt) (* restore *)
+                    END
+                END
+              ELSE
+                (* Try rational (e.g. "1/3", "-7/4") before float *)
+                WITH r = TryParseRational(txt) DO
+                  IF r # NIL THEN RETURN r END
+                END;
+                (* Try float (has decimal point or exponent) *)
+                TRY
+                  WITH lr = Scan.LongReal(txt),
                        lrp = NEW(SchemeLongReal.T) DO
                     lrp^ := lr;
                     RETURN lrp
                   END
+                EXCEPT
+                  Lex.Error, FloatMode.Trap =>
+                    WxPutText(wx, txt) (* restore *);
                 END
-              EXCEPT
-                Lex.Error, FloatMode.Trap => 
-                  WxPutText(wx, txt) (* restore END *);
               END
+            END;
+            (* Phase 2: try special float, complex for tokens with alphas *)
+            WITH s = TryParseSpecialFloat(txt) DO
+              IF s # NIL THEN RETURN s END
+            END;
+            WITH z = TryParseComplex(txt) DO
+              IF z # NIL THEN RETURN z END
             END
-          END 
+          END
         END;
 
         IF CaseInsensitive THEN
@@ -503,6 +622,251 @@ PROCEDURE HaveAlphasOtherThane(txt : TEXT) : BOOLEAN =
     END;
     RETURN FALSE
   END HaveAlphasOtherThane;
+
+PROCEDURE IsPureInteger(txt : TEXT) : BOOLEAN =
+  (* TRUE if txt looks like an integer: optional sign, then all digits.
+     No decimal point, no exponent. *)
+  VAR
+    start := 0;
+    len := Text.Length(txt);
+  BEGIN
+    IF len = 0 THEN RETURN FALSE END;
+    IF Text.GetChar(txt, 0) = '+' OR Text.GetChar(txt, 0) = '-' THEN
+      start := 1
+    END;
+    IF start >= len THEN RETURN FALSE END;
+    FOR i := start TO len-1 DO
+      WITH c = Text.GetChar(txt, i) DO
+        IF c < '0' OR c > '9' THEN RETURN FALSE END
+      END
+    END;
+    RETURN TRUE
+  END IsPureInteger;
+
+PROCEDURE ScanBased(txt : TEXT; defaultBase : CARDINAL) : Object
+  RAISES { Lex.Error, FloatMode.Trap } =
+  (* Replaces BigInt.ScanBased: parses base_value notation
+     (e.g. "10_65536" = 65536, "16_FF" = 255) and plain decimals.
+     Returns SchemeInt or Mpz.T.  Raises Lex.Error for non-numbers. *)
+  VAR
+    neg := FALSE;
+    start : TEXT := txt;
+  BEGIN
+    IF Text.Length(txt) = 0 THEN RAISE Lex.Error END;
+    IF Text.GetChar(txt, 0) = '-' THEN
+      neg := TRUE;
+      start := Text.Sub(txt, 1)
+    ELSIF Text.GetChar(txt, 0) = '+' THEN
+      start := Text.Sub(txt, 1)
+    END;
+    IF Text.Length(start) = 0 THEN RAISE Lex.Error END;
+
+    VAR upos := Text.FindChar(start, '_');
+        base := defaultBase;
+        valueTxt := start;
+    BEGIN
+      IF upos >= 1 AND upos < Text.Length(start) - 1 THEN
+        base := Scan.Int(Text.Sub(start, 0, upos));
+        valueTxt := Text.Sub(start, upos + 1)
+      END;
+
+      IF base < 2 OR base > 36 THEN RAISE Lex.Error END;
+
+      IF base <= 16 THEN
+        (* Scan.Int handles bases 2..16 *)
+        TRY
+          VAR i := Scan.Int(valueTxt, base); BEGIN
+            IF neg THEN i := -i END;
+            RETURN SchemeInt.FromI(i)
+          END
+        EXCEPT
+          Lex.Error, FloatMode.Trap =>
+            (* overflow or parse error: fall through to Mpz *)
+        END
+      END;
+
+      (* bases 17..36 or INTEGER overflow: use Mpz.
+         Mpz.init_set_str returns 0 on success, -1 on failure. *)
+      VAR m := Mpz.New(); BEGIN
+        IF Mpz.set_str(m, valueTxt, base) # 0 THEN
+          RAISE Lex.Error
+        END;
+        IF neg THEN Mpz.neg(m, m) END;
+        RETURN SchemeInt.MpzToScheme(m)
+      END
+    END
+  END ScanBased;
+
+(* --- Phase 2 number parsing helpers --- *)
+
+PROCEDURE TryParseRational(txt: TEXT): Object =
+  (* Try to parse txt as [+-]digits/digits.  Returns NIL on failure. *)
+  VAR len := Text.Length(txt);
+      slashPos := -1;
+      start := 0;
+      neg := FALSE;
+  BEGIN
+    IF len < 3 THEN RETURN NIL END;
+    IF Text.GetChar(txt, 0) = '-' THEN
+      neg := TRUE; start := 1
+    ELSIF Text.GetChar(txt, 0) = '+' THEN
+      start := 1
+    END;
+    IF start >= len THEN RETURN NIL END;
+    (* Find the slash *)
+    FOR i := start TO len - 1 DO
+      IF Text.GetChar(txt, i) = '/' THEN slashPos := i; EXIT END
+    END;
+    IF slashPos < start + 1 OR slashPos >= len - 1 THEN RETURN NIL END;
+    (* Verify numerator digits (after optional sign) *)
+    FOR i := start TO slashPos - 1 DO
+      WITH c = Text.GetChar(txt, i) DO
+        IF c < '0' OR c > '9' THEN RETURN NIL END
+      END
+    END;
+    (* Verify denominator digits *)
+    FOR i := slashPos + 1 TO len - 1 DO
+      WITH c = Text.GetChar(txt, i) DO
+        IF c < '0' OR c > '9' THEN RETURN NIL END
+      END
+    END;
+    (* Parse numerator (digits only) and denominator *)
+    VAR num := Mpz.New();
+        den := Mpz.New();
+        numDigits := Text.Sub(txt, start, slashPos - start);
+        denTxt := Text.Sub(txt, slashPos + 1);
+    BEGIN
+      IF Mpz.set_str(num, numDigits, 10) # 0 THEN RETURN NIL END;
+      IF neg THEN Mpz.neg(num, num) END;
+      IF Mpz.set_str(den, denTxt, 10) # 0 THEN RETURN NIL END;
+      IF Mpz.cmp_d(den, 0.0d0) = 0 THEN RETURN NIL END;
+      RETURN SchemeRational.New(num, den)
+    END
+  END TryParseRational;
+
+PROCEDURE TryParseSpecialFloat(txt: TEXT): Object =
+  (* Parse +inf.0, -inf.0, +nan.0 *)
+  BEGIN
+    IF Text.Equal(txt, "+inf.0") THEN
+      RETURN SchemeLongReal.FromLR(IEEESpecial.LongPosInf)
+    ELSIF Text.Equal(txt, "-inf.0") THEN
+      RETURN SchemeLongReal.FromLR(IEEESpecial.LongNegInf)
+    ELSIF Text.Equal(txt, "+nan.0") THEN
+      RETURN SchemeLongReal.FromLR(IEEESpecial.LongNan)
+    ELSE
+      RETURN NIL
+    END
+  END TryParseSpecialFloat;
+
+PROCEDURE TryParseReal(txt: TEXT): Object =
+  (* Try to parse txt as an integer, rational, or float.
+     Returns NIL on failure. *)
+  BEGIN
+    IF Text.Length(txt) = 0 THEN RETURN NIL END;
+    (* Try integer *)
+    IF IsPureInteger(txt) THEN
+      TRY
+        RETURN SchemeInt.FromI(Scan.Int(txt))
+      EXCEPT Lex.Error, FloatMode.Trap =>
+        TRY
+          RETURN SchemeInt.MpzToScheme(Mpz.InitScan(txt, 10))
+        EXCEPT ELSE (* fall through *) END
+      END
+    END;
+    (* Try rational *)
+    WITH r = TryParseRational(txt) DO
+      IF r # NIL THEN RETURN r END
+    END;
+    (* Try float *)
+    IF NOT HaveAlphasOtherThane(txt) THEN
+      TRY
+        RETURN SchemeLongReal.FromLR(Scan.LongReal(txt))
+      EXCEPT Lex.Error, FloatMode.Trap => (* fall through *) END
+    END;
+    (* Try special float *)
+    WITH s = TryParseSpecialFloat(txt) DO
+      IF s # NIL THEN RETURN s END
+    END;
+    RETURN NIL
+  END TryParseReal;
+
+PROCEDURE TryParseComplex(txt: TEXT): Object =
+  (* Try to parse txt as a complex number: a+bi, a-bi, +bi, -bi, +i, -i.
+     Returns NIL on failure. *)
+  VAR len := Text.Length(txt);
+      splitPos := -1;
+  BEGIN
+    IF len < 2 THEN RETURN NIL END;
+    (* Must end with 'i' *)
+    IF Text.GetChar(txt, len - 1) # 'i' THEN RETURN NIL END;
+    VAR body := Text.Sub(txt, 0, len - 1);
+        bodyLen := len - 1;
+    BEGIN
+      (* Special cases: just "i" → symbol, not complex *)
+      IF bodyLen = 0 THEN RETURN NIL END;
+
+      (* "+i" or "-i" *)
+      IF bodyLen = 1 THEN
+        IF Text.GetChar(body, 0) = '+' THEN
+          RETURN SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(1))
+        ELSIF Text.GetChar(body, 0) = '-' THEN
+          RETURN SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(-1))
+        ELSE
+          RETURN NIL
+        END
+      END;
+
+      (* Find the split point: scan from right for +/- not preceded by e/E *)
+      FOR i := bodyLen - 1 TO 1 BY -1 DO
+        WITH c = Text.GetChar(body, i) DO
+          IF c = '+' OR c = '-' THEN
+            IF i > 0 THEN
+              WITH prev = Text.GetChar(body, i - 1) DO
+                IF prev # 'e' AND prev # 'E' THEN
+                  splitPos := i; EXIT
+                END
+              END
+            ELSE
+              splitPos := i; EXIT
+            END
+          END
+        END
+      END;
+
+      VAR realTxt, imagTxt: TEXT;
+          realPart, imagPart: Object;
+      BEGIN
+        IF splitPos > 0 THEN
+          realTxt := Text.Sub(body, 0, splitPos);
+          imagTxt := Text.Sub(body, splitPos);
+        ELSE
+          (* No split found: pure imaginary (e.g. "+2i" → body = "+2") *)
+          realTxt := NIL;
+          imagTxt := body;
+        END;
+
+        (* Parse imaginary part *)
+        IF Text.Equal(imagTxt, "+") THEN
+          imagPart := SchemeInt.FromI(1)
+        ELSIF Text.Equal(imagTxt, "-") THEN
+          imagPart := SchemeInt.FromI(-1)
+        ELSE
+          imagPart := TryParseReal(imagTxt);
+          IF imagPart = NIL THEN RETURN NIL END
+        END;
+
+        (* Parse real part *)
+        IF realTxt = NIL THEN
+          realPart := SchemeInt.Zero
+        ELSE
+          realPart := TryParseReal(realTxt);
+          IF realPart = NIL THEN RETURN NIL END
+        END;
+
+        RETURN SchemeComplex.New(realPart, imagPart)
+      END
+    END
+  END TryParseComplex;
 
 PROCEDURE CharSeqToArray(seq : CharSeq.T) : String =
   BEGIN

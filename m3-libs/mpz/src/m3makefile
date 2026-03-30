@@ -1,0 +1,21 @@
+% Copyright (c) 2025 Intel Corporation.  All rights reserved.
+% SPDX-License-Identifier: Apache-2.0
+%
+% GMP (GNU Multiple Precision Arithmetic Library) Modula-3 bindings.
+% Adapted for cm3 tree from intel-async/async-toolkit/m3utils/gmp/mpz.
+
+import ("libm3")
+import ("m3core")
+import ("cit_util")
+
+import_sys_lib ("MPZ")
+c_source("MpzC")
+
+Interface ("MpzP")
+interface ("MpzRep")
+
+Module ("Mpz")
+implementation ("MpzOps")
+implementation ("MpzSafe")
+
+library ("mpz")

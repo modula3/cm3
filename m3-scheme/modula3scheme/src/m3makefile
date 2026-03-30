@@ -8,6 +8,8 @@ end
 
 import ("libm3")
 import ("mscheme")
+import ("mpz")
+import ("mpfr")
 %import ("finlib")
 import ("rdwr")
 

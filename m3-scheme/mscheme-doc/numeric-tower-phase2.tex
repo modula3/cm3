@@ -1,0 +1,1538 @@
+%%
+%% Numeric Tower Phase 2: Rationals, MPFR, and Complex Numbers
+%%
+%% Companion to "Numeric Tower Phase 1: Implementation Proposal"
+%%
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{longtable}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,define-global-symbol,
+    exact->inexact,inexact->exact,make-rectangular,make-polar,
+    real-part,imag-part,magnitude,angle,numerator,denominator,
+    rationalize,number->string,string->number,make-mpfr,mpfr-precision},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+  literate={lambda}{$\lambda$}1,
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,EXTENDED,
+    CHAR,TEXT,LONGINT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,DIV,MOD,
+    ISTYPE,NARROW,TYPECODE,GENERIC,ADDRESS,BITS,BITSIZE},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  Numeric Tower Phase~2:\\Rationals, MPFR, and Complex Numbers}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\section{Overview}
+\label{sec:overview}
+%======================================================================
+
+Phase~1 of the MScheme numeric tower introduced exact integers
+(fixnum and bignum) with overflow-safe arithmetic, exactness
+contagion, and full R5RS predicate semantics.  It is complete and
+tested: 450/450 numeric tower tests, 184/184 examples, 97/97 R4RS
+conformance.
+
+Phase~2 extends the tower with three new numeric types:
+\begin{enumerate}[nosep]
+\item \textbf{Exact rationals} ({\tt SchemeRational.T}) ---
+  pairs of exact integers in lowest terms, so that {\tt (/ 1 3)}
+  returns an exact {\tt 1/3} rather than an inexact {\tt 0.333\ldots}.
+\item \textbf{Arbitrary-precision inexact} ({\tt SchemeMpfr.T}) ---
+  MPFR-backed floating-point values with configurable mantissa
+  precision, opt-in via {\tt (make-mpfr \emph{value} \emph{bits})}.
+\item \textbf{Complex numbers} ({\tt SchemeComplex.T}) ---
+  pairs of arbitrary numeric types, completing the R5RS tower.
+\end{enumerate}
+
+\noindent The resulting type hierarchy is:
+\begin{lstlisting}[language={},frame=none,backgroundcolor=\color{white},xleftmargin=4em]
+SchemeObject.T
++-- Exact
+|   +-- SchemeInt.T        (fixnum: cached [-256..256])
+|   +-- Mpz.T              (bignum: arbitrary-precision integer)
+|   +-- SchemeRational.T   (num/den pair of exact integers)    NEW
++-- Inexact
+|   +-- SchemeLongReal.T   (IEEE 754 LONGREAL, 53-bit mantissa)
+|   +-- SchemeMpfr.T       (MPFR arbitrary-precision float)    NEW
++-- SchemeComplex.T        (pair of any numeric types)          NEW
+\end{lstlisting}
+
+%======================================================================
+\section{Build Instructions}
+\label{sec:build}
+%======================================================================
+
+Build instructions are unchanged from Phase~1 (see the Phase~1
+document, Section~2).  Phase~2 adds new modules but does not change
+the build procedure.  The new modules require {\tt mpfr} in
+addition to {\tt mpz}:
+
+\begin{lstlisting}[language={}]
+# In mscheme/src/m3makefile, add:
+import("mpfr")
+Module("SchemeRational")
+Module("SchemeMpfr")
+Module("SchemeComplex")
+\end{lstlisting}
+
+\noindent The {\tt mpfr} package is already available in the
+intel-async tree ({\tt m3utils/mpfr}).  It depends on {\tt mpz}
+(and hence on {\tt libgmp} and {\tt libmpfr}).
+
+%======================================================================
+\section{Exact Rationals ({\tt SchemeRational})}
+\label{sec:rational}
+%======================================================================
+
+This is the largest single change and has the widest impact: it
+alters the semantics of exact division from returning inexact to
+returning exact.
+
+%----------------------------------------------------------------------
+\subsection{Type Representation}
+%----------------------------------------------------------------------
+
+\begin{lstlisting}[language=Modula3]
+TYPE T = BRANDED "SchemeRational" REF
+           RECORD num, den: Mpz.T END;
+\end{lstlisting}
+
+\noindent Invariants maintained by the constructor:
+\begin{enumerate}[nosep]
+\item Numerator and denominator are always in lowest terms
+  (GCD-normalized).
+\item Denominator is always positive.
+\item If denominator equals~1, the value is demoted to an exact
+  integer ({\tt SchemeInt.T} or {\tt Mpz.T}), analogous to the
+  existing bignum-to-fixnum demotion.
+\end{enumerate}
+
+The numerator and denominator are stored as {\tt Mpz.T} rather
+than {\tt SchemeObject.T} because the normalization algorithm
+requires GMP operations ({\tt Mpz.gcd}, {\tt Mpz.tdiv\_q}) and
+there is no benefit to distinguishing fixnum-sized components
+at the rational level---the {\tt Mpz.T} representation is already
+compact for small values.
+
+%----------------------------------------------------------------------
+\subsection{Interface}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeRational.i3} (new)
+\item {\tt mscheme/src/SchemeRational.m3} (new)
+\end{itemize}
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE SchemeRational;
+IMPORT SchemeObject, Mpz;
+
+TYPE T = BRANDED "SchemeRational" REF
+           RECORD num, den: Mpz.T END;
+
+PROCEDURE New(num, den: Mpz.T): SchemeObject.T;
+  (* Normalize and demote to integer if den=1.
+     Signals error if den=0. *)
+
+PROCEDURE Add(a, b: T): SchemeObject.T;
+PROCEDURE Sub(a, b: T): SchemeObject.T;
+PROCEDURE Mul(a, b: T): SchemeObject.T;
+PROCEDURE Div(a, b: T): SchemeObject.T;
+PROCEDURE Neg(a: T): SchemeObject.T;
+PROCEDURE Abs(a: T): SchemeObject.T;
+
+PROCEDURE Compare(a, b: T): INTEGER;
+  (* Returns -1, 0, or 1 *)
+
+PROCEDURE IsZero(a: T): BOOLEAN;
+PROCEDURE IsPositive(a: T): BOOLEAN;
+PROCEDURE IsNegative(a: T): BOOLEAN;
+
+PROCEDURE Numerator(x: T): SchemeObject.T;
+  (* Returns exact integer numerator *)
+PROCEDURE Denominator(x: T): SchemeObject.T;
+  (* Returns exact integer denominator *)
+
+PROCEDURE ToLongReal(x: T): LONGREAL;
+  (* num/den as LONGREAL; may lose precision *)
+
+PROCEDURE Format(x: T): TEXT;
+  (* Returns "num/den" *)
+
+END SchemeRational.
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Normalization}
+%----------------------------------------------------------------------
+
+The {\tt New} constructor performs GCD normalization:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE New(num, den: Mpz.T): SchemeObject.T =
+  VAR g := Mpz.New();
+  BEGIN
+    IF Mpz.IsZero(den) THEN
+      (* error: division by zero *)
+    END;
+
+    (* Ensure denominator is positive *)
+    IF Mpz.IsNegative(den) THEN
+      Mpz.neg(num, num);
+      Mpz.neg(den, den);
+    END;
+
+    (* Reduce to lowest terms *)
+    Mpz.gcd(g, num, den);
+    Mpz.tdiv_q(num, num, g);
+    Mpz.tdiv_q(den, den, g);
+
+    (* Demote to integer if den=1 *)
+    IF Mpz.IsOne(den) THEN
+      RETURN SchemeInt.MpzToScheme(num)
+    END;
+
+    RETURN NEW(T, num := num, den := den)
+  END New;
+\end{lstlisting}
+
+\noindent The demotion rule (denominator~$=$~1~$\Rightarrow$~integer)
+is critical: it ensures that {\tt (/ 6 3)} returns the exact integer
+{\tt 2}, not the rational {\tt 2/1}.  This parallels the existing
+bignum-to-fixnum demotion in {\tt SchemeInt.MpzToScheme}.
+
+%----------------------------------------------------------------------
+\subsection{Rational Arithmetic}
+%----------------------------------------------------------------------
+
+Standard rules for rational arithmetic, with GCD normalization of
+every result:
+
+\begin{align*}
+\frac{a}{b} + \frac{c}{d} &= \frac{ad + bc}{bd} \\[4pt]
+\frac{a}{b} - \frac{c}{d} &= \frac{ad - bc}{bd} \\[4pt]
+\frac{a}{b} \times \frac{c}{d} &= \frac{ac}{bd} \\[4pt]
+\frac{a}{b} \div \frac{c}{d} &= \frac{ad}{bc}
+\end{align*}
+
+\noindent Each result is passed through {\tt New} which normalizes
+and demotes if the denominator is~1.  For example:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: T): SchemeObject.T =
+  VAR num := Mpz.New();
+      den := Mpz.New();
+      t   := Mpz.New();
+  BEGIN
+    Mpz.mul(num, a.num, b.den);   (* a.num * b.den *)
+    Mpz.mul(t,   b.num, a.den);   (* b.num * a.den *)
+    Mpz.add(num, num, t);         (* numerator = ad + bc *)
+    Mpz.mul(den, a.den, b.den);   (* denominator = bd *)
+    RETURN New(num, den)
+  END Add;
+\end{lstlisting}
+
+\paragraph{Optimization note.}
+A production implementation should use the standard
+``cross-multiply'' optimization that computes
+$g = \gcd(b, d)$ first and divides through before
+multiplying, to keep intermediate values smaller.  This
+is a straightforward enhancement but not essential for
+correctness.
+
+%----------------------------------------------------------------------
+\subsection{Division Semantics Change}
+\label{sec:div-change}
+%----------------------------------------------------------------------
+
+This is the single most visible behavioral change in Phase~2.
+
+\paragraph{Phase~1 behavior.}
+\begin{lstlisting}[language=Scheme]
+(/ 1 3)       ;=> 0.333333333333333  (inexact LONGREAL)
+(exact? (/ 1 3))  ;=> #f
+\end{lstlisting}
+
+\paragraph{Phase~2 behavior.}
+\begin{lstlisting}[language=Scheme]
+(/ 1 3)       ;=> 1/3  (exact rational)
+(exact? (/ 1 3))  ;=> #t
+(/ 1.0 3.0)   ;=> 0.333333333333333  (inexact, unchanged)
+(exact->inexact (/ 1 3))  ;=> 0.333333333333333
+\end{lstlisting}
+
+\paragraph{Implementation.}
+The change is in {\tt SchemeExact.Div} (which currently performs
+truncated integer division) and in the {\tt /} dispatch in
+{\tt SchemePrimitive.m3}.  When both operands are exact integers
+and the division is not exact:
+
+\begin{lstlisting}[language=Modula3]
+(* In SchemeExact.Div, replace truncated division: *)
+PROCEDURE Div(a, b: SchemeObject.T): SchemeObject.T =
+  VAR ma := SchemeInt.ToMpz(a);
+      mb := SchemeInt.ToMpz(b);
+  BEGIN
+    (* Construct rational; New() will normalize and
+       demote to integer if remainder is zero *)
+    RETURN SchemeRational.New(ma, mb)
+  END Div;
+\end{lstlisting}
+
+\noindent The existing {\tt quotient}, {\tt remainder}, and
+{\tt modulo} primitives are unaffected---they continue to perform
+truncated/floored integer division and require integer operands.
+
+\paragraph{Test impact.}
+Existing tests that assert {\tt (inexact?\ (/ 1 3))} must be
+updated to {\tt (exact?\ (/ 1 3))}.  The Phase~1 test suite
+already separates exact-division tests (where the result is an
+integer) from inexact-division tests, so the impact is contained.
+
+%----------------------------------------------------------------------
+\subsection{Changes to {\tt SchemeExact}}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeExact.i3} (modify)
+\item {\tt mscheme/src/SchemeExact.m3} (modify)
+\end{itemize}
+
+\paragraph{{\tt Is()} predicate.}
+Currently returns {\tt TRUE} for {\tt REF INTEGER} and {\tt Mpz.T}.
+Phase~2 extends this to also accept {\tt SchemeRational.T}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Is(x: SchemeObject.T): BOOLEAN =
+  BEGIN
+    RETURN x # NIL AND
+           (ISTYPE(x, REF INTEGER) OR
+            ISTYPE(x, Mpz.T) OR
+            ISTYPE(x, SchemeRational.T))
+  END Is;
+\end{lstlisting}
+
+\paragraph{{\tt IsInteger()} predicate.}
+This is where {\tt Is} and {\tt IsInteger} diverge.
+{\tt IsInteger} returns {\tt FALSE} for rationals (rationals with
+denominator~1 have already been demoted to integers):
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE IsInteger(x: SchemeObject.T): BOOLEAN =
+  BEGIN
+    RETURN x # NIL AND
+           (ISTYPE(x, REF INTEGER) OR
+            ISTYPE(x, Mpz.T))
+    (* SchemeRational.T is exact but NOT integer *)
+  END IsInteger;
+\end{lstlisting}
+
+\paragraph{Arithmetic dispatch.}
+Each arithmetic procedure in {\tt SchemeExact} must handle four
+cross-product cases for the two exact subtypes:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+& \textbf{Integer} $b$ & \textbf{Rational} $b$ \\
+\midrule
+\textbf{Integer} $a$ & existing code & promote $a$ to $a/1$ \\
+\textbf{Rational} $a$ & promote $b$ to $b/1$ & rational $\times$ rational \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The promotion ``integer~$\to$~rational with denominator~1''
+is trivial: wrap in {\tt SchemeRational.T} with {\tt den = Mpz.NewInt(1)}.
+The {\tt TYPECASE} dispatch is:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T =
+  BEGIN
+    TYPECASE a OF
+    | SchemeRational.T (ra) =>
+        TYPECASE b OF
+        | SchemeRational.T (rb) =>
+            RETURN SchemeRational.Add(ra, rb)
+        ELSE
+            RETURN SchemeRational.Add(ra, IntToRat(b))
+        END
+    ELSE
+      TYPECASE b OF
+      | SchemeRational.T (rb) =>
+          RETURN SchemeRational.Add(IntToRat(a), rb)
+      ELSE
+        (* existing integer x integer code *)
+        ...
+      END
+    END
+  END Add;
+\end{lstlisting}
+
+\noindent Where {\tt IntToRat} converts an exact integer to a
+rational with denominator~1:
+\begin{lstlisting}[language=Modula3]
+PROCEDURE IntToRat(x: SchemeObject.T): SchemeRational.T =
+  BEGIN
+    RETURN NEW(SchemeRational.T,
+               num := SchemeInt.ToMpz(x),
+               den := Mpz.NewInt(1))
+  END IntToRat;
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Reader: Rational Syntax}
+\label{sec:reader-rational}
+%----------------------------------------------------------------------
+
+The reader must parse {\tt num/den} syntax.  After detecting a
+pure integer token, check whether the next character is~{\tt /}
+followed by more digits:
+
+\begin{lstlisting}[language=Modula3]
+(* In SchemeInputPort.m3, after integer parse: *)
+IF Rd.GetChar(rd) = '/' THEN
+  (* Parse denominator *)
+  den := ScanInteger(rd);
+  IF den = 0 THEN error("zero denominator") END;
+  RETURN SchemeRational.New(
+           Mpz.NewInt(num), Mpz.NewInt(den))
+ELSE
+  Rd.UnGetChar(rd);
+  RETURN SchemeInt.FromI(num)
+END
+\end{lstlisting}
+
+\noindent Examples:
+\begin{lstlisting}[language=Scheme]
+1/3       ;=> SchemeRational: 1/3
+-7/4      ;=> SchemeRational: -7/4
+6/4       ;=> SchemeRational: 3/2 (normalized)
+4/2       ;=> SchemeInt: 2 (demoted)
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Printer}
+%----------------------------------------------------------------------
+
+{\tt SchemeExact.Format} gains a new branch:
+
+\begin{lstlisting}[language=Modula3]
+| SchemeRational.T (r) =>
+    RETURN Mpz.Format(r.num) & "/" & Mpz.Format(r.den)
+\end{lstlisting}
+
+\noindent So {\tt (display 1/3)} prints {\tt 1/3}, and
+{\tt (display -7/4)} prints {\tt -7/4}.
+
+%----------------------------------------------------------------------
+\subsection{New Primitives}
+%----------------------------------------------------------------------
+
+\paragraph{{\tt numerator} and {\tt denominator}.}
+R5RS~\S6.2.5 specifies these for all real numbers:
+
+\begin{lstlisting}[language=Scheme]
+(numerator 1/3)    ;=> 1
+(denominator 1/3)  ;=> 3
+(numerator 3)      ;=> 3
+(denominator 3)    ;=> 1
+(numerator 0.5)    ;=> 1.0
+(denominator 0.5)  ;=> 2.0
+\end{lstlisting}
+
+\noindent For exact rationals, these extract the components directly.
+For exact integers, {\tt numerator} returns the integer and
+{\tt denominator} returns~1.  For inexact values, the result is
+the inexact equivalent of the exact rational representation of
+the value.
+
+\paragraph{{\tt rationalize}.}
+R5RS defines {\tt (rationalize $x$ $y$)} to return the simplest
+rational within $y$ of~$x$.  The Stern--Brocot tree algorithm
+gives the simplest rational in an interval $[x-y, x+y]$:
+
+\begin{lstlisting}[language=Scheme]
+(rationalize 0.3 1/10)   ;=> 1/3
+(rationalize 3.14 0.01)  ;=> 22/7
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Predicate Table Update}
+%----------------------------------------------------------------------
+
+Table~\ref{tab:predicates} shows the predicate dispatch with
+rationals added.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Predicate} & {\tt REF INT} & {\tt Mpz.T} &
+  {\tt Rational} & {\tt LongReal} & {\tt Complex} \\
+\midrule
+{\tt number?}   & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+{\tt complex?}  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+{\tt real?}     & \checkmark & \checkmark & \checkmark & \checkmark & $^*$ \\
+{\tt rational?} & \checkmark & \checkmark & \checkmark & if int-val & \\
+{\tt integer?}  & \checkmark & \checkmark &            & if int-val & \\
+{\tt exact?}    & \checkmark & \checkmark & \checkmark &            & if both \\
+{\tt inexact?}  &            &            &            & \checkmark & if either \\
+\bottomrule
+\end{tabular}
+\caption{Predicate dispatch for the full numeric tower.
+  ``If int-val'' tests $x = \lfloor x \rfloor$ and finiteness.
+  $^*$Complex is real iff imaginary part is zero (but such values
+  are demoted, so this case does not arise in practice).
+  ``If both/either'' refers to the exactness of the real and
+  imaginary parts.}
+\label{tab:predicates}
+\end{table}
+
+
+%======================================================================
+\section{Arbitrary-Precision Inexact ({\tt SchemeMpfr})}
+\label{sec:mpfr}
+%======================================================================
+
+The existing inexact representation {\tt SchemeLongReal.T} provides
+IEEE~754 64-bit precision (53-bit mantissa, $\sim$16 decimal digits).
+{\tt SchemeMpfr.T} wraps MPFR values with configurable precision.
+
+%----------------------------------------------------------------------
+\subsection{Design Principles}
+%----------------------------------------------------------------------
+
+\begin{enumerate}[nosep]
+\item \textbf{Opt-in.}  MPFR values are created explicitly via
+  {\tt (make-mpfr \emph{value} \emph{bits})}.  Normal inexact
+  arithmetic continues to use {\tt LONGREAL} at hardware speed.
+\item \textbf{Contagious.}  Once an operand is {\tt SchemeMpfr.T},
+  the result is {\tt SchemeMpfr.T}.  This parallels the existing
+  exactness contagion rule.
+\item \textbf{Max precision.}  When two {\tt SchemeMpfr.T} values
+  interact, the result precision is {\tt MAX(p1, p2)}.
+\item \textbf{{\tt LONGREAL} promotion.}  Mixing {\tt LONGREAL}
+  with {\tt SchemeMpfr.T} promotes the {\tt LONGREAL} to MPFR
+  at the MPFR operand's precision.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\subsection{Type Representation}
+%----------------------------------------------------------------------
+
+\begin{lstlisting}[language=Modula3]
+TYPE T = BRANDED "SchemeMpfr" REF
+           RECORD val: Mpfr.T; prec: CARDINAL END;
+\end{lstlisting}
+
+\noindent The {\tt prec} field caches the mantissa precision (also
+available via the MPFR library, but cached for fast dispatch
+decisions).
+
+%----------------------------------------------------------------------
+\subsection{Interface}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeMpfr.i3} (new)
+\item {\tt mscheme/src/SchemeMpfr.m3} (new)
+\end{itemize}
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE SchemeMpfr;
+IMPORT SchemeObject, Mpfr;
+
+TYPE T = BRANDED "SchemeMpfr" REF
+           RECORD val: Mpfr.T; prec: CARDINAL END;
+
+(* Construction *)
+PROCEDURE New(prec: CARDINAL): T;
+PROCEDURE FromLR(v: LONGREAL; prec: CARDINAL): T;
+PROCEDURE FromExact(v: SchemeObject.T; prec: CARDINAL): T;
+  (* Convert any exact number to Mpfr at given precision *)
+
+(* Extraction *)
+PROCEDURE ToLR(v: T): LONGREAL;
+  (* Truncate to LONGREAL; overflow -> +/-Inf *)
+PROCEDURE GetPrec(v: T): CARDINAL;
+
+(* Arithmetic *)
+PROCEDURE Add(a, b: T): T;
+PROCEDURE Sub(a, b: T): T;
+PROCEDURE Mul(a, b: T): T;
+PROCEDURE Div(a, b: T): T;
+PROCEDURE Neg(a: T): T;
+PROCEDURE Abs(a: T): T;
+PROCEDURE Sqrt(a: T): T;
+
+(* Transcendentals *)
+PROCEDURE Sin(a: T): T;
+PROCEDURE Cos(a: T): T;
+PROCEDURE Tan(a: T): T;
+PROCEDURE Exp(a: T): T;
+PROCEDURE Log(a: T): T;
+
+(* Comparison *)
+PROCEDURE Compare(a, b: T): INTEGER;
+
+(* Formatting *)
+PROCEDURE Format(v: T): TEXT;
+
+END SchemeMpfr.
+\end{lstlisting}
+
+\paragraph{Precision propagation.}
+All binary operations compute at {\tt MAX(a.prec, b.prec)}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: T): T =
+  VAR p := MAX(a.prec, b.prec);
+      r := New(p);
+  BEGIN
+    EVAL Mpfr.Add(r.val, a.val, b.val);
+    RETURN r
+  END Add;
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Changes to {\tt SchemeInexact}}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeInexact.i3} (modify)
+\item {\tt mscheme/src/SchemeInexact.m3} (modify)
+\end{itemize}
+
+\paragraph{{\tt Is()} predicate.}
+Extended to accept both {\tt SchemeLongReal.T} and {\tt SchemeMpfr.T}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Is(x: SchemeObject.T): BOOLEAN =
+  BEGIN
+    RETURN x # NIL AND
+           (ISTYPE(x, SchemeLongReal.T) OR
+            ISTYPE(x, SchemeMpfr.T))
+  END Is;
+\end{lstlisting}
+
+\paragraph{Arithmetic dispatch.}
+The pattern parallels the exact-side dispatch.  A helper
+{\tt HasMpfr} scans operands for MPFR contagion:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T =
+  BEGIN
+    IF ISTYPE(a, SchemeMpfr.T) OR
+       ISTYPE(b, SchemeMpfr.T) THEN
+      (* Promote both to Mpfr, then operate *)
+      RETURN SchemeMpfr.Add(
+               ToMpfr(a), ToMpfr(b))
+    ELSE
+      (* Both are SchemeLongReal.T: existing fast path *)
+      WITH va = SchemeLongReal.FromO(a),
+           vb = SchemeLongReal.FromO(b) DO
+        RETURN SchemeLongReal.FromLR(va + vb)
+      END
+    END
+  END Add;
+\end{lstlisting}
+
+\noindent Where {\tt ToMpfr} promotes a {\tt SchemeLongReal.T}
+to {\tt SchemeMpfr.T} at the other operand's precision.
+
+%----------------------------------------------------------------------
+\subsection{New Primitives}
+%----------------------------------------------------------------------
+
+\paragraph{{\tt make-mpfr}.}
+Creates an MPFR value from any number:
+
+\begin{lstlisting}[language=Scheme]
+(make-mpfr 3.14 128)   ;=> 128-bit Mpfr approximation of 3.14
+(make-mpfr 1/3 256)    ;=> 256-bit Mpfr approximation of 1/3
+(make-mpfr 42 100)     ;=> 100-bit Mpfr representation of 42
+\end{lstlisting}
+
+\noindent Implementation dispatches on the input type:
+\begin{itemize}[nosep]
+\item {\tt SchemeLongReal.T} $\to$ {\tt SchemeMpfr.FromLR(val, prec)}
+\item Exact integer $\to$ {\tt SchemeMpfr.FromExact(val, prec)}
+\item {\tt SchemeRational.T} $\to$ compute {\tt num/den} in MPFR
+  at the specified precision
+\item {\tt SchemeMpfr.T} $\to$ copy with new precision (re-round
+  if lowering precision)
+\end{itemize}
+
+\paragraph{{\tt mpfr-precision}.}
+Returns the mantissa precision in bits:
+\begin{lstlisting}[language=Scheme]
+(mpfr-precision (make-mpfr 1.0 256))  ;=> 256
+\end{lstlisting}
+
+\paragraph{Transcendentals.}
+The existing {\tt sin}, {\tt cos}, {\tt exp}, {\tt log}, {\tt sqrt}
+primitives gain a dispatch branch: when the argument is
+{\tt SchemeMpfr.T}, the corresponding {\tt Mpfr.Sin}, {\tt Mpfr.Cos},
+etc.\ is called, giving correctly-rounded results at full precision.
+For {\tt SchemeLongReal.T} arguments, the existing {\tt Math}
+library functions are used (unchanged).
+
+
+%======================================================================
+\section{Complex Numbers ({\tt SchemeComplex})}
+\label{sec:complex}
+%======================================================================
+
+%----------------------------------------------------------------------
+\subsection{Type Representation}
+%----------------------------------------------------------------------
+
+\begin{lstlisting}[language=Modula3]
+TYPE T = BRANDED "SchemeComplex" REF
+           RECORD re, im: SchemeObject.T END;
+\end{lstlisting}
+
+\noindent The {\tt re} and {\tt im} fields are arbitrary Scheme
+numbers---integers, rationals, {\tt LONGREAL}, or {\tt SchemeMpfr.T}.
+This means that complex rationals (e.g., $\frac{1}{3} + \frac{2}{5}i$)
+and complex MPFR values fall out naturally without special-casing.
+
+\paragraph{Demotion invariant.}
+If the imaginary part is exactly zero, the constructor demotes
+to the real part alone.  This parallels rational demotion
+(denominator~1) and bignum demotion (fits in fixnum).
+
+%----------------------------------------------------------------------
+\subsection{Interface}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeComplex.i3} (new)
+\item {\tt mscheme/src/SchemeComplex.m3} (new)
+\end{itemize}
+
+\begin{lstlisting}[language=Modula3]
+INTERFACE SchemeComplex;
+IMPORT SchemeObject;
+FROM Scheme IMPORT E;
+
+TYPE T = BRANDED "SchemeComplex" REF
+           RECORD re, im: SchemeObject.T END;
+
+(* Construction *)
+PROCEDURE New(re, im: SchemeObject.T): SchemeObject.T;
+  (* Demotes to real if im = 0 *)
+PROCEDURE MakeRectangular(re, im: SchemeObject.T):
+    SchemeObject.T RAISES {E};
+PROCEDURE MakePolar(mag, ang: SchemeObject.T):
+    SchemeObject.T RAISES {E};
+
+(* Accessors *)
+PROCEDURE RealPart(x: T): SchemeObject.T;
+PROCEDURE ImagPart(x: T): SchemeObject.T;
+PROCEDURE Magnitude(x: SchemeObject.T):
+    SchemeObject.T RAISES {E};
+PROCEDURE Angle(x: SchemeObject.T):
+    SchemeObject.T RAISES {E};
+
+(* Arithmetic *)
+PROCEDURE Add(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Sub(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Mul(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Div(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Neg(a: T): SchemeObject.T RAISES {E};
+
+(* Formatting *)
+PROCEDURE Format(x: T): TEXT;
+
+END SchemeComplex.
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Complex Arithmetic}
+%----------------------------------------------------------------------
+
+Complex arithmetic is defined in terms of the existing
+{\tt SchemeNumber} dispatch, so that exactness and precision
+contagion compose naturally:
+
+\begin{align*}
+(a + bi) + (c + di) &= (a+c) + (b+d)i \\
+(a + bi) \times (c + di) &= (ac - bd) + (ad + bc)i \\
+\frac{a + bi}{c + di} &= \frac{(ac + bd) + (bc - ad)i}{c^2 + d^2}
+\end{align*}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: T): SchemeObject.T RAISES {E} =
+  BEGIN
+    RETURN New(SchemeNumber.Add(a.re, b.re),
+               SchemeNumber.Add(a.im, b.im))
+  END Add;
+
+PROCEDURE Mul(a, b: T): SchemeObject.T RAISES {E} =
+  VAR re := SchemeNumber.Sub(
+              SchemeNumber.Mul(a.re, b.re),
+              SchemeNumber.Mul(a.im, b.im));
+      im := SchemeNumber.Add(
+              SchemeNumber.Mul(a.re, b.im),
+              SchemeNumber.Mul(a.im, b.re));
+  BEGIN
+    RETURN New(re, im)
+  END Mul;
+\end{lstlisting}
+
+\noindent Because {\tt SchemeNumber.Add}, {\tt .Mul}, etc.\ already
+handle all combinations of exact/inexact and integer/rational/Mpfr,
+the complex module does not need to know about these subtypes.
+
+%----------------------------------------------------------------------
+\subsection{Exactness of Complex Numbers}
+%----------------------------------------------------------------------
+
+A complex number is exact iff both its real and imaginary parts are
+exact:
+
+\begin{lstlisting}[language=Scheme]
+(exact? (make-rectangular 1/3 2/5))  ;=> #t
+(exact? (make-rectangular 1.0 2.0))  ;=> #f
+(exact? (make-rectangular 1 2.0))    ;=> #f
+\end{lstlisting}
+
+\noindent The {\tt exact?} and {\tt inexact?} predicates must be
+updated to handle {\tt SchemeComplex.T} by checking both components.
+
+%----------------------------------------------------------------------
+\subsection{Ordering Restriction}
+%----------------------------------------------------------------------
+
+R5RS specifies that {\tt <}, {\tt >}, {\tt <=}, {\tt >=} are
+undefined for non-real complex numbers.  The implementation signals
+an error:
+
+\begin{lstlisting}[language=Scheme]
+(< 3+4i 5+6i)  ;=> ERROR: ordering not defined for complex
+(= 3+4i 3+4i)  ;=> #t  (equality IS defined)
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Changes to {\tt SchemeNumber}}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt mscheme/src/SchemeNumber.i3} (modify)
+\item {\tt mscheme/src/SchemeNumber.m3} (modify)
+\end{itemize}
+
+The {\tt SchemeNumber} dispatch layer gains a third tier for
+complex numbers.  The dispatch order becomes:
+
+\begin{enumerate}[nosep]
+\item If both operands are exact (integer or rational), use
+  {\tt SchemeExact} dispatch.
+\item If both operands are real (exact or inexact, but not complex),
+  use the existing exact/inexact contagion dispatch.
+\item If either operand is complex, promote the non-complex operand
+  to a complex with imaginary part zero, then use
+  {\tt SchemeComplex} dispatch.
+\end{enumerate}
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Add(a, b: SchemeObject.T):
+    SchemeObject.T RAISES {E} =
+  BEGIN
+    (* Complex contagion *)
+    IF ISTYPE(a, SchemeComplex.T) OR
+       ISTYPE(b, SchemeComplex.T) THEN
+      RETURN SchemeComplex.Add(
+               ToComplex(a), ToComplex(b))
+    END;
+
+    (* Existing real dispatch *)
+    IF SchemeExact.Is(a) THEN
+      IF SchemeExact.Is(b) THEN
+        RETURN SchemeExact.Add(a, b)
+      ELSIF SchemeInexact.Is(b) THEN
+        RETURN SchemeInexact.Add(
+                 ExactToInexact(a), b)
+      END
+    ELSIF SchemeInexact.Is(a) THEN
+      ...
+    END;
+    ...
+  END Add;
+\end{lstlisting}
+
+\noindent Where {\tt ToComplex} wraps a real number as a complex
+with imaginary part zero:
+\begin{lstlisting}[language=Modula3]
+PROCEDURE ToComplex(x: SchemeObject.T):
+    SchemeComplex.T =
+  BEGIN
+    TYPECASE x OF
+    | SchemeComplex.T (c) => RETURN c
+    ELSE
+      RETURN NEW(SchemeComplex.T,
+                 re := x, im := SchemeInt.Zero)
+    END
+  END ToComplex;
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{New Primitives}
+%----------------------------------------------------------------------
+
+\begin{lstlisting}[language=Scheme]
+(make-rectangular 3 4)   ;=> 3+4i
+(make-polar 5 0.9273)    ;=> 3.0+4.0i (approx)
+(real-part 3+4i)         ;=> 3
+(imag-part 3+4i)         ;=> 4
+(magnitude 3+4i)         ;=> 5
+(angle 3+4i)             ;=> 0.9272... (atan2)
+\end{lstlisting}
+
+\noindent {\tt make-polar} computes {\tt re = mag * cos(ang)} and
+{\tt im = mag * sin(ang)}.  When the arguments are exact, the
+result is inexact (since trigonometric functions produce inexact
+values in general).
+
+%======================================================================
+\section{Reader Extensions}
+\label{sec:reader}
+%======================================================================
+
+All changes are in {\tt SchemeInputPort.m3}.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Syntax} & \textbf{Parsed as} & \textbf{Notes} \\
+\midrule
+{\tt 1/3} & {\tt SchemeRational} & After integer, check for {\tt /} + digits \\
+{\tt -7/4} & {\tt SchemeRational} & Sign applies to numerator \\
+{\tt +inf.0} & {\tt SchemeLongReal} (+Inf) & Match as identifier, produce number \\
+{\tt -inf.0} & {\tt SchemeLongReal} ($-$Inf) & Same \\
+{\tt +nan.0} & {\tt SchemeLongReal} (NaN) & Same \\
+{\tt 3+4i} & {\tt SchemeComplex} & After number, check for {\tt +}/{\tt -} number {\tt i} \\
+{\tt 3-4i} & {\tt SchemeComplex} & Same \\
+{\tt +2i} & {\tt SchemeComplex} (0+2i) & Special case: real part is 0 \\
+{\tt -3i} & {\tt SchemeComplex} (0$-$3i) & Same \\
+{\tt +i} & {\tt SchemeComplex} (0+1i) & Special case: coefficient is 1 \\
+{\tt -i} & {\tt SchemeComplex} (0$-$1i) & Same \\
+\bottomrule
+\end{tabular}
+\caption{Reader extensions for Phase~2.}
+\label{tab:reader}
+\end{table}
+
+\paragraph{Parsing order.}
+The number parser proceeds in stages:
+\begin{enumerate}[nosep]
+\item Scan optional sign and digits.
+\item If {\tt /} follows, parse denominator $\to$ rational.
+\item If {\tt .} or exponent marker follows, parse as float.
+\item Otherwise, parse as integer.
+\item After obtaining the first number, if {\tt +} or {\tt -}
+  follows (and is not a delimiter), parse a second number and
+  expect~{\tt i} $\to$ complex.
+\item If the token is exactly {\tt +i} or {\tt -i}, return
+  complex with coefficient~1.
+\end{enumerate}
+
+\paragraph{Special float literals.}
+The tokens {\tt +inf.0}, {\tt -inf.0}, and {\tt +nan.0} are
+recognized in the identifier scanner (since they begin with
+{\tt +} or {\tt -}, which are valid identifier-start characters
+in R7RS).  When matched, they return the corresponding IEEE~754
+{\tt LONGREAL} value instead of a symbol.
+
+%======================================================================
+\section{Scheme--Modula-3 Interop}
+\label{sec:interop}
+%======================================================================
+
+When Scheme code calls Modula-3 procedures via {\tt modula3scheme}
+stubs (generated by {\tt sstubgen}), numeric types must convert at
+the boundary.  Phase~2 adds new source types (rational, Mpfr,
+complex) that must map to Modula-3 formal parameter types.
+
+%----------------------------------------------------------------------
+\subsection{Scheme $\to$ Modula-3 ({\tt ToModula} Direction)}
+%----------------------------------------------------------------------
+
+Table~\ref{tab:to-modula} shows the conversion matrix.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{M3 formal} & {\tt Int} & {\tt Mpz} &
+  {\tt Rational} & {\tt LongReal} & {\tt Mpfr} & {\tt Complex} & \textbf{Non-num} \\
+\midrule
+{\tt INTEGER}  & direct & range & error & round & error & error & error \\
+{\tt CARDINAL} & $\geq 0$ & range & error & round & error & error & error \\
+{\tt LONGREAL} & float & {\tt get\_d} & $n/d$ & direct & {\tt GetLR} & error & error \\
+{\tt REAL}     & float & {\tt get\_d} & $n/d$ & trunc & {\tt GetLR} & error & error \\
+{\tt EXTENDED} & float & {\tt get\_d} & $n/d$ & trunc & {\tt GetLR} & error & error \\
+{\tt Mpz.T}    & {\tt NewInt} & direct & error & error & error & error & error \\
+{\tt Mpfr.T}   & {\tt SetInt} & {\tt set\_d} & $n/d$ & {\tt SetLR} & direct & error & error \\
+{\tt TEXT}     & error & error & error & error & error & error & {\tt ToText} \\
+{\tt BOOLEAN}  & \multicolumn{7}{c}{{\tt TruthO}: all values yield {\tt \#t} except {\tt \#f}} \\
+{\tt CHAR}     & error & error & error & error & error & error & char$^*$ \\
+{\tt REFANY}   & pass & pass & pass & pass & pass & pass & pass \\
+\bottomrule
+\end{tabular}
+\caption{Scheme $\to$ Modula-3 type conversions.
+  ``Range'' means range-check via {\tt Mpz.get\_si};
+  ``$n/d$'' means compute numerator/denominator as the target type;
+  ``error'' means the conversion is not supported and raises a
+  Scheme exception.
+  ``Non-num'' covers strings, booleans, characters, and symbols.
+  $^*$Only Scheme character objects ({\tt \#\textbackslash A}) are accepted.}
+\label{tab:to-modula}
+\end{table}
+
+\paragraph{Key rules.}
+\begin{itemize}[nosep]
+\item \textbf{Mpfr.T $\to$ LONGREAL}: truncate precision;
+  overflow yields $\pm\infty$ (no exception).
+\item \textbf{Rational $\to$ LONGREAL}: compute {\tt num/den} as
+  double; exact if representable.
+\item \textbf{Complex $\to$ any real type}: error.  Cannot silently
+  discard the imaginary part.
+\item \textbf{Rational $\to$ INTEGER} or {\tt Mpz.T}: error.
+  A rational is not an integer (rationals with denominator~1
+  have already been demoted).
+\item \textbf{EXTENDED}: same conversion path as {\tt REAL}
+  (via {\tt SchemeLongReal.FromO}, then {\tt FLOAT} to target).
+\item \textbf{TEXT}: only accepts {\tt SchemeString.T};
+  all other types raise an exception.
+\item \textbf{BOOLEAN}: {\tt TruthO} returns {\tt TRUE} for every
+  value except {\tt \#f} (standard Scheme truthiness).
+\item \textbf{CHAR}: only accepts {\tt SchemeChar.T} objects
+  (e.g., {\tt \#\textbackslash A}); all other types raise an exception.
+\end{itemize}
+
+%----------------------------------------------------------------------
+\subsection{Modula-3 $\to$ Scheme ({\tt ToScheme} Direction)}
+%----------------------------------------------------------------------
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{M3 return type} & \textbf{Scheme result} \\
+\midrule
+{\tt INTEGER}  & {\tt SchemeInt.T} (fixnum, cached) \\
+{\tt CARDINAL} & {\tt SchemeInt.T} \\
+{\tt LONGREAL} & {\tt SchemeLongReal.T} \\
+{\tt REAL}     & {\tt SchemeLongReal.T} (promoted to {\tt LONGREAL}) \\
+{\tt EXTENDED} & {\tt SchemeLongReal.T} (promoted to {\tt LONGREAL}) \\
+{\tt Mpz.T}    & {\tt SchemeInt.T} or {\tt Mpz.T} \\
+{\tt Mpfr.T}   & {\tt SchemeMpfr.T} (preserves full precision) \\
+{\tt TEXT}     & {\tt SchemeString.T} \\
+{\tt BOOLEAN}  & {\tt SchemeBoolean.T} \\
+{\tt CHAR}     & {\tt SchemeChar.T} \\
+{\tt REFANY}   & pass-through \\
+\bottomrule
+\end{tabular}
+\caption{Modula-3 $\to$ Scheme type conversions.}
+\label{tab:to-scheme}
+\end{table}
+
+\noindent The key change is that {\tt Mpfr.T} return values stay as
+{\tt SchemeMpfr.T} rather than being converted to {\tt LONGREAL}.
+This preserves the full precision of MPFR computations across the
+Scheme--M3 boundary.
+
+%----------------------------------------------------------------------
+\subsection{{\tt sstubgen} Changes}
+%----------------------------------------------------------------------
+
+\paragraph{Files.}
+\begin{itemize}[nosep]
+\item {\tt modula3scheme/src/SchemeModula3Types.i3} (modify)
+\item {\tt modula3scheme/src/SchemeModula3Types.m3} (modify)
+\end{itemize}
+
+The {\tt Type} enumeration gains a new member:
+\begin{lstlisting}[language=Modula3]
+TYPE
+  Type = { ..., T_Mpz_T, T_Mpfr_T };  (* add T_Mpfr_T *)
+\end{lstlisting}
+
+\noindent New conversion procedures:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE ToModula_Mpfr_T(x: SchemeObject.T):
+    Mpfr.T RAISES {Scheme.E} =
+  BEGIN
+    TYPECASE x OF
+    | SchemeMpfr.T (m) =>
+        RETURN m.val
+    | SchemeLongReal.T (lr) =>
+        VAR r := Mpfr.New(53); BEGIN
+          EVAL Mpfr.SetLR(r, lr.val);
+          RETURN r
+        END
+    | REF INTEGER (ri) =>
+        VAR r := Mpfr.New(64); BEGIN
+          EVAL Mpfr.SetInt(r, ri^);
+          RETURN r
+        END
+    | Mpz.T (m) =>
+        VAR r := Mpfr.New(Mpz.SizeInBits(m)); BEGIN
+          EVAL Mpfr.SetLR(r, Mpz.get_d(m));
+          RETURN r
+        END
+    | SchemeRational.T (q) =>
+        VAR rn := Mpfr.New(128);
+            rd := Mpfr.New(128); BEGIN
+          EVAL Mpfr.SetLR(rn, Mpz.get_d(q.num));
+          EVAL Mpfr.SetLR(rd, Mpz.get_d(q.den));
+          EVAL Mpfr.Div(rn, rn, rd);
+          RETURN rn
+        END
+    ELSE
+      RAISE Scheme.E("expected a number for Mpfr.T")
+    END
+  END ToModula_Mpfr_T;
+
+PROCEDURE ToScheme_Mpfr_T(m: Mpfr.T):
+    SchemeObject.T =
+  BEGIN
+    RETURN NEW(SchemeMpfr.T,
+               val := m,
+               prec := Mpfr.GetPrec(m))
+  END ToScheme_Mpfr_T;
+\end{lstlisting}
+
+\paragraph{Generated stubs.}
+Currently, per-package stubs for {\tt Mpfr.T} parameters use
+{\tt NARROW(x, Mpfr.T)}, which only accepts actual {\tt Mpfr.T}
+objects.  After this change, {\tt sstubgen} generates
+{\tt SchemeModula3Types.ToModula\_Mpfr\_T(x)} instead, accepting
+any numeric type.  This requires adding {\tt Mpfr.T} as a
+concrete-mode base type in {\tt sstubgen}, parallel to how
+{\tt Mpz.T} is already handled.
+
+
+%======================================================================
+\section{Contagion Rules}
+\label{sec:contagion}
+%======================================================================
+
+Phase~2 introduces two new contagion dimensions in addition to
+the existing exactness contagion.  All three compose orthogonally.
+
+%----------------------------------------------------------------------
+\subsection{Exactness Contagion (Existing)}
+%----------------------------------------------------------------------
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+& \textbf{Exact} & \textbf{Inexact} \\
+\midrule
+\textbf{Exact}   & exact   & inexact \\
+\textbf{Inexact} & inexact & inexact \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Unchanged from Phase~1 and R5RS.
+
+%----------------------------------------------------------------------
+\subsection{Precision Contagion (New)}
+%----------------------------------------------------------------------
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+& \textbf{LONGREAL} & \textbf{Mpfr($p$)} \\
+\midrule
+\textbf{LONGREAL}   & LONGREAL   & Mpfr($p$) \\
+\textbf{Mpfr($p'$)} & Mpfr($p'$) & Mpfr(max($p$,$p'$)) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent When an exact value meets an {\tt SchemeMpfr.T}, the
+exact value is converted to MPFR at the MPFR operand's precision.
+
+%----------------------------------------------------------------------
+\subsection{Complex Contagion (New)}
+%----------------------------------------------------------------------
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+& \textbf{Real} & \textbf{Complex} \\
+\midrule
+\textbf{Real}    & real    & complex \\
+\textbf{Complex} & complex & complex \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent A real operand is promoted to complex with imaginary
+part zero.
+
+%----------------------------------------------------------------------
+\subsection{Combined Contagion}
+%----------------------------------------------------------------------
+
+The three contagion rules compose.  Consider:
+
+\begin{lstlisting}[language=Scheme]
+(+ (make-rectangular 1/3 2/5)   ; exact complex rational
+   (make-mpfr 1.0 128))         ; inexact Mpfr
+\end{lstlisting}
+
+\noindent This involves:
+\begin{enumerate}[nosep]
+\item Complex contagion: promote the Mpfr scalar to complex
+  (imaginary part = exact zero).
+\item Exactness contagion: exact rational parts are converted
+  to inexact.
+\item Precision contagion: the conversion yields Mpfr(128), not
+  LONGREAL.
+\end{enumerate}
+
+\noindent Result: an inexact complex with both parts as
+Mpfr(128) values.
+
+
+%======================================================================
+\section{Implementation Order}
+\label{sec:order}
+%======================================================================
+
+The three new types are implemented in dependency order, each step
+self-contained and independently testable.
+
+%----------------------------------------------------------------------
+\subsection{Step~1: Exact Rationals}
+%----------------------------------------------------------------------
+
+This is the largest step and has the widest behavioral impact
+(division semantics change).
+
+\begin{enumerate}[nosep]
+\item Create {\tt SchemeRational.i3} and {\tt .m3}.
+\item Modify {\tt SchemeExact} to accept rationals in {\tt Is()},
+  extend arithmetic dispatch to handle rational~$\times$~integer.
+\item Change {\tt SchemeExact.Div} to return rationals.
+\item Update reader for {\tt num/den} syntax.
+\item Add {\tt numerator}, {\tt denominator}, {\tt rationalize}
+  primitives.
+\item Update test suite; fix tests affected by division change.
+\item Add {\tt SchemeRational} $\to$ {\tt LONGREAL}/{\tt Mpfr.T}
+  conversion in {\tt SchemeModula3Types}.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\subsection{Step~2: SchemeMpfr}
+%----------------------------------------------------------------------
+
+Opt-in and minimally disruptive.
+
+\begin{enumerate}[nosep]
+\item Create {\tt SchemeMpfr.i3} and {\tt .m3}.
+\item Modify {\tt SchemeInexact} to accept {\tt SchemeMpfr.T},
+  add Mpfr arithmetic dispatch.
+\item Add {\tt make-mpfr} and {\tt mpfr-precision} primitives.
+\item Add Mpfr dispatch to transcendentals.
+\item Add {\tt Mpfr.T} as concrete base type in {\tt sstubgen}.
+\item Add precision tests to test suite.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\subsection{Step~3: Complex Numbers}
+%----------------------------------------------------------------------
+
+Depends on rationals for full generality (complex rationals).
+
+\begin{enumerate}[nosep]
+\item Create {\tt SchemeComplex.i3} and {\tt .m3}.
+\item Modify {\tt SchemeNumber} for complex dispatch.
+\item Add {\tt make-rectangular}, {\tt make-polar}, {\tt real-part},
+  {\tt imag-part}, {\tt magnitude}, {\tt angle} primitives.
+\item Update {\tt exact?}/{\tt inexact?} for complex values.
+\item Add {\tt a+bi} reader syntax.
+\item Add complex arithmetic tests.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\subsection{Step~4: Reader Cleanup}
+%----------------------------------------------------------------------
+
+Independent of the above; can be done at any time.
+
+\begin{enumerate}[nosep]
+\item {\tt +inf.0}, {\tt -inf.0}, {\tt +nan.0} reader support.
+\item Printer round-trip for special float values.
+\end{enumerate}
+
+
+%======================================================================
+\section{Files to Create and Modify}
+\label{sec:files}
+%======================================================================
+
+Table~\ref{tab:files} lists all files affected by Phase~2.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{llp{5.5cm}}
+\toprule
+\textbf{File} & \textbf{Action} & \textbf{Change} \\
+\midrule
+{\tt SchemeRational.i3} & New & Exact rational interface \\
+{\tt SchemeRational.m3} & New & GCD normalization, rational arithmetic \\
+{\tt SchemeMpfr.i3} & New & MPFR wrapper interface \\
+{\tt SchemeMpfr.m3} & New & Precision-tracked MPFR operations \\
+{\tt SchemeComplex.i3} & New & Complex number interface \\
+{\tt SchemeComplex.m3} & New & Complex arithmetic, demotion \\
+\midrule
+{\tt SchemeExact.i3} & Modify & {\tt Is()} accepts rationals;
+  {\tt IsInteger()} diverges \\
+{\tt SchemeExact.m3} & Modify & Rational~$\times$~integer dispatch;
+  division returns rationals \\
+{\tt SchemeInexact.i3} & Modify & {\tt Is()} accepts Mpfr \\
+{\tt SchemeInexact.m3} & Modify & Mpfr arithmetic dispatch;
+  {\tt ToMpfr} promotion \\
+{\tt SchemeNumber.i3} & Modify & {\tt Is()} accepts complex \\
+{\tt SchemeNumber.m3} & Modify & Complex dispatch tier;
+  {\tt ToComplex} promotion \\
+{\tt SchemePrimitive.m3} & Modify & New primitives; division
+  change; transcendental dispatch \\
+{\tt SchemeInputPort.m3} & Modify & Rational, complex, inf/nan
+  reader syntax \\
+{\tt mscheme/src/m3makefile} & Modify & Add new modules,
+  {\tt import("mpfr")} \\
+\midrule
+{\tt SchemeModula3Types.i3} & Modify & {\tt T\_Mpfr\_T} type;
+  Mpfr/Rational conversions \\
+{\tt SchemeModula3Types.m3} & Modify & {\tt ToModula\_Mpfr\_T},
+  {\tt ToScheme\_Mpfr\_T} \\
+\midrule
+{\tt numeric-tower-phase2.tex} & New & This document \\
+{\tt test-numeric-tower.scm} & Modify & Add Phase~2 test sections \\
+\bottomrule
+\end{tabular}
+\caption{Files created or modified in Phase~2.}
+\label{tab:files}
+\end{table}
+
+%======================================================================
+\section{Testing}
+\label{sec:testing}
+%======================================================================
+
+%----------------------------------------------------------------------
+\subsection{Existing Tests}
+%----------------------------------------------------------------------
+
+All 450 existing numeric tower tests must continue to pass, with
+one systematic change: tests that assert {\tt (inexact? (/ $a$ $b$))}
+for exact integer operands with non-zero remainder must be updated
+to assert {\tt (exact? (/ $a$ $b$))} and check the rational result.
+
+The 184 example tests and 97 R4RS conformance tests should be
+unaffected (they do not depend on the inexactness of exact division).
+
+%----------------------------------------------------------------------
+\subsection{New Test Sections}
+%----------------------------------------------------------------------
+
+The following sections are added to {\tt test-numeric-tower.scm}:
+
+\paragraph{Exact rationals.}
+\begin{lstlisting}[language=Scheme]
+;; Construction and normalization
+(test (/ 1 3)       '1/3)      ; exact rational
+(test (/ 6 4)       '3/2)      ; normalized
+(test (/ 4 2)       2)         ; demoted to integer
+(test (/ -7 4)      '-7/4)     ; sign on numerator
+(test (/ 7 -4)      '-7/4)     ; denominator always positive
+
+;; Arithmetic
+(test (+ 1/3 1/6)   '1/2)
+(test (- 1/2 1/3)   '1/6)
+(test (* 2/3 3/4)   '1/2)
+(test (/ 2/3 4/5)   '5/6)
+
+;; Mixed integer/rational
+(test (+ 1 1/3)     '4/3)
+(test (* 3 1/3)     1)         ; demoted to integer
+
+;; Predicates
+(test (exact? 1/3)    #t)
+(test (rational? 1/3) #t)
+(test (integer? 1/3)  #f)
+(test (real? 1/3)     #t)
+
+;; Primitives
+(test (numerator 1/3)   1)
+(test (denominator 1/3) 3)
+(test (numerator 3)     3)
+(test (denominator 3)   1)
+\end{lstlisting}
+
+\paragraph{Arbitrary-precision inexact.}
+\begin{lstlisting}[language=Scheme]
+;; Construction
+(test (mpfr-precision (make-mpfr 3.14 128)) 128)
+
+;; Precision contagion
+(test (mpfr-precision
+        (+ (make-mpfr 1.0 128)
+           (make-mpfr 2.0 256)))
+      256)
+
+;; Exactness: make-mpfr produces inexact
+(test (inexact? (make-mpfr 42 100)) #t)
+
+;; Transcendentals at high precision
+(let ((pi (make-mpfr 0 256)))
+  ;; (* 4 (atan 1)) should give pi to 256-bit precision
+  ...)
+\end{lstlisting}
+
+\paragraph{Complex numbers.}
+\begin{lstlisting}[language=Scheme]
+;; Construction
+(test (make-rectangular 3 4) '3+4i)
+(test (make-rectangular 3 0) 3)    ; demoted
+
+;; Arithmetic
+(test (+ 1+2i 3+4i) '4+6i)
+(test (* 1+2i 3+4i) '-5+10i)
+
+;; Accessors
+(test (real-part 3+4i) 3)
+(test (imag-part 3+4i) 4)
+(test (magnitude 3+4i) 5)
+
+;; Predicates
+(test (complex? 3+4i) #t)
+(test (number? 3+4i)  #t)
+(test (real? 3+4i)    #f)
+(test (exact? (make-rectangular 1/3 2/5)) #t)
+
+;; Ordering error
+(test-error (< 3+4i 5+6i))
+
+;; Complex rationals
+(test (+ (make-rectangular 1/3 1/4)
+         (make-rectangular 1/6 3/4))
+      (make-rectangular 1/2 1))
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\subsection{Integration Testing}
+%----------------------------------------------------------------------
+
+After Phase~2, the downstream packages {\tt numtest}, {\tt cspc},
+and {\tt photopic} must be rebuilt and their test suites rerun.  The
+primary risk is the division semantics change: any Scheme code that
+expects {\tt (/ $a$ $b$)} to return a {\tt LONGREAL} when both
+operands are exact integers will now receive a rational.  If such a
+value is then passed to a Modula-3 procedure expecting {\tt LONGREAL},
+the existing {\tt ToModula\_LONGREAL} will handle the conversion
+(via the rational~$\to$~double path in Table~\ref{tab:to-modula}).
+
+%======================================================================
+\section{What Phase~2 Does Not Change}
+\label{sec:not-changed}
+%======================================================================
+
+\begin{itemize}
+\item \textbf{No compiler changes.}  The MScheme compiler
+  ({\tt compiler.scm}) continues to emit {\tt SchemeInt}-based
+  code for integer constants and {\tt SchemeLongReal}-based code
+  for float constants.  Rational, Mpfr, and complex literals in
+  compiled code are handled at runtime by the library, not by
+  special compiler support.  Compiler optimizations for the new
+  types are a future phase.
+
+\item \textbf{No GMP-free fallback for MPFR.}  Unlike the GMP-free
+  fallback discussed in Phase~1 (Section~10), there is no pure-M3
+  fallback for MPFR.  If MPFR is not available, {\tt make-mpfr}
+  signals an error and the system operates with {\tt LONGREAL}
+  only.
+
+\item \textbf{No interval arithmetic.}  MPFR supports directed
+  rounding modes that could be used for interval arithmetic, but
+  this is not exposed in Phase~2.
+
+\item \textbf{No {\tt exact->inexact} for rationals via continued
+  fractions.}  The {\tt inexact->exact} conversion of a
+  {\tt LONGREAL} to a rational uses the standard IEEE~754 bit
+  decomposition (the {\tt LONGREAL} value is exactly
+  $m \times 2^e$ for integer $m$ and $e$).  Continued-fraction
+  approximation (which would give ``nicer'' rationals) is not
+  implemented.
+\end{itemize}
+
+\end{document}

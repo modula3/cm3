@@ -1,0 +1,29 @@
+/* numtest -- mscheme with compiled numeric test suites */
+
+import("libm3")
+import("parseparams")
+import("cit_common")
+import("schemesig")
+import("cit_util")
+import("mscheme")
+import("modula3scheme")
+import("schemecompiler")
+
+scheme("test-cn-integers")
+scheme("test-cn-floats")
+scheme("test-cn-exceptions")
+
+scheme("test-cn-rationals")
+scheme("test-cn-complex")
+scheme("test-cn-mixed")
+
+% Original test suites — contain Phase 2 features, enable when compiler is ready:
+%scheme("test-numeric-tower")
+scheme("test-examples")
+scheme("test-r4rs-gaps")
+
+LinkCompiledSchemeAs("NumtestCompiled")
+
+implementation("Main")
+
+program("numtest")

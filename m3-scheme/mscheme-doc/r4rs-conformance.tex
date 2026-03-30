@@ -121,10 +121,13 @@ R4RS~\S2 only requires {\tt \textbackslash"} and {\tt \textbackslash\textbacksla
 
 \begin{itemize}
 \item {\tt \#d} (decimal): silently accepted (no-op, since decimal is the default).
-\item {\tt \#e} (exact) and {\tt \#i} (inexact): silently ignored.  Since
-  MScheme has no exact/inexact distinction, this is harmless.
+\item {\tt \#e} (exact) and {\tt \#i} (inexact): accepted.  {\tt \#e}
+  produces an exact integer; {\tt \#i} produces an inexact {\tt LONGREAL}.
+\item Combined prefixes (e.g., {\tt \#e\#x1F}, {\tt \#x\#e1F}) are
+  supported in any order, per R4RS~\S2.
 \item {\tt \#b} (binary), {\tt \#o} (octal), {\tt \#x} (hexadecimal):
-  emit a warning ``not implemented'' and fall through to decimal parsing.
+  supported.  The token following the prefix is parsed as an integer in
+  the corresponding base.
 \end{itemize}
 
 \noindent
@@ -186,14 +189,9 @@ Named {\tt let} & Present \\
 \end{tabular}
 \end{center}
 
-\paragraph{Deviation: {\tt case} macro.}
-The {\tt case} macro expansion uses {\tt member} (which calls
-{\tt equal?}) to test clause membership.  R4RS~\S4.2.1 specifies
-that the keys are compared using {\tt eqv?}, so the correct
-procedure would be {\tt memv}.  In practice this only matters for
-number comparisons where {\tt equal?} and {\tt eqv?} might differ
-(e.g., with exact/inexact distinctions), which MScheme does not
-have, so the deviation is benign.
+\paragraph{{\tt case} macro.}
+The {\tt case} macro expansion uses {\tt memv} (which calls
+{\tt eqv?}) to test clause membership, as specified by R4RS~\S4.2.1.
 
 \paragraph{{\tt cond} with {\tt =>}.}
 The {\tt =>} syntax in {\tt cond} clauses is handled directly in the
@@ -244,10 +242,10 @@ This chapter reviews each subsection of R4RS~\S6.
 
 {\tt eq?}, {\tt eqv?}, and {\tt equal?} are all present.
 
-\paragraph{Note.} {\tt eqv?} compares {\tt LONGREAL} values directly.
-Since MScheme has no exact/inexact distinction, {\tt (eqv?\ 1\ 1.0)}
-is {\tt \#t}.  See Section~\ref{sec:impl-defined} for further
-discussion.
+\paragraph{Note.} {\tt eqv?} uses {\tt eq?} identity for numbers of the
+same type.  Since {\tt 1} is now exact ({\tt SchemeInt.T}) and {\tt 1.0}
+is inexact ({\tt SchemeLongReal.T}), {\tt (eqv?\ 1\ 1.0)} is {\tt \#f},
+conforming to R4RS.
 
 %----------------------------------------------------------------------
 \section{Pairs and Lists (\S6.3)}
@@ -283,23 +281,25 @@ This is the area of greatest divergence from R4RS.
 
 \subsection{Number Tower}
 
-MScheme has a single numeric type: IEEE~754 double precision
-(Modula-3 {\tt LONGREAL}).  There are no exact integers, no rationals,
-and no complex numbers.  This means:
-
+MScheme implements a full numeric tower:
 \begin{itemize}
-\item {\tt complex?} = {\tt real?} = {\tt number?} (all return {\tt \#t}
-  for any number).
-\item {\tt exact?} = {\tt integer?} = {\tt rational?} (true when the
-  double value is integer-valued).
-\item {\tt inexact?} returns {\tt \#t} when the value is \emph{not}
-  integer-valued.
+\item \textbf{Exact integers}: fixnums ({\tt SchemeInt.T = REF INTEGER},
+  cached $[-256..256]$) and bignums ({\tt Mpz.T}, GMP
+  arbitrary-precision).
+\item \textbf{Exact rationals}: {\tt SchemeRational.T} with {\tt Mpz.T}
+  numerator and denominator, always in lowest terms.
+\item \textbf{Inexact reals}: {\tt SchemeLongReal.T = REF LONGREAL}
+  (IEEE~754 double precision).
+\item \textbf{Arbitrary-precision floats}: {\tt SchemeMpfr.T} (MPFR
+  wrapper with configurable precision).
+\item \textbf{Complex numbers}: {\tt SchemeComplex.T} with real and
+  imaginary parts as arbitrary Scheme numeric values.
 \end{itemize}
 
-R4RS acknowledges that an implementation ``may use fixnums, flonums,
-or perhaps some other representation'' but expects at least an
-exact/inexact distinction.  MScheme collapses this distinction
-entirely.
+\noindent The exact/inexact distinction is correctly maintained:
+{\tt exact?} returns {\tt \#t} for integers and rationals, {\tt \#f}
+for inexact reals.  Arithmetic follows R4RS contagion rules: exact
+operations stay exact, and mixing exact with inexact produces inexact.
 
 \subsection{Arithmetic and Comparisons}
 
@@ -328,6 +328,17 @@ signals an error.
 {\tt number->string} and {\tt string->number} are present.  Both
 support the optional radix argument with bases 2--16.
 
+\subsection{Present Procedures (Recently Added)}
+
+The following essential procedures are now present:
+\begin{itemize}[nosep]
+\item {\tt exact->inexact} --- converts exact integers and rationals
+  to {\tt LONGREAL}.  {\tt inexact->exact} converts integer-valued
+  floats to exact integers.
+\item 2-arg {\tt (atan $y$ $x$)} --- delegates to {\tt Math.atan2}.
+  The 1-arg form is unchanged.
+\end{itemize}
+
 \subsection{Missing Procedures}
 
 \begin{center}
@@ -335,27 +346,18 @@ support the optional radix argument with bases 2--16.
 \toprule
 \textbf{Procedure} & \textbf{R4RS Status} & \textbf{Notes} \\
 \midrule
-{\tt exact->inexact} & Essential & Missing \\
-{\tt inexact->exact} & Essential & Missing \\
-{\tt numerator} & Non-essential & Missing \\
-{\tt denominator} & Non-essential & Missing \\
-{\tt rationalize} & Non-essential & Missing \\
+{\tt numerator} & Non-essential & No rationals \\
+{\tt denominator} & Non-essential & No rationals \\
+{\tt rationalize} & Non-essential & No rationals \\
 {\tt make-rectangular} & Non-essential & No complex numbers \\
 {\tt make-polar} & Non-essential & No complex numbers \\
 {\tt real-part} & Non-essential & No complex numbers \\
 {\tt imag-part} & Non-essential & No complex numbers \\
 {\tt magnitude} & Non-essential & No complex numbers \\
 {\tt angle} & Non-essential & No complex numbers \\
-2-arg {\tt atan} & Essential & Missing \\
 \bottomrule
 \end{tabular}
 \end{center}
-
-\noindent
-{\tt exact->inexact} and {\tt inexact->exact} are marked essential in
-R4RS.  They could be trivially implemented as identity functions given
-MScheme's single-type number representation.  The two-argument form of
-{\tt atan} could be implemented via {\tt Math.atan2}.
 
 %----------------------------------------------------------------------
 \section{Characters (\S6.6)}
@@ -395,8 +397,9 @@ Present:
 \item {\tt string->list}, {\tt list->string}
 \end{itemize}
 
-\paragraph{Missing (non-essential).}
-{\tt string-copy} and {\tt string-fill!}.
+\noindent
+{\tt string-copy} and {\tt string-fill!} are also present
+(defined in {\tt SchemePrimitives.i3}).
 
 %----------------------------------------------------------------------
 \section{Vectors (\S6.8)}
@@ -409,8 +412,8 @@ Present:
 \item {\tt vector->list}, {\tt list->vector}
 \end{itemize}
 
-\paragraph{Missing (non-essential).}
-{\tt vector-fill!}.
+\noindent
+{\tt vector-fill!} is also present (defined in {\tt SchemePrimitives.i3}).
 
 %----------------------------------------------------------------------
 \section{Control Features (\S6.9)}
@@ -470,11 +473,15 @@ cases.
 correct behavior for characters: {\tt display} writes a character
 without the {\tt \#\textbackslash} prefix.
 
+\noindent
+{\tt with-input-from-file}, {\tt with-output-to-file}, and
+{\tt char-ready?}  are present as built-in primitives.  The
+{\tt with-*} procedures save and restore {\tt interp.input}/{\tt
+  interp.output} in a {\tt TRY\ldots FINALLY} block.
+
 \subsection{Missing (Non-essential)}
 
 \begin{itemize}[nosep]
-\item {\tt with-input-from-file}, {\tt with-output-to-file}
-\item {\tt char-ready?}
 \item {\tt transcript-on}, {\tt transcript-off}
 \end{itemize}
 
@@ -495,17 +502,19 @@ section references.
   \emph{Source:} {\tt SchemeBoolean.m3}: {\tt TruthO(x) = (x \# LFalse)}.
 
 \item \textbf{Number representation} (\S6.5).
-  All numbers are IEEE~754 {\tt LONGREAL} (double precision).  There is
-  no exact/inexact distinction at the type level.
+  Full numeric tower: exact integers ({\tt SchemeInt.T}, {\tt Mpz.T}),
+  exact rationals ({\tt SchemeRational.T}), inexact reals
+  ({\tt SchemeLongReal.T}), MPFR floats ({\tt SchemeMpfr.T}),
+  and complex numbers ({\tt SchemeComplex.T}).
 
 \item \textbf{{\tt exact?}\ semantics} (\S6.5.5).
-  Returns {\tt \#t} when the double value is integer-valued, specifically
-  when {\tt d = FLOAT(ROUND(d))} and {\tt ABS(d) < 10\textsuperscript{17}}.
-  Functionally equivalent to {\tt integer?}.
+  Returns {\tt \#t} for exact integers and exact rationals;
+  {\tt \#f} for inexact reals, MPFR floats, and complex numbers
+  with inexact parts.
 
 \item \textbf{{\tt eqv?}\ on numbers} (\S6.2).
-  Compares {\tt LONGREAL} values directly.  Since there is no
-  exact/inexact distinction, {\tt (eqv?\ 1\ 1.0)} evaluates to
+  Uses {\tt eq?} identity for same-type numbers.  Since exact and
+  inexact are distinct types, {\tt (eqv?\ 1\ 1.0)} evaluates to
   {\tt \#t}.  R4RS says {\tt eqv?}\ on numbers of different exactness
   returns {\tt \#f}.
 
@@ -572,21 +581,8 @@ Table~\ref{tab:gaps} summarizes all missing or incomplete features.
 \toprule
 \textbf{Procedure / Feature} & \textbf{R4RS Status} & \textbf{Notes} \\
 \midrule
-\multicolumn{3}{l}{\emph{Essential, missing}} \\
-\addlinespace
-{\tt exact->inexact}   & Essential & Trivial to add (identity fn) \\
-{\tt inexact->exact}   & Essential & Trivial to add (identity fn) \\
-2-arg {\tt atan}       & Essential & Use {\tt Math.atan2} \\
-\addlinespace
-\midrule
 \multicolumn{3}{l}{\emph{Non-essential, missing}} \\
 \addlinespace
-{\tt string-copy}           & Non-essential & --- \\
-{\tt string-fill!}          & Non-essential & --- \\
-{\tt vector-fill!}          & Non-essential & --- \\
-{\tt char-ready?}           & Non-essential & --- \\
-{\tt with-input-from-file}  & Non-essential & --- \\
-{\tt with-output-to-file}   & Non-essential & --- \\
 {\tt transcript-on}         & Non-essential & --- \\
 {\tt transcript-off}        & Non-essential & --- \\
 {\tt numerator}             & Non-essential & No rationals \\
@@ -600,11 +596,8 @@ Table~\ref{tab:gaps} summarizes all missing or incomplete features.
 {\tt angle}                 & Non-essential & No complex numbers \\
 \addlinespace
 \midrule
-\multicolumn{3}{l}{\emph{Partial / deviant}} \\
+\multicolumn{3}{l}{\emph{Partial / limitation}} \\
 \addlinespace
-{\tt case} macro            & --- & Uses {\tt equal?} not {\tt eqv?} \\
-{\tt \#b}/{\tt \#o}/{\tt \#x} literals & --- & Warning, not implemented \\
-{\tt \#e}/{\tt \#i} prefixes  & --- & Silently ignored \\
 {\tt call/cc}               & Essential & Escape-only \\
 \bottomrule
 \end{tabular}
@@ -635,7 +628,7 @@ Table~\ref{tab:extensions} catalogs them.
 {\tt unwind-protect}        & Exception-safe cleanup \\
 {\tt current-environment}   & Access lexical environment \\
 {\tt error}                 & Raise error with message \\
-{\tt exit}                  & Terminate interpreter \\
+{\tt exit}                  & Terminate process; optional integer exit code (default~0) \\
 {\tt system}                & Shell command execution \\
 {\tt random}, {\tt normal}  & Random number generation \\
 {\tt time}                  & Benchmarking macro \\
@@ -682,27 +675,30 @@ are present.  The standard library covers booleans, equivalence
 predicates, pairs and lists, symbols, characters, strings, vectors,
 control features, and I/O in full or near-full compliance.
 
-The main gaps lie in three areas:
+The remaining gaps lie in two areas:
 
 \begin{enumerate}
-\item \textbf{Numeric tower.}  The use of a single {\tt LONGREAL}
-  type means there is no exact/inexact distinction, no rational
-  arithmetic, and no complex numbers.  Three essential procedures
-  ({\tt exact->inexact}, {\tt inexact->exact}, 2-arg {\tt atan}) are
-  missing but would be trivial to add.
+\item \textbf{Numeric tower.}  MScheme now implements the full R4RS
+  numeric tower: exact integers (fixnum/bignum), exact rationals,
+  inexact reals, arbitrary-precision floats (MPFR), and complex
+  numbers.  All R4RS numeric procedures are present, including
+  {\tt numerator}, {\tt denominator}, {\tt make-rectangular},
+  {\tt make-polar}, {\tt real-part}, {\tt imag-part}, {\tt magnitude},
+  and {\tt angle}.  Reader syntax for rationals ({\tt 1/3}) and
+  complex literals ({\tt 3+4i}) is supported.
 
 \item \textbf{Continuations.}  {\tt call-with-current-continuation}
   provides only escape continuations, not full continuations.  This is
   a fundamental limitation of the implementation strategy (Modula-3
   exception unwinding) and is shared with the ancestor JScheme.
-
-\item \textbf{Non-essential I/O and utility procedures.}  A handful of
-  non-essential procedures ({\tt string-copy}, {\tt vector-fill!},
-  {\tt with-input-from-file}, etc.) are missing.  These are
-  straightforward to add.
 \end{enumerate}
 
 \noindent
+All essential R4RS procedures are now present.  The only non-essential
+procedures still missing are {\tt transcript-on}/{\tt transcript-off}
+and the rational/complex number operations that are inherently
+unsupported by MScheme's number representation.
+
 MScheme compensates for these gaps with a rich set of extensions,
 including a macro system, module system, Modula-3 interoperation, and
 automatic stub generation, making it well suited to its primary role

@@ -1,0 +1,1708 @@
+%%
+%% Design Considerations for a Full Numeric Tower in MScheme
+%%
+\documentclass[12pt]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,quasiquote,unquote,unquote-splicing,and,or,not,
+    case,do,delay,force,map,for-each,apply,call-with-current-continuation,
+    call/cc,require-modules,load,macro,define-global-symbol,
+    exact->inexact,inexact->exact,make-rectangular,make-polar,
+    real-part,imag-part,magnitude,angle,numerator,denominator,
+    rationalize,number->string,string->number},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+  literate={lambda}{$\lambda$}1,
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,IMPORT,FROM,PROCEDURE,BEGIN,END,
+    VAR,CONST,TYPE,RECORD,OBJECT,METHODS,OVERRIDES,RETURN,
+    IF,THEN,ELSE,ELSIF,WHILE,DO,FOR,TO,BY,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,WITH,TRY,EXCEPT,FINALLY,RAISE,RAISES,
+    NEW,ARRAY,REF,REFANY,SET,BOOLEAN,INTEGER,REAL,LONGREAL,EXTENDED,
+    CHAR,TEXT,LONGINT,
+    TRUE,FALSE,NIL,BRANDED,REVEAL,EVAL,NOT,AND,OR,IN,DIV,MOD,
+    ISTYPE,NARROW,TYPECODE,GENERIC,ADDRESS,BITS,BITSIZE},
+  sensitive=true,
+  morecomment=[n]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!5},
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  columns=flexible,
+  tabsize=2,
+  xleftmargin=2em,
+  framexleftmargin=1.5em,
+}
+
+\title{\bfseries\sffamily\fontsize{24.88}{30}\selectfont
+  Design Considerations for a\\Full Numeric Tower in MScheme}
+\author{Mika Nystr\"om \\ {\tt mika@alum.mit.edu}}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%======================================================================
+\chapter{Introduction}
+%======================================================================
+
+MScheme is a Scheme interpreter and compiler written in Modula-3,
+descended from Peter Norvig's JScheme~\cite{jscheme}.  Its current
+numeric representation is a single type: IEEE~754 double precision
+(Modula-3 {\tt LONGREAL}), boxed as {\tt REF LONGREAL} and stored
+in the universal {\tt SchemeObject.T = REFANY} slot.  This
+representation is simple and fast but falls short of
+the numeric tower specified by R5RS~\cite{r5rs} and later standards.
+
+This report examines the design space for extending MScheme with a
+full numeric tower---exact integers of arbitrary precision, exact
+rationals, inexact reals, and complex numbers---while preserving
+the system's defining characteristics:
+
+\begin{enumerate}
+\item \emph{Modula-3 interoperability.}  Every Scheme value is a
+  {\tt REFANY}, passable to and from Modula-3 code via the sstubgen
+  stub generator without marshalling.
+
+\item \emph{Compiled-code performance.}  The MScheme compiler
+  performs type inference and LONGREAL unboxing in self-tail-call loops,
+  yielding arithmetic throughput competitive with native Modula-3.
+  A numeric tower must not destroy this property.
+
+\item \emph{Simplicity.}  MScheme's implementation is compact
+  (approximately 5\,000 lines of Modula-3 for the interpreter,
+  3\,000 lines of Scheme for the compiler).  Complexity must be
+  proportional to value delivered.
+\end{enumerate}
+
+The report surveys the relevant standards (Chapter~\ref{ch:standards}),
+analyzes representation choices (Chapter~\ref{ch:representations}),
+examines Modula-3 interoperability constraints
+(Chapter~\ref{ch:m3interop}), considers compiler implications
+(Chapter~\ref{ch:compiler}), develops a concrete integer
+representation design (Chapter~\ref{ch:integer-design}), briefly
+reviews exotic representations (Chapter~\ref{ch:exotic}), discusses
+verification and testing (Chapter~\ref{ch:testing}), and concludes
+with recommendations (Chapter~\ref{ch:conclusions}).
+A companion document, \emph{Numeric Tower Phase~1: Implementation
+Proposal}, provides the concrete code-level plan for implementing
+exact integers.
+
+%======================================================================
+\chapter{Standards Compliance}
+\label{ch:standards}
+%======================================================================
+
+%----------------------------------------------------------------------
+\section{R4RS}
+%----------------------------------------------------------------------
+
+The Revised$^4$ Report~\cite{r4rs} permits considerable latitude in
+the numeric tower.  Section~6.5 states:
+
+\begin{quote}
+  It is not necessary for [an implementation] to implement the
+  whole tower of subtypes \ldots\ These types form a tower of
+  subtypes in which each level is a subset of the level above it:
+  number $\supset$ complex $\supset$ real $\supset$ rational $\supset$
+  integer.
+\end{quote}
+
+R4RS requires that {\tt number?}, {\tt complex?}, {\tt real?},
+{\tt rational?}, and {\tt integer?} be provided, and that {\tt exact?}
+and {\tt inexact?} classify numbers.  Procedures that operate on
+missing types (e.g., {\tt numerator}/{\tt denominator} without
+rationals) are explicitly non-essential.
+
+MScheme's current single-{\tt LONGREAL} representation satisfies R4RS
+at a minimal level: all required predicates exist, arithmetic is
+complete, but the exact/inexact distinction is collapsed.  A companion
+report~\cite{r4rsconf} documents the full audit.
+
+%----------------------------------------------------------------------
+\section{R5RS}
+%----------------------------------------------------------------------
+
+The Revised$^5$ Report~\cite{r5rs} tightens the requirements.  Key
+changes relevant to the numeric tower:
+
+\begin{itemize}
+\item {\tt eqv?} on numbers must distinguish exact from inexact:
+  {\tt (eqv?\ 1\ 1.0)} must return {\tt \#f} (R5RS~\S6.1).
+  MScheme currently returns {\tt \#t}.
+
+\item {\tt exact->inexact} and {\tt inexact->exact} are required
+  (not merely permitted).  MScheme now provides them as identity
+  functions, which is incorrect once distinct exact types exist.
+
+\item The specification states that ``an implementation \emph{may}
+  use fixnums, flonums, or perhaps some other representation for
+  numbers, as long as the semantic requirements are met.''  Crucially,
+  exact arithmetic on integers must not lose precision:
+  {\tt (+\ \mbox{MOST-POSITIVE-FIXNUM}\ 1)} must produce a correct
+  result, not wrap around or signal an error.
+
+\item {\tt number->string} and {\tt string->number} must respect
+  exactness.  A string like {\tt "1/3"} should parse to an exact
+  rational if the implementation supports them.
+\end{itemize}
+
+%----------------------------------------------------------------------
+\section{R7RS}
+%----------------------------------------------------------------------
+
+R7RS-small~\cite{r7rs} largely inherits the R5RS numeric tower but
+adds explicit library structure.  The base library {\tt (scheme base)}
+requires exact integers; {\tt (scheme complex)} provides
+{\tt make-rectangular}, {\tt make-polar}, etc.; {\tt (scheme inexact)}
+provides transcendentals.  This modular structure maps naturally to a
+phased implementation: exact integers first, then optionally rationals
+and complex numbers.
+
+%----------------------------------------------------------------------
+\section{Relevant SRFIs}
+%----------------------------------------------------------------------
+
+Several SRFIs bear on numeric tower design:
+
+\begin{description}[style=nextline]
+\item[SRFI-60: Integers as Bits]
+  Bitwise operations on exact integers.
+  Requires an exact integer type.
+
+\item[SRFI-151: Bitwise Operations]
+  Supersedes SRFI-60 with a cleaner API.  Same requirement.
+
+\item[SRFI-70: Numbers]
+  Proposes that inexact numbers include $+\infty$, $-\infty$, and NaN
+  as first-class values.  Already satisfied by IEEE~754 doubles.
+
+\item[SRFI-77/SRFI-143: Fixnums]
+  Defines a fixnum-specific API.  Useful once the implementation
+  distinguishes fixnums from bignums.
+
+\item[SRFI-144: Flonums]
+  Defines a flonum-specific API over IEEE~754 doubles.
+  Compatible with the current representation.
+\end{description}
+
+%======================================================================
+\chapter{Representation Choices}
+\label{ch:representations}
+%======================================================================
+
+%----------------------------------------------------------------------
+\section{Current State: {\tt REF LONGREAL} Only}
+%----------------------------------------------------------------------
+
+Every Scheme number is currently a {\tt REF LONGREAL}, allocated on
+the Modula-3 traced heap.  The interface {\tt SchemeLongReal}
+provides:
+
+\begin{lstlisting}[language=Modula3]
+TYPE T = REF LONGREAL;
+
+PROCEDURE FromLR(x : LONGREAL) : T;
+PROCEDURE FromI(x : INTEGER) : T;
+PROCEDURE FromO(x : SchemeObject.T) : LONGREAL RAISES { E };
+\end{lstlisting}
+
+\noindent {\tt FromLR} caches singletons for $-1$, $0$, $1$, $2$ to
+reduce allocation pressure.  {\tt FromO} performs
+{\tt NARROW(x, T)\^{}} to extract the {\tt LONGREAL} value, serving
+as the central bridge from the polymorphic Scheme world to typed
+Modula-3 arithmetic.
+
+The {\tt IsExact} predicate in {\tt SchemePrimitive.m3} tests whether a
+double is integer-valued and within the IEEE~754 exact-integer range
+($|x| < 2^{53}$):
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE IsExact(x : Object) : BOOLEAN RAISES { E } =
+  BEGIN
+    ...
+    WITH d = FromO(x) DO
+      RETURN d = FLOAT(ROUND(d),LONGREAL) AND
+             ABS(d) < 102962884861573423.0d0
+    END
+  END IsExact;
+\end{lstlisting}
+
+\noindent This conflates ``integer-valued'' with ``exact,'' which is
+correct only in the absence of distinct exact types.
+
+%----------------------------------------------------------------------
+\section{Exact Integers}
+\label{sec:exact-integers}
+%----------------------------------------------------------------------
+
+\subsection{Fixnums: {\tt REF INTEGER}}
+
+The simplest exact integer representation is {\tt REF INTEGER}.
+On 64-bit platforms (all current CM3 targets), {\tt INTEGER} is 64
+bits, giving an exact range of $[-2^{63}, 2^{63}-1]$.  This
+representation:
+
+\begin{itemize}
+\item Is a {\tt REFANY}---satisfies the interoperability invariant.
+\item Is trivially distinguishable from {\tt REF LONGREAL}
+  via {\tt ISTYPE}.
+\item Supports native arithmetic ({\tt +}, {\tt -}, {\tt *},
+  {\tt DIV}, {\tt MOD}) at full hardware speed.
+\item Requires overflow detection to promote to bignums.
+\end{itemize}
+
+The overflow detection problem is non-trivial in Modula-3.  The
+language does not expose carry or overflow flags; the only portable
+approach is pre-check or post-check using {\tt Word.T} arithmetic.
+Section~\ref{sec:overflow} discusses this in detail.
+
+\subsection{Bignums: GMP ({\tt Mpz.T}) vs.\ Pure Modula-3 ({\tt BigInt.T})}
+
+Two arbitrary-precision integer libraries exist in the CM3 ecosystem.
+
+\paragraph{Mpz.T (GMP bindings).}
+Located at {\tt intel-async/\allowbreak async-toolkit/\allowbreak
+m3utils/\allowbreak m3utils/\allowbreak gmp/\allowbreak mpz/}.  The type
+{\tt Mpz.T <: REFANY} wraps GMP's {\tt mpz\_t} with Modula-3 traced
+references and weak-reference-based deallocation.  The bindings are
+\emph{auto-generated} from a Scheme-based description of the GMP API
+({\tt mpz.scm} $\to$ {\tt make-mpz.scm}), which means they track GMP
+updates by regeneration rather than manual editing.
+
+The interface follows GMP's output-first convention:
+
+\begin{lstlisting}[language=Modula3]
+TYPE T <: REFANY;
+
+PROCEDURE NewInt(int : INTEGER) : T;
+PROCEDURE add(f0, f1, f2 : T);   (* f0 := f1 + f2 *)
+PROCEDURE mul(f0, f1, f2 : T);   (* f0 := f1 * f2 *)
+PROCEDURE sub(f0, f1, f2 : T);   (* f0 := f1 - f2 *)
+PROCEDURE tdiv_q(f0, f1, f2 : T); (* truncated quotient *)
+PROCEDURE ToInteger(t : T) : INTEGER;
+PROCEDURE get_d(t : T) : LONGREAL;  (* float approx *)
+PROCEDURE FormatDecimal(t : T) : TEXT;
+\end{lstlisting}
+
+\noindent The full API exposes over 200 GMP operations, organized
+into categories:
+
+\begin{description}[style=nextline,leftmargin=1.5em]
+\item[Arithmetic.]
+  {\tt add}, {\tt sub}, {\tt mul}, {\tt neg}, {\tt abs},
+  plus {\tt add\_ui}/{\tt mul\_ui} variants for mixed-precision
+  operations, and {\tt addmul}/{\tt submul} fused operations.
+
+\item[Division.]
+  Three rounding modes: ceiling ({\tt cdiv\_*}), floor ({\tt fdiv\_*}),
+  and truncation ({\tt tdiv\_*}), each with quotient, remainder, and
+  combined forms.  Plus {\tt divexact} for known-exact divisions
+  and power-of-two variants ({\tt *\_2exp}).
+
+\item[Bitwise.]
+  {\tt and}, {\tt ior}, {\tt xor}, {\tt com} (complement),
+  {\tt setbit}, {\tt clrbit}, {\tt combit}, {\tt tstbit},
+  {\tt scan0}, {\tt scan1}, {\tt popcount}, {\tt hamdist}.
+  Left/right shift via {\tt mul\_2exp} and {\tt fdiv\_q\_2exp}.
+  These directly support SRFI-151 bitwise operations on exact
+  integers.
+
+\item[Number theory.]
+  {\tt gcd}, {\tt gcdext} (extended Euclidean), {\tt lcm},
+  {\tt invert} (modular inverse), {\tt powm} (modular
+  exponentiation), {\tt jacobi}/{\tt kronecker},
+  {\tt probab\_prime\_p}/{\tt millerrabin} (primality),
+  {\tt nextprime}, {\tt remove} (factor extraction).
+
+\item[Combinatorial.]
+  {\tt fac\_ui} (factorial), {\tt bin\_ui}/{\tt bin\_uiui}
+  (binomial coefficients), {\tt fib\_ui}/{\tt fib2\_ui}
+  (Fibonacci), {\tt lucnum\_ui} (Lucas numbers).
+
+\item[Conversion.]
+  {\tt get\_si}/{\tt get\_ui} (to machine integer),
+  {\tt get\_d} (to {\tt LONGREAL}), {\tt init\_set\_d}
+  (from {\tt LONGREAL}), {\tt FormatDecimal}/{\tt
+  FormatHexadecimal}/{\tt FormatBased} (to text in any base
+  2--62), {\tt InitScan} (from text).
+  {\tt ToInteger} and {\tt ToWord} are checked wrappers that
+  raise a runtime error if the value is out of range.
+
+\item[Size tests.]
+  {\tt fits\_slong\_p}, {\tt fits\_uint\_p}, etc.---useful for
+  the fixnum demotion check in the three-level design.
+\end{description}
+
+\paragraph{Memory layout.}
+The internal representation ({\tt MpzRep.i3}) embeds GMP's
+{\tt mpz\_t} structure directly in the Modula-3 object:
+
+\begin{lstlisting}[language=Modula3]
+REVEAL Mpz.T = BRANDED "Mpz" OBJECT
+    val : Val;
+  END;
+TYPE Val = RECORD
+    w : ARRAY [0..2] OF Word.T;  (* >= sizeof(mpz_t) *)
+  END;
+\end{lstlisting}
+
+\noindent On 64-bit platforms, each {\tt Mpz.T} occupies approximately
+40--48~bytes (Modula-3 object header plus three machine words for the
+{\tt mpz\_t}), plus whatever GMP allocates internally for limbs beyond
+the inline storage.  Cleanup is automatic: every {\tt Mpz.T} is
+registered with a {\tt WeakRef} callback that calls {\tt
+\_\_gmpz\_clear} when the object is collected.
+
+GMP is among the fastest bignum libraries available.
+The external dependency is the main drawback.
+
+\paragraph{Mpq: rational bindings.}
+The auto-generator's database ({\tt mpz.scm}) contains entries for
+GMP's {\tt mpq} rational functions ({\tt mpq\_add}, {\tt mpq\_mul},
+{\tt mpq\_canonicalize}, {\tt mpq\_get\_num}/{\tt mpq\_get\_den},
+etc.), but these are \textbf{not currently exposed} in the Modula-3
+interfaces.  Creating {\tt Mpq.T} bindings would be straightforward:
+regenerate from the existing data, define {\tt Mpq.T <: REFANY}
+analogously to {\tt Mpz.T}, and add {\tt WeakRef} cleanup.  This
+would provide an alternative to {\tt BigRational} with GMP's
+optimized rational arithmetic (automatic GCD reduction, efficient
+numerator/denominator extraction).
+
+\paragraph{MPFR: arbitrary-precision floats.}
+MPFR bindings also exist ({\tt m3utils/mpfr/} and {\tt
+caltech-other/mpfr/}), providing {\tt Mpfr.T <: REFANY} with
+configurable precision, seven rounding modes, and the standard
+transcendental functions.  While not needed for the core numeric
+tower, MPFR could serve as the foundation for an optional
+``exact real'' or ``arbitrary-precision float'' extension.
+
+\paragraph{BigInt.T (pure Modula-3).}
+Located at {\tt caltech-parser/\allowbreak cit\_util/\allowbreak src/}.  The
+type {\tt BigInt.T <: ROOT} uses a sign-magnitude representation with
+a dynamically-sized array of machine words:
+
+\begin{lstlisting}[language=Modula3]
+REVEAL BigInt.T = BRANDED "BigInt" OBJECT
+    sign : [-1 .. 1];
+    rep  : NSeq;
+  END;
+\end{lstlisting}
+
+\noindent BigInt provides the basic operations ({\tt Add}, {\tt Sub},
+{\tt Mul}, {\tt Div}, {\tt Mod}) and bitwise operations.  It is pure
+Modula-3 with no external dependencies, making it highly portable.
+However, it lacks the algorithmic optimizations of GMP (sub-quadratic
+multiplication, etc.) and has seen less testing.
+
+\paragraph{Recommendation.}
+Use {\tt Mpz.T} as the primary bignum representation, with {\tt BigInt.T}
+available as a fallback for platforms without GMP.  The {\tt Mpz.T
+<: REFANY} typing is directly compatible with {\tt SchemeObject.T};
+{\tt BigInt.T <: ROOT <: REFANY} is equally compatible.  Both can be
+tested with {\tt ISTYPE} at dispatch points.
+
+%----------------------------------------------------------------------
+\section{Inexact Reals: {\tt LONGREAL}'s New Role}
+%----------------------------------------------------------------------
+
+With exact integers handled by {\tt REF INTEGER} and bignums,
+{\tt REF LONGREAL} becomes the \emph{inexact} real type only.
+A {\tt LONGREAL} value is never ``exact,'' even when integer-valued.
+This is a semantic shift: currently {\tt (exact?\ 1.0)} returns
+{\tt \#t}, but after the tower is implemented it must return {\tt \#f}
+because the value {\tt 1.0} entered the system as inexact.
+
+The {\tt SchemeLongReal.FromO} function remains the critical bridge
+for Modula-3 interoperability.  It must be extended to handle exact
+integer types:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE FromO(x : SchemeObject.T) : LONGREAL RAISES { E } =
+  BEGIN
+    IF ISTYPE(x, SchemeLongReal.T) THEN
+      RETURN NARROW(x, SchemeLongReal.T)^
+    ELSIF ISTYPE(x, REF INTEGER) THEN
+      RETURN FLOAT(NARROW(x, REF INTEGER)^, LONGREAL)
+    ELSIF ISTYPE(x, Mpz.T) THEN
+      RETURN Mpz.GetD(x)  (* GMP double extraction *)
+    ELSE
+      RAISE E(...)
+    END
+  END FromO;
+\end{lstlisting}
+
+\noindent This is the backward-compatibility linchpin: all existing
+Modula-3 code that calls {\tt FromO} continues to work without
+changes, receiving the {\tt LONGREAL} value regardless of the
+underlying exact type.
+
+%----------------------------------------------------------------------
+\section{Exact Rationals}
+%----------------------------------------------------------------------
+
+\subsection{The Rational Generic}
+
+The {\tt cit\_util} library provides {\tt Rational.ig}, a generic
+rational-number interface parameterized over a base integer type:
+
+\begin{lstlisting}[language=Modula3]
+GENERIC INTERFACE Rational(BaseInt);
+TYPE T = RECORD
+    n : BaseInt.T;        (* numerator *)
+    d : BaseInt.Natural;  (* denominator, always > 0 *)
+  END;
+\end{lstlisting}
+
+\noindent Two instantiations exist:
+\begin{itemize}
+\item {\tt IntRational = Rational(IntForRat)} --- uses machine
+  {\tt INTEGER}.
+\item {\tt BigRational = Rational(BigInt)} --- uses arbitrary-precision
+  {\tt BigInt.T}.
+\end{itemize}
+
+\subsection{The IntForRat Overflow Bug}
+\label{sec:intforrat-bug}
+
+{\tt IntForRat} adapts {\tt INTEGER} for use with the {\tt Rational}
+generic.  Its interface contains an explicit warning:
+
+\begin{quote}
+  ``This implementation truncates its results MOD NUMBER(INTEGER) so
+  that they are between FIRST(INTEGER) and LAST(INTEGER) inclusive.''
+\end{quote}
+
+\noindent The arithmetic operations are direct wrappers:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Mul(a, b : T) : T = BEGIN RETURN a * b END Mul;
+PROCEDURE Add(a, b : T) : T = BEGIN RETURN a + b END Add;
+\end{lstlisting}
+
+\noindent These \emph{silently overflow}.  When {\tt Rational.Add}
+calls {\tt IntForRat.Mul} to compute cross-products of numerators
+and denominators, intermediate values can wrap around $2^{64}$,
+producing silently wrong results.  {\tt IntRational} is therefore
+\textbf{unusable} for a correct numeric tower.
+
+\subsection{Recommendation}
+
+Use {\tt BigRational} (instantiated with {\tt BigInt}) or create a
+new instantiation {\tt MpzRational = Rational(MpzForRat)} where
+{\tt MpzForRat} adapts {\tt Mpz.T} to the {\tt Rational} generic's
+interface.  Since rational denominators are always positive, the
+GCD-based reduction in {\tt Rational.mg} automatically maintains
+lowest terms.
+
+For Scheme integration, exact rationals should be boxed as {\tt REF
+BigRational.T} (or a branded object type), distinguishable by
+{\tt ISTYPE} at dispatch points.
+
+%----------------------------------------------------------------------
+\section{Complex Numbers}
+%----------------------------------------------------------------------
+
+Complex numbers are the least urgent component of the tower.
+R5RS makes {\tt make-rectangular}, {\tt make-polar},
+{\tt real-part}, {\tt imag-part}, {\tt magnitude}, and {\tt angle}
+non-essential when an implementation does not support complex numbers.
+
+When the time comes, a natural representation is:
+
+\begin{lstlisting}[language=Modula3]
+TYPE SchemeComplex = BRANDED "SchemeComplex" REF RECORD
+    re, im : SchemeObject.T;
+  END;
+\end{lstlisting}
+
+\noindent where {\tt re} and {\tt im} are themselves Scheme numbers
+(exact or inexact).  This allows exact Gaussian integers
+(e.g., $3+4i$ with exact components) alongside inexact complex
+values.  The exact/inexact classification of a complex number is
+determined by its components: exact iff both parts are exact.
+
+%----------------------------------------------------------------------
+\section{{\tt FLOAT} and {\tt EXTENDED}}
+\label{sec:float-extended}
+%----------------------------------------------------------------------
+
+Modula-3 defines three floating-point types:
+\begin{itemize}
+\item {\tt REAL} --- IEEE~754 single precision (32-bit).
+\item {\tt LONGREAL} --- IEEE~754 double precision (64-bit).
+\item {\tt EXTENDED} --- ``extended precision,'' platform-dependent.
+\end{itemize}
+
+On most modern platforms (AMD64, ARM64), {\tt EXTENDED} is mapped
+to {\tt LONGREAL} (both 64-bit).  Only on x86 (I386) targets does
+{\tt EXTENDED} correspond to the 80-bit x87 extended format.
+
+For the numeric tower, {\tt LONGREAL} is the only relevant inexact
+type.  {\tt REAL} offers no advantage (less precision, same allocation
+overhead), and {\tt EXTENDED}'s platform-dependent behavior makes it
+unsuitable for portable Scheme semantics.  However, {\tt FromO} could
+be extended to accept {\tt REF REAL} and {\tt REF EXTENDED} values
+passed in from Modula-3 code, converting them to {\tt LONGREAL} for
+Scheme consumption.
+
+%======================================================================
+\chapter{Modula-3 Interoperability}
+\label{ch:m3interop}
+%======================================================================
+
+%----------------------------------------------------------------------
+\section{The {\tt REFANY} Principle}
+%----------------------------------------------------------------------
+
+MScheme's defining interoperability feature is that every Scheme value
+is a Modula-3 {\tt REFANY}.  This means:
+
+\begin{itemize}
+\item Scheme values can be passed to Modula-3 procedures expecting
+  {\tt REFANY} (or specific reference types) without marshalling.
+\item Modula-3 values that are reference types can be passed into
+  Scheme without wrapping.
+\item The sstubgen stub generator can produce Scheme bindings for
+  Modula-3 interfaces automatically, handling numeric conversions
+  via {\tt SchemeLongReal.FromO}, {\tt SchemeLongReal.Int}, etc.
+\end{itemize}
+
+Any numeric tower extension must preserve this principle.  Since
+{\tt REF INTEGER <: REFANY}, {\tt Mpz.T <: REFANY}, and
+{\tt BigInt.T <: ROOT <: REFANY}, all proposed exact types satisfy
+the constraint.
+
+%----------------------------------------------------------------------
+\section{The sstubgen Bridge}
+%----------------------------------------------------------------------
+
+The sstubgen stub generator produces Modula-3 procedures that convert
+between Scheme objects and typed Modula-3 values.  For numeric parameters,
+it calls:
+
+\begin{itemize}
+\item {\tt SchemeLongReal.FromO(x)} for {\tt LONGREAL} parameters.
+\item {\tt SchemeLongReal.Int(x)} for {\tt INTEGER} parameters.
+\item {\tt SchemeLongReal.Card(x)} for {\tt CARDINAL} parameters.
+\end{itemize}
+
+With a numeric tower, these functions must accept the new types.
+{\tt FromO} becomes the universal numeric extraction point:
+regardless of whether a Scheme number is a fixnum, a bignum, or a
+float, {\tt FromO} returns a {\tt LONGREAL} approximation.
+{\tt Int} and {\tt Card} should preferentially extract exact integers
+without the lossy round-trip through {\tt LONGREAL}:
+
+\begin{lstlisting}[language=Modula3]
+PROCEDURE Int(x : SchemeObject.T) : INTEGER RAISES { E } =
+  BEGIN
+    IF ISTYPE(x, REF INTEGER) THEN
+      RETURN NARROW(x, REF INTEGER)^
+    ELSIF ISTYPE(x, Mpz.T) THEN
+      RETURN Mpz.ToInteger(x)  (* raises if out of range *)
+    ELSIF ISTYPE(x, SchemeLongReal.T) THEN
+      (* existing LONGREAL path *)
+      ...
+    END
+  END Int;
+\end{lstlisting}
+
+%----------------------------------------------------------------------
+\section{The {\tt LONGINT} Problem}
+%----------------------------------------------------------------------
+
+Modula-3 defines {\tt LONGINT} as a 64-bit integer type, distinct
+from {\tt INTEGER} (which is also 64-bit on 64-bit targets).  On
+32-bit targets, {\tt INTEGER} is 32 bits while {\tt LONGINT} remains
+64 bits.
+
+Currently, sstubgen does not handle {\tt LONGINT} parameters.  With
+a numeric tower, a {\tt LONGINT}-accepting stub could extract a 64-bit
+exact integer directly from a fixnum without going through {\tt LONGREAL}
+(which loses precision beyond $2^{53}$).  This is a secondary concern
+since 32-bit targets are increasingly rare, but the design should
+not preclude it.
+
+%----------------------------------------------------------------------
+\section{{\tt Word.T} and Unsigned Arithmetic}
+%----------------------------------------------------------------------
+
+Modula-3's {\tt Word.T} is the unsigned machine word type, equal in
+size to {\tt INTEGER} but with unsigned semantics.  The {\tt Word}
+interface provides modular arithmetic ({\tt Word.Plus}, {\tt Word.Times},
+{\tt Word.And}, etc.) that wraps on overflow.
+
+Scheme has no native unsigned integer type, but SRFI-60 and SRFI-151
+define bitwise operations on exact integers that assume a two's
+complement representation extended to arbitrary precision.  The
+implementation can use {\tt Word.T} arithmetic internally for
+performance-critical bitwise operations while maintaining the Scheme
+semantics of infinite-precision two's complement.
+
+%======================================================================
+\chapter{Compiler Implications}
+\label{ch:compiler}
+%======================================================================
+
+%----------------------------------------------------------------------
+\section{Current Architecture}
+%----------------------------------------------------------------------
+
+The MScheme compiler ({\tt schemecompiler/src/compiler.scm}, $\approx
+3{,}000$ lines) translates Scheme source to Modula-3 source, which is
+then compiled by the CM3 compiler.  All Scheme values are {\tt
+SchemeObject.T = REFANY} at the Modula-3 level.
+
+The compiler performs two key optimizations for numeric code:
+
+\paragraph{Inline arithmetic.}
+Binary operations {\tt +}, {\tt -}, {\tt *}, {\tt quotient},
+{\tt remainder} and comparisons {\tt =}, {\tt <}, {\tt >}, {\tt <=},
+{\tt >=} are compiled inline when applied to exactly two arguments.
+The generated code extracts {\tt LONGREAL} values via {\tt NARROW},
+performs native arithmetic, and re-boxes the result:
+
+\begin{lstlisting}[language=Modula3]
+(* compiled from (+ a b) *)
+SchemeLongReal.FromLR(
+  NARROW(a_0, SchemeLongReal.T)^ +
+  NARROW(a_1, SchemeLongReal.T)^)
+\end{lstlisting}
+
+\paragraph{LONGREAL unboxing.}
+For self-tail-call procedures and named-let loops, the compiler
+analyzes which parameters are used exclusively in numeric contexts
+(the {\tt analyze-numeric-params} pass).  Parameters meeting three
+conditions---every use is numeric-compatible, at least one use
+``forces'' a numeric type, and all self-tail-call arguments are
+numeric---are unboxed to local {\tt LONGREAL} variables:
+
+\begin{lstlisting}[language=Modula3]
+VAR nr_0, nr_1 : LONGREAL;
+BEGIN
+  nr_0 := NARROW(a_0, SchemeLongReal.T)^;
+  nr_1 := NARROW(a_1, SchemeLongReal.T)^;
+  LOOP
+    (* inner loop uses nr_0, nr_1 directly *)
+    result := SchemeLongReal.FromLR(nr_0 + nr_1);
+    (* tail-call reassignment: *)
+    nr_0 := nr_0 + 1.0d0;
+    ...
+  END
+END
+\end{lstlisting}
+
+\noindent This eliminates per-iteration heap allocation and {\tt NARROW}
+overhead, yielding 4--5$\times$ speedups on recursive numeric
+benchmarks.
+
+%----------------------------------------------------------------------
+\section{Impact of a Numeric Tower on Compiled Code}
+\label{sec:tower-impact}
+%----------------------------------------------------------------------
+
+Introducing exact integers breaks the assumption that all numbers are
+{\tt SchemeLongReal.T}.  The compiler must be modified in several
+ways.
+
+\subsection{Inline Arithmetic Dispatch}
+
+Currently, inline {\tt +} emits a single {\tt NARROW} to
+{\tt SchemeLongReal.T}.  With a numeric tower, the generated code
+must dispatch on the runtime types of both operands.  The fastest
+approach is a two-level {\tt ISTYPE} cascade:
+
+\begin{lstlisting}[language=Modula3]
+(* compiled from (+ a b) with numeric tower *)
+IF ISTYPE(a_0, REF INTEGER)
+   AND ISTYPE(a_1, REF INTEGER) THEN
+  (* fast path: fixnum + fixnum *)
+  SchemeInt.Add(a_0, a_1)
+ELSE
+  (* slow path: coerce to LONGREAL *)
+  SchemeLongReal.FromLR(
+    SchemeLongReal.FromO(a_0) +
+    SchemeLongReal.FromO(a_1))
+END
+\end{lstlisting}
+
+\noindent The fixnum fast path avoids heap allocation when the result
+fits in {\tt INTEGER}; the slow path falls back to the existing
+{\tt LONGREAL} code with a generalized {\tt FromO} that handles all
+numeric types.
+
+\subsection{Unboxing Under a Tower}
+
+The current unboxing pass assumes all numeric values are {\tt
+LONGREAL}.  With a tower, two unboxing strategies are possible:
+
+\begin{enumerate}
+\item \textbf{Unbox to {\tt LONGREAL} (conservative).}
+  Keep the current scheme.  {\tt NARROW} to {\tt SchemeLongReal.T}
+  at loop entry; if the value is actually a fixnum, the {\tt NARROW}
+  fails.  The compiler could emit a guard: if all initial values are
+  {\tt SchemeLongReal.T}, enter the unboxed loop; otherwise fall back
+  to a generic loop.
+
+\item \textbf{Unbox to {\tt INTEGER} (aggressive).}
+  When the compiler can prove that loop variables remain in the
+  fixnum range (e.g., a counting loop from 0 to $n$), unbox to
+  native {\tt INTEGER}.  This is faster than {\tt LONGREAL} for
+  pure integer work but requires overflow checking.
+\end{enumerate}
+
+The conservative approach preserves existing behavior.  The aggressive
+approach is a significant optimization but requires the overflow
+detection machinery described in Section~\ref{sec:overflow}.
+
+\subsection{Type Inference Extensions}
+
+The current type inference ({\tt analyze-numeric-params}) classifies
+parameters as ``numeric'' or ``generic.''  With a tower, a finer
+classification is desirable:
+
+\begin{itemize}
+\item \textbf{Integer-only}: parameter used only with integer
+  operations ({\tt quotient}, {\tt remainder}, bitwise ops).
+\item \textbf{Numeric}: parameter used with general arithmetic
+  ({\tt +}, {\tt -}, {\tt *}).
+\item \textbf{Generic}: parameter used in non-numeric contexts.
+\end{itemize}
+
+Integer-only parameters could be unboxed to {\tt INTEGER} (with
+overflow promotion); numeric parameters to {\tt LONGREAL}; generic
+parameters remain boxed.
+
+%----------------------------------------------------------------------
+\section{Integer Overflow in Modula-3}
+\label{sec:overflow}
+%----------------------------------------------------------------------
+
+\subsection{What the Language Specification Says}
+
+The Modula-3 language definition~\cite{spwm3,m3defn} is notably
+silent on integer overflow semantics.  Integer arithmetic overflow
+is \emph{not} explicitly classified as a checked runtime error, an
+unchecked runtime error, or undefined behavior.  The specification
+states only that programs should use the {\tt Word} interface for
+modular arithmetic, implying that ordinary {\tt INTEGER} operations
+do \emph{not} wrap---but without specifying what they do instead.
+
+The closest guidance appears in the {\tt FOR} loop specification,
+which warns:
+
+\begin{quote}
+  If the upper bound of the loop is {\tt LAST(INTEGER)} or
+  {\tt LAST(LONGINT)}, it should be rewritten as a {\tt WHILE}
+  loop to avoid overflow.
+\end{quote}
+
+\noindent This warning to programmers suggests overflow is a hazard
+to be avoided, but does not define the consequences.
+
+The runtime error enumeration does include {\tt IntegerOverflow}
+(in {\tt RuntimeError.T}), with the message ``Integer result too
+large to represent,'' but it is a dead letter: no code path in the
+current CM3 runtime raises it.
+
+\subsection{What CM3 Actually Does}
+
+The CM3 C backend ({\tt m3back/src/M3C.m3}) translates {\tt INTEGER}
+arithmetic directly to C operators.  The code generator's {\tt add},
+{\tt subtract}, and {\tt multiply} procedures all delegate to a
+generic {\tt op2} function that emits:
+
+\begin{lstlisting}[language=C]
+(left_operand) + (right_operand)
+(left_operand) - (right_operand)
+(left_operand) * (right_operand)
+\end{lstlisting}
+
+\noindent There is no overflow check, no use of
+{\tt \_\_builtin\_add\_overflow}, and no post-operation validation.
+Signed integer overflow in C is \emph{undefined behavior} per the
+C standard (C11~\S6.5/5).
+
+The compiler's constant-folding pass ({\tt m3front/src/exprs/\allowbreak
+IntegerExpr.m3}) \emph{does} detect overflow at compile time, using
+the arbitrary-precision {\tt TInt} module ({\tt m3middle/src/TInt.m3})
+which performs full overflow checking.  But this only affects
+compile-time constants; runtime arithmetic is unprotected.
+
+On POSIX platforms, the CM3 runtime ({\tt m3core/src/runtime/\allowbreak
+POSIX/\allowbreak RTSignalC.c}) installs signal handlers for {\tt
+SIGSEGV}, {\tt SIGBUS}, {\tt SIGPIPE}, etc., but \textbf{not} for
+{\tt SIGFPE}.  Integer overflow at runtime is therefore completely
+undetected.  On Windows, {\tt EXCEPTION\_INT\_OVERFLOW} is mapped to
+{\tt RuntimeError.IntegerOverflow}, but this mapping is moot since
+the C backend does not generate instructions that would trigger
+the exception.
+
+In practice, on all current targets (AMD64, ARM64, I386), signed
+integer overflow wraps in two's complement because the underlying
+hardware does so and modern compilers on these platforms generate
+wrapping code for simple signed arithmetic---but this is an
+accident of implementation, not a guarantee.  An aggressive C
+optimizer could in principle exploit the undefined behavior.
+
+\subsection{Implications for a Numeric Tower}
+
+This situation has three consequences for fixnum arithmetic:
+
+\begin{enumerate}
+\item \textbf{We cannot rely on overflow trapping.}
+  There is no signal, exception, or runtime error when {\tt INTEGER}
+  arithmetic overflows.  The program continues with a silently wrong
+  value.
+
+\item \textbf{We cannot rely on wrapping.}
+  Although wrapping occurs in practice, it is C undefined behavior
+  and could change with compiler optimizations.
+
+\item \textbf{Overflow must be detected explicitly before
+  performing the operation.}
+  This is the only portable approach.
+\end{enumerate}
+
+\subsection{Detection Strategies}
+
+\paragraph{Pre-check.}
+Before {\tt a + b}, check whether the result would overflow:
+\begin{lstlisting}[language=Modula3]
+IF (b > 0 AND a > LAST(INTEGER) - b) OR
+   (b < 0 AND a < FIRST(INTEGER) - b) THEN
+  (* promote to bignum *)
+ELSE
+  RETURN a + b
+END
+\end{lstlisting}
+This adds two comparisons and a subtraction per operation, roughly
+tripling the cost of a fixnum addition.
+
+\paragraph{Post-check via {\tt Word}.}
+Perform the addition using {\tt Word.Plus} (unsigned, wrapping---this
+\emph{is} well-defined) and check whether the signs indicate overflow:
+\begin{lstlisting}[language=Modula3]
+WITH sum = Word.Plus(a, b) DO
+  IF Word.And(
+       Word.Xor(sum, a),
+       Word.Xor(sum, b))
+     >= Word.Shift(1, BITSIZE(INTEGER)-1) THEN
+    (* overflow: promote to bignum *)
+  ELSE
+    RETURN VAL(sum, INTEGER)
+  END
+END
+\end{lstlisting}
+This uses defined-behavior unsigned arithmetic throughout.  The
+sign-bit check detects overflow in both directions.  Still adds
+overhead, but avoids the branch-heavy pre-check.
+
+\paragraph{Compiler intrinsic via emitted C.}
+Since the MScheme compiler emits Modula-3 source (not C), it cannot
+directly use GCC/Clang {\tt \_\_builtin\_add\_overflow} intrinsics.
+However, a thin Modula-3 wrapper with {\tt <*EXTERNAL*>} pragmas
+calling a C helper function is possible:
+
+\begin{lstlisting}[language=C]
+int SchemeFixnum__AddCheck(long a, long b, long *result) {
+    return __builtin_add_overflow(a, b, result);
+}
+\end{lstlisting}
+
+\noindent This is the fastest option (single instruction on x86:
+{\tt jo} after {\tt add}) but couples the implementation to the
+C backend and GCC/Clang.
+
+\paragraph{Practical recommendation.}
+Use the {\tt Word}-based post-check for the initial implementation.
+It is portable, uses only defined behavior, and has acceptable
+overhead.  If profiling shows fixnum arithmetic to be a bottleneck,
+add a C helper using {\tt \_\_builtin\_*\_overflow} as an alternative
+fast path.
+
+\paragraph{Multiplication.}
+Overflow detection for multiplication is harder than for addition.
+The pre-check requires a division (expensive) and has edge cases
+around {\tt FIRST(INTEGER)}.  The {\tt Word}-based approach requires
+a double-width multiply or a comparison against the maximum quotient.
+In practice, the simplest correct approach for multiplication is:
+check whether both operands fit in 32~bits (a single range check);
+if so, the 64-bit product cannot overflow; otherwise, promote both
+operands to {\tt Mpz.T} and multiply there.
+
+%----------------------------------------------------------------------
+\section{Bootstrap Considerations}
+%----------------------------------------------------------------------
+
+The MScheme compiler is self-hosting: it is written in Scheme and
+compiled by itself.  Introducing a numeric tower requires a two-phase
+bootstrap:
+
+\begin{enumerate}
+\item \textbf{Phase~1.}  Compile the new compiler source under the
+  old compiler (which uses {\tt LONGREAL}-only arithmetic).  The new
+  compiler source must be valid under both the old and new numeric
+  semantics.  Since integer arithmetic on doubles is exact for values
+  up to $2^{53}$ and the compiler processes only small integers
+  (line numbers, indices, string lengths), this is straightforward.
+
+\item \textbf{Phase~2.}  Use the Phase~1 compiler to recompile
+  itself.  This produces a compiler that emits numeric-tower-aware
+  Modula-3 code.
+\end{enumerate}
+
+The bootstrap is eased by the fact that the compiler itself does not
+exercise the numeric tower strenuously---it manipulates symbols,
+strings, and small integers, all well within {\tt LONGREAL}'s exact
+range.
+
+%======================================================================
+\chapter{Integer Representation Design}
+\label{ch:integer-design}
+%======================================================================
+
+This chapter evaluates three concrete designs for exact integer
+representation and recommends one.
+
+%----------------------------------------------------------------------
+\section{Design A: Fixnum Only ({\tt REF INTEGER})}
+\label{sec:fixnum-only}
+%----------------------------------------------------------------------
+
+\paragraph{Representation.}
+All exact integers are {\tt REF INTEGER}.  Overflow on arithmetic
+signals an error (or silently promotes to {\tt LONGREAL} inexact).
+
+\paragraph{Advantages.}
+\begin{itemize}
+\item Minimal implementation complexity.
+\item Fast arithmetic (native {\tt INTEGER} operations).
+\item The exact/inexact distinction is established: {\tt REF INTEGER}
+  is exact, {\tt REF LONGREAL} is inexact.
+\end{itemize}
+
+\paragraph{Disadvantages.}
+\begin{itemize}
+\item Violates R5RS: overflow on {\tt (+\ MOST-POSITIVE-FIXNUM\ 1)}
+  should produce a correct (bignum) result, not an error.
+\item 64-bit range is large but not unlimited; edge cases in
+  cryptographic or number-theoretic code will fail.
+\item {\tt exact->inexact} on large fixnums loses precision
+  (inherent in IEEE~754, not a bug).
+\end{itemize}
+
+\paragraph{Verdict.}
+Acceptable as a transitional step but not R5RS-conformant.
+
+%----------------------------------------------------------------------
+\section{Design B: Mpz Only}
+\label{sec:mpz-only}
+%----------------------------------------------------------------------
+
+\paragraph{Representation.}
+All exact integers are {\tt Mpz.T}.  No fixnum representation;
+even small integers like $0$ and $1$ are GMP objects.
+
+\paragraph{Advantages.}
+\begin{itemize}
+\item Correct by construction: no overflow, arbitrary precision.
+\item Single code path for all exact integers (no dispatch on
+  fixnum vs.\ bignum).
+\item GMP internally uses machine-word arithmetic for small values,
+  so the constant factor is tolerable.
+\end{itemize}
+
+\paragraph{Disadvantages.}
+\begin{itemize}
+\item Every exact integer requires a GMP allocation (at least 3
+  machine words for the {\tt mpz\_t} structure plus the Modula-3
+  object header and weak reference for deallocation).
+\item Arithmetic on small integers is slower than native {\tt INTEGER}:
+  function call overhead, GMP's internal dispatch, memory indirection.
+\item External dependency on GMP.
+\end{itemize}
+
+\paragraph{Verdict.}
+Correct and simple, but unnecessarily slow for the common case
+of small integers.
+
+%----------------------------------------------------------------------
+\section{Design C: Three-Level (Recommended)}
+\label{sec:three-level}
+%----------------------------------------------------------------------
+
+\paragraph{Representation.}
+\begin{enumerate}
+\item \textbf{Fixnum}: {\tt REF INTEGER} for values in
+  $[-2^{63}, 2^{63}-1]$.
+\item \textbf{Bignum}: {\tt Mpz.T} for values outside fixnum range.
+\item \textbf{Inexact}: {\tt REF LONGREAL} (unchanged).
+\end{enumerate}
+
+\paragraph{Type dispatch.}
+Every numeric operation begins with:
+\begin{lstlisting}[language=Modula3]
+IF ISTYPE(x, REF INTEGER) THEN
+  (* fixnum path *)
+ELSIF ISTYPE(x, Mpz.T) THEN
+  (* bignum path *)
+ELSIF ISTYPE(x, SchemeLongReal.T) THEN
+  (* inexact path *)
+ELSE
+  RAISE E("not a number: " & ...)
+END
+\end{lstlisting}
+
+\paragraph{Fixnum caching.}
+Small fixnums (e.g., $[-256, 256]$) should be pre-allocated in a
+global array, analogous to the current {\tt SchemeLongReal.Zero/One}
+caching but covering a wider range.  This eliminates allocation for
+the most common integer values.
+
+\paragraph{Promotion and demotion.}
+\begin{itemize}
+\item Fixnum arithmetic that overflows promotes to {\tt Mpz.T}.
+\item Mpz results that fit in fixnum range demote to {\tt REF INTEGER}.
+  (The {\tt Mpz.ToInteger} function provides the range check.)
+\item Mixing exact and inexact (e.g., fixnum + float) produces
+  inexact, following R5RS contagion rules.
+\end{itemize}
+
+\paragraph{Advantages.}
+\begin{itemize}
+\item R5RS-conformant: no overflow, no precision loss on exact
+  arithmetic.
+\item Fast for common cases: small integer arithmetic uses native
+  {\tt INTEGER}.
+\item GMP available for arbitrary precision when needed.
+\item Clear exact/inexact semantics.
+\end{itemize}
+
+\paragraph{Disadvantages.}
+\begin{itemize}
+\item Two-way dispatch on the integer path (fixnum vs.\ bignum).
+\item Overflow detection on the fixnum path (Section~\ref{sec:overflow}).
+\item More complex code than either single-representation design.
+\end{itemize}
+
+\paragraph{Verdict.}
+The right trade-off for a production Scheme implementation.  The
+three-level design is standard practice in major Scheme and Lisp
+implementations (Chez Scheme, Guile, SBCL, Racket) for good reason.
+
+%----------------------------------------------------------------------
+\section{Fixnum Caching Detail}
+%----------------------------------------------------------------------
+
+A pre-allocated array of {\tt REF INTEGER} values for the range
+$[-256, 256]$ (513 entries) eliminates allocation for the vast
+majority of integer operations in practice:
+
+\begin{lstlisting}[language=Modula3]
+VAR cache : ARRAY [-256..256] OF REF INTEGER;
+
+PROCEDURE FromI(x : INTEGER) : REF INTEGER =
+  BEGIN
+    IF x >= -256 AND x <= 256 THEN
+      RETURN cache[x]
+    ELSE
+      WITH r = NEW(REF INTEGER) DO r^ := x; RETURN r END
+    END
+  END FromI;
+\end{lstlisting}
+
+\noindent The cache size is a tunable parameter.  Larger caches
+reduce allocation at the cost of startup memory; 513 entries
+($\approx 4$\,KB on 64-bit) is negligible.
+
+%======================================================================
+\chapter{Case Study: Integer Types in the CSP Compiler}
+\label{ch:csp}
+%======================================================================
+
+The CSP compiler ({\tt cspc}, located at {\tt intel-async/\allowbreak
+async-toolkit/\allowbreak m3utils/\allowbreak m3utils/\allowbreak
+csp/})~\cite{cspmanual} is an MScheme application that compiles a
+hardware description language for asynchronous circuits.  Its
+treatment of integers illustrates a more sophisticated approach
+to integer types that is instructive for the numeric tower design.
+
+%----------------------------------------------------------------------
+\section{Three Kinds of Integers}
+%----------------------------------------------------------------------
+
+CSP defines three integer type categories, reflecting the needs
+of hardware description:
+
+\begin{description}[style=nextline]
+\item[{\tt int} (arbitrary precision).]
+  The default integer type.  Expressions are evaluated in arbitrary
+  precision---there is no overflow, no wrapping, and no width limit.
+  This is the type of intermediate computations.
+
+\item[{\tt int(W)} (unsigned, $W$~bits).]
+  Range: $[0, 2^W - 1]$.  Represents a hardware register of width $W$.
+  Assignment to an {\tt int(W)} variable implicitly truncates
+  (two's complement wrapping).
+
+\item[{\tt sint(W)} (signed, $W$~bits).]
+  Range: $[-2^{W-1}, 2^{W-1}-1]$.  Also represents a hardware register,
+  but with two's complement signed interpretation.
+\end{description}
+
+\noindent The CSP manual states the design principle explicitly:
+
+\begin{quote}
+  Expressions use arbitrary precision arithmetic, but variables can
+  either have arbitrary precision OR specified precision, in which
+  case the programmer-designer specifies the precise bit width of
+  the variable (and whether it is signed or not).
+\end{quote}
+
+This separation---\emph{expressions} are arbitrary-precision,
+\emph{storage} may truncate---is directly analogous to the Scheme
+numeric tower's treatment of exact integers (arbitrary precision
+in computation, with {\tt exact->inexact} as the explicit lossy
+conversion).
+
+%----------------------------------------------------------------------
+\section{Interval Arithmetic for Range Tracking}
+%----------------------------------------------------------------------
+
+The CSP compiler performs static range analysis using interval
+arithmetic over an extended number system ({\tt xnum}).  An
+{\tt xnum} is either a {\tt BigInt.T} (arbitrary precision),
+{\tt +inf}, {\tt -inf}, or {\tt nan}.  A \emph{range} is a pair
+$[\mathit{min}, \mathit{max}]$ of xnums.
+
+Ranges propagate through all arithmetic operations via the
+\emph{cartesian product principle}: for a binary operation
+$\mathop{op}$ on ranges $[a_{\min}, a_{\max}]$ and
+$[b_{\min}, b_{\max}]$, compute all four corner combinations
+$\mathop{op}(a_i, b_j)$ and return the range
+$[\min(\text{results}), \max(\text{results})]$.
+
+From {\tt csp/src/bigint.scm}:
+
+\begin{lstlisting}[language=Scheme]
+(define (make-simple-range-binop op)
+  (lambda (a b)
+    (let* ((all-pairs   (cartesian-product a b))
+           (all-results (map eval
+             (map (lambda (x) (cons op x))
+                  all-pairs)))
+           (min-res (apply xnum-min all-results))
+           (max-res (apply xnum-max all-results)))
+      (list min-res max-res))))
+
+(define range-+ (make-simple-range-binop xnum-+))
+(define range-* (make-simple-range-binop xnum-*))
+\end{lstlisting}
+
+\noindent Division requires special handling: the range is split at
+zero to handle sign changes, and division by zero yields
+$+\infty$ or {\tt nan}.
+
+%----------------------------------------------------------------------
+\section{Bitwise Operations on Ranges}
+%----------------------------------------------------------------------
+
+The CSP compiler also performs range analysis for bitwise
+operations---a problem significantly harder than arithmetic ranges,
+since bitwise operations do not preserve the interval structure in
+the same way.  The approach uses two helper functions:
+
+\begin{itemize}
+\item {\tt xnum-setallbits}: given $x$, returns the value with all
+  bits set from bit~0 to the MSB of $x$ (i.e., $2^{\lceil\log_2(x+1)\rceil}-1$).
+  This is the \emph{maximum} value achievable by OR-ing arbitrary
+  bit patterns up to the width of $x$.
+
+\item {\tt xnum-clearallbits}: the complement operation, returning
+  the \emph{minimum} value achievable by AND-ing.
+\end{itemize}
+
+For example, the OR range of two non-negative ranges is:
+
+\begin{lstlisting}[language=Scheme]
+(define (range-| a b)
+  (let* ((rmin (xnum-min (range-min a) (range-min b)))
+         (rmax (xnum-| (xnum-setallbits (range-max a))
+                       (xnum-setallbits (range-max b)))))
+    (make-range rmin rmax)))
+\end{lstlisting}
+
+\noindent XOR ranges require considering sign interactions and are
+the most complex, handling positive and negative sub-ranges
+separately.
+
+The implementation comment notes:
+
+\begin{quote}
+  Interval arithmetic on bitwise operators is not entirely
+  straightforward, and some of the intervals used here may not be
+  tight.  It is however believed they are all sound as coded.
+\end{quote}
+
+\noindent ``Sound but not tight'' is the practical standard: ranges
+may be conservatively wider than necessary, but never exclude valid
+values.
+
+%----------------------------------------------------------------------
+\section{Relevance to MScheme}
+%----------------------------------------------------------------------
+
+The CSP compiler's approach suggests two lessons for MScheme's
+numeric tower:
+
+\begin{enumerate}
+\item \textbf{Arbitrary-precision expressions with bounded storage}
+  is a proven pattern.  The Scheme equivalent is: exact integer
+  arithmetic is arbitrary-precision; conversion to fixnum-width
+  storage (e.g., for Modula-3 interop via {\tt SchemeLongReal.Int})
+  is an explicit, checked operation.
+
+\item \textbf{Bitwise operations on bignums are well-defined} in the
+  two's complement model.  The CSP compiler's range analysis for
+  bitwise operations, while approximate, demonstrates that the
+  operations themselves are straightforward---the subtlety is only in
+  static analysis, which MScheme's dynamic types sidestep entirely.
+  GMP's bitwise operations ({\tt mpz\_and}, {\tt mpz\_ior}, etc.)
+  already implement two's complement semantics for negative operands.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\section{What a Numeric Tower Would Simplify in {\tt cspc}}
+\label{sec:cspc-simplification}
+%----------------------------------------------------------------------
+
+The CSP compiler provides a concrete case study of the cost imposed
+by MScheme's lack of exact integers.  Because all MScheme numbers
+are {\tt LONGREAL}, {\tt cspc} maintains its own arbitrary-precision
+integer layer in {\tt bigint.scm} (1\,009~lines), built on top of
+Modula-3's {\tt BigInt.T} via the Scheme/Modula-3 stub interface.
+
+This file has four distinct layers:
+
+\begin{description}[style=nextline]
+\item[Layer~1: {\tt BigInt.T} wrappers ($\sim\!85$~lines).]
+  Functions like {\tt force-bigint} (convert a Scheme number to
+  {\tt BigInt.T}), {\tt bigint?} (type test), and {\tt make-big-op}
+  (template for wrapping {\tt BigInt} operations as Scheme
+  procedures).  These exist \emph{solely} because MScheme's native
+  numbers cannot represent exact integers.
+  \textbf{With native bignums: delete entirely.}
+
+\item[Layer~2: Extended numbers / {\tt xnum} ($\sim\!280$~lines).]
+  An ``extended number'' is either a {\tt BigInt.T}, {\tt +inf},
+  {\tt -inf}, or {\tt nan}.  Each {\tt xnum} arithmetic function
+  ({\tt xnum-+}, {\tt xnum-*}, etc.) dispatches on these four
+  cases: infinity/NaN handling is algorithmic necessity, but the
+  {\tt BigInt.T} branch is pure wrapper code
+  (e.g., {\tt (big+ a b)} instead of {\tt (+ a b)}).
+  \textbf{With native bignums: $\sim\!120$~lines of wrapper calls
+  become direct Scheme arithmetic; $\sim\!130$~lines of
+  $\pm\infty$/NaN handling remain unchanged.}
+
+\item[Layer~3: Range/interval system ($\sim\!380$~lines).]
+  The cartesian-product range operations ({\tt range-+},
+  {\tt range-*}, {\tt range-|}, etc.) are already abstracted
+  through the {\tt xnum} layer.
+  \textbf{With native bignums: no changes.}
+
+\item[Layer~4: Utilities and tests ($\sim\!160$~lines).]
+  Evaluation helpers ({\tt xnum-eval}) and test code.
+  \textbf{With native bignums: can be simplified or deleted.}
+\end{description}
+
+\noindent The quantitative impact is summarized in
+Table~\ref{tab:cspc-impact}.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Category} & \textbf{Current} & \textbf{With bignums} & \textbf{Change} \\
+\midrule
+{\tt BigInt.T} wrappers         &  85 &   0 & $-100\%$ \\
+{\tt bigint?} type dispatch     &  30 &   0 & $-100\%$ \\
+{\tt xnum-*} wrapper calls      & 120 &  $\sim\!0$ & $-100\%$ \\
+$\pm\infty$/NaN handling        & 130 & 130 & $0\%$ \\
+Range/interval logic            & 380 & 380 & $0\%$ \\
+Utilities/tests                 & 160 & 160 & $0\%$ \\
+\midrule
+\textbf{Total}                  & \textbf{1\,009} & \textbf{$\sim\!770$} & $\mathbf{-24\%}$ \\
+\bottomrule
+\end{tabular}
+\caption{Impact of native exact integers on {\tt cspc}'s
+  {\tt bigint.scm}.  The 380~lines of range logic are untouched
+  because they are already abstracted through the {\tt xnum} layer.}
+\label{tab:cspc-impact}
+\end{table}
+
+Beyond line counts, the deeper benefit is the elimination of an
+entire abstraction layer.  Currently, {\tt cspc} must maintain a
+parallel number system: every arithmetic expression goes through
+{\tt force-bigint} to convert from Scheme's {\tt LONGREAL} to
+{\tt BigInt.T}, performs the operation via Modula-3 stubs, and
+converts back.  There are 21~calls to {\tt BigInt.New} ({\tt
+LONGREAL} $\to$ {\tt BigInt.T}) and 41~{\tt bigint?} type checks
+scattered through the code.  With native bignums, ordinary Scheme
+arithmetic ({\tt +}, {\tt *}, {\tt expt}, etc.) would be exact by
+default, and the entire conversion apparatus vanishes.
+
+The {\tt xnum} layer would still be needed for $\pm\infty$ and
+NaN semantics, but its finite-integer branches would reduce from
+multi-line wrapper calls to direct Scheme operations---a one-line
+change per function.
+
+Two categories of {\tt BigInt} calls would \emph{remain} even with
+native bignums: {\tt BigInt.ToInteger} (13~calls, extracting machine
+integers for Modula-3 code generation) and {\tt BigInt.Format}
+(18~calls, converting to string for code output).  These represent
+the genuine Modula-3 interface boundary, not a workaround for
+missing Scheme functionality.  With a numeric tower, these would
+become calls to {\tt number->string} or the {\tt SchemeLongReal.Int}
+bridge.
+
+%======================================================================
+\chapter{Exotic Representations}
+\label{ch:exotic}
+%======================================================================
+
+This chapter briefly surveys alternative numeric representations
+that have been proposed in the literature but are not recommended
+for MScheme.
+
+%----------------------------------------------------------------------
+\section{Continued Fractions}
+%----------------------------------------------------------------------
+
+Continued fractions represent real numbers as:
+\[
+  a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{\ddots}}}
+\]
+Rational numbers have finite continued-fraction representations;
+irrationals have infinite ones.  Arithmetic on continued fractions
+(Gosper's algorithm~\cite{gosper}) processes terms lazily, enabling
+exact real arithmetic for algebraic expressions.
+
+\paragraph{Why not for MScheme.}
+Continued-fraction arithmetic is complex to implement and slow
+in practice.  Basic operations like addition require maintaining
+a matrix of four bignums per partial quotient; comparison can require
+unbounded lookahead.  The result quality (exact for rationals, lazy
+for irrationals) does not justify the implementation complexity for
+a Scheme primarily used as a scripting language.  Standard
+arbitrary-precision rationals (Section~\ref{sec:exact-integers})
+provide exact arithmetic for all rational values with much simpler
+code.
+
+%----------------------------------------------------------------------
+\section{Interval Arithmetic}
+%----------------------------------------------------------------------
+
+Interval arithmetic represents a real number as a pair $[a, b]$
+where the true value lies in the interval.  Operations propagate
+intervals, maintaining rigorous error bounds.
+
+\paragraph{Why not for MScheme.}
+Interval arithmetic addresses a different problem (numerical error
+tracking) than the Scheme numeric tower (exact/inexact distinction).
+It could be implemented as a \emph{library} type rather than a core
+numeric type.  The overhead of maintaining two bounds per number is
+significant, and standard Scheme code does not expect interval
+semantics.
+
+%----------------------------------------------------------------------
+\section{$p$-adic Numbers}
+%----------------------------------------------------------------------
+
+The $p$-adic numbers $\mathbb{Q}_p$ provide an alternative
+completion of the rationals, where closeness is measured by
+divisibility by powers of a prime $p$.  They appear in number
+theory and algebraic geometry.
+
+\paragraph{Why not for MScheme.}
+$p$-adic numbers are a specialized mathematical tool with essentially
+no presence in the Scheme standard or common Scheme usage patterns.
+If needed, they could be implemented as a library type.
+
+%======================================================================
+\chapter{Verification and Testing}
+\label{ch:testing}
+%======================================================================
+
+%----------------------------------------------------------------------
+\section{The Impracticality of Full Formal Verification}
+%----------------------------------------------------------------------
+
+Formally verifying a numeric tower implementation---proving that
+every operation produces correct results for all inputs---is
+attractive in principle but impractical here.
+
+\begin{itemize}
+\item The implementation spans two languages (Scheme compiler output
+  in Modula-3, compiled by CM3 to C, compiled by GCC/Clang to native
+  code) plus an external library (GMP).  Verification would need to
+  cross all these boundaries.
+
+\item GMP itself is not formally verified.  Its correctness rests
+  on decades of testing and widespread use, not proof.  A formal
+  verification of MScheme's tower would need to treat GMP as an
+  axiomatically correct oracle.
+
+\item The Modula-3 compiler and runtime are not formally verified.
+  {\tt NARROW}, garbage collection, and weak references are all
+  trusted.
+
+\item The effort required for formal verification (in, e.g.,
+  Coq or Isabelle) would dwarf the implementation effort by orders
+  of magnitude, and the resulting proofs would be fragile against
+  implementation changes.
+\end{itemize}
+
+%----------------------------------------------------------------------
+\section{Property-Based Testing}
+%----------------------------------------------------------------------
+
+The practical alternative is thorough testing, combining traditional
+unit tests with property-based (randomized) testing.
+
+\paragraph{Algebraic properties.}
+Test that arithmetic satisfies algebraic laws across all
+representation boundaries:
+
+\begin{itemize}
+\item Commutativity: $a + b = b + a$, $a \times b = b \times a$.
+\item Associativity: $(a + b) + c = a + (b + c)$.
+\item Identity: $a + 0 = a$, $a \times 1 = a$.
+\item Inverse: $a + (-a) = 0$, $a \times (1/a) = 1$ (for $a \neq 0$).
+\item Distributivity: $a \times (b + c) = a \times b + a \times c$.
+\end{itemize}
+
+\noindent These must hold for all combinations of fixnum, bignum,
+rational, and inexact operands (with appropriate tolerance for
+inexact results).
+
+\paragraph{Boundary testing.}
+Focus on representation boundaries:
+
+\begin{itemize}
+\item Fixnum limits: {\tt FIRST(INTEGER)}, {\tt LAST(INTEGER)},
+  and values $\pm 1$ from these.
+\item The fixnum/bignum promotion boundary: operations whose inputs
+  are fixnums but whose results require bignums.
+\item The bignum/fixnum demotion boundary: bignum operations that
+  produce fixnum-range results.
+\item The exact/inexact boundary: mixing exact and inexact operands.
+\item The IEEE~754 exact-integer limit ($2^{53}$): values near
+  this boundary that would lose precision when converted to {\tt
+  LONGREAL}.
+\end{itemize}
+
+\paragraph{Conversion round-trips.}
+\begin{itemize}
+\item {\tt (string->number (number->string $x$)) = $x$} for exact $x$.
+\item {\tt (inexact->exact (exact->inexact $x$)) = $x$} when $x$ is
+  a small exact integer.
+\item {\tt (exact->inexact $x$)} preserves value when $|x| \leq 2^{53}$.
+\end{itemize}
+
+\paragraph{Cross-validation.}
+Run R5RS test suites (e.g., the R7RS test suite from Chibi-Scheme,
+which includes extensive numeric tests) and compare results against
+a reference implementation like Chez Scheme or Guile.
+
+%----------------------------------------------------------------------
+\section{Test Infrastructure}
+%----------------------------------------------------------------------
+
+MScheme already has a test framework ({\tt test-r4rs-gaps.scm}) that
+can be extended.  Suggested additions:
+
+\begin{enumerate}
+\item An ``exact integer'' test suite exercising fixnum/bignum
+  boundaries.
+\item A ``rational arithmetic'' test suite with known-answer tests
+  (e.g., $1/3 + 1/6 = 1/2$).
+\item A ``mixed exactness'' test suite verifying contagion rules.
+\item A property-based test harness that generates random operands
+  across representation boundaries.
+\end{enumerate}
+
+%======================================================================
+\chapter{Conclusions and Recommendations}
+\label{ch:conclusions}
+%======================================================================
+
+%----------------------------------------------------------------------
+\section{Summary of Findings}
+%----------------------------------------------------------------------
+
+\begin{enumerate}
+\item MScheme's single-{\tt LONGREAL} representation is adequate for
+  R4RS but insufficient for R5RS conformance.  The most critical gap
+  is the collapsed exact/inexact distinction.
+
+\item The three-level integer representation (Section~\ref{sec:three-level})---fixnum
+  ({\tt REF INTEGER}), bignum ({\tt Mpz.T}), inexact ({\tt REF
+  LONGREAL})---is the standard design for a reason: it is correct,
+  fast for common cases, and well-understood.
+
+\item The {\tt Mpz} GMP bindings already exist with over 200
+  operations, are typed as {\tt REFANY}, use auto-generated
+  bindings (easily updated), and include WeakRef-based memory
+  management.  GMP's {\tt mpq} rational functions are present in
+  the generator database but not yet exposed; creating {\tt Mpq.T}
+  bindings is straightforward.  MPFR bindings also exist for
+  arbitrary-precision floats.
+
+\item The {\tt SchemeLongReal.FromO} bridge function is the
+  critical backward-compatibility mechanism.  Extending it to
+  handle exact integer types preserves all existing Modula-3
+  interoperability.
+
+\item \textbf{Integer overflow in CM3 is undefined behavior.}
+  The Modula-3 specification does not classify integer overflow;
+  the CM3 C backend emits plain C signed arithmetic with no overflow
+  checks; the runtime does not catch {\tt SIGFPE}.  Fixnum arithmetic
+  \emph{must} use explicit pre-checks or {\tt Word}-based post-checks.
+  The overflow detection cost is the primary performance concern for
+  the fixnum path.
+
+\item The compiler's unboxing optimization can initially be left
+  unchanged (unboxing to {\tt LONGREAL}).  A second phase could
+  add {\tt INTEGER} unboxing for counting loops with overflow
+  promotion.
+
+\item {\tt IntForRat} has a documented silent-overflow bug and
+  must not be used for exact rationals.  Use {\tt BigRational}
+  (with {\tt BigInt}) or create {\tt MpzRational}.
+
+\item The CSP compiler demonstrates a proven pattern of
+  arbitrary-precision expressions with bounded-width storage, and
+  shows that bitwise operations on intervals are tractable.
+  GMP natively supports two's complement bitwise operations on
+  negative bignums, directly enabling SRFI-151.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\section{Recommended Implementation Order}
+%----------------------------------------------------------------------
+
+\begin{enumerate}
+\item \textbf{Phase~1: Exact integers (fixnum + bignum).}
+  Introduce {\tt REF INTEGER} and {\tt Mpz.T} as exact integer
+  types.  Modify {\tt IsExact}, {\tt FromO}, {\tt Int}, and the
+  primitive dispatch in {\tt SchemePrimitive.m3}.  Update the
+  compiler's inline arithmetic to emit fixnum fast paths.  This
+  alone achieves R5RS integer compliance.
+
+\item \textbf{Phase~2: Exact rationals.}
+  Add {\tt BigRational.T} (or {\tt MpzRational.T}) as the exact
+  rational type.  Implement {\tt numerator}, {\tt denominator},
+  {\tt rationalize}, and update {\tt /} to return exact rationals
+  when dividing exact integers with a non-zero remainder.
+
+\item \textbf{Phase~3: Complex numbers.}
+  Add {\tt SchemeComplex.T} as described in the representations
+  chapter.  Implement {\tt make-rectangular}, {\tt make-polar},
+  {\tt real-part}, {\tt imag-part}, {\tt magnitude}, {\tt angle}.
+
+\item \textbf{Phase~4: Compiler optimizations.}
+  Add {\tt INTEGER}-unboxed loops, fixnum fast-path inlining, and
+  SRFI-143/151 bitwise operations.
+\end{enumerate}
+
+Each phase is self-contained and produces a working system.  Phase~1
+delivers the most value per effort; Phases~2 and~3 can be deferred
+indefinitely if the application domain does not require them.
+
+%----------------------------------------------------------------------
+\section{Effort Estimate by Phase}
+%----------------------------------------------------------------------
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{llc}
+\toprule
+\textbf{Phase} & \textbf{Scope} & \textbf{New/Modified M3 Lines} \\
+\midrule
+1. Exact integers   & Interpreter + compiler + sstubgen & $\sim$500--800 \\
+2. Exact rationals  & Interpreter + reader/printer      & $\sim$300--500 \\
+3. Complex numbers  & Interpreter + reader/printer      & $\sim$300--400 \\
+4. Compiler opts    & Compiler only                     & $\sim$200--400 \\
+\bottomrule
+\end{tabular}
+\caption{Estimated effort by phase.  Phase~1 is the largest because
+  it touches the most subsystems (interpreter dispatch, compiler code
+  generation, sstubgen stubs, reader/printer).  Subsequent phases are
+  more localized.}
+\label{tab:effort}
+\end{table}
+
+\begin{thebibliography}{99}
+
+\bibitem{r4rs} William Clinger and Jonathan Rees, eds.
+Revised$^4$ Report on the Algorithmic Language Scheme.  1991.
+
+\bibitem{r5rs} Richard Kelsey, William Clinger, and Jonathan Rees, eds.
+Revised$^5$ Report on the Algorithmic Language Scheme.  1998.
+
+\bibitem{r7rs} Alex Shinn, John Cowan, and Arthur A.\ Gleckler, eds.
+Revised$^7$ Report on the Algorithmic Language Scheme.  2013.
+
+\bibitem{spwm3} Greg~Nelson, ed.  {\it Systems Programming with Modula-3.}
+Englewood Cliffs, N.J.:\ Prentice-Hall, 1991.
+
+\bibitem{jscheme} Peter Norvig.  JScheme.
+{\tt https://norvig.com/jscheme.html}
+
+\bibitem{r4rsconf} Mika Nystr\"om.  MScheme R4RS Conformance Report.
+March 2026.
+
+\bibitem{m3defn} Luca Cardelli, James Donahue, Lucille Glassman,
+Mick Jordan, Bill Kalsow, and Greg Nelson.
+Modula-3 Language Definition.
+In~\cite{spwm3}, Chapter~2.
+
+\bibitem{cspmanual} Rajit Manohar.
+The CSP Language Reference Manual.
+Intel Labs, 2024.
+
+\bibitem{gosper} Bill Gosper.  Continued Fraction Arithmetic.
+MIT AI Lab, 1972.  HAKMEM Item~101B.
+
+\end{thebibliography}
+
+\end{document}

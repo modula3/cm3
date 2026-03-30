@@ -7,7 +7,7 @@
 *)
 
 INTERFACE SchemePrimitive;
-IMPORT SchemeEnvironment, SchemeProcedure;
+IMPORT SchemeEnvironment, SchemeProcedure, Scheme;
 
 (* Routines for installing Scheme primitives in a Scheme environment *)
 
@@ -73,5 +73,15 @@ PROCEDURE InstallDefaultPrimitives(dd : Definer;
 PROCEDURE EDInstallPrimitives(ed : ExtDefiner; 
                               env : SchemeEnvironment.T) : SchemeEnvironment.T;
 (* machinery for an extensible Definer *)
+
+(* Generic two-argument arithmetic/comparison for compiled code *)
+PROCEDURE NumericAdd(a, b : Scheme.Object) : Scheme.Object RAISES { Scheme.E };
+PROCEDURE NumericSub(a, b : Scheme.Object) : Scheme.Object RAISES { Scheme.E };
+PROCEDURE NumericMul(a, b : Scheme.Object) : Scheme.Object RAISES { Scheme.E };
+PROCEDURE NumericEQ(a, b : Scheme.Object) : BOOLEAN RAISES { Scheme.E };
+PROCEDURE NumericLT(a, b : Scheme.Object) : BOOLEAN RAISES { Scheme.E };
+PROCEDURE NumericGT(a, b : Scheme.Object) : BOOLEAN RAISES { Scheme.E };
+PROCEDURE NumericLE(a, b : Scheme.Object) : BOOLEAN RAISES { Scheme.E };
+PROCEDURE NumericGE(a, b : Scheme.Object) : BOOLEAN RAISES { Scheme.E };
 
 END SchemePrimitive.
