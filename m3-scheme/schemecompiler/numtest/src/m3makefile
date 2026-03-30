@@ -11,6 +11,7 @@ import("schemecompiler")
 
 scheme("test-cn-integers")
 scheme("test-cn-floats")
+scheme("test-cn-exceptions")
 
 % Phase 2 types — enable as compiler support is added:
 %scheme("test-cn-rationals")
