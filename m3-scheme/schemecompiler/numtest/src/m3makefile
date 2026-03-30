@@ -12,6 +12,7 @@ import("schemecompiler")
 _scheme_compile("CompiledNumTower",  "test-numeric-tower.scm",  HIDDEN)
 _scheme_compile("CompiledExamples",  "test-examples.scm",       HIDDEN)
 _scheme_compile("CompiledR4rsGaps",  "test-r4rs-gaps.scm",      HIDDEN)
+_scheme_compile("CompiledCompNumerics", "test-compiler-numerics.scm", HIDDEN)
 
 LinkCompiledSchemeAs("NumtestCompiled")
 

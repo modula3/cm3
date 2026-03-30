@@ -14,7 +14,9 @@
 
 (define (test name expected actual)
   (set! test-count (+ test-count 1))
-  (if (equal? expected actual)
+  (if (if (and (number? expected) (number? actual))
+          (= expected actual)
+          (equal? expected actual))
       (begin (set! pass-count (+ pass-count 1))
              (display "PASS: ") (display name) (newline))
       (begin (set! fail-count (+ fail-count 1))
@@ -202,9 +204,9 @@
 (test       "(/ -12 4) = -3"     -3  (/ -12 4))
 (test       "(/ 0 5) = 0"        0   (/ 0 5))
 
-;; Non-exact division => inexact (Phase 1, no rationals)
-(test-true  "inexact? (/ 1 3)"       (inexact? (/ 1 3)))
-(test-true  "inexact? (/ 2 3)"       (inexact? (/ 2 3)))
+;; Non-exact division => exact rational (Phase 2)
+(test-true  "exact? (/ 1 3)"         (exact? (/ 1 3)))
+(test-true  "exact? (/ 2 3)"         (exact? (/ 2 3)))
 
 ;; quotient, remainder, modulo — exact integer only
 (test "quotient 7 3"      2       (quotient 7 3))
@@ -542,15 +544,17 @@
 (test       "ceiling 2.7"    3.0    (ceiling 2.7))
 (test       "ceiling -2.7"   -2.0   (ceiling -2.7))
 (test       "ceiling 2.0"    2.0    (ceiling 2.0))
+(test       "ceiling -2.0"   -2.0   (ceiling -2.0))
 
 ;; truncate — toward zero
 (test       "truncate 2.7"   2.0    (truncate 2.7))
 (test       "truncate -2.7"  -2.0   (truncate -2.7))
 (test       "truncate 2.0"   2.0    (truncate 2.0))
+(test       "truncate -2.0"  -2.0   (truncate -2.0))
 
 ;; round — to nearest even (banker's rounding, R5RS 6.2.5)
-;; NOTE: M3's ROUND uses half-away-from-zero, so these
-;; four half-integer tests fail pre-tower.  Pre-existing bug.
+;; M3's ROUND uses half-away-from-zero, but the Scheme primitive
+;; has explicit half-to-even logic for the 0.5 case.
 (test       "round 2.5"      2.0    (round 2.5))
 (test       "round 3.5"      4.0    (round 3.5))
 (test       "round 2.7"      3.0    (round 2.7))
@@ -883,9 +887,9 @@
 
 ;; One-arg / is reciprocal
 (test       "(/ 1) = 1"          1    (/ 1))
-(test       "(/ 2) = 0.5"        0.5  (/ 2))
+(test       "(/ 2) = 1/2"        1/2  (/ 2))
 (test       "(/ 0.5) = 2.0"      2.0  (/ 0.5))
-(test-true  "inexact? (/ 2)"     (inexact? (/ 2)))
+(test-true  "exact? (/ 2)"       (exact? (/ 2)))
 (test-error "(/ 0)"              (lambda () (/ 0)))
 
 ;; Multi-arg subtraction and division
@@ -938,37 +942,40 @@
 ;; Unary (reciprocal)
 (test       "(/ 1) = 1"           1       (/ 1))
 (test       "(/ -1) = -1"         -1      (/ -1))
-(test       "(/ 2) = 0.5"         0.5     (/ 2))
-(test       "(/ 4) = 0.25"        0.25    (/ 4))
-(test       "(/ 10) = 0.1"        0.1     (/ 10))
+(test       "(/ 2) = 1/2"         1/2     (/ 2))
+(test       "(/ 4) = 1/4"         1/4     (/ 4))
+(test       "(/ 10) = 1/10"       1/10    (/ 10))
 (test       "(/ 0.5) = 2.0"       2.0     (/ 0.5))
 (test       "(/ 0.25) = 4.0"      4.0     (/ 0.25))
 (test       "(/ 2.0) = 0.5"       0.5     (/ 2.0))
-(test       "(/ -2) = -0.5"       -0.5    (/ -2))
+(test       "(/ -2) = -1/2"       -1/2    (/ -2))
 (test       "(/ -0.5) = -2.0"     -2.0    (/ -0.5))
 (test-error "(/ 0)"               (lambda () (/ 0)))
 (test-error "(/ 0.0)"             (lambda () (/ 0.0)))
 
-;; Binary: argument order matters — THIS IS THE BUG
+;; Binary: argument order matters
 ;; (/ a b) must return a/b, not b/a
-(test       "(/ 1 3) ~ 0.333"     #t      (< (abs (- (/ 1 3) 0.333333333333333)) 1e-10))
+;; Phase 2: exact integer division now returns exact rationals
+(test       "(/ 1 3) = 1/3"      1/3     (/ 1 3))
 (test       "(/ 3 1) = 3"         3       (/ 3 1))
-(test       "(/ 7 2) = 3.5"       3.5     (/ 7 2))
-(test       "(/ 2 7) ~ 0.286"     #t      (< (abs (- (/ 2 7) 0.285714285714286)) 1e-10))
-(test       "(/ 1 10) = 0.1"      0.1     (/ 1 10))
+(test       "(/ 7 2) = 7/2"      7/2     (/ 7 2))
+(test       "(/ 2 7) = 2/7"      2/7     (/ 2 7))
+(test       "(/ 1 10) = 1/10"    1/10    (/ 1 10))
 (test       "(/ 10 1) = 10"       10      (/ 10 1))
-(test       "(/ 2 8) = 0.25"      0.25    (/ 2 8))
+(test       "(/ 2 8) = 1/4"      1/4     (/ 2 8))
 (test       "(/ 8 2) = 4"         4       (/ 8 2))
-(test       "(/ 100 3) ~ 33.3"    #t      (< (abs (- (/ 100 3) 33.3333333333333)) 1e-10))
-(test       "(/ 3 100) = 0.03"    0.03    (/ 3 100))
+(test       "(/ 100 3) = 100/3"  100/3   (/ 100 3))
+(test       "(/ 3 100) = 3/100"  3/100   (/ 3 100))
 
-;; Binary exact division (zero remainder)
+;; Binary exact division (zero remainder — demotes to integer)
 (test       "(/ 6 2) = 3"         3       (/ 6 2))
-(test       "(/ 2 6) ~ 0.333"     #t      (< (abs (- (/ 2 6) 0.333333333333333)) 1e-10))
+(test       "(/ 2 6) = 1/3"      1/3     (/ 2 6))
 (test       "(/ 12 3) = 4"        4       (/ 12 3))
-(test       "(/ 3 12) = 0.25"     0.25    (/ 3 12))
+(test       "(/ 3 12) = 1/4"     1/4     (/ 3 12))
 (test-true  "exact? (/ 6 2)"     (exact? (/ 6 2)))
 (test-true  "exact? (/ 12 3)"    (exact? (/ 12 3)))
+(test-true  "exact? (/ 1 3)"     (exact? (/ 1 3)))
+(test-true  "exact? (/ 3 12)"    (exact? (/ 3 12)))
 
 ;; Binary inexact
 (test       "(/ 1.0 3.0) ~ 0.333" #t     (< (abs (- (/ 1.0 3.0) 0.333333333333333)) 1e-10))
@@ -986,8 +993,8 @@
 (test       "(/ 120 2 3) = 20"    20      (/ 120 2 3))
 (test       "(/ 120 3 2) = 20"    20      (/ 120 3 2))
 (test       "(/ 100 5 4) = 5"     5       (/ 100 5 4))
-(test       "(/ 1 2 5) = 0.1"     0.1     (/ 1 2 5))
-(test       "(/ 1 3 7) ~ 0.048"   #t      (< (abs (- (/ 1 3 7) (/ 1.0 21.0))) 1e-10))
+(test       "(/ 1 2 5) = 1/10"    1/10    (/ 1 2 5))
+(test       "(/ 1 3 7) = 1/21"    1/21    (/ 1 3 7))
 
 ;; Division by zero
 (test-error "(/ 1 0)"             (lambda () (/ 1 0)))
@@ -1052,12 +1059,167 @@
 (test       "(expt 2 -3) = 0.125"   0.125 (expt 2 -3))
 
 ;;; ============================================================
+;;; Phase 2: Exact Rationals
+;;; ============================================================
+
+(section "exact rationals — construction and predicates")
+
+;; Reader syntax
+(test-true  "exact? 1/3"            (exact? 1/3))
+(test-true  "exact? -7/4"           (exact? -7/4))
+(test-true  "exact? 1/2"            (exact? 1/2))
+(test-true  "rational? 1/3"         (rational? 1/3))
+(test-true  "rational? 42"          (rational? 42))
+(test-true  "number? 1/3"           (number? 1/3))
+(test-false "integer? 1/3"          (integer? 1/3))
+(test-true  "integer? 4/2"          (integer? 4/2))  ;; 4/2 demotes to 2
+
+;; Demotion: den=1 becomes integer
+(test       "3/1 = 3"              3       3/1)
+(test       "6/2 = 3"              3       6/2)
+(test       "-8/4 = -2"            -2      -8/4)
+(test-true  "integer? 6/3"         (integer? 6/3))
+
+;; GCD reduction
+(test       "2/4 = 1/2"            1/2     2/4)
+(test       "6/9 = 2/3"            2/3     6/9)
+(test       "-4/6 = -2/3"          -2/3    -4/6)
+
+(section "exact rationals — arithmetic")
+
+;; Addition
+(test       "1/3 + 1/3 = 2/3"      2/3     (+ 1/3 1/3))
+(test       "1/2 + 1/3 = 5/6"      5/6     (+ 1/2 1/3))
+(test       "1/2 + 1/2 = 1"        1       (+ 1/2 1/2))
+(test       "1/3 + 2 = 7/3"        7/3     (+ 1/3 2))
+(test       "2 + 1/3 = 7/3"        7/3     (+ 2 1/3))
+
+;; Subtraction
+(test       "1/2 - 1/3 = 1/6"      1/6     (- 1/2 1/3))
+(test       "1/3 - 1/3 = 0"        0       (- 1/3 1/3))
+(test       "1 - 1/3 = 2/3"        2/3     (- 1 1/3))
+
+;; Multiplication
+(test       "1/2 * 1/3 = 1/6"      1/6     (* 1/2 1/3))
+(test       "2/3 * 3/2 = 1"        1       (* 2/3 3/2))
+(test       "3 * 1/3 = 1"          1       (* 3 1/3))
+(test       "1/3 * 0 = 0"          0       (* 1/3 0))
+
+;; Division
+(test       "(/ 1/2 1/3) = 3/2"    3/2     (/ 1/2 1/3))
+(test       "(/ 1 1/3) = 3"        3       (/ 1 1/3))
+(test       "(/ 1/3 3) = 1/9"      1/9     (/ 1/3 3))
+
+;; Negation
+(test       "(- 1/3) = -1/3"       -1/3    (- 1/3))
+
+;; Comparison
+(test-true  "(< 1/3 1/2)"          (< 1/3 1/2))
+(test-false "(< 1/2 1/3)"          (< 1/2 1/3))
+(test-true  "(= 2/4 1/2)"          (= 2/4 1/2))
+(test-true  "(> 3/4 2/3)"          (> 3/4 2/3))
+(test-true  "(<= 1/3 1/3)"         (<= 1/3 1/3))
+(test-true  "(>= 1/2 1/3)"         (>= 1/2 1/3))
+
+;; numerator, denominator
+(test       "(numerator 1/3) = 1"        1       (numerator 1/3))
+(test       "(denominator 1/3) = 3"      3       (denominator 1/3))
+(test       "(numerator -3/4) = -3"      -3      (numerator -3/4))
+(test       "(denominator -3/4) = 4"     4       (denominator -3/4))
+(test       "(numerator 5) = 5"          5       (numerator 5))
+(test       "(denominator 5) = 1"        1       (denominator 5))
+
+;; exact->inexact on rationals
+(test       "(exact->inexact 1/2) = 0.5" 0.5     (exact->inexact 1/2))
+(test-true  "inexact? (exact->inexact 1/3)" (inexact? (exact->inexact 1/3)))
+
+;; Mixed rational / inexact
+(test-true  "inexact? (+ 1/3 0.5)"  (inexact? (+ 1/3 0.5)))
+(test-true  "inexact? (* 1/3 2.0)"  (inexact? (* 1/3 2.0)))
+
+;;; ============================================================
+;;; Phase 2: Complex Numbers
+;;; ============================================================
+
+(section "complex numbers — construction and predicates")
+
+;; make-rectangular
+(test-true  "complex? (make-rectangular 1 2)"  (complex? (make-rectangular 1 2)))
+(test-true  "number? (make-rectangular 1 2)"   (number? (make-rectangular 1 2)))
+(test-false "real? (make-rectangular 1 2)"      (real? (make-rectangular 1 2)))
+(test-false "integer? (make-rectangular 1 2)"   (integer? (make-rectangular 1 2)))
+
+;; Demotion: im=0 → real
+(test       "(make-rectangular 5 0) = 5"  5  (make-rectangular 5 0))
+(test-true  "integer? (make-rectangular 5 0)" (integer? (make-rectangular 5 0)))
+
+;; Reader syntax
+(test-true  "complex? 3+4i"         (complex? 3+4i))
+(test-true  "complex? -1+2i"        (complex? -1+2i))
+(test-true  "complex? +i"           (complex? +i))
+(test-true  "complex? -i"           (complex? -i))
+
+;; real-part, imag-part
+(test       "(real-part 3+4i) = 3"   3  (real-part (make-rectangular 3 4)))
+(test       "(imag-part 3+4i) = 4"   4  (imag-part (make-rectangular 3 4)))
+(test       "(real-part +i) = 0"     0  (real-part +i))
+(test       "(imag-part +i) = 1"     1  (imag-part +i))
+(test       "(imag-part -i) = -1"    -1 (imag-part -i))
+
+(section "complex numbers — arithmetic")
+
+;; Addition
+(test       "(+ 1+2i 3+4i)"     (make-rectangular 4 6)   (+ (make-rectangular 1 2) (make-rectangular 3 4)))
+(test       "(+ 1+2i 5)"        (make-rectangular 6 2)   (+ (make-rectangular 1 2) 5))
+
+;; Subtraction
+(test       "(- 3+4i 1+2i)"     (make-rectangular 2 2)   (- (make-rectangular 3 4) (make-rectangular 1 2)))
+
+;; Multiplication: (1+2i)(3+4i) = (3-8)+(4+6)i = -5+10i
+(test       "(* 1+2i 3+4i)"     (make-rectangular -5 10) (* (make-rectangular 1 2) (make-rectangular 3 4)))
+
+;; Division: (1+2i)/(3+4i) = (3+8)/(9+16) + (6-4)/(9+16)i = 11/25 + 2/25 i
+(test       "(/ 1+2i 3+4i)"     (make-rectangular 11/25 2/25)
+                                 (/ (make-rectangular 1 2) (make-rectangular 3 4)))
+
+;; Magnitude and angle
+(test       "(magnitude 3+4i) = 5.0"  5.0  (magnitude (make-rectangular 3 4)))
+(test-true  "number? (angle 1+1i)"    (number? (angle (make-rectangular 1 1))))
+
+;; Comparison — ordering errors on complex
+(test-error "(< 1+2i 3+4i)" (lambda () (< (make-rectangular 1 2) (make-rectangular 3 4))))
+
+;; Equality
+(test-true  "(= 1+2i 1+2i)"    (= (make-rectangular 1 2) (make-rectangular 1 2)))
+(test-false "(= 1+2i 1+3i)"    (= (make-rectangular 1 2) (make-rectangular 1 3)))
+
+;; Complex with rationals
+(test-true  "exact? (make-rectangular 1/3 2/5)"  (exact? (make-rectangular 1/3 2/5)))
+
+;;; ============================================================
+;;; Phase 2: Special Floats
+;;; ============================================================
+
+(section "special floats — +inf.0, -inf.0, +nan.0")
+
+(test-true  "number? +inf.0"        (number? +inf.0))
+(test-true  "number? -inf.0"        (number? -inf.0))
+(test-true  "number? +nan.0"        (number? +nan.0))
+(test-true  "inexact? +inf.0"       (inexact? +inf.0))
+(test-true  "inexact? -inf.0"       (inexact? -inf.0))
+(test-true  "inexact? +nan.0"       (inexact? +nan.0))
+(test-true  "(> +inf.0 1e308)"      (> +inf.0 1e308))
+(test-true  "(< -inf.0 -1e308)"     (< -inf.0 -1e308))
+(test       "(+ +inf.0 1) = +inf.0" +inf.0 (+ +inf.0 1))
+(test       "(* -inf.0 -1) = +inf.0" +inf.0 (* -inf.0 -1))
+
+;;; ============================================================
 ;;; Summary
 ;;; ============================================================
 
 (newline)
 (display "======================================") (newline)
-(display "Numeric tower Phase 1 tests: ")
+(display "Numeric tower tests: ")
 (display pass-count) (display "/") (display test-count) (display " passed")
 (if (> fail-count 0)
     (begin (display ", ") (display fail-count) (display " FAILED"))
