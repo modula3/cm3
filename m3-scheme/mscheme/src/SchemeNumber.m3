@@ -292,6 +292,33 @@ PROCEDURE ToInteger(x: SchemeObject.T): INTEGER RAISES {E} =
     END
   END ToInteger;
 
+PROCEDURE CheckReal(x: SchemeObject.T) RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      NULL => RAISE E("not a real number: ()")
+    | SchemeComplex.T =>
+      RAISE E("not a real number: " & SchemeComplex.Format(NARROW(x, SchemeComplex.T)))
+    ELSE (* ok *)
+    END
+  END CheckReal;
+
+PROCEDURE IsZero(x: SchemeObject.T): BOOLEAN RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      NULL => RAISE E("expected a number, got: ()")
+    | SchemeComplex.T(c) =>
+      RETURN Equal(c.re, SchemeInt.Zero) AND Equal(c.im, SchemeInt.Zero)
+    ELSE
+      IF SchemeExact.Is(x) THEN RETURN SchemeExact.IsZero(x)
+      ELSIF SchemeInexact.Is(x) THEN
+        RETURN SchemeInexact.ToLongReal(x) = 0.0d0
+      END;
+      CheckNumber(x);
+      RETURN FALSE
+    END
+  END IsZero;
+
+
 PROCEDURE Format(x: SchemeObject.T): TEXT =
   BEGIN
     TYPECASE x OF

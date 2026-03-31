@@ -29,6 +29,13 @@ PROCEDURE Compare(a, b: SchemeObject.T): INTEGER RAISES {E};
 PROCEDURE Equal(a, b: SchemeObject.T): BOOLEAN RAISES {E};
   (* Numeric equality *)
 
+(* Real-only guard: raises if x is complex *)
+PROCEDURE CheckReal(x: SchemeObject.T) RAISES {E};
+  (* Raises "not a real number" for complex; no-op for reals *)
+
+PROCEDURE IsZero(x: SchemeObject.T): BOOLEAN RAISES {E};
+  (* TRUE for any numeric zero, including 0+0i *)
+
 (* Conversion *)
 PROCEDURE ToLongReal(x: SchemeObject.T): LONGREAL RAISES {E};
 PROCEDURE ToInteger(x: SchemeObject.T): INTEGER RAISES {E};

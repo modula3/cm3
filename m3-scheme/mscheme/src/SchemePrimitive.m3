@@ -728,12 +728,14 @@ PROCEDURE Prims(t          : T;
       |
         P.Floor =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
-        ELSE RETURN FromLR(FLOAT(FLOOR(FromO(x)),LONGREAL))
+        ELSE SchemeNumber.CheckReal(x);
+             RETURN FromLR(FLOAT(FLOOR(FromO(x)),LONGREAL))
         END
       |
         P.Ceiling =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
-        ELSE RETURN FromLR(FLOAT(CEILING(FromO(x)),LONGREAL))
+        ELSE SchemeNumber.CheckReal(x);
+             RETURN FromLR(FLOAT(CEILING(FromO(x)),LONGREAL))
         END
       |
         P.Cons => RETURN Cons(x,y,interp)
@@ -789,6 +791,7 @@ PROCEDURE Prims(t          : T;
         P.Round =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
         ELSE
+          SchemeNumber.CheckReal(x);
           WITH lr = FromO(x),
                fl = Math.floor(lr),
                frac = lr - fl DO
@@ -816,7 +819,8 @@ PROCEDURE Prims(t          : T;
       |
         P.Truncate =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
-        ELSE RETURN FromLR(FLOAT(TRUNC(FromO(x)),LONGREAL))
+        ELSE SchemeNumber.CheckReal(x);
+             RETURN FromLR(FLOAT(TRUNC(FromO(x)),LONGREAL))
         END
       |
         P.Write => RETURN Write(x, OutPort(y, interp), TRUE,
@@ -834,7 +838,9 @@ PROCEDURE Prims(t          : T;
         P.BooleanQ => RETURN Truth(x = True() OR x = False())
       |
         P.Sqrt =>
-        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Sqrt(m)
+        TYPECASE x OF
+          SchemeMpfr.T(m) => RETURN SchemeMpfr.Sqrt(m)
+        | SchemeComplex.T(c) => RETURN ComplexSqrt(c)
         ELSE END;
         IF SchemeExact.IsInteger(x) AND NOT SchemeExact.IsNegative(x) THEN
           VAR
@@ -842,7 +848,6 @@ PROCEDURE Prims(t          : T;
             mr := Mpz.New();
           BEGIN
             Mpz.sqrt(mr, mx);
-            (* check if perfect square *)
             VAR mr2 := Mpz.New(); BEGIN
               Mpz.mul(mr2, mr, mr);
               IF Mpz.cmp(mr2, mx) = 0 THEN
@@ -853,11 +858,36 @@ PROCEDURE Prims(t          : T;
             END
           END
         ELSE
-          RETURN FromLR(Math.sqrt(FromO(x)))
+          (* Negative real: sqrt produces complex *)
+          WITH lr = FromO(x) DO
+            IF lr < 0.0d0 THEN
+              RETURN SchemeComplex.New(FromLR(0.0d0),
+                                      FromLR(Math.sqrt(-lr)))
+            ELSE
+              RETURN FromLR(Math.sqrt(lr))
+            END
+          END
         END
       |
         P.Expt =>
-        IF SchemeInt.IsExactInt(x) AND SchemeInt.IsExactInt(y)
+        IF ISTYPE(x, SchemeComplex.T) OR ISTYPE(y, SchemeComplex.T) THEN
+          (* complex expt: z^w = exp(w * log(z)) *)
+          VAR lz : Object;
+          BEGIN
+            TYPECASE x OF SchemeComplex.T(cx) =>
+              lz := ComplexLog(cx)
+            ELSE
+              lz := FromLR(Math.log(FromO(x)))
+            END;
+            WITH wlz = SchemeNumber.Mul(y, lz) DO
+              TYPECASE wlz OF SchemeComplex.T(cw) =>
+                RETURN ComplexExp(cw)
+              ELSE
+                RETURN FromLR(Math.exp(SchemeNumber.ToLongReal(wlz)))
+              END
+            END
+          END
+        ELSIF SchemeInt.IsExactInt(x) AND SchemeInt.IsExactInt(y)
            AND NOT SchemeInt.IsNegative(y) THEN
           (* both exact, non-negative exponent: exact result *)
           VAR
@@ -1000,37 +1030,109 @@ PROCEDURE Prims(t          : T;
         RETURN SchemeSymbol.Symbol(Text.FromChars(Str(x)^))
       |
         P.Exp =>
-        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Exp(m)
+        TYPECASE x OF
+          SchemeMpfr.T(m) => RETURN SchemeMpfr.Exp(m)
+        | SchemeComplex.T(c) => RETURN ComplexExp(c)
         ELSE RETURN FromLR(Math.exp(FromO(x)))
         END
       |
         P.Log =>
-        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Log(m)
+        TYPECASE x OF
+          SchemeMpfr.T(m) => RETURN SchemeMpfr.Log(m)
+        | SchemeComplex.T(c) => RETURN ComplexLog(c)
         ELSE RETURN FromLR(Math.log(FromO(x)))
         END
       |
         P.Sin =>
-        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Sin(m)
+        TYPECASE x OF
+          SchemeMpfr.T(m) => RETURN SchemeMpfr.Sin(m)
+        | SchemeComplex.T(c) => RETURN ComplexSin(c)
         ELSE RETURN FromLR(Math.sin(FromO(x)))
         END
       |
         P.Cos =>
-        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Cos(m)
+        TYPECASE x OF
+          SchemeMpfr.T(m) => RETURN SchemeMpfr.Cos(m)
+        | SchemeComplex.T(c) => RETURN ComplexCos(c)
         ELSE RETURN FromLR(Math.cos(FromO(x)))
         END
       |
         P.Tan =>
-        TYPECASE x OF SchemeMpfr.T(m) => RETURN SchemeMpfr.Tan(m)
+        TYPECASE x OF
+          SchemeMpfr.T(m) => RETURN SchemeMpfr.Tan(m)
+        | SchemeComplex.T(c) =>
+          RETURN SchemeNumber.Div(ComplexSin(c), ComplexCos(c))
         ELSE RETURN FromLR(Math.tan(FromO(x)))
         END
       |
-        P.Acos => RETURN FromLR(Math.acos(FromO(x)))
+        P.Acos =>
+        TYPECASE x OF SchemeComplex.T(c) =>
+          (* acos(z) = -i * log(z + i*sqrt(1-z^2)) *)
+          VAR i_val := SchemeComplex.New(SchemeInt.Zero, SchemeInt.One);
+              neg_i := SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(-1));
+              z2    := SchemeNumber.Mul(x, x);
+              one_z2 := SchemeNumber.Sub(SchemeInt.One, z2);
+          BEGIN
+            TYPECASE one_z2 OF SchemeComplex.T(c2) =>
+              RETURN SchemeNumber.Mul(neg_i,
+                ComplexLog(NARROW(SchemeNumber.Add(x,
+                  SchemeNumber.Mul(i_val, ComplexSqrt(c2))),
+                  SchemeComplex.T)))
+            ELSE
+              WITH sq = FromLR(Math.sqrt(SchemeNumber.ToLongReal(one_z2))) DO
+                RETURN SchemeNumber.Mul(neg_i,
+                  ComplexLog(NARROW(SchemeNumber.Add(x,
+                    SchemeNumber.Mul(i_val, sq)),
+                    SchemeComplex.T)))
+              END
+            END
+          END
+        ELSE RETURN FromLR(Math.acos(FromO(x)))
+        END
       |
-        P.Asin => RETURN FromLR(Math.asin(FromO(x)))
+        P.Asin =>
+        TYPECASE x OF SchemeComplex.T(c) =>
+          (* asin(z) = -i * log(i*z + sqrt(1-z^2)) *)
+          VAR i_val := SchemeComplex.New(SchemeInt.Zero, SchemeInt.One);
+              neg_i := SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(-1));
+              z2    := SchemeNumber.Mul(x, x);
+              one_z2 := SchemeNumber.Sub(SchemeInt.One, z2);
+              iz    := SchemeNumber.Mul(i_val, x);
+          BEGIN
+            TYPECASE one_z2 OF SchemeComplex.T(c2) =>
+              RETURN SchemeNumber.Mul(neg_i,
+                ComplexLog(NARROW(SchemeNumber.Add(iz, ComplexSqrt(c2)),
+                  SchemeComplex.T)))
+            ELSE
+              WITH sq = FromLR(Math.sqrt(SchemeNumber.ToLongReal(one_z2))) DO
+                RETURN SchemeNumber.Mul(neg_i,
+                  ComplexLog(NARROW(SchemeNumber.Add(iz, sq),
+                    SchemeComplex.T)))
+              END
+            END
+          END
+        ELSE RETURN FromLR(Math.asin(FromO(x)))
+        END
       |
         P.Atan =>
-        IF y = NIL THEN RETURN FromLR(Math.atan(FromO(x)))
-        ELSE RETURN FromLR(Math.atan2(FromO(x), FromO(y)))
+        TYPECASE x OF SchemeComplex.T =>
+          (* atan(z) = (log(1+iz) - log(1-iz)) / 2i *)
+          VAR i_val := SchemeComplex.New(SchemeInt.Zero, SchemeInt.One);
+              two_i := SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(2));
+              iz    := SchemeNumber.Mul(i_val, x);
+              a     := SchemeNumber.Add(SchemeInt.One, iz);
+              b     := SchemeNumber.Sub(SchemeInt.One, iz);
+          BEGIN
+            RETURN SchemeNumber.Div(
+              SchemeNumber.Sub(
+                ComplexLog(NARROW(a, SchemeComplex.T)),
+                ComplexLog(NARROW(b, SchemeComplex.T))),
+              two_i)
+          END
+        ELSE
+          IF y = NIL THEN RETURN FromLR(Math.atan(FromO(x)))
+          ELSE RETURN FromLR(Math.atan2(FromO(x), FromO(y)))
+          END
         END
       |
         
@@ -1182,6 +1284,7 @@ PROCEDURE Prims(t          : T;
             RETURN SchemeInt.MpzToScheme(mq)
           END
         ELSE
+          SchemeNumber.CheckReal(x); SchemeNumber.CheckReal(y);
           VAR d := FromO(x) / FromO(y); BEGIN
             IF d > 0.0d0 THEN
               RETURN FromLR(FLOAT(FLOOR(d),LONGREAL))
@@ -1205,6 +1308,7 @@ PROCEDURE Prims(t          : T;
             RETURN SchemeInt.MpzToScheme(mr)
           END
         ELSE
+          SchemeNumber.CheckReal(x); SchemeNumber.CheckReal(y);
           WITH a = TRUNC(FromO(x)), b = TRUNC(FromO(y)),
                r = a MOD b DO
             IF r # 0 AND (r > 0) # (a > 0) THEN
@@ -1229,6 +1333,7 @@ PROCEDURE Prims(t          : T;
             RETURN SchemeInt.MpzToScheme(mq)
           END
         ELSE
+          SchemeNumber.CheckReal(x); SchemeNumber.CheckReal(y);
           RETURN FromLR(FLOAT(TRUNC(FromO(x)) DIV TRUNC(FromO(y)), LONGREAL))
         END
       |
@@ -1246,6 +1351,7 @@ PROCEDURE Prims(t          : T;
             RETURN SchemeInt.MpzToScheme(mr)
           END
         ELSE
+          SchemeNumber.CheckReal(x); SchemeNumber.CheckReal(y);
           RETURN FromLR(FLOAT(TRUNC(FromO(x)) MOD TRUNC(FromO(y)), LONGREAL))
         END
       |
@@ -1276,6 +1382,7 @@ PROCEDURE Prims(t          : T;
           SchemeInt.T(ri) => RETURN Truth(ABS(ri^) MOD 2 # 0)
         | Mpz.T(m) => RETURN Truth(Mpz.tstbit(m, 0) # 0)
         ELSE
+          SchemeNumber.CheckReal(x);
           RETURN Truth(ABS(TRUNC(FromO(x))) MOD 2 # 0)
         END
       |
@@ -1284,22 +1391,19 @@ PROCEDURE Prims(t          : T;
           SchemeInt.T(ri) => RETURN Truth(ABS(ri^) MOD 2 = 0)
         | Mpz.T(m) => RETURN Truth(Mpz.tstbit(m, 0) = 0)
         ELSE
+          SchemeNumber.CheckReal(x);
           RETURN Truth(ABS(TRUNC(FromO(x))) MOD 2 = 0)
         END
       |
         P.ZeroQ =>
-        TYPECASE x OF
-          SchemeInt.T(ri) => RETURN Truth(ri^ = 0)
-        | Mpz.T(m) => RETURN Truth(Mpz.cmp(m, MpzZero) = 0)
-        ELSE
-          RETURN Truth(FromO(x) = 0.0d0)
-        END
+        RETURN Truth(SchemeNumber.IsZero(x))
       |
         P.PositiveQ =>
         TYPECASE x OF
           SchemeInt.T(ri) => RETURN Truth(ri^ > 0)
         | Mpz.T(m) => RETURN Truth(Mpz.cmp(m, MpzZero) > 0)
         ELSE
+          SchemeNumber.CheckReal(x);
           RETURN Truth(FromO(x) > 0.0d0)
         END
       |
@@ -1308,6 +1412,7 @@ PROCEDURE Prims(t          : T;
           SchemeInt.T(ri) => RETURN Truth(ri^ < 0)
         | Mpz.T(m) => RETURN Truth(Mpz.cmp(m, MpzZero) < 0)
         ELSE
+          SchemeNumber.CheckReal(x);
           RETURN Truth(FromO(x) < 0.0d0)
         END
       |
@@ -1449,7 +1554,9 @@ PROCEDURE Prims(t          : T;
         P.CharReadyQ =>
         RETURN Truth(InPort(x, interp).charReady())
       |
-        P.Tanh => RETURN FromLR(Math.tanh(FromO(x)))
+        P.Tanh =>
+        SchemeNumber.CheckReal(x);
+        RETURN FromLR(Math.tanh(FromO(x)))
       |
         P.Cosh => RETURN FromLR(Math.cosh(FromO(x)))
       |
@@ -1545,33 +1652,24 @@ PROCEDURE Prims(t          : T;
         P.LoadEnvironment => RETURN LoadEnvironment(interp, x)
       |
         P.ExactToInexact =>
-        IF SchemeExact.Is(x) THEN
-          RETURN SchemeLongReal.FromLR(SchemeExact.ToLongReal(x))
+        TYPECASE x OF SchemeComplex.T(c) =>
+          RETURN SchemeComplex.New(
+            SchemeLongReal.FromLR(SchemeNumber.ToLongReal(c.re)),
+            SchemeLongReal.FromLR(SchemeNumber.ToLongReal(c.im)))
         ELSE
-          RETURN x (* already inexact *)
+          IF SchemeExact.Is(x) THEN
+            RETURN SchemeLongReal.FromLR(SchemeExact.ToLongReal(x))
+          ELSE
+            RETURN x (* already inexact *)
+          END
         END
       |
         P.InexactToExact =>
-        IF SchemeExact.Is(x) THEN
-          RETURN x
-        ELSE
-          WITH lr = FromO(x) DO
-            IF Math.floor(lr) # lr THEN
-              (* Non-integer inexact: convert to exact rational.
-                 Use the IEEE 754 representation: lr = m * 2^e *)
-              RETURN Error("inexact->exact: not an integer: " & Stringify(List1(x)))
-            ELSIF lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
-                  lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
-              RETURN SchemeInt.FromI(ROUND(lr))
-            ELSE
-              (* large integer-valued float: convert via Mpz *)
-              WITH m = Mpz.New() DO
-                Mpz.set_d(m, lr);
-                RETURN SchemeInt.MpzToScheme(m)
-              END
-            END
-          END
-        END
+        TYPECASE x OF SchemeComplex.T(c) =>
+          (* Convert both parts to exact *)
+          RETURN SchemeComplex.New(InexactToExact(c.re), InexactToExact(c.im))
+        ELSE END;
+        RETURN InexactToExact(x)
       |
         P.System =>
         TRY
@@ -2050,6 +2148,74 @@ PROCEDURE NumericLE(a, b : Object) : BOOLEAN RAISES { E } =
 PROCEDURE NumericGE(a, b : Object) : BOOLEAN RAISES { E } =
   BEGIN RETURN SchemeNumber.Compare(a, b) >= 0 END NumericGE;
 
+PROCEDURE InexactToExact(x : Object) : Object RAISES { E } =
+  BEGIN
+    IF SchemeExact.Is(x) THEN RETURN x END;
+    WITH lr = FromO(x) DO
+      IF Math.floor(lr) # lr THEN
+        RETURN Error("inexact->exact: not an integer: " & Stringify(List1(x)))
+      ELSIF lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
+            lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+        RETURN SchemeInt.FromI(ROUND(lr))
+      ELSE
+        WITH m = Mpz.New() DO
+          Mpz.set_d(m, lr);
+          RETURN SchemeInt.MpzToScheme(m)
+        END
+      END
+    END
+  END InexactToExact;
+
+(* --- Complex transcendental helpers --- *)
+
+PROCEDURE ComplexExp(c : SchemeComplex.T) : Object =
+  (* exp(a+bi) = e^a * (cos(b) + i*sin(b)) *)
+  VAR a := SchemeNumber.ToLongReal(c.re);
+      b := SchemeNumber.ToLongReal(c.im);
+      ea := Math.exp(a);
+  BEGIN
+    RETURN SchemeComplex.New(FromLR(ea * Math.cos(b)),
+                            FromLR(ea * Math.sin(b)))
+  END ComplexExp;
+
+PROCEDURE ComplexLog(c : SchemeComplex.T) : Object RAISES { E } =
+  (* log(z) = log|z| + i*angle(z) *)
+  BEGIN
+    RETURN SchemeComplex.New(
+      FromLR(Math.log(SchemeNumber.ToLongReal(SchemeComplex.Magnitude(c)))),
+      SchemeComplex.Angle(c))
+  END ComplexLog;
+
+PROCEDURE ComplexSin(c : SchemeComplex.T) : Object =
+  (* sin(a+bi) = sin(a)cosh(b) + i*cos(a)sinh(b) *)
+  VAR a := SchemeNumber.ToLongReal(c.re);
+      b := SchemeNumber.ToLongReal(c.im);
+  BEGIN
+    RETURN SchemeComplex.New(
+      FromLR(Math.sin(a) * Math.cosh(b)),
+      FromLR(Math.cos(a) * Math.sinh(b)))
+  END ComplexSin;
+
+PROCEDURE ComplexCos(c : SchemeComplex.T) : Object =
+  (* cos(a+bi) = cos(a)cosh(b) - i*sin(a)sinh(b) *)
+  VAR a := SchemeNumber.ToLongReal(c.re);
+      b := SchemeNumber.ToLongReal(c.im);
+  BEGIN
+    RETURN SchemeComplex.New(
+      FromLR(Math.cos(a) * Math.cosh(b)),
+      FromLR(-Math.sin(a) * Math.sinh(b)))
+  END ComplexCos;
+
+PROCEDURE ComplexSqrt(c : SchemeComplex.T) : Object RAISES { E } =
+  (* sqrt(z) = sqrt(|z|) * (cos(angle/2) + i*sin(angle/2)) *)
+  VAR mag := SchemeNumber.ToLongReal(SchemeComplex.Magnitude(c));
+      ang := SchemeNumber.ToLongReal(SchemeComplex.Angle(c));
+      r   := Math.sqrt(mag);
+  BEGIN
+    RETURN SchemeComplex.New(FromLR(r * Math.cos(ang / 2.0d0)),
+                            FromLR(r * Math.sin(ang / 2.0d0)))
+  END ComplexSqrt;
+
 PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
   BEGIN
     TYPECASE x OF
@@ -2065,6 +2231,8 @@ PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
       VAR mr := Mpz.New(); BEGIN
         Mpz.abs(mr, m); RETURN SchemeInt.MpzToScheme(mr)
       END
+    | SchemeComplex.T(c) =>
+      RETURN SchemeComplex.Magnitude(c)
     ELSE
       RETURN FromLR(ABS(FromO(x)))
     END
@@ -2267,9 +2435,10 @@ PROCEDURE NumberToString(x, y : Object) : Object RAISES { E } =
 
     IF base < 2 THEN base := 2 ELSIF base > 16 THEN base := 16 END;
 
-    (* exact integers: use Mpz formatting or Fmt.Int *)
     TYPECASE x OF
-      SchemeInt.T(ri) =>
+      SchemeComplex.T(c) =>
+      RETURN SchemeString.FromText(SchemeComplex.Format(c))
+    | SchemeInt.T(ri) =>
       IF base = 10 THEN
         RETURN SchemeString.FromText(Fmt.Int(ri^))
       ELSE
@@ -2286,7 +2455,7 @@ PROCEDURE NumberToString(x, y : Object) : Object RAISES { E } =
         RETURN SchemeString.FromText(Mpz.FormatBased(m, base))
       END
     ELSE
-      (* inexact *)
+      (* inexact real *)
       IF base # 10 THEN
         RETURN SchemeString.FromText(Fmt.Int(ROUND(FromO(x)), base := base))
       ELSE
