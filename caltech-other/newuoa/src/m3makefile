@@ -1,4 +1,4 @@
-if equal(TARGET,"AMD64_LINUX")
+%if equal(TARGET,"AMD64_LINUX")
 build_standalone() % dont attempt to build shared libs from asm
 import ("libm3")
 import ("cit_util")
@@ -43,4 +43,4 @@ Module ("NewUOAs")
 %implementation("Main")
 %program ("testnewuoa")
 library ("newuoa")
-end
+%end
