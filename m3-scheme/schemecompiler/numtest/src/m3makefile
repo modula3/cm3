@@ -15,6 +15,7 @@ scheme("test-cn-exceptions")
 
 scheme("test-cn-rationals")
 scheme("test-cn-complex")
+scheme("test-cn-complex-math")
 scheme("test-cn-mixed")
 
 % Original test suites — contain Phase 2 features, enable when compiler is ready:
