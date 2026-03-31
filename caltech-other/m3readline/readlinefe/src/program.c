@@ -18,9 +18,9 @@
 
 static int sig = 0;
 
-static void 
-handler(int s) { 
-	sig = 1; 
+static void __attribute__((unused))
+handler(int s) {
+	sig = 1;
 }
 
 static int

@@ -15,15 +15,17 @@ IMPORT Thread;
 IMPORT SchemeM3;
 IMPORT SchemeNavigatorEnvironment;
 IMPORT ParseParams, Stdio;
+IMPORT TextRd, SchemeInputPort;
 IMPORT SchemeInteraction;
-IMPORT SchemeCompiled; <*NOWARN*>
+IMPORT SchemeLibCompiled; <*NOWARN*>
 
 <*FATAL Thread.Alerted*>
 
 VAR files : REF ARRAY OF Pathname.T;
     readLine : ReadLine.T;
     doReturn : BOOLEAN;
-BEGIN 
+    evalExpr : TEXT := NIL;
+BEGIN
   TRY
     WITH pp = NEW(ParseParams.T).init(Stdio.stderr) DO
       doReturn := pp.keywordPresent("-return");
@@ -31,6 +33,9 @@ BEGIN
         readLine := NIL
       ELSE
         readLine := NEW(ReadLine.Default).init()
+      END;
+      IF pp.keywordPresent("-e") THEN
+        evalExpr := pp.getNext()
       END;
 
       pp.skipParsed();
@@ -51,11 +56,16 @@ BEGIN
   Scheme.SetInteractionHook(SchemeInteraction.Hook);
 
   TRY
-    WITH scm = NEW(SchemeM3.T).init(files^, 
-                                    globalEnv := 
+    WITH scm = NEW(SchemeM3.T).init(files^,
+                                    globalEnv :=
                                         NEW(SchemeNavigatorEnvironment.T).initEmpty()) DO
-      IF doReturn THEN EVAL ReturningMainLoop(readLine, scm)
-      ELSE MainLoop(readLine, scm)
+      IF evalExpr # NIL THEN
+        EVAL scm.loadPort(NEW(SchemeInputPort.T).init(
+                            NEW(TextRd.T).init(evalExpr)))
+      ELSIF doReturn THEN
+        EVAL ReturningMainLoop(readLine, scm)
+      ELSE
+        MainLoop(readLine, scm)
       END
     END
   EXCEPT
@@ -63,10 +73,10 @@ BEGIN
   |
     IP.Error(err) => Debug.Error("Caught IP.Error : " & AL.Format(err))
   |
-    ReadLineError.E(err) => 
+    ReadLineError.E(err) =>
     Debug.Error("Caught ReadLineError.E : " & AL.Format(err))
   |
-    NetObj.Error(err) => Debug.Error("Caught NetObj.Error : " & 
+    NetObj.Error(err) => Debug.Error("Caught NetObj.Error : " &
       AL.Format(err))
   END
 END Main.
