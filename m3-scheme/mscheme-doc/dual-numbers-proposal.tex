@@ -1,0 +1,651 @@
+%%
+%% Proposal: Dual Numbers for Automatic Differentiation in MScheme
+%%
+\documentclass[12pt]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\lstdefinelanguage{Scheme}{
+  morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
+    set!,quote,and,or,not,make-rectangular,make-dual,
+    dual-real,dual-epsilon,dual?,real-part,imag-part,
+    exact->inexact,inexact->exact},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{Modula3}{
+  morekeywords={MODULE,INTERFACE,PROCEDURE,BEGIN,END,RETURN,IF,THEN,
+    ELSE,ELSIF,VAR,CONST,TYPE,IMPORT,FROM,REVEALS,BRANDED,OBJECT,
+    METHODS,OVERRIDES,TYPECASE,ISTYPE,NARROW,NEW,RAISES,RAISE,
+    TRY,EXCEPT,WITH,FOR,TO,BY,DO,WHILE,LOOP,EXIT,REPEAT,UNTIL,
+    CASE,OF,AND,OR,NOT,NIL,TRUE,FALSE,ARRAY,RECORD,REF,REFANY,
+    SchemeObject},
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\color{gray},
+  stringstyle=\color{brown},
+  showstringspaces=false,
+  columns=flexible,
+  breaklines=true,
+}
+
+\title{\bfseries\sffamily Proposal: Dual Numbers for\\Automatic Differentiation in MScheme}
+\author{Mika Nystr\"om and Claude (Anthropic)}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+%======================================================================
+\chapter{Introduction}
+%======================================================================
+
+Dual numbers, introduced by William Kingdon Clifford in
+1873~\cite{clifford1873}, extend the real numbers with an
+infinitesimal element $\varepsilon$ satisfying $\varepsilon^2 = 0$
+but $\varepsilon \neq 0$.  A dual number has the form
+$a + b\varepsilon$ where $a$ and~$b$ are ordinary numbers.  The
+key property is that evaluating any differentiable function at
+$a + \varepsilon$ yields $f(a) + f'(a)\varepsilon$---the derivative
+appears automatically, with no symbolic differentiation or
+finite-difference approximation.
+
+This proposal adds {\tt SchemeDual.T} to MScheme's numeric tower,
+following the same architecture as {\tt SchemeComplex.T}.  The
+implementation reuses {\tt SchemeNumber} dispatch throughout, so dual
+numbers interact correctly with the full tower: exact integers,
+rationals, inexact reals, MPFR floats, and complex numbers.
+
+%======================================================================
+\chapter{Algebra}
+%======================================================================
+
+\section{Arithmetic}
+
+Let $x = a + b\varepsilon$ and $y = c + d\varepsilon$.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Operation & Result \\
+\midrule
+$x + y$   & $(a + c) + (b + d)\varepsilon$ \\
+$x - y$   & $(a - c) + (b - d)\varepsilon$ \\
+$x \cdot y$ & $ac + (ad + bc)\varepsilon$ \\
+$x / y$   & $a/c + (bc - ad)/c^2 \cdot \varepsilon$ \\
+$-x$      & $-a + (-b)\varepsilon$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Note that the $bd\varepsilon^2$ term in multiplication
+vanishes because $\varepsilon^2 = 0$.
+
+\section{Transcendental Functions}
+
+For any differentiable function $f$:
+\[
+  f(a + b\varepsilon) = f(a) + b \cdot f'(a) \cdot \varepsilon
+\]
+
+\noindent Specific cases:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Function & Dual result \\
+\midrule
+$\exp(a + b\varepsilon)$ & $e^a + b e^a \varepsilon$ \\
+$\log(a + b\varepsilon)$ & $\log a + b/a \cdot \varepsilon$ \\
+$\sin(a + b\varepsilon)$ & $\sin a + b \cos a \cdot \varepsilon$ \\
+$\cos(a + b\varepsilon)$ & $\cos a - b \sin a \cdot \varepsilon$ \\
+$\tan(a + b\varepsilon)$ & $\tan a + b / \cos^2 a \cdot \varepsilon$ \\
+$\sqrt{a + b\varepsilon}$ & $\sqrt{a} + b/(2\sqrt{a}) \cdot \varepsilon$ \\
+$(a + b\varepsilon)^n$   & $a^n + n b a^{n-1} \varepsilon$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Interaction with Complex Numbers}
+
+A dual number's parts are {\tt SchemeObject.T}---they can be any
+numeric type, including complex.  A dual with complex parts
+$(a + bi) + (c + di)\varepsilon$ represents a complex-valued function
+and its complex derivative.  The arithmetic rules are unchanged;
+the derivative of a complex function is also complex.
+
+There is no ambiguity: ``dual of complex'' and ``complex of dual''
+yield isomorphic rings (both have four real components), but we
+choose dual-outside because the AD use case is ``evaluate $f$ at
+$x + \varepsilon$'' where $x$ may be complex.
+
+\section{Interaction with Exact Arithmetic}
+
+Dual numbers preserve exactness.  If both parts are exact
+(integers or rationals), the result is exact:
+\begin{lstlisting}[language=Scheme]
+(+ (make-dual 1/3 1) (make-dual 1/6 2))  ;=> (make-dual 1/2 3)
+\end{lstlisting}
+Inexact contagion applies per-part: if either operand's real part
+is inexact, the result's real part is inexact (and similarly for
+the epsilon part).
+
+%======================================================================
+\chapter{Scheme Interface}
+%======================================================================
+
+\section{Construction and Accessors}
+
+\begin{description}[style=nextline]
+\item[\tt (make-dual \textit{real} \textit{epsilon})]
+  Construct a dual number.  If \textit{epsilon} is exactly zero,
+  return \textit{real} (demotion, same as complex with zero
+  imaginary part).
+
+\item[\tt (dual-real \textit{x})]
+  Extract the real part.  For non-dual numbers, returns \textit{x}.
+
+\item[\tt (dual-epsilon \textit{x})]
+  Extract the epsilon part.  For non-dual numbers, returns~0.
+
+\item[\tt (dual? \textit{x})]
+  Returns {\tt \#t} if \textit{x} is a dual number with nonzero
+  epsilon part.
+\end{description}
+
+\section{Automatic Differentiation}
+
+\begin{lstlisting}[language=Scheme]
+;; Derivative of f at x:
+(define (derivative f x)
+  (dual-epsilon (f (make-dual x 1))))
+
+;; Example: d/dx (x^2 + sin(x)) at x=3
+(derivative (lambda (x) (+ (* x x) (sin x))) 3)
+;=> 6 + cos(3) = 5.0099...
+
+;; Works with complex-valued functions:
+(derivative (lambda (z) (* z z)) (make-rectangular 1 2))
+;=> 2+4i (= 2z at z=1+2i)
+
+;; Works with exact arithmetic:
+(derivative (lambda (x) (* x x x)) 1/3)
+;=> 1/3 (= 3x^2 at x=1/3)
+\end{lstlisting}
+
+\section{Predicates}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Predicate & Dual number & Rationale \\
+\midrule
+{\tt number?}  & {\tt \#t} & Duals are numbers \\
+{\tt dual?}    & {\tt \#t} & New predicate \\
+{\tt complex?} & {\tt \#f} & Not in the complex plane \\
+{\tt real?}    & {\tt \#f} & Has nonzero epsilon part \\
+{\tt exact?}   & per-part  & Exact iff both parts exact \\
+{\tt zero?}    & both zero & $a = 0$ and $b = 0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Ordering ({\tt <}, {\tt >}, etc.) on dual numbers
+should raise an error, since dual numbers do not have a natural
+total order (same rationale as complex).
+
+\section{Display and Reader Syntax}
+
+Dual numbers use the suffix {\tt eps} (for $\varepsilon$), with
+{\tt +} or {\tt -} separating the real and epsilon parts.  The
+suffix is unambiguous: floating-point exponents use {\tt e} followed
+by digits ({\tt 3.14e2}), while the dual suffix is {\tt eps}
+followed by end-of-token.
+
+\paragraph{Simple cases (real-valued parts).}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Dual number & Syntax \\
+\midrule
+$3 + 4\varepsilon$      & {\tt 3+4eps} \\
+$3 - 4\varepsilon$      & {\tt 3-4eps} \\
+$0 + 5\varepsilon$      & {\tt 5eps} \\
+$0 + \varepsilon$       & {\tt eps} \\
+$0 - \varepsilon$       & {\tt -eps} \\
+$\frac{1}{3} + 2\varepsilon$ & {\tt 1/3+2eps} \\
+$3.14 + 4 \times 10^{10}\varepsilon$ & {\tt 3.14+4.0e10eps} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Complex-valued parts.}
+When either part is complex (or negative, to avoid {\tt 3+-4eps}),
+it is wrapped in parentheses:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Dual number & Syntax \\
+\midrule
+$(3+4i) + 5\varepsilon$         & {\tt (3+4i)+5eps} \\
+$3 + (4i)\varepsilon$           & {\tt 3+(4i)eps} \\
+$(3+4i) + (1+2i)\varepsilon$    & {\tt (3+4i)+(1+2i)eps} \\
+$0 + (4i)\varepsilon$           & {\tt (4i)eps} \\
+$3 + (-4)\varepsilon$           & {\tt 3+(-4)eps} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The rule for display: if a part is complex, negative, or
+itself a dual (if nesting were allowed), wrap it in parentheses.
+Otherwise display it bare.
+
+\paragraph{Reader.}
+The reader recognizes the {\tt eps} suffix after a numeric literal.
+For the {\tt a+b\,eps} form, the {\tt +} or {\tt -} separates two
+sub-expressions, with {\tt eps} terminating the epsilon part.
+Parenthesized complex parts are parsed as sub-expressions.
+Reader support can be deferred to a later phase; {\tt make-dual}
+suffices initially.
+
+%======================================================================
+\chapter{Modula-3 Implementation}
+%======================================================================
+
+\section{Type Definition}
+
+\begin{lstlisting}[language=Modula3]
+(* SchemeDual.i3 *)
+INTERFACE SchemeDual;
+IMPORT SchemeObject, SchemeInt;
+FROM Scheme IMPORT E;
+
+TYPE T = SchemeObject.T BRANDED "SchemeDual" OBJECT
+  re, eps : SchemeObject.T;
+END;
+
+PROCEDURE New(re, eps: SchemeObject.T): SchemeObject.T;
+  (* Demotes to re if eps is exactly zero *)
+
+PROCEDURE RealPart(x: T): SchemeObject.T;
+PROCEDURE EpsilonPart(x: T): SchemeObject.T;
+
+(* Arithmetic *)
+PROCEDURE Add(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Sub(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Mul(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Div(a, b: T): SchemeObject.T RAISES {E};
+PROCEDURE Neg(a: T): SchemeObject.T RAISES {E};
+
+PROCEDURE Equal(a, b: T): BOOLEAN RAISES {E};
+PROCEDURE Format(x: T): TEXT;
+
+END SchemeDual.
+\end{lstlisting}
+
+The {\tt New} constructor demotes to the real part when the epsilon
+part is exactly zero, paralleling {\tt SchemeComplex.New} which
+demotes when the imaginary part is zero.
+
+\section{Integration with SchemeNumber}
+
+The existing {\tt SchemeNumber} module dispatches on type via
+{\tt TYPECASE} and {\tt ISTYPE}.  Adding dual numbers requires
+the same pattern used for complex:
+
+\begin{enumerate}[nosep]
+\item In {\tt Add}, {\tt Sub}, {\tt Mul}, {\tt Div}, {\tt Neg},
+  {\tt Abs}: check for {\tt SchemeDual.T} before the exact/inexact
+  dispatch.  When one operand is dual and the other is not,
+  promote the non-dual to dual with epsilon = 0.
+\item In {\tt Compare}, {\tt Equal}: duals with equal real and
+  epsilon parts are equal; ordering raises an error.
+\item In {\tt IsExact}, {\tt IsInexact}: check both parts.
+\item In {\tt Is}: return {\tt TRUE} for duals.
+\item In {\tt Format}: delegate to {\tt SchemeDual.Format}.
+\item In {\tt CheckReal}: raise for duals (same as complex).
+\end{enumerate}
+
+\section{Integration with SchemePrimitive}
+
+The transcendental functions in {\tt SchemePrimitive.m3} use the
+same {\tt TYPECASE} pattern as complex.  For each function $f$,
+add a {\tt SchemeDual.T} case that computes
+$f(a) + b \cdot f'(a) \cdot \varepsilon$ using the existing
+real-valued $f$ and $f'$:
+
+\begin{lstlisting}[language=Modula3]
+(* Example: exp on dual *)
+| SchemeDual.T(d) =>
+  WITH fa  = DoExp(d.re),    (* exp(a) -- recursive call *)
+       dfa = fa               (* exp'(a) = exp(a) *)
+  DO
+    RETURN SchemeDual.New(fa, SchemeNumber.Mul(d.eps, dfa))
+  END
+\end{lstlisting}
+
+\noindent Since the parts are {\tt SchemeObject.T}, the recursive
+call handles the case where {\tt d.re} is complex---{\tt DoExp}
+dispatches to {\tt ComplexExp} automatically.
+
+The following is a complete list of every math builtin in
+{\tt SchemePrimitive.m3} that must be updated for dual numbers,
+grouped by behavior.
+
+\paragraph{Dual-aware (compute $f(a) + b f'(a) \varepsilon$).}
+
+\begin{center}
+\small
+\begin{tabular}{lll}
+\toprule
+Builtin & $f(a)$ & $f'(a)$ \\
+\midrule
+{\tt exp}   & $e^a$          & $e^a$ \\
+{\tt log}   & $\log a$       & $1/a$ \\
+{\tt sin}   & $\sin a$       & $\cos a$ \\
+{\tt cos}   & $\cos a$       & $-\sin a$ \\
+{\tt tan}   & $\tan a$       & $1/\cos^2 a$ \\
+{\tt asin}  & $\arcsin a$    & $1/\sqrt{1-a^2}$ \\
+{\tt acos}  & $\arccos a$    & $-1/\sqrt{1-a^2}$ \\
+{\tt atan}  & $\arctan a$    & $1/(1+a^2)$ \\
+{\tt sqrt}  & $\sqrt{a}$     & $1/(2\sqrt{a})$ \\
+{\tt expt}  & $a^n$          & $n a^{n-1}$ (general: $a^n \log a$) \\
+{\tt abs}   & $|a|$          & $\mathrm{sign}(a)$ (real duals only) \\
+{\tt tanh}  & $\tanh a$      & $1/\cosh^2 a$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Dual arithmetic (already covered by SchemeNumber).}
+These are handled in {\tt SchemeNumber.m3}, not per-builtin:
+{\tt +}, {\tt -}, {\tt *}, {\tt /}, unary {\tt -}.
+
+\paragraph{Predicates (check/dispatch on dual type).}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Builtin & Behavior for dual \\
+\midrule
+{\tt number?}  & {\tt \#t} \\
+{\tt dual?}    & {\tt \#t} (new predicate) \\
+{\tt complex?} & {\tt \#f} \\
+{\tt real?}    & {\tt \#f} \\
+{\tt rational?} & {\tt \#f} \\
+{\tt integer?} & {\tt \#f} \\
+{\tt exact?}   & exact iff both parts exact \\
+{\tt inexact?} & inexact iff either part inexact \\
+{\tt zero?}    & both parts zero \\
+{\tt positive?} & error (not ordered) \\
+{\tt negative?} & error (not ordered) \\
+{\tt even?}    & error \\
+{\tt odd?}     & error \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Real-only (error on dual, via {\tt CheckReal}).}
+These operations are not defined for dual numbers and should
+raise ``not a real number'':
+
+\begin{center}
+\begin{tabular}{l}
+\toprule
+Builtins \\
+\midrule
+{\tt <\quad >\quad <=\quad >=\quad min\quad max} \\
+{\tt floor\quad ceiling\quad truncate\quad round} \\
+{\tt quotient\quad remainder\quad modulo\quad gcd\quad lcm} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Equality.}
+{\tt =} returns {\tt \#t} when both real and epsilon parts are equal.
+{\tt eqv?} and {\tt equal?} use identity/structural comparison as usual.
+
+\paragraph{Conversion.}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Builtin & Behavior \\
+\midrule
+{\tt exact->inexact} & convert both parts \\
+{\tt inexact->exact} & convert both parts \\
+{\tt number->string} & delegate to {\tt SchemeDual.Format} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Accessors (new).}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Builtin & Behavior \\
+\midrule
+{\tt dual-real}    & real part; identity for non-duals \\
+{\tt dual-epsilon} & epsilon part; 0 for non-duals \\
+{\tt make-dual}    & constructor (demotes if epsilon = 0) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Interop (SchemeModula3Types)}
+
+{\tt SchemeDual.T} is a traced M3 reference type, so it passes
+through the Scheme--M3 boundary like any other {\tt REFANY}.
+Modula-3 interfaces that declare parameters of type
+{\tt SchemeDual.T} receive the dual object directly, and can
+access its {\tt re} and {\tt eps} fields from M3 code.
+
+{\tt SchemeModula3Types} should add {\tt SchemeDual\_T} as a
+recognized interop type (parallel to {\tt Mpz.T} and {\tt Mpfr.T}),
+with {\tt ToScheme}/{\tt ToModula} converters and
+an entry in the {\tt Type} enumeration.  The {\tt interop-roundtrip}
+primitive should support {\tt 'SchemeDual\_T}.
+
+For M3 formal types that expect real numbers ({\tt INTEGER},
+{\tt LONGREAL}, etc.), dual arguments should raise an error,
+same as complex.
+
+\section{Modula-3 API for Complex and Dual}
+
+{\tt Mpz.T} is a pre-existing M3 library with its own rich API
+(200+ operations).  {\tt SchemeComplex.T} and {\tt SchemeDual.T}
+are different: they originate in the Scheme numeric tower, so
+their M3 interfaces must be designed to be useful from both sides.
+
+The complex transcendental functions ({\tt ComplexExp},
+{\tt ComplexLog}, {\tt ComplexSin}, etc.) are currently static
+procedures inside {\tt SchemePrimitive.m3}.  These should move
+into {\tt SchemeComplex.i3/m3} as public exports, and the
+corresponding dual versions into {\tt SchemeDual.i3/m3}:
+
+\begin{lstlisting}[language=Modula3]
+(* SchemeComplex.i3 — public M3 API *)
+PROCEDURE Exp(c: T): SchemeObject.T RAISES {E};
+PROCEDURE Log(c: T): SchemeObject.T RAISES {E};
+PROCEDURE Sin(c: T): SchemeObject.T RAISES {E};
+PROCEDURE Cos(c: T): SchemeObject.T RAISES {E};
+PROCEDURE Sqrt(c: T): SchemeObject.T RAISES {E};
+(* ... and similarly for SchemeDual.i3 *)
+\end{lstlisting}
+
+\noindent With these as public interfaces, M3 code can call
+complex and dual math directly:
+
+\begin{lstlisting}[language=Modula3]
+VAR z := SchemeComplex.New(SchemeInt.FromI(3),
+                           SchemeInt.FromI(4));
+VAR w := SchemeComplex.Exp(z);   (* e^(3+4i) *)
+\end{lstlisting}
+
+\noindent {\tt SchemePrimitive.m3} then dispatches the Scheme
+builtins ({\tt exp}, {\tt sin}, etc.) to these module procedures
+rather than inlining the formulas.
+
+{\tt sstubgen} can generate Scheme stubs for these interfaces
+if requested (e.g., via {\tt SchemeStubs("SchemeComplex")} in
+a package's m3makefile), making the operations callable from
+Scheme as {\tt (SchemeComplex.Exp z)}.  This falls out naturally
+from the existing stub generation mechanism---no special support
+is needed.
+
+The full public API for each module:
+
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+Category & Procedures \\
+\midrule
+Construction   & {\tt New}, {\tt MakeRectangular}/{\tt MakePolar} (complex) \\
+               & {\tt New} (dual) \\
+Accessors      & {\tt RealPart}, {\tt ImagPart}, {\tt Magnitude}, {\tt Angle} (complex) \\
+               & {\tt RealPart}, {\tt EpsilonPart} (dual) \\
+Arithmetic     & {\tt Add}, {\tt Sub}, {\tt Mul}, {\tt Div}, {\tt Neg} \\
+Comparison     & {\tt Equal} \\
+Transcendental & {\tt Exp}, {\tt Log}, {\tt Sin}, {\tt Cos}, {\tt Tan} \\
+               & {\tt Asin}, {\tt Acos}, {\tt Atan}, {\tt Sqrt} \\
+Query          & {\tt IsZero} \\
+Display        & {\tt Format} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%======================================================================
+\chapter{Compiler Support}
+%======================================================================
+
+\section{Constant Embedding}
+
+The compiler's {\tt constant-ref} and {\tt constant-to-m3} need
+a dual case, parallel to the complex case:
+
+\begin{lstlisting}[language=Scheme]
+;; In constant-ref / constant-to-m3:
+((dual? val)
+ (string-append "SchemeDual.New("
+                (constant-ref (dual-real val) ctx) ", "
+                (constant-ref (dual-epsilon val) ctx) ")"))
+\end{lstlisting}
+
+\section{{\tt form->string}}
+
+The {\tt form->string} serializer needs to handle duals for the
+{\tt loadEvalText} fallback path:
+
+\begin{lstlisting}[language=Scheme]
+((dual? form)
+ (string-append "(make-dual "
+                (form->string (dual-real form)) " "
+                (form->string (dual-epsilon form)) ")"))
+\end{lstlisting}
+
+\section{Inline Primitives}
+
+The {\tt number?} predicate already compiles to
+{\tt SchemeNumber.Is()}, which will return {\tt TRUE} for duals
+once {\tt SchemeNumber.Is} is updated.  No compiler change needed.
+
+The {\tt dual?} predicate can be inlined as
+{\tt ISTYPE(x, SchemeDual.T)} in {\tt gen-inline-expr}.
+
+Arithmetic ({\tt +}, {\tt -}, {\tt *}, {\tt /}) goes through
+{\tt SchemePrimitive.NumericAdd} etc., which delegate to
+{\tt SchemeNumber.Add}---no compiler change needed.
+
+\section{IMPORT Line}
+
+Add {\tt SchemeDual} to the generated M3 module's IMPORT list
+(alongside the existing {\tt SchemeComplex}, {\tt SchemeRational},
+etc.).
+
+\section{Unboxing}
+
+Numeric unboxing (currently disabled) assumes {\tt LONGREAL}
+representation.  Duals cannot be unboxed to {\tt LONGREAL}.
+The existing guard that disables unboxing for the numeric tower
+covers this case; no change needed.
+
+%======================================================================
+\chapter{Testing}
+%======================================================================
+
+A test file {\tt test-dual.scm} should cover:
+
+\begin{enumerate}[nosep]
+\item Basic arithmetic: {\tt +}, {\tt -}, {\tt *}, {\tt /}, unary {\tt -}
+\item Demotion: {\tt (make-dual 5 0)} $\to$ {\tt 5}
+\item Predicates: {\tt dual?}, {\tt number?}, {\tt real?}, {\tt exact?}
+\item Transcendentals: {\tt exp}, {\tt log}, {\tt sin}, {\tt cos},
+  {\tt tan}, {\tt sqrt}, {\tt expt}, {\tt asin}, {\tt acos}, {\tt atan}
+\item Automatic differentiation: verify $f'(x)$ for known functions
+\item Exact arithmetic: rational-valued duals
+\item Complex-valued duals: derivatives of complex functions
+\item Error cases: ordering, {\tt floor}, {\tt positive?}, etc.
+\item {\tt exact->inexact}, {\tt inexact->exact} on duals
+\item {\tt number->string} on duals
+\item Interop: {\tt REFANY} roundtrip
+\item Loops with dual accumulators (compiler acceptance)
+\end{enumerate}
+
+A compiler version {\tt test-cn-dual.scm} in the numtest suite
+verifies identical behavior compiled vs.\ interpreted.
+
+%======================================================================
+\chapter{Implementation Plan}
+%======================================================================
+
+\begin{center}
+\begin{tabular}{clll}
+\toprule
+Step & Task & Files & Effort \\
+\midrule
+1 & {\tt SchemeDual.i3/m3} & new & 1 hour \\
+2 & {\tt SchemeNumber.m3} dispatch & modify & 1 hour \\
+3 & {\tt SchemePrimitive.m3} transcendentals & modify & 2 hours \\
+4 & {\tt SchemeInputPort.m3} reader (optional) & modify & 1 hour \\
+5 & {\tt compiler.scm} constants/serialization & modify & 30 min \\
+6 & {\tt test-dual.scm} + {\tt test-cn-dual.scm} & new & 2 hours \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Steps 1--3 follow the same pattern as the complex number
+implementation.  Step~4 (reader syntax) can be deferred.
+Step~5 is mechanical---same changes as were made for complex.
+Step~6 should be written first (acceptance tests) before
+implementing, as was done for the complex math builtins.
+
+{
+\frenchspacing
+\begin{thebibliography}{99}
+
+\bibitem{clifford1873} William Kingdon Clifford.
+  Preliminary sketch of biquaternions.
+  {\it Proceedings of the London Mathematical Society,}
+  s1-4(1):381--395, 1873.
+
+\end{thebibliography}
+}
+
+\end{document}
