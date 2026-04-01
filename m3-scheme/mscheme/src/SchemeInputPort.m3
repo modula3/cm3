@@ -22,7 +22,7 @@ IMPORT SchemePair, SchemeUtils;
 IMPORT SchemeInputPortClass;
 IMPORT Fmt;
 IMPORT SchemeInt, Mpz;
-IMPORT SchemeRational, SchemeComplex, SchemeExact, IEEESpecial;
+IMPORT SchemeRational, SchemeComplex, SchemeDual, SchemeExact, IEEESpecial;
 (*IMPORT Debug;*)
 
 REVEAL RdClass.Private <: MUTEX; (* see cryptic SRC comments *)
@@ -600,6 +600,9 @@ PROCEDURE NextToken(t          : T;
             WITH s = TryParseSpecialFloat(txt) DO
               IF s # NIL THEN RETURN s END
             END;
+            WITH d = TryParseDual(txt) DO
+              IF d # NIL THEN RETURN d END
+            END;
             WITH z = TryParseComplex(txt) DO
               IF z # NIL THEN RETURN z END
             END
@@ -871,6 +874,84 @@ PROCEDURE TryParseComplex(txt: TEXT): Object =
       END
     END
   END TryParseComplex;
+
+PROCEDURE TryParseDual(txt : TEXT) : Object =
+  (* Try to parse txt as a dual number: a+beps, a-beps, beps, eps, -eps.
+     Returns NIL on failure. *)
+  VAR len := Text.Length(txt);
+  BEGIN
+    IF len < 3 THEN RETURN NIL END;
+    (* Must end with "eps" *)
+    IF NOT Text.Equal(Text.Sub(txt, len - 3), "eps") THEN RETURN NIL END;
+    VAR body := Text.Sub(txt, 0, len - 3);
+        bodyLen := len - 3;
+        splitPos := -1;
+    BEGIN
+      (* "eps" alone → 0 + 1*eps *)
+      IF bodyLen = 0 THEN
+        RETURN SchemeDual.New(SchemeInt.Zero, SchemeInt.FromI(1))
+      END;
+
+      (* "+eps" or "-eps" *)
+      IF bodyLen = 1 THEN
+        IF Text.GetChar(body, 0) = '+' THEN
+          RETURN SchemeDual.New(SchemeInt.Zero, SchemeInt.FromI(1))
+        ELSIF Text.GetChar(body, 0) = '-' THEN
+          RETURN SchemeDual.New(SchemeInt.Zero, SchemeInt.FromI(-1))
+        END
+      END;
+
+      (* Find the split point: scan from right for +/- not preceded by e/E *)
+      FOR i := bodyLen - 1 TO 1 BY -1 DO
+        WITH c = Text.GetChar(body, i) DO
+          IF c = '+' OR c = '-' THEN
+            IF i > 0 THEN
+              WITH prev = Text.GetChar(body, i - 1) DO
+                IF prev # 'e' AND prev # 'E' THEN
+                  splitPos := i; EXIT
+                END
+              END
+            ELSE
+              splitPos := i; EXIT
+            END
+          END
+        END
+      END;
+
+      VAR realTxt, epsTxt: TEXT;
+          realPart, epsPart: Object;
+      BEGIN
+        IF splitPos > 0 THEN
+          realTxt := Text.Sub(body, 0, splitPos);
+          epsTxt := Text.Sub(body, splitPos);
+        ELSE
+          (* No split: pure epsilon (e.g. "5eps") *)
+          realTxt := NIL;
+          epsTxt := body;
+        END;
+
+        (* Parse epsilon part *)
+        IF Text.Equal(epsTxt, "+") THEN
+          epsPart := SchemeInt.FromI(1)
+        ELSIF Text.Equal(epsTxt, "-") THEN
+          epsPart := SchemeInt.FromI(-1)
+        ELSE
+          epsPart := TryParseReal(epsTxt);
+          IF epsPart = NIL THEN RETURN NIL END
+        END;
+
+        (* Parse real part *)
+        IF realTxt = NIL THEN
+          realPart := SchemeInt.Zero
+        ELSE
+          realPart := TryParseReal(realTxt);
+          IF realPart = NIL THEN RETURN NIL END
+        END;
+
+        RETURN SchemeDual.New(realPart, epsPart)
+      END
+    END
+  END TryParseDual;
 
 PROCEDURE CharSeqToArray(seq : CharSeq.T) : String =
   BEGIN

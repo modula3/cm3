@@ -87,63 +87,48 @@ PROCEDURE Equal(a, b: T): BOOLEAN RAISES {E} =
            SchemeNumber.Equal(a.eps, b.eps)
   END Equal;
 
-PROCEDURE NeedParens(x: SchemeObject.T): BOOLEAN =
-  (* Does this part need parentheses in display? *)
+PROCEDURE IsNegative(x: SchemeObject.T): BOOLEAN =
   BEGIN
-    TYPECASE x OF
-      NULL => RETURN FALSE
-    | SchemeComplex.T => RETURN TRUE
+    IF SchemeExact.Is(x) THEN
+      RETURN SchemeExact.IsNegative(x)
     ELSE
-      IF SchemeExact.Is(x) THEN
-        RETURN SchemeExact.IsNegative(x)
-      ELSE
-        VAR txt := SchemeNumber.Format(x); BEGIN
-          RETURN txt # NIL AND Text.Length(txt) > 0 AND
-                 Text.GetChar(txt, 0) = '-'
-        END
+      VAR txt := SchemeNumber.Format(x); BEGIN
+        RETURN txt # NIL AND Text.Length(txt) > 0 AND
+               Text.GetChar(txt, 0) = '-'
       END
     END
-  END NeedParens;
+  END IsNegative;
 
-PROCEDURE FormatPart(x: SchemeObject.T): TEXT =
+PROCEDURE NeedParens(x: SchemeObject.T): BOOLEAN =
+  (* Only complex epsilon parts need parentheses *)
   BEGIN
-    IF NeedParens(x) THEN
-      RETURN "(" & SchemeNumber.Format(x) & ")"
-    ELSE
-      RETURN SchemeNumber.Format(x)
-    END
-  END FormatPart;
+    RETURN x # NIL AND ISTYPE(x, SchemeComplex.T)
+  END NeedParens;
 
 PROCEDURE Format(x: T): TEXT =
   VAR reTxt := SchemeNumber.Format(x.re);
-      epsTxt := FormatPart(x.eps);
+      epsTxt := SchemeNumber.Format(x.eps);
       reIsZero := FALSE;
   BEGIN
     TRY reIsZero := SchemeNumber.IsZero(x.re) EXCEPT E => END;
 
+    (* Wrap complex parts in parens *)
+    IF NeedParens(x.eps) THEN
+      epsTxt := "(" & epsTxt & ")"
+    END;
+
     IF reIsZero THEN
-      (* Just the epsilon part: 4eps or (3+4i)eps *)
-      IF SchemeNumber.Equal(x.eps, SchemeInt.One) THEN
-        RETURN "eps"
-      ELSE
-        RETURN epsTxt & "eps"
-      END
+      (* Just the epsilon part *)
+      RETURN epsTxt & "eps"
     ELSE
       IF NeedParens(x.re) THEN
         reTxt := "(" & reTxt & ")"
       END;
-      IF NeedParens(x.eps) THEN
-        RETURN reTxt & "+" & epsTxt & "eps"
+      (* Check for negative epsilon to use - instead of +- *)
+      IF IsNegative(x.eps) THEN
+        RETURN reTxt & epsTxt & "eps"
       ELSE
-        (* Check for negative epsilon to use - instead of +- *)
-        VAR rawEps := SchemeNumber.Format(x.eps); BEGIN
-          IF rawEps # NIL AND Text.Length(rawEps) > 0 AND
-             Text.GetChar(rawEps, 0) = '-' THEN
-            RETURN reTxt & rawEps & "eps"
-          ELSE
-            RETURN reTxt & "+" & epsTxt & "eps"
-          END
-        END
+        RETURN reTxt & "+" & epsTxt & "eps"
       END
     END
   END Format;
