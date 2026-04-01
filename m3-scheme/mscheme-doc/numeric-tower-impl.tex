@@ -692,12 +692,13 @@ that the compiler is a fixed point.
 %======================================================================
 
 \begin{itemize}
-\item \textbf{No rationals.}  Exact division of non-divisible
-  integers returns inexact {\tt LONGREAL}.  Phase~2 would
-  introduce {\tt BigRational} or {\tt Mpq.T}.
+\item \textbf{Rationals.}  \emph{Now implemented.}  Exact division
+  of non-divisible integers returns {\tt SchemeRational.T}
+  (backed by GMP {\tt mpq\_t}).
 
-\item \textbf{No complex numbers.}  Phase~3 would add
-  {\tt SchemeComplex.T}.
+\item \textbf{Complex numbers.}  \emph{Now implemented.}
+  {\tt SchemeComplex.T} with full R4RS support including
+  transcendentals.
 
 \item \textbf{No compiler {\tt INTEGER} unboxing.}  The compiler's
   self-tail-call optimization continues to unbox to {\tt LONGREAL}.

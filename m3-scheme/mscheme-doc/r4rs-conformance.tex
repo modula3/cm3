@@ -346,15 +346,29 @@ The following essential procedures are now present:
 \toprule
 \textbf{Procedure} & \textbf{R4RS Status} & \textbf{Notes} \\
 \midrule
-{\tt numerator} & Non-essential & No rationals \\
-{\tt denominator} & Non-essential & No rationals \\
-{\tt rationalize} & Non-essential & No rationals \\
-{\tt make-rectangular} & Non-essential & No complex numbers \\
-{\tt make-polar} & Non-essential & No complex numbers \\
-{\tt real-part} & Non-essential & No complex numbers \\
-{\tt imag-part} & Non-essential & No complex numbers \\
-{\tt magnitude} & Non-essential & No complex numbers \\
-{\tt angle} & Non-essential & No complex numbers \\
+{\tt rationalize} & Non-essential & Not yet implemented \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Recently Implemented (Numeric Tower)}
+
+The following non-essential procedures are now available via the full
+numeric tower (exact integers, rationals, inexact reals, complex numbers):
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Procedure} & \textbf{R4RS Status} & \textbf{Notes} \\
+\midrule
+{\tt numerator} & Non-essential & Via {\tt SchemeRational.T} \\
+{\tt denominator} & Non-essential & Via {\tt SchemeRational.T} \\
+{\tt make-rectangular} & Non-essential & Via {\tt SchemeComplex.T} \\
+{\tt make-polar} & Non-essential & Via {\tt SchemeComplex.T} \\
+{\tt real-part} & Non-essential & Via {\tt SchemeComplex.T} \\
+{\tt imag-part} & Non-essential & Via {\tt SchemeComplex.T} \\
+{\tt magnitude} & Non-essential & Via {\tt SchemeComplex.T} \\
+{\tt angle} & Non-essential & Via {\tt SchemeComplex.T} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -585,15 +599,7 @@ Table~\ref{tab:gaps} summarizes all missing or incomplete features.
 \addlinespace
 {\tt transcript-on}         & Non-essential & --- \\
 {\tt transcript-off}        & Non-essential & --- \\
-{\tt numerator}             & Non-essential & No rationals \\
-{\tt denominator}           & Non-essential & No rationals \\
-{\tt rationalize}           & Non-essential & No rationals \\
-{\tt make-rectangular}      & Non-essential & No complex numbers \\
-{\tt make-polar}            & Non-essential & No complex numbers \\
-{\tt real-part}             & Non-essential & No complex numbers \\
-{\tt imag-part}             & Non-essential & No complex numbers \\
-{\tt magnitude}             & Non-essential & No complex numbers \\
-{\tt angle}                 & Non-essential & No complex numbers \\
+{\tt rationalize}           & Non-essential & --- \\
 \addlinespace
 \midrule
 \multicolumn{3}{l}{\emph{Partial / limitation}} \\
