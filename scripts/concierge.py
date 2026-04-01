@@ -435,7 +435,7 @@ class Cm3:
 
     def build(self, *paths):
         "Relative to root of current build directory"
-        return self.source(*paths) / self.build_dir()
+        return Path(self.source(*paths)) / Path(self.build_dir())
 
     def build_dir(self):
         "Basename of build directory"
@@ -581,7 +581,7 @@ class Cm3:
         script_path = self.script()
         script_dir  = script_path.parent
         source_dir  = script_dir.parent
-        return source_dir.joinpath(*paths)
+        return source_dir.joinpath(*paths).as_posix()
 
     def target(self):
         "Compilation target, passed to CM3"
@@ -654,7 +654,7 @@ class WithCm3:
 
     def rmdir(self, dir):
         "Recursively remove a directory"
-        if dir.is_dir():
+        if Path(dir).is_dir():
             print("rm", "-Rf", dir)
             if not self.no_action():
                 shutil.rmtree(dir)
@@ -1237,7 +1237,7 @@ class ConciergeCommand(WithPackageActions):
         "Create a directory"
         print("\nmkdir", "-p", dir, "\n")
         if not self.no_action():
-            dir.mkdir(parents=True, exist_ok=True)
+            Path(dir).mkdir(parents=True, exist_ok=True)
 
     def rm(self, file):
         "Remove a file"
@@ -1700,18 +1700,21 @@ class MakeBootstrapCommand(ConciergeCommand):
             cmakelists = self.source() / Path(package_path) / "CMakeLists.txt"
             if not cmakelists.is_file():
                 continue
-            package_dir = bootstrap_dir / Path(package_path).name
+            package_dir = Path(bootstrap_dir) / Path(package_path).name
+            
             self.mkdir(package_dir)
             self.cp(cmakelists, package_dir)
-            package_dirs.append(package_dir.name)
+            package_dirs.append(Path(package_dir).name)
+
             package_sources = []
             if not self.no_action():
-                for file in self.build(package_path).iterdir():
+                
+                for file in Path(self.build(package_path)).iterdir():
                     if file.suffix in [".c", ".cpp", ".h"]:
                         self.cp(file, package_dir)
                         package_sources.append(file.name)
 
-                with open(package_dir / "sources.lst", "w") as sources:
+                with open(Path(package_dir) / "sources.lst", "w") as sources:
                     sources.write("set(cm3_SOURCES\n")
                     for filename in sorted(package_sources):
                         sources.write(f"{filename}\n")
@@ -1728,11 +1731,11 @@ include(GNUInstallDirs)
 include(bootstrap.cmake)
 """
         if not self.no_action():
-            with open(bootstrap_dir / "CMakeLists.txt", "w") as cmake:
+            with open(Path(bootstrap_dir) / "CMakeLists.txt", "w") as cmake:
                 cmake.write(cmake_header)
                 for dir in sorted(package_dirs):
                     cmake.write(f"add_subdirectory({dir})\n")
-        self.cp(self.source("scripts/bootstrap.cmake"), bootstrap_dir)
+        self.cp(Path(self.source("scripts/bootstrap.cmake")), Path(bootstrap_dir))
 
         # Generate tarballs.
         distname = f"cm3-boot-{self.config()}-{self.version()}"
