@@ -4779,6 +4779,7 @@ CONST text = ARRAY ConvertOp OF TEXT{
    something so get one version for longreal and another for extended *)
     "#ifndef m3_round\n#define m3_round m3_round\n" &
     "#ifdef _WIN32 /* temporary workaround */\n" &
+    "double __cdecl round(double);\n" &
     "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
     " return (INT64)f; }\n" &
     "#else\n" &
@@ -4791,6 +4792,7 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#ifndef m3_trunc\n" &
     "#define m3_trunc m3_trunc\n" &
     "#ifdef _WIN32\n" &
+    "double __cdecl trunc(double);\n" &
     "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
     " return (INT64)trunc(f); }\n" &
     "#else\n" &
@@ -4803,6 +4805,7 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#ifndef m3_floor\n" &
     "#define m3_floor m3_floor\n" &
     "#ifdef _WIN32\n" &
+    "double __cdecl floor(double);\n" &
     "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
     " return (INT64)floor(f); }\n" &
     "#else\n" &
@@ -4815,6 +4818,7 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#ifndef m3_ceil\n" &
     "#define m3_ceil m3_ceil\n" &
     "#ifdef _WIN32\n" &
+    "double __cdecl ceil(double);\n" &
     "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
     " return (INT64)ceil(f); }\n" &
     "#else\n" &
