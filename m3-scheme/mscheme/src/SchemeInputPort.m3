@@ -241,7 +241,7 @@ PROCEDURE ReadBigInt(t : T) : Object RAISES { E } =
 
 PROCEDURE IsEOF(x : Object) : BOOLEAN = BEGIN RETURN x = EOF END IsEOF;
 
-PROCEDURE ReadTail2(t          : T; 
+PROCEDURE ReadTail2(t          : T;
                     bigInt     : BOOLEAN;
                     bigIntBase : [2..36];
                     wx         : Wx) : Object
@@ -249,10 +249,12 @@ PROCEDURE ReadTail2(t          : T;
   VAR token := t.nextToken(bigInt, bigIntBase, wx);
       res : SchemePair.T := NIL;
       ret : Object;
+      startLine := t.lNo;
   BEGIN
     LOOP
     IF    token = EOF THEN
-      RETURN Error("EOF during read.")
+      RETURN Error("EOF during read, " & UnNil(t.helpfulText) &
+        ", list started at line " & Fmt.Int(startLine))
     ELSIF token = RP THEN
       ret := NIL ; EXIT
     ELSIF token = DOT THEN
@@ -301,9 +303,11 @@ PROCEDURE ReadTail(t          : T;
                    wx         : Wx) : Object RAISES { E } =
   VAR
     token := t.nextToken(bigInt, bigIntBase, wx);
+    startLine := t.lNo;
   BEGIN
     IF    token = EOF THEN
-      RETURN Error("EOF during read.")
+      RETURN Error("EOF during read, " & UnNil(t.helpfulText) &
+        ", list started at line " & Fmt.Int(startLine))
     ELSIF token = RP THEN
       RETURN NIL
     ELSIF token = DOT THEN
