@@ -74,6 +74,7 @@ Module("SchemeExact")
 Module("SchemeInexact")
 Module("SchemeNumber")
 Module("SchemeComplex")
+Module("SchemeDual")
 
 Module("SchemeChar")
 

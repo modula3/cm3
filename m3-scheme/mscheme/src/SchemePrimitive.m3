@@ -46,7 +46,7 @@ IMPORT RefRecord;
 IMPORT SchemeClosure;
 IMPORT SchemeInt, Mpz;
 IMPORT SchemeExact, SchemeInexact, SchemeNumber;
-IMPORT SchemeRational, SchemeMpfr, SchemeComplex, Mpfr;
+IMPORT SchemeRational, SchemeMpfr, SchemeComplex, SchemeDual, Mpfr;
 IMPORT Pickle, Rd;
 
 <* FATAL Thread.Alerted *>
@@ -165,7 +165,8 @@ TYPE
         MakeMpfr, MpfrPrecision,
         MakeRectangular, MakePolar, RealPart, ImagPart,
         MagnitudeP, AngleP,
-        RationalQ, RealQ, ComplexQ
+        RationalQ, RealQ, ComplexQ,
+        MakeDual, DualReal, DualEpsilon, DualQ
   };
 
 REVEAL 
@@ -487,6 +488,10 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("imag-part",      ORD(P.ImagPart), dd, 1)
     .defPrim("magnitude",      ORD(P.MagnitudeP), dd, 1)
     .defPrim("angle",          ORD(P.AngleP), dd, 1)
+    .defPrim("make-dual",      ORD(P.MakeDual), dd, 2)
+    .defPrim("dual-real",      ORD(P.DualReal), dd, 1)
+    .defPrim("dual-epsilon",   ORD(P.DualEpsilon), dd, 1)
+    .defPrim("dual?",          ORD(P.DualQ), dd, 1)
     ;
     
     RETURN env
@@ -840,6 +845,12 @@ PROCEDURE Prims(t          : T;
         P.Sqrt =>
         TYPECASE x OF
           SchemeMpfr.T(m) => RETURN SchemeMpfr.Sqrt(m)
+        | SchemeDual.T(d) =>
+          (* sqrt(a+be) = sqrt(a) + b/(2*sqrt(a)) * e *)
+          WITH fa = AnySqrt(d.re),
+               two_fa = SchemeNumber.Mul(SchemeInt.FromI(2), fa) DO
+            RETURN DualLift(d, fa, SchemeNumber.Div(SchemeInt.One, two_fa))
+          END
         | SchemeComplex.T(c) => RETURN ComplexSqrt(c)
         ELSE END;
         IF SchemeExact.IsInteger(x) AND NOT SchemeExact.IsNegative(x) THEN
@@ -870,7 +881,21 @@ PROCEDURE Prims(t          : T;
         END
       |
         P.Expt =>
-        IF ISTYPE(x, SchemeComplex.T) OR ISTYPE(y, SchemeComplex.T) THEN
+        IF ISTYPE(x, SchemeDual.T) THEN
+          (* (a+be)^n = a^n + n*b*a^(n-1) * e  (general: a^n + b*n*a^(n-1)*e) *)
+          WITH d = NARROW(x, SchemeDual.T),
+               fa = SchemeNumber.Mul(y, SchemeNumber.Sub(y, SchemeInt.One)) DO
+            (* f(a) = a^y, f'(a) = y * a^(y-1) *)
+            RETURN DualLift(d,
+              (* Use general pow for f(a) *)
+              FromLR(Math.pow(SchemeNumber.ToLongReal(d.re),
+                              SchemeNumber.ToLongReal(y))),
+              SchemeNumber.Mul(y,
+                FromLR(Math.pow(SchemeNumber.ToLongReal(d.re),
+                                SchemeNumber.ToLongReal(
+                                  SchemeNumber.Sub(y, SchemeInt.One))))))
+          END
+        ELSIF ISTYPE(x, SchemeComplex.T) OR ISTYPE(y, SchemeComplex.T) THEN
           (* complex expt: z^w = exp(w * log(z)) *)
           VAR lz : Object;
           BEGIN
@@ -1031,42 +1056,69 @@ PROCEDURE Prims(t          : T;
       |
         P.Exp =>
         TYPECASE x OF
-          SchemeMpfr.T(m) => RETURN SchemeMpfr.Exp(m)
+          SchemeDual.T(d) =>
+          (* exp'(a) = exp(a) *)
+          WITH fa = AnyExp(d.re) DO RETURN DualLift(d, fa, fa) END
+        | SchemeMpfr.T(m) => RETURN SchemeMpfr.Exp(m)
         | SchemeComplex.T(c) => RETURN ComplexExp(c)
         ELSE RETURN FromLR(Math.exp(FromO(x)))
         END
       |
         P.Log =>
         TYPECASE x OF
-          SchemeMpfr.T(m) => RETURN SchemeMpfr.Log(m)
+          SchemeDual.T(d) =>
+          (* log'(a) = 1/a *)
+          RETURN DualLift(d, AnyLog(d.re),
+                   SchemeNumber.Div(SchemeInt.One, d.re))
+        | SchemeMpfr.T(m) => RETURN SchemeMpfr.Log(m)
         | SchemeComplex.T(c) => RETURN ComplexLog(c)
         ELSE RETURN FromLR(Math.log(FromO(x)))
         END
       |
         P.Sin =>
         TYPECASE x OF
-          SchemeMpfr.T(m) => RETURN SchemeMpfr.Sin(m)
+          SchemeDual.T(d) =>
+          (* sin'(a) = cos(a) *)
+          RETURN DualLift(d, AnySin(d.re), AnyCos(d.re))
+        | SchemeMpfr.T(m) => RETURN SchemeMpfr.Sin(m)
         | SchemeComplex.T(c) => RETURN ComplexSin(c)
         ELSE RETURN FromLR(Math.sin(FromO(x)))
         END
       |
         P.Cos =>
         TYPECASE x OF
-          SchemeMpfr.T(m) => RETURN SchemeMpfr.Cos(m)
+          SchemeDual.T(d) =>
+          (* cos'(a) = -sin(a) *)
+          RETURN DualLift(d, AnyCos(d.re), SchemeNumber.Neg(AnySin(d.re)))
+        | SchemeMpfr.T(m) => RETURN SchemeMpfr.Cos(m)
         | SchemeComplex.T(c) => RETURN ComplexCos(c)
         ELSE RETURN FromLR(Math.cos(FromO(x)))
         END
       |
         P.Tan =>
         TYPECASE x OF
-          SchemeMpfr.T(m) => RETURN SchemeMpfr.Tan(m)
+          SchemeDual.T(d) =>
+          (* tan'(a) = 1/cos^2(a) *)
+          WITH ca = AnyCos(d.re) DO
+            RETURN DualLift(d, SchemeNumber.Div(AnySin(d.re), ca),
+                     SchemeNumber.Div(SchemeInt.One, SchemeNumber.Mul(ca, ca)))
+          END
+        | SchemeMpfr.T(m) => RETURN SchemeMpfr.Tan(m)
         | SchemeComplex.T(c) =>
           RETURN SchemeNumber.Div(ComplexSin(c), ComplexCos(c))
         ELSE RETURN FromLR(Math.tan(FromO(x)))
         END
       |
         P.Acos =>
-        TYPECASE x OF SchemeComplex.T(c) =>
+        TYPECASE x OF SchemeDual.T(d) =>
+          (* acos'(a) = -1/sqrt(1-a^2) *)
+          WITH a2 = SchemeNumber.Mul(d.re, d.re),
+               dfa = SchemeNumber.Neg(
+                 SchemeNumber.Div(SchemeInt.One,
+                   AnySqrt(SchemeNumber.Sub(SchemeInt.One, a2)))) DO
+            RETURN DualLift(d, FromLR(Math.acos(SchemeNumber.ToLongReal(d.re))), dfa)
+          END
+        | SchemeComplex.T(c) =>
           (* acos(z) = -i * log(z + i*sqrt(1-z^2)) *)
           VAR i_val := SchemeComplex.New(SchemeInt.Zero, SchemeInt.One);
               neg_i := SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(-1));
@@ -1091,7 +1143,14 @@ PROCEDURE Prims(t          : T;
         END
       |
         P.Asin =>
-        TYPECASE x OF SchemeComplex.T(c) =>
+        TYPECASE x OF SchemeDual.T(d) =>
+          (* asin'(a) = 1/sqrt(1-a^2) *)
+          WITH a2 = SchemeNumber.Mul(d.re, d.re),
+               dfa = SchemeNumber.Div(SchemeInt.One,
+                 AnySqrt(SchemeNumber.Sub(SchemeInt.One, a2))) DO
+            RETURN DualLift(d, FromLR(Math.asin(SchemeNumber.ToLongReal(d.re))), dfa)
+          END
+        | SchemeComplex.T(c) =>
           (* asin(z) = -i * log(i*z + sqrt(1-z^2)) *)
           VAR i_val := SchemeComplex.New(SchemeInt.Zero, SchemeInt.One);
               neg_i := SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(-1));
@@ -1115,7 +1174,14 @@ PROCEDURE Prims(t          : T;
         END
       |
         P.Atan =>
-        TYPECASE x OF SchemeComplex.T =>
+        TYPECASE x OF SchemeDual.T(d) =>
+          (* atan'(a) = 1/(1+a^2) *)
+          WITH a2 = SchemeNumber.Mul(d.re, d.re),
+               dfa = SchemeNumber.Div(SchemeInt.One,
+                 SchemeNumber.Add(SchemeInt.One, a2)) DO
+            RETURN DualLift(d, FromLR(Math.atan(SchemeNumber.ToLongReal(d.re))), dfa)
+          END
+        | SchemeComplex.T =>
           (* atan(z) = (log(1+iz) - log(1-iz)) / 2i *)
           VAR i_val := SchemeComplex.New(SchemeInt.Zero, SchemeInt.One);
               two_i := SchemeComplex.New(SchemeInt.Zero, SchemeInt.FromI(2));
@@ -1482,10 +1548,14 @@ PROCEDURE Prims(t          : T;
         END
       |
         P.RealQ =>
-        RETURN Truth(SchemeExact.Is(x) OR SchemeInexact.Is(x))
+        RETURN Truth(NOT ISTYPE(x, SchemeDual.T) AND
+                     (SchemeExact.Is(x) OR SchemeInexact.Is(x)))
       |
         P.ComplexQ =>
-        RETURN Truth(SchemeNumber.Is(x))
+        RETURN Truth(NOT ISTYPE(x, SchemeDual.T) AND SchemeNumber.Is(x))
+      |
+        P.DualQ =>
+        RETURN Truth(x # NIL AND ISTYPE(x, SchemeDual.T))
       |
         P.CallWithInputFile =>
         VAR p : SchemeInputPort.T := NIL;
@@ -1555,8 +1625,18 @@ PROCEDURE Prims(t          : T;
         RETURN Truth(InPort(x, interp).charReady())
       |
         P.Tanh =>
-        SchemeNumber.CheckReal(x);
-        RETURN FromLR(Math.tanh(FromO(x)))
+        TYPECASE x OF SchemeDual.T(d) =>
+          (* tanh'(a) = 1/cosh^2(a) *)
+          SchemeNumber.CheckReal(d.re);
+          WITH lr = FromO(d.re),
+               fa = FromLR(Math.tanh(lr)),
+               ch = Math.cosh(lr) DO
+            RETURN DualLift(d, fa, FromLR(1.0d0 / (ch * ch)))
+          END
+        ELSE
+          SchemeNumber.CheckReal(x);
+          RETURN FromLR(Math.tanh(FromO(x)))
+        END
       |
         P.Cosh => RETURN FromLR(Math.cosh(FromO(x)))
       |
@@ -1652,7 +1732,12 @@ PROCEDURE Prims(t          : T;
         P.LoadEnvironment => RETURN LoadEnvironment(interp, x)
       |
         P.ExactToInexact =>
-        TYPECASE x OF SchemeComplex.T(c) =>
+        TYPECASE x OF
+          SchemeDual.T(d) =>
+          RETURN SchemeDual.New(
+            SchemeLongReal.FromLR(SchemeNumber.ToLongReal(d.re)),
+            SchemeLongReal.FromLR(SchemeNumber.ToLongReal(d.eps)))
+        | SchemeComplex.T(c) =>
           RETURN SchemeComplex.New(
             SchemeLongReal.FromLR(SchemeNumber.ToLongReal(c.re)),
             SchemeLongReal.FromLR(SchemeNumber.ToLongReal(c.im)))
@@ -1665,8 +1750,10 @@ PROCEDURE Prims(t          : T;
         END
       |
         P.InexactToExact =>
-        TYPECASE x OF SchemeComplex.T(c) =>
-          (* Convert both parts to exact *)
+        TYPECASE x OF
+          SchemeDual.T(d) =>
+          RETURN SchemeDual.New(InexactToExact(d.re), InexactToExact(d.eps))
+        | SchemeComplex.T(c) =>
           RETURN SchemeComplex.New(InexactToExact(c.re), InexactToExact(c.im))
         ELSE END;
         RETURN InexactToExact(x)
@@ -1829,6 +1916,33 @@ PROCEDURE Prims(t          : T;
       |
         P.AngleP =>
         RETURN SchemeComplex.Angle(x)
+      |
+        P.MakeDual =>
+        IF NOT SchemeNumber.Is(x) THEN
+          RETURN Error("make-dual: not a number: " & Stringify(List1(x)))
+        END;
+        IF NOT SchemeNumber.Is(y) THEN
+          RETURN Error("make-dual: not a number: " & Stringify(List1(y)))
+        END;
+        RETURN SchemeDual.New(x, y)
+      |
+        P.DualReal =>
+        TYPECASE x OF
+          SchemeDual.T(d) => RETURN SchemeDual.RealPart(d)
+        ELSE
+          IF SchemeNumber.Is(x) THEN RETURN x
+          ELSE RETURN Error("dual-real: not a number: " & Stringify(List1(x)))
+          END
+        END
+      |
+        P.DualEpsilon =>
+        TYPECASE x OF
+          SchemeDual.T(d) => RETURN SchemeDual.EpsilonPart(d)
+        ELSE
+          IF SchemeNumber.Is(x) THEN RETURN SchemeInt.Zero
+          ELSE RETURN Error("dual-epsilon: not a number: " & Stringify(List1(x)))
+          END
+        END
       END
     END
   END Prims;
@@ -2041,7 +2155,6 @@ PROCEDURE NumCompare(args : Object; op : CHAR) : Object RAISES { E } =
       ELSE
         WITH ax = FromO(a), bx = FromO(b) DO
           IF ax # ax OR bx # bx THEN
-            (* NaN: unordered *)
             RETURN LAST(INTEGER)
           ELSIF ax < bx THEN RETURN -1
           ELSIF ax > bx THEN RETURN 1
@@ -2060,8 +2173,14 @@ PROCEDURE NumCompare(args : Object; op : CHAR) : Object RAISES { E } =
         args := Rest(args);
         b := First(args);
 
-        (* Complex numbers: only = is defined, ordering is an error *)
-        IF ISTYPE(a, SchemeComplex.T) OR ISTYPE(b, SchemeComplex.T) THEN
+        (* Dual/complex: only = is defined, ordering is an error *)
+        IF ISTYPE(a, SchemeDual.T) OR ISTYPE(b, SchemeDual.T) THEN
+          IF op = '=' THEN
+            IF NOT SchemeNumber.Equal(a, b) THEN RETURN False() END
+          ELSE
+            RAISE E("ordering comparisons not defined for dual numbers")
+          END
+        ELSIF ISTYPE(a, SchemeComplex.T) OR ISTYPE(b, SchemeComplex.T) THEN
           IF op = '=' THEN
             IF NOT SchemeNumber.Equal(a, b) THEN RETURN False() END
           ELSE
@@ -2216,6 +2335,67 @@ PROCEDURE ComplexSqrt(c : SchemeComplex.T) : Object RAISES { E } =
                             FromLR(r * Math.sin(ang / 2.0d0)))
   END ComplexSqrt;
 
+(* --- Dual number helpers --- *)
+
+(* f(a + b*eps) = f(a) + b * f'(a) * eps *)
+PROCEDURE DualLift(d: SchemeDual.T; fa, dfa: Object): Object RAISES {E} =
+  BEGIN
+    RETURN SchemeDual.New(fa, SchemeNumber.Mul(d.eps, dfa))
+  END DualLift;
+
+(* Compute transcendental on a non-dual value (may be complex, mpfr, real) *)
+PROCEDURE AnyExp(x: Object): Object RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      SchemeMpfr.T(m) => RETURN SchemeMpfr.Exp(m)
+    | SchemeComplex.T(c) => RETURN ComplexExp(c)
+    ELSE RETURN FromLR(Math.exp(FromO(x)))
+    END
+  END AnyExp;
+
+PROCEDURE AnyLog(x: Object): Object RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      SchemeMpfr.T(m) => RETURN SchemeMpfr.Log(m)
+    | SchemeComplex.T(c) => RETURN ComplexLog(c)
+    ELSE RETURN FromLR(Math.log(FromO(x)))
+    END
+  END AnyLog;
+
+PROCEDURE AnySin(x: Object): Object RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      SchemeMpfr.T(m) => RETURN SchemeMpfr.Sin(m)
+    | SchemeComplex.T(c) => RETURN ComplexSin(c)
+    ELSE RETURN FromLR(Math.sin(FromO(x)))
+    END
+  END AnySin;
+
+PROCEDURE AnyCos(x: Object): Object RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      SchemeMpfr.T(m) => RETURN SchemeMpfr.Cos(m)
+    | SchemeComplex.T(c) => RETURN ComplexCos(c)
+    ELSE RETURN FromLR(Math.cos(FromO(x)))
+    END
+  END AnyCos;
+
+PROCEDURE AnySqrt(x: Object): Object RAISES {E} =
+  BEGIN
+    TYPECASE x OF
+      SchemeMpfr.T(m) => RETURN SchemeMpfr.Sqrt(m)
+    | SchemeComplex.T(c) => RETURN ComplexSqrt(c)
+    ELSE
+      WITH lr = FromO(x) DO
+        IF lr < 0.0d0 THEN
+          RETURN SchemeComplex.New(FromLR(0.0d0), FromLR(Math.sqrt(-lr)))
+        ELSE
+          RETURN FromLR(Math.sqrt(lr))
+        END
+      END
+    END
+  END AnySqrt;
+
 PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
   BEGIN
     TYPECASE x OF
@@ -2230,6 +2410,17 @@ PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
     | Mpz.T(m) =>
       VAR mr := Mpz.New(); BEGIN
         Mpz.abs(mr, m); RETURN SchemeInt.MpzToScheme(mr)
+      END
+    | SchemeDual.T(d) =>
+      (* abs(a+be) = |a| + b*sign(a)*e  (real duals only) *)
+      SchemeNumber.CheckReal(d.re);
+      WITH fa = DoAbs(d.re),
+           lr = SchemeNumber.ToLongReal(d.re) DO
+        IF lr >= 0.0d0 THEN
+          RETURN SchemeDual.New(fa, d.eps)
+        ELSE
+          RETURN SchemeDual.New(fa, SchemeNumber.Neg(d.eps))
+        END
       END
     | SchemeComplex.T(c) =>
       RETURN SchemeComplex.Magnitude(c)
@@ -2287,16 +2478,59 @@ PROCEDURE NumComputeComplex(args : Object; op : CHAR; start : Object) : Object
 PROCEDURE NumComputeStart(args : Object; op : CHAR; start : Object) : Object
   RAISES { E } =
   BEGIN
-    IF ISTYPE(start, SchemeComplex.T) OR HasComplex(args) THEN
+    IF ISTYPE(start, SchemeDual.T) OR HasDual(args) THEN
+      IF op = 'X' OR op = 'N' THEN
+        SchemeNumber.CheckReal(start);
+        (* won't reach here if start is dual *)
+      END;
+      RETURN NumComputeDual(args, op, start)
+    ELSIF ISTYPE(start, SchemeComplex.T) OR HasComplex(args) THEN
       RETURN NumComputeComplex(args, op, start)
     ELSIF NOT HasInexact(args) AND SchemeExact.Is(start) THEN
-      (* exact path *)
       RETURN NumComputeExact(args, op, start)
     ELSE
-      (* inexact path *)
       RETURN NumComputeInexact(args, op, FromO(start))
     END
   END NumComputeStart;
+
+PROCEDURE HasDual(args : Object) : BOOLEAN =
+  BEGIN
+    TYPECASE args OF
+      NULL => RETURN FALSE
+    | SchemePair.T(p) =>
+      RETURN ISTYPE(p.first, SchemeDual.T) OR HasDual(p.rest)
+    ELSE RETURN FALSE
+    END
+  END HasDual;
+
+PROCEDURE NumComputeDual(args : Object; op : CHAR; start : Object) : Object
+  RAISES { E } =
+  VAR result := start;
+      rest := args;
+  BEGIN
+    IF rest = NIL THEN
+      (* unary *)
+      CASE op OF
+        '-' => RETURN SchemeNumber.Neg(result)
+      | '/' => RETURN SchemeNumber.Div(SchemeInt.One, result)
+      | 'X', 'N' => RETURN result
+      ELSE RETURN result
+      END
+    END;
+    WHILE rest # NIL DO
+      WITH a = First(rest) DO
+        CASE op OF
+          '+' => result := SchemeNumber.Add(result, a)
+        | '-' => result := SchemeNumber.Sub(result, a)
+        | '*' => result := SchemeNumber.Mul(result, a)
+        | '/' => result := SchemeNumber.Div(result, a)
+        ELSE <* ASSERT FALSE *>
+        END
+      END;
+      rest := Rest(rest)
+    END;
+    RETURN result
+  END NumComputeDual;
 
 PROCEDURE NumCompute(args : Object; op : CHAR) : Object
   RAISES { E } =
@@ -2307,6 +2541,8 @@ PROCEDURE NumCompute(args : Object; op : CHAR) : Object
       | '*' => RETURN SchemeInt.One
       ELSE <* ASSERT FALSE *>
       END
+    ELSIF HasDual(args) THEN
+      RETURN NumComputeDual(Rest(args), op, First(args))
     ELSIF HasComplex(args) THEN
       RETURN NumComputeComplex(Rest(args), op, First(args))
     ELSIF NOT HasInexact(args) AND SchemeExact.Is(First(args)) THEN
@@ -2436,7 +2672,9 @@ PROCEDURE NumberToString(x, y : Object) : Object RAISES { E } =
     IF base < 2 THEN base := 2 ELSIF base > 16 THEN base := 16 END;
 
     TYPECASE x OF
-      SchemeComplex.T(c) =>
+      SchemeDual.T(d) =>
+      RETURN SchemeString.FromText(SchemeDual.Format(d))
+    | SchemeComplex.T(c) =>
       RETURN SchemeString.FromText(SchemeComplex.Format(c))
     | SchemeInt.T(ri) =>
       IF base = 10 THEN

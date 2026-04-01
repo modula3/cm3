@@ -2,20 +2,23 @@
 
 MODULE SchemeNumber;
 IMPORT SchemeObject, SchemeExact, SchemeInexact, SchemeComplex,
-       SchemeInt, SchemeLongReal;
+       SchemeDual, SchemeInt, SchemeLongReal;
 FROM Scheme IMPORT E;
 FROM SchemeUtils IMPORT StringifyT;
 
 PROCEDURE Is(x: SchemeObject.T): BOOLEAN =
   BEGIN
     RETURN SchemeExact.Is(x) OR SchemeInexact.Is(x) OR
-           (x # NIL AND ISTYPE(x, SchemeComplex.T))
+           (x # NIL AND (ISTYPE(x, SchemeComplex.T) OR
+                         ISTYPE(x, SchemeDual.T)))
   END Is;
 
 PROCEDURE IsExact(x: SchemeObject.T): BOOLEAN =
   BEGIN
     TYPECASE x OF
       NULL => RETURN FALSE
+    | SchemeDual.T(d) =>
+      RETURN IsExact(d.re) AND IsExact(d.eps)
     | SchemeComplex.T(c) =>
       RETURN SchemeExact.Is(c.re) AND SchemeExact.Is(c.im)
     ELSE
@@ -27,6 +30,8 @@ PROCEDURE IsInexact(x: SchemeObject.T): BOOLEAN =
   BEGIN
     TYPECASE x OF
       NULL => RETURN FALSE
+    | SchemeDual.T(d) =>
+      RETURN IsInexact(d.re) OR IsInexact(d.eps)
     | SchemeComplex.T(c) =>
       RETURN SchemeInexact.Is(c.re) OR SchemeInexact.Is(c.im)
     ELSE
@@ -142,10 +147,26 @@ PROCEDURE RealDiv(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
     RETURN NIL
   END RealDiv;
 
-(* --- Full-tower Arithmetic (with complex) --- *)
+(* Promote a non-dual to dual with eps=0 *)
+PROCEDURE ToDual(x: SchemeObject.T): SchemeDual.T =
+  BEGIN
+    TYPECASE x OF
+      SchemeDual.T(d) => RETURN d
+    ELSE
+      RETURN NEW(SchemeDual.T, re := x, eps := SchemeInt.Zero)
+    END
+  END ToDual;
+
+PROCEDURE IsDual(x: SchemeObject.T): BOOLEAN =
+  BEGIN RETURN x # NIL AND ISTYPE(x, SchemeDual.T) END IsDual;
+
+(* --- Full-tower Arithmetic (with dual and complex) --- *)
 
 PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
+    IF IsDual(a) OR IsDual(b) THEN
+      RETURN SchemeDual.Add(ToDual(a), ToDual(b))
+    END;
     IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
        (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Add(ToComplex(a), ToComplex(b))
@@ -155,6 +176,9 @@ PROCEDURE Add(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
+    IF IsDual(a) OR IsDual(b) THEN
+      RETURN SchemeDual.Sub(ToDual(a), ToDual(b))
+    END;
     IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
        (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Sub(ToComplex(a), ToComplex(b))
@@ -164,6 +188,9 @@ PROCEDURE Sub(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
+    IF IsDual(a) OR IsDual(b) THEN
+      RETURN SchemeDual.Mul(ToDual(a), ToDual(b))
+    END;
     IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
        (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Mul(ToComplex(a), ToComplex(b))
@@ -173,6 +200,9 @@ PROCEDURE Mul(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Div(a, b: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
+    IF IsDual(a) OR IsDual(b) THEN
+      RETURN SchemeDual.Div(ToDual(a), ToDual(b))
+    END;
     IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
        (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RETURN SchemeComplex.Div(ToComplex(a), ToComplex(b))
@@ -184,6 +214,7 @@ PROCEDURE Neg(a: SchemeObject.T): SchemeObject.T RAISES {E} =
   BEGIN
     TYPECASE a OF
       NULL => CheckNumber(a); RETURN NIL
+    | SchemeDual.T(d) => RETURN SchemeDual.Neg(d)
     | SchemeComplex.T(c) => RETURN SchemeComplex.Neg(c)
     ELSE
       IF SchemeExact.Is(a) THEN
@@ -217,6 +248,9 @@ PROCEDURE Abs(a: SchemeObject.T): SchemeObject.T RAISES {E} =
 
 PROCEDURE Compare(a, b: SchemeObject.T): INTEGER RAISES {E} =
   BEGIN
+    IF IsDual(a) OR IsDual(b) THEN
+      RAISE E("ordering not defined for dual numbers")
+    END;
     IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
        (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       RAISE E("ordering not defined for complex numbers")
@@ -241,6 +275,17 @@ PROCEDURE Compare(a, b: SchemeObject.T): INTEGER RAISES {E} =
 
 PROCEDURE Equal(a, b: SchemeObject.T): BOOLEAN RAISES {E} =
   BEGIN
+    IF IsDual(a) OR IsDual(b) THEN
+      IF IsDual(a) AND IsDual(b) THEN
+        RETURN SchemeDual.Equal(NARROW(a, SchemeDual.T),
+                                NARROW(b, SchemeDual.T))
+      ELSE
+        (* One dual, one non-dual: equal iff eps=0 and re matches.
+           But dual with eps=0 would have been demoted,
+           so this is always FALSE. *)
+        RETURN FALSE
+      END
+    END;
     IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) OR
        (b # NIL AND ISTYPE(b, SchemeComplex.T)) THEN
       IF (a # NIL AND ISTYPE(a, SchemeComplex.T)) AND
@@ -249,9 +294,6 @@ PROCEDURE Equal(a, b: SchemeObject.T): BOOLEAN RAISES {E} =
                  NARROW(a, SchemeComplex.T),
                  NARROW(b, SchemeComplex.T))
       ELSE
-        (* One complex, one real: equal iff im=0 and re matches.
-           But complex with im=0 would have been demoted,
-           so this is always FALSE. *)
         RETURN FALSE
       END
     END;
@@ -263,7 +305,9 @@ PROCEDURE Equal(a, b: SchemeObject.T): BOOLEAN RAISES {E} =
 PROCEDURE ToLongReal(x: SchemeObject.T): LONGREAL RAISES {E} =
   BEGIN
     TYPECASE x OF
-      SchemeComplex.T =>
+      SchemeDual.T =>
+      RAISE E("cannot convert dual to real")
+    | SchemeComplex.T =>
       RAISE E("cannot convert complex to real")
     ELSE
       IF SchemeExact.Is(x) THEN
@@ -279,7 +323,9 @@ PROCEDURE ToLongReal(x: SchemeObject.T): LONGREAL RAISES {E} =
 PROCEDURE ToInteger(x: SchemeObject.T): INTEGER RAISES {E} =
   BEGIN
     TYPECASE x OF
-      SchemeComplex.T =>
+      SchemeDual.T =>
+      RAISE E("cannot convert dual to integer")
+    | SchemeComplex.T =>
       RAISE E("cannot convert complex to integer")
     ELSE
       IF SchemeExact.Is(x) THEN
@@ -296,6 +342,8 @@ PROCEDURE CheckReal(x: SchemeObject.T) RAISES {E} =
   BEGIN
     TYPECASE x OF
       NULL => RAISE E("not a real number: ()")
+    | SchemeDual.T(d) =>
+      RAISE E("not a real number: " & SchemeDual.Format(d))
     | SchemeComplex.T =>
       RAISE E("not a real number: " & SchemeComplex.Format(NARROW(x, SchemeComplex.T)))
     ELSE (* ok *)
@@ -306,6 +354,8 @@ PROCEDURE IsZero(x: SchemeObject.T): BOOLEAN RAISES {E} =
   BEGIN
     TYPECASE x OF
       NULL => RAISE E("expected a number, got: ()")
+    | SchemeDual.T(d) =>
+      RETURN IsZero(d.re) AND IsZero(d.eps)
     | SchemeComplex.T(c) =>
       RETURN Equal(c.re, SchemeInt.Zero) AND Equal(c.im, SchemeInt.Zero)
     ELSE
@@ -323,6 +373,7 @@ PROCEDURE Format(x: SchemeObject.T): TEXT =
   BEGIN
     TYPECASE x OF
       NULL => RETURN "()"
+    | SchemeDual.T(d) => RETURN SchemeDual.Format(d)
     | SchemeComplex.T(c) => RETURN SchemeComplex.Format(c)
     ELSE
       IF SchemeExact.Is(x) THEN
