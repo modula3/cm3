@@ -44,7 +44,9 @@ end
 proc FileRemoveRecursive(a) is
 % fs_rmrec might not work
   if equal ($OS, "Windows_NT")
-    exec("@-rmdir /q/s ", subst_chars(a, "/", "\\"))
+    if fs_exists(a)
+      exec("@-rmdir /q/s ", subst_chars(a, "/", "\\"))
+    end
   else
     exec("@rm -rf ", a)
   end
@@ -159,6 +161,7 @@ proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
   end
 
   exec (diff, ExpectedPath, OutputPath, head)
+
   if defined("HTML")
     exec (diff, ExpectedPath, OutputPath, ">>", report)
     if equal(OS_TYPE, "POSIX")
@@ -166,6 +169,7 @@ proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
       jux (d)
     end
   end
+
 end
 
 if defined ("LOG_CMPS")
@@ -1067,7 +1071,6 @@ c_test ("c0", "c004", "declaration of REF INTEGER")
 c_test ("c0", "c003", "a program with two statements")
 c_test ("c0", "c002", "empty unsafe program")
 c_test ("c0", "c001", "empty program")
-
 
 
 % Finalize HTML report.
