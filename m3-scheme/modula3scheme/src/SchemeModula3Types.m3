@@ -4,7 +4,7 @@ MODULE SchemeModula3Types;
 FROM SchemeUtils IMPORT Stringify;
 IMPORT Scheme;
 IMPORT SchemeObject, SchemeString, SchemeBoolean, SchemeLongReal, SchemeChar;
-IMPORT SchemeInt, Mpz, Mpfr, SchemeMpfr, SchemeRational;
+IMPORT SchemeInt, Mpz, Mpfr, SchemeMpfr, SchemeRational, SchemeDual;
 IMPORT SchemePrimitive;
 FROM Scheme IMPORT E, Object;
 IMPORT SchemeProcedure, SchemeSymbol;
@@ -256,6 +256,11 @@ PROCEDURE InteropRoundtripApply(<*UNUSED*>p : SchemeProcedure.T;
       RETURN ToScheme_BOOLEAN(ToModula_BOOLEAN(val))
     ELSIF sym = SchemeSymbol.FromText("CHAR") THEN
       RETURN ToScheme_CHAR(ToModula_CHAR(val))
+    ELSIF sym = SchemeSymbol.FromText("SchemeDual_T") THEN
+      IF NOT ISTYPE(val, SchemeDual.T) THEN
+        RAISE Scheme.E("expected a SchemeDual.T: " & Stringify(val))
+      END;
+      RETURN val
     ELSIF sym = SchemeSymbol.FromText("REFANY") THEN
       RETURN ToScheme_REFANY(ToModula_REFANY(val))
     ELSE

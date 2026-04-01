@@ -528,6 +528,11 @@
               ((and (integer? val) (= val 1)) "SchemeInt.One")
               ((integer? val)
                (string-append "SchemeInt.FromI(" (number-to-m3-integer val) ")"))
+              ((and (number? val) (dual? val))
+               ;; Dual constant
+               (string-append "SchemeDual.New("
+                              (constant-ref (dual-real val) ctx) ", "
+                              (constant-ref (dual-epsilon val) ctx) ")"))
               ((and (number? val) (not (real? val)))
                ;; Complex constant
                (string-append "SchemeComplex.MakeRectangular("
@@ -2384,6 +2389,11 @@
     ((and (integer? c) (= c 1)) "SchemeInt.One")
     ((integer? c)
      (string-append "SchemeInt.FromI(" (number-to-m3-integer c) ")"))
+    ((and (number? c) (dual? c))
+     ;; Dual constant
+     (string-append "SchemeDual.New("
+                    (constant-to-m3 (dual-real c)) ", "
+                    (constant-to-m3 (dual-epsilon c)) ")"))
     ((and (number? c) (not (real? c)))
      ;; Complex constant
      (string-append "SchemeComplex.MakeRectangular("
@@ -2437,6 +2447,11 @@
   (cond
     ((string? form) (string-append "\"" (scheme-escape-string form) "\""))
     ((symbol? form) (symbol->string form))
+    ((and (number? form) (dual? form))
+     ;; Dual number: emit (make-dual re eps)
+     (string-append "(make-dual "
+                    (form->string (dual-real form)) " "
+                    (form->string (dual-epsilon form)) ")"))
     ((and (number? form) (not (real? form)))
      ;; Complex (has nonzero imaginary part): emit (make-rectangular re im)
      (string-append "(make-rectangular "
@@ -2685,7 +2700,7 @@
      (L "IMPORT Scheme, SchemeObject, SchemeProcedure, SchemeProcedureClass;")
      (L "IMPORT SchemeEnvironment, SchemeEnvironmentBinding;")
      (L "IMPORT SchemeSymbol, SchemeBoolean, SchemeLongReal, SchemePair, SchemeInt, SchemePrimitive;")
-     (L "IMPORT SchemeNumber, SchemeExact, SchemeRational, SchemeMpfr, SchemeComplex, Mpz;")
+     (L "IMPORT SchemeNumber, SchemeExact, SchemeRational, SchemeMpfr, SchemeComplex, SchemeDual, Mpz;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
      (L "IMPORT SchemeCompiledRegistry;")
      (L "FROM Scheme IMPORT Object;")
