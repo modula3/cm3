@@ -329,8 +329,8 @@
 (test-false "zero? (make-dual 0 1)" (zero? (make-dual 0 1)))
 (test-true  "zero? (make-dual 0 0)" (zero? (make-dual 0 0)))
 ;; But make-dual 0 0 demotes to 0, so this is really just zero? on 0
-;; Test with inexact zero epsilon to avoid demotion
-(test-false "zero? (make-dual 0 0.0)" (zero? (make-dual 0 0.0)))
+;; (make-dual 0 0.0) doesn't demote (inexact zero) but is mathematically zero
+(test-true  "zero? (make-dual 0 0.0)" (zero? (make-dual 0 0.0)))
 (test-false "zero? (make-dual 1 0.0)" (zero? (make-dual 1 0.0)))
 
 ;;; ============================================================
