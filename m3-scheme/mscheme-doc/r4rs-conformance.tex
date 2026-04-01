@@ -339,18 +339,6 @@ The following essential procedures are now present:
   The 1-arg form is unchanged.
 \end{itemize}
 
-\subsection{Missing Procedures}
-
-\begin{center}
-\begin{tabular}{lll}
-\toprule
-\textbf{Procedure} & \textbf{R4RS Status} & \textbf{Notes} \\
-\midrule
-{\tt rationalize} & Non-essential & Not yet implemented \\
-\bottomrule
-\end{tabular}
-\end{center}
-
 \subsection{Recently Implemented (Numeric Tower)}
 
 The following non-essential procedures are now available via the full
@@ -363,6 +351,7 @@ numeric tower (exact integers, rationals, inexact reals, complex numbers):
 \midrule
 {\tt numerator} & Non-essential & Via {\tt SchemeRational.T} \\
 {\tt denominator} & Non-essential & Via {\tt SchemeRational.T} \\
+{\tt rationalize} & Non-essential & Stern-Brocot mediants \\
 {\tt make-rectangular} & Non-essential & Via {\tt SchemeComplex.T} \\
 {\tt make-polar} & Non-essential & Via {\tt SchemeComplex.T} \\
 {\tt real-part} & Non-essential & Via {\tt SchemeComplex.T} \\
@@ -599,7 +588,6 @@ Table~\ref{tab:gaps} summarizes all missing or incomplete features.
 \addlinespace
 {\tt transcript-on}         & Non-essential & --- \\
 {\tt transcript-off}        & Non-essential & --- \\
-{\tt rationalize}           & Non-essential & --- \\
 \addlinespace
 \midrule
 \multicolumn{3}{l}{\emph{Partial / limitation}} \\
