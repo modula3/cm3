@@ -237,4 +237,40 @@
                                (loop (cdr rest) (f acc (car rest)))))))))
     (fold-left + 0 '(1/4 1/4 1/4 1/4))))
 
+(section "CN-RATIONALS: rationalize")
+
+;; Basic: simplest rational within tolerance
+(test "rationalize 3/10 1/10"    1/3   (rationalize 3/10 1/10))
+(test "rationalize 1/3 0"        1/3   (rationalize 1/3 0))
+(test "rationalize 1/2 0"        1/2   (rationalize 1/2 0))
+(test "rationalize 3 0"          3     (rationalize 3 0))
+
+;; Simplest in range: 0 is in [lo, hi]
+(test "rationalize 1/10 1/2"     0     (rationalize 1/10 1/2))
+(test "rationalize 0 1"          0     (rationalize 0 1))
+
+;; Integer result when integer is in range
+(test "rationalize 7/3 1/2"      2     (rationalize 7/3 1/2))
+(test "rationalize 11/4 1/2"     3     (rationalize 11/4 1/2))
+
+;; Negative inputs
+(test "rationalize -3/10 1/10"   -1/3  (rationalize -3/10 1/10))
+(test "rationalize -7/3 1/2"     -2    (rationalize -7/3 1/2))
+
+;; Exact inputs produce exact results
+(test-true "rationalize exact? 1"
+  (exact? (rationalize 3/10 1/10)))
+(test-true "rationalize exact? 2"
+  (exact? (rationalize 1/3 0)))
+
+;; Inexact inputs produce inexact results
+(test-false "rationalize inexact input"
+  (exact? (rationalize 0.3 0.1)))
+
+;; Well-known approximation: pi ~ 355/113
+(test "rationalize 355/113 1/100" 22/7  (rationalize 355/113 1/100))
+
+;; Large tolerance: anything in [0, 2] -> simplest is 0
+(test "rationalize 1 1"          0     (rationalize 1 1))
+
 (test-summary "CN-RATIONALS")
