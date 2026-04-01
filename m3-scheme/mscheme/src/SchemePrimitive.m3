@@ -161,7 +161,7 @@ TYPE
         ArithmeticShift, IntegerLength,
 
         (* Phase 2: rationals, mpfr, complex *)
-        Numerator, Denominator,
+        Numerator, Denominator, Rationalize,
         MakeMpfr, MpfrPrecision,
         MakeRectangular, MakePolar, RealPart, ImagPart,
         MagnitudeP, AngleP,
@@ -480,6 +480,7 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("integer-length", ORD(P.IntegerLength), dd, 1)
     .defPrim("numerator",      ORD(P.Numerator), dd, 1)
     .defPrim("denominator",    ORD(P.Denominator), dd, 1)
+    .defPrim("rationalize",    ORD(P.Rationalize), dd, 2)
     .defPrim("make-mpfr",      ORD(P.MakeMpfr), dd, 2)
     .defPrim("mpfr-precision", ORD(P.MpfrPrecision), dd, 1)
     .defPrim("make-rectangular", ORD(P.MakeRectangular), dd, 2)
@@ -1851,6 +1852,93 @@ PROCEDURE Prims(t          : T;
             RETURN FromLR(1.0d0)
           ELSE
             RETURN Error("denominator: not a number: " & Stringify(List1(x)))
+          END
+        END
+      |
+        P.Rationalize =>
+        (* (rationalize x y) — simplest rational within y of x.
+           Stern-Brocot tree / mediants algorithm. *)
+        BEGIN
+          IF NOT SchemeNumber.Is(x) THEN
+            RETURN Error("rationalize: not a number: " & Stringify(List1(x)))
+          END;
+          IF NOT SchemeNumber.Is(y) THEN
+            RETURN Error("rationalize: not a number: " & Stringify(List1(y)))
+          END;
+          SchemeNumber.CheckReal(x);
+          SchemeNumber.CheckReal(y);
+          VAR xr := SchemeNumber.ToLongReal(x);
+              yr := ABS(SchemeNumber.ToLongReal(y));
+              lo := xr - yr;
+              hi := xr + yr;
+              exact := SchemeNumber.IsExact(x) AND SchemeNumber.IsExact(y);
+              (* Stern-Brocot mediants *)
+              p0 := 0; q0 := 1;  (* left = 0/1 *)
+              p1 := 1; q1 := 0;  (* right = 1/0 = +inf *)
+              neg := FALSE;
+          BEGIN
+            IF yr < 0.0d0 THEN
+              RETURN Error("rationalize: tolerance must be non-negative")
+            END;
+            (* Handle zero tolerance on exact integer *)
+            IF yr = 0.0d0 AND lo = FLOAT(ROUND(lo), LONGREAL) THEN
+              IF exact THEN RETURN SchemeInt.FromI(ROUND(lo))
+              ELSE RETURN FromLR(lo)
+              END
+            END;
+            (* Handle negative range: rationalize(-x, y) = -rationalize(x, y) *)
+            IF hi < 0.0d0 THEN
+              neg := TRUE;
+              VAR tmp := -lo; BEGIN lo := -hi; hi := tmp END
+            ELSIF lo < 0.0d0 THEN
+              (* 0 is in the interval — simplest possible *)
+              IF exact THEN RETURN SchemeInt.Zero
+              ELSE RETURN FromLR(0.0d0)
+              END
+            END;
+            (* Now 0 <= lo <= hi.  Find simplest p/q in [lo, hi]. *)
+            (* First check if an integer is in the range *)
+            IF FLOAT(CEILING(lo), LONGREAL) <= hi THEN
+              VAR n := CEILING(lo); BEGIN
+                IF neg THEN n := -n END;
+                IF exact THEN RETURN SchemeInt.FromI(n)
+                ELSE RETURN FromLR(FLOAT(n, LONGREAL))
+                END
+              END
+            END;
+            (* Stern-Brocot search *)
+            FOR iter := 0 TO 1000 DO
+              VAR pm := p0 + p1;
+                  qm := q0 + q1;
+                  med := FLOAT(pm, LONGREAL) / FLOAT(qm, LONGREAL);
+              BEGIN
+                IF med < lo THEN
+                  (* mediant too small, go right *)
+                  p0 := pm; q0 := qm
+                ELSIF med > hi THEN
+                  (* mediant too large, go left *)
+                  p1 := pm; q1 := qm
+                ELSE
+                  (* mediant is in range — this is the simplest *)
+                  IF neg THEN pm := -pm END;
+                  IF exact THEN
+                    IF qm = 1 THEN RETURN SchemeInt.FromI(pm)
+                    ELSE RETURN SchemeRational.New(
+                           Mpz.NewInt(pm), Mpz.NewInt(qm))
+                    END
+                  ELSE
+                    RETURN FromLR(FLOAT(pm, LONGREAL) / FLOAT(qm, LONGREAL))
+                  END
+                END
+              END
+            END;
+            (* Fallback: return best approximation *)
+            IF neg THEN p0 := -(p0 + p1) ELSE p0 := p0 + p1 END;
+            q0 := q0 + q1;
+            IF exact THEN RETURN SchemeRational.New(
+                                   Mpz.NewInt(p0), Mpz.NewInt(q0))
+            ELSE RETURN FromLR(FLOAT(p0, LONGREAL) / FLOAT(q0, LONGREAL))
+            END
           END
         END
       |
