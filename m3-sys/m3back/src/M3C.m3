@@ -2578,17 +2578,16 @@ CONST Prefix = ARRAY OF TEXT {
 "# endif",
 "#endif",
 
-"//#include <cmath>",
-"//#define INFINITY 1e10000",
-"#define INFINITY (__builtin_inff ())",
-"//#define NAN (0.0f / 0.0f)",
-"#define NAN (__builtin_nanf(\"\"))",
-"#define Infinity INFINITY",
-"#define NaN NAN",
-
 "#define REAL REAL",
 "#define LONGREAL LONGREAL",
 "#define EXTENDED EXTENDED",
+
+"//#include <cmath>",
+"#include <limits>",
+"#define INFINITY (std::numeric_limits<double>::infinity() )",
+"#define Infinity INFINITY",
+"#define NAN (std::numeric_limits<double>::quiet_NaN() )",
+"#define NaN NAN",
 
 "typedef float REAL;",
 "typedef double LONGREAL;",
@@ -5991,11 +5990,11 @@ BEGIN
             ch := 'e';
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
-            (* suffix := 'Q'; if actually using _Float128 on POSIX *)
-            IF NOT Text.Equal(Target.OS_name,"WIN32") THEN
-              suffix := 'Q';
-            END;
-            ch := 'e';
+            (* suffix := 'Q'; if actually using _Float128 *)
+          IF NOT Text.Equal(Target.OS_name, "WIN32") THEN
+            suffix := 'Q';
+          END;
+          ch := 'e';
         END;
         cBuf[j] := ch;
         INC(j);
