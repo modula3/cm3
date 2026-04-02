@@ -158,7 +158,11 @@ TYPE
         ExactToInexact, InexactToExact,
 
         BitwiseAnd, BitwiseIor, BitwiseXor, BitwiseNot,
+        BitwiseNand, BitwiseNor, BitwiseAndc1, BitwiseAndc2,
+        BitwiseOrc1, BitwiseOrc2, BitwiseEqv,
         ArithmeticShift, IntegerLength,
+        BitSetQ, CopyBit, BitCount, FirstSetBit,
+        BitField, BitFieldSet, BitFieldRotate, BitFieldReverse,
 
         (* Phase 2: rationals, mpfr, complex *)
         Numerator, Denominator, Rationalize,
@@ -476,8 +480,23 @@ PROCEDURE InstallSandboxPrimitives(dd : Definer;
     .defPrim("bitwise-ior",    ORD(P.BitwiseIor), dd, 0, n)
     .defPrim("bitwise-xor",    ORD(P.BitwiseXor), dd, 0, n)
     .defPrim("bitwise-not",    ORD(P.BitwiseNot), dd, 1)
+    .defPrim("bitwise-nand",   ORD(P.BitwiseNand), dd, 2)
+    .defPrim("bitwise-nor",    ORD(P.BitwiseNor), dd, 2)
+    .defPrim("bitwise-andc1",  ORD(P.BitwiseAndc1), dd, 2)
+    .defPrim("bitwise-andc2",  ORD(P.BitwiseAndc2), dd, 2)
+    .defPrim("bitwise-orc1",   ORD(P.BitwiseOrc1), dd, 2)
+    .defPrim("bitwise-orc2",   ORD(P.BitwiseOrc2), dd, 2)
+    .defPrim("bitwise-eqv",    ORD(P.BitwiseEqv), dd, 0, n)
     .defPrim("arithmetic-shift", ORD(P.ArithmeticShift), dd, 2)
     .defPrim("integer-length", ORD(P.IntegerLength), dd, 1)
+    .defPrim("bit-set?",       ORD(P.BitSetQ), dd, 2)
+    .defPrim("copy-bit",       ORD(P.CopyBit), dd, 3)
+    .defPrim("bit-count",      ORD(P.BitCount), dd, 1)
+    .defPrim("first-set-bit",  ORD(P.FirstSetBit), dd, 1)
+    .defPrim("bit-field",      ORD(P.BitField), dd, 3)
+    .defPrim("bit-field-set",  ORD(P.BitFieldSet), dd, 4)
+    .defPrim("bit-field-rotate", ORD(P.BitFieldRotate), dd, 4)
+    .defPrim("bit-field-reverse", ORD(P.BitFieldReverse), dd, 3)
     .defPrim("numerator",      ORD(P.Numerator), dd, 1)
     .defPrim("denominator",    ORD(P.Denominator), dd, 1)
     .defPrim("rationalize",    ORD(P.Rationalize), dd, 2)
@@ -639,6 +658,14 @@ PROCEDURE Apply2(t : T; interp : Scheme.T; a1, a2 : Object) : Object
   END Apply2;
 
 CONST DefFree = TRUE;
+
+PROCEDURE CheckExactInt(x: Object; name: TEXT): Mpz.T RAISES {E} =
+  BEGIN
+    IF NOT SchemeInt.IsExactInt(x) THEN
+      RAISE E(name & ": not an exact integer: " & StringifyQ(x, FALSE))
+    END;
+    RETURN SchemeInt.ToMpz(x)
+  END CheckExactInt;
 
 PROCEDURE CheckVectorIdx(vec : Vector; idx : INTEGER) RAISES { E } =
   BEGIN
@@ -1843,6 +1870,255 @@ PROCEDURE Prims(t          : T;
             RETURN SchemeInt.FromI(0)
           ELSE
             RETURN SchemeInt.FromI(Mpz.sizeinbase(mx, 2))
+          END
+        END
+      |
+        P.BitwiseNand =>
+        WITH mx = CheckExactInt(x, "bitwise-nand"),
+             my = CheckExactInt(y, "bitwise-nand"),
+             mr = Mpz.New(), mt = Mpz.New() DO
+          Mpz.and(mt, mx, my);
+          Mpz.com(mr, mt);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitwiseNor =>
+        WITH mx = CheckExactInt(x, "bitwise-nor"),
+             my = CheckExactInt(y, "bitwise-nor"),
+             mr = Mpz.New(), mt = Mpz.New() DO
+          Mpz.ior(mt, mx, my);
+          Mpz.com(mr, mt);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitwiseAndc1 =>
+        (* (and (not x) y) *)
+        WITH mx = CheckExactInt(x, "bitwise-andc1"),
+             my = CheckExactInt(y, "bitwise-andc1"),
+             mr = Mpz.New(), mt = Mpz.New() DO
+          Mpz.com(mt, mx);
+          Mpz.and(mr, mt, my);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitwiseAndc2 =>
+        (* (and x (not y)) *)
+        WITH mx = CheckExactInt(x, "bitwise-andc2"),
+             my = CheckExactInt(y, "bitwise-andc2"),
+             mr = Mpz.New(), mt = Mpz.New() DO
+          Mpz.com(mt, my);
+          Mpz.and(mr, mx, mt);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitwiseOrc1 =>
+        (* (or (not x) y) *)
+        WITH mx = CheckExactInt(x, "bitwise-orc1"),
+             my = CheckExactInt(y, "bitwise-orc1"),
+             mr = Mpz.New(), mt = Mpz.New() DO
+          Mpz.com(mt, mx);
+          Mpz.ior(mr, mt, my);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitwiseOrc2 =>
+        (* (or x (not y)) *)
+        WITH mx = CheckExactInt(x, "bitwise-orc2"),
+             my = CheckExactInt(y, "bitwise-orc2"),
+             mr = Mpz.New(), mt = Mpz.New() DO
+          Mpz.com(mt, my);
+          Mpz.ior(mr, mx, mt);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitwiseEqv =>
+        (* bitwise equivalence = not(xor(a,b)), variadic *)
+        free := FALSE;
+        WITH r = BitwiseNary(args, 'X') DO
+          VAR mx := SchemeInt.ToMpz(r); mr := Mpz.New(); BEGIN
+            Mpz.com(mr, mx);
+            RETURN SchemeInt.MpzToScheme(mr)
+          END
+        END
+      |
+        P.BitSetQ =>
+        (* (bit-set? index n) *)
+        WITH idx = SchemeLongReal.Int(x, TRUE),
+             mn = CheckExactInt(y, "bit-set?") DO
+          IF idx < 0 THEN
+            RETURN Error("bit-set?: index must be non-negative")
+          END;
+          RETURN Truth(Mpz.tstbit(mn, idx) # 0)
+        END
+      |
+        P.CopyBit =>
+        (* (copy-bit index n bit) *)
+        free := FALSE;
+        WITH idx = SchemeLongReal.Int(x, TRUE),
+             mn = CheckExactInt(y, "copy-bit"),
+             bit = First(Rest(Rest(args))),
+             mr = Mpz.New() DO
+          IF idx < 0 THEN
+            RETURN Error("copy-bit: index must be non-negative")
+          END;
+          Mpz.set(mr, mn);
+          IF bit # SchemeBoolean.False() AND bit # NIL AND bit # SchemeInt.Zero THEN
+            Mpz.setbit(mr, idx)
+          ELSE
+            Mpz.clrbit(mr, idx)
+          END;
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitCount =>
+        WITH mx = CheckExactInt(x, "bit-count") DO
+          IF Mpz.IsNeg(mx) THEN
+            (* For negative n, count 0 bits = popcount(~n) *)
+            VAR mt := Mpz.New(); BEGIN
+              Mpz.com(mt, mx);
+              RETURN SchemeInt.FromI(Mpz.popcount(mt))
+            END
+          ELSE
+            RETURN SchemeInt.FromI(Mpz.popcount(mx))
+          END
+        END
+      |
+        P.FirstSetBit =>
+        WITH mx = CheckExactInt(x, "first-set-bit") DO
+          RETURN SchemeInt.FromI(Mpz.scan1(mx, 0))
+        END
+      |
+        P.BitField =>
+        (* (bit-field n start end) — extract bits [start, end) *)
+        free := FALSE;
+        WITH mx = CheckExactInt(x, "bit-field"),
+             start = SchemeLongReal.Int(y, TRUE),
+             end = SchemeLongReal.Int(First(Rest(Rest(args))), TRUE),
+             mr = Mpz.New(), mask = Mpz.New() DO
+          IF start < 0 OR end < start THEN
+            RETURN Error("bit-field: invalid range")
+          END;
+          (* mask = (1 << (end-start)) - 1 *)
+          Mpz.set_ui(mask, 1);
+          Mpz.mul_2exp(mask, mask, end - start);
+          Mpz.sub_ui(mask, mask, 1);
+          (* result = (n >> start) & mask *)
+          Mpz.tdiv_q_2exp(mr, mx, start);
+          Mpz.and(mr, mr, mask);
+          RETURN SchemeInt.MpzToScheme(mr)
+        END
+      |
+        P.BitFieldSet =>
+        (* (bit-field-set n replacement start end) *)
+        free := FALSE;
+        WITH mx = CheckExactInt(x, "bit-field-set"),
+             repl = CheckExactInt(y, "bit-field-set"),
+             start = SchemeLongReal.Int(First(Rest(Rest(args))), TRUE) DO
+          VAR end := SchemeLongReal.Int(First(Rest(Rest(Rest(args)))), TRUE);
+              mr := Mpz.New();
+              mask := Mpz.New();
+              shifted := Mpz.New();
+          BEGIN
+            IF start < 0 OR end < start THEN
+              RETURN Error("bit-field-set: invalid range")
+            END;
+            (* mask = ((1 << width) - 1) << start *)
+            Mpz.set_ui(mask, 1);
+            Mpz.mul_2exp(mask, mask, end - start);
+            Mpz.sub_ui(mask, mask, 1);
+            (* shifted replacement *)
+            Mpz.set(shifted, repl);
+            Mpz.and(shifted, shifted, mask);  (* clip to width *)
+            Mpz.mul_2exp(shifted, shifted, start);
+            (* clear field in n *)
+            Mpz.mul_2exp(mask, mask, start);
+            Mpz.com(mask, mask);
+            Mpz.and(mr, mx, mask);
+            (* insert *)
+            Mpz.ior(mr, mr, shifted);
+            RETURN SchemeInt.MpzToScheme(mr)
+          END
+        END
+      |
+        P.BitFieldRotate =>
+        (* (bit-field-rotate n count start end) *)
+        free := FALSE;
+        WITH mx = CheckExactInt(x, "bit-field-rotate"),
+             count = SchemeLongReal.Int(y, TRUE),
+             start = SchemeLongReal.Int(First(Rest(Rest(args))), TRUE) DO
+          VAR end := SchemeLongReal.Int(First(Rest(Rest(Rest(args)))), TRUE);
+              width := end - start;
+              field := Mpz.New();
+              mask := Mpz.New();
+              mr := Mpz.New();
+              rotated := Mpz.New();
+              hi := Mpz.New();
+              lo := Mpz.New();
+          BEGIN
+            IF start < 0 OR end < start THEN
+              RETURN Error("bit-field-rotate: invalid range")
+            END;
+            IF width = 0 THEN RETURN SchemeInt.MpzToScheme(mx) END;
+            (* extract field *)
+            Mpz.set_ui(mask, 1);
+            Mpz.mul_2exp(mask, mask, width);
+            Mpz.sub_ui(mask, mask, 1);
+            Mpz.tdiv_q_2exp(field, mx, start);
+            Mpz.and(field, field, mask);
+            (* normalize count into [0, width) *)
+            VAR c := count MOD width; BEGIN
+              IF c < 0 THEN c := c + width END;
+              (* rotate: hi = field << c, lo = field >> (width-c), then or *)
+              Mpz.mul_2exp(hi, field, c);
+              Mpz.tdiv_q_2exp(lo, field, width - c);
+              Mpz.ior(rotated, hi, lo);
+              Mpz.and(rotated, rotated, mask);  (* clip *)
+            END;
+            (* clear field in n, insert rotated *)
+            Mpz.mul_2exp(rotated, rotated, start);
+            Mpz.mul_2exp(mask, mask, start);
+            Mpz.com(mask, mask);
+            Mpz.and(mr, mx, mask);
+            Mpz.ior(mr, mr, rotated);
+            RETURN SchemeInt.MpzToScheme(mr)
+          END
+        END
+      |
+        P.BitFieldReverse =>
+        (* (bit-field-reverse n start end) *)
+        free := FALSE;
+        WITH mx = CheckExactInt(x, "bit-field-reverse"),
+             start = SchemeLongReal.Int(y, TRUE),
+             end = SchemeLongReal.Int(First(Rest(Rest(args))), TRUE) DO
+          VAR width := end - start;
+              field := Mpz.New();
+              mask := Mpz.New();
+              mr := Mpz.New();
+              rev := Mpz.New();
+          BEGIN
+            IF start < 0 OR end < start THEN
+              RETURN Error("bit-field-reverse: invalid range")
+            END;
+            (* extract field *)
+            Mpz.set_ui(mask, 1);
+            Mpz.mul_2exp(mask, mask, width);
+            Mpz.sub_ui(mask, mask, 1);
+            Mpz.tdiv_q_2exp(field, mx, start);
+            Mpz.and(field, field, mask);
+            (* reverse bits *)
+            Mpz.set_ui(rev, 0);
+            FOR i := 0 TO width - 1 DO
+              IF Mpz.tstbit(field, i) # 0 THEN
+                Mpz.setbit(rev, width - 1 - i)
+              END
+            END;
+            (* clear field in n, insert reversed *)
+            Mpz.mul_2exp(rev, rev, start);
+            Mpz.mul_2exp(mask, mask, start);
+            Mpz.com(mask, mask);
+            Mpz.and(mr, mx, mask);
+            Mpz.ior(mr, mr, rev);
+            RETURN SchemeInt.MpzToScheme(mr)
           END
         END
       |

@@ -91,10 +91,11 @@ PROCEDURE Shift(f0 : T; f1 : T; amt : INTEGER) =
 
 PROCEDURE ShiftMpz(f0 : T; f1 : T; amt : T) =
   BEGIN
-    WITH minc = cmp(f1, MinInt),
-         maxc = cmp(f1, MaxInt) DO
+    WITH minc = cmp(amt, MinInt),
+         maxc = cmp(amt, MaxInt) DO
       IF minc = -1 THEN
-        WITH c = cmp(f0, Zero) DO
+        (* Enormous right shift: result is 0 or -1 *)
+        WITH c = cmp(f1, Zero) DO
           IF c = -1 THEN
             set(f0, Neg1);
             RETURN
@@ -104,10 +105,11 @@ PROCEDURE ShiftMpz(f0 : T; f1 : T; amt : T) =
           END
         END
       ELSIF maxc = 1 THEN
-        IF    cmp(f0, Neg1) = 0 THEN
+        (* Enormous left shift: only 0 and -1 are representable *)
+        IF    cmp(f1, Neg1) = 0 THEN
           set(f0, Neg1);
           RETURN
-        ELSIF cmp(f0, Zero) = 0 THEN
+        ELSIF cmp(f1, Zero) = 0 THEN
           set(f0, Zero);
           RETURN
         ELSE
