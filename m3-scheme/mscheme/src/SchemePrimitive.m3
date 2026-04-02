@@ -22,7 +22,7 @@ FROM SchemeUtils IMPORT Length, First, Second, Third,
                         Vec, InPort, OutPort, List1, ListToVector, ListStar,
                         VectorToList, Write, SetWarningsAreErrors;
 
-IMPORT SchemeInputPort, SchemeContinuation, SchemeMacro, SchemeString;
+IMPORT SchemeInputPort, SchemeContinuation, SchemeMacro, SchemeString, TextRd;
 FROM SchemeBoolean IMPORT Truth, False, True, TruthO;
 FROM SchemeProcedure IMPORT Proc; IMPORT SchemeProcedure;
 FROM SchemeLongReal IMPORT FromLR, FromO, Zero, One;
@@ -2910,22 +2910,15 @@ PROCEDURE StringToNumber(x, y : Object) : Object RAISES { E } =
       END;
 
       IF base = 10 THEN
-        (* try integer first, then float *)
-        IF IsPureIntegerStr(str) THEN
-          TRY
-            RETURN SchemeInt.FromI(Scan.Int(str))
-          EXCEPT Lex.Error, FloatMode.Trap =>
-            VAR m: Object; BEGIN
-              TRY m := Mpz.InitScan(str, 10)
-              EXCEPT ELSE m := NIL END;
-              IF m # NIL THEN RETURN m END
-            END
+        (* Use the reader to parse all numeric syntax:
+           integers, rationals, floats, special floats,
+           complex, and dual numbers. *)
+        WITH port = NEW(SchemeInputPort.T).init(
+                      NEW(TextRd.T).init(str)),
+             tok = port.read() DO
+          IF SchemeNumber.Is(tok) THEN RETURN tok
+          ELSE RETURN False()
           END
-        END;
-        TRY
-          RETURN FromLR(Scan.LongReal(str))
-        EXCEPT
-          FloatMode.Trap, Lex.Error => RETURN False()
         END
       ELSE
         TRY
