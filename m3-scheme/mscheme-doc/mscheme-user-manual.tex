@@ -315,8 +315,9 @@ rationals; {\tt inexact?} for floats.  {\tt rational?} is true for
 integers and exact rationals.  {\tt complex?} is true for all
 numbers (per R4RS); {\tt real?} excludes complex values with nonzero
 imaginary part.  {\tt exact->inexact} converts exact values to
-{\tt LONGREAL}; {\tt inexact->exact} converts integer-valued floats
-back to exact integers.
+{\tt LONGREAL}; {\tt inexact->exact} converts floats to exact values
+--- integer-valued floats become exact integers, and non-integer floats
+become exact rationals.
 
 Additional numeric operations include: {\tt numerator},
 {\tt denominator}, {\tt make-rectangular}, {\tt make-polar},
@@ -325,6 +326,16 @@ Additional numeric operations include: {\tt numerator},
 {\tt atan} accepts one or two arguments: {\tt (atan $x$)} computes
 $\arctan x$; {\tt (atan $y$ $x$)} computes $\arctan(y/x)$ with
 correct quadrant (delegates to {\tt Math.atan2}).
+
+{\tt string->number} handles rationals ({\tt "1/3"}), complex
+({\tt "3+4i"}), dual numbers, and special floats ({\tt +inf.0},
+{\tt -inf.0}, {\tt +nan.0}).  {\tt number->string} handles rationals,
+producing the {\tt "n/d"} representation.  {\tt inexact->exact} returns
+exact rationals for non-integer floats (e.g., {\tt (inexact->exact 0.1)}
+yields {\tt 3602879701896397/36028797018963968}).
+{\tt floor}, {\tt ceiling}, {\tt round}, and {\tt truncate} return
+exact results for exact rational inputs.  {\tt rationalize} is
+implemented using Stern-Brocot mediants.
 
 Number literals may carry R4RS radix prefixes: {\tt \#b} (binary),
 {\tt \#o} (octal), {\tt \#d} (decimal, default), and {\tt \#x}
@@ -381,6 +392,42 @@ force  eval
 \end{lstlisting}
 
 {\tt eval} can take an optional environment argument.
+
+\subsection{Bitwise Operations (SRFI-151)}\label{sec:bitwise}
+
+MScheme implements the SRFI-151 bitwise operations on exact integers
+(fixnums and bignums), backed by GMP.  All 18 primitives are available:
+
+\begin{lstlisting}[language=Scheme]
+;; Basic (pre-existing)
+bitwise-and  bitwise-ior  bitwise-xor  bitwise-not
+arithmetic-shift  integer-length
+
+;; Composite
+bitwise-nand  bitwise-nor  bitwise-eqv
+bitwise-andc1  bitwise-andc2  bitwise-orc1  bitwise-orc2
+
+;; Single-bit
+bit-set?  copy-bit
+
+;; Counting
+bit-count  first-set-bit
+
+;; Bit fields
+bit-field  bit-field-set  bit-field-rotate  bit-field-reverse
+\end{lstlisting}
+
+\noindent
+Negative integers use two's complement representation, as required
+by SRFI-151.  Examples:
+
+\begin{lstlisting}[language=Scheme]
+(bitwise-and #xff #x0f)       ; => 15
+(arithmetic-shift 1 64)       ; => 18446744073709551616
+(bit-count 255)               ; => 8
+(bit-set? 3 #b1010)           ; => #t
+(bit-field #b110110 2 5)      ; => 5  (bits 2..4)
+\end{lstlisting}
 
 \subsection{MScheme Extensions}\label{sec:extensions}
 

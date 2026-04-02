@@ -312,7 +312,9 @@ signals an error.
 \subsection{Rounding, GCD, LCM}
 
 {\tt floor}, {\tt ceiling}, {\tt truncate}, {\tt round},
-{\tt gcd}, {\tt lcm} are all present.
+{\tt gcd}, {\tt lcm} are all present.  The rounding procedures
+return exact integer results for exact rational inputs, as
+required by R4RS.
 
 \subsection{Transcendentals}
 
@@ -327,14 +329,19 @@ signals an error.
 
 {\tt number->string} and {\tt string->number} are present.  Both
 support the optional radix argument with bases 2--16.
+{\tt string->number} also handles rationals ({\tt "1/3"}), complex
+({\tt "3+4i"}), dual numbers, and special floats ({\tt +inf.0},
+{\tt -inf.0}, {\tt +nan.0}).  {\tt number->string} produces the
+{\tt "n/d"} representation for exact rationals.
 
 \subsection{Present Procedures (Recently Added)}
 
 The following essential procedures are now present:
 \begin{itemize}[nosep]
 \item {\tt exact->inexact} --- converts exact integers and rationals
-  to {\tt LONGREAL}.  {\tt inexact->exact} converts integer-valued
-  floats to exact integers.
+  to {\tt LONGREAL}.  {\tt inexact->exact} converts floats to exact
+  values: integer-valued floats become exact integers, and non-integer
+  floats become exact rationals.
 \item 2-arg {\tt (atan $y$ $x$)} --- delegates to {\tt Math.atan2}.
   The 1-arg form is unchanged.
 \end{itemize}
@@ -657,6 +664,21 @@ Table~\ref{tab:extensions} catalogs them.
 {\tt equal?-memo}           & Memoization ({\tt equal?} keys) \\
 {\tt write-noflush}         & Write without flushing \\
 {\tt display-noflush}       & Display without flushing \\
+\addlinespace
+\multicolumn{2}{l}{\emph{SRFI-151: Bitwise Operations}} \\
+\addlinespace
+{\tt bitwise-and}, {\tt bitwise-ior}, {\tt bitwise-xor} & Logical operations on exact integers \\
+{\tt bitwise-not}           & Bitwise complement \\
+{\tt bitwise-nand}, {\tt bitwise-nor}, {\tt bitwise-eqv} & Composite logical operations \\
+{\tt bitwise-andc1}, {\tt bitwise-andc2} & And-complement \\
+{\tt bitwise-orc1}, {\tt bitwise-orc2} & Or-complement \\
+{\tt arithmetic-shift}      & Left/right shift (negative = right) \\
+{\tt integer-length}        & Bit length of integer \\
+{\tt bit-set?}, {\tt copy-bit} & Single-bit access and modification \\
+{\tt bit-count}             & Population count (number of set bits) \\
+{\tt first-set-bit}         & Index of lowest set bit \\
+{\tt bit-field}, {\tt bit-field-set} & Extract/replace bit fields \\
+{\tt bit-field-rotate}, {\tt bit-field-reverse} & Rotate/reverse bit fields \\
 \end{longtable}
 
 %======================================================================

@@ -1158,7 +1158,7 @@ registered in layered \texttt{InstallPrimitives} procedures:
 \toprule
 \textbf{Layer} & \textbf{Contents} \\
 \midrule
-\texttt{InstallSandboxPrimitives} & $\sim$170 safe primitives (R4RS core) \\
+\texttt{InstallSandboxPrimitives} & $\sim$190 safe primitives (R4RS core + SRFI-151 bitwise) \\
 \texttt{InstallFileIOPrimitives} & File I/O (\texttt{open-input-file}, etc.) \\
 \texttt{InstallNorvigPrimitives} & JScheme extensions (\texttt{new}, \texttt{class}, \texttt{exit}) \\
 \texttt{InstallDefaultExtendedPrimitives} & MScheme extensions (\texttt{random}, \texttt{system}, etc.) \\
@@ -1185,6 +1185,18 @@ CASE VAL(t.id, P) OF
 | ...
 END
 \end{lstlisting}
+
+The enumeration \texttt{P} includes entries for the SRFI-151 bitwise
+operations (18~primitives total): the six pre-existing operations
+(\texttt{bitwise-and}, \texttt{bitwise-ior}, \texttt{bitwise-xor},
+\texttt{bitwise-not}, \texttt{arithmetic-shift}, \texttt{integer-length})
+and twelve additions (\texttt{bitwise-nand}, \texttt{bitwise-nor},
+\texttt{bitwise-eqv}, \texttt{bitwise-andc1}, \texttt{bitwise-andc2},
+\texttt{bitwise-orc1}, \texttt{bitwise-orc2}, \texttt{bit-set?},
+\texttt{copy-bit}, \texttt{bit-count}, \texttt{first-set-bit},
+\texttt{bit-field}, \texttt{bit-field-set}, \texttt{bit-field-rotate},
+\texttt{bit-field-reverse}).  All are dispatched to GMP
+(\texttt{Mpz.T}) operations after coercing fixnum arguments to bignums.
 
 For user-defined extension primitives (registered via
 \texttt{ExtDefiner.addPrim}), the ID is a random integer above

@@ -2811,6 +2811,14 @@ rare in practice, this is a reasonable trade-off.  If a user
 redefines \texttt{+}, the compiled code will still use the
 original arithmetic.
 
+The SRFI-151 bitwise operations (\texttt{bitwise-and},
+\texttt{arithmetic-shift}, \texttt{bit-field}, etc.---18~primitives
+total) are not currently inlined.  Compiled code that calls these
+primitives falls back to the interpreter's primitive dispatch, which
+delegates to GMP.  Inlining them would require emitting direct
+\texttt{Mpz} calls with appropriate fixnum-to-bignum coercion,
+which is feasible but has not been prioritized.
+
 %----------------------------------------------------------------------
 \section{Inline Boolean Tests}
 \label{sec:opt-booltest}
