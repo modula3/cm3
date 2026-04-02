@@ -102,6 +102,8 @@ PROCEDURE cmp (f0 : T; f1 : T) : INTEGER;
 
 PROCEDURE cmp_d (f0 : T; f1 : LONGREAL) : INTEGER;
 
+PROCEDURE cmp_si (f0 : T; f1 : INTEGER) : INTEGER;
+
 PROCEDURE cmpabs (f0 : T; f1 : T) : INTEGER;
 
 PROCEDURE cmpabs_d (f0 : T; f1 : LONGREAL) : INTEGER;
@@ -309,5 +311,12 @@ PROCEDURE ui_pow_ui (f0 : T; f1 : Word.T; f2 : Word.T);
 PROCEDURE xor (f0 : T; f1 : T; f2 : T);
 
 PROCEDURE mpf_set_default_prec (f0 : Word.T);
+
+(* Convenience predicates (GMP macros, implemented in M3) *)
+PROCEDURE IsNeg (f0 : T) : BOOLEAN;    (* sgn(f0) < 0 *)
+PROCEDURE IsPos (f0 : T) : BOOLEAN;    (* sgn(f0) > 0 *)
+PROCEDURE IsZero (f0 : T) : BOOLEAN;   (* sgn(f0) = 0 *)
+PROCEDURE IsOdd (f0 : T) : BOOLEAN;    (* tstbit(f0, 0) = 1 *)
+PROCEDURE IsEven (f0 : T) : BOOLEAN;   (* tstbit(f0, 0) = 0 *)
 
 END Mpz.

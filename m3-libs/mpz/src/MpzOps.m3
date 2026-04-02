@@ -112,6 +112,11 @@ PROCEDURE cmp_d (f0 : T; f1 : LONGREAL) : INTEGER =
     RETURN P.c_cmp_d(ADR(f0.val),f1)
   END cmp_d;
 
+PROCEDURE cmp_si (f0 : T; f1 : INTEGER) : INTEGER =
+  BEGIN
+    RETURN P.c_cmp_si(ADR(f0.val),f1)
+  END cmp_si;
+
 PROCEDURE cmpabs (f0 : T; f1 : T) : INTEGER =
   BEGIN
     RETURN P.c_cmpabs(ADR(f0.val),ADR(f1.val))
@@ -631,5 +636,20 @@ PROCEDURE mpf_set_default_prec (f0 : Word.T) =
   BEGIN
     P.c_mpf_set_default_prec(f0)
   END mpf_set_default_prec;
+
+PROCEDURE IsNeg (f0 : T) : BOOLEAN =
+  BEGIN RETURN cmp_si(f0, 0) < 0 END IsNeg;
+
+PROCEDURE IsPos (f0 : T) : BOOLEAN =
+  BEGIN RETURN cmp_si(f0, 0) > 0 END IsPos;
+
+PROCEDURE IsZero (f0 : T) : BOOLEAN =
+  BEGIN RETURN cmp_si(f0, 0) = 0 END IsZero;
+
+PROCEDURE IsOdd (f0 : T) : BOOLEAN =
+  BEGIN RETURN tstbit(f0, 0) # 0 END IsOdd;
+
+PROCEDURE IsEven (f0 : T) : BOOLEAN =
+  BEGIN RETURN tstbit(f0, 0) = 0 END IsEven;
 
 BEGIN END MpzOps.

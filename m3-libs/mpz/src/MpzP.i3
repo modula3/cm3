@@ -97,6 +97,9 @@ PROCEDURE c_cmp (f0 : MpzPtrT; f1 : MpzPtrT) : Ctypes.int;
 <*EXTERNAL "__gmpz_cmp_d" *>
 PROCEDURE c_cmp_d (f0 : MpzPtrT; f1 : LONGREAL) : Ctypes.int;
 
+<*EXTERNAL "__gmpz_cmp_si" *>
+PROCEDURE c_cmp_si (f0 : MpzPtrT; f1 : Ctypes.long) : Ctypes.int;
+
 <*EXTERNAL "__gmpz_cmpabs" *>
 PROCEDURE c_cmpabs (f0 : MpzPtrT; f1 : MpzPtrT) : Ctypes.int;
 

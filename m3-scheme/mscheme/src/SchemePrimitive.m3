@@ -734,14 +734,24 @@ PROCEDURE Prims(t          : T;
       |
         P.Floor =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
-        ELSE SchemeNumber.CheckReal(x);
-             RETURN FromLR(FLOAT(FLOOR(FromO(x)),LONGREAL))
+        ELSE
+          SchemeNumber.CheckReal(x);
+          TYPECASE x OF
+            SchemeRational.T(r) => RETURN RationalFloor(r)
+          ELSE
+            RETURN FromLR(FLOAT(FLOOR(FromO(x)),LONGREAL))
+          END
         END
       |
         P.Ceiling =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
-        ELSE SchemeNumber.CheckReal(x);
-             RETURN FromLR(FLOAT(CEILING(FromO(x)),LONGREAL))
+        ELSE
+          SchemeNumber.CheckReal(x);
+          TYPECASE x OF
+            SchemeRational.T(r) => RETURN RationalCeiling(r)
+          ELSE
+            RETURN FromLR(FLOAT(CEILING(FromO(x)),LONGREAL))
+          END
         END
       |
         P.Cons => RETURN Cons(x,y,interp)
@@ -798,18 +808,22 @@ PROCEDURE Prims(t          : T;
         IF SchemeInt.IsExactInt(x) THEN RETURN x
         ELSE
           SchemeNumber.CheckReal(x);
-          WITH lr = FromO(x),
-               fl = Math.floor(lr),
-               frac = lr - fl DO
-            IF frac # 0.5d0 AND frac # -0.5d0 THEN
-              RETURN FromLR(FLOAT(ROUND(lr), LONGREAL))
-            ELSE
-              (* half-to-even: round to nearest even *)
-              WITH hi = fl + 1.0d0 DO
-                IF TRUNC(fl) MOD 2 = 0 THEN
-                  RETURN FromLR(fl)
-                ELSE
-                  RETURN FromLR(hi)
+          TYPECASE x OF
+            SchemeRational.T(r) => RETURN RationalRound(r)
+          ELSE
+            WITH lr = FromO(x),
+                 fl = Math.floor(lr),
+                 frac = lr - fl DO
+              IF frac # 0.5d0 AND frac # -0.5d0 THEN
+                RETURN FromLR(FLOAT(ROUND(lr), LONGREAL))
+              ELSE
+                (* half-to-even: round to nearest even *)
+                WITH hi = fl + 1.0d0 DO
+                  IF TRUNC(fl) MOD 2 = 0 THEN
+                    RETURN FromLR(fl)
+                  ELSE
+                    RETURN FromLR(hi)
+                  END
                 END
               END
             END
@@ -825,8 +839,13 @@ PROCEDURE Prims(t          : T;
       |
         P.Truncate =>
         IF SchemeInt.IsExactInt(x) THEN RETURN x
-        ELSE SchemeNumber.CheckReal(x);
-             RETURN FromLR(FLOAT(TRUNC(FromO(x)),LONGREAL))
+        ELSE
+          SchemeNumber.CheckReal(x);
+          TYPECASE x OF
+            SchemeRational.T(r) => RETURN RationalTruncate(r)
+          ELSE
+            RETURN FromLR(FLOAT(TRUNC(FromO(x)),LONGREAL))
+          END
         END
       |
         P.Write => RETURN Write(x, OutPort(y, interp), TRUE,
@@ -2359,15 +2378,33 @@ PROCEDURE InexactToExact(x : Object) : Object RAISES { E } =
   BEGIN
     IF SchemeExact.Is(x) THEN RETURN x END;
     WITH lr = FromO(x) DO
-      IF Math.floor(lr) # lr THEN
-        RETURN Error("inexact->exact: not an integer: " & Stringify(List1(x)))
-      ELSIF lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
-            lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
-        RETURN SchemeInt.FromI(ROUND(lr))
+      IF Math.floor(lr) = lr THEN
+        (* Integer-valued: return exact integer *)
+        IF lr >= FLOAT(FIRST(INTEGER), LONGREAL) AND
+           lr <= FLOAT(LAST(INTEGER), LONGREAL) THEN
+          RETURN SchemeInt.FromI(ROUND(lr))
+        ELSE
+          WITH m = Mpz.New() DO
+            Mpz.set_d(m, lr);
+            RETURN SchemeInt.MpzToScheme(m)
+          END
+        END
       ELSE
-        WITH m = Mpz.New() DO
-          Mpz.set_d(m, lr);
-          RETURN SchemeInt.MpzToScheme(m)
+        (* Non-integer float: convert to exact rational.
+           Multiply by powers of 2 until integer, then reduce. *)
+        WITH num = Mpz.New(), den = Mpz.New() DO
+          VAR m := lr;
+              e := 0;
+          BEGIN
+            WHILE m # Math.floor(m) DO
+              m := m * 2.0d0;
+              e := e + 1
+            END;
+            Mpz.set_d(num, m);
+            Mpz.set_ui(den, 1);
+            Mpz.mul_2exp(den, den, e);
+            RETURN SchemeRational.New(num, den)
+          END
         END
       END
     END
@@ -2510,12 +2547,68 @@ PROCEDURE DoAbs(x : Object) : Object RAISES { E } =
           RETURN SchemeDual.New(fa, SchemeNumber.Neg(d.eps))
         END
       END
+    | SchemeRational.T(r) =>
+      RETURN SchemeRational.Abs(r)
     | SchemeComplex.T(c) =>
       RETURN SchemeComplex.Magnitude(c)
     ELSE
       RETURN FromLR(ABS(FromO(x)))
     END
   END DoAbs;
+
+(* Rational floor/ceiling/truncate/round — return exact integer *)
+PROCEDURE RationalFloor(r: SchemeRational.T): Object =
+  VAR q := Mpz.New(); rm := Mpz.New();
+  BEGIN
+    Mpz.fdiv_qr(q, rm, r.num, r.den);
+    RETURN SchemeInt.MpzToScheme(q)
+  END RationalFloor;
+
+PROCEDURE RationalCeiling(r: SchemeRational.T): Object =
+  VAR q := Mpz.New(); rm := Mpz.New();
+  BEGIN
+    Mpz.cdiv_qr(q, rm, r.num, r.den);
+    RETURN SchemeInt.MpzToScheme(q)
+  END RationalCeiling;
+
+PROCEDURE RationalTruncate(r: SchemeRational.T): Object =
+  VAR q := Mpz.New(); rm := Mpz.New();
+  BEGIN
+    Mpz.tdiv_qr(q, rm, r.num, r.den);
+    RETURN SchemeInt.MpzToScheme(q)
+  END RationalTruncate;
+
+PROCEDURE RationalRound(r: SchemeRational.T): Object =
+  (* Round half-to-even *)
+  VAR q := Mpz.New(); rm := Mpz.New();
+      den2 := Mpz.New();
+  BEGIN
+    Mpz.tdiv_qr(q, rm, r.num, r.den);
+    Mpz.abs(rm, rm);
+    (* Compare 2*|remainder| with denominator *)
+    Mpz.mul_2exp(rm, rm, 1);  (* rm := 2*|rem| *)
+    WITH cmp = Mpz.cmp(rm, r.den) DO
+      IF cmp > 0 THEN
+        (* |frac| > 1/2: round away from zero *)
+        IF Mpz.IsNeg(r.num) THEN
+          Mpz.sub_ui(q, q, 1)
+        ELSE
+          Mpz.add_ui(q, q, 1)
+        END
+      ELSIF cmp = 0 THEN
+        (* Exactly half: round to even *)
+        IF Mpz.IsOdd(q) THEN
+          IF Mpz.IsNeg(r.num) THEN
+            Mpz.sub_ui(q, q, 1)
+          ELSE
+            Mpz.add_ui(q, q, 1)
+          END
+        END
+      END
+      (* else |frac| < 1/2: truncate is correct *)
+    END;
+    RETURN SchemeInt.MpzToScheme(q)
+  END RationalRound;
 
 PROCEDURE HasComplex(args : Object) : BOOLEAN =
   (* Scan arg list for any SchemeComplex.T *)
@@ -2780,6 +2873,8 @@ PROCEDURE NumberToString(x, y : Object) : Object RAISES { E } =
       ELSE
         RETURN SchemeString.FromText(Mpz.FormatBased(m, base))
       END
+    | SchemeRational.T(r) =>
+      RETURN SchemeString.FromText(SchemeRational.Format(r))
     ELSE
       (* inexact real *)
       IF base # 10 THEN
