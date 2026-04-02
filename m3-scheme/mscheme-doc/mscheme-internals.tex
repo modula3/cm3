@@ -10,6 +10,7 @@
 \usepackage{hyperref}
 \usepackage{textcomp}
 \usepackage{amssymb}
+\usepackage{amsmath}
 
 \lstdefinelanguage{Scheme}{
   morekeywords={define,lambda,if,cond,else,let,let*,letrec,begin,
@@ -1315,7 +1316,7 @@ END ReturnCons;
 
 The entire chain of cons cells is returned in one operation.  Each
 cell's \texttt{first} field is overwritten with the poison symbol
-\texttt{SYMrip} (the string \texttt{"####r.i.p.-dead-cons-cell####"}).
+\texttt{SYMrip} (the string \texttt{"\#\#\#\#r.i.p.-dead-cons-cell\#\#\#\#"}).
 This is a debugging aid: if a recycled cell is accidentally read, the
 poison value will be conspicuous in output.
 
