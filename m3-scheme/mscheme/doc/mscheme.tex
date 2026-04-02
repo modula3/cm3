@@ -184,12 +184,14 @@ Scheme-specific types are defined as ordinary M3 reference types:
 \toprule
 Scheme type  & Modula-3 representation \\
 \midrule
-Fixnum       & \texttt{SchemeInt.T = REF INTEGER} (cached $[-256..256]$) \\
-Bignum       & \texttt{Mpz.T} (GMP arbitrary-precision) \\
-Rational     & \texttt{SchemeRational.T} (num/den as \texttt{Mpz.T}) \\
-Inexact real & \texttt{SchemeLongReal.T = REF LONGREAL} \\
-MPFR float   & \texttt{SchemeMpfr.T} (configurable precision) \\
-Complex      & \texttt{SchemeComplex.T} (re/im as \texttt{SchemeObject.T}) \\
+\multicolumn{2}{@{}l}{\emph{Numeric tower (exact $\to$ inexact $\to$ compound):}} \\
+\quad Exact integer  & \texttt{SchemeInt.T = REF INTEGER} (fixnum, cached $[-256..256]$) \\
+\quad               & \texttt{Mpz.T} (bignum via GMP) \\
+\quad Exact rational & \texttt{SchemeRational.T} (num/den as \texttt{Mpz.T}) \\
+\quad Inexact real   & \texttt{SchemeLongReal.T = REF LONGREAL} \\
+\quad Arb-prec float & \texttt{SchemeMpfr.T} (MPFR wrapper, configurable precision) \\
+\quad Complex        & \texttt{SchemeComplex.T} (re/im as \texttt{SchemeObject.T}) \\
+\quad Dual           & \texttt{SchemeDual.T} (re/$\varepsilon$ for automatic differentiation) \\
 Pair         & \texttt{SchemePair.T = REF RECORD first, rest : REFANY END} \\
 Symbol       & \texttt{SchemeSymbol.T = Atom.T} \\
 Boolean      & \texttt{SchemeBoolean.T = BRANDED REF BOOLEAN} \\
@@ -238,9 +240,13 @@ Subrange             & \texttt{SchemeInt.T}      & As base type, with bounds che
 \label{tab:value-types}
 \end{table}
 
-All six numeric types collapse to a single Scheme type (\texttt{REF
-LONGREAL}).  Common values (0.0, 1.0, $-$1.0, 2.0) are cached to
-reduce allocation.  The \texttt{SchemeChar} module preallocates all
+The numeric tower preserves exactness: exact integers (\texttt{SchemeInt.T},
+\texttt{Mpz.T}) and exact rationals (\texttt{SchemeRational.T}) remain exact;
+inexact reals use \texttt{SchemeLongReal.T} or \texttt{SchemeMpfr.T};
+compound types \texttt{SchemeComplex.T} and \texttt{SchemeDual.T} compose
+over the tower.  Common fixnum values ($[-256..256]$) and common
+\texttt{LONGREAL} values (0.0, 1.0, $-$1.0, 2.0) are cached to reduce
+allocation.  The \texttt{SchemeChar} module preallocates all
 256 character values at initialization.
 
 Records and arrays require more elaborate treatment because they are

@@ -1948,7 +1948,7 @@ VAR
 BEGIN
   (* evaluate initializer in outer scope:
      a_x here refers to the parameter *)
-  t_0 := SchemeLongReal.Add(a_x, self.k_0);
+  t_0 := SchemeNumber.Add(a_x, self.k_0);
   VAR
     a_x : SchemeObject.T := t_0;
   BEGIN
@@ -1965,10 +1965,10 @@ the next variable is introduced:
 \begin{lstlisting}[language=Modula3]
 (* (let* ((a (+ x 1)) (b (* a 2))) ...) *)
 VAR t_0 : SchemeObject.T; BEGIN
-  t_0 := SchemeLongReal.Add(a_x, self.k_0);
+  t_0 := SchemeNumber.Add(a_x, self.k_0);
   VAR a_a : SchemeObject.T := t_0; BEGIN
     VAR t_1 : SchemeObject.T; BEGIN
-      t_1 := SchemeLongReal.Mul(a_a, self.k_1);
+      t_1 := SchemeNumber.Mul(a_a, self.k_1);
       VAR a_b : SchemeObject.T := t_1; BEGIN
         ...
       END;
@@ -2776,10 +2776,14 @@ inlineable primitives and their M3 equivalents:
 \toprule
 \textbf{Scheme} & \textbf{Inlined Modula-3} \\
 \midrule
-\texttt{(+ a b)}     & \texttt{SchemeLongReal.FromLR(NARROW(a,SchemeLongReal.T)\^{} + \ldots)} \\
+\texttt{(+ a b)}     & \texttt{SchemeNumber.Add(a, b)} \\
+\texttt{(- a b)}     & \texttt{SchemeNumber.Sub(a, b)} \\
+\texttt{(* a b)}     & \texttt{SchemeNumber.Mul(a, b)} \\
+\texttt{(/ a b)}     & \texttt{SchemeNumber.Div(a, b)} \\
 \texttt{(car x)}     & \texttt{SchemeUtils.First(x)} \\
 \texttt{(null? x)}   & \texttt{SchemeBoolean.FromBool(x = NIL)} \\
 \texttt{(pair? x)}   & \texttt{SchemeBoolean.FromBool(ISTYPE(x, SchemePair.T))} \\
+\texttt{(number? x)} & \texttt{SchemeBoolean.FromBool(SchemeNumber.Is(x))} \\
 \texttt{(cons a b)}  & \texttt{SchemePair.Cons(a, b)} \\
 \texttt{(eq? a b)}   & \texttt{SchemeBoolean.FromBool(a = b)} \\
 \texttt{(not x)}     & \texttt{SchemeBoolean.FromBool(NOT SchemeBoolean.Truth(x))} \\
@@ -2789,12 +2793,16 @@ inlineable primitives and their M3 equivalents:
 
 \noindent
 Arithmetic operations (\texttt{+}, \texttt{-}, \texttt{*},
-\texttt{quotient}, \texttt{remainder}) delegate to
-\texttt{SchemePrimitive.NumericAdd/Sub/Mul}, which in turn call
-\texttt{SchemeNumber.Add/Sub/Mul}.  This handles the full numeric
-tower (exact integers, rationals, inexact reals, MPFR, complex)
+\texttt{/}) delegate directly to
+\texttt{SchemeNumber.Add/Sub/Mul/Div}.  This handles the full numeric
+tower (exact integers, rationals, inexact reals, MPFR, complex, duals)
 with correct contagion rules.  The \texttt{number?} predicate
-compiles to \texttt{SchemeNumber.Is()}, recognizing all numeric types.
+compiles to \texttt{SchemeNumber.Is(x)}, recognizing all numeric types.
+Rational, complex, and dual constants are embedded via
+\texttt{SchemeRational.New}, \texttt{SchemeComplex.T},
+and \texttt{SchemeDual.New} respectively.  The generated code imports
+\texttt{SchemeNumber}, \texttt{SchemeInt}, \texttt{SchemeRational},
+\texttt{SchemeComplex}, and \texttt{SchemeDual} as needed.
 
 Primitives are inlined unconditionally---no guard check is emitted.
 Since R4RS reserves the right to make arithmetic operators
@@ -2822,7 +2830,7 @@ Previously compiled as:
 
 \begin{lstlisting}[language=Modula3]
 IF SchemeBoolean.TruthO(
-     SchemeLongReal.NumEq(a_0, self.k_0)) THEN
+     SchemeNumber.NumEq(a_0, self.k_0)) THEN
 \end{lstlisting}
 
 \noindent
@@ -2834,7 +2842,10 @@ IF NARROW(a_0, SchemeLongReal.T)^ = 0.0d0 THEN
 
 \noindent
 This eliminates the intermediate \texttt{SchemeBoolean.T} allocation
-and the \texttt{TruthO} type-check dispatch.  The optimization
+and the \texttt{TruthO} type-check dispatch.
+Note: the \texttt{NARROW}-based inline form currently assumes
+\texttt{LONGREAL} operands; non-\texttt{LONGREAL} numeric types
+fall back to the \texttt{SchemeNumber} dispatch path.  The optimization
 applies to \texttt{=}, \texttt{<}, \texttt{>}, \texttt{<=}, and
 \texttt{>=} in test position.  Compound boolean expressions using
 \texttt{and}/\texttt{or} are also inlined when their leaves are
@@ -2925,6 +2936,15 @@ Parameters are analyzed independently.  In
 arithmetic and \texttt{lst} is used with \texttt{car}/\texttt{cdr},
 only \texttt{n} is unboxed; \texttt{lst} remains a boxed
 \texttt{SchemeObject.T}.
+
+\subsection{Current Status}
+
+Numeric unboxing is currently enabled only for \texttt{LONGREAL}
+parameters.  With the transition to \texttt{SchemeNumber}-based
+arithmetic (supporting exact integers, rationals, complex, and
+duals), unboxing for non-\texttt{LONGREAL} types is disabled
+pending a type-inference pass that can determine the concrete
+numeric type at compile time.
 
 %----------------------------------------------------------------------
 \section{The \texttt{set!}+Lambda Capture Fix}

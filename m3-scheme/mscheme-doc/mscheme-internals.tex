@@ -161,6 +161,8 @@ mpfr float & \texttt{SchemeMpfr.T}
            & MPFR, configurable precision \\
 complex & \texttt{SchemeComplex.T}
         & re/im as \texttt{SchemeObject.T} \\
+dual & \texttt{SchemeDual.T}
+     & re/eps for automatic differentiation \\
 string & \texttt{SchemeString.T = REF ARRAY OF CHAR}
        & Mutable character array \\
 character & \texttt{SchemeChar.T = REF CHAR}
@@ -197,7 +199,8 @@ Several points deserve attention:
   (\texttt{SchemeInt.T} for fixnums, \texttt{Mpz.T} for bignums),
   exact rationals (\texttt{SchemeRational.T}), inexact reals
   (\texttt{SchemeLongReal.T}), MPFR floats (\texttt{SchemeMpfr.T}),
-  and complex numbers (\texttt{SchemeComplex.T}).  The
+  complex numbers (\texttt{SchemeComplex.T}), and dual numbers
+  (\texttt{SchemeDual.T}, for automatic differentiation).  The
   \texttt{SchemeNumber} module provides unified arithmetic dispatch.
 
 \item \textbf{Output ports} are raw Modula-3 \texttt{Wr.T} writers.
@@ -294,9 +297,12 @@ The tokenizer (\texttt{NextToken}) classifies input characters as follows:
   \texttt{REF ARRAY OF CHAR} with amortized-constant append) until a
   delimiter or whitespace is encountered.  The resulting text is then:
   \begin{itemize}
-  \item Parsed as a \texttt{LONGREAL} if it begins with a digit, sign,
-    or decimal point, and contains no non-numeric characters other
-    than~\texttt{e}.
+  \item Parsed as a number if it matches numeric syntax.  The reader
+    recognizes integer literals (yielding \texttt{SchemeInt.T} or
+    \texttt{Mpz.T}), rational literals such as \texttt{1/3} (yielding
+    \texttt{SchemeRational.T}), floating-point literals (yielding
+    \texttt{SchemeLongReal.T}), and complex literals such as
+    \texttt{3+4i} (yielding \texttt{SchemeComplex.T}).
   \item Otherwise, interned as a symbol via \texttt{Atom.FromText}.
   \end{itemize}
 \end{enumerate}

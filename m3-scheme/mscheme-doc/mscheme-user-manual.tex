@@ -78,12 +78,14 @@ Modula-3 integration features.
 
 MScheme follows the \emph{Revised$^4$ Report on the Algorithmic Language
 Scheme (R4RS)}~\cite{r4rs} with extensions.  It is not a complete R5RS
-implementation.  Notable limitations inherited from JScheme include:
+implementation.  The numeric tower has been extended beyond
+JScheme's original single {\tt double} type to include exact integers
+(fixnum and GMP bignum), exact rationals, inexact reals
+({\tt LONGREAL}), arbitrary-precision floats (MPFR), complex numbers,
+and dual numbers (for automatic differentiation).
+Notable limitations inherited from JScheme include:
 
 \begin{itemize}
-\item Full numeric tower: exact integers (fixnum/bignum), exact rationals,
-  inexact reals ({\tt LONGREAL}), arbitrary-precision floats (MPFR),
-  and complex numbers.
 \item {\tt call-with-current-continuation} only unwinds the stack
   (no full continuations).
 \item The Modula-3 call stack is used for Scheme control flow, limiting
@@ -303,8 +305,12 @@ number->string  string->number
 
 MScheme implements the full R4RS numeric tower.  Exact integers
 (fixnums and GMP bignums), exact rationals, inexact {\tt LONGREAL}
-values, MPFR arbitrary-precision floats, and complex numbers are
-all supported.  {\tt exact?} returns {\tt \#t} for integers and
+values, MPFR arbitrary-precision floats, complex numbers, and dual
+numbers (for automatic differentiation) are all supported.
+Arithmetic uses contagion: exact values promote to inexact when mixed,
+real values promote to complex when mixed, and any value promotes to
+dual when mixed with a dual number.
+{\tt exact?} returns {\tt \#t} for integers and
 rationals; {\tt inexact?} for floats.  {\tt rational?} is true for
 integers and exact rationals.  {\tt complex?} is true for all
 numbers (per R4RS); {\tt real?} excludes complex values with nonzero
@@ -450,21 +456,23 @@ MScheme extends R4RS with the following procedures, grouped by category.
 
 \subsubsection{Numeric Type Conversions}
 
-MScheme's numeric tower includes exact integers, exact rationals,
-inexact {\tt LONGREAL}, MPFR floats, and complex numbers.
+MScheme's numeric tower includes exact integers (fixnum and bignum),
+exact rationals, inexact {\tt LONGREAL}, MPFR floats, complex numbers,
+and dual numbers.
 These procedures perform explicit type conversions for Modula-3 interop.
 
 \nopagebreak[4]
 \begin{description}
 \item[{\tt (number->LONGREAL x)}]
-  Identity on the numeric value (MScheme numbers are already
-  {\tt LONGREAL}).  Useful as an explicit type annotation when passing
-  to stubs that distinguish {\tt REAL} vs.\ {\tt LONGREAL}.
+  Convert any numeric value to {\tt LONGREAL}.  Exact integers,
+  rationals, and MPFR floats are converted to the nearest
+  double-precision value.  Useful as an explicit type annotation
+  when passing to stubs that distinguish {\tt REAL} vs.\ {\tt LONGREAL}.
 \item[{\tt (number->REAL x)}]
-  Narrow {\it x\/} from {\tt LONGREAL} to {\tt REAL} (single
-  precision).  May lose precision.
+  Convert {\it x\/} to {\tt REAL} (single precision).
+  May lose precision.
 \item[{\tt (number->EXTENDED x)}]
-  Narrow {\it x\/} to {\tt EXTENDED} (extended precision on
+  Convert {\it x\/} to {\tt EXTENDED} (extended precision on
   platforms that support it).
 \end{description}
 
@@ -1197,6 +1205,15 @@ MScheme provides thread-based asynchronous execution:
 \chapter{BigInt Support}
 %======================================================================
 
+Note: MScheme's numeric tower now includes built-in bignum support
+via {\tt Mpz.T}.  Integer arithmetic automatically promotes fixnums
+to bignums when results exceed the fixnum range, and standard
+arithmetic operators ({\tt +}, {\tt *}, etc.) work transparently on
+bignums.  The {\tt BigInt} stub interface described below provides
+direct access to the underlying GMP library for applications that
+need explicit control over arbitrary-precision integer objects.
+
+\medskip\noindent
 MScheme integrates with the {\tt BigInt} module for
 arbitrary-precision integer arithmetic.  After loading stubs:
 
@@ -1546,11 +1563,13 @@ END
 VAR result := scm.loadEvalText("(+ 1 2 3)");
 (* result is SchemeObject.T = REFANY *)
 
-(* Extract a number *)
-VAR n := SchemeLongReal.FromO(result);  (* 6.0d0 *)
+(* Extract a number -- result may be SchemeInt.T,
+   Mpz.T, SchemeLongReal.T, etc. depending on
+   the operand types.  Use SchemeNumber to convert. *)
+VAR n := SchemeNumber.ToLongReal(result);  (* 6.0d0 *)
 
 (* Bind a value into Scheme *)
-scm.bind("my-var", SchemeLongReal.FromI(42));
+scm.bind("my-var", SchemeInt.FromI(42));
 
 (* Load and evaluate a file *)
 EVAL scm.loadFile(SchemeString.FromText("mycode.scm"));
