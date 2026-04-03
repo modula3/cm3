@@ -1463,7 +1463,7 @@ include(path() & SL & "config" & SL & TARGET)
     def _install_config(self):
         "Copy config for distribution"
 
-        src = self.source("m3-sys/cminstall/src/config")
+        src = Path(self.source("m3-sys/cminstall/src/config"))
         dst = self.install("bin/config")
 
         # Delete the old config files.
