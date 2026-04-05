@@ -2591,11 +2591,6 @@ CONST Prefix = ARRAY OF TEXT {
 
 "typedef float REAL;",
 "typedef double LONGREAL;",
-"# if defined(_MSC_VER)",
-"typedef double EXTENDED;",
-"# else",
-"typedef _Float128 EXTENDED;",
-"# endif",
 
 "#ifdef __cplusplus",
 "extern \"C\" {",
@@ -3139,6 +3134,11 @@ BEGIN
     END;
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
+    END;
+    IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      print(self, "typedef _Float128 EXTENDED;\n");
+    ELSE
+      print(self,"typedef double EXTENDED;\n");
     END;
 END Prefix_Print;
 
@@ -5991,7 +5991,7 @@ BEGIN
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
             (* suffix := 'Q'; if actually using _Float128 *)
-          IF NOT Text.Equal(Target.OS_name, "WIN32") THEN
+          IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
             suffix := 'Q';
           END;
           ch := 'e';
