@@ -21,7 +21,7 @@ INTERFACE Target;
     boundary (i.e. (size + align - 1) DIV align * align).
 *)
 
-IMPORT TInt, TWord;
+IMPORT TInt, TWord, Ext;
 
 CONST MaxAlign = 64;
   (* We 64-bit align certain 64-bit operands (e.g. LONGINT, LONGREAL, EXTENDED),
@@ -276,11 +276,15 @@ VAR (*CONST*)
   Longreal  := Float_type{CGType.LReel, Precision.Long, 64, 64, 8,
                  Float{Precision.Long, 0, -1.79769313486231570x+308},
                  Float{Precision.Long, 0, 1.79769313486231570x+308}};
-  Extended := Float_type{CGType.XReel, Precision.Extended, 128, 128, 16,
-                Float{Precision.Extended, 0,
-                      -1.1897314953572317650857593266280070X+4932},
-                Float{Precision.Extended, 0,
-                      1.1897314953572317650857593266280070X+4932}};
+(*
+  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8,
+                 Float{Precision.Extended, 0, -1.79769313486231570x+308},
+                 Float{Precision.Extended, 0, 1.79769313486231570x+308}};
+*)
+  Extended  := Float_type{CGType.XReel, Precision.Extended,
+                          Ext.BitSize, Ext.BitAlign, Ext.ByteSize,
+                 Float{Precision.Extended, 0, Ext.Min},
+                 Float{Precision.Extended, 0, Ext.Max}};
 
 CONST
   (*                   cg_type,   size, align, pack, bytes, min, max *)

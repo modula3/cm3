@@ -282,6 +282,13 @@ local extra_targets = GccBackendVersionData{GccVersion}[3]
 if not GCC43
   local m3gty = GccBackendVersionData{GccVersion}[1]
   local Defines = GccBackendVersionData{GccVersion}[2]
+  % Only the AMD64_LINUX target supports 128 bit floats as EXTENDED
+  % All others remain the same and treat EXTENDED as LONGREAL
+  if equal (M3CC_TARGET, "AMD64_LINUX")
+    Defines = Defines & "#define LONG_DOUBLE_SIZE 128\n"
+  else
+    Defines = Defines & "#define LONG_DOUBLE_SIZE 64\n"
+  end
   fs_mkdir(SourceDir & "/gcc/m3cg")
   local files = ["config-lang.in", "m3-def.h", "m3-parse.h", "lang-options.h",
                  "lang.opt", "m3cg.h", "Make-lang.in"]
