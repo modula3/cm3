@@ -9,6 +9,8 @@ readonly SYSTEM_ASM = "as --64" % Assembler
 include("AMD64.common")
 include("Linux.common")
 
+SYSTEM_LIBS{"LIBC"} += [ "-lquadmath" ]
+
 %uncomment this define to use zero cost exception handling
 %M3_USE_STACK_WALKER = TRUE
 
