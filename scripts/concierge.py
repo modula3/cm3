@@ -1727,6 +1727,7 @@ project(cm3 LANGUAGES C CXX)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
    set(CMAKE_INSTALL_PREFIX "{cmake_install_prefix}" CACHE PATH "..." FORCE)
 endif()
+set(M3Target "{self.target().name()}")
 include(GNUInstallDirs)
 include(bootstrap.cmake)
 """
