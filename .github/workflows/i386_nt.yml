@@ -28,7 +28,7 @@ jobs:
         backend: [c, integrated]
 
     defaults:
-      run: {shell: pwsh}
+      run: {shell: cmd}
 
     env:
       CM3_TARGET: I386_NT
@@ -49,8 +49,7 @@ jobs:
 
     - name: Install bootstrap release
       run: |
-        mkdir ..\build
-        mkdir ..\install
+        mkdir ..\build ..\install
         cd ..\install
         wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
