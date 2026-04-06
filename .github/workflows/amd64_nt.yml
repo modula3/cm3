@@ -44,7 +44,8 @@ jobs:
 
     - name: Install bootstrap release
       run: |
-        mkdir ..\build ..\install
+        mkdir ..\build
+        mkdir ..\install
         cd ..\install
         wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
