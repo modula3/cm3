@@ -1473,7 +1473,7 @@ include(path() & SL & "config" & SL & TARGET)
         self.mkdir(dst)
 
         # Copy all files from src to dst.
-        for config in src.iterdir():
+        for config in Path(src).iterdir():
             self.cp(config, dst)
 
         # Write new cm3.cfg
