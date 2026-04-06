@@ -6,9 +6,9 @@
 %      modified on Fri May  7 14:56:08 PDT 1993 by muller
 
 %RandomReal implementation 
-% - one of these dirs depending on backend
-if equal (TARGET_OS, "NT") and not IsBackendLlvm ()
-  include_dir ("ext64")
-else
+% - one of these dirs depending on  target
+if equal (TARGET, "AMD64_LINUX")
   include_dir ("ext128")
+else
+  include_dir ("ext64")
 end

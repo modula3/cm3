@@ -4828,8 +4828,61 @@ CONST text = ARRAY ConvertOp OF TEXT{
     "#endif" 
 
     };
+VAR text2 : ARRAY ConvertOp OF TEXT;
 BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text[op]);
+    IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      text2[ConvertOp.Round] :=
+        "#ifndef m3_round\n#define m3_round m3_round\n" &
+        "INT64 __cdecl llroundq(_Float128);\n" &
+        "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " return (INT64)llroundq(f); }\n" &
+        "#endif";
+      text2[ConvertOp.Trunc] :=
+        "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
+        "_Float128 __cdecl truncq(_Float128);\n" &
+        "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
+        " return (INT64)truncq(f); }\n" &
+        "#endif";
+      text2[ConvertOp.Floor] :=
+        "#ifndef m3_floor\n#define m3_floor m3_floor\n" &
+        "_Float128 __cdecl floorq(_Float128);\n" &
+        "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
+        " return (INT64)floorq(f); }\n" &
+        "#endif";
+      text2[ConvertOp.Ceiling] :=
+        "#ifndef m3_ceil\n#define m3_ceil m3_ceil\n" &
+        "_Float128 __cdecl ceilq(_Float128);\n" &
+        "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
+        " return (INT64)ceilq(f); }\n" &
+        "#endif";
+    ELSE
+      text2[ConvertOp.Round] :=
+        "#ifndef m3_round\n#define m3_round m3_round\n" &
+        "double __cdecl round(double);\n" &
+        "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " return (INT64)f; }\n" &
+        "#endif";
+      text2[ConvertOp.Trunc] :=
+        "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
+        "double __cdecl trunc(double);\n" &
+        "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
+        " return (INT64)trunc(f); }\n" &
+        "#endif";
+      text2[ConvertOp.Floor] :=
+        "#ifndef m3_floor\n#define m3_floor m3_floor\n" &
+        "double __cdecl floor(double);\n" &
+        "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
+        " return (INT64)floor(f); }\n" &
+        "#endif";
+      text2[ConvertOp.Ceiling] :=
+        "#ifndef m3_ceil\n#define m3_ceil m3_ceil\n" &
+        "double __cdecl ceil(double);\n" &
+        "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
+        " return (INT64)ceil(f); }\n" &
+        "#endif";
+    END;
+
+    HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text2[op]);
 END HelperFunctions_cvt_int;
 
 PROCEDURE HelperFunctions_set_compare(self: HelperFunctions_t; <*UNUSED*>byte_size: ByteSize; op: CompareOp; <*UNUSED*>type: IType) =

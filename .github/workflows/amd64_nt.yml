@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 35
 
     defaults:
-      run: {shell: cmd}
+      run: {shell: pwsh}
 
     env:
       CM3_TARGET: AMD64_NT

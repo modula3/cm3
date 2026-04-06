@@ -28,7 +28,7 @@ jobs:
         backend: [c, integrated]
 
     defaults:
-      run: {shell: cmd}
+      run: {shell: pwsh}
 
     env:
       CM3_TARGET: I386_NT
