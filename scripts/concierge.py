@@ -860,8 +860,8 @@ class PackageAction(WithCm3):
         "Execute a cm3 child process"
         cwd  = self.source(package_path)
         args = [str(self.exe())] + args + self.defines() + self.flags()
-        print("\ncd", cwd, "\n")
-        print(*args)
+        print("\ncd", cwd, "\n", flush = True)
+        print(*args, flush = True)
 
         if self.no_action():
             return
@@ -871,8 +871,8 @@ class PackageAction(WithCm3):
             cwd=cwd,
             env=self.env(),
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            errors="ignore"
+            stderr=subprocess.STDOUT #,
+            #errors="ignore"
         )
         sys.stdout.write(proc.stdout)
         proc.check_returncode()
@@ -1079,7 +1079,7 @@ class WithPackageActions(WithPackageDb):
             action = constructor(self.cm3())
             def executor(packages):
                 paths = self.get_package_paths(packages)
-                print(method_name, *paths)
+                print(method_name, *paths, flush = True)
                 action.execute(paths)
             return executor
         except KeyError:
