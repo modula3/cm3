@@ -871,8 +871,9 @@ class PackageAction(WithCm3):
             cwd=cwd,
             env=self.env(),
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT #,
-            #errors="ignore"
+            stderr=subprocess.STDOUT,
+            check=True,
+            errors="ignore"
         )
         sys.stdout.write(proc.stdout)
         proc.check_returncode()
