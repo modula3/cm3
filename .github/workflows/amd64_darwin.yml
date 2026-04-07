@@ -54,7 +54,7 @@ jobs:
 
     - name: Build everything
       run: |
-        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all -caltech-other -caltech-parser -m3-scheme
 
     - name: Run compiler validation suite
       continue-on-error: true
