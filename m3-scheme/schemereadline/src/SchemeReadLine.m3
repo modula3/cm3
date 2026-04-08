@@ -12,6 +12,7 @@ IMPORT TextWr;
 IMPORT Text, IntSeq;
 IMPORT RuntimeError;
 IMPORT SchemeClass, Wr;
+IMPORT SchemeCompiledRegistry;
 IMPORT SchemePair;
 
 <* FATAL Thread.Alerted *>
@@ -123,6 +124,7 @@ PROCEDURE MainLoop(rl : ReadLine.T; scm : Scheme.T) RAISES { NetObj.Error,
     LastEE := SchemeSymbol.Symbol("*last-error-environment*");
     LastEX := SchemeSymbol.Symbol("*last-error-object*");
   BEGIN
+    SchemeCompiledRegistry.Disable();
     Csighandler.install_int_handler();
     IF doReadLine THEN
       rl.startProc();

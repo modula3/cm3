@@ -203,6 +203,7 @@ PROCEDURE SetInterrupter(t : T; i : Interrupter) =
 
 PROCEDURE ReadEvalWriteLoop(t : T; int : Interrupter) RAISES { Wr.Failure } =
   BEGIN
+    SchemeCompiledRegistry.Disable();
     t.setInterrupter(int);
 
     t.bind(SchemeSymbol.Symbol("bang-bang"), NIL);

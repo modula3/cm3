@@ -1827,14 +1827,25 @@ before looking for a file on disk or in the bundled defaults.  If
 the name matches a registered module, the compiled \texttt{Install}
 procedure is called directly.
 
-This means:
+During program startup, this means:
 \begin{itemize}
 \item \texttt{(load "mathlib.scm")} uses the compiled version.
 \item \texttt{(require-modules "mathlib")} uses the compiled version.
 \item No source file needs to be present at runtime.
 \item The deduplication list in \texttt{require-modules} prevents
   double-installation, just as it prevents double-loading.
+\item The same file may be loaded more than once during startup;
+  each load uses the compiled version.
 \end{itemize}
+
+Once the REPL starts (\texttt{ReadEvalWriteLoop} or
+\texttt{SchemeReadLine.MainLoop}), the compiled registry is
+automatically disabled.  Subsequent calls to \texttt{(load
+"mathlib.scm")} read the source file from disk, and the new
+definitions replace the compiled bindings through the Level~1
+binding cells.  This lets the user edit a compiled module and
+reload it interactively for debugging without rebuilding the
+program.
 
 The \texttt{SchemeCompiledRegistry} interface:
 
@@ -1879,17 +1890,27 @@ the first \texttt{(require-modules ...)} call.
 
 \subsection{Reload Semantics}\label{sec:reload}
 
-Compiled modules remain registered for the lifetime of the process.
-Every call to \texttt{(load "mathlib.scm")} invokes the compiled
-\texttt{Install} procedure, even if the module has already been loaded
-once.  The \texttt{Install} procedure re-runs completely each time:
-passthrough forms (such as \texttt{(define a 0)}) are re-evaluated,
-and compiled procedures are re-installed into the environment.
+During startup, \texttt{(load "mathlib.scm")} runs the compiled
+\texttt{Install} procedure.  Once the REPL is running, the compiled
+registry is disabled and \texttt{(load "mathlib.scm")} reads the
+source file from disk.  Because the Level~1 compiler routes all
+inter-procedure calls through binding cells
+(\S\ref{sec:binding-cells}), the new interpreted definitions are
+immediately visible to any compiled callers that reference them.
 
-This preserves the standard Scheme reload semantics.  For example:
+This means:
+\begin{itemize}
+\item During startup, compiled modules load at native speed.
+\item From the REPL, the user can edit a \texttt{.scm} file and
+  \texttt{(load ...)} it; the edited definitions take effect
+  immediately, even for functions called by other compiled modules.
+\item No rebuild is required for interactive debugging.
+\end{itemize}
+
+\noindent For example, from the REPL:
 
 \begin{lstlisting}
-> (load "mathlib.scm")    ; a is bound to 0
+> (load "mathlib.scm")    ; reads source, replaces compiled bindings
 > (set! a 1)              ; mutate a
 > a
 1
@@ -1898,10 +1919,9 @@ This preserves the standard Scheme reload semantics.  For example:
 0
 \end{lstlisting}
 
-\noindent The behavior is identical whether \texttt{mathlib.scm} is
-compiled or interpreted: the module is re-executed from the top, all
-definitions are re-established, and any mutations made since the
-previous load are overwritten.
+\noindent The module is re-executed from the top, all definitions are
+re-established, and any mutations made since the previous load are
+overwritten.
 
 Note that \texttt{require-modules} maintains its own deduplication
 list, so \texttt{(require-modules "mathlib")} loads the module at most
