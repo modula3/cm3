@@ -418,6 +418,7 @@ class Cm3:
         self._keep_going = False
         self._list_only  = False
         self._no_action  = False
+        self._no_buffering  = False
 
     def backend(self):
         "The compiler backend to use when building packages"
@@ -566,13 +567,17 @@ class Cm3:
         "Perform a dry-run, do not make any changes to the system"
         return self._no_action
 
+    def no_buffering(self):
+        "Let cm3 child process not buffer its output"
+        return self._no_buffering
+
     def script(self):
         "The script is used to locate the source directory"
         return Path(self._script).resolve()
 
     def set_options(self, namespace):
         "Inform CM3 of options detected in argument parsing"
-        for attr in ["_keep_going", "_list_only", "_no_action"]:
+        for attr in ["_keep_going", "_list_only", "_no_action", "_no_buffering"]:
             if hasattr(namespace, attr):
                 setattr(self, attr, getattr(namespace, attr))
 
@@ -638,6 +643,7 @@ class WithCm3:
             "keep_going",
             "list_only",
             "no_action",
+            "no_buffering",
             "source",
             "target",
             "use_c_backend",
@@ -866,16 +872,26 @@ class PackageAction(WithCm3):
         if self.no_action():
             return
 
-        proc = subprocess.run(
-            args,
-            cwd=cwd,
-            env=self.env(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=True,
-            errors="ignore"
-        )
-        sys.stdout.write(proc.stdout)
+        #if noBuffering the cm3 process sends output direct which aids debug
+        if self.no_buffering():
+            proc = subprocess.run(
+                args,
+                cwd=cwd,
+                env=self.env(),
+                errors="ignore"
+            )
+        else:
+            proc = subprocess.run(
+                args,
+                cwd=cwd,
+                env=self.env(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=True,
+                errors="ignore"
+            )
+            sys.stdout.write(proc.stdout)
+
         proc.check_returncode()
 
     def success(self):
@@ -1110,6 +1126,7 @@ class ConciergeCommand(WithPackageActions):
         keep_going = False
         list_only  = False
         no_action  = False
+        no_buffering  = False
 
         for option in ["-k", "--keep-going"]:
             while option in args:
@@ -1126,9 +1143,15 @@ class ConciergeCommand(WithPackageActions):
                 args.remove(option)
                 no_action = True
 
+        for option in ["-b", "--no-buffering"]:
+            while option in args:
+                args.remove(option)
+                no_buffering = True
+
         setattr(namespace, "_keep_going", keep_going)
         setattr(namespace, "_list_only",  list_only)
         setattr(namespace, "_no_action",  no_action)
+        setattr(namespace, "_no_buffering",  no_buffering)
 
     @classmethod
     def _parse_compiler_options(cls, args, namespace):
@@ -1837,6 +1860,7 @@ class Concierge:
         self._keep_going = False
         self._list_only  = False
         self._no_action  = False
+        self._no_buffering  = False
 
         # Package defaults.
         self._actions  = []
