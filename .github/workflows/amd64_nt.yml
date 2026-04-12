@@ -49,8 +49,8 @@ jobs:
         wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
         cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
-        cmake --build ..\build
-        cmake --install ..\build --config Debug
+        cmake --build ..\build --config Release
+        cmake --install ..\build --config Release
         echo %CM3_INSTALL%\bin>>%GITHUB_PATH%
 
     - name: Fetch sources
