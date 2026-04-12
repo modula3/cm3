@@ -276,11 +276,6 @@ VAR (*CONST*)
   Longreal  := Float_type{CGType.LReel, Precision.Long, 64, 64, 8,
                  Float{Precision.Long, 0, -1.79769313486231570x+308},
                  Float{Precision.Long, 0, 1.79769313486231570x+308}};
-(*
-  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8,
-                 Float{Precision.Extended, 0, -1.79769313486231570x+308},
-                 Float{Precision.Extended, 0, 1.79769313486231570x+308}};
-*)
   Extended  := Float_type{CGType.XReel, Precision.Extended,
                           Ext.BitSize, Ext.BitAlign, Ext.ByteSize,
                  Float{Precision.Extended, 0, Ext.Min},

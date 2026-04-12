@@ -580,7 +580,7 @@ Usocket__un(
 
 int
 __cdecl
-Usocket_accept_un(int fd)
+Usocket__accept_un(int fd)
 {
     sockaddr_un addr;
     m3c_socklen_t socklen = sizeof(addr);

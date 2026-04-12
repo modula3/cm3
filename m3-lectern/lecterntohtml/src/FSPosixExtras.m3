@@ -8,7 +8,7 @@
 UNSAFE MODULE FSPosixExtras EXPORTS FSPosix;
 
 IMPORT Atom, File, FS, M3toC, OSError, OSErrorPosix, Pathname, Pipe,
-  RegularFile, Terminal, Unix, Ustat, Word, Utypes;
+  Socket, RegularFile, Terminal, Unix, Ustat, Word;
 
 PROCEDURE LinkStatus(p: Pathname.T): File.Status RAISES {OSError.E} = 
   VAR status: File.Status; statBuf: Ustat.struct_stat;
@@ -17,37 +17,37 @@ PROCEDURE LinkStatus(p: Pathname.T): File.Status RAISES {OSError.E} =
   BEGIN
     M3toC.FreeSharedS(p, p_str);
     IF result < 0 THEN OSErrorPosix.Raise() END;
-    (* StatBufToStatus(statBuf, status); *)
-      status.type := (*FilePosix.*)FileTypeFromStatbuf(statBuf);
+      status.type := FileTypeFromStatbuf(statBuf);
       status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
       status.size := ORD(statBuf.st_size);
     RETURN status
   END LinkStatus;
 
-(* Copied from os/src/POSIX/FilePosix.i3, with one extra case added: *)
 PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
   : File.Type =
+  VAR stat : INTEGER;
   BEGIN
-    CASE Word.And(statbuf.st_mode, Ustat.S_IFMT) OF
-    | Ustat.S_IFCHR =>
-        IF IsDevNull(statbuf)
-          THEN RETURN RegularFile.FileType
-          ELSE RETURN Terminal.FileType
-        END
-    | Ustat.S_IFPIPE, Ustat.S_IFPORT, Ustat.S_IFSOCK =>
-        RETURN Pipe.FileType
-    | Ustat.S_IFREG =>
-        RETURN RegularFile.FileType
-    | Ustat.S_IFDIR =>
-        RETURN FS.DirectoryFileType
-    | Ustat.S_IFLNK =>
-        RETURN (*FSPosix.*)SymbolicLinkFileType
+    stat := Word.And(statbuf.st_mode, Ustat.S_IFMT);
+    IF stat = Ustat.S_IFCHR  THEN
+      IF IsDevNull(statbuf)
+        THEN RETURN RegularFile.FileType
+        ELSE RETURN Terminal.FileType
+      END
+    ELSIF stat = Ustat.S_IFIFO THEN 
+      RETURN Pipe.FileType
+    ELSIF stat = Ustat.S_IFSOCK THEN 
+      RETURN Socket.FileType
+    ELSIF stat = Ustat.S_IFREG THEN 
+      RETURN RegularFile.FileType
+    ELSIF stat = Ustat.S_IFDIR  THEN
+      RETURN FS.DirectoryFileType
+    ELSIF stat = Ustat.S_IFLNK  THEN
+      RETURN SymbolicLinkFileType
     ELSE
-        RETURN RegularFile.FileType
-    END
+      RETURN RegularFile.FileType
+    END;
   END FileTypeFromStatbuf;
 
-(* Copied from os/src/POSIX/FilePosix.i3: *)
 VAR
   null_done := FALSE;
   null_stat: Ustat.struct_stat;

@@ -156,20 +156,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Typenames := TRUE;          (* on declare_param, etc. *)
     END;
 
-(*
-    IF Text.Equal(OS_name, "WIN32") AND
-       NOT (backend_mode IN  BackendStAloneLlvmSet) THEN 
-or
-    IF Text.Equal(system, "AMD64_LINUX") THEN
-      (* treat EXTENDED AS LONGREAL *)
-      Extended := Float_type{CGType.XReel, Precision.Extended, 128, 128, 16,
-                    Float{Precision.Extended, 0,
-                          -1.1897314953572317650857593266280070X+4932},
-                    Float{Precision.Extended, 0,
-                          1.1897314953572317650857593266280070X+4932}};
-    END;
-*)
-
     (* There is no portable stack walker, and therefore few systems have one.
        Addendum: Actually libunwind circa 2010 is mostly portable.
        Having a stack walker theoretically speeds up everything nicely.  If
