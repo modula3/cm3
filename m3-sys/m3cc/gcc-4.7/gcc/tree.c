@@ -9471,8 +9471,8 @@ build_common_builtin_nodes (void)
     {
       ftype = build_function_type_list (long_integer_type_node, long_double_type_node,
 				        NULL_TREE);
-      local_define_builtin ("__builtin_lroundl", ftype, BUILT_IN_LROUNDL,
-			    "lroundl", ECF_NOTHROW | ECF_LEAF);
+      local_define_builtin ("__builtin_lroundq", ftype, BUILT_IN_LROUNDL,
+			    "lroundq", ECF_NOTHROW | ECF_LEAF);
     }
 
   if (!builtin_decl_explicit_p (BUILT_IN_ALLOCA))
