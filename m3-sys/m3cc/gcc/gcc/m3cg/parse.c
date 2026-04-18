@@ -5147,18 +5147,23 @@ M3CG_HANDLER (MAX) { m3_minmax (type, 0); }
 M3CG_HANDLER (ROUND)
 {
   //Use the builtins for rounding.
+  tree dt;
   m3_start_call ();
   m3_pop_param (src_t);
 
+  if (dst_T == T_int_32)
+    dt = t_int_32;
+  else
+    dt = t_int_64;
   if (src_T == T_reel) {
-    m3_call_direct (lroundf_proc, t_int_64);
+    m3_call_direct (lroundf_proc, dt);
   } else if (src_T == T_lreel) {
-    m3_call_direct (lround_proc, t_int_64);
+    m3_call_direct (lround_proc, dt);
   } else if (src_T == T_xreel) {
     if (LONG_DOUBLE_TYPE_SIZE == 64) {
-      m3_call_direct (lround_proc, t_int_64);
+      m3_call_direct (lround_proc, dt);
     } else {
-      m3_call_direct (lroundq_proc, t_int_64);
+      m3_call_direct (lroundq_proc, dt);
     }
   }
   EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t, EXPR_REF (-1));
