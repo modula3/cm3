@@ -5151,7 +5151,7 @@ M3CG_HANDLER (ROUND)
   m3_start_call ();
   m3_pop_param (src_t);
 
-  if (dst_T == T_int_32)
+ if (LONG_TYPE_SIZE == 32)
     dt = t_int_32;
   else
     dt = t_int_64;
@@ -5166,7 +5166,6 @@ M3CG_HANDLER (ROUND)
       m3_call_direct (lroundq_proc, dt);
     }
   }
-  EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t, EXPR_REF (-1));
 
 /*
   the original code, which produces erroneous results for reel
