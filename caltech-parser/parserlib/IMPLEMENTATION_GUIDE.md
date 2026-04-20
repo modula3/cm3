@@ -631,15 +631,44 @@ When kyacc reports a shift/reduce or reduce/reduce conflict:
   input.  This requires grammar restructuring — precedence directives
   don't help.
 
-**Important:** kyacc resolves shift/reduce conflicts by preferring REDUCE
-over SHIFT (opposite of yacc's default).  This means `opt_foo → empty`
-productions can cause problems — the parser reduces `empty` immediately
-rather than shifting to see what comes next.
+**Default conflict resolution (no precedence):**
+When a shift/reduce conflict has no applicable `%left`/`%right`
+precedence, kyacc uses a heuristic that differs from standard yacc:
+
+- **Epsilon reduce rules** (RHS length = 0): SHIFT wins.
+  This handles the dangling-else case correctly.
+- **Non-epsilon reduce rules** (RHS length > 0): REDUCE wins.
+  This is the opposite of standard yacc, which always defaults to SHIFT.
+
+The rationale for the reduce-default is that kyacc was originally
+designed for grammars where reducing a completed rule is usually
+correct (e.g., "declaration vs. statement" ambiguities in M3-like
+languages).  However, this behavior breaks grammars that rely on
+standard yacc shift-default semantics, particularly:
+- Right-associative operators like `**` (exponentiation)
+- Function call syntax `f(x)` when `f` is also valid as a value
+- Any production where a longer match should take priority
+
+**The `-shift-default` flag:**
+To get standard yacc behavior (always SHIFT on tie), pass
+`-shift-default` to kyacc.  In an m3makefile, use:
+
+```
+ParserLALRShift("tok", "spec")    (* LALR + shift-default, VISIBLE *)
+parserLALRShift("tok", "spec")    (* LALR + shift-default, HIDDEN *)
+```
+
+The flag can also be set via the environment variable `yaccSHIFT=1`.
+
+With `-shift-default`, ALL unresolved shift/reduce conflicts
+(regardless of whether the reduce rule is epsilon or not) default
+to SHIFT.  kyacc still prints warnings for each such conflict.
 
 ### The deferred-decision pattern
 
-Because kyacc prefers REDUCE over SHIFT, optional or ambiguous prefixes
-must be handled by deferring the decision.  Instead of:
+Without `-shift-default`, kyacc prefers REDUCE over SHIFT for
+non-epsilon rules, so optional or ambiguous prefixes must be handled
+by deferring the decision.  Instead of:
 
 ```
 declaration:
@@ -704,6 +733,13 @@ example shows the tree-building pattern where `detach()` is essential.
 The CSP grammar has 356 lines, 60+ nonterminals, and ~80 reductions.
 kyacc handles this without issues — build time is under a second.
 
+The CAST-3 grammar (455 lines, ~100 reductions) builds in ~5 seconds
+in LALR mode.  In canonical LR(1) mode (`Parser` instead of
+`ParserLALR`), left-recursive nonterminals used in many contexts can
+cause state explosion — the CAST-3 grammar never completed in
+canonical mode.  **Recommendation:** use `ParserLALR` or
+`ParserLALRShift` for any grammar over ~200 rules.
+
 The generated parser code (in `ARM64_DARWIN/`) is roughly:
 - `cspTok.m3`: ~200 lines (token definitions)
 - `cspLex.m3`: ~1500 lines (DFA tables)
@@ -725,6 +761,8 @@ code size are not concerns.
 | Statement disambiguation | No guidance on common grammar patterns |
 | LL-to-LR conversion | No guidance despite many grammars being LL-origin |
 | Conflict debugging | No strategies for resolving LR(1) conflicts |
+| `-lalr` and `-shift-default` flags | Not documented in `kyacc.html` |
+| `ParserLALR`/`ParserLALRShift` quake procs | Not documented in `m3build.html` |
 | Testing patterns | No suggested test infrastructure |
 | Explicit vs. directive precedence | No discussion of trade-offs |
 | Global state in extensions | Not documented as a pattern |
@@ -734,4 +772,5 @@ code size are not concerns.
 
 *Written March 2026, based on the `cspfe` implementation
 (`intel-async/async-toolkit/m3utils/m3utils/csp/cspparse/`) and the
-`rdlparse` implementation (`intel-async/.../rdl/rdlparse/`).*
+`rdlparse` implementation (`intel-async/.../rdl/rdlparse/`).
+Updated April 2026: `-shift-default` flag documentation, LALR scaling notes.*

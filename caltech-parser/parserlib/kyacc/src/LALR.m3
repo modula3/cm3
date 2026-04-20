@@ -62,6 +62,7 @@ VAR
   gTotalKernel: INTEGER;
   gLA: REF ARRAY OF REF ARRAY OF BOOLEAN;
   gIsAcceptState: REF ARRAY OF BOOLEAN;
+  gShiftDefault: BOOLEAN;
 
 (* ---- Packing ---- *)
 
@@ -805,9 +806,10 @@ PROCEDURE BuildTransitions(VAR outNum: INTEGER): PDATransListList.T =
                 tlist := PDATransList.Cons(trans, tlist);
               | 0 =>
                 WarnConflict(s, reduceR[code], bestShift, "shift");
-                (* Epsilon reduce → shift wins (dangling else).
-                   Non-epsilon reduce → reduce wins (decl vs stmt). *)
-                IF reduceR[code].length = 0 THEN
+                IF gShiftDefault OR reduceR[code].length = 0 THEN
+                  (* Standard yacc: always shift on tie.
+                     kyacc heuristic: shift only for epsilon reduce
+                     (dangling else). *)
                   trans.code := code;
                   trans.kind := PDATrans.ActKind.Shift;
                   trans.target := shiftTgt[code];
@@ -847,11 +849,13 @@ PROCEDURE Build(rules: RuleList.T;
                 codes: REF ARRAY OF INTEGER;
                 symNames: REF ARRAY OF TEXT;
                 warnings: TextTextTbl.T;
-                VAR numStates: INTEGER): PDATransListList.T =
+                VAR numStates: INTEGER;
+                shiftDefault: BOOLEAN := FALSE): PDATransListList.T =
   BEGIN
     gCodes := codes;
     gSymNames := symNames;
     gWarnings := warnings;
+    gShiftDefault := shiftDefault;
     gMaxCode := 0;
     FOR i := 0 TO LAST(codes^) DO
       IF codes[i] > gMaxCode THEN gMaxCode := codes[i]; END;

@@ -23,6 +23,7 @@ IMPORT Fmt;
 VAR
   Debug := Env.Get("yaccDEBUG") # NIL;
   LALR := Env.Get("yaccLALR") # NIL;
+  ShiftDefault := Env.Get("yaccSHIFT") # NIL;
 
   pp: ParseParams.T;
   Form := yaccformBundle.Get();
@@ -31,6 +32,7 @@ VAR
 PROCEDURE ConsumeExtraFlags() =
   BEGIN
     IF pp.keywordPresent("-lalr") THEN LALR := TRUE; END;
+    IF pp.keywordPresent("-shift-default") THEN ShiftDefault := TRUE; END;
     TRY pp.finish(); EXCEPT ParseParams.Error => Process.Exit(1); END;
   END ConsumeExtraFlags;
 PROCEDURE RenumberRules(rules: RuleList.T; inc: INTEGER) =
@@ -95,7 +97,8 @@ PROCEDURE Subs(): TextSubs.T =
   BEGIN
     ConsumeExtraFlags();
     IF LALR THEN Term.WrLn("kyacc: LALR mode enabled"); END;
-    pda := PDA.New(rules, tok, yp.getCodes(), LALR);
+    IF ShiftDefault THEN Term.WrLn("kyacc: shift-default mode enabled"); END;
+    pda := PDA.New(rules, tok, yp.getCodes(), LALR, ShiftDefault);
     lastShift := pda.lastShift;
     lastReduce := lastShift + numRules + 1;
     RenumberRules(yp.getRules(), lastShift+1);

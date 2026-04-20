@@ -35,6 +35,7 @@ REVEAL
     numStates: INTEGER := 0;
     statesList: PDATransListList.T := NIL;
     lalr: BOOLEAN := FALSE;
+    shiftDefault: BOOLEAN := FALSE;
   OVERRIDES
     fmtSymbols := FormatSymbols;
     symInfo := SymInfo;
@@ -113,7 +114,8 @@ PROCEDURE BuildStatesListLALR(self: T) =
     warnings := NEW(TextTextTbl.Default).init();
   BEGIN
     self.statesList := LALR.Build(self.rules, self.codes, self.symNames,
-                                  warnings, self.numStates);
+                                  warnings, self.numStates,
+                                  self.shiftDefault);
     Warn(warnings);
   END BuildStatesListLALR;
 
@@ -200,9 +202,11 @@ PROCEDURE BuildStatesArray(self: T) =
 PROCEDURE New(rules: RuleList.T;
               tok: TokSpec.T;
               codeTbl: TextIntTbl.T;
-              lalr: BOOLEAN := FALSE): T =
+              lalr: BOOLEAN := FALSE;
+              shiftDefault: BOOLEAN := FALSE): T =
   VAR
-    self := NEW(T, rules := rules, tok := tok, lalr := lalr);
+    self := NEW(T, rules := rules, tok := tok,
+                lalr := lalr, shiftDefault := shiftDefault);
   BEGIN
     BuildCodes(self, codeTbl);
     IF self.lalr THEN
