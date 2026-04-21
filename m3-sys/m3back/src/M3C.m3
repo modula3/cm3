@@ -4805,7 +4805,7 @@ BEGIN
         "#ifndef m3_round\n#define m3_round m3_round\n" &
         "double __cdecl round(double);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
-        " return (INT64)f; }\n" &
+        " return (INT64)round(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
         "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &

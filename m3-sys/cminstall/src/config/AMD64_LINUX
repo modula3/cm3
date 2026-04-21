@@ -19,6 +19,8 @@ if defined("M3_USE_STACK_WALKER")
                             "-lunwind-x86_64",
                             "-lunwind",
                             "-lunwind-generic" ]
+else
+  SYSTEM_LIBS{"UNWIND"} = [ ]
 end
 
 
