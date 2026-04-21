@@ -1,0 +1,18 @@
+import ("cit_util")
+import ("mscheme")
+import ("modula3scheme")
+import ("libm3")
+import ("netobj")
+import ("m3readline")
+import ("schemereadline")
+import ("sstubgen")
+
+SchemeStubs("Fmt")
+
+ExportSchemeStubs("fmttest")
+
+importSchemeStubs()
+
+implementation("Main")
+
+program ("fmttest")
