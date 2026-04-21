@@ -1805,8 +1805,9 @@
      " " dnl
      "  PROCEDURE Next() : SchemeObject.T RAISES { Scheme.E } = " dnl
      "    BEGIN" dnl
+     "      IF p__ = NIL THEN RAISE Scheme.E(\"too few arguments to " m3pn "\") END;" dnl
      "      TRY RETURN SchemeUtils.First(p__) FINALLY p__ := SchemePair.Pair(SchemeUtils.Rest(p__)) END" dnl
-     "    END Next;" dnl  
+     "    END Next;" dnl
      " " dnl
      "  VAR p__ := SchemePair.Pair(args);" dnl
      "  BEGIN" dnl
