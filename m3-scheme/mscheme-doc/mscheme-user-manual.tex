@@ -2037,6 +2037,25 @@ hot spots and leave the rest interpreted.
   near-native call performance within a module.
 \end{itemize}
 
+\section{Profiling Compiled Code}
+
+Compiled procedures are visible to the sampling profiler
+(Chapter~\ref{ch:profiler}).  Each compiled procedure updates the
+profiler's current-procedure and caller registers on entry, so both
+the flat profile and the call graph include compiled code alongside
+interpreted code.  The overhead is one boolean test and two pointer
+writes per call, identical to the interpreted path.
+
+To suppress profiler hooks at compile time (e.g., for maximum
+performance in production builds), set the compiler variable before
+compilation:
+
+\begin{lstlisting}[language=Scheme]
+(set! *profiler-hooks* #f)
+\end{lstlisting}
+
+The default is {\tt \#t} (hooks enabled).
+
 
 %======================================================================
 \chapter{Real-World Usage Patterns}
