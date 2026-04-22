@@ -1674,15 +1674,23 @@
         ((OpenArray) (formal-type-converter (make-ref-type type)))
         (else (to-modula-proc-name type env))))
 
-    (define (make-formal-temp f)
-      (string-append
-       (extract-field 'name f)
-       " := "
-       (formal-type-converter (extract-field 'type f))
-       "(Next())"
-       ))
+    (define (formal-has-default? f)
+      (not (null? (extract-field 'default f))))
 
-    (define (format-call) 
+    (define (make-formal-temp f)
+      (let ((name (extract-field 'name f))
+            (type (extract-field 'type f)))
+        (if (formal-has-default? f)
+            ;; optional: just declare with type, assign later
+            (string-append
+             name " : " (format-type type env))
+            ;; required: initialize directly from Next()
+            (string-append
+             name " := "
+             (formal-type-converter type)
+             "(Next())"))))
+
+    (define (format-call)
       (let* ((formals (extract-field 'formals sig))
              (arg-list (infixize
                         (map (lambda (f) 
@@ -1730,7 +1738,7 @@
              )
             ))
 
-        (define (unpack-var-params) 
+        (define (unpack-var-params)
           ;; fill this in
           (string-append
            "        p__ := SchemePair.Pair(args);" dnl
@@ -1738,11 +1746,33 @@
            )
           )
 
-        (string-append 
+        (define (format-optional-defaults)
+          ;; generate IF/THEN/ELSE assignments for optional formals
+          (apply string-append
+                 (map (lambda (f)
+                        (let* ((name (extract-field 'name f))
+                               (type (extract-field 'type f))
+                               (default (extract-field 'default f)))
+                          (string-append
+                           "        WITH next__ = Next() DO" dnl
+                           "          IF next__ = NIL THEN" dnl
+                           "            " name " :="
+                           (format-type-value type default env) ";" dnl
+                           "          ELSE" dnl
+                           "            " name " := "
+                           (formal-type-converter type) "(next__);" dnl
+                           "          END" dnl
+                           "        END;" dnl)))
+                      (filter formal-has-default? formals))))
+
+        (string-append
          "      (* unpack formals *)" dnl
          "      VAR "
          (infixize  (cons "<*NOWARN*>junk__ := 0" (map make-formal-temp formals))
                     (string-append ";" dnl "           ")) "; BEGIN" dnl
+
+                    "        (* fill in defaults for optional params *)" dnl
+                    (format-optional-defaults)
 
                     "        (* carry out NIL checks for open arrays *)" dnl
                     (format-nil-checks) dnl
@@ -1805,12 +1835,22 @@
      " " dnl
      "  PROCEDURE Next() : SchemeObject.T RAISES { Scheme.E } = " dnl
      "    BEGIN" dnl
-     "      IF p__ = NIL THEN RAISE Scheme.E(\"too few arguments to " m3pn "\") END;" dnl
      "      TRY RETURN SchemeUtils.First(p__) FINALLY p__ := SchemePair.Pair(SchemeUtils.Rest(p__)) END" dnl
      "    END Next;" dnl
      " " dnl
      "  VAR p__ := SchemePair.Pair(args);" dnl
      "  BEGIN" dnl
+     (let* ((formals (extract-field 'formals (extract-field 'sig proc-type)))
+            (required (length (filter (lambda (f)
+                                        (and (null? (extract-field 'default f))
+                                             (not (eq? 'Mode.Implied
+                                                       (extract-field 'mode f)))))
+                                      formals))))
+       (if (> required 0)
+           (string-append
+            "    IF SchemeUtils.Length(args) < " (number->string required)
+            " THEN RAISE Scheme.E(\"too few arguments to " m3pn "\") END;" dnl)
+           ""))
      "    TRY" dnl
      (format-call)
      "    EXCEPT" dnl
