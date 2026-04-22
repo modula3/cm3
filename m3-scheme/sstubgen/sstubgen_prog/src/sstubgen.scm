@@ -619,18 +619,25 @@
 (define (format-type-value type value env)
   (case (car value)
 
-    ((Ordinal) 
+    ((Ordinal)
      ;; special case for NIL: (Ordinal . 0)
-     
+     ;; Reference types (including REFANY, ROOT, etc.) with ordinal 0
+     ;; are NIL.  Also, any non-ordinal type with ordinal 0 is NIL,
+     ;; since VAL only works with ordinal types.
+
      (if (is-reference-type? type)
          (if (not (= (cdr value) 0))
-             (error "Ordinal initializer for Ref, non-zero value : " type 
+             (error "Ordinal initializer for Ref, non-zero value : " type
                     ", " value)
              " NIL")
-         (string-append 
-          " VAL(" 
-          (my-number->string (cdr value))", "  (type-formatter type env)
-          ")")))
+         (if (and (= (cdr value) 0)
+                  (not (member? (car type)
+                                '(Enumeration Subrange Integer Cardinal Longint))))
+             " NIL"
+             (string-append
+              " VAL("
+              (my-number->string (cdr value))", "  (type-formatter type env)
+              ")"))))
     
     ((LongFloat)
      (string-append
