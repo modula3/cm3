@@ -614,30 +614,24 @@
 (define bad-values '())
 
 (define (is-reference-type? type)
-  (member? (car type) '(Opaque Ref Procedure Object)))
+  (or (member? (car type) '(Opaque Ref Procedure Object))
+      (member? (is-basetype type) '(REFANY ROOT ADDRESS NULL TEXT))))
 
 (define (format-type-value type value env)
   (case (car value)
 
     ((Ordinal)
      ;; special case for NIL: (Ordinal . 0)
-     ;; Reference types (including REFANY, ROOT, etc.) with ordinal 0
-     ;; are NIL.  Also, any non-ordinal type with ordinal 0 is NIL,
-     ;; since VAL only works with ordinal types.
 
      (if (is-reference-type? type)
          (if (not (= (cdr value) 0))
              (error "Ordinal initializer for Ref, non-zero value : " type
                     ", " value)
              " NIL")
-         (if (and (= (cdr value) 0)
-                  (not (member? (car type)
-                                '(Enumeration Subrange Integer Cardinal Longint))))
-             " NIL"
-             (string-append
-              " VAL("
-              (my-number->string (cdr value))", "  (type-formatter type env)
-              ")"))))
+         (string-append
+          " VAL("
+          (my-number->string (cdr value))", "  (type-formatter type env)
+          ")")))
     
     ((LongFloat)
      (string-append
@@ -2040,9 +2034,10 @@
 
 
 (define (format-typecode type env)
-  (if (and 
+  (if (and
        (is-reference-type? type)
-       (not (eq? (car type) 'Procedure)))
+       (not (eq? (car type) 'Procedure))
+       (not (member? (is-basetype type) '(REFANY))))
       (string-append "TYPECODE(" (type-formatter type env) ")")
       "-1"))
 
