@@ -2062,6 +2062,20 @@
 (define *lambda-counter* 0)    ;; serial counter for lam0, lam1, ...
 (define *module-procs* '())    ;; alist: name-symbol → (m3name nparams rest-param)
 
+(define *profiler-hooks* #t)   ;; emit sampling profiler hooks in compiled procs
+
+(define (gen-profiler-hook name)
+  ;; Generate M3 code to update the sampling profiler registers.
+  ;; name is the Scheme procedure name (a symbol or string).
+  (if *profiler-hooks*
+      (let ((name-str (if (symbol? name) (symbol->string name) name)))
+        (string-append
+         (L "    IF SchemeSamplingProfiler.enabled THEN")
+         (L "      SchemeSamplingProfiler.currentCallerName := SchemeSamplingProfiler.currentProcName;")
+         (L "      SchemeSamplingProfiler.currentProcName := \"" name-str "\";")
+         (L "    END;")))
+      ""))
+
 (define (iota n)
   (let loop ((i 0) (acc '()))
     (if (= i n) (reverse acc)
@@ -2153,6 +2167,7 @@
        (if self-tail
            (string-append
             (L "  BEGIN")
+            (gen-profiler-hook name)
             ;; Narrowing assignments for unboxed params before LOOP
             (apply string-append
                    (map (lambda (u)
@@ -2168,6 +2183,7 @@
             NL)
            (string-append
             (L "  BEGIN")
+            (gen-profiler-hook name)
             body-code
             (L "  END Apply" (number->string nparams) "_" m3name ";")
             NL)))))))
@@ -2253,6 +2269,7 @@
                           (L "    " (car d) " : " (cdr d) ";"))
                         decls))
             (L "  BEGIN")
+            (gen-profiler-hook name)
             ;; Extract fixed params
             (apply string-append
                    (map (lambda (m3n)
@@ -2703,6 +2720,9 @@
      (L "IMPORT SchemeNumber, SchemeExact, SchemeRational, SchemeMpfr, SchemeComplex, SchemeDual, Mpz;")
      (L "IMPORT SchemeUtils, SchemeString, SchemeChar;")
      (L "IMPORT SchemeCompiledRegistry;")
+     (if *profiler-hooks*
+         (L "IMPORT SchemeSamplingProfiler;")
+         "")
      (L "FROM Scheme IMPORT Object;")
      NL
      (L "TYPE")
