@@ -48,6 +48,7 @@ IMPORT SchemeInt, Mpz;
 IMPORT SchemeExact, SchemeInexact, SchemeNumber;
 IMPORT SchemeRational, SchemeMpfr, SchemeComplex, SchemeDual, Mpfr;
 IMPORT Pickle, Rd;
+IMPORT SchemeSamplingProfiler, TextIntTbl;
 
 <* FATAL Thread.Alerted *>
 
@@ -170,7 +171,12 @@ TYPE
         MakeRectangular, MakePolar, RealPart, ImagPart,
         MagnitudeP, AngleP,
         RationalQ, RealQ, ComplexQ,
-        MakeDual, DualReal, DualEpsilon, DualQ
+        MakeDual, DualReal, DualEpsilon, DualQ,
+
+        (* sampling profiler *)
+        SamplingProfilerStart, SamplingProfilerStop,
+        SamplingProfilerReset, SamplingProfilerResults,
+        SamplingProfilerTotal, SamplingProfilerReport
   };
 
 REVEAL 
@@ -563,6 +569,12 @@ PROCEDURE InstallDefaultExtendedPrimitives(dd : Definer;
     .defPrim("dump-environment", ORD(P.DumpEnvironment), dd, 1, 1)
     .defPrim("load-environment!", ORD(P.LoadEnvironment), dd, 1, 1)
     .defPrim("system",           ORD(P.System), dd, 1, 1)
+    .defPrim("sampling-profiler-start",   ORD(P.SamplingProfilerStart), dd, 0, 1)
+    .defPrim("sampling-profiler-stop",    ORD(P.SamplingProfilerStop), dd, 0, 0)
+    .defPrim("sampling-profiler-reset",   ORD(P.SamplingProfilerReset), dd, 0, 0)
+    .defPrim("sampling-profiler-results", ORD(P.SamplingProfilerResults), dd, 0, 0)
+    .defPrim("sampling-profiler-total",   ORD(P.SamplingProfilerTotal), dd, 0, 0)
+    .defPrim("sampling-profiler-report",  ORD(P.SamplingProfilerReport), dd, 0, 1)
     ;
     RETURN env;
 
@@ -2326,6 +2338,31 @@ PROCEDURE Prims(t          : T;
           ELSE RETURN Error("dual-epsilon: not a number: " & Stringify(List1(x)))
           END
         END
+      |
+        P.SamplingProfilerStart =>
+        IF x # NIL THEN
+          SchemeSamplingProfiler.Start(SchemeLongReal.Int(x, TRUE))
+        ELSE
+          SchemeSamplingProfiler.Start()
+        END;
+        RETURN True()
+      |
+        P.SamplingProfilerStop =>
+        SchemeSamplingProfiler.Stop();
+        RETURN True()
+      |
+        P.SamplingProfilerReset =>
+        SchemeSamplingProfiler.Reset();
+        RETURN True()
+      |
+        P.SamplingProfilerResults =>
+        RETURN ProfilerResultsToAlist()
+      |
+        P.SamplingProfilerTotal =>
+        RETURN SchemeInt.FromI(SchemeSamplingProfiler.Total())
+      |
+        P.SamplingProfilerReport =>
+        RETURN ProfilerReport(interp, x)
       END
     END
   END Prims;
@@ -3521,5 +3558,115 @@ PROCEDURE NormalDeviate(rand : Random.T; mean, sdev : LONGREAL) : LONGREAL =
   END NormalDeviate;
        
 VAR MpzZero := Mpz.NewInt(0);
+
+(**********************************************************************)
+(* Sampling profiler helpers                                          *)
+(**********************************************************************)
+
+PROCEDURE ProfilerResultsToAlist() : Object =
+  (* Return an alist ((name . count) ...) sorted by count descending. *)
+  VAR
+    tab := SchemeSamplingProfiler.Results();
+    n := tab.size();
+    names := NEW(REF ARRAY OF TEXT, n);
+    counts := NEW(REF ARRAY OF INTEGER, n);
+    iter := tab.iterate();
+    name : TEXT;
+    count : INTEGER;
+    i := 0;
+  BEGIN
+    WHILE iter.next(name, count) DO
+      names[i] := name; counts[i] := count; INC(i)
+    END;
+    (* insertion sort by count descending *)
+    FOR j := 1 TO n - 1 DO
+      VAR k := j;
+          tmpN := names[j];
+          tmpC := counts[j];
+      BEGIN
+        WHILE k > 0 AND counts[k - 1] < tmpC DO
+          names[k] := names[k - 1];
+          counts[k] := counts[k - 1];
+          DEC(k)
+        END;
+        names[k] := tmpN;
+        counts[k] := tmpC
+      END
+    END;
+    (* build alist from end to front *)
+    VAR result : SchemePair.T := NIL; BEGIN
+      FOR j := n - 1 TO 0 BY -1 DO
+        result := NEW(Pair,
+                      first := NEW(Pair,
+                                   first := SchemeString.FromText(names[j]),
+                                   rest := SchemeInt.FromI(counts[j])),
+                      rest := result)
+      END;
+      RETURN result
+    END
+  END ProfilerResultsToAlist;
+
+PROCEDURE ProfilerReport(interp : Scheme.T; topN : Object) : Object
+  RAISES { E } =
+  (* Display a formatted profiler report to the current output port.
+     Optional argument: max number of entries to show (default: all). *)
+  VAR
+    tab := SchemeSamplingProfiler.Results();
+    total := SchemeSamplingProfiler.Total();
+    n := tab.size();
+    names := NEW(REF ARRAY OF TEXT, n);
+    counts := NEW(REF ARRAY OF INTEGER, n);
+    iter := tab.iterate();
+    name : TEXT;
+    count : INTEGER;
+    i := 0;
+    limit := n;
+    wr := OutPort(NIL, interp);
+  BEGIN
+    WHILE iter.next(name, count) DO
+      names[i] := name; counts[i] := count; INC(i)
+    END;
+    (* insertion sort by count descending *)
+    FOR j := 1 TO n - 1 DO
+      VAR k := j;
+          tmpN := names[j];
+          tmpC := counts[j];
+      BEGIN
+        WHILE k > 0 AND counts[k - 1] < tmpC DO
+          names[k] := names[k - 1];
+          counts[k] := counts[k - 1];
+          DEC(k)
+        END;
+        names[k] := tmpN;
+        counts[k] := tmpC
+      END
+    END;
+    IF topN # NIL THEN
+      limit := MIN(SchemeLongReal.Int(topN, TRUE), n)
+    END;
+    TRY
+      Wr.PutText(wr, "  samples   %     procedure\n");
+      Wr.PutText(wr, "  -------  ----   ---------\n");
+      FOR j := 0 TO limit - 1 DO
+        VAR pct : LONGREAL; BEGIN
+          IF total > 0 THEN
+            pct := 100.0d0 * FLOAT(counts[j], LONGREAL) /
+                              FLOAT(total, LONGREAL)
+          ELSE
+            pct := 0.0d0
+          END;
+          Wr.PutText(wr, Fmt.Pad(Fmt.Int(counts[j]), 9));
+          Wr.PutText(wr, Fmt.Pad(Fmt.LongReal(pct, Fmt.Style.Fix, 1), 7));
+          Wr.PutText(wr, "   " & names[j] & "\n")
+        END
+      END;
+      Wr.PutText(wr, "  -------\n");
+      Wr.PutText(wr, Fmt.Pad(Fmt.Int(total), 9) & " total samples\n");
+      Wr.Flush(wr)
+    EXCEPT
+      Wr.Failure => RAISE E("sampling-profiler-report: output error")
+    END;
+    RETURN SchemeBoolean.True()
+  END ProfilerReport;
 
 BEGIN END SchemePrimitive.

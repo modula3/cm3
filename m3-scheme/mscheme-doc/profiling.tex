@@ -1,0 +1,168 @@
+%======================================================================
+\chapter{Sampling Profiler}\label{ch:profiler}
+%======================================================================
+
+MScheme includes a built-in sampling profiler that can be used to
+identify performance bottlenecks in Scheme programs.  The profiler
+operates by running a background thread that periodically samples
+which procedure is currently executing and tallying the results.
+
+\section{Overview}
+
+Traditional instrumentation-based profilers record the time spent in
+every procedure call.  This is accurate but imposes significant
+overhead on every call, which can distort the very measurements one is
+trying to make.  A~sampling profiler takes a different approach: it
+periodically inspects which procedure is currently running and
+increments a counter for that procedure.  Given enough samples, the
+resulting histogram converges to the true time distribution.  The
+overhead is negligible because the interpreter's hot path does only a
+single pointer write per procedure call; all the bookkeeping is
+confined to the sampler thread, which wakes up independently on a
+timer.
+
+\section{API Reference}
+
+\begin{description}
+
+\item[{\tt (sampling-profiler-start)} / {\tt (sampling-profiler-start {\it interval-ms})}]
+  Start the sampling profiler.  The optional argument {\it interval-ms\/}
+  specifies the sampling interval in milliseconds; it defaults to~1.
+  If the profiler is already running, this procedure has no effect.
+  Returns {\tt \#t}.
+
+\item[{\tt (sampling-profiler-stop)}]
+  Stop the sampling profiler.  Blocks until the sampler thread has
+  exited.  The accumulated samples are retained and can still be
+  inspected.  Returns {\tt \#t}.
+
+\item[{\tt (sampling-profiler-reset)}]
+  Clear all accumulated samples and reset the total count to zero.
+  Returns {\tt \#t}.  This does not stop a running profiler; to start a
+  fresh profiling session one typically calls:
+\begin{lstlisting}[language=Scheme]
+(sampling-profiler-reset)
+(sampling-profiler-start)
+\end{lstlisting}
+
+\item[{\tt (sampling-profiler-results)}]
+  Return the profiling data as an association list sorted in descending
+  order by sample count.  Each element is a pair
+  {\tt ({\it name\/}~.~{\it count\/})}, where {\it name\/} is a string
+  naming the procedure and {\it count\/} is the number of times the
+  sampler observed that procedure as the current one.  If no samples
+  have been collected, the empty list is returned.
+\begin{lstlisting}[language={}]
+(sampling-profiler-results)
+=> (("<" . 2027) ("-" . 1763) ("fib" . 1354) ("+" . 452))
+\end{lstlisting}
+
+\item[{\tt (sampling-profiler-total)}]
+  Return the total number of samples collected as an exact integer.
+
+\item[{\tt (sampling-profiler-report)} / {\tt (sampling-profiler-report {\it n})}]
+  Print a formatted profiler report to the current output port.  The
+  optional argument~{\it n\/} limits the output to the top~{\it n\/}
+  procedures by sample count; by default all procedures are shown.
+  Returns {\tt \#t}.
+\begin{lstlisting}[language={}]
+(sampling-profiler-report)
+
+  samples   %     procedure
+  -------  ----   ---------
+     2027   36.2   <
+     1763   31.5   -
+     1354   24.2   fib
+      452    8.1   +
+  -------
+     5596 total samples
+\end{lstlisting}
+
+\end{description}
+
+\section{Examples}
+
+\subsection{Profiling a Recursive Function}
+
+The simplest use of the profiler is to bracket a computation with
+{\tt start} and {\tt stop} calls:
+
+\begin{lstlisting}[language=Scheme]
+(define (fib n)
+  (if (< n 2) n
+      (+ (fib (- n 1)) (fib (- n 2)))))
+
+(sampling-profiler-reset)
+(sampling-profiler-start)
+(fib 35)
+(sampling-profiler-stop)
+(sampling-profiler-report)
+\end{lstlisting}
+
+\noindent
+The report reveals that the naive Fibonacci spends most of its time in
+the arithmetic primitives {\tt <}, {\tt -}, and~{\tt +}, with the
+closure {\tt fib} itself accounting for roughly a quarter of the
+samples.  This is expected: each call to {\tt fib} performs one
+comparison, one or two subtractions, and one addition.
+
+\subsection{Comparing Two Implementations}
+
+The profiler can help compare alternative implementations of the same
+algorithm.  For instance, one might compare a naive list-based {\tt
+  member} against the built-in:
+
+\begin{lstlisting}[language=Scheme]
+(define (my-member x lst)
+  (cond ((null? lst) #f)
+        ((equal? x (car lst)) lst)
+        (else (my-member x (cdr lst)))))
+
+(define data (let loop ((i 0) (acc '()))
+               (if (= i 10000) acc
+                   (loop (+ i 1) (cons i acc)))))
+
+;; Profile the custom version
+(sampling-profiler-reset)
+(sampling-profiler-start)
+(do ((i 0 (+ i 1))) ((= i 100))
+  (my-member 5000 data))
+(sampling-profiler-stop)
+(sampling-profiler-report 5)
+
+;; Profile the built-in
+(sampling-profiler-reset)
+(sampling-profiler-start)
+(do ((i 0 (+ i 1))) ((= i 100))
+  (member 5000 data))
+(sampling-profiler-stop)
+(sampling-profiler-report 5)
+\end{lstlisting}
+
+\noindent
+The first report will show samples distributed across {\tt
+  my-member}, {\tt equal?}, {\tt null?}, {\tt car}, and {\tt cdr}.
+The second report will show samples concentrated in the built-in {\tt
+  member}, which performs the same work in a single Modula-3 loop
+without re-entering the interpreter on each recursive step.
+
+\section{Design Notes}
+
+The sampling profiler is implemented in two parts.  In the eval loop
+({\tt Scheme.m3}), every procedure call writes the name of the callee
+to a global variable.  This write is guarded by a boolean flag and
+costs one pointer-sized store when profiling is enabled, or one
+boolean test when it is not.
+
+A separate Modula-3 thread, forked by {\tt sampling-profiler-start},
+wakes up at the configured interval, reads the current procedure name,
+and increments a counter in a hash table protected by a mutex.  The
+mutex is never acquired by the eval loop, so profiling does not
+introduce lock contention in the interpreter.  The hash table keys on
+text value (not object identity), so samples for the same procedure
+are correctly aggregated regardless of which interpreter thread
+produced them.
+
+Both closures and primitive procedures are tracked.  Closures receive
+their names from {\tt define}; anonymous closures appear as
+``anonymous procedure''.

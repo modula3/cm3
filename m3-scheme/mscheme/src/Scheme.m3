@@ -22,6 +22,8 @@ IMPORT Env, TextReader;
 
 IMPORT SchemeDefsBundle, Bundle;
 IMPORT SchemeProfiler;
+IMPORT SchemeSamplingProfiler;
+IMPORT SchemeProcedureClass; <*NOWARN*>
 IMPORT SchemeUnixDeps;
 IMPORT SchemeEnvironmentBinding;
 IMPORT SchemeEnvironmentInstanceRep; (* for pickling *)
@@ -572,7 +574,13 @@ PROCEDURE EvalInternal(t   : T;
           ELSE
             (* procedure call *)
             fn := t.eval(fn, env);
-            
+
+            IF SchemeSamplingProfiler.enabled THEN
+              TYPECASE fn OF
+                SchemeProcedure.T(p) =>
+                SchemeSamplingProfiler.currentProcName := p.name
+              ELSE END
+            END;
 
             IF ProfileProcedures AND ISTYPE (fn,Procedure) THEN
               SchemeProfiler.EnterProcedure(fn)

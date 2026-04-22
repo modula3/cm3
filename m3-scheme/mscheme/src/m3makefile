@@ -24,6 +24,7 @@ import ("mpfr")
 
 Module("Scheme")
 Module("SchemeProfiler")
+Module("SchemeSamplingProfiler")
 
 Interface("SchemeClass")
 
