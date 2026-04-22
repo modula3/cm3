@@ -19,6 +19,7 @@ resource ("struct.scm")
 resource ("pregexp/pregexp.scm")
 resource ("marketdata-hfdate-conversion.scm")
 resource ("addresses.scm")
+resource ("profiling.scm")
 
 bundle ("SchemeDefsBundle")
 
@@ -41,5 +42,6 @@ ship_source ("struct.scm")
 ship_source ("pregexp/pregexp.scm")
 ship_source ("marketdata-hfdate-conversion.scm")
 ship_source ("addresses.scm")
+ship_source ("profiling.scm")
 
 library ("scheme-lib")

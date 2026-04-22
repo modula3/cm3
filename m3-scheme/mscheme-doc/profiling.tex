@@ -6,6 +6,8 @@ MScheme includes a built-in sampling profiler that can be used to
 identify performance bottlenecks in Scheme programs.  The profiler
 operates by running a background thread that periodically samples
 which procedure is currently executing and tallying the results.
+In addition to the flat profile, the profiler records caller/callee
+arcs, providing a call graph similar to that produced by {\tt gprof}.
 
 \section{Overview}
 
@@ -16,12 +18,14 @@ trying to make.  A~sampling profiler takes a different approach: it
 periodically inspects which procedure is currently running and
 increments a counter for that procedure.  Given enough samples, the
 resulting histogram converges to the true time distribution.  The
-overhead is negligible because the interpreter's hot path does only a
-single pointer write per procedure call; all the bookkeeping is
-confined to the sampler thread, which wakes up independently on a
-timer.
+overhead is negligible because the interpreter's hot path does only
+two pointer writes per procedure call (the current procedure name and
+the caller name); all the bookkeeping is confined to the sampler
+thread, which wakes up independently on a timer.
 
 \section{API Reference}
+
+\subsection{Flat Profile}
 
 \begin{description}
 
@@ -37,7 +41,8 @@ timer.
   inspected.  Returns {\tt \#t}.
 
 \item[{\tt (sampling-profiler-reset)}]
-  Clear all accumulated samples and reset the total count to zero.
+  Clear all accumulated samples (both flat profile and call graph) and
+  reset the total count to zero.
   Returns {\tt \#t}.  This does not stop a running profiler; to start a
   fresh profiling session one typically calls:
 \begin{lstlisting}[language=Scheme]
@@ -80,6 +85,87 @@ timer.
 
 \end{description}
 
+\subsection{Call Graph}
+
+\begin{description}
+
+\item[{\tt (sampling-profiler-call-graph)}]
+  Return the call graph as an association list.  Each element has the
+  form {\tt ({\it callee\/} ({\it caller\/}~.~{\it count\/}) \ldots)},
+  where {\it callee\/} is the procedure that was observed running, and
+  each {\tt ({\it caller\/}~.~{\it count\/})} pair indicates how many
+  times {\it caller\/} was the most recent call site when {\it callee\/}
+  was sampled.  The entries are sorted by total callee sample count,
+  descending.  This is the same information that {\tt gprof} uses to
+  construct its call graph.
+
+\begin{lstlisting}[language={}]
+(sampling-profiler-call-graph)
+=> (("<"   ("-" . 2089) ("<" . 3))
+    ("-"   ("-" . 3) ("fib" . 1753))
+    ("fib" ("+" . 623) ("<" . 643) ("fib" . 9) ("-" . 1))
+    ("+"   ("<" . 398) ("+" . 2)))
+\end{lstlisting}
+
+  Reading this output for the {\tt fib} example: {\tt fib} was sampled
+  1276~times in total.  Of those, 643~samples had {\tt <} as the
+  caller (from the test {\tt (< n 2)} calling back into {\tt fib} via
+  the {\tt if}), and 623~had {\tt +} (from {\tt (+ (fib \ldots) (fib
+  \ldots))}).
+
+\end{description}
+
+\subsection{Call Graph Report}
+
+The {\tt profiling} library (loaded via {\tt (require-modules
+"profiling")}) provides a formatted call graph report:
+
+\begin{description}
+
+\item[{\tt (sampling-profiler-call-graph-report)} / {\tt (sampling-profiler-call-graph-report {\it n})}]
+  Print a formatted call graph report to the current output port,
+  showing each procedure with its callers indented below it.
+  The optional argument~{\it n\/} limits the output to the
+  top~{\it n\/} procedures.  Returns {\tt ok}.
+
+\begin{lstlisting}[language={}]
+(require-modules "profiling")
+(sampling-profiler-call-graph-report)
+
+  samples   %     procedure
+  -------  ----   ---------
+     2148 38.4%   <
+                2145  <- -
+                   2  <- <
+                   1  <- +
+
+     1705 30.5%   -
+                1695  <- fib
+                  10  <- -
+
+     1313 23.4%   fib
+                 671  <- +
+                 633  <- <
+                   9  <- fib
+
+      423  7.5%   +
+                 419  <- <
+                   4  <- +
+
+  -------
+     5589 total samples
+\end{lstlisting}
+
+  Each top-level line shows a callee with its flat sample count and
+  percentage.  The indented lines below show how many of those samples
+  had each caller as the most recent call site.  For instance, {\tt <}
+  was sampled 2148~times, and in 2145 of those the caller was~{\tt -}
+  --- reflecting the pattern {\tt (< n 2)} where {\tt n} was just
+  produced by a subtraction.
+
+\end{description}
+
+
 \section{Examples}
 
 \subsection{Profiling a Recursive Function}
@@ -88,6 +174,8 @@ The simplest use of the profiler is to bracket a computation with
 {\tt start} and {\tt stop} calls:
 
 \begin{lstlisting}[language=Scheme]
+(require-modules "profiling")
+
 (define (fib n)
   (if (< n 2) n
       (+ (fib (- n 1)) (fib (- n 2)))))
@@ -97,14 +185,16 @@ The simplest use of the profiler is to bracket a computation with
 (fib 35)
 (sampling-profiler-stop)
 (sampling-profiler-report)
+(sampling-profiler-call-graph-report)
 \end{lstlisting}
 
 \noindent
-The report reveals that the naive Fibonacci spends most of its time in
-the arithmetic primitives {\tt <}, {\tt -}, and~{\tt +}, with the
-closure {\tt fib} itself accounting for roughly a quarter of the
-samples.  This is expected: each call to {\tt fib} performs one
-comparison, one or two subtractions, and one addition.
+The flat report reveals that the naive Fibonacci spends most of its
+time in the arithmetic primitives {\tt <}, {\tt -}, and~{\tt +}, with
+the closure {\tt fib} itself accounting for roughly a quarter of the
+samples.  The call graph report shows how these procedures relate:
+{\tt fib} is called primarily from {\tt +} and {\tt <}, while {\tt -}
+is called almost exclusively from {\tt fib}.
 
 \subsection{Comparing Two Implementations}
 
@@ -150,15 +240,18 @@ without re-entering the interpreter on each recursive step.
 
 The sampling profiler is implemented in two parts.  In the eval loop
 ({\tt Scheme.m3}), every procedure call writes the name of the callee
-to a global variable.  This write is guarded by a boolean flag and
-costs one pointer-sized store when profiling is enabled, or one
+and the name of the caller (the previously current procedure) to a
+pair of global variables.  These writes are guarded by a boolean flag
+and cost two pointer-sized stores when profiling is enabled, or one
 boolean test when it is not.
 
 A separate Modula-3 thread, forked by {\tt sampling-profiler-start},
-wakes up at the configured interval, reads the current procedure name,
-and increments a counter in a hash table protected by a mutex.  The
+wakes up at the configured interval, reads the current procedure and
+caller names, and updates two data structures protected by a mutex: a
+flat count table (procedure name to sample count) and a call graph
+table (callee name to a table of caller names and edge counts).  The
 mutex is never acquired by the eval loop, so profiling does not
-introduce lock contention in the interpreter.  The hash table keys on
+introduce lock contention in the interpreter.  Both tables key on
 text value (not object identity), so samples for the same procedure
 are correctly aggregated regardless of which interpreter thread
 produced them.
@@ -166,3 +259,11 @@ produced them.
 Both closures and primitive procedures are tracked.  Closures receive
 their names from {\tt define}; anonymous closures appear as
 ``anonymous procedure''.
+
+The caller/callee relationship mirrors the approach taken by {\tt
+  gprof}: each sample records a single arc from the most recent caller
+to the current callee.  For tail calls, the caller is the procedure
+that initiated the tail-call chain, which is the correct attribution
+--- {\tt f} tail-calling {\tt g} which tail-calls {\tt h} produces
+arcs {\tt f}$\to${\tt g} and {\tt g}$\to${\tt h}, exactly reflecting
+the actual call sequence.

@@ -578,6 +578,8 @@ PROCEDURE EvalInternal(t   : T;
             IF SchemeSamplingProfiler.enabled THEN
               TYPECASE fn OF
                 SchemeProcedure.T(p) =>
+                SchemeSamplingProfiler.currentCallerName :=
+                    SchemeSamplingProfiler.currentProcName;
                 SchemeSamplingProfiler.currentProcName := p.name
               ELSE END
             END;

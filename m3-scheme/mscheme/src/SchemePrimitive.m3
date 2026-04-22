@@ -176,7 +176,8 @@ TYPE
         (* sampling profiler *)
         SamplingProfilerStart, SamplingProfilerStop,
         SamplingProfilerReset, SamplingProfilerResults,
-        SamplingProfilerTotal, SamplingProfilerReport
+        SamplingProfilerTotal, SamplingProfilerReport,
+        SamplingProfilerCallGraph
   };
 
 REVEAL 
@@ -575,6 +576,7 @@ PROCEDURE InstallDefaultExtendedPrimitives(dd : Definer;
     .defPrim("sampling-profiler-results", ORD(P.SamplingProfilerResults), dd, 0, 0)
     .defPrim("sampling-profiler-total",   ORD(P.SamplingProfilerTotal), dd, 0, 0)
     .defPrim("sampling-profiler-report",  ORD(P.SamplingProfilerReport), dd, 0, 1)
+    .defPrim("sampling-profiler-call-graph", ORD(P.SamplingProfilerCallGraph), dd, 0, 0)
     ;
     RETURN env;
 
@@ -2363,6 +2365,9 @@ PROCEDURE Prims(t          : T;
       |
         P.SamplingProfilerReport =>
         RETURN ProfilerReport(interp, x)
+      |
+        P.SamplingProfilerCallGraph =>
+        RETURN ProfilerCallGraphToAlist()
       END
     END
   END Prims;
@@ -3668,5 +3673,77 @@ PROCEDURE ProfilerReport(interp : Scheme.T; topN : Object) : Object
     END;
     RETURN SchemeBoolean.True()
   END ProfilerReport;
+
+PROCEDURE ProfilerCallGraphToAlist() : Object =
+  (* Return call graph as alist:
+     ((callee (caller . count) ...) ...) sorted by total callee count. *)
+  VAR
+    graph := SchemeSamplingProfiler.CallGraph();
+    flat := SchemeSamplingProfiler.Results();
+    n := graph.size();
+    callees := NEW(REF ARRAY OF TEXT, n);
+    totals := NEW(REF ARRAY OF INTEGER, n);
+    gIter := graph.iterate();
+    callee : TEXT;
+    callersRef : REFANY;
+    i := 0;
+  BEGIN
+    (* collect callees and their flat counts for sorting *)
+    WHILE gIter.next(callee, callersRef) DO
+      callees[i] := callee;
+      VAR flatCount := 0; BEGIN
+        EVAL flat.get(callee, flatCount);
+        totals[i] := flatCount
+      END;
+      INC(i)
+    END;
+    (* insertion sort by total descending *)
+    FOR j := 1 TO n - 1 DO
+      VAR k := j;
+          tmpN := callees[j];
+          tmpC := totals[j];
+      BEGIN
+        WHILE k > 0 AND totals[k - 1] < tmpC DO
+          callees[k] := callees[k - 1];
+          totals[k] := totals[k - 1];
+          DEC(k)
+        END;
+        callees[k] := tmpN;
+        totals[k] := tmpC
+      END
+    END;
+    (* build alist from end to front *)
+    VAR result : SchemePair.T := NIL; BEGIN
+      FOR j := n - 1 TO 0 BY -1 DO
+        (* build caller alist for this callee *)
+        VAR ref : REFANY;
+            callerAlist : SchemePair.T := NIL;
+        BEGIN
+          IF graph.get(callees[j], ref) THEN
+            WITH callerTab = NARROW(ref, TextIntTbl.T) DO
+              VAR cIter := callerTab.iterate();
+                  cName : TEXT;
+                  cCount : INTEGER;
+              BEGIN
+                WHILE cIter.next(cName, cCount) DO
+                  callerAlist := NEW(Pair,
+                                     first := NEW(Pair,
+                                                  first := SchemeString.FromText(cName),
+                                                  rest := SchemeInt.FromI(cCount)),
+                                     rest := callerAlist)
+                END
+              END
+            END
+          END;
+          result := NEW(Pair,
+                        first := NEW(Pair,
+                                     first := SchemeString.FromText(callees[j]),
+                                     rest := callerAlist),
+                        rest := result)
+        END
+      END;
+      RETURN result
+    END
+  END ProfilerCallGraphToAlist;
 
 BEGIN END SchemePrimitive.
