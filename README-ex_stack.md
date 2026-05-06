@@ -470,9 +470,7 @@ The completed work includes:
 5. setting `M3_BACKEND_MODE = "C"` and `M3_USE_STACK_WALKER = TRUE` in
    the `AMD64_DARWIN` config
 
-All five verification tests pass under Rosetta 2.  See
-`README-AMD64_DARWIN.md` for the full bootstrap procedure and
-target-specific notes.
+All five verification tests pass under Rosetta 2.
 
 ### Other targets
 
