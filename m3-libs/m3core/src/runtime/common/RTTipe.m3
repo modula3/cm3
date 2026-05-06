@@ -384,11 +384,11 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
 
     | Kind.Longreal =>
         t.size  := BITSIZE(LONGREAL);
-        t.align := p.max_align;
+        t.align := MIN (t.size, p.max_align);
 
     | Kind.Extended =>
         t.size  := BITSIZE(EXTENDED);
-        t.align := p.max_align;
+        t.align := MIN (t.size, p.max_align);
 
     | Kind.Enum =>
         VAR enum: Enum := t; BEGIN
