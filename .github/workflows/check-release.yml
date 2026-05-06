@@ -13,9 +13,9 @@ env:
 
 jobs:
   AMD64_DARWIN:
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     env:
-      CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
+      CM3DIST: cm3-dist-AMD64_DARWIN-${{ github.event.inputs.tag }}.tar.xz
     steps:
     - run: |
         mkdir ../build ../dist
@@ -26,7 +26,7 @@ jobs:
   ARM64_DARWIN:
     runs-on: macos-latest
     env:
-      CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
+      CM3DIST: cm3-dist-ARM64_DARWIN-${{ github.event.inputs.tag }}.tar.xz
     steps:
     - run: |
         mkdir ../build ../dist
