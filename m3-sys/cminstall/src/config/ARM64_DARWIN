@@ -1,14 +1,32 @@
-readonly TARGET = "ARM64_DARWIN"
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+%
 
+readonly TARGET = "ARM64_DARWIN"
 readonly DarwinArch = "arm64"
+
+% ARM64 Darwin has no native CM3 code generator; the C backend is required.
+% Darwin.common would default to "3" (native x86 assembler backend), so we
+% must set this before including it.
+M3_BACKEND_MODE = "C"
+
+% Enable C++ zero-cost exception handling (ex_stack).
+% Must be set before including Darwin.common so its guard fires correctly.
+M3_USE_STACK_WALKER = TRUE
 
 include("ARM64.common")
 include("Darwin.common")
 
-M3_PARALLEL_BACK = 20
+% Set to 1 to avoid pthread_create deadlock under Rosetta 2 (AMD64->ARM64 translation).
+% The Rosetta-translated cm3 binary hangs when spawning multiple POSIX threads.
+% Native ARM64 cm3 can safely increase this if desired.
+M3_PARALLEL_BACK = 1
+
+% libunwind is always available in libSystem.B.dylib on macOS — no extra link flags needed.
+SYSTEM_LIBS{"UNWIND"} = []
 
 % Homebrew.
 SYSTEM_LIBS{"ODBC"} = ["-L/opt/homebrew/lib", "-liodbc", "-liodbcinst"]
-SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ]
 SYSTEM_LIBS{"OPENGL"} = [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
-						  "-L/opt/X11/lib", "-lGLU", "-lGL", "-lXext" ]
+                          "-L/opt/X11/lib", "-lGLU", "-lGL", "-lXext" ]

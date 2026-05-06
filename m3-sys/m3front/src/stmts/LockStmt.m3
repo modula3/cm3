@@ -100,6 +100,14 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 
     (* jump over the exc handler *)
     CG.Jump (lab+2);
+
+    (* End the try block here so that the lock-release and re-raise code
+       (which follows at lab+2) is OUTSIDE the try region.  This prevents
+       exceptions from Thread.Release or ResumeRaiseEx from being re-caught
+       by this same catch clause.  Any such exceptions propagate naturally
+       to an enclosing outer try block instead. *)
+    CG.End_try ();
+
     CG.Set_label (lab+1, barrier := TRUE);
     CG.Landing_pad(lab+1, catches);
     CG.Store_addr (info);
@@ -140,7 +148,6 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Procedure.EmitCall (proc);
 
     CG.Gen_location (p.tail);
-    CG.End_try ();
     CG.Set_label (lab+3, barrier := TRUE);
     RETURN oc;
   END Compile1;

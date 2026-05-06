@@ -55,6 +55,8 @@ TYPE Multipass_t = M3CG_MultiPass.T OBJECT
         set_runtime_proc := set_runtime_proc;
     END;
 
+TYPE LabelRef = REF INTEGER; (* REF Label; Label = INTEGER *)
+
 TYPE
 T = M3CG_DoNothing.T OBJECT
 
@@ -79,6 +81,7 @@ T = M3CG_DoNothing.T OBJECT
         c      : Wr.T := NIL;
         stack  : RefSeq.T := NIL;
         params : RefSeq.T := NIL;
+        try_handler_stack: RefSeq.T := NIL; (* stack of LabelRef for nested TRY blocks *)
         op_index := 0;
 
         unit_name := "L_";
@@ -90,6 +93,7 @@ T = M3CG_DoNothing.T OBJECT
         RTHooks_Raise_id := M3ID.NoID;
         RTHooks_ReportFault_id := M3ID.NoID;
         RTHooks_ReportFault_imported_or_declared := FALSE;
+        RTStack_ThrowM3Exc_id := M3ID.NoID;
         alloca_id := M3ID.NoID;
         setjmp_id := M3ID.NoID;
         jmpbuf_size_id := M3ID.NoID;
@@ -2616,6 +2620,10 @@ CONST Prefix = ARRAY OF TEXT {
 "void __cdecl m3_memmove(void* dest, const void* source, size_t n);",
 "void __cdecl m3_memset(void* dest, int fill, size_t count);",
 "int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
+"} /* extern \"C\" */",
+"struct _M3Exc { void* act; };",
+"static __thread void* _m3_caught __attribute__((unused));",
+"extern \"C\" {",
 
 ""};
 
@@ -3126,6 +3134,7 @@ BEGIN
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
     self.RTHooks_AssertFailed_id := M3ID.Add("RTHooks__AssertFailed");
+    self.RTStack_ThrowM3Exc_id := M3ID.Add("RTStack__ThrowM3Exc");
     SuppressLineDirective(self, 1, "begin_unit");
     IF NUMBER(multipass.op_data[M3CG_Binary.Op.case_jump]^) > 0 THEN
         IF CaseDefaultAssertFalse THEN
@@ -4325,6 +4334,8 @@ OVERRIDES
     if_false := MarkUsed_if_true;
     if_compare := MarkUsed_if_compare;
     case_jump := MarkUsed_case_jump;
+    invoke_direct := MarkUsed_invoke_direct;
+    invoke_indirect := MarkUsed_invoke_indirect;
     load := MarkUsed_load;
     load_address := MarkUsed_load_address;
     store := MarkUsed_store;
@@ -4365,6 +4376,16 @@ BEGIN
     END;
 END MarkUsed_case_jump;
 
+<*NOWARN*>PROCEDURE MarkUsed_invoke_direct(self: MarkUsed_t; <*UNUSED*>proc: M3CG.Proc; <*UNUSED*>type: CGType; <*UNUSED*>next: Label; handler: Label) =
+BEGIN
+    MarkUsed_label(self, handler);
+END MarkUsed_invoke_direct;
+
+<*NOWARN*>PROCEDURE MarkUsed_invoke_indirect(self: MarkUsed_t; <*UNUSED*>type: CGType; <*UNUSED*>cc: CallingConvention; <*UNUSED*>next: Label; handler: Label) =
+BEGIN
+    MarkUsed_label(self, handler);
+END MarkUsed_invoke_indirect;
+
 PROCEDURE CountUsedLabels_case_jump(self: CountUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
 BEGIN
     INC(self.count, NUMBER(labels));
@@ -4379,8 +4400,8 @@ PROCEDURE MarkUsed(self: Multipass_t) =
 TYPE Op = M3CG_Binary.Op;
 CONST LabelOps = ARRAY OF Op{
     (* operands that goto a label -- marking the label as used
-       Except for case_jump, these ops use one label each.
-       case_jump requires more specific analysis *)
+       Except for case_jump, invoke_direct, invoke_indirect, these ops use one label each.
+       case_jump uses an array; invoke_direct and invoke_indirect each use two labels. *)
         Op.jump,
         Op.if_true,
         Op.if_false,
@@ -4417,6 +4438,10 @@ BEGIN
     self.Replay(count_pass, index, self.op_data[Op.case_jump]);
     INC(pass.index, count_pass.count);
 
+    (* invoke_direct and invoke_indirect each use 2 labels (next and handler). *)
+    INC(pass.index, 2 * self.op_counts[Op.invoke_direct]);
+    INC(pass.index, 2 * self.op_counts[Op.invoke_indirect]);
+
     IF pass.index # 0 THEN
         pass.labels := NEW(REF ARRAY OF Label, pass.index);
         pass.index := 0;
@@ -4424,6 +4449,10 @@ BEGIN
             index := 0;
             self.Replay(pass, index, self.op_data[LabelOps[i]]);
         END;
+        index := 0;
+        self.Replay(pass, index, self.op_data[Op.invoke_direct]);
+        index := 0;
+        self.Replay(pass, index, self.op_data[Op.invoke_indirect]);
         x.labels := NEW(REF ARRAY OF BOOLEAN, pass.labels_max - pass.labels_min + 1);
         x.labels_min := pass.labels_min;
         x.labels_max := pass.labels_max;
@@ -6053,6 +6082,9 @@ BEGIN
     IF name = self.RTHooks_ReportFault_id THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
         no_return(self);
+    ELSIF name = self.RTStack_ThrowM3Exc_id THEN
+        proc.no_return := TRUE;
+        no_return(self);
     END;
     SuppressLineDirective(self, parameter_count, "import_procedure parameter_count");
     self.param_proc := proc;
@@ -6457,7 +6489,8 @@ BEGIN
     self.comment("exit_proc");
     <* ASSERT self.in_proc *>
     <* ASSERT proc # NIL *>
-    <* ASSERT NOT proc.is_RTException_Raise *>
+    (* is_RTException_Raise implies no_return; the no_return path below
+       handles it correctly by skipping return-statement emission. *)
     IF proc.no_return THEN
         <* ASSERT proc.exit_proc_skipped = 0 *>
         <* ASSERT type = CGType.Void  *>
@@ -7989,33 +8022,62 @@ BEGIN
 END call_indirect;
 
 PROCEDURE start_try (self : T) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("start_try");
     END;
+    IF self.try_handler_stack = NIL THEN
+      self.try_handler_stack := NEW(RefSeq.T).init();
+    END;
+    r := NEW(LabelRef); r^ := FIRST(Label); (* sentinel: no handler label yet *)
+    self.try_handler_stack.addhi(r);
+    print(self, "try {\n");
   END start_try;
 
 PROCEDURE end_try (self : T) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("end_try");
     END;
+    <*ASSERT self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0*>
+    r := NARROW(self.try_handler_stack.remhi(), LabelRef);
+    IF r^ = FIRST(Label) THEN
+      (* No invoke_direct seen — try body had no calls; use a re-throw catch *)
+      print(self, "} catch (...) { throw; }\n");
+    ELSE
+      print(self, "} catch (_M3Exc& _m3exc) { _m3_caught = _m3exc.act; goto L" 
+                & LabelToHex(r^) & "; }\n");
+    END;
   END end_try;
 
 <*NOWARN*>PROCEDURE invoke_direct (self : T; p : M3CG.Proc; t : CGType; next,handler : Label) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("invoke_direct");
     END;
-    self.call_direct(p,t);
+    (* Record the handler label for the enclosing start_try/end_try pair *)
+    IF self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0 THEN
+      r := NARROW(self.try_handler_stack.gethi(), LabelRef);
+      IF r^ = FIRST(Label) THEN r^ := handler END;
+    END;
+    self.call_direct(p, t);
   END invoke_direct;
 
 <*NOWARN*>PROCEDURE invoke_indirect (self : T; t : CGType; cc : CallingConvention; next,handler : Label) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("invoke_indirect");
     END;
-    self.call_indirect(t,cc);
+    (* Record the handler label for the enclosing start_try/end_try pair *)
+    IF self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0 THEN
+      r := NARROW(self.try_handler_stack.gethi(), LabelRef);
+      IF r^ = FIRST(Label) THEN r^ := handler END;
+    END;
+    self.call_indirect(t, cc);
   END invoke_indirect;
 
 
@@ -8024,7 +8086,9 @@ PROCEDURE end_try (self : T) =
     IF debug THEN
       self.comment("landing_pad");
     END;
-    push(self, CGType.Addr, CTextToExpr("0"));
+    (* The catch block in end_try already stored the activation in _m3_caught.
+       Push it onto the expression stack so Store_addr(info) can save it. *)
+    push(self, CGType.Addr, CTextToExpr("_m3_caught"));
   END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)

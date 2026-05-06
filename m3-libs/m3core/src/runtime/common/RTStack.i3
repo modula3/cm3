@@ -50,5 +50,12 @@ PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. *)
 
+<*EXTERNAL "RTStack__ThrowM3Exc" *>
+PROCEDURE ThrowM3Exc (act: ADDRESS);
+(* Throw a C++ _M3Exc carrying "act" (a pointer to a RT0.RaiseActivation)
+   so that native C++ EH unwind dispatches to the appropriate TRY/EXCEPT
+   or TRY/FINALLY handler.  Only meaningful when Has_walker = TRUE and the
+   M3C backend generates C++ try/catch for exception handling. *)
+
 END RTStack.
 

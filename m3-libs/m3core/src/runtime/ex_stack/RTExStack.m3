@@ -4,7 +4,7 @@
 
 UNSAFE MODULE RTExStack EXPORTS RTException;
 
-IMPORT RT0, RTOS, RTError, RTIO, RTStack, RTParams, RTEHScan;
+IMPORT RT0, RTOS, RTIO, RTStack, RTParams, RTEHScan;
 IMPORT RTProcedureSRC;
 FROM RT0 IMPORT RaiseActivation;
 (*
@@ -14,9 +14,6 @@ IMPORT Cstring;
 
 VAR
   DEBUG := FALSE;
-
-EXCEPTION
-  OUCH; (* to keep the compiler from complaining *)
 
 TYPE
   CharArr = REF ARRAY OF CHAR;
@@ -31,72 +28,38 @@ PROCEDURE AllocBuf(size : INTEGER) : ADDRESS =
   END AllocBuf;
 
 PROCEDURE Raise (VAR act: RaiseActivation) RAISES ANY =
-  VAR
-    here, f: RTStack.Frame;
-    excRef : REF RaiseActivation;
-    scan : BOOLEAN;
+  VAR excRef: REF RaiseActivation;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RAISE", act);
       PrintStack (act.exception.uid);
     END;
-
-    RTStack.CurrentFrame (here);
-    RTStack.PreviousFrame (here, f); (* skip self *)
-    LOOP
-      IF (f.pc = NIL) THEN
-        (* we're at the end of the stack (or we got lost along the way!) *)
-        InvokeBackstop (act, raises := FALSE);
-      END;
-
-      IF f.lsda # NIL THEN
-        (* scan the dwarf eh scopes found by the unwinder *)
-        scan := RTEHScan.ScanEHTable(f, act.exception.uid);
-        IF scan THEN
-          excRef := NEW(REF RaiseActivation);
-          excRef^ := act;
-          ResumeRaise (excRef^)
-        END;
-      END;
-
-      (* try the previous frame *)
-      RTStack.PreviousFrame (f, f);
-    END; (* loop *)
+    (* Copy the activation to the M3 heap so the pointer remains valid
+       across stack unwinding.  ThrowM3Exc carries ADR(excRef^) as
+       _M3Exc.act; the generated catch clauses store that into _m3_caught
+       so that CompileHandler1's Load_addr(info) chain retrieves the
+       correct exception descriptor and argument. *)
+    excRef := NEW(REF RaiseActivation);
+    excRef^ := act;
+    RTStack.ThrowM3Exc(ADR(excRef^));
+    (* ThrowM3Exc never returns; this is an unreachable safety net. *)
+    InvokeBackstop (act, raises := FALSE);
   END Raise;
 
 PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
-  VAR
-    here, f: RTStack.Frame;
-    scan : BOOLEAN;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RERAISE", a);
       PrintStack (a.exception.uid);
     END;
-
-    RTStack.CurrentFrame (here);
-    RTStack.PreviousFrame (here, f); (* skip self *)
-    LOOP
-      IF (f.pc = NIL) THEN
-        (* we're at the end of the stack (most likely unhandled exception) *)
-        InvokeBackstop (a, raises := FALSE);
-      END;
-
-      IF f.lsda # NIL THEN
-        (* scan the dwarf eh scopes found by the unwinder *)
-        scan := RTEHScan.ScanEHTable(f, a.exception.uid);
-        IF scan THEN
-          (* landingpad set in scan *)
-          f.excRef := ADR(a);
-          RTStack.Unwind (f);
-          RTError.MsgPC (LOOPHOLE (f.pc, INTEGER), "Unwind returned!");
-          RAISE OUCH;
-        END;
-      END;
-
-      (* try the previous frame *)
-      RTStack.PreviousFrame (f, f);
-    END;
+    (* Re-throw via native C++ so the unwinder dispatches to the correct
+       enclosing TRY/EXCEPT or TRY/FINALLY handler.  ADR(a) is a heap
+       pointer because Raise always copies the activation to the M3 heap
+       before throwing; ThrowM3Exc passes that address through as
+       _M3Exc.act, which the catch clause stores into _m3_caught. *)
+    RTStack.ThrowM3Exc(ADR(a));
+    (* ThrowM3Exc never returns; this is an unreachable safety net. *)
+    InvokeBackstop (a, raises := FALSE);
   END ResumeRaise;
 
 
