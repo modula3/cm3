@@ -1785,7 +1785,8 @@ include(bootstrap.cmake)
 
     def tar(self, tarfile, args):
         self.rm(Path(tarfile))
-        command = ["tar", "acf", tarfile, "--warning=no-file-changed"] + args
+        tar_cmd = "gtar" if shutil.which("gtar") else "tar"
+        command = [tar_cmd, "acf", tarfile, "--warning=no-file-changed"] + args
 
         print(*command)
         if not self.no_action():
@@ -1814,14 +1815,15 @@ class MakeDistributionCommand(MakeBootstrapCommand):
 
         # Generate tarball.
         distname = f"cm3-dist-{self.config()}-{self.version()}"
-        parent   = str(self.source().parent)
-        source   = self.source().name
+        source_path = Path(self.source())
+        parent   = str(source_path.parent)
+        source   = source_path.name
 
         if self.target().is_win32():
             self.zip(f"{source}/{distname}.7z", [f"-xr@{source}/.gitignore", f"-xr@{source}/scripts/7z.exclude", f"{source}"], cwd=parent)
             self.zip(f"{source}/{distname}.7z", [f"{source}/bootstrap"], cwd=parent, noclean=True)
         else:
-            parent  = str(self.source().parent)
+            parent  = str(source_path.parent)
             command = [
                 "--directory", parent,
                 "--exclude=*.7z",
