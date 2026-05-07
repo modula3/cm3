@@ -887,7 +887,6 @@ class PackageAction(WithCm3):
                 env=self.env(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                check=True,
                 errors="ignore"
             )
             sys.stdout.write(proc.stdout)
