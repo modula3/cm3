@@ -63,7 +63,7 @@ jobs:
     timeout-minutes: 120
 
     env:
-      BOOTSTRAP: https://github.com/modula3/cm3/releases/download/d5.12.0/cm3-boot-ARM64_DARWIN-d5.12.0.tar.xz
+      BOOTSTRAP: https://github.com/modula3/cm3/releases/download/d5.12.1/cm3-boot-ARM64_DARWIN-d5.12.1.tar.xz
 
     steps:
     - name: Install prerequisites
