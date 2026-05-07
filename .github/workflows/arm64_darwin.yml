@@ -12,7 +12,7 @@ on:
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-ARM64_DARWIN-d5.12.0.tar.xz
+        default: cm3-boot-ARM64_DARWIN-d5.12.1.tar.xz
         required: false
         type: string
 
