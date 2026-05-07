@@ -2421,7 +2421,7 @@ BEGIN
     IF is_RTHooks_ReportFault THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
-    proc.no_return := is_RTHooks_AssertFailed OR is_RTHooks_ReportFault OR proc.is_RTException_Raise OR proc.is_RTHooks_Raise;
+    proc.no_return := FALSE;
     IF proc.no_return THEN
         no_return(self);
     END;
