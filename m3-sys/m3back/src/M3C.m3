@@ -91,6 +91,7 @@ T = M3CG_DoNothing.T OBJECT
         RTException_Raise_id := M3ID.NoID;
         RTHooks_AssertFailed_id := M3ID.NoID;
         RTHooks_Raise_id := M3ID.NoID;
+        RTHooks_ResumeRaise_id := M3ID.NoID;
         RTHooks_ReportFault_id := M3ID.NoID;
         RTHooks_ReportFault_imported_or_declared := FALSE;
         RTStack_ThrowM3Exc_id := M3ID.NoID;
@@ -2421,7 +2422,8 @@ BEGIN
     IF is_RTHooks_ReportFault THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
     END;
-    proc.no_return := is_RTHooks_AssertFailed OR is_RTHooks_ReportFault OR proc.is_RTException_Raise OR proc.is_RTHooks_Raise;
+    proc.no_return := is_RTHooks_AssertFailed OR is_RTHooks_ReportFault OR proc.is_RTException_Raise OR proc.is_RTHooks_Raise
+                      OR (is_common_void AND name = self.RTHooks_ResumeRaise_id AND parameter_count = 1);
     IF proc.no_return THEN
         no_return(self);
     END;
@@ -3132,6 +3134,7 @@ BEGIN
     self.setjmp_id := M3ID.Add("m3_setjmp");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
+    self.RTHooks_ResumeRaise_id := M3ID.Add("RTHooks__ResumeRaise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
     self.RTHooks_AssertFailed_id := M3ID.Add("RTHooks__AssertFailed");
     self.RTStack_ThrowM3Exc_id := M3ID.Add("RTStack__ThrowM3Exc");
