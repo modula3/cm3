@@ -6274,17 +6274,9 @@ BEGIN
                  * m3fronts reads before write.
                  *)
                 print(self, local.Declare());
-                IF local.initAll THEN
-                  print(self, "={0};//initAll\n");
-                ELSIF local.cgtype = CGType.Struct THEN
-                  print(self, "={0};//struct\n");
-                ELSIF local.type # NIL AND local.type.isPacked() THEN
-                  print(self, "={0};//packed\n");
-                ELSIF local.loadBeforeStore THEN
-                  print(self, "={0};//loadBeforeStore\n");
-                ELSE
-                  print(self, ";\n"); (* ideal *)
-                END;
+                (* Always initialize all locals to avoid uninitialized variable issues in Release builds.
+                   In Release mode (-O2/-O3), uninitialized locals cause undefined behavior. *)
+                print(self, "={0};//always-init\n");
             END;
         END;
     END;
