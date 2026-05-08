@@ -44,7 +44,7 @@ jobs:
         echo CM3_INSTALL="$(pwd)/../install" >> $GITHUB_ENV
 
     - name: Fetch sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Install bootstrap release
       env:
@@ -68,7 +68,7 @@ jobs:
       working-directory: m3-sys/m3tests
 
     - name: Generate test report
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v2
       with:
         name: ${{ format('m3tests ({0}, {1})', env.CM3_TARGET, matrix.backend) }}
         fail-on-error: false

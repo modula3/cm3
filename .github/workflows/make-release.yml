@@ -34,7 +34,7 @@ jobs:
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Fetch tag
       run: git fetch --force origin ${{ github.ref }}:${{ github.ref }}
@@ -85,7 +85,7 @@ jobs:
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Fetch tag
       run: git fetch --force origin ${{ github.ref }}:${{ github.ref }}
@@ -122,7 +122,7 @@ jobs:
         name: dist-macos
 
     - name: Create release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         draft: true
         files: |
