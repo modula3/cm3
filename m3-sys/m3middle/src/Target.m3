@@ -179,6 +179,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     Has_stack_walker          := FALSE;
 
+    (* EXTENDED is 128-bit (_Float128) only on AMD64_LINUX.
+       On all other targets it maps to LONGREAL (64-bit IEEE double).
+       The module-level initializer uses Ext.BitSize which is baked in at
+       compile time from the HOST target's ExtendedRep; reset here for any
+       host/target mismatch. *)
+    IF NOT Text.Equal(system, "AMD64_LINUX") THEN
+      Extended := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8,
+                     Float{Precision.Extended, 0, -1.79769313486231570x+308},
+                     Float{Precision.Extended, 0, 1.79769313486231570x+308}};
+    END;
+
     (* add the system-specific customization *)
 
     (* 32bit or 64bit *)
