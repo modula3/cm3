@@ -1798,7 +1798,7 @@ include(bootstrap.cmake)
     def tag(self):
         "Get the version from the current tag"
         try:
-            return subprocess.check_output(["git", "describe", "--abbrev=0"], errors="ignore").rstrip()
+            return subprocess.check_output(["git", "describe", "--abbrev=0", "--tags"], errors="ignore").rstrip()
         except:
             return None
 
