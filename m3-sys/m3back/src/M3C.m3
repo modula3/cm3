@@ -2622,7 +2622,11 @@ CONST Prefix = ARRAY OF TEXT {
 "int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
 "} /* extern \"C\" */",
 "struct _M3Exc { void* act; };",
+"#ifdef _MSC_VER",
+"static __declspec(thread) void* _m3_caught;",
+"#else",
 "static __thread void* _m3_caught __attribute__((unused));",
+"#endif",
 "extern \"C\" {",
 
 ""};
