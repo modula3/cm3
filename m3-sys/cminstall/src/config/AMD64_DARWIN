@@ -23,8 +23,7 @@ M3_BACKEND_MODE = "C"
 
 % Enable C++ zero-cost exception handling (ex_stack).
 % Must be set before including Darwin.common so its guard fires correctly.
-% Disabled for now due to bootstrap issue.
-% M3_USE_STACK_WALKER = TRUE
+M3_USE_STACK_WALKER = TRUE
 
 include("AMD64.common")
 include("Darwin.common")
