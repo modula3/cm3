@@ -94,6 +94,9 @@ SPARC64_OPENBSD/
 SPARC64_SOLARIS/
 SPARC_LINUX/
 SPARC_SOLARIS/
+# Platform dirs under src/ are source files, not build output
+!**/src/**/
+
 bootstrap/
 concierge.log
 m3-sys/m3cc/gcc-4.7/gcc/m3cg/
