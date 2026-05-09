@@ -456,6 +456,22 @@ enclosing scope, which makes lambda-lifting safe (no closure ever
 needs to be a first-class value). LLVM has no static-link concept;
 lambda-lifting maps cleanly to ordinary parameters.
 
+**Why not LLVM's `nest` attribute + trampolines?**
+LLVM's `nest` attribute exists specifically to enable the
+`llvm.init.trampoline` / `llvm.adjust.trampoline` intrinsics, which
+lower to a libgcc/compiler-rt helper (`__trampoline_setup`) that writes
+a small machine-code stub into a stack buffer and then makes it
+executable. This requires a writable+executable stack — a W⊕X
+violation. On **ARM64 Darwin** (Apple Silicon) W⊕X is enforced in
+hardware via PAC and MMU page permissions; there is no supported path
+to an executable stack short of `MAP_JIT` + the
+`com.apple.security.cs.allow-jit` entitlement (a JIT engine privilege,
+not appropriate here). The same restriction applies on **AMD64 Darwin**.
+Trampolines work on AMD64 Linux but not on any of the Darwin targets,
+so they cannot be the uniform strategy. Lambda-lifting is portable
+across all three primary targets and produces better IR for LLVM to
+optimize.
+
 **Consequence:** Each nested proc becomes a top-level MSIR procedure
 with `internal` linkage and a lexical-mangled name (`Outer.Inner`).
 m3front's existing capture analysis classifies each uplevel reference
@@ -466,6 +482,12 @@ read-only by value (`ptr addrspace(1)`), read-write by pointer to a
 stack slot containing the traced ref (which the conservative scan
 finds). After inlining, mem2reg reverses any address-take introduced
 purely for capture support.
+
+**Procedure values** (nested proc passed as a callback): represented as
+an explicit `{ proc_ptr, env_ptr }` struct. Call sites that receive a
+procedure value emit an indirect call threading the `env_ptr` as an
+extra argument. This mirrors CM3's existing C-backend closure
+representation.
 
 ### D14. Module descriptors are first-class MSIR entities.
 
