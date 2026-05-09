@@ -12,6 +12,7 @@ IMPORT CG, AssertStmt, AssignStmt, BlockStmt, CaseStmt, ExitStmt;
 IMPORT EvalStmt, ForStmt, IfStmt, LockStmt, LoopStmt, RepeatStmt;
 IMPORT ReturnStmt, RaiseStmt, TryStmt, TypeCaseStmt, WhileStmt, WithStmt;
 IMPORT Scanner, Token, Coverage, Error, Tracer, M3ID, DebugStmt;
+IMPORT MSIRBuilder;
 FROM Scanner IMPORT GetToken, cur;
 
 TYPE TK = Token.T;
@@ -151,6 +152,19 @@ PROCEDURE GetOutcome (t: T): Outcomes =
     (*** DumpOutcome (x, oc); ****)
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE CompileMSIR (t: T) =
+  BEGIN
+    WHILE (t # NIL) AND MSIRBuilder.InProc () DO
+      t.compileMSIR ();
+      t := t.next;
+    END;
+  END CompileMSIR;
+
+PROCEDURE MSIRDefault (<*UNUSED*> s: T) =
+  BEGIN
+    MSIRBuilder.Abandon ("unsupported statement");
+  END MSIRDefault;
 
 
 (***

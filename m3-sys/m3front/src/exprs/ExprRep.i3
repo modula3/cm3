@@ -9,7 +9,7 @@
 
 INTERFACE ExprRep;
 
-IMPORT M3, M3Buf, CG, Target, Type, Expr;
+IMPORT M3, M3Buf, CG, Target, Type, Expr, MSIR;
 
 REVEAL
   M3.Expr = M3.Node BRANDED "Expr.T" OBJECT
@@ -43,6 +43,10 @@ REVEAL
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
+    compileMSIR  (): MSIR.Value                    := MSIRDefault;
+    (* Emit MSIR for this expression. Returns NIL on unsupported,
+       in which case MSIRBuilder.Abandon has been called and the
+       enclosing procedure will be dropped. *)
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
@@ -77,6 +81,9 @@ PROCEDURE NotBoolean     (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE PrepNoBranch   (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NoBranch       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NotWritable    (e: M3.Expr);
+PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
+(* default: signals "not yet supported" by calling MSIRBuilder.Abandon
+   and returning NIL. Subclasses override when they have a translation. *)
 
 (* Multi-use overrides for exprAlign:  *)
 PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT;

@@ -10,6 +10,7 @@ MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
 IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -18,6 +19,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -63,6 +65,16 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.Returns};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR v: MSIR.Value := NIL;
+  BEGIN
+    IF p.expr # NIL THEN
+      v := Expr.CompileMSIR (p.expr);
+      IF v = NIL THEN RETURN END;
+    END;
+    MSIR.BuildRet (MSIRBuilder.CurrentBlock (), v);
+  END CompileMSIR;
 
 BEGIN
 END ReturnStmt.

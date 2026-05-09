@@ -14,6 +14,7 @@ IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTParams;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 IMPORT Module;
+IMPORT MSIRBuilder;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 VAR debug := FALSE;
@@ -659,6 +660,11 @@ PROCEDURE GenBody (p: T) =
 
     CG.Gen_location (p.origin);
     CG.Begin_procedure (p.cg_proc);
+    EVAL MSIRBuilder.BeginProc (p.name,
+                                ProcType.Formals (p.signature),
+                                p.syms,
+                                tresult,
+                                isExternal := TRUE);
     Scope.Enter (p.syms);
 
     Marker.PushProcedure (tresult, p.result, cconv);
@@ -686,6 +692,10 @@ PROCEDURE GenBody (p: T) =
     Marker.Pop ();
     Scope.Exit (p.syms);
 
+    IF MSIRBuilder.InProc () THEN
+      Stmt.CompileMSIR (p.block);
+    END;
+    MSIRBuilder.EndProc ();
     CG.End_procedure (p.cg_proc);
 
     Scope.Pop (zz);

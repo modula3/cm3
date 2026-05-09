@@ -7,7 +7,7 @@
 
 INTERFACE Expr;
 
-IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value;
+IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value, MSIR;
 
 TYPE
   T    = M3.Expr;
@@ -116,6 +116,9 @@ PROCEDURE Alignment (t: T): Type.BitAlignT;
 
 PROCEDURE Prep (t: T);
 PROCEDURE Compile (t: T; StaticOnly := FALSE);
+PROCEDURE CompileMSIR (t: T): MSIR.Value;
+(* Emit MSIR for the expression and return its result Value.
+   NIL on unsupported (the enclosing proc will be dropped). *)
 (* Emit code to evaluate the expression onto the top of stack. For some
    types, this could be an address (arrays, records, bit sets).
    StaticOnly means construct static data but do not evaluate. *)

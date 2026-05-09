@@ -10,6 +10,7 @@ m3middle base core front headless unicode
 m3objfile core front headless unicode
 m3linker core front headless unicode
 m3back core front headless unicode
+msir core front headless unicode
 m3cggen base core front headless
 m3staloneback headless tool
 m3quake base core front headless unicode

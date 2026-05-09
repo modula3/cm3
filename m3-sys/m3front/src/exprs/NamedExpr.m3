@@ -11,6 +11,7 @@ MODULE NamedExpr;
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
 IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -44,6 +45,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         checkUseFailure := CheckUseFailure;
+        compileMSIR  := CompileMSIR;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -209,6 +211,25 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
       END
     END
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    IF p.value = NIL THEN Resolve (p) END;
+    TYPECASE p.value OF
+    | Variable.T(vv) =>
+        VAR v := MSIRBuilder.LookupVar (vv);
+        BEGIN
+          IF v = NIL THEN
+            MSIRBuilder.Abandon ("unbound variable reference");
+            RETURN NIL;
+          END;
+          RETURN v;
+        END;
+    ELSE
+      MSIRBuilder.Abandon ("named-expr value is not a Variable");
+      RETURN NIL;
+    END;
+  END CompileMSIR;
 
 PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN

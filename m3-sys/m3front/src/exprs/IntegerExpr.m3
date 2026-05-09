@@ -10,6 +10,7 @@ MODULE IntegerExpr;
 (* INTEGER and LONGINT *Literals* only. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Error, M3Buf, Target, TInt;
+IMPORT MSIR, MSIRType, MSIRBuilder;
 
 TYPE
   P = Expr.T BRANDED "IntegerExpr.T" OBJECT
@@ -35,6 +36,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 VAR cache := ARRAY BOOLEAN, [-7 .. 64] OF P {ARRAY [-7 .. 64] OF P{NIL, ..},..};
@@ -81,6 +83,21 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     <* ASSERT NOT StaticOnly *>
     CG.Load_integer (Type.CGType (p.type), p.value);
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR i: INTEGER;  t: MSIR.T;
+  BEGIN
+    IF NOT TInt.ToInt (p.value, i) THEN
+      MSIRBuilder.Abandon ("integer literal out of INTEGER range");
+      RETURN NIL;
+    END;
+    t := MSIRType.Translate (p.type);
+    IF t = NIL THEN
+      MSIRBuilder.Abandon ("unsupported integer literal type");
+      RETURN NIL;
+    END;
+    RETURN MSIR.ConstInt (t, VAL (i, LONGINT));
+  END CompileMSIR;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
   BEGIN

@@ -16,9 +16,15 @@ REVEAL
     check       (VAR cs: M3.CheckState);
     compile     (): Stmt.Outcomes;
     outcomes    (): Stmt.Outcomes;
+    compileMSIR ()                     := MSIRDefault;
+    (* Emit MSIR for this statement. On encountering an unsupported
+       construct, calls MSIRBuilder.Abandon — the enclosing proc
+       will be dropped at EndProc. *)
   END;
 
 PROCEDURE Init (stmt: M3.Stmt);
 (* initializes the common fields of a Stmt.T *)
+
+PROCEDURE MSIRDefault (s: M3.Stmt);
 
 END StmtRep.

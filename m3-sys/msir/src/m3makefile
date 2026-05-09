@@ -1,0 +1,10 @@
+% Modula-3 Semantic IR — typed-SSA mid-level IR for the LLVM retarget.
+% See repo-root MSIR.md and MSIR-design.md for the design narrative.
+
+import("libm3")
+
+Module("MSIR")
+Module("MSIRPrinter")
+Module("MSIRVerifier")
+
+library("msir")

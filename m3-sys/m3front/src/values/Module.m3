@@ -13,6 +13,7 @@ IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 IMPORT Jmpbufs;
+IMPORT MSIREmit;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -927,6 +928,7 @@ PROCEDURE Compile (t: T) =
     zz := Scope.Push (t.localScope);
       WebInfo.Reset ();
       CG.Begin_unit ();
+      MSIREmit.BeginUnit (t.name);
       CG.Widechar_size (Target.WideCharSize());
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
@@ -945,6 +947,7 @@ PROCEDURE Compile (t: T) =
         load_map[TRUE]  := NIL;
       END;
       CG.End_unit ();
+      MSIREmit.EndUnit ();
       Host.env.note_webinfo (WebInfo.Finish ());
     Scope.Pop (zz);
     Revelation.Pop (yy);

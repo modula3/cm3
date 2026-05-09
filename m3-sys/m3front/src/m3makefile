@@ -12,6 +12,7 @@
 
 import ("libm3")
 import ("m3middle")
+import ("msir")
 
 % FRONTEND
 include_dir ("builtinAtomic")
@@ -21,6 +22,7 @@ include_dir ("builtinInfo")
 include_dir ("builtinTypes")
 include_dir ("exprs")
 include_dir ("misc")
+include_dir ("msir")
 include_dir ("stmts")
 include_dir ("types")
 include_dir ("values")

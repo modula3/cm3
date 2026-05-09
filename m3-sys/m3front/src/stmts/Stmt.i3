@@ -24,6 +24,10 @@ PROCEDURE TypeCheck (t: T;  VAR cs: CheckState);
 
 PROCEDURE Compile (t: T): Outcomes;
 
+PROCEDURE CompileMSIR (t: T);
+(* Emit MSIR for the chain of statements rooted at t. Walks the
+   .next chain like Compile. *)
+
 PROCEDURE GetOutcome (t: T): Outcomes;
 
 END Stmt.

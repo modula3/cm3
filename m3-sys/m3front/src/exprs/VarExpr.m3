@@ -9,6 +9,7 @@
 MODULE VarExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Type, Value, Variable;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Expr.T OBJECT
@@ -34,6 +35,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (t: Type.T;  name: M3ID.T): Expr.T =
@@ -93,6 +95,16 @@ PROCEDURE NoteWrites (p: P) =
   BEGIN
     Variable.ScheduleTrace (p.v);
   END NoteWrites;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR v := MSIRBuilder.LookupVar (p.v);
+  BEGIN
+    IF v = NIL THEN
+      MSIRBuilder.Abandon ("unbound variable reference");
+      RETURN NIL;
+    END;
+    RETURN v;
+  END CompileMSIR;
 
 BEGIN
 END VarExpr.

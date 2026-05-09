@@ -11,6 +11,7 @@ MODULE AddExpr;
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT SetType, Addr, Module, Error, Target, ErrType, TInt;
 IMPORT AddressExpr, SetExpr, IntegerExpr, ReelExpr;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET };
@@ -44,6 +45,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -162,6 +164,18 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
         CG.Add (FPType[p.class]);
     END;
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR a, b: MSIR.Value;
+  BEGIN
+    IF (p.class # Class.cINT) AND (p.class # Class.cLINT) THEN
+      MSIRBuilder.Abandon ("non-integer '+'");
+      RETURN NIL;
+    END;
+    a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
+    b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", a, b);
+  END CompileMSIR;
 
 PROCEDURE Fold (p: P): Expr.T =
   VAR e1, e2, e3: Expr.T;

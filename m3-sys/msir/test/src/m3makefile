@@ -1,0 +1,8 @@
+% Test program for the MSIR package — builds a small procedure
+% programmatically and prints it.
+
+import("libm3")
+import("msir")
+
+implementation("Main")
+program("msir-smoke")

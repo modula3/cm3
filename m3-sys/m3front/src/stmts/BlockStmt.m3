@@ -9,6 +9,7 @@
 MODULE BlockStmt;
 
 IMPORT M3ID, Scope, Token, Stmt, StmtRep, Scanner, Decl, ESet, Tracer;
+IMPORT MSIRBuilder;
 FROM Scanner IMPORT Match, cur;
 
 TYPE
@@ -21,6 +22,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (needScope: BOOLEAN): Stmt.T =
@@ -110,6 +112,15 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.GetOutcome (p.body);
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  BEGIN
+    IF p.scope # NIL THEN
+      MSIRBuilder.Abandon ("nested block with local scope");
+      RETURN;
+    END;
+    Stmt.CompileMSIR (p.body);
+  END CompileMSIR;
 
 (*------------------------------------------------------- tracing support ---*)
 

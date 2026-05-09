@@ -15,6 +15,7 @@ IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Constant;
+IMPORT MSIR, MSIRBuilder;
 
 (********************************************************************)
 
@@ -587,6 +588,18 @@ PROCEDURE NotWritable (<*UNUSED*> t: T) =
   BEGIN
     (* skip *)
   END NotWritable;
+
+PROCEDURE MSIRDefault (<*UNUSED*> e: T): MSIR.Value =
+  BEGIN
+    MSIRBuilder.Abandon ("unsupported expression");
+    RETURN NIL;
+  END MSIRDefault;
+
+PROCEDURE CompileMSIR (t: T): MSIR.Value =
+  BEGIN
+    IF (t = NIL) THEN RETURN NIL END;
+    RETURN t.compileMSIR ();
+  END CompileMSIR;
 
 PROCEDURE EqCheckA (a: Ta;  e: T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN
