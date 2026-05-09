@@ -73,6 +73,9 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
     | Type.Class.Array =>
         RETURN TranslateFixedArray(base);
 
+    | Type.Class.OpenArray =>
+        RETURN TranslateOpenArray(base);
+
     | Type.Class.Ref =>
         VAR target: Type.T;  targetMsir: MSIR.T := MSIR.TVoid();
         BEGIN
@@ -136,17 +139,27 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
     END;
   END TranslateRecord;
 
+PROCEDURE TranslateOpenArray(t: Type.T): MSIR.T =
+  VAR indexT, eltT: Type.T;  eltMsir: MSIR.T;
+  BEGIN
+    IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL END;
+    (* indexT = NIL for open arrays at every level of nesting. *)
+    eltMsir := Translate(eltT);
+    IF eltMsir = NIL THEN RETURN NIL END;
+    RETURN MSIR.TOpenArray(1, eltMsir);
+  END TranslateOpenArray;
+
 PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
   VAR
     indexT, eltT: Type.T;
-    nElts: INTEGER;
-    eltMsir: MSIR.T;
+    nElts:        INTEGER;
+    eltMsir:      MSIR.T;
   BEGIN
     IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL END;
-    IF indexT = NIL THEN RETURN NIL END;  (* open array — handled elsewhere *)
-    IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN NIL END;
+    IF indexT = NIL THEN RETURN NIL END;  (* open: should not reach here *)
     eltMsir := Translate(eltT);
     IF eltMsir = NIL THEN RETURN NIL END;
+    IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN NIL END;
     RETURN MSIR.TFixedArray(VAL(nElts, LONGINT), eltMsir);
   END TranslateFixedArray;
 

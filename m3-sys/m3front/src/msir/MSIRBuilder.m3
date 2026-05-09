@@ -77,8 +77,17 @@ PROCEDURE BeginProc(name: M3ID.T;
           END;
           params[i].name := M3ID.ToText(info.name);
           CASE info.mode OF
-          | Formal.Mode.mVALUE    => params[i].mode := MSIR.ParamMode.ByValue;
-                                     params[i].type := pt;
+          | Formal.Mode.mVALUE =>
+              params[i].mode := MSIR.ParamMode.ByValue;
+              IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
+                (* Open arrays are always passed indirectly even for VALUE mode:
+                   the caller copies the data; the formal is a fat-pointer to
+                   the copy.  Use TPtr so the binding path treats it as
+                   indirect (vIndirect = TRUE for open array locals). *)
+                params[i].type := MSIR.TPtr(pt);
+              ELSE
+                params[i].type := pt;
+              END;
           | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
                                      params[i].type := MSIR.TPtr(pt);
           | Formal.Mode.mREADONLY =>
@@ -390,8 +399,13 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
           END;
           params[i].name := M3ID.ToText(info.name);
           CASE info.mode OF
-          | Formal.Mode.mVALUE    => params[i].mode := MSIR.ParamMode.ByValue;
-                                     params[i].type := pt;
+          | Formal.Mode.mVALUE =>
+              params[i].mode := MSIR.ParamMode.ByValue;
+              IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
+                params[i].type := MSIR.TPtr(pt);
+              ELSE
+                params[i].type := pt;
+              END;
           | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
                                      params[i].type := MSIR.TPtr(pt);
           | Formal.Mode.mREADONLY =>

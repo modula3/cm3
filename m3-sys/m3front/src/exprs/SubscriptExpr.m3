@@ -509,18 +509,23 @@ PROCEDURE NoteWrites (p: P) =
 (* MSIR support: fixed (non-open) 1-D subscript only for v0. The index is
    already biased to 0..N-1 in p.biased_b. *)
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
-  VAR arrAddr, idxVal: MSIR.Value;
+  VAR blk := MSIRBuilder.CurrentBlock ();
+      arrAddr, idxVal, oa: MSIR.Value;
   BEGIN
+    idxVal := Expr.CompileMSIR (p.biased_b);
+    IF idxVal = NIL THEN RETURN NIL END;
     IF p.lhsOpenDepth # 0 THEN
-      MSIRBuilder.Abandon ("open-array subscript not yet supported in MSIR");
-      RETURN NIL;
+      (* Open array: load the fat pointer value via CompileMSIR (which does a
+         BuildLoad through the TPtr(OpenArray) stored in the var map), then
+         compute the element address. *)
+      oa := Expr.CompileMSIR (p.a);
+      IF oa = NIL THEN RETURN NIL END;
+      RETURN MSIR.BuildOpenArrayElemAddr (blk, "", oa,
+                                          ARRAY OF MSIR.Value{idxVal});
     END;
     arrAddr := Expr.LValueMSIR (p.a);
     IF arrAddr = NIL THEN RETURN NIL END;
-    idxVal := Expr.CompileMSIR (p.biased_b);
-    IF idxVal = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildArrayElemAddr (
-             MSIRBuilder.CurrentBlock (), "", arrAddr, idxVal);
+    RETURN MSIR.BuildArrayElemAddr (blk, "", arrAddr, idxVal);
   END LValueMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
