@@ -15,6 +15,7 @@ IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
 IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE P = Stmt.T OBJECT
         lhs     : Expr.T;
@@ -23,6 +24,7 @@ TYPE P = Stmt.T OBJECT
         check       := CheckMethod;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 (* EXPORTED: *) 
@@ -846,6 +848,30 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    lhsName: M3ID.T;
+    lhsObj:  Value.T;
+    lhsPtr:  MSIR.Value;
+    rhsVal:  MSIR.Value;
+  BEGIN
+    IF NOT NamedExpr.Split (p.lhs, lhsName, lhsObj) THEN
+      MSIRBuilder.Abandon ("assignment LHS is not a named variable");
+      RETURN;
+    END;
+    TYPECASE lhsObj OF
+    | Variable.T (vv) =>
+        lhsPtr := MSIRBuilder.LookupVarAddr (vv);
+        IF lhsPtr = NIL THEN RETURN END;
+    ELSE
+      MSIRBuilder.Abandon ("assignment LHS is not a Variable");
+      RETURN;
+    END;
+    rhsVal := Expr.CompileMSIR (p.rhs);
+    IF rhsVal = NIL THEN RETURN END;
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, lhsPtr);
+  END CompileMSIR;
 
 BEGIN
 END AssignStmt.

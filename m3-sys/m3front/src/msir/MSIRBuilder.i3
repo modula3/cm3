@@ -28,11 +28,23 @@ PROCEDURE BeginProc(name: M3ID.T;
                     result: Type.T;
                     isExternal: BOOLEAN): BOOLEAN;
 
-(* Resolve a VarExpr's target Variable.T to the MSIR Value that
-   represents it in the current proc. Returns NIL if not bound
-   (e.g. a local that's not yet supported); callers should treat
-   NIL as a signal to call Abandon. *)
+(* Resolve a Variable.T to its current SSA value.
+   For formals: returns the MSIR Param value directly.
+   For locals:  emits a Load from the variable's alloca and returns
+                the loaded value.
+   Returns NIL if not bound; callers should treat NIL as Abandon. *)
 PROCEDURE LookupVar(v: Variable.T): MSIR.Value;
+
+(* Resolve a Variable.T to its alloca address (for store targets).
+   Returns NIL for formals (cannot store to by-value formal in v0)
+   and for unbound variables. *)
+PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value;
+
+(* Register a local (non-formal) Variable.T in the current proc.
+   Emits an Alloca in the current block and records the ptr in the
+   var map so that LookupVar / LookupVarAddr work.
+   Returns FALSE (and Abandons) if the type is unsupported. *)
+PROCEDURE AddLocal(v: Variable.T): BOOLEAN;
 
 (* EndProc finalizes the current proc. If unsupported was ever
    asserted, the proc is dropped; otherwise it is appended to the

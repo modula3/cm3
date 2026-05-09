@@ -5,16 +5,21 @@ IMPORT M3ID, Type, Value, Formal, Variable, Scope;
 
 CONST MaxVarMap = 64;
 
-VAR
-  curProc:    MSIR.Proc  := NIL;
-  curBlock:   MSIR.Block := NIL;
-  abandoned:  BOOLEAN    := FALSE;
+(* Each formal maps to a Param SSA value (elemType = NIL).
+   Each local maps to an alloca ptr (elemType = the allocated type). *)
+TYPE VarEntry = RECORD
+  key:      Variable.T;
+  val:      MSIR.Value;
+  elemType: MSIR.T;       (* NIL => formal; non-NIL => local alloca ptr *)
+END;
 
-  (* Variable.T -> MSIR.Value lookup, populated at BeginProc.
-     Linear scan; v0 procs have few formals/locals. *)
-  varMapKeys: ARRAY [0..MaxVarMap-1] OF Variable.T;
-  varMapVals: ARRAY [0..MaxVarMap-1] OF MSIR.Value;
-  varMapN:    INTEGER := 0;
+VAR
+  curProc:   MSIR.Proc  := NIL;
+  curBlock:  MSIR.Block := NIL;
+  abandoned: BOOLEAN    := FALSE;
+
+  varMap: ARRAY [0..MaxVarMap-1] OF VarEntry;
+  varMapN: INTEGER := 0;
 
 PROCEDURE BeginProc(name: M3ID.T;
                     formals: Value.T;
@@ -22,10 +27,10 @@ PROCEDURE BeginProc(name: M3ID.T;
                     result: Type.T;
                     isExternal: BOOLEAN): BOOLEAN =
   VAR
-    info:      Formal.Info;
-    nFormals:  INTEGER := 0;
-    f:         Value.T;
-    resultT:   MSIR.T;
+    info:     Formal.Info;
+    nFormals: INTEGER := 0;
+    f:        Value.T;
+    resultT:  MSIR.T;
   BEGIN
     IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
     <* ASSERT curProc = NIL *>
@@ -64,26 +69,28 @@ PROCEDURE BeginProc(name: M3ID.T;
         MSIR.ProcSetLinkage(curProc, MSIR.Linkage.Internal);
       END;
 
-      (* Bind each formal's wrapping Variable.T to its MSIR Param value
-         so VarExpr references can resolve. The Variables are inserted
-         into syms in the same order as ProcType.Formals(p.signature). *)
+      (* Walk the proc scope: bind formals to Param values and locals to
+         alloca ptrs.  Formals and locals share the same scope list. *)
       VAR
         v:    Value.T := Scope.ToList(syms);
         vIdx: INTEGER := 0;
       BEGIN
-        WHILE (v # NIL) AND (vIdx < nFormals) DO
+        WHILE v # NIL DO
           TYPECASE v OF
           | Variable.T(vv) =>
               IF Variable.IsFormal(vv) THEN
                 IF varMapN < MaxVarMap THEN
-                  varMapKeys[varMapN] := vv;
-                  varMapVals[varMapN] := MSIR.ProcParam(curProc, vIdx);
+                  varMap[varMapN].key      := vv;
+                  varMap[varMapN].val      := MSIR.ProcParam(curProc, vIdx);
+                  varMap[varMapN].elemType := NIL;
                   INC(varMapN);
                 END;
                 INC(vIdx);
+              ELSE
+                (* local variable: allocate a stack slot *)
+                EVAL AddLocal(vv);
               END;
           ELSE
-            (* skip non-Variable scope entries *)
           END;
           v := v.next;
         END;
@@ -95,10 +102,63 @@ PROCEDURE BeginProc(name: M3ID.T;
 PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
   BEGIN
     FOR i := 0 TO varMapN - 1 DO
-      IF varMapKeys[i] = v THEN RETURN varMapVals[i] END;
+      IF varMap[i].key = v THEN
+        IF varMap[i].elemType = NIL THEN
+          RETURN varMap[i].val;   (* formal: return param value directly *)
+        ELSE
+          (* local: emit a load from the alloca ptr *)
+          RETURN MSIR.BuildLoad(curBlock, "", varMap[i].elemType, varMap[i].val);
+        END;
+      END;
     END;
     RETURN NIL;
   END LookupVar;
+
+PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
+  BEGIN
+    FOR i := 0 TO varMapN - 1 DO
+      IF varMap[i].key = v THEN
+        IF varMap[i].elemType = NIL THEN
+          Abandon("cannot store to by-value formal in MSIR v0");
+          RETURN NIL;
+        END;
+        RETURN varMap[i].val;   (* alloca ptr *)
+      END;
+    END;
+    RETURN NIL;
+  END LookupVarAddr;
+
+PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
+  VAR
+    type:                  Type.T;
+    global, indirect, lhs: BOOLEAN;
+    mt:                    MSIR.T;
+    allocaVal:             MSIR.Value;
+  BEGIN
+    Variable.Split(v, type, global, indirect, lhs);
+    IF indirect THEN
+      Abandon("VAR-mode variable not supported in MSIR v0");
+      RETURN FALSE;
+    END;
+    mt := MSIRType.Translate(type);
+    IF mt = NIL THEN
+      Abandon("unsupported local variable type");
+      RETURN FALSE;
+    END;
+    allocaVal := MSIR.BuildAlloca(
+                   curBlock,
+                   Value.GlobalName(v, dots := FALSE, with_module := FALSE),
+                   mt);
+    IF varMapN >= MaxVarMap THEN
+      Abandon("too many variables in proc");
+      RETURN FALSE;
+    END;
+    varMap[varMapN].key      := v;
+    varMap[varMapN].val      := allocaVal;
+    varMap[varMapN].elemType := mt;
+    INC(varMapN);
+    RETURN TRUE;
+  END AddLocal;
 
 PROCEDURE EndProc() =
   BEGIN

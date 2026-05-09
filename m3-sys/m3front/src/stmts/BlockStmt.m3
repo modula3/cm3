@@ -9,7 +9,7 @@
 MODULE BlockStmt;
 
 IMPORT M3ID, Scope, Token, Stmt, StmtRep, Scanner, Decl, ESet, Tracer;
-IMPORT MSIRBuilder;
+IMPORT MSIRBuilder, Value, Variable;
 FROM Scanner IMPORT Match, cur;
 
 TYPE
@@ -114,10 +114,21 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (p: P) =
+  VAR v: Value.T;
   BEGIN
     IF p.scope # NIL THEN
-      MSIRBuilder.Abandon ("nested block with local scope");
-      RETURN;
+      (* Register each local variable as an alloca in the current block. *)
+      v := Scope.ToList (p.scope);
+      WHILE v # NIL AND MSIRBuilder.InProc () DO
+        TYPECASE v OF
+        | Variable.T (lv) =>
+            IF NOT Variable.IsFormal (lv) THEN
+              EVAL MSIRBuilder.AddLocal (lv);
+            END;
+        ELSE
+        END;
+        v := v.next;
+      END;
     END;
     Stmt.CompileMSIR (p.body);
   END CompileMSIR;
