@@ -503,12 +503,21 @@ PROCEDURE Proc(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, "(");
     FOR i := 0 TO n - 1 DO
       IF i > 0 THEN Wr.PutText(wr, ", ") END;
-      VAR v := MSIR.ProcParam(p, i);
+      VAR v    := MSIR.ProcParam(p, i);
+          mode := MSIR.ProcParamMode(p, i);
+          vt   := MSIR.ValueType(v);
       BEGIN
-        Wr.PutText(wr, ParamModeText(MSIR.ProcParamMode(p, i)));
+        Wr.PutText(wr, ParamModeText(mode));
         Wr.PutText(wr, MSIR.ValueName(v));
         Wr.PutText(wr, ": ");
-        Type(wr, MSIR.ValueType(v));
+        (* For VAR/READONLY, the param is ptr T internally;
+           print the element type T since mode already implies indirection. *)
+        IF (mode = MSIR.ParamMode.Var OR mode = MSIR.ParamMode.Readonly)
+           AND MSIR.Kind(vt) = MSIR.TypeKind.Ptr THEN
+          Type(wr, MSIR.EltType(vt));
+        ELSE
+          Type(wr, vt);
+        END;
       END;
     END;
     Wr.PutText(wr, ") -> ");

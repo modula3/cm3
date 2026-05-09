@@ -71,11 +71,21 @@ PROCEDURE BeginProc(name: M3ID.T;
             RETURN FALSE;
           END;
           params[i].name := M3ID.ToText(info.name);
-          params[i].type := pt;
           CASE info.mode OF
           | Formal.Mode.mVALUE    => params[i].mode := MSIR.ParamMode.ByValue;
+                                     params[i].type := pt;
           | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
-          | Formal.Mode.mREADONLY => params[i].mode := MSIR.ParamMode.Readonly;
+                                     params[i].type := MSIR.TPtr(pt);
+          | Formal.Mode.mREADONLY =>
+              params[i].mode := MSIR.ParamMode.Readonly;
+              CASE MSIR.Kind(pt) OF
+              | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
+                MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
+                MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
+                  params[i].type := MSIR.TPtr(pt);
+              ELSE
+                  params[i].type := pt;
+              END;
           END;
         END;
         f := f.next;
@@ -112,13 +122,13 @@ PROCEDURE BeginProc(name: M3ID.T;
                   Variable.Split(svv, vType, vGlobal, vIndirect, vLhs);
                   mt := MSIR.ValueType(paramVal);
                   IF vIndirect THEN
-                    (* VAR/READONLY-indirect formal: the param value IS the
-                       address of the caller's storage. Loads/stores route
-                       through it directly — no alloca needed. *)
+                    (* VAR/READONLY-indirect formal: param value has type ptr T.
+                       elemType is T (the pointee). Loads/stores route through
+                       the param directly — no alloca needed. *)
                     IF varMapN < MaxVarMap THEN
                       varMap[varMapN].key      := svv;
                       varMap[varMapN].val      := paramVal;
-                      varMap[varMapN].elemType := mt;
+                      varMap[varMapN].elemType := MSIR.EltType(mt);
                       INC(varMapN);
                     END;
                   ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Struct THEN
@@ -357,11 +367,21 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
             RETURN NIL;
           END;
           params[i].name := M3ID.ToText(info.name);
-          params[i].type := pt;
           CASE info.mode OF
           | Formal.Mode.mVALUE    => params[i].mode := MSIR.ParamMode.ByValue;
+                                     params[i].type := pt;
           | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
-          | Formal.Mode.mREADONLY => params[i].mode := MSIR.ParamMode.Readonly;
+                                     params[i].type := MSIR.TPtr(pt);
+          | Formal.Mode.mREADONLY =>
+              params[i].mode := MSIR.ParamMode.Readonly;
+              CASE MSIR.Kind(pt) OF
+              | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
+                MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
+                MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
+                  params[i].type := MSIR.TPtr(pt);
+              ELSE
+                  params[i].type := pt;
+              END;
           END;
         END;
         f := f.next;

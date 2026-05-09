@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, M3ID, RTParams, FileWr, Wr, Thread, OSError;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, M3ID, RTParams, FileWr, Stdio, Wr, Thread, OSError;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -44,9 +44,15 @@ PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
   END NoteSkipped;
 
 PROCEDURE EndUnit() =
-  VAR wr: Wr.T;  path: TEXT;
+  VAR wr: Wr.T;  path: TEXT;  errs: REF ARRAY OF TEXT;
   BEGIN
     IF curModule = NIL THEN RETURN END;
+    errs := MSIRVerifier.VerifyModule(curModule);
+    IF errs # NIL THEN
+      FOR i := 0 TO LAST(errs^) DO
+        Wr.PutText(Stdio.stderr, "msir-verify: " & errs[i] & "\n");
+      END;
+    END;
     path := MSIR.ModuleName(curModule) & ".msir";
     TRY
       wr := FileWr.Open(path);

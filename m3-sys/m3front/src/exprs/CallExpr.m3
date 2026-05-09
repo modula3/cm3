@@ -475,7 +475,12 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
     n       := NUMBER(p.args^);
     argVals := NEW(REF ARRAY OF MSIR.Value, n);
     FOR i := 0 TO n - 1 DO
-      argVal := Expr.CompileMSIR(p.args[i]);
+      IF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i)))
+           = MSIR.TypeKind.Ptr THEN
+        argVal := Expr.LValueMSIR(p.args[i]);
+      ELSE
+        argVal := Expr.CompileMSIR(p.args[i]);
+      END;
       IF argVal = NIL THEN RETURN NIL END;
       argVals[i] := argVal;
     END;

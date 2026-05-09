@@ -1,6 +1,6 @@
 MODULE MSIRVerifier;
 
-IMPORT MSIR, RefSeq, Fmt;
+IMPORT MSIR, RefSeq, Fmt, Text;
 
 TYPE Ctx = REF RECORD
   errors: RefSeq.T;        (* of TEXT *)
@@ -36,6 +36,21 @@ PROCEDURE IsTerminator(op: MSIR.Op): BOOLEAN =
     ELSE RETURN FALSE
     END;
   END IsTerminator;
+
+(*------------------------------------------ helper predicates *)
+
+PROCEDURE IsScalar (t: MSIR.T): BOOLEAN =
+  BEGIN
+    CASE MSIR.Kind(t) OF
+    | MSIR.TypeKind.I1,  MSIR.TypeKind.I8,  MSIR.TypeKind.I16,
+      MSIR.TypeKind.I32, MSIR.TypeKind.I64,
+      MSIR.TypeKind.W8,  MSIR.TypeKind.W16,
+      MSIR.TypeKind.W32, MSIR.TypeKind.W64,
+      MSIR.TypeKind.F32, MSIR.TypeKind.F64, MSIR.TypeKind.F128 =>
+      RETURN TRUE;
+    ELSE RETURN FALSE;
+    END;
+  END IsScalar;
 
 (*------------------------------------------ instruction-level checks *)
 
@@ -210,6 +225,123 @@ PROCEDURE CheckRet(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
     END;
   END CheckRet;
 
+PROCEDURE CheckLoad(c: Ctx;  i: MSIR.Insn) =
+  VAR res   := MSIR.InsnResult(i);
+      addrT : MSIR.T;
+  BEGIN
+    IF MSIR.InsnOperandCount(i) # 1 THEN Err(c, "load expects 1 operand"); RETURN END;
+    addrT := MSIR.ValueType(MSIR.InsnOperand(i, 0));
+    IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr THEN
+      Err(c, "load address must be ptr type"); RETURN;
+    END;
+    IF res = NIL THEN Err(c, "load must have a result"); RETURN END;
+    IF NOT MSIR.Equal(MSIR.EltType(addrT), MSIR.ValueType(res)) THEN
+      Err(c, "load result type does not match pointer element type");
+    END;
+  END CheckLoad;
+
+PROCEDURE CheckStore(c: Ctx;  i: MSIR.Insn) =
+  VAR valT, addrT: MSIR.T;
+  BEGIN
+    IF MSIR.InsnOperandCount(i) # 2 THEN Err(c, "store expects 2 operands"); RETURN END;
+    valT  := MSIR.ValueType(MSIR.InsnOperand(i, 0));
+    addrT := MSIR.ValueType(MSIR.InsnOperand(i, 1));
+    IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr THEN
+      Err(c, "store destination must be ptr type"); RETURN;
+    END;
+    IF NOT MSIR.Equal(MSIR.EltType(addrT), valT) THEN
+      Err(c, "store value type does not match pointer element type");
+    END;
+    IF MSIR.InsnResult(i) # NIL THEN Err(c, "store must not have a result") END;
+  END CheckStore;
+
+PROCEDURE CheckAlloca(c: Ctx;  i: MSIR.Insn) =
+  VAR res     := MSIR.InsnResult(i);
+      targetT := MSIR.InsnTargetType(i);
+      resT    : MSIR.T;
+  BEGIN
+    IF res = NIL THEN Err(c, "alloca must have a result"); RETURN END;
+    resT := MSIR.ValueType(res);
+    IF MSIR.Kind(resT) # MSIR.TypeKind.Ptr THEN
+      Err(c, "alloca result must be ptr type"); RETURN;
+    END;
+    IF targetT # NIL AND NOT MSIR.Equal(MSIR.EltType(resT), targetT) THEN
+      Err(c, "alloca result ptr element type does not match declared target type");
+    END;
+  END CheckAlloca;
+
+PROCEDURE CheckConvert(c: Ctx;  i: MSIR.Insn) =
+  VAR res := MSIR.InsnResult(i);
+  BEGIN
+    IF MSIR.InsnOperandCount(i) # 1 THEN Err(c, "convert expects 1 operand"); RETURN END;
+    IF res = NIL THEN Err(c, "convert must have a result"); RETURN END;
+    IF NOT IsScalar(MSIR.ValueType(MSIR.InsnOperand(i, 0))) THEN
+      Err(c, "convert source must be a scalar type");
+    END;
+    IF NOT IsScalar(MSIR.ValueType(res)) THEN
+      Err(c, "convert target must be a scalar type");
+    END;
+  END CheckConvert;
+
+PROCEDURE CheckFieldAddr(c: Ctx;  i: MSIR.Insn) =
+  VAR
+    objT, innerT : MSIR.T;
+    fname        : TEXT;
+    res          := MSIR.InsnResult(i);
+    found        : BOOLEAN;
+  BEGIN
+    IF MSIR.InsnOperandCount(i) # 1 THEN Err(c, "field_addr expects 1 operand"); RETURN END;
+    objT := MSIR.ValueType(MSIR.InsnOperand(i, 0));
+    CASE MSIR.Kind(objT) OF
+    | MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
+        innerT := MSIR.EltType(objT);
+    ELSE Err(c, "field_addr: object must be ptr or gc_ref"); RETURN;
+    END;
+    fname := MSIR.InsnSelector(i);
+    CASE MSIR.Kind(innerT) OF
+    | MSIR.TypeKind.Struct =>
+        found := FALSE;
+        FOR k := 0 TO MSIR.StructFieldCount(innerT) - 1 DO
+          IF Text.Equal(MSIR.StructField(innerT, k).name, fname) THEN found := TRUE END;
+        END;
+        IF NOT found THEN Err(c, "field_addr: field '" & fname & "' not found") END;
+    | MSIR.TypeKind.Object =>
+        IF MSIR.ObjectFieldIndex(innerT, fname) < 0 THEN
+          Err(c, "field_addr: field '" & fname & "' not found in '"
+               & MSIR.ObjectName(innerT) & "'");
+        END;
+    ELSE Err(c, "field_addr: inner type must be Struct or Object");
+    END;
+    IF res = NIL THEN Err(c, "field_addr must have a result"); RETURN END;
+    IF MSIR.Kind(MSIR.ValueType(res)) # MSIR.TypeKind.Ptr THEN
+      Err(c, "field_addr result must be ptr type");
+    END;
+  END CheckFieldAddr;
+
+PROCEDURE CheckArrayElemAddr(c: Ctx;  i: MSIR.Insn) =
+  VAR
+    arrT  : MSIR.T;
+    res   := MSIR.InsnResult(i);
+  BEGIN
+    IF MSIR.InsnOperandCount(i) # 2 THEN
+      Err(c, "array.elem_addr expects 2 operands"); RETURN;
+    END;
+    arrT := MSIR.ValueType(MSIR.InsnOperand(i, 0));
+    IF MSIR.Kind(arrT) # MSIR.TypeKind.Ptr THEN
+      Err(c, "array.elem_addr: operand must be ptr-to-fixed-array"); RETURN;
+    END;
+    IF MSIR.Kind(MSIR.EltType(arrT)) # MSIR.TypeKind.FixedArray THEN
+      Err(c, "array.elem_addr: ptr element must be fixed-array type"); RETURN;
+    END;
+    IF NOT IsScalar(MSIR.ValueType(MSIR.InsnOperand(i, 1))) THEN
+      Err(c, "array.elem_addr: index must be a scalar type");
+    END;
+    IF res = NIL THEN Err(c, "array.elem_addr must have a result"); RETURN END;
+    IF MSIR.Kind(MSIR.ValueType(res)) # MSIR.TypeKind.Ptr THEN
+      Err(c, "array.elem_addr result must be ptr type");
+    END;
+  END CheckArrayElemAddr;
+
 PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
   BEGIN
     CASE MSIR.InsnOp(i) OF
@@ -235,6 +367,18 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckTypecase(c, i);
     | MSIR.Op.Ret =>
         CheckRet(c, i, resultT);
+    | MSIR.Op.Load =>
+        CheckLoad(c, i);
+    | MSIR.Op.Store =>
+        CheckStore(c, i);
+    | MSIR.Op.Alloca =>
+        CheckAlloca(c, i);
+    | MSIR.Op.Convert =>
+        CheckConvert(c, i);
+    | MSIR.Op.FieldAddr =>
+        CheckFieldAddr(c, i);
+    | MSIR.Op.ArrayElemAddr =>
+        CheckArrayElemAddr(c, i);
     ELSE
         (* Other ops: no v0 checks beyond what the builders enforce. *)
     END;
