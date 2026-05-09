@@ -17,6 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE New (e: Expr.T): Stmt.T =
@@ -49,6 +50,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  BEGIN
+    EVAL Expr.CompileMSIR(p.e);
+  END CompileMSIR;
 
 BEGIN
 END CallStmt.

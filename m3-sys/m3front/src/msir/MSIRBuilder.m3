@@ -1,10 +1,11 @@
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
-IMPORT M3ID, Type, Value, Formal, Variable, Scope;
+IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType;
 
 CONST MaxVarMap   = 64;
 CONST MaxExitStack = 16;
+CONST MaxProcMap  = 128;
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
    Each local maps to an alloca ptr (elemType = the allocated type). *)
@@ -14,16 +15,21 @@ TYPE VarEntry = RECORD
   elemType: MSIR.T;       (* NIL => formal; non-NIL => local alloca ptr *)
 END;
 
+TYPE ProcEntry = RECORD key: Value.T;  val: MSIR.Proc END;
+
 VAR
   curProc:   MSIR.Proc  := NIL;
   curBlock:  MSIR.Block := NIL;
   abandoned: BOOLEAN    := FALSE;
 
-  varMap: ARRAY [0..MaxVarMap-1] OF VarEntry;
+  varMap:  ARRAY [0..MaxVarMap-1]  OF VarEntry;
   varMapN: INTEGER := 0;
 
   exitStack: ARRAY [0..MaxExitStack-1] OF MSIR.Block;
   exitDepth: INTEGER := 0;
+
+  procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
+  procMapN: INTEGER := 0;
 
 PROCEDURE BeginProc(name: M3ID.T;
                     formals: Value.T;
@@ -232,6 +238,62 @@ PROCEDURE CurrentExitBlock(): MSIR.Block =
     IF exitDepth = 0 THEN RETURN NIL END;
     RETURN exitStack[exitDepth - 1];
   END CurrentExitBlock;
+
+PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
+  BEGIN
+    IF v = NIL OR p = NIL THEN RETURN END;
+    IF procMapN >= MaxProcMap THEN RETURN END;
+    procMap[procMapN].key := v;
+    procMap[procMapN].val := p;
+    INC(procMapN);
+  END RegisterProc;
+
+PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
+  VAR
+    f:        Value.T;
+    info:     Formal.Info;
+    nFormals: INTEGER := 0;
+    resultT:  MSIR.T;
+  BEGIN
+    FOR i := 0 TO procMapN - 1 DO
+      IF procMap[i].key = v THEN RETURN procMap[i].val END;
+    END;
+    (* Not found — build an external stub. *)
+    resultT := MSIRType.TranslateResult(ProcType.Result(procType));
+    IF resultT = NIL THEN
+      Abandon("unsupported result type in callee");
+      RETURN NIL;
+    END;
+    f := ProcType.Formals(procType);
+    WHILE f # NIL DO INC(nFormals);  f := f.next END;
+    VAR params := NEW(REF ARRAY OF MSIR.Param, nFormals);
+    BEGIN
+      f := ProcType.Formals(procType);
+      FOR i := 0 TO nFormals - 1 DO
+        Formal.Split(f, info);
+        VAR pt := MSIRType.Translate(info.type);
+        BEGIN
+          IF pt = NIL THEN
+            Abandon("unsupported parameter type in callee");
+            RETURN NIL;
+          END;
+          params[i].name := M3ID.ToText(info.name);
+          params[i].type := pt;
+          CASE info.mode OF
+          | Formal.Mode.mVALUE    => params[i].mode := MSIR.ParamMode.ByValue;
+          | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
+          | Formal.Mode.mREADONLY => params[i].mode := MSIR.ParamMode.Readonly;
+          END;
+        END;
+        f := f.next;
+      END;
+      VAR stub := MSIR.NewProc(Value.GlobalName(v), params^, resultT);
+      BEGIN
+        RegisterProc(v, stub);
+        RETURN stub;
+      END;
+    END;
+  END LookupOrCreateProc;
 
 BEGIN
 END MSIRBuilder.

@@ -665,6 +665,9 @@ PROCEDURE GenBody (p: T) =
                                 p.syms,
                                 tresult,
                                 isExternal := TRUE);
+    IF MSIRBuilder.InProc () THEN
+      MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+    END;
     Scope.Enter (p.syms);
 
     Marker.PushProcedure (tresult, p.result, cconv);

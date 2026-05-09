@@ -79,4 +79,15 @@ PROCEDURE PushExitBlock(b: MSIR.Block);
 PROCEDURE PopExitBlock();
 PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
 
+(*-------------------------------------------------------------- Proc registry *)
+
+(* Register a procedure value with its MSIR.Proc so call sites can find it.
+   Called from Procedure.m3 after a successful BeginProc. *)
+PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
+
+(* Look up v in the registry; if not found, build an external stub from
+   procType (the m3front ProcType.T).  Returns NIL and calls Abandon if
+   any parameter or result type is unsupported. *)
+PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc;
+
 END MSIRBuilder.

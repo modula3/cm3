@@ -15,6 +15,7 @@ MODULE CallExpr;
 
 IMPORT CG, Expr, ExprRep, Error, ProcType, Type, UserProc;
 IMPORT KeywordExpr, ESet, QualifyExpr, ErrType, Value, Target;
+IMPORT MSIR, MSIRBuilder;
 
 REVEAL
   MethodList = BRANDED "CallExpr.MethodList" REF RECORD
@@ -70,6 +71,7 @@ REVEAL
         note_write   := NoteWrites;
         exprAlign    := CallExprAlign;
         usesAssignProtocol := UsesAssignProtocol;
+        compileMSIR        := CompileMSIR;
       END;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
@@ -439,6 +441,36 @@ PROCEDURE IsWritable (p: T;  lhs: BOOLEAN): BOOLEAN =
     IF p.methods = NIL THEN RETURN FALSE END;
     RETURN p.methods.isWritable (p, lhs);
   END IsWritable;
+
+PROCEDURE CompileMSIR (p: T): MSIR.Value =
+  VAR
+    v:          Value.T;
+    msirCallee: MSIR.Proc;
+    argVals:    REF ARRAY OF MSIR.Value;
+    n:          INTEGER;
+    argVal:     MSIR.Value;
+  BEGIN
+    IF NOT MSIRBuilder.InProc() THEN RETURN NIL END;
+    IF NOT IsUserProc(p) THEN
+      MSIRBuilder.Abandon("builtin call not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    IF NOT UserProc.IsProcedureLiteral(p.proc, v) THEN
+      MSIRBuilder.Abandon("indirect/closure call not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    Resolve(p);
+    msirCallee := MSIRBuilder.LookupOrCreateProc(v, p.proc_type);
+    IF msirCallee = NIL THEN RETURN NIL END;
+    n       := NUMBER(p.args^);
+    argVals := NEW(REF ARRAY OF MSIR.Value, n);
+    FOR i := 0 TO n - 1 DO
+      argVal := Expr.CompileMSIR(p.args[i]);
+      IF argVal = NIL THEN RETURN NIL END;
+      argVals[i] := argVal;
+    END;
+    RETURN MSIR.BuildCall(MSIRBuilder.CurrentBlock(), "", msirCallee, argVals^);
+  END CompileMSIR;
 
 BEGIN
 END CallExpr.
