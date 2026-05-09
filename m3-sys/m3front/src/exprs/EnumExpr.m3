@@ -9,6 +9,7 @@
 MODULE EnumExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, M3Buf, Target, TInt;
+IMPORT MSIR, MSIRType, MSIRBuilder;
 
 TYPE
   P = Expr.T BRANDED "EnumExpr.T" OBJECT
@@ -34,6 +35,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
@@ -108,6 +110,21 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR i: INTEGER;  t: MSIR.T;
+  BEGIN
+    IF NOT TInt.ToInt (p.value, i) THEN
+      MSIRBuilder.Abandon ("enum literal out of INTEGER range");
+      RETURN NIL;
+    END;
+    t := MSIRType.Translate (p.type);
+    IF t = NIL THEN
+      MSIRBuilder.Abandon ("unsupported enum literal type");
+      RETURN NIL;
+    END;
+    RETURN MSIR.ConstInt (t, VAL (i, LONGINT));
+  END CompileMSIR;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
   BEGIN

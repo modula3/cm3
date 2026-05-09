@@ -214,6 +214,7 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR constExpr: Expr.T;
   BEGIN
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
@@ -227,6 +228,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           RETURN v;
         END;
     ELSE
+      IF Value.ClassOf (p.value) = Value.Class.Expr THEN
+        constExpr := Value.ToExpr (p.value);
+        IF constExpr # NIL THEN RETURN Expr.CompileMSIR (constExpr) END;
+      END;
       MSIRBuilder.Abandon ("named-expr value is not a Variable");
       RETURN NIL;
     END;

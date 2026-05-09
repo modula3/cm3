@@ -10,6 +10,7 @@ MODULE ConcatExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Textt, Procedure, Target;
 IMPORT TextExpr, AssignStmt, Host, NarrowExpr, RunTyme, Error;
+IMPORT MSIR;
 
 TYPE
   P = ExprRep.Tab BRANDED "ConcatExpr.P" OBJECT
@@ -36,7 +37,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := ExprRep.ExprAddrAlign; 
+        exprAlign    := ExprRep.ExprAddrAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -141,6 +143,14 @@ PROCEDURE Fold (p: P): Expr.T =
     IF TextExpr.Cat (e1, e2, e3) THEN p.folded := e3 END;
     RETURN e3;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    IF p.folded # NIL THEN RETURN Expr.CompileMSIR (p.folded) END;
+    EVAL Expr.CompileMSIR (p.a);
+    EVAL Expr.CompileMSIR (p.b);
+    RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+  END CompileMSIR;
 
 BEGIN
 END ConcatExpr.

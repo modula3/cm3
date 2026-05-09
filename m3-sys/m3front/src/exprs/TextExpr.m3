@@ -10,6 +10,7 @@ MODULE TextExpr;
 
 IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
 IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure, Word;
+IMPORT MSIR;
 
 TYPE
   P = Expr.T OBJECT
@@ -36,7 +37,8 @@ TYPE
         prepLiteral  := PrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := ExprRep.ExprAddrAlign; 
+        exprAlign    := ExprRep.ExprAddrAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 (* NOTE! These UIDs have nothing to do with the UIDs that are hashes
@@ -291,6 +293,11 @@ PROCEDURE GenLiteral
     CG.Init_var (offset, globalConstsCGVar, literals[uid] + Target.Address.pack,
                  is_const);
   END GenLiteral;
+
+PROCEDURE CompileMSIR (<*UNUSED*> p: P): MSIR.Value =
+  BEGIN
+    RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+  END CompileMSIR;
 
 BEGIN
 END TextExpr.

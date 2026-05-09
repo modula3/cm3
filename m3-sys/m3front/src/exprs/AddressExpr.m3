@@ -11,6 +11,7 @@ MODULE AddressExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Addr, Null, IntegerExpr;
 IMPORT Target, TInt, TWord, M3Buf;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Expr.T OBJECT
@@ -36,6 +37,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (READONLY value: Target.Int): Expr.T =
@@ -153,6 +155,20 @@ PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
     CG.Load_nil ();
     IF (val # 0) THEN CG.Add_offset (Target.Byte * val) END;
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    IF NOT TInt.EQ (p.value, TInt.Zero) THEN
+      MSIRBuilder.Abandon ("non-NIL address constant not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    (* NIL: untraced null pointer or null gc-ref depending on context.
+       Return gc_ref void — EqualExpr's icmp handles mixed pointer comparisons. *)
+    IF p.type = Null.T
+      THEN RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+      ELSE RETURN MSIR.ConstNil (MSIR.TPtr  (MSIR.TVoid ()));
+    END;
+  END CompileMSIR;
 
 PROCEDURE Bounder (p: P;   VAR min, max: Target.Int) =
   BEGIN

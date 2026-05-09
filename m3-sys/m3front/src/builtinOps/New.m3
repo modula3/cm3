@@ -14,6 +14,7 @@ IMPORT RefType, ObjectType, OpaqueType, KeywordExpr, Value;
 IMPORT Field, Method, Int, ProcType, AssignStmt, OpenArrayType;
 IMPORT Scope, RecordType, TypeExpr, Null, Revelation, Target;
 IMPORT ArrayExpr, M3ID, M3RT, RunTyme, ErrType;
+IMPORT MSIR, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -425,6 +426,19 @@ PROCEDURE GenOpaque (t: Type.T;  ce: CallExpr.T) =
     END;
   END GenOpaque;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR t: Type.T;  mt: MSIR.T;
+  BEGIN
+    IF TypeExpr.Split (ce.args[0], t) THEN
+      mt := MSIRType.Translate (t);
+    ELSE
+      mt := NIL;
+    END;
+    IF mt = NIL THEN mt := MSIR.TVoid () END;
+    (* v0 stub: NEW is not fully modeled in MSIR yet. *)
+    RETURN MSIR.ConstNil (MSIR.TGcRef (mt));
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, LAST (INTEGER), TRUE, TRUE, TRUE, NIL,
@@ -444,6 +458,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
     Procedure.DefinePredefined ("NEW", Z, TRUE);
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
   END Initialize;
 
 BEGIN
