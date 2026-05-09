@@ -12,6 +12,7 @@ IMPORT CG, Expr, ExprRep, ArrayType, Error, Type, Int, LInt;
 IMPORT ArrayExpr, OpenArrayType, Host, EnumExpr;
 IMPORT CheckExpr, SubtractExpr, IntegerExpr, ErrType;
 IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
@@ -49,6 +50,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := SubscriptExprAlign;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR;
       END;
 
 (* EXPORTED: *) 
@@ -502,6 +505,36 @@ PROCEDURE NoteWrites (p: P) =
   BEGIN
     Expr.NoteWrite (p.a);
   END NoteWrites;
+
+(* MSIR support: fixed (non-open) 1-D subscript only for v0. The index is
+   already biased to 0..N-1 in p.biased_b. *)
+PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  VAR arrAddr, idxVal: MSIR.Value;
+  BEGIN
+    IF p.lhsOpenDepth # 0 THEN
+      MSIRBuilder.Abandon ("open-array subscript not yet supported in MSIR");
+      RETURN NIL;
+    END;
+    arrAddr := Expr.LValueMSIR (p.a);
+    IF arrAddr = NIL THEN RETURN NIL END;
+    idxVal := Expr.CompileMSIR (p.biased_b);
+    IF idxVal = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildArrayElemAddr (
+             MSIRBuilder.CurrentBlock (), "", arrAddr, idxVal);
+  END LValueMSIR;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR addr: MSIR.Value;  ty: MSIR.T;
+  BEGIN
+    addr := LValueMSIR (p);
+    IF addr = NIL THEN RETURN NIL END;
+    ty := MSIRType.Translate (p.type);
+    IF ty = NIL THEN
+      MSIRBuilder.Abandon ("unsupported subscript element type");
+      RETURN NIL;
+    END;
+    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
+  END CompileMSIR;
 
 BEGIN
 END SubscriptExpr.

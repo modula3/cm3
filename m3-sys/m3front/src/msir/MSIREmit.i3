@@ -21,6 +21,10 @@ PROCEDURE BeginUnit(name: M3ID.T);
    MSIRBuilder.EndProc when a proc was successfully translated. *)
 PROCEDURE AddProc(p: MSIR.Proc);
 
+(* Record that a proc was skipped (BeginProc returned FALSE or Abandon
+   was called). Appended as a comment in the MSIR output. *)
+PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT);
+
 (* Finalize the unit: write the assembled MSIR.Module to
    <unit-name>.msir in the current working directory and clear
    state. No-op if not enabled. *)

@@ -1,7 +1,7 @@
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
-IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType;
+IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt;
 
 CONST MaxVarMap   = 64;
 CONST MaxExitStack = 16;
@@ -21,6 +21,7 @@ VAR
   curProc:   MSIR.Proc  := NIL;
   curBlock:  MSIR.Block := NIL;
   abandoned: BOOLEAN    := FALSE;
+  blockSeq:  INTEGER    := 0;   (* per-proc block label counter *)
 
   varMap:  ARRAY [0..MaxVarMap-1]  OF VarEntry;
   varMapN: INTEGER := 0;
@@ -47,9 +48,13 @@ PROCEDURE BeginProc(name: M3ID.T;
     abandoned := FALSE;
     varMapN   := 0;
     exitDepth := 0;
+    blockSeq  := 0;
 
     resultT := MSIRType.TranslateResult(result);
-    IF resultT = NIL THEN RETURN FALSE END;
+    IF resultT = NIL THEN
+      MSIREmit.NoteSkipped(M3ID.ToText(name), "unsupported result type");
+      RETURN FALSE;
+    END;
 
     f := formals;
     WHILE f # NIL DO INC(nFormals); f := f.next END;
@@ -61,7 +66,10 @@ PROCEDURE BeginProc(name: M3ID.T;
         Formal.Split(f, info);
         VAR pt := MSIRType.Translate(info.type);
         BEGIN
-          IF pt = NIL THEN RETURN FALSE END;
+          IF pt = NIL THEN
+            MSIREmit.NoteSkipped(M3ID.ToText(name), "unsupported formal type");
+            RETURN FALSE;
+          END;
           params[i].name := M3ID.ToText(info.name);
           params[i].type := pt;
           CASE info.mode OF
@@ -80,30 +88,82 @@ PROCEDURE BeginProc(name: M3ID.T;
         MSIR.ProcSetLinkage(curProc, MSIR.Linkage.Internal);
       END;
 
-      (* Walk the proc scope: bind formals to Param values and locals to
-         alloca ptrs.  Formals and locals share the same scope list. *)
+      (* Bind declared formals in declaration order by looking up their Variable.T
+         in the scope by name.  This avoids confusing hidden _result/_return
+         variables (also IsFormal=TRUE but NOT in ProcType.Formals) with the
+         declared formals. *)
       VAR
-        v:    Value.T := Scope.ToList(syms);
-        vIdx: INTEGER := 0;
+        fDecl: Value.T := formals;
+        vIdx:  INTEGER := 0;
+        fInfo: Formal.Info;
       BEGIN
-        WHILE v # NIL DO
-          TYPECASE v OF
-          | Variable.T(vv) =>
-              IF Variable.IsFormal(vv) THEN
-                IF varMapN < MaxVarMap THEN
-                  varMap[varMapN].key      := vv;
-                  varMap[varMapN].val      := MSIR.ProcParam(curProc, vIdx);
-                  varMap[varMapN].elemType := NIL;
-                  INC(varMapN);
+        WHILE fDecl # NIL DO
+          Formal.Split(fDecl, fInfo);
+          VAR sv := Scope.LookUp(syms, fInfo.name, strict := TRUE);
+          BEGIN
+            TYPECASE sv OF
+            | Variable.T(svv) =>
+                VAR
+                  paramVal := MSIR.ProcParam(curProc, vIdx);
+                  mt:        MSIR.T;
+                  vType:     Type.T;
+                  vGlobal, vIndirect, vLhs: BOOLEAN;
+                BEGIN
+                  Variable.Split(svv, vType, vGlobal, vIndirect, vLhs);
+                  mt := MSIR.ValueType(paramVal);
+                  IF vIndirect THEN
+                    (* VAR/READONLY-indirect formal: the param value IS the
+                       address of the caller's storage. Loads/stores route
+                       through it directly — no alloca needed. *)
+                    IF varMapN < MaxVarMap THEN
+                      varMap[varMapN].key      := svv;
+                      varMap[varMapN].val      := paramVal;
+                      varMap[varMapN].elemType := mt;
+                      INC(varMapN);
+                    END;
+                  ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Struct THEN
+                    (* struct by-value formal: alloca+store for field access *)
+                    VAR allocaVal := MSIR.BuildAlloca(curBlock,
+                          Value.GlobalName(sv, dots := FALSE, with_module := FALSE),
+                          mt);
+                    BEGIN
+                      MSIR.BuildStore(curBlock, paramVal, allocaVal);
+                      IF varMapN < MaxVarMap THEN
+                        varMap[varMapN].key      := svv;
+                        varMap[varMapN].val      := allocaVal;
+                        varMap[varMapN].elemType := mt;
+                        INC(varMapN);
+                      END;
+                    END;
+                  ELSE
+                    IF varMapN < MaxVarMap THEN
+                      varMap[varMapN].key      := svv;
+                      varMap[varMapN].val      := paramVal;
+                      varMap[varMapN].elemType := NIL;
+                      INC(varMapN);
+                    END;
+                  END;
                 END;
-                INC(vIdx);
-              ELSE
-                (* local variable: allocate a stack slot *)
-                EVAL AddLocal(vv);
+            ELSE (* no Variable.T found for this formal name — skip *)
+            END;
+          END;
+          INC(vIdx);
+          fDecl := fDecl.next;
+        END;
+      END;
+
+      (* Walk scope for locals (skip all formals, including hidden _result/_return). *)
+      VAR sv: Value.T := Scope.ToList(syms);
+      BEGIN
+        WHILE sv # NIL DO
+          TYPECASE sv OF
+          | Variable.T(svv) =>
+              IF NOT Variable.IsFormal(svv) THEN
+                EVAL AddLocal(svv);
               END;
           ELSE
           END;
-          v := v.next;
+          sv := sv.next;
         END;
       END;
     END;
@@ -172,8 +232,22 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
   END AddLocal;
 
 PROCEDURE EndProc() =
+  VAR resultT: MSIR.T;
   BEGIN
     IF curProc = NIL THEN RETURN END;
+    IF NOT abandoned
+       AND curBlock # NIL
+       AND NOT MSIR.BlockIsTerminated(curBlock) THEN
+      (* Implicit fall-through at end of body: emit `ret` for void procs;
+         emit `unreachable` for value-returning procs (the source omits a
+         return path, which is a runtime error in M3 if reached). *)
+      resultT := MSIR.ProcResultType(curProc);
+      IF resultT # NIL AND MSIR.Kind(resultT) = MSIR.TypeKind.Void THEN
+        MSIR.BuildRet(curBlock, NIL);
+      ELSE
+        MSIR.BuildUnreachable(curBlock);
+      END;
+    END;
     IF NOT abandoned THEN
       MSIREmit.AddProc(curProc);
     END;
@@ -184,8 +258,11 @@ PROCEDURE EndProc() =
     exitDepth := 0;
   END EndProc;
 
-PROCEDURE Abandon(<*UNUSED*> reason: TEXT) =
+PROCEDURE Abandon(reason: TEXT) =
   BEGIN
+    IF NOT abandoned AND curProc # NIL THEN
+      MSIREmit.NoteSkipped(MSIR.ProcName(curProc), "abandon: " & reason);
+    END;
     abandoned := TRUE;
   END Abandon;
 
@@ -201,9 +278,11 @@ PROCEDURE CurrentBlock(): MSIR.Block =
   BEGIN RETURN curBlock END CurrentBlock;
 
 PROCEDURE NewBlock(label: TEXT): MSIR.Block =
-  VAR b: MSIR.Block;
+  VAR b: MSIR.Block;  uniq: TEXT;
   BEGIN
-    b := MSIR.NewBlock(label, ARRAY OF MSIR.BlockParam{});
+    INC(blockSeq);
+    uniq := label & "." & Fmt.Int(blockSeq);
+    b := MSIR.NewBlock(uniq, ARRAY OF MSIR.BlockParam{});
     MSIR.ProcAddBlock(curProc, b);
     RETURN b;
   END NewBlock;

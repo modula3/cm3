@@ -10,6 +10,7 @@ MODULE DerefExpr;
 
 IMPORT Expr, ExprRep, RefType, Error, Type, RunTyme;
 IMPORT NilChkExpr, CG, ErrType, Host;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   P = ExprRep.Ta BRANDED "DerefExpr.P" OBJECT
@@ -35,6 +36,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR;
       END;
 
 PROCEDURE New (a: Expr.T): Expr.T =
@@ -178,6 +181,25 @@ PROCEDURE NoteWrites (p: P) =
   BEGIN
     Expr.NoteWrite (p.a);
   END NoteWrites;
+
+PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  BEGIN
+    (* p^ as lvalue: the address is the pointer value itself. *)
+    RETURN Expr.CompileMSIR (p.a);
+  END LValueMSIR;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR addr: MSIR.Value;  ty: MSIR.T;
+  BEGIN
+    addr := Expr.CompileMSIR (p.a);
+    IF addr = NIL THEN RETURN NIL END;
+    ty := MSIRType.Translate (p.type);
+    IF ty = NIL THEN
+      MSIRBuilder.Abandon ("unsupported deref target type");
+      RETURN NIL;
+    END;
+    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
+  END CompileMSIR;
 
 BEGIN
 END DerefExpr.

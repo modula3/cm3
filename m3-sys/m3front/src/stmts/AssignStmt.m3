@@ -851,23 +851,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
 
 PROCEDURE CompileMSIR (p: P) =
   VAR
-    lhsName: M3ID.T;
-    lhsObj:  Value.T;
-    lhsPtr:  MSIR.Value;
-    rhsVal:  MSIR.Value;
+    lhsPtr: MSIR.Value;
+    rhsVal: MSIR.Value;
   BEGIN
-    IF NOT NamedExpr.Split (p.lhs, lhsName, lhsObj) THEN
-      MSIRBuilder.Abandon ("assignment LHS is not a named variable");
-      RETURN;
-    END;
-    TYPECASE lhsObj OF
-    | Variable.T (vv) =>
-        lhsPtr := MSIRBuilder.LookupVarAddr (vv);
-        IF lhsPtr = NIL THEN RETURN END;
-    ELSE
-      MSIRBuilder.Abandon ("assignment LHS is not a Variable");
-      RETURN;
-    END;
+    lhsPtr := Expr.LValueMSIR (p.lhs);
+    IF lhsPtr = NIL THEN RETURN END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, lhsPtr);

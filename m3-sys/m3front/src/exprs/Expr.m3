@@ -595,11 +595,23 @@ PROCEDURE MSIRDefault (<*UNUSED*> e: T): MSIR.Value =
     RETURN NIL;
   END MSIRDefault;
 
+PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T): MSIR.Value =
+  BEGIN
+    MSIRBuilder.Abandon ("lvalue address unsupported for this expression");
+    RETURN NIL;
+  END LValueMSIRDefault;
+
 PROCEDURE CompileMSIR (t: T): MSIR.Value =
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
     RETURN t.compileMSIR ();
   END CompileMSIR;
+
+PROCEDURE LValueMSIR (t: T): MSIR.Value =
+  BEGIN
+    IF (t = NIL) THEN RETURN NIL END;
+    RETURN t.compileLValueMSIR ();
+  END LValueMSIR;
 
 PROCEDURE EqCheckA (a: Ta;  e: T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN

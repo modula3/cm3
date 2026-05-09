@@ -33,6 +33,16 @@ PROCEDURE AddProc(p: MSIR.Proc) =
     MSIR.ModuleAddProc(curModule, p);
   END AddProc;
 
+PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
+  VAR wr: Wr.T;
+  BEGIN
+    TRY wr := FileWr.OpenAppend("/tmp/msir-debug.txt"); EXCEPT ELSE RETURN END;
+    TRY
+      Wr.PutText(wr, procName & ": " & reason & "\n");
+      Wr.Close(wr);
+    EXCEPT ELSE END;
+  END NoteSkipped;
+
 PROCEDURE EndUnit() =
   VAR wr: Wr.T;  path: TEXT;
   BEGIN

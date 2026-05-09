@@ -47,6 +47,8 @@ REVEAL
     (* Emit MSIR for this expression. Returns NIL on unsupported,
        in which case MSIRBuilder.Abandon has been called and the
        enclosing procedure will be dropped. *)
+    compileLValueMSIR (): MSIR.Value               := LValueMSIRDefault;
+    (* Emit MSIR address of this lvalue. Returns NIL on unsupported. *)
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
@@ -84,6 +86,8 @@ PROCEDURE NotWritable    (e: M3.Expr);
 PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
 (* default: signals "not yet supported" by calling MSIRBuilder.Abandon
    and returning NIL. Subclasses override when they have a translation. *)
+PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;
+(* default lvalue: calls Abandon. Override in designator expressions. *)
 
 (* Multi-use overrides for exprAlign:  *)
 PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT;

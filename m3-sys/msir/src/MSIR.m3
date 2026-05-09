@@ -18,6 +18,7 @@ REVEAL T = BRANDED "MSIR.T" REF RECORD
   objMethods:       REF ARRAY OF Method := NIL;
   objDescriptorSym: TEXT                := NIL;
   openArrayRank:    INTEGER             := 0;    (* OpenArray *)
+  arrayLen:         LONGINT              := 0L;   (* FixedArray length *)
   subrLo, subrHi:   LONGINT              := 0L;   (* Subrange / Set bounds *)
 END;
 
@@ -147,6 +148,15 @@ PROCEDURE THeapArray(rank: INTEGER;  elt: T): T =
     RETURN t;
   END THeapArray;
 
+PROCEDURE TFixedArray(len: LONGINT;  elt: T): T =
+  VAR t := NewType(TypeKind.FixedArray);
+  BEGIN
+    <* ASSERT len >= 0L, "TFixedArray: length must be >= 0" *>
+    t.arrayLen := len;
+    t.elt      := elt;
+    RETURN t;
+  END TFixedArray;
+
 PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T =
   VAR t := NewType(TypeKind.Subrange);
   BEGIN
@@ -181,6 +191,9 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
         RETURN Text.Equal(a.structName, b.structName);
     | TypeKind.OpenArray, TypeKind.HeapArray =>
         IF a.openArrayRank # b.openArrayRank THEN RETURN FALSE END;
+        RETURN Equal(a.elt, b.elt);
+    | TypeKind.FixedArray =>
+        IF a.arrayLen # b.arrayLen THEN RETURN FALSE END;
         RETURN Equal(a.elt, b.elt);
     | TypeKind.Subrange, TypeKind.Set =>
         IF a.subrLo # b.subrLo OR a.subrHi # b.subrHi THEN RETURN FALSE END;
@@ -243,6 +256,8 @@ PROCEDURE OpenArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END OpenAr
 PROCEDURE OpenArrayElt(t: T): T        = BEGIN RETURN t.elt           END OpenArrayElt;
 PROCEDURE HeapArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END HeapArrayRank;
 PROCEDURE HeapArrayElt(t: T): T        = BEGIN RETURN t.elt           END HeapArrayElt;
+PROCEDURE FixedArrayLen(t: T): LONGINT = BEGIN RETURN t.arrayLen      END FixedArrayLen;
+PROCEDURE FixedArrayElt(t: T): T       = BEGIN RETURN t.elt           END FixedArrayElt;
 
 PROCEDURE SubrangeParent(t: T): T   = BEGIN RETURN t.elt    END SubrangeParent;
 PROCEDURE SubrangeLo(t: T): LONGINT = BEGIN RETURN t.subrLo END SubrangeLo;
@@ -960,6 +975,36 @@ PROCEDURE BuildFieldAddr(b: Block;  name: TEXT;
     addInsn(b, i);
     RETURN i.result;
   END BuildFieldAddr;
+
+PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;
+                             arr: Value;  idx: Value): Value =
+  VAR
+    i := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 2);
+    arrT := arr.type;
+    arrayT: T := NIL;
+    eltT:   T := NIL;
+  BEGIN
+    <* ASSERT arrT # NIL, "BuildArrayElemAddr: arr has no type" *>
+    (* Accept either `ptr FixedArray` (alloca'd local) or a FixedArray
+       value (e.g., VAR-mode formal whose value already represents the
+       address). *)
+    IF Kind(arrT) = TypeKind.Ptr THEN
+      arrayT := arrT.elt;
+    ELSE
+      arrayT := arrT;
+    END;
+    <* ASSERT Kind(arrayT) = TypeKind.FixedArray,
+       "BuildArrayElemAddr: arr must be FixedArray or ptr FixedArray" *>
+    eltT := arrayT.elt;
+    i.op := Op.ArrayElemAddr;
+    ops[0] := arr;
+    ops[1] := idx;
+    i.operands := ops;
+    i.result := makeResult(b, TPtr(eltT), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildArrayElemAddr;
 
 PROCEDURE BuildNew(b: Block;  name: TEXT;  type: T): Value =
   VAR i := NEW(Insn);

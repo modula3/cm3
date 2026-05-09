@@ -10,6 +10,7 @@ MODULE NilChkExpr;
 
 IMPORT CG, Expr, ExprRep, Type, AddressExpr;
 IMPORT Target, TInt, RefType, Host, OpenArrayType, M3RT;
+IMPORT MSIR;
 
 TYPE
   P = ExprRep.Ta BRANDED "NilChkExpr.P" OBJECT
@@ -35,6 +36,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR;
       END;
 
 PROCEDURE New (a: Expr.T): Expr.T =
@@ -116,6 +119,18 @@ PROCEDURE NoteWrites (p: P) =
   BEGIN
     Expr.NoteWrite (p.a);
   END NoteWrites;
+
+(* MSIR: forward through the nil-check wrapper. The nil check itself is a
+   runtime concern that can be modeled in a later pass. *)
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    RETURN Expr.CompileMSIR (p.a);
+  END CompileMSIR;
+
+PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  BEGIN
+    RETURN Expr.LValueMSIR (p.a);
+  END LValueMSIR;
 
 BEGIN
 END NilChkExpr.

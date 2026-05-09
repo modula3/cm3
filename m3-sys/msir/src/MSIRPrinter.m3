@@ -46,6 +46,11 @@ PROCEDURE Type(wr: Wr.T;  t: MSIR.T) =
         Wr.PutText(wr, Fmt.Int(MSIR.HeapArrayRank(t)));
         Wr.PutText(wr, "> ");
         Type(wr, MSIR.HeapArrayElt(t));
+    | MSIR.TypeKind.FixedArray =>
+        Wr.PutText(wr, "[");
+        Wr.PutText(wr, Fmt.LongInt(MSIR.FixedArrayLen(t)));
+        Wr.PutText(wr, "]");
+        Type(wr, MSIR.FixedArrayElt(t));
     | MSIR.TypeKind.Subrange =>
         Wr.PutText(wr, "subrange<");
         Type(wr, MSIR.SubrangeParent(t));
@@ -156,6 +161,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.SetMember          => RETURN "set_member";
     | MSIR.Op.OpenArrayNew       => RETURN "openarray.new";
     | MSIR.Op.OpenArrayDeref     => RETURN "openarray.deref";
+    | MSIR.Op.ArrayElemAddr      => RETURN "array.elem_addr";
     END;
   END OpText;
 
@@ -253,6 +259,11 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", .");
         Wr.PutText(wr, MSIR.InsnSelector(i));
+    | MSIR.Op.ArrayElemAddr =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
     | MSIR.Op.New =>
         Wr.PutText(wr, " ");
         Type(wr, MSIR.InsnTargetType(i));

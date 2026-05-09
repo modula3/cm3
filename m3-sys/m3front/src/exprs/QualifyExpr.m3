@@ -13,6 +13,7 @@ IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
 IMPORT Method, Field, Target, M3RT, Host, RunTyme;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   Class = { importDecl    (* <importedInterface>.<anyId> *),
@@ -61,8 +62,10 @@ TYPE
         genFPLiteral := ExprRep.NoFPLiteral;
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
-        note_write   := NoteWrites;
-        exprAlign    := QualifyExprAlign;
+        note_write        := NoteWrites;
+        exprAlign         := QualifyExprAlign;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR;
       END;
 
 PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
@@ -789,6 +792,52 @@ PROCEDURE NoteWrites (p: P) =
                          END;
     END;
   END NoteWrites;
+
+PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  VAR fieldInfo: Field.Info;  baseAddr: MSIR.Value;
+  BEGIN
+    Resolve (p);
+    CASE p.class OF
+    | Class.recField =>
+        baseAddr := Expr.LValueMSIR (p.lhsExpr);
+        IF baseAddr = NIL THEN RETURN NIL END;
+        Field.Split (p.rhsValue, fieldInfo);
+        RETURN MSIR.BuildFieldAddr (MSIRBuilder.CurrentBlock (), "",
+                                    baseAddr, M3ID.ToText (fieldInfo.name));
+    ELSE
+      MSIRBuilder.Abandon ("lvalue not supported for this qualify class");
+      RETURN NIL;
+    END;
+  END LValueMSIR;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR fieldInfo: Field.Info;  fieldType: MSIR.T;  addr: MSIR.Value;
+      folded: Expr.T;
+  BEGIN
+    Resolve (p);
+    CASE p.class OF
+    | Class.recField =>
+        addr := LValueMSIR (p);
+        IF addr = NIL THEN RETURN NIL END;
+        Field.Split (p.rhsValue, fieldInfo);
+        fieldType := MSIRType.Translate (fieldInfo.type);
+        IF fieldType = NIL THEN
+          MSIRBuilder.Abandon ("unsupported record field type");
+          RETURN NIL;
+        END;
+        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);
+    | Class.enumLit =>
+        folded := Fold (p);
+        IF folded = NIL THEN
+          MSIRBuilder.Abandon ("enum literal fold failed");
+          RETURN NIL;
+        END;
+        RETURN Expr.CompileMSIR (folded);
+    ELSE
+      MSIRBuilder.Abandon ("unsupported qualify expression");
+      RETURN NIL;
+    END;
+  END CompileMSIR;
 
 BEGIN
 END QualifyExpr.

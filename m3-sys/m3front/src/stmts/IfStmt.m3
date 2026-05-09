@@ -145,10 +145,17 @@ PROCEDURE CompileMSIR (p: P) =
     condVal:    MSIR.Value;
     thenBlock:  MSIR.Block;
     nextBlock:  MSIR.Block;   (* false branch target for each clause *)
-    mergeBlock: MSIR.Block;
-  BEGIN
-    mergeBlock := MSIRBuilder.NewBlock ("if.merge");
+    mergeBlock: MSIR.Block := NIL;  (* lazily created on first need *)
 
+  PROCEDURE EnsureMerge (): MSIR.Block =
+    BEGIN
+      IF mergeBlock = NIL THEN
+        mergeBlock := MSIRBuilder.NewBlock ("if.merge");
+      END;
+      RETURN mergeBlock;
+    END EnsureMerge;
+
+  BEGIN
     c := p.clauses;
     WHILE (c # NIL) AND MSIRBuilder.InProc () DO
       (* Compile condition into the current block. *)
@@ -160,7 +167,7 @@ PROCEDURE CompileMSIR (p: P) =
       IF (c.next # NIL) OR (p.elseBody # NIL) THEN
         nextBlock := MSIRBuilder.NewBlock ("if.next");
       ELSE
-        nextBlock := mergeBlock;
+        nextBlock := EnsureMerge ();
       END;
 
       MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), condVal,
@@ -171,7 +178,7 @@ PROCEDURE CompileMSIR (p: P) =
       MSIRBuilder.SetCurrentBlock (thenBlock);
       Stmt.CompileMSIR (c.body);
       IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
-        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock,
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), EnsureMerge (),
                       ARRAY OF MSIR.Value{});
       END;
 
@@ -179,17 +186,19 @@ PROCEDURE CompileMSIR (p: P) =
       c := c.next;
     END;
 
-    (* Compile else body (if any) in the current block (nextBlock or merge). *)
+    (* Compile else body (if any) in the current block. *)
     IF (p.elseBody # NIL) AND MSIRBuilder.InProc () THEN
       Stmt.CompileMSIR (p.elseBody);
       IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
-        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock,
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), EnsureMerge (),
                       ARRAY OF MSIR.Value{});
       END;
-      MSIRBuilder.SetCurrentBlock (mergeBlock);
+      IF mergeBlock # NIL THEN
+        MSIRBuilder.SetCurrentBlock (mergeBlock);
+      END;
     END;
-    (* If no else body, nextBlock was already set to mergeBlock above,
-       so curBlock is already mergeBlock for the no-else case. *)
+    (* If no else body, nextBlock was set to merge for the last clause,
+       so curBlock is already merge when one was needed. *)
   END CompileMSIR;
 
 BEGIN

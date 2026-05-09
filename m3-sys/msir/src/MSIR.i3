@@ -23,6 +23,7 @@ TYPE TypeKind = {
   Object,                             (* class type with super, methods, descriptor *)
   OpenArray,                          (* fat pointer: { data, sizes... } *)
   HeapArray,                          (* REF ARRAY OF T: heap dope-prefix struct *)
+  FixedArray,                         (* ARRAY [lo..hi] OF T: contiguous storage *)
   Subrange,                           (* parent type T constrained to [lo..hi] *)
   Set,                                (* set with element type and domain [lo..hi] *)
   ProcType
@@ -48,6 +49,7 @@ PROCEDURE TObject(name: TEXT;
                   descriptorSym: TEXT): T;
 PROCEDURE TOpenArray(rank: INTEGER;  elt: T): T;
 PROCEDURE THeapArray(rank: INTEGER;  elt: T): T;
+PROCEDURE TFixedArray(len: LONGINT;  elt: T): T;
 PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T;
 PROCEDURE TSet(elt: T;  lo, hi: LONGINT): T;
 
@@ -74,6 +76,9 @@ PROCEDURE OpenArrayElt(t: T): T;
 
 PROCEDURE HeapArrayRank(t: T): INTEGER;
 PROCEDURE HeapArrayElt(t: T): T;
+
+PROCEDURE FixedArrayLen(t: T): LONGINT;
+PROCEDURE FixedArrayElt(t: T): T;
 
 PROCEDURE SubrangeParent(t: T): T;
 PROCEDURE SubrangeLo(t: T): LONGINT;
@@ -239,6 +244,8 @@ TYPE Op = {
   (* open arrays *)
   OpenArraySize, OpenArrayElemAddr, Subarray,
   OpenArrayNew, OpenArrayDeref,
+  (* fixed arrays *)
+  ArrayElemAddr,
   (* runtime checks *)
   SubscriptCheck, NilCheck, RangeCheck,
   (* representation conversion *)
@@ -303,6 +310,12 @@ PROCEDURE BuildFieldAddr(b: Block;  name: TEXT;
                          obj: Value;  fieldName: TEXT): Value;
                                              (* obj: gc_ref Object | gc_ref Struct |
                                                 ptr Struct; result: ptr fieldType *)
+
+(* `array.elem_addr arr, idx` — pointer arithmetic on a fixed array.
+   arr must be ptr FixedArray (i.e. an alloca or by-ref).
+   Result: ptr (element type). *)
+PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;
+                             arr: Value;  idx: Value): Value;
 
 PROCEDURE BuildNew(b: Block;  name: TEXT;  type: T): Value;
                                              (* type must be Object; result: gc_ref type *)

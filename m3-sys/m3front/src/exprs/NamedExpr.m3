@@ -45,7 +45,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         checkUseFailure := CheckUseFailure;
-        compileMSIR  := CompileMSIR;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -230,6 +231,22 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       RETURN NIL;
     END;
   END CompileMSIR;
+
+PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  BEGIN
+    IF p.value = NIL THEN Resolve (p) END;
+    TYPECASE p.value OF
+    | Variable.T(vv) =>
+        VAR addr := MSIRBuilder.LookupVarAddr (vv);
+        BEGIN
+          IF addr = NIL THEN RETURN NIL END;
+          RETURN addr;
+        END;
+    ELSE
+      MSIRBuilder.Abandon ("named lvalue is not a Variable");
+      RETURN NIL;
+    END;
+  END LValueMSIR;
 
 PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN

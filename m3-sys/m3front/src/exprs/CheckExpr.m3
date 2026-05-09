@@ -10,6 +10,7 @@ MODULE CheckExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, IntegerExpr, EnumExpr, Host;
 IMPORT Target, TInt, Error, LInt;
+IMPORT MSIR;
 
 TYPE
   Class = { cLOWER, cUPPER, cBOTH };
@@ -48,7 +49,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := CheckExprAlign; 
+        exprAlign    := CheckExprAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a: Expr.T;  READONLY min, max: Target.Int;
@@ -198,6 +200,13 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
                       IF TInt.LT (p.max, max) THEN max := p.max END;
     END;
   END Bounder;
+
+(* MSIR: forward through the range-check wrapper. The runtime check
+   itself (range_check op) can be added in a later refinement. *)
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    RETURN Expr.CompileMSIR (p.expr);
+  END CompileMSIR;
 
 BEGIN
 END CheckExpr.
