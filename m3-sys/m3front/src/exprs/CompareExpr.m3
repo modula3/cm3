@@ -12,6 +12,7 @@ IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT EnumType, SetType, Bool, Module, Addr, Target, TInt;
 IMPORT IntegerExpr, EnumExpr, ReelExpr, AddressExpr;
 IMPORT SetExpr, Error;
+IMPORT MSIR, MSIRBuilder;
 
 CONST
   cINT   = 0;
@@ -66,6 +67,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T;  op: Op): Expr.T =
@@ -244,6 +246,26 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
     RETURN NIL;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    lv, rv: MSIR.Value;
+    pred:   MSIR.CmpPred;
+  BEGIN
+    IF (p.class # cINT) AND (p.class # cLINT) THEN
+      MSIRBuilder.Abandon ("non-integer comparison not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    CASE p.op OF
+    | CG.Cmp.GT => pred := MSIR.CmpPred.Sgt;
+    | CG.Cmp.GE => pred := MSIR.CmpPred.Sge;
+    | CG.Cmp.LT => pred := MSIR.CmpPred.Slt;
+    | CG.Cmp.LE => pred := MSIR.CmpPred.Sle;
+    END;
+    lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+    rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, lv, rv);
+  END CompileMSIR;
 
 BEGIN
 END CompareExpr.

@@ -1308,5 +1308,19 @@ PROCEDURE BuildOpenArrayDeref(b: Block;  name: TEXT;  ref: Value): Value =
     RETURN i.result;
   END BuildOpenArrayDeref;
 
+PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
+  VAR n := BlockInsnCount(b);  ri: Insn;
+  BEGIN
+    IF n = 0 THEN RETURN FALSE END;
+    ri := BlockInsn(b, n-1);
+    CASE ri.op OF
+    | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable,
+      Op.UnwindTo, Op.RetThroughEnvelope, Op.Typecase =>
+        RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END;
+  END BlockIsTerminated;
+
 BEGIN
 END MSIR.

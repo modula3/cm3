@@ -9,6 +9,7 @@
 MODULE NotExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt, Value;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Ta BRANDED "NotExpr.P" OBJECT
@@ -33,7 +34,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := ExprRep.ExprBoolAlign; 
+        exprAlign    := ExprRep.ExprBoolAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a: Expr.T): Expr.T =
@@ -89,6 +91,17 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
     RETURN e3;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR v: MSIR.Value;
+  BEGIN
+    v := Expr.CompileMSIR (p.a);
+    IF v = NIL THEN RETURN NIL END;
+    (* NOT x: emit icmp eq x, 0  (false == 0 in i1) *)
+    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                            MSIR.CmpPred.Eq, v,
+                            MSIR.ConstInt (MSIR.TI1 (), 0L));
+  END CompileMSIR;
 
 BEGIN
 END NotExpr.

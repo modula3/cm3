@@ -9,6 +9,7 @@
 MODULE IfStmt;
 
 IMPORT CG, Expr, Bool, Type, Error, Token, Stmt, StmtRep, Scanner, ErrType;
+IMPORT MSIR, MSIRBuilder;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 TYPE
@@ -19,6 +20,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 TYPE
@@ -136,6 +138,59 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     END;
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    c:          Clause;
+    condVal:    MSIR.Value;
+    thenBlock:  MSIR.Block;
+    nextBlock:  MSIR.Block;   (* false branch target for each clause *)
+    mergeBlock: MSIR.Block;
+  BEGIN
+    mergeBlock := MSIRBuilder.NewBlock ("if.merge");
+
+    c := p.clauses;
+    WHILE (c # NIL) AND MSIRBuilder.InProc () DO
+      (* Compile condition into the current block. *)
+      condVal := Expr.CompileMSIR (c.cond);
+      IF condVal = NIL THEN RETURN END;
+
+      thenBlock := MSIRBuilder.NewBlock ("if.then");
+      (* The false branch goes to the next clause test, else body, or merge. *)
+      IF (c.next # NIL) OR (p.elseBody # NIL) THEN
+        nextBlock := MSIRBuilder.NewBlock ("if.next");
+      ELSE
+        nextBlock := mergeBlock;
+      END;
+
+      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), condVal,
+                        thenBlock, ARRAY OF MSIR.Value{},
+                        nextBlock, ARRAY OF MSIR.Value{});
+
+      (* Compile then body. *)
+      MSIRBuilder.SetCurrentBlock (thenBlock);
+      Stmt.CompileMSIR (c.body);
+      IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock,
+                      ARRAY OF MSIR.Value{});
+      END;
+
+      MSIRBuilder.SetCurrentBlock (nextBlock);
+      c := c.next;
+    END;
+
+    (* Compile else body (if any) in the current block (nextBlock or merge). *)
+    IF (p.elseBody # NIL) AND MSIRBuilder.InProc () THEN
+      Stmt.CompileMSIR (p.elseBody);
+      IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock,
+                      ARRAY OF MSIR.Value{});
+      END;
+      MSIRBuilder.SetCurrentBlock (mergeBlock);
+    END;
+    (* If no else body, nextBlock was already set to mergeBlock above,
+       so curBlock is already mergeBlock for the no-else case. *)
+  END CompileMSIR;
 
 BEGIN
 END IfStmt.

@@ -10,6 +10,7 @@ MODULE NegateExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT IntegerExpr, ReelExpr;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Ta BRANDED "NegateExpr.P" OBJECT
@@ -35,6 +36,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a: Expr.T): Expr.T =
@@ -106,6 +108,16 @@ PROCEDURE Fold (p: P): Expr.T =
     p.folded := e3;
     RETURN e3;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR v: MSIR.Value;  t: MSIR.T;
+  BEGIN
+    v := Expr.CompileMSIR (p.a);
+    IF v = NIL THEN RETURN NIL END;
+    t := MSIR.ValueType (v);
+    RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "",
+                           MSIR.ConstInt (t, 0L), v);
+  END CompileMSIR;
 
 BEGIN
 END NegateExpr.

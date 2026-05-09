@@ -3,7 +3,8 @@ MODULE MSIRBuilder;
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope;
 
-CONST MaxVarMap = 64;
+CONST MaxVarMap   = 64;
+CONST MaxExitStack = 16;
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
    Each local maps to an alloca ptr (elemType = the allocated type). *)
@@ -21,6 +22,9 @@ VAR
   varMap: ARRAY [0..MaxVarMap-1] OF VarEntry;
   varMapN: INTEGER := 0;
 
+  exitStack: ARRAY [0..MaxExitStack-1] OF MSIR.Block;
+  exitDepth: INTEGER := 0;
+
 PROCEDURE BeginProc(name: M3ID.T;
                     formals: Value.T;
                     syms: Scope.T;
@@ -36,6 +40,7 @@ PROCEDURE BeginProc(name: M3ID.T;
     <* ASSERT curProc = NIL *>
     abandoned := FALSE;
     varMapN   := 0;
+    exitDepth := 0;
 
     resultT := MSIRType.TranslateResult(result);
     IF resultT = NIL THEN RETURN FALSE END;
@@ -170,6 +175,7 @@ PROCEDURE EndProc() =
     curBlock  := NIL;
     abandoned := FALSE;
     varMapN   := 0;
+    exitDepth := 0;
   END EndProc;
 
 PROCEDURE Abandon(<*UNUSED*> reason: TEXT) =
@@ -187,6 +193,45 @@ PROCEDURE CurrentProc(): MSIR.Proc =
 
 PROCEDURE CurrentBlock(): MSIR.Block =
   BEGIN RETURN curBlock END CurrentBlock;
+
+PROCEDURE NewBlock(label: TEXT): MSIR.Block =
+  VAR b: MSIR.Block;
+  BEGIN
+    b := MSIR.NewBlock(label, ARRAY OF MSIR.BlockParam{});
+    MSIR.ProcAddBlock(curProc, b);
+    RETURN b;
+  END NewBlock;
+
+PROCEDURE SetCurrentBlock(b: MSIR.Block) =
+  BEGIN
+    curBlock := b;
+  END SetCurrentBlock;
+
+PROCEDURE CurrentBlockTerminated(): BOOLEAN =
+  BEGIN
+    RETURN MSIR.BlockIsTerminated(curBlock);
+  END CurrentBlockTerminated;
+
+PROCEDURE PushExitBlock(b: MSIR.Block) =
+  BEGIN
+    IF exitDepth < MaxExitStack THEN
+      exitStack[exitDepth] := b;
+      INC(exitDepth);
+    ELSE
+      Abandon("exit block stack overflow");
+    END;
+  END PushExitBlock;
+
+PROCEDURE PopExitBlock() =
+  BEGIN
+    IF exitDepth > 0 THEN DEC(exitDepth) END;
+  END PopExitBlock;
+
+PROCEDURE CurrentExitBlock(): MSIR.Block =
+  BEGIN
+    IF exitDepth = 0 THEN RETURN NIL END;
+    RETURN exitStack[exitDepth - 1];
+  END CurrentExitBlock;
 
 BEGIN
 END MSIRBuilder.

@@ -9,6 +9,7 @@
 MODULE ExitStmt;
 
 IMPORT Stmt, StmtRep, Error, Token, Scanner, Marker;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -16,6 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -44,6 +46,21 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.Exits};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (<*UNUSED*> p: P) =
+  VAR exitBlock: MSIR.Block;  deadBlock: MSIR.Block;
+  BEGIN
+    exitBlock := MSIRBuilder.CurrentExitBlock ();
+    IF exitBlock = NIL THEN
+      MSIRBuilder.Abandon ("EXIT not inside a WHILE in MSIR v0");
+      RETURN;
+    END;
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), exitBlock,
+                  ARRAY OF MSIR.Value{});
+    (* Instructions after EXIT are dead; switch to a fresh block. *)
+    deadBlock := MSIRBuilder.NewBlock ("exit.dead");
+    MSIRBuilder.SetCurrentBlock (deadBlock);
+  END CompileMSIR;
 
 BEGIN
 END ExitStmt.

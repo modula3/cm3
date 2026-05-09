@@ -10,6 +10,7 @@ MODULE WhileStmt;
 
 IMPORT CG, Expr, Type, Bool, Error, Marker, ErrType;
 IMPORT Stmt, StmtRep, Token, Scanner;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -19,6 +20,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -73,6 +75,43 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
             + Stmt.Outcomes {Stmt.Outcome.FallThrough}
             - Stmt.Outcomes {Stmt.Outcome.Exits};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    headerBlock: MSIR.Block;
+    bodyBlock:   MSIR.Block;
+    exitBlock:   MSIR.Block;
+    condVal:     MSIR.Value;
+  BEGIN
+    headerBlock := MSIRBuilder.NewBlock ("while.header");
+    bodyBlock   := MSIRBuilder.NewBlock ("while.body");
+    exitBlock   := MSIRBuilder.NewBlock ("while.exit");
+
+    (* Branch from the current block to the loop header. *)
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlock,
+                  ARRAY OF MSIR.Value{});
+
+    (* Loop header: evaluate condition. *)
+    MSIRBuilder.SetCurrentBlock (headerBlock);
+    condVal := Expr.CompileMSIR (p.cond);
+    IF condVal = NIL THEN RETURN END;
+    MSIR.BuildCondBr (headerBlock, condVal,
+                      bodyBlock,   ARRAY OF MSIR.Value{},
+                      exitBlock,   ARRAY OF MSIR.Value{});
+
+    (* Loop body. *)
+    MSIRBuilder.SetCurrentBlock (bodyBlock);
+    MSIRBuilder.PushExitBlock (exitBlock);
+    Stmt.CompileMSIR (p.body);
+    MSIRBuilder.PopExitBlock ();
+    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlock,
+                    ARRAY OF MSIR.Value{});
+    END;
+
+    (* Continue at exit. *)
+    MSIRBuilder.SetCurrentBlock (exitBlock);
+  END CompileMSIR;
 
 BEGIN
 END WhileStmt.

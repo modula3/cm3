@@ -14,6 +14,7 @@ IMPORT IntegerExpr, ReelExpr, EnumExpr, AddressExpr, UserProc;
 IMPORT ProcExpr, ProcType, TextExpr, Error, M3WString;
 IMPORT RecordType, ArrayType, Field, Value, M3String, Textt;
 IMPORT NamedExpr, QualifyExpr, OpenArrayType, Target, TInt;
+IMPORT MSIR, MSIRBuilder;
 
 CONST
   Max_unroll = 4; (* max # of iterations in an unrolled loop *)
@@ -53,7 +54,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := ExprRep.ExprBoolAlign; 
+        exprAlign    := ExprRep.ExprBoolAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T;  op: Op): Expr.T =
@@ -836,6 +838,24 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
     RETURN NIL;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    lv, rv: MSIR.Value;
+    pred:   MSIR.CmpPred;
+  BEGIN
+    IF p.kind # Kind.SimpleScalar THEN
+      MSIRBuilder.Abandon ("non-scalar equality not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    CASE p.op OF
+    | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
+    | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+    END;
+    lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+    rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, lv, rv);
+  END CompileMSIR;
 
 BEGIN
 END EqualExpr.

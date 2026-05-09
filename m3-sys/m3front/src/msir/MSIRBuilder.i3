@@ -58,9 +58,25 @@ PROCEDURE Abandon(reason: TEXT);
    supported? Body translators check this gate before doing anything. *)
 PROCEDURE InProc(): BOOLEAN;
 
-(* Accessors for body translators (next plan step). NIL outside a
-   supported in-progress proc. *)
+(* Accessors for body translators. NIL outside a supported in-progress proc. *)
 PROCEDURE CurrentProc(): MSIR.Proc;
 PROCEDURE CurrentBlock(): MSIR.Block;
+
+(*-------------------------------------------------------------- Control flow *)
+
+(* Create a new block, add it to curProc, return it.
+   Does NOT switch curBlock; use SetCurrentBlock for that. *)
+PROCEDURE NewBlock(label: TEXT): MSIR.Block;
+
+(* Switch curBlock to b.  b must belong to curProc. *)
+PROCEDURE SetCurrentBlock(b: MSIR.Block);
+
+(* TRUE if curBlock has a terminator as its last instruction. *)
+PROCEDURE CurrentBlockTerminated(): BOOLEAN;
+
+(* Loop-exit block stack for EXIT statement translation. *)
+PROCEDURE PushExitBlock(b: MSIR.Block);
+PROCEDURE PopExitBlock();
+PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
 
 END MSIRBuilder.

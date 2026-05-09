@@ -160,6 +160,8 @@ PROCEDURE BlockParamCount(b: Block): INTEGER;
 PROCEDURE BlockParamValue(b: Block;  i: INTEGER): Value;
 PROCEDURE BlockInsnCount(b: Block): INTEGER;
 PROCEDURE BlockInsn(b: Block;  i: INTEGER): Insn;
+PROCEDURE BlockIsTerminated(b: Block): BOOLEAN;
+                                             (* TRUE if last insn is a terminator *)
 
 (*--------------------------------------------------------------- Envelope *)
 
