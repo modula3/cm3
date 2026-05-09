@@ -201,8 +201,12 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN
         gv := MSIR.GlobalValue(globalMap[i].val);
-        gt := MSIR.GlobalType(globalMap[i].val);
-        RETURN MSIR.BuildLoad(curBlock, "", gt, gv);
+        IF MSIR.Kind(MSIR.ValueType(gv)) = MSIR.TypeKind.GcSlot THEN
+          RETURN MSIR.BuildGcLoad(curBlock, "", gv);
+        ELSE
+          gt := MSIR.GlobalType(globalMap[i].val);
+          RETURN MSIR.BuildLoad(curBlock, "", gt, gv);
+        END;
       END;
     END;
     RETURN NIL;

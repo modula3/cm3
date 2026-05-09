@@ -853,12 +853,17 @@ PROCEDURE CompileMSIR (p: P) =
   VAR
     lhsPtr: MSIR.Value;
     rhsVal: MSIR.Value;
+    blk   := MSIRBuilder.CurrentBlock ();
   BEGIN
     lhsPtr := Expr.LValueMSIR (p.lhs);
     IF lhsPtr = NIL THEN RETURN END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
-    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, lhsPtr);
+    IF MSIR.Kind (MSIR.ValueType (lhsPtr)) = MSIR.TypeKind.GcSlot THEN
+      MSIR.BuildGcStore (blk, lhsPtr, rhsVal);
+    ELSE
+      MSIR.BuildStore (blk, rhsVal, lhsPtr);
+    END;
   END CompileMSIR;
 
 BEGIN

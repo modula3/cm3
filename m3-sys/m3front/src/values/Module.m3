@@ -1138,10 +1138,19 @@ PROCEDURE DeclareModuleGlobalsMSIR (t: T) =
             IF vglobal AND NOT vindirect THEN
               mt := MSIRType.Translate (vtype);
               IF mt # NIL THEN
-                EVAL MSIRBuilder.DeclareGlobal (
-                  svv,
-                  Value.GlobalName (sv, dots := FALSE, with_module := FALSE),
-                  mt, isTraced := FALSE);
+                VAR
+                  isTraced  := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
+                                OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
+                  eltType   := mt;
+                BEGIN
+                  (* For traced slots, NewGlobal wants the pointee type T, not
+                     GcRef(T): a GcSlot(T) cell holds a reference-to-T. *)
+                  IF isTraced THEN eltType := MSIR.EltType(mt) END;
+                  EVAL MSIRBuilder.DeclareGlobal (
+                    svv,
+                    Value.GlobalName (sv, dots := FALSE, with_module := FALSE),
+                    eltType, isTraced);
+                END;
               END;
             END;
           END;
