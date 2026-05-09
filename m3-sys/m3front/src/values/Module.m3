@@ -13,7 +13,7 @@ IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 IMPORT Jmpbufs;
-IMPORT MSIREmit;
+IMPORT MSIR, MSIREmit, MSIRBuilder, MSIRType;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -1112,15 +1112,56 @@ PROCEDURE EmitDecl (x: InitBody) =
        lev := 0, cc := Target.DefaultCall, exported := TRUE, parent := NIL,
        return_typename := M3ID_RT0_ModulePtr ());
     x.arg := BinderDeclareParam ();
+    (* MSIR: declare module globals now so procedure bodies can reference them.
+       EmitDecl runs before any EmitBody, so this fires before procedures are
+       compiled. *)
+    DeclareModuleGlobalsMSIR (t);
   END EmitDecl;
+
+PROCEDURE DeclareModuleGlobalsMSIR (t: T) =
+  (* Walk the local scope and register each non-external module-level variable
+     as an MSIR global.  Called from EmitDecl (before any proc body is compiled)
+     so that both module init and procedure bodies can reference them. *)
+  VAR
+    sv:                    Value.T;
+    vtype:                 Type.T;
+    vglobal, vindirect, vlhs: BOOLEAN;
+    mt:                    MSIR.T;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN END;
+    sv := Scope.ToList (t.localScope);
+    WHILE sv # NIL DO
+      TYPECASE sv OF
+      | Variable.T (svv) =>
+          IF NOT Variable.IsFormal (svv) THEN
+            Variable.Split (svv, vtype, vglobal, vindirect, vlhs);
+            IF vglobal AND NOT vindirect THEN
+              mt := MSIRType.Translate (vtype);
+              IF mt # NIL THEN
+                EVAL MSIRBuilder.DeclareGlobal (
+                  svv,
+                  Value.GlobalName (sv, dots := FALSE, with_module := FALSE),
+                  mt, isTraced := FALSE);
+              END;
+            END;
+          END;
+      ELSE
+      END;
+      sv := sv.next;
+    END;
+  END DeclareModuleGlobalsMSIR;
 
 PROCEDURE EmitBody (x: InitBody) =
   VAR t := x.self;  zz: Scope.T;   skip := CG.Next_label ();
+      msirOk: BOOLEAN;
   BEGIN
     IF (x.cg_proc = NIL) THEN RETURN END;
 
     (* restore my environment *)
     zz := Scope.Push (t.localScope);
+
+    (* MSIR: open the module init proc (globals were declared in EmitDecl) *)
+    msirOk := MSIRBuilder.BeginModuleInit (x.name);
 
     (* generate my initialization procedure *)
     CG.Comment (-1, FALSE, "module main body ", x.name);
@@ -1142,6 +1183,12 @@ PROCEDURE EmitBody (x: InitBody) =
     Jmpbufs.CompileProcAllocateJmpbufs (t.jmpbufs);
     EVAL Stmt.Compile (t.block);
     Tracer.Pop (t.trace);
+
+    (* MSIR: compile the module init body statements, then finalize *)
+    IF msirOk THEN
+      Stmt.CompileMSIR (t.block);
+      MSIRBuilder.EndProc();
+    END;
 
     CG.Set_label (skip);
 

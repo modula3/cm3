@@ -90,4 +90,22 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
    any parameter or result type is unsupported. *)
 PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc;
 
+(*------------------------------------------------------------- Module globals *)
+
+(* Reset the global map.  Call once at the start of each new module
+   (from MSIREmit.BeginUnit). *)
+PROCEDURE BeginModule();
+
+(* Declare a module-level global variable.  Adds the MSIR.Global to the
+   current MSIREmit module and records a mapping from v to GlobalValue so
+   that LookupVar / LookupVarAddr work for module-level variables.
+   Returns FALSE if the type is unsupported or the map is full. *)
+PROCEDURE DeclareGlobal(v: Variable.T;  name: TEXT;  mt: MSIR.T;
+                         isTraced: BOOLEAN): BOOLEAN;
+
+(* Start the module initialisation procedure.  Sets up curProc/curBlock
+   for the init body without walking any scope (globals are already in
+   the globalMap).  Returns FALSE when MSIR is not enabled. *)
+PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN;
+
 END MSIRBuilder.

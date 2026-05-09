@@ -13,6 +13,10 @@ IMPORT MSIR, M3ID;
 
 PROCEDURE IsEnabled(): BOOLEAN;
 
+(* Return the current MSIR.Module being assembled.  NIL outside a
+   BeginUnit/EndUnit bracket or when not enabled. *)
+PROCEDURE CurrentModule(): MSIR.Module;
+
 (* Begin a new compilation unit. Creates a fresh MSIR.Module.
    No-op if not enabled. *)
 PROCEDURE BeginUnit(name: M3ID.T);

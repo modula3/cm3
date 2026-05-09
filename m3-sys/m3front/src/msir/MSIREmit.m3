@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, M3ID, RTParams, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRBuilder, M3ID, RTParams, FileWr, Stdio, Wr, Thread, OSError;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -25,7 +25,11 @@ PROCEDURE BeginUnit(name: M3ID.T) =
     txt := M3ID.ToText(name);
     IF txt = NIL THEN txt := "<anonymous>" END;
     curModule := MSIR.NewModule(txt);
+    MSIRBuilder.BeginModule();
   END BeginUnit;
+
+PROCEDURE CurrentModule(): MSIR.Module =
+  BEGIN RETURN curModule END CurrentModule;
 
 PROCEDURE AddProc(p: MSIR.Proc) =
   BEGIN

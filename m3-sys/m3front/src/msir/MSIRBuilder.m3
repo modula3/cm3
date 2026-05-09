@@ -3,9 +3,10 @@ MODULE MSIRBuilder;
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt;
 
-CONST MaxVarMap   = 64;
+CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
-CONST MaxProcMap  = 128;
+CONST MaxProcMap   = 128;
+CONST MaxGlobalMap = 256;
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
    Each local maps to an alloca ptr (elemType = the allocated type). *)
@@ -15,7 +16,8 @@ TYPE VarEntry = RECORD
   elemType: MSIR.T;       (* NIL => formal; non-NIL => local alloca ptr *)
 END;
 
-TYPE ProcEntry = RECORD key: Value.T;  val: MSIR.Proc END;
+TYPE ProcEntry   = RECORD key: Value.T;    val: MSIR.Proc   END;
+TYPE GlobalEntry = RECORD key: Variable.T; val: MSIR.Global END;
 
 VAR
   curProc:   MSIR.Proc  := NIL;
@@ -31,6 +33,9 @@ VAR
 
   procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
   procMapN: INTEGER := 0;
+
+  globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
+  globalMapN: INTEGER := 0;
 
 PROCEDURE BeginProc(name: M3ID.T;
                     formals: Value.T;
@@ -181,6 +186,7 @@ PROCEDURE BeginProc(name: M3ID.T;
   END BeginProc;
 
 PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
+  VAR gv: MSIR.Value;  gt: MSIR.T;
   BEGIN
     FOR i := 0 TO varMapN - 1 DO
       IF varMap[i].key = v THEN
@@ -190,6 +196,13 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
           (* local: emit a load from the alloca ptr *)
           RETURN MSIR.BuildLoad(curBlock, "", varMap[i].elemType, varMap[i].val);
         END;
+      END;
+    END;
+    FOR i := 0 TO globalMapN - 1 DO
+      IF globalMap[i].key = v THEN
+        gv := MSIR.GlobalValue(globalMap[i].val);
+        gt := MSIR.GlobalType(globalMap[i].val);
+        RETURN MSIR.BuildLoad(curBlock, "", gt, gv);
       END;
     END;
     RETURN NIL;
@@ -204,6 +217,11 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
           RETURN NIL;
         END;
         RETURN varMap[i].val;   (* alloca ptr *)
+      END;
+    END;
+    FOR i := 0 TO globalMapN - 1 DO
+      IF globalMap[i].key = v THEN
+        RETURN MSIR.GlobalValue(globalMap[i].val);
       END;
     END;
     RETURN NIL;
@@ -393,6 +411,46 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
       END;
     END;
   END LookupOrCreateProc;
+
+PROCEDURE BeginModule() =
+  BEGIN
+    globalMapN := 0;
+    procMapN   := 0;
+  END BeginModule;
+
+PROCEDURE DeclareGlobal(v: Variable.T;  name: TEXT;  mt: MSIR.T;
+                         isTraced: BOOLEAN): BOOLEAN =
+  VAR
+    m:  MSIR.Module;
+    g:  MSIR.Global;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
+    m := MSIREmit.CurrentModule();
+    IF m = NIL THEN RETURN FALSE END;
+    IF globalMapN >= MaxGlobalMap THEN RETURN FALSE END;
+    g := MSIR.NewGlobal(name, mt, isTraced);
+    MSIR.ModuleAddGlobal(m, g);
+    globalMap[globalMapN].key := v;
+    globalMap[globalMapN].val := g;
+    INC(globalMapN);
+    RETURN TRUE;
+  END DeclareGlobal;
+
+PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
+  VAR resultT: MSIR.T;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
+    <* ASSERT curProc = NIL *>
+    abandoned := FALSE;
+    varMapN   := 0;
+    exitDepth := 0;
+    blockSeq  := 0;
+    resultT   := MSIR.TVoid();
+    curProc  := MSIR.NewProc(name, ARRAY OF MSIR.Param{}, resultT);
+    curBlock := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
+    MSIR.ProcAddBlock(curProc, curBlock);
+    RETURN TRUE;
+  END BeginModuleInit;
 
 BEGIN
 END MSIRBuilder.
