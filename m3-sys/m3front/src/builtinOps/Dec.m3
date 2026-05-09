@@ -9,7 +9,7 @@
 MODULE Dec;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, Int, LInt, Module;
-IMPORT M3ID, Addr, Target, TInt, IntegerExpr, Host, NamedExpr;
+IMPORT M3ID, Addr, Target, TInt, IntegerExpr, Host, NamedExpr, MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -117,6 +117,36 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.NoteWrite (lhs);
   END Compile;
 
+PROCEDURE DecMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    lhsExpr := ce.args[0];
+    addr    := Expr.LValueMSIR (lhsExpr);
+    mt      : MSIR.T;
+    old, delta, updated : MSIR.Value;
+    blk     := MSIRBuilder.CurrentBlock ();
+  BEGIN
+    IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
+    IF addr = NIL THEN
+      MSIRBuilder.Abandon ("DEC: cannot get lvalue in MSIR");
+      RETURN NIL;
+    END;
+    mt := MSIRType.Translate (Expr.TypeOf (lhsExpr));
+    IF mt = NIL THEN
+      MSIRBuilder.Abandon ("DEC: unsupported variable type");
+      RETURN NIL;
+    END;
+    old := MSIR.BuildLoad (blk, "", mt, addr);
+    IF NUMBER (ce.args^) > 1 THEN
+      delta := Expr.CompileMSIR (ce.args[1]);
+      IF delta = NIL THEN RETURN NIL END;
+    ELSE
+      delta := MSIR.ConstInt (MSIR.ValueType (old), 1L);
+    END;
+    updated := MSIR.BuildISub (blk, "", old, delta);
+    MSIR.BuildStore (blk, updated, addr);
+    RETURN NIL;
+  END DecMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 2, FALSE, FALSE, TRUE, NIL,
@@ -134,6 +164,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, DecMSIR);
     Procedure.DefinePredefined ("DEC", Z, TRUE);
   END Initialize;
 

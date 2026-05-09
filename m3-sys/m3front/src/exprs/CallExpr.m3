@@ -42,6 +42,7 @@ REVEAL
                  noteWriter   : NoteWriter;
                  isIndirect   : Predicate;
                  builtinAlign : BuiltinAlign;
+                 compileMSIR  : MSIRCompiler := NIL;
                END;
 
 REVEAL
@@ -357,6 +358,11 @@ PROCEDURE CallExprAlign (p: T): Type.BitAlignT =
     END;
   END CallExprAlign;
 
+PROCEDURE SetMethodMSIR (ml: MethodList;  c: MSIRCompiler) =
+  BEGIN
+    ml.compileMSIR := c;
+  END SetMethodMSIR;
+
 PROCEDURE BuiltinAlignDefault (p: T): Type.BitAlignT =
   VAR
     resultType : Type.T;
@@ -452,6 +458,10 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN NIL END;
     IF NOT IsUserProc(p) THEN
+      Resolve(p);
+      IF p.methods # NIL AND p.methods.compileMSIR # NIL THEN
+        RETURN p.methods.compileMSIR(p);
+      END;
       MSIRBuilder.Abandon("builtin call not supported in MSIR v0");
       RETURN NIL;
     END;

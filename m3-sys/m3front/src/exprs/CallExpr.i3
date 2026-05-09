@@ -12,7 +12,7 @@ INTERFACE CallExpr;
 (* NOTE: Notwithstanding its name, this interface handles only
          calls on builtin procedures.
 *)
-IMPORT CG, Expr, Type, Target;
+IMPORT CG, Expr, Type, Target, MSIR;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T;
 
@@ -84,5 +84,8 @@ PROCEDURE PrepNoBranch   (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NoBranch       (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NotWritable    (t: T);
 PROCEDURE BuiltinAlignDefault (t: T): Type.BitAlignT;
+
+TYPE MSIRCompiler = PROCEDURE (t: T): MSIR.Value;
+PROCEDURE SetMethodMSIR (ml: MethodList;  c: MSIRCompiler);
 
 END CallExpr.

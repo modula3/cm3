@@ -9,7 +9,7 @@
 MODULE Val;
 
 IMPORT CallExpr, Expr, ExprRep, Type, Procedure, Error, TypeExpr, Int, LInt;
-IMPORT IntegerExpr, EnumExpr, EnumType, CheckExpr, Target, TInt, CG;
+IMPORT IntegerExpr, EnumExpr, EnumType, CheckExpr, Target, TInt, CG, MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -112,6 +112,16 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     Expr.GetBounds (ce.args[0], min, max);
   END GetBounds;
 
+PROCEDURE ValMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    v       := Expr.CompileMSIR (ce.args[0]);
+    resultT := MSIRType.Translate (Expr.TypeOf (ce));
+  BEGIN
+    IF v = NIL OR resultT = NIL THEN RETURN NIL END;
+    IF MSIR.Equal (MSIR.ValueType (v), resultT) THEN RETURN v END;
+    RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", v, resultT);
+  END ValMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
@@ -130,6 +140,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, ValMSIR);
     Procedure.DefinePredefined ("VAL", Z, TRUE);
   END Initialize;
 
