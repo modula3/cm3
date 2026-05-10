@@ -247,7 +247,7 @@ TYPE Op = {
   Dispatch, Narrow, Istype, Typecase,
   (* exception *)
   Raise,
-  LandingPad,   (* LLVM landingpad instruction; cleanup or catch _ZTI7_M3Exc *)
+  LandingPad,   (* LLVM landingpad instruction; cleanup or catch _ZTI6_M3Exc *)
   ExtractValue, (* extract field from a struct aggregate by index *)
   Resume,       (* LLVM resume — re-throw after landingpad (terminator) *)
   (* open arrays *)
@@ -260,7 +260,11 @@ TYPE Op = {
   (* representation conversion *)
   Convert,
   (* sets *)
-  SetUnion, SetIntersect, SetDifference, SetMember
+  SetUnion, SetIntersect, SetDifference, SetMember,
+  (* indirect dispatch *)
+  PtrAdd,         (* getelementptr ptr, ptr %base, i64 N  — vtable slot address *)
+  CallIndirect,   (* call via function-pointer value (no static Proc target) *)
+  InvokeIndirect  (* invoke via function-pointer value, with normal/unwind targets *)
 };
 
 TYPE CmpPred = {
@@ -448,6 +452,23 @@ PROCEDURE BuildSetDifference(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildSetMember    (b: Block;  name: TEXT;
                              set: Value;  elt: Value): Value;
                              (* result: i1 *)
+
+(*----------------------------------------------- indirect dispatch *)
+
+(* Advance a pointer by idx slots: `getelementptr ptr, ptr %base, i64 idx`.
+   Used for vtable indexing.  Result type = same as base. *)
+PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value;
+
+(* Call through a function-pointer value.  fn must have ptr type.
+   rtype is the MSIR return type (NIL for void).  Like BuildCall but the
+   callee is a runtime value rather than a statically known Proc. *)
+PROCEDURE BuildCallIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
+                             READONLY args: ARRAY OF Value): Value;
+
+(* Invoke through a function-pointer value, with EH normal/unwind targets. *)
+PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
+                               READONLY args: ARRAY OF Value;
+                               normalBlock: Block;  unwindBlock: Block): Value;
 
 (*------------------------------------------------- heap-array builders *)
 

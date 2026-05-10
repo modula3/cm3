@@ -810,6 +810,17 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     END;
   END LValueMSIR;
 
+PROCEDURE LhsExpr (e: Expr.T): Expr.T =
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN NIL;
+    | P(p) => Resolve (p);
+              IF p.class = Class.objMethod THEN RETURN p.lhsExpr END;
+              RETURN NIL;
+    ELSE RETURN NIL;
+    END;
+  END LhsExpr;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR fieldInfo: Field.Info;  fieldType: MSIR.T;  addr: MSIR.Value;
       folded: Expr.T;

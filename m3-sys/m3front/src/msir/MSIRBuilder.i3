@@ -110,6 +110,16 @@ PROCEDURE CurrentUnwindBlock(): MSIR.Block;  (* NIL if not in a try *)
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
+(* Emit a virtual method dispatch on a CM3 object reference.
+   obj:  the receiver (gc_ref void or ptr — first word is the vtable pointer)
+   midx: vtable slot index (= Method.Info.offset / Target.Address.size)
+   rtype: MSIR return type of the method (NIL for void)
+   args:  explicit arguments (NOT including the implicit self/obj first arg)
+   Prepends obj as the first argument.  Uses invoke inside a TRY context. *)
+PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
+                          rtype: MSIR.T;
+                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
 (*------------------------------------------------------------- Module globals *)
 
 (* Reset the global map.  Call once at the start of each new module

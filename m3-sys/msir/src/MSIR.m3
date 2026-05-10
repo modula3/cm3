@@ -1207,6 +1207,59 @@ PROCEDURE BuildResume(b: Block;  lp: Value) =
     addInsn(b, i);
   END BuildResume;
 
+PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op         := Op.PtrAdd;
+    i.operands   := NEW(REF ARRAY OF Value, 1);
+    i.operands[0] := base;
+    i.extractIdx := VAL(idx, INTEGER);   (* reuse extractIdx for the constant index *)
+    i.result     := makeResult(b, base.type, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildPtrAdd;
+
+PROCEDURE BuildCallIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
+                             READONLY args: ARRAY OF Value): Value =
+  VAR
+    i    := NEW(Insn);
+    nOps := 1 + NUMBER(args);
+    ops  := NEW(REF ARRAY OF Value, nOps);
+  BEGIN
+    i.op       := Op.CallIndirect;
+    ops[0]     := fn;    (* ops[0] = function pointer *)
+    FOR k := 0 TO NUMBER(args) - 1 DO ops[1 + k] := args[k] END;
+    i.operands  := ops;
+    i.targetType := rtype;   (* return type stored in targetType *)
+    IF rtype # NIL AND Kind(rtype) # TypeKind.Void THEN
+      i.result := makeResult(b, rtype, name, i);
+    END;
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildCallIndirect;
+
+PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
+                               READONLY args: ARRAY OF Value;
+                               normalBlock: Block;  unwindBlock: Block): Value =
+  VAR
+    i    := NEW(Insn);
+    nOps := 1 + NUMBER(args);
+    ops  := NEW(REF ARRAY OF Value, nOps);
+  BEGIN
+    i.op       := Op.InvokeIndirect;
+    ops[0]     := fn;
+    FOR k := 0 TO NUMBER(args) - 1 DO ops[1 + k] := args[k] END;
+    i.operands   := ops;
+    i.targetType  := rtype;
+    i.br0Tgt     := normalBlock;
+    i.br1Tgt     := unwindBlock;
+    IF rtype # NIL AND Kind(rtype) # TypeKind.Void THEN
+      i.result := makeResult(b, rtype, name, i);
+    END;
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildInvokeIndirect;
+
 PROCEDURE BuildRaise(b: Block;  exceptionSym: TEXT;  value: Value) =
   VAR i := NEW(Insn);
   BEGIN
@@ -1438,7 +1491,7 @@ PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
     CASE ri.op OF
     | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable,
       Op.UnwindTo, Op.RetThroughEnvelope, Op.Typecase,
-      Op.Resume, Op.Invoke =>
+      Op.Resume, Op.Invoke, Op.InvokeIndirect =>
         RETURN TRUE;
     ELSE
       RETURN FALSE;

@@ -532,6 +532,63 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "\n");
         END;
 
+    | MSIR.Op.PtrAdd =>
+        (* getelementptr ptr, ptr %base, i64 N — advances base by N pointer slots *)
+        VAR
+          baseV := MSIR.InsnOperand(i, 0);
+          idx   := MSIR.InsnExtractIdx(i);
+        BEGIN
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr ptr, ptr ");
+          LLOpVal(wr, baseV);
+          Wr.PutText(wr, ", i64 " & Fmt.Int(idx) & "\n");
+        END;
+
+    | MSIR.Op.CallIndirect =>
+        (* ops[0]=fn, ops[1..n-1]=args; targetType=return type *)
+        VAR
+          fnV   := MSIR.InsnOperand(i, 0);
+          rtype := MSIR.InsnTargetType(i);
+        BEGIN
+          Wr.PutText(wr, "  ");
+          IF res # NIL THEN Wr.PutText(wr, MSIR.ValueName(res) & " = ") END;
+          Wr.PutText(wr, "call ");
+          IF rtype # NIL THEN LLType(wr, rtype) ELSE Wr.PutText(wr, "void") END;
+          Wr.PutText(wr, " ");
+          LLOpVal(wr, fnV);
+          Wr.PutText(wr, "(");
+          FOR k := 1 TO nOps - 1 DO
+            IF k > 1 THEN Wr.PutText(wr, ", ") END;
+            LLTypedVal(wr, MSIR.InsnOperand(i, k));
+          END;
+          Wr.PutText(wr, ")\n");
+        END;
+
+    | MSIR.Op.InvokeIndirect =>
+        VAR
+          fnV     := MSIR.InsnOperand(i, 0);
+          rtype   := MSIR.InsnTargetType(i);
+          normalB := MSIR.InsnBrTarget(i, 0);
+          unwindB := MSIR.InsnBrTarget(i, 1);
+        BEGIN
+          Wr.PutText(wr, "  ");
+          IF res # NIL THEN Wr.PutText(wr, MSIR.ValueName(res) & " = ") END;
+          Wr.PutText(wr, "invoke ");
+          IF rtype # NIL THEN LLType(wr, rtype) ELSE Wr.PutText(wr, "void") END;
+          Wr.PutText(wr, " ");
+          LLOpVal(wr, fnV);
+          Wr.PutText(wr, "(");
+          FOR k := 1 TO nOps - 1 DO
+            IF k > 1 THEN Wr.PutText(wr, ", ") END;
+            LLTypedVal(wr, MSIR.InsnOperand(i, k));
+          END;
+          Wr.PutText(wr, ")\n");
+          Wr.PutText(wr, "          to label %");
+          Wr.PutText(wr, MSIR.BlockLabel(normalB));
+          Wr.PutText(wr, " unwind label %");
+          Wr.PutText(wr, MSIR.BlockLabel(unwindB));
+          Wr.PutText(wr, "\n");
+        END;
+
     | MSIR.Op.LandingPad =>
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = landingpad ");
         LLType(wr, MSIR.ValueType(res));
@@ -812,7 +869,8 @@ PROCEDURE HasInvoke(p: MSIR.Proc): BOOLEAN =
         ni := MSIR.BlockInsnCount(b);
       BEGIN
         FOR ii := 0 TO ni - 1 DO
-          IF MSIR.InsnOp(MSIR.BlockInsn(b, ii)) = MSIR.Op.Invoke THEN
+          IF MSIR.InsnOp(MSIR.BlockInsn(b, ii)) = MSIR.Op.Invoke OR
+             MSIR.InsnOp(MSIR.BlockInsn(b, ii)) = MSIR.Op.InvokeIndirect THEN
             RETURN TRUE;
           END;
         END;

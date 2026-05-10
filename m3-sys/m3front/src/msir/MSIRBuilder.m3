@@ -417,6 +417,51 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
     RETURN result;
   END EmitCall;
 
+PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
+                          rtype: MSIR.T;
+                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+  VAR
+    ptrT    := MSIR.TPtr(MSIR.TVoid());
+    suite   : MSIR.Value;
+    slotPtr : MSIR.Value;
+    fn      : MSIR.Value;
+    allArgs : REF ARRAY OF MSIR.Value;
+    nArgs   := NUMBER(args);
+    unwind  : MSIR.Block;
+    normalB : MSIR.Block;
+    result  : MSIR.Value;
+  BEGIN
+    (* 1. Load vtable pointer (first word of object). *)
+    suite := MSIR.BuildLoad(curBlock, "", ptrT, obj);
+
+    (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
+    IF midx = 0L THEN
+      slotPtr := suite;
+    ELSE
+      slotPtr := MSIR.BuildPtrAdd(curBlock, "", suite, midx);
+    END;
+
+    (* 3. Load function pointer from the slot. *)
+    fn := MSIR.BuildLoad(curBlock, "", ptrT, slotPtr);
+
+    (* 4. Build argument list: obj (implicit self) first, then explicit args. *)
+    allArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
+    allArgs[0] := obj;
+    FOR k := 0 TO nArgs - 1 DO allArgs[1 + k] := args[k] END;
+
+    (* 5. Indirect call or invoke depending on TRY context. *)
+    unwind := CurrentUnwindBlock();
+    IF unwind # NIL THEN
+      normalB := NewBlock("dispatch.cont");
+      result  := MSIR.BuildInvokeIndirect(curBlock, name, fn, rtype, allArgs^,
+                                            normalB, unwind);
+      curBlock := normalB;
+    ELSE
+      result := MSIR.BuildCallIndirect(curBlock, name, fn, rtype, allArgs^);
+    END;
+    RETURN result;
+  END EmitMethodCall;
+
 PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
   BEGIN
     IF v = NIL OR p = NIL THEN RETURN END;

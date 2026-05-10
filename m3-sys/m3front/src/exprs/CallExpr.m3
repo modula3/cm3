@@ -15,7 +15,7 @@ MODULE CallExpr;
 
 IMPORT CG, Expr, ExprRep, Error, ProcType, Type, UserProc;
 IMPORT KeywordExpr, ESet, QualifyExpr, ErrType, Value, Target;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType, Method;
 
 REVEAL
   MethodList = BRANDED "CallExpr.MethodList" REF RECORD
@@ -466,6 +466,41 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
       RETURN NIL;
     END;
     IF NOT UserProc.IsProcedureLiteral(p.proc, v) THEN
+      (* Check for virtual method dispatch: obj.method(args) *)
+      VAR
+        methodVal : Value.T;
+        methodInfo: Method.Info;
+        objExpr   : Expr.T;
+        objVal    : MSIR.Value;
+        rtype     : MSIR.T;
+        dispArgs  : REF ARRAY OF MSIR.Value;
+        midx      : LONGINT;
+      BEGIN
+        IF QualifyExpr.Split(p.proc, methodVal) AND
+           Value.ClassOf(methodVal) = Value.Class.Method THEN
+          objExpr := QualifyExpr.LhsExpr(p.proc);
+          IF objExpr = NIL THEN
+            MSIRBuilder.Abandon("method call: cannot get receiver");
+            RETURN NIL;
+          END;
+          EVAL Method.Split(methodVal, methodInfo);
+          (* Vtable index = bit offset / address size in bits *)
+          midx := VAL(methodInfo.offset, LONGINT)
+                    DIV VAL(Target.Address.size, LONGINT);
+
+          objVal := Expr.CompileMSIR(objExpr);
+          IF objVal = NIL THEN RETURN NIL END;
+
+          n       := NUMBER(p.args^);
+          rtype   := MSIRType.TranslateResult(ProcType.Result(p.proc_type));
+          dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
+          FOR i := 0 TO n - 1 DO
+            dispArgs[i] := Expr.CompileMSIR(p.args[i]);
+            IF dispArgs[i] = NIL THEN RETURN NIL END;
+          END;
+          RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
+        END;
+      END;
       MSIRBuilder.Abandon("indirect/closure call not supported in MSIR v0");
       RETURN NIL;
     END;

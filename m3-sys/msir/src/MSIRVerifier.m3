@@ -33,7 +33,7 @@ PROCEDURE IsTerminator(op: MSIR.Op): BOOLEAN =
     | MSIR.Op.Br, MSIR.Op.CondBr, MSIR.Op.Ret, MSIR.Op.Unreachable,
       MSIR.Op.UnwindTo, MSIR.Op.RetThroughEnvelope,
       MSIR.Op.Raise, MSIR.Op.Typecase,
-      MSIR.Op.Invoke, MSIR.Op.Resume => RETURN TRUE;
+      MSIR.Op.Invoke, MSIR.Op.InvokeIndirect, MSIR.Op.Resume => RETURN TRUE;
     ELSE RETURN FALSE
     END;
   END IsTerminator;
@@ -240,8 +240,10 @@ PROCEDURE CheckLoad(c: Ctx;  i: MSIR.Insn) =
   BEGIN
     IF MSIR.InsnOperandCount(i) # 1 THEN Err(c, "load expects 1 operand"); RETURN END;
     addrT := MSIR.ValueType(MSIR.InsnOperand(i, 0));
-    IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr THEN
-      Err(c, "load address must be ptr type"); RETURN;
+    IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr AND
+       MSIR.Kind(addrT) # MSIR.TypeKind.GcRef AND
+       MSIR.Kind(addrT) # MSIR.TypeKind.GcSlot THEN
+      Err(c, "load address must be ptr, gc_ref, or gc_slot type"); RETURN;
     END;
     IF res = NIL THEN Err(c, "load must have a result"); RETURN END;
     IF MSIR.Kind(MSIR.EltType(addrT)) # MSIR.TypeKind.Void AND
@@ -256,8 +258,10 @@ PROCEDURE CheckStore(c: Ctx;  i: MSIR.Insn) =
     IF MSIR.InsnOperandCount(i) # 2 THEN Err(c, "store expects 2 operands"); RETURN END;
     valT  := MSIR.ValueType(MSIR.InsnOperand(i, 0));
     addrT := MSIR.ValueType(MSIR.InsnOperand(i, 1));
-    IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr THEN
-      Err(c, "store destination must be ptr type"); RETURN;
+    IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr AND
+       MSIR.Kind(addrT) # MSIR.TypeKind.GcRef AND
+       MSIR.Kind(addrT) # MSIR.TypeKind.GcSlot THEN
+      Err(c, "store destination must be ptr, gc_ref, or gc_slot type"); RETURN;
     END;
     IF MSIR.Kind(MSIR.EltType(addrT)) # MSIR.TypeKind.Void AND
        NOT MSIR.Equal(MSIR.EltType(addrT), valT) THEN

@@ -20,4 +20,9 @@ PROCEDURE PassObject (e: Expr.T): BOOLEAN;
 
 PROCEDURE MethodType (e: Expr.T): Type.T;
 
+(* If e is a QualifyExpr for an object method call (class=objMethod),
+   return the left-hand object expression.  Otherwise return NIL.
+   Used by the MSIR path to compile virtual dispatch. *)
+PROCEDURE LhsExpr (e: Expr.T): Expr.T;
+
 END QualifyExpr.

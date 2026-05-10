@@ -383,6 +383,18 @@ PROCEDURE Neither (a, b: INTEGER): BOOLEAN =
     RETURN NOT (a > 0 OR b > 0);
   END Neither;
 
+(* Method dispatch via virtual call on OBJECT types *)
+TYPE
+  Shape = OBJECT METHODS area(): INTEGER := ShapeArea END;
+  Square = Shape OBJECT side: INTEGER := 0
+             OVERRIDES area := SquareArea END;
+
+PROCEDURE ShapeArea (<*UNUSED*>self: Shape): INTEGER = BEGIN RETURN 0 END ShapeArea;
+PROCEDURE SquareArea (self: Square): INTEGER = BEGIN RETURN self.side * self.side END SquareArea;
+
+PROCEDURE ShapeDispatch (s: Shape): INTEGER =
+  BEGIN RETURN s.area() END ShapeDispatch;
+
 (* TYPECASE: dispatch on dynamic type of a REFANY.
    Returns 1 for REF INTEGER, 2 for REF BOOLEAN, 0 for ELSE.
    No variable binding in clauses so calling with NIL is safe:

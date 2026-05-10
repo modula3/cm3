@@ -167,6 +167,9 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.OpenArrayNew       => RETURN "openarray.new";
     | MSIR.Op.OpenArrayDeref     => RETURN "openarray.deref";
     | MSIR.Op.ArrayElemAddr      => RETURN "array.elem_addr";
+    | MSIR.Op.PtrAdd             => RETURN "ptr.add";
+    | MSIR.Op.CallIndirect       => RETURN "call.indirect";
+    | MSIR.Op.InvokeIndirect     => RETURN "invoke.indirect";
     END;
   END OpText;
 
@@ -405,7 +408,7 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         IF MSIR.InsnIsCleanup(i) THEN
           Wr.PutText(wr, " cleanup");
         ELSE
-          Wr.PutText(wr, " catch _ZTI7_M3Exc");
+          Wr.PutText(wr, " catch _ZTI6_M3Exc");
         END;
     | MSIR.Op.ExtractValue =>
         Wr.PutText(wr, " ");
@@ -415,6 +418,26 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.Resume =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
+    | MSIR.Op.PtrAdd =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", " & Fmt.Int(MSIR.InsnExtractIdx(i)));
+    | MSIR.Op.CallIndirect, MSIR.Op.InvokeIndirect =>
+        (* ops[0]=fn, ops[1..n-1]=args *)
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, "(");
+        FOR k := 1 TO nOps - 1 DO
+          IF k > 1 THEN Wr.PutText(wr, ", ") END;
+          NameRef(wr, MSIR.InsnOperand(i, k));
+        END;
+        Wr.PutText(wr, ")");
+        IF MSIR.InsnBrTarget(i, 0) # NIL THEN
+          Wr.PutText(wr, " to ");
+          Wr.PutText(wr, MSIR.BlockLabel(MSIR.InsnBrTarget(i, 0)));
+          Wr.PutText(wr, " unwind ");
+          Wr.PutText(wr, MSIR.BlockLabel(MSIR.InsnBrTarget(i, 1)));
+        END;
     ELSE (* no extra operands printed for other ops *)
     END;
     Wr.PutText(wr, "\n");
