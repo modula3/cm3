@@ -313,7 +313,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 ### Known Limitations / Remaining Work
 
 - **Exception value binding**: `EXCEPT E(v) =>` skipped (falls back to body-only); requires extracting arg from activation record
-- **`__cxa_end_catch` in matched handlers**: catch handlers that exit via `ret` are missing `__cxa_end_catch()` — exception object leaks until process exit (no crash). Handlers that fall through to merge call it correctly.
+- **Exception value binding**: `EXCEPT E(v) =>` skipped (falls back to body-only); requires extracting arg from activation record
 - **TYPECASE**: not implemented; calls `MSIRBuilder.Abandon`
 - **Method dispatch**: not implemented
 - **LOCK**: not implemented

@@ -46,7 +46,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [ ] Module body TEXT/IO — `Fmt.Int` etc. call correctly but string concatenation and IO.Put crash without TYPECASE/TEXT support
 
 ### B. ~~RAISE statement~~ ✓ Done
-- Known gap: `__cxa_end_catch` missing for matched handlers that exit via `ret` (exception object leaks until process exit; no crash). Fall-through handlers and no-match resume both call it correctly.
+- Ownership lifecycle correct: `__cxa_get_exception_ptr` for peeking (no ownership), `__cxa_begin_catch`/`__cxa_end_catch` strictly bracketing matched handler bodies (including before any `ret` via `ReturnStmt.CompileMSIR`), plain `resume` for no-match.
 
 ### C. Exception value binding
 - `EXCEPT E(v) =>` handler with bound variable skipped (falls back to body-only)
