@@ -347,6 +347,23 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
+- **Debug symbols**: no source locations reach LLVM IR; see below
+
+### Debug Symbol Support (Future Work)
+
+The MSIR → LLVM path currently emits no debug metadata. Adding DWARF support is self-contained additive work with no architectural changes required.
+
+**What LLVM needs**: `!DICompileUnit`, `!DIFile`, `!DISubprogram` per proc, `!DILocalVariable` per local, `!DILocation` on every instruction, and `llvm.dbg.declare` intrinsics linking allocas to their variable descriptors.
+
+**Natural hook points** (already in the code):
+- `Scanner.offset` / `t.origin` carry (file, line) information throughout m3front
+- `CG.Gen_location(offset)` is called at statement boundaries, proc entry, etc. — MSIR needs a parallel `MSIRBuilder.SetLocation(offset)` at the same sites
+- `AddLocalMSIR` is where `llvm.dbg.declare` intrinsics would be emitted after each alloca
+- `BeginProc` is where `!DISubprogram` would be attached to the proc definition
+
+**Complication**: CM3's `Scanner.offset` packs file identity and line number into a single integer using m3front-internal encoding. Decoding back to a human-readable (file, line) requires `Scanner.Here` or equivalent — currently only callable during active scanning. A mapping table from file-id to path would need to be maintained during compilation.
+
+**Right time to implement**: once the LLVM path is the primary production path. Debug metadata roughly doubles emitted LLVM IR size, so deferring until stability is established is reasonable.
 
 ### Cosmetic Issues in Emitted MSIR
 
