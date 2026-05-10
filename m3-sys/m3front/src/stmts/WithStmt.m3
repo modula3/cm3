@@ -13,6 +13,7 @@ IMPORT M3ID, CG, Expr, Scope, Value, Variable, OpenArrayType;
 IMPORT Type, Stmt, StmtRep, Token, M3RT, Target, Tracer, AssignStmt;
 IMPORT ArrayExpr;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   Kind = {designator, openarray, structure, other};
@@ -27,6 +28,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -174,6 +176,46 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     Scope.Pop (zz);
     RETURN oc;
   END Compile;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    addr:               MSIR.Value;
+    val:                MSIR.Value;
+    mt:                 MSIR.T;
+    t:                  Type.T;
+    global, indirect,
+    lhs:                BOOLEAN;
+  BEGIN
+    CASE p.kind OF
+    | Kind.designator =>
+        addr := Expr.LValueMSIR (p.expr);
+        IF addr = NIL THEN
+          MSIRBuilder.Abandon ("WITH designator: cannot get lvalue in MSIR");
+          RETURN;
+        END;
+        Variable.Split (p.var, t, global, indirect, lhs);
+        mt := MSIRType.Translate (t);
+        IF mt = NIL THEN
+          MSIRBuilder.Abandon ("WITH designator: unsupported type");
+          RETURN;
+        END;
+        MSIRBuilder.BindVarAddr (p.var, addr, mt);
+
+    | Kind.other =>
+        val := Expr.CompileMSIR (p.expr);
+        IF val = NIL THEN RETURN END;
+        IF NOT MSIRBuilder.AddLocal (p.var) THEN RETURN END;
+        addr := MSIRBuilder.LookupVarAddr (p.var);
+        IF addr = NIL THEN RETURN END;
+        MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
+
+    ELSE
+        MSIRBuilder.Abandon ("WITH: unsupported kind (structure/openarray) in MSIR v0");
+        RETURN;
+    END;
+
+    Stmt.CompileMSIR (p.body);
+  END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   BEGIN

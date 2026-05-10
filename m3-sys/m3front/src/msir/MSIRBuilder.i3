@@ -46,6 +46,11 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value;
    Returns FALSE (and Abandons) if the type is unsupported. *)
 PROCEDURE AddLocal(v: Variable.T): BOOLEAN;
 
+(* Bind a Variable.T to an existing address (no alloca emitted).
+   LookupVar(v) will emit a load through addr; LookupVarAddr(v) returns addr.
+   Used for WITH designator variables, where addr is the target's address. *)
+PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T);
+
 (* EndProc finalizes the current proc. If unsupported was ever
    asserted, the proc is dropped; otherwise it is appended to the
    current MSIREmit module. *)

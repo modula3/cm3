@@ -272,6 +272,18 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
     RETURN TRUE;
   END AddLocal;
 
+PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
+  BEGIN
+    IF varMapN >= MaxVarMap THEN
+      Abandon("too many variables in proc");
+      RETURN;
+    END;
+    varMap[varMapN].key      := v;
+    varMap[varMapN].val      := addr;
+    varMap[varMapN].elemType := elemType;
+    INC(varMapN);
+  END BindVarAddr;
+
 PROCEDURE EndProc() =
   VAR resultT: MSIR.T;
   BEGIN

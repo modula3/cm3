@@ -10,6 +10,7 @@ MODULE RepeatStmt;
 
 IMPORT CG, Expr, Type, Bool, Error, Stmt, StmtRep;
 IMPORT Token, Scanner, Marker;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -20,6 +21,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -68,6 +70,35 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     END;
     RETURN oc;
   END Compile;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    bodyBlk: MSIR.Block;
+    exitBlk: MSIR.Block;
+    cond:    MSIR.Value;
+  BEGIN
+    bodyBlk := MSIRBuilder.NewBlock ("repeat.body");
+    exitBlk := MSIRBuilder.NewBlock ("repeat.exit");
+
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), bodyBlk, ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (bodyBlk);
+
+    MSIRBuilder.PushExitBlock (exitBlk);
+    Stmt.CompileMSIR (p.body);
+    MSIRBuilder.PopExitBlock ();
+
+    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      cond := Expr.CompileMSIR (p.expr);
+      IF cond # NIL THEN
+        (* UNTIL expr: exit if TRUE, loop back if FALSE *)
+        MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                          exitBlk, ARRAY OF MSIR.Value{},
+                          bodyBlk, ARRAY OF MSIR.Value{});
+      END;
+    END;
+
+    MSIRBuilder.SetCurrentBlock (exitBlk);
+  END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   VAR oc := Stmt.GetOutcome (p.body);
