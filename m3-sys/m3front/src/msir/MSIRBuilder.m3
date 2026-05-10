@@ -2,6 +2,7 @@ MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target;
+IMPORT RunTyme, Procedure;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -464,6 +465,15 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
     END;
     RETURN result;
   END EmitMethodCall;
+
+PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
+  VAR proc: Procedure.T;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN NIL END;
+    proc := RunTyme.LookUpProc(h);
+    IF proc = NIL THEN RETURN NIL END;
+    RETURN LookupOrCreateProc(proc, Value.TypeOf(proc));
+  END HookProc;
 
 PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
   BEGIN

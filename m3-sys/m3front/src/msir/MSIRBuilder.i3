@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, M3ID, Type, Value, Scope, Variable;
+IMPORT MSIR, M3ID, Type, Value, Scope, Variable, RunTyme;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -119,6 +119,17 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
+(*---------------------------------------------- RunTyme hook lookup for MSIR *)
+
+(* Look up RunTyme hook h and return the corresponding MSIR.Proc extern stub,
+   creating it if not already registered.  Returns NIL if the hook cannot be
+   found or MSIR is not enabled.
+   Usage in CompileMSIR methods (replaces hardcoded "RTHooks__Foo" names):
+     proc := MSIRBuilder.HookProc(RunTyme.Hook.Foo);
+     IF proc = NIL THEN RETURN NIL END;
+     EVAL MSIRBuilder.EmitCall("", proc, args); *)
+PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc;
 
 (*------------------------------------------------------------- Module globals *)
 
