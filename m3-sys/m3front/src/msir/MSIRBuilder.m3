@@ -435,13 +435,13 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
     suite := MSIR.BuildLoad(curBlock, "", ptrT, obj);
 
     (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
-    (* Vtable slot N is at byte offset N * sizeof(ptr). *)
+    (* Vtable slot N is at byte offset N * Target.Address.bytes. *)
     IF midx = 0L THEN
       slotPtr := suite;
     ELSE
       slotPtr := MSIR.BuildPtrAdd(curBlock, "",
                                   suite,
-                                  midx * VAL(Target.Address.size, LONGINT) DIV 8L);
+                                  midx * VAL(Target.Address.bytes, LONGINT));
     END;
 
     (* 3. Load function pointer from the slot. *)

@@ -2,6 +2,7 @@
 % See repo-root MSIR.md and MSIR-design.md for the design narrative.
 
 import("libm3")
+import("m3middle")
 
 Module("MSIR")
 Module("MSIRPrinter")

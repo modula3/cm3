@@ -199,8 +199,9 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
 
 PROCEDURE CompileMSIR (p: P) =
   (* LOCK mu DO body END  ≡  mu.acquire(); TRY body FINALLY mu.release() END
-     MUTEX vtable: slot 0 = acquire  (M3RT.MUTEX_acquire = 0 bytes)
-                   slot 1 = release  (M3RT.MUTEX_release = 8 bytes on 64-bit) *)
+     MUTEX vtable slot = M3RT.MUTEX_acquire|release (byte offset) / bytes-per-addr
+     M3RT.MUTEX_acquire = 0 * AP → slot 0
+     M3RT.MUTEX_release = 1 * AP → slot 1  where AP = Target.Address.bytes *)
   VAR
     mu:        MSIR.Value;
     lpad:      MSIR.Block;
@@ -221,9 +222,11 @@ PROCEDURE CompileMSIR (p: P) =
     mu := Expr.CompileMSIR(p.mutex);
     IF mu = NIL THEN RETURN END;
 
-    (* Acquire the mutex: mu.acquire() — vtable slot 0. *)
-    EVAL MSIRBuilder.EmitMethodCall("", mu, 0L, MSIR.TVoid(),
-                                     ARRAY OF MSIR.Value{});
+    (* Acquire the mutex: mu.acquire() — vtable slot M3RT.MUTEX_acquire / AP. *)
+    EVAL MSIRBuilder.EmitMethodCall(
+           "", mu,
+           VAL(M3RT.MUTEX_acquire, LONGINT) DIV VAL(Target.Address.bytes, LONGINT),
+           MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR. *)
@@ -255,12 +258,14 @@ PROCEDURE CompileMSIR (p: P) =
     MSIR.BuildStore(lpad, one, excFlag);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
-    (* Finally body: release the mutex — vtable slot 1.
+    (* Finally body: release the mutex — vtable slot M3RT.MUTEX_release / AP.
        Release is called outside our own lpad (already popped), so if it throws
        the exception propagates to any enclosing TRY rather than looping back. *)
     MSIRBuilder.SetCurrentBlock(finBody);
-    EVAL MSIRBuilder.EmitMethodCall("", mu, 1L, MSIR.TVoid(),
-                                     ARRAY OF MSIR.Value{});
+    EVAL MSIRBuilder.EmitMethodCall(
+           "", mu,
+           VAL(M3RT.MUTEX_release, LONGINT) DIV VAL(Target.Address.bytes, LONGINT),
+           MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN

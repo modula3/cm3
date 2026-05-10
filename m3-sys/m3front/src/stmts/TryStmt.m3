@@ -668,8 +668,9 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Build landing pad: catch _M3Exc, extract exception UID.
        _M3Exc.act (ptr to RaiseActivation) is at offset 0 of the thrown obj.
-       RaiseActivation.exception (ExceptionPtr) is at EA_exception = offset 0.
-       ExceptionPtr^.uid (i64) is the first field of the exception descriptor. *)
+       RaiseActivation.exception (ExceptionPtr) is at M3RT.EA_exception = 0 bits.
+       ExceptionPtr^.uid (i64) is the first field of the exception descriptor.
+       Three sequential pointer loads are correct because all three offsets are 0. *)
     lpVal      := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
     excObjPtr  := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
     actPtr     := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr);

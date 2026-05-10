@@ -1,6 +1,7 @@
 MODULE MSIRToLLVM;
 
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr;
+IMPORT M3RT, Target, Word;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (*----------------------------------------------------- module-level state *)
@@ -181,8 +182,8 @@ PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
      gray-bit check:   skip if header gray bit is clear (object is clean)
      slow path:        call RTHooks__CheckLoadTracedRef(ref)
 
-   Header layout (RT0.RefHeader = one word at -8 relative to object ptr):
-     bit 22 = gray bit (RH_gray_offset = 22, mask = 1<<22 = 4194304) *)
+   Header layout (RT0.RefHeader = Target.Address.bytes before object ptr):
+     bit M3RT.RH_gray_offset = gray bit (mask = 1 << RH_gray_offset) *)
 PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
   VAR n: TEXT;
   BEGIN
@@ -202,11 +203,13 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
     (* gray-bit check: read object header word (8 bytes before object ptr) *)
     Wr.PutText(wr, "gc.gray." & n & ":\n");
     Wr.PutText(wr, "  %__gc_hptr." & n
-                   & " = getelementptr i8, ptr " & refName & ", i64 -8\n");
+                   & " = getelementptr i8, ptr " & refName
+                   & ", i64 -" & Fmt.Int(Target.Address.bytes) & "\n");
     Wr.PutText(wr, "  %__gc_hdr."  & n
                    & " = load i64, ptr %__gc_hptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_gb."   & n
-                   & " = and i64 %__gc_hdr." & n & ", 4194304\n");
+                   & " = and i64 %__gc_hdr." & n
+                   & ", " & Fmt.Int(Word.Shift(1, M3RT.RH_gray_offset)) & "\n");
     Wr.PutText(wr, "  %__gc_gr."   & n
                    & " = icmp ne i64 %__gc_gb." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_gr." & n
@@ -228,15 +231,16 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
    The barrier marks the containing object and its page as dirty so the
    GC will re-scan the object's reference fields in the next sweep.
 
-   Fast path: read the header word (one word = 8 bytes before the object
-   pointer); if the dirty bit (bit 21, mask 2097152 = 1<<21) is already
-   set, skip the slow-path call.  Otherwise call RTHooks__CheckStoreTraced.
+   Fast path: read the header word (Target.Address.bytes before the object
+   pointer); if the dirty bit (bit M3RT.RH_dirty_offset, 1<<RH_dirty_offset)
+   is already set, skip the slow-path call.
+   Otherwise call RTHooks__CheckStoreTraced.
 
-   Header layout matches RT0.RefHeaderBits:
-     bit 0:    forwarded
-     bits 1-20: typecode
-     bit 21:   dirty  (RH_dirty_offset)
-     bit 22:   gray *)
+   Header layout matches RT0.RefHeaderBits (M3RT constants):
+     bit 0:                forwarded  (RH_forwarded_offset)
+     bits 1-20:            typecode   (RH_typecode_offset, RH_typecode_size)
+     bit RH_dirty_offset:  dirty
+     bit RH_gray_offset:   gray *)
 PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
   VAR n: TEXT;
   BEGIN
@@ -244,11 +248,13 @@ PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
     n := Fmt.Int(auxN);
     (* Read object header; skip barrier if already dirty. *)
     Wr.PutText(wr, "  %__gc_whptr." & n
-                   & " = getelementptr i8, ptr " & containerName & ", i64 -8\n");
+                   & " = getelementptr i8, ptr " & containerName
+                   & ", i64 -" & Fmt.Int(Target.Address.bytes) & "\n");
     Wr.PutText(wr, "  %__gc_whdr."  & n
                    & " = load i64, ptr %__gc_whptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_wdb."   & n
-                   & " = and i64 %__gc_whdr." & n & ", 2097152\n");
+                   & " = and i64 %__gc_whdr." & n
+                   & ", " & Fmt.Int(Word.Shift(1, M3RT.RH_dirty_offset)) & "\n");
     Wr.PutText(wr, "  %__gc_wdirty." & n
                    & " = icmp ne i64 %__gc_wdb." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_wdirty." & n
@@ -1002,9 +1008,11 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     Wr.PutText(wr, "  ptr null,\n");    (* var_map *)
     Wr.PutText(wr, "  ptr null,\n");    (* gc_map *)
     Wr.PutText(wr, "  ptr null,\n");    (* imports *)
-    Wr.PutText(wr, "  i64 0,\n");       (* link_state: 0 = unlinked *)
-    Wr.PutText(wr, "  ptr @" & binderName & ",\n");  (* binder = ourselves *)
-    Wr.PutText(wr, "  i64 3\n");        (* gc_flags: GC_gen | GC_inc *)
+    Wr.PutText(wr, "  i64 0,\n");       (* MI_link_state: 0 = unlinked *)
+    Wr.PutText(wr, "  ptr @" & binderName & ",\n");  (* MI_binder = ourselves *)
+    (* MI_gc_flags = 3 = RT0.GC_both = RT0.GC_gen OR RT0.GC_inc.
+       RT0 lives in m3core, not m3middle, so we use the literal value. *)
+    Wr.PutText(wr, "  i64 3\n");
     Wr.PutText(wr, "}\n");
 
     (* Binder function: mode=0 → return MI; mode=1 → run body + return MI. *)
