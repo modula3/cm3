@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -19,12 +19,26 @@ PROCEDURE IsEnabled(): BOOLEAN =
   END IsEnabled;
 
 PROCEDURE BeginUnit(name: M3ID.T) =
-  VAR txt: TEXT;
+  VAR txt, triple, datalayout: TEXT;
   BEGIN
     IF NOT IsEnabled() THEN RETURN END;
     txt := M3ID.ToText(name);
     IF txt = NIL THEN txt := "<anonymous>" END;
     curModule := MSIR.NewModule(txt);
+    triple := NIL;  datalayout := NIL;
+    IF Target.System_name # NIL THEN
+      IF Text.Equal(Target.System_name, "ARM64_DARWIN") THEN
+        triple     := "arm64-apple-macosx";
+        datalayout := "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-n32:64-S128-Fn32";
+      ELSIF Text.Equal(Target.System_name, "AMD64_DARWIN") THEN
+        triple     := "x86_64-apple-macosx";
+        datalayout := "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
+      ELSIF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+        triple     := "x86_64-unknown-linux-gnu";
+        datalayout := "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
+      END;
+    END;
+    IF triple # NIL THEN MSIR.SetModuleTarget(curModule, triple, datalayout) END;
     MSIRBuilder.BeginModule();
   END BeginUnit;
 

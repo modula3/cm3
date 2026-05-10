@@ -658,10 +658,12 @@ PROCEDURE ProcItemIsEnvelope(p: Proc; i: INTEGER): BOOLEAN =
 (*--------------------------------------------------------------- Module *)
 
 REVEAL Module = BRANDED "MSIR.Module" REF RECORD
-  name:    TEXT;
-  imports: RefSeq.T;                               (* elements: TEXT *)
-  procs:   RefSeq.T;                               (* elements: Proc *)
-  globals: RefSeq.T;                               (* elements: Global *)
+  name:       TEXT;
+  triple:     TEXT := NIL;
+  datalayout: TEXT := NIL;
+  imports:    RefSeq.T;                            (* elements: TEXT *)
+  procs:      RefSeq.T;                            (* elements: Proc *)
+  globals:    RefSeq.T;                            (* elements: Global *)
 END;
 
 REVEAL Global = BRANDED "MSIR.Global" REF RECORD
@@ -713,6 +715,14 @@ PROCEDURE NewModule(name: TEXT): Module =
   END NewModule;
 
 PROCEDURE ModuleName(m: Module): TEXT = BEGIN RETURN m.name END ModuleName;
+
+PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT) =
+  BEGIN m.triple := triple;  m.datalayout := datalayout END SetModuleTarget;
+PROCEDURE ModuleTriple(m: Module): TEXT =
+  BEGIN RETURN m.triple END ModuleTriple;
+PROCEDURE ModuleDataLayout(m: Module): TEXT =
+  BEGIN RETURN m.datalayout END ModuleDataLayout;
+
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT) =
   BEGIN m.imports.addhi(name) END ModuleAddImport;
 PROCEDURE ModuleImportCount(m: Module): INTEGER =

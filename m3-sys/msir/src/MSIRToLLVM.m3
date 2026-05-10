@@ -3,12 +3,56 @@ MODULE MSIRToLLVM;
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
-(*------------------------------------------------------ auxiliary naming *)
+(*----------------------------------------------------- module-level state *)
 
-VAR auxN: INTEGER := 0;
+VAR
+  auxN:          INTEGER     := 0;
+  curEmitModule: MSIR.Module := NIL;
+
+(*------------------------------------------------------ auxiliary naming *)
 
 PROCEDURE NewAux(): TEXT =
   BEGIN INC(auxN); RETURN "%__ll" & Fmt.Int(auxN) END NewAux;
+
+(*------------------------------------------------------ symbol mangling *)
+
+(* Replace every '.' in n with '__' — M3 module-separator to C ABI. *)
+PROCEDURE DotsToUnderscore(n: TEXT): TEXT =
+  VAR result := "";  start, dot: INTEGER;
+  BEGIN
+    start := 0;
+    LOOP
+      dot := Text.FindChar(n, '.', start);
+      IF dot < 0 THEN RETURN result & Text.Sub(n, start) END;
+      result := result & Text.Sub(n, start, dot - start) & "__";
+      start  := dot + 1;
+    END;
+  END DotsToUnderscore;
+
+(* LLVM symbol name for a procedure:
+   - module-internal: <Module>__<Proc>
+   - M3 extern (name has '.'): replace dots with '__'
+   - C extern (no dot): use as-is *)
+PROCEDURE LLSymbol(p: MSIR.Proc): TEXT =
+  VAR n := MSIR.ProcName(p);
+  BEGIN
+    IF IsModuleProc(curEmitModule, p) THEN
+      RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
+    ELSIF Text.FindChar(n, '.') >= 0 THEN
+      (* Fully qualified M3 name ("Fmt.Int") → replace dots with __ *)
+      RETURN DotsToUnderscore(n);
+    ELSIF IsModuleProcByName(curEmitModule, n) THEN
+      (* Extern stub whose scope name was empty: unqualified name matches a
+         module proc — prepend the module prefix. *)
+      RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
+    ELSE
+      RETURN n;  (* C extern or truly external M3 symbol *)
+    END;
+  END LLSymbol;
+
+(* LLVM symbol name for a module-local global variable. *)
+PROCEDURE LLGlobalSym(name: TEXT): TEXT =
+  BEGIN RETURN MSIR.ModuleName(curEmitModule) & "__" & name END LLGlobalSym;
 
 (*------------------------------------------------------- type emission *)
 
@@ -76,9 +120,8 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "null");
     | MSIR.ValueKind.GlobalRef =>
-        (* GlobalRef names have no @ in MSIR; add it for LLVM *)
         Wr.PutText(wr, "@");
-        Wr.PutText(wr, MSIR.ValueName(v));
+        Wr.PutText(wr, LLGlobalSym(MSIR.ValueName(v)));
     ELSE
         (* InsnResult names already have % prefix; proc param names are bare. *)
         VAR n: TEXT := MSIR.ValueName(v);
@@ -326,7 +369,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "call ");
           LLType(wr, MSIR.ProcResultType(callee));
           Wr.PutText(wr, " @");
-          Wr.PutText(wr, MSIR.ProcName(callee));
+          Wr.PutText(wr, LLSymbol(callee));
           Wr.PutText(wr, "(");
           FOR k := 0 TO nOps - 1 DO
             IF k > 0 THEN Wr.PutText(wr, ", ") END;
@@ -457,6 +500,20 @@ PROCEDURE IsModuleProc(m: MSIR.Module;  p: MSIR.Proc): BOOLEAN =
     RETURN FALSE;
   END IsModuleProc;
 
+PROCEDURE IsModuleProcByName(m: MSIR.Module;  name: TEXT): BOOLEAN =
+  (* TRUE if any module proc has this exact unqualified name.
+     Used for extern stubs that refer to module-internal procs: when the
+     scope name of the calling module is empty the stub gets the bare
+     local name ("Abs") rather than the qualified form ("Main.Abs"). *)
+  BEGIN
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), name) THEN
+        RETURN TRUE;
+      END;
+    END;
+    RETURN FALSE;
+  END IsModuleProcByName;
+
 PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
   (* Walk all call insns in all internal procs, collect external callees. *)
   VAR
@@ -481,6 +538,7 @@ PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
             callee := MSIR.InsnCallee(ins);
             IF callee # NIL AND
                NOT IsModuleProc(m, callee) AND
+               NOT IsModuleProcByName(m, MSIR.ProcName(callee)) AND
                NOT ProcSeen(externs, callee) THEN
               externs.addhi(callee);
             END;
@@ -531,7 +589,7 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
       Wr.PutText(wr, "declare ");
       LLType(wr, rtype);
       Wr.PutText(wr, " @");
-      Wr.PutText(wr, MSIR.ProcName(p));
+      Wr.PutText(wr, LLSymbol(p));
       EmitParamTypeList(wr, p);
       Wr.PutText(wr, "\n");
       RETURN;
@@ -543,7 +601,7 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
     END;
     LLType(wr, rtype);
     Wr.PutText(wr, " @");
-    Wr.PutText(wr, MSIR.ProcName(p));
+    Wr.PutText(wr, LLSymbol(p));
     EmitParamList(wr, p);
     Wr.PutText(wr, " {\n");
 
@@ -560,7 +618,7 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global) =
   VAR t := MSIR.GlobalType(g);
   BEGIN
     Wr.PutText(wr, "@");
-    Wr.PutText(wr, MSIR.GlobalName(g));
+    Wr.PutText(wr, LLGlobalSym(MSIR.GlobalName(g)));
     Wr.PutText(wr, " = global ");
     IF MSIR.GlobalIsTraced(g) THEN
       Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
@@ -579,7 +637,7 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, "declare ");
     LLType(wr, rtype);
     Wr.PutText(wr, " @");
-    Wr.PutText(wr, MSIR.ProcName(p));
+    Wr.PutText(wr, LLSymbol(p));
     EmitParamTypeList(wr, p);
     Wr.PutText(wr, "\n");
   END EmitDeclare;
@@ -587,10 +645,22 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 (*------------------------------------------------------ module emission *)
 
 PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
-  VAR externs := NEW(RefSeq.T).init();
+  VAR
+    externs    := NEW(RefSeq.T).init();
+    triple     := MSIR.ModuleTriple(m);
+    datalayout := MSIR.ModuleDataLayout(m);
   BEGIN
+    curEmitModule := m;
+    auxN          := 0;
     Wr.PutText(wr, "; ModuleID = '" & MSIR.ModuleName(m) & "'\n");
-    Wr.PutText(wr, "; MSIR v0 LLVM IR prototype — not production quality\n\n");
+    Wr.PutText(wr, "source_filename = \"" & MSIR.ModuleName(m) & "\"\n");
+    IF datalayout # NIL THEN
+      Wr.PutText(wr, "target datalayout = \"" & datalayout & "\"\n");
+    END;
+    IF triple # NIL THEN
+      Wr.PutText(wr, "target triple = \"" & triple & "\"\n");
+    END;
+    Wr.PutText(wr, "\n");
 
     (* globals *)
     FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO

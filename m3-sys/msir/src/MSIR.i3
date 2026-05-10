@@ -194,6 +194,9 @@ TYPE Module <: REFANY;
 
 PROCEDURE NewModule(name: TEXT): Module;
 PROCEDURE ModuleName(m: Module): TEXT;
+PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT);
+PROCEDURE ModuleTriple(m: Module): TEXT;
+PROCEDURE ModuleDataLayout(m: Module): TEXT;
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
 PROCEDURE ModuleImportCount(m: Module): INTEGER;
 PROCEDURE ModuleImport(m: Module;  i: INTEGER): TEXT;
