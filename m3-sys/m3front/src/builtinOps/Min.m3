@@ -10,6 +10,7 @@ MODULE Min;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Max;
 IMPORT IntegerExpr, EnumExpr, ReelExpr, Target, TInt;
+IMPORT MSIR, MSIRBuilder, Int, LInt;
 
 VAR Z: CallExpr.MethodList;
 
@@ -64,6 +65,44 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     END;
   END GetBounds;
 
+PROCEDURE MinMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    a, b:     MSIR.Value;
+    t:        Type.T;
+    mt:       MSIR.T;
+    slot:     MSIR.Value;
+    cond:     MSIR.Value;
+    result:   MSIR.Value;
+    useBBlk:  MSIR.Block;
+    mergeBlk: MSIR.Block;
+  BEGIN
+    t := Type.Base (Expr.TypeOf (ce.args[0]));
+    IF (t # Int.T) AND (t # LInt.T) AND NOT Type.IsOrdinal (t) THEN
+      MSIRBuilder.Abandon ("MIN: non-ordinal type not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    a := Expr.CompileMSIR (ce.args[0]);
+    IF a = NIL THEN RETURN NIL END;
+    b := Expr.CompileMSIR (ce.args[1]);
+    IF b = NIL THEN RETURN NIL END;
+    mt       := MSIR.ValueType (a);
+    slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", mt);
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), a, slot);
+    cond     := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                                MSIR.CmpPred.Sle, a, b);
+    useBBlk  := MSIRBuilder.NewBlock ("min.useb");
+    mergeBlk := MSIRBuilder.NewBlock ("min.merge");
+    MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                      mergeBlk, ARRAY OF MSIR.Value{},
+                      useBBlk,  ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (useBBlk);
+    MSIR.BuildStore (useBBlk, b, slot);
+    MSIR.BuildBr (useBBlk, mergeBlk, ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (mergeBlk);
+    result := MSIR.BuildLoad (mergeBlk, "", mt, slot);
+    RETURN result;
+  END MinMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
@@ -82,6 +121,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, MinMSIR);
     Procedure.DefinePredefined ("MIN", Z, TRUE);
   END Initialize;
 

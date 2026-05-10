@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRBuilder, M3ID, RTParams, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, FileWr, Stdio, Wr, Thread, OSError;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -63,7 +63,15 @@ PROCEDURE EndUnit() =
       MSIRPrinter.Module(wr, curModule);
       Wr.Close(wr);
     EXCEPT
-      OSError.E => (* best-effort: skip if we can't write *)
+      OSError.E => (* best-effort *)
+    END;
+    path := MSIR.ModuleName(curModule) & ".ll";
+    TRY
+      wr := FileWr.Open(path);
+      MSIRToLLVM.Module(wr, curModule);
+      Wr.Close(wr);
+    EXCEPT
+      OSError.E => (* best-effort *)
     END;
     curModule := NIL;
   END EndUnit;

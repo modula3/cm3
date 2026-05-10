@@ -731,7 +731,9 @@ PROCEDURE ModuleProc(m: Module; i: INTEGER): Proc =
 PROCEDURE freshName(p: Proc): TEXT =
   BEGIN
     INC(p.nameCounter);
-    RETURN "%" & Fmt.Int(p.nameCounter);
+    (* Use "t" prefix so LLVM does not treat these as unnamed-temporary slot
+       numbers, which must be assigned sequentially counting all values. *)
+    RETURN "%t" & Fmt.Int(p.nameCounter);
   END freshName;
 
 PROCEDURE finalName(b: Block;  name: TEXT): TEXT =

@@ -11,6 +11,7 @@ MODULE TryFinStmt;
 IMPORT M3ID, CG, Token, Scanner, Stmt, StmtRep, Marker, Target, Type, Addr;
 IMPORT RunTyme, Procedure, ProcBody, M3RT, Scope, Fmt, Host, TryStmt, Module;
 IMPORT Jmpbufs;
+IMPORT MSIRBuilder;
 FROM Stmt IMPORT Outcome;
 
 TYPE
@@ -26,6 +27,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 TYPE
@@ -401,6 +403,15 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
     IF Outcome.Returns IN xc THEN o := o + Stmt.Outcomes {Outcome.Returns} END;
     RETURN o;
   END Compile3;
+
+PROCEDURE CompileMSIR (p: P) =
+  BEGIN
+    IF NOT MSIRBuilder.InProc () THEN RETURN END;
+    Stmt.CompileMSIR (p.body);
+    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      Stmt.CompileMSIR (p.finally);
+    END;
+  END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   VAR oc, xc, o: Stmt.Outcomes;

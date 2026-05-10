@@ -12,6 +12,7 @@ IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 IMPORT RunTyme, Procedure;
+IMPORT MSIRBuilder;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
 
@@ -29,6 +30,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 TYPE
@@ -613,6 +615,12 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
     CG.Set_label (top+1);
     RETURN oc;
   END CompileHandler2;
+
+PROCEDURE CompileMSIR (p: P) =
+  BEGIN
+    IF NOT MSIRBuilder.InProc () THEN RETURN END;
+    Stmt.CompileMSIR (p.body);
+  END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   VAR h: Handler;  oc := Stmt.GetOutcome (p.body);

@@ -6,5 +6,6 @@ import("libm3")
 Module("MSIR")
 Module("MSIRPrinter")
 Module("MSIRVerifier")
+Module("MSIRToLLVM")
 
 library("msir")

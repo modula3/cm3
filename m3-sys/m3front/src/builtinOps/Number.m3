@@ -10,6 +10,7 @@ MODULE Number;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Card, Error, ArrayExpr;
 IMPORT ArrayType, TypeExpr, IntegerExpr, Int, EnumType, Target, TInt;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -123,6 +124,44 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     END;
   END Fold;
 
+PROCEDURE NumberMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e             := ce.args[0];
+    t, index, elt : Type.T;
+    min, max, tmp, num: Target.Int;
+    mt:           MSIR.T;
+    oa:           MSIR.Value;
+  BEGIN
+    IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
+    IF ArrayType.Split (t, index, elt) THEN t := index END;
+    IF t = NIL THEN
+      (* open array: emit OpenArraySize(oa, 0) *)
+      oa := Expr.CompileMSIR (e);
+      IF oa = NIL THEN RETURN NIL END;
+      mt := MSIRType.Translate (Card.T);
+      IF mt = NIL THEN MSIRBuilder.Abandon ("NUMBER: cannot translate CARDINAL"); RETURN NIL END;
+      RETURN MSIR.BuildOpenArraySize (MSIRBuilder.CurrentBlock (), "", oa, 0);
+    END;
+    mt := MSIRType.Translate (Card.T);
+    IF mt = NIL THEN MSIRBuilder.Abandon ("NUMBER: cannot translate CARDINAL"); RETURN NIL END;
+    IF NOT Type.GetBounds (t, min, max) THEN
+      MSIRBuilder.Abandon ("NUMBER: cannot get bounds");  RETURN NIL
+    END;
+    IF TInt.LT (max, min) THEN
+      RETURN MSIR.ConstInt (mt, 0L);
+    ELSIF TInt.Subtract (max, min, tmp) AND TInt.Add (tmp, TInt.One, num) THEN
+      VAR n: INTEGER;
+      BEGIN
+        IF NOT TInt.ToInt (num, n) THEN
+          MSIRBuilder.Abandon ("NUMBER: result too large");  RETURN NIL
+        END;
+        RETURN MSIR.ConstInt (mt, VAL (n, LONGINT));
+      END;
+    ELSE
+      MSIRBuilder.Abandon ("NUMBER: result too large");  RETURN NIL
+    END;
+  END NumberMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, Card.T,
@@ -140,6 +179,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, NumberMSIR);
     Procedure.DefinePredefined ("NUMBER", Z, TRUE);
   END Initialize;
 

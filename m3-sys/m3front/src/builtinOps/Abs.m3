@@ -10,6 +10,7 @@ MODULE Abs;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error;
 IMPORT Target, TInt, Int, LInt, Reel, LReel, EReel, IntegerExpr, ReelExpr;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 
@@ -58,6 +59,46 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     IF TInt.LT (min, TInt.Zero) THEN min := TInt.Zero; END;
   END GetBounds;
 
+PROCEDURE AbsMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    arg:      MSIR.Value;
+    t:        Type.T;
+    mt:       MSIR.T;
+    slot:     MSIR.Value;
+    zero:     MSIR.Value;
+    cond:     MSIR.Value;
+    negVal:   MSIR.Value;
+    result:   MSIR.Value;
+    negBlk:   MSIR.Block;
+    mergeBlk: MSIR.Block;
+  BEGIN
+    t := Type.Base (Expr.TypeOf (ce.args[0]));
+    IF (t # Int.T) AND (t # LInt.T) THEN
+      MSIRBuilder.Abandon ("ABS: non-integer type not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    arg := Expr.CompileMSIR (ce.args[0]);
+    IF arg = NIL THEN RETURN NIL END;
+    mt := MSIR.ValueType (arg);
+    slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", mt);
+    zero     := MSIR.ConstInt (mt, 0L);
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arg, slot);
+    cond     := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                                MSIR.CmpPred.Slt, arg, zero);
+    negBlk   := MSIRBuilder.NewBlock ("abs.neg");
+    mergeBlk := MSIRBuilder.NewBlock ("abs.merge");
+    MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                      negBlk,   ARRAY OF MSIR.Value{},
+                      mergeBlk, ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (negBlk);
+    negVal := MSIR.BuildISub (negBlk, "", zero, arg);
+    MSIR.BuildStore (negBlk, negVal, slot);
+    MSIR.BuildBr (negBlk, mergeBlk, ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (mergeBlk);
+    result := MSIR.BuildLoad (mergeBlk, "", mt, slot);
+    RETURN result;
+  END AbsMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, NIL,
@@ -76,6 +117,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, AbsMSIR);
     Procedure.DefinePredefined ("ABS", Z, TRUE);
   END Initialize;
 

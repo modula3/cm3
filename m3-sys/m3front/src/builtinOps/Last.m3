@@ -11,6 +11,7 @@ MODULE Last;
 IMPORT CG, CallExpr, Expr, Type, Procedure, First, ArrayType;
 IMPORT TypeExpr, IntegerExpr, EnumExpr, Int, LInt, ArrayExpr;
 IMPORT Reel, LReel, EReel, ReelExpr, Target, TInt;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -105,6 +106,40 @@ PROCEDURE LastOfType (t: Type.T): Expr.T =
     END;
   END LastOfType;
 
+PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e              := ce.args[0];
+    t, index, elt  : Type.T;
+    min, max       : Target.Int;
+    mt             : MSIR.T;
+    n              : INTEGER;
+    oa             : MSIR.Value;
+    sz             : MSIR.Value;
+    one            : MSIR.Value;
+  BEGIN
+    IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
+    IF ArrayType.Split (t, index, elt) THEN t := index END;
+    IF t = NIL THEN
+      (* open array: LAST = OpenArraySize(oa,0) - 1 *)
+      oa := Expr.CompileMSIR (e);
+      IF oa = NIL THEN RETURN NIL END;
+      mt  := MSIRType.Translate (Int.T);
+      IF mt = NIL THEN MSIRBuilder.Abandon ("LAST: cannot translate INTEGER"); RETURN NIL END;
+      sz  := MSIR.BuildOpenArraySize (MSIRBuilder.CurrentBlock (), "", oa, 0);
+      one := MSIR.ConstInt (MSIR.ValueType (sz), 1L);
+      RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "", sz, one);
+    END;
+    mt := MSIRType.Translate (Type.Base (t));
+    IF mt = NIL THEN MSIRBuilder.Abandon ("LAST: unsupported type"); RETURN NIL END;
+    IF NOT Type.GetBounds (t, min, max) THEN
+      MSIRBuilder.Abandon ("LAST: cannot get bounds");  RETURN NIL
+    END;
+    IF NOT TInt.ToInt (max, n) THEN
+      MSIRBuilder.Abandon ("LAST: bound out of range");  RETURN NIL
+    END;
+    RETURN MSIR.ConstInt (mt, VAL (n, LONGINT));
+  END LastMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, NIL,
@@ -123,6 +158,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, LastMSIR);
     Procedure.DefinePredefined ("LAST", Z, TRUE);
   END Initialize;
 

@@ -11,6 +11,7 @@ MODULE First;
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, ArrayType;
 IMPORT Int, LInt, EnumType, IntegerExpr, EnumExpr, TypeExpr;
 IMPORT Reel, LReel, EReel, ReelExpr, Target, TInt;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -134,6 +135,33 @@ PROCEDURE FirstOfType (t: Type.T): Expr.T =
     END;
   END FirstOfType;
 
+PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e              := ce.args[0];
+    t, index, elt  : Type.T;
+    min, max       : Target.Int;
+    mt             : MSIR.T;
+    n              : INTEGER;
+  BEGIN
+    IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
+    IF ArrayType.Split (t, index, elt) THEN t := index END;
+    IF t = NIL THEN
+      (* open array: FIRST is always 0 *)
+      mt := MSIRType.Translate (Int.T);
+      IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: cannot translate INTEGER"); RETURN NIL END;
+      RETURN MSIR.ConstInt (mt, 0L);
+    END;
+    mt := MSIRType.Translate (Type.Base (t));
+    IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: unsupported type"); RETURN NIL END;
+    IF NOT Type.GetBounds (t, min, max) THEN
+      MSIRBuilder.Abandon ("FIRST: cannot get bounds");  RETURN NIL
+    END;
+    IF NOT TInt.ToInt (min, n) THEN
+      MSIRBuilder.Abandon ("FIRST: bound out of range");  RETURN NIL
+    END;
+    RETURN MSIR.ConstInt (mt, VAL (n, LONGINT));
+  END FirstMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, NIL,
@@ -152,6 +180,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, FirstMSIR);
     Procedure.DefinePredefined ("FIRST", Z, TRUE);
   END Initialize;
 

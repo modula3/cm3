@@ -146,9 +146,10 @@ PROCEDURE BeginProc(name: M3ID.T;
                       INC(varMapN);
                     END;
                   ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Struct THEN
-                    (* struct by-value formal: alloca+store for field access *)
+                    (* struct by-value formal: alloca+store for field access.
+                       Use ".slot" suffix so the alloca name differs from the param name. *)
                     VAR allocaVal := MSIR.BuildAlloca(curBlock,
-                          Value.GlobalName(sv, dots := FALSE, with_module := FALSE),
+                          Value.GlobalName(sv, dots := FALSE, with_module := FALSE) & ".slot",
                           mt);
                     BEGIN
                       MSIR.BuildStore(curBlock, paramVal, allocaVal);
