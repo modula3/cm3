@@ -16,7 +16,7 @@ IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, RTParams, MSIR;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 VAR debug := FALSE;
@@ -1089,6 +1089,13 @@ PROCEDURE ScheduleTrace (t: T) =
   BEGIN
     Tracer.Schedule (t.trace);
   END ScheduleTrace;
+
+PROCEDURE CompileInitExprMSIR (t: T): MSIR.Value =
+  BEGIN
+    (* Only local, non-imported variables with an explicit initializer. *)
+    IF t.global OR t.imported OR t.initExpr = NIL THEN RETURN NIL END;
+    RETURN Expr.CompileMSIR (t.initExpr);
+  END CompileInitExprMSIR;
 
 BEGIN
   debug := RTParams.IsPresent ("m3front-debug-variable");

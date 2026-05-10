@@ -95,6 +95,21 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
    any parameter or result type is unsupported. *)
 PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc;
 
+(*------------------------------------------------------ Exception handling *)
+
+(* Push/pop a try context.  While a try context is active, EmitCall emits
+   `invoke` (routing the unwind path to lpadBlock) rather than `call`. *)
+PROCEDURE PushTryContext(lpadBlock: MSIR.Block);
+PROCEDURE PopTryContext();
+PROCEDURE CurrentUnwindBlock(): MSIR.Block;  (* NIL if not in a try *)
+
+(* Smart call emitter.  If inside a try context, creates a normal-continuation
+   block, emits `invoke callee(args) to label %normal unwind label %lpad`,
+   then switches curBlock to the continuation block.
+   Otherwise, emits a plain `call`. *)
+PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
+                   READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
 (*------------------------------------------------------------- Module globals *)
 
 (* Reset the global map.  Call once at the start of each new module

@@ -484,7 +484,7 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
       IF argVal = NIL THEN RETURN NIL END;
       argVals[i] := argVal;
     END;
-    RETURN MSIR.BuildCall(MSIRBuilder.CurrentBlock(), "", msirCallee, argVals^);
+    RETURN MSIRBuilder.EmitCall("", msirCallee, argVals^);
   END CompileMSIR;
 
 BEGIN

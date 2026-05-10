@@ -16,6 +16,11 @@ void *Fmt__Int(M3Int n, M3Int base) { return NULL; }
 void  IO__Put(void *t, void *wr)    { (void)t; (void)wr; }
 void *Fmt__Bool(M3Bool b)           { return NULL; }
 
+/* Stub for the C++ typeinfo of _M3Exc, required by the EH exception tables
+   emitted by LLVM for TRY/EXCEPT procs.  Content is irrelevant for these
+   normal-path tests since no exception is actually thrown. */
+void *_ZTI7_M3Exc[2] = { 0, 0 };
+
 /* ---- M3 procedure declarations ---- */
 extern M3Int  Main__Add(M3Int a, M3Int b);
 extern M3Int  Main__Factorial(M3Int n);
@@ -70,6 +75,9 @@ extern M3Bool Main__Neither(M3Int a, M3Int b);
 extern void   Main__IncrCounter(void);
 extern void   Main__AddToCounter(M3Int n);
 extern M3Int  Main__GetCounter(void);
+
+extern M3Int  Main__TryFinNormal(void);
+extern M3Int  Main__TryExceptNormal(void);
 
 /* Direct access to module globals (zeroinitialised — no M3 module init runs) */
 extern M3Int  Main__gCounter;
@@ -198,6 +206,10 @@ int main(void) {
     Main__AddToCounter(8);
     check_int("gCounter (direct)", Main__gCounter,          10);
     check_int("GetCounter()",     Main__GetCounter(),       10); /* gBase=0 */
+
+    /* EH — normal-path tests (no exception raised) */
+    check_int("TryFinNormal()",     Main__TryFinNormal(),      11);
+    check_int("TryExceptNormal()",  Main__TryExceptNormal(),    8);
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

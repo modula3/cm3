@@ -11,7 +11,7 @@ MODULE TryFinStmt;
 IMPORT M3ID, CG, Token, Scanner, Stmt, StmtRep, Marker, Target, Type, Addr;
 IMPORT RunTyme, Procedure, ProcBody, M3RT, Scope, Fmt, Host, TryStmt, Module;
 IMPORT Jmpbufs;
-IMPORT MSIRBuilder;
+IMPORT MSIR, MSIRBuilder;
 FROM Stmt IMPORT Outcome;
 
 TYPE
@@ -405,12 +405,70 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
   END Compile3;
 
 PROCEDURE CompileMSIR (p: P) =
+  VAR
+    lpad:      MSIR.Block;
+    finBody:   MSIR.Block;
+    resumeBlk: MSIR.Block;
+    merge:     MSIR.Block;
+    lpSlot:    MSIR.Value;
+    excFlag:   MSIR.Value;
+    lpVal:     MSIR.Value;
+    excFlagV:  MSIR.Value;
+    lpLoaded:  MSIR.Value;
+    lpType:    MSIR.T;
+    zero, one: MSIR.Value;
   BEGIN
-    IF NOT MSIRBuilder.InProc () THEN RETURN END;
-    Stmt.CompileMSIR (p.body);
-    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
-      Stmt.CompileMSIR (p.finally);
+    IF NOT MSIRBuilder.InProc() THEN RETURN END;
+
+    lpType := MSIR.TLandingPad();
+    zero   := MSIR.ConstInt(MSIR.TI1(), 0L);
+    one    := MSIR.ConstInt(MSIR.TI1(), 1L);
+
+    (* Allocas go in the current (pre-try) block so they land in the entry. *)
+    lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
+    excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());
+    MSIR.BuildStore(MSIRBuilder.CurrentBlock(), zero, excFlag);
+
+    lpad      := MSIRBuilder.NewBlock("fin.lpad");
+    finBody   := MSIRBuilder.NewBlock("fin.body");
+    resumeBlk := MSIRBuilder.NewBlock("fin.resume");
+    merge     := MSIRBuilder.NewBlock("fin.done");
+
+    (* Compile body with cleanup lpad as unwind target. *)
+    MSIRBuilder.PushTryContext(lpad);
+    Stmt.CompileMSIR(p.body);
+    MSIRBuilder.PopTryContext();
+
+    (* Normal fall-through → finBody *)
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
+
+    (* Landing pad: save lp value, set flag, jump to finally body. *)
+    lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := TRUE);
+    MSIR.BuildStore(lpad, lpVal, lpSlot);
+    MSIR.BuildStore(lpad, one, excFlag);
+    MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
+
+    (* Finally body. *)
+    MSIRBuilder.SetCurrentBlock(finBody);
+    Stmt.CompileMSIR(p.finally);
+
+    (* After finally: check flag; resume if exceptional, else continue. *)
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      excFlagV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "",
+                                 MSIR.TI1(), excFlag);
+      MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), excFlagV,
+                       resumeBlk, ARRAY OF MSIR.Value{},
+                       merge, ARRAY OF MSIR.Value{});
+    END;
+
+    (* Resume block: reload saved lp and resume unwinding. *)
+    MSIRBuilder.SetCurrentBlock(resumeBlk);
+    lpLoaded := MSIR.BuildLoad(resumeBlk, "", lpType, lpSlot);
+    MSIR.BuildResume(resumeBlk, lpLoaded);
+
+    MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =

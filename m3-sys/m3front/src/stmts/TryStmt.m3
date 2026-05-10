@@ -11,8 +11,8 @@ MODULE TryStmt;
 IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
-IMPORT RunTyme, Procedure;
-IMPORT MSIRBuilder;
+IMPORT RunTyme, Procedure, M3FP;
+IMPORT MSIR, MSIRBuilder;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
 
@@ -617,9 +617,110 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
   END CompileHandler2;
 
 PROCEDURE CompileMSIR (p: P) =
+  VAR
+    h:          Handler;
+    e:          Except;
+    lpad:       MSIR.Block;
+    merge:      MSIR.Block;
+    hBody:      MSIR.Block;
+    checkBlk:   MSIR.Block;
+    nextBlk:    MSIR.Block;
+    lpVal:      MSIR.Value;
+    excObjPtr:  MSIR.Value;
+    actPtr:     MSIR.Value;
+    excDescPtr: MSIR.Value;
+    uid:        MSIR.Value;
+    uidConst:   MSIR.Value;
+    cmp:        MSIR.Value;
+    ptrT:       MSIR.T;
   BEGIN
-    IF NOT MSIRBuilder.InProc () THEN RETURN END;
-    Stmt.CompileMSIR (p.body);
+    IF NOT MSIRBuilder.InProc() THEN RETURN END;
+
+    (* No handlers: just compile the body. *)
+    IF p.handles = NIL AND NOT p.hasElse THEN
+      Stmt.CompileMSIR(p.body);
+      RETURN;
+    END;
+
+    (* Conservatively skip procs where any handler binds an exception value. *)
+    h := p.handles;
+    WHILE h # NIL DO
+      IF h.scope # NIL THEN
+        Stmt.CompileMSIR(p.body);  (* body only; exception value binding not yet impl *)
+        RETURN;
+      END;
+      h := h.next;
+    END;
+
+    ptrT  := MSIR.TPtr(MSIR.TVoid());
+    lpad  := MSIRBuilder.NewBlock("lpad");
+    merge := MSIRBuilder.NewBlock("try.merge");
+
+    (* Compile body; calls inside it become invoke with lpad as unwind target. *)
+    MSIRBuilder.PushTryContext(lpad);
+    Stmt.CompileMSIR(p.body);
+    MSIRBuilder.PopTryContext();
+
+    (* Normal fall-through → merge *)
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
+    END;
+
+    (* Build landing pad: catch _M3Exc, extract exception UID.
+       _M3Exc.act (ptr to RaiseActivation) is at offset 0 of the thrown obj.
+       RaiseActivation.exception (ExceptionPtr) is at EA_exception = offset 0.
+       ExceptionPtr^.uid (i64) is the first field of the exception descriptor. *)
+    lpVal      := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
+    excObjPtr  := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
+    actPtr     := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr);
+    excDescPtr := MSIR.BuildLoad(lpad, "", ptrT, actPtr);
+    uid        := MSIR.BuildLoad(lpad, "", MSIR.TI(64), excDescPtr);
+
+    (* Emit a chain of UID comparisons, one per (handler, exception) pair. *)
+    checkBlk := lpad;
+    h := p.handles;
+    WHILE h # NIL DO
+      hBody := MSIRBuilder.NewBlock("h.body");
+      e := h.tags;
+      WHILE e # NIL DO
+        (* Compute the exception fingerprint the same way SetGlobals does.
+           Exceptionz.UID requires Declarer to have run first; computing
+           directly from the name is safe at any compilation phase. *)
+        uidConst := MSIR.ConstInt(MSIR.TI(64),
+                      VAL(M3FP.ToInt(M3FP.FromText(Value.GlobalName(e.obj))),
+                          LONGINT));
+        cmp     := MSIR.BuildICmp(checkBlk, "",
+                                   MSIR.CmpPred.Eq, uid, uidConst);
+        nextBlk := MSIRBuilder.NewBlock("exc.next");
+        MSIR.BuildCondBr(checkBlk, cmp,
+                         hBody, ARRAY OF MSIR.Value{},
+                         nextBlk, ARRAY OF MSIR.Value{});
+        checkBlk := nextBlk;
+        e := e.next;
+      END;
+
+      (* Compile handler body; fall-through → merge. *)
+      MSIRBuilder.SetCurrentBlock(hBody);
+      Stmt.CompileMSIR(h.body);
+      IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+        MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
+      END;
+
+      h := h.next;
+    END;
+
+    (* ELSE clause or resume (re-throw) when no handler matched. *)
+    MSIRBuilder.SetCurrentBlock(checkBlk);
+    IF p.hasElse THEN
+      Stmt.CompileMSIR(p.elseBody);
+      IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+        MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
+      END;
+    ELSE
+      MSIR.BuildResume(checkBlk, lpVal);
+    END;
+
+    MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =

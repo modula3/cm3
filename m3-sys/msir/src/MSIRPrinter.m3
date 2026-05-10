@@ -150,6 +150,9 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.Istype             => RETURN "istype";
     | MSIR.Op.Typecase           => RETURN "typecase";
     | MSIR.Op.Raise              => RETURN "raise";
+    | MSIR.Op.LandingPad         => RETURN "landingpad";
+    | MSIR.Op.ExtractValue       => RETURN "extractvalue";
+    | MSIR.Op.Resume             => RETURN "resume";
     | MSIR.Op.OpenArraySize      => RETURN "openarray.size";
     | MSIR.Op.OpenArrayElemAddr  => RETURN "openarray.elem_addr";
     | MSIR.Op.Subarray           => RETURN "subarray";
@@ -393,6 +396,21 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.OpenArrayDeref =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
+    | MSIR.Op.LandingPad =>
+        IF MSIR.InsnIsCleanup(i) THEN
+          Wr.PutText(wr, " cleanup");
+        ELSE
+          Wr.PutText(wr, " catch _ZTI7_M3Exc");
+        END;
+    | MSIR.Op.ExtractValue =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        Wr.PutText(wr, Fmt.Int(MSIR.InsnExtractIdx(i)));
+    | MSIR.Op.Resume =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+    ELSE (* no extra operands printed for other ops *)
     END;
     Wr.PutText(wr, "\n");
   END Insn;

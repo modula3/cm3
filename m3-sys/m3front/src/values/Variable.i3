@@ -8,7 +8,7 @@
 
 INTERFACE Variable;
 
-IMPORT M3ID, Type, Value,  Scope, Decl, Target, CG, Tracer;
+IMPORT M3ID, Type, Value,  Scope, Decl, Target, CG, Tracer, MSIR;
 
 TYPE
   T <: Value.T;
@@ -56,5 +56,10 @@ PROCEDURE CheckTrace (x: Tracer.T;  VAR cs: Value.CheckState);
 PROCEDURE ScheduleTrace (t: T);
 
 PROCEDURE Reset ();
+
+(* Compile the variable's initializer expression for the MSIR path.
+   Returns NIL if the variable is global, imported, or has no initializer.
+   The caller stores the result into the variable's alloca. *)
+PROCEDURE CompileInitExprMSIR (t: T): MSIR.Value;
 
 END Variable.

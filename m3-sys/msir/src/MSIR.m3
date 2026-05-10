@@ -166,6 +166,14 @@ PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T =
     RETURN t;
   END TSubrange;
 
+PROCEDURE TLandingPad(): T =
+  BEGIN
+    RETURN TStruct("lpad_t", ARRAY OF Field{
+      Field{name := "excobj", type := TPtr(TVoid())},
+      Field{name := "sel",    type := TI(32)}
+    });
+  END TLandingPad;
+
 PROCEDURE TSet(elt: T;  lo, hi: LONGINT): T =
   VAR t := NewType(TypeKind.Set);
   BEGIN
@@ -369,6 +377,8 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   targetType: T    := NIL;        (* Alloca, New, Narrow, Istype, Convert *)
   selector:   TEXT := NIL;        (* Dispatch method name; FieldAddr field name *)
   typecaseClauses: REF ARRAY OF TypecaseClause := NIL;
+  extractIdx: INTEGER := 0;       (* ExtractValue: field index *)
+  isCleanup:  BOOLEAN := FALSE;   (* LandingPad: cleanup vs. catch *)
 END;
 
 PROCEDURE InsnOp(i: Insn): Op = BEGIN RETURN i.op END InsnOp;
@@ -399,6 +409,8 @@ PROCEDURE InsnBrArg(i: Insn; k, j: INTEGER): Value =
 PROCEDURE InsnCallee(i: Insn): Proc = BEGIN RETURN i.callee END InsnCallee;
 PROCEDURE InsnTargetType(i: Insn): T = BEGIN RETURN i.targetType END InsnTargetType;
 PROCEDURE InsnSelector(i: Insn): TEXT = BEGIN RETURN i.selector END InsnSelector;
+PROCEDURE InsnExtractIdx(i: Insn): INTEGER = BEGIN RETURN i.extractIdx END InsnExtractIdx;
+PROCEDURE InsnIsCleanup(i: Insn): BOOLEAN = BEGIN RETURN i.isCleanup END InsnIsCleanup;
 PROCEDURE InsnTypecaseClauseCount(i: Insn): INTEGER =
   BEGIN
     IF i.typecaseClauses = NIL THEN RETURN 0 END;
@@ -1133,18 +1145,62 @@ PROCEDURE BuildTypecase(b: Block;  value: Value;
 (*--------------------------------------------------- EH builders / control *)
 
 PROCEDURE BuildInvoke(b: Block;  name: TEXT;  callee: Proc;
-                      READONLY args: ARRAY OF Value): Value =
+                      READONLY args: ARRAY OF Value;
+                      normalBlock: Block;  unwindBlock: Block): Value =
   VAR i := NEW(Insn);
   BEGIN
-    i.op := Op.Invoke;
-    i.callee := callee;
+    i.op      := Op.Invoke;
+    i.callee  := callee;
     i.operands := copyArgs(args);
-    IF Kind(callee.result) # TypeKind.Void THEN
+    i.br0Tgt  := normalBlock;
+    i.br1Tgt  := unwindBlock;
+    IF callee.result # NIL AND Kind(callee.result) # TypeKind.Void THEN
       i.result := makeResult(b, callee.result, name, i);
     END;
     addInsn(b, i);
     RETURN i.result;
   END BuildInvoke;
+
+PROCEDURE BuildLandingPad(b: Block;  name: TEXT;  isCleanup: BOOLEAN): Value =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op        := Op.LandingPad;
+    i.isCleanup := isCleanup;
+    i.result    := makeResult(b, TLandingPad(), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildLandingPad;
+
+PROCEDURE BuildExtractValue(b: Block;  name: TEXT;
+                             aggregate: Value;  idx: INTEGER): Value =
+  VAR
+    i    := NEW(Insn);
+    ops  := NEW(REF ARRAY OF Value, 1);
+    aggT := aggregate.type;
+    fldT : T;
+  BEGIN
+    <* ASSERT aggT # NIL AND Kind(aggT) = TypeKind.Struct,
+       "BuildExtractValue: aggregate must have Struct type" *>
+    fldT := StructField(aggT, idx).type;
+    i.op         := Op.ExtractValue;
+    i.extractIdx := idx;
+    ops[0]       := aggregate;
+    i.operands   := ops;
+    i.result     := makeResult(b, fldT, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildExtractValue;
+
+PROCEDURE BuildResume(b: Block;  lp: Value) =
+  VAR
+    i   := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    i.op       := Op.Resume;
+    ops[0]     := lp;
+    i.operands := ops;
+    addInsn(b, i);
+  END BuildResume;
 
 PROCEDURE BuildRaise(b: Block;  exceptionSym: TEXT;  value: Value) =
   VAR i := NEW(Insn);
@@ -1376,7 +1432,8 @@ PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
     ri := BlockInsn(b, n-1);
     CASE ri.op OF
     | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable,
-      Op.UnwindTo, Op.RetThroughEnvelope, Op.Typecase =>
+      Op.UnwindTo, Op.RetThroughEnvelope, Op.Typecase,
+      Op.Resume, Op.Invoke =>
         RETURN TRUE;
     ELSE
       RETURN FALSE;

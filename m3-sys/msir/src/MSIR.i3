@@ -53,6 +53,9 @@ PROCEDURE TFixedArray(len: LONGINT;  elt: T): T;
 PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T;
 PROCEDURE TSet(elt: T;  lo, hi: LONGINT): T;
 
+(* Landing-pad aggregate: { ptr, i32 } — the LLVM EH landingpad result type. *)
+PROCEDURE TLandingPad(): T;
+
 PROCEDURE Kind(t: T): TypeKind;
 PROCEDURE Equal(a, b: T): BOOLEAN;
 PROCEDURE EltType(t: T): T;           (* for Ptr / GcRef / GcSlot *)
@@ -244,6 +247,9 @@ TYPE Op = {
   Dispatch, Narrow, Istype, Typecase,
   (* exception *)
   Raise,
+  LandingPad,   (* LLVM landingpad instruction; cleanup or catch _ZTI7_M3Exc *)
+  ExtractValue, (* extract field from a struct aggregate by index *)
+  Resume,       (* LLVM resume — re-throw after landingpad (terminator) *)
   (* open arrays *)
   OpenArraySize, OpenArrayElemAddr, Subarray,
   OpenArrayNew, OpenArrayDeref,
@@ -277,6 +283,8 @@ PROCEDURE InsnBrArg(i: Insn;  k, j: INTEGER): Value;
 PROCEDURE InsnCallee(i: Insn): Proc;         (* Call only *)
 PROCEDURE InsnTargetType(i: Insn): T;        (* Alloca, New, Narrow, Istype *)
 PROCEDURE InsnSelector(i: Insn): TEXT;       (* Dispatch: method name; FieldAddr: field name *)
+PROCEDURE InsnExtractIdx(i: Insn): INTEGER;  (* ExtractValue: field index *)
+PROCEDURE InsnIsCleanup(i: Insn): BOOLEAN;   (* LandingPad: TRUE=cleanup, FALSE=catch *)
 
 (*---------------------------------------------------------------- Builders *)
 
@@ -352,11 +360,28 @@ PROCEDURE InsnTypecaseClause(i: Insn;  k: INTEGER): TypecaseClause;
 
 (*--------------------------------------------------- EH builders / control *)
 
-(* `invoke` is `call` from inside a `try` envelope; lowering routes its
-   unwind path to the enclosing envelope's handler chain. The verifier
-   (when added) checks that invoke appears only inside try envelopes. *)
+(* `invoke` is `call` that can unwind.  normalBlock is the block entered
+   on normal return; unwindBlock is the landingpad block entered on exception.
+   Both blocks must belong to the same proc as b. *)
 PROCEDURE BuildInvoke(b: Block;  name: TEXT;  callee: Proc;
-                      READONLY args: ARRAY OF Value): Value;
+                      READONLY args: ARRAY OF Value;
+                      normalBlock: Block;  unwindBlock: Block): Value;
+
+(* `landingpad` begins the exception-handling preamble of an unwind block.
+   Must be the first instruction in the block.
+   isCleanup = TRUE  → `cleanup` clause (for TRY/FINALLY)
+   isCleanup = FALSE → `catch ptr @_ZTI7_M3Exc` (for TRY/EXCEPT)
+   Result type: TLandingPad() = { ptr, i32 }. *)
+PROCEDURE BuildLandingPad(b: Block;  name: TEXT;  isCleanup: BOOLEAN): Value;
+
+(* `extractvalue` — extract field idx from a struct aggregate.
+   Result type = type of field idx in aggregate's struct type. *)
+PROCEDURE BuildExtractValue(b: Block;  name: TEXT;
+                             aggregate: Value;  idx: INTEGER): Value;
+
+(* `resume` — re-throw the in-flight exception.  lp must have type
+   TLandingPad().  Terminator. *)
+PROCEDURE BuildResume(b: Block;  lp: Value);
 
 (* `raise` raises an M3 exception by identity symbol, with optional value.
    Pass NIL value for exceptions that carry no payload. *)

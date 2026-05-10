@@ -9,7 +9,7 @@
 MODULE BlockStmt;
 
 IMPORT M3ID, Scope, Token, Stmt, StmtRep, Scanner, Decl, ESet, Tracer;
-IMPORT MSIRBuilder, Value, Variable;
+IMPORT MSIRBuilder, Value, Variable, MSIR;
 FROM Scanner IMPORT Match, cur;
 
 TYPE
@@ -117,13 +117,36 @@ PROCEDURE CompileMSIR (p: P) =
   VAR v: Value.T;
   BEGIN
     IF p.scope # NIL THEN
-      (* Register each local variable as an alloca in the current block. *)
+      (* Register allocas for all local variables. *)
       v := Scope.ToList (p.scope);
       WHILE v # NIL AND MSIRBuilder.InProc () DO
         TYPECASE v OF
         | Variable.T (lv) =>
             IF NOT Variable.IsFormal (lv) THEN
               EVAL MSIRBuilder.AddLocal (lv);
+            END;
+        ELSE
+        END;
+        v := v.next;
+      END;
+      (* Emit initializers for variables with explicit init expressions. *)
+      v := Scope.ToList (p.scope);
+      WHILE v # NIL AND MSIRBuilder.InProc () DO
+        TYPECASE v OF
+        | Variable.T (lv) =>
+            IF NOT Variable.IsFormal (lv) THEN
+              VAR initVal := Variable.CompileInitExprMSIR (lv);
+              BEGIN
+                IF initVal # NIL THEN
+                  VAR addr := MSIRBuilder.LookupVarAddr (lv);
+                  BEGIN
+                    IF addr # NIL THEN
+                      MSIR.BuildStore (MSIRBuilder.CurrentBlock(),
+                                       initVal, addr);
+                    END;
+                  END;
+                END;
+              END;
             END;
         ELSE
         END;

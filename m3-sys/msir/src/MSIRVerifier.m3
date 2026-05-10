@@ -32,7 +32,8 @@ PROCEDURE IsTerminator(op: MSIR.Op): BOOLEAN =
     CASE op OF
     | MSIR.Op.Br, MSIR.Op.CondBr, MSIR.Op.Ret, MSIR.Op.Unreachable,
       MSIR.Op.UnwindTo, MSIR.Op.RetThroughEnvelope,
-      MSIR.Op.Raise, MSIR.Op.Typecase => RETURN TRUE;
+      MSIR.Op.Raise, MSIR.Op.Typecase,
+      MSIR.Op.Invoke, MSIR.Op.Resume => RETURN TRUE;
     ELSE RETURN FALSE
     END;
   END IsTerminator;
@@ -235,7 +236,8 @@ PROCEDURE CheckLoad(c: Ctx;  i: MSIR.Insn) =
       Err(c, "load address must be ptr type"); RETURN;
     END;
     IF res = NIL THEN Err(c, "load must have a result"); RETURN END;
-    IF NOT MSIR.Equal(MSIR.EltType(addrT), MSIR.ValueType(res)) THEN
+    IF MSIR.Kind(MSIR.EltType(addrT)) # MSIR.TypeKind.Void AND
+       NOT MSIR.Equal(MSIR.EltType(addrT), MSIR.ValueType(res)) THEN
       Err(c, "load result type does not match pointer element type");
     END;
   END CheckLoad;
@@ -249,7 +251,8 @@ PROCEDURE CheckStore(c: Ctx;  i: MSIR.Insn) =
     IF MSIR.Kind(addrT) # MSIR.TypeKind.Ptr THEN
       Err(c, "store destination must be ptr type"); RETURN;
     END;
-    IF NOT MSIR.Equal(MSIR.EltType(addrT), valT) THEN
+    IF MSIR.Kind(MSIR.EltType(addrT)) # MSIR.TypeKind.Void AND
+       NOT MSIR.Equal(MSIR.EltType(addrT), valT) THEN
       Err(c, "store value type does not match pointer element type");
     END;
     IF MSIR.InsnResult(i) # NIL THEN Err(c, "store must not have a result") END;

@@ -5,6 +5,7 @@ IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
+CONST MaxTryDepth  = 16;
 CONST MaxProcMap   = 128;
 CONST MaxGlobalMap = 256;
 
@@ -31,6 +32,9 @@ VAR
   exitStack: ARRAY [0..MaxExitStack-1] OF MSIR.Block;
   exitDepth: INTEGER := 0;
 
+  tryStack:  ARRAY [0..MaxTryDepth-1] OF MSIR.Block;
+  tryDepth:  INTEGER := 0;
+
   procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
   procMapN: INTEGER := 0;
 
@@ -53,6 +57,7 @@ PROCEDURE BeginProc(name: M3ID.T;
     abandoned := FALSE;
     varMapN   := 0;
     exitDepth := 0;
+    tryDepth  := 0;
     blockSeq  := 0;
 
     resultT := MSIRType.TranslateResult(result);
@@ -310,6 +315,7 @@ PROCEDURE EndProc() =
     abandoned := FALSE;
     varMapN   := 0;
     exitDepth := 0;
+    tryDepth  := 0;
   END EndProc;
 
 PROCEDURE Abandon(reason: TEXT) =
@@ -371,6 +377,45 @@ PROCEDURE CurrentExitBlock(): MSIR.Block =
     IF exitDepth = 0 THEN RETURN NIL END;
     RETURN exitStack[exitDepth - 1];
   END CurrentExitBlock;
+
+PROCEDURE PushTryContext(lpadBlock: MSIR.Block) =
+  BEGIN
+    IF tryDepth < MaxTryDepth THEN
+      tryStack[tryDepth] := lpadBlock;
+      INC(tryDepth);
+    ELSE
+      Abandon("try context stack overflow");
+    END;
+  END PushTryContext;
+
+PROCEDURE PopTryContext() =
+  BEGIN
+    IF tryDepth > 0 THEN DEC(tryDepth) END;
+  END PopTryContext;
+
+PROCEDURE CurrentUnwindBlock(): MSIR.Block =
+  BEGIN
+    IF tryDepth = 0 THEN RETURN NIL END;
+    RETURN tryStack[tryDepth - 1];
+  END CurrentUnwindBlock;
+
+PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
+                   READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+  VAR
+    unwind:  MSIR.Block;
+    normalB: MSIR.Block;
+    result:  MSIR.Value;
+  BEGIN
+    unwind := CurrentUnwindBlock();
+    IF unwind # NIL THEN
+      normalB := NewBlock("invoke.cont");
+      result  := MSIR.BuildInvoke(curBlock, name, callee, args, normalB, unwind);
+      curBlock := normalB;
+    ELSE
+      result := MSIR.BuildCall(curBlock, name, callee, args);
+    END;
+    RETURN result;
+  END EmitCall;
 
 PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
   BEGIN
@@ -475,6 +520,7 @@ PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
     abandoned := FALSE;
     varMapN   := 0;
     exitDepth := 0;
+    tryDepth  := 0;
     blockSeq  := 0;
     resultT   := MSIR.TVoid();
     curProc  := MSIR.NewProc(name, ARRAY OF MSIR.Param{}, resultT);

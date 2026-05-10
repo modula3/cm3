@@ -359,13 +359,11 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.Unreachable =>
         Wr.PutText(wr, "  unreachable\n");
 
-    | MSIR.Op.Call, MSIR.Op.Invoke =>
+    | MSIR.Op.Call =>
         VAR callee := MSIR.InsnCallee(i);
         BEGIN
           Wr.PutText(wr, "  ");
-          IF res # NIL THEN
-            Wr.PutText(wr, MSIR.ValueName(res) & " = ");
-          END;
+          IF res # NIL THEN Wr.PutText(wr, MSIR.ValueName(res) & " = ") END;
           Wr.PutText(wr, "call ");
           LLType(wr, MSIR.ProcResultType(callee));
           Wr.PutText(wr, " @");
@@ -377,6 +375,51 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           END;
           Wr.PutText(wr, ")\n");
         END;
+
+    | MSIR.Op.Invoke =>
+        VAR
+          callee  := MSIR.InsnCallee(i);
+          normalB := MSIR.InsnBrTarget(i, 0);
+          unwindB := MSIR.InsnBrTarget(i, 1);
+        BEGIN
+          Wr.PutText(wr, "  ");
+          IF res # NIL THEN Wr.PutText(wr, MSIR.ValueName(res) & " = ") END;
+          Wr.PutText(wr, "invoke ");
+          LLType(wr, MSIR.ProcResultType(callee));
+          Wr.PutText(wr, " @");
+          Wr.PutText(wr, LLSymbol(callee));
+          Wr.PutText(wr, "(");
+          FOR k := 0 TO nOps - 1 DO
+            IF k > 0 THEN Wr.PutText(wr, ", ") END;
+            LLTypedVal(wr, MSIR.InsnOperand(i, k));
+          END;
+          Wr.PutText(wr, ")\n");
+          Wr.PutText(wr, "          to label %");
+          Wr.PutText(wr, MSIR.BlockLabel(normalB));
+          Wr.PutText(wr, " unwind label %");
+          Wr.PutText(wr, MSIR.BlockLabel(unwindB));
+          Wr.PutText(wr, "\n");
+        END;
+
+    | MSIR.Op.LandingPad =>
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = landingpad ");
+        LLType(wr, MSIR.ValueType(res));
+        Wr.PutText(wr, "\n");
+        IF MSIR.InsnIsCleanup(i) THEN
+          Wr.PutText(wr, "          cleanup\n");
+        ELSE
+          Wr.PutText(wr, "          catch ptr @_ZTI7_M3Exc\n");
+        END;
+
+    | MSIR.Op.ExtractValue =>
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = extractvalue ");
+        LLTypedVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", " & Fmt.Int(MSIR.InsnExtractIdx(i)) & "\n");
+
+    | MSIR.Op.Resume =>
+        Wr.PutText(wr, "  resume ");
+        LLTypedVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, "\n");
 
     | MSIR.Op.FieldAddr =>
         VAR
@@ -577,6 +620,24 @@ PROCEDURE EmitParamTypeList(wr: Wr.T;  p: MSIR.Proc) =
 
 (*------------------------------------------------------- proc emission *)
 
+PROCEDURE HasInvoke(p: MSIR.Proc): BOOLEAN =
+  VAR nb := MSIR.ProcBlockCount(p);
+  BEGIN
+    FOR bi := 0 TO nb - 1 DO
+      VAR
+        b  := MSIR.ProcBlock(p, bi);
+        ni := MSIR.BlockInsnCount(b);
+      BEGIN
+        FOR ii := 0 TO ni - 1 DO
+          IF MSIR.InsnOp(MSIR.BlockInsn(b, ii)) = MSIR.Op.Invoke THEN
+            RETURN TRUE;
+          END;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END HasInvoke;
+
 PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
   VAR
     nb    := MSIR.ProcBlockCount(p);
@@ -603,6 +664,9 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, " @");
     Wr.PutText(wr, LLSymbol(p));
     EmitParamList(wr, p);
+    IF HasInvoke(p) THEN
+      Wr.PutText(wr, " personality ptr @__gxx_personality_v0");
+    END;
     Wr.PutText(wr, " {\n");
 
     FOR bi := 0 TO nb - 1 DO
@@ -644,14 +708,24 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 
 (*------------------------------------------------------ module emission *)
 
+PROCEDURE ModuleHasEH(m: MSIR.Module): BOOLEAN =
+  BEGIN
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      IF HasInvoke(MSIR.ModuleProc(m, i)) THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END ModuleHasEH;
+
 PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
   VAR
     externs    := NEW(RefSeq.T).init();
     triple     := MSIR.ModuleTriple(m);
     datalayout := MSIR.ModuleDataLayout(m);
+    needsEH    : BOOLEAN;
   BEGIN
     curEmitModule := m;
     auxN          := 0;
+    needsEH       := ModuleHasEH(m);
     Wr.PutText(wr, "; ModuleID = '" & MSIR.ModuleName(m) & "'\n");
     Wr.PutText(wr, "source_filename = \"" & MSIR.ModuleName(m) & "\"\n");
     IF datalayout # NIL THEN
@@ -661,6 +735,13 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
       Wr.PutText(wr, "target triple = \"" & triple & "\"\n");
     END;
     Wr.PutText(wr, "\n");
+
+    (* EH externs — emitted once per module when any proc uses invoke *)
+    IF needsEH THEN
+      Wr.PutText(wr, "@_ZTI7_M3Exc = external constant ptr\n");
+      Wr.PutText(wr, "declare i32 @__gxx_personality_v0(...)\n");
+      Wr.PutText(wr, "\n");
+    END;
 
     (* globals *)
     FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO

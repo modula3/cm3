@@ -2,6 +2,8 @@ MODULE Main;
 
 IMPORT IO, Fmt;
 
+EXCEPTION TestExcept;
+
 VAR gCounter: INTEGER := 0;
 VAR gBase: INTEGER := 100;
 VAR gRef: REFANY := NIL;
@@ -381,6 +383,30 @@ PROCEDURE Neither (a, b: INTEGER): BOOLEAN =
     RETURN NOT (a > 0 OR b > 0);
   END Neither;
 
+(* TRY/FINALLY normal path: finally block runs, result = 1 + 10 = 11 *)
+PROCEDURE TryFinNormal (): INTEGER =
+  VAR n: INTEGER := 1;
+  BEGIN
+    TRY
+      n := n + Add(0, 0);
+    FINALLY
+      n := n + 10;
+    END;
+    RETURN n;
+  END TryFinNormal;
+
+(* TRY/EXCEPT normal path: no exception raised, body result returned *)
+PROCEDURE TryExceptNormal (): INTEGER =
+  VAR n: INTEGER := 0;
+  BEGIN
+    TRY
+      n := Add(5, 3);
+    EXCEPT
+      TestExcept => n := -1;
+    END;
+    RETURN n;
+  END TryExceptNormal;
+
 BEGIN
   IO.Put ("Add(2,3) = " & Fmt.Int(Add(2,3)) & "\n");
   IO.Put ("Factorial(5) = " & Fmt.Int(Factorial(5)) & "\n");
@@ -473,4 +499,8 @@ BEGIN
   IO.Put ("EitherPos(-1, 4) = " & Fmt.Bool(EitherPos(-1, 4)) & "\n");
   IO.Put ("EitherPos(-1, -2) = " & Fmt.Bool(EitherPos(-1, -2)) & "\n");
   IO.Put ("Neither(-1, -2) = " & Fmt.Bool(Neither(-1, -2)) & "\n");
+
+  (* EH tests *)
+  IO.Put ("TryFinNormal() = " & Fmt.Int(TryFinNormal()) & "\n");
+  IO.Put ("TryExceptNormal() = " & Fmt.Int(TryExceptNormal()) & "\n");
 END Main.
