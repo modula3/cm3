@@ -533,12 +533,12 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         END;
 
     | MSIR.Op.PtrAdd =>
-        (* getelementptr ptr, ptr %base, i64 N — advances base by N pointer slots *)
+        (* getelementptr i8, ptr %base, i64 N — advances base by N bytes *)
         VAR
           baseV := MSIR.InsnOperand(i, 0);
           idx   := MSIR.InsnExtractIdx(i);
         BEGIN
-          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr ptr, ptr ");
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr i8, ptr ");
           LLOpVal(wr, baseV);
           Wr.PutText(wr, ", i64 " & Fmt.Int(idx) & "\n");
         END;

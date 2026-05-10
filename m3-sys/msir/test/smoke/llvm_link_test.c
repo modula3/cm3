@@ -86,6 +86,9 @@ extern M3Int  Main__GetCounter(void);
 extern M3Int  Main__TryFinNormal(void);
 extern M3Int  Main__TryExceptNormal(void);
 
+/* Method dispatch + heap object field access */
+extern M3Int  Main__SquareArea(void *self);  /* reads self->side via field GEP */
+
 /* TYPECASE test */
 extern M3Int  Main__TypecaseKind(void *r);
 
@@ -232,6 +235,12 @@ int main(void) {
     /* EH — normal-path tests (no exception raised) */
     check_int("TryFinNormal()",     Main__TryFinNormal(),      11);
     check_int("TryExceptNormal()",  Main__TryExceptNormal(),    8);
+
+    /* Object field access: construct a fake Square on the stack.
+       CM3 object layout: [vtable_ptr(8), side(8)].
+       SquareArea reads self.side (at byte offset 8) and returns side*side. */
+    struct { void *vtable; M3Int side; } fake_square = { NULL, 7 };
+    check_int("SquareArea(side=7)",   Main__SquareArea(&fake_square), 49);
 
     /* TYPECASE dispatch — NIL path: ScanTypecase(NIL)=0 → first clause → 1 */
     check_int("TypecaseKind(NULL)",   Main__TypecaseKind(NULL), 1);

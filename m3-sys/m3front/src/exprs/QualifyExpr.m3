@@ -794,7 +794,12 @@ PROCEDURE NoteWrites (p: P) =
   END NoteWrites;
 
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
-  VAR fieldInfo: Field.Info;  baseAddr: MSIR.Value;
+  VAR
+    fieldInfo: Field.Info;
+    baseAddr:  MSIR.Value;
+    objOff:    INTEGER;
+    objAlign:  INTEGER;
+    byteOff:   LONGINT;
   BEGIN
     Resolve (p);
     CASE p.class OF
@@ -804,6 +809,22 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         Field.Split (p.rhsValue, fieldInfo);
         RETURN MSIR.BuildFieldAddr (MSIRBuilder.CurrentBlock (), "",
                                     baseAddr, M3ID.ToText (fieldInfo.name));
+    | Class.objField =>
+        (* Compute byte offset: fields start at obj_offset bits from the object
+           pointer (typically 64 bits = 8 bytes for the vtable word), plus the
+           field's own bit offset within the field region.  Abandon when
+           obj_offset is not statically known (complex inheritance chains). *)
+        Field.Split (p.rhsValue, fieldInfo);
+        ObjectType.GetFieldsOffsetAndAlign (p.holder, objOff, objAlign);
+        IF objOff < 0 THEN
+          MSIRBuilder.Abandon ("object field: non-static data offset");
+          RETURN NIL;
+        END;
+        byteOff := VAL (objOff + fieldInfo.offset, LONGINT) DIV 8L;
+        baseAddr := Expr.CompileMSIR (p.lhsExpr);
+        IF baseAddr = NIL THEN RETURN NIL END;
+        IF byteOff = 0L THEN RETURN baseAddr END;
+        RETURN MSIR.BuildPtrAdd (MSIRBuilder.CurrentBlock (), "", baseAddr, byteOff);
     ELSE
       MSIRBuilder.Abandon ("lvalue not supported for this qualify class");
       RETURN NIL;
@@ -834,6 +855,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         fieldType := MSIRType.Translate (fieldInfo.type);
         IF fieldType = NIL THEN
           MSIRBuilder.Abandon ("unsupported record field type");
+          RETURN NIL;
+        END;
+        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);
+    | Class.objField =>
+        (* Load a scalar field from a heap object.  LValueMSIR computes the
+           byte address; we load the field value from that address. *)
+        addr := LValueMSIR (p);
+        IF addr = NIL THEN RETURN NIL END;
+        Field.Split (p.rhsValue, fieldInfo);
+        fieldType := MSIRType.Translate (fieldInfo.type);
+        IF fieldType = NIL THEN
+          MSIRBuilder.Abandon ("unsupported object field type");
           RETURN NIL;
         END;
         RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);

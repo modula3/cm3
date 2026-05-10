@@ -1,7 +1,7 @@
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
-IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt;
+IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -435,10 +435,13 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
     suite := MSIR.BuildLoad(curBlock, "", ptrT, obj);
 
     (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
+    (* Vtable slot N is at byte offset N * sizeof(ptr). *)
     IF midx = 0L THEN
       slotPtr := suite;
     ELSE
-      slotPtr := MSIR.BuildPtrAdd(curBlock, "", suite, midx);
+      slotPtr := MSIR.BuildPtrAdd(curBlock, "",
+                                  suite,
+                                  midx * VAL(Target.Address.size, LONGINT) DIV 8L);
     END;
 
     (* 3. Load function pointer from the slot. *)

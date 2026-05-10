@@ -455,8 +455,10 @@ PROCEDURE BuildSetMember    (b: Block;  name: TEXT;
 
 (*----------------------------------------------- indirect dispatch *)
 
-(* Advance a pointer by idx slots: `getelementptr ptr, ptr %base, i64 idx`.
-   Used for vtable indexing.  Result type = same as base. *)
+(* Advance a pointer by idx BYTES: `getelementptr i8, ptr %base, i64 idx`.
+   General byte-offset GEP; result type = same as base.
+   Used for vtable slot indexing (pass idx = method_slot * sizeof(ptr))
+   and for heap object field access (pass idx = total byte offset). *)
 PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value;
 
 (* Call through a function-pointer value.  fn must have ptr type.
