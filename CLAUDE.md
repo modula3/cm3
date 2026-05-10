@@ -225,13 +225,16 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (68/68 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (69/69 tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
 - VAR/READONLY params, INC/DEC
 - Exception handling: TRY/EXCEPT (UID-dispatch landingpad) and TRY/FINALLY (cleanup landingpad + resume)
 - RAISE statement: per-exception `ExceptionDesc` static global (`{ uid, null, 0 }`), calls `RTHooks__Raise` via `HookProc(RaiseEx)`, emits `unreachable` after
+- Exception value binding (`EXCEPT E(v) =>`): loads `act.arg` at `EA_arg = 8` bytes, stores to bound-variable alloca; `inttoptr`/`ptrtoint` for scalar arg packing
+- RTLinker binder `@Module_I3` (interface view, returns same MI) and `@Module_M3`
+- `RT0.ImportInfo` chain in `MI_imports`: linked list of `{ null, binder_fn, next }` records; `BuildImportLink` registers imports via `MSIREmit.RegisterImport`; RTHooks excluded (always pre-initialised by `InitRuntime`)
 - GC read barrier (nil/misaligned/gray-bit inline fast path + `RTHooks__CheckLoadTracedRef`)
 - GC write barrier infrastructure (`GcStore` container operand, dirty-bit check + `RTHooks__CheckStoreTraced` for heap fields; globals are GC roots and need no barrier)
 - RTLinker binder (`@Module_M3`) and `RT0.ModuleInfo` struct (`@Module_M3_info`) emitted in LLVM IR
@@ -312,17 +315,12 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 
 ### Known Limitations / Remaining Work
 
-- **Exception value binding**: `EXCEPT E(v) =>` skipped (falls back to body-only); requires extracting arg from activation record
-- **Exception value binding**: `EXCEPT E(v) =>` skipped (falls back to body-only); requires extracting arg from activation record
-- **TYPECASE**: not implemented; calls `MSIRBuilder.Abandon`
-- **Method dispatch**: not implemented
-- **LOCK**: not implemented
 - **Nested procedures**: up-level variable access not supported
-- **TEXT / string literals**: `Fmt.Int` etc. return correct values but string concat/IO not fully supported
+- **TEXT / string literals**: string concat/IO not fully supported; module body crashes on IO.Put
 - **GC write barrier for heap fields**: `BuildGcStore(..., container)` infrastructure exists; activated when heap field stores are implemented
-- **`imports` chain** in `RT0.ModuleInfo`: currently null; dependencies not transitively initialized via RTLinker
-- **`type_cells`** in `RT0.ModuleInfo`: currently null; exception type lookups via typecode won't work
+- **`type_cells`** in `RT0.ModuleInfo`: currently null; `NEW(T)` and exception typecode lookups won't work
 - **`var_map` / `gc_map`** in `RT0.ModuleInfo`: currently null; GC won't scan module globals as roots
+- **NEW**: needs `type_cells` for object type descriptors
 
 ### Cosmetic Issues in Emitted MSIR
 

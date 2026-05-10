@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-10 (msir branch)
 
-## What's Working (68/68 tests pass)
+## What's Working (69/69 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -34,37 +34,30 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] `@Module_M3_info` RT0.ModuleInfo descriptor (binder and gc_flags set; other fields null)
 - [x] GC barrier extern declarations (`RTHooks__CheckLoadTracedRef/CheckStoreTraced`)
 - [x] RAISE statement: per-exception `ExceptionDesc` static (`{ uid, null, 0 }`), `RTHooks__Raise` via `HookProc(RaiseEx)`, Itanium ABI `__cxa_begin_catch` fix in catch landingpads
+- [x] Exception value binding (`EXCEPT E(v) =>`): loads `act.arg` at EA_arg=8 bytes, `ptrtoint`/`inttoptr` for scalar packing; `AddLocal(h.var)` registers the handler-scope variable
+- [x] `@Module_I3` interface binder (returns same MI as `@Module_M3`)
+- [x] `RT0.ImportInfo` chain in `MI_imports`: `BuildImportLink` registers binders via `MSIREmit.RegisterImport`; RTHooks filtered (pre-initialised by `InitRuntime`); standalone binary now runs full transitive RTLinker init
 
 ---
 
 ## Remaining Work (prioritised)
 
-### A. Complete Runtime Linking
-- [ ] `imports` chain in ModuleInfo — null now; without it, transitive module init via RTLinker won't work
-- [ ] `type_cells` — exception type descriptors; needed for `Compiler.ThisException()` and runtime exception reporting
-- [ ] `var_map` / `gc_map` — GC root map for traced globals; needed for correct GC under collection
-- [ ] Module body TEXT/IO — `Fmt.Int` etc. call correctly but string concatenation and IO.Put crash without TYPECASE/TEXT support
+### A. ~~Complete Runtime Linking~~ partially done
+- [x] `imports` chain — emitted; transitive RTLinker init works
+- [ ] `type_cells` — type/exception descriptors; needed for `NEW(T)` and typecode-based lookups
+- [ ] `var_map` / `gc_map` — GC root map for traced globals
+- [ ] Module body TEXT/IO — string concatenation and IO.Put crash; blocked on TEXT/TYPECASE support
 
 ### B. ~~RAISE statement~~ ✓ Done
 - Ownership lifecycle correct: `__cxa_get_exception_ptr` for peeking (no ownership), `__cxa_begin_catch`/`__cxa_end_catch` strictly bracketing matched handler bodies (including before any `ret` via `ReturnStmt.CompileMSIR`), plain `resume` for no-match.
 
-### C. Exception value binding
-- `EXCEPT E(v) =>` handler with bound variable skipped (falls back to body-only)
-- Needs: extract `arg` field from `RaiseActivation` in the landing pad
-- Three-level load chain: `exc_obj_ptr → act → arg`
+### C. ~~Exception value binding~~ ✓ Done
 
-### D. TYPECASE
-- `Op.Typecase` defined in MSIR but `CompileMSIR` calls `Abandon`
-- Needed for any code using object polymorphism
-- Lowers to `RTHooks__ScanTypecase` dispatch
+### D. ~~TYPECASE~~ ✓ Done
 
-### E. Method dispatch
-- `Op.Dispatch` in MSIR; `CompileMSIR` not implemented
-- Needed for object-oriented code
-- Lowers to vtable load + indirect call
+### E. ~~Method dispatch~~ ✓ Done
 
-### F. LOCK statement
-- Not implemented; desugar as TRY/FINALLY wrapping Thread.Acquire/Release
+### F. ~~LOCK statement~~ ✓ Done
 
 ### G. Nested procedures / up-level access
 - Up-level variable references call `Abandon`; blocked on static link support
@@ -79,7 +72,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (68 checks)
+# Full end-to-end LLVM link test (69 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path; body fails on TEXT/IO)
