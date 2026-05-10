@@ -1,8 +1,8 @@
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
-IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target;
-IMPORT RunTyme, Procedure;
+IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
+IMPORT RunTyme, Procedure, M3FP;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -465,6 +465,60 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
     END;
     RETURN result;
   END EmitMethodCall;
+
+PROCEDURE ExcDescValue (v: Value.T): MSIR.Value =
+  VAR
+    m    := MSIREmit.CurrentModule();
+    name := Value.GlobalName(v, dots := FALSE, with_module := TRUE) & "_excptr";
+    uid  := VAL(M3FP.ToInt(M3FP.FromText(Value.GlobalName(v))), LONGINT);
+    desc : MSIR.ExcDesc;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    (* Check if already registered for this module. *)
+    FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO
+      desc := MSIR.ModuleExcDesc(m, i);
+      IF Text.Equal(MSIR.ExcDescName(desc), name) THEN
+        RETURN MSIR.ExcDescValue(desc);
+      END;
+    END;
+    (* Not found — create and register. *)
+    desc := MSIR.NewExcDesc(name, uid);
+    MSIR.ModuleAddExcDesc(m, desc);
+    RETURN MSIR.ExcDescValue(desc);
+  END ExcDescValue;
+
+PROCEDURE CxaStub(name: TEXT;  READONLY params: ARRAY OF MSIR.Param;
+                   rtype: MSIR.T): MSIR.Proc =
+  (* Return a cached MSIR extern stub for a C++ ABI function. *)
+  BEGIN
+    FOR i := 0 TO procMapN - 1 DO
+      IF Text.Equal(MSIR.ProcName(procMap[i].val), name) THEN
+        RETURN procMap[i].val;
+      END;
+    END;
+    VAR p := MSIR.NewProc(name, params, rtype);
+    BEGIN
+      IF procMapN < MaxProcMap THEN
+        procMap[procMapN].key := NIL;
+        procMap[procMapN].val := p;
+        INC(procMapN);
+      END;
+      RETURN p;
+    END;
+  END CxaStub;
+
+PROCEDURE CxaBeginCatch(): MSIR.Proc =
+  VAR params := ARRAY [0..0] OF MSIR.Param{
+    MSIR.Param{name := "exc_header", type := MSIR.TPtr(MSIR.TVoid()),
+               mode := MSIR.ParamMode.ByValue}};
+  BEGIN
+    RETURN CxaStub("__cxa_begin_catch", params, MSIR.TPtr(MSIR.TVoid()));
+  END CxaBeginCatch;
+
+PROCEDURE CxaEndCatch(): MSIR.Proc =
+  BEGIN
+    RETURN CxaStub("__cxa_end_catch", ARRAY OF MSIR.Param{}, MSIR.TVoid());
+  END CxaEndCatch;
 
 PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
   VAR proc: Procedure.T;

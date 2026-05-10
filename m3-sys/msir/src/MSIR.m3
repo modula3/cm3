@@ -676,6 +676,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
+  excDescs:   RefSeq.T;                            (* elements: ExcDesc *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
@@ -721,13 +722,45 @@ PROCEDURE ModuleGlobalCount(m: Module): INTEGER =
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global =
   BEGIN RETURN m.globals.get(i) END ModuleGlobal;
 
+(*---------------------------------------------- exception descriptors *)
+
+REVEAL ExcDesc = BRANDED "MSIR.ExcDesc" REF RECORD
+  name  : TEXT;
+  uid   : LONGINT;
+  ptrVal: Value := NIL;  (* cached ptr value *)
+END;
+
+PROCEDURE NewExcDesc(name: TEXT;  uid: LONGINT): ExcDesc =
+  VAR d := NEW(ExcDesc);  v := NEW(Value);
+  BEGIN
+    d.name := name;
+    d.uid  := uid;
+    (* Use a bare InsnResult-style value with the full @symbol name so
+       LLOpVal emits it as-is without going through LLGlobalSym. *)
+    v.type  := TPtr(TVoid());
+    v.name  := "@" & name;
+    v.vKind := ValueKind.InsnResult;
+    d.ptrVal := v;
+    RETURN d;
+  END NewExcDesc;
+
+PROCEDURE ExcDescName (d: ExcDesc): TEXT    = BEGIN RETURN d.name   END ExcDescName;
+PROCEDURE ExcDescUID  (d: ExcDesc): LONGINT = BEGIN RETURN d.uid    END ExcDescUID;
+PROCEDURE ExcDescValue(d: ExcDesc): Value   = BEGIN RETURN d.ptrVal END ExcDescValue;
+
+PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc) = BEGIN m.excDescs.addhi(d) END ModuleAddExcDesc;
+PROCEDURE ModuleExcDescCount(m: Module): INTEGER     = BEGIN RETURN m.excDescs.size() END ModuleExcDescCount;
+PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
+  BEGIN RETURN m.excDescs.get(i) END ModuleExcDesc;
+
 PROCEDURE NewModule(name: TEXT): Module =
   VAR m := NEW(Module);
   BEGIN
-    m.name    := name;
-    m.imports := NEW(RefSeq.T).init();
-    m.procs   := NEW(RefSeq.T).init();
-    m.globals := NEW(RefSeq.T).init();
+    m.name     := name;
+    m.imports  := NEW(RefSeq.T).init();
+    m.procs    := NEW(RefSeq.T).init();
+    m.globals  := NEW(RefSeq.T).init();
+    m.excDescs := NEW(RefSeq.T).init();
     RETURN m;
   END NewModule;
 

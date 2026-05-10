@@ -216,6 +216,23 @@ PROCEDURE ModuleAddProc(m: Module;  p: Proc);
 PROCEDURE ModuleProcCount(m: Module): INTEGER;
 PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
 
+(*-------------------------------------------------- exception descriptors *)
+
+(* A per-exception static descriptor: { uid: i64, name: ptr, implicit: i64 }.
+   Created by NewExcDesc; emitted as a module-level internal global.
+   The Value returned by ExcDescValue has ptr type and may be passed
+   directly as the 'ex' argument to RTHooks__Raise. *)
+TYPE ExcDesc <: REFANY;
+
+PROCEDURE NewExcDesc(name: TEXT;  uid: LONGINT): ExcDesc;
+PROCEDURE ExcDescName (d: ExcDesc): TEXT;    (* LLVM global symbol *)
+PROCEDURE ExcDescUID  (d: ExcDesc): LONGINT;
+PROCEDURE ExcDescValue(d: ExcDesc): Value;   (* ptr to descriptor *)
+
+PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc);
+PROCEDURE ModuleExcDescCount(m: Module): INTEGER;
+PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc;
+
 (*-------------------------------------------------------- module globals *)
 
 TYPE Global <: REFANY;

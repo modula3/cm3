@@ -148,13 +148,21 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, "@");
         Wr.PutText(wr, LLGlobalSym(MSIR.ValueName(v)));
     ELSE
-        (* InsnResult names already have % prefix; proc param names are bare. *)
-        VAR n: TEXT := MSIR.ValueName(v);
+        (* InsnResult/Param names: % prefix; bare param names get % added.
+           ExcDesc values start with @ (full symbol) and are emitted as-is. *)
+        VAR n: TEXT := MSIR.ValueName(v);  c0: CHAR;
         BEGIN
-          IF Text.Length(n) > 0 AND Text.GetChar(n, 0) # '%' THEN
-            Wr.PutText(wr, "%");
+          IF Text.Length(n) = 0 THEN
+            Wr.PutText(wr, "undef");
+          ELSE
+            c0 := Text.GetChar(n, 0);
+            IF c0 = '%' OR c0 = '@' THEN
+              (* Already has the right sigil. *)
+            ELSE
+              Wr.PutText(wr, "%");
+            END;
+            Wr.PutText(wr, n);
           END;
-          Wr.PutText(wr, n);
         END;
     END;
   END LLOpVal;
@@ -1147,6 +1155,8 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     IF needsEH THEN
       Wr.PutText(wr, "@_ZTI6_M3Exc = external constant ptr\n");
       Wr.PutText(wr, "declare i32 @__gxx_personality_v0(...)\n");
+      (* Note: @__cxa_begin_catch and @__cxa_end_catch are declared automatically
+         by CollectExterns since they appear as Call callees in catch landingpads. *)
       Wr.PutText(wr, "\n");
     END;
 
@@ -1180,6 +1190,17 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     (* internal proc definitions *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       EmitProc(wr, MSIR.ModuleProc(m, i));
+    END;
+
+    (* Exception descriptors: { i64 uid, ptr null, i64 0 } = ExceptionDesc *)
+    FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO
+      VAR d := MSIR.ModuleExcDesc(m, i);
+      BEGIN
+        Wr.PutText(wr, "\n@" & MSIR.ExcDescName(d)
+                       & " = internal global { i64, ptr, i64 } { i64 "
+                       & Fmt.LongInt(MSIR.ExcDescUID(d))
+                       & ", ptr null, i64 0 }\n");
+      END;
     END;
 
     (* RTLinker binder and ModuleInfo descriptor *)

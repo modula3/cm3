@@ -10,6 +10,7 @@ MODULE RaiseStmt;
 
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
+IMPORT MSIR, MSIRBuilder, RunTyme;
 FROM M3 IMPORT QID;
 
 TYPE
@@ -22,6 +23,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -95,6 +97,63 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {(* Raises *)};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  (* RAISE E  or  RAISE E(arg)
+     RTHooks__Raise(ex, arg, module, line):
+       ex     = direct pointer to ExceptionDesc { uid, name_ptr, implicit }
+       arg    = argument value cast to ptr (NIL for no-arg exceptions)
+       module = NIL (diagnostics only; skip for now)
+       line   = 0  (diagnostics only; skip for now)
+     RTHooks__Raise never returns — emit unreachable after the call. *)
+  VAR
+    raiseProc : MSIR.Proc;
+    descVal   : MSIR.Value;
+    argVal    : MSIR.Value;
+    ptrT      := MSIR.TPtr(MSIR.TVoid());
+    args      : REF ARRAY OF MSIR.Value;
+  BEGIN
+    IF NOT MSIRBuilder.InProc() THEN RETURN END;
+    IF p.except = NIL THEN
+      MSIRBuilder.Abandon("raise: exception not resolved");
+      RETURN;
+    END;
+
+    raiseProc := MSIRBuilder.HookProc(RunTyme.Hook.RaiseEx);
+    IF raiseProc = NIL THEN
+      MSIRBuilder.Abandon("raise: RTHooks__Raise not available");
+      RETURN;
+    END;
+
+    (* Exception descriptor pointer. *)
+    descVal := MSIRBuilder.ExcDescValue(p.except);
+    IF descVal = NIL THEN
+      MSIRBuilder.Abandon("raise: cannot build exception descriptor");
+      RETURN;
+    END;
+
+    (* Argument: compile if present, else NIL. *)
+    IF p.arg # NIL THEN
+      argVal := Expr.CompileMSIR(p.arg);
+      IF argVal = NIL THEN RETURN END;
+      (* Cast to ptr (ADDRESS) for RTHooks__Raise parameter. *)
+      argVal := MSIR.BuildConvert(MSIRBuilder.CurrentBlock(), "", argVal, ptrT);
+    ELSE
+      argVal := MSIR.ConstNil(ptrT);
+    END;
+
+    args := NEW(REF ARRAY OF MSIR.Value, 4);
+    args[0] := descVal;
+    args[1] := argVal;
+    args[2] := MSIR.ConstNil(ptrT);    (* module: NIL *)
+    args[3] := MSIR.ConstInt(MSIR.TI(64), 0L);  (* line: 0 *)
+
+    EVAL MSIRBuilder.EmitCall("", raiseProc, args^);
+    (* RTHooks__Raise never returns normally. *)
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIR.BuildUnreachable(MSIRBuilder.CurrentBlock());
+    END;
+  END CompileMSIR;
 
 BEGIN
 END RaiseStmt.

@@ -69,6 +69,8 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
 PROCEDURE CompileMSIR (p: P) =
   VAR v: MSIR.Value := NIL;
   BEGIN
+    IF NOT MSIRBuilder.InProc ()              THEN RETURN END;
+    IF MSIRBuilder.CurrentBlockTerminated ()  THEN RETURN END;
     IF p.expr # NIL THEN
       v := Expr.CompileMSIR (p.expr);
       IF v = NIL THEN RETURN END;

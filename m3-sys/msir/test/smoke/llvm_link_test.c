@@ -23,10 +23,8 @@ void *Fmt__Bool(M3Bool b)           { return NULL; }
 void RTHooks__CheckLoadTracedRef(void *ref) { (void)ref; }
 void RTHooks__CheckStoreTraced(void *dst)   { (void)dst; }
 
-/* Stub for the C++ typeinfo of _M3Exc, required by the EH exception tables
-   emitted by LLVM for TRY/EXCEPT procs.  Content is irrelevant for these
-   normal-path tests since no exception is actually thrown. */
-void *_ZTI6_M3Exc[2] = { 0, 0 };
+/* _ZTI6_M3Exc is provided by raise_stub.cpp (the C++ compiler generates a
+   proper typeinfo for struct _M3Exc when raise_stub.cpp is compiled). */
 
 /* ---- M3 procedure declarations ---- */
 extern M3Int  Main__Add(M3Int a, M3Int b);
@@ -83,6 +81,7 @@ extern void   Main__IncrCounter(void);
 extern void   Main__AddToCounter(M3Int n);
 extern M3Int  Main__GetCounter(void);
 
+extern M3Int  Main__TryRaise(void);
 extern M3Int  Main__TryFinNormal(void);
 extern M3Int  Main__TryExceptNormal(void);
 
@@ -232,7 +231,8 @@ int main(void) {
     check_int("gCounter (direct)", Main__gCounter,          10);
     check_int("GetCounter()",     Main__GetCounter(),       10); /* gBase=0 */
 
-    /* EH — normal-path tests (no exception raised) */
+    /* EH — normal-path tests and RAISE round-trip */
+    check_int("TryRaise()",         Main__TryRaise(),           1); /* raises and catches TestExcept */
     check_int("TryFinNormal()",     Main__TryFinNormal(),      11);
     check_int("TryExceptNormal()",  Main__TryExceptNormal(),    8);
 

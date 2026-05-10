@@ -116,6 +116,14 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
    rtype: MSIR return type of the method (NIL for void)
    args:  explicit arguments (NOT including the implicit self/obj first arg)
    Prepends obj as the first argument.  Uses invoke inside a TRY context. *)
+(* Itanium C++ ABI helpers needed around CATCH landingpads.
+   CxaBeginCatch(exc_header) -> exc_obj  — converts exception-header ptr
+     (field 0 of the landingpad result) to the actual thrown exception object.
+   CxaEndCatch()             — releases the exception; must be called once
+     per CxaBeginCatch, before every exit from the handler (including resume). *)
+PROCEDURE CxaBeginCatch (): MSIR.Proc;
+PROCEDURE CxaEndCatch   (): MSIR.Proc;
+
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
@@ -130,6 +138,11 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
      IF proc = NIL THEN RETURN NIL END;
      EVAL MSIRBuilder.EmitCall("", proc, args); *)
 PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc;
+
+(* Get or create an exception descriptor global for exception value v.
+   Returns a Value of ptr type pointing to the descriptor.
+   The descriptor { uid, null, 0 } is registered with the current module. *)
+PROCEDURE ExcDescValue (v: Value.T): MSIR.Value;
 
 (*------------------------------------------------------------- Module globals *)
 

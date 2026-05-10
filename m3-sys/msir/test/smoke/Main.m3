@@ -419,6 +419,18 @@ PROCEDURE TypecaseKind (r: REFANY): INTEGER =
     END;
   END TypecaseKind;
 
+(* RAISE: raise TestExcept and catch it in the same proc.
+   Returns 1 if the exception is caught, 0 if it unexpectedly falls through. *)
+PROCEDURE TryRaise (): INTEGER =
+  BEGIN
+    TRY
+      RAISE TestExcept;
+      RETURN 0;       (* unreachable *)
+    EXCEPT
+      TestExcept => RETURN 1;
+    END;
+  END TryRaise;
+
 (* TRY/FINALLY normal path: finally block runs, result = 1 + 10 = 11 *)
 PROCEDURE TryFinNormal (): INTEGER =
   VAR n: INTEGER := 1;
