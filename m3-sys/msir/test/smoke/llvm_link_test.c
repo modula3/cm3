@@ -73,6 +73,9 @@ extern void   Main__AddToCounter(M3Int n);
 extern M3Int  Main__GetCounter(void);
 
 extern M3Int  Main__TryRaise(void);
+extern M3Int  Main__AllocInt(M3Int n);    /* NEW(REF INTEGER): stores n, returns n */
+extern M3Int  Main__AllocSquare(M3Int side);   /* NEW(Square): sets side, returns side*side */
+extern M3Int  Main__DispatchSquare(M3Int side); /* NEW(Square) + vtable dispatch */
 extern M3Int  Main__TryRaiseArg(void);  /* raises TestExceptArg(42), catches, returns 42 */
 extern M3Int  Main__TryFinNormal(void);
 extern M3Int  Main__TryExceptNormal(void);
@@ -213,6 +216,14 @@ int main(void) {
     Main__AddToCounter(8);
     check_int("gCounter (direct)", Main__gCounter,          10);
     check_int("GetCounter()",     Main__GetCounter(),       10); /* gBase=0 */
+
+    /* NEW(REF INTEGER) — allocate, store 99, read back */
+    check_int("AllocInt(99)",       Main__AllocInt(99),         99);
+
+    /* NEW(Square) — allocate OBJECT, set side, return side*side */
+    check_int("AllocSquare(6)",     Main__AllocSquare(6),       36);
+    /* NEW(Square) + vtable dispatch through ShapeDispatch */
+    check_int("DispatchSquare(5)",  Main__DispatchSquare(5),    25);
 
     /* EH — normal-path tests and RAISE round-trip */
     check_int("TryRaise()",         Main__TryRaise(),           1); /* raises and catches TestExcept */

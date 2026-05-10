@@ -825,9 +825,12 @@ PROCEDURE GenCells (): INTEGER =
     IF (cell = NIL) THEN RETURN -1; END;
     WHILE (cell # NIL) DO
       CG.Comment (cell.offset, FALSE, "typecell for ", Name (cell.type));
-      IF (cell.type.info.class = Class.Ref)
-        THEN RefType.InitTypecell (cell.type, cell.offset, prev);
-        ELSE ObjectType.InitTypecell (cell.type, cell.offset, prev);
+      IF (cell.type.info.class = Class.Ref) THEN
+        RefType.InitTypecell     (cell.type, cell.offset, prev);
+        RefType.InitTypecellMSIR (cell.type);
+      ELSE
+        ObjectType.InitTypecell     (cell.type, cell.offset, prev);
+        ObjectType.InitTypecellMSIR (cell.type);
       END;
       prev := cell.offset;
       cell := cell.next;

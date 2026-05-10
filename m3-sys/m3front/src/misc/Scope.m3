@@ -262,12 +262,12 @@ PROCEDURE Enter (t: T) =
 PROCEDURE InitValues (t: T) =
   VAR v: Value.T;
   BEGIN
-    IF t = NIL THEN RETURN; END;
+    IF t = NIL THEN RETURN END;
     v := t.head;
-    WHILE (v #  NIL) DO  Value.LangInit (v);  v := v.next;  END;
+    WHILE v # NIL DO  Value.LangInit (v);  v := v.next;  END;
     Tracer.EmitPending ();
     v := t.head;
-    WHILE (v #  NIL) DO  Value.UserInit (v);  v := v.next;  END;
+    WHILE v # NIL DO  Value.UserInit (v);  v := v.next;  END;
     Tracer.EmitPending ();
   END InitValues;
 

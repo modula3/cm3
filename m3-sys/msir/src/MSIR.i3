@@ -100,6 +100,7 @@ TYPE ValueKind = {ConstInt, ConstNil, Param, BlockParam, InsnResult, GlobalRef};
 PROCEDURE ConstInt(t: T;  v: LONGINT): Value;
 PROCEDURE ConstBool(v: BOOLEAN): Value;
 PROCEDURE ConstNil(t: T): Value;      (* t must be Ptr / GcRef *)
+PROCEDURE ConstZero(t: T): Value;    (* zero / NIL / FALSE for scalars; NIL for unsupported types *)
 
 PROCEDURE ValueType(v: Value): T;
 PROCEDURE ValueName(v: Value): TEXT;  (* SSA name, e.g. "%5" or "a" *)
@@ -142,7 +143,8 @@ PROCEDURE ProcGetCallingConvention(p: Proc): CallingConvention;
 
 PROCEDURE ProcName(p: Proc): TEXT;
 PROCEDURE ProcParamCount(p: Proc): INTEGER;
-PROCEDURE ProcParam(p: Proc;  i: INTEGER): Value;
+PROCEDURE ProcParam    (p: Proc;  i: INTEGER): Value;
+PROCEDURE ProcParamName(p: Proc;  i: INTEGER): TEXT;
 PROCEDURE ProcParamMode(p: Proc;  i: INTEGER): ParamMode;
 PROCEDURE ProcResultType(p: Proc): T;
 PROCEDURE ProcEntry(p: Proc): Block;
@@ -233,6 +235,47 @@ PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc);
 PROCEDURE ModuleExcDescCount(m: Module): INTEGER;
 PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc;
 
+(*----------------------------------------------- type descriptors (type_cells) *)
+
+(* A TypeCell or ObjectTypeCell static global, emitted into the .ll and
+   linked into the RT0.ModuleInfo.type_cells list for RTLinker.FixTypes.
+   For REF types: a base TypeCell (96 bytes on 64-bit).
+   For OBJECT types: an ObjectTypeCell (152 bytes) with defaultMethods set
+   so AllocateTracedObj -> InitObj stores the vtable without needing linkProc. *)
+TYPE TypeDesc <: REFANY;
+
+(* uid = M3FP fingerprint.  kind: 6=Ref, 13=Obj.
+   dataSize in bytes; dataAlignment in bits (matches M3RT TC_dataAlignment).
+   methods: names of vtable function symbols, one per slot (OBJECT only).
+   methodBytes: total vtable byte size; -1 means compute from methods array. *)
+PROCEDURE NewTypeDesc(name: TEXT; uid: LONGINT; isTraced: BOOLEAN;
+                      kind: INTEGER; dataSize: INTEGER;
+                      dataAlignment: INTEGER;
+                      parentUID: LONGINT := 0L;
+                      dataOffset: INTEGER := 0;
+                      READONLY methods: ARRAY OF TEXT := ARRAY OF TEXT{};
+                      methodBytes: INTEGER := -1): TypeDesc;
+PROCEDURE TypeDescName        (d: TypeDesc): TEXT;
+PROCEDURE TypeDescValue       (d: TypeDesc): Value;   (* ptr to the TypeCell global *)
+PROCEDURE TypeDescUID         (d: TypeDesc): LONGINT;
+PROCEDURE TypeDescTraced      (d: TypeDesc): BOOLEAN;
+PROCEDURE TypeDescKind        (d: TypeDesc): INTEGER; (* 6=Ref, 13=Obj *)
+PROCEDURE TypeDescSize        (d: TypeDesc): INTEGER; (* dataSize in bytes *)
+PROCEDURE TypeDescAlign       (d: TypeDesc): INTEGER; (* dataAlignment in bits *)
+PROCEDURE TypeDescParentUID   (d: TypeDesc): LONGINT; (* OBJ: parent fingerprint *)
+PROCEDURE TypeDescDataOffset  (d: TypeDesc): INTEGER; (* OBJ: field region byte offset *)
+PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
+PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
+PROCEDURE TypeDescMethod      (d: TypeDesc;  i: INTEGER): TEXT;
+
+PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc);
+PROCEDURE ModuleTypeDescCount(m: Module): INTEGER;
+PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc;
+
+(* Create a ptr-typed value that refers to the TypeCell global named 'name'.
+   Used in proc bodies before the TypeCell global is registered (forward ref). *)
+PROCEDURE TypeCellRef (name: TEXT): Value;
+
 (*----------------------------------------------- import binders *)
 
 (* Register an imported module's binder function name (e.g. "Fmt_M3").
@@ -248,10 +291,12 @@ TYPE Global <: REFANY;
 (* A module-level global. If isTraced, the slot must be registered as a
    GC root in the module descriptor (D14) and stores go through
    gc.store; loads go through gc.load. Otherwise plain load/store. *)
-PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN): Global;
-PROCEDURE GlobalName(g: Global): TEXT;
-PROCEDURE GlobalType(g: Global): T;          (* the user's value type *)
-PROCEDURE GlobalIsTraced(g: Global): BOOLEAN;
+PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
+                    isExternal: BOOLEAN := FALSE): Global;
+PROCEDURE GlobalName      (g: Global): TEXT;
+PROCEDURE GlobalType      (g: Global): T;
+PROCEDURE GlobalIsTraced  (g: Global): BOOLEAN;
+PROCEDURE GlobalIsExternal(g: Global): BOOLEAN;
 PROCEDURE GlobalValue(g: Global): Value;
                                              (* an addressable Value:
                                                 gc_slot type if traced,

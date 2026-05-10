@@ -16,7 +16,8 @@ IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
-IMPORT RTIO, RTParams, MSIR;
+IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
+IMPORT Text;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 VAR debug := FALSE;
@@ -259,6 +260,94 @@ PROCEDURE IsFormal (t: T): BOOLEAN =
   BEGIN
     RETURN (t # NIL) AND (t.formal # NIL);
   END IsFormal;
+
+PROCEDURE DeclareGlobalMSIR (t: T) =
+  VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
+      m : MSIR.Module;  g: MSIR.Global;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () THEN RETURN END;
+    IF NOT t.global OR t.indirect THEN RETURN END;
+    mt := MSIRType.Translate (t.type);
+    IF mt = NIL THEN RETURN END;
+    m := MSIREmit.CurrentModule ();
+    IF m = NIL THEN RETURN END;
+    isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
+                 OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
+    eltType  := mt;
+    IF isTraced THEN eltType := MSIR.EltType(mt) END;
+    g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=FALSE),
+                        eltType, isTraced);
+    MSIRBuilder.GlobalMapAdd(t, g, m);
+  END DeclareGlobalMSIR;
+
+PROCEDURE RegisterExternMSIR (t: T) =
+  VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
+      m : MSIR.Module;  g: MSIR.Global;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () THEN RETURN END;
+    IF t.indirect THEN RETURN END;
+    mt := MSIRType.Translate (t.type);
+    IF mt = NIL THEN RETURN END;
+    m := MSIREmit.CurrentModule ();
+    IF m = NIL THEN RETURN END;
+    isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
+                 OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
+    eltType  := mt;
+    IF isTraced THEN eltType := MSIR.EltType(mt) END;
+    g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
+                        eltType, isTraced, isExternal:=TRUE);
+    MSIRBuilder.GlobalMapAdd(t, g, m);
+  END RegisterExternMSIR;
+
+PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
+  VAR mt: MSIR.T;  allocaVal: MSIR.Value;  zero: MSIR.Value;
+  BEGIN
+    IF b = NIL THEN RETURN FALSE END;
+    IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
+    IF t.indirect THEN RETURN FALSE END;
+    mt := MSIRType.Translate (t.type);
+    IF mt = NIL THEN RETURN FALSE END;
+    allocaVal := MSIR.BuildAlloca(b,
+                   Value.GlobalName(t, dots:=FALSE, with_module:=FALSE), mt);
+    IF allocaVal = NIL THEN RETURN FALSE END;
+    MSIRBuilder.VarMapAdd (t, allocaVal, mt);
+    (* Emit language-default zero-init alongside CG's Type.InitValue in LangInit *)
+    IF Type.InitCost (t.type, FALSE) > 0 THEN
+      zero := MSIR.ConstZero (mt);
+      IF zero # NIL THEN MSIR.BuildStore (b, zero, allocaVal) END;
+    END;
+    RETURN TRUE;
+  END AddLocalMSIR;
+
+PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
+  VAR fName   := M3ID.ToText (t.name);  (* direct field access *)
+      n       := MSIR.ProcParamCount (p);
+      paramVal: MSIR.Value;
+      mt      : MSIR.T;
+  BEGIN
+    IF p = NIL OR b = NIL THEN RETURN END;
+    IF MSIRBuilder.VarMapContains (t) THEN RETURN END;
+    FOR i := 0 TO n - 1 DO
+      IF Text.Equal (MSIR.ProcParamName (p, i), fName) THEN
+        paramVal := MSIR.ProcParam (p, i);
+        mt       := MSIR.ValueType (paramVal);
+        IF t.indirect THEN
+          MSIRBuilder.VarMapAdd (t, paramVal, MSIR.EltType(mt));
+        ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Struct THEN
+          VAR slot := MSIR.BuildAlloca(b,
+                        Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot",
+                        mt);
+          BEGIN
+            MSIR.BuildStore(b, paramVal, slot);
+            MSIRBuilder.VarMapAdd(t, slot, mt);
+          END;
+        ELSE
+          MSIRBuilder.VarMapAdd(t, paramVal, NIL);
+        END;
+        RETURN;
+      END;
+    END;
+  END BindFormalMSIR;
 
 (* EXPORTED *)
 PROCEDURE HasClosure (t: T): BOOLEAN =
@@ -931,6 +1020,20 @@ PROCEDURE UserInit (t: T) =
         t.initPending := FALSE;
         LoadLValue (t);
         Type.Zero (t.type);
+        (* MSIR: store zero constant *)
+        IF NOT t.global AND MSIRBuilder.InProc () THEN
+          VAR addr := MSIRBuilder.LookupVarAddr (t);
+              mt   := MSIRType.Translate (t.type);
+              zero : MSIR.Value;
+          BEGIN
+            IF addr # NIL AND mt # NIL THEN
+              zero := MSIR.ConstZero (mt);
+              IF zero # NIL THEN
+                MSIR.BuildStore (MSIRBuilder.CurrentBlock (), zero, addr);
+              END;
+            END;
+          END;
+        END;
       ELSIF t.initAllocated THEN
         t.initPending := FALSE;
         IF Expr.CheckUseFailure (t.initExpr) THEN
@@ -949,12 +1052,27 @@ PROCEDURE UserInit (t: T) =
         ELSE
           (* Expr.CheckUseFailure will have generated an unconditional RT error. *)
         END;
+        (* MSIR: const-area copy not yet supported; skip *)
       ELSE
         t.initPending := FALSE;
         ArrayExpr.NoteUseTargetVar (t.initExpr);
         AssignStmt.PrepForEmit (t.type, t.initExpr, initializing := TRUE);
         LoadLValue (t);
         AssignStmt.DoEmit (t.type, t.initExpr, t.cg_align, initializing := TRUE);
+        (* MSIR: compile and store the initializer expression *)
+        IF MSIRBuilder.InProc () THEN
+          VAR initVal := Expr.CompileMSIR (t.initExpr);
+              addr    := MSIRBuilder.LookupVarAddr (t);
+          BEGIN
+            IF initVal # NIL AND addr # NIL THEN
+              IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+                MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
+              ELSE
+                MSIR.BuildStore (MSIRBuilder.CurrentBlock (), initVal, addr);
+              END;
+            END;
+          END;
+        END;
       END;
       t.initDone := TRUE;
       Tracer.Schedule (t.trace);
@@ -1089,13 +1207,6 @@ PROCEDURE ScheduleTrace (t: T) =
   BEGIN
     Tracer.Schedule (t.trace);
   END ScheduleTrace;
-
-PROCEDURE CompileInitExprMSIR (t: T): MSIR.Value =
-  BEGIN
-    (* Only local, non-imported variables with an explicit initializer. *)
-    IF t.global OR t.imported OR t.initExpr = NIL THEN RETURN NIL END;
-    RETURN Expr.CompileMSIR (t.initExpr);
-  END CompileInitExprMSIR;
 
 BEGIN
   debug := RTParams.IsPresent ("m3front-debug-variable");

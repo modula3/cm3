@@ -420,6 +420,29 @@ PROCEDURE TypecaseKind (r: REFANY): INTEGER =
     END;
   END TypecaseKind;
 
+(* NEW: allocate a REF INTEGER, store, and return the stored value. *)
+PROCEDURE AllocInt (n: INTEGER): INTEGER =
+  VAR r: REF INTEGER;
+  BEGIN r := NEW(REF INTEGER); r^ := n; RETURN r^ END AllocInt;
+
+(* NEW: allocate a Square object, set the side field, return side*side. *)
+PROCEDURE AllocSquare (side: INTEGER): INTEGER =
+  VAR s: Square;
+  BEGIN
+    s := NEW(Square);
+    s.side := side;
+    RETURN s.side * s.side;
+  END AllocSquare;
+
+(* NEW + vtable dispatch: allocate a Square and call area() through the vtable. *)
+PROCEDURE DispatchSquare (side: INTEGER): INTEGER =
+  VAR s: Square;
+  BEGIN
+    s := NEW(Square);
+    s.side := side;
+    RETURN ShapeDispatch(s);
+  END DispatchSquare;
+
 (* RAISE with argument: raises TestExceptArg(42) and extracts the value. *)
 PROCEDURE TryRaiseArg (): INTEGER =
   BEGIN

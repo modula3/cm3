@@ -13,7 +13,7 @@ IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 IMPORT Jmpbufs;
-IMPORT MSIR, MSIREmit, MSIRBuilder, MSIRType;
+IMPORT MSIREmit, MSIRBuilder;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -933,6 +933,7 @@ PROCEDURE Compile (t: T) =
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
       DeclareGlobalData (t);
+      DeclareGlobalsMSIR (t);
       IF (t.body # NIL) THEN EmitDecl (t.body); END;
       Type.CompileAll ();
       IF (t.interface)
@@ -1031,6 +1032,34 @@ PROCEDURE DeclareGlobalData (t: T) =
                                                 ModuleTypeUID, is_const := FALSE);
   END DeclareGlobalData;
 
+PROCEDURE DeclareGlobalsMSIR (t: T) =
+  (* MSIR analog of DeclareGlobalData + the scope-walk portion of
+     CompileModule/CompileInterface.  Registers module-level variables and
+     exception descriptors with MSIR before any proc bodies are compiled.
+     Parallel to BeginProc registering formals and locals. *)
+  VAR sv: Value.T;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () THEN RETURN END;
+    sv := Scope.ToList (t.localScope);
+    WHILE sv # NIL DO
+      TYPECASE sv OF
+      | Variable.T (v) =>
+          IF Value.IsExternal (sv) OR Value.IsImported (sv) THEN
+            Variable.RegisterExternMSIR (v);
+          ELSE
+            Variable.DeclareGlobalMSIR (v);
+          END;
+      ELSE
+          IF Value.ClassOf (sv) = Value.Class.Exception
+            AND NOT Value.IsExternal (sv)
+            AND NOT Value.IsImported (sv) THEN
+            EVAL MSIRBuilder.ExcDescValue (sv);
+          END;
+      END;
+      sv := sv.next;
+    END;
+  END DeclareGlobalsMSIR;
+
 PROCEDURE GlobalData (is_const: BOOLEAN): CG.Var =
   BEGIN
     <*ASSERT curModule.compile_age >= compile_age*>
@@ -1115,53 +1144,7 @@ PROCEDURE EmitDecl (x: InitBody) =
        lev := 0, cc := Target.DefaultCall, exported := TRUE, parent := NIL,
        return_typename := M3ID_RT0_ModulePtr ());
     x.arg := BinderDeclareParam ();
-    (* MSIR: declare module globals now so procedure bodies can reference them.
-       EmitDecl runs before any EmitBody, so this fires before procedures are
-       compiled. *)
-    DeclareModuleGlobalsMSIR (t);
   END EmitDecl;
-
-PROCEDURE DeclareModuleGlobalsMSIR (t: T) =
-  (* Walk the local scope and register each non-external module-level variable
-     as an MSIR global.  Called from EmitDecl (before any proc body is compiled)
-     so that both module init and procedure bodies can reference them. *)
-  VAR
-    sv:                    Value.T;
-    vtype:                 Type.T;
-    vglobal, vindirect, vlhs: BOOLEAN;
-    mt:                    MSIR.T;
-  BEGIN
-    IF NOT MSIREmit.IsEnabled() THEN RETURN END;
-    sv := Scope.ToList (t.localScope);
-    WHILE sv # NIL DO
-      TYPECASE sv OF
-      | Variable.T (svv) =>
-          IF NOT Variable.IsFormal (svv) THEN
-            Variable.Split (svv, vtype, vglobal, vindirect, vlhs);
-            IF vglobal AND NOT vindirect THEN
-              mt := MSIRType.Translate (vtype);
-              IF mt # NIL THEN
-                VAR
-                  isTraced  := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
-                                OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
-                  eltType   := mt;
-                BEGIN
-                  (* For traced slots, NewGlobal wants the pointee type T, not
-                     GcRef(T): a GcSlot(T) cell holds a reference-to-T. *)
-                  IF isTraced THEN eltType := MSIR.EltType(mt) END;
-                  EVAL MSIRBuilder.DeclareGlobal (
-                    svv,
-                    Value.GlobalName (sv, dots := FALSE, with_module := FALSE),
-                    eltType, isTraced);
-                END;
-              END;
-            END;
-          END;
-      ELSE
-      END;
-      sv := sv.next;
-    END;
-  END DeclareModuleGlobalsMSIR;
 
 PROCEDURE EmitBody (x: InitBody) =
   VAR t := x.self;  zz: Scope.T;   skip := CG.Next_label ();
@@ -1172,7 +1155,7 @@ PROCEDURE EmitBody (x: InitBody) =
     (* restore my environment *)
     zz := Scope.Push (t.localScope);
 
-    (* MSIR: open the module init proc (globals were declared in EmitDecl) *)
+    (* MSIR: open the module init proc *)
     msirOk := MSIRBuilder.BeginModuleInit (x.name);
 
     (* generate my initialization procedure *)
@@ -1196,10 +1179,9 @@ PROCEDURE EmitBody (x: InitBody) =
     EVAL Stmt.Compile (t.block);
     Tracer.Pop (t.trace);
 
-    (* MSIR: compile the module init body statements, then finalize *)
     IF msirOk THEN
       Stmt.CompileMSIR (t.block);
-      MSIRBuilder.EndProc();
+      MSIRBuilder.EndProc ();
     END;
 
     CG.Set_label (skip);

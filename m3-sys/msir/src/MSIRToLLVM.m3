@@ -974,13 +974,19 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global) =
   VAR t := MSIR.GlobalType(g);
   BEGIN
     Wr.PutText(wr, "@");
-    Wr.PutText(wr, LLGlobalSym(MSIR.GlobalName(g)));
-    Wr.PutText(wr, " = global ");
-    IF MSIR.GlobalIsTraced(g) THEN
-      Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
-    ELSE
+    IF MSIR.GlobalIsExternal(g) THEN
+      Wr.PutText(wr, MSIR.GlobalName(g));
+      Wr.PutText(wr, " = external global ");
       LLType(wr, t);
-      Wr.PutText(wr, " zeroinitializer");
+    ELSE
+      Wr.PutText(wr, LLGlobalSym(MSIR.GlobalName(g)));
+      Wr.PutText(wr, " = global ");
+      IF MSIR.GlobalIsTraced(g) THEN
+        Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
+      ELSE
+        LLType(wr, t);
+        Wr.PutText(wr, " zeroinitializer");
+      END;
     END;
     Wr.PutText(wr, "\n");
   END EmitGlobal;
@@ -997,6 +1003,115 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
     EmitParamTypeList(wr, p);
     Wr.PutText(wr, "\n");
   END EmitDeclare;
+
+(*----------------------------------------------- TypeCell / ObjectTypeCell emission *)
+
+(* TypeCell layout (M3RT offsets, 64-bit, all byte values unless noted):
+   [0]  typecode       i64  (0, assigned by RTLinker.FixTypes)
+   [8]  selfID         i64  (fingerprint)
+   [16] fp             i64  (fingerprint, same as selfID)
+   [24] traced         i8   (1=traced)
+   [25] kind           i8   (6=Ref, 13=Obj)
+   [26] link_state     i8   (0=unlinked)
+   [27] dataAlignment  i8   (bits, e.g. 64 for INTEGER)
+   [28-31]             [4 x i8] padding (to align dataSize to 8 bytes)
+   [32] dataSize       i64  (bytes)
+   [40] type_map       ptr  (null)
+   [48] gc_map         ptr  (null)
+   [56] type_desc      ptr  (null)
+   [64] initProc       ptr  (null)
+   [72] brand          ptr  (null)
+   [80] name           ptr  (null)
+   [88] next           ptr  (→ next TypeDesc, or null)
+   ObjectTypeCell extends at [96]:
+   [96]  parentID        i64  (parent fingerprint)
+   [104] linkProc        ptr  (null; defaultMethods pre-set instead)
+   [112] dataOffset      i64  (bits: byte offset of field region, e.g. 64)
+   [120] methodOffset    i64  (0)
+   [128] methodSize      i64  (N * address bytes)
+   [136] defaultMethods  ptr  (→ vtable array)
+   [144] parent          ptr  (null for now) *)
+
+PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
+  VAR
+    n := MSIR.ModuleTypeDescCount(m);
+  BEGIN
+    IF n = 0 THEN RETURN END;
+
+    Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
+    Wr.PutText(wr, "%TC_t  = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
+    Wr.PutText(wr, "%OTC_t = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, ptr, i64, i64, i64, ptr, ptr }\n");
+
+    FOR k := 0 TO n - 1 DO
+      VAR
+        d       := MSIR.ModuleTypeDesc(m, k);
+        nm      := MSIR.TypeDescName(d);
+        isObj   := MSIR.TypeDescKind(d) = 13;  (* TypeKind.Obj *)
+        nextVal : TEXT;
+      BEGIN
+        (* next pointer: chain TypeCells for MI_type_cells list *)
+        IF k < n - 1
+          THEN nextVal := "ptr @" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
+          ELSE nextVal := "ptr null";
+        END;
+
+        IF isObj THEN
+          (* ObjectTypeCell: emit vtable first, then the cell *)
+          VAR nMethods := MSIR.TypeDescMethodCount(d);
+          BEGIN
+            IF nMethods > 0 THEN
+              Wr.PutText(wr, "@" & nm & ".methods = internal constant [");
+              Wr.PutText(wr, Fmt.Int(nMethods) & " x ptr] [");
+              FOR j := 0 TO nMethods - 1 DO
+                IF j > 0 THEN Wr.PutText(wr, ", ") END;
+                Wr.PutText(wr, "ptr @" & MSIR.TypeDescMethod(d, j));
+              END;
+              Wr.PutText(wr, "]\n");
+            END;
+          END;
+          Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
+          Wr.PutText(wr, "  i64 0,\n");  (* typecode *)
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* fp *)
+          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
+          Wr.PutText(wr, "  i8 13,\n");  (* kind = Obj *)
+          Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
+          Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)
+          Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
+          Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
+          Wr.PutText(wr, "  ptr null,\n");  (* linkProc *)
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescDataOffset(d)) & ",\n"); (* dataOffset bits *)
+          Wr.PutText(wr, "  i64 0,\n");  (* methodOffset *)
+          VAR nMeth2 := MSIR.TypeDescMethodCount(d);
+          BEGIN
+            Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescMethodBytes(d)) & ",\n"); (* methodSize *)
+            IF nMeth2 > 0
+              THEN Wr.PutText(wr, "  ptr @" & nm & ".methods,\n");
+              ELSE Wr.PutText(wr, "  ptr null,\n");
+            END;
+          END;
+          Wr.PutText(wr, "  ptr null\n");  (* parent TypeCell *)
+          Wr.PutText(wr, "}\n");
+        ELSE
+          (* Plain TypeCell (REF, etc.) *)
+          Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
+          Wr.PutText(wr, "  i64 0,\n");  (* typecode *)
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
+          Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
+          Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
+          Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n");
+          Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
+          Wr.PutText(wr, "  " & nextVal & "\n");  (* TC_next *)
+          Wr.PutText(wr, "}\n");
+        END;
+      END;
+    END;
+  END EmitTypeCells;
 
 (*----------------------------------------------- module binder emission *)
 
@@ -1104,7 +1219,12 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       byteOff := k * ap;
       (* Determine LLVM type, value, and M3RT field name for this slot. *)
       IF    byteOff = M3RT.MI_file DIV cs           THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_file";
-      ELSIF byteOff = M3RT.MI_type_cells DIV cs     THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_type_cells";
+      ELSIF byteOff = M3RT.MI_type_cells DIV cs     THEN fieldType := "ptr";
+                                                          fieldName := "MI_type_cells";
+                                                          IF MSIR.ModuleTypeDescCount(m) > 0
+                                                            THEN fieldVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, 0));
+                                                            ELSE fieldVal := "null";
+                                                          END;
       ELSIF byteOff = M3RT.MI_type_cell_ptrs DIV cs THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_type_cell_ptrs";
       ELSIF byteOff = M3RT.MI_full_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_full_rev";
       ELSIF byteOff = M3RT.MI_part_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_part_rev";
@@ -1264,6 +1384,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       EmitProc(wr, MSIR.ModuleProc(m, i));
     END;
+
+    (* TypeCell / ObjectTypeCell globals for type_cells *)
+    EmitTypeCells(wr, m);
 
     (* Exception descriptors: { i64 uid, ptr null, i64 0 } = ExceptionDesc *)
     FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO

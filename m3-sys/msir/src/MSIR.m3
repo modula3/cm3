@@ -2,7 +2,7 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text;
+IMPORT RefSeq, Fmt, Text, Target;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -353,6 +353,19 @@ PROCEDURE ConstNil(t: T): Value =
     RETURN val;
   END ConstNil;
 
+PROCEDURE ConstZero(t: T): Value =
+  BEGIN
+    CASE Kind(t) OF
+    | TypeKind.I1                        => RETURN ConstBool(FALSE);
+    | TypeKind.I8, TypeKind.I16,
+      TypeKind.I32, TypeKind.I64,
+      TypeKind.W8, TypeKind.W16,
+      TypeKind.W32, TypeKind.W64        => RETURN ConstInt(t, 0L);
+    | TypeKind.Ptr, TypeKind.GcRef       => RETURN ConstNil(t);
+    ELSE                                   RETURN NIL;
+    END;
+  END ConstZero;
+
 PROCEDURE ValueType(v: Value): T = BEGIN RETURN v.type END ValueType;
 PROCEDURE ValueName(v: Value): TEXT = BEGIN RETURN v.name END ValueName;
 
@@ -575,8 +588,8 @@ PROCEDURE ProcParamCount(p: Proc): INTEGER =
     IF p.params = NIL THEN RETURN 0 END;
     RETURN NUMBER(p.params^);
   END ProcParamCount;
-PROCEDURE ProcParam(p: Proc; i: INTEGER): Value =
-  BEGIN RETURN p.paramValues[i] END ProcParam;
+PROCEDURE ProcParam    (p: Proc; i: INTEGER): Value    = BEGIN RETURN p.paramValues[i]       END ProcParam;
+PROCEDURE ProcParamName(p: Proc; i: INTEGER): TEXT     = BEGIN RETURN p.params[i].name        END ProcParamName;
 PROCEDURE ProcParamMode(p: Proc; i: INTEGER): ParamMode =
   BEGIN RETURN p.params[i].mode END ProcParamMode;
 PROCEDURE ProcResultType(p: Proc): T = BEGIN RETURN p.result END ProcResultType;
@@ -678,6 +691,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   globals:    RefSeq.T;                            (* elements: Global *)
   excDescs:      RefSeq.T;                         (* elements: ExcDesc *)
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
+  typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
@@ -686,20 +700,23 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
 END;
 
 REVEAL Global = BRANDED "MSIR.Global" REF RECORD
-  name:     TEXT;
-  type:     T;
-  isTraced: BOOLEAN;
-  refValue: Value := NIL;
+  name:       TEXT;
+  type:       T;
+  isTraced:   BOOLEAN;
+  isExternal: BOOLEAN := FALSE;
+  refValue:   Value := NIL;
 END;
 
-PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN): Global =
+PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
+                    isExternal: BOOLEAN := FALSE): Global =
   VAR
     g := NEW(Global);
     v := NEW(Value);
   BEGIN
-    g.name     := name;
-    g.type     := type;
-    g.isTraced := isTraced;
+    g.name       := name;
+    g.type       := type;
+    g.isTraced   := isTraced;
+    g.isExternal := isExternal;
     v.name  := name;
     v.vKind := ValueKind.GlobalRef;
     IF isTraced THEN
@@ -711,9 +728,10 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN): Global =
     RETURN g;
   END NewGlobal;
 
-PROCEDURE GlobalName(g: Global): TEXT       = BEGIN RETURN g.name     END GlobalName;
-PROCEDURE GlobalType(g: Global): T          = BEGIN RETURN g.type     END GlobalType;
-PROCEDURE GlobalIsTraced(g: Global): BOOLEAN= BEGIN RETURN g.isTraced END GlobalIsTraced;
+PROCEDURE GlobalName      (g: Global): TEXT    = BEGIN RETURN g.name       END GlobalName;
+PROCEDURE GlobalType      (g: Global): T       = BEGIN RETURN g.type       END GlobalType;
+PROCEDURE GlobalIsTraced  (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
+PROCEDURE GlobalIsExternal(g: Global): BOOLEAN = BEGIN RETURN g.isExternal END GlobalIsExternal;
 PROCEDURE GlobalValue(g: Global): Value     = BEGIN RETURN g.refValue END GlobalValue;
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global) =
@@ -754,6 +772,87 @@ PROCEDURE ModuleExcDescCount(m: Module): INTEGER     = BEGIN RETURN m.excDescs.s
 PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
   BEGIN RETURN m.excDescs.get(i) END ModuleExcDesc;
 
+(*---------------------------------------------- type descriptors *)
+
+REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
+  name          : TEXT;
+  uid           : LONGINT;
+  isTraced      : BOOLEAN;
+  kind          : INTEGER;  (* 6=Ref, 13=Obj *)
+  dataSize      : INTEGER;  (* bytes *)
+  dataAlignment : INTEGER;  (* bits *)
+  parentUID     : LONGINT;  (* OBJ: parent fingerprint *)
+  dataOffset    : INTEGER;  (* OBJ: field region byte offset *)
+  methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
+  methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
+  ptrVal        : Value := NIL;
+END;
+
+PROCEDURE NewTypeDesc(name: TEXT; uid: LONGINT; isTraced: BOOLEAN;
+                      kind: INTEGER; dataSize: INTEGER;
+                      dataAlignment: INTEGER;
+                      parentUID: LONGINT := 0L;
+                      dataOffset: INTEGER := 0;
+                      READONLY methods: ARRAY OF TEXT := ARRAY OF TEXT{};
+                      methodBytes: INTEGER := -1): TypeDesc =
+  VAR d := NEW(TypeDesc);  v := NEW(Value);
+      ms := NEW(REF ARRAY OF TEXT, NUMBER(methods));
+  BEGIN
+    FOR i := 0 TO NUMBER(methods) - 1 DO ms[i] := methods[i] END;
+    d.name          := name;
+    d.uid           := uid;
+    d.isTraced      := isTraced;
+    d.kind          := kind;
+    d.dataSize      := dataSize;
+    d.dataAlignment := dataAlignment;
+    d.parentUID     := parentUID;
+    d.dataOffset    := dataOffset;
+    d.methods       := ms;
+    d.methodBytes   := methodBytes;
+    v.type  := TPtr(TVoid());
+    v.name  := "@" & name;
+    v.vKind := ValueKind.InsnResult;  (* emitted as @name *)
+    d.ptrVal := v;
+    RETURN d;
+  END NewTypeDesc;
+
+PROCEDURE TypeDescName       (d: TypeDesc): TEXT    = BEGIN RETURN d.name          END TypeDescName;
+PROCEDURE TypeDescValue      (d: TypeDesc): Value   = BEGIN RETURN d.ptrVal        END TypeDescValue;
+PROCEDURE TypeDescUID        (d: TypeDesc): LONGINT = BEGIN RETURN d.uid           END TypeDescUID;
+PROCEDURE TypeDescTraced     (d: TypeDesc): BOOLEAN = BEGIN RETURN d.isTraced      END TypeDescTraced;
+PROCEDURE TypeDescKind       (d: TypeDesc): INTEGER = BEGIN RETURN d.kind          END TypeDescKind;
+PROCEDURE TypeDescSize       (d: TypeDesc): INTEGER = BEGIN RETURN d.dataSize      END TypeDescSize;
+PROCEDURE TypeDescAlign      (d: TypeDesc): INTEGER = BEGIN RETURN d.dataAlignment END TypeDescAlign;
+PROCEDURE TypeDescParentUID  (d: TypeDesc): LONGINT = BEGIN RETURN d.parentUID     END TypeDescParentUID;
+PROCEDURE TypeDescDataOffset (d: TypeDesc): INTEGER = BEGIN RETURN d.dataOffset    END TypeDescDataOffset;
+PROCEDURE TypeDescMethodBytes(d: TypeDesc): INTEGER =
+  BEGIN
+    IF d.methodBytes >= 0 THEN RETURN d.methodBytes END;
+    IF d.methods = NIL THEN RETURN 0 END;
+    RETURN NUMBER(d.methods^) * Target.Address.bytes;
+  END TypeDescMethodBytes;
+PROCEDURE TypeDescMethodCount(d: TypeDesc): INTEGER =
+  BEGIN
+    IF d.methods = NIL THEN RETURN 0 END;
+    RETURN NUMBER(d.methods^);
+  END TypeDescMethodCount;
+PROCEDURE TypeDescMethod(d: TypeDesc; i: INTEGER): TEXT =
+  BEGIN RETURN d.methods[i] END TypeDescMethod;
+
+PROCEDURE TypeCellRef (name: TEXT): Value =
+  VAR v := NEW(Value);
+  BEGIN
+    v.type  := TPtr(TVoid());
+    v.name  := "@" & name;
+    v.vKind := ValueKind.InsnResult;
+    RETURN v;
+  END TypeCellRef;
+
+PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc) = BEGIN m.typeDescs.addhi(d) END ModuleAddTypeDesc;
+PROCEDURE ModuleTypeDescCount(m: Module): INTEGER      = BEGIN RETURN m.typeDescs.size() END ModuleTypeDescCount;
+PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc =
+  BEGIN RETURN m.typeDescs.get(i) END ModuleTypeDesc;
+
 PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT) =
   BEGIN
     (* Deduplicate: skip if already registered. *)
@@ -776,6 +875,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.globals       := NEW(RefSeq.T).init();
     m.excDescs      := NEW(RefSeq.T).init();
     m.importBinders := NEW(RefSeq.T).init();
+    m.typeDescs     := NEW(RefSeq.T).init();
     RETURN m;
   END NewModule;
 
@@ -988,6 +1088,7 @@ PROCEDURE BuildCall(b: Block; name: TEXT; callee: Proc;
 PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value =
   VAR i := NEW(Insn);
   BEGIN
+    IF b = NIL THEN RETURN NIL END;
     i.op := Op.Alloca;
     i.targetType := type;
     i.result := makeResult(b, TPtr(type), name, i);

@@ -14,6 +14,7 @@ IMPORT Value, Error, RecordType, ProcType, OpaqueType, Revelation;
 IMPORT Field, Reff, Addr, Word, M3Buf, ErrType, Procedure, AddressExpr;
 IMPORT ObjectAdr, ObjectRef, Token, Module, Method, Brand;
 IMPORT AssignStmt, M3RT, Scanner, TipeMap, TipeDesc, TypeFP, Target;
+IMPORT MSIR, MSIREmit, Fmt;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 CONST
@@ -38,16 +39,16 @@ TYPE
         isTraced     : BOOLEAN;
         user_name    : TEXT;
       OVERRIDES
-        check      := Check;
-        no_straddle:= TypeRep.AddrNoStraddle;
-        isEqual    := EqualChk;
-        isSubtype  := Subtyper;
-        compile    := Compiler;
-        initCost   := InitCoster;
-        initValue  := TypeRep.InitToZeros;
-        mapper     := TypeRep.GenRefMap;
-        gen_desc   := TypeRep.GenRefDesc;
-        fprint     := FPrinter;
+        check       := Check;
+        no_straddle := TypeRep.AddrNoStraddle;
+        isEqual     := EqualChk;
+        isSubtype   := Subtyper;
+        compile     := Compiler;
+        initCost    := InitCoster;
+        initValue   := TypeRep.InitToZeros;
+        mapper      := TypeRep.GenRefMap;
+        gen_desc    := TypeRep.GenRefDesc;
+        fprint      := FPrinter;
       END;
 
 VAR
@@ -623,6 +624,126 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
 
     NoteOffsets (p, p);
   END InitTypecell;
+
+PROCEDURE GetObjectTypeInfo (t            : Type.T;
+                              VAR fieldSize    : INTEGER;
+                              VAR dataAlignment: INTEGER;
+                              VAR methodSize   : INTEGER;
+                              VAR dataOffset   : INTEGER;
+                              VAR parentUID    : LONGINT;
+                              VAR nSlots       : INTEGER;
+                              VAR names        : REF ARRAY OF TEXT;
+                              VAR vtableKnown  : BOOLEAN) =
+  VAR
+    p     : P := Confirm (t);
+    mBase : INTEGER;
+  BEGIN
+    names        := NIL;
+    nSlots       := 0;
+    vtableKnown  := FALSE;
+    IF p = NIL THEN
+      fieldSize := 0;  dataAlignment := Target.Address.align;
+      methodSize := 0;  dataOffset := -1;  parentUID := 0L;
+      RETURN;
+    END;
+    GetSizes (p);
+    GetOffsets (p, use_magic := FALSE);
+    fieldSize     := p.fieldSize DIV Target.Byte;
+    dataAlignment := p.info.addr_align;
+    methodSize    := p.methodSize DIV Target.Byte;
+    IF p.fieldOffset >= 0
+      THEN dataOffset := p.fieldOffset DIV Target.Byte;
+      ELSE dataOffset := -1;
+    END;
+    IF p.superType # NIL
+      THEN parentUID := VAL (Type.GlobalUID (p.superType), LONGINT);
+      ELSE parentUID := 0L;
+    END;
+    mBase := MethodOffset (p);
+    IF mBase < 0 THEN RETURN END;  (* unknown super chain — vtableKnown stays FALSE *)
+    nSlots := (mBase + p.methodSize) DIV Target.Address.size;
+    IF nSlots = 0 THEN
+      names := NEW (REF ARRAY OF TEXT, 0);
+      vtableKnown := TRUE;
+      RETURN;
+    END;
+    names := NEW (REF ARRAY OF TEXT, nSlots);
+    IF FillMethodNames (p, names^) THEN
+      vtableKnown := TRUE;
+    ELSE
+      names  := NIL;
+      nSlots := 0;
+    END;
+  END GetObjectTypeInfo;
+
+PROCEDURE InitTypecellMSIR (t: Type.T) =
+  VAR
+    fldSize, fldAlign, methBytes, dataOff, nSlots: INTEGER;
+    parUID      : LONGINT;
+    names       : REF ARRAY OF TEXT;
+    vtableKnown : BOOLEAN;
+    info        : Type.Info;
+    uid         : LONGINT;
+    m           : MSIR.Module;
+    desc        : MSIR.TypeDesc;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () THEN RETURN END;
+    m := MSIREmit.CurrentModule ();
+    IF m = NIL THEN RETURN END;
+    EVAL Type.CheckInfo (t, info);
+    uid := VAL (Type.GlobalUID (t), LONGINT);
+    GetObjectTypeInfo (t, fldSize, fldAlign, methBytes, dataOff, parUID,
+                       nSlots, names, vtableKnown);
+    IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
+    IF vtableKnown AND names # NIL THEN
+      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
+                                info.isTraced, 13, fldSize, fldAlign,
+                                parUID, dataOff, names^, methBytes);
+    ELSE
+      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
+                                info.isTraced, 13, fldSize, fldAlign,
+                                parUID, dataOff, ARRAY OF TEXT{}, methBytes);
+    END;
+    MSIR.ModuleAddTypeDesc (m, desc);
+  END InitTypecellMSIR;
+
+PROCEDURE FillMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
+  VAR
+    v      : Value.T;
+    method : Method.Info;
+    expr   : Expr.T;
+    proc   : Value.T;
+    addr   : Target.Int;
+    mOff   : INTEGER;
+    tVis   : Type.T;
+    mBase  : INTEGER;
+  BEGIN
+    IF p = NIL THEN RETURN TRUE END;
+    IF NOT FillMethodNames (Confirm (p.superType), m) THEN RETURN FALSE END;
+    v := Scope.ToList (p.methods);
+    WHILE v # NIL DO
+      Method.SplitX (v, method);
+      (* find the canonical visible type for offset computation *)
+      VAR top: Value.T; BEGIN
+        EVAL LookUp (p, method.name, top, tVis);
+      END;
+      mBase := MethodOffset (tVis);
+      IF mBase < 0 THEN RETURN FALSE END;
+      mOff := (mBase + method.offset) DIV Target.Address.size;
+      expr := Expr.ConstValue (method.dfault);
+      IF expr = NIL THEN
+        RETURN FALSE;  (* non-constant default *)
+      ELSIF UserProc.IsProcedureLiteral (expr, proc) THEN
+        m[mOff] := Value.GlobalName (proc, dots := FALSE, with_module := TRUE);
+      ELSIF AddressExpr.Split (expr, addr) AND TInt.EQ (addr, TInt.Zero) THEN
+        RETURN FALSE;  (* NIL default — runtime must patch *)
+      ELSE
+        RETURN FALSE;  (* unknown *)
+      END;
+      v := v.next;
+    END;
+    RETURN TRUE;
+  END FillMethodNames;
 
 PROCEDURE GenTypeMap (p: P;  fields: Value.T;  refs_only: BOOLEAN): INTEGER =
   (* generate my "TypeMap" (used by the garbage collector) *)

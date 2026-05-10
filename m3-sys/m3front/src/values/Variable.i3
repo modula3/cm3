@@ -27,6 +27,12 @@ PROCEDURE Split (t: T;  VAR type: Type.T;
                  VAR global, indirect, lhs: BOOLEAN);
 
 PROCEDURE IsFormal   (t: T): BOOLEAN;
+
+(* MSIR declarations — called from DeclareGlobalsMSIR and BeginProc. *)
+PROCEDURE DeclareGlobalMSIR  (t: T);
+PROCEDURE RegisterExternMSIR (t: T);
+PROCEDURE AddLocalMSIR       (t: T;  b: MSIR.Block): BOOLEAN;
+PROCEDURE BindFormalMSIR     (t: T;  p: MSIR.Proc;  b: MSIR.Block);
 PROCEDURE HasClosure (t: T): BOOLEAN;
 
 PROCEDURE NeedsAddress (t: T);
@@ -56,10 +62,5 @@ PROCEDURE CheckTrace (x: Tracer.T;  VAR cs: Value.CheckState);
 PROCEDURE ScheduleTrace (t: T);
 
 PROCEDURE Reset ();
-
-(* Compile the variable's initializer expression for the MSIR path.
-   Returns NIL if the variable is global, imported, or has no initializer.
-   The caller stores the result into the variable's alloca. *)
-PROCEDURE CompileInitExprMSIR (t: T): MSIR.Value;
 
 END Variable.

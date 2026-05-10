@@ -24,4 +24,6 @@ PROCEDURE NoteRefName (t: Type.T;  name: TEXT);
 
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER);
 
+PROCEDURE InitTypecellMSIR (t: Type.T);
+
 END RefType.

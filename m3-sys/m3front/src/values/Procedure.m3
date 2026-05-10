@@ -14,7 +14,7 @@ IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTParams;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 IMPORT Module;
-IMPORT MSIRBuilder, MSIR;
+IMPORT MSIRBuilder;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 VAR debug := FALSE;
@@ -696,33 +696,6 @@ PROCEDURE GenBody (p: T) =
     Scope.Exit (p.syms);
 
     IF MSIRBuilder.InProc () THEN
-      (* Emit initializers for proc-scope VAR declarations (p.syms).
-         BlockStmt.CompileMSIR handles inner block scopes; these are the
-         procedure-level declarations that BeginProc only allocates. *)
-      VAR sv: Value.T := Scope.ToList (p.syms);
-      BEGIN
-        WHILE sv # NIL AND MSIRBuilder.InProc () DO
-          TYPECASE sv OF
-          | Variable.T(svv) =>
-              IF NOT Variable.IsFormal (svv) THEN
-                VAR initVal := Variable.CompileInitExprMSIR (svv);
-                BEGIN
-                  IF initVal # NIL THEN
-                    VAR addr := MSIRBuilder.LookupVarAddr (svv);
-                    BEGIN
-                      IF addr # NIL THEN
-                        MSIR.BuildStore (MSIRBuilder.CurrentBlock(),
-                                         initVal, addr);
-                      END;
-                    END;
-                  END;
-                END;
-              END;
-          ELSE
-          END;
-          sv := sv.next;
-        END;
-      END;
       Stmt.CompileMSIR (p.block);
     END;
     MSIRBuilder.EndProc ();

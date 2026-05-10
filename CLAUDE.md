@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (69/69 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (73/73 tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -240,6 +240,11 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - RTLinker binder (`@Module_M3`) and `RT0.ModuleInfo` struct (`@Module_M3_info`) emitted in LLVM IR
 - M3 symbol mangling (`Module.Proc` → `Module__Proc`), target triple/datalayout for LLVM 22
 - `target triple` / `target datalayout` for ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX
+- **TypeCells**: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` called from `Type.GenCells` alongside CG counterparts; driven by type *declarations*, not NEW sites
+- **NEW(REF T)** and **NEW(OBJECT T)**: full support; `GenRefMSIR`/`GenObjectMSIR`/`CallAllocHook` in `New.m3`; vtable (`OTC_defaultMethods`) populated from `ObjectType.GetObjectTypeInfo`/`FillMethodNames`
+- **Vtable dispatch**: `ShapeDispatch(s)` correctly dispatches via `s.vtable[0](s)` in LLVM IR; `AllocateTracedObj` stub initialises vtable pointer from `OTC_defaultMethods`
+- **Module global initialization**: variable initializers (user-specified and language-default zero-init) emitted in MSIR module body; traced globals use `BuildGcStore`
+- **External/imported variable registration**: `DeclareGlobalsMSIR` in `Module.Compile` pre-registers all module-level variables and exception descriptors before proc bodies compile
 
 ### EH Model Requirement
 
@@ -281,9 +286,9 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 This script:
 1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
 2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 64 checks
+3. Links with the C test harness (`llvm_link_test.c`) and runs 73 checks
 
-The harness provides C stubs for the few M3 runtime symbols it needs (`Fmt__Int`, `IO__Put`, GC barriers, `_ZTI6_M3Exc`) since it doesn't run the M3 runtime initialization.
+The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
 
 To run as a full M3 program against the real runtime:
 ```sh
@@ -296,31 +301,52 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 
 | File | Role |
 |---|---|
-| `m3-sys/msir/src/MSIR.i3/.m3` | IR types, values, ops, builders |
-| `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR; handles EH, GC barriers, RTLinker binder |
+| `m3-sys/msir/src/MSIR.i3/.m3` | IR types, values, ops, builders; `TypeDesc`, `ConstZero`, `TypeCellRef` |
+| `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR; handles EH, GC barriers, TypeCells, RTLinker binder |
 | `m3-sys/msir/src/MSIRPrinter.m3` | Prints MSIR text (`.msir` files) |
 | `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks on completed procs |
-| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; `EmitCall` (invoke-inside-TRY); try-context stack |
+| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`); `EmitCall`; try-context stack |
 | `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` and `.ll` at end of unit |
 | `m3-sys/m3front/src/stmts/TryStmt.m3` | `CompileMSIR`: EH lowering for TRY/EXCEPT (UID comparison chain) |
 | `m3-sys/m3front/src/stmts/TryFinStmt.m3` | `CompileMSIR`: EH lowering for TRY/FINALLY (cleanup landingpad) |
 | `m3-sys/m3front/src/stmts/AssignStmt.m3` | `CompileMSIR`: fetches `CurrentBlock()` AFTER RHS to handle invoke-in-RHS |
-| `m3-sys/m3front/src/stmts/BlockStmt.m3` | `CompileMSIR`: allocas + `CompileInitExprMSIR` for block-scope VAR init |
-| `m3-sys/m3front/src/values/Variable.m3` | `CompileInitExprMSIR`: compiles VAR initializer expression for MSIR |
-| `m3-sys/m3front/src/values/Procedure.m3` | Post-body: emits proc-scope VAR initializers before `Stmt.CompileMSIR` |
+| `m3-sys/m3front/src/stmts/BlockStmt.m3` | `CompileMSIR`: calls `Scope.InitValues` (vars already registered by `BeginProc`) |
+| `m3-sys/m3front/src/values/Variable.m3` | Owns MSIR declarations: `DeclareGlobalMSIR`, `RegisterExternMSIR`, `AddLocalMSIR` (with zero-init), `BindFormalMSIR`; MSIR init in `UserInit` |
+| `m3-sys/m3front/src/values/Procedure.m3` | `GenBody`: `BeginProc` sets up MSIR proc; `Stmt.CompileMSIR`/`EndProc` follow CG body |
+| `m3-sys/m3front/src/values/Module.m3` | `DeclareGlobalsMSIR`: pre-registers globals + exception descs; `EmitBody`: module-init MSIR |
+| `m3-sys/m3front/src/types/RefType.m3` | `InitTypecellMSIR`: registers MSIR TypeDesc; called from `Type.GenCells` |
+| `m3-sys/m3front/src/types/ObjectType.m3` | `InitTypecellMSIR`: registers MSIR ObjectTypeDesc with vtable; `GetObjectTypeInfo`, `FillMethodNames` |
+| `m3-sys/m3front/src/types/Type.m3` | `GenCells`: calls CG and MSIR `InitTypecell` together for each type cell |
+| `m3-sys/m3front/src/builtinOps/New.m3` | `CompileMSIR`: dispatches to `GenRefMSIR`/`GenObjectMSIR`/`GenOpaqueMSIR`; `CallAllocHook` is common tail |
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uses `MSIRBuilder.EmitCall` (invoke-aware) instead of `MSIR.BuildCall` |
-| `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 64-test C harness |
+| `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 73-test C harness |
+| `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
+
+### Architecture: MSIR Declaration Lifecycle
+
+MSIR declarations are co-located with CG declarations, not in separate passes:
+
+| What | When | Where |
+|---|---|---|
+| Module globals (vars + exception descs) | `Module.Compile`, before type compilation | `Module.DeclareGlobalsMSIR` → `Variable.DeclareGlobalMSIR` / `RegisterExternMSIR` |
+| Type cells (Ref + Object) | `Type.GenCells` in `GenLinkerInfo` | `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` alongside CG `InitTypecell` |
+| Proc formals + locals | `MSIRBuilder.BeginProc`, before CG `Scope.InitValues` | `Variable.BindFormalMSIR` + `Variable.AddLocalMSIR` (zero-init if `InitCost > 0`) |
+| Variable initializers | CG-path `Scope.InitValues` (guarded by `t.initDone`) | MSIR blocks inside `Variable.UserInit` fire here because `BeginProc` has set `curBlock` |
+| Exception descriptors | `Module.DeclareGlobalsMSIR` | `MSIRBuilder.ExcDescValue` called upfront; lazy calls from TryStmt/RaiseStmt find existing desc |
+
+`Variable.m3` owns all MSIR registration for variables; `MSIRBuilder` exposes only raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`). The `Scope.InitValues` call in `GenBody`'s MSIR phase is intentionally absent — init fires during the CG-path call because `BeginProc` is already active.
 
 ### Known Limitations / Remaining Work
 
 - **Nested procedures**: up-level variable access not supported
 - **TEXT / string literals**: string concat/IO not fully supported; module body crashes on IO.Put
-- **GC write barrier for heap fields**: `BuildGcStore(..., container)` infrastructure exists; activated when heap field stores are implemented
-- **`type_cells`** in `RT0.ModuleInfo`: currently null; `NEW(T)` and exception typecode lookups won't work
+- **GC write barrier for heap fields**: `BuildGcStore(..., container)` infrastructure exists; write barriers for storing traced refs into heap object fields not yet activated
 - **`var_map` / `gc_map`** in `RT0.ModuleInfo`: currently null; GC won't scan module globals as roots
-- **NEW**: needs `type_cells` for object type descriptors
+- **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
+- **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
+- **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 
 ### Cosmetic Issues in Emitted MSIR
 

@@ -48,6 +48,7 @@ PROCEDURE LangInit (t: T);
 PROCEDURE UserInit (t: T);
 (* generate the user specified initialization for t *)
 
+
 PROCEDURE ClassOf          (t: T): Class;
 PROCEDURE IsExternal       (t: T): BOOLEAN;
 PROCEDURE IsImported       (t: T): BOOLEAN;

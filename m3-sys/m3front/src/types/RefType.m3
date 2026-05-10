@@ -13,6 +13,7 @@ IMPORT Null, Reff, Addr, Error, Module, M3Buf, Brand;
 IMPORT Revelation, OpenArrayType, TipeMap, TipeDesc, TypeFP;
 IMPORT ProcType, ObjectAdr, Word, M3RT;
 IMPORT RTIO, RTParams;
+IMPORT MSIRBuilder, MSIREmit;
 
 VAR debug := FALSE;
 
@@ -23,16 +24,16 @@ TYPE
         isTraced   : BOOLEAN;
         user_name  : TEXT;
       OVERRIDES
-        check      := Check;
-        no_straddle:= TypeRep.AddrNoStraddle;
-        isEqual    := EqualChk;
-        isSubtype  := Subtyper;
-        compile    := Compiler;
-        initCost   := InitCoster;
-        initValue  := TypeRep.InitToZeros;
-        mapper     := TypeRep.GenRefMap;
-        gen_desc   := GenDesc;
-        fprint     := FPrinter;
+        check       := Check;
+        no_straddle := TypeRep.AddrNoStraddle;
+        isEqual     := EqualChk;
+        isSubtype   := Subtyper;
+        compile     := Compiler;
+        initCost    := InitCoster;
+        initValue   := TypeRep.InitToZeros;
+        mapper      := TypeRep.GenRefMap;
+        gen_desc    := GenDesc;
+        fprint      := FPrinter;
       END;
 
 VAR root := M3ID.NoID;
@@ -308,6 +309,24 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     END;
 
   END InitTypecell;
+
+PROCEDURE InitTypecellMSIR (t: Type.T) =
+  VAR
+    info  : Type.Info;
+    rinfo : Type.Info;
+    r     : Type.T;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () THEN RETURN END;
+    EVAL Type.CheckInfo (t, info);
+    IF NOT Split (t, r) THEN RETURN END;
+    r := Type.StripPacked (r);
+    EVAL Type.CheckInfo (r, rinfo);
+    EVAL MSIRBuilder.TypeDescValueForRef (
+           t,
+           rinfo.size DIV Target.Char.size,
+           rinfo.alignment,
+           info.isTraced);
+  END InitTypecellMSIR;
 
 PROCEDURE GenTypeMap (p: P;  refs_only: BOOLEAN): INTEGER =
   (* generate my "TypeMap" (called by the garbage collector) *)

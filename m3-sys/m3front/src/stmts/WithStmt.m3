@@ -204,7 +204,7 @@ PROCEDURE CompileMSIR (p: P) =
     | Kind.other =>
         val := Expr.CompileMSIR (p.expr);
         IF val = NIL THEN RETURN END;
-        IF NOT MSIRBuilder.AddLocal (p.var) THEN RETURN END;
+        IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock()) THEN RETURN END;
         addr := MSIRBuilder.LookupVarAddr (p.var);
         IF addr = NIL THEN RETURN END;
         MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);

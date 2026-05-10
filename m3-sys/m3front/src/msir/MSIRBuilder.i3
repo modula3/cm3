@@ -154,18 +154,28 @@ PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc;
    The descriptor { uid, null, 0 } is registered with the current module. *)
 PROCEDURE ExcDescValue (v: Value.T): MSIR.Value;
 
+(* Look up or create a TypeCell descriptor for a REF type.
+   Used by GenRefMSIR; handles both locally-declared and imported ref types. *)
+PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
+                               dataAlignment: INTEGER;
+                               isTraced: BOOLEAN): MSIR.Value;
+
+(* Return a forward reference to the ObjectTypeCell for t.
+   The TypeCell global (@tc_obj_<uid>) is defined later by compileMSIR.
+   Used by GenObjectMSIR before GenLinkerInfoMSIR has run. *)
+PROCEDURE ObjectTypeCellRef(t: Type.T): MSIR.Value;
+
 (*------------------------------------------------------------- Module globals *)
 
 (* Reset the global map.  Call once at the start of each new module
    (from MSIREmit.BeginUnit). *)
 PROCEDURE BeginModule();
 
-(* Declare a module-level global variable.  Adds the MSIR.Global to the
-   current MSIREmit module and records a mapping from v to GlobalValue so
-   that LookupVar / LookupVarAddr work for module-level variables.
-   Returns FALSE if the type is unsupported or the map is full. *)
-PROCEDURE DeclareGlobal(v: Variable.T;  name: TEXT;  mt: MSIR.T;
-                         isTraced: BOOLEAN): BOOLEAN;
+(* Raw map-management helpers.  Variable.m3 calls these after doing its own
+   type translation and condition checks. *)
+PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
+PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T);
+PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
 
 (* Start the module initialisation procedure.  Sets up curProc/curBlock
    for the init body without walking any scope (globals are already in

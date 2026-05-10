@@ -14,7 +14,7 @@ IMPORT RefType, ObjectType, OpaqueType, KeywordExpr, Value;
 IMPORT Field, Method, Int, ProcType, AssignStmt, OpenArrayType;
 IMPORT Scope, RecordType, TypeExpr, Null, Revelation, Target;
 IMPORT ArrayExpr, M3ID, M3RT, RunTyme, ErrType;
-IMPORT MSIR, MSIRType;
+IMPORT MSIR, MSIRType, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 
@@ -427,17 +427,78 @@ PROCEDURE GenOpaque (t: Type.T;  ce: CallExpr.T) =
   END GenOpaque;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
-  VAR t: Type.T;  mt: MSIR.T;
+  VAR t, r: Type.T;
   BEGIN
-    IF TypeExpr.Split (ce.args[0], t) THEN
-      mt := MSIRType.Translate (t);
-    ELSE
-      mt := NIL;
+    IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
+    IF NOT TypeExpr.Split (ce.args[0], t) THEN
+      MSIRBuilder.Abandon ("NEW: cannot determine type");  RETURN NIL;
     END;
-    IF mt = NIL THEN mt := MSIR.TVoid () END;
-    (* v0 stub: NEW is not fully modeled in MSIR yet. *)
-    RETURN MSIR.ConstNil (MSIR.TGcRef (mt));
+    t := Type.StripPacked (t);
+    IF    RefType.Split    (t, r) THEN RETURN GenRefMSIR    (t, Type.StripPacked (r), ce);
+    ELSIF ObjectType.Is    (t)    THEN RETURN GenObjectMSIR (t, ce);
+    ELSIF OpaqueType.Is    (t)    THEN RETURN GenOpaqueMSIR (t, ce);
+    ELSE  MSIRBuilder.Abandon ("NEW: not a reference type");  RETURN NIL;
+    END;
   END CompileMSIR;
+
+(* Common tail: call the allocator hook with descV, convert result to type t. *)
+PROCEDURE CallAllocHook (t: Type.T;  hook: RunTyme.Hook;
+                          descV: MSIR.Value): MSIR.Value =
+  VAR proc: MSIR.Proc;  res: MSIR.Value;  mt: MSIR.T;
+  BEGIN
+    IF descV = NIL THEN RETURN NIL END;
+    proc := MSIRBuilder.HookProc (hook);
+    IF proc = NIL THEN
+      MSIRBuilder.Abandon ("NEW: allocator hook not available");  RETURN NIL;
+    END;
+    res := MSIRBuilder.EmitCall ("", proc, ARRAY OF MSIR.Value{descV});
+    IF res = NIL THEN RETURN NIL END;
+    mt := MSIRType.Translate (t);
+    IF mt = NIL THEN mt := MSIR.TGcRef (MSIR.TVoid ()) END;
+    RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", res, mt);
+  END CallAllocHook;
+
+PROCEDURE GenRefMSIR (t, r: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
+  CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedRef,
+                                                RunTyme.Hook.NewTracedRef };
+  VAR t_info, r_info: Type.Info;
+  BEGIN
+    t := Type.CheckInfo (t, t_info);
+    r := Type.CheckInfo (r, r_info);
+    CASE r_info.class OF
+    | Type.Class.OpenArray =>
+        MSIRBuilder.Abandon ("NEW(REF open-array): not yet in MSIR");  RETURN NIL;
+    | Type.Class.Record =>
+        MSIRBuilder.Abandon ("NEW(REF record): not yet in MSIR");  RETURN NIL;
+    ELSE
+        RETURN CallAllocHook (t, PHook [t_info.isTraced],
+                              MSIRBuilder.TypeDescValueForRef (
+                                t,
+                                r_info.size DIV Target.Char.size,
+                                r_info.alignment,
+                                t_info.isTraced));
+    END;
+  END GenRefMSIR;
+
+PROCEDURE GenObjectMSIR (t: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
+  CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedObj,
+                                                RunTyme.Hook.NewTracedObj };
+  VAR t_info: Type.Info;
+  BEGIN
+    t := Type.CheckInfo (t, t_info);
+    RETURN CallAllocHook (t, PHook [t_info.isTraced],
+                          MSIRBuilder.ObjectTypeCellRef (t));
+  END GenObjectMSIR;
+
+PROCEDURE GenOpaqueMSIR (t: Type.T;  ce: CallExpr.T): MSIR.Value =
+  VAR x := Revelation.LookUp (t);  r: Type.T;
+  BEGIN
+    IF RefType.Split (x, r) THEN
+      RETURN GenRefMSIR (x, Type.StripPacked (r), ce);
+    END;
+    MSIRBuilder.Abandon ("NEW(OPAQUE): not yet in MSIR");
+    RETURN NIL;
+  END GenOpaqueMSIR;
 
 PROCEDURE Initialize () =
   BEGIN

@@ -276,6 +276,7 @@ PROCEDURE UserInit (t: T) =
     Scanner.offset := save;
   END UserInit;
 
+
 VAR all: T;  (* all values in the current module *)
 
 PROCEDURE Init (t: T;  name: M3ID.T;  c: Class) =

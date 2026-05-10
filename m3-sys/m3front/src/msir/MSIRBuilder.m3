@@ -48,7 +48,7 @@ VAR
 
 PROCEDURE BeginProc(name: M3ID.T;
                     formals: Value.T;
-                    syms: Scope.T;
+                    <*UNUSED*> syms: Scope.T;
                     result: Type.T;
                     isExternal: BOOLEAN): BOOLEAN =
   VAR
@@ -123,79 +123,28 @@ PROCEDURE BeginProc(name: M3ID.T;
         MSIR.ProcSetLinkage(curProc, MSIR.Linkage.Internal);
       END;
 
-      (* Bind declared formals in declaration order by looking up their Variable.T
-         in the scope by name.  This avoids confusing hidden _result/_return
-         variables (also IsFormal=TRUE but NOT in ProcType.Formals) with the
-         declared formals. *)
-      VAR
-        fDecl: Value.T := formals;
-        vIdx:  INTEGER := 0;
-        fInfo: Formal.Info;
+      (* Bind formals and locals upfront — independent of CG declare timing. *)
+      VAR fDecl := formals;  fInfo: Formal.Info;
       BEGIN
         WHILE fDecl # NIL DO
           Formal.Split(fDecl, fInfo);
           VAR sv := Scope.LookUp(syms, fInfo.name, strict := TRUE);
           BEGIN
             TYPECASE sv OF
-            | Variable.T(svv) =>
-                VAR
-                  paramVal := MSIR.ProcParam(curProc, vIdx);
-                  mt:        MSIR.T;
-                  vType:     Type.T;
-                  vGlobal, vIndirect, vLhs: BOOLEAN;
-                BEGIN
-                  Variable.Split(svv, vType, vGlobal, vIndirect, vLhs);
-                  mt := MSIR.ValueType(paramVal);
-                  IF vIndirect THEN
-                    (* VAR/READONLY-indirect formal: param value has type ptr T.
-                       elemType is T (the pointee). Loads/stores route through
-                       the param directly — no alloca needed. *)
-                    IF varMapN < MaxVarMap THEN
-                      varMap[varMapN].key      := svv;
-                      varMap[varMapN].val      := paramVal;
-                      varMap[varMapN].elemType := MSIR.EltType(mt);
-                      INC(varMapN);
-                    END;
-                  ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Struct THEN
-                    (* struct by-value formal: alloca+store for field access.
-                       Use ".slot" suffix so the alloca name differs from the param name. *)
-                    VAR allocaVal := MSIR.BuildAlloca(curBlock,
-                          Value.GlobalName(sv, dots := FALSE, with_module := FALSE) & ".slot",
-                          mt);
-                    BEGIN
-                      MSIR.BuildStore(curBlock, paramVal, allocaVal);
-                      IF varMapN < MaxVarMap THEN
-                        varMap[varMapN].key      := svv;
-                        varMap[varMapN].val      := allocaVal;
-                        varMap[varMapN].elemType := mt;
-                        INC(varMapN);
-                      END;
-                    END;
-                  ELSE
-                    IF varMapN < MaxVarMap THEN
-                      varMap[varMapN].key      := svv;
-                      varMap[varMapN].val      := paramVal;
-                      varMap[varMapN].elemType := NIL;
-                      INC(varMapN);
-                    END;
-                  END;
-                END;
-            ELSE (* no Variable.T found for this formal name — skip *)
+            | Variable.T(svv) => Variable.BindFormalMSIR(svv, curProc, curBlock);
+            ELSE
             END;
           END;
-          INC(vIdx);
           fDecl := fDecl.next;
         END;
       END;
-
-      (* Walk scope for locals (skip all formals, including hidden _result/_return). *)
       VAR sv: Value.T := Scope.ToList(syms);
       BEGIN
         WHILE sv # NIL DO
           TYPECASE sv OF
           | Variable.T(svv) =>
               IF NOT Variable.IsFormal(svv) THEN
-                EVAL AddLocal(svv);
+                EVAL Variable.AddLocalMSIR(svv, curBlock);
               END;
           ELSE
           END;
@@ -259,6 +208,10 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
     mt:                    MSIR.T;
     allocaVal:             MSIR.Value;
   BEGIN
+    (* Idempotent: skip if already registered (e.g. by BeginProc for p.syms). *)
+    FOR i := 0 TO varMapN - 1 DO
+      IF varMap[i].key = v THEN RETURN TRUE END;
+    END;
     Variable.Split(v, type, global, indirect, lhs);
     IF indirect THEN
       Abandon("VAR-mode variable not supported in MSIR v0");
@@ -555,6 +508,34 @@ PROCEDURE CurrentCatchEndProc(): MSIR.Proc =
     RETURN catchStack[catchDepth - 1];
   END CurrentCatchEndProc;
 
+PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
+                               dataAlignment: INTEGER;
+                               isTraced: BOOLEAN): MSIR.Value =
+  VAR
+    m   := MSIREmit.CurrentModule();
+    uid := VAL(Type.GlobalUID(t), LONGINT);
+    nm  := "tc_ref_" & Fmt.LongInt(uid);
+    desc: MSIR.TypeDesc;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    FOR i := 0 TO MSIR.ModuleTypeDescCount(m) - 1 DO
+      desc := MSIR.ModuleTypeDesc(m, i);
+      IF MSIR.TypeDescUID(desc) = uid AND MSIR.TypeDescKind(desc) = 6 THEN
+        RETURN MSIR.TypeDescValue(desc);
+      END;
+    END;
+    desc := MSIR.NewTypeDesc(nm, uid, isTraced, 6 (* Ref *),
+                              dataSize, dataAlignment);
+    MSIR.ModuleAddTypeDesc(m, desc);
+    RETURN MSIR.TypeDescValue(desc);
+  END TypeDescValueForRef;
+
+PROCEDURE ObjectTypeCellRef(t: Type.T): MSIR.Value =
+  VAR uid := VAL(Type.GlobalUID(t), LONGINT);
+  BEGIN
+    RETURN MSIR.TypeCellRef("tc_obj_" & Fmt.LongInt(uid));
+  END ObjectTypeCellRef;
+
 PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
   VAR proc: Procedure.T;
   BEGIN
@@ -641,23 +622,33 @@ PROCEDURE BeginModule() =
     procMapN   := 0;
   END BeginModule;
 
-PROCEDURE DeclareGlobal(v: Variable.T;  name: TEXT;  mt: MSIR.T;
-                         isTraced: BOOLEAN): BOOLEAN =
-  VAR
-    m:  MSIR.Module;
-    g:  MSIR.Global;
+(* ---- raw map-management helpers called from Variable.m3 ---- *)
+
+PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
   BEGIN
-    IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
-    m := MSIREmit.CurrentModule();
-    IF m = NIL THEN RETURN FALSE END;
-    IF globalMapN >= MaxGlobalMap THEN RETURN FALSE END;
-    g := MSIR.NewGlobal(name, mt, isTraced);
+    IF globalMapN >= MaxGlobalMap THEN RETURN END;
     MSIR.ModuleAddGlobal(m, g);
     globalMap[globalMapN].key := v;
     globalMap[globalMapN].val := g;
     INC(globalMapN);
-    RETURN TRUE;
-  END DeclareGlobal;
+  END GlobalMapAdd;
+
+PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T) =
+  BEGIN
+    IF varMapN >= MaxVarMap THEN RETURN END;
+    varMap[varMapN].key      := v;
+    varMap[varMapN].val      := val;
+    varMap[varMapN].elemType := elt;
+    INC(varMapN);
+  END VarMapAdd;
+
+PROCEDURE VarMapContains(v: Variable.T): BOOLEAN =
+  BEGIN
+    FOR i := 0 TO varMapN - 1 DO
+      IF varMap[i].key = v THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END VarMapContains;
 
 PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
   VAR resultT: MSIR.T;
