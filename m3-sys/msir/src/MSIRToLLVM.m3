@@ -957,27 +957,19 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 
 (*----------------------------------------------- module binder emission *)
 
-(* Emit the RTLinker binder function @<Mod>_M3 and the RT0.ModuleInfo
-   struct @<Mod>_M3_info.
+(* Emit the RTLinker binder @<Mod>_M3 and RT0.ModuleInfo struct @<Mod>_M3_info.
 
-   RT0.ModuleInfo layout (64-bit, MI_SIZE=104 bytes, 13 fields):
-     [0]   file           ptr  -- module source filename (null = unknown)
-     [8]   type_cells     ptr  -- type/exception descriptor array (null = none)
-     [16]  type_cell_ptrs ptr  -- pointers into type cell array (null)
-     [24]  full_rev       ptr  -- full revelation table (null)
-     [32]  part_rev       ptr  -- partial revelation table (null)
-     [40]  proc_info      ptr  -- procedure name/address pairs (null)
-     [48]  try_scopes     ptr  -- ex_frame scope table (null for ex_stack)
-     [56]  var_map        ptr  -- GC type map for globals (null for now)
-     [64]  gc_map         ptr  -- reduced GC map (null for now)
-     [72]  imports        ptr  -- import chain (null = no dependencies)
-     [80]  link_state     i64  -- 0=unlinked (RTLinker updates)
-     [88]  binder         ptr  -- pointer to this binder function
-     [96]  gc_flags       i64  -- 3 = GC_gen | GC_inc
+   The struct layout is derived entirely from M3RT.MI_* byte offsets and
+   Target.Address.bytes so it stays correct if ModuleInfo grows new fields.
 
-   Binder calling convention (RT0.Binder):
-     mode=0 : return MI pointer without running module body (used by AddUnit)
-     mode=1 : run module body then return MI pointer (used by RunMainBody) *)
+   Field type rules (from RT0.ModuleInfo):
+     - MI_link_state and MI_gc_flags are INTEGER  → i64 in LLVM
+     - all other fields are ADDRESS or PROC       → ptr in LLVM
+   Fields are AP = Target.Address.bytes bytes each (IP = AP on all targets).
+
+   Binder convention (RT0.Binder):
+     mode=0 : return MI pointer (AddUnit path — do NOT run body)
+     mode≠0 : run module body then return MI pointer (RunMainBody path) *)
 PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
   VAR
     modName    := MSIR.ModuleName(m);
@@ -985,7 +977,20 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     infoName   := "@" & modName & "_M3_info";
     bodyName   := "@" & modName & "__" & modName & "_M3";
     bodyExists := FALSE;
+    cs         := Target.Char.size;        (* bits per byte = 8 *)
+    ap         := Target.Address.bytes;   (* bytes per field slot *)
+    miBytes    := M3RT.MI_SIZE DIV cs;    (* total struct size in bytes *)
+    nFields    := miBytes DIV ap;         (* number of fields *)
+    fieldName  : TEXT;
+    fieldType  : TEXT;
+    fieldVal   : TEXT;
+    byteOff    : INTEGER;
   BEGIN
+    <* ASSERT M3RT.MI_SIZE MOD cs = 0,
+       "RT0.ModuleInfo size not a multiple of char size" *>
+    <* ASSERT miBytes MOD ap = 0,
+       "RT0.ModuleInfo byte size not a multiple of address size" *>
+
     (* Check whether the module body proc was compiled (not abandoned). *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_M3") THEN
@@ -993,29 +998,54 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
 
-    (* ModuleInfo struct: mostly null; binder and gc_flags are set. *)
+    (* Emit named type — field types derived from M3RT offsets. *)
     Wr.PutText(wr, "\n");
-    Wr.PutText(wr, "; RT0.ModuleInfo for " & modName & "\n");
-    Wr.PutText(wr, "%RT0_ModuleInfo_t = type { ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, ptr, i64 }\n");
+    Wr.PutText(wr, "; RT0.ModuleInfo for " & modName
+                   & " (" & Fmt.Int(nFields) & " fields, "
+                   & Fmt.Int(miBytes) & " bytes)\n");
+    Wr.PutText(wr, "%RT0_ModuleInfo_t = type { ");
+    FOR k := 0 TO nFields - 1 DO
+      IF k > 0 THEN Wr.PutText(wr, ", ") END;
+      byteOff := k * ap;
+      IF byteOff = M3RT.MI_link_state DIV cs OR byteOff = M3RT.MI_gc_flags DIV cs
+        THEN Wr.PutText(wr, "i64");
+        ELSE Wr.PutText(wr, "ptr");
+      END;
+    END;
+    Wr.PutText(wr, " }\n");
+
+    (* Emit global initializer — values derived from M3RT offsets. *)
     Wr.PutText(wr, infoName & " = global %RT0_ModuleInfo_t {\n");
-    Wr.PutText(wr, "  ptr null,\n");    (* file *)
-    Wr.PutText(wr, "  ptr null,\n");    (* type_cells *)
-    Wr.PutText(wr, "  ptr null,\n");    (* type_cell_ptrs *)
-    Wr.PutText(wr, "  ptr null,\n");    (* full_rev *)
-    Wr.PutText(wr, "  ptr null,\n");    (* part_rev *)
-    Wr.PutText(wr, "  ptr null,\n");    (* proc_info *)
-    Wr.PutText(wr, "  ptr null,\n");    (* try_scopes *)
-    Wr.PutText(wr, "  ptr null,\n");    (* var_map *)
-    Wr.PutText(wr, "  ptr null,\n");    (* gc_map *)
-    Wr.PutText(wr, "  ptr null,\n");    (* imports *)
-    Wr.PutText(wr, "  i64 0,\n");       (* MI_link_state: 0 = unlinked *)
-    Wr.PutText(wr, "  ptr @" & binderName & ",\n");  (* MI_binder = ourselves *)
-    (* MI_gc_flags = 3 = RT0.GC_both = RT0.GC_gen OR RT0.GC_inc.
-       RT0 lives in m3core, not m3middle, so we use the literal value. *)
-    Wr.PutText(wr, "  i64 3\n");
+    FOR k := 0 TO nFields - 1 DO
+      byteOff := k * ap;
+      (* Determine LLVM type, value, and M3RT field name for this slot. *)
+      IF    byteOff = M3RT.MI_file DIV cs           THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_file";
+      ELSIF byteOff = M3RT.MI_type_cells DIV cs     THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_type_cells";
+      ELSIF byteOff = M3RT.MI_type_cell_ptrs DIV cs THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_type_cell_ptrs";
+      ELSIF byteOff = M3RT.MI_full_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_full_rev";
+      ELSIF byteOff = M3RT.MI_part_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_part_rev";
+      ELSIF byteOff = M3RT.MI_proc_info DIV cs      THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_proc_info";
+      ELSIF byteOff = M3RT.MI_try_scopes DIV cs     THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_try_scopes";
+      ELSIF byteOff = M3RT.MI_var_map DIV cs        THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_var_map";
+      ELSIF byteOff = M3RT.MI_gc_map DIV cs         THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_gc_map";
+      ELSIF byteOff = M3RT.MI_imports DIV cs        THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_imports";
+      ELSIF byteOff = M3RT.MI_link_state DIV cs     THEN fieldType := "i64"; fieldVal := "0";               fieldName := "MI_link_state";
+      ELSIF byteOff = M3RT.MI_binder DIV cs         THEN fieldType := "ptr"; fieldVal := "@" & binderName;  fieldName := "MI_binder";
+      ELSIF byteOff = M3RT.MI_gc_flags DIV cs       THEN fieldType := "i64";
+                                                   (* RT0.GC_both = GC_gen | GC_inc = 3; literal used
+                                                      because RT0 is in m3core, not m3middle. *)
+                                                   fieldVal := "3";                                   fieldName := "MI_gc_flags";
+      ELSE                                         fieldType := "ptr"; fieldVal := "null";             fieldName := "?";
+      END;
+      IF k < nFields - 1
+        THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
+        ELSE Wr.PutText(wr, "  " & fieldType & " " & fieldVal);
+      END;
+      Wr.PutText(wr, "  ; " & fieldName & " (+" & Fmt.Int(byteOff) & ")\n");
+    END;
     Wr.PutText(wr, "}\n");
 
-    (* Binder function: mode=0 → return MI; mode=1 → run body + return MI. *)
+    (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI. *)
     Wr.PutText(wr, "\ndefine ptr @" & binderName & "(i64 %mode) {\n");
     IF bodyExists THEN
       Wr.PutText(wr, "entry:\n");
