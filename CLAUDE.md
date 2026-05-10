@@ -237,6 +237,10 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - M3 symbol mangling (`Module.Proc` → `Module__Proc`), target triple/datalayout for LLVM 22
 - `target triple` / `target datalayout` for ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX
 
+### EH Model Requirement
+
+MSIR's LLVM lowering uses the C++ EH personality model (`invoke`/`landingpad`/`resume` with `@__gxx_personality_v0`) exclusively.  This maps directly to `ex_stack` (C++ zero-cost EH) and cannot be used with `ex_frame` (setjmp/longjmp).  MSIR emission should only be enabled on `ex_stack` platforms (ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX).  On `ex_frame` platforms the C backend remains the only path.
+
 ### Enabling MSIR Emission
 
 MSIR output is gated behind a runtime parameter so it doesn't slow normal builds. Pass `@M3m3front-msir` to the `cm3` process — the `@M3` prefix is consumed by `RTParams` and never reaches the compiled program's argument list:
