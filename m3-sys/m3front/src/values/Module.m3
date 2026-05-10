@@ -1084,6 +1084,9 @@ PROCEDURE BuildImportLink (nm: M3ID.T;  binder: TEXT): INTEGER =
     curModule.last_import := offset;
     CG.Init_var (prev_link, curModule.globals[FALSE].seg, offset, FALSE);
     CG.Init_proc (offset + M3RT.II_binder, proc, FALSE);
+    (* Register the binder with MSIR so EmitModuleBinder can build the
+       RT0.ImportInfo chain in the LLVM module descriptor. *)
+    MSIREmit.RegisterImport(binder);
     RETURN offset;
   END BuildImportLink;
 

@@ -676,7 +676,8 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
-  excDescs:   RefSeq.T;                            (* elements: ExcDesc *)
+  excDescs:      RefSeq.T;                         (* elements: ExcDesc *)
+  importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
@@ -753,14 +754,28 @@ PROCEDURE ModuleExcDescCount(m: Module): INTEGER     = BEGIN RETURN m.excDescs.s
 PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
   BEGIN RETURN m.excDescs.get(i) END ModuleExcDesc;
 
+PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT) =
+  BEGIN
+    (* Deduplicate: skip if already registered. *)
+    FOR i := 0 TO m.importBinders.size() - 1 DO
+      IF Text.Equal(m.importBinders.get(i), binder) THEN RETURN END;
+    END;
+    m.importBinders.addhi(binder);
+  END ModuleAddImportBinder;
+PROCEDURE ModuleImportBinderCount(m: Module): INTEGER =
+  BEGIN RETURN m.importBinders.size() END ModuleImportBinderCount;
+PROCEDURE ModuleImportBinder(m: Module;  i: INTEGER): TEXT =
+  BEGIN RETURN m.importBinders.get(i) END ModuleImportBinder;
+
 PROCEDURE NewModule(name: TEXT): Module =
   VAR m := NEW(Module);
   BEGIN
-    m.name     := name;
-    m.imports  := NEW(RefSeq.T).init();
-    m.procs    := NEW(RefSeq.T).init();
-    m.globals  := NEW(RefSeq.T).init();
-    m.excDescs := NEW(RefSeq.T).init();
+    m.name          := name;
+    m.imports       := NEW(RefSeq.T).init();
+    m.procs         := NEW(RefSeq.T).init();
+    m.globals       := NEW(RefSeq.T).init();
+    m.excDescs      := NEW(RefSeq.T).init();
+    m.importBinders := NEW(RefSeq.T).init();
     RETURN m;
   END NewModule;
 

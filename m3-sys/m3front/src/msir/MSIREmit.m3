@@ -46,6 +46,18 @@ PROCEDURE BeginUnit(name: M3ID.T) =
 PROCEDURE CurrentModule(): MSIR.Module =
   BEGIN RETURN curModule END CurrentModule;
 
+PROCEDURE RegisterImport(binder: TEXT) =
+  BEGIN
+    IF curModule = NIL THEN RETURN END;
+    (* RTHooks is always pre-initialised by RTLinker__InitRuntime before any
+       module body runs; it must not appear in the module's import chain or
+       the linker pulls in RTHooks_m.o which conflicts with raise_stub.cpp. *)
+    IF Text.Equal(binder, "RTHooks_I3") OR Text.Equal(binder, "RTHooks_M3") THEN
+      RETURN;
+    END;
+    MSIR.ModuleAddImportBinder(curModule, binder);
+  END RegisterImport;
+
 PROCEDURE AddProc(p: MSIR.Proc) =
   BEGIN
     IF curModule = NIL THEN RETURN END;

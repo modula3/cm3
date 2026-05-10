@@ -25,6 +25,11 @@ PROCEDURE BeginUnit(name: M3ID.T);
    MSIRBuilder.EndProc when a proc was successfully translated. *)
 PROCEDURE AddProc(p: MSIR.Proc);
 
+(* Register an imported module binder so the emitter can build the
+   RT0.ImportInfo chain in the module descriptor.  binder is the
+   mangled binder name, e.g. "Fmt_M3" or "IO_M3". *)
+PROCEDURE RegisterImport(binder: TEXT);
+
 (* Record that a proc was skipped (BeginProc returned FALSE or Abandon
    was called). Appended as a comment in the MSIR output. *)
 PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT);

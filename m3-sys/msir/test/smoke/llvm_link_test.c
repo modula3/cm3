@@ -10,18 +10,9 @@ typedef _Bool         M3Bool;   /* i1  — BOOLEAN */
 typedef struct { M3Int x; M3Int y; } Point;
 typedef struct { M3Int *data; M3Int  size; } OpenArray;
 
-/* Stubs for M3 runtime externs referenced in Main__Main_M3.
-   We never call that proc from the harness, but the linker needs them. */
-void *Fmt__Int(M3Int n, M3Int base) { return NULL; }
-void  IO__Put(void *t, void *wr)    { (void)t; (void)wr; }
-void *Fmt__Bool(M3Bool b)           { return NULL; }
-
-/* Stubs for GC write/read barrier slow paths.  These are only called when
-   a heap object is gray (read barrier) or not dirty (write barrier) during
-   an incremental collection.  In the link test no GC runs, so these are
-   never actually invoked. */
-void RTHooks__CheckLoadTracedRef(void *ref) { (void)ref; }
-void RTHooks__CheckStoreTraced(void *dst)   { (void)dst; }
+/* Fmt__Int, IO__Put, Fmt__Bool, RTHooks__Check* are provided by libm3/libm3core.
+   Harness test procedures (Add, Factorial, etc.) never call any of them, so
+   no initialised runtime is needed.  RTHooks__Raise is in raise_stub.cpp. */
 
 /* _ZTI6_M3Exc is provided by raise_stub.cpp (the C++ compiler generates a
    proper typeinfo for struct _M3Exc when raise_stub.cpp is compiled). */
@@ -92,17 +83,8 @@ extern M3Int  Main__SquareArea(void *self);  /* reads self->side via field GEP *
 /* TYPECASE test */
 extern M3Int  Main__TypecaseKind(void *r);
 
-/* Stub for RTHooks__ScanTypecase used by TYPECASE lowering.
-   ScanTypecase(NIL, table) returns 0 per M3 spec (first clause) without
-   accessing any runtime state — safe in the uninitialised harness.
-   For non-NIL refs: walk the cell array to find the ELSE index (uid=0). */
-typedef struct { void *defn; long uid; } M3_TCCell;
-long RTHooks__ScanTypecase(void *ref, M3_TCCell *table) {
-    long i = 0;
-    if (ref == NULL) return 0;
-    while (table[i].uid != 0) ++i;
-    return i; /* ELSE index */
-}
+/* RTHooks__ScanTypecase is provided by libm3core.  For ref=NIL (our only
+   harness test) it returns 0 immediately without touching runtime state. */
 
 /* Direct access to module globals (zeroinitialised — no M3 module init runs) */
 extern M3Int  Main__gCounter;

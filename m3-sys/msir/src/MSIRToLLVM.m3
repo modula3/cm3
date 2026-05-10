@@ -1024,6 +1024,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     ap         := Target.Address.bytes;   (* bytes per field slot *)
     miBytes    := M3RT.MI_SIZE DIV cs;    (* total struct size in bytes *)
     nFields    := miBytes DIV ap;         (* number of fields *)
+    nImports   := MSIR.ModuleImportBinderCount(m);
     fieldName  : TEXT;
     fieldType  : TEXT;
     fieldVal   : TEXT;
@@ -1038,6 +1039,46 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_M3") THEN
         bodyExists := TRUE;
+      END;
+    END;
+
+    (* Emit RT0.ImportInfo chain — one record per imported module binder.
+       Each ImportInfo = { ptr import_ptr, ptr binder_fn, ptr next_ptr }.
+       We define @<Mod>_I3 (the interface binder) first so it can be
+       referenced without a preceding declare (which would conflict).
+       All other binders are external and need explicit declare statements. *)
+    IF nImports > 0 THEN
+      (* Define the interface binder for this module before the ImportInfo globals. *)
+      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(i64 %mode) {\n");
+      Wr.PutText(wr, "entry:\n");
+      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+      Wr.PutText(wr, "}\n");
+
+      Wr.PutText(wr, "\n; RT0.ImportInfo chain for " & modName & "\n");
+      (* Declare external binders (skip modName_I3 which we just defined). *)
+      FOR k := 0 TO nImports - 1 DO
+        VAR b := MSIR.ModuleImportBinder(m, k);
+        BEGIN
+          IF NOT Text.Equal(b, modName & "_I3") THEN
+            Wr.PutText(wr, "declare ptr @" & b & "(i64)\n");
+          END;
+        END;
+      END;
+      (* Emit ImportInfo records. *)
+      FOR k := 0 TO nImports - 1 DO
+        VAR
+          b    := MSIR.ModuleImportBinder(m, k);
+          name := modName & "_M3_imp." & Fmt.Int(k);
+          next : TEXT;
+        BEGIN
+          IF k < nImports - 1
+            THEN next := "@" & modName & "_M3_imp." & Fmt.Int(k + 1);
+            ELSE next := "null";
+          END;
+          Wr.PutText(wr, "@" & name
+                         & " = internal global { ptr, ptr, ptr } { ptr null, ptr @"
+                         & b & ", ptr " & next & " }\n");
+        END;
       END;
     END;
 
@@ -1071,7 +1112,12 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       ELSIF byteOff = M3RT.MI_try_scopes DIV cs     THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_try_scopes";
       ELSIF byteOff = M3RT.MI_var_map DIV cs        THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_var_map";
       ELSIF byteOff = M3RT.MI_gc_map DIV cs         THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_gc_map";
-      ELSIF byteOff = M3RT.MI_imports DIV cs        THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_imports";
+      ELSIF byteOff = M3RT.MI_imports DIV cs        THEN fieldType := "ptr";
+                                                          fieldName := "MI_imports";
+                                                          IF nImports > 0
+                                                            THEN fieldVal := "@" & modName & "_M3_imp.0";
+                                                            ELSE fieldVal := "null";
+                                                          END;
       ELSIF byteOff = M3RT.MI_link_state DIV cs     THEN fieldType := "i64"; fieldVal := "0";               fieldName := "MI_link_state";
       ELSIF byteOff = M3RT.MI_binder DIV cs         THEN fieldType := "ptr"; fieldVal := "@" & binderName;  fieldName := "MI_binder";
       ELSIF byteOff = M3RT.MI_gc_flags DIV cs       THEN fieldType := "i64";
@@ -1087,6 +1133,16 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       Wr.PutText(wr, "  ; " & fieldName & " (+" & Fmt.Int(byteOff) & ")\n");
     END;
     Wr.PutText(wr, "}\n");
+
+    (* Interface binder @<Mod>_I3 — only needed when no imports section
+       emitted it already (that section defines it first to avoid declare
+       conflicts).  For modules with no imports, emit it here. *)
+    IF nImports = 0 THEN
+      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(i64 %mode) {\n");
+      Wr.PutText(wr, "entry:\n");
+      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+      Wr.PutText(wr, "}\n");
+    END;
 
     (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI. *)
     Wr.PutText(wr, "\ndefine ptr @" & binderName & "(i64 %mode) {\n");

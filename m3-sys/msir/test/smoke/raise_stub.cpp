@@ -25,6 +25,18 @@ struct RaiseActivation {
     void *un_arg;
 };
 
+/* Stub out ALL of RTHooks_m.o's symbols to prevent the archive member from
+   being pulled in.  IO_m.o references RTHooks__ResumeRaise etc., which would
+   drag in RTHooks_m.o and conflict with our RTHooks__Raise below.
+   These are never called from harness tests; the harness never invokes
+   IO.Put, Assert, or runtime error reporting. */
+extern "C" void *RTHooks_I3(long)        { return nullptr; }
+extern "C" void *RTHooks_M3(long)        { return nullptr; }
+extern "C" void  RTHooks__AssertFailed(void *, long) { }
+extern "C" void  RTHooks__NoOp()         { }
+extern "C" void  RTHooks__ReportFault(void *, long)  { }
+extern "C" void  RTHooks__ResumeRaise(void *)        { }
+
 extern "C" void RTHooks__Raise(void *ex, void *arg,
                                 void *module, long line) {
     static RaiseActivation act;

@@ -233,6 +233,14 @@ PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc);
 PROCEDURE ModuleExcDescCount(m: Module): INTEGER;
 PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc;
 
+(*----------------------------------------------- import binders *)
+
+(* Register an imported module's binder function name (e.g. "Fmt_M3").
+   The emitter builds the RT0.ImportInfo chain from these. *)
+PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT);
+PROCEDURE ModuleImportBinderCount(m: Module): INTEGER;
+PROCEDURE ModuleImportBinder     (m: Module;  i: INTEGER): TEXT;
+
 (*-------------------------------------------------------- module globals *)
 
 TYPE Global <: REFANY;
