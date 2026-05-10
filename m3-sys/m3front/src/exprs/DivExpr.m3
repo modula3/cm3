@@ -10,6 +10,7 @@ MODULE DivExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, TInt, Target;
 IMPORT TargetMap;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Tab BRANDED "DivExpr.P" OBJECT
@@ -34,6 +35,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -152,6 +154,18 @@ PROCEDURE SmallPowerOfTwo (READONLY x: Target.Int;  VAR log: INTEGER): BOOLEAN=
     log := -1;
     RETURN FALSE;
   END SmallPowerOfTwo;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR a, b: MSIR.Value;
+  BEGIN
+    IF (p.type # Int.T) AND (p.type # LInt.T) THEN
+      MSIRBuilder.Abandon ("non-integer DIV");
+      RETURN NIL;
+    END;
+    a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
+    b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildIDiv (MSIRBuilder.CurrentBlock (), "", a, b);
+  END CompileMSIR;
 
 BEGIN
 END DivExpr.

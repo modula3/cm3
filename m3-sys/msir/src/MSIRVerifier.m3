@@ -345,7 +345,8 @@ PROCEDURE CheckArrayElemAddr(c: Ctx;  i: MSIR.Insn) =
 PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
   BEGIN
     CASE MSIR.InsnOp(i) OF
-    | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul =>
+    | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul,
+      MSIR.Op.IDiv, MSIR.Op.IMod =>
         CheckBinaryArith(c, i);
     | MSIR.Op.ICmp =>
         CheckICmp(c, i);

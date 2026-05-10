@@ -133,6 +133,8 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.IAdd               => RETURN "iadd";
     | MSIR.Op.ISub               => RETURN "isub";
     | MSIR.Op.IMul               => RETURN "imul";
+    | MSIR.Op.IDiv               => RETURN "idiv";
+    | MSIR.Op.IMod               => RETURN "imod";
     | MSIR.Op.ICmp               => RETURN "icmp";
     | MSIR.Op.Br                 => RETURN "br";
     | MSIR.Op.CondBr             => RETURN "cond_br";
@@ -202,7 +204,8 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Value(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
-    | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul =>
+    | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul,
+      MSIR.Op.IDiv, MSIR.Op.IMod =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");

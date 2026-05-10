@@ -229,7 +229,7 @@ TYPE Op = {
   (* memory *)
   Alloca, Load, Store, GcLoad, GcStore, FieldAddr,
   (* arithmetic *)
-  IAdd, ISub, IMul,
+  IAdd, ISub, IMul, IDiv, IMod,
   (* compare *)
   ICmp,
   (* control *)
@@ -280,6 +280,8 @@ PROCEDURE InsnSelector(i: Insn): TEXT;       (* Dispatch: method name; FieldAddr
 PROCEDURE BuildIAdd(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildISub(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIMul(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIDiv(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIMod(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildICmp(b: Block;  name: TEXT;  pred: CmpPred;  x, y: Value): Value;
 
 PROCEDURE BuildLoad (b: Block;  name: TEXT;  type: T;  addr: Value): Value;

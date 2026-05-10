@@ -11,6 +11,7 @@ MODULE CaseStmt;
 IMPORT CG, Expr, Stmt, StmtRep, Type, Error, Target, TInt, Host;
 IMPORT EnumExpr, Token, IntegerExpr, Scanner, Word, ErrType;
 FROM Scanner IMPORT Match, GetToken, Fail, cur;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   P = Stmt.T BRANDED "CaseStmt.P" OBJECT
@@ -26,6 +27,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 TYPE
@@ -542,6 +544,97 @@ PROCEDURE CollapseTree (t: Tree): Tree =
     END;
     RETURN t;
   END CollapseTree;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    selVal:     MSIR.Value;
+    selType:    MSIR.T;
+    t:          Tree;
+    minI, maxI: INTEGER;
+    minVal,
+    maxVal,
+    cond:       MSIR.Value;
+    inRangeBlk,
+    nextBlk:    MSIR.Block;
+    bodyBlks:   REF ARRAY OF MSIR.Block;
+    elseBlk:    MSIR.Block;
+    mergeBlk:   MSIR.Block;
+  BEGIN
+    p.tree := FlattenTree (p.tree, NIL);
+    p.tree := CollapseTree (p.tree);
+
+    selType := MSIRType.Translate (Expr.TypeOf (p.expr));
+    IF selType = NIL THEN
+      MSIRBuilder.Abandon ("CASE selector type not supported in MSIR");
+      RETURN;
+    END;
+
+    selVal := Expr.CompileMSIR (p.expr);
+    IF selVal = NIL THEN RETURN END;
+
+    bodyBlks := NEW (REF ARRAY OF MSIR.Block, p.nCases);
+    FOR i := 0 TO p.nCases - 1 DO
+      bodyBlks[i] := MSIRBuilder.NewBlock ("case.body");
+    END;
+    elseBlk  := MSIRBuilder.NewBlock ("case.else");
+    mergeBlk := MSIRBuilder.NewBlock ("case.merge");
+
+    IF p.tree = NIL THEN
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), elseBlk, ARRAY OF MSIR.Value{});
+    ELSE
+      t := p.tree;
+      WHILE t # NIL DO
+        IF NOT TInt.ToInt (t.min, minI) OR NOT TInt.ToInt (t.max, maxI) THEN
+          MSIRBuilder.Abandon ("CASE label out of INTEGER range");
+          RETURN;
+        END;
+        minVal := MSIR.ConstInt (selType, VAL (minI, LONGINT));
+        maxVal := MSIR.ConstInt (selType, VAL (maxI, LONGINT));
+
+        (* sel < min → else (tree is sorted, so no later node can match) *)
+        inRangeBlk := MSIRBuilder.NewBlock ("case.inrange");
+        cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                                MSIR.CmpPred.Slt, selVal, minVal);
+        MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                          elseBlk,    ARRAY OF MSIR.Value{},
+                          inRangeBlk, ARRAY OF MSIR.Value{});
+        MSIRBuilder.SetCurrentBlock (inRangeBlk);
+
+        (* sel <= max → body[t.body]; otherwise continue to next range *)
+        IF t.greater # NIL
+          THEN nextBlk := MSIRBuilder.NewBlock ("case.next")
+          ELSE nextBlk := elseBlk
+        END;
+        cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                                MSIR.CmpPred.Sle, selVal, maxVal);
+        MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                          bodyBlks[t.body], ARRAY OF MSIR.Value{},
+                          nextBlk,          ARRAY OF MSIR.Value{});
+        MSIRBuilder.SetCurrentBlock (nextBlk);
+
+        t := t.greater;
+      END;
+      (* After the last node nextBlk = elseBlk, so current block is elseBlk *)
+    END;
+
+    (* generate body blocks *)
+    FOR i := 0 TO p.nCases - 1 DO
+      MSIRBuilder.SetCurrentBlock (bodyBlks[i]);
+      Stmt.CompileMSIR (p.bodies[i]);
+      IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlk, ARRAY OF MSIR.Value{});
+      END;
+    END;
+
+    (* else block *)
+    MSIRBuilder.SetCurrentBlock (elseBlk);
+    IF p.hasElse THEN Stmt.CompileMSIR (p.elseBody) END;
+    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlk, ARRAY OF MSIR.Value{});
+    END;
+
+    MSIRBuilder.SetCurrentBlock (mergeBlk);
+  END CompileMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   VAR oc := Stmt.Outcomes {};

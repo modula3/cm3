@@ -782,6 +782,10 @@ PROCEDURE BuildISub(b: Block; name: TEXT; x, y: Value): Value =
   BEGIN RETURN buildBin(b, Op.ISub, name, x, y) END BuildISub;
 PROCEDURE BuildIMul(b: Block; name: TEXT; x, y: Value): Value =
   BEGIN RETURN buildBin(b, Op.IMul, name, x, y) END BuildIMul;
+PROCEDURE BuildIDiv(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IDiv, name, x, y) END BuildIDiv;
+PROCEDURE BuildIMod(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IMod, name, x, y) END BuildIMod;
 
 PROCEDURE BuildICmp(b: Block; name: TEXT; pred: CmpPred; x, y: Value): Value =
   VAR

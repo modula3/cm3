@@ -9,6 +9,7 @@
 MODULE AndExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt, Value;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Tab BRANDED "AndExpr.P" OBJECT
@@ -34,7 +35,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := ExprRep.ExprBoolAlign; 
+        exprAlign    := ExprRep.ExprBoolAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -116,6 +118,33 @@ PROCEDURE Fold (p: P): Expr.T =
       RETURN Bool.Map[(ORD (TRUE) = z1) AND (ORD (TRUE) = z2)];
     END;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    condA, condB: MSIR.Value;
+    slot:         MSIR.Value;
+    rhsBlock:     MSIR.Block;
+    mergeBlock:   MSIR.Block;
+    boolT:        MSIR.T;
+  BEGIN
+    boolT    := MSIR.TI1 ();
+    slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", boolT);
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), MSIR.ConstInt(boolT, 0L), slot);
+    condA    := Expr.CompileMSIR (p.a);
+    IF condA = NIL THEN RETURN NIL END;
+    rhsBlock   := MSIRBuilder.NewBlock ("and.rhs");
+    mergeBlock := MSIRBuilder.NewBlock ("and.merge");
+    MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), condA,
+                      rhsBlock,   ARRAY OF MSIR.Value{},
+                      mergeBlock, ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (rhsBlock);
+    condB := Expr.CompileMSIR (p.b);
+    IF condB = NIL THEN RETURN NIL END;
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), condB, slot);
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock, ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (mergeBlock);
+    RETURN MSIR.BuildLoad (mergeBlock, "", boolT, slot);
+  END CompileMSIR;
 
 BEGIN
 END AndExpr.

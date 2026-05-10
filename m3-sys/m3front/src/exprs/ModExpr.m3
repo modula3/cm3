@@ -10,6 +10,7 @@ MODULE ModExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, Target;
 IMPORT Reel, LReel, EReel, ReelExpr, DivExpr, TInt;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cERR };
@@ -44,6 +45,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -213,6 +215,18 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
       ExprRep.NoBounds (p, min, max);
     END;
   END GetBounds;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR a, b: MSIR.Value;
+  BEGIN
+    IF (p.class # Class.cINT) AND (p.class # Class.cLINT) THEN
+      MSIRBuilder.Abandon ("non-integer MOD");
+      RETURN NIL;
+    END;
+    a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
+    b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildIMod (MSIRBuilder.CurrentBlock (), "", a, b);
+  END CompileMSIR;
 
 BEGIN
 END ModExpr.

@@ -13,6 +13,7 @@ IMPORT M3ID, CG, Error, Scope, Expr, Stmt, StmtRep;
 IMPORT EnumType, Type, Int, LInt, Variable, Target, TargetMap, TInt, ErrType;
 IMPORT IntegerExpr, EnumExpr, Token, Marker, Tracer;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   P = Stmt.T OBJECT
@@ -26,6 +27,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -395,6 +397,106 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
             - Stmt.Outcomes {Stmt.Outcome.Exits}
             + Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    loopVar:    Variable.T := p.var;
+    varType:    Type.T;
+    varGlobal,
+    varIndir,
+    varLhs:     BOOLEAN;
+    msirType:   MSIR.T;
+    stepVal:    Target.Int;
+    stepI:      INTEGER;
+    fromVal:    MSIR.Value;
+    limitVal:   MSIR.Value;
+    stepConst:  MSIR.Value;
+    varAddr:    MSIR.Value;
+    cur:        MSIR.Value;
+    next:       MSIR.Value;
+    cond:       MSIR.Value;
+    pred:       MSIR.CmpPred;
+    headerBlk:  MSIR.Block;
+    bodyBlk:    MSIR.Block;
+    exitBlk:    MSIR.Block;
+    zz:         Scope.T;
+  BEGIN
+    Variable.Split (loopVar, varType, varGlobal, varIndir, varLhs);
+    msirType := MSIRType.Translate (varType);
+    IF msirType = NIL THEN
+      MSIRBuilder.Abandon ("FOR variable type not supported in MSIR");
+      RETURN;
+    END;
+
+    (* Step is always a constant after Check. *)
+    IF NOT Reduce (p.step, stepVal) THEN
+      MSIRBuilder.Abandon ("FOR step must be constant in MSIR v0");
+      RETURN;
+    END;
+    IF NOT TInt.ToInt (stepVal, stepI) THEN
+      MSIRBuilder.Abandon ("FOR step out of INTEGER range");
+      RETURN;
+    END;
+    IF stepI = 0 THEN
+      MSIRBuilder.Abandon ("zero FOR step");
+      RETURN;
+    END;
+    stepConst := MSIR.ConstInt (msirType, VAL(stepI, LONGINT));
+
+    (* Register the loop variable as a local so it gets an alloca. *)
+    zz := Scope.Push (p.scope);
+    EVAL MSIRBuilder.AddLocal (loopVar);
+    varAddr := MSIRBuilder.LookupVarAddr (loopVar);
+    Scope.Pop (zz);
+    IF varAddr = NIL THEN
+      MSIRBuilder.Abandon ("FOR variable not mapped in MSIR");
+      RETURN;
+    END;
+
+    (* Compile and store the initial value. *)
+    fromVal := Expr.CompileMSIR (p.from);
+    IF fromVal = NIL THEN RETURN END;
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), fromVal, varAddr);
+
+    (* Create blocks. *)
+    headerBlk := MSIRBuilder.NewBlock ("for.header");
+    bodyBlk   := MSIRBuilder.NewBlock ("for.body");
+    exitBlk   := MSIRBuilder.NewBlock ("for.exit");
+
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk,
+                  ARRAY OF MSIR.Value{});
+
+    (* Header: test index against limit. *)
+    MSIRBuilder.SetCurrentBlock (headerBlk);
+    cur      := MSIR.BuildLoad (headerBlk, "", msirType, varAddr);
+    limitVal := Expr.CompileMSIR (p.limit);
+    IF limitVal = NIL THEN RETURN END;
+    IF stepI > 0
+      THEN pred := MSIR.CmpPred.Sle;
+      ELSE pred := MSIR.CmpPred.Sge;
+    END;
+    cond := MSIR.BuildICmp (headerBlk, "", pred, cur, limitVal);
+    MSIR.BuildCondBr (headerBlk, cond,
+                      bodyBlk, ARRAY OF MSIR.Value{},
+                      exitBlk, ARRAY OF MSIR.Value{});
+
+    (* Body. *)
+    MSIRBuilder.SetCurrentBlock (bodyBlk);
+    MSIRBuilder.PushExitBlock (exitBlk);
+    Stmt.CompileMSIR (p.body);
+    MSIRBuilder.PopExitBlock ();
+
+    (* Increment and loop back if body didn't terminate. *)
+    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      cur  := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, varAddr);
+      next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepConst);
+      MSIR.BuildStore (MSIRBuilder.CurrentBlock (), next, varAddr);
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk,
+                    ARRAY OF MSIR.Value{});
+    END;
+
+    MSIRBuilder.SetCurrentBlock (exitBlk);
+  END CompileMSIR;
 
 BEGIN
 END ForStmt.
