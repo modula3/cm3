@@ -1,9 +1,10 @@
 MODULE Main;
 
-IMPORT IO, Fmt;
+IMPORT IO, Fmt, Thread;
 
 EXCEPTION TestExcept;
 
+VAR gLock: MUTEX := NIL;  (* initialised in module body *)
 VAR gCounter: INTEGER := 0;
 VAR gBase: INTEGER := 100;
 VAR gRef: REFANY := NIL;
@@ -12,6 +13,14 @@ PROCEDURE IncrCounter () =
   BEGIN
     gCounter := gCounter + 1;
   END IncrCounter;
+
+PROCEDURE LockedIncr (): INTEGER =
+  BEGIN
+    LOCK gLock DO
+      gCounter := gCounter + 1;
+    END;
+    RETURN gCounter;
+  END LockedIncr;
 
 PROCEDURE AddToCounter (n: INTEGER) =
   BEGIN

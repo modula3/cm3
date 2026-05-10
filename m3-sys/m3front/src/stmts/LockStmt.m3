@@ -10,6 +10,7 @@ MODULE LockStmt;
 
 IMPORT M3ID, Expr, Mutex, Error, Type, Stmt, StmtRep, Token, Marker;
 IMPORT CG, Target, M3RT, Scanner, Procedure, RunTyme;
+IMPORT MSIR, MSIRBuilder;
 FROM Scanner IMPORT Match;
 
 TYPE
@@ -21,6 +22,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -194,6 +196,88 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.GetOutcome (p.body);
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  (* LOCK mu DO body END  ≡  mu.acquire(); TRY body FINALLY mu.release() END
+     MUTEX vtable: slot 0 = acquire  (M3RT.MUTEX_acquire = 0 bytes)
+                   slot 1 = release  (M3RT.MUTEX_release = 8 bytes on 64-bit) *)
+  VAR
+    mu:        MSIR.Value;
+    lpad:      MSIR.Block;
+    finBody:   MSIR.Block;
+    resumeBlk: MSIR.Block;
+    merge:     MSIR.Block;
+    lpSlot:    MSIR.Value;
+    excFlag:   MSIR.Value;
+    lpVal:     MSIR.Value;
+    excFlagV:  MSIR.Value;
+    lpLoaded:  MSIR.Value;
+    lpType:    MSIR.T;
+    zero, one: MSIR.Value;
+  BEGIN
+    IF NOT MSIRBuilder.InProc() THEN RETURN END;
+
+    (* Compile the mutex expression. *)
+    mu := Expr.CompileMSIR(p.mutex);
+    IF mu = NIL THEN RETURN END;
+
+    (* Acquire the mutex: mu.acquire() — vtable slot 0. *)
+    EVAL MSIRBuilder.EmitMethodCall("", mu, 0L, MSIR.TVoid(),
+                                     ARRAY OF MSIR.Value{});
+    IF NOT MSIRBuilder.InProc() THEN RETURN END;
+
+    (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR. *)
+    lpType := MSIR.TLandingPad();
+    zero   := MSIR.ConstInt(MSIR.TI1(), 0L);
+    one    := MSIR.ConstInt(MSIR.TI1(), 1L);
+
+    lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
+    excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());
+    MSIR.BuildStore(MSIRBuilder.CurrentBlock(), zero, excFlag);
+
+    lpad      := MSIRBuilder.NewBlock("lock.lpad");
+    finBody   := MSIRBuilder.NewBlock("lock.fin");
+    resumeBlk := MSIRBuilder.NewBlock("lock.resume");
+    merge     := MSIRBuilder.NewBlock("lock.done");
+
+    (* Body inside TRY (lpad = cleanup unwind target). *)
+    MSIRBuilder.PushTryContext(lpad);
+    Stmt.CompileMSIR(p.body);
+    MSIRBuilder.PopTryContext();
+
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
+    END;
+
+    (* Landing pad: save lp value, set exceptional flag. *)
+    lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := TRUE);
+    MSIR.BuildStore(lpad, lpVal, lpSlot);
+    MSIR.BuildStore(lpad, one, excFlag);
+    MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
+
+    (* Finally body: release the mutex — vtable slot 1.
+       Release is called outside our own lpad (already popped), so if it throws
+       the exception propagates to any enclosing TRY rather than looping back. *)
+    MSIRBuilder.SetCurrentBlock(finBody);
+    EVAL MSIRBuilder.EmitMethodCall("", mu, 1L, MSIR.TVoid(),
+                                     ARRAY OF MSIR.Value{});
+    IF NOT MSIRBuilder.InProc() THEN RETURN END;
+
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      excFlagV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "",
+                                 MSIR.TI1(), excFlag);
+      MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), excFlagV,
+                       resumeBlk, ARRAY OF MSIR.Value{},
+                       merge,     ARRAY OF MSIR.Value{});
+    END;
+
+    (* Resume: reload saved landing pad and resume unwinding. *)
+    MSIRBuilder.SetCurrentBlock(resumeBlk);
+    lpLoaded := MSIR.BuildLoad(resumeBlk, "", lpType, lpSlot);
+    MSIR.BuildResume(resumeBlk, lpLoaded);
+
+    MSIRBuilder.SetCurrentBlock(merge);
+  END CompileMSIR;
 
 BEGIN
 END LockStmt.

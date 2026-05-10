@@ -869,9 +869,11 @@ PROCEDURE HasInvoke(p: MSIR.Proc): BOOLEAN =
         ni := MSIR.BlockInsnCount(b);
       BEGIN
         FOR ii := 0 TO ni - 1 DO
-          IF MSIR.InsnOp(MSIR.BlockInsn(b, ii)) = MSIR.Op.Invoke OR
-             MSIR.InsnOp(MSIR.BlockInsn(b, ii)) = MSIR.Op.InvokeIndirect THEN
-            RETURN TRUE;
+          CASE MSIR.InsnOp(MSIR.BlockInsn(b, ii)) OF
+          | MSIR.Op.Invoke, MSIR.Op.InvokeIndirect,
+            MSIR.Op.LandingPad, MSIR.Op.Resume =>
+              RETURN TRUE;
+          ELSE
           END;
         END;
       END;
