@@ -533,7 +533,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         IF MSIR.InsnIsCleanup(i) THEN
           Wr.PutText(wr, "          cleanup\n");
         ELSE
-          Wr.PutText(wr, "          catch ptr @_ZTI7_M3Exc\n");
+          Wr.PutText(wr, "          catch ptr @_ZTI6_M3Exc\n");
         END;
 
     | MSIR.Op.ExtractValue =>
@@ -831,6 +831,81 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, "\n");
   END EmitDeclare;
 
+(*----------------------------------------------- module binder emission *)
+
+(* Emit the RTLinker binder function @<Mod>_M3 and the RT0.ModuleInfo
+   struct @<Mod>_M3_info.
+
+   RT0.ModuleInfo layout (64-bit, MI_SIZE=104 bytes, 13 fields):
+     [0]   file           ptr  -- module source filename (null = unknown)
+     [8]   type_cells     ptr  -- type/exception descriptor array (null = none)
+     [16]  type_cell_ptrs ptr  -- pointers into type cell array (null)
+     [24]  full_rev       ptr  -- full revelation table (null)
+     [32]  part_rev       ptr  -- partial revelation table (null)
+     [40]  proc_info      ptr  -- procedure name/address pairs (null)
+     [48]  try_scopes     ptr  -- ex_frame scope table (null for ex_stack)
+     [56]  var_map        ptr  -- GC type map for globals (null for now)
+     [64]  gc_map         ptr  -- reduced GC map (null for now)
+     [72]  imports        ptr  -- import chain (null = no dependencies)
+     [80]  link_state     i64  -- 0=unlinked (RTLinker updates)
+     [88]  binder         ptr  -- pointer to this binder function
+     [96]  gc_flags       i64  -- 3 = GC_gen | GC_inc
+
+   Binder calling convention (RT0.Binder):
+     mode=0 : return MI pointer without running module body (used by AddUnit)
+     mode=1 : run module body then return MI pointer (used by RunMainBody) *)
+PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
+  VAR
+    modName    := MSIR.ModuleName(m);
+    binderName := modName & "_M3";
+    infoName   := "@" & modName & "_M3_info";
+    bodyName   := "@" & modName & "__" & modName & "_M3";
+    bodyExists := FALSE;
+  BEGIN
+    (* Check whether the module body proc was compiled (not abandoned). *)
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_M3") THEN
+        bodyExists := TRUE;
+      END;
+    END;
+
+    (* ModuleInfo struct: mostly null; binder and gc_flags are set. *)
+    Wr.PutText(wr, "\n");
+    Wr.PutText(wr, "; RT0.ModuleInfo for " & modName & "\n");
+    Wr.PutText(wr, "%RT0_ModuleInfo_t = type { ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, ptr, i64 }\n");
+    Wr.PutText(wr, infoName & " = global %RT0_ModuleInfo_t {\n");
+    Wr.PutText(wr, "  ptr null,\n");    (* file *)
+    Wr.PutText(wr, "  ptr null,\n");    (* type_cells *)
+    Wr.PutText(wr, "  ptr null,\n");    (* type_cell_ptrs *)
+    Wr.PutText(wr, "  ptr null,\n");    (* full_rev *)
+    Wr.PutText(wr, "  ptr null,\n");    (* part_rev *)
+    Wr.PutText(wr, "  ptr null,\n");    (* proc_info *)
+    Wr.PutText(wr, "  ptr null,\n");    (* try_scopes *)
+    Wr.PutText(wr, "  ptr null,\n");    (* var_map *)
+    Wr.PutText(wr, "  ptr null,\n");    (* gc_map *)
+    Wr.PutText(wr, "  ptr null,\n");    (* imports *)
+    Wr.PutText(wr, "  i64 0,\n");       (* link_state: 0 = unlinked *)
+    Wr.PutText(wr, "  ptr @" & binderName & ",\n");  (* binder = ourselves *)
+    Wr.PutText(wr, "  i64 3\n");        (* gc_flags: GC_gen | GC_inc *)
+    Wr.PutText(wr, "}\n");
+
+    (* Binder function: mode=0 → return MI; mode=1 → run body + return MI. *)
+    Wr.PutText(wr, "\ndefine ptr @" & binderName & "(i64 %mode) {\n");
+    IF bodyExists THEN
+      Wr.PutText(wr, "entry:\n");
+      Wr.PutText(wr, "  %do_body = icmp ne i64 %mode, 0\n");
+      Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
+      Wr.PutText(wr, "run:\n");
+      Wr.PutText(wr, "  call void " & bodyName & "()\n");
+      Wr.PutText(wr, "  br label %done\n");
+      Wr.PutText(wr, "done:\n");
+    ELSE
+      Wr.PutText(wr, "entry:\n");
+    END;
+    Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+    Wr.PutText(wr, "}\n");
+  END EmitModuleBinder;
+
 (*------------------------------------------------------ module emission *)
 
 PROCEDURE ModuleHasEH(m: MSIR.Module): BOOLEAN =
@@ -894,7 +969,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
 
     (* EH externs — emitted once per module when any proc uses invoke *)
     IF needsEH THEN
-      Wr.PutText(wr, "@_ZTI7_M3Exc = external constant ptr\n");
+      Wr.PutText(wr, "@_ZTI6_M3Exc = external constant ptr\n");
       Wr.PutText(wr, "declare i32 @__gxx_personality_v0(...)\n");
       Wr.PutText(wr, "\n");
     END;
@@ -924,6 +999,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       EmitProc(wr, MSIR.ModuleProc(m, i));
     END;
+
+    (* RTLinker binder and ModuleInfo descriptor *)
+    EmitModuleBinder(wr, m);
   END Module;
 
 BEGIN

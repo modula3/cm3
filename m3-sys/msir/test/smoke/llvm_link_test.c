@@ -26,7 +26,7 @@ void RTHooks__CheckStoreTraced(void *dst)   { (void)dst; }
 /* Stub for the C++ typeinfo of _M3Exc, required by the EH exception tables
    emitted by LLVM for TRY/EXCEPT procs.  Content is irrelevant for these
    normal-path tests since no exception is actually thrown. */
-void *_ZTI7_M3Exc[2] = { 0, 0 };
+void *_ZTI6_M3Exc[2] = { 0, 0 };
 
 /* ---- M3 procedure declarations ---- */
 extern M3Int  Main__Add(M3Int a, M3Int b);
