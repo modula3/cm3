@@ -667,34 +667,31 @@ PROCEDURE CompileMSIR (p: P) =
     END;
 
     (* Build landing pad: catch _M3Exc, extract exception UID.
-       The Itanium C++ ABI requires __cxa_begin_catch to convert the
-       exception-header pointer (field 0 of the landingpad result) to the
-       actual thrown exception object pointer.  Without this call, field 0
-       is the _Unwind_Exception header (starting with the ABI magic bytes
-       "CLNGC++" = 0x434c4e47432b2b00) — NOT the _M3Exc struct.
+       Use __cxa_get_exception_ptr to PEEK at the exception object without
+       acquiring ownership — no matching __cxa_end_catch needed here.
+       This avoids pairing problems: ownership is acquired only inside the
+       matched handler body (with __cxa_begin_catch / __cxa_end_catch strictly
+       bracketed), and the no-match path resumes without any cleanup.
 
-       After __cxa_begin_catch, %excObjPtr = &_M3Exc{act}.
-       _M3Exc.act (ptr to RaiseActivation) is at offset 0 of the thrown obj.
-       RaiseActivation.exception (ExceptionPtr) is at M3RT.EA_exception = 0.
-       ExceptionPtr^.uid (i64) is the first field of the exception descriptor.
-       Three sequential loads are correct because all three offsets are 0.
-
-       __cxa_end_catch must be called once per __cxa_begin_catch before every
-       exit (handler fall-through, else clause, or resume). *)
-    VAR beginCatch := MSIRBuilder.CxaBeginCatch();
-        endCatch   := MSIRBuilder.CxaEndCatch();
+       Itanium ABI note: landingpad field 0 is the _Unwind_Exception header
+       (starts with the ABI magic "CLNGC++"), not the thrown _M3Exc object.
+       __cxa_get_exception_ptr / __cxa_begin_catch translate header → object. *)
+    VAR
+      getPtr     := MSIRBuilder.CxaGetExceptionPtr();
+      beginCatch := MSIRBuilder.CxaBeginCatch();
+      endCatch   := MSIRBuilder.CxaEndCatch();
+      excHeader  : MSIR.Value;
     BEGIN
-    IF beginCatch = NIL OR endCatch = NIL THEN
-      MSIRBuilder.Abandon("TRY/EXCEPT: __cxa_begin_catch not available");
+    IF getPtr = NIL OR beginCatch = NIL OR endCatch = NIL THEN
+      MSIRBuilder.Abandon("TRY/EXCEPT: C++ ABI helpers not available");
       RETURN;
     END;
 
     lpVal      := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
-    VAR excHeader := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
-    BEGIN
-    excObjPtr  := MSIR.BuildCall(lpad, "", beginCatch,
+    excHeader  := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
+    (* Peek at exception object (no ownership — no end_catch needed). *)
+    excObjPtr  := MSIR.BuildCall(lpad, "", getPtr,
                                   ARRAY OF MSIR.Value{excHeader});
-    END;
     actPtr     := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr);
     excDescPtr := MSIR.BuildLoad(lpad, "", ptrT, actPtr);
     uid        := MSIR.BuildLoad(lpad, "", MSIR.TI(64), excDescPtr);
@@ -706,9 +703,6 @@ PROCEDURE CompileMSIR (p: P) =
       hBody := MSIRBuilder.NewBlock("h.body");
       e := h.tags;
       WHILE e # NIL DO
-        (* Compute the exception fingerprint the same way SetGlobals does.
-           Exceptionz.UID requires Declarer to have run first; computing
-           directly from the name is safe at any compilation phase. *)
         uidConst := MSIR.ConstInt(MSIR.TI(64),
                       VAL(M3FP.ToInt(M3FP.FromText(Value.GlobalName(e.obj))),
                           LONGINT));
@@ -722,9 +716,16 @@ PROCEDURE CompileMSIR (p: P) =
         e := e.next;
       END;
 
-      (* Compile handler body; fall-through → end_catch + merge. *)
+      (* Handler body: acquire ownership here, compile body, release after.
+         __cxa_begin_catch is the FIRST insn; end_catch is emitted:
+           – before any ret   via MSIRBuilder.CurrentCatchEndProc() in ReturnStmt
+           – before br merge  via the explicit call below on fall-through *)
+      EVAL MSIR.BuildCall(hBody, "", beginCatch,
+                           ARRAY OF MSIR.Value{excHeader});
       MSIRBuilder.SetCurrentBlock(hBody);
+      MSIRBuilder.PushCatchContext(endCatch);
       Stmt.CompileMSIR(h.body);
+      MSIRBuilder.PopCatchContext();
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
         EVAL MSIR.BuildCall(MSIRBuilder.CurrentBlock(), "", endCatch,
                              ARRAY OF MSIR.Value{});
@@ -734,21 +735,17 @@ PROCEDURE CompileMSIR (p: P) =
       h := h.next;
     END;
 
-    (* ELSE clause or resume (re-throw) when no handler matched.
-       Must call __cxa_end_catch before resume to balance begin_catch. *)
+    (* No ownership was acquired for the no-match path — just resume. *)
     MSIRBuilder.SetCurrentBlock(checkBlk);
     IF p.hasElse THEN
-      EVAL MSIR.BuildCall(checkBlk, "", endCatch, ARRAY OF MSIR.Value{});
-      MSIRBuilder.SetCurrentBlock(checkBlk);
       Stmt.CompileMSIR(p.elseBody);
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
         MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
       END;
     ELSE
-      EVAL MSIR.BuildCall(checkBlk, "", endCatch, ARRAY OF MSIR.Value{});
       MSIR.BuildResume(checkBlk, lpVal);
     END;
-    END; (* VAR beginCatch, endCatch *)
+    END; (* VAR getPtr, beginCatch, endCatch, excHeader *)
 
     MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;

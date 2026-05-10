@@ -67,13 +67,19 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (p: P) =
-  VAR v: MSIR.Value := NIL;
+  VAR v: MSIR.Value := NIL;  endCatch: MSIR.Proc;
   BEGIN
     IF NOT MSIRBuilder.InProc ()              THEN RETURN END;
     IF MSIRBuilder.CurrentBlockTerminated ()  THEN RETURN END;
     IF p.expr # NIL THEN
       v := Expr.CompileMSIR (p.expr);
       IF v = NIL THEN RETURN END;
+    END;
+    (* If returning from inside a catch handler, release the exception first. *)
+    endCatch := MSIRBuilder.CurrentCatchEndProc ();
+    IF endCatch # NIL THEN
+      EVAL MSIR.BuildCall (MSIRBuilder.CurrentBlock (), "", endCatch,
+                           ARRAY OF MSIR.Value {});
     END;
     MSIR.BuildRet (MSIRBuilder.CurrentBlock (), v);
   END CompileMSIR;

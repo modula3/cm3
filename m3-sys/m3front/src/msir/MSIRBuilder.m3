@@ -7,6 +7,7 @@ IMPORT RunTyme, Procedure, M3FP;
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
 CONST MaxTryDepth  = 16;
+CONST MaxCatchDepth = 16;
 CONST MaxProcMap   = 128;
 CONST MaxGlobalMap = 256;
 
@@ -36,6 +37,9 @@ VAR
   tryStack:  ARRAY [0..MaxTryDepth-1] OF MSIR.Block;
   tryDepth:  INTEGER := 0;
 
+  catchStack: ARRAY [0..MaxCatchDepth-1] OF MSIR.Proc;  (* endCatch procs *)
+  catchDepth: INTEGER := 0;
+
   procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
   procMapN: INTEGER := 0;
 
@@ -59,6 +63,7 @@ PROCEDURE BeginProc(name: M3ID.T;
     varMapN   := 0;
     exitDepth := 0;
     tryDepth  := 0;
+    catchDepth := 0;
     blockSeq  := 0;
 
     resultT := MSIRType.TranslateResult(result);
@@ -317,6 +322,7 @@ PROCEDURE EndProc() =
     varMapN   := 0;
     exitDepth := 0;
     tryDepth  := 0;
+    catchDepth := 0;
   END EndProc;
 
 PROCEDURE Abandon(reason: TEXT) =
@@ -520,6 +526,35 @@ PROCEDURE CxaEndCatch(): MSIR.Proc =
     RETURN CxaStub("__cxa_end_catch", ARRAY OF MSIR.Param{}, MSIR.TVoid());
   END CxaEndCatch;
 
+PROCEDURE CxaGetExceptionPtr(): MSIR.Proc =
+  VAR params := ARRAY [0..0] OF MSIR.Param{
+    MSIR.Param{name := "exc_header", type := MSIR.TPtr(MSIR.TVoid()),
+               mode := MSIR.ParamMode.ByValue}};
+  BEGIN
+    RETURN CxaStub("__cxa_get_exception_ptr", params, MSIR.TPtr(MSIR.TVoid()));
+  END CxaGetExceptionPtr;
+
+PROCEDURE PushCatchContext(endCatch: MSIR.Proc) =
+  BEGIN
+    IF catchDepth < MaxCatchDepth THEN
+      catchStack[catchDepth] := endCatch;
+      INC(catchDepth);
+    ELSE
+      Abandon("catch context stack overflow");
+    END;
+  END PushCatchContext;
+
+PROCEDURE PopCatchContext() =
+  BEGIN
+    IF catchDepth > 0 THEN DEC(catchDepth) END;
+  END PopCatchContext;
+
+PROCEDURE CurrentCatchEndProc(): MSIR.Proc =
+  BEGIN
+    IF catchDepth = 0 THEN RETURN NIL END;
+    RETURN catchStack[catchDepth - 1];
+  END CurrentCatchEndProc;
+
 PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
   VAR proc: Procedure.T;
   BEGIN
@@ -633,6 +668,7 @@ PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
     varMapN   := 0;
     exitDepth := 0;
     tryDepth  := 0;
+    catchDepth := 0;
     blockSeq  := 0;
     resultT   := MSIR.TVoid();
     curProc  := MSIR.NewProc(name, ARRAY OF MSIR.Param{}, resultT);

@@ -1155,8 +1155,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     IF needsEH THEN
       Wr.PutText(wr, "@_ZTI6_M3Exc = external constant ptr\n");
       Wr.PutText(wr, "declare i32 @__gxx_personality_v0(...)\n");
-      (* Note: @__cxa_begin_catch and @__cxa_end_catch are declared automatically
-         by CollectExterns since they appear as Call callees in catch landingpads. *)
+      (* __cxa_get_exception_ptr, __cxa_begin_catch, __cxa_end_catch are all
+         declared automatically by CollectExterns (they appear as Call callees
+         in catch landingpads). *)
       Wr.PutText(wr, "\n");
     END;
 

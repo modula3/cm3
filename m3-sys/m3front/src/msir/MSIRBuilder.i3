@@ -121,8 +121,18 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
      (field 0 of the landingpad result) to the actual thrown exception object.
    CxaEndCatch()             — releases the exception; must be called once
      per CxaBeginCatch, before every exit from the handler (including resume). *)
-PROCEDURE CxaBeginCatch (): MSIR.Proc;
-PROCEDURE CxaEndCatch   (): MSIR.Proc;
+PROCEDURE CxaBeginCatch      (): MSIR.Proc;
+PROCEDURE CxaEndCatch        (): MSIR.Proc;
+PROCEDURE CxaGetExceptionPtr (): MSIR.Proc;
+  (* __cxa_get_exception_ptr(ptr) -> ptr: peek at the exception object
+     WITHOUT acquiring ownership — no matching __cxa_end_catch needed. *)
+
+(* Catch-handler context stack.  Push before compiling a handler body so that
+   ReturnStmt.CompileMSIR can emit __cxa_end_catch before any ret inside the
+   handler.  Pop after the handler body is compiled. *)
+PROCEDURE PushCatchContext (endCatch: MSIR.Proc);
+PROCEDURE PopCatchContext  ();
+PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
 
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
                           rtype: MSIR.T;
