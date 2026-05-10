@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-10 (msir branch)
 
-## What's Working (64/64 tests pass)
+## What's Working (68/68 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -33,6 +33,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] `@Module_M3(i64 %mode)` RTLinker binder (mode=0: return MI; mode=1: run body+return MI)
 - [x] `@Module_M3_info` RT0.ModuleInfo descriptor (binder and gc_flags set; other fields null)
 - [x] GC barrier extern declarations (`RTHooks__CheckLoadTracedRef/CheckStoreTraced`)
+- [x] RAISE statement: per-exception `ExceptionDesc` static (`{ uid, null, 0 }`), `RTHooks__Raise` via `HookProc(RaiseEx)`, Itanium ABI `__cxa_begin_catch` fix in catch landingpads
 
 ---
 
@@ -44,10 +45,8 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [ ] `var_map` / `gc_map` — GC root map for traced globals; needed for correct GC under collection
 - [ ] Module body TEXT/IO — `Fmt.Int` etc. call correctly but string concatenation and IO.Put crash without TYPECASE/TEXT support
 
-### B. RAISE statement
-- `Op.Raise` defined in MSIR but lowering not implemented
-- Needs: allocate `RaiseActivation` on heap, fill UID+arg, call `RTHooks__Raise`
-- Prerequisite for testing real exception flow end-to-end
+### B. ~~RAISE statement~~ ✓ Done
+- Known gap: `__cxa_end_catch` missing for matched handlers that exit via `ret` (exception object leaks until process exit; no crash). Fall-through handlers and no-match resume both call it correctly.
 
 ### C. Exception value binding
 - `EXCEPT E(v) =>` handler with bound variable skipped (falls back to body-only)
@@ -80,7 +79,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (64 checks)
+# Full end-to-end LLVM link test (68 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path; body fails on TEXT/IO)

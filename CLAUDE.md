@@ -225,12 +225,13 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (64/64 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (68/68 tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
 - VAR/READONLY params, INC/DEC
 - Exception handling: TRY/EXCEPT (UID-dispatch landingpad) and TRY/FINALLY (cleanup landingpad + resume)
+- RAISE statement: per-exception `ExceptionDesc` static global (`{ uid, null, 0 }`), calls `RTHooks__Raise` via `HookProc(RaiseEx)`, emits `unreachable` after
 - GC read barrier (nil/misaligned/gray-bit inline fast path + `RTHooks__CheckLoadTracedRef`)
 - GC write barrier infrastructure (`GcStore` container operand, dirty-bit check + `RTHooks__CheckStoreTraced` for heap fields; globals are GC roots and need no barrier)
 - RTLinker binder (`@Module_M3`) and `RT0.ModuleInfo` struct (`@Module_M3_info`) emitted in LLVM IR
@@ -311,8 +312,8 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 
 ### Known Limitations / Remaining Work
 
-- **RAISE statement**: `Op.Raise` is defined but lowering not implemented; needs to build `RaiseActivation` on heap and call `RTHooks__Raise`
 - **Exception value binding**: `EXCEPT E(v) =>` skipped (falls back to body-only); requires extracting arg from activation record
+- **`__cxa_end_catch` in matched handlers**: catch handlers that exit via `ret` are missing `__cxa_end_catch()` — exception object leaks until process exit (no crash). Handlers that fall through to merge call it correctly.
 - **TYPECASE**: not implemented; calls `MSIRBuilder.Abandon`
 - **Method dispatch**: not implemented
 - **LOCK**: not implemented
