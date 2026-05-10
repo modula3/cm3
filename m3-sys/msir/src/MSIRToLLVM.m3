@@ -5,9 +5,15 @@ IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr;
 
 (*----------------------------------------------------- module-level state *)
 
+TYPE TCEntry = REF RECORD
+  name : TEXT;                   (* "@tc.table.N" *)
+  uids : REF ARRAY OF LONGINT;   (* type UIDs; last entry is 0 (ELSE) *)
+END;
+
 VAR
   auxN:          INTEGER     := 0;
   curEmitModule: MSIR.Module := NIL;
+  pendingTC:     RefSeq.T    := NIL;   (* TCEntry list, built during EmitInsn *)
 
 (*------------------------------------------------------ auxiliary naming *)
 
@@ -629,6 +635,58 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "\n");
         END;
 
+    | MSIR.Op.Typecase =>
+        (* Emit the RTHooks__ScanTypecase call and a switch on the result.
+           The type table (@tc.table.N) is a mutable global (ScanTypecase
+           lazily fills the defn pointer) collected in pendingTC and emitted
+           after all function definitions. *)
+        VAR
+          nClauses := MSIR.InsnTypecaseClauseCount(i);
+          refV     := MSIR.InsnOperand(i, 0);
+          tblN     : TEXT;
+          tblName  : TEXT;
+          idxName  : TEXT;
+          uids     : REF ARRAY OF LONGINT;
+        BEGIN
+          INC(auxN);
+          tblN    := Fmt.Int(auxN);
+          tblName := "@tc.table." & tblN;
+          idxName := "%__tc_idx." & tblN;
+
+          (* Collect UIDs for the pending type table. *)
+          uids := NEW(REF ARRAY OF LONGINT, nClauses);
+          FOR k := 0 TO nClauses - 1 DO
+            uids[k] := MSIR.InsnTypecaseClause(i, k).uid;
+          END;
+          IF pendingTC = NIL THEN pendingTC := NEW(RefSeq.T).init() END;
+          VAR ent := NEW(TCEntry);
+          BEGIN
+            ent.name := tblName;
+            ent.uids := uids;
+            pendingTC.addhi(ent);
+          END;
+
+          (* Call RTHooks__ScanTypecase(ref, table) → index. *)
+          Wr.PutText(wr, "  " & idxName & " = call i64 @RTHooks__ScanTypecase(ptr ");
+          LLOpVal(wr, refV);
+          Wr.PutText(wr, ", ptr " & tblName & ")\n");
+
+          (* Switch on index: ELSE clause is the default (last clause). *)
+          VAR elseClause := MSIR.InsnTypecaseClause(i, nClauses - 1);
+          BEGIN
+            Wr.PutText(wr, "  switch i64 " & idxName & ", label %");
+            Wr.PutText(wr, MSIR.BlockLabel(elseClause.block) & " [\n");
+            FOR k := 0 TO nClauses - 2 DO  (* non-ELSE clauses *)
+              VAR cl := MSIR.InsnTypecaseClause(i, k);
+              BEGIN
+                Wr.PutText(wr, "    i64 " & Fmt.Int(k) & ", label %");
+                Wr.PutText(wr, MSIR.BlockLabel(cl.block) & "\n");
+              END;
+            END;
+            Wr.PutText(wr, "  ]\n");
+          END;
+        END;
+
     ELSE
         Wr.PutText(wr, "  ; unhandled op\n");
     END;
@@ -955,6 +1013,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
   BEGIN
     curEmitModule := m;
     auxN          := 0;
+    pendingTC     := NIL;
     needsEH       := ModuleHasEH(m);
     needsGC       := ModuleHasGcOps(m);
     Wr.PutText(wr, "; ModuleID = '" & MSIR.ModuleName(m) & "'\n");
@@ -1002,6 +1061,29 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
 
     (* RTLinker binder and ModuleInfo descriptor *)
     EmitModuleBinder(wr, m);
+
+    (* Emit mutable type-table globals collected during typecase emission.
+       ScanTypecase lazily fills the defn pointer so these must be global
+       (not constant).  TypecaseCell = { ptr defn, i64 uid } (16 bytes). *)
+    IF pendingTC # NIL AND pendingTC.size() > 0 THEN
+      Wr.PutText(wr, "\n; TYPECASE type tables (RTHooks__ScanTypecase)\n");
+      Wr.PutText(wr, "declare i64 @RTHooks__ScanTypecase(ptr, ptr)\n");
+      FOR ti := 0 TO pendingTC.size() - 1 DO
+        VAR ent := NARROW(pendingTC.get(ti), TCEntry);
+            n   := NUMBER(ent.uids^);
+        BEGIN
+          Wr.PutText(wr, ent.name & " = internal global [" & Fmt.Int(n));
+          Wr.PutText(wr, " x { ptr, i64 }] [");
+          FOR k := 0 TO n - 1 DO
+            IF k > 0 THEN Wr.PutText(wr, ", ") END;
+            (* Each element needs the struct type prefix in LLVM array literals. *)
+            Wr.PutText(wr, "{ ptr, i64 } { ptr null, i64 " & Fmt.LongInt(ent.uids[k]) & " }");
+          END;
+          Wr.PutText(wr, "]\n");
+        END;
+      END;
+      pendingTC := NIL;
+    END;
   END Module;
 
 BEGIN

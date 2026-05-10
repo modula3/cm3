@@ -11,6 +11,7 @@ MODULE TypeCaseStmt;
 IMPORT M3ID, CG, Expr, Stmt, StmtRep, Type, Variable, Scope;
 IMPORT Error, Token, ObjectAdr, Scanner;
 IMPORT Host, Reff, Target, Tracer, Module, RunTyme, Procedure;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 
 TYPE
@@ -25,6 +26,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
       END;
 
 TYPE
@@ -379,6 +381,104 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     IF (p.hasElse) THEN  oc := oc + Stmt.GetOutcome (p.elseBody)  END;
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    c        : Case;
+    refVal   : MSIR.Value;
+    merge    : MSIR.Block;
+    elseBlk  : MSIR.Block;
+    nLabels  : INTEGER;
+    clauses  : REF ARRAY OF MSIR.TypecaseClause;
+    cIdx     : INTEGER;
+    cBlk     : MSIR.Block;
+    varAddr  : MSIR.Value;
+    narrowed : MSIR.Value;
+    mt       : MSIR.T;
+  BEGIN
+    IF NOT MSIRBuilder.InProc () THEN RETURN END;
+
+    (* Compile the discriminant expression. *)
+    refVal := Expr.CompileMSIR (p.expr);
+    IF refVal = NIL THEN
+      MSIRBuilder.Abandon ("typecase: cannot compile selector expression");
+      RETURN;
+    END;
+
+    (* Count total type labels across all cases. *)
+    nLabels := 0;
+    c := p.cases;
+    WHILE c # NIL DO INC (nLabels, c.nTags);  c := c.next END;
+
+    (* Build MSIR clause array: one entry per type label + ELSE terminator. *)
+    clauses := NEW (REF ARRAY OF MSIR.TypecaseClause, nLabels + 1);
+    cIdx := 0;
+    c := p.cases;
+    WHILE c # NIL DO
+      cBlk := MSIRBuilder.NewBlock ("tc.case");
+      FOR z := 0 TO c.nTags - 1 DO
+        mt := MSIRType.Translate (c.tags[z]);
+        clauses[cIdx].isElse     := FALSE;
+        clauses[cIdx].uid        := VAL (Type.GlobalUID (c.tags[z]), LONGINT);
+        clauses[cIdx].targetType := mt;
+        clauses[cIdx].block      := cBlk;
+        INC (cIdx);
+      END;
+      c := c.next;
+    END;
+    (* ELSE terminator (uid=0). *)
+    elseBlk := MSIRBuilder.NewBlock ("tc.else");
+    clauses[cIdx].isElse     := TRUE;
+    clauses[cIdx].uid        := 0L;
+    clauses[cIdx].targetType := NIL;
+    clauses[cIdx].block      := elseBlk;
+
+    merge := MSIRBuilder.NewBlock ("tc.merge");
+
+    (* Emit the typecase terminator on the current block. *)
+    MSIR.BuildTypecase (MSIRBuilder.CurrentBlock (), refVal, clauses^);
+
+    (* Compile each case body. *)
+    cIdx := 0;
+    c := p.cases;
+    WHILE c # NIL DO
+      (* cBlk is the block for this case — all tags in a case share one block. *)
+      MSIRBuilder.SetCurrentBlock (clauses[cIdx].block);
+
+      (* Bind the narrowed variable if present. *)
+      IF c.scope # NIL THEN
+        varAddr := MSIRBuilder.LookupVarAddr (c.var);
+        IF varAddr # NIL THEN
+          mt := MSIRType.Translate (c.tags[0]);
+          IF mt = NIL THEN mt := MSIR.ValueType (refVal) END;
+          narrowed := MSIR.BuildConvert (
+            MSIRBuilder.CurrentBlock (), "", refVal, mt);
+          MSIR.BuildStore (MSIRBuilder.CurrentBlock (), narrowed, varAddr);
+        END;
+      END;
+
+      Stmt.CompileMSIR (c.stmt);
+      IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), merge,
+                      ARRAY OF MSIR.Value {});
+      END;
+
+      INC (cIdx, c.nTags);
+      c := c.next;
+    END;
+
+    (* Compile the ELSE body. *)
+    MSIRBuilder.SetCurrentBlock (elseBlk);
+    IF p.hasElse THEN
+      Stmt.CompileMSIR (p.elseBody);
+    END;
+    IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), merge,
+                    ARRAY OF MSIR.Value {});
+    END;
+
+    MSIRBuilder.SetCurrentBlock (merge);
+  END CompileMSIR;
 
 BEGIN
 END TypeCaseStmt.

@@ -86,6 +86,21 @@ extern M3Int  Main__GetCounter(void);
 extern M3Int  Main__TryFinNormal(void);
 extern M3Int  Main__TryExceptNormal(void);
 
+/* TYPECASE test */
+extern M3Int  Main__TypecaseKind(void *r);
+
+/* Stub for RTHooks__ScanTypecase used by TYPECASE lowering.
+   ScanTypecase(NIL, table) returns 0 per M3 spec (first clause) without
+   accessing any runtime state — safe in the uninitialised harness.
+   For non-NIL refs: walk the cell array to find the ELSE index (uid=0). */
+typedef struct { void *defn; long uid; } M3_TCCell;
+long RTHooks__ScanTypecase(void *ref, M3_TCCell *table) {
+    long i = 0;
+    if (ref == NULL) return 0;
+    while (table[i].uid != 0) ++i;
+    return i; /* ELSE index */
+}
+
 /* Direct access to module globals (zeroinitialised — no M3 module init runs) */
 extern M3Int  Main__gCounter;
 extern M3Int  Main__gBase;
@@ -217,6 +232,9 @@ int main(void) {
     /* EH — normal-path tests (no exception raised) */
     check_int("TryFinNormal()",     Main__TryFinNormal(),      11);
     check_int("TryExceptNormal()",  Main__TryExceptNormal(),    8);
+
+    /* TYPECASE dispatch — NIL path: ScanTypecase(NIL)=0 → first clause → 1 */
+    check_int("TypecaseKind(NULL)",   Main__TypecaseKind(NULL), 1);
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

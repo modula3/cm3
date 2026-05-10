@@ -348,12 +348,14 @@ PROCEDURE BuildNarrow(b: Block;  name: TEXT;
 PROCEDURE BuildIstype(b: Block;  name: TEXT;
                       obj: Value;  targetType: T): Value;
 
-(* TYPECASE is a structured terminator op. Each clause names a target type
-   (or ELSE) and a parameterized block. The block's first parameter (if any)
-   receives the matched value narrowed to the clause type. ELSE is mandatory
-   at MSIR level — m3front synthesizes one if source omits it. *)
+(* TYPECASE is a structured terminator op.  Each clause names a target type
+   (or ELSE) and a parameterized block.  ELSE is mandatory at MSIR level.
+   uid  = M3 type fingerprint (Type.GlobalUID) used to build the
+          RTHooks__ScanTypecase type table; 0 for the ELSE terminator.
+   targetType = MSIR type of the narrowed value (NIL if isElse). *)
 TYPE TypecaseClause = RECORD
   isElse:     BOOLEAN;
+  uid:        LONGINT;  (* M3 type UID; 0 for ELSE *)
   targetType: T;        (* NIL if isElse *)
   block:      Block;
 END;

@@ -383,6 +383,21 @@ PROCEDURE Neither (a, b: INTEGER): BOOLEAN =
     RETURN NOT (a > 0 OR b > 0);
   END Neither;
 
+(* TYPECASE: dispatch on dynamic type of a REFANY.
+   Returns 1 for REF INTEGER, 2 for REF BOOLEAN, 0 for ELSE.
+   No variable binding in clauses so calling with NIL is safe:
+   ScanTypecase(NIL) returns 0 (first clause) without accessing runtime state. *)
+TYPE RefBool = REF BOOLEAN;
+
+PROCEDURE TypecaseKind (r: REFANY): INTEGER =
+  BEGIN
+    TYPECASE r OF
+    | REF INTEGER => RETURN 1;
+    | RefBool     => RETURN 2;
+    ELSE            RETURN 0;
+    END;
+  END TypecaseKind;
+
 (* TRY/FINALLY normal path: finally block runs, result = 1 + 10 = 11 *)
 PROCEDURE TryFinNormal (): INTEGER =
   VAR n: INTEGER := 1;
@@ -499,6 +514,9 @@ BEGIN
   IO.Put ("EitherPos(-1, 4) = " & Fmt.Bool(EitherPos(-1, 4)) & "\n");
   IO.Put ("EitherPos(-1, -2) = " & Fmt.Bool(EitherPos(-1, -2)) & "\n");
   IO.Put ("Neither(-1, -2) = " & Fmt.Bool(Neither(-1, -2)) & "\n");
+
+  (* TYPECASE test *)
+  IO.Put ("TypecaseKind(NIL) = " & Fmt.Int(TypecaseKind(NIL)) & "\n");
 
   (* EH tests *)
   IO.Put ("TryFinNormal() = " & Fmt.Int(TryFinNormal()) & "\n");
