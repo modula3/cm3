@@ -953,8 +953,9 @@ PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value) =
     <* ASSERT Kind(slot.type) = TypeKind.GcSlot,
        "BuildGcStore: slot operand must be gc_slot" *>
     i.op := Op.GcStore;
-    ops[0] := slot;
-    ops[1] := value;
+    (* Operand order matches Store: ops[0]=value, ops[1]=slot/addr. *)
+    ops[0] := value;
+    ops[1] := slot;
     i.operands := ops;
     addInsn(b, i);
   END BuildGcStore;

@@ -154,6 +154,57 @@ PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
     RETURN -1;
   END FieldIndex;
 
+(*-------------------------------------------- GC read-barrier emission *)
+
+(* Emit the CM3 read barrier for a newly loaded traced reference.
+   refName is the SSA name of the loaded value (e.g. "%t1").
+   The barrier preserves the strong tricolor invariant by scanning
+   gray objects before the mutator can observe white references through them.
+
+   Barrier structure (all as inline LLVM blocks):
+     nil check:        skip if ref is null
+     misaligned check: skip if low bit is set (not a real heap ref)
+     gray-bit check:   skip if header gray bit is clear (object is clean)
+     slow path:        call RTHooks__CheckLoadTracedRef(ref)
+
+   Header layout (RT0.RefHeader = one word at -8 relative to object ptr):
+     bit 22 = gray bit (RH_gray_offset = 22, mask = 1<<22 = 4194304) *)
+PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
+  VAR n: TEXT;
+  BEGIN
+    INC(auxN);
+    n := Fmt.Int(auxN);
+    (* nil check *)
+    Wr.PutText(wr, "  %__gc_nil." & n & " = icmp eq ptr " & refName & ", null\n");
+    Wr.PutText(wr, "  br i1 %__gc_nil." & n
+                   & ", label %gc.skip." & n & ", label %gc.check." & n & "\n");
+    (* misaligned check: low bit set → not a real heap pointer *)
+    Wr.PutText(wr, "gc.check." & n & ":\n");
+    Wr.PutText(wr, "  %__gc_int." & n & " = ptrtoint ptr " & refName & " to i64\n");
+    Wr.PutText(wr, "  %__gc_low." & n & " = and i64 %__gc_int." & n & ", 1\n");
+    Wr.PutText(wr, "  %__gc_ma."  & n & " = icmp ne i64 %__gc_low." & n & ", 0\n");
+    Wr.PutText(wr, "  br i1 %__gc_ma." & n
+                   & ", label %gc.skip." & n & ", label %gc.gray." & n & "\n");
+    (* gray-bit check: read object header word (8 bytes before object ptr) *)
+    Wr.PutText(wr, "gc.gray." & n & ":\n");
+    Wr.PutText(wr, "  %__gc_hptr." & n
+                   & " = getelementptr i8, ptr " & refName & ", i64 -8\n");
+    Wr.PutText(wr, "  %__gc_hdr."  & n
+                   & " = load i64, ptr %__gc_hptr." & n & "\n");
+    Wr.PutText(wr, "  %__gc_gb."   & n
+                   & " = and i64 %__gc_hdr." & n & ", 4194304\n");
+    Wr.PutText(wr, "  %__gc_gr."   & n
+                   & " = icmp ne i64 %__gc_gb." & n & ", 0\n");
+    Wr.PutText(wr, "  br i1 %__gc_gr." & n
+                   & ", label %gc.slow." & n & ", label %gc.skip." & n & "\n");
+    (* slow path *)
+    Wr.PutText(wr, "gc.slow." & n & ":\n");
+    Wr.PutText(wr, "  call void @RTHooks__CheckLoadTracedRef(ptr " & refName & ")\n");
+    Wr.PutText(wr, "  br label %gc.skip." & n & "\n");
+    (* barrier exit — subsequent insns continue here *)
+    Wr.PutText(wr, "gc.skip." & n & ":\n");
+  END EmitGcReadBarrier;
+
 (*----------------------------------------------- floor div/mod helpers *)
 
 (* Emit Modula-3 floor division: q = floor(a / b) using sdiv + correction. *)
@@ -304,14 +355,37 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         LLType(wr, MSIR.InsnTargetType(i));
         Wr.PutText(wr, "\n");
 
-    | MSIR.Op.Load, MSIR.Op.GcLoad =>
+    | MSIR.Op.Load =>
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = load ");
         LLType(wr, MSIR.ValueType(res));
         Wr.PutText(wr, ", ptr ");
         LLOpVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, "\n");
 
-    | MSIR.Op.Store, MSIR.Op.GcStore =>
+    | MSIR.Op.GcLoad =>
+        (* Load the traced reference from the slot, then apply the CM3
+           read barrier: nil check → misaligned check → gray-bit check →
+           conditional call to RTHooks__CheckLoadTracedRef.
+           The barrier preserves the strong tricolor invariant by scanning
+           any gray object before the mutator uses it. *)
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = load ptr, ptr ");
+        LLOpVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, "\n");
+        EmitGcReadBarrier(wr, MSIR.ValueName(res));
+
+    | MSIR.Op.Store =>
+        Wr.PutText(wr, "  store ");
+        LLTypedVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ptr ");
+        LLOpVal(wr, MSIR.InsnOperand(i, 1));
+        Wr.PutText(wr, "\n");
+
+    | MSIR.Op.GcStore =>
+        (* ops[0]=value, ops[1]=slot — same convention as Store.
+           Write barrier deferred: current GcStores are all to module globals
+           (GC roots registered via module descriptor), which don't need a
+           barrier.  Heap-field GcStores will add a container operand and
+           the CheckStoreTraced call when implemented. *)
         Wr.PutText(wr, "  store ");
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ptr ");
@@ -716,16 +790,47 @@ PROCEDURE ModuleHasEH(m: MSIR.Module): BOOLEAN =
     RETURN FALSE;
   END ModuleHasEH;
 
+PROCEDURE ProcHasGcOp(p: MSIR.Proc): BOOLEAN =
+  VAR nb := MSIR.ProcBlockCount(p);
+  BEGIN
+    FOR bi := 0 TO nb - 1 DO
+      VAR
+        b  := MSIR.ProcBlock(p, bi);
+        ni := MSIR.BlockInsnCount(b);
+      BEGIN
+        FOR ii := 0 TO ni - 1 DO
+          VAR op := MSIR.InsnOp(MSIR.BlockInsn(b, ii));
+          BEGIN
+            IF op = MSIR.Op.GcLoad OR op = MSIR.Op.GcStore THEN
+              RETURN TRUE;
+            END;
+          END;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END ProcHasGcOp;
+
+PROCEDURE ModuleHasGcOps(m: MSIR.Module): BOOLEAN =
+  BEGIN
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      IF ProcHasGcOp(MSIR.ModuleProc(m, i)) THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END ModuleHasGcOps;
+
 PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
   VAR
     externs    := NEW(RefSeq.T).init();
     triple     := MSIR.ModuleTriple(m);
     datalayout := MSIR.ModuleDataLayout(m);
     needsEH    : BOOLEAN;
+    needsGC    : BOOLEAN;
   BEGIN
     curEmitModule := m;
     auxN          := 0;
     needsEH       := ModuleHasEH(m);
+    needsGC       := ModuleHasGcOps(m);
     Wr.PutText(wr, "; ModuleID = '" & MSIR.ModuleName(m) & "'\n");
     Wr.PutText(wr, "source_filename = \"" & MSIR.ModuleName(m) & "\"\n");
     IF datalayout # NIL THEN
@@ -740,6 +845,13 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     IF needsEH THEN
       Wr.PutText(wr, "@_ZTI7_M3Exc = external constant ptr\n");
       Wr.PutText(wr, "declare i32 @__gxx_personality_v0(...)\n");
+      Wr.PutText(wr, "\n");
+    END;
+
+    (* GC barrier externs — emitted when any proc uses gc.load / gc.store *)
+    IF needsGC THEN
+      Wr.PutText(wr, "declare void @RTHooks__CheckLoadTracedRef(ptr)\n");
+      Wr.PutText(wr, "declare void @RTHooks__CheckStoreTraced(ptr)\n");
       Wr.PutText(wr, "\n");
     END;
 

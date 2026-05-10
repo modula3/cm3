@@ -16,6 +16,13 @@ void *Fmt__Int(M3Int n, M3Int base) { return NULL; }
 void  IO__Put(void *t, void *wr)    { (void)t; (void)wr; }
 void *Fmt__Bool(M3Bool b)           { return NULL; }
 
+/* Stubs for GC write/read barrier slow paths.  These are only called when
+   a heap object is gray (read barrier) or not dirty (write barrier) during
+   an incremental collection.  In the link test no GC runs, so these are
+   never actually invoked. */
+void RTHooks__CheckLoadTracedRef(void *ref) { (void)ref; }
+void RTHooks__CheckStoreTraced(void *dst)   { (void)dst; }
+
 /* Stub for the C++ typeinfo of _M3Exc, required by the EH exception tables
    emitted by LLVM for TRY/EXCEPT procs.  Content is irrelevant for these
    normal-path tests since no exception is actually thrown. */

@@ -144,9 +144,10 @@ PROCEDURE CheckGcStore(c: Ctx;  i: MSIR.Insn) =
     IF MSIR.InsnOperandCount(i) # 2 THEN
       Err(c, "gc.store expects 2 operands"); RETURN;
     END;
-    slotT := MSIR.ValueType(MSIR.InsnOperand(i, 0));
+    (* ops[0]=value, ops[1]=slot — consistent with Store convention. *)
+    slotT := MSIR.ValueType(MSIR.InsnOperand(i, 1));
     IF MSIR.Kind(slotT) # MSIR.TypeKind.GcSlot THEN
-      Err(c, "gc.store first operand must be gc_slot");
+      Err(c, "gc.store second operand must be gc_slot");
     END;
   END CheckGcStore;
 
