@@ -21,6 +21,16 @@ VAR
 PROCEDURE NewAux(): TEXT =
   BEGIN INC(auxN); RETURN "%__ll" & Fmt.Int(auxN) END NewAux;
 
+(* Return the LLVM symbol name for a module hook proc.
+   If the proc was set via MSIR.SetModuleHooks (from RunTyme lookup in
+   MSIREmit), use LLSymbol so the name comes from the actual interface.
+   Falls back to the hardcoded name only when the proc is NIL. *)
+PROCEDURE LLHookName(p: MSIR.Proc;  fallback: TEXT): TEXT =
+  BEGIN
+    IF p # NIL THEN RETURN LLSymbol(p) END;
+    RETURN fallback;
+  END LLHookName;
+
 (* Capture LLOpVal(v) as a TEXT for use in barrier string templates. *)
 PROCEDURE LLOpValStr(v: MSIR.Value): TEXT =
   VAR wr2 := TextWr.New();
@@ -216,7 +226,10 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
                    & ", label %gc.slow." & n & ", label %gc.skip." & n & "\n");
     (* slow path *)
     Wr.PutText(wr, "gc.slow." & n & ":\n");
-    Wr.PutText(wr, "  call void @RTHooks__CheckLoadTracedRef(ptr " & refName & ")\n");
+    Wr.PutText(wr, "  call void @"
+                   & LLHookName(MSIR.ModuleGCLoadBarrier(curEmitModule),
+                                 "RTHooks__CheckLoadTracedRef")
+                   & "(ptr " & refName & ")\n");
     Wr.PutText(wr, "  br label %gc.skip." & n & "\n");
     (* barrier exit — subsequent insns continue here *)
     Wr.PutText(wr, "gc.skip." & n & ":\n");
@@ -260,7 +273,10 @@ PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
     Wr.PutText(wr, "  br i1 %__gc_wdirty." & n
                    & ", label %gc.wskip." & n & ", label %gc.wslow." & n & "\n");
     Wr.PutText(wr, "gc.wslow." & n & ":\n");
-    Wr.PutText(wr, "  call void @RTHooks__CheckStoreTraced(ptr " & containerName & ")\n");
+    Wr.PutText(wr, "  call void @"
+                   & LLHookName(MSIR.ModuleGCStoreBarrier(curEmitModule),
+                                 "RTHooks__CheckStoreTraced")
+                   & "(ptr " & containerName & ")\n");
     Wr.PutText(wr, "  br label %gc.wskip." & n & "\n");
     (* Store follows immediately after gc.wskip.N: label. *)
     Wr.PutText(wr, "gc.wskip." & n & ":\n");
@@ -729,8 +745,11 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             pendingTC.addhi(ent);
           END;
 
-          (* Call RTHooks__ScanTypecase(ref, table) → index. *)
-          Wr.PutText(wr, "  " & idxName & " = call i64 @RTHooks__ScanTypecase(ptr ");
+          (* Call ScanTypecase(ref, table) → index via registered hook proc. *)
+          Wr.PutText(wr, "  " & idxName & " = call i64 @"
+                         & LLHookName(MSIR.ModuleScanTypecase(curEmitModule),
+                                       "RTHooks__ScanTypecase")
+                         & "(ptr ");
           LLOpVal(wr, refV);
           Wr.PutText(wr, ", ptr " & tblName & ")\n");
 
@@ -1133,8 +1152,14 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
 
     (* GC barrier externs — emitted when any proc uses gc.load / gc.store *)
     IF needsGC THEN
-      Wr.PutText(wr, "declare void @RTHooks__CheckLoadTracedRef(ptr)\n");
-      Wr.PutText(wr, "declare void @RTHooks__CheckStoreTraced(ptr)\n");
+      Wr.PutText(wr, "declare void @"
+                     & LLHookName(MSIR.ModuleGCLoadBarrier(m),
+                                   "RTHooks__CheckLoadTracedRef")
+                     & "(ptr)\n");
+      Wr.PutText(wr, "declare void @"
+                     & LLHookName(MSIR.ModuleGCStoreBarrier(m),
+                                   "RTHooks__CheckStoreTraced")
+                     & "(ptr)\n");
       Wr.PutText(wr, "\n");
     END;
 
@@ -1164,8 +1189,14 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
        ScanTypecase lazily fills the defn pointer so these must be global
        (not constant).  TypecaseCell = { ptr defn, i64 uid } (16 bytes). *)
     IF pendingTC # NIL AND pendingTC.size() > 0 THEN
-      Wr.PutText(wr, "\n; TYPECASE type tables (RTHooks__ScanTypecase)\n");
-      Wr.PutText(wr, "declare i64 @RTHooks__ScanTypecase(ptr, ptr)\n");
+      Wr.PutText(wr, "\n; TYPECASE type tables ("
+                     & LLHookName(MSIR.ModuleScanTypecase(m),
+                                   "RTHooks__ScanTypecase")
+                     & ")\n");
+      Wr.PutText(wr, "declare i64 @"
+                     & LLHookName(MSIR.ModuleScanTypecase(m),
+                                   "RTHooks__ScanTypecase")
+                     & "(ptr, ptr)\n");
       FOR ti := 0 TO pendingTC.size() - 1 DO
         VAR ent := NARROW(pendingTC.get(ti), TCEntry);
             n   := NUMBER(ent.uids^);

@@ -1,6 +1,7 @@
 MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT RunTyme;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -65,6 +66,13 @@ PROCEDURE EndUnit() =
   VAR wr: Wr.T;  path: TEXT;  errs: REF ARRAY OF TEXT;
   BEGIN
     IF curModule = NIL THEN RETURN END;
+    (* Register hook procs now — RTHooks is available after full compilation
+       of the unit (imports resolved).  BeginUnit is too early: the Assert
+       in RunTyme.LookUpProc fires if hooks = NIL (RTHooks not yet seen). *)
+    MSIR.SetModuleHooks(curModule,
+      MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef),
+      MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced),
+      MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase));
     errs := MSIRVerifier.VerifyModule(curModule);
     IF errs # NIL THEN
       FOR i := 0 TO LAST(errs^) DO

@@ -200,6 +200,15 @@ PROCEDURE ModuleName(m: Module): TEXT;
 PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT);
 PROCEDURE ModuleTriple(m: Module): TEXT;
 PROCEDURE ModuleDataLayout(m: Module): TEXT;
+
+(* Register the RunTyme hook procs used by the GC barriers and typecase.
+   Called from MSIREmit after RunTyme lookup.  Pass NIL to use the fallback
+   hardcoded symbol names in the LLVM emitter. *)
+PROCEDURE SetModuleHooks(m: Module;
+                          gcLoad, gcStore, scanTypecase: Proc);
+PROCEDURE ModuleGCLoadBarrier  (m: Module): Proc;
+PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
+PROCEDURE ModuleScanTypecase   (m: Module): Proc;
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
 PROCEDURE ModuleImportCount(m: Module): INTEGER;
 PROCEDURE ModuleImport(m: Module;  i: INTEGER): TEXT;

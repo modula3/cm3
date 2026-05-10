@@ -676,6 +676,11 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
+  (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
+     fallback hardcoded names in the LLVM emitter. *)
+  gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
+  gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
+  scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
 END;
 
 REVEAL Global = BRANDED "MSIR.Global" REF RECORD
@@ -733,7 +738,22 @@ PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT) =
 PROCEDURE ModuleTriple(m: Module): TEXT =
   BEGIN RETURN m.triple END ModuleTriple;
 PROCEDURE ModuleDataLayout(m: Module): TEXT =
+
   BEGIN RETURN m.datalayout END ModuleDataLayout;
+
+PROCEDURE SetModuleHooks(m: Module;
+                          gcLoad, gcStore, scanTypecase: Proc) =
+  BEGIN
+    m.gcLoadBarrierProc  := gcLoad;
+    m.gcStoreBarrierProc := gcStore;
+    m.scanTypecaseProc   := scanTypecase;
+  END SetModuleHooks;
+PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
+  BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
+PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =
+  BEGIN RETURN m.gcStoreBarrierProc END ModuleGCStoreBarrier;
+PROCEDURE ModuleScanTypecase  (m: Module): Proc =
+  BEGIN RETURN m.scanTypecaseProc   END ModuleScanTypecase;
 
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT) =
   BEGIN m.imports.addhi(name) END ModuleAddImport;
