@@ -82,6 +82,7 @@ extern void   Main__AddToCounter(M3Int n);
 extern M3Int  Main__GetCounter(void);
 
 extern M3Int  Main__TryRaise(void);
+extern M3Int  Main__TryRaiseArg(void);  /* raises TestExceptArg(42), catches, returns 42 */
 extern M3Int  Main__TryFinNormal(void);
 extern M3Int  Main__TryExceptNormal(void);
 
@@ -233,6 +234,7 @@ int main(void) {
 
     /* EH — normal-path tests and RAISE round-trip */
     check_int("TryRaise()",         Main__TryRaise(),           1); /* raises and catches TestExcept */
+    check_int("TryRaiseArg()",      Main__TryRaiseArg(),        42); /* raises TestExceptArg(42), binds v */
     check_int("TryFinNormal()",     Main__TryFinNormal(),      11);
     check_int("TryExceptNormal()",  Main__TryExceptNormal(),    8);
 

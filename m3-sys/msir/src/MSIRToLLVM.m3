@@ -707,13 +707,29 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           convOp  : TEXT;
         BEGIN
           IF dstT = NIL THEN dstT := MSIR.ValueType(res) END;
-          IF srcBits > 0 AND dstBits > 0 THEN
-            IF dstBits > srcBits    THEN convOp := "sext";
-            ELSIF dstBits < srcBits THEN convOp := "trunc";
-            ELSE                         convOp := "bitcast";
+          (* Select the right LLVM cast for the source → destination types.
+             ptr↔integer require inttoptr/ptrtoint; bitcast is only for
+             same-sized scalar pairs or ptr↔ptr. *)
+          VAR
+            srcIsPtr := MSIR.Kind(srcT) = MSIR.TypeKind.Ptr
+                     OR MSIR.Kind(srcT) = MSIR.TypeKind.GcRef
+                     OR MSIR.Kind(srcT) = MSIR.TypeKind.GcSlot;
+            dstIsPtr := MSIR.Kind(dstT) = MSIR.TypeKind.Ptr
+                     OR MSIR.Kind(dstT) = MSIR.TypeKind.GcRef
+                     OR MSIR.Kind(dstT) = MSIR.TypeKind.GcSlot;
+          BEGIN
+            IF srcIsPtr AND dstBits > 0 THEN
+              convOp := "ptrtoint";
+            ELSIF srcBits > 0 AND dstIsPtr THEN
+              convOp := "inttoptr";
+            ELSIF srcBits > 0 AND dstBits > 0 THEN
+              IF    dstBits > srcBits THEN convOp := "sext";
+              ELSIF dstBits < srcBits THEN convOp := "trunc";
+              ELSE                        convOp := "bitcast";
+              END;
+            ELSE
+              convOp := "bitcast";
             END;
-          ELSE
-            convOp := "bitcast";
           END;
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & convOp & " ");
           LLTypedVal(wr, src);

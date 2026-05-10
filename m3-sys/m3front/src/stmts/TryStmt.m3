@@ -12,7 +12,7 @@ IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 IMPORT RunTyme, Procedure, M3FP;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
 
@@ -642,16 +642,6 @@ PROCEDURE CompileMSIR (p: P) =
       RETURN;
     END;
 
-    (* Conservatively skip procs where any handler binds an exception value. *)
-    h := p.handles;
-    WHILE h # NIL DO
-      IF h.scope # NIL THEN
-        Stmt.CompileMSIR(p.body);  (* body only; exception value binding not yet impl *)
-        RETURN;
-      END;
-      h := h.next;
-    END;
-
     ptrT  := MSIR.TPtr(MSIR.TVoid());
     lpad  := MSIRBuilder.NewBlock("lpad");
     merge := MSIRBuilder.NewBlock("try.merge");
@@ -723,6 +713,46 @@ PROCEDURE CompileMSIR (p: P) =
       EVAL MSIR.BuildCall(hBody, "", beginCatch,
                            ARRAY OF MSIR.Value{excHeader});
       MSIRBuilder.SetCurrentBlock(hBody);
+
+      (* Register the handler-bound variable in the varMap; h.scope is
+         separate from the proc's main scope so BeginProc didn't add it. *)
+      IF h.scope # NIL THEN
+        EVAL MSIRBuilder.AddLocal(h.var);
+      END;
+
+      (* Bind exception argument if present: EXCEPT E(v) => ...
+         RaiseActivation.arg is at EA_arg = 1 × AP bytes after EA_exception.
+         ArgByReference = FALSE (scalar ≤ ptr): arg is the value itself
+           stored as a void* — convert ptr → argType → store to alloca.
+         ArgByReference = TRUE  (large/structured): arg is a ptr to the value
+           — load the value through it → store to alloca. *)
+      IF h.scope # NIL THEN
+        VAR
+          eaArgBytes := VAL(M3RT.EA_arg, LONGINT) DIV VAL(Target.Char.size, LONGINT);
+          argFldPtr  := MSIR.BuildPtrAdd(hBody, "", actPtr, eaArgBytes);
+          argRaw     := MSIR.BuildLoad(hBody, "", ptrT, argFldPtr);
+          argType    := h.type;  (* set by Check from Exceptionz.ArgType *)
+          mt         := MSIRType.Translate(argType);
+          varAddr    := MSIRBuilder.LookupVarAddr(h.var);
+        BEGIN
+          IF mt # NIL AND varAddr # NIL THEN
+            IF Exceptionz.ArgByReference(argType) THEN
+              (* Large arg: argRaw is a pointer to the value. *)
+              VAR argLoaded := MSIR.BuildLoad(hBody, "", mt, argRaw);
+              BEGIN
+                MSIR.BuildStore(hBody, argLoaded, varAddr);
+              END;
+            ELSE
+              (* Small arg: argRaw is the value bit-cast from ADDRESS. *)
+              VAR argVal := MSIR.BuildConvert(hBody, "", argRaw, mt);
+              BEGIN
+                MSIR.BuildStore(hBody, argVal, varAddr);
+              END;
+            END;
+          END;
+        END;
+      END;
+
       MSIRBuilder.PushCatchContext(endCatch);
       Stmt.CompileMSIR(h.body);
       MSIRBuilder.PopCatchContext();

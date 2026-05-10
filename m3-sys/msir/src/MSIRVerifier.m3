@@ -290,11 +290,19 @@ PROCEDURE CheckConvert(c: Ctx;  i: MSIR.Insn) =
   BEGIN
     IF MSIR.InsnOperandCount(i) # 1 THEN Err(c, "convert expects 1 operand"); RETURN END;
     IF res = NIL THEN Err(c, "convert must have a result"); RETURN END;
-    IF NOT IsScalar(MSIR.ValueType(MSIR.InsnOperand(i, 0))) THEN
-      Err(c, "convert source must be a scalar type");
-    END;
-    IF NOT IsScalar(MSIR.ValueType(res)) THEN
-      Err(c, "convert target must be a scalar type");
+    (* Allow ptr↔scalar (inttoptr / ptrtoint) in addition to scalar↔scalar. *)
+    VAR srcT := MSIR.ValueType(MSIR.InsnOperand(i, 0));  dstT := MSIR.ValueType(res);
+        srcOk := IsScalar(srcT)
+              OR MSIR.Kind(srcT) = MSIR.TypeKind.Ptr
+              OR MSIR.Kind(srcT) = MSIR.TypeKind.GcRef
+              OR MSIR.Kind(srcT) = MSIR.TypeKind.GcSlot;
+        dstOk := IsScalar(dstT)
+              OR MSIR.Kind(dstT) = MSIR.TypeKind.Ptr
+              OR MSIR.Kind(dstT) = MSIR.TypeKind.GcRef
+              OR MSIR.Kind(dstT) = MSIR.TypeKind.GcSlot;
+    BEGIN
+      IF NOT srcOk THEN Err(c, "convert source must be a scalar or ptr type") END;
+      IF NOT dstOk THEN Err(c, "convert target must be a scalar or ptr type") END;
     END;
   END CheckConvert;
 

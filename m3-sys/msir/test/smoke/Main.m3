@@ -3,6 +3,7 @@ MODULE Main;
 IMPORT IO, Fmt, Thread;
 
 EXCEPTION TestExcept;
+EXCEPTION TestExceptArg(INTEGER);  (* exception with an INTEGER argument *)
 
 VAR gLock: MUTEX := NIL;  (* initialised in module body *)
 VAR gCounter: INTEGER := 0;
@@ -418,6 +419,17 @@ PROCEDURE TypecaseKind (r: REFANY): INTEGER =
     ELSE            RETURN 0;
     END;
   END TypecaseKind;
+
+(* RAISE with argument: raises TestExceptArg(42) and extracts the value. *)
+PROCEDURE TryRaiseArg (): INTEGER =
+  BEGIN
+    TRY
+      RAISE TestExceptArg(42);
+      RETURN 0;
+    EXCEPT
+      TestExceptArg(v) => RETURN v;
+    END;
+  END TryRaiseArg;
 
 (* RAISE: raise TestExcept and catch it in the same proc.
    Returns 1 if the exception is caught, 0 if it unexpectedly falls through. *)
