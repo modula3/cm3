@@ -317,7 +317,13 @@ PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value;
 
 PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value;
                                              (* slot must have type gc_slot T *)
-PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value);
+(* Store a traced reference into a gc_slot.
+   container: the heap object that owns the slot; pass NIL for module globals
+   (which are GC roots and don't need a write barrier).  When non-NIL, the
+   lowering emits the CM3 dirty-bit check and a conditional call to
+   RTHooks__CheckStoreTraced before the actual store. *)
+PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
+                        container: Value := NIL);
 
 PROCEDURE BuildFieldAddr(b: Block;  name: TEXT;
                          obj: Value;  fieldName: TEXT): Value;

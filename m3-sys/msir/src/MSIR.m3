@@ -945,17 +945,21 @@ PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value =
     RETURN i.result;
   END BuildGcLoad;
 
-PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value) =
+PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
+                        container: Value := NIL) =
   VAR
-    i := NEW(Insn);
-    ops := NEW(REF ARRAY OF Value, 2);
+    i    := NEW(Insn);
+    nOps := 2 + (ORD(container # NIL));
+    ops  := NEW(REF ARRAY OF Value, nOps);
   BEGIN
     <* ASSERT Kind(slot.type) = TypeKind.GcSlot,
        "BuildGcStore: slot operand must be gc_slot" *>
     i.op := Op.GcStore;
-    (* Operand order matches Store: ops[0]=value, ops[1]=slot/addr. *)
+    (* ops[0]=value, ops[1]=slot — consistent with Store.
+       ops[2]=container (the heap object), present only when non-NIL. *)
     ops[0] := value;
     ops[1] := slot;
+    IF container # NIL THEN ops[2] := container END;
     i.operands := ops;
     addInsn(b, i);
   END BuildGcStore;

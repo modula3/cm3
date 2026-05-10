@@ -260,6 +260,11 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
+        IF MSIR.InsnOperandCount(i) = 3 THEN
+          Wr.PutText(wr, " [container: ");
+          NameRef(wr, MSIR.InsnOperand(i, 2));
+          Wr.PutText(wr, "]");
+        END;
     | MSIR.Op.FieldAddr =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));

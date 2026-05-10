@@ -139,15 +139,22 @@ PROCEDURE CheckGcLoad(c: Ctx;  i: MSIR.Insn) =
   END CheckGcLoad;
 
 PROCEDURE CheckGcStore(c: Ctx;  i: MSIR.Insn) =
-  VAR slotT: MSIR.T;
+  VAR n := MSIR.InsnOperandCount(i);  slotT, contT: MSIR.T;
   BEGIN
-    IF MSIR.InsnOperandCount(i) # 2 THEN
-      Err(c, "gc.store expects 2 operands"); RETURN;
+    IF n # 2 AND n # 3 THEN
+      Err(c, "gc.store expects 2 or 3 operands"); RETURN;
     END;
-    (* ops[0]=value, ops[1]=slot — consistent with Store convention. *)
+    (* ops[0]=value, ops[1]=slot, ops[2]=container (optional). *)
     slotT := MSIR.ValueType(MSIR.InsnOperand(i, 1));
     IF MSIR.Kind(slotT) # MSIR.TypeKind.GcSlot THEN
       Err(c, "gc.store second operand must be gc_slot");
+    END;
+    IF n = 3 THEN
+      contT := MSIR.ValueType(MSIR.InsnOperand(i, 2));
+      IF MSIR.Kind(contT) # MSIR.TypeKind.GcRef AND
+         MSIR.Kind(contT) # MSIR.TypeKind.Ptr THEN
+        Err(c, "gc.store third operand (container) must be gc_ref or ptr");
+      END;
     END;
   END CheckGcStore;
 

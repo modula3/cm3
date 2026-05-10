@@ -1,6 +1,6 @@
 MODULE MSIRToLLVM;
 
-IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq;
+IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (*----------------------------------------------------- module-level state *)
@@ -13,6 +13,14 @@ VAR
 
 PROCEDURE NewAux(): TEXT =
   BEGIN INC(auxN); RETURN "%__ll" & Fmt.Int(auxN) END NewAux;
+
+(* Capture LLOpVal(v) as a TEXT for use in barrier string templates. *)
+PROCEDURE LLOpValStr(v: MSIR.Value): TEXT =
+  VAR wr2 := TextWr.New();
+  BEGIN
+    LLOpVal(wr2, v);
+    RETURN TextWr.ToText(wr2);
+  END LLOpValStr;
 
 (*------------------------------------------------------ symbol mangling *)
 
@@ -205,6 +213,47 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
     Wr.PutText(wr, "gc.skip." & n & ":\n");
   END EmitGcReadBarrier;
 
+(*------------------------------------------ GC write-barrier emission *)
+
+(* Emit the CM3 write barrier for a gc.store to a heap object field.
+   containerName is the SSA name of the containing heap object.
+   The actual store follows immediately after this call.
+
+   The barrier marks the containing object and its page as dirty so the
+   GC will re-scan the object's reference fields in the next sweep.
+
+   Fast path: read the header word (one word = 8 bytes before the object
+   pointer); if the dirty bit (bit 21, mask 2097152 = 1<<21) is already
+   set, skip the slow-path call.  Otherwise call RTHooks__CheckStoreTraced.
+
+   Header layout matches RT0.RefHeaderBits:
+     bit 0:    forwarded
+     bits 1-20: typecode
+     bit 21:   dirty  (RH_dirty_offset)
+     bit 22:   gray *)
+PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
+  VAR n: TEXT;
+  BEGIN
+    INC(auxN);
+    n := Fmt.Int(auxN);
+    (* Read object header; skip barrier if already dirty. *)
+    Wr.PutText(wr, "  %__gc_whptr." & n
+                   & " = getelementptr i8, ptr " & containerName & ", i64 -8\n");
+    Wr.PutText(wr, "  %__gc_whdr."  & n
+                   & " = load i64, ptr %__gc_whptr." & n & "\n");
+    Wr.PutText(wr, "  %__gc_wdb."   & n
+                   & " = and i64 %__gc_whdr." & n & ", 2097152\n");
+    Wr.PutText(wr, "  %__gc_wdirty." & n
+                   & " = icmp ne i64 %__gc_wdb." & n & ", 0\n");
+    Wr.PutText(wr, "  br i1 %__gc_wdirty." & n
+                   & ", label %gc.wskip." & n & ", label %gc.wslow." & n & "\n");
+    Wr.PutText(wr, "gc.wslow." & n & ":\n");
+    Wr.PutText(wr, "  call void @RTHooks__CheckStoreTraced(ptr " & containerName & ")\n");
+    Wr.PutText(wr, "  br label %gc.wskip." & n & "\n");
+    (* Store follows immediately after gc.wskip.N: label. *)
+    Wr.PutText(wr, "gc.wskip." & n & ":\n");
+  END EmitGcWriteBarrier;
+
 (*----------------------------------------------- floor div/mod helpers *)
 
 (* Emit Modula-3 floor division: q = floor(a / b) using sdiv + correction. *)
@@ -381,11 +430,13 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, "\n");
 
     | MSIR.Op.GcStore =>
-        (* ops[0]=value, ops[1]=slot — same convention as Store.
-           Write barrier deferred: current GcStores are all to module globals
-           (GC roots registered via module descriptor), which don't need a
-           barrier.  Heap-field GcStores will add a container operand and
-           the CheckStoreTraced call when implemented. *)
+        (* ops[0]=value, ops[1]=slot, ops[2]=container (optional).
+           If container is present (heap field store), emit the CM3 dirty-bit
+           write barrier before the store.  Module-global stores (no container)
+           skip the barrier — they are GC roots tracked via module descriptor. *)
+        IF nOps = 3 THEN
+          EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)));
+        END;
         Wr.PutText(wr, "  store ");
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ptr ");
