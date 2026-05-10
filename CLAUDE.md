@@ -223,6 +223,20 @@ Per-target CI (e.g., `arm64_darwin.yml`) is called via `workflow_call` from `int
 
 The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-level IR layer being built toward LLVM retargeting.
 
+### Current Status
+
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (64/64 tests):
+
+- Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
+- Records (by-value and by-ref), fixed and open arrays, enums, globals
+- VAR/READONLY params, INC/DEC
+- Exception handling: TRY/EXCEPT (UID-dispatch landingpad) and TRY/FINALLY (cleanup landingpad + resume)
+- GC read barrier (nil/misaligned/gray-bit inline fast path + `RTHooks__CheckLoadTracedRef`)
+- GC write barrier infrastructure (`GcStore` container operand, dirty-bit check + `RTHooks__CheckStoreTraced` for heap fields; globals are GC roots and need no barrier)
+- RTLinker binder (`@Module_M3`) and `RT0.ModuleInfo` struct (`@Module_M3_info`) emitted in LLVM IR
+- M3 symbol mangling (`Module.Proc` → `Module__Proc`), target triple/datalayout for LLVM 22
+- `target triple` / `target datalayout` for ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX
+
 ### Enabling MSIR Emission
 
 MSIR output is gated behind a runtime parameter so it doesn't slow normal builds. Pass `@M3m3front-msir` to the `cm3` process — the `@M3` prefix is consumed by `RTParams` and never reaches the compiled program's argument list:
@@ -231,11 +245,11 @@ MSIR output is gated behind a runtime parameter so it doesn't slow normal builds
 cm3 '@M3m3front-msir' -build
 ```
 
-This writes `<Module>.msir` to the build directory (e.g. `ARM64_DARWIN/Main.msir`) for every module compiled in that invocation. Without the flag, no `.msir` file is created and no MSIR code path runs.
+This writes `<Module>.msir` and `<Module>.ll` to the build directory for every module compiled in that invocation.
 
 ### Build Order After Editing MSIR or m3front
 
-When you change files in `m3-sys/msir/src/` or `m3-sys/m3front/src/msir/`, rebuild in this order:
+When you change files in `m3-sys/msir/src/` or `m3-sys/m3front/src/msir/`, or any of the m3front files that touch MSIR (stmts, values, exprs), rebuild in this order:
 
 ```sh
 # From the repo root, with ~/cm3/bin on PATH
@@ -247,26 +261,67 @@ cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3
 
 The `cm3` driver links m3front statically, so you must relink and reinstall the binary before the new MSIR code takes effect in compilations.
 
-### Smoke Test
+### End-to-End LLVM Link Test
+
+The canonical test is in `m3-sys/msir/test/`:
 
 ```sh
-cd /tmp/msir-smoke   # directory with Main.m3 + m3makefile
-cm3 '@M3m3front-msir' -build
-cat ARM64_DARWIN/Main.msir
-./ARM64_DARWIN/smoke
+# Requires LLVM clang on PATH (or export LLVM_PREFIX=$(brew --prefix llvm))
+bash m3-sys/msir/test/run-llvm-link-test.sh
 ```
 
-The smoke test `m3makefile` (no import of `msir` needed — emission is built into m3front):
+This script:
+1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
+2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
+3. Links with the C test harness (`llvm_link_test.c`) and runs 64 checks
 
-```quake
-import("libm3")
-implementation("Main")
-program("smoke")
+The harness provides C stubs for the few M3 runtime symbols it needs (`Fmt__Int`, `IO__Put`, GC barriers, `_ZTI6_M3Exc`) since it doesn't run the M3 runtime initialization.
+
+To run as a full M3 program against the real runtime:
+```sh
+clang _m3main.cpp Main-llvm.o libm3core.a libm3.a -lc++ -o smoke-realrt
+./smoke-realrt
 ```
+The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run the module body. The body currently fails on TEXT/IO operations (not yet fully supported in MSIR), but the binder and initialization sequence work correctly.
 
-### Known Cosmetic Issues in Emitted MSIR
+### Key Source Files
 
-- **Unreachable merge blocks**: when all branches of an IF end with `ret`, the `if.merge` block gets no predecessors. It appears in the output but is harmless; LLVM DCE removes it.
+| File | Role |
+|---|---|
+| `m3-sys/msir/src/MSIR.i3/.m3` | IR types, values, ops, builders |
+| `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR; handles EH, GC barriers, RTLinker binder |
+| `m3-sys/msir/src/MSIRPrinter.m3` | Prints MSIR text (`.msir` files) |
+| `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks on completed procs |
+| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; `EmitCall` (invoke-inside-TRY); try-context stack |
+| `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` and `.ll` at end of unit |
+| `m3-sys/m3front/src/stmts/TryStmt.m3` | `CompileMSIR`: EH lowering for TRY/EXCEPT (UID comparison chain) |
+| `m3-sys/m3front/src/stmts/TryFinStmt.m3` | `CompileMSIR`: EH lowering for TRY/FINALLY (cleanup landingpad) |
+| `m3-sys/m3front/src/stmts/AssignStmt.m3` | `CompileMSIR`: fetches `CurrentBlock()` AFTER RHS to handle invoke-in-RHS |
+| `m3-sys/m3front/src/stmts/BlockStmt.m3` | `CompileMSIR`: allocas + `CompileInitExprMSIR` for block-scope VAR init |
+| `m3-sys/m3front/src/values/Variable.m3` | `CompileInitExprMSIR`: compiles VAR initializer expression for MSIR |
+| `m3-sys/m3front/src/values/Procedure.m3` | Post-body: emits proc-scope VAR initializers before `Stmt.CompileMSIR` |
+| `m3-sys/m3front/src/exprs/CallExpr.m3` | Uses `MSIRBuilder.EmitCall` (invoke-aware) instead of `MSIR.BuildCall` |
+| `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, …) |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 64-test C harness |
+| `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
+
+### Known Limitations / Remaining Work
+
+- **RAISE statement**: `Op.Raise` is defined but lowering not implemented; needs to build `RaiseActivation` on heap and call `RTHooks__Raise`
+- **Exception value binding**: `EXCEPT E(v) =>` skipped (falls back to body-only); requires extracting arg from activation record
+- **TYPECASE**: not implemented; calls `MSIRBuilder.Abandon`
+- **Method dispatch**: not implemented
+- **LOCK**: not implemented
+- **Nested procedures**: up-level variable access not supported
+- **TEXT / string literals**: `Fmt.Int` etc. return correct values but string concat/IO not fully supported
+- **GC write barrier for heap fields**: `BuildGcStore(..., container)` infrastructure exists; activated when heap field stores are implemented
+- **`imports` chain** in `RT0.ModuleInfo`: currently null; dependencies not transitively initialized via RTLinker
+- **`type_cells`** in `RT0.ModuleInfo`: currently null; exception type lookups via typecode won't work
+- **`var_map` / `gc_map`** in `RT0.ModuleInfo`: currently null; GC won't scan module globals as roots
+
+### Cosmetic Issues in Emitted MSIR
+
+- **Unreachable merge blocks**: when all branches of an IF end with `ret`, the `if.merge` block gets no predecessors. Harmless; LLVM DCE removes it.
 - **Repeated block label names**: ELSIF chains reuse label hints (`if.then`, `if.next`) for each clause. The blocks are distinct objects; only the printed names collide. Fix: add a counter suffix in `NewBlock`.
 
 ---
