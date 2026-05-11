@@ -346,6 +346,18 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 
 **Nested proc note**: the C backend always sets `inline_nested_procs=FALSE` (via `-unfold_nested_procs` in `cm3cfg.common`). MSIR requires nested proc bodies compiled while the outer proc's context is live, so `LangInit` calls `GenBodyMSIR` inline regardless of `inline_nested_procs`. The outer proc's frame alloca gets an `alloca i8, i64 N` instruction (not just `alloca i8`) once all up-level vars are registered, by calling `MSIR.AllocaSetCount` at the end of `BeginProc`.
 
+**Why MSIR must compile nested procs inline (and the C backend need not):**
+
+Three interlocking constraints force this:
+
+1. **Up-level variable slots are allocated lazily.** When a nested proc body references an outer-scope variable, `AllocFrameSlot` reserves a byte offset in the outer proc's frame struct. Those offsets are only known *during* compilation of the nested proc body — they cannot be pre-computed before the body is visited.
+
+2. **The outer proc's frame alloca requires a final, concrete size.** LLVM IR's `alloca` instruction takes a constant operand; there is no way to patch it after emission. `MSIR.AllocaSetCount` back-patches the `alloca i8, i64 N` at the end of `BeginProc`, but only after all nested procs have been processed and all frame slots allocated. If the inner proc were compiled in a separate later pass the slot count would be wrong.
+
+3. **The nested proc's GEP offsets must be constants embedded in the IR.** When the inner proc accesses an up-level variable it emits `getelementptr inbounds (i8, ptr %__env, i64 <offset>)`. Those offsets live in the outer proc's `MSIRBuilder` state. If the inner proc were compiled after the outer proc's builder was torn down, the state would be gone and the offsets unavailable.
+
+The C backend sidesteps all three constraints: C structs can be forward-declared, C symbol references are resolved at link time, and the static-link cast (`(FrameT*)env`) is valid regardless of when the nested function definition is emitted. LLVM IR provides none of these affordances, so inline compilation is unavoidable.
+
 ### Known Limitations / Remaining Work
 
 - **TEXT**: literals and `&` concatenation work; `IO.Put` receives real TEXT values in the module body. Remaining: `Fmt.Bool`, wide-char literals (use `ToLiteral` fallback), and TEXT-returning expressions that aren't yet handled (e.g., `Text.Sub`, `Fmt.Real`)

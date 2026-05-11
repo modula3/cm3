@@ -1,8 +1,8 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-10 (msir branch)
+Last updated: 2026-05-11 (msir branch)
 
-## What's Working (69/69 tests pass)
+## What's Working (74/74 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -21,6 +21,18 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] `EmitCall` promotes calls inside TRY to `invoke` automatically
 - [x] `AssignStmt.CompileMSIR` re-fetches `CurrentBlock()` after RHS (invoke-in-RHS)
 - [x] GC globals (gc_slot typed, GcLoad/GcStore ops)
+- [x] RAISE statement: per-exception `ExceptionDesc` static global, `RTHooks__Raise`
+- [x] Exception value binding (`EXCEPT E(v) =>`): loads `act.arg`, ptrtoint/inttoptr for scalar packing
+- [x] TYPECASE
+- [x] Method dispatch (vtable)
+- [x] LOCK statement (via TRY/FINALLY lowering)
+- [x] NEW(REF T) and NEW(OBJECT T): `GenRefMSIR`/`GenObjectMSIR`/`CallAllocHook`
+- [x] TypeCells: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` from `Type.GenCells`
+- [x] TEXT literals: static `TextLiteral.T` globals; `ConstTextLit` value kind
+- [x] TEXT concatenation: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat`
+- [x] GC write barrier for heap fields: `QualifyExpr.LValueMSIR` sets pending container; `AssignStmt.CompileMSIR` calls `BuildGcStore` with container
+- [x] `var_map`/`gc_map`: module globals embedded as trailing fields of `@Mod_M3_info`; TipeMap byte sequence for GC scanning; LLVM aliases for symbol compatibility
+- [x] Nested procedures: static-link frame struct (`%__env: ptr`), up-level var access via byte-offset GEPs, frame size back-patched by `AllocaSetCount`
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -29,54 +41,62 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] `invoke`/`landingpad`/`extractvalue`/`resume` (LLVM EH, ex_stack model)
 - [x] `personality ptr @__gxx_personality_v0`, `@_ZTI6_M3Exc` extern
 - [x] GcLoad inline read barrier (nil → misaligned → gray-bit → `RTHooks__CheckLoadTracedRef`)
-- [x] GcStore write barrier infrastructure (`container` operand; dirty-bit check + `RTHooks__CheckStoreTraced` when heap field; globals skip)
-- [x] `@Module_M3(i64 %mode)` RTLinker binder (mode=0: return MI; mode=1: run body+return MI)
-- [x] `@Module_M3_info` RT0.ModuleInfo descriptor (binder and gc_flags set; other fields null)
-- [x] GC barrier extern declarations (`RTHooks__CheckLoadTracedRef/CheckStoreTraced`)
-- [x] RAISE statement: per-exception `ExceptionDesc` static (`{ uid, null, 0 }`), `RTHooks__Raise` via `HookProc(RaiseEx)`, Itanium ABI `__cxa_begin_catch` fix in catch landingpads
-- [x] Exception value binding (`EXCEPT E(v) =>`): loads `act.arg` at EA_arg=8 bytes, `ptrtoint`/`inttoptr` for scalar packing; `AddLocal(h.var)` registers the handler-scope variable
-- [x] `@Module_I3` interface binder (returns same MI as `@Module_M3`)
-- [x] `RT0.ImportInfo` chain in `MI_imports`: `BuildImportLink` registers binders via `MSIREmit.RegisterImport`; RTHooks filtered (pre-initialised by `InitRuntime`); standalone binary now runs full transitive RTLinker init
+- [x] GcStore write barrier (`container` operand; dirty-bit check + `RTHooks__CheckStoreTraced` for heap fields; globals skip)
+- [x] `@Module_M3(i64 %mode)` RTLinker binder; `@Module_I3` interface binder
+- [x] `@Module_M3_info` RT0.ModuleInfo descriptor with embedded module globals and gc_map
+- [x] RAISE: `ExceptionDesc` static, `RTHooks__Raise`, Itanium ABI `__cxa_begin_catch` fix
+- [x] `RT0.ImportInfo` chain in `MI_imports`: `BuildImportLink`; RTHooks filtered (pre-initialised)
+- [x] TypeCell and ObjectTypeDesc (vtable) emission
 
 ---
 
 ## Remaining Work (prioritised)
 
-### A. ~~Complete Runtime Linking~~ partially done
-- [x] `imports` chain — emitted; transitive RTLinker init works
-- [ ] `type_cells` — type/exception descriptors; needed for `NEW(T)` and typecode-based lookups
-- [ ] `var_map` / `gc_map` — GC root map for traced globals
-- [ ] Module body TEXT/IO — string concatenation and IO.Put crash; blocked on TEXT/TYPECASE support
+### A. Nested procedures: migrate to lambda-lifting
 
-### B. ~~RAISE statement~~ ✓ Done
-- Ownership lifecycle correct: `__cxa_get_exception_ptr` for peeking (no ownership), `__cxa_begin_catch`/`__cxa_end_catch` strictly bracketing matched handler bodies (including before any `ret` via `ReturnStmt.CompileMSIR`), plain `resume` for no-match.
+The current implementation uses a static-link / frame-struct approach (`%__env: ptr` +
+byte-offset GEPs) rather than the lambda-lifting specified in D15. This works for one
+level of nesting but has three structural costs:
 
-### C. ~~Exception value binding~~ ✓ Done
+1. Nested proc bodies must be compiled inline while the outer proc's `MSIRBuilder` is
+   live (frame offsets are allocated lazily; alloca size is back-patched).
+2. Multi-level nesting requires chaining `%__env` pointers — currently unsupported.
+3. Opaque `i8*` GEPs limit LLVM alias analysis, SROA, and mem2reg.
 
-### D. ~~TYPECASE~~ ✓ Done
+**Target:** per-capture parameter passing — read-only by value, read-write by pointer to
+outer stack slot — using m3front's existing variable-writability information. Frame-struct
+grouping (O16) can follow as a performance tuning step for high-capture cases.
 
-### E. ~~Method dispatch~~ ✓ Done
+### B. TEXT: remaining cases
 
-### F. ~~LOCK statement~~ ✓ Done
+- `Fmt.Bool`, `Fmt.Real`, and other TEXT-returning expressions not yet handled
+- Wide-char literals (currently fall back to `ToLiteral`)
+- `Text.Sub` and similar TEXT manipulation operations
 
-### G. Nested procedures / up-level access
-- Up-level variable references call `Abandon`; blocked on static link support
+### C. NEW(REF open-array/record)
 
-### H. GC write barrier for heap fields
-- Infrastructure is in place (`BuildGcStore(..., container)`)
-- Activated automatically once heap field stores are wired in `CompileMSIR`
-- Need: detect field-of-heap-object in LValueMSIR, pass container to BuildGcStore
+`GenRefMSIR` currently abandons for open-array and record referents; only scalar
+referents are supported.
+
+### D. Opaque types
+
+`GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
+
+### E. Debug symbols
+
+No source locations in emitted LLVM IR. See debug symbol architecture note in
+`CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,
+`AddLocalMSIR`, `BeginProc`).
 
 ---
 
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (69 checks)
+# Full end-to-end LLVM link test (74 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
-# Standalone M3 program (RTLinker path; body fails on TEXT/IO)
-cd m3-sys/msir/test/smoke/ARM64_DARWIN
+# Standalone M3 program (RTLinker path)
 clang _m3main.cpp Main-llvm.o libm3core.a libm3.a -lc++ -o smoke-realrt
 ./smoke-realrt
 

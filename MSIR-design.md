@@ -489,6 +489,46 @@ procedure value emit an indirect call threading the `env_ptr` as an
 extra argument. This mirrors CM3's existing C-backend closure
 representation.
 
+**Current implementation status and assessment (2026-05-11):**
+The initial implementation (74/74 tests) uses a **static-link / frame-struct**
+approach instead of full lambda-lifting. Each nested proc receives a single
+`%__env: ptr` first parameter pointing to the outer proc's frame alloca; up-level
+variables are accessed via byte-offset GEPs into that frame; the frame alloca size
+is back-patched by `MSIR.AllocaSetCount` at the end of `BeginProc`.
+
+This approach was chosen as a pragmatic first step that mirrors the C backend's
+static-link convention, but it diverges from D15 in important ways and introduces
+three interlocking costs:
+
+1. **Forces inline compilation of nested proc bodies.** Up-level variable frame
+   offsets are allocated lazily as the inner body is compiled; the frame alloca
+   size is only known after all nested procs are processed; inner-proc GEPs embed
+   constant byte offsets that require the outer proc's `MSIRBuilder` to be live.
+   Together these mean the nested proc body *must* be compiled while the outer
+   proc's context is active — unlike the C backend, where C forward declarations
+   decouple the passes.
+
+2. **Multi-level nesting requires chaining `%__env` pointers.** A proc nested
+   inside a nested proc must receive the outer-outer frame via a second level of
+   indirection. This is a known unsolved limitation of the current approach.
+
+3. **Opaque GEPs limit LLVM optimization.** Byte-offset GEPs into an `i8*` frame
+   are invisible to LLVM's alias analysis, SROA, and mem2reg. Explicit typed
+   parameters are not.
+
+Lambda-lifting (D15 as written) eliminates all three costs: no inline compilation
+constraint, natural multi-level nesting (each level adds captures as parameters),
+and typed parameters LLVM can reason about. Note that O16 already anticipated
+frame-struct grouping as a *performance optimization on top of lambda-lifting* for
+high-capture cases — the current implementation has inadvertently gone straight to
+that optimization without the clean baseline.
+
+**Migration path:** Replace the frame-struct approach with per-capture parameter
+passing (read-only by value, read-write by pointer to an outer stack slot),
+plumbing m3front's existing variable-writability information into MSIR. The
+frame-struct grouping from O16 can then be added as a tuning step for procs with
+many captures.
+
 ### D14. Module descriptors are first-class MSIR entities.
 
 **Why:** Init order, root registration, type registration, and
@@ -567,7 +607,10 @@ remains open (see O13).
 
 ### O4. Nested procedures: lambda-lift vs static link.
 
-**Resolved by D15.** Lambda-lift at MSIR construction.
+**Partially resolved by D15.** Lambda-lift at MSIR construction is the correct
+target. The initial implementation uses a static-link / frame-struct approach
+instead (see assessment in D15); migration to full lambda-lifting is the
+recommended next step for the nested-proc path.
 
 ### O5. LOCK statement.
 
