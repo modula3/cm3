@@ -247,6 +247,8 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **External/imported variable registration**: `DeclareGlobalsMSIR` in `Module.Compile` pre-registers all module-level variables and exception descriptors before proc bodies compile
 - **TEXT literals**: static `TextLiteral.T` globals (`{ i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }`); `ConstTextLit` value kind carries uid+chars for readable MSIR text; lowered to LLVM constant-expression GEP `getelementptr inbounds (i8, ptr @textlit_N, i64 8)`
 - **TEXT concatenation**: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat(a, b)` via `HookProc(RunTyme.Hook.Concat)`; module body now passes real TEXT values to `IO.Put`
+- **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container (object pointer) via `MSIRBuilder.SetPendingContainer`; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; traced object fields are retyped from `GcRef` to `GcSlot` so the barrier fires correctly
+- **`var_map`/`gc_map`**: module globals embedded as trailing fields of `@Mod_M3_info` struct (after MI_SIZE=104 bytes); gc_map TipeMap byte sequence skips non-traced fields and emits `Op.Ref` for each traced global; LLVM aliases (`@Main__gCounter` etc.) preserve binary symbol compatibility with CG-compiled modules; GC now correctly scans MSIR module globals as roots
 
 ### EH Model Requirement
 
@@ -344,13 +346,13 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 
 - **Nested procedures**: up-level variable access not supported
 - **TEXT**: literals and `&` concatenation work; `IO.Put` receives real TEXT values in the module body. Remaining: `Fmt.Bool`, wide-char literals (use `ToLiteral` fallback), and TEXT-returning expressions that aren't yet handled (e.g., `Text.Sub`, `Fmt.Real`)
-- **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; see container protocol below
-- **`var_map` / `gc_map`** in `RT0.ModuleInfo`: currently null; GC won't scan module globals as roots
+- **GC write barrier for heap fields**: activated; see container protocol below
+- **`var_map`/`gc_map`**: implemented; see architecture note below
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
+- **Nested procedures**: up-level variable access not supported — key blocker for compiling CM3 itself
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
-- **`Fmt.Bool`** and other `Fmt.*` returning TEXT: not yet wired through MSIR
 
 ### GC Write Barrier Container Protocol
 
@@ -367,6 +369,27 @@ The `SetPendingContainer`/`TakePendingContainer` side-channel avoids changing an
 ### TEXT Literal Architecture Note
 
 `TextExpr.P` is extended with `cgOffset: INTEGER` to store the `Module.Allocate` result directly on the expression object. `LiteralTable = REF ARRAY OF P` (indexed by uid) is the single per-module registry for both CG and MSIR — no parallel tracking needed. `Split8`/`Split32` on `literals[uid]` gives string content; `literals[uid].cgOffset` gives the CG const-area offset. `ExpandLiterals` grows the array; `Reset` clears entries to NIL for reuse across modules. `MSIREmit.EndUnit` bridges the data to `MSIR.Module` since `MSIRToLLVM` (in the `msir` package) cannot import `TextExpr` from `m3front`.
+
+### Module Global Layout and var_map/gc_map
+
+Module globals in MSIR are **embedded as trailing fields of `@Mod_M3_info`** (after the standard 104-byte `RT0.ModuleInfo` header), matching the CG convention exactly. The GC walker `RTHeapMap.Walk(m, m.gc_map, v)` starts at `m` (the `@Mod_M3_info` address) and uses the TipeMap to find traced fields.
+
+**Struct layout** (example: `gLock: MUTEX; gCounter: INTEGER; gRef: REFANY`):
+```
+@Main_M3_info = global %RT0_ModuleInfo_t {
+  [13 standard MI fields, bytes 0..103]
+  ptr null,  ; gLock (+104, traced MUTEX)
+  i64 0,     ; gCounter (+112, untraced INTEGER)
+  i64 0,     ; gBase (+120, untraced INTEGER)
+  ptr null,  ; gRef (+128, traced REFANY)
+}
+```
+
+**gc_map TipeMap** (`@Main_M3_gc_map`): byte sequence `SkipF_1(104), Ref, SkipF_1(16), Ref, Stop` — skips the header, visits `gLock`, skips the two untraced integers, visits `gRef`.
+
+**LLVM aliases** (`@Main__gCounter = alias i64, ptr getelementptr ...`) preserve binary symbol compatibility so C code and CG-compiled modules can still access globals by their mangled names.
+
+**Access in proc bodies**: `LookupVarAddr(g)` returns `getelementptr inbounds (i8, ptr @Main_M3_info, i64 <byteOffset>)` as a constant expression (a `StructFieldRef` value kind in MSIR).
 
 ### Debug Symbol Support (Future Work)
 
