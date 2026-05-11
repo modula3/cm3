@@ -132,6 +132,20 @@ PROCEDURE Init_chars (offset: INTEGER;  t: T;  is_const: BOOLEAN) =
     END; 
   END Init_chars;
 
+PROCEDURE GetChar (t: T;  i: INTEGER): INTEGER =
+  (* Walk the tree to find the i-th character's code point. *)
+  BEGIN
+    LOOP
+      IF t = NIL THEN RETURN 0 END;
+      IF t.body # NIL THEN RETURN t.body[i] END;
+      (* composite node: prefix holds first t.prefix.length chars *)
+      IF i < t.prefix.length
+        THEN t := t.prefix;
+        ELSE i := i - t.prefix.length;  t := t.suffix;
+      END;
+    END;
+  END GetChar;
+
 PROCEDURE Length (t: T): INTEGER =
   BEGIN
     IF (t = NIL)

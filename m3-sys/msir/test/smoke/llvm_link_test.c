@@ -77,6 +77,7 @@ extern M3Int  Main__AllocInt(M3Int n);    /* NEW(REF INTEGER): stores n, returns
 extern M3Int  Main__AllocSquare(M3Int side);   /* NEW(Square): sets side, returns side*side */
 extern M3Int  Main__NestedSum(M3Int n);        /* nested proc: sum 1..n */
 extern M3Int  Main__NestedScale(M3Int base, M3Int n); /* read-only capture: base*n */
+extern M3Int  Main__WideLen(void);    /* WIDECHAR literal: Text.Length(W"Hi")=2 */
 extern M3Int  Main__DispatchSquare(M3Int side); /* NEW(Square) + vtable dispatch */
 extern M3Int  Main__TryRaiseArg(void);  /* raises TestExceptArg(42), catches, returns 42 */
 extern M3Int  Main__TryFinNormal(void);
@@ -98,6 +99,7 @@ extern M3Int  Main__gBase;
 /* ---- test harness ---- */
 
 static int failures = 0;
+
 
 static void check_int(const char *name, M3Int got, M3Int expected) {
     if (got == expected)
@@ -229,6 +231,8 @@ int main(void) {
     check_int("NestedSum(10)",      Main__NestedSum(10),        55);
     /* Read-only capture: base passed by value, not pointer */
     check_int("NestedScale(7,6)",   Main__NestedScale(7, 6),    42);
+    /* WIDECHAR literal: Text.Length(W"Hi") = 2 */
+    check_int("WideLen()",          Main__WideLen(),             2);
     /* NEW(Square) + vtable dispatch through ShapeDispatch */
     check_int("DispatchSquare(5)",  Main__DispatchSquare(5),    25);
 

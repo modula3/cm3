@@ -12,6 +12,8 @@
    ex (= the descriptor pointer) in act.exception makes this work. */
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 struct _M3Exc { void *act; };
 
 struct RaiseActivation {
@@ -89,12 +91,21 @@ extern "C" void RTHooks__Raise(void *ex, void *arg,
 extern "C" void *Thread_I3(long) { return nullptr; }
 extern "C" void *Fmt_I3(long)    { return nullptr; }
 extern "C" void *IO_I3(long)     { return nullptr; }
+extern "C" void *Text_I3(long)   { return nullptr; }
 
 /* Fmt / IO stubs: called only from the M3 module body (Main__Main_M3),
    which the harness never invokes. */
 extern "C" void *Fmt__Int(long, long)  { return nullptr; }
 extern "C" void *Fmt__Bool(int)        { return nullptr; }
 extern "C" void  IO__Put(void *, void *) { }
+
+/* Text.Length: read cnt field (i64 at offset 8 from TEXT ptr).
+   For normal strings cnt > 0; for wide-char strings cnt < 0 (negated length). */
+extern "C" long  Text__Length(void *t) {
+    if (!t) return 0;
+    int64_t cnt; memcpy(&cnt, (char*)t + 8, 8);
+    return (long)(cnt < 0 ? -cnt : cnt);
+}
 
 /* GC read barrier: a no-op in the harness — no real GC runs. */
 extern "C" void  RTHooks__CheckLoadTracedRef(void *) { }

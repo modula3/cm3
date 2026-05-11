@@ -34,6 +34,9 @@ PROCEDURE Init_chars (offset: INTEGER;  t: T;  is_const: BOOLEAN);
 PROCEDURE Length (t: T): INTEGER;
 (* returns the length of the string *)
 
+PROCEDURE GetChar (t: T;  i: INTEGER): INTEGER;
+(* returns the Unicode code point of the i-th character (0-origin) *)
+
 (* NOTE! These UIDs have nothing to do with the UIDs that are hashes
          and used many places. *)
 

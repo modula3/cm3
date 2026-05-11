@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT IO, Fmt, Thread;
+IMPORT IO, Fmt, Text, Thread;
 
 EXCEPTION TestExcept;
 EXCEPTION TestExceptArg(INTEGER);  (* exception with an INTEGER argument *)
@@ -465,6 +465,14 @@ PROCEDURE NestedScale (base, n: INTEGER): INTEGER =
 BEGIN
   RETURN Scale (n);
 END NestedScale;
+
+(* Wide-char literal: exercises the WIDECHAR text-literal encoding path.
+   Returns the length of W"Hi" (2 chars) so the harness can verify it. *)
+PROCEDURE WideLen (): INTEGER =
+  VAR w: TEXT := W"Hi";
+  BEGIN
+    RETURN Text.Length (w);
+  END WideLen;
 
 (* RAISE with argument: raises TestExceptArg(42) and extracts the value. *)
 PROCEDURE TryRaiseArg (): INTEGER =

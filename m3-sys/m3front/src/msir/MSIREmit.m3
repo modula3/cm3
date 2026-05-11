@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError, Word;
 IMPORT TextExpr, M3String, M3WString;
 IMPORT RunTyme;
 
@@ -100,9 +100,25 @@ PROCEDURE EndUnit() =
           chars := M3String.ToText(s8);
           cnt   := M3String.Length(s8);
         ELSE
+          (* Wide-char literal: encode each WIDECHAR as little-endian bytes.
+             MSIRToLLVM detects cnt<0 and emits the appropriately-sized struct. *)
           EVAL TextExpr.Split32(e, s32);
-          chars := M3WString.ToLiteral(s32);
-          cnt   := - M3WString.Length(s32);
+          VAR wlen      := M3WString.Length(s32);
+              wcharBytes := Target.WideCharSize() DIV Target.Char.size;
+              byteArr    := NEW(REF ARRAY OF CHAR, wlen * wcharBytes);
+          BEGIN
+            FOR k := 0 TO wlen - 1 DO
+              VAR cp := M3WString.GetChar(s32, k);
+              BEGIN
+                FOR b := 0 TO wcharBytes - 1 DO
+                  byteArr[k * wcharBytes + b] :=
+                    VAL(Word.And(Word.RightShift(cp, b * 8), 16_FF), CHAR);
+                END;
+              END;
+            END;
+            chars := Text.FromChars(byteArr^);
+            cnt   := - wlen;
+          END;
         END;
         EVAL MSIR.ModuleAddTextLit(curModule, chars, cnt);
       END;

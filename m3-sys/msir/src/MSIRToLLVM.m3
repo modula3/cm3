@@ -1096,16 +1096,25 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
 
     FOR uid := 0 TO n - 1 DO
       VAR
-        chars := MSIR.ModuleTextLitChars(m, uid);
-        cnt   := MSIR.ModuleTextLitCnt(m, uid);
-        len   := ABS(cnt);
+        chars      := MSIR.ModuleTextLitChars(m, uid);
+        cnt        := MSIR.ModuleTextLitCnt(m, uid);
+        len        := ABS(cnt);
+        wide       := cnt < 0;
+        wcharBytes : INTEGER;
+        byteCount  : INTEGER;
       BEGIN
+        IF wide
+          THEN wcharBytes := Target.WideCharSize() DIV Target.Char.size;
+          ELSE wcharBytes := 1;
+        END;
+        byteCount := len * wcharBytes + wcharBytes;
         Wr.PutText(wr, "@textlit_" & Fmt.Int(uid) & " = internal constant { i64, ptr, i64, ["
-                       & Fmt.Int(len + 1) & " x i8] } { i64 "
+                       & Fmt.Int(byteCount) & " x i8] } { i64 "
                        & Fmt.LongInt(GcHeader)
                        & ", ptr @textlit_methods, i64 " & Fmt.Int(cnt) & ", ["
-                       & Fmt.Int(len + 1) & " x i8] c\"");
-        FOR j := 0 TO len - 1 DO
+                       & Fmt.Int(byteCount) & " x i8] c\"");
+        (* Emit body bytes: for 8-bit, 1 byte/char; for wide, wcharBytes bytes/char *)
+        FOR j := 0 TO len * wcharBytes - 1 DO
           VAR c := ORD(Text.GetChar(chars, j));
           BEGIN
             IF c >= 32 AND c < 127 AND c # ORD('"') AND c # ORD('\\') THEN
@@ -1116,7 +1125,9 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
             END;
           END;
         END;
-        Wr.PutText(wr, "\\00\" }\n");
+        (* Null terminator: wcharBytes zero bytes *)
+        FOR k := 0 TO wcharBytes - 1 DO Wr.PutText(wr, "\\00") END;
+        Wr.PutText(wr, "\" }\n");
       END;
     END;
   END EmitTextLiterals;
