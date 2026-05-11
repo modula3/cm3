@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (74/74 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (75/75 tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -291,7 +291,7 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 This script:
 1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
 2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 74 checks
+3. Links with the C test harness (`llvm_link_test.c`) and runs 75 checks
 
 The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
 
@@ -327,7 +327,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
 | `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 74-test C harness |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 75-test C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
 

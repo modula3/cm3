@@ -278,7 +278,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
      Dispatched through methods.compileMSIR by CallExpr.CompileMSIR. *)
   VAR
     v:          Value.T;
-    procType    := Type.Base (Expr.TypeOf (p.proc));
+    procType    : Type.T;
     msirCallee: MSIR.Proc;
     argVals:    REF ARRAY OF MSIR.Value;
     n:          INTEGER;
@@ -286,6 +286,12 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     isNested:   BOOLEAN;
     pBase:      INTEGER;
   BEGIN
+    (* Expr.TypeOf returns NIL for method expressions (obj.method cannot be
+       used as a first-class value).  Fall back to QualifyExpr.MethodType. *)
+    VAR t := Expr.TypeOf (p.proc); BEGIN
+      IF t = NIL THEN t := QualifyExpr.MethodType (p.proc) END;
+      procType := Type.Base (t);
+    END;
     IF NOT IsProcedureLiteral(p.proc, v) THEN
       (* Virtual method dispatch: obj.method(args) *)
       VAR

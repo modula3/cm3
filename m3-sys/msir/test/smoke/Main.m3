@@ -455,6 +455,17 @@ BEGIN
   RETURN acc;
 END NestedSum;
 
+(* Read-only capture optimisation: Scale reads base but never writes it.
+   base is passed by value (not by pointer) in the lambda-lifted IR. *)
+PROCEDURE NestedScale (base, n: INTEGER): INTEGER =
+  PROCEDURE Scale (k: INTEGER): INTEGER =
+  BEGIN
+    RETURN base * k;
+  END Scale;
+BEGIN
+  RETURN Scale (n);
+END NestedScale;
+
 (* RAISE with argument: raises TestExceptArg(42) and extracts the value. *)
 PROCEDURE TryRaiseArg (): INTEGER =
   BEGIN

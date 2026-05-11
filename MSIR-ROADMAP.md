@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-11 (msir branch)
 
-## What's Working (74/74 tests pass)
+## What's Working (75/75 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -78,7 +78,7 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (74 checks)
+# Full end-to-end LLVM link test (75 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

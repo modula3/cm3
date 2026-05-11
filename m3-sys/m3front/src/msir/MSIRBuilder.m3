@@ -70,6 +70,21 @@ VAR
   globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
   globalMapN: INTEGER := 0;
 
+PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
+  (* TRUE for types safe to pass by value as a capture param.
+     Integer and float widths are pure values; Ptr covers UNTRACED REF, ADDRESS,
+     and procedure values (addrspace 0).  GcRef (addrspace 1) is excluded: traced
+     references must remain on the stack so the conservative GC scanner finds them. *)
+  BEGIN
+    CASE MSIR.Kind(mt) OF
+    | MSIR.TypeKind.I1,  MSIR.TypeKind.I8,  MSIR.TypeKind.I16, MSIR.TypeKind.I32,
+      MSIR.TypeKind.I64, MSIR.TypeKind.W8,  MSIR.TypeKind.W16, MSIR.TypeKind.W32,
+      MSIR.TypeKind.W64, MSIR.TypeKind.F32, MSIR.TypeKind.F64, MSIR.TypeKind.F128,
+      MSIR.TypeKind.Ptr  => RETURN TRUE;
+    ELSE RETURN FALSE;
+    END;
+  END IsScalarType;
+
 PROCEDURE BeginProc(name: TEXT;
                     formals: Value.T;
                     syms: Scope.T;
@@ -134,11 +149,24 @@ PROCEDURE BeginProc(name: TEXT;
 
     VAR params := NEW(REF ARRAY OF MSIR.Param, nCaptures + nFormals);
     BEGIN
-      (* Lambda-lifted capture params: one ptr per captured variable. *)
+      (* Lambda-lifted capture params.
+         Read-only scalar captures pass by value (Integer, Float, Ptr).
+         Written or aggregate captures pass by opaque ptr. *)
       FOR i := 0 TO nCaptures - 1 DO
-        params[i].name := "__cap_" & Fmt.Int(i);
-        params[i].type := MSIR.TPtr(MSIR.TVoid());
-        params[i].mode := MSIR.ParamMode.ByValue;
+        VAR v:  Variable.T := caps[i].var;
+            vt: Type.T;  vg, vi, vlhs: BOOLEAN;
+            mt: MSIR.T;
+        BEGIN
+          Variable.Split(v, vt, vg, vi, vlhs);
+          mt := MSIRType.Translate(vt);
+          params[i].name := "__cap_" & Fmt.Int(i);
+          params[i].mode := MSIR.ParamMode.ByValue;
+          IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
+            params[i].type := mt;          (* pass the value directly *)
+          ELSE
+            params[i].type := MSIR.TPtr(MSIR.TVoid());  (* pass ptr *)
+          END;
+        END;
       END;
       (* Regular explicit formals, shifted past capture params. *)
       f := formals;
@@ -184,8 +212,8 @@ PROCEDURE BeginProc(name: TEXT;
       END;
 
       (* For nested procs: bind capture params in the inner proc's varMap.
-         Each capture param is a ptr to the outer proc's alloca for that var.
-         LookupVar loads through the ptr; LookupVarAddr returns it directly. *)
+         Read-only scalar captures: param holds the value directly (elemType=NIL).
+         Written or aggregate captures: param holds a ptr; loads go through it. *)
       IF isNested AND nCaptures > 0 THEN
         FOR i := 0 TO nCaptures - 1 DO
           VAR v:  Variable.T := caps[i].var;
@@ -195,9 +223,13 @@ PROCEDURE BeginProc(name: TEXT;
             Variable.Split(v, vt, vg, vi, vlhs);
             mt := MSIRType.Translate(vt);
             IF mt # NIL AND varMapN < MaxVarMap THEN
-              varMap[varMapN].key      := v;
-              varMap[varMapN].val      := MSIR.ProcParam(curProc, i);
-              varMap[varMapN].elemType := mt;
+              varMap[varMapN].key := v;
+              varMap[varMapN].val := MSIR.ProcParam(curProc, i);
+              IF NOT caps[i].written AND IsScalarType(mt) THEN
+                varMap[varMapN].elemType := NIL;  (* value: return param directly *)
+              ELSE
+                varMap[varMapN].elemType := mt;   (* ptr: load through it *)
+              END;
               INC(varMapN);
             END;
           END;
@@ -477,23 +509,32 @@ PROCEDURE IsNestedProc(v: Value.T): BOOLEAN =
 
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
-  (* Build capture args from the outer proc's varMap, then call. *)
+  (* Build capture args from the outer proc's varMap, then call.
+     Read-only scalar captures are passed by value; others by pointer. *)
   VAR
     caps    : REF ARRAY OF CaptureAnalysis.Capture;
     nCaps   : INTEGER;
     allArgs : REF ARRAY OF MSIR.Value;
-    addr    : MSIR.Value;
+    v       : Variable.T;
+    vt      : Type.T;  vg, vi, vlhs: BOOLEAN;
+    mt      : MSIR.T;
   BEGIN
     caps := GetProcCaptures(calleeVal);
     IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
     allArgs := NEW(REF ARRAY OF MSIR.Value, nCaps + NUMBER(args));
     FOR i := 0 TO nCaps - 1 DO
-      addr := LookupVarAddr(caps[i].var);
-      IF addr = NIL THEN
+      v := caps[i].var;
+      Variable.Split(v, vt, vg, vi, vlhs);
+      mt := MSIRType.Translate(vt);
+      IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
+        allArgs[i] := LookupVar(v);   (* pass the current value *)
+      ELSE
+        allArgs[i] := LookupVarAddr(v);  (* pass the alloca address *)
+      END;
+      IF allArgs[i] = NIL THEN
         Abandon("capture var not found in outer proc varMap");
         RETURN NIL;
       END;
-      allArgs[i] := addr;
     END;
     FOR i := 0 TO NUMBER(args) - 1 DO allArgs[nCaps + i] := args[i] END;
     RETURN EmitCall(name, callee, allArgs^);
