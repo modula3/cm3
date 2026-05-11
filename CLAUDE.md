@@ -344,13 +344,25 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 
 - **Nested procedures**: up-level variable access not supported
 - **TEXT**: literals and `&` concatenation work; `IO.Put` receives real TEXT values in the module body. Remaining: `Fmt.Bool`, wide-char literals (use `ToLiteral` fallback), and TEXT-returning expressions that aren't yet handled (e.g., `Text.Sub`, `Fmt.Real`)
-- **GC write barrier for heap fields**: `BuildGcStore(..., container)` infrastructure exists; write barriers for storing traced refs into heap object fields not yet activated
+- **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; see container protocol below
 - **`var_map` / `gc_map`** in `RT0.ModuleInfo`: currently null; GC won't scan module globals as roots
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
 - **`Fmt.Bool`** and other `Fmt.*` returning TEXT: not yet wired through MSIR
+
+### GC Write Barrier Container Protocol
+
+In the **CG path**, write barriers are implicit: `M3C.m3` handles them automatically when it sees a traced-type `CG.Store_indirect`. The front-end threads no container — the C backend infers it from surrounding code.
+
+In the **MSIR path**, LLVM IR is lower-level and barriers must be emitted explicitly. The protocol:
+
+1. `QualifyExpr.LValueMSIR` (objField case) computes the base object pointer (`baseAddr`) before GEP-ing to the field. It calls `MSIRBuilder.SetPendingContainer(baseAddr)` as a side-effect and retypes the GEP result from `GcRef` to `GcSlot(elemType)` if the field is a traced ref.
+2. `AssignStmt.CompileMSIR` calls `MSIRBuilder.TakePendingContainer()` immediately after `LValueMSIR`. The result is NIL for module globals (GC roots, no barrier) and the object pointer for heap fields.
+3. `MSIR.BuildGcStore(block, slot, value, container)`: when `container != NIL`, emits the inline dirty-bit check + `RTHooks__CheckStoreTraced`.
+
+The `SetPendingContainer`/`TakePendingContainer` side-channel avoids changing any expression interface while threading the container from the LValue expression to the assignment statement.
 
 ### TEXT Literal Architecture Note
 
