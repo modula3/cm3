@@ -296,6 +296,16 @@ PROCEDURE ModuleTextLitCount(m: Module): INTEGER;
 PROCEDURE ModuleTextLitChars(m: Module;  uid: INTEGER): TEXT;
 PROCEDURE ModuleTextLitCnt  (m: Module;  uid: INTEGER): INTEGER;
 
+(* TextLiteral vtable method hook procs — the five RTHooks__TextLit* procs.
+   Populated by MSIREmit.EndUnit via MSIRBuilder.HookProc + RunTyme.LookUpProc
+   so that names come from the compiler's view of RTHooks rather than being
+   hardcoded in the LLVM emitter.  NIL elements mean not yet registered. *)
+PROCEDURE ModuleSetTextLitHooks(m: Module;
+                                 READONLY hooks: ARRAY [0..4] OF Proc);
+PROCEDURE ModuleGetTextLitHook (m: Module;  i: INTEGER): Proc;
+(* indices: 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
+            3=TextLitGetChars 4=TextLitGetWideChars *)
+
 (* Build a getelementptr computing the TEXT reference:
    ptr to offset 8 of @textlit_<uid> (past the GC header to the vtable field).
    uid comes from TextExpr.SetUID via TextExpr.CompileMSIR. *)

@@ -107,6 +107,20 @@ PROCEDURE EndUnit() =
         EVAL MSIR.ModuleAddTextLit(curModule, chars, cnt);
       END;
     END;
+    (* Register the five TextLiteral vtable method procs so MSIRToLLVM can
+       use the correct RTHooks__TextLit* names derived from m3front's view
+       of RTHooks rather than hardcoding them in the lowering pass. *)
+    IF MSIR.ModuleTextLitCount(curModule) > 0 THEN
+      VAR tlhooks: ARRAY [0..4] OF MSIR.Proc;
+      BEGIN
+        tlhooks[0] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitInfo);
+        tlhooks[1] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetChar);
+        tlhooks[2] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetWideChar);
+        tlhooks[3] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetChars);
+        tlhooks[4] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetWideChars);
+        MSIR.ModuleSetTextLitHooks(curModule, tlhooks);
+      END;
+    END;
 
     errs := MSIRVerifier.VerifyModule(curModule);
     IF errs # NIL THEN

@@ -1060,7 +1060,7 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
    [136] defaultMethods  ptr  (→ vtable array)
    [144] parent          ptr  (null for now) *)
 
-PROCEDURE EmitTextLiterals(wr: Wr.T;  <*UNUSED*> m: MSIR.Module) =
+PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
   (* Emit TextLiteral.T globals for every string literal in the module.
      Layout of each @textlit_N:
        { i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }
@@ -1068,27 +1068,27 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  <*UNUSED*> m: MSIR.Module) =
      per-module registry the CG path uses (SetUID tracking). *)
   CONST
     GcHeader = 2L; (* Word.Shift(TEXT_typecode=1, RH_typecode_offset=1) *)
-    Methods = ARRAY [0..4] OF TEXT {
-      "RTHooks__TextLitInfo",
-      "RTHooks__TextLitGetChar",
-      "RTHooks__TextLitGetWideChar",
-      "RTHooks__TextLitGetChars",
-      "RTHooks__TextLitGetWideChars"
-    };
   VAR n := MSIR.ModuleTextLitCount(m);
   BEGIN
     IF n = 0 THEN RETURN END;
     Wr.PutText(wr, "\n; TEXT literal globals\n");
 
-    Wr.PutText(wr, "declare void @RTHooks__TextLitInfo(ptr, ptr)\n");
-    Wr.PutText(wr, "declare i8   @RTHooks__TextLitGetChar(ptr, i64)\n");
-    Wr.PutText(wr, "declare i32  @RTHooks__TextLitGetWideChar(ptr, i64)\n");
-    Wr.PutText(wr, "declare void @RTHooks__TextLitGetChars(ptr, ptr, i64)\n");
-    Wr.PutText(wr, "declare void @RTHooks__TextLitGetWideChars(ptr, ptr, i64)\n");
+    (* declare lines for the 5 TextLiteral vtable methods.
+       Names come from the MSIR.Proc stubs set by MSIREmit via RunTyme.LookUpProc;
+       the stubs are also added to the externs list in CollectExterns so
+       EmitDeclare emits their full signatures. *)
 
     Wr.PutText(wr, "@textlit_methods = internal constant [5 x ptr] [\n");
     FOR i := 0 TO 4 DO
-      Wr.PutText(wr, "  ptr @" & Methods[i]);
+      VAR p    := MSIR.ModuleGetTextLitHook(m, i);
+          name : TEXT;
+      BEGIN
+        IF p = NIL
+          THEN name := "<nil-textlit-hook-" & Fmt.Int(i) & ">";
+          ELSE name := LLSymbol(p);
+        END;
+        Wr.PutText(wr, "  ptr @" & name);
+      END;
       IF i < 4 THEN Wr.PutText(wr, ",") END;
       Wr.PutText(wr, "\n");
     END;
@@ -1625,8 +1625,15 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
       EmitGlobal(wr, MSIR.ModuleGlobal(m, i));
     END;
 
-    (* collect extern callees *)
+    (* collect extern callees and TextLiteral vtable method procs *)
     CollectExterns(m, externs);
+    FOR i := 0 TO 4 DO
+      VAR p := MSIR.ModuleGetTextLitHook(m, i); BEGIN
+        IF p # NIL AND NOT ProcSeen(externs, p) THEN
+          externs.addhi(p);
+        END;
+      END;
+    END;
     IF externs.size() > 0 THEN
       Wr.PutText(wr, "\n");
       FOR i := 0 TO externs.size() - 1 DO

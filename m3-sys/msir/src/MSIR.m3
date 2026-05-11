@@ -742,6 +742,9 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
+  textLitHooks : ARRAY [0..4] OF Proc;
+  (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
+     3=TextLitGetChars 4=TextLitGetWideChars — NIL = not yet registered *)
 END;
 
 
@@ -946,6 +949,12 @@ PROCEDURE ModuleTextLitChars(m: Module;  i: INTEGER): TEXT =
   BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).chars END ModuleTextLitChars;
 PROCEDURE ModuleTextLitCnt(m: Module;  i: INTEGER): INTEGER =
   BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).cnt END ModuleTextLitCnt;
+
+PROCEDURE ModuleSetTextLitHooks(m: Module;
+                                 READONLY hooks: ARRAY [0..4] OF Proc) =
+  BEGIN m.textLitHooks := hooks END ModuleSetTextLitHooks;
+PROCEDURE ModuleGetTextLitHook(m: Module;  i: INTEGER): Proc =
+  BEGIN RETURN m.textLitHooks[i] END ModuleGetTextLitHook;
 
 PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
   (* Kept for API compat; callers should prefer ConstTextLit directly. *)
