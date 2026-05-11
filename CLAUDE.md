@@ -245,6 +245,8 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **Vtable dispatch**: `ShapeDispatch(s)` correctly dispatches via `s.vtable[0](s)` in LLVM IR; `AllocateTracedObj` stub initialises vtable pointer from `OTC_defaultMethods`
 - **Module global initialization**: variable initializers (user-specified and language-default zero-init) emitted in MSIR module body; traced globals use `BuildGcStore`
 - **External/imported variable registration**: `DeclareGlobalsMSIR` in `Module.Compile` pre-registers all module-level variables and exception descriptors before proc bodies compile
+- **TEXT literals**: static `TextLiteral.T` globals (`{ i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }`); `ConstTextLit` value kind carries uid+chars for readable MSIR text; lowered to LLVM constant-expression GEP `getelementptr inbounds (i8, ptr @textlit_N, i64 8)`
+- **TEXT concatenation**: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat(a, b)` via `HookProc(RunTyme.Hook.Concat)`; module body now passes real TEXT values to `IO.Put`
 
 ### EH Model Requirement
 
@@ -341,13 +343,18 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 ### Known Limitations / Remaining Work
 
 - **Nested procedures**: up-level variable access not supported
-- **TEXT / string literals**: string concat/IO not fully supported; module body crashes on IO.Put
+- **TEXT**: literals and `&` concatenation work; `IO.Put` receives real TEXT values in the module body. Remaining: `Fmt.Bool`, wide-char literals (use `ToLiteral` fallback), and TEXT-returning expressions that aren't yet handled (e.g., `Text.Sub`, `Fmt.Real`)
 - **GC write barrier for heap fields**: `BuildGcStore(..., container)` infrastructure exists; write barriers for storing traced refs into heap object fields not yet activated
 - **`var_map` / `gc_map`** in `RT0.ModuleInfo`: currently null; GC won't scan module globals as roots
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
+- **`Fmt.Bool`** and other `Fmt.*` returning TEXT: not yet wired through MSIR
+
+### TEXT Literal Architecture Note
+
+`TextExpr.P` is extended with `cgOffset: INTEGER` to store the `Module.Allocate` result directly on the expression object. `LiteralTable = REF ARRAY OF P` (indexed by uid) is the single per-module registry for both CG and MSIR — no parallel tracking needed. `Split8`/`Split32` on `literals[uid]` gives string content; `literals[uid].cgOffset` gives the CG const-area offset. `ExpandLiterals` grows the array; `Reset` clears entries to NIL for reuse across modules. `MSIREmit.EndUnit` bridges the data to `MSIR.Module` since `MSIRToLLVM` (in the `msir` package) cannot import `TextExpr` from `m3front`.
 
 ### Debug Symbol Support (Future Work)
 
