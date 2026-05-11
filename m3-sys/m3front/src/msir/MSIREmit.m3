@@ -1,7 +1,7 @@
 MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
-IMPORT TextExpr;
+IMPORT TextExpr, M3String, M3WString;
 IMPORT RunTyme;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
@@ -89,11 +89,23 @@ PROCEDURE EndUnit() =
     (* Populate text literals from TextExpr's per-module registry.
        TextExpr.SetUID tracks literals during compilation; we transfer
        them here so MSIRToLLVM (in the msir package) can emit the LLVM globals
-       without importing TextExpr (which would create a circular dependency). *)
+       without importing TextExpr (which would create a circular dependency).
+       Split8/Split32 on the stored expression give chars and cnt. *)
     FOR uid := 0 TO TextExpr.LiteralCount() - 1 DO
-      EVAL MSIR.ModuleAddTextLit(curModule,
-                                  TextExpr.LiteralChars(uid),
-                                  TextExpr.LiteralCnt(uid));
+      VAR e := TextExpr.LiteralExpr(uid);
+          s8: M3String.T;  s32: M3WString.T;
+          chars: TEXT;  cnt: INTEGER;
+      BEGIN
+        IF TextExpr.Split8(e, s8) THEN
+          chars := M3String.ToText(s8);
+          cnt   := M3String.Length(s8);
+        ELSE
+          EVAL TextExpr.Split32(e, s32);
+          chars := M3WString.ToLiteral(s32);
+          cnt   := - M3WString.Length(s32);
+        END;
+        EVAL MSIR.ModuleAddTextLit(curModule, chars, cnt);
+      END;
     END;
 
     errs := MSIRVerifier.VerifyModule(curModule);

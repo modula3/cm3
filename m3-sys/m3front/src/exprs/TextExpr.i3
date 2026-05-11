@@ -22,7 +22,7 @@ PROCEDURE Reset ();
 (* MSIR accessors: iterate registered literals for LLVM global emission.
    Valid after compilation; reset by Reset(). *)
 PROCEDURE LiteralCount (): INTEGER;
-PROCEDURE LiteralChars (uid: INTEGER): TEXT;    (* raw chars *)
-PROCEDURE LiteralCnt   (uid: INTEGER): INTEGER; (* char count; neg = wide *)
+PROCEDURE LiteralExpr  (uid: INTEGER): Expr.T;
+(* Use Split8/Split32 on the returned expression to get chars and count. *)
 
 END TextExpr.

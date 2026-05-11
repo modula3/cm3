@@ -14,8 +14,9 @@ IMPORT MSIR, MSIRBuilder, MSIREmit;
 
 TYPE
   P = Expr.T OBJECT
-        value8  : M3String.T;
-        value32 : M3WString.T;
+        value8    : M3String.T;
+        value32   : M3WString.T;
+        cgOffset  : INTEGER := 0;  (* Module.Allocate offset; 0 = not yet allocated *)
       OVERRIDES
         typeOf       := ExprRep.NoType;
         repTypeOf    := ExprRep.NoType;
@@ -44,18 +45,14 @@ TYPE
 (* NOTE! These UIDs have nothing to do with the UIDs that are hashes
          and used many places. *)
 
-VAR nextUID : INTEGER := 0;
-TYPE  LiteralTable  = REF ARRAY OF INTEGER;
-TYPE  CharTable     = REF ARRAY OF TEXT;
-TYPE  CntTable      = REF ARRAY OF INTEGER;
-      (* LiteralTable[uid] is the offset w/in the global constant area where
-         the uid-th literal is stored.
-         CharTable[uid] and CntTable[uid] are the raw chars and cnt for MSIR. *)
+VAR nextUID  : INTEGER := 0;
+TYPE LiteralTable = REF ARRAY OF P;
+      (* literals[uid] is the representative TextExpr.T for the uid-th literal.
+         The CG allocate offset is in literals[uid](P).cgOffset.
+         Use Split8/Split32 on it to extract string content for MSIR. *)
 
 VAR globalConstsCGVar : CG.Var  := NIL;
 VAR literals : LiteralTable := NIL;
-VAR litChars : CharTable    := NIL;  (* MSIR: raw characters for uid-th literal *)
-VAR litCnts  : CntTable     := NIL;  (* MSIR: cnt (neg = wide) for uid-th literal *)
 VAR methodListOffset : INTEGER := -1;
     (* ^Offset w/in global constant area of a list of addresses of
        TextLiteral.T's overrides of Text.T methods. *)
@@ -66,11 +63,9 @@ PROCEDURE Reset () =
     globalConstsCGVar := NIL;
     methodListOffset := -1;
     (* literals := NIL; *)
-    IF (literals # NIL) THEN
-      FOR i := FIRST (literals^) TO LAST (literals^) DO literals[i] := 0; END;
+    IF literals # NIL THEN
+       FOR i := FIRST(literals^) TO LAST(literals^) DO literals[i] := NIL; END;
     END;
-    litChars := NIL;
-    litCnts  := NIL;
   END Reset;
 
 PROCEDURE New8 (value: M3String.T): Expr.T =
@@ -143,8 +138,9 @@ PROCEDURE SetUID (p: P): INTEGER =
     (* make sure there's room in the table *)
     IF (literals = NIL) OR (LAST (literals^) < uid) THEN ExpandLiterals () END;
 
-    x := literals [uid];
-    IF (x # 0) THEN RETURN uid END;
+    (* already allocated? — literals[uid] is the representative P with cgOffset set *)
+    IF literals[uid] # NIL THEN RETURN uid END;
+    literals[uid] := p;   (* register this P as representative *)
 
     IF (globalConstsCGVar = NIL) THEN
       globalConstsCGVar := Module.GlobalData (is_const := TRUE);
@@ -154,25 +150,7 @@ PROCEDURE SetUID (p: P): INTEGER =
     (* allocate the variable with room for the trailing null character *)
     x := Module.Allocate (Chars_offset + (len+1) * width,
                            Target.Address.align, TRUE, "*TEXT literal*");
-    literals[uid] := x;
-
-    (* MSIR: record raw chars and cnt for LLVM emission *)
-    IF (litChars = NIL) OR (LAST (litChars^) < uid) THEN
-      VAR nc := NEW(CharTable, MAX(uid+1, 200));
-          nn := NEW(CntTable,  MAX(uid+1, 200));
-      BEGIN
-        IF litChars # NIL THEN
-          SUBARRAY(nc^, 0, NUMBER(litChars^)) := litChars^;
-          SUBARRAY(nn^, 0, NUMBER(litCnts^))  := litCnts^;
-        END;
-        litChars := nc;  litCnts := nn;
-      END;
-    END;
-    IF p.value8 # NIL
-      THEN litChars[uid] := M3String.ToText(p.value8);
-      ELSE litChars[uid] := M3WString.ToLiteral(p.value32);
-    END;
-    litCnts[uid] := cnt;
+    p.cgOffset := x;
 
     (* initialize the variable *)
     (*
@@ -231,7 +209,8 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     <* ASSERT NOT StaticOnly *>
 (* NOTE^ If ever duplicate text constants are removed as for arrays, this
     will need to change. *)
-    CG.Load_addr_of (globalConstsCGVar, literals[uid] + Target.Address.pack,
+    CG.Load_addr_of (globalConstsCGVar,
+                     literals[uid].cgOffset + Target.Address.pack,
                      Target.Address.align);
   END Compile;
 
@@ -315,7 +294,8 @@ PROCEDURE GenLiteral
    literal 'p', (whose value is located in the global constant area) *)
   VAR uid := SetUID (p);
   BEGIN
-    CG.Init_var (offset, globalConstsCGVar, literals[uid] + Target.Address.pack,
+    CG.Init_var (offset, globalConstsCGVar,
+                 literals[uid].cgOffset + Target.Address.pack,
                  is_const);
   END GenLiteral;
 
@@ -341,17 +321,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
 PROCEDURE LiteralCount (): INTEGER =
   BEGIN RETURN nextUID END LiteralCount;
 
-PROCEDURE LiteralChars (uid: INTEGER): TEXT =
+PROCEDURE LiteralExpr (uid: INTEGER): Expr.T =
   BEGIN
-    IF litChars = NIL OR uid > LAST(litChars^) THEN RETURN "" END;
-    RETURN litChars[uid];
-  END LiteralChars;
-
-PROCEDURE LiteralCnt (uid: INTEGER): INTEGER =
-  BEGIN
-    IF litCnts = NIL OR uid > LAST(litCnts^) THEN RETURN 0 END;
-    RETURN litCnts[uid];
-  END LiteralCnt;
+    IF literals = NIL OR uid > LAST(literals^) THEN RETURN NIL END;
+    RETURN literals[uid];
+  END LiteralExpr;
 
 BEGIN
 END TextExpr.
