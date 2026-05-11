@@ -105,10 +105,10 @@ extern "C" long  RTHooks__ScanTypecase(void *, void *) { return 0; }
 /* TEXT concatenation — only called from module body, not harness tests. */
 extern "C" void *RTHooks__Concat(void *, void *) { return nullptr; }
 
-/* TextLiteral.T method stubs — stored as pointers in @textlit_methods but
-   never called from the test harness (module body never runs). */
-extern "C" void  TextLiteral__TextLitInfo(void *, void *)         { }
-extern "C" long  TextLiteral__TextLitGetChar(void *, long)        { return 0; }
-extern "C" long  TextLiteral__TextLitGetWideChar(void *, long)    { return 0; }
-extern "C" void  TextLiteral__TextLitGetChars(void *, void *, long) { }
-extern "C" void  TextLiteral__TextLitGetWideChars(void *, void *, long) { }
+/* RTHooks TextLiteral method stubs — stored as pointers in @textlit_methods
+   but never called from the test harness (module body never runs). */
+extern "C" void  RTHooks__TextLitInfo(void *, void *)             { }
+extern "C" long  RTHooks__TextLitGetChar(void *, long)            { return 0; }
+extern "C" long  RTHooks__TextLitGetWideChar(void *, long)        { return 0; }
+extern "C" void  RTHooks__TextLitGetChars(void *, void *, long)   { }
+extern "C" void  RTHooks__TextLitGetWideChars(void *, void *, long) { }

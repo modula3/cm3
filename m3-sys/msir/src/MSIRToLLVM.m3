@@ -1069,22 +1069,22 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  <*UNUSED*> m: MSIR.Module) =
   CONST
     GcHeader = 2L; (* Word.Shift(TEXT_typecode=1, RH_typecode_offset=1) *)
     Methods = ARRAY [0..4] OF TEXT {
-      "TextLiteral__TextLitInfo",
-      "TextLiteral__TextLitGetChar",
-      "TextLiteral__TextLitGetWideChar",
-      "TextLiteral__TextLitGetChars",
-      "TextLiteral__TextLitGetWideChars"
+      "RTHooks__TextLitInfo",
+      "RTHooks__TextLitGetChar",
+      "RTHooks__TextLitGetWideChar",
+      "RTHooks__TextLitGetChars",
+      "RTHooks__TextLitGetWideChars"
     };
   VAR n := MSIR.ModuleTextLitCount(m);
   BEGIN
     IF n = 0 THEN RETURN END;
     Wr.PutText(wr, "\n; TEXT literal globals\n");
 
-    Wr.PutText(wr, "declare void @TextLiteral__TextLitInfo(ptr, ptr)\n");
-    Wr.PutText(wr, "declare i8   @TextLiteral__TextLitGetChar(ptr, i64)\n");
-    Wr.PutText(wr, "declare i32  @TextLiteral__TextLitGetWideChar(ptr, i64)\n");
-    Wr.PutText(wr, "declare void @TextLiteral__TextLitGetChars(ptr, ptr, i64)\n");
-    Wr.PutText(wr, "declare void @TextLiteral__TextLitGetWideChars(ptr, ptr, i64)\n");
+    Wr.PutText(wr, "declare void @RTHooks__TextLitInfo(ptr, ptr)\n");
+    Wr.PutText(wr, "declare i8   @RTHooks__TextLitGetChar(ptr, i64)\n");
+    Wr.PutText(wr, "declare i32  @RTHooks__TextLitGetWideChar(ptr, i64)\n");
+    Wr.PutText(wr, "declare void @RTHooks__TextLitGetChars(ptr, ptr, i64)\n");
+    Wr.PutText(wr, "declare void @RTHooks__TextLitGetWideChars(ptr, ptr, i64)\n");
 
     Wr.PutText(wr, "@textlit_methods = internal constant [5 x ptr] [\n");
     FOR i := 0 TO 4 DO
