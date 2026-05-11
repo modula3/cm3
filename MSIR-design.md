@@ -498,7 +498,7 @@ alloca — that approach diverged from D15 and introduced three structural costs
 limiting LLVM optimization). All three are now gone.
 
 **Current implementation** (`CaptureAnalysis` + `MSIRBuilder`):
-- `CaptureAnalysis.Scan(body, ca)` pre-scans the nested proc's AST, recording each
+- `Stmt.Capture(body, ca)` pre-scans the nested proc's AST, recording each
   up-level variable reference as `(Variable.T, written: BOOLEAN)`.
 - `MSIRBuilder.BeginProc(..., captures := ca)` generates one explicit `ptr` parameter
   per captured variable (`%__cap_0`, `%__cap_1`, …) and binds them in the inner
@@ -599,7 +599,7 @@ remains open (see O13).
 
 ### O4. Nested procedures: lambda-lift vs static link.
 
-**Resolved by D15.** Lambda-lifting is implemented: `CaptureAnalysis.Scan`
+**Resolved by D15.** Lambda-lifting is implemented: `Stmt.Capture`
 pre-scans nested proc bodies; explicit capture params replace `%__env`; multi-level
 nesting works naturally. See D15 for implementation details and the parameter
 explosion note.

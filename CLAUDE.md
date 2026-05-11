@@ -249,7 +249,7 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **TEXT concatenation**: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat(a, b)` via `HookProc(RunTyme.Hook.Concat)`; module body now passes real TEXT values to `IO.Put`
 - **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container (object pointer) via `MSIRBuilder.SetPendingContainer`; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; traced object fields are retyped from `GcRef` to `GcSlot` so the barrier fires correctly
 - **`var_map`/`gc_map`**: module globals embedded as trailing fields of `@Mod_M3_info` struct (after MI_SIZE=104 bytes); gc_map TipeMap byte sequence skips non-traced fields and emits `Op.Ref` for each traced global; LLVM aliases (`@Main__gCounter` etc.) preserve binary symbol compatibility with CG-compiled modules; GC now correctly scans MSIR module globals as roots
-- **Nested procedures**: lambda-lifted — each captured up-level variable becomes an explicit `ptr` parameter in the inner proc's LLVM signature (`%__cap_0`, `%__cap_1`, …); outer proc's up-level vars are ordinary allocas whose addresses are passed as capture args; `CaptureAnalysis.Scan` pre-scans the body to collect captures before `GenBodyMSIR`; `RegisterProc` stores the capture list so call sites build the right arg list; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of the same base name; multi-level nesting supported naturally (inner proc passes its own capture params through to deeper procs)
+- **Nested procedures**: lambda-lifted — each captured up-level variable becomes an explicit `ptr` parameter in the inner proc's LLVM signature (`%__cap_0`, `%__cap_1`, …); outer proc's up-level vars are ordinary allocas whose addresses are passed as capture args; `Stmt.Capture` pre-scans the body to collect captures before `GenBodyMSIR`; `RegisterProc` stores the capture list so call sites build the right arg list; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of the same base name; multi-level nesting supported naturally (inner proc passes its own capture params through to deeper procs)
 
 ### EH Model Requirement
 
@@ -323,7 +323,9 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/types/ObjectType.m3` | `InitTypecellMSIR`: registers MSIR ObjectTypeDesc with vtable; `GetObjectTypeInfo`, `FillMethodNames` |
 | `m3-sys/m3front/src/types/Type.m3` | `GenCells`: calls CG and MSIR `InitTypecell` together for each type cell |
 | `m3-sys/m3front/src/builtinOps/New.m3` | `CompileMSIR`: dispatches to `GenRefMSIR`/`GenObjectMSIR`/`GenOpaqueMSIR`; `CallAllocHook` is common tail |
-| `m3-sys/m3front/src/exprs/CallExpr.m3` | Uses `MSIRBuilder.EmitCall` (invoke-aware) instead of `MSIR.BuildCall` |
+| `m3-sys/m3front/src/misc/CaptureAnalysis.i3/.m3` | Capture-analysis module: `Note(ca, v, written)` records up-level variable accesses; `GetCaptures` returns the set; `T` is the accumulator passed through `Stmt.Capture`/`Expr.Capture` walks |
+| `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
+| `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
 | `m3-sys/msir/test/smoke/llvm_link_test.c` | 74-test C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
@@ -340,7 +342,7 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 | Proc formals + locals | `MSIRBuilder.BeginProc`, before CG `Scope.InitValues` | `Variable.BindFormalMSIR` + `Variable.AddLocalMSIR` (zero-init if `InitCost > 0`) |
 | Variable initializers | CG-path `Scope.InitValues` (guarded by `t.initDone`) | MSIR blocks inside `Variable.UserInit` fire here because `BeginProc` has set `curBlock` |
 | Exception descriptors | `Module.DeclareGlobalsMSIR` | `MSIRBuilder.ExcDescValue` called upfront; lazy calls from TryStmt/RaiseStmt find existing desc |
-| Nested proc body (MSIR) | `Procedure.LangInit` via `Scope.InitValues`, when `inline_nested_procs=FALSE` | `CaptureAnalysis.Scan` pre-scans the body; `GenBodyMSIR(t)` calls `BeginProc` with the captures, registers the proc+captures; `ProcMapContains` guards `GenBody` against re-emitting MSIR on the second (CG-only) pass |
+| Nested proc body (MSIR) | `Procedure.LangInit` via `Scope.InitValues`, when `inline_nested_procs=FALSE` | `Stmt.Capture` pre-scans the body; `GenBodyMSIR(t)` calls `BeginProc` with the captures, registers the proc+captures; `ProcMapContains` guards `GenBody` against re-emitting MSIR on the second (CG-only) pass |
 
 `Variable.m3` owns all MSIR registration for variables; `MSIRBuilder` exposes only raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`). The `Scope.InitValues` call in `GenBody`'s MSIR phase is intentionally absent — init fires during the CG-path call because `BeginProc` is already active.
 
@@ -348,9 +350,9 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 
 **Lambda-lifting: how nested procs work in MSIR**
 
-Up-level variables are identified by `CaptureAnalysis.Scan`, which walks the nested proc's AST before compilation and records each up-level variable reference. The nested proc gets one explicit `ptr` parameter per captured variable (`%__cap_0`, `%__cap_1`, …). In the outer proc, captured variables are ordinary `alloca` locals; their addresses are passed as capture arguments at each call site.
+Up-level variables are identified by `Stmt.Capture`, which dispatches through the `capture`/`captureLV` virtual methods on `Stmt.T` and `Expr.T` to walk the nested proc's AST before compilation and record each up-level variable reference. The nested proc gets one explicit `ptr` parameter per captured variable (`%__cap_0`, `%__cap_1`, …). In the outer proc, captured variables are ordinary `alloca` locals; their addresses are passed as capture arguments at each call site.
 
-- `CaptureAnalysis.Scan(body, ca)` — pre-pass that records `(Variable.T, written)` pairs
+- `Stmt.Capture(body, ca)` — pre-pass that walks the AST via the `capture`/`captureLV` virtual methods on `Stmt.T` and `Expr.T`, recording `(Variable.T, written)` pairs in `ca`
 - `MSIRBuilder.BeginProc(..., captures := ca)` — generates explicit capture params; binds each in the inner proc's varMap so `LookupVar`/`LookupVarAddr` work transparently
 - `MSIRBuilder.RegisterProc(p, proc, caps)` — stores the capture list alongside the proc
 - `MSIRBuilder.EmitNestedCall(name, callee, calleeVal, args)` — looks up captures for `calleeVal`, calls `LookupVarAddr(cap.var)` for each, prepends these to `args`
@@ -358,6 +360,23 @@ Up-level variables are identified by `CaptureAnalysis.Scan`, which walks the nes
 Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `acc`, and `SubAdd` (nested in `Add`) also uses `acc`, then `SubAdd`'s `BeginProc` runs inside `Add`'s varMap context where `acc` maps to `Add`'s `%__cap_0` param. `LookupVarAddr(acc)` returns `%__cap_0`, which is passed directly as `SubAdd`'s capture arg.
 
 **Parameter explosion note**: a proc that captures many up-level variables acquires many extra pointer parameters. LLVM's inliner and middle-end optimisations (mem2reg, SROA) typically eliminate this overhead after inlining — the pointers are promoted back to registers and the indirections disappear. O16 in MSIR-design.md discusses frame-struct grouping as a future performance tuning step for hot paths where inlining does not apply.
+
+### CallExpr MSIR Dispatch Architecture
+
+`CallExpr.m3` dispatches both MSIR compilation and capture analysis through its `MethodList` mechanism, with no per-kind logic inside `CallExpr` itself.
+
+**Types and setters** (in `CallExpr.i3`):
+- `CompilerMSIR = PROCEDURE (t: T): MSIR.Value` — MSIR compilation callback
+- `Capturer = PROCEDURE (t: T; ca: CaptureAnalysis.T)` — capture-analysis callback
+- `SetMethodMSIR(ml, c)` / `SetMethodCapture(ml, s)` — wiring helpers
+- `CaptureDefault` — set by `NewMethodList` on every `MethodList`; scans all args as reads
+
+**Per-module callbacks**:
+- `UserProc.m3`: `CompileMSIR` (direct call, vtable dispatch, nested lambda) + `Capture` (formal-mode scan); wired in `Initialize`
+- `Inc.m3`, `Dec.m3`: each defines `CompileMSIR` (arithmetic) + `Capture` (ScanLV arg0, Scan rest); wired in `Initialize`
+- Other builtins inherit `CaptureDefault` (all args read-only)
+
+**`capture`/`captureLV` virtual methods**: defined on `Expr.T` (in `ExprRep.i3`) and `Stmt.T` (in `StmtRep.i3`). `Stmt.Capture(s, ca)` chains through `.next`; `Expr.Capture(e, ca)` dispatches to `e.capture(ca)`. Each concrete stmt/expr type overrides these to recurse into its sub-nodes. `Expr.CaptureLV` propagates the lvalue context so that directly-assigned variables are marked `written=TRUE` by `VarExpr` and `NamedExpr`.
 
 ### Known Limitations / Remaining Work
 
