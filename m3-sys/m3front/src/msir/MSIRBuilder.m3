@@ -642,6 +642,20 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
     INC(globalMapN);
   END GlobalMapAdd;
 
+PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
+                              infoName: TEXT;  byteOff: INTEGER;
+                              fieldType: MSIR.T) =
+  BEGIN
+    IF globalMapN >= MaxGlobalMap THEN RETURN END;
+    (* Patch the global with struct field info and a StructFieldRef value. *)
+    MSIR.GlobalSetStructField(g, byteOff,
+                              MSIR.StructFieldRef(infoName, byteOff, fieldType));
+    MSIR.ModuleAddGlobal(m, g);
+    globalMap[globalMapN].key := v;
+    globalMap[globalMapN].val := g;
+    INC(globalMapN);
+  END GlobalMapAddStruct;
+
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T) =
   BEGIN
     IF varMapN >= MaxVarMap THEN RETURN END;

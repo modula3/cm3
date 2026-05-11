@@ -264,6 +264,8 @@ PROCEDURE IsFormal (t: T): BOOLEAN =
 PROCEDURE DeclareGlobalMSIR (t: T) =
   VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
       m : MSIR.Module;  g: MSIR.Global;
+      byteSize, byteAlign, byteOff: INTEGER;
+      infoName: TEXT;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     IF NOT t.global OR t.indirect THEN RETURN END;
@@ -275,9 +277,21 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
                  OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
     eltType  := mt;
     IF isTraced THEN eltType := MSIR.EltType(mt) END;
+    (* Allocate in the module struct; compute byte size and alignment. *)
+    byteSize  := t.size DIV Target.Char.size;
+    byteAlign := MAX(1, t.align DIV Target.Char.size);
+    IF byteSize <= 0 THEN byteSize := Target.Address.bytes END;
+    byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
+    infoName  := MSIR.ModuleName(m) & "_M3_info";
     g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=FALSE),
                         eltType, isTraced);
-    MSIRBuilder.GlobalMapAdd(t, g, m);
+    (* Attach struct field info and update refValue to a StructFieldRef. *)
+    VAR fieldType: MSIR.T;
+    BEGIN
+      IF isTraced THEN fieldType := MSIR.TGcSlot(eltType)
+                  ELSE fieldType := MSIR.TPtr(eltType) END;
+      MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff, fieldType);
+    END;
   END DeclareGlobalMSIR;
 
 PROCEDURE RegisterExternMSIR (t: T) =

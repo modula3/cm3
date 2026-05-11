@@ -2,7 +2,7 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text, Target;
+IMPORT RefSeq, Fmt, Text, Target, M3RT;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -317,18 +317,19 @@ PROCEDURE ObjectFieldIndex(t: T;  name: TEXT): INTEGER =
 (*----------------------------------------------------------------- Values *)
 
 REVEAL Value = BRANDED "MSIR.Value" REF RECORD
-  type:      T          := NIL;
-  name:      TEXT       := NIL;
-  vKind:     ValueKind;
-  intVal:    LONGINT    := 0L;
-  proc:      Proc       := NIL;     (* Param *)
-  paramIdx:  INTEGER    := -1;
-  block:     Block      := NIL;     (* BlockParam *)
-  bparamIdx: INTEGER    := -1;
-  insn:      Insn       := NIL;     (* InsnResult *)
-  textUid:   INTEGER    := -1;      (* ConstTextLit: index into @textlit_N *)
-  textChars: TEXT       := NIL;     (* ConstTextLit: raw chars for printing *)
-  textCnt:   INTEGER    := 0;       (* ConstTextLit: cnt (neg = wide) *)
+  type:        T          := NIL;
+  name:        TEXT       := NIL;
+  vKind:       ValueKind;
+  intVal:      LONGINT    := 0L;
+  proc:        Proc       := NIL;     (* Param *)
+  paramIdx:    INTEGER    := -1;
+  block:       Block      := NIL;     (* BlockParam *)
+  bparamIdx:   INTEGER    := -1;
+  insn:        Insn       := NIL;     (* InsnResult *)
+  textUid:     INTEGER    := -1;      (* ConstTextLit *)
+  textChars:   TEXT       := NIL;     (* ConstTextLit *)
+  textCnt:     INTEGER    := 0;       (* ConstTextLit *)
+  structOff:   INTEGER    := -1;      (* StructFieldRef: byte offset in @Mod_M3_info *)
 END;
 
 PROCEDURE ConstInt(t: T;  v: LONGINT): Value =
@@ -378,6 +379,19 @@ PROCEDURE RetypeValue(v: Value;  t: T): Value =
     w.insn  := v.insn;
     RETURN w;
   END RetypeValue;
+
+PROCEDURE StructFieldRef(infoName: TEXT;  byteOffset: INTEGER;  t: T): Value =
+  VAR v := NEW(Value);
+  BEGIN
+    v.type      := t;
+    v.vKind     := ValueKind.StructFieldRef;
+    v.name      := "@" & infoName;   (* base global name *)
+    v.structOff := byteOffset;
+    RETURN v;
+  END StructFieldRef;
+
+PROCEDURE GetStructFieldOffset(v: Value): INTEGER =
+  BEGIN RETURN v.structOff END GetStructFieldOffset;
 
 PROCEDURE ConstTextLit(uid: INTEGER;  chars: TEXT;  cnt: INTEGER): Value =
   VAR val := NEW(Value);
@@ -722,6 +736,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
   textLiterals:  RefSeq.T;                         (* elements: TextLit *)
+  nextGlobalOff: INTEGER := 0;  (* byte offset for next embedded user global *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
@@ -734,8 +749,9 @@ REVEAL Global = BRANDED "MSIR.Global" REF RECORD
   name:       TEXT;
   type:       T;
   isTraced:   BOOLEAN;
-  isExternal: BOOLEAN := FALSE;
-  refValue:   Value := NIL;
+  isExternal: BOOLEAN  := FALSE;
+  byteOffset: INTEGER  := -1;   (* -1 = standalone global; >=0 = offset in @Mod_M3_info *)
+  refValue:   Value    := NIL;
 END;
 
 PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
@@ -759,11 +775,14 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
     RETURN g;
   END NewGlobal;
 
-PROCEDURE GlobalName      (g: Global): TEXT    = BEGIN RETURN g.name       END GlobalName;
-PROCEDURE GlobalType      (g: Global): T       = BEGIN RETURN g.type       END GlobalType;
-PROCEDURE GlobalIsTraced  (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
-PROCEDURE GlobalIsExternal(g: Global): BOOLEAN = BEGIN RETURN g.isExternal END GlobalIsExternal;
-PROCEDURE GlobalValue(g: Global): Value     = BEGIN RETURN g.refValue END GlobalValue;
+PROCEDURE GlobalName       (g: Global): TEXT    = BEGIN RETURN g.name       END GlobalName;
+PROCEDURE GlobalType       (g: Global): T       = BEGIN RETURN g.type       END GlobalType;
+PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
+PROCEDURE GlobalIsExternal (g: Global): BOOLEAN = BEGIN RETURN g.isExternal END GlobalIsExternal;
+PROCEDURE GlobalByteOffset    (g: Global): INTEGER = BEGIN RETURN g.byteOffset END GlobalByteOffset;
+PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value) =
+  BEGIN g.byteOffset := byteOff; g.refValue := ref END GlobalSetStructField;
+PROCEDURE GlobalValue(g: Global): Value         = BEGIN RETURN g.refValue   END GlobalValue;
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global) =
   BEGIN m.globals.addhi(g) END ModuleAddGlobal;
@@ -771,6 +790,31 @@ PROCEDURE ModuleGlobalCount(m: Module): INTEGER =
   BEGIN RETURN m.globals.size() END ModuleGlobalCount;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global =
   BEGIN RETURN m.globals.get(i) END ModuleGlobal;
+
+PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
+                             byteAlign: INTEGER): INTEGER =
+  VAR off: INTEGER;
+  BEGIN
+    (* Initialise on first call: start right after MI_SIZE *)
+    IF m.nextGlobalOff = 0 THEN
+      m.nextGlobalOff := M3RT.MI_SIZE DIV Target.Char.size;
+    END;
+    (* Round up to alignment *)
+    off := m.nextGlobalOff;
+    IF byteAlign > 1 THEN
+      off := (off + byteAlign - 1) - ((off + byteAlign - 1) MOD byteAlign);
+    END;
+    m.nextGlobalOff := off + byteSize;
+    RETURN off;
+  END ModuleAllocGlobal;
+
+PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
+  BEGIN
+    IF m.nextGlobalOff = 0 THEN
+      RETURN M3RT.MI_SIZE DIV Target.Char.size;
+    END;
+    RETURN m.nextGlobalOff;
+  END ModuleGlobalStructSize;
 
 (*---------------------------------------------- exception descriptors *)
 
@@ -932,8 +976,9 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.globals       := NEW(RefSeq.T).init();
     m.excDescs      := NEW(RefSeq.T).init();
     m.importBinders := NEW(RefSeq.T).init();
-    m.typeDescs     := NEW(RefSeq.T).init();
-    m.textLiterals  := NEW(RefSeq.T).init();
+    m.typeDescs      := NEW(RefSeq.T).init();
+    m.textLiterals   := NEW(RefSeq.T).init();
+    m.nextGlobalOff  := 0;  (* lazily initialised to MI_SIZE on first allocation *)
     RETURN m;
   END NewModule;
 

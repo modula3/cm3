@@ -95,13 +95,18 @@ PROCEDURE SetHi(t: T): LONGINT;
 
 TYPE Value <: REFANY;
 
-TYPE ValueKind = {ConstInt, ConstNil, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef};
+TYPE ValueKind = {ConstInt, ConstNil, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef,
+                  StructFieldRef (* GEP into module's @Mod_M3_info struct *) };
 
 PROCEDURE ConstInt(t: T;  v: LONGINT): Value;
 PROCEDURE ConstBool(v: BOOLEAN): Value;
 PROCEDURE ConstNil(t: T): Value;      (* t must be Ptr / GcRef *)
 PROCEDURE ConstZero(t: T): Value;    (* zero / NIL / FALSE for scalars; NIL for unsupported types *)
 PROCEDURE RetypeValue(v: Value; t: T): Value;
+PROCEDURE StructFieldRef(infoName: TEXT;  byteOffset: INTEGER;  t: T): Value;
+(* A ptr/GcSlot value computed as getelementptr i8, ptr @infoName, i64 byteOffset.
+   Used for module globals embedded in the @Mod_M3_info struct. *)
+PROCEDURE GetStructFieldOffset(v: Value): INTEGER;
 (* Return a new Value with the same name/kind as v but type t.
    Used to recast a GEP ptr result as GcSlot when the target field is traced. *)
 PROCEDURE ConstTextLit(uid: INTEGER; chars: TEXT; cnt: INTEGER): Value;
@@ -313,16 +318,27 @@ TYPE Global <: REFANY;
    gc.store; loads go through gc.load. Otherwise plain load/store. *)
 PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
                     isExternal: BOOLEAN := FALSE): Global;
-PROCEDURE GlobalName      (g: Global): TEXT;
-PROCEDURE GlobalType      (g: Global): T;
-PROCEDURE GlobalIsTraced  (g: Global): BOOLEAN;
-PROCEDURE GlobalIsExternal(g: Global): BOOLEAN;
+PROCEDURE GlobalName       (g: Global): TEXT;
+PROCEDURE GlobalType       (g: Global): T;
+PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN;
+PROCEDURE GlobalIsExternal (g: Global): BOOLEAN;
+PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)
+PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value);
 PROCEDURE GlobalValue(g: Global): Value;
                                              (* an addressable Value:
                                                 gc_slot type if traced,
                                                 ptr type otherwise *)
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global);
+
+(* Allocate space for a struct-embedded global in the module's @Mod_M3_info
+   struct.  Returns the byte offset allocated; advances the internal cursor.
+   byteSize is the size in bytes; byteAlign is the required byte alignment.
+   After MI_SIZE bytes of standard ModuleInfo fields, user globals follow. *)
+PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
+                             byteAlign: INTEGER): INTEGER;
+PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER;
+(* Total byte size of the module struct = MI_SIZE + embedded user globals. *)
 PROCEDURE ModuleGlobalCount(m: Module): INTEGER;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global;
 

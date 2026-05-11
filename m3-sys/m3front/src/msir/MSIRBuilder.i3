@@ -182,6 +182,12 @@ PROCEDURE BeginModule();
 (* Raw map-management helpers.  Variable.m3 calls these after doing its own
    type translation and condition checks. *)
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
+
+(* Like GlobalMapAdd but for globals embedded in the @Mod_M3_info struct.
+   Sets the global's byteOffset and refValue to a StructFieldRef GEP. *)
+PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
+                              infoName: TEXT;  byteOff: INTEGER;
+                              fieldType: MSIR.T);
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T);
 PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
 

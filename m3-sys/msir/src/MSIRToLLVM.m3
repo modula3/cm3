@@ -1,7 +1,7 @@
 MODULE MSIRToLLVM;
 
-IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr;
-IMPORT M3RT, Target, Word;
+IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
+IMPORT M3RT, Target;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (*----------------------------------------------------- module-level state *)
@@ -30,6 +30,14 @@ PROCEDURE LLHookName(p: MSIR.Proc;  fallback: TEXT): TEXT =
     IF p # NIL THEN RETURN LLSymbol(p) END;
     RETURN fallback;
   END LLHookName;
+
+(* Render an MSIR type as TEXT (for use in alias declarations etc.) *)
+PROCEDURE LLTypeStr(t: MSIR.T): TEXT =
+  VAR wr := TextWr.New();
+  BEGIN
+    LLType(wr, t);
+    RETURN TextWr.ToText(wr);
+  END LLTypeStr;
 
 (* Capture LLOpVal(v) as a TEXT for use in barrier string templates. *)
 PROCEDURE LLOpValStr(v: MSIR.Value): TEXT =
@@ -152,6 +160,13 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.GlobalRef =>
         Wr.PutText(wr, "@");
         Wr.PutText(wr, LLGlobalSym(MSIR.ValueName(v)));
+    | MSIR.ValueKind.StructFieldRef =>
+        (* getelementptr inbounds (i8, ptr @Mod_M3_info, i64 N) *)
+        Wr.PutText(wr, "getelementptr inbounds (i8, ptr ");
+        Wr.PutText(wr, MSIR.ValueName(v));   (* "@Mod_M3_info" *)
+        Wr.PutText(wr, ", i64 ");
+        Wr.PutText(wr, Fmt.Int(MSIR.GetStructFieldOffset(v)));
+        Wr.PutText(wr, ")");
     ELSE
         (* InsnResult/Param names: % prefix; bare param names get % added.
            ExcDesc values start with @ (full symbol) and are emitted as-is. *)
@@ -978,6 +993,8 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
 PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global) =
   VAR t := MSIR.GlobalType(g);
   BEGIN
+    (* Struct-embedded globals live in @Mod_M3_info, not as standalone globals. *)
+    IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN RETURN END;
     Wr.PutText(wr, "@");
     IF MSIR.GlobalIsExternal(g) THEN
       Wr.PutText(wr, MSIR.GlobalName(g));
@@ -1179,6 +1196,80 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
     END;
   END EmitTypeCells;
 
+(*----------------------------------------------- gc_map emission *)
+
+(* Emit a TipeMap byte-array global for module global scanning.
+   Returns TRUE if any traced globals exist (and the global was emitted). *)
+PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
+                           modName: TEXT;  miBytes: INTEGER): BOOLEAN =
+  TYPE ByteArr = REF ARRAY OF INTEGER;
+  VAR bytes := NEW(ByteArr, 64);  n := 0;  cursor := 0;
+
+  PROCEDURE AddByte(b: INTEGER) =
+  BEGIN
+    IF n >= NUMBER(bytes^) THEN
+      VAR nb := NEW(ByteArr, 2 * NUMBER(bytes^));
+      BEGIN SUBARRAY(nb^, 0, NUMBER(bytes^)) := bytes^; bytes := nb END;
+    END;
+    bytes[n] := b;  INC(n);
+  END AddByte;
+
+  PROCEDURE SkipTo(target: INTEGER) =
+  VAR delta := target - cursor;
+  BEGIN
+    WHILE delta > 0 DO
+      IF delta <= 255 THEN
+        AddByte(42);  AddByte(delta);   (* SkipF_1 + 1-byte count *)
+        INC(cursor, delta);  delta := 0;
+      ELSE
+        AddByte(43);  (* SkipF_2 + 2-byte little-endian count *)
+        AddByte(Word.And(delta, 16_ff));
+        AddByte(Word.And(Word.RightShift(delta, 8), 16_ff));
+        INC(cursor, delta);  delta := 0;
+      END;
+    END;
+  END SkipTo;
+
+  VAR nGlob := MSIR.ModuleGlobalCount(m);  hasTraced := FALSE;
+  BEGIN
+    FOR i := 0 TO nGlob - 1 DO
+      VAR g := MSIR.ModuleGlobal(m, i);
+      BEGIN
+        IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g)
+           AND MSIR.GlobalIsTraced(g) THEN
+          hasTraced := TRUE;
+        END;
+      END;
+    END;
+    IF NOT hasTraced THEN RETURN FALSE END;
+
+    (* Skip past standard ModuleInfo fields. *)
+    SkipTo(miBytes);
+
+    (* Visit each traced struct-embedded global in allocation order. *)
+    FOR i := 0 TO nGlob - 1 DO
+      VAR g   := MSIR.ModuleGlobal(m, i);
+          off := MSIR.GlobalByteOffset(g);
+      BEGIN
+        IF off >= 0 AND NOT MSIR.GlobalIsExternal(g) AND MSIR.GlobalIsTraced(g) THEN
+          SkipTo(off);
+          AddByte(4);   (* Op.Ref: visit, advance cursor by address size *)
+          INC(cursor, Target.Address.bytes);
+        END;
+      END;
+    END;
+    AddByte(0);  (* Op.Stop *)
+
+    Wr.PutText(wr, "@" & modName & "_M3_gc_map = internal constant ["
+                   & Fmt.Int(n) & " x i8] c\"");
+    FOR i := 0 TO n - 1 DO
+      Wr.PutText(wr, "\\");
+      Wr.PutText(wr, Fmt.Pad(Fmt.Unsigned(bytes[i], 16), 2, '0'));
+    END;
+    Wr.PutText(wr, "\"\n");
+    RETURN TRUE;
+  END EmitGcMapGlobal;
+
 (*----------------------------------------------- module binder emission *)
 
 (* Emit the RTLinker binder @<Mod>_M3 and RT0.ModuleInfo struct @<Mod>_M3_info.
@@ -1210,6 +1301,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     fieldType  : TEXT;
     fieldVal   : TEXT;
     byteOff    : INTEGER;
+    gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
   BEGIN
     <* ASSERT M3RT.MI_SIZE MOD cs = 0,
        "RT0.ModuleInfo size not a multiple of char size" *>
@@ -1263,6 +1355,11 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
 
+    (* Emit gc_map if there are any struct-embedded traced module globals. *)
+    IF EmitGcMapGlobal(wr, m, modName, miBytes) THEN
+      gcMapName := modName & "_M3_gc_map";
+    END;
+
     (* Emit named type — field types derived from M3RT offsets. *)
     Wr.PutText(wr, "\n");
     Wr.PutText(wr, "; RT0.ModuleInfo for " & modName
@@ -1275,6 +1372,19 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       IF byteOff = M3RT.MI_link_state DIV cs OR byteOff = M3RT.MI_gc_flags DIV cs
         THEN Wr.PutText(wr, "i64");
         ELSE Wr.PutText(wr, "ptr");
+      END;
+    END;
+    (* Append user global fields to the struct type. *)
+    FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
+      VAR g := MSIR.ModuleGlobal(m, i);
+      BEGIN
+        IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
+          Wr.PutText(wr, ", ");
+          IF MSIR.GlobalIsTraced(g)
+            THEN Wr.PutText(wr, "ptr");  (* traced ref: always ptr *)
+            ELSE LLType(wr, MSIR.GlobalType(g));
+          END;
+        END;
       END;
     END;
     Wr.PutText(wr, " }\n");
@@ -1296,8 +1406,18 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       ELSIF byteOff = M3RT.MI_part_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_part_rev";
       ELSIF byteOff = M3RT.MI_proc_info DIV cs      THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_proc_info";
       ELSIF byteOff = M3RT.MI_try_scopes DIV cs     THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_try_scopes";
-      ELSIF byteOff = M3RT.MI_var_map DIV cs        THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_var_map";
-      ELSIF byteOff = M3RT.MI_gc_map DIV cs         THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_gc_map";
+      ELSIF byteOff = M3RT.MI_var_map DIV cs        THEN fieldType := "ptr";
+                                                          fieldName := "MI_var_map";
+                                                          IF gcMapName # NIL
+                                                            THEN fieldVal := "@" & gcMapName;
+                                                            ELSE fieldVal := "null";
+                                                          END;
+      ELSIF byteOff = M3RT.MI_gc_map DIV cs         THEN fieldType := "ptr";
+                                                          fieldName := "MI_gc_map";
+                                                          IF gcMapName # NIL
+                                                            THEN fieldVal := "@" & gcMapName;
+                                                            ELSE fieldVal := "null";
+                                                          END;
       ELSIF byteOff = M3RT.MI_imports DIV cs        THEN fieldType := "ptr";
                                                           fieldName := "MI_imports";
                                                           IF nImports > 0
@@ -1314,11 +1434,73 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       END;
       IF k < nFields - 1
         THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
-        ELSE Wr.PutText(wr, "  " & fieldType & " " & fieldVal);
+        ELSE (* Last standard field — comma only if user globals follow. *)
+             VAR hasEmbedded := FALSE;
+             BEGIN
+               FOR gi := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
+                 VAR g := MSIR.ModuleGlobal(m, gi);
+                 BEGIN
+                   IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
+                     hasEmbedded := TRUE;
+                   END;
+                 END;
+               END;
+               IF hasEmbedded
+                 THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
+                 ELSE Wr.PutText(wr, "  " & fieldType & " " & fieldVal);
+               END;
+             END;
       END;
       Wr.PutText(wr, "  ; " & fieldName & " (+" & Fmt.Int(byteOff) & ")\n");
     END;
+    (* Append zero initializers for struct-embedded user globals. *)
+    VAR embGlobs: RefSeq.T := NEW(RefSeq.T).init();
+    BEGIN
+      FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
+        VAR g := MSIR.ModuleGlobal(m, i);
+        BEGIN
+          IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
+            embGlobs.addhi(g);
+          END;
+        END;
+      END;
+      FOR i := 0 TO embGlobs.size() - 1 DO
+        VAR g: MSIR.Global := embGlobs.get(i);
+        BEGIN
+          IF MSIR.GlobalIsTraced(g)
+            THEN Wr.PutText(wr, "  ptr null");
+            ELSE Wr.PutText(wr, "  "); LLType(wr, MSIR.GlobalType(g));
+                 Wr.PutText(wr, " zeroinitializer");
+          END;
+          IF i < embGlobs.size() - 1 THEN Wr.PutText(wr, ",") END;
+          Wr.PutText(wr, "  ; " & MSIR.GlobalName(g)
+                         & " (+" & Fmt.Int(MSIR.GlobalByteOffset(g)) & ")\n");
+        END;
+      END;
+    END;
     Wr.PutText(wr, "}\n");
+
+    (* Emit aliases for struct-embedded globals so C/CG code can find them
+       by their mangled names (e.g. @Main__gCounter). *)
+    FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
+      VAR g   := MSIR.ModuleGlobal(m, i);
+          off := MSIR.GlobalByteOffset(g);
+      BEGIN
+        IF off >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
+          VAR lltype: TEXT;
+          BEGIN
+            IF MSIR.GlobalIsTraced(g)
+              THEN lltype := "ptr";
+              ELSE lltype := LLTypeStr(MSIR.GlobalType(g));
+            END;
+            Wr.PutText(wr, "@" & LLGlobalSym(MSIR.GlobalName(g))
+                           & " = alias " & lltype
+                           & ", ptr getelementptr inbounds (i8, ptr "
+                           & infoName & ", i64 " & Fmt.Int(off) & ")\n");
+          END;
+        END;
+      END;
+    END;
 
     (* Interface binder @<Mod>_I3 — only needed when no imports section
        emitted it already (that section defines it first to avoid declare
