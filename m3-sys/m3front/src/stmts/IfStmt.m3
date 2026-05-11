@@ -21,7 +21,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 TYPE
@@ -202,16 +202,16 @@ PROCEDURE CompileMSIR (p: P) =
        so curBlock is already merge when one was needed. *)
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   VAR c := p.clauses;
   BEGIN
     WHILE c # NIL DO
-      Expr.Scan (c.cond, ca);
-      Stmt.Scan (c.body, ca);
+      Expr.Capture (c.cond, ca);
+      Stmt.Capture (c.body, ca);
       c := c.next;
     END;
-    Stmt.Scan (p.elseBody, ca);
-  END Scan;
+    Stmt.Capture (p.elseBody, ca);
+  END Capture;
 
 BEGIN
 END IfStmt.

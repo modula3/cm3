@@ -23,7 +23,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (needScope: BOOLEAN): Stmt.T =
@@ -148,10 +148,10 @@ PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Stmt.CheckState) =
     Stmt.TypeCheck (x.body, cs);
   END CheckTrace;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Stmt.Scan (p.body, ca);
-  END Scan;
+    Stmt.Capture (p.body, ca);
+  END Capture;
 
 BEGIN
 END BlockStmt.

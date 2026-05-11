@@ -56,7 +56,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := LoopholeExprAlign;
-        scan         := Scan;
+        capture  := Capture;
       END;
 
 (*EXPORTED:*)
@@ -514,10 +514,10 @@ PROCEDURE NoteWrites (p: P) =
     Expr.NoteWrite (p.expr);
   END NoteWrites;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.expr, ca);
-  END Scan;
+    Expr.Capture (p.expr, ca);
+  END Capture;
 
 BEGIN
 END LoopholeExpr.

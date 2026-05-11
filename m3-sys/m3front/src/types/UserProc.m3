@@ -359,7 +359,7 @@ PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
     formal   : Value.T;
     finfo    : Formal.Info;
   BEGIN
-    Expr.Scan(ce.proc, ca);
+    Expr.Capture(ce.proc, ca);
     formal := ProcType.Formals(procType);
     FOR i := 0 TO LAST(ce.args^) DO
       IF formal # NIL THEN
@@ -369,9 +369,9 @@ PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
         finfo.mode := Formal.Mode.mVALUE;  (* extra args beyond formal list *)
       END;
       IF finfo.mode = Formal.Mode.mVAR THEN
-        Expr.ScanLV(ce.args[i], ca);
+        Expr.CaptureLV(ce.args[i], ca);
       ELSE
-        Expr.Scan(ce.args[i], ca);
+        Expr.Capture(ce.args[i], ca);
       END;
     END;
   END Capture;

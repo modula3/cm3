@@ -36,8 +36,8 @@ TYPE
         genLiteral   := GenLiteral;
         note_write   := NoteWrites;
         exprAlign    := KeywordExprAlign;
-        scan         := Scan;
-        scanLV       := ScanLV;
+        capture  := Capture;
+        captureLV := CaptureLV;
       END;
 
 PROCEDURE New (key: M3ID.T;  arg: Expr.T): Expr.T =
@@ -171,15 +171,15 @@ PROCEDURE NoteWrites (p: P) =
     Expr.NoteWrite (p.expr);
   END NoteWrites;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.expr, ca);
-  END Scan;
+    Expr.Capture (p.expr, ca);
+  END Capture;
 
-PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.ScanLV (p.expr, ca);
-  END ScanLV;
+    Expr.CaptureLV (p.expr, ca);
+  END CaptureLV;
 
 BEGIN
 END KeywordExpr.

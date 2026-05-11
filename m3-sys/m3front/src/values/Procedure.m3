@@ -611,7 +611,7 @@ PROCEDURE GenBodyMSIR (p: T) =
   VAR ca := CaptureAnalysis.New ();
   BEGIN
     (* Scan the nested proc body to collect up-level variable captures. *)
-    Stmt.Scan (p.block, ca);
+    Stmt.Capture (p.block, ca);
     (* Use the fully-qualified unmangled name so nested procs don't collide
        with module-level procs of the same base name. *)
     IF NOT MSIRBuilder.BeginProc (

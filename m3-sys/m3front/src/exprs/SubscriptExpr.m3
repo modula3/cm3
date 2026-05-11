@@ -50,7 +50,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := SubscriptExprAlign;
-        scanLV       := ScanLV;
+        captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -542,13 +542,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
   END CompileMSIR;
 
-PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     (* Assigning a[i] modifies the array variable a — propagate the lvalue
        context.  The subscript b is always a read. *)
-    Expr.ScanLV (p.a, ca);
-    Expr.Scan   (p.b, ca);
-  END ScanLV;
+    Expr.CaptureLV (p.a, ca);
+    Expr.Capture   (p.b, ca);
+  END CaptureLV;
 
 BEGIN
 END SubscriptExpr.

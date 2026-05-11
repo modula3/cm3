@@ -50,7 +50,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := CheckExprAlign;
-        scan         := Scan;
+        capture  := Capture;
         compileMSIR  := CompileMSIR;
       END;
 
@@ -209,10 +209,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN Expr.CompileMSIR (p.expr);
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.expr, ca);
-  END Scan;
+    Expr.Capture (p.expr, ca);
+  END Capture;
 
 BEGIN
 END CheckExpr.

@@ -28,7 +28,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 TYPE
@@ -484,11 +484,11 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     RETURN o;
   END GetOutcome;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Stmt.Scan (p.body,    ca);
-    Stmt.Scan (p.finally, ca);
-  END Scan;
+    Stmt.Capture (p.body,    ca);
+    Stmt.Capture (p.finally, ca);
+  END Capture;
 
 BEGIN
 END TryFinStmt.

@@ -20,7 +20,7 @@ REVEAL
     (* Emit MSIR for this statement. On encountering an unsupported
        construct, calls MSIRBuilder.Abandon — the enclosing proc
        will be dropped at EndProc. *)
-    scan        (ca: CaptureAnalysis.T) := ScanDefault;
+    capture        (ca: CaptureAnalysis.T) := CaptureDefault;
     (* Walk this statement, recording up-level variable captures in ca.
        Concrete implementations recurse into sub-statements and
        sub-expressions.  The default is a no-op (correct for leaf stmts
@@ -31,6 +31,6 @@ PROCEDURE Init (stmt: M3.Stmt);
 (* initializes the common fields of a Stmt.T *)
 
 PROCEDURE MSIRDefault (s: M3.Stmt);
-PROCEDURE ScanDefault  (s: M3.Stmt;  ca: CaptureAnalysis.T);
+PROCEDURE CaptureDefault  (s: M3.Stmt;  ca: CaptureAnalysis.T);
 
 END StmtRep.

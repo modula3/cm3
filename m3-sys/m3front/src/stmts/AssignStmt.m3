@@ -25,7 +25,7 @@ TYPE P = Stmt.T OBJECT
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 (* EXPORTED: *) 
@@ -871,11 +871,11 @@ PROCEDURE CompileMSIR (p: P) =
     END;
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.ScanLV (p.lhs, ca);
-    Expr.Scan (p.rhs, ca);
-  END Scan;
+    Expr.CaptureLV (p.lhs, ca);
+    Expr.Capture (p.rhs, ca);
+  END Capture;
 
 BEGIN
 END AssignStmt.

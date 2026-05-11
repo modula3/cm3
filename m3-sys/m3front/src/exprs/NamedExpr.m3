@@ -45,8 +45,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         checkUseFailure := CheckUseFailure;
-        scan              := Scan;
-        scanLV            := ScanLV;
+        capture  := Capture;
+        captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -371,15 +371,15 @@ PROCEDURE NoteCapture (p: P;  ca: CaptureAnalysis.T;  written: BOOLEAN) =
     END;
   END NoteCapture;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     NoteCapture (p, ca, FALSE);
-  END Scan;
+  END Capture;
 
-PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     NoteCapture (p, ca, TRUE);
-  END ScanLV;
+  END CaptureLV;
 
 BEGIN
 END NamedExpr.

@@ -17,7 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -68,10 +68,10 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     RETURN oc;
   END GetOutcome;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Stmt.Scan (p.body, ca);
-  END Scan;
+    Stmt.Capture (p.body, ca);
+  END Capture;
 
 BEGIN
 END LoopStmt.

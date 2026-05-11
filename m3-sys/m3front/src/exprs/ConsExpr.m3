@@ -52,7 +52,7 @@ TYPE
         staticLength := StaticLength;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
-        scan := Scan;
+        capture  := Capture;
       END;
 
 (* EXPORTED: *)
@@ -261,17 +261,17 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     RETURN Expr.CheckUseFailure (p.base) (* Delegate.*);
   END CheckUseFailure;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     (* Scan args if any; also scan through base if it exists. *)
     IF p.base # NIL THEN
-      Expr.Scan (p.base, ca);
+      Expr.Capture (p.base, ca);
     ELSIF p.args # NIL THEN
       FOR i := 0 TO LAST (p.args^) DO
-        Expr.Scan (p.args[i], ca);
+        Expr.Capture (p.args[i], ca);
       END;
     END;
-  END Scan;
+  END Capture;
 
 BEGIN
 END ConsExpr.

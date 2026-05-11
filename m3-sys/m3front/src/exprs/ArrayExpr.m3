@@ -179,7 +179,7 @@ REVEAL
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
     checkUseFailure := CheckUseFailure;
-    scan := Scan
+    capture  := Capture
   END (*OBJECT*);
 
 (* EXPORTED: *) 
@@ -2367,14 +2367,14 @@ PROCEDURE CheckUseFailure (top: T): BOOLEAN =
     END;
   END CheckUseFailure;
 
-PROCEDURE Scan (p: T;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: T;  ca: CaptureAnalysis.T) =
   BEGIN
     IF p.args # NIL THEN
       FOR i := 0 TO LAST (p.args^) DO
-        Expr.Scan (p.args[i], ca);
+        Expr.Capture (p.args[i], ca);
       END;
     END;
-  END Scan;
+  END Capture;
 
 BEGIN
 END ArrayExpr.

@@ -151,8 +151,8 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
 PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
   (* DEC writes its first argument; any decrement expression is a read. *)
   BEGIN
-    Expr.ScanLV (ce.args[0], ca);
-    FOR i := 1 TO LAST (ce.args^) DO Expr.Scan (ce.args[i], ca) END;
+    Expr.CaptureLV (ce.args[0], ca);
+    FOR i := 1 TO LAST (ce.args^) DO Expr.Capture (ce.args[i], ca) END;
   END Capture;
 
 PROCEDURE Initialize () =

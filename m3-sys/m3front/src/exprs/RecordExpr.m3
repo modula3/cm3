@@ -64,7 +64,7 @@ TYPE
         note_write   := ExprRep.NotWritable;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
-        scan := Scan;
+        capture  := Capture;
       END;
 
 (* EXPORTED: *)
@@ -589,14 +589,14 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     END;
   END CheckUseFailure;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     IF p.args # NIL THEN
       FOR i := 0 TO LAST (p.args^) DO
-        Expr.Scan (p.args[i], ca);
+        Expr.Capture (p.args[i], ca);
       END;
     END;
-  END Scan;
+  END Capture;
 
 BEGIN
 END RecordExpr.

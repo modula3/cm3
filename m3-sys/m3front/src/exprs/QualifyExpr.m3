@@ -64,8 +64,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write        := NoteWrites;
         exprAlign         := QualifyExprAlign;
-        scan              := Scan;
-        scanLV            := ScanLV;
+        capture  := Capture;
+        captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -901,29 +901,29 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.lhsExpr, ca);
-  END Scan;
+    Expr.Capture (p.lhsExpr, ca);
+  END Capture;
 
-PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     CASE p.class OF
     | Class.recField =>
         (* Assigning through a record field modifies the record variable itself:
            propagate the lvalue context so the outer variable is marked written. *)
-        Expr.ScanLV (p.lhsExpr, ca);
+        Expr.CaptureLV (p.lhsExpr, ca);
     | Class.objField =>
         (* Assigning through an object field modifies heap data, not the pointer
            variable holding the object reference: the pointer is only read. *)
-        Expr.Scan (p.lhsExpr, ca);
+        Expr.Capture (p.lhsExpr, ca);
     ELSE
         (* importDecl, enumLit, objTypeMethod, objMethod, unknown:
            the lhsExpr is either a module/type expression or an object
            reference; in all cases we just read it. *)
-        Expr.Scan (p.lhsExpr, ca);
+        Expr.Capture (p.lhsExpr, ca);
     END;
-  END ScanLV;
+  END CaptureLV;
 
 BEGIN
 END QualifyExpr.

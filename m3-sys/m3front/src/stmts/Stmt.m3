@@ -166,18 +166,18 @@ PROCEDURE MSIRDefault (<*UNUSED*> s: T) =
     MSIRBuilder.Abandon ("unsupported statement");
   END MSIRDefault;
 
-PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (t: T;  ca: CaptureAnalysis.T) =
   BEGIN
     WHILE t # NIL DO
-      t.scan (ca);
+      t.capture (ca);
       t := t.next;
     END;
-  END Scan;
+  END Capture;
 
-PROCEDURE ScanDefault (<*UNUSED*> s: T;  <*UNUSED*> ca: CaptureAnalysis.T) =
+PROCEDURE CaptureDefault (<*UNUSED*> s: T;  <*UNUSED*> ca: CaptureAnalysis.T) =
   BEGIN
     (* leaf statement with no sub-expressions — nothing to record *)
-  END ScanDefault;
+  END CaptureDefault;
 
 
 (***

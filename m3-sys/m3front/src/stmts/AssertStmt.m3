@@ -21,7 +21,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 CONST includeTextInAsserts = TRUE;
@@ -152,11 +152,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.cond, ca);
-    Expr.Scan (p.msg,  ca);
-  END Scan;
+    Expr.Capture (p.cond, ca);
+    Expr.Capture (p.msg,  ca);
+  END Capture;
 
 BEGIN
 END AssertStmt.

@@ -73,7 +73,7 @@ REVEAL
         note_write   := NoteWrites;
         exprAlign    := CallExprAlign;
         usesAssignProtocol := UsesAssignProtocol;
-        scan         := Capture;
+        capture  := Capture;
         compileMSIR  := CompileMSIR;
       END;
 
@@ -232,7 +232,7 @@ PROCEDURE NotWritable (<*UNUSED*> t: T)=
 PROCEDURE CaptureDefault (ce: T;  ca: CaptureAnalysis.T) =
   (* Default: every argument of an unspecialised builtin is a read. *)
   BEGIN
-    FOR i := 0 TO LAST(ce.args^) DO Expr.Scan(ce.args[i], ca) END;
+    FOR i := 0 TO LAST(ce.args^) DO Expr.Capture(ce.args[i], ca) END;
   END CaptureDefault;
 
 (***********************************************************************)

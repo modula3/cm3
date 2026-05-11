@@ -28,7 +28,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -499,15 +499,15 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.SetCurrentBlock (exitBlk);
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.from,  ca);
-    Expr.Scan (p.limit, ca);
-    Expr.Scan (p.step,  ca);
-    Stmt.Scan (p.body,  ca);
+    Expr.Capture (p.from,  ca);
+    Expr.Capture (p.limit, ca);
+    Expr.Capture (p.step,  ca);
+    Stmt.Capture (p.body,  ca);
     (* p.var is the loop control variable — it is local to the FOR
        statement itself, not an outer capture. *)
-  END Scan;
+  END Capture;
 
 BEGIN
 END ForStmt.

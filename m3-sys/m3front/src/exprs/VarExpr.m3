@@ -35,8 +35,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
-        scan         := Scan;
-        scanLV       := ScanLV;
+        capture  := Capture;
+        captureLV := CaptureLV;
         compileMSIR  := CompileMSIR;
       END;
 
@@ -108,15 +108,15 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN v;
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     IF Variable.IsUpLevel (p.v) THEN CaptureAnalysis.Note (ca, p.v, FALSE) END;
-  END Scan;
+  END Capture;
 
-PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     IF Variable.IsUpLevel (p.v) THEN CaptureAnalysis.Note (ca, p.v, TRUE) END;
-  END ScanLV;
+  END CaptureLV;
 
 BEGIN
 END VarExpr.

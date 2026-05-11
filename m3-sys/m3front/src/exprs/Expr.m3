@@ -687,39 +687,39 @@ PROCEDURE CheckUseFailure (t: T): BOOLEAN =
 
 (*----------------------------------------------- capture analysis scan ---*)
 
-PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (t: T;  ca: CaptureAnalysis.T) =
   BEGIN
-    IF t # NIL THEN t.scan (ca) END;
-  END Scan;
+    IF t # NIL THEN t.capture (ca) END;
+  END Capture;
 
-PROCEDURE ScanLV (t: T;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (t: T;  ca: CaptureAnalysis.T) =
   BEGIN
-    IF t # NIL THEN t.scanLV (ca) END;
-  END ScanLV;
+    IF t # NIL THEN t.captureLV (ca) END;
+  END CaptureLV;
 
-PROCEDURE ExprScanDefault (<*UNUSED*> e: T;  <*UNUSED*> ca: CaptureAnalysis.T) =
-  BEGIN (* leaf expr: nothing to record *) END ExprScanDefault;
+PROCEDURE ExprCaptureDefault (<*UNUSED*> e: T;  <*UNUSED*> ca: CaptureAnalysis.T) =
+  BEGIN (* leaf expr: nothing to record *) END ExprCaptureDefault;
 
-PROCEDURE ExprScanLVDefault (e: T;  ca: CaptureAnalysis.T) =
-  BEGIN e.scan (ca) END ExprScanLVDefault;
+PROCEDURE ExprCaptureLVDefault (e: T;  ca: CaptureAnalysis.T) =
+  BEGIN e.capture (ca) END ExprCaptureLVDefault;
 
-PROCEDURE TaScan (e: Ta;  ca: CaptureAnalysis.T) =
-  BEGIN IF e.a # NIL THEN e.a.scan (ca) END END TaScan;
+PROCEDURE TaCapture (e: Ta;  ca: CaptureAnalysis.T) =
+  BEGIN IF e.a # NIL THEN e.a.capture (ca) END END TaCapture;
 
-PROCEDURE TaScanLV (e: Ta;  ca: CaptureAnalysis.T) =
-  BEGIN IF e.a # NIL THEN e.a.scan (ca) END END TaScanLV;
+PROCEDURE TaCaptureLV (e: Ta;  ca: CaptureAnalysis.T) =
+  BEGIN IF e.a # NIL THEN e.a.capture (ca) END END TaCaptureLV;
 
-PROCEDURE TabScan (e: Tab;  ca: CaptureAnalysis.T) =
+PROCEDURE TabCapture (e: Tab;  ca: CaptureAnalysis.T) =
   BEGIN
-    IF e.a # NIL THEN e.a.scan (ca) END;
-    IF e.b # NIL THEN e.b.scan (ca) END;
-  END TabScan;
+    IF e.a # NIL THEN e.a.capture (ca) END;
+    IF e.b # NIL THEN e.b.capture (ca) END;
+  END TabCapture;
 
-PROCEDURE TabScanLV (e: Tab;  ca: CaptureAnalysis.T) =
+PROCEDURE TabCaptureLV (e: Tab;  ca: CaptureAnalysis.T) =
   BEGIN
-    IF e.a # NIL THEN e.a.scan (ca) END;
-    IF e.b # NIL THEN e.b.scan (ca) END;
-  END TabScanLV;
+    IF e.a # NIL THEN e.a.capture (ca) END;
+    IF e.b # NIL THEN e.b.capture (ca) END;
+  END TabCaptureLV;
 
 BEGIN
 END Expr.

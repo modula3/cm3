@@ -30,7 +30,7 @@ PROCEDURE CompileMSIR (t: T);
 
 PROCEDURE GetOutcome (t: T): Outcomes;
 
-PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T);
+PROCEDURE Capture (t: T;  ca: CaptureAnalysis.T);
 (* Walk the statement chain rooted at t, recording up-level variable
    captures in ca.  Descends into all sub-statements and sub-expressions.
    Call this on a nested proc's body before GenBodyMSIR to collect its

@@ -31,7 +31,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 TYPE
@@ -848,17 +848,17 @@ PROCEDURE LoadInfoPtr () =
     END;
   END LoadInfoPtr;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   VAR h := p.handles;
   BEGIN
-    Stmt.Scan (p.body, ca);
+    Stmt.Capture (p.body, ca);
     WHILE h # NIL DO
-      Stmt.Scan (h.body, ca);
+      Stmt.Capture (h.body, ca);
       (* h.var is the exception value binding — local to the handler *)
       h := h.next;
     END;
-    Stmt.Scan (p.elseBody, ca);
-  END Scan;
+    Stmt.Capture (p.elseBody, ca);
+  END Capture;
 
 BEGIN
 END TryStmt.

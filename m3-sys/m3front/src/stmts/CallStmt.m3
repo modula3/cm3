@@ -18,7 +18,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE New (e: Expr.T): Stmt.T =
@@ -57,10 +57,10 @@ PROCEDURE CompileMSIR (p: P) =
     EVAL Expr.CompileMSIR(p.e);
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.e, ca);
-  END Scan;
+    Expr.Capture (p.e, ca);
+  END Capture;
 
 BEGIN
 END CallStmt.

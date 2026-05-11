@@ -32,7 +32,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := NarrowExprAlign;
-        scan         := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
@@ -107,10 +107,10 @@ PROCEDURE Fold (p: P): Expr.T =
     RETURN p;
   END Fold;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.expr, ca);
-  END Scan;
+    Expr.Capture (p.expr, ca);
+  END Capture;
 
 BEGIN
 END NarrowExpr.

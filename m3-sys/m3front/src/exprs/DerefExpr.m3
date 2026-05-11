@@ -36,7 +36,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
-        scanLV       := ScanLV;
+        captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -202,12 +202,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
   END CompileMSIR;
 
-PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     (* p^ := rhs modifies heap memory, not the pointer variable p itself.
        The pointer is only read, so scan (not scanLV) the sub-expression. *)
-    Expr.Scan (p.a, ca);
-  END ScanLV;
+    Expr.Capture (p.a, ca);
+  END CaptureLV;
 
 BEGIN
 END DerefExpr.

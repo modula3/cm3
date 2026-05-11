@@ -27,7 +27,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 TYPE
@@ -481,17 +481,17 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.SetCurrentBlock (merge);
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   VAR c := p.cases;
   BEGIN
-    Expr.Scan (p.expr, ca);
+    Expr.Capture (p.expr, ca);
     WHILE c # NIL DO
-      Stmt.Scan (c.stmt, ca);
+      Stmt.Capture (c.stmt, ca);
       (* c.var is the typecase binding variable — local to the arm *)
       c := c.next;
     END;
-    Stmt.Scan (p.elseBody, ca);
-  END Scan;
+    Stmt.Capture (p.elseBody, ca);
+  END Capture;
 
 BEGIN
 END TypeCaseStmt.

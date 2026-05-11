@@ -21,7 +21,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -114,11 +114,11 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.SetCurrentBlock (exitBlock);
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.cond, ca);
-    Stmt.Scan (p.body, ca);
-  END Scan;
+    Expr.Capture (p.cond, ca);
+    Stmt.Capture (p.body, ca);
+  END Capture;
 
 BEGIN
 END WhileStmt.

@@ -17,7 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -51,10 +51,10 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.e, ca);
-  END Scan;
+    Expr.Capture (p.e, ca);
+  END Capture;
 
 BEGIN
 END EvalStmt.

@@ -29,7 +29,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -223,12 +223,12 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     RETURN Stmt.GetOutcome (p.body);
   END GetOutcome;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.expr, ca);
-    Stmt.Scan (p.body, ca);
+    Expr.Capture (p.expr, ca);
+    Stmt.Capture (p.body, ca);
     (* p.var is the WITH-bound alias — not an outer capture *)
-  END Scan;
+  END Capture;
 
 BEGIN
 END WithStmt.

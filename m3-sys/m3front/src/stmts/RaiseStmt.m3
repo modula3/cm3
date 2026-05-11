@@ -24,7 +24,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
-        scan        := Scan;
+        capture  := Capture;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -156,10 +156,10 @@ PROCEDURE CompileMSIR (p: P) =
     END;
   END CompileMSIR;
 
-PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (p.arg, ca);  (* NIL-safe: Expr.Scan checks for NIL *)
-  END Scan;
+    Expr.Capture (p.arg, ca);  (* NIL-safe: Expr.Capture checks for NIL *)
+  END Capture;
 
 BEGIN
 END RaiseStmt.

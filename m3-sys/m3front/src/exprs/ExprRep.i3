@@ -43,10 +43,10 @@ REVEAL
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
-    scan         (ca: CaptureAnalysis.T)           := ExprScanDefault;
+    capture         (ca: CaptureAnalysis.T)           := ExprCaptureDefault;
     (* Walk sub-expressions recording up-level variable reads in ca.
        The default is a no-op (correct for leaf exprs with no children). *)
-    scanLV       (ca: CaptureAnalysis.T)           := ExprScanLVDefault;
+    captureLV       (ca: CaptureAnalysis.T)           := ExprCaptureLVDefault;
     (* Like scan, but this expression appears in an lvalue context:
        a VarExpr/NamedExpr at the top of the tree marks its variable
        as written.  Default: delegates to scan (correct for non-designators
@@ -65,15 +65,15 @@ REVEAL
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA;
-                                                    scan    := TaScan;
-                                                    scanLV  := TaScanLV  END;
-(* Ta.scan  recurses into a.  Ta.scanLV  also recurses into a (unary exprs
+                                                    capture  := TaCapture;
+                                                    captureLV := TaCaptureLV  END;
+(* Ta.capture  recurses into a.  Ta.captureLV  also recurses into a (unary exprs
    are not designators, so the lvalue context does not propagate further). *)
 
 TYPE Tab  = M3.Expr OBJECT a, b: M3.Expr  OVERRIDES isEqual := EqCheckAB;
-                                                     scan   := TabScan;
-                                                     scanLV := TabScanLV END;
-(* Tab.scan  recurses into a and b.  Tab.scanLV  recurses into a and b
+                                                     capture  := TabCapture;
+                                                     captureLV := TabCaptureLV END;
+(* Tab.capture  recurses into a and b.  Tab.captureLV  recurses into a and b
    (binary exprs are not designators at the top level, except for
    SubscriptExpr which overrides scanLV to propagate into a). *)
 
@@ -109,15 +109,15 @@ PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
 PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;
 (* default lvalue: calls Abandon. Override in designator expressions. *)
 
-PROCEDURE ExprScanDefault   (e: M3.Expr;  ca: CaptureAnalysis.T);
+PROCEDURE ExprCaptureDefault   (e: M3.Expr;  ca: CaptureAnalysis.T);
 (* no-op: correct for leaf expressions with no sub-expressions *)
-PROCEDURE ExprScanLVDefault (e: M3.Expr;  ca: CaptureAnalysis.T);
+PROCEDURE ExprCaptureLVDefault (e: M3.Expr;  ca: CaptureAnalysis.T);
 (* delegates to scan: correct when the expression is not itself a
    directly-assigned variable (deref, heap-field-qualify, etc.) *)
-PROCEDURE TaScan    (e: Ta;  ca: CaptureAnalysis.T);
-PROCEDURE TaScanLV  (e: Ta;  ca: CaptureAnalysis.T);
-PROCEDURE TabScan   (e: Tab; ca: CaptureAnalysis.T);
-PROCEDURE TabScanLV (e: Tab; ca: CaptureAnalysis.T);
+PROCEDURE TaCapture    (e: Ta;  ca: CaptureAnalysis.T);
+PROCEDURE TaCaptureLV  (e: Ta;  ca: CaptureAnalysis.T);
+PROCEDURE TabCapture   (e: Tab; ca: CaptureAnalysis.T);
+PROCEDURE TabCaptureLV (e: Tab; ca: CaptureAnalysis.T);
 
 (* Multi-use overrides for exprAlign:  *)
 PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT;
