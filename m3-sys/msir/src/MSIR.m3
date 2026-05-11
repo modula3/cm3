@@ -692,11 +692,18 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   excDescs:      RefSeq.T;                         (* elements: ExcDesc *)
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
+  textLiterals:  RefSeq.T;                         (* elements: TextLit *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
+END;
+
+TYPE TextLit = REF RECORD
+  chars  : TEXT;    (* raw characters *)
+  cnt    : INTEGER; (* character count; negative = wide *)
+  uid    : INTEGER; (* per-module uid for naming the global *)
 END;
 
 REVEAL Global = BRANDED "MSIR.Global" REF RECORD
@@ -853,6 +860,35 @@ PROCEDURE ModuleTypeDescCount(m: Module): INTEGER      = BEGIN RETURN m.typeDesc
 PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc =
   BEGIN RETURN m.typeDescs.get(i) END ModuleTypeDesc;
 
+PROCEDURE ModuleAddTextLit(m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER =
+  (* Deduplicate by (chars, cnt). *)
+  VAR lit: TextLit;
+  BEGIN
+    FOR i := 0 TO m.textLiterals.size() - 1 DO
+      lit := m.textLiterals.get(i);
+      IF lit.cnt = cnt AND Text.Equal(lit.chars, chars) THEN RETURN lit.uid END;
+    END;
+    lit := NEW(TextLit, chars := chars, cnt := cnt, uid := m.textLiterals.size());
+    m.textLiterals.addhi(lit);
+    RETURN lit.uid;
+  END ModuleAddTextLit;
+PROCEDURE ModuleTextLitCount(m: Module): INTEGER =
+  BEGIN RETURN m.textLiterals.size() END ModuleTextLitCount;
+PROCEDURE ModuleTextLitChars(m: Module;  i: INTEGER): TEXT =
+  BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).chars END ModuleTextLitChars;
+PROCEDURE ModuleTextLitCnt(m: Module;  i: INTEGER): INTEGER =
+  BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).cnt END ModuleTextLitCnt;
+
+PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
+  (* Emit getelementptr i8, ptr @textlit_<uid>, i64 8 — the TEXT reference. *)
+  VAR baseVal := NEW(Value);
+  BEGIN
+    baseVal.type  := TPtr(TVoid());
+    baseVal.name  := "@textlit_" & Fmt.Int(uid);
+    baseVal.vKind := ValueKind.InsnResult;
+    RETURN BuildPtrAdd(b, "", baseVal, 8L);  (* auto-named to avoid duplicates *)
+  END BuildTextLiteralRef;
+
 PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT) =
   BEGIN
     (* Deduplicate: skip if already registered. *)
@@ -876,6 +912,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.excDescs      := NEW(RefSeq.T).init();
     m.importBinders := NEW(RefSeq.T).init();
     m.typeDescs     := NEW(RefSeq.T).init();
+    m.textLiterals  := NEW(RefSeq.T).init();
     RETURN m;
   END NewModule;
 

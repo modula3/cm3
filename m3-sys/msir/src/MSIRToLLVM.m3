@@ -1032,6 +1032,72 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
    [136] defaultMethods  ptr  (→ vtable array)
    [144] parent          ptr  (null for now) *)
 
+PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
+  (* Emit TextLiteral.T globals for every string literal in the module.
+     Layout of each @textlit_N:
+       { i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }
+     The TEXT reference value is a ptr to the method_list field (offset 8).
+     This matches the CM3 object model: GC header at offset 0, object at +8. *)
+  CONST
+    GcHeader = 2L; (* Word.Shift(TEXT_typecode=1, RH_typecode_offset=1) *)
+    (* Method names for TextLiteral.T vtable (5 procedures). *)
+    Methods = ARRAY [0..4] OF TEXT {
+      "TextLiteral__TextLitInfo",
+      "TextLiteral__TextLitGetChar",
+      "TextLiteral__TextLitGetWideChar",
+      "TextLiteral__TextLitGetChars",
+      "TextLiteral__TextLitGetWideChars"
+    };
+  VAR n := MSIR.ModuleTextLitCount(m);
+  BEGIN
+    IF n = 0 THEN RETURN END;
+    Wr.PutText(wr, "\n; TEXT literal globals\n");
+
+    (* Declare the TextLiteral.T method procs so LLVM accepts the constant ref. *)
+    Wr.PutText(wr, "declare void @TextLiteral__TextLitInfo(ptr, ptr)\n");
+    Wr.PutText(wr, "declare i8   @TextLiteral__TextLitGetChar(ptr, i64)\n");
+    Wr.PutText(wr, "declare i32  @TextLiteral__TextLitGetWideChar(ptr, i64)\n");
+    Wr.PutText(wr, "declare void @TextLiteral__TextLitGetChars(ptr, ptr, i64)\n");
+    Wr.PutText(wr, "declare void @TextLiteral__TextLitGetWideChars(ptr, ptr, i64)\n");
+
+    (* Per-module TextLiteral.T method list (vtable). *)
+    Wr.PutText(wr, "@textlit_methods = internal constant [5 x ptr] [\n");
+    FOR i := 0 TO 4 DO
+      Wr.PutText(wr, "  ptr @" & Methods[i]);
+      IF i < 4 THEN Wr.PutText(wr, ",") END;
+      Wr.PutText(wr, "\n");
+    END;
+    Wr.PutText(wr, "]\n");
+
+    FOR i := 0 TO n - 1 DO
+      VAR
+        chars := MSIR.ModuleTextLitChars(m, i);
+        cnt   := MSIR.ModuleTextLitCnt(m, i);
+        len   := ABS(cnt);
+      BEGIN
+        (* Struct: { i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars } *)
+        Wr.PutText(wr, "@textlit_" & Fmt.Int(i) & " = internal constant { i64, ptr, i64, ["
+                       & Fmt.Int(len + 1) & " x i8] } { i64 "
+                       & Fmt.LongInt(GcHeader)
+                       & ", ptr @textlit_methods, i64 " & Fmt.Int(cnt) & ", ["
+                       & Fmt.Int(len + 1) & " x i8] c\"");
+        (* Emit characters with LLVM escape syntax for non-printable bytes. *)
+        FOR j := 0 TO len - 1 DO
+          VAR c := ORD(Text.GetChar(chars, j));
+          BEGIN
+            IF c >= 32 AND c < 127 AND c # ORD('"') AND c # ORD('\\') THEN
+              Wr.PutChar(wr, VAL(c, CHAR));
+            ELSE
+              Wr.PutText(wr, "\\");
+              Wr.PutText(wr, Fmt.Pad(Fmt.Unsigned(c, 16), 2, '0'));
+            END;
+          END;
+        END;
+        Wr.PutText(wr, "\\00\" }\n");  (* null terminator *)
+      END;
+    END;
+  END EmitTextLiterals;
+
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   VAR
     n := MSIR.ModuleTypeDescCount(m);
@@ -1384,6 +1450,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       EmitProc(wr, MSIR.ModuleProc(m, i));
     END;
+
+    (* TextLiteral globals *)
+    EmitTextLiterals(wr, m);
 
     (* TypeCell / ObjectTypeCell globals for type_cells *)
     EmitTypeCells(wr, m);

@@ -276,6 +276,20 @@ PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc;
    Used in proc bodies before the TypeCell global is registered (forward ref). *)
 PROCEDURE TypeCellRef (name: TEXT): Value;
 
+(*----------------------------------------------- TEXT literals *)
+
+(* Register a TEXT literal with the module and return a uid.
+   chars: raw character bytes; cnt: character count (negative = wide).
+   Returns an existing uid if this literal was already registered. *)
+PROCEDURE ModuleAddTextLit (m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER;
+PROCEDURE ModuleTextLitCount(m: Module): INTEGER;
+PROCEDURE ModuleTextLitChars(m: Module;  i: INTEGER): TEXT;
+PROCEDURE ModuleTextLitCnt  (m: Module;  i: INTEGER): INTEGER;
+
+(* Build a getelementptr instruction that computes the TEXT reference
+   (pointer to offset 8 of @textlit_<uid>) in block b. *)
+PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value;
+
 (*----------------------------------------------- import binders *)
 
 (* Register an imported module's binder function name (e.g. "Fmt_M3").

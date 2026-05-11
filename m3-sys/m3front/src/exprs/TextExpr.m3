@@ -10,7 +10,7 @@ MODULE TextExpr;
 
 IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
 IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure, Word;
-IMPORT MSIR;
+IMPORT MSIR, MSIRBuilder, MSIREmit;
 
 TYPE
   P = Expr.T OBJECT
@@ -294,9 +294,25 @@ PROCEDURE GenLiteral
                  is_const);
   END GenLiteral;
 
-PROCEDURE CompileMSIR (<*UNUSED*> p: P): MSIR.Value =
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR m   := MSIREmit.CurrentModule ();
+      uid : INTEGER;
+      chars: TEXT;
+      cnt  : INTEGER;
   BEGIN
-    RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+    IF m = NIL OR NOT MSIRBuilder.InProc () THEN
+      RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+    END;
+    IF p.value8 # NIL THEN
+      chars := M3String.ToText (p.value8);
+      cnt   := M3String.Length (p.value8);
+    ELSE
+      (* Wide (WIDECHAR) literal: use the literal representation for now. *)
+      chars := M3WString.ToLiteral (p.value32);
+      cnt   := - M3WString.Length (p.value32);
+    END;
+    uid := MSIR.ModuleAddTextLit (m, chars, cnt);
+    RETURN MSIR.BuildTextLiteralRef (MSIRBuilder.CurrentBlock (), uid);
   END CompileMSIR;
 
 BEGIN

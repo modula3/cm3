@@ -909,6 +909,12 @@ PROCEDURE LangInit (t: T) =
 
     IF (t.initDone) THEN RETURN END;
 
+    (* MSIR: register alloca for block-scope locals (proc-scope ones are
+       already registered by BeginProc; AddLocalMSIR is idempotent). *)
+    IF NOT (t.indirect OR t.global) AND MSIRBuilder.InProc () THEN
+      EVAL AddLocalMSIR (t, MSIRBuilder.CurrentBlock ());
+    END;
+
     (* initialize the value *)
     IF (t.initExpr # NIL) AND (NOT t.up_level) AND (NOT t.imported) THEN
       (* variable has a user specified initExpr value and isn't referenced
