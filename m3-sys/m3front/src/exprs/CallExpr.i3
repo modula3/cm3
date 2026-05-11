@@ -88,4 +88,9 @@ PROCEDURE BuiltinAlignDefault (t: T): Type.BitAlignT;
 TYPE MSIRCompiler = PROCEDURE (t: T): MSIR.Value;
 PROCEDURE SetMethodMSIR (ml: MethodList;  c: MSIRCompiler);
 
+PROCEDURE SetWritesArg0 (ml: MethodList);
+(* Mark that this builtin writes its first argument (for CaptureAnalysis.Scan).
+   Call this in Initialize alongside SetMethodMSIR.  Currently only INC and DEC
+   need this — all other builtins treat every argument as a read. *)
+
 END CallExpr.

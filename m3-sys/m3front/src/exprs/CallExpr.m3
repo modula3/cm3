@@ -44,6 +44,9 @@ REVEAL
                  isIndirect   : Predicate;
                  builtinAlign : BuiltinAlign;
                  compileMSIR  : MSIRCompiler := NIL;
+                 writesArg0   : BOOLEAN := FALSE;
+                 (* TRUE only for INC and DEC: their first argument is written.
+                    Used by Scan to decide scanLV vs scan for capture analysis. *)
                END;
 
 REVEAL
@@ -365,6 +368,11 @@ PROCEDURE SetMethodMSIR (ml: MethodList;  c: MSIRCompiler) =
     ml.compileMSIR := c;
   END SetMethodMSIR;
 
+PROCEDURE SetWritesArg0 (ml: MethodList) =
+  BEGIN
+    ml.writesArg0 := TRUE;
+  END SetWritesArg0;
+
 PROCEDURE BuiltinAlignDefault (p: T): Type.BitAlignT =
   VAR
     resultType : Type.T;
@@ -462,7 +470,7 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN NIL END;
     IF NOT IsUserProc(p) THEN
-      Resolve(p);
+      (* IsUserProc called Resolve; p.methods is already set. *)
       IF p.methods # NIL AND p.methods.compileMSIR # NIL THEN
         RETURN p.methods.compileMSIR(p);
       END;
@@ -540,25 +548,20 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
   END CompileMSIR;
 
 PROCEDURE Scan (ce: T;  ca: CaptureAnalysis.T) =
-  VAR
-    pType  : Type.T;
-    formal : Value.T;
-    finfo  : Formal.Info;
+  VAR formal: Value.T;  finfo: Formal.Info;
   BEGIN
     Expr.Scan (ce.proc, ca);
     IF ce.args = NIL THEN RETURN END;
-    IF ce.methods = NIL THEN
-      (* User procedure call: use formal modes to classify each argument. *)
-      pType  := Expr.TypeOf (ce.proc);
-      IF pType = NIL THEN pType := QualifyExpr.MethodType (ce.proc) END;
-      pType  := Type.Base (pType);
-      formal := ProcType.Formals (pType);
+    IF IsUserProc (ce) THEN
+      (* User procedure call: derive mode from formal parameter list.
+         IsUserProc called Resolve, so ce.proc_type is set. *)
+      formal := ProcType.Formals (ce.proc_type);
       FOR i := 0 TO LAST (ce.args^) DO
         IF formal # NIL THEN
           Formal.Split (formal, finfo);
           formal := formal.next;
         ELSE
-          finfo.mode := Formal.Mode.mVALUE;  (* extra args: treat as value *)
+          finfo.mode := Formal.Mode.mVALUE;  (* extra args beyond formals *)
         END;
         IF finfo.mode = Formal.Mode.mVAR THEN
           Expr.ScanLV (ce.args[i], ca);
@@ -567,16 +570,14 @@ PROCEDURE Scan (ce: T;  ca: CaptureAnalysis.T) =
         END;
       END;
     ELSE
-      (* Builtin call: use IsDesignator as a conservative proxy for writability.
-         Builtins that write their first arg (INC, DEC) take a designator;
-         read-only builtins (FIRST, LAST, etc.) take non-designators or
-         the distinction is irrelevant because the arg isn't a variable. *)
-      FOR i := 0 TO LAST (ce.args^) DO
-        IF Expr.IsDesignator (ce.args[i]) AND Expr.IsWritable (ce.args[i], FALSE) THEN
-          Expr.ScanLV (ce.args[i], ca);
-        ELSE
-          Expr.Scan (ce.args[i], ca);
-        END;
+      (* Builtin call: only INC and DEC write their first argument;
+         all other builtins treat every argument as a read. *)
+      IF ce.methods # NIL AND ce.methods.writesArg0
+           AND NUMBER (ce.args^) > 0 THEN
+        Expr.ScanLV (ce.args[0], ca);
+        FOR i := 1 TO LAST (ce.args^) DO Expr.Scan (ce.args[i], ca) END;
+      ELSE
+        FOR i := 0 TO LAST (ce.args^) DO Expr.Scan (ce.args[i], ca) END;
       END;
     END;
   END Scan;

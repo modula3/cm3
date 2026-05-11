@@ -165,6 +165,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
     CallExpr.SetMethodMSIR (Z, DecMSIR);
+    CallExpr.SetWritesArg0 (Z);
     Procedure.DefinePredefined ("DEC", Z, TRUE);
   END Initialize;
 
