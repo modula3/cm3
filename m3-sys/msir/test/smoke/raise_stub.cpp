@@ -102,6 +102,9 @@ extern "C" void  RTHooks__CheckLoadTracedRef(void *) { }
 /* TYPECASE dispatch: for NIL input, returns 0 (→ first TYPECASE branch). */
 extern "C" long  RTHooks__ScanTypecase(void *, void *) { return 0; }
 
+/* TEXT concatenation — only called from module body, not harness tests. */
+extern "C" void *RTHooks__Concat(void *, void *) { return nullptr; }
+
 /* TextLiteral.T method stubs — stored as pointers in @textlit_methods but
    never called from the test harness (module body never runs). */
 extern "C" void  TextLiteral__TextLitInfo(void *, void *)         { }

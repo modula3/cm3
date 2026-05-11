@@ -10,7 +10,7 @@ MODULE ConcatExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Textt, Procedure, Target;
 IMPORT TextExpr, AssignStmt, Host, NarrowExpr, RunTyme, Error;
-IMPORT MSIR;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Tab BRANDED "ConcatExpr.P" OBJECT
@@ -145,11 +145,15 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR a, b: MSIR.Value;  proc: MSIR.Proc;
   BEGIN
     IF p.folded # NIL THEN RETURN Expr.CompileMSIR (p.folded) END;
-    EVAL Expr.CompileMSIR (p.a);
-    EVAL Expr.CompileMSIR (p.b);
-    RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+    a := Expr.CompileMSIR (p.a);
+    b := Expr.CompileMSIR (p.b);
+    IF a = NIL OR b = NIL THEN RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ())) END;
+    proc := MSIRBuilder.HookProc (RunTyme.Hook.Concat);
+    IF proc = NIL THEN RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ())) END;
+    RETURN MSIRBuilder.EmitCall ("", proc, ARRAY OF MSIR.Value{a, b});
   END CompileMSIR;
 
 BEGIN
