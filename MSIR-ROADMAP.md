@@ -32,7 +32,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] TEXT concatenation: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat`
 - [x] GC write barrier for heap fields: `QualifyExpr.LValueMSIR` sets pending container; `AssignStmt.CompileMSIR` calls `BuildGcStore` with container
 - [x] `var_map`/`gc_map`: module globals embedded as trailing fields of `@Mod_M3_info`; TipeMap byte sequence for GC scanning; LLVM aliases for symbol compatibility
-- [x] Nested procedures: static-link frame struct (`%__env: ptr`), up-level var access via byte-offset GEPs, frame size back-patched by `AllocaSetCount`
+- [x] Nested procedures: **lambda-lifted** — `CaptureAnalysis.Scan` pre-scans the body; each captured up-level variable becomes an explicit `ptr` param (`%__cap_0`, …); outer proc's up-level vars are ordinary allocas; multi-level nesting supported
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -52,37 +52,22 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 
 ## Remaining Work (prioritised)
 
-### A. Nested procedures: migrate to lambda-lifting
-
-The current implementation uses a static-link / frame-struct approach (`%__env: ptr` +
-byte-offset GEPs) rather than the lambda-lifting specified in D15. This works for one
-level of nesting but has three structural costs:
-
-1. Nested proc bodies must be compiled inline while the outer proc's `MSIRBuilder` is
-   live (frame offsets are allocated lazily; alloca size is back-patched).
-2. Multi-level nesting requires chaining `%__env` pointers — currently unsupported.
-3. Opaque `i8*` GEPs limit LLVM alias analysis, SROA, and mem2reg.
-
-**Target:** per-capture parameter passing — read-only by value, read-write by pointer to
-outer stack slot — using m3front's existing variable-writability information. Frame-struct
-grouping (O16) can follow as a performance tuning step for high-capture cases.
-
-### B. TEXT: remaining cases
+### A. TEXT: remaining cases
 
 - `Fmt.Bool`, `Fmt.Real`, and other TEXT-returning expressions not yet handled
 - Wide-char literals (currently fall back to `ToLiteral`)
 - `Text.Sub` and similar TEXT manipulation operations
 
-### C. NEW(REF open-array/record)
+### B. NEW(REF open-array/record)
 
 `GenRefMSIR` currently abandons for open-array and record referents; only scalar
 referents are supported.
 
-### D. Opaque types
+### C. Opaque types
 
 `GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
 
-### E. Debug symbols
+### D. Debug symbols
 
 No source locations in emitted LLVM IR. See debug symbol architecture note in
 `CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,

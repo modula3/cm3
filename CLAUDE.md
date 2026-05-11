@@ -249,7 +249,7 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **TEXT concatenation**: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat(a, b)` via `HookProc(RunTyme.Hook.Concat)`; module body now passes real TEXT values to `IO.Put`
 - **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container (object pointer) via `MSIRBuilder.SetPendingContainer`; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; traced object fields are retyped from `GcRef` to `GcSlot` so the barrier fires correctly
 - **`var_map`/`gc_map`**: module globals embedded as trailing fields of `@Mod_M3_info` struct (after MI_SIZE=104 bytes); gc_map TipeMap byte sequence skips non-traced fields and emits `Op.Ref` for each traced global; LLVM aliases (`@Main__gCounter` etc.) preserve binary symbol compatibility with CG-compiled modules; GC now correctly scans MSIR module globals as roots
-- **Nested procedures**: `NestedSum` with inner `Add` accessing up-level `acc` via static link; `GenBodyMSIR` compiles nested proc MSIR inline while outer proc's frame/varMap context is live (required because `inline_nested_procs=FALSE` with the C backend); frame is `alloca i8, i64 N` with N patched at end of `BeginProc`; frame pointer passed as `%__env: ptr` first parameter; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of same base name
+- **Nested procedures**: lambda-lifted — each captured up-level variable becomes an explicit `ptr` parameter in the inner proc's LLVM signature (`%__cap_0`, `%__cap_1`, …); outer proc's up-level vars are ordinary allocas whose addresses are passed as capture args; `CaptureAnalysis.Scan` pre-scans the body to collect captures before `GenBodyMSIR`; `RegisterProc` stores the capture list so call sites build the right arg list; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of the same base name; multi-level nesting supported naturally (inner proc passes its own capture params through to deeper procs)
 
 ### EH Model Requirement
 
@@ -291,7 +291,7 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 This script:
 1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
 2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 73 checks
+3. Links with the C test harness (`llvm_link_test.c`) and runs 74 checks
 
 The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
 
@@ -310,7 +310,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR; handles EH, GC barriers, TypeCells, RTLinker binder |
 | `m3-sys/msir/src/MSIRPrinter.m3` | Prints MSIR text (`.msir` files) |
 | `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks on completed procs |
-| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`); `EmitCall`; try-context stack; `AllocFrameSlot` / `AllocaSetCount` for nested-proc frame struct |
+| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`); `EmitCall`/`EmitNestedCall`; try-context stack; `RegisterProc`/`GetProcCaptures` for lambda-lifted nested proc capture lists |
 | `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` and `.ll` at end of unit |
 | `m3-sys/m3front/src/stmts/TryStmt.m3` | `CompileMSIR`: EH lowering for TRY/EXCEPT (UID comparison chain) |
 | `m3-sys/m3front/src/stmts/TryFinStmt.m3` | `CompileMSIR`: EH lowering for TRY/FINALLY (cleanup landingpad) |
@@ -340,23 +340,24 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 | Proc formals + locals | `MSIRBuilder.BeginProc`, before CG `Scope.InitValues` | `Variable.BindFormalMSIR` + `Variable.AddLocalMSIR` (zero-init if `InitCost > 0`) |
 | Variable initializers | CG-path `Scope.InitValues` (guarded by `t.initDone`) | MSIR blocks inside `Variable.UserInit` fire here because `BeginProc` has set `curBlock` |
 | Exception descriptors | `Module.DeclareGlobalsMSIR` | `MSIRBuilder.ExcDescValue` called upfront; lazy calls from TryStmt/RaiseStmt find existing desc |
-| Nested proc body (MSIR) | `Procedure.LangInit` via `Scope.InitValues`, when `inline_nested_procs=FALSE` | `GenBodyMSIR(t)` compiles MSIR inline while outer proc's frame/varMap context is live; `ProcMapContains` guards `GenBody` against re-emitting MSIR on the second (CG-only) pass |
+| Nested proc body (MSIR) | `Procedure.LangInit` via `Scope.InitValues`, when `inline_nested_procs=FALSE` | `CaptureAnalysis.Scan` pre-scans the body; `GenBodyMSIR(t)` calls `BeginProc` with the captures, registers the proc+captures; `ProcMapContains` guards `GenBody` against re-emitting MSIR on the second (CG-only) pass |
 
 `Variable.m3` owns all MSIR registration for variables; `MSIRBuilder` exposes only raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`). The `Scope.InitValues` call in `GenBody`'s MSIR phase is intentionally absent — init fires during the CG-path call because `BeginProc` is already active.
 
-**Nested proc note**: the C backend always sets `inline_nested_procs=FALSE` (via `-unfold_nested_procs` in `cm3cfg.common`). MSIR requires nested proc bodies compiled while the outer proc's context is live, so `LangInit` calls `GenBodyMSIR` inline regardless of `inline_nested_procs`. The outer proc's frame alloca gets an `alloca i8, i64 N` instruction (not just `alloca i8`) once all up-level vars are registered, by calling `MSIR.AllocaSetCount` at the end of `BeginProc`.
+**Nested proc note**: the C backend always sets `inline_nested_procs=FALSE` (via `-unfold_nested_procs` in `cm3cfg.common`). MSIR still calls `GenBodyMSIR` inline from `LangInit` — not because the outer proc's context is required (the old frame-struct reason), but to guarantee that the nested proc is registered in `procMap` before any call site in the outer body is compiled. Call sites call `LookupOrCreateProc` and `GetProcCaptures`; both must find the nested proc's MSIR.Proc and capture list already registered.
 
-**Why MSIR must compile nested procs inline (and the C backend need not):**
+**Lambda-lifting: how nested procs work in MSIR**
 
-Three interlocking constraints force this:
+Up-level variables are identified by `CaptureAnalysis.Scan`, which walks the nested proc's AST before compilation and records each up-level variable reference. The nested proc gets one explicit `ptr` parameter per captured variable (`%__cap_0`, `%__cap_1`, …). In the outer proc, captured variables are ordinary `alloca` locals; their addresses are passed as capture arguments at each call site.
 
-1. **Up-level variable slots are allocated lazily.** When a nested proc body references an outer-scope variable, `AllocFrameSlot` reserves a byte offset in the outer proc's frame struct. Those offsets are only known *during* compilation of the nested proc body — they cannot be pre-computed before the body is visited.
+- `CaptureAnalysis.Scan(body, ca)` — pre-pass that records `(Variable.T, written)` pairs
+- `MSIRBuilder.BeginProc(..., captures := ca)` — generates explicit capture params; binds each in the inner proc's varMap so `LookupVar`/`LookupVarAddr` work transparently
+- `MSIRBuilder.RegisterProc(p, proc, caps)` — stores the capture list alongside the proc
+- `MSIRBuilder.EmitNestedCall(name, callee, calleeVal, args)` — looks up captures for `calleeVal`, calls `LookupVarAddr(cap.var)` for each, prepends these to `args`
 
-2. **The outer proc's frame alloca requires a final, concrete size.** LLVM IR's `alloca` instruction takes a constant operand; there is no way to patch it after emission. `MSIR.AllocaSetCount` back-patches the `alloca i8, i64 N` at the end of `BeginProc`, but only after all nested procs have been processed and all frame slots allocated. If the inner proc were compiled in a separate later pass the slot count would be wrong.
+Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `acc`, and `SubAdd` (nested in `Add`) also uses `acc`, then `SubAdd`'s `BeginProc` runs inside `Add`'s varMap context where `acc` maps to `Add`'s `%__cap_0` param. `LookupVarAddr(acc)` returns `%__cap_0`, which is passed directly as `SubAdd`'s capture arg.
 
-3. **The nested proc's GEP offsets must be constants embedded in the IR.** When the inner proc accesses an up-level variable it emits `getelementptr inbounds (i8, ptr %__env, i64 <offset>)`. Those offsets live in the outer proc's `MSIRBuilder` state. If the inner proc were compiled after the outer proc's builder was torn down, the state would be gone and the offsets unavailable.
-
-The C backend sidesteps all three constraints: C structs can be forward-declared, C symbol references are resolved at link time, and the static-link cast (`(FrameT*)env`) is valid regardless of when the nested function definition is emitted. LLVM IR provides none of these affordances, so inline compilation is unavoidable.
+**Parameter explosion note**: a proc that captures many up-level variables acquires many extra pointer parameters. LLVM's inliner and middle-end optimisations (mem2reg, SROA) typically eliminate this overhead after inlining — the pointers are promoted back to registers and the indirections disappear. O16 in MSIR-design.md discusses frame-struct grouping as a future performance tuning step for hot paths where inlining does not apply.
 
 ### Known Limitations / Remaining Work
 
@@ -365,7 +366,6 @@ The C backend sidesteps all three constraints: C structs can be forward-declared
 - **`var_map`/`gc_map`**: implemented; see architecture note below
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
-- **Multi-level nested procedures**: `GenBodyMSIR` handles one level of nesting; deeper nesting (nested inside nested) needs chaining `%__env` for the outer-outer frame
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
 
