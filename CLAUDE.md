@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (73/73 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (74/74 tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -249,6 +249,7 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **TEXT concatenation**: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat(a, b)` via `HookProc(RunTyme.Hook.Concat)`; module body now passes real TEXT values to `IO.Put`
 - **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container (object pointer) via `MSIRBuilder.SetPendingContainer`; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; traced object fields are retyped from `GcRef` to `GcSlot` so the barrier fires correctly
 - **`var_map`/`gc_map`**: module globals embedded as trailing fields of `@Mod_M3_info` struct (after MI_SIZE=104 bytes); gc_map TipeMap byte sequence skips non-traced fields and emits `Op.Ref` for each traced global; LLVM aliases (`@Main__gCounter` etc.) preserve binary symbol compatibility with CG-compiled modules; GC now correctly scans MSIR module globals as roots
+- **Nested procedures**: `NestedSum` with inner `Add` accessing up-level `acc` via static link; `GenBodyMSIR` compiles nested proc MSIR inline while outer proc's frame/varMap context is live (required because `inline_nested_procs=FALSE` with the C backend); frame is `alloca i8, i64 N` with N patched at end of `BeginProc`; frame pointer passed as `%__env: ptr` first parameter; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of same base name
 
 ### EH Model Requirement
 
@@ -309,14 +310,14 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR; handles EH, GC barriers, TypeCells, RTLinker binder |
 | `m3-sys/msir/src/MSIRPrinter.m3` | Prints MSIR text (`.msir` files) |
 | `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks on completed procs |
-| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`); `EmitCall`; try-context stack |
+| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`); `EmitCall`; try-context stack; `AllocFrameSlot` / `AllocaSetCount` for nested-proc frame struct |
 | `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` and `.ll` at end of unit |
 | `m3-sys/m3front/src/stmts/TryStmt.m3` | `CompileMSIR`: EH lowering for TRY/EXCEPT (UID comparison chain) |
 | `m3-sys/m3front/src/stmts/TryFinStmt.m3` | `CompileMSIR`: EH lowering for TRY/FINALLY (cleanup landingpad) |
 | `m3-sys/m3front/src/stmts/AssignStmt.m3` | `CompileMSIR`: fetches `CurrentBlock()` AFTER RHS to handle invoke-in-RHS |
 | `m3-sys/m3front/src/stmts/BlockStmt.m3` | `CompileMSIR`: calls `Scope.InitValues` (vars already registered by `BeginProc`) |
 | `m3-sys/m3front/src/values/Variable.m3` | Owns MSIR declarations: `DeclareGlobalMSIR`, `RegisterExternMSIR`, `AddLocalMSIR` (with zero-init), `BindFormalMSIR`; MSIR init in `UserInit` |
-| `m3-sys/m3front/src/values/Procedure.m3` | `GenBody`: `BeginProc` sets up MSIR proc; `Stmt.CompileMSIR`/`EndProc` follow CG body |
+| `m3-sys/m3front/src/values/Procedure.m3` | `GenBody`: `BeginProc` sets up MSIR proc; `Stmt.CompileMSIR`/`EndProc` follow CG body; `GenBodyMSIR`: MSIR-only inline compilation of nested procs |
 | `m3-sys/m3front/src/values/Module.m3` | `DeclareGlobalsMSIR`: pre-registers globals + exception descs; `EmitBody`: module-init MSIR |
 | `m3-sys/m3front/src/types/RefType.m3` | `InitTypecellMSIR`: registers MSIR TypeDesc; called from `Type.GenCells` |
 | `m3-sys/m3front/src/types/ObjectType.m3` | `InitTypecellMSIR`: registers MSIR ObjectTypeDesc with vtable; `GetObjectTypeInfo`, `FillMethodNames` |
@@ -324,7 +325,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/builtinOps/New.m3` | `CompileMSIR`: dispatches to `GenRefMSIR`/`GenObjectMSIR`/`GenOpaqueMSIR`; `CallAllocHook` is common tail |
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uses `MSIRBuilder.EmitCall` (invoke-aware) instead of `MSIR.BuildCall` |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 73-test C harness |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 74-test C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
 
@@ -339,18 +340,20 @@ MSIR declarations are co-located with CG declarations, not in separate passes:
 | Proc formals + locals | `MSIRBuilder.BeginProc`, before CG `Scope.InitValues` | `Variable.BindFormalMSIR` + `Variable.AddLocalMSIR` (zero-init if `InitCost > 0`) |
 | Variable initializers | CG-path `Scope.InitValues` (guarded by `t.initDone`) | MSIR blocks inside `Variable.UserInit` fire here because `BeginProc` has set `curBlock` |
 | Exception descriptors | `Module.DeclareGlobalsMSIR` | `MSIRBuilder.ExcDescValue` called upfront; lazy calls from TryStmt/RaiseStmt find existing desc |
+| Nested proc body (MSIR) | `Procedure.LangInit` via `Scope.InitValues`, when `inline_nested_procs=FALSE` | `GenBodyMSIR(t)` compiles MSIR inline while outer proc's frame/varMap context is live; `ProcMapContains` guards `GenBody` against re-emitting MSIR on the second (CG-only) pass |
 
 `Variable.m3` owns all MSIR registration for variables; `MSIRBuilder` exposes only raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`). The `Scope.InitValues` call in `GenBody`'s MSIR phase is intentionally absent — init fires during the CG-path call because `BeginProc` is already active.
 
+**Nested proc note**: the C backend always sets `inline_nested_procs=FALSE` (via `-unfold_nested_procs` in `cm3cfg.common`). MSIR requires nested proc bodies compiled while the outer proc's context is live, so `LangInit` calls `GenBodyMSIR` inline regardless of `inline_nested_procs`. The outer proc's frame alloca gets an `alloca i8, i64 N` instruction (not just `alloca i8`) once all up-level vars are registered, by calling `MSIR.AllocaSetCount` at the end of `BeginProc`.
+
 ### Known Limitations / Remaining Work
 
-- **Nested procedures**: up-level variable access not supported
 - **TEXT**: literals and `&` concatenation work; `IO.Put` receives real TEXT values in the module body. Remaining: `Fmt.Bool`, wide-char literals (use `ToLiteral` fallback), and TEXT-returning expressions that aren't yet handled (e.g., `Text.Sub`, `Fmt.Real`)
 - **GC write barrier for heap fields**: activated; see container protocol below
 - **`var_map`/`gc_map`**: implemented; see architecture note below
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
-- **Nested procedures**: up-level variable access not supported — key blocker for compiling CM3 itself
+- **Multi-level nested procedures**: `GenBodyMSIR` handles one level of nesting; deeper nesting (nested inside nested) needs chaining `%__env` for the outer-outer frame
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
 
