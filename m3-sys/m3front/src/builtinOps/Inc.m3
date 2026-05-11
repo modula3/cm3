@@ -10,6 +10,7 @@ MODULE Inc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Dec, Target, TInt;
 IMPORT IntegerExpr, Host, Int, LInt, MSIR, MSIRBuilder, MSIRType;
+IMPORT CaptureAnalysis;
 
 VAR Z: CallExpr.MethodList;
 
@@ -84,7 +85,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.NoteWrite (lhs);
   END Compile;
 
-PROCEDURE IncMSIR (ce: CallExpr.T): MSIR.Value =
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
     lhsExpr := ce.args[0];
     addr    := Expr.LValueMSIR (lhsExpr);
@@ -112,7 +113,14 @@ PROCEDURE IncMSIR (ce: CallExpr.T): MSIR.Value =
     updated := MSIR.BuildIAdd (blk, "", old, delta);
     MSIR.BuildStore (blk, updated, addr);
     RETURN NIL;
-  END IncMSIR;
+  END CompileMSIR;
+
+PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
+  (* INC writes its first argument; any increment expression is a read. *)
+  BEGIN
+    Expr.ScanLV (ce.args[0], ca);
+    FOR i := 1 TO LAST (ce.args^) DO Expr.Scan (ce.args[i], ca) END;
+  END Capture;
 
 PROCEDURE Initialize () =
   BEGIN
@@ -131,8 +139,8 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    CallExpr.SetMethodMSIR (Z, IncMSIR);
-    CallExpr.SetWritesArg0 (Z);
+    CallExpr.SetMethodMSIR    (Z, CompileMSIR);
+    CallExpr.SetMethodCapture (Z, Capture);
     Procedure.DefinePredefined ("INC", Z, TRUE);
   END Initialize;
 

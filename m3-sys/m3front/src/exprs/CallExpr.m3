@@ -15,8 +15,7 @@ MODULE CallExpr;
 
 IMPORT CG, Expr, ExprRep, Error, ProcType, Type, UserProc;
 IMPORT KeywordExpr, ESet, QualifyExpr, ErrType, Value, Target;
-IMPORT MSIR, MSIRBuilder, MSIRType, Method;
-IMPORT Formal, CaptureAnalysis;
+IMPORT MSIR, CaptureAnalysis;
 
 REVEAL
   MethodList = BRANDED "CallExpr.MethodList" REF RECORD
@@ -43,10 +42,8 @@ REVEAL
                  noteWriter   : NoteWriter;
                  isIndirect   : Predicate;
                  builtinAlign : BuiltinAlign;
-                 compileMSIR  : MSIRCompiler := NIL;
-                 writesArg0   : BOOLEAN := FALSE;
-                 (* TRUE only for INC and DEC: their first argument is written.
-                    Used by Scan to decide scanLV vs scan for capture analysis. *)
+                 capture      : Capturer := NIL;
+                 compileMSIR  : CompilerMSIR := NIL;
                END;
 
 REVEAL
@@ -76,8 +73,8 @@ REVEAL
         note_write   := NoteWrites;
         exprAlign    := CallExprAlign;
         usesAssignProtocol := UsesAssignProtocol;
-        scan               := Scan;
-        compileMSIR        := CompileMSIR;
+        scan         := Capture;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
@@ -159,6 +156,7 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
     m.isDesignator := isDesignator;
     m.noteWriter   := noteWriter;
     m.builtinAlign := builtinAlign;
+    m.capture      := CaptureDefault;  (* default: all args are reads *)
     RETURN m;
   END NewMethodList;
 
@@ -230,6 +228,12 @@ PROCEDURE NotWritable (<*UNUSED*> t: T)=
   BEGIN
     (* skip *)
   END NotWritable;
+
+PROCEDURE CaptureDefault (ce: T;  ca: CaptureAnalysis.T) =
+  (* Default: every argument of an unspecialised builtin is a read. *)
+  BEGIN
+    FOR i := 0 TO LAST(ce.args^) DO Expr.Scan(ce.args[i], ca) END;
+  END CaptureDefault;
 
 (***********************************************************************)
 
@@ -363,15 +367,11 @@ PROCEDURE CallExprAlign (p: T): Type.BitAlignT =
     END;
   END CallExprAlign;
 
-PROCEDURE SetMethodMSIR (ml: MethodList;  c: MSIRCompiler) =
-  BEGIN
-    ml.compileMSIR := c;
-  END SetMethodMSIR;
+PROCEDURE SetMethodMSIR (ml: MethodList;  c: CompilerMSIR) =
+  BEGIN ml.compileMSIR := c END SetMethodMSIR;
 
-PROCEDURE SetWritesArg0 (ml: MethodList) =
-  BEGIN
-    ml.writesArg0 := TRUE;
-  END SetWritesArg0;
+PROCEDURE SetMethodCapture (ml: MethodList;  c: Capturer) =
+  BEGIN ml.capture := c END SetMethodCapture;
 
 PROCEDURE BuiltinAlignDefault (p: T): Type.BitAlignT =
   VAR
@@ -459,128 +459,14 @@ PROCEDURE IsWritable (p: T;  lhs: BOOLEAN): BOOLEAN =
   END IsWritable;
 
 PROCEDURE CompileMSIR (p: T): MSIR.Value =
-  VAR
-    v:          Value.T;
-    msirCallee: MSIR.Proc;
-    argVals:    REF ARRAY OF MSIR.Value;
-    n:          INTEGER;
-    argVal:     MSIR.Value;
-    isNested:   BOOLEAN;
-    pBase:      INTEGER;
   BEGIN
-    IF NOT MSIRBuilder.InProc() THEN RETURN NIL END;
-    IF NOT IsUserProc(p) THEN
-      (* IsUserProc called Resolve; p.methods is already set. *)
-      IF p.methods # NIL AND p.methods.compileMSIR # NIL THEN
-        RETURN p.methods.compileMSIR(p);
-      END;
-      MSIRBuilder.Abandon("builtin call not supported in MSIR v0");
-      RETURN NIL;
-    END;
-    IF NOT UserProc.IsProcedureLiteral(p.proc, v) THEN
-      (* Check for virtual method dispatch: obj.method(args) *)
-      VAR
-        methodVal : Value.T;
-        methodInfo: Method.Info;
-        objExpr   : Expr.T;
-        objVal    : MSIR.Value;
-        rtype     : MSIR.T;
-        dispArgs  : REF ARRAY OF MSIR.Value;
-        midx      : LONGINT;
-      BEGIN
-        IF QualifyExpr.Split(p.proc, methodVal) AND
-           Value.ClassOf(methodVal) = Value.Class.Method THEN
-          objExpr := QualifyExpr.LhsExpr(p.proc);
-          IF objExpr = NIL THEN
-            MSIRBuilder.Abandon("method call: cannot get receiver");
-            RETURN NIL;
-          END;
-          EVAL Method.Split(methodVal, methodInfo);
-          (* Vtable index = bit offset / address size in bits *)
-          midx := VAL(methodInfo.offset, LONGINT)
-                    DIV VAL(Target.Address.size, LONGINT);
-
-          objVal := Expr.CompileMSIR(objExpr);
-          IF objVal = NIL THEN RETURN NIL END;
-
-          n       := NUMBER(p.args^);
-          rtype   := MSIRType.TranslateResult(ProcType.Result(p.proc_type));
-          dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
-          FOR i := 0 TO n - 1 DO
-            dispArgs[i] := Expr.CompileMSIR(p.args[i]);
-            IF dispArgs[i] = NIL THEN RETURN NIL END;
-          END;
-          RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
-        END;
-      END;
-      MSIRBuilder.Abandon("indirect/closure call not supported in MSIR v0");
-      RETURN NIL;
-    END;
-    Resolve(p);
-    msirCallee := MSIRBuilder.LookupOrCreateProc(v, p.proc_type);
-    IF msirCallee = NIL THEN RETURN NIL END;
-    isNested := MSIRBuilder.IsNestedProc(v);
-    IF isNested THEN
-      VAR caps := MSIRBuilder.GetProcCaptures(v);
-      BEGIN
-        IF caps = NIL THEN pBase := 0 ELSE pBase := NUMBER(caps^) END;
-      END;
-    ELSE
-      pBase := 0;
-    END;
-    n       := NUMBER(p.args^);
-    argVals := NEW(REF ARRAY OF MSIR.Value, n);
-    FOR i := 0 TO n - 1 DO
-      IF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i + pBase)))
-           = MSIR.TypeKind.Ptr THEN
-        argVal := Expr.LValueMSIR(p.args[i]);
-      ELSE
-        argVal := Expr.CompileMSIR(p.args[i]);
-      END;
-      IF argVal = NIL THEN RETURN NIL END;
-      argVals[i] := argVal;
-    END;
-    IF isNested THEN
-      RETURN MSIRBuilder.EmitNestedCall("", msirCallee, v, argVals^);
-    ELSE
-      RETURN MSIRBuilder.EmitCall("", msirCallee, argVals^);
-    END;
+    RETURN p.methods.compileMSIR(p);
   END CompileMSIR;
 
-PROCEDURE Scan (ce: T;  ca: CaptureAnalysis.T) =
-  VAR formal: Value.T;  finfo: Formal.Info;
+PROCEDURE Capture (ce: T;  ca: CaptureAnalysis.T) =
   BEGIN
-    Expr.Scan (ce.proc, ca);
-    IF ce.args = NIL THEN RETURN END;
-    IF IsUserProc (ce) THEN
-      (* User procedure call: derive mode from formal parameter list.
-         IsUserProc called Resolve, so ce.proc_type is set. *)
-      formal := ProcType.Formals (ce.proc_type);
-      FOR i := 0 TO LAST (ce.args^) DO
-        IF formal # NIL THEN
-          Formal.Split (formal, finfo);
-          formal := formal.next;
-        ELSE
-          finfo.mode := Formal.Mode.mVALUE;  (* extra args beyond formals *)
-        END;
-        IF finfo.mode = Formal.Mode.mVAR THEN
-          Expr.ScanLV (ce.args[i], ca);
-        ELSE
-          Expr.Scan (ce.args[i], ca);
-        END;
-      END;
-    ELSE
-      (* Builtin call: only INC and DEC write their first argument;
-         all other builtins treat every argument as a read. *)
-      IF ce.methods # NIL AND ce.methods.writesArg0
-           AND NUMBER (ce.args^) > 0 THEN
-        Expr.ScanLV (ce.args[0], ca);
-        FOR i := 1 TO LAST (ce.args^) DO Expr.Scan (ce.args[i], ca) END;
-      ELSE
-        FOR i := 0 TO LAST (ce.args^) DO Expr.Scan (ce.args[i], ca) END;
-      END;
-    END;
-  END Scan;
+    ce.methods.capture(ce, ca);
+  END Capture;
 
 BEGIN
 END CallExpr.

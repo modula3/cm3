@@ -11,6 +11,7 @@ MODULE UserProc;
 IMPORT M3ID, CG, Type, Expr, ExprRep, ProcType, Formal;
 IMPORT Procedure, NamedExpr, Variable, QualifyExpr, Value;
 IMPORT CallExpr, ProcExpr, Marker, ErrType;
+IMPORT MSIR, MSIRBuilder, MSIRType, Method, Target, CaptureAnalysis;
 
 (* Externally dispatched-to, using a field of Methods: *)
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
@@ -272,6 +273,109 @@ PROCEDURE IsProcedureLiteral (e: Expr.T;  VAR proc: Value.T): BOOLEAN =
   END IsProcedureLiteral;
 
 (* EXPORTED: *)
+PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
+  (* MSIR handler for user procedure calls — direct, virtual, and nested.
+     Dispatched through methods.compileMSIR by CallExpr.CompileMSIR. *)
+  VAR
+    v:          Value.T;
+    procType    := Type.Base (Expr.TypeOf (p.proc));
+    msirCallee: MSIR.Proc;
+    argVals:    REF ARRAY OF MSIR.Value;
+    n:          INTEGER;
+    argVal:     MSIR.Value;
+    isNested:   BOOLEAN;
+    pBase:      INTEGER;
+  BEGIN
+    IF NOT IsProcedureLiteral(p.proc, v) THEN
+      (* Virtual method dispatch: obj.method(args) *)
+      VAR
+        methodVal : Value.T;
+        methodInfo: Method.Info;
+        objExpr   : Expr.T;
+        objVal    : MSIR.Value;
+        rtype     : MSIR.T;
+        dispArgs  : REF ARRAY OF MSIR.Value;
+        midx      : LONGINT;
+      BEGIN
+        IF QualifyExpr.Split(p.proc, methodVal) AND
+           Value.ClassOf(methodVal) = Value.Class.Method THEN
+          objExpr := QualifyExpr.LhsExpr(p.proc);
+          IF objExpr = NIL THEN
+            MSIRBuilder.Abandon("method call: cannot get receiver");
+            RETURN NIL;
+          END;
+          EVAL Method.Split(methodVal, methodInfo);
+          midx := VAL(methodInfo.offset, LONGINT)
+                    DIV VAL(Target.Address.size, LONGINT);
+          objVal := Expr.CompileMSIR(objExpr);
+          IF objVal = NIL THEN RETURN NIL END;
+          n       := NUMBER(p.args^);
+          rtype   := MSIRType.TranslateResult(ProcType.Result(procType));
+          dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
+          FOR i := 0 TO n - 1 DO
+            dispArgs[i] := Expr.CompileMSIR(p.args[i]);
+            IF dispArgs[i] = NIL THEN RETURN NIL END;
+          END;
+          RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
+        END;
+      END;
+      MSIRBuilder.Abandon("indirect/closure call not supported in MSIR v0");
+      RETURN NIL;
+    END;
+    msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
+    IF msirCallee = NIL THEN RETURN NIL END;
+    isNested := MSIRBuilder.IsNestedProc(v);
+    IF isNested THEN
+      VAR caps := MSIRBuilder.GetProcCaptures(v);
+      BEGIN
+        IF caps = NIL THEN pBase := 0 ELSE pBase := NUMBER(caps^) END;
+      END;
+    ELSE
+      pBase := 0;
+    END;
+    n       := NUMBER(p.args^);
+    argVals := NEW(REF ARRAY OF MSIR.Value, n);
+    FOR i := 0 TO n - 1 DO
+      IF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i + pBase)))
+           = MSIR.TypeKind.Ptr THEN
+        argVal := Expr.LValueMSIR(p.args[i]);
+      ELSE
+        argVal := Expr.CompileMSIR(p.args[i]);
+      END;
+      IF argVal = NIL THEN RETURN NIL END;
+      argVals[i] := argVal;
+    END;
+    IF isNested THEN
+      RETURN MSIRBuilder.EmitNestedCall("", msirCallee, v, argVals^);
+    ELSE
+      RETURN MSIRBuilder.EmitCall("", msirCallee, argVals^);
+    END;
+  END CompileMSIR;
+
+PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
+  (* Capture proc and call arguments using formal parameter modes. *)
+  VAR
+    procType := Type.Base (Expr.TypeOf (ce.proc));
+    formal   : Value.T;
+    finfo    : Formal.Info;
+  BEGIN
+    Expr.Scan(ce.proc, ca);
+    formal := ProcType.Formals(procType);
+    FOR i := 0 TO LAST(ce.args^) DO
+      IF formal # NIL THEN
+        Formal.Split(formal, finfo);
+        formal := formal.next;
+      ELSE
+        finfo.mode := Formal.Mode.mVALUE;  (* extra args beyond formal list *)
+      END;
+      IF finfo.mode = Formal.Mode.mVAR THEN
+        Expr.ScanLV(ce.args[i], ca);
+      ELSE
+        Expr.Scan(ce.args[i], ca);
+      END;
+    END;
+  END Capture;
+
 PROCEDURE Initialize () =
   BEGIN
     Methods := CallExpr.NewMethodList (0, 99999, FALSE, TRUE, TRUE, NIL,
@@ -290,6 +394,8 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR    (Methods, CompileMSIR);
+    CallExpr.SetMethodCapture (Methods, Capture);
   END Initialize;
 
 BEGIN

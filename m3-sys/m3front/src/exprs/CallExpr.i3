@@ -12,7 +12,7 @@ INTERFACE CallExpr;
 (* NOTE: Notwithstanding its name, this interface handles only
          calls on builtin procedures.
 *)
-IMPORT CG, Expr, Type, Target, MSIR;
+IMPORT CG, Expr, Type, Target, MSIR, CaptureAnalysis;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T;
 
@@ -32,17 +32,19 @@ TYPE
   MethodList <: REFANY;
 
 TYPE
-  Typer       = PROCEDURE (t: T): Type.T;
-  Visitor     = PROCEDURE (t: T);
-  TypeChecker = PROCEDURE (t: T;  VAR cs: Expr.CheckState);
-  Evaluator   = PROCEDURE (t: T): Expr.T;
-  Bounder     = PROCEDURE (t: T;  VAR min, max: Target.Int);
-  Predicate   = PROCEDURE (t: T;  traced := FALSE): BOOLEAN;
-  Compiler    = PROCEDURE (t: T);
-  CompilerLV  = PROCEDURE (t: T;  traced: BOOLEAN);
-  CompilerBR  = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
-  NoteWriter  = PROCEDURE (t: T);
-  BuiltinAlign= PROCEDURE (t: T): Type.BitAlignT;
+  Typer        = PROCEDURE (t: T): Type.T;
+  Visitor      = PROCEDURE (t: T);
+  TypeChecker  = PROCEDURE (t: T;  VAR cs: Expr.CheckState);
+  Evaluator    = PROCEDURE (t: T): Expr.T;
+  Bounder      = PROCEDURE (t: T;  VAR min, max: Target.Int);
+  Predicate    = PROCEDURE (t: T;  traced := FALSE): BOOLEAN;
+  Compiler     = PROCEDURE (t: T);
+  CompilerLV   = PROCEDURE (t: T;  traced: BOOLEAN);
+  CompilerBR   = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
+  NoteWriter   = PROCEDURE (t: T);
+  BuiltinAlign = PROCEDURE (t: T): Type.BitAlignT;
+  Capturer     = PROCEDURE (t: T;  ca: CaptureAnalysis.T);
+  CompilerMSIR = PROCEDURE (t: T): MSIR.Value;
   
 PROCEDURE NewMethodList
   (minArgs      : INTEGER;
@@ -85,12 +87,7 @@ PROCEDURE NoBranch       (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NotWritable    (t: T);
 PROCEDURE BuiltinAlignDefault (t: T): Type.BitAlignT;
 
-TYPE MSIRCompiler = PROCEDURE (t: T): MSIR.Value;
-PROCEDURE SetMethodMSIR (ml: MethodList;  c: MSIRCompiler);
-
-PROCEDURE SetWritesArg0 (ml: MethodList);
-(* Mark that this builtin writes its first argument (for CaptureAnalysis.Scan).
-   Call this in Initialize alongside SetMethodMSIR.  Currently only INC and DEC
-   need this — all other builtins treat every argument as a read. *)
+PROCEDURE SetMethodCapture (ml: MethodList;  s: Capturer);
+PROCEDURE SetMethodMSIR    (ml: MethodList;  c: CompilerMSIR);
 
 END CallExpr.
