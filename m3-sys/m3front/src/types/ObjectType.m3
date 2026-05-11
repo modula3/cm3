@@ -697,11 +697,13 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
     IF vtableKnown AND names # NIL THEN
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
-                                info.isTraced, 13, fldSize, fldAlign,
+                                info.isTraced, ORD (M3RT.TypeKind.Obj),
+                                fldSize, fldAlign,
                                 parUID, dataOff, names^, methBytes);
     ELSE
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
-                                info.isTraced, 13, fldSize, fldAlign,
+                                info.isTraced, ORD (M3RT.TypeKind.Obj),
+                                fldSize, fldAlign,
                                 parUID, dataOff, ARRAY OF TEXT{}, methBytes);
     END;
     MSIR.ModuleAddTypeDesc (m, desc);

@@ -856,7 +856,7 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   name          : TEXT;
   uid           : LONGINT;
   isTraced      : BOOLEAN;
-  kind          : INTEGER;  (* 6=Ref, 13=Obj *)
+  kind          : INTEGER;  (* ORD(M3RT.TypeKind) *)
   dataSize      : INTEGER;  (* bytes *)
   dataAlignment : INTEGER;  (* bits *)
   parentUID     : LONGINT;  (* OBJ: parent fingerprint *)

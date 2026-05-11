@@ -156,7 +156,7 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         (* Emit as a constant-expression GEP: no separate instruction needed. *)
         Wr.PutText(wr, "getelementptr inbounds (i8, ptr @textlit_");
         Wr.PutText(wr, Fmt.Int(MSIR.GetTextLitUID(v)));
-        Wr.PutText(wr, ", i64 8)");
+        Wr.PutText(wr, ", i64 " & Fmt.Int(Target.Address.bytes) & ")");
     | MSIR.ValueKind.GlobalRef =>
         Wr.PutText(wr, "@");
         Wr.PutText(wr, LLGlobalSym(MSIR.ValueName(v)));
@@ -1066,8 +1066,8 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
        { i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }
      Literal data comes from TextExpr.LiteralCount/Chars/Cnt — the same
      per-module registry the CG path uses (SetUID tracking). *)
-  CONST
-    GcHeader = 2L; (* Word.Shift(TEXT_typecode=1, RH_typecode_offset=1) *)
+  VAR
+    GcHeader := VAL(Word.Shift(M3RT.TEXT_typecode, M3RT.RH_typecode_offset), LONGINT);
   VAR n := MSIR.ModuleTextLitCount(m);
   BEGIN
     IF n = 0 THEN RETURN END;
@@ -1135,7 +1135,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
       VAR
         d       := MSIR.ModuleTypeDesc(m, k);
         nm      := MSIR.TypeDescName(d);
-        isObj   := MSIR.TypeDescKind(d) = 13;  (* TypeKind.Obj *)
+        isObj   := MSIR.TypeDescKind(d) = ORD(M3RT.TypeKind.Obj);
         nextVal : TEXT;
       BEGIN
         (* next pointer: chain TypeCells for MI_type_cells list *)
@@ -1163,7 +1163,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
           Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* fp *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
-          Wr.PutText(wr, "  i8 13,\n");  (* kind = Obj *)
+          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
           Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
           Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)

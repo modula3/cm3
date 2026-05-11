@@ -2,7 +2,7 @@ MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
-IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis;
+IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -701,11 +701,12 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
     IF m = NIL THEN RETURN NIL END;
     FOR i := 0 TO MSIR.ModuleTypeDescCount(m) - 1 DO
       desc := MSIR.ModuleTypeDesc(m, i);
-      IF MSIR.TypeDescUID(desc) = uid AND MSIR.TypeDescKind(desc) = 6 THEN
+      IF MSIR.TypeDescUID(desc) = uid
+         AND MSIR.TypeDescKind(desc) = ORD(M3RT.TypeKind.Ref) THEN
         RETURN MSIR.TypeDescValue(desc);
       END;
     END;
-    desc := MSIR.NewTypeDesc(nm, uid, isTraced, 6 (* Ref *),
+    desc := MSIR.NewTypeDesc(nm, uid, isTraced, ORD(M3RT.TypeKind.Ref),
                               dataSize, dataAlignment);
     MSIR.ModuleAddTypeDesc(m, desc);
     RETURN MSIR.TypeDescValue(desc);

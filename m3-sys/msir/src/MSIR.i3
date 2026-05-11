@@ -258,7 +258,7 @@ PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc;
    so AllocateTracedObj -> InitObj stores the vtable without needing linkProc. *)
 TYPE TypeDesc <: REFANY;
 
-(* uid = M3FP fingerprint.  kind: 6=Ref, 13=Obj.
+(* uid = M3FP fingerprint.  kind: ORD(M3RT.TypeKind) — Ref=1, Obj=2, Array=3.
    dataSize in bytes; dataAlignment in bits (matches M3RT TC_dataAlignment).
    methods: names of vtable function symbols, one per slot (OBJECT only).
    methodBytes: total vtable byte size; -1 means compute from methods array. *)
@@ -273,7 +273,7 @@ PROCEDURE TypeDescName        (d: TypeDesc): TEXT;
 PROCEDURE TypeDescValue       (d: TypeDesc): Value;   (* ptr to the TypeCell global *)
 PROCEDURE TypeDescUID         (d: TypeDesc): LONGINT;
 PROCEDURE TypeDescTraced      (d: TypeDesc): BOOLEAN;
-PROCEDURE TypeDescKind        (d: TypeDesc): INTEGER; (* 6=Ref, 13=Obj *)
+PROCEDURE TypeDescKind        (d: TypeDesc): INTEGER; (* ORD(M3RT.TypeKind) *)
 PROCEDURE TypeDescSize        (d: TypeDesc): INTEGER; (* dataSize in bytes *)
 PROCEDURE TypeDescAlign       (d: TypeDesc): INTEGER; (* dataAlignment in bits *)
 PROCEDURE TypeDescParentUID   (d: TypeDesc): LONGINT; (* OBJ: parent fingerprint *)
