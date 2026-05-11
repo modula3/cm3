@@ -95,12 +95,18 @@ PROCEDURE SetHi(t: T): LONGINT;
 
 TYPE Value <: REFANY;
 
-TYPE ValueKind = {ConstInt, ConstNil, Param, BlockParam, InsnResult, GlobalRef};
+TYPE ValueKind = {ConstInt, ConstNil, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef};
 
 PROCEDURE ConstInt(t: T;  v: LONGINT): Value;
 PROCEDURE ConstBool(v: BOOLEAN): Value;
 PROCEDURE ConstNil(t: T): Value;      (* t must be Ptr / GcRef *)
 PROCEDURE ConstZero(t: T): Value;    (* zero / NIL / FALSE for scalars; NIL for unsupported types *)
+PROCEDURE ConstTextLit(uid: INTEGER; chars: TEXT; cnt: INTEGER): Value;
+(* A TEXT literal value. uid indexes @textlit_<uid> for LLVM lowering;
+   chars/cnt are the string content for readable MSIR text output. *)
+PROCEDURE GetTextLitUID  (v: Value): INTEGER;
+PROCEDURE GetTextLitChars(v: Value): TEXT;
+PROCEDURE GetTextLitCnt  (v: Value): INTEGER;
 
 PROCEDURE ValueType(v: Value): T;
 PROCEDURE ValueName(v: Value): TEXT;  (* SSA name, e.g. "%5" or "a" *)
@@ -276,18 +282,15 @@ PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc;
    Used in proc bodies before the TypeCell global is registered (forward ref). *)
 PROCEDURE TypeCellRef (name: TEXT): Value;
 
-(*----------------------------------------------- TEXT literals *)
-
-(* Register a TEXT literal with the module and return a uid.
-   chars: raw character bytes; cnt: character count (negative = wide).
-   Returns an existing uid if this literal was already registered. *)
-PROCEDURE ModuleAddTextLit (m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER;
+(* TEXT literals — populated by MSIREmit.EndUnit from TextExpr.Literal* *)
+PROCEDURE ModuleAddTextLit  (m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER;
 PROCEDURE ModuleTextLitCount(m: Module): INTEGER;
-PROCEDURE ModuleTextLitChars(m: Module;  i: INTEGER): TEXT;
-PROCEDURE ModuleTextLitCnt  (m: Module;  i: INTEGER): INTEGER;
+PROCEDURE ModuleTextLitChars(m: Module;  uid: INTEGER): TEXT;
+PROCEDURE ModuleTextLitCnt  (m: Module;  uid: INTEGER): INTEGER;
 
-(* Build a getelementptr instruction that computes the TEXT reference
-   (pointer to offset 8 of @textlit_<uid>) in block b. *)
+(* Build a getelementptr computing the TEXT reference:
+   ptr to offset 8 of @textlit_<uid> (past the GC header to the vtable field).
+   uid comes from TextExpr.SetUID via TextExpr.CompileMSIR. *)
 PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value;
 
 (*----------------------------------------------- import binders *)

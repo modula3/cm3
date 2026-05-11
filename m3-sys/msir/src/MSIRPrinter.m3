@@ -1,6 +1,6 @@
 MODULE MSIRPrinter;
 
-IMPORT MSIR, Wr, Fmt, Thread;
+IMPORT MSIR, Wr, Fmt, Thread, Text;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -72,6 +72,25 @@ PROCEDURE Type(wr: Wr.T;  t: MSIR.T) =
     END;
   END Type;
 
+PROCEDURE PrintQuotedText(wr: Wr.T;  chars: TEXT;  cnt: INTEGER) =
+  VAR len := ABS(cnt);
+  BEGIN
+    IF chars = NIL THEN Wr.PutText(wr, "\"\""); RETURN END;
+    Wr.PutChar(wr, '"');
+    FOR i := 0 TO len - 1 DO
+      VAR c := ORD(Text.GetChar(chars, i));
+      BEGIN
+        IF c >= 32 AND c < 127 AND c # ORD('"') AND c # ORD('\\') THEN
+          Wr.PutChar(wr, VAL(c, CHAR));
+        ELSE
+          Wr.PutChar(wr, '\\');
+          Wr.PutText(wr, Fmt.Pad(Fmt.Unsigned(c, 16), 2, '0'));
+        END;
+      END;
+    END;
+    Wr.PutChar(wr, '"');
+  END PrintQuotedText;
+
 PROCEDURE Value(wr: Wr.T;  v: MSIR.Value) =
   BEGIN
     IF v = NIL THEN Wr.PutText(wr, "<nil-value>"); RETURN END;
@@ -82,6 +101,8 @@ PROCEDURE Value(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "nil");
+    | MSIR.ValueKind.ConstTextLit =>
+        PrintQuotedText(wr, MSIR.GetTextLitChars(v), MSIR.GetTextLitCnt(v));
     | MSIR.ValueKind.Param,
       MSIR.ValueKind.BlockParam,
       MSIR.ValueKind.InsnResult,
@@ -100,6 +121,8 @@ PROCEDURE NameRef(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "nil");
+    | MSIR.ValueKind.ConstTextLit =>
+        PrintQuotedText(wr, MSIR.GetTextLitChars(v), MSIR.GetTextLitCnt(v));
     ELSE
         Wr.PutText(wr, MSIR.ValueName(v));
     END;

@@ -1,6 +1,7 @@
 MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT TextExpr;
 IMPORT RunTyme;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
@@ -85,6 +86,16 @@ PROCEDURE EndUnit() =
       MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef),
       MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced),
       MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase));
+    (* Populate text literals from TextExpr's per-module registry.
+       TextExpr.SetUID tracks literals during compilation; we transfer
+       them here so MSIRToLLVM (in the msir package) can emit the LLVM globals
+       without importing TextExpr (which would create a circular dependency). *)
+    FOR uid := 0 TO TextExpr.LiteralCount() - 1 DO
+      EVAL MSIR.ModuleAddTextLit(curModule,
+                                  TextExpr.LiteralChars(uid),
+                                  TextExpr.LiteralCnt(uid));
+    END;
+
     errs := MSIRVerifier.VerifyModule(curModule);
     IF errs # NIL THEN
       FOR i := 0 TO LAST(errs^) DO

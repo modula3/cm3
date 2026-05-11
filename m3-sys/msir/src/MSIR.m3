@@ -326,6 +326,9 @@ REVEAL Value = BRANDED "MSIR.Value" REF RECORD
   block:     Block      := NIL;     (* BlockParam *)
   bparamIdx: INTEGER    := -1;
   insn:      Insn       := NIL;     (* InsnResult *)
+  textUid:   INTEGER    := -1;      (* ConstTextLit: index into @textlit_N *)
+  textChars: TEXT       := NIL;     (* ConstTextLit: raw chars for printing *)
+  textCnt:   INTEGER    := 0;       (* ConstTextLit: cnt (neg = wide) *)
 END;
 
 PROCEDURE ConstInt(t: T;  v: LONGINT): Value =
@@ -365,6 +368,22 @@ PROCEDURE ConstZero(t: T): Value =
     ELSE                                   RETURN NIL;
     END;
   END ConstZero;
+
+PROCEDURE ConstTextLit(uid: INTEGER;  chars: TEXT;  cnt: INTEGER): Value =
+  VAR val := NEW(Value);
+  BEGIN
+    val.type      := TGcRef(TVoid());  (* TEXT = traced ref *)
+    val.vKind     := ValueKind.ConstTextLit;
+    val.textUid   := uid;
+    val.textChars := chars;
+    val.textCnt   := cnt;
+    val.name      := "@textlit_" & Fmt.Int(uid);  (* LLVM global name for emit *)
+    RETURN val;
+  END ConstTextLit;
+
+PROCEDURE GetTextLitUID  (v: Value): INTEGER = BEGIN RETURN v.textUid   END GetTextLitUID;
+PROCEDURE GetTextLitChars(v: Value): TEXT    = BEGIN RETURN v.textChars  END GetTextLitChars;
+PROCEDURE GetTextLitCnt  (v: Value): INTEGER = BEGIN RETURN v.textCnt   END GetTextLitCnt;
 
 PROCEDURE ValueType(v: Value): T = BEGIN RETURN v.type END ValueType;
 PROCEDURE ValueName(v: Value): TEXT = BEGIN RETURN v.name END ValueName;
@@ -700,11 +719,6 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
 END;
 
-TYPE TextLit = REF RECORD
-  chars  : TEXT;    (* raw characters *)
-  cnt    : INTEGER; (* character count; negative = wide *)
-  uid    : INTEGER; (* per-module uid for naming the global *)
-END;
 
 REVEAL Global = BRANDED "MSIR.Global" REF RECORD
   name:       TEXT;
@@ -860,17 +874,17 @@ PROCEDURE ModuleTypeDescCount(m: Module): INTEGER      = BEGIN RETURN m.typeDesc
 PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc =
   BEGIN RETURN m.typeDescs.get(i) END ModuleTypeDesc;
 
+TYPE TextLit = REF RECORD  (* populated by MSIREmit.EndUnit from TextExpr *)
+  chars : TEXT;
+  cnt   : INTEGER;
+END;
+
 PROCEDURE ModuleAddTextLit(m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER =
-  (* Deduplicate by (chars, cnt). *)
-  VAR lit: TextLit;
+  VAR lit: TextLit;  n := m.textLiterals.size();
   BEGIN
-    FOR i := 0 TO m.textLiterals.size() - 1 DO
-      lit := m.textLiterals.get(i);
-      IF lit.cnt = cnt AND Text.Equal(lit.chars, chars) THEN RETURN lit.uid END;
-    END;
-    lit := NEW(TextLit, chars := chars, cnt := cnt, uid := m.textLiterals.size());
+    lit := NEW(TextLit, chars := chars, cnt := cnt);
     m.textLiterals.addhi(lit);
-    RETURN lit.uid;
+    RETURN n;
   END ModuleAddTextLit;
 PROCEDURE ModuleTextLitCount(m: Module): INTEGER =
   BEGIN RETURN m.textLiterals.size() END ModuleTextLitCount;
@@ -880,13 +894,10 @@ PROCEDURE ModuleTextLitCnt(m: Module;  i: INTEGER): INTEGER =
   BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).cnt END ModuleTextLitCnt;
 
 PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
-  (* Emit getelementptr i8, ptr @textlit_<uid>, i64 8 — the TEXT reference. *)
-  VAR baseVal := NEW(Value);
+  (* Kept for API compat; callers should prefer ConstTextLit directly. *)
+  <*UNUSED*> VAR dummy := b;
   BEGIN
-    baseVal.type  := TPtr(TVoid());
-    baseVal.name  := "@textlit_" & Fmt.Int(uid);
-    baseVal.vKind := ValueKind.InsnResult;
-    RETURN BuildPtrAdd(b, "", baseVal, 8L);  (* auto-named to avoid duplicates *)
+    RETURN ConstTextLit(uid, NIL, 0);
   END BuildTextLiteralRef;
 
 PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT) =

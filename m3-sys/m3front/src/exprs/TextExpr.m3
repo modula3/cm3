@@ -45,12 +45,17 @@ TYPE
          and used many places. *)
 
 VAR nextUID : INTEGER := 0;
-TYPE  LiteralTable = REF ARRAY OF INTEGER;
+TYPE  LiteralTable  = REF ARRAY OF INTEGER;
+TYPE  CharTable     = REF ARRAY OF TEXT;
+TYPE  CntTable      = REF ARRAY OF INTEGER;
       (* LiteralTable[uid] is the offset w/in the global constant area where
-         the uid-th literal is stored. *)
+         the uid-th literal is stored.
+         CharTable[uid] and CntTable[uid] are the raw chars and cnt for MSIR. *)
 
 VAR globalConstsCGVar : CG.Var  := NIL;
 VAR literals : LiteralTable := NIL;
+VAR litChars : CharTable    := NIL;  (* MSIR: raw characters for uid-th literal *)
+VAR litCnts  : CntTable     := NIL;  (* MSIR: cnt (neg = wide) for uid-th literal *)
 VAR methodListOffset : INTEGER := -1;
     (* ^Offset w/in global constant area of a list of addresses of
        TextLiteral.T's overrides of Text.T methods. *)
@@ -64,6 +69,8 @@ PROCEDURE Reset () =
     IF (literals # NIL) THEN
       FOR i := FIRST (literals^) TO LAST (literals^) DO literals[i] := 0; END;
     END;
+    litChars := NIL;
+    litCnts  := NIL;
   END Reset;
 
 PROCEDURE New8 (value: M3String.T): Expr.T =
@@ -148,6 +155,24 @@ PROCEDURE SetUID (p: P): INTEGER =
     x := Module.Allocate (Chars_offset + (len+1) * width,
                            Target.Address.align, TRUE, "*TEXT literal*");
     literals[uid] := x;
+
+    (* MSIR: record raw chars and cnt for LLVM emission *)
+    IF (litChars = NIL) OR (LAST (litChars^) < uid) THEN
+      VAR nc := NEW(CharTable, MAX(uid+1, 200));
+          nn := NEW(CntTable,  MAX(uid+1, 200));
+      BEGIN
+        IF litChars # NIL THEN
+          SUBARRAY(nc^, 0, NUMBER(litChars^)) := litChars^;
+          SUBARRAY(nn^, 0, NUMBER(litCnts^))  := litCnts^;
+        END;
+        litChars := nc;  litCnts := nn;
+      END;
+    END;
+    IF p.value8 # NIL
+      THEN litChars[uid] := M3String.ToText(p.value8);
+      ELSE litChars[uid] := M3WString.ToLiteral(p.value32);
+    END;
+    litCnts[uid] := cnt;
 
     (* initialize the variable *)
     (*
@@ -295,25 +320,38 @@ PROCEDURE GenLiteral
   END GenLiteral;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR m   := MSIREmit.CurrentModule ();
-      uid : INTEGER;
-      chars: TEXT;
-      cnt  : INTEGER;
+  VAR uid: INTEGER;  chars: TEXT;  cnt: INTEGER;
   BEGIN
-    IF m = NIL OR NOT MSIRBuilder.InProc () THEN
+    IF NOT MSIREmit.IsEnabled () OR NOT MSIRBuilder.InProc () THEN
       RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
     END;
+    (* SetUID registers the literal in the CG per-module table (deduplication)
+       and returns the uid used to name the LLVM global @textlit_<uid>. *)
+    uid := SetUID (p);
     IF p.value8 # NIL THEN
       chars := M3String.ToText (p.value8);
       cnt   := M3String.Length (p.value8);
     ELSE
-      (* Wide (WIDECHAR) literal: use the literal representation for now. *)
       chars := M3WString.ToLiteral (p.value32);
       cnt   := - M3WString.Length (p.value32);
     END;
-    uid := MSIR.ModuleAddTextLit (m, chars, cnt);
-    RETURN MSIR.BuildTextLiteralRef (MSIRBuilder.CurrentBlock (), uid);
+    RETURN MSIR.ConstTextLit (uid, chars, cnt);
   END CompileMSIR;
+
+PROCEDURE LiteralCount (): INTEGER =
+  BEGIN RETURN nextUID END LiteralCount;
+
+PROCEDURE LiteralChars (uid: INTEGER): TEXT =
+  BEGIN
+    IF litChars = NIL OR uid > LAST(litChars^) THEN RETURN "" END;
+    RETURN litChars[uid];
+  END LiteralChars;
+
+PROCEDURE LiteralCnt (uid: INTEGER): INTEGER =
+  BEGIN
+    IF litCnts = NIL OR uid > LAST(litCnts^) THEN RETURN 0 END;
+    RETURN litCnts[uid];
+  END LiteralCnt;
 
 BEGIN
 END TextExpr.

@@ -19,4 +19,10 @@ PROCEDURE Split32 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN;
 
 PROCEDURE Reset ();
 
+(* MSIR accessors: iterate registered literals for LLVM global emission.
+   Valid after compilation; reset by Reset(). *)
+PROCEDURE LiteralCount (): INTEGER;
+PROCEDURE LiteralChars (uid: INTEGER): TEXT;    (* raw chars *)
+PROCEDURE LiteralCnt   (uid: INTEGER): INTEGER; (* char count; neg = wide *)
+
 END TextExpr.
