@@ -455,6 +455,8 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
     argVals:    REF ARRAY OF MSIR.Value;
     n:          INTEGER;
     argVal:     MSIR.Value;
+    isNested:   BOOLEAN;
+    pBase:      INTEGER;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN NIL END;
     IF NOT IsUserProc(p) THEN
@@ -507,10 +509,12 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
     Resolve(p);
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, p.proc_type);
     IF msirCallee = NIL THEN RETURN NIL END;
+    isNested := MSIRBuilder.IsNestedProc(v);
+    pBase    := ORD(isNested);
     n       := NUMBER(p.args^);
     argVals := NEW(REF ARRAY OF MSIR.Value, n);
     FOR i := 0 TO n - 1 DO
-      IF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i)))
+      IF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i + pBase)))
            = MSIR.TypeKind.Ptr THEN
         argVal := Expr.LValueMSIR(p.args[i]);
       ELSE
@@ -519,7 +523,11 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
       IF argVal = NIL THEN RETURN NIL END;
       argVals[i] := argVal;
     END;
-    RETURN MSIRBuilder.EmitCall("", msirCallee, argVals^);
+    IF isNested THEN
+      RETURN MSIRBuilder.EmitNestedCall("", msirCallee, argVals^);
+    ELSE
+      RETURN MSIRBuilder.EmitCall("", msirCallee, argVals^);
+    END;
   END CompileMSIR;
 
 BEGIN

@@ -27,6 +27,7 @@ PROCEDURE Split (t: T;  VAR type: Type.T;
                  VAR global, indirect, lhs: BOOLEAN);
 
 PROCEDURE IsFormal   (t: T): BOOLEAN;
+PROCEDURE IsUpLevel  (t: T): BOOLEAN;  (* accessed from a nested procedure *)
 
 (* MSIR declarations — called from DeclareGlobalsMSIR and BeginProc. *)
 PROCEDURE DeclareGlobalMSIR  (t: T);

@@ -75,6 +75,7 @@ extern M3Int  Main__GetCounter(void);
 extern M3Int  Main__TryRaise(void);
 extern M3Int  Main__AllocInt(M3Int n);    /* NEW(REF INTEGER): stores n, returns n */
 extern M3Int  Main__AllocSquare(M3Int side);   /* NEW(Square): sets side, returns side*side */
+extern M3Int  Main__NestedSum(M3Int n);        /* nested proc: sum 1..n */
 extern M3Int  Main__DispatchSquare(M3Int side); /* NEW(Square) + vtable dispatch */
 extern M3Int  Main__TryRaiseArg(void);  /* raises TestExceptArg(42), catches, returns 42 */
 extern M3Int  Main__TryFinNormal(void);
@@ -222,6 +223,9 @@ int main(void) {
 
     /* NEW(Square) — allocate OBJECT, set side, return side*side */
     check_int("AllocSquare(6)",     Main__AllocSquare(6),       36);
+
+    /* Nested procedure: sum 1..10 = 55 */
+    check_int("NestedSum(10)",      Main__NestedSum(10),        55);
     /* NEW(Square) + vtable dispatch through ShapeDispatch */
     check_int("DispatchSquare(5)",  Main__DispatchSquare(5),    25);
 

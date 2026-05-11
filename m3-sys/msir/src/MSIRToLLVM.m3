@@ -456,9 +456,15 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     (* --- single-instruction ops --- *)
 
     | MSIR.Op.Alloca =>
-        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca ");
-        LLType(wr, MSIR.InsnTargetType(i));
-        Wr.PutText(wr, "\n");
+        VAR cnt := MSIR.InsnExtractIdx(i);
+        BEGIN
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca ");
+          LLType(wr, MSIR.InsnTargetType(i));
+          IF cnt > 1 THEN
+            Wr.PutText(wr, ", i64 " & Fmt.Int(cnt));
+          END;
+          Wr.PutText(wr, "\n");
+        END;
 
     | MSIR.Op.Load =>
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = load ");

@@ -594,8 +594,32 @@ PROCEDURE LangInit (t: T) =
       GenBody (t);
     ELSE
       CG.Note_procedure_origin (t.cg_proc);
+      (* MSIR: compile nested proc's MSIR body inline in outer proc's context.
+         With the C backend, inline_nested_procs=FALSE (unfold_nested_procs is set),
+         so CG defers nested procs to ProcBody.  MSIR needs them compiled inline
+         while the outer proc's frame/varMap context is still live. *)
+      IF MSIRBuilder.InProc () THEN
+        GenBodyMSIR (t);
+      END;
     END;
   END LangInit;
+
+(* Compile only the MSIR part of a nested proc's body, inline within the
+   enclosing proc's MSIR context.  Called from LangInit when inline_nested_procs
+   is FALSE so the CG path defers compilation but MSIR must do it now. *)
+PROCEDURE GenBodyMSIR (p: T) =
+  BEGIN
+    (* Use the fully-qualified unmangled name so nested procs don't collide
+       with module-level procs of the same base name. *)
+    IF NOT MSIRBuilder.BeginProc (
+              Value.GlobalName (p, dots := FALSE, with_module := FALSE),
+              ProcType.Formals (p.signature),
+              p.syms, ProcType.Result (p.signature),
+              isExternal := TRUE) THEN RETURN END;
+    MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+    Stmt.CompileMSIR (p.block);
+    MSIRBuilder.EndProc ();
+  END GenBodyMSIR;
 
 PROCEDURE ToExpr (t: T): Expr.T =
   BEGIN
@@ -645,6 +669,7 @@ PROCEDURE GenBody (p: T) =
     l        : CG.Label;
     frame    : CG.Var;
     cconv    : CG.CallingConvention;
+    msirSkip : BOOLEAN;
   BEGIN
     IF (Host.inline_nested_procs)
       AND (p.body # NIL) AND (p.body.level > 0) THEN
@@ -653,6 +678,12 @@ PROCEDURE GenBody (p: T) =
       Tracer.EmitPending ();
     END;
 
+    (* If inline_nested_procs is FALSE, GenBodyMSIR compiled this nested proc's
+       MSIR inline already (from LangInit).  Skip MSIR here to avoid double-emit. *)
+    msirSkip := (NOT Host.inline_nested_procs)
+                AND (p.body # NIL) AND (p.body.level > 0)
+                AND MSIRBuilder.ProcMapContains (p);
+
     Scanner.offset := p.origin;
     zz := Scope.Push (p.syms);
     tresult := ProcType.Result (p.signature);
@@ -660,13 +691,15 @@ PROCEDURE GenBody (p: T) =
 
     CG.Gen_location (p.origin);
     CG.Begin_procedure (p.cg_proc);
-    EVAL MSIRBuilder.BeginProc (p.name,
-                                ProcType.Formals (p.signature),
-                                p.syms,
-                                tresult,
-                                isExternal := TRUE);
-    IF MSIRBuilder.InProc () THEN
-      MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+    IF NOT msirSkip THEN
+      EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
+                                  ProcType.Formals (p.signature),
+                                  p.syms,
+                                  tresult,
+                                  isExternal := TRUE);
+      IF MSIRBuilder.InProc () THEN
+        MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+      END;
     END;
     Scope.Enter (p.syms);
 
@@ -695,10 +728,12 @@ PROCEDURE GenBody (p: T) =
     Marker.Pop ();
     Scope.Exit (p.syms);
 
-    IF MSIRBuilder.InProc () THEN
+    IF NOT msirSkip AND MSIRBuilder.InProc () THEN
       Stmt.CompileMSIR (p.block);
     END;
-    MSIRBuilder.EndProc ();
+    IF NOT msirSkip THEN
+      MSIRBuilder.EndProc ();
+    END;
     CG.End_procedure (p.cg_proc);
 
     Scope.Pop (zz);

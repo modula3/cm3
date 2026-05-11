@@ -443,6 +443,18 @@ PROCEDURE DispatchSquare (side: INTEGER): INTEGER =
     RETURN ShapeDispatch(s);
   END DispatchSquare;
 
+(* Nested procedure: tests up-level variable access and static-link call. *)
+PROCEDURE NestedSum (n: INTEGER): INTEGER =
+  VAR acc := 0;
+  PROCEDURE Add (k: INTEGER) =
+  BEGIN
+    INC (acc, k);
+  END Add;
+BEGIN
+  FOR i := 1 TO n DO Add (i) END;
+  RETURN acc;
+END NestedSum;
+
 (* RAISE with argument: raises TestExceptArg(42) and extracts the value. *)
 PROCEDURE TryRaiseArg (): INTEGER =
   BEGIN

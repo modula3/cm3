@@ -1194,10 +1194,18 @@ PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value =
     IF b = NIL THEN RETURN NIL END;
     i.op := Op.Alloca;
     i.targetType := type;
+    i.extractIdx := 1;   (* count = 1 initially *)
     i.result := makeResult(b, TPtr(type), name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildAlloca;
+
+PROCEDURE AllocaSetCount(v: Value;  count: INTEGER) =
+  (* v must be the result of BuildAlloca.  Patches extractIdx to the new count. *)
+  BEGIN
+    IF v = NIL OR v.insn = NIL OR v.insn.op # Op.Alloca THEN RETURN END;
+    v.insn.extractIdx := MAX(1, count);
+  END AllocaSetCount;
 
 PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value =
   VAR

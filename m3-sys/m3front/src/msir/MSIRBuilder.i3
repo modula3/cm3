@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, M3ID, Type, Value, Scope, Variable, RunTyme;
+IMPORT MSIR, Type, Value, Scope, Variable, RunTyme;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -22,7 +22,7 @@ IMPORT MSIR, M3ID, Type, Value, Scope, Variable, RunTyme;
    Returns FALSE if the signature is outside the supported subset
    (e.g. has an unsupported parameter or result type); the caller should
    then suppress all subsequent MSIR calls for this procedure. *)
-PROCEDURE BeginProc(name: M3ID.T;
+PROCEDURE BeginProc(name: TEXT;
                     formals: Value.T;
                     syms: Scope.T;
                     result: Type.T;
@@ -103,6 +103,10 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
    any parameter or result type is unsupported. *)
 PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc;
 
+(* TRUE if v is already registered in the proc map.
+   Used to skip re-emitting MSIR for nested procs compiled inline via GenBodyMSIR. *)
+PROCEDURE ProcMapContains(v: Value.T): BOOLEAN;
+
 (*------------------------------------------------------ Exception handling *)
 
 (* Push/pop a try context.  While a try context is active, EmitCall emits
@@ -117,6 +121,15 @@ PROCEDURE CurrentUnwindBlock(): MSIR.Block;  (* NIL if not in a try *)
    Otherwise, emits a plain `call`. *)
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
+(* Like EmitCall but prepends the current frame pointer as the first argument.
+   Used when calling a nested proc that expects %__env. *)
+PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
+                         READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
+(* TRUE if the given procedure value represents a nested proc (level > 0).
+   Nested proc calls require EmitNestedCall to pass the static link. *)
+PROCEDURE IsNestedProc(v: Value.T): BOOLEAN;
 
 (* Emit a virtual method dispatch on a CM3 object reference.
    obj:  the receiver (gc_ref void or ptr — first word is the vtable pointer)
@@ -181,6 +194,22 @@ PROCEDURE BeginModule();
 
 (* Raw map-management helpers.  Variable.m3 calls these after doing its own
    type translation and condition checks. *)
+(* ------------------------------------------------- up-level frame support *)
+
+(* Allocate a slot in the current proc's frame for an up-level variable.
+   Creates the frame alloca lazily on first call.  Returns a ptr value
+   (a GEP into the frame) that serves as the variable's address. *)
+PROCEDURE AllocFrameSlot(v: Variable.T;  byteSize: INTEGER;
+                          byteAlign: INTEGER;  mt: MSIR.T): MSIR.Value;
+
+(* Return the current proc's frame alloca (NIL if no up-level vars yet). *)
+PROCEDURE CurrentFrame(): MSIR.Value;
+
+(* Return the frame base + byte offset for an up-level var already in the
+   frame, from the perspective of a NESTED proc receiving %env: ptr.
+   Used when binding outer up-level vars in the inner proc's varMap. *)
+PROCEDURE FrameOffset(v: Variable.T): INTEGER;  (* -1 if not in frame *)
+
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
 
 (* Like GlobalMapAdd but for globals embedded in the @Mod_M3_info struct.

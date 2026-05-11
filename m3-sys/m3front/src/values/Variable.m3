@@ -261,6 +261,11 @@ PROCEDURE IsFormal (t: T): BOOLEAN =
     RETURN (t # NIL) AND (t.formal # NIL);
   END IsFormal;
 
+PROCEDURE IsUpLevel (t: T): BOOLEAN =
+  BEGIN
+    RETURN (t # NIL) AND t.up_level;
+  END IsUpLevel;
+
 PROCEDURE DeclareGlobalMSIR (t: T) =
   VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
       m : MSIR.Module;  g: MSIR.Global;
@@ -314,21 +319,31 @@ PROCEDURE RegisterExternMSIR (t: T) =
   END RegisterExternMSIR;
 
 PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
-  VAR mt: MSIR.T;  allocaVal: MSIR.Value;  zero: MSIR.Value;
+  VAR mt: MSIR.T;  slotAddr: MSIR.Value;  zero: MSIR.Value;
+      byteSize, byteAlign: INTEGER;
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
     IF t.indirect THEN RETURN FALSE END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
-    allocaVal := MSIR.BuildAlloca(b,
-                   Value.GlobalName(t, dots:=FALSE, with_module:=FALSE), mt);
-    IF allocaVal = NIL THEN RETURN FALSE END;
-    MSIRBuilder.VarMapAdd (t, allocaVal, mt);
+    IF t.up_level THEN
+      (* Variable is accessed from a nested proc — allocate in the frame struct
+         so the nested proc can reach it via its static link (%env param). *)
+      byteSize  := MAX(1, t.size DIV Target.Char.size);
+      byteAlign := MAX(1, t.align DIV Target.Char.size);
+      slotAddr  := MSIRBuilder.AllocFrameSlot(t, byteSize, byteAlign, mt);
+      IF slotAddr = NIL THEN RETURN FALSE END;
+    ELSE
+      slotAddr := MSIR.BuildAlloca(b,
+                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE), mt);
+      IF slotAddr = NIL THEN RETURN FALSE END;
+    END;
+    MSIRBuilder.VarMapAdd (t, slotAddr, mt);
     (* Emit language-default zero-init alongside CG's Type.InitValue in LangInit *)
     IF Type.InitCost (t.type, FALSE) > 0 THEN
       zero := MSIR.ConstZero (mt);
-      IF zero # NIL THEN MSIR.BuildStore (b, zero, allocaVal) END;
+      IF zero # NIL THEN MSIR.BuildStore (b, zero, slotAddr) END;
     END;
     RETURN TRUE;
   END AddLocalMSIR;

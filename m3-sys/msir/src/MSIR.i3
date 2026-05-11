@@ -433,6 +433,9 @@ PROCEDURE BuildCall(b: Block;  name: TEXT;  callee: Proc;
 
 PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value;
                                              (* result: ptr type *)
+(* Change an existing alloca's element count (for frame-size fixup).
+   count >= 1; when count > 1 emits "alloca T, i64 count". *)
+PROCEDURE AllocaSetCount(v: Value;  count: INTEGER);
 
 PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value;
                                              (* slot must have type gc_slot T *)
