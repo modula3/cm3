@@ -63,6 +63,14 @@ PROCEDURE Abandon(reason: TEXT);
    supported? Body translators check this gate before doing anything. *)
 PROCEDURE InProc(): BOOLEAN;
 
+(* GC write barrier container side-channel.
+   LValueMSIR for heap object fields calls SetPendingContainer with the
+   object pointer (the GC container) before returning the slot address.
+   AssignStmt.CompileMSIR calls TakePendingContainer to retrieve it —
+   returns NIL (and clears) if not set (e.g. for globals or locals). *)
+PROCEDURE SetPendingContainer(v: MSIR.Value);
+PROCEDURE TakePendingContainer(): MSIR.Value;
+
 (* Accessors for body translators. NIL outside a supported in-progress proc. *)
 PROCEDURE CurrentProc(): MSIR.Proc;
 PROCEDURE CurrentBlock(): MSIR.Block;

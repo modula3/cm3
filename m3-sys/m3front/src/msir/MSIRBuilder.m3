@@ -23,10 +23,11 @@ TYPE ProcEntry   = RECORD key: Value.T;    val: MSIR.Proc   END;
 TYPE GlobalEntry = RECORD key: Variable.T; val: MSIR.Global END;
 
 VAR
-  curProc:   MSIR.Proc  := NIL;
-  curBlock:  MSIR.Block := NIL;
-  abandoned: BOOLEAN    := FALSE;
-  blockSeq:  INTEGER    := 0;   (* per-proc block label counter *)
+  curProc:          MSIR.Proc  := NIL;
+  curBlock:         MSIR.Block := NIL;
+  abandoned:        BOOLEAN    := FALSE;
+  blockSeq:         INTEGER    := 0;   (* per-proc block label counter *)
+  pendingContainer: MSIR.Value := NIL; (* GC write barrier container side-channel *)
 
   varMap:  ARRAY [0..MaxVarMap-1]  OF VarEntry;
   varMapN: INTEGER := 0;
@@ -269,13 +270,14 @@ PROCEDURE EndProc() =
     IF NOT abandoned THEN
       MSIREmit.AddProc(curProc);
     END;
-    curProc   := NIL;
-    curBlock  := NIL;
-    abandoned := FALSE;
-    varMapN   := 0;
-    exitDepth := 0;
-    tryDepth  := 0;
-    catchDepth := 0;
+    curProc          := NIL;
+    curBlock         := NIL;
+    abandoned        := FALSE;
+    varMapN          := 0;
+    exitDepth        := 0;
+    tryDepth         := 0;
+    catchDepth       := 0;
+    pendingContainer := NIL;
   END EndProc;
 
 PROCEDURE Abandon(reason: TEXT) =
@@ -290,6 +292,13 @@ PROCEDURE InProc(): BOOLEAN =
   BEGIN
     RETURN curProc # NIL AND NOT abandoned;
   END InProc;
+
+PROCEDURE SetPendingContainer(v: MSIR.Value) =
+  BEGIN pendingContainer := v END SetPendingContainer;
+
+PROCEDURE TakePendingContainer(): MSIR.Value =
+  VAR v := pendingContainer;
+  BEGIN pendingContainer := NIL; RETURN v END TakePendingContainer;
 
 PROCEDURE CurrentProc(): MSIR.Proc =
   BEGIN RETURN curProc END CurrentProc;

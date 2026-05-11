@@ -823,8 +823,24 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         byteOff := VAL (objOff + fieldInfo.offset, LONGINT) DIV 8L;
         baseAddr := Expr.CompileMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
-        IF byteOff = 0L THEN RETURN baseAddr END;
-        RETURN MSIR.BuildPtrAdd (MSIRBuilder.CurrentBlock (), "", baseAddr, byteOff);
+        (* Set container for GC write barrier in AssignStmt.CompileMSIR. *)
+        MSIRBuilder.SetPendingContainer (baseAddr);
+        VAR slotAddr: MSIR.Value;
+        BEGIN
+          IF byteOff = 0L
+            THEN slotAddr := baseAddr;
+            ELSE slotAddr := MSIR.BuildPtrAdd(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
+          END;
+          (* Retype as GcSlot if this field holds a traced reference,
+             so AssignStmt.CompileMSIR emits the write barrier. *)
+          VAR ft := MSIRType.Translate(fieldInfo.type);
+          BEGIN
+            IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.GcRef THEN
+              slotAddr := MSIR.RetypeValue(slotAddr, MSIR.TGcSlot(MSIR.EltType(ft)));
+            END;
+          END;
+          RETURN slotAddr;
+        END;
     ELSE
       MSIRBuilder.Abandon ("lvalue not supported for this qualify class");
       RETURN NIL;

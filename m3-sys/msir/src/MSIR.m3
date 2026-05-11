@@ -369,6 +369,16 @@ PROCEDURE ConstZero(t: T): Value =
     END;
   END ConstZero;
 
+PROCEDURE RetypeValue(v: Value;  t: T): Value =
+  VAR w := NEW(Value);
+  BEGIN
+    w.type  := t;
+    w.name  := v.name;
+    w.vKind := v.vKind;
+    w.insn  := v.insn;
+    RETURN w;
+  END RetypeValue;
+
 PROCEDURE ConstTextLit(uid: INTEGER;  chars: TEXT;  cnt: INTEGER): Value =
   VAR val := NEW(Value);
   BEGIN

@@ -101,6 +101,9 @@ PROCEDURE ConstInt(t: T;  v: LONGINT): Value;
 PROCEDURE ConstBool(v: BOOLEAN): Value;
 PROCEDURE ConstNil(t: T): Value;      (* t must be Ptr / GcRef *)
 PROCEDURE ConstZero(t: T): Value;    (* zero / NIL / FALSE for scalars; NIL for unsupported types *)
+PROCEDURE RetypeValue(v: Value; t: T): Value;
+(* Return a new Value with the same name/kind as v but type t.
+   Used to recast a GEP ptr result as GcSlot when the target field is traced. *)
 PROCEDURE ConstTextLit(uid: INTEGER; chars: TEXT; cnt: INTEGER): Value;
 (* A TEXT literal value. uid indexes @textlit_<uid> for LLVM lowering;
    chars/cnt are the string content for readable MSIR text output. *)
