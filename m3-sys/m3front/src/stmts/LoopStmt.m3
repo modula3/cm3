@@ -8,7 +8,7 @@
 
 MODULE LoopStmt;
 
-IMPORT CG, Scanner, Stmt, StmtRep, Marker, Token;
+IMPORT CG, Scanner, Stmt, StmtRep, Marker, Token, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -17,6 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -66,6 +67,11 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     END;
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Stmt.Scan (p.body, ca);
+  END Scan;
 
 BEGIN
 END LoopStmt.

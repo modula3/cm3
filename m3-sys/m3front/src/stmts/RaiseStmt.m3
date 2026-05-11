@@ -10,7 +10,7 @@ MODULE RaiseStmt;
 
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
-IMPORT MSIR, MSIRBuilder, RunTyme;
+IMPORT MSIR, MSIRBuilder, RunTyme, CaptureAnalysis;
 FROM M3 IMPORT QID;
 
 TYPE
@@ -24,6 +24,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -154,6 +155,11 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildUnreachable(MSIRBuilder.CurrentBlock());
     END;
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.arg, ca);  (* NIL-safe: Expr.Scan checks for NIL *)
+  END Scan;
 
 BEGIN
 END RaiseStmt.

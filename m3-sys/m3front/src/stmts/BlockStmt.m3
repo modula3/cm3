@@ -9,6 +9,7 @@
 MODULE BlockStmt;
 
 IMPORT M3ID, Scope, Token, Stmt, StmtRep, Scanner, Decl, ESet, Tracer;
+IMPORT CaptureAnalysis;
 FROM Scanner IMPORT Match, cur;
 
 TYPE
@@ -22,6 +23,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (needScope: BOOLEAN): Stmt.T =
@@ -145,6 +147,11 @@ PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Stmt.CheckState) =
     IF (tt = NIL) THEN RETURN END;
     Stmt.TypeCheck (x.body, cs);
   END CheckTrace;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Stmt.Scan (p.body, ca);
+  END Scan;
 
 BEGIN
 END BlockStmt.

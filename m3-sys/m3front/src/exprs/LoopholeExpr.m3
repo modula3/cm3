@@ -10,6 +10,7 @@ MODULE LoopholeExpr;
 
 IMPORT M3Buf, CG, Expr, ExprRep, Type, Error, OpenArrayType;
 IMPORT M3, M3ID, M3RT, Target, TInt, Fmt;
+IMPORT CaptureAnalysis;
 FROM Target IMPORT FloatType;
 
 TYPE
@@ -55,6 +56,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := LoopholeExprAlign;
+        scan         := Scan;
       END;
 
 (*EXPORTED:*)
@@ -511,6 +513,11 @@ PROCEDURE NoteWrites (p: P) =
   BEGIN
     Expr.NoteWrite (p.expr);
   END NoteWrites;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+  END Scan;
 
 BEGIN
 END LoopholeExpr.

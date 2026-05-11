@@ -12,7 +12,7 @@ MODULE RecordExpr;
 
 IMPORT M3, M3ID, CG, Error, Type, RecordType, Module;
 IMPORT Value, Field, AssignStmt, M3Buf;
-IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr;
+IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
 
 TYPE
   Info = RECORD
@@ -64,6 +64,7 @@ TYPE
         note_write   := ExprRep.NotWritable;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
+        scan := Scan;
       END;
 
 (* EXPORTED: *)
@@ -587,6 +588,15 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     ELSE RETURN TRUE;
     END;
   END CheckUseFailure;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF p.args # NIL THEN
+      FOR i := 0 TO LAST (p.args^) DO
+        Expr.Scan (p.args[i], ca);
+      END;
+    END;
+  END Scan;
 
 BEGIN
 END RecordExpr.

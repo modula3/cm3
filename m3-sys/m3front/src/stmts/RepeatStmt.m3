@@ -10,7 +10,7 @@ MODULE RepeatStmt;
 
 IMPORT CG, Expr, Type, Bool, Error, Stmt, StmtRep;
 IMPORT Token, Scanner, Marker;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -22,6 +22,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -109,6 +110,12 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     END;
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Stmt.Scan (p.body, ca);
+    Expr.Scan (p.expr, ca);
+  END Scan;
 
 BEGIN
 END RepeatStmt.

@@ -9,7 +9,7 @@
 MODULE IfStmt;
 
 IMPORT CG, Expr, Bool, Type, Error, Token, Stmt, StmtRep, Scanner, ErrType;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 TYPE
@@ -21,6 +21,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 TYPE
@@ -200,6 +201,17 @@ PROCEDURE CompileMSIR (p: P) =
     (* If no else body, nextBlock was set to merge for the last clause,
        so curBlock is already merge when one was needed. *)
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  VAR c := p.clauses;
+  BEGIN
+    WHILE c # NIL DO
+      Expr.Scan (c.cond, ca);
+      Stmt.Scan (c.body, ca);
+      c := c.next;
+    END;
+    Stmt.Scan (p.elseBody, ca);
+  END Scan;
 
 BEGIN
 END IfStmt.

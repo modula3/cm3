@@ -11,7 +11,7 @@ MODULE AssertStmt;
 IMPORT CG, Expr, Token, Scanner, Stmt, StmtRep, Error;
 IMPORT Host, EnumExpr, Type, Bool, Target, TInt, ErrType;
 IMPORT Textt, Procedure, NarrowExpr, Module, AssignStmt, RunTyme;
-IMPORT TextExpr, M3String;
+IMPORT TextExpr, M3String, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -21,6 +21,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        scan        := Scan;
       END;
 
 CONST includeTextInAsserts = TRUE;
@@ -150,6 +151,12 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.cond, ca);
+    Expr.Scan (p.msg,  ca);
+  END Scan;
 
 BEGIN
 END AssertStmt.

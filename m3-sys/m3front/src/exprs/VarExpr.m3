@@ -9,7 +9,7 @@
 MODULE VarExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Type, Value, Variable;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   P = Expr.T OBJECT
@@ -35,6 +35,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        scan         := Scan;
+        scanLV       := ScanLV;
         compileMSIR  := CompileMSIR;
       END;
 
@@ -105,6 +107,16 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     RETURN v;
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF Variable.IsUpLevel (p.v) THEN CaptureAnalysis.Note (ca, p.v, FALSE) END;
+  END Scan;
+
+PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF Variable.IsUpLevel (p.v) THEN CaptureAnalysis.Note (ca, p.v, TRUE) END;
+  END ScanLV;
 
 BEGIN
 END VarExpr.

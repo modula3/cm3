@@ -11,7 +11,7 @@ MODULE TryFinStmt;
 IMPORT M3ID, CG, Token, Scanner, Stmt, StmtRep, Marker, Target, Type, Addr;
 IMPORT RunTyme, Procedure, ProcBody, M3RT, Scope, Fmt, Host, TryStmt, Module;
 IMPORT Jmpbufs;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 FROM Stmt IMPORT Outcome;
 
 TYPE
@@ -28,6 +28,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 TYPE
@@ -482,6 +483,12 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     IF Outcome.Returns IN xc THEN o := o + Stmt.Outcomes {Outcome.Returns} END;
     RETURN o;
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Stmt.Scan (p.body,    ca);
+    Stmt.Scan (p.finally, ca);
+  END Scan;
 
 BEGIN
 END TryFinStmt.

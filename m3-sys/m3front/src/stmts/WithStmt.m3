@@ -13,7 +13,7 @@ IMPORT M3ID, CG, Expr, Scope, Value, Variable, OpenArrayType;
 IMPORT Type, Stmt, StmtRep, Token, M3RT, Target, Tracer, AssignStmt;
 IMPORT ArrayExpr;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   Kind = {designator, openarray, structure, other};
@@ -29,6 +29,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -221,6 +222,13 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.GetOutcome (p.body);
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+    Stmt.Scan (p.body, ca);
+    (* p.var is the WITH-bound alias — not an outer capture *)
+  END Scan;
 
 BEGIN
 END WithStmt.

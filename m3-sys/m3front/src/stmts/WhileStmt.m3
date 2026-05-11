@@ -10,7 +10,7 @@ MODULE WhileStmt;
 
 IMPORT CG, Expr, Type, Bool, Error, Marker, ErrType;
 IMPORT Stmt, StmtRep, Token, Scanner;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -21,6 +21,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -112,6 +113,12 @@ PROCEDURE CompileMSIR (p: P) =
     (* Continue at exit. *)
     MSIRBuilder.SetCurrentBlock (exitBlock);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.cond, ca);
+    Stmt.Scan (p.body, ca);
+  END Scan;
 
 BEGIN
 END WhileStmt.

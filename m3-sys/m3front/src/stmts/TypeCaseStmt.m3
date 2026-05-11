@@ -11,7 +11,7 @@ MODULE TypeCaseStmt;
 IMPORT M3ID, CG, Expr, Stmt, StmtRep, Type, Variable, Scope;
 IMPORT Error, Token, ObjectAdr, Scanner;
 IMPORT Host, Reff, Target, Tracer, Module, RunTyme, Procedure;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 
 TYPE
@@ -27,6 +27,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 TYPE
@@ -479,6 +480,18 @@ PROCEDURE CompileMSIR (p: P) =
 
     MSIRBuilder.SetCurrentBlock (merge);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  VAR c := p.cases;
+  BEGIN
+    Expr.Scan (p.expr, ca);
+    WHILE c # NIL DO
+      Stmt.Scan (c.stmt, ca);
+      (* c.var is the typecase binding variable — local to the arm *)
+      c := c.next;
+    END;
+    Stmt.Scan (p.elseBody, ca);
+  END Scan;
 
 BEGIN
 END TypeCaseStmt.

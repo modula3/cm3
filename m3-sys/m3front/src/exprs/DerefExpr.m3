@@ -10,7 +10,7 @@ MODULE DerefExpr;
 
 IMPORT Expr, ExprRep, RefType, Error, Type, RunTyme;
 IMPORT NilChkExpr, CG, ErrType, Host;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = ExprRep.Ta BRANDED "DerefExpr.P" OBJECT
@@ -36,6 +36,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
+        scanLV       := ScanLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -200,6 +201,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
   END CompileMSIR;
+
+PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    (* p^ := rhs modifies heap memory, not the pointer variable p itself.
+       The pointer is only read, so scan (not scanLV) the sub-expression. *)
+    Expr.Scan (p.a, ca);
+  END ScanLV;
 
 BEGIN
 END DerefExpr.

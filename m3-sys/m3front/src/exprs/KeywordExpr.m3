@@ -8,7 +8,7 @@
 
 MODULE KeywordExpr;
 
-IMPORT M3, M3ID, Expr, ExprRep, Type, Target;
+IMPORT M3, M3ID, Expr, ExprRep, Type, Target, CaptureAnalysis;
 
 TYPE
   P = Expr.T OBJECT
@@ -35,7 +35,9 @@ TYPE
         prepLiteral  := PrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := NoteWrites;
-        exprAlign    := KeywordExprAlign; 
+        exprAlign    := KeywordExprAlign;
+        scan         := Scan;
+        scanLV       := ScanLV;
       END;
 
 PROCEDURE New (key: M3ID.T;  arg: Expr.T): Expr.T =
@@ -168,6 +170,16 @@ PROCEDURE NoteWrites (p: P) =
   BEGIN
     Expr.NoteWrite (p.expr);
   END NoteWrites;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+  END Scan;
+
+PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.ScanLV (p.expr, ca);
+  END ScanLV;
 
 BEGIN
 END KeywordExpr.

@@ -13,7 +13,7 @@ IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
 IMPORT Method, Field, Target, M3RT, Host, RunTyme;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   Class = { importDecl    (* <importedInterface>.<anyId> *),
@@ -64,6 +64,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write        := NoteWrites;
         exprAlign         := QualifyExprAlign;
+        scan              := Scan;
+        scanLV            := ScanLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -898,6 +900,30 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       RETURN NIL;
     END;
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.lhsExpr, ca);
+  END Scan;
+
+PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    CASE p.class OF
+    | Class.recField =>
+        (* Assigning through a record field modifies the record variable itself:
+           propagate the lvalue context so the outer variable is marked written. *)
+        Expr.ScanLV (p.lhsExpr, ca);
+    | Class.objField =>
+        (* Assigning through an object field modifies heap data, not the pointer
+           variable holding the object reference: the pointer is only read. *)
+        Expr.Scan (p.lhsExpr, ca);
+    ELSE
+        (* importDecl, enumLit, objTypeMethod, objMethod, unknown:
+           the lhsExpr is either a module/type expression or an object
+           reference; in all cases we just read it. *)
+        Expr.Scan (p.lhsExpr, ca);
+    END;
+  END ScanLV;
 
 BEGIN
 END QualifyExpr.

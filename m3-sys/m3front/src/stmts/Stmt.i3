@@ -8,7 +8,7 @@
 
 INTERFACE Stmt;
 
-IMPORT M3;
+IMPORT M3, CaptureAnalysis;
 
 TYPE
   T = M3.Stmt;
@@ -29,6 +29,12 @@ PROCEDURE CompileMSIR (t: T);
    .next chain like Compile. *)
 
 PROCEDURE GetOutcome (t: T): Outcomes;
+
+PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T);
+(* Walk the statement chain rooted at t, recording up-level variable
+   captures in ca.  Descends into all sub-statements and sub-expressions.
+   Call this on a nested proc's body before GenBodyMSIR to collect its
+   capture set. *)
 
 END Stmt.
 

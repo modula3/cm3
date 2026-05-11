@@ -15,7 +15,7 @@ IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
 IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE P = Stmt.T OBJECT
         lhs     : Expr.T;
@@ -25,6 +25,7 @@ TYPE P = Stmt.T OBJECT
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 (* EXPORTED: *) 
@@ -869,6 +870,12 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildStore (MSIRBuilder.CurrentBlock(), rhsVal, lhsPtr);
     END;
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.ScanLV (p.lhs, ca);
+    Expr.Scan (p.rhs, ca);
+  END Scan;
 
 BEGIN
 END AssignStmt.

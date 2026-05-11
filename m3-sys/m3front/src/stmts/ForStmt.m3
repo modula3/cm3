@@ -13,7 +13,7 @@ IMPORT M3ID, CG, Error, Scope, Expr, Stmt, StmtRep;
 IMPORT EnumType, Type, Int, LInt, Variable, Target, TargetMap, TInt, ErrType;
 IMPORT IntegerExpr, EnumExpr, Token, Marker, Tracer;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -28,6 +28,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -497,6 +498,16 @@ PROCEDURE CompileMSIR (p: P) =
 
     MSIRBuilder.SetCurrentBlock (exitBlk);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.from,  ca);
+    Expr.Scan (p.limit, ca);
+    Expr.Scan (p.step,  ca);
+    Stmt.Scan (p.body,  ca);
+    (* p.var is the loop control variable — it is local to the FOR
+       statement itself, not an outer capture. *)
+  END Scan;
 
 BEGIN
 END ForStmt.

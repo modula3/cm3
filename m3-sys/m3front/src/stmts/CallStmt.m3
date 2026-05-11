@@ -8,7 +8,7 @@
 
 MODULE CallStmt;
 
-IMPORT Expr, Stmt, StmtRep, Error, Type, ErrType;
+IMPORT Expr, Stmt, StmtRep, Error, Type, ErrType, CaptureAnalysis;
 
 TYPE
   P = Stmt.T BRANDED "CallStmt.P" OBJECT
@@ -18,6 +18,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE New (e: Expr.T): Stmt.T =
@@ -55,6 +56,11 @@ PROCEDURE CompileMSIR (p: P) =
   BEGIN
     EVAL Expr.CompileMSIR(p.e);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.e, ca);
+  END Scan;
 
 BEGIN
 END CallStmt.

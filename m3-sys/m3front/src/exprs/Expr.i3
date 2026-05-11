@@ -7,7 +7,7 @@
 
 INTERFACE Expr;
 
-IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value, MSIR;
+IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value, MSIR, CaptureAnalysis;
 
 TYPE
   T    = M3.Expr;
@@ -174,5 +174,12 @@ PROCEDURE StaticSize (expr: T): INTEGER;
 PROCEDURE CheckUseFailure (t: T): BOOLEAN;
 (* Generate runtime actions prior to a use of t that does not call Compile.
    Return TRUE IFF following code is reachable. *)
+
+PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T);
+(* Walk t, recording up-level variable captures in ca as reads. *)
+
+PROCEDURE ScanLV (t: T;  ca: CaptureAnalysis.T);
+(* Walk t in lvalue context: a VarExpr/NamedExpr at the root of a
+   directly-assigned designator marks its variable as written in ca. *)
 
 END Expr.

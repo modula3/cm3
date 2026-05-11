@@ -12,7 +12,7 @@ IMPORT CG, AssertStmt, AssignStmt, BlockStmt, CaseStmt, ExitStmt;
 IMPORT EvalStmt, ForStmt, IfStmt, LockStmt, LoopStmt, RepeatStmt;
 IMPORT ReturnStmt, RaiseStmt, TryStmt, TypeCaseStmt, WhileStmt, WithStmt;
 IMPORT Scanner, Token, Coverage, Error, Tracer, M3ID, DebugStmt;
-IMPORT MSIRBuilder;
+IMPORT MSIRBuilder, CaptureAnalysis;
 FROM Scanner IMPORT GetToken, cur;
 
 TYPE TK = Token.T;
@@ -165,6 +165,19 @@ PROCEDURE MSIRDefault (<*UNUSED*> s: T) =
   BEGIN
     MSIRBuilder.Abandon ("unsupported statement");
   END MSIRDefault;
+
+PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T) =
+  BEGIN
+    WHILE t # NIL DO
+      t.scan (ca);
+      t := t.next;
+    END;
+  END Scan;
+
+PROCEDURE ScanDefault (<*UNUSED*> s: T;  <*UNUSED*> ca: CaptureAnalysis.T) =
+  BEGIN
+    (* leaf statement with no sub-expressions — nothing to record *)
+  END ScanDefault;
 
 
 (***

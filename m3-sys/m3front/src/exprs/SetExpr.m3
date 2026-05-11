@@ -9,7 +9,7 @@
 MODULE SetExpr;
 (* For set constructors. *)
 
-IMPORT Text, Fmt;
+IMPORT Text, Fmt, CaptureAnalysis;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
@@ -60,6 +60,7 @@ TYPE
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
         checkUseFailure := CheckUseFailure;
+        scan := Scan;
       END;
 
 TYPE
@@ -991,6 +992,15 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     ELSE RETURN TRUE;
     END;
   END CheckUseFailure;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF p.args # NIL THEN
+      FOR i := 0 TO LAST (p.args^) DO
+        Expr.Scan (p.args[i], ca);
+      END;
+    END;
+  END Scan;
 
 BEGIN
 END SetExpr.

@@ -12,7 +12,7 @@ IMPORT M3ID, CG, Variable, Scope, Exceptionz, Value, Error, Marker;
 IMPORT Type, Stmt, StmtRep, TryFinStmt, Token;
 IMPORT Scanner, ESet, Target, M3RT, Tracer, Jmpbufs;
 IMPORT RunTyme, Procedure, M3FP;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur;
 FROM M3 IMPORT QID;
 
@@ -31,6 +31,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 TYPE
@@ -846,6 +847,18 @@ PROCEDURE LoadInfoPtr () =
       END;
     END;
   END LoadInfoPtr;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  VAR h := p.handles;
+  BEGIN
+    Stmt.Scan (p.body, ca);
+    WHILE h # NIL DO
+      Stmt.Scan (h.body, ca);
+      (* h.var is the exception value binding — local to the handler *)
+      h := h.next;
+    END;
+    Stmt.Scan (p.elseBody, ca);
+  END Scan;
 
 BEGIN
 END TryStmt.

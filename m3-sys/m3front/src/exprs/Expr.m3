@@ -15,7 +15,7 @@ IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Constant;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 (********************************************************************)
 
@@ -684,6 +684,42 @@ PROCEDURE CheckUseFailure (t: T): BOOLEAN =
     <* ASSERT strippedExpr.checked *>
     RETURN strippedExpr.checkUseFailure ();
   END CheckUseFailure;
+
+(*----------------------------------------------- capture analysis scan ---*)
+
+PROCEDURE Scan (t: T;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF t # NIL THEN t.scan (ca) END;
+  END Scan;
+
+PROCEDURE ScanLV (t: T;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF t # NIL THEN t.scanLV (ca) END;
+  END ScanLV;
+
+PROCEDURE ExprScanDefault (<*UNUSED*> e: T;  <*UNUSED*> ca: CaptureAnalysis.T) =
+  BEGIN (* leaf expr: nothing to record *) END ExprScanDefault;
+
+PROCEDURE ExprScanLVDefault (e: T;  ca: CaptureAnalysis.T) =
+  BEGIN e.scan (ca) END ExprScanLVDefault;
+
+PROCEDURE TaScan (e: Ta;  ca: CaptureAnalysis.T) =
+  BEGIN IF e.a # NIL THEN e.a.scan (ca) END END TaScan;
+
+PROCEDURE TaScanLV (e: Ta;  ca: CaptureAnalysis.T) =
+  BEGIN IF e.a # NIL THEN e.a.scan (ca) END END TaScanLV;
+
+PROCEDURE TabScan (e: Tab;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF e.a # NIL THEN e.a.scan (ca) END;
+    IF e.b # NIL THEN e.b.scan (ca) END;
+  END TabScan;
+
+PROCEDURE TabScanLV (e: Tab;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF e.a # NIL THEN e.a.scan (ca) END;
+    IF e.b # NIL THEN e.b.scan (ca) END;
+  END TabScanLV;
 
 BEGIN
 END Expr.

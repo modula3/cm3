@@ -21,7 +21,7 @@ MODULE ArrayExpr;
                         CG stack) during Prep.
 *)
 
-IMPORT Fmt;
+IMPORT Fmt, CaptureAnalysis;
 
 IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
 
@@ -178,7 +178,8 @@ REVEAL
     note_write   := ExprRep.NotWritable;
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
-    checkUseFailure := CheckUseFailure
+    checkUseFailure := CheckUseFailure;
+    scan := Scan
   END (*OBJECT*);
 
 (* EXPORTED: *) 
@@ -2365,6 +2366,15 @@ PROCEDURE CheckUseFailure (top: T): BOOLEAN =
     ELSE RETURN TRUE;
     END;
   END CheckUseFailure;
+
+PROCEDURE Scan (p: T;  ca: CaptureAnalysis.T) =
+  BEGIN
+    IF p.args # NIL THEN
+      FOR i := 0 TO LAST (p.args^) DO
+        Expr.Scan (p.args[i], ca);
+      END;
+    END;
+  END Scan;
 
 BEGIN
 END ArrayExpr.

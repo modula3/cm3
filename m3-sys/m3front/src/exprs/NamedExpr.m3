@@ -11,7 +11,7 @@ MODULE NamedExpr;
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
 IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -45,6 +45,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         checkUseFailure := CheckUseFailure;
+        scan              := Scan;
+        scanLV            := ScanLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -358,6 +360,26 @@ PROCEDURE Is (e: Expr.T): BOOLEAN =
     ELSE RETURN FALSE;
     END;
   END Is;
+
+PROCEDURE NoteCapture (p: P;  ca: CaptureAnalysis.T;  written: BOOLEAN) =
+  BEGIN
+    IF p.value = NIL THEN Resolve (p) END;
+    TYPECASE p.value OF
+    | Variable.T(v) =>
+        IF Variable.IsUpLevel (v) THEN CaptureAnalysis.Note (ca, v, written) END;
+    ELSE (* constant, proc, type — not a capturable variable *)
+    END;
+  END NoteCapture;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    NoteCapture (p, ca, FALSE);
+  END Scan;
+
+PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    NoteCapture (p, ca, TRUE);
+  END ScanLV;
 
 BEGIN
 END NamedExpr.

@@ -3,7 +3,7 @@
 
 MODULE NarrowExpr;
 
-IMPORT M3, Expr, ExprRep, Type, Narrow, CG, Host, Target;
+IMPORT M3, Expr, ExprRep, Type, Narrow, CG, Host, Target, CaptureAnalysis;
 
 TYPE
   P = Expr.T BRANDED "NarrowExpr" OBJECT
@@ -32,6 +32,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := NarrowExprAlign;
+        scan         := Scan;
       END;
 
 PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
@@ -105,6 +106,11 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
     RETURN p;
   END Fold;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+  END Scan;
 
 BEGIN
 END NarrowExpr.

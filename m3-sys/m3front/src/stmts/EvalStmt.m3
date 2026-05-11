@@ -8,7 +8,7 @@
 
 MODULE EvalStmt;
 
-IMPORT CG, Expr, Token, Scanner, Stmt, StmtRep, Error, Type;
+IMPORT CG, Expr, Token, Scanner, Stmt, StmtRep, Error, Type, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -17,6 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -49,6 +50,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.e, ca);
+  END Scan;
 
 BEGIN
 END EvalStmt.

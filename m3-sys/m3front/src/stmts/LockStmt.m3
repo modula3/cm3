@@ -10,7 +10,7 @@ MODULE LockStmt;
 
 IMPORT M3ID, Expr, Mutex, Error, Type, Stmt, StmtRep, Token, Marker;
 IMPORT CG, Target, M3RT, Scanner, Procedure, RunTyme;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 FROM Scanner IMPORT Match;
 
 TYPE
@@ -23,6 +23,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -283,6 +284,12 @@ PROCEDURE CompileMSIR (p: P) =
 
     MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.mutex, ca);
+    Stmt.Scan (p.body,  ca);
+  END Scan;
 
 BEGIN
 END LockStmt.

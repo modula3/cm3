@@ -11,7 +11,7 @@ MODULE CaseStmt;
 IMPORT CG, Expr, Stmt, StmtRep, Type, Error, Target, TInt, Host;
 IMPORT EnumExpr, Token, IntegerExpr, Scanner, Word, ErrType;
 FROM Scanner IMPORT Match, GetToken, Fail, cur;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = Stmt.T BRANDED "CaseStmt.P" OBJECT
@@ -28,6 +28,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 TYPE
@@ -647,6 +648,17 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     END;
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+    IF p.bodies # NIL THEN
+      FOR i := 0 TO p.nCases - 1 DO
+        Stmt.Scan (p.bodies[i], ca);
+      END;
+    END;
+    Stmt.Scan (p.elseBody, ca);
+  END Scan;
 
 BEGIN
 END CaseStmt.

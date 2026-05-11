@@ -10,7 +10,7 @@ MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
 IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -20,6 +20,7 @@ TYPE
         compile     := Compile;
         outcomes    := GetOutcome;
         compileMSIR := CompileMSIR;
+        scan        := Scan;
       END;
 
 PROCEDURE Parse (): Stmt.T =
@@ -83,6 +84,11 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     MSIR.BuildRet (MSIRBuilder.CurrentBlock (), v);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+  END Scan;
 
 BEGIN
 END ReturnStmt.

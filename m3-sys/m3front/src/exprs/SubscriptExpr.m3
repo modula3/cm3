@@ -12,7 +12,7 @@ IMPORT CG, Expr, ExprRep, ArrayType, Error, Type, Int, LInt;
 IMPORT ArrayExpr, OpenArrayType, Host, EnumExpr;
 IMPORT CheckExpr, SubtractExpr, IntegerExpr, ErrType;
 IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
@@ -50,6 +50,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := SubscriptExprAlign;
+        scanLV       := ScanLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
       END;
@@ -540,6 +541,14 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
   END CompileMSIR;
+
+PROCEDURE ScanLV (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    (* Assigning a[i] modifies the array variable a — propagate the lvalue
+       context.  The subscript b is always a read. *)
+    Expr.ScanLV (p.a, ca);
+    Expr.Scan   (p.b, ca);
+  END ScanLV;
 
 BEGIN
 END SubscriptExpr.

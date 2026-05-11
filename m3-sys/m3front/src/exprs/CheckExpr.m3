@@ -10,7 +10,7 @@ MODULE CheckExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, IntegerExpr, EnumExpr, Host;
 IMPORT Target, TInt, Error, LInt;
-IMPORT MSIR;
+IMPORT MSIR, CaptureAnalysis;
 
 TYPE
   Class = { cLOWER, cUPPER, cBOTH };
@@ -50,6 +50,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := CheckExprAlign;
+        scan         := Scan;
         compileMSIR  := CompileMSIR;
       END;
 
@@ -207,6 +208,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   BEGIN
     RETURN Expr.CompileMSIR (p.expr);
   END CompileMSIR;
+
+PROCEDURE Scan (p: P;  ca: CaptureAnalysis.T) =
+  BEGIN
+    Expr.Scan (p.expr, ca);
+  END Scan;
 
 BEGIN
 END CheckExpr.
