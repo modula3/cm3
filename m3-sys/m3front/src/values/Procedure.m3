@@ -14,7 +14,7 @@ IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
 IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTParams;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 IMPORT Module;
-IMPORT MSIRBuilder;
+IMPORT MSIRBuilder, CaptureAnalysis;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 VAR debug := FALSE;
@@ -608,15 +608,20 @@ PROCEDURE LangInit (t: T) =
    enclosing proc's MSIR context.  Called from LangInit when inline_nested_procs
    is FALSE so the CG path defers compilation but MSIR must do it now. *)
 PROCEDURE GenBodyMSIR (p: T) =
+  VAR ca := CaptureAnalysis.New ();
   BEGIN
+    (* Scan the nested proc body to collect up-level variable captures. *)
+    Stmt.Scan (p.block, ca);
     (* Use the fully-qualified unmangled name so nested procs don't collide
        with module-level procs of the same base name. *)
     IF NOT MSIRBuilder.BeginProc (
               Value.GlobalName (p, dots := FALSE, with_module := FALSE),
               ProcType.Formals (p.signature),
               p.syms, ProcType.Result (p.signature),
-              isExternal := TRUE) THEN RETURN END;
-    MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+              isExternal := TRUE,
+              captures := ca) THEN RETURN END;
+    MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
+                               CaptureAnalysis.GetCaptures (ca));
     Stmt.CompileMSIR (p.block);
     MSIRBuilder.EndProc ();
   END GenBodyMSIR;

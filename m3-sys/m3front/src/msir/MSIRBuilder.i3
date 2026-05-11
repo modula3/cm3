@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, Type, Value, Scope, Variable, RunTyme;
+IMPORT MSIR, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -26,7 +26,12 @@ PROCEDURE BeginProc(name: TEXT;
                     formals: Value.T;
                     syms: Scope.T;
                     result: Type.T;
-                    isExternal: BOOLEAN): BOOLEAN;
+                    isExternal: BOOLEAN;
+                    captures: CaptureAnalysis.T := NIL): BOOLEAN;
+(* When captures is non-NIL (nested proc): lambda-lift by generating one
+   ptr param per captured variable instead of a single %__env frame pointer.
+   The caller must also pass captures to RegisterProc so call sites can
+   reconstruct the capture args. *)
 
 (* Resolve a Variable.T to its current SSA value.
    For formals: returns the MSIR Param value directly.
@@ -96,7 +101,15 @@ PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
 
 (* Register a procedure value with its MSIR.Proc so call sites can find it.
    Called from Procedure.m3 after a successful BeginProc. *)
-PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
+PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
+                       caps: REF ARRAY OF CaptureAnalysis.Capture := NIL);
+(* Register v → p in the proc map.  caps is the capture list from
+   CaptureAnalysis.GetCaptures; NIL for non-nested procs. *)
+
+PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture;
+(* Return the capture list stored by RegisterProc for v; NIL if not nested
+   or not yet registered.  Used by EmitNestedCall and call sites to build
+   the capture argument list. *)
 
 (* Look up v in the registry; if not found, build an external stub from
    procType (the m3front ProcType.T).  Returns NIL and calls Abandon if
@@ -122,9 +135,11 @@ PROCEDURE CurrentUnwindBlock(): MSIR.Block;  (* NIL if not in a try *)
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
-(* Like EmitCall but prepends the current frame pointer as the first argument.
-   Used when calling a nested proc that expects %__env. *)
-PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
+(* Like EmitCall but prepends the capture arguments for a lambda-lifted nested
+   proc.  calleeVal is the Value.T for the nested proc (used to look up the
+   capture list registered by RegisterProc).  For each capture, passes
+   LookupVarAddr(cap.var) from the current (outer) proc's varMap. *)
+PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
 (* TRUE if the given procedure value represents a nested proc (level > 0).
@@ -194,21 +209,6 @@ PROCEDURE BeginModule();
 
 (* Raw map-management helpers.  Variable.m3 calls these after doing its own
    type translation and condition checks. *)
-(* ------------------------------------------------- up-level frame support *)
-
-(* Allocate a slot in the current proc's frame for an up-level variable.
-   Creates the frame alloca lazily on first call.  Returns a ptr value
-   (a GEP into the frame) that serves as the variable's address. *)
-PROCEDURE AllocFrameSlot(v: Variable.T;  byteSize: INTEGER;
-                          byteAlign: INTEGER;  mt: MSIR.T): MSIR.Value;
-
-(* Return the current proc's frame alloca (NIL if no up-level vars yet). *)
-PROCEDURE CurrentFrame(): MSIR.Value;
-
-(* Return the frame base + byte offset for an up-level var already in the
-   frame, from the perspective of a NESTED proc receiving %env: ptr.
-   Used when binding outer up-level vars in the inner proc's varMap. *)
-PROCEDURE FrameOffset(v: Variable.T): INTEGER;  (* -1 if not in frame *)
 
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
 

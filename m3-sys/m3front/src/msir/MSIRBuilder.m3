@@ -2,7 +2,7 @@ MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
-IMPORT RunTyme, Procedure, M3FP;
+IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -11,7 +11,6 @@ CONST MaxCatchDepth = 16;
 CONST MaxProcMap   = 128;
 CONST MaxGlobalMap  = 256;
 CONST MaxNestDepth  = 8;   (* maximum nesting depth for nested procs *)
-CONST MaxFrameSlots = 32;  (* max up-level vars per proc *)
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
    Each local maps to an alloca ptr (elemType = the allocated type). *)
@@ -33,15 +32,14 @@ TYPE ProcContext = RECORD
   exitDepth:     INTEGER;
   tryDepth:      INTEGER;
   catchDepth:    INTEGER;
-  frame:         MSIR.Value;  (* frame alloca for up-level vars; NIL if none *)
-  frameSize:     INTEGER;     (* bytes allocated in frame so far *)
-  frameSlotsN:   INTEGER;
-  frameSlots:    ARRAY [0..MaxFrameSlots-1] OF FrameEntry;
 END;
 
-TYPE ProcEntry   = RECORD key: Value.T;    val: MSIR.Proc   END;
+TYPE ProcEntry   = RECORD
+  key:  Value.T;
+  val:  MSIR.Proc;
+  caps: REF ARRAY OF CaptureAnalysis.Capture;  (* NIL for non-nested procs *)
+END;
 TYPE GlobalEntry = RECORD key: Variable.T; val: MSIR.Global END;
-TYPE FrameEntry  = RECORD key: Variable.T; offset: INTEGER  END;
 
 VAR
   curProc:          MSIR.Proc  := NIL;
@@ -49,16 +47,10 @@ VAR
   abandoned:        BOOLEAN    := FALSE;
   blockSeq:         INTEGER    := 0;
   pendingContainer: MSIR.Value := NIL;
-  curFrame:         MSIR.Value := NIL;  (* frame alloca for up-level vars *)
-  curFrameSize:     INTEGER    := 0;    (* bytes allocated in frame so far *)
 
   (* Saved contexts for nested proc compilation. *)
   procContextStack: ARRAY [0..MaxNestDepth-1] OF ProcContext;
   procContextDepth: INTEGER := 0;
-
-  (* Frame slot table: maps up-level vars to byte offsets within curFrame. *)
-  frameSlots:  ARRAY [0..MaxFrameSlots-1] OF FrameEntry;
-  frameSlotsN: INTEGER := 0;
 
   varMap:  ARRAY [0..MaxVarMap-1]  OF VarEntry;
   varMapN: INTEGER := 0;
@@ -80,19 +72,22 @@ VAR
 
 PROCEDURE BeginProc(name: TEXT;
                     formals: Value.T;
-                    <*UNUSED*> syms: Scope.T;
+                    syms: Scope.T;
                     result: Type.T;
-                    isExternal: BOOLEAN): BOOLEAN =
+                    isExternal: BOOLEAN;
+                    captures: CaptureAnalysis.T := NIL): BOOLEAN =
   VAR
-    info:     Formal.Info;
-    nFormals: INTEGER := 0;
-    f:        Value.T;
-    resultT:  MSIR.T;
-    isNested: BOOLEAN;  (* TRUE if being compiled inside another proc (level>0) *)
-    pBase:    INTEGER;  (* param array offset: 1 for nested (%__env first) *)
+    info:      Formal.Info;
+    nFormals:  INTEGER := 0;
+    nCaptures: INTEGER := 0;
+    f:         Value.T;
+    resultT:   MSIR.T;
+    isNested:  BOOLEAN;
+    pBase:     INTEGER;  (* param index offset = nCaptures *)
+    caps:      REF ARRAY OF CaptureAnalysis.Capture;
   BEGIN
     IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
-    (* If we're already in a proc (nested proc via LangInit), push current state. *)
+    (* Push current state if we're already inside a proc (nested proc). *)
     IF curProc # NIL THEN
       IF procContextDepth >= MaxNestDepth THEN
         MSIREmit.NoteSkipped(name, "nesting too deep");
@@ -108,23 +103,16 @@ PROCEDURE BeginProc(name: TEXT;
         ctx.exitDepth  := exitDepth;
         ctx.tryDepth   := tryDepth;
         ctx.catchDepth := catchDepth;
-        ctx.frame        := curFrame;
-        ctx.frameSize    := curFrameSize;
-        ctx.frameSlotsN  := frameSlotsN;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
-        FOR i := 0 TO frameSlotsN - 1 DO ctx.frameSlots[i] := frameSlots[i] END;
       END;
       INC(procContextDepth);
     END;
-    abandoned        := FALSE;
-    varMapN          := 0;
-    exitDepth        := 0;
-    tryDepth         := 0;
-    catchDepth       := 0;
-    blockSeq         := 0;
-    curFrame         := NIL;
-    curFrameSize     := 0;
-    frameSlotsN      := 0;
+    abandoned  := FALSE;
+    varMapN    := 0;
+    exitDepth  := 0;
+    tryDepth   := 0;
+    catchDepth := 0;
+    blockSeq   := 0;
 
     resultT := MSIRType.TranslateResult(result);
     IF resultT = NIL THEN
@@ -132,25 +120,29 @@ PROCEDURE BeginProc(name: TEXT;
       RETURN FALSE;
     END;
 
-    (* Nested procs get an extra first param %__env: ptr → enclosing frame. *)
-    isNested := procContextDepth > 0;
-    pBase    := 0;
+    isNested  := procContextDepth > 0;
+    IF captures = NIL THEN caps := NIL
+    ELSE caps := CaptureAnalysis.GetCaptures(captures)
+    END;
+    IF caps = NIL THEN nCaptures := 0
+    ELSE nCaptures := NUMBER(caps^)
+    END;
+    pBase := nCaptures;
 
     f := formals;
     WHILE f # NIL DO INC(nFormals); f := f.next END;
-    IF isNested THEN INC(nFormals) END;  (* +1 for %__env *)
 
-    VAR params := NEW(REF ARRAY OF MSIR.Param, nFormals);
+    VAR params := NEW(REF ARRAY OF MSIR.Param, nCaptures + nFormals);
     BEGIN
-      IF isNested THEN
-        pBase := 1;
-        params[0].name := "__env";
-        params[0].type := MSIR.TPtr(MSIR.TVoid());
-        params[0].mode := MSIR.ParamMode.ByValue;
-        pBase := 1;
+      (* Lambda-lifted capture params: one ptr per captured variable. *)
+      FOR i := 0 TO nCaptures - 1 DO
+        params[i].name := "__cap_" & Fmt.Int(i);
+        params[i].type := MSIR.TPtr(MSIR.TVoid());
+        params[i].mode := MSIR.ParamMode.ByValue;
       END;
+      (* Regular explicit formals, shifted past capture params. *)
       f := formals;
-      FOR i := 0 TO (nFormals - 1) - pBase DO
+      FOR i := 0 TO nFormals - 1 DO
         Formal.Split(f, info);
         VAR pt := MSIRType.Translate(info.type);
         BEGIN
@@ -191,40 +183,28 @@ PROCEDURE BeginProc(name: TEXT;
         MSIR.ProcSetLinkage(curProc, MSIR.Linkage.Internal);
       END;
 
-      (* For nested procs: bind outer up-level vars through %__env (param 0). *)
-      IF isNested THEN
-        VAR envVal := MSIR.ProcParam(curProc, 0);  (* %__env: ptr *)
-            ctx    := procContextStack[procContextDepth - 1];
-        BEGIN
-          FOR i := 0 TO ctx.frameSlotsN - 1 DO
-            VAR v   := ctx.frameSlots[i].key;
-                off := ctx.frameSlots[i].offset;
-                vt:  Type.T;  vg, vi, vlhs: BOOLEAN;
-                mt:  MSIR.T;
-                slotPtr: MSIR.Value;
-            BEGIN
-              Variable.Split(v, vt, vg, vi, vlhs);
-              mt := MSIRType.Translate(vt);
-              IF mt # NIL THEN
-                slotPtr := MSIR.BuildPtrAdd(curBlock, "", envVal,
-                                            VAL(off, LONGINT));
-                IF MSIR.Kind(mt) = MSIR.TypeKind.GcRef THEN
-                  slotPtr := MSIR.RetypeValue(slotPtr,
-                               MSIR.TGcSlot(MSIR.EltType(mt)));
-                END;
-                IF varMapN < MaxVarMap THEN
-                  varMap[varMapN].key      := v;
-                  varMap[varMapN].val      := slotPtr;
-                  varMap[varMapN].elemType := mt;
-                  INC(varMapN);
-                END;
-              END;
+      (* For nested procs: bind capture params in the inner proc's varMap.
+         Each capture param is a ptr to the outer proc's alloca for that var.
+         LookupVar loads through the ptr; LookupVarAddr returns it directly. *)
+      IF isNested AND nCaptures > 0 THEN
+        FOR i := 0 TO nCaptures - 1 DO
+          VAR v:  Variable.T := caps[i].var;
+              vt: Type.T;  vg, vi, vlhs: BOOLEAN;
+              mt: MSIR.T;
+          BEGIN
+            Variable.Split(v, vt, vg, vi, vlhs);
+            mt := MSIRType.Translate(vt);
+            IF mt # NIL AND varMapN < MaxVarMap THEN
+              varMap[varMapN].key      := v;
+              varMap[varMapN].val      := MSIR.ProcParam(curProc, i);
+              varMap[varMapN].elemType := mt;
+              INC(varMapN);
             END;
           END;
         END;
       END;
 
-      (* Bind formals and locals upfront — independent of CG declare timing. *)
+      (* Bind explicit formals. *)
       VAR fDecl := formals;  fInfo: Formal.Info;
       BEGIN
         WHILE fDecl # NIL DO
@@ -239,6 +219,7 @@ PROCEDURE BeginProc(name: TEXT;
           fDecl := fDecl.next;
         END;
       END;
+      (* Bind non-formal locals. *)
       VAR sv: Value.T := Scope.ToList(syms);
       BEGIN
         WHILE sv # NIL DO
@@ -251,11 +232,6 @@ PROCEDURE BeginProc(name: TEXT;
           END;
           sv := sv.next;
         END;
-      END;
-      (* Patch the frame alloca to the actual total size now that all
-         up-level variable slots are registered. *)
-      IF curFrame # NIL AND curFrameSize > 0 THEN
-        MSIR.AllocaSetCount(curFrame, curFrameSize);
       END;
     END;
     RETURN TRUE;
@@ -388,11 +364,7 @@ PROCEDURE EndProc() =
         exitDepth        := ctx.exitDepth;
         tryDepth         := ctx.tryDepth;
         catchDepth       := ctx.catchDepth;
-        curFrame         := ctx.frame;
-        curFrameSize     := ctx.frameSize;
-        frameSlotsN      := ctx.frameSlotsN;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
-        FOR i := 0 TO frameSlotsN - 1 DO frameSlots[i] := ctx.frameSlots[i] END;
       END;
     ELSE
       curProc          := NIL;
@@ -403,9 +375,6 @@ PROCEDURE EndProc() =
       tryDepth         := 0;
       catchDepth       := 0;
       pendingContainer := NIL;
-      curFrame         := NIL;
-      curFrameSize     := 0;
-      frameSlotsN      := 0;
     END;
   END EndProc;
 
@@ -429,53 +398,6 @@ PROCEDURE TakePendingContainer(): MSIR.Value =
   VAR v := pendingContainer;
   BEGIN pendingContainer := NIL; RETURN v END TakePendingContainer;
 
-PROCEDURE AllocFrameSlot(v: Variable.T;  byteSize: INTEGER;
-                          byteAlign: INTEGER;  mt: MSIR.T): MSIR.Value =
-  (* Ensure the frame alloca exists, then carve out a slot for v. *)
-  VAR off: INTEGER;  slotPtr: MSIR.Value;
-  BEGIN
-    IF curBlock = NIL THEN RETURN NIL END;
-    (* Create frame alloca lazily on first up-level var.
-       Use TPtr(TVoid()) for the MSIR pointer type so that load/store of any
-       type through a frame-slot GEP doesn't trigger verifier type-mismatch
-       warnings (LLVM opaque pointers make this valid). *)
-    IF curFrame = NIL THEN
-      curFrame := MSIR.BuildAlloca(curBlock, "__frame", MSIR.TI(8));
-      curFrame := MSIR.RetypeValue(curFrame, MSIR.TPtr(MSIR.TVoid()));
-      curFrameSize := 0;
-    END;
-    (* Round up to alignment. *)
-    IF byteAlign > 1 THEN
-      off := (curFrameSize + byteAlign - 1) -
-             ((curFrameSize + byteAlign - 1) MOD byteAlign);
-    ELSE
-      off := curFrameSize;
-    END;
-    INC(curFrameSize, MAX(byteSize, 1));
-    (* Record for inner-proc lookup. *)
-    IF frameSlotsN < MaxFrameSlots THEN
-      frameSlots[frameSlotsN].key    := v;
-      frameSlots[frameSlotsN].offset := off;
-      INC(frameSlotsN);
-    END;
-    (* Return a ptr to the slot: GEP(frame, off) typed as mt's ptr. *)
-    slotPtr := MSIR.BuildPtrAdd(curBlock, "", curFrame, VAL(off, LONGINT));
-    IF MSIR.Kind(mt) = MSIR.TypeKind.GcRef THEN
-      slotPtr := MSIR.RetypeValue(slotPtr, MSIR.TGcSlot(MSIR.EltType(mt)));
-    END;
-    RETURN slotPtr;
-  END AllocFrameSlot;
-
-PROCEDURE CurrentFrame(): MSIR.Value =
-  BEGIN RETURN curFrame END CurrentFrame;
-
-PROCEDURE FrameOffset(v: Variable.T): INTEGER =
-  BEGIN
-    FOR i := 0 TO frameSlotsN - 1 DO
-      IF frameSlots[i].key = v THEN RETURN frameSlots[i].offset END;
-    END;
-    RETURN -1;
-  END FrameOffset;
 
 PROCEDURE CurrentProc(): MSIR.Proc =
   BEGIN RETURN curProc END CurrentProc;
@@ -553,19 +475,27 @@ PROCEDURE IsNestedProc(v: Value.T): BOOLEAN =
     END;
   END IsNestedProc;
 
-PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
+PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
-  (* Prepend the current frame pointer as %__env (first arg) to the call. *)
-  VAR allArgs := NEW(REF ARRAY OF MSIR.Value, NUMBER(args) + 1);
-      frame   := curFrame;
+  (* Build capture args from the outer proc's varMap, then call. *)
+  VAR
+    caps    : REF ARRAY OF CaptureAnalysis.Capture;
+    nCaps   : INTEGER;
+    allArgs : REF ARRAY OF MSIR.Value;
+    addr    : MSIR.Value;
   BEGIN
-    IF frame = NIL THEN
-      (* Outer proc has no frame yet — pass null (no up-level vars accessed). *)
-      allArgs[0] := MSIR.ConstNil(MSIR.TPtr(MSIR.TVoid()));
-    ELSE
-      allArgs[0] := frame;
+    caps := GetProcCaptures(calleeVal);
+    IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
+    allArgs := NEW(REF ARRAY OF MSIR.Value, nCaps + NUMBER(args));
+    FOR i := 0 TO nCaps - 1 DO
+      addr := LookupVarAddr(caps[i].var);
+      IF addr = NIL THEN
+        Abandon("capture var not found in outer proc varMap");
+        RETURN NIL;
+      END;
+      allArgs[i] := addr;
     END;
-    FOR i := 0 TO NUMBER(args) - 1 DO allArgs[i + 1] := args[i] END;
+    FOR i := 0 TO NUMBER(args) - 1 DO allArgs[nCaps + i] := args[i] END;
     RETURN EmitCall(name, callee, allArgs^);
   END EmitNestedCall;
 
@@ -755,14 +685,24 @@ PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
     RETURN LookupOrCreateProc(proc, Value.TypeOf(proc));
   END HookProc;
 
-PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
+PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
+                       caps: REF ARRAY OF CaptureAnalysis.Capture := NIL) =
   BEGIN
     IF v = NIL OR p = NIL THEN RETURN END;
     IF procMapN >= MaxProcMap THEN RETURN END;
-    procMap[procMapN].key := v;
-    procMap[procMapN].val := p;
+    procMap[procMapN].key  := v;
+    procMap[procMapN].val  := p;
+    procMap[procMapN].caps := caps;
     INC(procMapN);
   END RegisterProc;
+
+PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture =
+  BEGIN
+    FOR i := 0 TO procMapN - 1 DO
+      IF procMap[i].key = v THEN RETURN procMap[i].caps END;
+    END;
+    RETURN NIL;
+  END GetProcCaptures;
 
 PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
   BEGIN
@@ -839,8 +779,6 @@ PROCEDURE BeginModule() =
     globalMapN       := 0;
     procMapN         := 0;
     procContextDepth := 0;
-    curFrame         := NIL;
-    curFrameSize     := 0;
   END BeginModule;
 
 (* ---- raw map-management helpers called from Variable.m3 ---- *)

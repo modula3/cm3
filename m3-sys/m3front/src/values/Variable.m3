@@ -320,25 +320,18 @@ PROCEDURE RegisterExternMSIR (t: T) =
 
 PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
   VAR mt: MSIR.T;  slotAddr: MSIR.Value;  zero: MSIR.Value;
-      byteSize, byteAlign: INTEGER;
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
     IF t.indirect THEN RETURN FALSE END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
-    IF t.up_level THEN
-      (* Variable is accessed from a nested proc — allocate in the frame struct
-         so the nested proc can reach it via its static link (%env param). *)
-      byteSize  := MAX(1, t.size DIV Target.Char.size);
-      byteAlign := MAX(1, t.align DIV Target.Char.size);
-      slotAddr  := MSIRBuilder.AllocFrameSlot(t, byteSize, byteAlign, mt);
-      IF slotAddr = NIL THEN RETURN FALSE END;
-    ELSE
-      slotAddr := MSIR.BuildAlloca(b,
-                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE), mt);
-      IF slotAddr = NIL THEN RETURN FALSE END;
-    END;
+    (* With lambda-lifting, up-level variables are ordinary stack allocas in
+       the outer proc.  Their addresses are passed directly as capture params
+       to inner procs, so no special frame-struct handling is needed here. *)
+    slotAddr := MSIR.BuildAlloca(b,
+                  Value.GlobalName(t, dots:=FALSE, with_module:=FALSE), mt);
+    IF slotAddr = NIL THEN RETURN FALSE END;
     MSIRBuilder.VarMapAdd (t, slotAddr, mt);
     (* Emit language-default zero-init alongside CG's Type.InitValue in LangInit *)
     IF Type.InitCost (t.type, FALSE) > 0 THEN

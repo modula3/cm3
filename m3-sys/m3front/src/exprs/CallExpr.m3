@@ -512,7 +512,14 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, p.proc_type);
     IF msirCallee = NIL THEN RETURN NIL END;
     isNested := MSIRBuilder.IsNestedProc(v);
-    pBase    := ORD(isNested);
+    IF isNested THEN
+      VAR caps := MSIRBuilder.GetProcCaptures(v);
+      BEGIN
+        IF caps = NIL THEN pBase := 0 ELSE pBase := NUMBER(caps^) END;
+      END;
+    ELSE
+      pBase := 0;
+    END;
     n       := NUMBER(p.args^);
     argVals := NEW(REF ARRAY OF MSIR.Value, n);
     FOR i := 0 TO n - 1 DO
@@ -526,7 +533,7 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
       argVals[i] := argVal;
     END;
     IF isNested THEN
-      RETURN MSIRBuilder.EmitNestedCall("", msirCallee, argVals^);
+      RETURN MSIRBuilder.EmitNestedCall("", msirCallee, v, argVals^);
     ELSE
       RETURN MSIRBuilder.EmitCall("", msirCallee, argVals^);
     END;
