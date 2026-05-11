@@ -250,6 +250,9 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container (object pointer) via `MSIRBuilder.SetPendingContainer`; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; traced object fields are retyped from `GcRef` to `GcSlot` so the barrier fires correctly
 - **`var_map`/`gc_map`**: module globals embedded as trailing fields of `@Mod_M3_info` struct (after MI_SIZE=104 bytes); gc_map TipeMap byte sequence skips non-traced fields and emits `Op.Ref` for each traced global; LLVM aliases (`@Main__gCounter` etc.) preserve binary symbol compatibility with CG-compiled modules; GC now correctly scans MSIR module globals as roots
 - **Nested procedures**: lambda-lifted — each captured up-level variable becomes an explicit `ptr` parameter in the inner proc's LLVM signature (`%__cap_0`, `%__cap_1`, …); outer proc's up-level vars are ordinary allocas whose addresses are passed as capture args; `Stmt.Capture` pre-scans the body to collect captures before `GenBodyMSIR`; `RegisterProc` stores the capture list so call sites build the right arg list; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of the same base name; multi-level nesting supported naturally (inner proc passes its own capture params through to deeper procs)
+- **Read-only scalar capture optimisation**: captures classified `written=FALSE` by `CaptureAnalysis` and of scalar MSIR type (integer, float, or untraced pointer) are passed by value instead of by pointer, giving LLVM's alias analysis better information; GcRef captures always pass by pointer so the conservative GC scanner keeps them on the stack
+- **WIDECHAR text literals**: `M3WString.GetChar` provides raw code-point access; `MSIREmit` encodes each WIDECHAR as little-endian bytes (`Target.WideCharSize() DIV Target.Char.size` bytes); `MSIRToLLVM` emits the correct `[wcharBytes*len + wcharBytes x i8]` struct field with a wide null terminator; `cnt` is negative to distinguish from ASCII literals
+- **TextLiteral vtable hooks**: the five `@textlit_methods` function pointers (`RTHooks__TextLitInfo` etc.) are resolved via `MSIRBuilder.HookProc`/`RunTyme.LookUpProc` in `MSIREmit.EndUnit` and stored in the MSIR module; `MSIRToLLVM` uses `LLSymbol(hook)` for names and `EmitDeclare` for signatures, eliminating all hardcoded strings and deriving correct types from the M3 type system
 
 ### EH Model Requirement
 
@@ -324,6 +327,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/types/Type.m3` | `GenCells`: calls CG and MSIR `InitTypecell` together for each type cell |
 | `m3-sys/m3front/src/builtinOps/New.m3` | `CompileMSIR`: dispatches to `GenRefMSIR`/`GenObjectMSIR`/`GenOpaqueMSIR`; `CallAllocHook` is common tail |
 | `m3-sys/m3front/src/misc/CaptureAnalysis.i3/.m3` | Capture-analysis module: `Note(ca, v, written)` records up-level variable accesses; `GetCaptures` returns the set; `T` is the accumulator passed through `Stmt.Capture`/`Expr.Capture` walks |
+| `m3-sys/m3front/src/misc/M3WString.m3` | Wide-char string representation; `GetChar(t, i)` gives raw code-point access used by `MSIREmit` to encode WIDECHAR literals as little-endian byte sequences |
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
 | `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
@@ -380,7 +384,7 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 
 ### Known Limitations / Remaining Work
 
-- **TEXT**: literals and `&` concatenation work; `IO.Put` receives real TEXT values in the module body. Remaining: `Fmt.Bool`, wide-char literals (use `ToLiteral` fallback), and TEXT-returning expressions that aren't yet handled (e.g., `Text.Sub`, `Fmt.Real`)
+- **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls (`Fmt.Bool`, `Text.Length`, etc.) all work — external calls are emitted correctly and the calling convention matches the C backend. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests
 - **GC write barrier for heap fields**: activated; see container protocol below
 - **`var_map`/`gc_map`**: implemented; see architecture note below
 - **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported

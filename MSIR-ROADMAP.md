@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-11 (msir branch)
+Last updated: 2026-05-12 (msir branch)
 
 ## What's Working (76/76 tests pass)
 
@@ -33,6 +33,9 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] GC write barrier for heap fields: `QualifyExpr.LValueMSIR` sets pending container; `AssignStmt.CompileMSIR` calls `BuildGcStore` with container
 - [x] `var_map`/`gc_map`: module globals embedded as trailing fields of `@Mod_M3_info`; TipeMap byte sequence for GC scanning; LLVM aliases for symbol compatibility
 - [x] Nested procedures: **lambda-lifted** — `Stmt.Capture` pre-scans the body; each captured up-level variable becomes an explicit `ptr` param (`%__cap_0`, …); outer proc's up-level vars are ordinary allocas; multi-level nesting supported
+- [x] Read-only scalar captures pass by value (not ptr): `CaptureAnalysis.written=FALSE` + scalar MSIR type → direct value param; GcRef stays by ptr for conservative GC
+- [x] WIDECHAR text literals: encoded as little-endian bytes (`Target.WideCharSize()` per char); `[wcharBytes*len + wcharBytes x i8]` struct; negative `cnt` distinguishes from ASCII
+- [x] TEXT library calls (`Fmt.Bool`, `Text.Length`, etc.): external calls emit correctly; calling convention matches C backend
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -47,6 +50,8 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] RAISE: `ExceptionDesc` static, `RTHooks__Raise`, Itanium ABI `__cxa_begin_catch` fix
 - [x] `RT0.ImportInfo` chain in `MI_imports`: `BuildImportLink`; RTHooks filtered (pre-initialised)
 - [x] TypeCell and ObjectTypeDesc (vtable) emission
+- [x] TC_kind bytes: use `ORD(M3RT.TypeKind.*)` (was hardcoded 6/13); GcHeader and TEXT GEP offset use M3RT/Target constants
+- [x] TextLiteral vtable method names resolved via `RunTyme.LookUpProc` → `MSIRBuilder.HookProc`; `EmitDeclare` derives signatures from M3 types (no hardcoded strings)
 
 ---
 
@@ -54,9 +59,8 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 
 ### A. TEXT: remaining cases
 
-- `Fmt.Bool`, `Fmt.Real`, and other TEXT-returning expressions not yet handled
-- Wide-char literals (currently fall back to `ToLiteral`)
-- `Text.Sub` and similar TEXT manipulation operations
+- `Fmt.Real` (floating-point formatting) — not yet exercised in tests
+- `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
 
 ### B. NEW(REF open-array/record)
 
