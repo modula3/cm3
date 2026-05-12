@@ -284,7 +284,6 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     n:          INTEGER;
     argVal:     MSIR.Value;
     isNested:   BOOLEAN;
-    pBase:      INTEGER;
   BEGIN
     (* Expr.TypeOf returns NIL for method expressions (obj.method cannot be
        used as a first-class value).  Fall back to QualifyExpr.MethodType. *)
@@ -331,28 +330,14 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
     IF msirCallee = NIL THEN RETURN NIL END;
     isNested := MSIRBuilder.IsNestedProc(v);
-    IF isNested THEN
-      VAR caps := MSIRBuilder.GetProcCaptures(v);
-      BEGIN
-        IF caps = NIL THEN pBase := 0 ELSE pBase := NUMBER(caps^) END;
-      END;
-    ELSE
-      pBase := 0;
-    END;
     n       := NUMBER(p.args^);
     argVals := NEW(REF ARRAY OF MSIR.Value, n);
     VAR fv := ProcType.Formals(procType);
     BEGIN
       FOR i := 0 TO n - 1 DO
-        IF fv # NIL THEN
-          argVal := Formal.EmitArgMSIR(fv, p.args[i]);
-          fv := fv.next;
-        ELSIF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i + pBase)))
-                = MSIR.TypeKind.Ptr THEN
-          argVal := Expr.LValueMSIR(p.args[i]);
-        ELSE
-          argVal := Expr.CompileMSIR(p.args[i]);
-        END;
+        <* ASSERT fv # NIL *>
+        argVal := Formal.EmitArgMSIR(fv, p.args[i]);
+        fv := fv.next;
         IF argVal = NIL THEN RETURN NIL END;
         argVals[i] := argVal;
       END;
