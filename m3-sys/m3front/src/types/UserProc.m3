@@ -329,7 +329,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     END;
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
     IF msirCallee = NIL THEN RETURN NIL END;
-    isNested := MSIRBuilder.IsNestedProc(v);
+    isNested := Procedure.IsNested(v);
     n       := NUMBER(p.args^);
     argVals := NEW(REF ARRAY OF MSIR.Value, n);
     VAR fv := ProcType.Formals(procType);

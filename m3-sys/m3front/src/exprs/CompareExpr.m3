@@ -249,22 +249,36 @@ PROCEDURE Fold (p: P): Expr.T =
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR
-    lv, rv: MSIR.Value;
-    pred:   MSIR.CmpPred;
+    lv, rv:   MSIR.Value;
+    pred:     MSIR.CmpPred;
+    fpred:    MSIR.FCmpPred;
+    isFloat   := (p.class = cREAL) OR (p.class = cLONG) OR (p.class = cEXTND);
   BEGIN
-    IF (p.class # cINT) AND (p.class # cLINT) THEN
-      MSIRBuilder.Abandon ("non-integer comparison not supported in MSIR v0");
+    IF isFloat THEN
+      CASE p.op OF
+      | CG.Cmp.GT => fpred := MSIR.FCmpPred.OGt;
+      | CG.Cmp.GE => fpred := MSIR.FCmpPred.OGe;
+      | CG.Cmp.LT => fpred := MSIR.FCmpPred.OLt;
+      | CG.Cmp.LE => fpred := MSIR.FCmpPred.OLe;
+      END;
+      lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+      rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+      RETURN MSIR.BuildFCmp (MSIRBuilder.CurrentBlock (), "", fpred, lv, rv);
+    ELSIF (p.class = cINT) OR (p.class = cLINT)
+       OR (p.class = cADDR) OR (p.class = cENUM) THEN
+      CASE p.op OF
+      | CG.Cmp.GT => pred := MSIR.CmpPred.Sgt;
+      | CG.Cmp.GE => pred := MSIR.CmpPred.Sge;
+      | CG.Cmp.LT => pred := MSIR.CmpPred.Slt;
+      | CG.Cmp.LE => pred := MSIR.CmpPred.Sle;
+      END;
+      lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+      rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+      RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, lv, rv);
+    ELSE
+      MSIRBuilder.Abandon ("unsupported comparison class in MSIR");
       RETURN NIL;
     END;
-    CASE p.op OF
-    | CG.Cmp.GT => pred := MSIR.CmpPred.Sgt;
-    | CG.Cmp.GE => pred := MSIR.CmpPred.Sge;
-    | CG.Cmp.LT => pred := MSIR.CmpPred.Slt;
-    | CG.Cmp.LE => pred := MSIR.CmpPred.Sle;
-    END;
-    lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
-    rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, lv, rv);
   END CompileMSIR;
 
 BEGIN

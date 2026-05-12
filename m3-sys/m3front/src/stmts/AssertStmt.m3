@@ -21,6 +21,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIRStmt;
         capture  := Capture;
       END;
 
@@ -151,6 +152,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE CompileMSIRStmt (<*UNUSED*> p: P) =
+  BEGIN
+    (* ASSERT pragmas are silently omitted in MSIR; only the fall-through outcome matters. *)
+  END CompileMSIRStmt;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

@@ -9,6 +9,7 @@
 MODULE LoopStmt;
 
 IMPORT CG, Scanner, Stmt, StmtRep, Marker, Token, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -17,6 +18,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
         capture  := Capture;
       END;
 
@@ -67,6 +69,26 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
     END;
     RETURN oc;
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  VAR
+    headerBlock: MSIR.Block;
+    exitBlock:   MSIR.Block;
+  BEGIN
+    headerBlock := MSIRBuilder.NewBlock ("loop.header");
+    exitBlock   := MSIRBuilder.NewBlock ("loop.exit");
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlock,
+                  ARRAY OF MSIR.Value{});
+    MSIRBuilder.SetCurrentBlock (headerBlock);
+    MSIRBuilder.PushExitBlock (exitBlock);
+    Stmt.CompileMSIR (p.body);
+    MSIRBuilder.PopExitBlock ();
+    IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlock,
+                    ARRAY OF MSIR.Value{});
+    END;
+    MSIRBuilder.SetCurrentBlock (exitBlock);
+  END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

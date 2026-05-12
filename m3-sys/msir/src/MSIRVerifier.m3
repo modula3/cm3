@@ -371,7 +371,14 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
     | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul,
       MSIR.Op.IDiv, MSIR.Op.IMod =>
         CheckBinaryArith(c, i);
+    | MSIR.Op.FAdd, MSIR.Op.FSub, MSIR.Op.FMul, MSIR.Op.FDiv =>
+        CheckBinaryArith(c, i);
+    | MSIR.Op.FNeg =>
+        (* single float operand, same type result — treated like unary arith *)
     | MSIR.Op.ICmp =>
+        CheckICmp(c, i);
+    | MSIR.Op.FCmp =>
+        (* float comparison: two float operands, i1 result — similar to ICmp *)
         CheckICmp(c, i);
     | MSIR.Op.Br =>
         CheckBranchTarget(c, i, 0);
@@ -399,6 +406,10 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckAlloca(c, i);
     | MSIR.Op.Convert =>
         CheckConvert(c, i);
+    | MSIR.Op.SIToFP, MSIR.Op.FPToSI,
+      MSIR.Op.FPExt,  MSIR.Op.FPTrunc,
+      MSIR.Op.ZExt,   MSIR.Op.SExt, MSIR.Op.Trunc =>
+        (* Cast ops: one operand, typed result. No further v0 checks. *)
     | MSIR.Op.FieldAddr =>
         CheckFieldAddr(c, i);
     | MSIR.Op.ArrayElemAddr =>

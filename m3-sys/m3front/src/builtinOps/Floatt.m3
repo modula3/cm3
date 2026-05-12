@@ -10,6 +10,7 @@ MODULE Floatt;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Reel, LReel, EReel;
 IMPORT Int, LInt, Error, ReelExpr, TypeExpr;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -83,6 +84,45 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     END;
   END Fold;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e    := ce.args[0];
+    srcT := Type.Base (Expr.TypeOf (e));
+    dstT := TypeOf (ce);
+    blk  := MSIRBuilder.CurrentBlock ();
+    src  : MSIR.Value;
+    dst  : MSIR.T;
+    srcIsFloat := (srcT = Reel.T) OR (srcT = LReel.T) OR (srcT = EReel.T);
+    dstIsFloat := (dstT = Reel.T) OR (dstT = LReel.T) OR (dstT = EReel.T);
+  BEGIN
+    IF NOT dstIsFloat THEN
+      MSIRBuilder.Abandon ("FLOAT: unexpected dest type");
+      RETURN NIL;
+    END;
+    src := Expr.CompileMSIR (e);  IF src = NIL THEN RETURN NIL END;
+    dst := MSIRType.Translate (dstT);
+    IF dst = NIL THEN
+      MSIRBuilder.Abandon ("FLOAT: unsupported dest type in MSIR");
+      RETURN NIL;
+    END;
+    IF NOT srcIsFloat THEN
+      (* Integer → float: signed integer to floating-point *)
+      RETURN MSIR.BuildSIToFP (blk, "", src, dst);
+    ELSE
+      VAR srcBits := MSIR.BitWidth (MSIR.ValueType (src));
+          dstBits := MSIR.BitWidth (dst);
+      BEGIN
+        IF dstBits > srcBits THEN
+          RETURN MSIR.BuildFPExt (blk, "", src, dst);
+        ELSIF dstBits < srcBits THEN
+          RETURN MSIR.BuildFPTrunc (blk, "", src, dst);
+        ELSE
+          RETURN src;   (* same width, identity *)
+        END;
+      END;
+    END;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 2, TRUE, FALSE, TRUE, NIL,
@@ -101,6 +141,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("FLOAT", Z, TRUE);
   END Initialize;
 

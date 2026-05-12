@@ -196,15 +196,20 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR a, b: MSIR.Value;
+  VAR a, b: MSIR.Value;  blk: MSIR.Block;
   BEGIN
-    IF (p.class # Class.cINT) AND (p.class # Class.cLINT) THEN
-      MSIRBuilder.Abandon ("non-integer '-'");
-      RETURN NIL;
-    END;
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "", a, b);
+    blk := MSIRBuilder.CurrentBlock ();
+    CASE p.class OF
+    | Class.cINT, Class.cLINT, Class.cENUM =>
+        RETURN MSIR.BuildISub (blk, "", a, b);
+    | Class.cREAL, Class.cLONG, Class.cEXTND =>
+        RETURN MSIR.BuildFSub (blk, "", a, b);
+    ELSE
+      MSIRBuilder.Abandon ("unsupported '-' class");
+      RETURN NIL;
+    END;
   END CompileMSIR;
 
 PROCEDURE Fold (p: P): Expr.T =

@@ -110,13 +110,18 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR v: MSIR.Value;  t: MSIR.T;
+  VAR v: MSIR.Value;  t: MSIR.T;  k: MSIR.TypeKind;  blk: MSIR.Block;
   BEGIN
     v := Expr.CompileMSIR (p.a);
     IF v = NIL THEN RETURN NIL END;
-    t := MSIR.ValueType (v);
-    RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "",
-                           MSIR.ConstInt (t, 0L), v);
+    t   := MSIR.ValueType (v);
+    k   := MSIR.Kind (t);
+    blk := MSIRBuilder.CurrentBlock ();
+    IF (k = MSIR.TypeKind.F32) OR (k = MSIR.TypeKind.F64) THEN
+      RETURN MSIR.BuildFNeg (blk, "", v);
+    ELSE
+      RETURN MSIR.BuildISub (blk, "", MSIR.ConstInt (t, 0L), v);
+    END;
   END CompileMSIR;
 
 BEGIN

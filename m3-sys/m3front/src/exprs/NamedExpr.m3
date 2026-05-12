@@ -216,7 +216,7 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR constExpr: Expr.T;
+  VAR constExpr: Expr.T;  folded: Expr.T;
   BEGIN
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
@@ -224,15 +224,24 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         VAR v := MSIRBuilder.LookupVar (vv);
         BEGIN
           IF v = NIL THEN
+            Variable.RegisterExternMSIR (vv);
+            v := MSIRBuilder.LookupVar (vv);
+          END;
+          IF v = NIL THEN
             MSIRBuilder.Abandon ("unbound variable reference");
             RETURN NIL;
           END;
           RETURN v;
         END;
     ELSE
-      IF Value.ClassOf (p.value) = Value.Class.Expr THEN
-        constExpr := Value.ToExpr (p.value);
-        IF constExpr # NIL THEN RETURN Expr.CompileMSIR (constExpr) END;
+      CASE Value.ClassOf (p.value) OF
+      | Value.Class.Expr =>
+          constExpr := Value.ToExpr (p.value);
+          IF constExpr # NIL THEN RETURN Expr.CompileMSIR (constExpr) END;
+      | Value.Class.Procedure =>
+          folded := Fold (p);
+          IF folded # NIL THEN RETURN Expr.CompileMSIR (folded) END;
+      ELSE (* skip *)
       END;
       MSIRBuilder.Abandon ("named-expr value is not a Variable");
       RETURN NIL;
@@ -246,7 +255,14 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     | Variable.T(vv) =>
         VAR addr := MSIRBuilder.LookupVarAddr (vv);
         BEGIN
-          IF addr = NIL THEN RETURN NIL END;
+          IF addr = NIL THEN
+            Variable.RegisterExternMSIR (vv);
+            addr := MSIRBuilder.LookupVarAddr (vv);
+          END;
+          IF addr = NIL THEN
+            MSIRBuilder.Abandon ("named lvalue: unbound variable reference");
+            RETURN NIL;
+          END;
           RETURN addr;
         END;
     ELSE

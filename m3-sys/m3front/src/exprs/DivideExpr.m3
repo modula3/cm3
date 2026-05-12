@@ -10,6 +10,7 @@ MODULE DivideExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Reel, LReel, ErrType;
 IMPORT SetExpr, ReelExpr, SetType, EReel, Target;
+IMPORT MSIR, MSIRBuilder;
 
 CONST
   cREAL  = 0;
@@ -35,6 +36,7 @@ TYPE
         compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
+        compileMSIR  := CompileMSIR;
         evaluate     := Fold;
         isEqual      := ExprRep.EqCheckAB;
         getBounds    := ExprRep.NoBounds;
@@ -148,6 +150,14 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
     RETURN e3;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR a, b: MSIR.Value;
+  BEGIN
+    a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
+    b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildFDiv (MSIRBuilder.CurrentBlock (), "", a, b);
+  END CompileMSIR;
 
 BEGIN
 END DivideExpr.

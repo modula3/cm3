@@ -7,6 +7,8 @@
 
 INTERFACE MSIR;
 
+IMPORT Target;
+
 (*------------------------------------------------------------------- Types *)
 
 TYPE T <: REFANY;                     (* opaque MSIR type *)
@@ -95,13 +97,19 @@ PROCEDURE SetHi(t: T): LONGINT;
 
 TYPE Value <: REFANY;
 
-TYPE ValueKind = {ConstInt, ConstNil, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef,
+TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef,
                   StructFieldRef (* GEP into module's @Mod_M3_info struct *) };
 
 PROCEDURE ConstInt(t: T;  v: LONGINT): Value;
+PROCEDURE ConstFloat(t: T;  READONLY v: Target.Float): Value;
+PROCEDURE GetFloatVal(v: Value;  VAR f: Target.Float);  (* ConstFloat only *)
 PROCEDURE ConstBool(v: BOOLEAN): Value;
 PROCEDURE ConstNil(t: T): Value;      (* t must be Ptr / GcRef *)
 PROCEDURE ConstZero(t: T): Value;    (* zero / NIL / FALSE for scalars; NIL for unsupported types *)
+PROCEDURE ConstProcRef(p: Proc): Value;
+(* A pointer constant that represents the address of procedure p.
+   Type is TPtr(TVoid()); in LLVM this lowers to ptr @procname. *)
+PROCEDURE GetConstProc(v: Value): Proc;   (* ConstProc only *)
 PROCEDURE RetypeValue(v: Value; t: T): Value;
 PROCEDURE StructFieldRef(infoName: TEXT;  byteOffset: INTEGER;  t: T): Value;
 (* A ptr/GcSlot value computed as getelementptr i8, ptr @infoName, i64 byteOffset.
@@ -379,10 +387,12 @@ TYPE Insn <: REFANY;
 TYPE Op = {
   (* memory *)
   Alloca, Load, Store, GcLoad, GcStore, FieldAddr,
-  (* arithmetic *)
+  (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
+  (* float arithmetic *)
+  FAdd, FSub, FMul, FDiv, FNeg,
   (* compare *)
-  ICmp,
+  ICmp, FCmp,
   (* control *)
   Br, CondBr, Ret, Unreachable,
   UnwindTo, RetThroughEnvelope,        (* cross-envelope exits *)
@@ -402,8 +412,15 @@ TYPE Op = {
   ArrayElemAddr,
   (* runtime checks *)
   SubscriptCheck, NilCheck, RangeCheck,
-  (* representation conversion *)
+  (* type conversion / casting *)
   Convert,
+  SIToFP,     (* signed integer → float *)
+  FPToSI,     (* float → signed integer *)
+  FPExt,      (* float extension (narrower → wider) *)
+  FPTrunc,    (* float truncation (wider → narrower) *)
+  ZExt,       (* zero-extend integer *)
+  SExt,       (* sign-extend integer *)
+  Trunc,      (* integer truncation *)
   (* sets *)
   SetUnion, SetIntersect, SetDifference, SetMember,
   (* indirect dispatch *)
@@ -418,6 +435,14 @@ TYPE CmpPred = {
   Ult, Ule, Ugt, Uge
 };
 
+TYPE FCmpPred = {
+  OEq, ONe,   (* ordered: both not NaN *)
+  OLt, OLe, OGt, OGe,
+  ORd,        (* ordered: neither NaN *)
+  UNe,        (* unordered or not equal *)
+  ULt, ULe, UGt, UGe
+};
+
 PROCEDURE InsnOp(i: Insn): Op;
 PROCEDURE InsnResult(i: Insn): Value;        (* NIL if Void-typed *)
 PROCEDURE InsnOperandCount(i: Insn): INTEGER;
@@ -425,6 +450,7 @@ PROCEDURE InsnOperand(i: Insn;  k: INTEGER): Value;
 
 (* Some opcodes carry extra data that isn't an SSA operand: *)
 PROCEDURE InsnCmpPred(i: Insn): CmpPred;     (* ICmp only *)
+PROCEDURE InsnFCmpPred(i: Insn): FCmpPred;   (* FCmp only *)
 PROCEDURE InsnBrTarget(i: Insn;  k: INTEGER): Block;
                                              (* k=0 for Br, k∈{0,1} for CondBr *)
 PROCEDURE InsnBrArgCount(i: Insn;  k: INTEGER): INTEGER;
@@ -443,6 +469,22 @@ PROCEDURE BuildIMul(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIDiv(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIMod(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildICmp(b: Block;  name: TEXT;  pred: CmpPred;  x, y: Value): Value;
+
+PROCEDURE BuildFAdd(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildFSub(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildFMul(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildFDiv(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildFNeg(b: Block;  name: TEXT;  x: Value): Value;
+PROCEDURE BuildFCmp(b: Block;  name: TEXT;  pred: FCmpPred;  x, y: Value): Value;
+
+(* Type-converting casts — result type is supplied explicitly. *)
+PROCEDURE BuildSIToFP (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildFPToSI (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildFPExt  (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildFPTrunc(b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildZExt   (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildSExt   (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildTrunc  (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
 
 PROCEDURE BuildLoad (b: Block;  name: TEXT;  type: T;  addr: Value): Value;
 PROCEDURE BuildStore(b: Block;  value: Value;  addr: Value);

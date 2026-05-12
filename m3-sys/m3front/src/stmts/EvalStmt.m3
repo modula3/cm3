@@ -17,6 +17,7 @@ TYPE
         check       := Check;
         compile     := Compile;
         outcomes    := GetOutcome;
+        compileMSIR := CompileMSIR;
         capture  := Capture;
       END;
 
@@ -50,6 +51,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
+
+PROCEDURE CompileMSIR (p: P) =
+  BEGIN
+    EVAL Expr.CompileMSIR (p.e);
+  END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

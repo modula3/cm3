@@ -142,10 +142,6 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
-(* TRUE if the given procedure value represents a nested proc (level > 0).
-   Nested proc calls require EmitNestedCall to pass the static link. *)
-PROCEDURE IsNestedProc(v: Value.T): BOOLEAN;
-
 (* Emit a virtual method dispatch on a CM3 object reference.
    obj:  the receiver (gc_ref void or ptr — first word is the vtable pointer)
    midx: vtable slot index (= Method.Info.offset / Target.Address.size)

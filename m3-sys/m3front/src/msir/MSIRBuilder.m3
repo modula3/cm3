@@ -10,7 +10,7 @@ CONST MaxTryDepth  = 16;
 CONST MaxCatchDepth = 16;
 CONST MaxProcMap   = 128;
 CONST MaxGlobalMap  = 256;
-CONST MaxNestDepth  = 8;   (* maximum nesting depth for nested procs *)
+CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
    Each local maps to an alloca ptr (elemType = the allocated type). *)
@@ -507,14 +507,6 @@ PROCEDURE CurrentUnwindBlock(): MSIR.Block =
     IF tryDepth = 0 THEN RETURN NIL END;
     RETURN tryStack[tryDepth - 1];
   END CurrentUnwindBlock;
-
-PROCEDURE IsNestedProc(v: Value.T): BOOLEAN =
-  BEGIN
-    TYPECASE v OF
-    | Procedure.T(p) => RETURN Procedure.IsNested(p);
-    ELSE RETURN FALSE;
-    END;
-  END IsNestedProc;
 
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =

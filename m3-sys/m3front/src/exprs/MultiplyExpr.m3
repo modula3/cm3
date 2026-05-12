@@ -152,15 +152,20 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR a, b: MSIR.Value;
+  VAR a, b: MSIR.Value;  blk: MSIR.Block;
   BEGIN
-    IF (p.class # cINT) AND (p.class # cLINT) THEN
-      MSIRBuilder.Abandon ("non-integer '*'");
-      RETURN NIL;
-    END;
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildIMul (MSIRBuilder.CurrentBlock (), "", a, b);
+    blk := MSIRBuilder.CurrentBlock ();
+    CASE p.class OF
+    | cINT, cLINT =>
+        RETURN MSIR.BuildIMul (blk, "", a, b);
+    | cREAL, cLONG, cEXTND =>
+        RETURN MSIR.BuildFMul (blk, "", a, b);
+    ELSE
+      MSIRBuilder.Abandon ("unsupported '*' class");
+      RETURN NIL;
+    END;
   END CompileMSIR;
 
 PROCEDURE Fold (p: P): Expr.T =

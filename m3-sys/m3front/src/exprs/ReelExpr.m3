@@ -10,6 +10,7 @@ MODULE ReelExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Target, TInt, TFloat;
 IMPORT M3Buf, Reel, LReel, EReel, IntegerExpr;
+IMPORT MSIR, MSIRType;
 
 TYPE
   P = Expr.T OBJECT
@@ -25,6 +26,7 @@ TYPE
         compileLV    := ExprRep.NotLValueBool;
         prepBR       := ExprRep.NotBoolean;
         compileBR    := ExprRep.NotBoolean;
+        compileMSIR  := CompileMSIR;
         evaluate     := ExprRep.Self;
         isEqual      := EqCheck;
         getBounds    := ExprRep.NoBounds;
@@ -66,6 +68,13 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     <* ASSERT NOT StaticOnly *>
     CG.Load_float (p.val);
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR mt := MSIRType.Translate (p.type);
+  BEGIN
+    IF mt = NIL THEN RETURN NIL END;
+    RETURN MSIR.ConstFloat (mt, p.val);
+  END CompileMSIR;
 
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
   VAR x, y: Target.Float;

@@ -99,8 +99,15 @@ PROCEDURE Value(wr: Wr.T;  v: MSIR.Value) =
         Type(wr, MSIR.ValueType(v));
         Wr.PutText(wr, " ");
         Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
+    | MSIR.ValueKind.ConstFloat =>
+        Type(wr, MSIR.ValueType(v));
+        Wr.PutText(wr, " ");
+        Wr.PutText(wr, MSIR.ValueName(v));
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "nil");
+    | MSIR.ValueKind.ConstProc =>
+        Wr.PutText(wr, "ptr @");
+        Wr.PutText(wr, MSIR.ProcName(MSIR.GetConstProc(v)));
     | MSIR.ValueKind.ConstTextLit =>
         PrintQuotedText(wr, MSIR.GetTextLitChars(v), MSIR.GetTextLitCnt(v));
     | MSIR.ValueKind.StructFieldRef =>
@@ -123,8 +130,13 @@ PROCEDURE NameRef(wr: Wr.T;  v: MSIR.Value) =
     CASE MSIR.GetValueKind(v) OF
     | MSIR.ValueKind.ConstInt =>
         Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
+    | MSIR.ValueKind.ConstFloat =>
+        Wr.PutText(wr, MSIR.ValueName(v));
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "nil");
+    | MSIR.ValueKind.ConstProc =>
+        Wr.PutText(wr, "@");
+        Wr.PutText(wr, MSIR.ProcName(MSIR.GetConstProc(v)));
     | MSIR.ValueKind.ConstTextLit =>
         PrintQuotedText(wr, MSIR.GetTextLitChars(v), MSIR.GetTextLitCnt(v));
     | MSIR.ValueKind.StructFieldRef =>
@@ -152,6 +164,24 @@ PROCEDURE PredText(p: MSIR.CmpPred): TEXT =
     END;
   END PredText;
 
+PROCEDURE FCmpPredText(p: MSIR.FCmpPred): TEXT =
+  BEGIN
+    CASE p OF
+    | MSIR.FCmpPred.OEq => RETURN "oeq";
+    | MSIR.FCmpPred.ONe => RETURN "one";
+    | MSIR.FCmpPred.OLt => RETURN "olt";
+    | MSIR.FCmpPred.OLe => RETURN "ole";
+    | MSIR.FCmpPred.OGt => RETURN "ogt";
+    | MSIR.FCmpPred.OGe => RETURN "oge";
+    | MSIR.FCmpPred.ORd => RETURN "ord";
+    | MSIR.FCmpPred.UNe => RETURN "une";
+    | MSIR.FCmpPred.ULt => RETURN "ult";
+    | MSIR.FCmpPred.ULe => RETURN "ule";
+    | MSIR.FCmpPred.UGt => RETURN "ugt";
+    | MSIR.FCmpPred.UGe => RETURN "uge";
+    END;
+  END FCmpPredText;
+
 PROCEDURE OpText(op: MSIR.Op): TEXT =
   BEGIN
     CASE op OF
@@ -167,6 +197,12 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.IDiv               => RETURN "idiv";
     | MSIR.Op.IMod               => RETURN "imod";
     | MSIR.Op.ICmp               => RETURN "icmp";
+    | MSIR.Op.FAdd               => RETURN "fadd";
+    | MSIR.Op.FSub               => RETURN "fsub";
+    | MSIR.Op.FMul               => RETURN "fmul";
+    | MSIR.Op.FDiv               => RETURN "fdiv";
+    | MSIR.Op.FNeg               => RETURN "fneg";
+    | MSIR.Op.FCmp               => RETURN "fcmp";
     | MSIR.Op.Br                 => RETURN "br";
     | MSIR.Op.CondBr             => RETURN "cond_br";
     | MSIR.Op.Ret                => RETURN "ret";
@@ -191,6 +227,13 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.NilCheck           => RETURN "nil_check";
     | MSIR.Op.RangeCheck         => RETURN "range_check";
     | MSIR.Op.Convert            => RETURN "convert";
+    | MSIR.Op.SIToFP             => RETURN "sitofp";
+    | MSIR.Op.FPToSI             => RETURN "fptosi";
+    | MSIR.Op.FPExt              => RETURN "fpext";
+    | MSIR.Op.FPTrunc            => RETURN "fptrunc";
+    | MSIR.Op.ZExt               => RETURN "zext";
+    | MSIR.Op.SExt               => RETURN "sext";
+    | MSIR.Op.Trunc              => RETURN "trunc";
     | MSIR.Op.SetUnion           => RETURN "set_union";
     | MSIR.Op.SetIntersect       => RETURN "set_intersect";
     | MSIR.Op.SetDifference      => RETURN "set_difference";
@@ -247,9 +290,24 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
+    | MSIR.Op.FAdd, MSIR.Op.FSub, MSIR.Op.FMul, MSIR.Op.FDiv =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+    | MSIR.Op.FNeg =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
     | MSIR.Op.ICmp =>
         Wr.PutText(wr, " ");
         Wr.PutText(wr, PredText(MSIR.InsnCmpPred(i)));
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+    | MSIR.Op.FCmp =>
+        Wr.PutText(wr, " ");
+        Wr.PutText(wr, FCmpPredText(MSIR.InsnFCmpPred(i)));
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
@@ -416,6 +474,13 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, " to ");
         Type(wr, MSIR.InsnTargetType(i));
+    | MSIR.Op.SIToFP, MSIR.Op.FPToSI,
+      MSIR.Op.FPExt,  MSIR.Op.FPTrunc,
+      MSIR.Op.ZExt,   MSIR.Op.SExt, MSIR.Op.Trunc =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, " to ");
+        Type(wr, MSIR.ValueType(MSIR.InsnResult(i)));
     | MSIR.Op.SetUnion, MSIR.Op.SetIntersect,
       MSIR.Op.SetDifference, MSIR.Op.SetMember =>
         Wr.PutText(wr, " ");

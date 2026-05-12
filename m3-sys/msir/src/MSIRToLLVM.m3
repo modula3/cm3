@@ -1,7 +1,7 @@
 MODULE MSIRToLLVM;
 
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT M3RT, Target;
+IMPORT M3RT, Target, TFloat;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (*----------------------------------------------------- module-level state *)
@@ -143,6 +143,42 @@ PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
 
 (*------------------------------------------------------- value emission *)
 
+CONST HexDigit = ARRAY [0..15] OF CHAR {
+  '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+
+(* Emit a float constant as LLVM hex.
+   For float (32-bit): LLVM requires 0x + 16 hex chars of the 64-bit double
+   that has the same value (i.e., the float widened to double).
+   For double (64-bit): 0x + 16 hex chars of the 64-bit IEEE pattern.
+   We use TFloat.ToBytes to get little-endian bytes, then emit big-endian hex. *)
+PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
+  VAR
+    f    : Target.Float;
+    buf  : ARRAY [0..15] OF TFloat.Byte;
+    nBytes : INTEGER;
+    dbuf : ARRAY [0..7] OF TFloat.Byte;  (* always 8 bytes for LLVM *)
+  BEGIN
+    MSIR.GetFloatVal(v, f);
+    nBytes := TFloat.ToBytes(f, buf);
+    (* Zero-extend to 8 bytes. For 4-byte REAL, we widen to the 8-byte IEEE
+       double with the same value by letting clang/LLVM do the right thing:
+       emit 0x + 8 zero-padded digits for the 32-bit pattern.
+       LLVM accepts 0xHHHHHHHH (8 hex = 4 bytes) for float literals. *)
+    FOR i := 0 TO 7 DO dbuf[i] := 0 END;
+    FOR i := 0 TO nBytes - 1 DO dbuf[i] := buf[i] END;
+    Wr.PutText(wr, "0x");
+    (* Big-endian hex: most-significant byte first. *)
+    FOR i := nBytes - 1 TO 0 BY -1 DO
+      Wr.PutChar(wr, HexDigit[Word.And(Word.RightShift(dbuf[i], 4), 16_f)]);
+      Wr.PutChar(wr, HexDigit[Word.And(dbuf[i], 16_f)]);
+    END;
+    (* If 32-bit float: pad remaining 8 hex digits with zeros so LLVM sees
+       a valid 16-hex-digit constant (float 0xHHHHHHHH00000000). *)
+    FOR i := nBytes TO 7 DO
+      Wr.PutText(wr, "00");
+    END;
+  END EmitFloatHex;
+
 (* Emit just the LLVM name/constant for a value (no type prefix). *)
 PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
   BEGIN
@@ -150,8 +186,13 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     CASE MSIR.GetValueKind(v) OF
     | MSIR.ValueKind.ConstInt =>
         Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
+    | MSIR.ValueKind.ConstFloat =>
+        EmitFloatHex(wr, v);
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "null");
+    | MSIR.ValueKind.ConstProc =>
+        Wr.PutText(wr, "@");
+        Wr.PutText(wr, LLSymbol(MSIR.GetConstProc(v)));
     | MSIR.ValueKind.ConstTextLit =>
         (* Emit as a constant-expression GEP: no separate instruction needed. *)
         Wr.PutText(wr, "getelementptr inbounds (i8, ptr @textlit_");
@@ -425,6 +466,24 @@ PROCEDURE CmpPredText(p: MSIR.CmpPred): TEXT =
     END;
   END CmpPredText;
 
+PROCEDURE FCmpPredText(p: MSIR.FCmpPred): TEXT =
+  BEGIN
+    CASE p OF
+    | MSIR.FCmpPred.OEq => RETURN "oeq";
+    | MSIR.FCmpPred.ONe => RETURN "one";
+    | MSIR.FCmpPred.OLt => RETURN "olt";
+    | MSIR.FCmpPred.OLe => RETURN "ole";
+    | MSIR.FCmpPred.OGt => RETURN "ogt";
+    | MSIR.FCmpPred.OGe => RETURN "oge";
+    | MSIR.FCmpPred.ORd => RETURN "ord";
+    | MSIR.FCmpPred.UNe => RETURN "une";
+    | MSIR.FCmpPred.ULt => RETURN "ult";
+    | MSIR.FCmpPred.ULe => RETURN "ule";
+    | MSIR.FCmpPred.UGt => RETURN "ugt";
+    | MSIR.FCmpPred.UGe => RETURN "uge";
+    END;
+  END FCmpPredText;
+
 PROCEDURE EmitBinop(wr: Wr.T;  llop: TEXT;  res, a, b: MSIR.Value) =
   BEGIN
     Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & llop & " ");
@@ -509,9 +568,29 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.ISub => EmitBinop(wr, "sub",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
     | MSIR.Op.IMul => EmitBinop(wr, "mul",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
 
+    | MSIR.Op.FAdd => EmitBinop(wr, "fadd", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.FSub => EmitBinop(wr, "fsub", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.FMul => EmitBinop(wr, "fmul", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.FDiv => EmitBinop(wr, "fdiv", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.FNeg =>
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = fneg ");
+        LLTypedVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, "\n");
+
     | MSIR.Op.ICmp =>
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = icmp ");
         Wr.PutText(wr, CmpPredText(MSIR.InsnCmpPred(i)));
+        Wr.PutText(wr, " ");
+        LLType(wr, MSIR.ValueType(MSIR.InsnOperand(i, 0)));
+        Wr.PutText(wr, " ");
+        LLOpVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        LLOpVal(wr, MSIR.InsnOperand(i, 1));
+        Wr.PutText(wr, "\n");
+
+    | MSIR.Op.FCmp =>
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = fcmp ");
+        Wr.PutText(wr, FCmpPredText(MSIR.InsnFCmpPred(i)));
         Wr.PutText(wr, " ");
         LLType(wr, MSIR.ValueType(MSIR.InsnOperand(i, 0)));
         Wr.PutText(wr, " ");
@@ -758,6 +837,31 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             END;
           END;
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & convOp & " ");
+          LLTypedVal(wr, src);
+          Wr.PutText(wr, " to ");
+          LLType(wr, dstT);
+          Wr.PutText(wr, "\n");
+        END;
+
+    | MSIR.Op.SIToFP, MSIR.Op.FPToSI,
+      MSIR.Op.FPExt,  MSIR.Op.FPTrunc,
+      MSIR.Op.ZExt,   MSIR.Op.SExt, MSIR.Op.Trunc =>
+        VAR
+          src    := MSIR.InsnOperand(i, 0);
+          dstT   := MSIR.ValueType(res);
+          llop   : TEXT;
+        BEGIN
+          CASE MSIR.InsnOp(i) OF
+          | MSIR.Op.SIToFP  => llop := "sitofp";
+          | MSIR.Op.FPToSI  => llop := "fptosi";
+          | MSIR.Op.FPExt   => llop := "fpext";
+          | MSIR.Op.FPTrunc => llop := "fptrunc";
+          | MSIR.Op.ZExt    => llop := "zext";
+          | MSIR.Op.SExt    => llop := "sext";
+          | MSIR.Op.Trunc   => llop := "trunc";
+          ELSE                  llop := "bitcast";
+          END;
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & llop & " ");
           LLTypedVal(wr, src);
           Wr.PutText(wr, " to ");
           LLType(wr, dstT);

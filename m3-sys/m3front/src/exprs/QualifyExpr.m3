@@ -805,6 +805,15 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
   BEGIN
     Resolve (p);
     CASE p.class OF
+    | Class.importDecl =>
+        TYPECASE p.rhsValue OF
+        | Variable.T (v) =>
+            Variable.RegisterExternMSIR (v);
+            RETURN MSIRBuilder.LookupVarAddr (v);
+        ELSE
+          MSIRBuilder.Abandon ("importDecl lvalue: unsupported value class");
+          RETURN NIL;
+        END;
     | Class.recField =>
         baseAddr := Expr.LValueMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
@@ -880,6 +889,26 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   BEGIN
     Resolve (p);
     CASE p.class OF
+    | Class.importDecl =>
+        (* Module.X: look up the exported entity in its owning module.
+           For Variable: register as extern global on demand, then look up. *)
+        TYPECASE p.rhsValue OF
+        | Variable.T (v) =>
+            Variable.RegisterExternMSIR (v);
+            VAR val := MSIRBuilder.LookupVar (v);
+            BEGIN
+              IF val = NIL THEN
+                MSIRBuilder.Abandon ("importDecl: variable not in global map");
+                RETURN NIL;
+              END;
+              RETURN val;
+            END;
+        ELSE
+            folded := Fold (p);
+            IF folded # NIL THEN RETURN Expr.CompileMSIR (folded) END;
+            MSIRBuilder.Abandon ("importDecl: unsupported value class");
+            RETURN NIL;
+        END;
     | Class.recField =>
         addr := LValueMSIR (p);
         IF addr = NIL THEN RETURN NIL END;

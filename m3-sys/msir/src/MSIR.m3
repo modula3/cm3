@@ -2,7 +2,7 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text, Target, M3RT;
+IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -194,12 +194,8 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
     | TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot =>
         RETURN Equal(a.elt, b.elt);
     | TypeKind.Struct =>
-        IF Text.Equal(a.structName, b.structName) THEN RETURN TRUE END;
-        (* Both named and different: distinct types. *)
-        IF Text.Length(a.structName) > 0 AND Text.Length(b.structName) > 0 THEN
-          RETURN FALSE
-        END;
-        (* At least one is anonymous (inferred-type variable): compare structurally. *)
+        (* Always compare structurally: struct names are cosmetic.
+           BITS X FOR T produces a different name than T but identical layout. *)
         IF a.fields = NIL AND b.fields = NIL THEN RETURN TRUE END;
         IF a.fields = NIL OR b.fields = NIL THEN RETURN FALSE END;
         IF NUMBER(a.fields^) # NUMBER(b.fields^) THEN RETURN FALSE END;
@@ -338,7 +334,8 @@ REVEAL Value = BRANDED "MSIR.Value" REF RECORD
   name:        TEXT       := NIL;
   vKind:       ValueKind;
   intVal:      LONGINT    := 0L;
-  proc:        Proc       := NIL;     (* Param *)
+  floatVal:    Target.Float;           (* ConstFloat *)
+  proc:        Proc       := NIL;     (* Param, ConstProc *)
   paramIdx:    INTEGER    := -1;
   block:       Block      := NIL;     (* BlockParam *)
   bparamIdx:   INTEGER    := -1;
@@ -374,6 +371,39 @@ PROCEDURE ConstNil(t: T): Value =
     RETURN val;
   END ConstNil;
 
+PROCEDURE ConstFloat(t: T;  READONLY v: Target.Float): Value =
+  VAR val := NEW(Value);
+      buf : ARRAY [0..63] OF CHAR;
+      len : INTEGER;
+  BEGIN
+    val.type     := t;
+    val.vKind    := ValueKind.ConstFloat;
+    val.floatVal := v;
+    len := TFloat.ToChars(v, buf);
+    val.name := Text.FromChars(SUBARRAY(buf, 0, len));
+    RETURN val;
+  END ConstFloat;
+
+PROCEDURE GetFloatVal(v: Value;  VAR f: Target.Float) =
+  BEGIN
+    f := v.floatVal;
+  END GetFloatVal;
+
+PROCEDURE ConstProcRef(p: Proc): Value =
+  VAR val := NEW(Value);
+  BEGIN
+    val.type  := TPtr(TVoid());
+    val.vKind := ValueKind.ConstProc;
+    val.proc  := p;
+    val.name  := "@" & ProcName(p);
+    RETURN val;
+  END ConstProcRef;
+
+PROCEDURE GetConstProc(v: Value): Proc =
+  BEGIN
+    RETURN v.proc;
+  END GetConstProc;
+
 PROCEDURE ConstZero(t: T): Value =
   BEGIN
     CASE Kind(t) OF
@@ -383,6 +413,8 @@ PROCEDURE ConstZero(t: T): Value =
       TypeKind.W8, TypeKind.W16,
       TypeKind.W32, TypeKind.W64        => RETURN ConstInt(t, 0L);
     | TypeKind.Ptr, TypeKind.GcRef       => RETURN ConstNil(t);
+    | TypeKind.F32                       => RETURN ConstFloat(t, TFloat.ZeroR);
+    | TypeKind.F64                       => RETURN ConstFloat(t, TFloat.ZeroL);
     ELSE                                   RETURN NIL;
     END;
   END ConstZero;
@@ -442,6 +474,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
 
   (* opcode-specific extras *)
   cmpPred:   CmpPred;
+  fcmpPred:  FCmpPred;
   br0Tgt:    Block := NIL;
   br0Args:   REF ARRAY OF Value := NIL;
   br1Tgt:    Block := NIL;
@@ -465,6 +498,8 @@ PROCEDURE InsnOperand(i: Insn; k: INTEGER): Value =
   BEGIN RETURN i.operands[k] END InsnOperand;
 PROCEDURE InsnCmpPred(i: Insn): CmpPred =
   BEGIN RETURN i.cmpPred END InsnCmpPred;
+PROCEDURE InsnFCmpPred(i: Insn): FCmpPred =
+  BEGIN RETURN i.fcmpPred END InsnFCmpPred;
 PROCEDURE InsnBrTarget(i: Insn; k: INTEGER): Block =
   BEGIN
     IF k = 0 THEN RETURN i.br0Tgt ELSE RETURN i.br1Tgt END;
@@ -1171,6 +1206,70 @@ PROCEDURE BuildICmp(b: Block; name: TEXT; pred: CmpPred; x, y: Value): Value =
     addInsn(b, i);
     RETURN i.result;
   END BuildICmp;
+
+PROCEDURE BuildFAdd(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.FAdd, name, x, y) END BuildFAdd;
+PROCEDURE BuildFSub(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.FSub, name, x, y) END BuildFSub;
+PROCEDURE BuildFMul(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.FMul, name, x, y) END BuildFMul;
+PROCEDURE BuildFDiv(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.FDiv, name, x, y) END BuildFDiv;
+
+PROCEDURE BuildFNeg(b: Block; name: TEXT; x: Value): Value =
+  VAR
+    i := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    i.op := Op.FNeg;
+    ops[0] := x;
+    i.operands := ops;
+    i.result := makeResult(b, x.type, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildFNeg;
+
+PROCEDURE BuildFCmp(b: Block; name: TEXT; pred: FCmpPred; x, y: Value): Value =
+  VAR
+    i := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 2);
+  BEGIN
+    i.op := Op.FCmp;
+    i.fcmpPred := pred;
+    ops[0] := x; ops[1] := y;
+    i.operands := ops;
+    i.result := makeResult(b, TI1(), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildFCmp;
+
+PROCEDURE buildCast(b: Block;  op: Op;  name: TEXT;  x: Value;  dstType: T): Value =
+  VAR
+    i   := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    i.op      := op;
+    ops[0]    := x;
+    i.operands := ops;
+    i.result  := makeResult(b, dstType, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END buildCast;
+
+PROCEDURE BuildSIToFP (b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.SIToFP,  name, x, dstType) END BuildSIToFP;
+PROCEDURE BuildFPToSI (b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.FPToSI,  name, x, dstType) END BuildFPToSI;
+PROCEDURE BuildFPExt  (b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.FPExt,   name, x, dstType) END BuildFPExt;
+PROCEDURE BuildFPTrunc(b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.FPTrunc, name, x, dstType) END BuildFPTrunc;
+PROCEDURE BuildZExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.ZExt,    name, x, dstType) END BuildZExt;
+PROCEDURE BuildSExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.SExt,    name, x, dstType) END BuildSExt;
+PROCEDURE BuildTrunc  (b: Block; name: TEXT; x: Value; dstType: T): Value =
+  BEGIN RETURN buildCast(b, Op.Trunc,   name, x, dstType) END BuildTrunc;
 
 PROCEDURE BuildLoad(b: Block; name: TEXT; type: T; addr: Value): Value =
   VAR

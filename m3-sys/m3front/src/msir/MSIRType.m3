@@ -76,6 +76,9 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
     | Type.Class.OpenArray =>
         RETURN TranslateOpenArray(base);
 
+    | Type.Class.Procedure =>
+        RETURN MSIR.TPtr(MSIR.TVoid());   (* function pointer, opaque *)
+
     | Type.Class.Object, Type.Class.Opaque =>
         (* Conservative: all object and opaque types are traced references.
            Vtable-aware typed descriptors are future work. *)

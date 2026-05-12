@@ -7,10 +7,10 @@
 (*      modified on Tue Oct 10 18:42:24 1989 by muller         *)
 
 MODULE ProcExpr;
-(* A PROCEDURE constant. *) 
+(* A PROCEDURE constant. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Value, Procedure, M3Buf;
-IMPORT Scope;
+IMPORT Scope, MSIR, MSIRBuilder;
 
 TYPE
   P = Expr.T OBJECT
@@ -36,6 +36,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (proc: Value.T): Expr.T =
@@ -113,6 +114,18 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T;
   BEGIN
     CG.Init_proc (offset, Procedure.CGName (p.proc), is_const);
   END GenLiteral;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    procType := Type.Base (Expr.TypeOf (p));
+    msirProc := MSIRBuilder.LookupOrCreateProc (p.proc, procType);
+  BEGIN
+    IF msirProc = NIL THEN
+      MSIRBuilder.Abandon ("ProcExpr: cannot get MSIR proc");
+      RETURN NIL;
+    END;
+    RETURN MSIR.ConstProcRef (msirProc);
+  END CompileMSIR;
 
 BEGIN
 END ProcExpr.
