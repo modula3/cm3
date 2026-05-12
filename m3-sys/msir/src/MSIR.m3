@@ -745,6 +745,8 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   textLitHooks : ARRAY [0..4] OF Proc;
   (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
      3=TextLitGetChars 4=TextLitGetWideChars — NIL = not yet registered *)
+  typeLinks    : REF ARRAY OF TypeLink := NIL;
+  nTypeLinks   : INTEGER               := 0;
 END;
 
 
@@ -863,6 +865,8 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   dataOffset    : INTEGER;  (* OBJ: field region byte offset *)
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
+  nDimensions   : INTEGER := 0;  (* Array: open array rank *)
+  elementSize   : INTEGER := 0;  (* Array: element byte size *)
   ptrVal        : Value := NIL;
 END;
 
@@ -917,6 +921,13 @@ PROCEDURE TypeDescMethodCount(d: TypeDesc): INTEGER =
 PROCEDURE TypeDescMethod(d: TypeDesc; i: INTEGER): TEXT =
   BEGIN RETURN d.methods[i] END TypeDescMethod;
 
+PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER) =
+  BEGIN d.nDimensions := nDimensions;  d.elementSize := elementSize END TypeDescSetArrayInfo;
+PROCEDURE TypeDescNDimensions(d: TypeDesc): INTEGER =
+  BEGIN RETURN d.nDimensions END TypeDescNDimensions;
+PROCEDURE TypeDescElementSize(d: TypeDesc): INTEGER =
+  BEGIN RETURN d.elementSize END TypeDescElementSize;
+
 PROCEDURE TypeCellRef (name: TEXT): Value =
   VAR v := NEW(Value);
   BEGIN
@@ -962,6 +973,45 @@ PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
   BEGIN
     RETURN ConstTextLit(uid, NIL, 0);
   END BuildTextLiteralRef;
+
+(*---------------------------------------------- type links (cell_ptrs) *)
+
+REVEAL TypeLink = BRANDED "MSIR.TypeLink" REF RECORD
+  name : TEXT;
+  uid  : LONGINT;
+END;
+
+PROCEDURE NewTypeLink(name: TEXT; uid: LONGINT): TypeLink =
+  VAR tl := NEW(TypeLink);
+  BEGIN tl.name := name; tl.uid := uid; RETURN tl END NewTypeLink;
+
+PROCEDURE TypeLinkName(tl: TypeLink): TEXT =
+  BEGIN RETURN tl.name END TypeLinkName;
+
+PROCEDURE TypeLinkUID(tl: TypeLink): LONGINT =
+  BEGIN RETURN tl.uid END TypeLinkUID;
+
+PROCEDURE ModuleAddTypeLink(m: Module; tl: TypeLink) =
+  BEGIN
+    IF m.typeLinks = NIL OR m.nTypeLinks >= NUMBER(m.typeLinks^) THEN
+      VAR n  := MAX(8, 2 * m.nTypeLinks);
+          nb := NEW(REF ARRAY OF TypeLink, n);
+      BEGIN
+        IF m.typeLinks # NIL THEN
+          SUBARRAY(nb^, 0, m.nTypeLinks) := SUBARRAY(m.typeLinks^, 0, m.nTypeLinks);
+        END;
+        m.typeLinks := nb;
+      END;
+    END;
+    m.typeLinks[m.nTypeLinks] := tl;
+    INC(m.nTypeLinks);
+  END ModuleAddTypeLink;
+
+PROCEDURE ModuleTypeLinkCount(m: Module): INTEGER =
+  BEGIN RETURN m.nTypeLinks END ModuleTypeLinkCount;
+
+PROCEDURE ModuleTypeLink(m: Module; i: INTEGER): TypeLink =
+  BEGIN RETURN m.typeLinks[i] END ModuleTypeLink;
 
 PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT) =
   BEGIN

@@ -437,6 +437,17 @@ PROCEDURE AllocPair (a, b: INTEGER): INTEGER =
     RETURN r^.x + r^.y;
   END AllocPair;
 
+(* NEW(REF ARRAY OF INTEGER, n): allocate, store elem 0, return it. *)
+TYPE IntArrRef = REF ARRAY OF INTEGER;
+
+PROCEDURE AllocIntArr (n: INTEGER): INTEGER =
+  VAR r: IntArrRef;
+  BEGIN
+    r := NEW(IntArrRef, n);
+    r^[0] := n * 2;
+    RETURN r^[0];
+  END AllocIntArr;
+
 (* NEW: allocate a Square object, set the side field, return side*side. *)
 PROCEDURE AllocSquare (side: INTEGER): INTEGER =
   VAR s: Square;

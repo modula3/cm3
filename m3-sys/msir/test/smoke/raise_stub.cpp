@@ -37,12 +37,17 @@ extern "C" void *RTAllocator_M3(long)  { return nullptr; }
 
 /* Stub for RTHooks__AllocateTracedRef: allocates dataSize bytes via malloc
    and returns a pointer to the data area (skipping a fake 8-byte header).
-   Not GC-managed; safe for short-lived harness tests. */
+   Not GC-managed; safe for short-lived harness tests.
+   typeDescr may be null for foreign types whose TypeLink was not resolved
+   by MSIR_InitTypeLinks; fall back to allocating 64 bytes in that case. */
 extern "C" void *RTHooks__AllocateTracedRef(void *typeDescr) {
-    /* TC_dataSize is at byte offset 32 of the TypeCell. */
-    long *tc = (long *)typeDescr;
-    long dataSize = tc[4];  /* byte 32 / sizeof(long) = index 4 */
-    if (dataSize <= 0) dataSize = 8;
+    long dataSize = 64;  /* safe fallback for unresolved TypeLinks */
+    if (typeDescr) {
+        /* TC_dataSize is at byte offset 32 of the TypeCell. */
+        long *tc = (long *)typeDescr;
+        dataSize = tc[4];  /* byte 32 / sizeof(long) = index 4 */
+        if (dataSize <= 0) dataSize = 8;
+    }
     char *mem = (char *)calloc(1, (size_t)(dataSize + 8));
     return mem + 8;  /* skip fake header */
 }
@@ -50,17 +55,55 @@ extern "C" void *RTHooks__AllocateTracedRef(void *typeDescr) {
 /* Stub for RTHooks__AllocateTracedObj: allocates vtable-ptr + dataSize bytes,
    then mirrors RTAllocator.InitObj by storing OTC_defaultMethods as the vtable.
    TC_dataSize is at byte 32 (long index 4).
-   OTC_defaultMethods is at byte 136 (long index 17). */
+   OTC_defaultMethods is at byte 136 (long index 17).
+   typeDescr may be null for foreign types (unresolved TypeLink); fall back to
+   allocating 64 bytes with a null vtable. */
 extern "C" void *RTHooks__AllocateTracedObj(void *typeDescr) {
-    long *tc = (long *)typeDescr;
-    long dataSize = tc[4];          /* TC_dataSize */
-    if (dataSize < 0) dataSize = 0;
-    void *defaultMethods = (void *)tc[17];  /* OTC_defaultMethods */
+    long dataSize = 64;  /* safe fallback */
+    void *defaultMethods = nullptr;
+    if (typeDescr) {
+        long *tc = (long *)typeDescr;
+        dataSize = tc[4];          /* TC_dataSize */
+        if (dataSize < 0) dataSize = 0;
+        defaultMethods = (void *)tc[17];  /* OTC_defaultMethods */
+    }
     size_t total = (size_t)(8 + 8 + dataSize);  /* fake-header + vtable + fields */
     char *mem = (char *)calloc(1, total);
     char *obj = mem + 8;            /* skip fake GC header */
     *(void **)obj = defaultMethods; /* InitObj: obj[0] = vtable ptr */
     return obj;
+}
+
+/* Stub for RTHooks__AllocateOpenArray (= RTHooks.NewTracedArray).
+   Signature: (void *typeDescr, void *sizesStruct) -> void*
+   sizesStruct layout (matches M3 OA sizes convention):
+     byte  0: ptr  -> first dimension value (= &sizesStruct + 16)
+     byte  8: i64  -> number of dimensions
+     byte 16: i64  -> dimension 0 size
+   ATC layout: nDimensions at byte 96 (long[12]), elementSize at byte 104 (long[13]).
+   typeDescr may be null for foreign types (unresolved TypeLink); fall back to
+   elemSize=8 in that case. */
+extern "C" void *RTHooks__AllocateOpenArray(void *typeDescr, void *sizesStruct) {
+    long *sizes = (long *)sizesStruct;
+    long elemSize = 8;  /* safe fallback for unresolved TypeLinks */
+    if (typeDescr) {
+        long *tc = (long *)typeDescr;
+        elemSize = tc[13];          /* ATC_elementSize at byte 104 */
+        if (elemSize <= 0) elemSize = 8;
+    }
+    long ndims = sizes[1];           /* OA_size_0 at byte 8 */
+    long dim0  = (ndims >= 1) ? sizes[2] : 0;  /* OA_size_1 at byte 16 */
+    if (dim0 < 0) dim0 = 0;
+    /* Dope vector: { ptr data, i64 dim0 [, i64 dim1 ...] } */
+    long dopeSize = 8 + 8 * ndims;   /* ptr (8) + ndims * i64 (8 each) */
+    long elemTotal = dim0 * elemSize;
+    /* Allocate: fake GC header (8) + dope vector + element storage */
+    char *mem  = (char *)calloc(1, 8 + (size_t)(dopeSize + elemTotal));
+    char *dope = mem + 8;            /* skip fake GC header */
+    char *elems = dope + dopeSize;   /* element storage follows dope */
+    *(void **)dope = elems;          /* data_ptr field of dope vector */
+    *((long *)(dope + 8)) = dim0;    /* dimension 0 count */
+    return dope;                     /* GcRef value = ptr to dope vector */
 }
 
 /* Stub out ALL of RTHooks_m.o's symbols to prevent the archive member from

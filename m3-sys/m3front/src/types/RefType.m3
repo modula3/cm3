@@ -312,20 +312,47 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
 
 PROCEDURE InitTypecellMSIR (t: Type.T) =
   VAR
-    info  : Type.Info;
-    rinfo : Type.Info;
-    r     : Type.T;
+    info     : Type.Info;
+    rinfo    : Type.Info;
+    r        : Type.T;
+    ta       : Type.T;
+    dims     : INTEGER;
+    elemSize : INTEGER;
+    dopeSize : INTEGER;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     EVAL Type.CheckInfo (t, info);
     IF NOT Split (t, r) THEN RETURN END;
     r := Type.StripPacked (r);
     EVAL Type.CheckInfo (r, rinfo);
-    EVAL MSIRBuilder.TypeDescValueForRef (
-           t,
-           rinfo.size DIV Target.Char.size,
-           rinfo.alignment,
-           info.isTraced);
+    ta   := Type.Base (r);
+    dims := OpenArrayType.OpenDepth (ta);
+    IF dims > 0 THEN
+      (* ATC: compute dope-vector size and element size exactly as InitTypecell does *)
+      dopeSize := Target.Address.size;
+      WITH ia = Target.Integer.align DO
+        dopeSize := ((dopeSize + ia - 1) DIV ia) * ia;
+        INC (dopeSize, Target.Integer.size * dims);
+      END;
+      WITH aa = info.addr_align DO
+        dopeSize := ((dopeSize + aa - 1) DIV aa) * aa;
+      END;
+      elemSize := OpenArrayType.EltPack (ta);
+      IF elemSize < Target.Byte THEN elemSize := Target.Byte END;
+      EVAL MSIRBuilder.TypeDescValueForRefArray (
+             t,
+             dopeSize DIV Target.Char.size,
+             rinfo.alignment,
+             dims,
+             elemSize DIV Target.Byte,
+             info.isTraced);
+    ELSE
+      EVAL MSIRBuilder.TypeDescValueForRef (
+             t,
+             rinfo.size DIV Target.Char.size,
+             rinfo.alignment,
+             info.isTraced);
+    END;
   END InitTypecellMSIR;
 
 PROCEDURE GenTypeMap (p: P;  refs_only: BOOLEAN): INTEGER =

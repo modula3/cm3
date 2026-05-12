@@ -1141,12 +1141,15 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
     Wr.PutText(wr, "%TC_t  = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
     Wr.PutText(wr, "%OTC_t = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, ptr, i64, i64, i64, ptr, ptr }\n");
+    Wr.PutText(wr, "%ATC_t = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, i64 }\n");
 
     FOR k := 0 TO n - 1 DO
       VAR
         d       := MSIR.ModuleTypeDesc(m, k);
         nm      := MSIR.TypeDescName(d);
-        isObj   := MSIR.TypeDescKind(d) = ORD(M3RT.TypeKind.Obj);
+        knd     := MSIR.TypeDescKind(d);
+        isObj   := knd = ORD(M3RT.TypeKind.Obj);
+        isArr   := knd = ORD(M3RT.TypeKind.Array);
         nextVal : TEXT;
       BEGIN
         (* next pointer: chain TypeCells for MI_type_cells list *)
@@ -1194,6 +1197,22 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           END;
           Wr.PutText(wr, "  ptr null\n");  (* parent TypeCell *)
           Wr.PutText(wr, "}\n");
+        ELSIF isArr THEN
+          (* ArrayTypeCell: plain TC fields + nDimensions + elementSize *)
+          Wr.PutText(wr, "@" & nm & " = internal global %ATC_t {\n");
+          Wr.PutText(wr, "  i64 0,\n");  (* typecode *)
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
+          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
+          Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
+          Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dopeSize *)
+          Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
+          Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescNDimensions(d)) & ",\n"); (* nDimensions *)
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescElementSize(d)) & "\n");  (* elementSize *)
+          Wr.PutText(wr, "}\n");
         ELSE
           (* Plain TypeCell (REF, etc.) *)
           Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
@@ -1212,6 +1231,91 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
   END EmitTypeCells;
+
+(*----------------------------------------------- TypeLink / cell_ptrs emission *)
+
+(* Emit TypeLink globals (MI_type_cell_ptrs chain) and MSIR_InitTypeLinks.
+   Each TypeLink is a { ptr defn, i64 uid } global.
+   Chain: TypeLink[0].defn = null (terminus), TypeLink[k].defn = &TypeLink[k-1].
+   MI_type_cell_ptrs points to TypeLink[n-1] (head).
+   MSIR_InitTypeLinks is a harness helper: for each TypeLink that has a matching
+   TypeDesc (same uid and kind prefix), stores the TypeCell address into defn. *)
+PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
+  VAR
+    nLinks := MSIR.ModuleTypeLinkCount(m);
+    nDescs := MSIR.ModuleTypeDescCount(m);
+  BEGIN
+    IF nLinks = 0 THEN
+      (* Emit a no-op MSIR_InitTypeLinks so the harness always links. *)
+      Wr.PutText(wr, "\ndefine void @MSIR_InitTypeLinks() {\n");
+      Wr.PutText(wr, "entry:\n");
+      Wr.PutText(wr, "  ret void\n");
+      Wr.PutText(wr, "}\n");
+      RETURN;
+    END;
+
+    Wr.PutText(wr, "\n; TypeLink globals (MI_type_cell_ptrs chain)\n");
+    Wr.PutText(wr, "%TypeLink_t = type { ptr, i64 }\n");
+
+    (* Emit each TypeLink global.
+       TypeLink[0].defn = null (chain terminus).
+       TypeLink[k].defn = ptr @TypeLink[k-1] for k >= 1. *)
+    FOR k := 0 TO nLinks - 1 DO
+      VAR
+        tl   := MSIR.ModuleTypeLink(m, k);
+        nm   := MSIR.TypeLinkName(tl);
+        uid  := MSIR.TypeLinkUID(tl);
+        prev : TEXT;
+      BEGIN
+        IF k = 0
+          THEN prev := "ptr null";
+          ELSE prev := "ptr @" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, k-1));
+        END;
+        Wr.PutText(wr, "@" & nm & " = internal global %TypeLink_t { "
+                       & prev & ", i64 " & Fmt.LongInt(uid) & " }\n");
+      END;
+    END;
+
+    (* Emit MSIR_InitTypeLinks: for each TypeLink, if a TypeDesc with
+       matching uid and kind exists, store the TypeCell address into defn. *)
+    Wr.PutText(wr, "\ndefine void @MSIR_InitTypeLinks() {\n");
+    Wr.PutText(wr, "entry:\n");
+    FOR k := 0 TO nLinks - 1 DO
+      VAR
+        tl   := MSIR.ModuleTypeLink(m, k);
+        nm   := MSIR.TypeLinkName(tl);
+        uid  := MSIR.TypeLinkUID(tl);
+        tcNm : TEXT := NIL;
+      BEGIN
+        FOR j := 0 TO nDescs - 1 DO
+          VAR d := MSIR.ModuleTypeDesc(m, j);
+          BEGIN
+            IF MSIR.TypeDescUID(d) = uid THEN
+              (* Match TypeLink prefix to TypeDesc kind prefix:
+                 tl_ref_ -> tc_ref_, tl_arr_ -> tc_arr_, tl_obj_ -> tc_obj_ *)
+              IF Text.Length(nm) >= 6 AND Text.Length(MSIR.TypeDescName(d)) >= 6 THEN
+                VAR prefix := Text.Sub(nm, 0, 6);
+                    dn     := MSIR.TypeDescName(d);
+                    dnpfx  := Text.Sub(dn, 0, 6);
+                BEGIN
+                  IF (Text.Equal(prefix, "tl_ref") AND Text.Equal(dnpfx, "tc_ref"))
+                  OR (Text.Equal(prefix, "tl_arr") AND Text.Equal(dnpfx, "tc_arr"))
+                  OR (Text.Equal(prefix, "tl_obj") AND Text.Equal(dnpfx, "tc_obj")) THEN
+                    tcNm := dn;
+                  END;
+                END;
+              END;
+            END;
+          END;
+        END;
+        IF tcNm # NIL THEN
+          Wr.PutText(wr, "  store ptr @" & tcNm & ", ptr @" & nm & "\n");
+        END;
+      END;
+    END;
+    Wr.PutText(wr, "  ret void\n");
+    Wr.PutText(wr, "}\n");
+  END EmitTypeLinks;
 
 (*----------------------------------------------- gc_map emission *)
 
@@ -1418,7 +1522,12 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
                                                             THEN fieldVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, 0));
                                                             ELSE fieldVal := "null";
                                                           END;
-      ELSIF byteOff = M3RT.MI_type_cell_ptrs DIV cs THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_type_cell_ptrs";
+      ELSIF byteOff = M3RT.MI_type_cell_ptrs DIV cs THEN fieldType := "ptr";
+                                                          fieldName := "MI_type_cell_ptrs";
+                                                          IF MSIR.ModuleTypeLinkCount(m) > 0
+                                                            THEN fieldVal := "@" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, MSIR.ModuleTypeLinkCount(m)-1));
+                                                            ELSE fieldVal := "null";
+                                                          END;
       ELSIF byteOff = M3RT.MI_full_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_full_rev";
       ELSIF byteOff = M3RT.MI_part_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_part_rev";
       ELSIF byteOff = M3RT.MI_proc_info DIV cs      THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_proc_info";
@@ -1662,6 +1771,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
 
     (* TypeCell / ObjectTypeCell globals for type_cells *)
     EmitTypeCells(wr, m);
+
+    (* TypeLink globals for type_cell_ptrs chain, plus MSIR_InitTypeLinks *)
+    EmitTypeLinks(wr, m);
 
     (* Exception descriptors: { i64 uid, ptr null, i64 0 } = ExceptionDesc *)
     FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO

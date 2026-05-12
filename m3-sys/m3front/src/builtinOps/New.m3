@@ -467,7 +467,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
     r := Type.CheckInfo (r, r_info);
     CASE r_info.class OF
     | Type.Class.OpenArray =>
-        MSIRBuilder.Abandon ("NEW(REF open-array): not yet in MSIR");  RETURN NIL;
+        RETURN GenOpenArrayMSIR (t, t_info, r, ce);
     | Type.Class.Record =>
         (* Keyword-arg field initializers not yet supported in MSIR. *)
         IF NUMBER (ce.args^) > 1 THEN
@@ -475,20 +475,95 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
           RETURN NIL;
         END;
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                              MSIRBuilder.TypeDescValueForRef (
-                                t,
-                                r_info.size DIV Target.Char.size,
-                                r_info.alignment,
-                                t_info.isTraced));
+                              MSIRBuilder.TypeLinkValueForRef (t));
     ELSE
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                              MSIRBuilder.TypeDescValueForRef (
-                                t,
-                                r_info.size DIV Target.Char.size,
-                                r_info.alignment,
-                                t_info.isTraced));
+                              MSIRBuilder.TypeLinkValueForRef (t));
     END;
   END GenRefMSIR;
+
+PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
+                             r: Type.T;  ce: CallExpr.T): MSIR.Value =
+  (* NEW(REF ARRAY OF T, dim0 [, dim1...]) — calls AllocateOpenArray.
+     Use TypeLinkValueForRefArray so the TypeCell is resolved by RTLinker
+     rather than defined inline at the call site. *)
+  CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedArray,
+                                                RunTyme.Hook.NewTracedArray };
+  VAR
+    ta       := Type.Base (r);
+    ndims    : INTEGER;
+    b        : MSIR.Block;
+    ptrT     := MSIR.TPtr (MSIR.TVoid ());
+    intT     := MSIR.TI (Target.Integer.size);
+    flds     : REF ARRAY OF MSIR.Field;
+    sizesT   : MSIR.T;
+    sizesA   : MSIR.Value;
+    proc     : MSIR.Proc;
+    res      : MSIR.Value;
+    mt       : MSIR.T;
+    descV    : MSIR.Value;
+    apBytes  : LONGINT;
+    ipBytes  : LONGINT;
+  BEGIN
+    ndims := OpenArrayType.OpenDepth (ta);
+    IF ndims < 1 THEN
+      MSIRBuilder.Abandon ("NEW(REF open-array): zero-depth open array");
+      RETURN NIL;
+    END;
+    descV := MSIRBuilder.TypeLinkValueForRefArray (t);
+    IF descV = NIL THEN RETURN NIL END;
+    proc := MSIRBuilder.HookProc (PHook [t_info.isTraced]);
+    IF proc = NIL THEN
+      MSIRBuilder.Abandon ("NEW(REF open-array): hook not available");  RETURN NIL;
+    END;
+
+    (* Build the sizes struct: { ptr elt_ptr, i64 count, i64 dim0, ... } *)
+    flds := NEW (REF ARRAY OF MSIR.Field, ndims + 2);
+    flds[0] := MSIR.Field{name := "", type := ptrT};
+    flds[1] := MSIR.Field{name := "", type := intT};
+    FOR k := 0 TO ndims - 1 DO
+      flds[2 + k] := MSIR.Field{name := "", type := intT};
+    END;
+    sizesT := MSIR.TStruct ("__oa_shape", flds^);
+    b := MSIRBuilder.CurrentBlock ();
+    sizesA := MSIR.BuildAlloca (b, "__oa_sz", sizesT);
+
+    apBytes := VAL (Target.Address.size DIV Target.Byte, LONGINT);
+    ipBytes := VAL (Target.Integer.size DIV Target.Byte, LONGINT);
+
+    (* OA_elt_ptr (byte 0) = &sizes.dim0 = sizesA + (AP + IP) bytes *)
+    VAR dim0Addr := MSIR.BuildPtrAdd (b, "", sizesA, apBytes + ipBytes);
+    BEGIN
+      MSIR.BuildStore (b, dim0Addr, sizesA);
+    END;
+
+    (* OA_size_0 (byte AP) = number of open dimensions *)
+    VAR cntAddr := MSIR.BuildPtrAdd (b, "", sizesA, apBytes);
+    BEGIN
+      MSIR.BuildStore (b, MSIR.ConstInt (intT, VAL (ndims, LONGINT)), cntAddr);
+    END;
+
+    (* OA_size_i (byte AP + IP*i, i in 1..ndims) = ce.args[i] dimension expression *)
+    FOR i := 1 TO ndims DO
+      VAR
+        dimAddr := MSIR.BuildPtrAdd (b, "",
+                     sizesA, apBytes + ipBytes * VAL (i, LONGINT));
+        dimVal  : MSIR.Value;
+      BEGIN
+        dimVal := Expr.CompileMSIR (ce.args[i]);
+        b := MSIRBuilder.CurrentBlock ();  (* re-fetch after potential invoke *)
+        IF dimVal = NIL THEN RETURN NIL END;
+        dimVal := MSIR.BuildConvert (b, "", dimVal, intT);
+        MSIR.BuildStore (b, dimVal, dimAddr);
+      END;
+    END;
+
+    res := MSIRBuilder.EmitCall ("", proc, ARRAY OF MSIR.Value{descV, sizesA});
+    IF res = NIL THEN RETURN NIL END;
+    mt := MSIRType.Translate (t);
+    IF mt = NIL THEN mt := MSIR.TGcRef (MSIR.TVoid ()) END;
+    RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", res, mt);
+  END GenOpenArrayMSIR;
 
 PROCEDURE GenObjectMSIR (t: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
   CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedObj,
@@ -497,7 +572,7 @@ PROCEDURE GenObjectMSIR (t: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
   BEGIN
     t := Type.CheckInfo (t, t_info);
     RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                          MSIRBuilder.ObjectTypeCellRef (t));
+                          MSIRBuilder.TypeLinkValueForObject (t));
   END GenObjectMSIR;
 
 PROCEDURE GenOpaqueMSIR (t: Type.T;  ce: CallExpr.T): MSIR.Value =

@@ -281,6 +281,10 @@ PROCEDURE TypeDescDataOffset  (d: TypeDesc): INTEGER; (* OBJ: field region byte 
 PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
 PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescMethod      (d: TypeDesc;  i: INTEGER): TEXT;
+(* Array TypeCell extensions (kind = ORD(M3RT.TypeKind.Array)). *)
+PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER);
+PROCEDURE TypeDescNDimensions (d: TypeDesc): INTEGER;
+PROCEDURE TypeDescElementSize (d: TypeDesc): INTEGER;
 
 PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc);
 PROCEDURE ModuleTypeDescCount(m: Module): INTEGER;
@@ -289,6 +293,22 @@ PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc;
 (* Create a ptr-typed value that refers to the TypeCell global named 'name'.
    Used in proc bodies before the TypeCell global is registered (forward ref). *)
 PROCEDURE TypeCellRef (name: TEXT): Value;
+
+(*----------------------------------------------- type cell references (cell_ptrs) *)
+
+(* Analog of RT0.TypeLink / CG cell_ptrs.  Each entry is a { ptr defn, i64 uid }
+   global added to MI_type_cell_ptrs.  RTLinker.ResolveTypeLinks fills defn with
+   the actual TypeCell pointer at module-init time.
+   Loading defn at runtime (after RTLinker) gives the TypeCell pointer. *)
+TYPE TypeLink <: REFANY;
+
+PROCEDURE NewTypeLink (name: TEXT;  uid: LONGINT): TypeLink;
+PROCEDURE TypeLinkName (tl: TypeLink): TEXT;
+PROCEDURE TypeLinkUID  (tl: TypeLink): LONGINT;
+
+PROCEDURE ModuleAddTypeLink  (m: Module;  tl: TypeLink);
+PROCEDURE ModuleTypeLinkCount(m: Module): INTEGER;
+PROCEDURE ModuleTypeLink     (m: Module;  i: INTEGER): TypeLink;
 
 (* TEXT literals — populated by MSIREmit.EndUnit from TextExpr.Literal* *)
 PROCEDURE ModuleAddTextLit  (m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER;

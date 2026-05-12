@@ -712,11 +712,106 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
     RETURN MSIR.TypeDescValue(desc);
   END TypeDescValueForRef;
 
+PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
+                                    dataAlignment: INTEGER;
+                                    nDimensions: INTEGER;
+                                    elementSize: INTEGER;
+                                    isTraced: BOOLEAN): MSIR.Value =
+  VAR
+    m    := MSIREmit.CurrentModule();
+    uid  := VAL(Type.GlobalUID(t), LONGINT);
+    nm   := "tc_arr_" & Fmt.LongInt(uid);
+    desc : MSIR.TypeDesc;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    FOR i := 0 TO MSIR.ModuleTypeDescCount(m) - 1 DO
+      desc := MSIR.ModuleTypeDesc(m, i);
+      IF MSIR.TypeDescUID(desc) = uid
+         AND MSIR.TypeDescKind(desc) = ORD(M3RT.TypeKind.Array) THEN
+        RETURN MSIR.TypeDescValue(desc);
+      END;
+    END;
+    desc := MSIR.NewTypeDesc(nm, uid, isTraced, ORD(M3RT.TypeKind.Array),
+                              dopeSize, dataAlignment);
+    MSIR.TypeDescSetArrayInfo(desc, nDimensions, elementSize);
+    MSIR.ModuleAddTypeDesc(m, desc);
+    RETURN MSIR.TypeDescValue(desc);
+  END TypeDescValueForRefArray;
+
 PROCEDURE ObjectTypeCellRef(t: Type.T): MSIR.Value =
   VAR uid := VAL(Type.GlobalUID(t), LONGINT);
   BEGIN
     RETURN MSIR.TypeCellRef("tc_obj_" & Fmt.LongInt(uid));
   END ObjectTypeCellRef;
+
+PROCEDURE ArrayTypeCellRef(t: Type.T): MSIR.Value =
+  VAR uid := VAL(Type.GlobalUID(t), LONGINT);
+  BEGIN
+    RETURN MSIR.TypeCellRef("tc_arr_" & Fmt.LongInt(uid));
+  END ArrayTypeCellRef;
+
+PROCEDURE TypeLinkValueForRef(t: Type.T): MSIR.Value =
+  VAR m    := MSIREmit.CurrentModule();
+      uid  := VAL(Type.GlobalUID(t), LONGINT);
+      nm   := "tl_ref_" & Fmt.LongInt(uid);
+      tl   : MSIR.TypeLink;
+      addr : MSIR.Value;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    FOR i := 0 TO MSIR.ModuleTypeLinkCount(m) - 1 DO
+      tl := MSIR.ModuleTypeLink(m, i);
+      IF Text.Equal(MSIR.TypeLinkName(tl), nm) THEN
+        addr := MSIR.TypeCellRef(nm);
+        RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
+      END;
+    END;
+    tl := MSIR.NewTypeLink(nm, uid);
+    MSIR.ModuleAddTypeLink(m, tl);
+    addr := MSIR.TypeCellRef(nm);
+    RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
+  END TypeLinkValueForRef;
+
+PROCEDURE TypeLinkValueForRefArray(t: Type.T): MSIR.Value =
+  VAR m    := MSIREmit.CurrentModule();
+      uid  := VAL(Type.GlobalUID(t), LONGINT);
+      nm   := "tl_arr_" & Fmt.LongInt(uid);
+      tl   : MSIR.TypeLink;
+      addr : MSIR.Value;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    FOR i := 0 TO MSIR.ModuleTypeLinkCount(m) - 1 DO
+      tl := MSIR.ModuleTypeLink(m, i);
+      IF Text.Equal(MSIR.TypeLinkName(tl), nm) THEN
+        addr := MSIR.TypeCellRef(nm);
+        RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
+      END;
+    END;
+    tl := MSIR.NewTypeLink(nm, uid);
+    MSIR.ModuleAddTypeLink(m, tl);
+    addr := MSIR.TypeCellRef(nm);
+    RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
+  END TypeLinkValueForRefArray;
+
+PROCEDURE TypeLinkValueForObject(t: Type.T): MSIR.Value =
+  VAR m    := MSIREmit.CurrentModule();
+      uid  := VAL(Type.GlobalUID(t), LONGINT);
+      nm   := "tl_obj_" & Fmt.LongInt(uid);
+      tl   : MSIR.TypeLink;
+      addr : MSIR.Value;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    FOR i := 0 TO MSIR.ModuleTypeLinkCount(m) - 1 DO
+      tl := MSIR.ModuleTypeLink(m, i);
+      IF Text.Equal(MSIR.TypeLinkName(tl), nm) THEN
+        addr := MSIR.TypeCellRef(nm);
+        RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
+      END;
+    END;
+    tl := MSIR.NewTypeLink(nm, uid);
+    MSIR.ModuleAddTypeLink(m, tl);
+    addr := MSIR.TypeCellRef(nm);
+    RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
+  END TypeLinkValueForObject;
 
 PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
   VAR proc: Procedure.T;

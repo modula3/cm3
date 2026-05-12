@@ -75,6 +75,7 @@ extern M3Int  Main__GetCounter(void);
 extern M3Int  Main__TryRaise(void);
 extern M3Int  Main__AllocInt(M3Int n);    /* NEW(REF INTEGER): stores n, returns n */
 extern M3Int  Main__AllocPair(M3Int a, M3Int b); /* NEW(REF Point): sets x/y, returns x+y */
+extern M3Int  Main__AllocIntArr(M3Int n); /* NEW(REF ARRAY OF INTEGER, n): elem0=n*2, returns n*2 */
 extern M3Int  Main__AllocSquare(M3Int side);   /* NEW(Square): sets side, returns side*side */
 extern M3Int  Main__NestedSum(M3Int n);        /* nested proc: sum 1..n */
 extern M3Int  Main__NestedScale(M3Int base, M3Int n); /* read-only capture: base*n */
@@ -96,6 +97,11 @@ extern M3Int  Main__TypecaseKind(void *r);
 /* Direct access to module globals (zeroinitialised — no M3 module init runs) */
 extern M3Int  Main__gCounter;
 extern M3Int  Main__gBase;
+
+/* Initialise TypeLink defn pointers so allocator hooks get real TypeCells.
+   This is a harness-only helper emitted by MSIRToLLVM — in production,
+   RTLinker.ResolveTypeLinks walks MI_type_cell_ptrs instead. */
+extern void MSIR_InitTypeLinks(void);
 
 /* ---- test harness ---- */
 
@@ -123,6 +129,9 @@ static void check_bool(const char *name, M3Bool got, M3Bool expected) {
 }
 
 int main(void) {
+    /* Resolve TypeLink defn pointers before any allocator calls. */
+    MSIR_InitTypeLinks();
+
     /* arithmetic */
     check_int("Add(2,3)",         Main__Add(2, 3),         5);
     check_int("Factorial(5)",     Main__Factorial(5),       120);
@@ -227,6 +236,9 @@ int main(void) {
 
     /* NEW(REF Point) — allocate, set x=3/y=4, return x+y */
     check_int("AllocPair(3,4)",     Main__AllocPair(3, 4),      7);
+
+    /* NEW(REF ARRAY OF INTEGER, 5) — alloc, set r^[0]=10, return 10 */
+    check_int("AllocIntArr(5)",     Main__AllocIntArr(5),       10);
 
     /* NEW(Square) — allocate OBJECT, set side, return side*side */
     check_int("AllocSquare(6)",     Main__AllocSquare(6),       36);

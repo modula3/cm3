@@ -242,6 +242,7 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - `target triple` / `target datalayout` for ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX
 - **TypeCells**: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` called from `Type.GenCells` alongside CG counterparts; driven by type *declarations*, not NEW sites
 - **NEW(REF T)** and **NEW(OBJECT T)**: full support; `GenRefMSIR`/`GenObjectMSIR`/`CallAllocHook` in `New.m3`; vtable (`OTC_defaultMethods`) populated from `ObjectType.GetObjectTypeInfo`/`FillMethodNames`
+- **NEW(REF ARRAY OF T, n)**: `GenOpenArrayMSIR` in `New.m3`; computes ATC parameters (dopeSize, elementSize, nDimensions) and calls `TypeDescValueForRefArray` eagerly at the call site (not deferred to `InitTypecellMSIR`) to handle the case where the type's UID is visible from an imported module; sizes struct layout `{ ptr &dim0, i64 ndims, i64 dim0 }`; stub in `raise_stub.cpp`
 - **Vtable dispatch**: `ShapeDispatch(s)` correctly dispatches via `s.vtable[0](s)` in LLVM IR; `AllocateTracedObj` stub initialises vtable pointer from `OTC_defaultMethods`
 - **Module global initialization**: variable initializers (user-specified and language-default zero-init) emitted in MSIR module body; traced globals use `BuildGcStore`
 - **External/imported variable registration**: `DeclareGlobalsMSIR` in `Module.Compile` pre-registers all module-level variables and exception descriptors before proc bodies compile
@@ -387,7 +388,8 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 - **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls (`Fmt.Bool`, `Text.Length`, etc.) all work — external calls are emitted correctly and the calling convention matches the C backend. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests
 - **GC write barrier for heap fields**: activated; see container protocol below
 - **`var_map`/`gc_map`**: implemented; see architecture note below
-- **NEW(REF open-array/record)**: `GenRefMSIR` abandons for these; only scalar referents supported
+- **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested; record-with-keyword-args still abandoned
+- **NEW(REF record with keyword args)**: `GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
