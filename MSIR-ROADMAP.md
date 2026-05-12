@@ -2,9 +2,10 @@
 
 Last updated: 2026-05-12 (msir branch)
 
-## What's Working (77/77 tests pass)
+## What's Working (73/73 tests pass; 0 abandons across p0/p1/p2)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
+The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abandon` events.
 
 ### Emission (m3front → MSIR)
 - [x] Arithmetic, comparisons, boolean short-circuit
@@ -28,6 +29,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] LOCK statement (via TRY/FINALLY lowering)
 - [x] NEW(REF T) and NEW(OBJECT T): `GenRefMSIR`/`GenObjectMSIR`/`CallAllocHook`
 - [x] NEW(REF record): same allocator hook as scalar (`NewTracedRef`), TypeCell carries record byte-size; `QualifyExpr.LValueMSIR` byte-offset GEP fallback for GcRef(Void) base (REF Record field access)
+- [x] NEW(REF ARRAY OF T, n): `GenOpenArrayMSIR`; 1-D open arrays; multi-D untested
 - [x] TypeCells: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` from `Type.GenCells`
 - [x] TEXT literals: static `TextLiteral.T` globals; `ConstTextLit` value kind
 - [x] TEXT concatenation: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat`
@@ -37,6 +39,10 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Read-only scalar captures pass by value (not ptr): `CaptureAnalysis.written=FALSE` + scalar MSIR type → direct value param; GcRef stays by ptr for conservative GC
 - [x] WIDECHAR text literals: encoded as little-endian bytes (`Target.WideCharSize()` per char); `[wcharBytes*len + wcharBytes x i8]` struct; negative `cnt` distinguishes from ASCII
 - [x] TEXT library calls (`Fmt.Bool`, `Text.Length`, etc.): external calls emit correctly; calling convention matches C backend
+- [x] Procedure values: `ProcExpr.CompileMSIR` → `MSIR.ConstProcRef(proc)` (`ptr @procname`); `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; auto-registers extern variables on demand for `FROM X IMPORT y` names; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`
+- [x] Float type conversions: `FLOAT()` builtin via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float); cast ops `ZExt`/`SExt`/`Trunc` for integer widening/narrowing
+- [x] EVAL, ASSERT, LOOP statements: `CompileMSIR` implementations
+- [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -53,6 +59,8 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] TypeCell and ObjectTypeDesc (vtable) emission
 - [x] TC_kind bytes: use `ORD(M3RT.TypeKind.*)` (was hardcoded 6/13); GcHeader and TEXT GEP offset use M3RT/Target constants
 - [x] TextLiteral vtable method names resolved via `RunTyme.LookUpProc` → `MSIRBuilder.HookProc`; `EmitDeclare` derives signatures from M3 types (no hardcoded strings)
+- [x] Procedure constants: `ConstProc` value kind lowers to `ptr @procname`
+- [x] Cast instructions: `sitofp`, `fptosi`, `fpext`, `fptrunc`, `zext`, `sext`, `trunc`
 
 ---
 
@@ -63,28 +71,45 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - `Fmt.Real` (floating-point formatting) — not yet exercised in tests
 - `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
 
-### B. NEW(REF open-array)
+### B. VALUE open-array formals
 
-`GenRefMSIR` handles scalar and record referents; open-array is the remaining gap.
-Requires an extended ATC TypeCell (`ATC_nDimensions`, `ATC_elementSize`), a sizes-struct
-alloca built in MSIR, and a 2-arg call to `RTAllocator__NewTracedArray`.
+Copy-in of open-array VALUE formals (building a local dope vector) is not yet implemented.
+Relevant for procedures that take open arrays by value.
 
-### C. Opaque types
+### C. SET type operations
+
+SET literals, the `IN` operator, and set arithmetic (`+`, `-`, `*`, `/`) are not yet implemented.
+These require either inline bit manipulation (for small sets) or runtime calls (for large sets).
+
+### D. NEW(REF open-array): multi-dimensional
+
+`GenOpenArrayMSIR` handles 1-D; multi-D untested.
+
+### E. NEW(REF record with keyword args)
+
+`GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works.
+
+### F. Opaque types
 
 `GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
 
-### D. Debug symbols
+### G. Debug symbols
 
 No source locations in emitted LLVM IR. See debug symbol architecture note in
 `CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,
 `AddLocalMSIR`, `BeginProc`).
+
+### H. TRUNC/FLOOR/CEILING/ROUND builtins
+
+These float-to-integer conversion builtins need `CompileMSIR` implementations using `FPToSI`
+(with appropriate rounding mode for FLOOR/CEILING/ROUND).
 
 ---
 
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (77 checks)
+# Full end-to-end LLVM link test (73 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)
@@ -94,4 +119,11 @@ clang _m3main.cpp Main-llvm.o libm3core.a libm3.a -lc++ -o smoke-realrt
 # Just inspect the emitted IR
 cd /any/m3-program && cm3 '@M3m3front-msir' -build
 cat ARM64_DARWIN/Main.ll
+
+# Full p0/p1/p2 abandon sweep
+cd m3-sys/m3tests && rm -f /tmp/msir-debug.txt
+for d in src/p0/p0?? src/p1/p1?? src/p2/p2??; do
+  [ -d "$d" ] && (cd "$d" && cm3 '@M3m3front-msir' -build 2>/dev/null)
+done
+grep -c 'abandon' /tmp/msir-debug.txt 2>/dev/null || echo "0 abandons"
 ```

@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; smoke test runs  |
+| `m3-sys/msir` v0 package       | Built; ships; 73/73 smoke tests pass; 0 abandons across p0/p1/p2 |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -516,10 +516,11 @@ typically eliminate this overhead after inlining — pointers are promoted back 
 registers and indirections disappear. Frame-struct grouping (O16) remains available
 as a future performance tuning step for hot paths where inlining does not apply.
 
-**Remaining refinement**: all captures currently pass by pointer regardless of
-whether they are written. Read-only scalar captures could be passed by value instead,
-giving LLVM stronger alias information without further correctness work. This is
-a straightforward follow-on once the basic path is exercised more broadly.
+**Read-only scalar capture optimisation** (implemented): captures classified
+`written=FALSE` by `CaptureAnalysis` and of scalar MSIR type (integer, float, or
+untraced pointer) are passed by value instead of by pointer, giving LLVM's alias
+analysis better information; GcRef captures always pass by pointer so the
+conservative GC scanner keeps them on the stack.
 
 ### D14. Module descriptors are first-class MSIR entities.
 

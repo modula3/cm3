@@ -405,7 +405,7 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 
 ### GC Write Barrier Container Protocol
 
-In the **CG path**, write barriers are implicit: `M3C.m3` handles them automatically when it sees a traced-type `CG.Store_indirect`. The front-end threads no container — the C backend infers it from surrounding code.
+In the **CG path**, write barriers are explicit and emitted by the front-end before the store: `QualifyExpr.PrepLV` (and `DerefExpr.CompileLV`) call `RunTyme.EmitCheckStoreTraced()` when `Host.doGenGC` is true and the field is traced. That helper pops the container (object pointer) off the M3CG stack, emits a dirty-bit test inline, and conditionally calls `RTHooks__CheckStoreTraced` — all as M3CG ops before the subsequent `Store_indirect`. The C backend (`M3C.m3`) merely translates these M3CG ops to C; it does not independently decide when to add barriers.
 
 In the **MSIR path**, LLVM IR is lower-level and barriers must be emitted explicitly. The protocol:
 
