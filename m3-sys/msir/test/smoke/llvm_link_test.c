@@ -74,6 +74,7 @@ extern M3Int  Main__GetCounter(void);
 
 extern M3Int  Main__TryRaise(void);
 extern M3Int  Main__AllocInt(M3Int n);    /* NEW(REF INTEGER): stores n, returns n */
+extern M3Int  Main__AllocPair(M3Int a, M3Int b); /* NEW(REF Point): sets x/y, returns x+y */
 extern M3Int  Main__AllocSquare(M3Int side);   /* NEW(Square): sets side, returns side*side */
 extern M3Int  Main__NestedSum(M3Int n);        /* nested proc: sum 1..n */
 extern M3Int  Main__NestedScale(M3Int base, M3Int n); /* read-only capture: base*n */
@@ -223,6 +224,9 @@ int main(void) {
 
     /* NEW(REF INTEGER) — allocate, store 99, read back */
     check_int("AllocInt(99)",       Main__AllocInt(99),         99);
+
+    /* NEW(REF Point) — allocate, set x=3/y=4, return x+y */
+    check_int("AllocPair(3,4)",     Main__AllocPair(3, 4),      7);
 
     /* NEW(Square) — allocate OBJECT, set side, return side*side */
     check_int("AllocSquare(6)",     Main__AllocSquare(6),       36);

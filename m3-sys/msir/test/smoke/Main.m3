@@ -425,6 +425,18 @@ PROCEDURE AllocInt (n: INTEGER): INTEGER =
   VAR r: REF INTEGER;
   BEGIN r := NEW(REF INTEGER); r^ := n; RETURN r^ END AllocInt;
 
+(* NEW(REF Record): allocate a heap Point, set fields, return sum. *)
+TYPE PointRef = REF Point;
+
+PROCEDURE AllocPair (a, b: INTEGER): INTEGER =
+  VAR r: PointRef;
+  BEGIN
+    r := NEW(PointRef);
+    r^.x := a;
+    r^.y := b;
+    RETURN r^.x + r^.y;
+  END AllocPair;
+
 (* NEW: allocate a Square object, set the side field, return side*side. *)
 PROCEDURE AllocSquare (side: INTEGER): INTEGER =
   VAR s: Square;

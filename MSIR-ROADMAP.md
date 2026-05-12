@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-12 (msir branch)
 
-## What's Working (76/76 tests pass)
+## What's Working (77/77 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -27,6 +27,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Method dispatch (vtable)
 - [x] LOCK statement (via TRY/FINALLY lowering)
 - [x] NEW(REF T) and NEW(OBJECT T): `GenRefMSIR`/`GenObjectMSIR`/`CallAllocHook`
+- [x] NEW(REF record): same allocator hook as scalar (`NewTracedRef`), TypeCell carries record byte-size; `QualifyExpr.LValueMSIR` byte-offset GEP fallback for GcRef(Void) base (REF Record field access)
 - [x] TypeCells: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` from `Type.GenCells`
 - [x] TEXT literals: static `TextLiteral.T` globals; `ConstTextLit` value kind
 - [x] TEXT concatenation: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat`
@@ -62,10 +63,11 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - `Fmt.Real` (floating-point formatting) — not yet exercised in tests
 - `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
 
-### B. NEW(REF open-array/record)
+### B. NEW(REF open-array)
 
-`GenRefMSIR` currently abandons for open-array and record referents; only scalar
-referents are supported.
+`GenRefMSIR` handles scalar and record referents; open-array is the remaining gap.
+Requires an extended ATC TypeCell (`ATC_nDimensions`, `ATC_elementSize`), a sizes-struct
+alloca built in MSIR, and a 2-arg call to `RTAllocator__NewTracedArray`.
 
 ### C. Opaque types
 
@@ -82,7 +84,7 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (76 checks)
+# Full end-to-end LLVM link test (77 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

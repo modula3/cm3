@@ -458,7 +458,7 @@ PROCEDURE CallAllocHook (t: Type.T;  hook: RunTyme.Hook;
     RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", res, mt);
   END CallAllocHook;
 
-PROCEDURE GenRefMSIR (t, r: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
+PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
   CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedRef,
                                                 RunTyme.Hook.NewTracedRef };
   VAR t_info, r_info: Type.Info;
@@ -469,7 +469,17 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
     | Type.Class.OpenArray =>
         MSIRBuilder.Abandon ("NEW(REF open-array): not yet in MSIR");  RETURN NIL;
     | Type.Class.Record =>
-        MSIRBuilder.Abandon ("NEW(REF record): not yet in MSIR");  RETURN NIL;
+        (* Keyword-arg field initializers not yet supported in MSIR. *)
+        IF NUMBER (ce.args^) > 1 THEN
+          MSIRBuilder.Abandon ("NEW(REF record, field:=val): not yet in MSIR");
+          RETURN NIL;
+        END;
+        RETURN CallAllocHook (t, PHook [t_info.isTraced],
+                              MSIRBuilder.TypeDescValueForRef (
+                                t,
+                                r_info.size DIV Target.Char.size,
+                                r_info.alignment,
+                                t_info.isTraced));
     ELSE
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
                               MSIRBuilder.TypeDescValueForRef (

@@ -809,8 +809,28 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         baseAddr := Expr.LValueMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
         Field.Split (p.rhsValue, fieldInfo);
-        RETURN MSIR.BuildFieldAddr (MSIRBuilder.CurrentBlock (), "",
-                                    baseAddr, M3ID.ToText (fieldInfo.name));
+        (* Use compile-time field offset — same as CG.Add_offset (field.offset DIV 8).
+           No struct-type lookup needed; fieldInfo.offset is authoritative. *)
+        byteOff := VAL (fieldInfo.offset, LONGINT) DIV 8L;
+        VAR
+          b    := MSIRBuilder.CurrentBlock ();
+          ft   := MSIRType.Translate (fieldInfo.type);
+          slot : MSIR.Value;
+        BEGIN
+          IF byteOff = 0L
+            THEN slot := baseAddr;
+            ELSE slot := MSIR.BuildPtrAdd (b, "", baseAddr, byteOff);
+          END;
+          (* Heap record (GcRef base): set container and retype traced fields
+             as GcSlot so AssignStmt.CompileMSIR fires the write barrier. *)
+          IF MSIR.Kind (MSIR.ValueType (baseAddr)) = MSIR.TypeKind.GcRef THEN
+            MSIRBuilder.SetPendingContainer (baseAddr);
+            IF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.GcRef THEN
+              slot := MSIR.RetypeValue (slot, MSIR.TGcSlot (MSIR.EltType (ft)));
+            END;
+          END;
+          RETURN slot;
+        END;
     | Class.objField =>
         (* Compute byte offset: fields start at obj_offset bits from the object
            pointer (typically 64 bits = 8 bytes for the vtable word), plus the
