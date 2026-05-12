@@ -577,6 +577,26 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, "\n");
 
+    | MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound =>
+        VAR
+          src   := MSIR.InsnOperand(i, 0);
+          ftype := MSIR.ValueType(src);
+          bits  := MSIR.BitWidth(ftype);
+          iname : TEXT;
+          fsuf  := "f" & Fmt.Int(bits);
+        BEGIN
+          CASE MSIR.InsnOp(i) OF
+          | MSIR.Op.FPFloor     => iname := "llvm.floor.";
+          | MSIR.Op.FPCeil      => iname := "llvm.ceil.";
+          ELSE                     iname := "llvm.round.";
+          END;
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = call ");
+          LLType(wr, ftype);
+          Wr.PutText(wr, " @" & iname & fsuf & "(");
+          LLTypedVal(wr, src);
+          Wr.PutText(wr, ")\n");
+        END;
+
     | MSIR.Op.ICmp =>
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = icmp ");
         Wr.PutText(wr, CmpPredText(MSIR.InsnCmpPred(i)));

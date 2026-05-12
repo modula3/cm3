@@ -9,6 +9,7 @@
 MODULE Trunc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Ceiling, Int, ReelExpr, TypeExpr;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -50,6 +51,20 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     END;
   END Fold;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e    := ce.args[0];
+    dstT := MSIRType.Translate (TypeOf (ce));
+    blk  := MSIRBuilder.CurrentBlock ();
+    src  : MSIR.Value;
+  BEGIN
+    src := Expr.CompileMSIR (e);  IF src = NIL THEN RETURN NIL END;
+    IF dstT = NIL THEN
+      MSIRBuilder.Abandon ("TRUNC: unsupported dest type");  RETURN NIL
+    END;
+    RETURN MSIR.BuildFPToSI (blk, "", src, dstT);
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 2, TRUE, FALSE, TRUE, NIL,
@@ -68,6 +83,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("TRUNC", Z, TRUE);
   END Initialize;
 

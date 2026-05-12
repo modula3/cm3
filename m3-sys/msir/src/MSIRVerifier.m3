@@ -408,8 +408,9 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckConvert(c, i);
     | MSIR.Op.SIToFP, MSIR.Op.FPToSI,
       MSIR.Op.FPExt,  MSIR.Op.FPTrunc,
-      MSIR.Op.ZExt,   MSIR.Op.SExt, MSIR.Op.Trunc =>
-        (* Cast ops: one operand, typed result. No further v0 checks. *)
+      MSIR.Op.ZExt,   MSIR.Op.SExt, MSIR.Op.Trunc,
+      MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound =>
+        (* Cast/rounding ops: one operand, typed result. No further v0 checks. *)
     | MSIR.Op.FieldAddr =>
         CheckFieldAddr(c, i);
     | MSIR.Op.ArrayElemAddr =>

@@ -1271,6 +1271,13 @@ PROCEDURE BuildSExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
 PROCEDURE BuildTrunc  (b: Block; name: TEXT; x: Value; dstType: T): Value =
   BEGIN RETURN buildCast(b, Op.Trunc,   name, x, dstType) END BuildTrunc;
 
+PROCEDURE BuildFPFloor    (b: Block; name: TEXT; x: Value): Value =
+  BEGIN RETURN buildCast(b, Op.FPFloor,     name, x, x.type) END BuildFPFloor;
+PROCEDURE BuildFPCeil     (b: Block; name: TEXT; x: Value): Value =
+  BEGIN RETURN buildCast(b, Op.FPCeil,      name, x, x.type) END BuildFPCeil;
+PROCEDURE BuildFPRound    (b: Block; name: TEXT; x: Value): Value =
+  BEGIN RETURN buildCast(b, Op.FPRound,     name, x, x.type) END BuildFPRound;
+
 PROCEDURE BuildLoad(b: Block; name: TEXT; type: T; addr: Value): Value =
   VAR
     i := NEW(Insn);

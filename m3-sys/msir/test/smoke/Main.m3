@@ -544,6 +544,19 @@ PROCEDURE TryExceptNormal (): INTEGER =
     RETURN n;
   END TryExceptNormal;
 
+(* TRUNC/FLOOR/CEILING/ROUND — runtime params prevent constant folding *)
+PROCEDURE TruncTest (x: REAL): INTEGER =
+  BEGIN RETURN TRUNC(x) END TruncTest;
+
+PROCEDURE FloorTest (x: REAL): INTEGER =
+  BEGIN RETURN FLOOR(x) END FloorTest;
+
+PROCEDURE CeilingTest (x: REAL): INTEGER =
+  BEGIN RETURN CEILING(x) END CeilingTest;
+
+PROCEDURE RoundTest (y: LONGREAL): INTEGER =
+  BEGIN RETURN ROUND(y) END RoundTest;
+
 BEGIN
   IO.Put ("Add(2,3) = " & Fmt.Int(Add(2,3)) & "\n");
   IO.Put ("Factorial(5) = " & Fmt.Int(Factorial(5)) & "\n");
@@ -639,6 +652,16 @@ BEGIN
 
   (* TYPECASE test *)
   IO.Put ("TypecaseKind(NIL) = " & Fmt.Int(TypecaseKind(NIL)) & "\n");
+
+  (* TRUNC / FLOOR / CEILING / ROUND tests *)
+  IO.Put ("TruncTest(2.7) = " & Fmt.Int(TruncTest(FLOAT(2.7))) & "\n");
+  IO.Put ("TruncTest(-1.3) = " & Fmt.Int(TruncTest(FLOAT(-1.3))) & "\n");
+  IO.Put ("FloorTest(2.7) = " & Fmt.Int(FloorTest(FLOAT(2.7))) & "\n");
+  IO.Put ("FloorTest(-1.3) = " & Fmt.Int(FloorTest(FLOAT(-1.3))) & "\n");
+  IO.Put ("CeilingTest(2.7) = " & Fmt.Int(CeilingTest(FLOAT(2.7))) & "\n");
+  IO.Put ("CeilingTest(-1.3) = " & Fmt.Int(CeilingTest(FLOAT(-1.3))) & "\n");
+  IO.Put ("RoundTest(3.5D0) = " & Fmt.Int(RoundTest(3.5D0)) & "\n");
+  IO.Put ("RoundTest(-0.5D0) = " & Fmt.Int(RoundTest(-0.5D0)) & "\n");
 
   (* EH tests *)
   IO.Put ("TryFinNormal() = " & Fmt.Int(TryFinNormal()) & "\n");

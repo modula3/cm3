@@ -91,6 +91,12 @@ extern M3Int  Main__SquareArea(void *self);  /* reads self->side via field GEP *
 /* TYPECASE test */
 extern M3Int  Main__TypecaseKind(void *r);
 
+/* TRUNC / FLOOR / CEILING / ROUND rounding builtins */
+extern M3Int  Main__TruncTest(float x);
+extern M3Int  Main__FloorTest(float x);
+extern M3Int  Main__CeilingTest(float x);
+extern M3Int  Main__RoundTest(double y);
+
 /* RTHooks__ScanTypecase is provided by libm3core.  For ref=NIL (our only
    harness test) it returns 0 immediately without touching runtime state. */
 
@@ -266,6 +272,16 @@ int main(void) {
 
     /* TYPECASE dispatch — NIL path: ScanTypecase(NIL)=0 → first clause → 1 */
     check_int("TypecaseKind(NULL)",   Main__TypecaseKind(NULL), 1);
+
+    /* TRUNC / FLOOR / CEILING / ROUND */
+    check_int("TruncTest(2.7f)",   Main__TruncTest(2.7f),    2);
+    check_int("TruncTest(-1.3f)",  Main__TruncTest(-1.3f),  -1);
+    check_int("FloorTest(2.7f)",   Main__FloorTest(2.7f),    2);
+    check_int("FloorTest(-1.3f)",  Main__FloorTest(-1.3f),  -2);
+    check_int("CeilingTest(2.7f)", Main__CeilingTest(2.7f),  3);
+    check_int("CeilingTest(-1.3f)",Main__CeilingTest(-1.3f),-1);
+    check_int("RoundTest(3.5)",    Main__RoundTest(3.5),     4);
+    check_int("RoundTest(-0.5)",   Main__RoundTest(-0.5),   -1); /* round-half-away-from-zero */
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

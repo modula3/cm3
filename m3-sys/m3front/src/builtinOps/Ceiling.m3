@@ -10,6 +10,7 @@ MODULE Ceiling;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Int, LInt;
 IMPORT Reel, LReel, EReel, Error, ReelExpr, TypeExpr;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -73,6 +74,20 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     END;
   END Fold;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e    := ce.args[0];
+    dstT := MSIRType.Translate (TypeOf (ce));
+    blk  := MSIRBuilder.CurrentBlock ();
+    src  : MSIR.Value;
+  BEGIN
+    src := Expr.CompileMSIR (e);  IF src = NIL THEN RETURN NIL END;
+    IF dstT = NIL THEN
+      MSIRBuilder.Abandon ("CEILING: unsupported dest type");  RETURN NIL
+    END;
+    RETURN MSIR.BuildFPToSI (blk, "", MSIR.BuildFPCeil (blk, "", src), dstT);
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 2, TRUE, FALSE, TRUE, NIL,
@@ -91,6 +106,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("CEILING", Z, TRUE);
   END Initialize;
 

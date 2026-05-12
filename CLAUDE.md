@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (73/73 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (81/81 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -258,6 +258,7 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **Fixed→open-array argument coercion**: `Formal.EmitArgMSIR` / `GenOpenArgMSIR` (in `Formal.m3`) build a stack dope vector `{ ptr data, i64 dim0, … }` when a fixed-size array actual is passed to a VAR/READONLY open-array formal; `UserProc.CompileMSIR` walks formals via `Formal.EmitArgMSIR` rather than the old Ptr-check heuristic; VALUE open-array formals abandon (not yet needed)
 - **Procedure values**: `ProcExpr.CompileMSIR` returns `MSIR.ConstProcRef(proc)` — a `ptr @procname` constant; `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`; `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` guards `Kind(EltType) ≠ Void` so proc formals are treated as by-value scalars
 - **Float type conversions**: new cast ops `SIToFP`, `FPToSI`, `FPExt`, `FPTrunc`, `ZExt`, `SExt`, `Trunc` in `MSIR`; `Floatt.CompileMSIR` implements `FLOAT()` via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float)
+- **TRUNC/FLOOR/CEILING/ROUND builtins**: new unary float ops `FPFloor`, `FPCeil`, `FPRound` in `MSIR`; lowered to `llvm.floor.*`, `llvm.ceil.*`, `llvm.round.*` intrinsics (suffix `f32`/`f64`/`f128` from bit width); `Trunc.m3` emits direct `fptosi`; `Floor.m3`/`Ceiling.m3`/`Round.m3` emit the rounding op followed by `fptosi`; CM3's ROUND matches C `round()` (round-half-away-from-zero, not round-half-to-even)
 - **Extern variable auto-registration**: `NamedExpr.CompileMSIR` calls `Variable.RegisterExternMSIR(vv)` on demand for `FROM X IMPORT y` style variables not pre-registered by `DeclareGlobalsMSIR`
 - **EVAL / ASSERT / LOOP stmts**: `EvalStmt`, `AssertStmt`, `LoopStmt` have `CompileMSIR` implementations
 

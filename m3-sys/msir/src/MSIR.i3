@@ -421,6 +421,9 @@ TYPE Op = {
   ZExt,       (* zero-extend integer *)
   SExt,       (* sign-extend integer *)
   Trunc,      (* integer truncation *)
+  FPFloor,    (* floor(x): round toward -inf; lowers to llvm.floor.* *)
+  FPCeil,     (* ceil(x):  round toward +inf; lowers to llvm.ceil.* *)
+  FPRound,    (* round-half-away-from-zero (CM3 ROUND = C round()); lowers to llvm.round.* *)
   (* sets *)
   SetUnion, SetIntersect, SetDifference, SetMember,
   (* indirect dispatch *)
@@ -482,9 +485,13 @@ PROCEDURE BuildSIToFP (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
 PROCEDURE BuildFPToSI (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
 PROCEDURE BuildFPExt  (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
 PROCEDURE BuildFPTrunc(b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
-PROCEDURE BuildZExt   (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
-PROCEDURE BuildSExt   (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
-PROCEDURE BuildTrunc  (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildZExt       (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildSExt       (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+PROCEDURE BuildTrunc      (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;
+(* Float rounding — result type = input type; lower to llvm.floor/ceil/roundeven *)
+PROCEDURE BuildFPFloor    (b: Block;  name: TEXT;  x: Value): Value;
+PROCEDURE BuildFPCeil     (b: Block;  name: TEXT;  x: Value): Value;
+PROCEDURE BuildFPRound    (b: Block;  name: TEXT;  x: Value): Value;
 
 PROCEDURE BuildLoad (b: Block;  name: TEXT;  type: T;  addr: Value): Value;
 PROCEDURE BuildStore(b: Block;  value: Value;  addr: Value);
