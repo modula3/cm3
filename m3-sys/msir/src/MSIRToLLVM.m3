@@ -810,8 +810,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           LLType(wr, fixedArrT);
           Wr.PutText(wr, ", ptr ");
           LLOpVal(wr, arrV);
-          Wr.PutText(wr, ", i64 0, i64 ");
-          LLOpVal(wr, idxV);
+          Wr.PutText(wr, ", i64 0, ");
+          LLTypedVal(wr, idxV);
           Wr.PutText(wr, "\n");
         END;
 
@@ -1261,6 +1261,36 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
   END EmitTextLiterals;
+
+PROCEDURE EmitConstArrays(wr: Wr.T;  m: MSIR.Module) =
+  VAR n := MSIR.ModuleConstArrayCount(m);
+  BEGIN
+    IF n = 0 THEN RETURN END;
+    Wr.PutText(wr, "\n; CONST array globals\n");
+    FOR i := 0 TO n - 1 DO
+      VAR
+        ca  := MSIR.ModuleConstArray(m, i);
+        cnt := MSIR.ConstArrayEltCount(ca);
+      BEGIN
+        Wr.PutText(wr, "@" & MSIR.ConstArrayName(ca)
+                       & " = private constant [" & Fmt.Int(cnt) & " x ");
+        LLType(wr, MSIR.ConstArrayEltType(ca));
+        Wr.PutText(wr, "] [");
+        IF cnt = 0 THEN
+          Wr.PutText(wr, "]\n");
+        ELSE
+          Wr.PutText(wr, "\n");
+          FOR j := 0 TO cnt - 1 DO
+            Wr.PutText(wr, "  ");
+            LLTypedVal(wr, MSIR.ConstArrayElt(ca, j));
+            IF j < cnt - 1 THEN Wr.PutText(wr, ",") END;
+            Wr.PutText(wr, "\n");
+          END;
+          Wr.PutText(wr, "]\n");
+        END;
+      END;
+    END;
+  END EmitConstArrays;
 
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   VAR
@@ -1898,6 +1928,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
 
     (* TextLiteral globals *)
     EmitTextLiterals(wr, m);
+
+    (* CONST array globals *)
+    EmitConstArrays(wr, m);
 
     (* TypeCell / ObjectTypeCell globals for type_cells *)
     EmitTypeCells(wr, m);

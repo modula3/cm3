@@ -3,6 +3,7 @@ MODULE MSIRBuilder;
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
+IMPORT Expr, ArrayExpr, ArrayType;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -69,6 +70,13 @@ VAR
 
   globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
   globalMapN: INTEGER := 0;
+
+TYPE ConstArrayEntry = RECORD key: Value.T; val: MSIR.Value END;
+CONST MaxConstArrayMap = 64;
+VAR
+  constArrayMap:  ARRAY [0..MaxConstArrayMap-1] OF ConstArrayEntry;
+  constArrayMapN: INTEGER := 0;
+  constArraySeq:  INTEGER := 0;
 
 PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
   (* TRUE for types safe to pass by value as a capture param.
@@ -922,7 +930,58 @@ PROCEDURE BeginModule() =
     globalMapN       := 0;
     procMapN         := 0;
     procContextDepth := 0;
+    constArrayMapN   := 0;
+    constArraySeq    := 0;
   END BeginModule;
+
+PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
+  VAR
+    ae:       ArrayExpr.T;
+    n:        INTEGER;
+    indexT, eltT: Type.T;
+    eltMsir:  MSIR.T;
+    elts:     REF ARRAY OF MSIR.Value;
+    ca:       MSIR.ConstArray;
+    name:     TEXT;
+    v:        MSIR.Value;
+    m:        MSIR.Module;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN NIL END;
+    (* De-dup: return cached value for this CONST if already materialized. *)
+    FOR i := 0 TO constArrayMapN - 1 DO
+      IF constArrayMap[i].key = m3Val THEN RETURN constArrayMap[i].val END;
+    END;
+    ae := ArrayExpr.ArrayConstrExpr(constExpr);
+    IF ae = NIL THEN
+      Abandon("ConstArray: not an array constructor");  RETURN NIL;
+    END;
+    n := ArrayExpr.EltCount(ae);
+    IF NOT ArrayType.Split(Expr.TypeOf(constExpr), indexT, eltT) THEN
+      Abandon("ConstArray: not an array type");  RETURN NIL;
+    END;
+    eltMsir := MSIRType.Translate(eltT);
+    IF eltMsir = NIL THEN
+      Abandon("ConstArray: unsupported element type");  RETURN NIL;
+    END;
+    elts := NEW(REF ARRAY OF MSIR.Value, n);
+    FOR i := 0 TO n - 1 DO
+      elts[i] := Expr.CompileMSIR(ArrayExpr.Elt(ae, i));
+      IF elts[i] = NIL THEN
+        Abandon("ConstArray: element " & Fmt.Int(i) & " failed");  RETURN NIL;
+      END;
+    END;
+    m    := MSIREmit.CurrentModule();
+    name := "constarray_" & Fmt.Int(constArraySeq);  INC(constArraySeq);
+    ca   := MSIR.NewConstArray(name, eltMsir, elts^);
+    MSIR.ModuleAddConstArray(m, ca);
+    v    := MSIR.ConstArrayValue(ca);
+    IF constArrayMapN < MaxConstArrayMap THEN
+      constArrayMap[constArrayMapN].key := m3Val;
+      constArrayMap[constArrayMapN].val := v;
+      INC(constArrayMapN);
+    END;
+    RETURN v;
+  END MaterializeConstArray;
 
 (* ---- raw map-management helpers called from Variable.m3 ---- *)
 

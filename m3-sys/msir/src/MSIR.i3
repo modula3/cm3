@@ -380,6 +380,25 @@ PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER;
 PROCEDURE ModuleGlobalCount(m: Module): INTEGER;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global;
 
+(*---------------------------------------------- constant array globals *)
+
+(* A private constant [N x eltType] global, used to materialise
+   CONST ARRAY OF T values for subscript LValue operations.
+   Emitted as: @constarray_K = private constant [N x eltType] [...] *)
+TYPE ConstArray <: REFANY;
+
+PROCEDURE NewConstArray(name: TEXT; eltType: T;
+                        READONLY elts: ARRAY OF Value): ConstArray;
+PROCEDURE ConstArrayName    (ca: ConstArray): TEXT;
+PROCEDURE ConstArrayEltType (ca: ConstArray): T;
+PROCEDURE ConstArrayEltCount(ca: ConstArray): INTEGER;
+PROCEDURE ConstArrayElt     (ca: ConstArray; i: INTEGER): Value;
+PROCEDURE ConstArrayValue   (ca: ConstArray): Value;  (* ptr to the global *)
+
+PROCEDURE ModuleAddConstArray  (m: Module; ca: ConstArray);
+PROCEDURE ModuleConstArrayCount(m: Module): INTEGER;
+PROCEDURE ModuleConstArray     (m: Module; i: INTEGER): ConstArray;
+
 (*------------------------------------------------------------------- Insn *)
 
 TYPE Insn <: REFANY;

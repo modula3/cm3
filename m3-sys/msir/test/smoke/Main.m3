@@ -555,6 +555,16 @@ PROCEDURE IsWeekend (d: Weekday): BOOLEAN =
 PROCEDURE IsWorkday (d: Weekday): BOOLEAN =
   BEGIN RETURN d IN WorkWeek END IsWorkday;
 
+(* CONST ARRAY subscript — runtime index into a compile-time CONST array *)
+CONST SmallPrimes = ARRAY [0..4] OF INTEGER{2, 3, 5, 7, 11};
+CONST BoolName    = ARRAY BOOLEAN OF TEXT{"FALSE", "TRUE"};
+
+PROCEDURE GetPrime (i: INTEGER): INTEGER =
+  BEGIN RETURN SmallPrimes[i] END GetPrime;
+
+PROCEDURE GetBoolName (b: BOOLEAN): TEXT =
+  BEGIN RETURN BoolName[b] END GetBoolName;
+
 (* TRUNC/FLOOR/CEILING/ROUND — runtime params prevent constant folding *)
 PROCEDURE TruncTest (x: REAL): INTEGER =
   BEGIN RETURN TRUNC(x) END TruncTest;
@@ -669,6 +679,13 @@ BEGIN
   IO.Put ("IsWeekend(Mon) = " & Fmt.Bool(IsWeekend(Weekday.Mon)) & "\n");
   IO.Put ("IsWorkday(Wed) = " & Fmt.Bool(IsWorkday(Weekday.Wed)) & "\n");
   IO.Put ("IsWorkday(Sun) = " & Fmt.Bool(IsWorkday(Weekday.Sun)) & "\n");
+
+  (* CONST array subscript tests *)
+  IO.Put ("GetPrime(0) = " & Fmt.Int(GetPrime(0)) & "\n");
+  IO.Put ("GetPrime(2) = " & Fmt.Int(GetPrime(2)) & "\n");
+  IO.Put ("GetPrime(4) = " & Fmt.Int(GetPrime(4)) & "\n");
+  IO.Put ("GetBoolName(FALSE) = " & GetBoolName(FALSE) & "\n");
+  IO.Put ("GetBoolName(TRUE) = " & GetBoolName(TRUE) & "\n");
 
   (* TRUNC / FLOOR / CEILING / ROUND tests *)
   IO.Put ("TruncTest(2.7) = " & Fmt.Int(TruncTest(FLOAT(2.7))) & "\n");

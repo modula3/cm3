@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (86/86 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (91/91 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -403,7 +403,7 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
 - **SET type operations**: `IN` operator on small constant SETs works (word-size bit-mask extraction via `SetExpr.GetWordBitMask`, bitwise shift/and ops); SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented
-- **CONST array subscript with runtime index**: when a `CONST ARRAY` is subscripted at a non-constant index (e.g., `BoolToText[b]`, `reservedWords[i]`), MSIR abandons — requires materializing the CONST array as a static global
+- **CONST array subscript with runtime index**: works — `NamedExpr.LValueMSIR` handles `Value.Class.Expr` array by calling `MSIRBuilder.MaterializeConstArray`; the array is registered as `@constarray_N = private constant [N x T] [...]`; `ArrayElemAddr` GEP emits the actual index type (not hardcoded i64)
 
 ### GC Write Barrier Container Protocol
 

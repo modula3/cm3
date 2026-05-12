@@ -2376,5 +2376,16 @@ PROCEDURE Capture (p: T;  ca: CaptureAnalysis.T) =
     END;
   END Capture;
 
+PROCEDURE EltCount (constr: T): INTEGER =
+  BEGIN
+    IF constr = NIL OR constr.args = NIL THEN RETURN 0 END;
+    RETURN NUMBER (constr.args^);
+  END EltCount;
+
+PROCEDURE Elt (constr: T; i: INTEGER): Expr.T =
+  BEGIN
+    RETURN constr.args^[i];
+  END Elt;
+
 BEGIN
 END ArrayExpr.

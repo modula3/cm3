@@ -101,6 +101,10 @@ extern M3Int  Main__FloorTest(float x);
 extern M3Int  Main__CeilingTest(float x);
 extern M3Int  Main__RoundTest(double y);
 
+/* CONST array subscript — runtime index into compile-time constant array */
+extern M3Int  Main__GetPrime(M3Int i);       /* SmallPrimes[i] */
+extern void  *Main__GetBoolName(M3Bool b);   /* BoolName[b] — returns TEXT ptr */
+
 /* RTHooks__ScanTypecase is provided by libm3core.  For ref=NIL (our only
    harness test) it returns 0 immediately without touching runtime state. */
 
@@ -293,6 +297,14 @@ int main(void) {
     check_int("RoundTest(3.5)",    Main__RoundTest(3.5),     4); /* nearest even: 3.5 -> 4 */
     check_int("RoundTest(2.5)",    Main__RoundTest(2.5),     2); /* nearest even: 2.5 -> 2, not 3 */
     check_int("RoundTest(-0.5)",   Main__RoundTest(-0.5),    0); /* nearest even: -0.5 -> 0, not -1 */
+
+    /* CONST array subscript — integer array */
+    check_int("GetPrime(0)",  Main__GetPrime(0),  2);
+    check_int("GetPrime(2)",  Main__GetPrime(2),  5);
+    check_int("GetPrime(4)",  Main__GetPrime(4),  11);
+    /* CONST array subscript — TEXT array (check non-NULL) */
+    check_bool("GetBoolName(0)!=NIL", Main__GetBoolName(0) != NULL, 1);
+    check_bool("GetBoolName(1)!=NIL", Main__GetBoolName(1) != NULL, 1);
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

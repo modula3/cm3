@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis;
+IMPORT MSIR, Expr, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -218,6 +218,13 @@ PROCEDURE TypeLinkValueForRefArray (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForObject   (t: Type.T): MSIR.Value;
 
 (*------------------------------------------------------------- Module globals *)
+
+(* Materialise a CONST ARRAY OF T expression as a private constant LLVM global.
+   constExpr is the underlying ArrayExpr (or a ConsExpr wrapping one); m3Val
+   is the Value.T used as a de-dup key so the same CONST produces one global.
+   Returns a ptr-typed Value that points to the global — suitable as the LValue
+   for a subscript expression.  Abandons and returns NIL on unsupported types. *)
+PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value;
 
 (* Reset the global map.  Call once at the start of each new module
    (from MSIREmit.BeginUnit). *)

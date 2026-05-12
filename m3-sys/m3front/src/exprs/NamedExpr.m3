@@ -12,6 +12,7 @@ IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
 IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
 IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT ArrayExpr;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -266,7 +267,17 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           RETURN addr;
         END;
     ELSE
-      MSIRBuilder.Abandon ("named lvalue is not a Variable");
+      (* CONST ARRAY OF T — materialise as a private constant LLVM global. *)
+      IF Value.ClassOf (p.value) = Value.Class.Expr THEN
+        VAR constExpr := Value.ToExpr (p.value);
+        BEGIN
+          IF constExpr # NIL
+             AND ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
+            RETURN MSIRBuilder.MaterializeConstArray (p.value, constExpr);
+          END;
+        END;
+      END;
+      MSIRBuilder.Abandon ("named lvalue is not a Variable or CONST array");
       RETURN NIL;
     END;
   END LValueMSIR;

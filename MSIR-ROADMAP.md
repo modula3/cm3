@@ -1,8 +1,8 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-12 (msir branch)
+Last updated: 2026-05-13 (msir branch)
 
-## What's Working (86/86 tests pass; 0 abandons across p0/p1/p2)
+## What's Working (91/91 tests pass; 0 abandons across p0/p1/p2)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abandon` events.
@@ -45,6 +45,7 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 - [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
 - [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.roundeven.*`; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`, per spec: `SetRounding` does not affect ROUND)
 - [x] `IN` operator on small constant SETs: `InExpr.CompileMSIR` extracts the word-size bit mask via `SetExpr.GetWordBitMask` (strips NamedExpr/ConsExpr, calls `BuildMap`); emits `lshr(mask, zext(elt - minOrd)) & 1 != 0` using new `IAnd`/`IOr`/`IXor`/`IShl`/`ILShr`/`IAShr` bitwise/shift ops; abandons for multi-word sets or runtime set operands
+- [x] CONST array subscript: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` for array types by calling `MSIRBuilder.MaterializeConstArray`; `ArrayExpr.EltCount`/`Elt` enumerate elements; per-element `Expr.CompileMSIR` yields constant MSIR values (`ConstTextLit`, `ConstInt`, etc.); result registered as `@constarray_N = private constant [N x T] [...]` global; `ArrayElemAddr` GEP now emits the actual index type (not hardcoded i64) to support narrow indices (e.g. BOOLEAN → i1)
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -81,8 +82,10 @@ Relevant for procedures that take open arrays by value.
 
 ### C. SET type operations
 
-SET literals, the `IN` operator, and set arithmetic (`+`, `-`, `*`, `/`) are not yet implemented.
-These require either inline bit manipulation (for small sets) or runtime calls (for large sets).
+The `IN` operator is implemented for small constant SETs (fits in one word). Remaining:
+- `IN` for large or runtime SETs — abandons
+- SET literals — not yet implemented
+- Set arithmetic (`+`, `-`, `*`, `/`) — not yet implemented
 
 ### D. NEW(REF open-array): multi-dimensional
 
@@ -107,7 +110,7 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (86 checks)
+# Full end-to-end LLVM link test (91 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

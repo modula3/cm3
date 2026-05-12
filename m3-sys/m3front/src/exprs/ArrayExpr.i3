@@ -73,4 +73,10 @@ PROCEDURE CheckStaticRTErrAssign
    statically unconditional runtime error when assigned to a variable
    of lhsType. *)
 
+PROCEDURE EltCount (constr: T): INTEGER;
+(* NUMBER of args in a 1-D fixed array constructor (0 if constr=NIL). *)
+
+PROCEDURE Elt (constr: T; i: INTEGER): Expr.T;
+(* i-th element expression (0-based). Requires i < EltCount(constr). *)
+
 END ArrayExpr.

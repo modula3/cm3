@@ -788,6 +788,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
   textLiterals:  RefSeq.T;                         (* elements: TextLit *)
+  constArrays:   RefSeq.T;                         (* elements: ConstArray *)
   nextGlobalOff: INTEGER := 0;  (* byte offset for next embedded user global *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
@@ -847,6 +848,45 @@ PROCEDURE ModuleGlobalCount(m: Module): INTEGER =
   BEGIN RETURN m.globals.size() END ModuleGlobalCount;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global =
   BEGIN RETURN m.globals.get(i) END ModuleGlobal;
+
+(*---------------------------------------------- ConstArray *)
+
+REVEAL ConstArray = BRANDED "MSIR.ConstArray" REF RECORD
+  name:    TEXT;
+  eltType: T;
+  elts:    REF ARRAY OF Value;
+  ptrVal:  Value;
+END;
+
+PROCEDURE NewConstArray(name: TEXT; eltType: T;
+                        READONLY elts: ARRAY OF Value): ConstArray =
+  VAR ca := NEW(ConstArray);  v := NEW(Value);  n := NUMBER(elts);
+  BEGIN
+    ca.name    := name;
+    ca.eltType := eltType;
+    ca.elts    := NEW(REF ARRAY OF Value, n);
+    ca.elts^   := elts;
+    v.type     := TPtr(TFixedArray(VAL(n, LONGINT), eltType));
+    v.vKind    := ValueKind.InsnResult;
+    v.name     := "@" & name;
+    ca.ptrVal  := v;
+    RETURN ca;
+  END NewConstArray;
+
+PROCEDURE ConstArrayName    (ca: ConstArray): TEXT    = BEGIN RETURN ca.name    END ConstArrayName;
+PROCEDURE ConstArrayEltType (ca: ConstArray): T       = BEGIN RETURN ca.eltType END ConstArrayEltType;
+PROCEDURE ConstArrayEltCount(ca: ConstArray): INTEGER =
+  BEGIN RETURN NUMBER(ca.elts^) END ConstArrayEltCount;
+PROCEDURE ConstArrayElt (ca: ConstArray; i: INTEGER): Value =
+  BEGIN RETURN ca.elts^[i] END ConstArrayElt;
+PROCEDURE ConstArrayValue(ca: ConstArray): Value = BEGIN RETURN ca.ptrVal END ConstArrayValue;
+
+PROCEDURE ModuleAddConstArray(m: Module; ca: ConstArray) =
+  BEGIN m.constArrays.addhi(ca) END ModuleAddConstArray;
+PROCEDURE ModuleConstArrayCount(m: Module): INTEGER =
+  BEGIN RETURN m.constArrays.size() END ModuleConstArrayCount;
+PROCEDURE ModuleConstArray(m: Module; i: INTEGER): ConstArray =
+  BEGIN RETURN m.constArrays.get(i) END ModuleConstArray;
 
 PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
                              byteAlign: INTEGER): INTEGER =
@@ -1089,6 +1129,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.importBinders := NEW(RefSeq.T).init();
     m.typeDescs      := NEW(RefSeq.T).init();
     m.textLiterals   := NEW(RefSeq.T).init();
+    m.constArrays    := NEW(RefSeq.T).init();
     m.nextGlobalOff  := 0;  (* lazily initialised to MI_SIZE on first allocation *)
     RETURN m;
   END NewModule;
