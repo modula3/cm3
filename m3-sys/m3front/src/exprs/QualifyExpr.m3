@@ -817,10 +817,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           ft   := MSIRType.Translate (fieldInfo.type);
           slot : MSIR.Value;
         BEGIN
-          IF byteOff = 0L
-            THEN slot := baseAddr;
-            ELSE slot := MSIR.BuildPtrAdd (b, "", baseAddr, byteOff);
-          END;
+          slot := MSIR.BuildPtrAdd (b, "", baseAddr, byteOff);
           (* Heap record (GcRef base): set container and retype traced fields
              as GcSlot so AssignStmt.CompileMSIR fires the write barrier. *)
           IF MSIR.Kind (MSIR.ValueType (baseAddr)) = MSIR.TypeKind.GcRef THEN
@@ -849,10 +846,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         MSIRBuilder.SetPendingContainer (baseAddr);
         VAR slotAddr: MSIR.Value;
         BEGIN
-          IF byteOff = 0L
-            THEN slotAddr := baseAddr;
-            ELSE slotAddr := MSIR.BuildPtrAdd(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
-          END;
+          slotAddr := MSIR.BuildPtrAdd(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
           (* Retype as GcSlot if this field holds a traced reference,
              so AssignStmt.CompileMSIR emits the write barrier. *)
           VAR ft := MSIRType.Translate(fieldInfo.type);

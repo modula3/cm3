@@ -435,7 +435,16 @@ PROCEDURE CurrentProc(): MSIR.Proc =
   BEGIN RETURN curProc END CurrentProc;
 
 PROCEDURE CurrentBlock(): MSIR.Block =
-  BEGIN RETURN curBlock END CurrentBlock;
+  BEGIN
+    IF curBlock # NIL AND MSIR.BlockIsTerminated(curBlock) THEN
+      VAR dead := MSIR.NewBlock("dead", ARRAY OF MSIR.BlockParam{});
+      BEGIN
+        MSIR.ProcAddBlock(curProc, dead);
+        curBlock := dead;
+      END;
+    END;
+    RETURN curBlock;
+  END CurrentBlock;
 
 PROCEDURE NewBlock(label: TEXT): MSIR.Block =
   VAR b: MSIR.Block;  uniq: TEXT;
@@ -543,17 +552,19 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   VAR
+    b:       MSIR.Block;
     unwind:  MSIR.Block;
     normalB: MSIR.Block;
     result:  MSIR.Value;
   BEGIN
+    b      := CurrentBlock();   (* advance past any dead-terminator block *)
     unwind := CurrentUnwindBlock();
     IF unwind # NIL THEN
       normalB := NewBlock("invoke.cont");
-      result  := MSIR.BuildInvoke(curBlock, name, callee, args, normalB, unwind);
+      result  := MSIR.BuildInvoke(b, name, callee, args, normalB, unwind);
       curBlock := normalB;
     ELSE
-      result := MSIR.BuildCall(curBlock, name, callee, args);
+      result := MSIR.BuildCall(b, name, callee, args);
     END;
     RETURN result;
   END EmitCall;
@@ -563,6 +574,7 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   VAR
     ptrT    := MSIR.TPtr(MSIR.TVoid());
+    b       : MSIR.Block;
     suite   : MSIR.Value;
     slotPtr : MSIR.Value;
     fn      : MSIR.Value;
@@ -572,21 +584,23 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
     normalB : MSIR.Block;
     result  : MSIR.Value;
   BEGIN
+    b := CurrentBlock();   (* advance past any dead-terminator block *)
+
     (* 1. Load vtable pointer (first word of object). *)
-    suite := MSIR.BuildLoad(curBlock, "", ptrT, obj);
+    suite := MSIR.BuildLoad(b, "", ptrT, obj);
 
     (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
     (* Vtable slot N is at byte offset N * Target.Address.bytes. *)
     IF midx = 0L THEN
       slotPtr := suite;
     ELSE
-      slotPtr := MSIR.BuildPtrAdd(curBlock, "",
+      slotPtr := MSIR.BuildPtrAdd(b, "",
                                   suite,
                                   midx * VAL(Target.Address.bytes, LONGINT));
     END;
 
     (* 3. Load function pointer from the slot. *)
-    fn := MSIR.BuildLoad(curBlock, "", ptrT, slotPtr);
+    fn := MSIR.BuildLoad(b, "", ptrT, slotPtr);
 
     (* 4. Build argument list: obj (implicit self) first, then explicit args. *)
     allArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
@@ -597,11 +611,11 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
     unwind := CurrentUnwindBlock();
     IF unwind # NIL THEN
       normalB := NewBlock("dispatch.cont");
-      result  := MSIR.BuildInvokeIndirect(curBlock, name, fn, rtype, allArgs^,
+      result  := MSIR.BuildInvokeIndirect(b, name, fn, rtype, allArgs^,
                                             normalB, unwind);
       curBlock := normalB;
     ELSE
-      result := MSIR.BuildCallIndirect(curBlock, name, fn, rtype, allArgs^);
+      result := MSIR.BuildCallIndirect(b, name, fn, rtype, allArgs^);
     END;
     RETURN result;
   END EmitMethodCall;

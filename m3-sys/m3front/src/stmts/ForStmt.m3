@@ -476,8 +476,8 @@ PROCEDURE CompileMSIR (p: P) =
       THEN pred := MSIR.CmpPred.Sle;
       ELSE pred := MSIR.CmpPred.Sge;
     END;
-    cond := MSIR.BuildICmp (headerBlk, "", pred, cur, limitVal);
-    MSIR.BuildCondBr (headerBlk, cond,
+    cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, cur, limitVal);
+    MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
                       bodyBlk, ARRAY OF MSIR.Value{},
                       exitBlk, ARRAY OF MSIR.Value{});
 

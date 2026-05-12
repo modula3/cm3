@@ -534,7 +534,7 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     (* OA_elt_ptr (byte 0) = &sizes.dim0 = sizesA + (AP + IP) bytes *)
     VAR dim0Addr := MSIR.BuildPtrAdd (b, "", sizesA, apBytes + ipBytes);
     BEGIN
-      MSIR.BuildStore (b, dim0Addr, sizesA);
+      MSIR.BuildStore (b, dim0Addr, MSIR.BuildPtrAdd (b, "", sizesA, 0L));
     END;
 
     (* OA_size_0 (byte AP) = number of open dimensions *)

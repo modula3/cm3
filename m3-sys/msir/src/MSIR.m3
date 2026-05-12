@@ -194,7 +194,24 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
     | TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot =>
         RETURN Equal(a.elt, b.elt);
     | TypeKind.Struct =>
-        RETURN Text.Equal(a.structName, b.structName);
+        IF Text.Equal(a.structName, b.structName) THEN RETURN TRUE END;
+        (* Both named and different: distinct types. *)
+        IF Text.Length(a.structName) > 0 AND Text.Length(b.structName) > 0 THEN
+          RETURN FALSE
+        END;
+        (* At least one is anonymous (inferred-type variable): compare structurally. *)
+        IF a.fields = NIL AND b.fields = NIL THEN RETURN TRUE END;
+        IF a.fields = NIL OR b.fields = NIL THEN RETURN FALSE END;
+        IF NUMBER(a.fields^) # NUMBER(b.fields^) THEN RETURN FALSE END;
+        FOR i := 0 TO LAST(a.fields^) DO
+          IF NOT Text.Equal(a.fields[i].name, b.fields[i].name) THEN
+            RETURN FALSE
+          END;
+          IF NOT Equal(a.fields[i].type, b.fields[i].type) THEN
+            RETURN FALSE
+          END;
+        END;
+        RETURN TRUE;
     | TypeKind.Object =>
         RETURN Text.Equal(a.structName, b.structName);
     | TypeKind.OpenArray, TypeKind.HeapArray =>
@@ -1553,7 +1570,8 @@ PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value
     i.operands   := NEW(REF ARRAY OF Value, 1);
     i.operands[0] := base;
     i.extractIdx := VAL(idx, INTEGER);   (* reuse extractIdx for the constant index *)
-    i.result     := makeResult(b, base.type, name, i);
+    (* Byte arithmetic yields an opaque pointer; element type is unknown. *)
+    i.result     := makeResult(b, TPtr(TVoid()), name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildPtrAdd;

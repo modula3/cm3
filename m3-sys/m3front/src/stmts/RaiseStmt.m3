@@ -137,8 +137,23 @@ PROCEDURE CompileMSIR (p: P) =
     IF p.arg # NIL THEN
       argVal := Expr.CompileMSIR(p.arg);
       IF argVal = NIL THEN RETURN END;
-      (* Cast to ptr (ADDRESS) for RTHooks__Raise parameter. *)
-      argVal := MSIR.BuildConvert(MSIRBuilder.CurrentBlock(), "", argVal, ptrT);
+      (* Cast to ptr void for RTHooks__Raise's arg parameter.
+         Scalar/pointer args: inttoptr-style convert.
+         Aggregate args (struct, array): spill to stack, pass address. *)
+      VAR argT := MSIR.ValueType(argVal); b := MSIRBuilder.CurrentBlock();
+      BEGIN
+        CASE MSIR.Kind(argT) OF
+        | MSIR.TypeKind.Struct, MSIR.TypeKind.FixedArray,
+          MSIR.TypeKind.Object =>
+            VAR slot := MSIR.BuildAlloca(b, "", argT);
+            BEGIN
+              MSIR.BuildStore(b, argVal, slot);
+              argVal := MSIR.BuildConvert(b, "", slot, ptrT);
+            END;
+        ELSE
+          argVal := MSIR.BuildConvert(b, "", argVal, ptrT);
+        END;
+      END;
     ELSE
       argVal := MSIR.ConstNil(ptrT);
     END;
