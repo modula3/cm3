@@ -58,6 +58,8 @@ The legacy shell scripts in `scripts/` (e.g., `do-cm3-front.sh`) wrap `cm3` dire
 ```sh
 cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3
 # (substitute your target name for ARM64_DARWIN)
+# On Darwin: re-sign after copy or the binary will be SIGKILL'd by the kernel
+codesign --force --sign - ~/cm3/bin/cm3
 ```
 
 ---
@@ -286,6 +288,7 @@ cd m3-sys/msir   && cm3 -build && cm3 -ship
 cd m3-sys/m3front && cm3 -build && cm3 -ship
 cd m3-sys/cm3    && cm3 -build
 cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3
+codesign --force --sign - ~/cm3/bin/cm3   # Darwin: re-sign after copy
 ```
 
 The `cm3` driver links m3front statically, so you must relink and reinstall the binary before the new MSIR code takes effect in compilations.
