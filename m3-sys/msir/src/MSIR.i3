@@ -423,7 +423,7 @@ TYPE Op = {
   Trunc,      (* integer truncation *)
   FPFloor,    (* floor(x): round toward -inf; lowers to llvm.floor.* *)
   FPCeil,     (* ceil(x):  round toward +inf; lowers to llvm.ceil.* *)
-  FPRound,    (* round-half-away-from-zero (CM3 ROUND = C round()); lowers to llvm.round.* *)
+  FPRound,    (* round-half-to-even (FloatMode.RoundDefault=NearestElseEven); lowers to llvm.roundeven.* *)
   (* sets *)
   SetUnion, SetIntersect, SetDifference, SetMember,
   (* indirect dispatch *)

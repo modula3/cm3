@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-12 (msir branch)
 
-## What's Working (81/81 tests pass; 0 abandons across p0/p1/p2)
+## What's Working (82/82 tests pass; 0 abandons across p0/p1/p2)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abandon` events.
@@ -43,7 +43,7 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 - [x] Float type conversions: `FLOAT()` builtin via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float); cast ops `ZExt`/`SExt`/`Trunc` for integer widening/narrowing
 - [x] EVAL, ASSERT, LOOP statements: `CompileMSIR` implementations
 - [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
-- [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.round.*` intrinsics; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND matches C `round()` (half-away-from-zero)
+- [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.roundeven.*`; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`, per spec: `SetRounding` does not affect ROUND)
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -105,7 +105,7 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (81 checks)
+# Full end-to-end LLVM link test (82 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

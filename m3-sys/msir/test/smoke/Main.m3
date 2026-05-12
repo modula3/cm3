@@ -661,6 +661,7 @@ BEGIN
   IO.Put ("CeilingTest(2.7) = " & Fmt.Int(CeilingTest(FLOAT(2.7))) & "\n");
   IO.Put ("CeilingTest(-1.3) = " & Fmt.Int(CeilingTest(FLOAT(-1.3))) & "\n");
   IO.Put ("RoundTest(3.5D0) = " & Fmt.Int(RoundTest(3.5D0)) & "\n");
+  IO.Put ("RoundTest(2.5D0) = " & Fmt.Int(RoundTest(2.5D0)) & "\n");
   IO.Put ("RoundTest(-0.5D0) = " & Fmt.Int(RoundTest(-0.5D0)) & "\n");
 
   (* EH tests *)

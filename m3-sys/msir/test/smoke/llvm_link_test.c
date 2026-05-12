@@ -280,8 +280,9 @@ int main(void) {
     check_int("FloorTest(-1.3f)",  Main__FloorTest(-1.3f),  -2);
     check_int("CeilingTest(2.7f)", Main__CeilingTest(2.7f),  3);
     check_int("CeilingTest(-1.3f)",Main__CeilingTest(-1.3f),-1);
-    check_int("RoundTest(3.5)",    Main__RoundTest(3.5),     4);
-    check_int("RoundTest(-0.5)",   Main__RoundTest(-0.5),   -1); /* round-half-away-from-zero */
+    check_int("RoundTest(3.5)",    Main__RoundTest(3.5),     4); /* nearest even: 3.5 -> 4 */
+    check_int("RoundTest(2.5)",    Main__RoundTest(2.5),     2); /* nearest even: 2.5 -> 2, not 3 */
+    check_int("RoundTest(-0.5)",   Main__RoundTest(-0.5),    0); /* nearest even: -0.5 -> 0, not -1 */
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

@@ -588,7 +588,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           CASE MSIR.InsnOp(i) OF
           | MSIR.Op.FPFloor     => iname := "llvm.floor.";
           | MSIR.Op.FPCeil      => iname := "llvm.ceil.";
-          ELSE                     iname := "llvm.round.";
+          ELSE                     iname := "llvm.roundeven."; (* NearestElseEven = FloatMode.RoundDefault *)
           END;
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = call ");
           LLType(wr, ftype);
