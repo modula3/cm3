@@ -13,7 +13,7 @@ IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Module, Variable, Procedure, UserProc, Target, M3RT;
 IMPORT RTIO, RTParams;
-IMPORT MSIR, MSIRBuilder, TInt;
+IMPORT MSIR, MSIRBuilder, MSIRType, TInt;
 
 VAR debug := FALSE;
 
@@ -1244,8 +1244,7 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
     END;
     IF form.openArray THEN
       IF form.mode = Mode.mVALUE THEN
-        MSIRBuilder.Abandon ("VALUE open array formal: not yet in MSIR");
-        RETURN NIL;
+        RETURN GenValueOpenArgMSIR (form, actual);
       END;
       RETURN GenOpenArgMSIR (form, actual);
     END;
@@ -1264,6 +1263,98 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
     END;
     RETURN Expr.CompileMSIR (actual);
   END EmitArgMSIR;
+
+PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
+  (* VALUE open-array formal: caller-side copy.
+     For fixed-actual (actDepth=0): alloca element copy, memcpy, build dope.
+     For open-actual: abandon (rare; callee-side copy not yet implemented). *)
+  VAR
+    formType   := form.type;
+    actType    := Type.Base (Expr.TypeOf (actual));
+    formDepth  := OpenArrayType.OpenDepth (formType);
+    actDepth   := OpenArrayType.OpenDepth (actType);
+    ptrT       := MSIR.TPtr (MSIR.TVoid ());
+    intT       := MSIR.TI (Target.Integer.size);
+    apB        := VAL (Target.Address.size DIV Target.Byte, LONGINT);
+    ipB        := VAL (Target.Integer.size DIV Target.Byte, LONGINT);
+    flds       : REF ARRAY OF MSIR.Field;
+    b          : MSIR.Block;
+    dopeA, dataPtr, copyA : MSIR.Value;
+    innerT, indexT, eltT  : Type.T;
+    cnt        : Target.Int;
+    cntI       : INTEGER;
+    totalElts  : LONGINT;
+    eltMsirT   : MSIR.T;
+    eltPackBits: INTEGER;
+    totalBytes : INTEGER;
+  BEGIN
+    IF actDepth > 0 THEN
+      (* Open actual → VALUE open formal: dynamic alloca not yet in MSIR *)
+      MSIRBuilder.Abandon (
+        "VALUE open-array formal with open actual: not yet in MSIR");
+      RETURN NIL;
+    END;
+
+    (* Compute static element count by walking the fixed-array dimensions. *)
+    totalElts := 1L;
+    innerT    := actType;
+    FOR k := 0 TO formDepth - 1 DO
+      IF NOT ArrayType.Split (innerT, indexT, eltT) THEN
+        MSIRBuilder.Abandon ("VALUE open-array: cannot split array type");
+        RETURN NIL;
+      END;
+      cnt := Type.Number (indexT);
+      IF NOT TInt.ToInt (cnt, cntI) THEN
+        MSIRBuilder.Abandon ("VALUE open-array: element count out of INTEGER range");
+        RETURN NIL;
+      END;
+      totalElts := totalElts * VAL (cntI, LONGINT);
+      innerT    := eltT;
+    END;
+    (* innerT is now the innermost element type. *)
+    eltMsirT := MSIRType.Translate (innerT);
+    IF eltMsirT = NIL THEN
+      MSIRBuilder.Abandon ("VALUE open-array: unsupported element type");
+      RETURN NIL;
+    END;
+    eltPackBits := OpenArrayType.EltPack (formType);   (* bits/element *)
+    IF totalElts < 1L THEN totalElts := 1L END;        (* alloca needs count >= 1 *)
+    totalBytes := VAL (totalElts, INTEGER) * (eltPackBits DIV Target.Char.size);
+
+    (* Get original data pointer. *)
+    dataPtr := Expr.LValueMSIR (actual);
+    IF dataPtr = NIL THEN RETURN NIL END;
+
+    (* Alloca element copy with element-type alignment. *)
+    b     := MSIRBuilder.CurrentBlock ();
+    copyA := MSIR.BuildAlloca (b, "oa.copy", eltMsirT);
+    IF totalElts > 1L THEN MSIR.AllocaSetCount (copyA, VAL (totalElts, INTEGER)) END;
+
+    (* Emit memcpy(copyA, dataPtr, totalBytes). *)
+    MSIRBuilder.EmitMemcpy (copyA, dataPtr, totalBytes);
+
+    (* Build dope vector { ptr, i64 x formDepth } on stack. *)
+    flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
+    flds[0] := MSIR.Field {name := "", type := ptrT};
+    FOR k := 0 TO formDepth - 1 DO
+      flds[1 + k] := MSIR.Field {name := "", type := intT};
+    END;
+    b     := MSIRBuilder.CurrentBlock ();
+    dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+    MSIR.BuildStore (b, copyA, MSIR.BuildPtrAdd (b, "", dopeA, 0L));
+    innerT := actType;
+    FOR k := 0 TO formDepth - 1 DO
+      IF NOT ArrayType.Split (innerT, indexT, eltT) THEN RETURN NIL END;
+      cnt := Type.Number (indexT);
+      IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
+      MSIR.BuildStore (b,
+                       MSIR.ConstInt (intT, VAL (cntI, LONGINT)),
+                       MSIR.BuildPtrAdd (b, "", dopeA,
+                                         apB + ipB * VAL (k, LONGINT)));
+      innerT := eltT;
+    END;
+    RETURN dopeA;
+  END GenValueOpenArgMSIR;
 
 PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
   (* Build a dope vector on the stack when a fixed array is passed to an

@@ -226,6 +226,11 @@ PROCEDURE TypeLinkValueForObject   (t: Type.T): MSIR.Value;
    for a subscript expression.  Abandons and returns NIL on unsupported types. *)
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value;
 
+(* Emit a memcpy(dst, src, byteCount) call in the current block.
+   Uses the C library memcpy; the result ptr is discarded.
+   No-op when not inside a proc or already abandoned. *)
+PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
+
 (* Reset the global map.  Call once at the start of each new module
    (from MSIREmit.BeginUnit). *)
 PROCEDURE BeginModule();

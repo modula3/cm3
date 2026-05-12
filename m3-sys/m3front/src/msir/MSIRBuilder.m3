@@ -78,6 +78,8 @@ VAR
   constArrayMapN: INTEGER := 0;
   constArraySeq:  INTEGER := 0;
 
+  memcpyProc: MSIR.Proc := NIL;  (* lazy C memcpy stub *)
+
 PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
   (* TRUE for types safe to pass by value as a capture param.
      Integer and float widths are pure values; Ptr covers UNTRACED REF, ADDRESS,
@@ -932,7 +934,33 @@ PROCEDURE BeginModule() =
     procContextDepth := 0;
     constArrayMapN   := 0;
     constArraySeq    := 0;
+    memcpyProc       := NIL;
   END BeginModule;
+
+PROCEDURE GetMemcpyProc(): MSIR.Proc =
+  BEGIN
+    IF memcpyProc = NIL THEN
+      memcpyProc := MSIR.NewProc("memcpy",
+        ARRAY OF MSIR.Param{
+          MSIR.Param{name := "dst",  type := MSIR.TPtr(MSIR.TVoid()),
+                     mode := MSIR.ParamMode.ByValue},
+          MSIR.Param{name := "src",  type := MSIR.TPtr(MSIR.TVoid()),
+                     mode := MSIR.ParamMode.ByValue},
+          MSIR.Param{name := "n",    type := MSIR.TI(Target.Integer.size),
+                     mode := MSIR.ParamMode.ByValue}
+        },
+        MSIR.TPtr(MSIR.TVoid()));  (* memcpy returns ptr; result unused *)
+    END;
+    RETURN memcpyProc;
+  END GetMemcpyProc;
+
+PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER) =
+  BEGIN
+    IF curBlock = NIL OR abandoned THEN RETURN END;
+    EVAL MSIR.BuildCall(curBlock, "", GetMemcpyProc(),
+      ARRAY OF MSIR.Value{dst, src,
+        MSIR.ConstInt(MSIR.TI(Target.Integer.size), VAL(byteCount, LONGINT))});
+  END EmitMemcpy;
 
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR

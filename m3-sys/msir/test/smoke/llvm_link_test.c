@@ -105,6 +105,9 @@ extern M3Int  Main__RoundTest(double y);
 extern M3Int  Main__GetPrime(M3Int i);       /* SmallPrimes[i] */
 extern void  *Main__GetBoolName(M3Bool b);   /* BoolName[b] — returns TEXT ptr */
 
+/* VALUE open-array formal — caller provides dope vector, callee sums elements */
+extern M3Int  Main__SumOA(OpenArray *a);
+
 /* RTHooks__ScanTypecase is provided by libm3core.  For ref=NIL (our only
    harness test) it returns 0 immediately without touching runtime state. */
 
@@ -305,6 +308,14 @@ int main(void) {
     /* CONST array subscript — TEXT array (check non-NULL) */
     check_bool("GetBoolName(0)!=NIL", Main__GetBoolName(0) != NULL, 1);
     check_bool("GetBoolName(1)!=NIL", Main__GetBoolName(1) != NULL, 1);
+
+    /* VALUE open-array formal — caller builds dope vector, MSIR callee sums */
+    { M3Int d3[3] = {10, 20, 30};
+      OpenArray oa3 = {d3, 3};
+      check_int("SumOA({10,20,30})", Main__SumOA(&oa3), 60); }
+    { M3Int d5[5] = {1, 2, 3, 4, 5};
+      OpenArray oa5 = {d5, 5};
+      check_int("SumOA({1,2,3,4,5})", Main__SumOA(&oa5), 15); }
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

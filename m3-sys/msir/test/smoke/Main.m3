@@ -565,6 +565,14 @@ PROCEDURE GetPrime (i: INTEGER): INTEGER =
 PROCEDURE GetBoolName (b: BOOLEAN): TEXT =
   BEGIN RETURN BoolName[b] END GetBoolName;
 
+(* VALUE open-array formal: caller-side copy *)
+PROCEDURE SumOA (a: ARRAY OF INTEGER): INTEGER =
+  VAR s := 0;
+  BEGIN
+    FOR i := 0 TO LAST(a) DO INC(s, a[i]) END;
+    RETURN s;
+  END SumOA;
+
 (* TRUNC/FLOOR/CEILING/ROUND — runtime params prevent constant folding *)
 PROCEDURE TruncTest (x: REAL): INTEGER =
   BEGIN RETURN TRUNC(x) END TruncTest;
@@ -686,6 +694,10 @@ BEGIN
   IO.Put ("GetPrime(4) = " & Fmt.Int(GetPrime(4)) & "\n");
   IO.Put ("GetBoolName(FALSE) = " & GetBoolName(FALSE) & "\n");
   IO.Put ("GetBoolName(TRUE) = " & GetBoolName(TRUE) & "\n");
+
+  (* VALUE open-array formal tests *)
+  IO.Put ("SumOA({10,20,30}) = " & Fmt.Int(SumOA(ARRAY OF INTEGER{10, 20, 30})) & "\n");
+  IO.Put ("SumOA({1,2,3,4,5}) = " & Fmt.Int(SumOA(ARRAY OF INTEGER{1, 2, 3, 4, 5})) & "\n");
 
   (* TRUNC / FLOOR / CEILING / ROUND tests *)
   IO.Put ("TruncTest(2.7) = " & Fmt.Int(TruncTest(FLOAT(2.7))) & "\n");
