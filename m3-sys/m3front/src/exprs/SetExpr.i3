@@ -7,7 +7,7 @@
 (*      Modified On Fri Jul  6 23:46:44 1990 By muller         *)
 
 INTERFACE SetExpr;
-(* For set constructors. *) 
+(* For set constructors. *)
 
 IMPORT Type, Expr, CG;
 
@@ -28,6 +28,12 @@ PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
 (* Set Code and Msg if they are not set and expr is known to produce a
    statically unconditional runtime error when evaluated. *)
+
+PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: LONGINT): BOOLEAN;
+(* If e is a compile-time constant SET that fits in one word, sets minOrd to the
+   minimum element ordinal and mask to the set's word-sized bit pattern (bit k
+   is set iff ordinal minOrd+k is a member), then returns TRUE.  Returns FALSE
+   if e is non-constant, has runtime elements, or is larger than one word. *)
 
 PROCEDURE Init ();
 

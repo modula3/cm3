@@ -1002,5 +1002,33 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
     END;
   END Capture;
 
+(*EXPORTED:*)
+PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: LONGINT): BOOLEAN =
+  VAR
+    p      : P;
+    n      : Node;
+    tmp    : Target.Int;
+    cur    : Target.Int;
+    v      : INTEGER;
+    constE : Expr.T;
+  BEGIN
+    (* Strip NamedExpr/ConsExpr wrappers (e.g. a CONST name) to the underlying SetExpr. *)
+    constE := Expr.ConstValue (e);
+    IF constE = NIL THEN constE := e END;
+    IF NOT BuildMap (constE, p) THEN RETURN FALSE END;
+    IF p.maxI - p.minI >= Target.Word.size THEN RETURN FALSE END;
+    minOrd := p.minI;
+    cur    := TInt.Zero;
+    n := p.tree;
+    WHILE n # NIL DO
+      TWord.And (left [n.min - p.minI], right [n.max - p.minI], tmp);
+      TWord.Or  (cur, tmp, cur);
+      n := n.next;
+    END;
+    IF NOT TInt.ToInt (cur, v) THEN RETURN FALSE END;
+    mask := VAL (v, LONGINT);
+    RETURN TRUE;
+  END GetWordBitMask;
+
 BEGIN
 END SetExpr.

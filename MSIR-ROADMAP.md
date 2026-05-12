@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-12 (msir branch)
 
-## What's Working (82/82 tests pass; 0 abandons across p0/p1/p2)
+## What's Working (86/86 tests pass; 0 abandons across p0/p1/p2)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abandon` events.
@@ -44,6 +44,7 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 - [x] EVAL, ASSERT, LOOP statements: `CompileMSIR` implementations
 - [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
 - [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.roundeven.*`; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`, per spec: `SetRounding` does not affect ROUND)
+- [x] `IN` operator on small constant SETs: `InExpr.CompileMSIR` extracts the word-size bit mask via `SetExpr.GetWordBitMask` (strips NamedExpr/ConsExpr, calls `BuildMap`); emits `lshr(mask, zext(elt - minOrd)) & 1 != 0` using new `IAnd`/`IOr`/`IXor`/`IShl`/`ILShr`/`IAShr` bitwise/shift ops; abandons for multi-word sets or runtime set operands
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -62,6 +63,7 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 - [x] TextLiteral vtable method names resolved via `RunTyme.LookUpProc` → `MSIRBuilder.HookProc`; `EmitDeclare` derives signatures from M3 types (no hardcoded strings)
 - [x] Procedure constants: `ConstProc` value kind lowers to `ptr @procname`
 - [x] Cast instructions: `sitofp`, `fptosi`, `fpext`, `fptrunc`, `zext`, `sext`, `trunc`
+- [x] Bitwise/shift instructions: `and`, `or`, `xor`, `shl`, `lshr`, `ashr` (via new `IAnd`/`IOr`/`IXor`/`IShl`/`ILShr`/`IAShr` ops)
 
 ---
 
@@ -105,7 +107,7 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (82 checks)
+# Full end-to-end LLVM link test (86 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

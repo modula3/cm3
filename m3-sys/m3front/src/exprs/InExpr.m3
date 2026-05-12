@@ -10,6 +10,7 @@ MODULE InExpr;
 
 IMPORT CG, Expr, ExprRep, Error, Type, SetType, Bool, SetExpr;
 IMPORT Target, TInt, Value;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Tab BRANDED "InExpr.P" OBJECT
@@ -35,7 +36,8 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
-        exprAlign    := ExprRep.ExprBoolAlign; 
+        exprAlign    := ExprRep.ExprBoolAlign;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a, b: Expr.T): Expr.T =
@@ -144,6 +146,56 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
       CG.Set_member (info.size);
     END;
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    set, range            : Type.T;
+    b                     : BOOLEAN;
+    min, max, emin, emax  : Target.Int;
+    info                  : Type.Info;
+    mask                  : LONGINT;
+    minOrd                : INTEGER;
+    elt, maskVal, shifted, bit : MSIR.Value;
+    blk                        : MSIR.Block;
+    ti64                       : MSIR.T;
+  BEGIN
+    set := Type.Base (Type.CheckInfo (Expr.TypeOf (p.b), info));
+    b := SetType.Split (set, range);  <*ASSERT b*>
+    b := Type.GetBounds (range, min, max);  <*ASSERT b*>
+    Expr.GetBounds (p.a, emin, emax);
+
+    IF NOT SetExpr.GetWordBitMask (p.b, minOrd, mask) THEN
+      MSIRBuilder.Abandon ("InExpr: non-constant or large set");
+      RETURN NIL;
+    END;
+    IF TInt.LT (emin, min) OR TInt.LT (max, emax) THEN
+      MSIRBuilder.Abandon ("InExpr: element needs range check");
+      RETURN NIL;
+    END;
+
+    blk  := MSIRBuilder.CurrentBlock ();
+    elt  := Expr.CompileMSIR (p.a);
+    IF elt = NIL THEN RETURN NIL END;
+    blk  := MSIRBuilder.CurrentBlock ();
+    ti64 := MSIR.TI (64);
+
+    (* Zero-extend element to i64 if narrower. *)
+    IF MSIR.BitWidth (MSIR.ValueType (elt)) < 64 THEN
+      elt := MSIR.BuildZExt (blk, "in.ext", elt, ti64);
+    END;
+
+    maskVal := MSIR.ConstInt (ti64, mask);
+
+    IF minOrd # 0 THEN
+      elt := MSIR.BuildISub (blk, "in.adj", elt,
+                             MSIR.ConstInt (ti64, VAL (minOrd, LONGINT)));
+    END;
+
+    shifted := MSIR.BuildILShr (blk, "in.shr", maskVal, elt);
+    bit     := MSIR.BuildIAnd  (blk, "in.bit", shifted, MSIR.ConstInt (ti64, 1L));
+    RETURN MSIR.BuildICmp (blk, "in.cmp", MSIR.CmpPred.Ne,
+                           bit, MSIR.ConstZero (ti64));
+  END CompileMSIR;
 
 PROCEDURE Fold (p: P): Expr.T =
   VAR e1, e2, e3: Expr.T;

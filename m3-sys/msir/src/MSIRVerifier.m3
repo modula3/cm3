@@ -369,7 +369,9 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
   BEGIN
     CASE MSIR.InsnOp(i) OF
     | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul,
-      MSIR.Op.IDiv, MSIR.Op.IMod =>
+      MSIR.Op.IDiv, MSIR.Op.IMod,
+      MSIR.Op.IAnd, MSIR.Op.IOr,  MSIR.Op.IXor,
+      MSIR.Op.IShl, MSIR.Op.ILShr, MSIR.Op.IAShr =>
         CheckBinaryArith(c, i);
     | MSIR.Op.FAdd, MSIR.Op.FSub, MSIR.Op.FMul, MSIR.Op.FDiv =>
         CheckBinaryArith(c, i);

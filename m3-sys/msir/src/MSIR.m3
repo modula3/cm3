@@ -1193,6 +1193,19 @@ PROCEDURE BuildIDiv(b: Block; name: TEXT; x, y: Value): Value =
 PROCEDURE BuildIMod(b: Block; name: TEXT; x, y: Value): Value =
   BEGIN RETURN buildBin(b, Op.IMod, name, x, y) END BuildIMod;
 
+PROCEDURE BuildIAnd(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IAnd, name, x, y) END BuildIAnd;
+PROCEDURE BuildIOr(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IOr, name, x, y) END BuildIOr;
+PROCEDURE BuildIXor(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IXor, name, x, y) END BuildIXor;
+PROCEDURE BuildIShl(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IShl, name, x, y) END BuildIShl;
+PROCEDURE BuildILShr(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.ILShr, name, x, y) END BuildILShr;
+PROCEDURE BuildIAShr(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IAShr, name, x, y) END BuildIAShr;
+
 PROCEDURE BuildICmp(b: Block; name: TEXT; pred: CmpPred; x, y: Value): Value =
   VAR
     i := NEW(Insn);

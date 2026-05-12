@@ -91,6 +91,10 @@ extern M3Int  Main__SquareArea(void *self);  /* reads self->side via field GEP *
 /* TYPECASE test */
 extern M3Int  Main__TypecaseKind(void *r);
 
+/* IN operator — element IN constant SET */
+extern M3Bool Main__IsWeekend(M3Byte d);   /* SET OF Weekday{Sat,Sun} */
+extern M3Bool Main__IsWorkday(M3Byte d);   /* SET OF Weekday{Mon..Fri} */
+
 /* TRUNC / FLOOR / CEILING / ROUND rounding builtins */
 extern M3Int  Main__TruncTest(float x);
 extern M3Int  Main__FloorTest(float x);
@@ -272,6 +276,12 @@ int main(void) {
 
     /* TYPECASE dispatch — NIL path: ScanTypecase(NIL)=0 → first clause → 1 */
     check_int("TypecaseKind(NULL)",   Main__TypecaseKind(NULL), 1);
+
+    /* IN operator — element IN constant SET (Weekday enum, ordinals 0..6) */
+    check_bool("IsWeekend(Sat=5)",   Main__IsWeekend(5),  1); /* Sat is ordinal 5 */
+    check_bool("IsWeekend(Mon=0)",   Main__IsWeekend(0),  0);
+    check_bool("IsWorkday(Wed=2)",   Main__IsWorkday(2),  1);
+    check_bool("IsWorkday(Sun=6)",   Main__IsWorkday(6),  0);
 
     /* TRUNC / FLOOR / CEILING / ROUND */
     check_int("TruncTest(2.7f)",   Main__TruncTest(2.7f),    2);

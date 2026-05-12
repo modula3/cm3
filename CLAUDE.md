@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (82/82 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (86/86 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -402,7 +402,8 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 - **VALUE open-array formals**: copy-in to a local dope vector not yet implemented; these still abandon
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
-- **SET type operations**: SET literals, IN operator, set arithmetic not yet implemented
+- **SET type operations**: `IN` operator on small constant SETs works (word-size bit-mask extraction via `SetExpr.GetWordBitMask`, bitwise shift/and ops); SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented
+- **CONST array subscript with runtime index**: when a `CONST ARRAY` is subscripted at a non-constant index (e.g., `BoolToText[b]`, `reservedWords[i]`), MSIR abandons — requires materializing the CONST array as a static global
 
 ### GC Write Barrier Container Protocol
 

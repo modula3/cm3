@@ -564,9 +564,15 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         LLOpVal(wr, MSIR.InsnOperand(i, 1));
         Wr.PutText(wr, "\n");
 
-    | MSIR.Op.IAdd => EmitBinop(wr, "add",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
-    | MSIR.Op.ISub => EmitBinop(wr, "sub",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
-    | MSIR.Op.IMul => EmitBinop(wr, "mul",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IAdd  => EmitBinop(wr, "add",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.ISub  => EmitBinop(wr, "sub",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IMul  => EmitBinop(wr, "mul",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IAnd  => EmitBinop(wr, "and",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IOr   => EmitBinop(wr, "or",   res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IXor  => EmitBinop(wr, "xor",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IShl  => EmitBinop(wr, "shl",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.ILShr => EmitBinop(wr, "lshr", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IAShr => EmitBinop(wr, "ashr", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
 
     | MSIR.Op.FAdd => EmitBinop(wr, "fadd", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
     | MSIR.Op.FSub => EmitBinop(wr, "fsub", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));

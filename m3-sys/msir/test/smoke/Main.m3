@@ -544,6 +544,17 @@ PROCEDURE TryExceptNormal (): INTEGER =
     RETURN n;
   END TryExceptNormal;
 
+(* IN operator — element IN constant SET *)
+TYPE Weekday = {Mon, Tue, Wed, Thu, Fri, Sat, Sun};
+CONST Weekends = SET OF Weekday{Weekday.Sat, Weekday.Sun};
+CONST WorkWeek = SET OF Weekday{Weekday.Mon, Weekday.Tue, Weekday.Wed, Weekday.Thu, Weekday.Fri};
+
+PROCEDURE IsWeekend (d: Weekday): BOOLEAN =
+  BEGIN RETURN d IN Weekends END IsWeekend;
+
+PROCEDURE IsWorkday (d: Weekday): BOOLEAN =
+  BEGIN RETURN d IN WorkWeek END IsWorkday;
+
 (* TRUNC/FLOOR/CEILING/ROUND — runtime params prevent constant folding *)
 PROCEDURE TruncTest (x: REAL): INTEGER =
   BEGIN RETURN TRUNC(x) END TruncTest;
@@ -652,6 +663,12 @@ BEGIN
 
   (* TYPECASE test *)
   IO.Put ("TypecaseKind(NIL) = " & Fmt.Int(TypecaseKind(NIL)) & "\n");
+
+  (* IN operator tests *)
+  IO.Put ("IsWeekend(Sat) = " & Fmt.Bool(IsWeekend(Weekday.Sat)) & "\n");
+  IO.Put ("IsWeekend(Mon) = " & Fmt.Bool(IsWeekend(Weekday.Mon)) & "\n");
+  IO.Put ("IsWorkday(Wed) = " & Fmt.Bool(IsWorkday(Weekday.Wed)) & "\n");
+  IO.Put ("IsWorkday(Sun) = " & Fmt.Bool(IsWorkday(Weekday.Sun)) & "\n");
 
   (* TRUNC / FLOOR / CEILING / ROUND tests *)
   IO.Put ("TruncTest(2.7) = " & Fmt.Int(TruncTest(FLOAT(2.7))) & "\n");

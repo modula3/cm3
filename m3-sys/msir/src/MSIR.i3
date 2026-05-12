@@ -389,6 +389,7 @@ TYPE Op = {
   Alloca, Load, Store, GcLoad, GcStore, FieldAddr,
   (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
+  IAnd, IOr, IXor, IShl, ILShr, IAShr, (* bitwise / shift *)
   (* float arithmetic *)
   FAdd, FSub, FMul, FDiv, FNeg,
   (* compare *)
@@ -471,6 +472,12 @@ PROCEDURE BuildISub(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIMul(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIDiv(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIMod(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIAnd(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIOr (b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIXor(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIShl(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildILShr(b: Block; name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIAShr(b: Block; name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildICmp(b: Block;  name: TEXT;  pred: CmpPred;  x, y: Value): Value;
 
 PROCEDURE BuildFAdd(b: Block;  name: TEXT;  x, y: Value): Value;
