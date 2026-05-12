@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). The following features are implemented and tested (77/77 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (73/73 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -256,6 +256,10 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **TextLiteral vtable hooks**: the five `@textlit_methods` function pointers (`RTHooks__TextLitInfo` etc.) are resolved via `MSIRBuilder.HookProc`/`RunTyme.LookUpProc` in `MSIREmit.EndUnit` and stored in the MSIR module; `MSIRToLLVM` uses `LLSymbol(hook)` for names and `EmitDeclare` for signatures, eliminating all hardcoded strings and deriving correct types from the M3 type system
 - **TypeCell alignment**: `InitTypecellMSIR` in `RefType.m3` and `ObjectType.m3` now correctly converts alignment from bits to bytes (divides by `Target.Byte`) before passing to `TypeDescValueForRef`/`TypeDescValueForRefArray`; `RTType__FinishTypecell` requires bytes in {1,2,4,8,16}
 - **Fixed→open-array argument coercion**: `Formal.EmitArgMSIR` / `GenOpenArgMSIR` (in `Formal.m3`) build a stack dope vector `{ ptr data, i64 dim0, … }` when a fixed-size array actual is passed to a VAR/READONLY open-array formal; `UserProc.CompileMSIR` walks formals via `Formal.EmitArgMSIR` rather than the old Ptr-check heuristic; VALUE open-array formals abandon (not yet needed)
+- **Procedure values**: `ProcExpr.CompileMSIR` returns `MSIR.ConstProcRef(proc)` — a `ptr @procname` constant; `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`; `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` guards `Kind(EltType) ≠ Void` so proc formals are treated as by-value scalars
+- **Float type conversions**: new cast ops `SIToFP`, `FPToSI`, `FPExt`, `FPTrunc`, `ZExt`, `SExt`, `Trunc` in `MSIR`; `Floatt.CompileMSIR` implements `FLOAT()` via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float)
+- **Extern variable auto-registration**: `NamedExpr.CompileMSIR` calls `Variable.RegisterExternMSIR(vv)` on demand for `FROM X IMPORT y` style variables not pre-registered by `DeclareGlobalsMSIR`
+- **EVAL / ASSERT / LOOP stmts**: `EvalStmt`, `AssertStmt`, `LoopStmt` have `CompileMSIR` implementations
 
 ### EH Model Requirement
 
@@ -391,11 +395,13 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 - **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls (`Fmt.Bool`, `Text.Length`, etc.) all work — external calls are emitted correctly and the calling convention matches the C backend. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests
 - **GC write barrier for heap fields**: activated; see container protocol below
 - **`var_map`/`gc_map`**: implemented; see architecture note below
-- **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested; record-with-keyword-args still abandoned
+- **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested
 - **NEW(REF record with keyword args)**: `GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
+- **VALUE open-array formals**: copy-in to a local dope vector not yet implemented; these still abandon
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
 - **Debug symbols**: no source locations reach LLVM IR; see below
+- **SET type operations**: SET literals, IN operator, set arithmetic not yet implemented
 
 ### GC Write Barrier Container Protocol
 
