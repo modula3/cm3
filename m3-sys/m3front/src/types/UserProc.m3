@@ -341,15 +341,21 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     END;
     n       := NUMBER(p.args^);
     argVals := NEW(REF ARRAY OF MSIR.Value, n);
-    FOR i := 0 TO n - 1 DO
-      IF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i + pBase)))
-           = MSIR.TypeKind.Ptr THEN
-        argVal := Expr.LValueMSIR(p.args[i]);
-      ELSE
-        argVal := Expr.CompileMSIR(p.args[i]);
+    VAR fv := ProcType.Formals(procType);
+    BEGIN
+      FOR i := 0 TO n - 1 DO
+        IF fv # NIL THEN
+          argVal := Formal.EmitArgMSIR(fv, p.args[i]);
+          fv := fv.next;
+        ELSIF MSIR.Kind(MSIR.ValueType(MSIR.ProcParam(msirCallee, i + pBase)))
+                = MSIR.TypeKind.Ptr THEN
+          argVal := Expr.LValueMSIR(p.args[i]);
+        ELSE
+          argVal := Expr.CompileMSIR(p.args[i]);
+        END;
+        IF argVal = NIL THEN RETURN NIL END;
+        argVals[i] := argVal;
       END;
-      IF argVal = NIL THEN RETURN NIL END;
-      argVals[i] := argVal;
     END;
     IF isNested THEN
       RETURN MSIRBuilder.EmitNestedCall("", msirCallee, v, argVals^);

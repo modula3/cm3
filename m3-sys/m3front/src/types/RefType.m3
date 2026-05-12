@@ -342,7 +342,7 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
       EVAL MSIRBuilder.TypeDescValueForRefArray (
              t,
              dopeSize DIV Target.Char.size,
-             rinfo.alignment,
+             rinfo.alignment DIV Target.Byte,
              dims,
              elemSize DIV Target.Byte,
              info.isTraced);
@@ -350,7 +350,7 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
       EVAL MSIRBuilder.TypeDescValueForRef (
              t,
              rinfo.size DIV Target.Char.size,
-             rinfo.alignment,
+             rinfo.alignment DIV Target.Byte,
              info.isTraced);
     END;
   END InitTypecellMSIR;

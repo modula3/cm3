@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The following features are implemented and tested (77/77 tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). The following features are implemented and tested (77/77 tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -254,6 +254,8 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **Read-only scalar capture optimisation**: captures classified `written=FALSE` by `CaptureAnalysis` and of scalar MSIR type (integer, float, or untraced pointer) are passed by value instead of by pointer, giving LLVM's alias analysis better information; GcRef captures always pass by pointer so the conservative GC scanner keeps them on the stack
 - **WIDECHAR text literals**: `M3WString.GetChar` provides raw code-point access; `MSIREmit` encodes each WIDECHAR as little-endian bytes (`Target.WideCharSize() DIV Target.Char.size` bytes); `MSIRToLLVM` emits the correct `[wcharBytes*len + wcharBytes x i8]` struct field with a wide null terminator; `cnt` is negative to distinguish from ASCII literals
 - **TextLiteral vtable hooks**: the five `@textlit_methods` function pointers (`RTHooks__TextLitInfo` etc.) are resolved via `MSIRBuilder.HookProc`/`RunTyme.LookUpProc` in `MSIREmit.EndUnit` and stored in the MSIR module; `MSIRToLLVM` uses `LLSymbol(hook)` for names and `EmitDeclare` for signatures, eliminating all hardcoded strings and deriving correct types from the M3 type system
+- **TypeCell alignment**: `InitTypecellMSIR` in `RefType.m3` and `ObjectType.m3` now correctly converts alignment from bits to bytes (divides by `Target.Byte`) before passing to `TypeDescValueForRef`/`TypeDescValueForRefArray`; `RTType__FinishTypecell` requires bytes in {1,2,4,8,16}
+- **Fixed→open-array argument coercion**: `Formal.EmitArgMSIR` / `GenOpenArgMSIR` (in `Formal.m3`) build a stack dope vector `{ ptr data, i64 dim0, … }` when a fixed-size array actual is passed to a VAR/READONLY open-array formal; `UserProc.CompileMSIR` walks formals via `Formal.EmitArgMSIR` rather than the old Ptr-check heuristic; VALUE open-array formals abandon (not yet needed)
 
 ### EH Model Requirement
 
@@ -304,7 +306,7 @@ To run as a full M3 program against the real runtime:
 clang _m3main.cpp Main-llvm.o libm3core.a libm3.a -lc++ -o smoke-realrt
 ./smoke-realrt
 ```
-The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run the module body. The body currently fails on TEXT/IO operations (not yet fully supported in MSIR), but the binder and initialization sequence work correctly.
+The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run the module body. The module body runs to completion (exit 0) — all IO.Put / Fmt / Text calls in Main.m3 work correctly against the real runtime.
 
 ### Key Source Files
 
@@ -331,6 +333,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/misc/M3WString.m3` | Wide-char string representation; `GetChar(t, i)` gives raw code-point access used by `MSIREmit` to encode WIDECHAR literals as little-endian byte sequences |
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
 | `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
+| `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`: formal-aware arg-passing for MSIR call sites; `GenOpenArgMSIR`: builds stack dope vector when fixed array is passed to open-array formal |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
 | `m3-sys/msir/test/smoke/llvm_link_test.c` | 76-test C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |

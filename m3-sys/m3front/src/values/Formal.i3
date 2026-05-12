@@ -8,7 +8,7 @@
 
 INTERFACE Formal;
 
-IMPORT M3ID, Type, Value, Expr, Tracer;
+IMPORT M3ID, Type, Value, Expr, Tracer, MSIR;
 
 TYPE Mode = {mVALUE, mVAR, mREADONLY};
 
@@ -62,5 +62,10 @@ PROCEDURE CheckArgs (VAR cs       : Value.CheckState;
 PROCEDURE PrepArg (formalValue: Value.T;  actual: Expr.T);
 PROCEDURE EmitArg (proc: Expr.T;  formalValue: Value.T;  actual: Expr.T);
 (* generate code to pass 'actual' as a 'formal'.  *)
+
+PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value;
+(* MSIR analog of EmitArg: compile 'actual' and return the MSIR value to
+   pass for 'formalValue', performing open-array dope-vector construction
+   when the actual's open depth is less than the formal's. *)
 
 END Formal.

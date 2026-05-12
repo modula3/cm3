@@ -13,6 +13,7 @@ IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Module, Variable, Procedure, UserProc, Target, M3RT;
 IMPORT RTIO, RTParams;
+IMPORT MSIR, MSIRBuilder, TInt;
 
 VAR debug := FALSE;
 
@@ -1232,6 +1233,89 @@ PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL) =
 
     CG.Free (actVal);
   END RedepthArray;
+
+(*EXPORTED*)
+PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
+  VAR form: T := formalValue;
+  BEGIN
+    IF form.mode = Mode.mVAR THEN
+      IF form.openArray THEN RETURN GenOpenArgMSIR (form, actual) END;
+      RETURN Expr.LValueMSIR (actual);
+    END;
+    IF form.openArray THEN
+      IF form.mode = Mode.mVALUE THEN
+        MSIRBuilder.Abandon ("VALUE open array formal: not yet in MSIR");
+        RETURN NIL;
+      END;
+      RETURN GenOpenArgMSIR (form, actual);
+    END;
+    IF form.mode = Mode.mREADONLY THEN
+      CASE form.kind OF
+      | Type.Class.Record, Type.Class.Array, Type.Class.Object =>
+          RETURN Expr.LValueMSIR (actual);
+      | Type.Class.Set =>
+          IF SetType.IsSmallSet (form.repType)
+            THEN RETURN Expr.CompileMSIR (actual);
+            ELSE RETURN Expr.LValueMSIR (actual);
+          END;
+      ELSE
+        RETURN Expr.CompileMSIR (actual);
+      END;
+    END;
+    RETURN Expr.CompileMSIR (actual);
+  END EmitArgMSIR;
+
+PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
+  (* Build a dope vector on the stack when a fixed array is passed to an
+     open-array formal, and return a pointer to it.  When the actual is
+     already open at the required depth, return LValueMSIR directly. *)
+  VAR
+    formType  := form.type;
+    actType   := Type.Base (Expr.TypeOf (actual));
+    formDepth := OpenArrayType.OpenDepth (formType);
+    actDepth  := OpenArrayType.OpenDepth (actType);
+    ptrT      := MSIR.TPtr (MSIR.TVoid ());
+    intT      := MSIR.TI (Target.Integer.size);
+    apB       := VAL (Target.Address.size DIV Target.Byte, LONGINT);
+    ipB       := VAL (Target.Integer.size DIV Target.Byte, LONGINT);
+    flds      : REF ARRAY OF MSIR.Field;
+    b         : MSIR.Block;
+    dopeA, dataPtr : MSIR.Value;
+    innerT, indexT, eltT : Type.T;
+    cnt  : Target.Int;
+    cntI : INTEGER;
+  BEGIN
+    IF formDepth <= actDepth THEN
+      RETURN Expr.LValueMSIR (actual);
+    END;
+    IF actDepth > 0 THEN
+      MSIRBuilder.Abandon ("partial open-array depth coercion not yet in MSIR");
+      RETURN NIL;
+    END;
+    flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
+    flds[0] := MSIR.Field {name := "", type := ptrT};
+    FOR k := 0 TO formDepth - 1 DO
+      flds[1 + k] := MSIR.Field {name := "", type := intT};
+    END;
+    b     := MSIRBuilder.CurrentBlock ();
+    dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+    dataPtr := Expr.LValueMSIR (actual);
+    IF dataPtr = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
+    MSIR.BuildStore (b, dataPtr, MSIR.BuildPtrAdd (b, "", dopeA, 0L));
+    innerT := actType;
+    FOR k := 0 TO formDepth - 1 DO
+      IF NOT ArrayType.Split (innerT, indexT, eltT) THEN RETURN NIL END;
+      cnt := Type.Number (indexT);
+      IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
+      MSIR.BuildStore (b,
+                       MSIR.ConstInt (intT, VAL (cntI, LONGINT)),
+                       MSIR.BuildPtrAdd (b, "", dopeA,
+                                         apB + ipB * VAL (k, LONGINT)));
+      innerT := eltT;
+    END;
+    RETURN dopeA;
+  END GenOpenArgMSIR;
 
 (*EXPORTED*)
 PROCEDURE GenCopy (type: Type.T) =

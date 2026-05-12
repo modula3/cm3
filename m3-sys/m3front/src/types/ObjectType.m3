@@ -694,6 +694,7 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     uid := VAL (Type.GlobalUID (t), LONGINT);
     GetObjectTypeInfo (t, fldSize, fldAlign, methBytes, dataOff, parUID,
                        nSlots, names, vtableKnown);
+    fldAlign := fldAlign DIV Target.Byte;
     IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
     IF vtableKnown AND names # NIL THEN
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
