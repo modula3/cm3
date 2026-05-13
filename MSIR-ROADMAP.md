@@ -1,11 +1,11 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-13 (msir branch)
+Last updated: 2026-05-13 (msir branch, commit 4aae372169)
 
-## What's Working (91/91 tests pass; 0 abandons across p0/p1/p2)
+## What's Working (96/96 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
-The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abandon` events.
+The full p0/p1/p2 compiler validation test suite has only 8 `msir-abandon` events (all known, all minor).
 
 ### Emission (m3front → MSIR)
 - [x] Arithmetic, comparisons, boolean short-circuit
@@ -37,6 +37,7 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 - [x] `var_map`/`gc_map`: module globals embedded as trailing fields of `@Mod_M3_info`; TipeMap byte sequence for GC scanning; LLVM aliases for symbol compatibility
 - [x] Nested procedures: **lambda-lifted** — `Stmt.Capture` pre-scans the body; each captured up-level variable becomes an explicit `ptr` param (`%__cap_0`, …); outer proc's up-level vars are ordinary allocas; multi-level nesting supported
 - [x] Read-only scalar captures pass by value (not ptr): `CaptureAnalysis.written=FALSE` + scalar MSIR type → direct value param; GcRef stays by ptr for conservative GC
+- [x] VALUE open-array formals: caller-side copy-in; `GenValueOpenArgMSIR` allocas element storage (eltType alignment), emits `@memcpy`, builds dope vector; fixed-size actuals supported; open-actual (dynamic count) still abandons
 - [x] WIDECHAR text literals: encoded as little-endian bytes (`Target.WideCharSize()` per char); `[wcharBytes*len + wcharBytes x i8]` struct; negative `cnt` distinguishes from ASCII
 - [x] TEXT library calls (`Fmt.Bool`, `Text.Length`, etc.): external calls emit correctly; calling convention matches C backend
 - [x] Procedure values: `ProcExpr.CompileMSIR` → `MSIR.ConstProcRef(proc)` (`ptr @procname`); `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; auto-registers extern variables on demand for `FROM X IMPORT y` names; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`
@@ -46,6 +47,7 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 - [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.roundeven.*`; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`, per spec: `SetRounding` does not affect ROUND)
 - [x] `IN` operator on small constant SETs: `InExpr.CompileMSIR` extracts the word-size bit mask via `SetExpr.GetWordBitMask` (strips NamedExpr/ConsExpr, calls `BuildMap`); emits `lshr(mask, zext(elt - minOrd)) & 1 != 0` using new `IAnd`/`IOr`/`IXor`/`IShl`/`ILShr`/`IAShr` bitwise/shift ops; abandons for multi-word sets or runtime set operands
 - [x] CONST array subscript: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` for array types by calling `MSIRBuilder.MaterializeConstArray`; `ArrayExpr.EltCount`/`Elt` enumerate elements; per-element `Expr.CompileMSIR` yields constant MSIR values (`ConstTextLit`, `ConstInt`, etc.); result registered as `@constarray_N = private constant [N x T] [...]` global; `ArrayElemAddr` GEP now emits the actual index type (not hardcoded i64) to support narrow indices (e.g. BOOLEAN → i1)
+- [x] Indirect (proc-variable) calls: `UserProc.CompileMSIR` now handles the non-literal, non-method case via `Expr.CompileMSIR(p.proc)` + `MSIRBuilder.EmitCallIndirect`; routes to `BuildCallIndirect` or `BuildInvokeIndirect` depending on active TRY context
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -70,20 +72,28 @@ The full p0/p1/p2 compiler validation test suite compiles with zero `msir-abando
 
 ## Remaining Work (prioritised)
 
-### A. TEXT: remaining cases
+**Only 8 abandons remain** across the full p0/p1/p2 test suite:
+- 3 × VALUE open-array formal with open actual (dynamic alloca not in MSIR)
+- 2 × NEW(REF record, keyword args)
+- 1 × unsupported expression
+- 1 × named lvalue not a Variable or CONST array
+- 1 × IN operator on non-constant or large set
 
-- `Fmt.Real` (floating-point formatting) — not yet exercised in tests
-- `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
+### A. VALUE open-array formals (partial)
 
-### B. VALUE open-array formals
+Fixed-size actuals work (caller-side copy: alloca+memcpy+dope vector).
+Remaining: open actual → VALUE open formal (dynamic element count requires dynamic alloca, not yet in MSIR).
+3 abandons remain in p0/p1/p2 for this case.
 
-Copy-in of open-array VALUE formals (building a local dope vector) is not yet implemented.
-Relevant for procedures that take open arrays by value.
+### B. NEW(REF record with keyword args)
+
+`GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works.
+2 abandons remain.
 
 ### C. SET type operations
 
 The `IN` operator is implemented for small constant SETs (fits in one word). Remaining:
-- `IN` for large or runtime SETs — abandons
+- `IN` for large or runtime SETs — 1 abandon
 - SET literals — not yet implemented
 - Set arithmetic (`+`, `-`, `*`, `/`) — not yet implemented
 
@@ -91,19 +101,20 @@ The `IN` operator is implemented for small constant SETs (fits in one word). Rem
 
 `GenOpenArrayMSIR` handles 1-D; multi-D untested.
 
-### E. NEW(REF record with keyword args)
-
-`GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works.
-
-### F. Opaque types
+### E. Opaque types
 
 `GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
 
-### G. Debug symbols
+### F. Debug symbols
 
 No source locations in emitted LLVM IR. See debug symbol architecture note in
 `CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,
 `AddLocalMSIR`, `BeginProc`).
+
+### G. TEXT: remaining cases
+
+- `Fmt.Real` (floating-point formatting) — not yet exercised in tests
+- `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
 
 ---
 
