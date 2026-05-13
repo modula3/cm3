@@ -862,6 +862,18 @@ PROCEDURE CompileMSIR (p: P) =
     IF lhsPtr = NIL THEN RETURN END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
+    (* Coerce nil constant to match the slot's element type for untraced pointer stores.
+       NIL compiles as gc_ref void but untraced pointer slots have type ptr T. *)
+    IF MSIR.GetValueKind (rhsVal) = MSIR.ValueKind.ConstNil THEN
+      VAR slotT := MSIR.ValueType (lhsPtr);
+          eltT  := MSIR.EltType (slotT);
+      BEGIN
+        IF MSIR.Kind (eltT) # MSIR.TypeKind.Void AND
+           NOT MSIR.Equal (eltT, MSIR.ValueType (rhsVal)) THEN
+          rhsVal := MSIR.RetypeValue (rhsVal, eltT);
+        END;
+      END;
+    END;
     (* Use CurrentBlock() after RHS compilation: a call in the RHS (via
        EmitCall inside a TRY) may switch curBlock to a new continuation block. *)
     IF MSIR.Kind (MSIR.ValueType (lhsPtr)) = MSIR.TypeKind.GcSlot THEN

@@ -881,6 +881,14 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       END;
       RETURN MSIR.BuildFCmp (blk, "", fpred, lv, rv);
     ELSE
+      (* Coerce nil constant to match the other operand's type (e.g. ptr void vs gc_ref void). *)
+      IF MSIR.GetValueKind (lv) = MSIR.ValueKind.ConstNil AND
+         NOT MSIR.Equal (MSIR.ValueType (lv), MSIR.ValueType (rv)) THEN
+        lv := MSIR.RetypeValue (lv, MSIR.ValueType (rv));
+      ELSIF MSIR.GetValueKind (rv) = MSIR.ValueKind.ConstNil AND
+            NOT MSIR.Equal (MSIR.ValueType (rv), MSIR.ValueType (lv)) THEN
+        rv := MSIR.RetypeValue (rv, MSIR.ValueType (lv));
+      END;
       CASE p.op OF
       | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
       | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
