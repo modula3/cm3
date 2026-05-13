@@ -936,6 +936,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("unsupported record field type");
           RETURN NIL;
         END;
+        (* LValueMSIR retyped traced-ref fields to gc_slot for write-barrier;
+           use BuildGcLoad (read barrier + correct result type) for those. *)
+        IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+          RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
+        END;
         RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);
     | Class.objField =>
         (* Load a scalar field from a heap object.  LValueMSIR computes the
@@ -947,6 +952,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         IF fieldType = NIL THEN
           MSIRBuilder.Abandon ("unsupported object field type");
           RETURN NIL;
+        END;
+        (* LValueMSIR retyped traced-ref fields to gc_slot for write-barrier;
+           use BuildGcLoad (read barrier + correct result type) for those. *)
+        IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+          RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
         END;
         RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);
     | Class.enumLit =>

@@ -75,13 +75,19 @@ PROCEDURE CompileMSIR (p: P) =
     IF p.expr # NIL THEN
       v := Expr.CompileMSIR (p.expr);
       IF v = NIL THEN RETURN END;
-      (* Coerce nil constant to match the procedure result type (e.g. RETURN NIL
-         from an ADDRESS-returning proc: gc_ref void → ptr void). *)
-      IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstNil THEN
-        VAR resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
-        BEGIN
-          IF resultT # NIL AND MSIR.Kind (resultT) # MSIR.TypeKind.Void AND
-             NOT MSIR.Equal (MSIR.ValueType (v), resultT) THEN
+      (* Coerce the return value to match the declared procedure result type when
+         M3 subtyping allows assignment but MSIR requires exact kind match:
+         - NIL constant → any non-void result type (e.g. RETURN NIL from ADDRESS proc)
+         - gc_ref X → gc_ref void when the proc result is REFANY / gc_ref void
+           (REF T <: REFANY is valid M3 but MSIR types are not structurally equal) *)
+      VAR resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
+      BEGIN
+        IF resultT # NIL AND MSIR.Kind (resultT) # MSIR.TypeKind.Void AND
+           NOT MSIR.Equal (MSIR.ValueType (v), resultT) THEN
+          IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstNil OR
+             (MSIR.Kind (MSIR.ValueType (v)) = MSIR.Kind (resultT) AND
+              (MSIR.Kind (resultT) = MSIR.TypeKind.GcRef OR
+               MSIR.Kind (resultT) = MSIR.TypeKind.Ptr)) THEN
             v := MSIR.RetypeValue (v, resultT);
           END;
         END;
