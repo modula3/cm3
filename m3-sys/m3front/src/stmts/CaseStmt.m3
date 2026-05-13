@@ -322,10 +322,13 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
   END Compile;
 
 PROCEDURE FlattenTree (t, tail: Tree): Tree =
+  VAR less: Tree;
   BEGIN
     IF (t = NIL) THEN RETURN tail END;
     t.greater := FlattenTree (t.greater, tail);
-    RETURN FlattenTree (t.less, t);
+    less := t.less;
+    t.less := NIL;   (* clear stale BST link so re-entrant FlattenTree is safe *)
+    RETURN FlattenTree (less, t);
   END FlattenTree;
 
 PROCEDURE ShouldBeIndexed (p: P;  maxL, minL: INTEGER): BOOLEAN =

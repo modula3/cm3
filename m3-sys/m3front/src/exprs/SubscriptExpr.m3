@@ -527,6 +527,21 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     END;
     arrAddr := Expr.LValueMSIR (p.a);
     IF arrAddr = NIL THEN RETURN NIL END;
+    (* Verify the array type is a FixedArray (or ptr→FixedArray) before
+       calling BuildArrayElemAddr.  Packed / sub-word-element arrays
+       produce non-FixedArray MSIR types and are not yet supported. *)
+    VAR arrT := MSIR.ValueType (arrAddr);  arrayT: MSIR.T;
+    BEGIN
+      IF MSIR.Kind(arrT) = MSIR.TypeKind.Ptr THEN
+        arrayT := MSIR.EltType (arrT);
+      ELSE
+        arrayT := arrT;
+      END;
+      IF MSIR.Kind(arrayT) # MSIR.TypeKind.FixedArray THEN
+        MSIRBuilder.Abandon ("packed/sub-word array subscript not yet supported in MSIR");
+        RETURN NIL;
+      END;
+    END;
     blk := MSIRBuilder.CurrentBlock ();
     RETURN MSIR.BuildArrayElemAddr (blk, "", arrAddr, idxVal);
   END LValueMSIR;
