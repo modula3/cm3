@@ -1,11 +1,11 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-13 (msir branch, commit 4aae372169)
+Last updated: 2026-05-13 (msir branch, commit b0ff93bb3b)
 
 ## What's Working (96/96 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
-The full p0/p1/p2 compiler validation test suite has only 8 `msir-abandon` events (all known, all minor).
+**Zero msir-abandon events** across the full p0/p1/p2 compiler validation test suite.
 
 ### Emission (m3front → MSIR)
 - [x] Arithmetic, comparisons, boolean short-circuit
@@ -48,6 +48,8 @@ The full p0/p1/p2 compiler validation test suite has only 8 `msir-abandon` event
 - [x] `IN` operator on small constant SETs: `InExpr.CompileMSIR` extracts the word-size bit mask via `SetExpr.GetWordBitMask` (strips NamedExpr/ConsExpr, calls `BuildMap`); emits `lshr(mask, zext(elt - minOrd)) & 1 != 0` using new `IAnd`/`IOr`/`IXor`/`IShl`/`ILShr`/`IAShr` bitwise/shift ops; abandons for multi-word sets or runtime set operands
 - [x] CONST array subscript: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` for array types by calling `MSIRBuilder.MaterializeConstArray`; `ArrayExpr.EltCount`/`Elt` enumerate elements; per-element `Expr.CompileMSIR` yields constant MSIR values (`ConstTextLit`, `ConstInt`, etc.); result registered as `@constarray_N = private constant [N x T] [...]` global; `ArrayElemAddr` GEP now emits the actual index type (not hardcoded i64) to support narrow indices (e.g. BOOLEAN → i1)
 - [x] Indirect (proc-variable) calls: `UserProc.CompileMSIR` now handles the non-literal, non-method case via `Expr.CompileMSIR(p.proc)` + `MSIRBuilder.EmitCallIndirect`; routes to `BuildCallIndirect` or `BuildInvokeIndirect` depending on active TRY context
+- [x] CONST record field access: `QualifyExpr.CompileMSIR` folds `OK.rank` (CONST RECORD field) via `StripNamedCons + RecordExpr.Qualify` before attempting `LValueMSIR`
+- [x] NEW(REF record, keyword args): `GenRefMSIR` initializes named fields after allocation via `KeywordExpr.Split + RecordType.LookUp + Field.Split + BuildPtrAdd + BuildStore`
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -72,40 +74,30 @@ The full p0/p1/p2 compiler validation test suite has only 8 `msir-abandon` event
 
 ## Remaining Work (prioritised)
 
-**Only 8 abandons remain** across the full p0/p1/p2 test suite:
-- 3 × VALUE open-array formal with open actual (dynamic alloca not in MSIR)
-- 2 × NEW(REF record, keyword args)
-- 1 × unsupported expression
-- 1 × named lvalue not a Variable or CONST array
-- 1 × IN operator on non-constant or large set
+**Zero abandons** in the full p0/p1/p2 test suite. Remaining gaps are constructs
+not exercised by p0/p1/p2 or architectural limitations.
 
 ### A. VALUE open-array formals (partial)
 
 Fixed-size actuals work (caller-side copy: alloca+memcpy+dope vector).
 Remaining: open actual → VALUE open formal (dynamic element count requires dynamic alloca, not yet in MSIR).
-3 abandons remain in p0/p1/p2 for this case.
 
-### B. NEW(REF record with keyword args)
-
-`GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works.
-2 abandons remain.
-
-### C. SET type operations
+### B. SET type operations
 
 The `IN` operator is implemented for small constant SETs (fits in one word). Remaining:
-- `IN` for large or runtime SETs — 1 abandon
+- `IN` for large or runtime SETs — not yet implemented
 - SET literals — not yet implemented
 - Set arithmetic (`+`, `-`, `*`, `/`) — not yet implemented
 
-### D. NEW(REF open-array): multi-dimensional
+### C. NEW(REF open-array): multi-dimensional
 
 `GenOpenArrayMSIR` handles 1-D; multi-D untested.
 
-### E. Opaque types
+### D. Opaque types
 
 `GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
 
-### F. Debug symbols
+### E. Debug symbols
 
 No source locations in emitted LLVM IR. See debug symbol architecture note in
 `CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,

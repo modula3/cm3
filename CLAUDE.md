@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Only 8 msir-abandon events remain across the full p0/p1/p2 test suite** (all minor, all known). The following features are implemented and tested (96/96 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (96/96 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
