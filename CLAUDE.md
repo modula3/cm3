@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon events across the full p0/p1/p2 test suite.** The following features are implemented and tested (96/96 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon and zero msir-verify events across the full p0/p1/p2 test suite, all of libm3, and all of m3core.** The following features are implemented and tested (96/96 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -405,6 +405,15 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 - **Debug symbols**: no source locations reach LLVM IR; see below
 - **SET type operations**: `IN` operator on small constant SETs works (word-size bit-mask extraction via `SetExpr.GetWordBitMask`, bitwise shift/and ops); SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented
 - **CONST array subscript with runtime index**: works — `NamedExpr.LValueMSIR` handles `Value.Class.Expr` array by calling `MSIRBuilder.MaterializeConstArray`; the array is registered as `@constarray_N = private constant [N x T] [...]`; `ArrayElemAddr` GEP emits the actual index type (not hardcoded i64)
+
+### NIL Typing Convention
+
+`NIL` in M3 is represented in MSIR as `ConstNil(TPtr(TVoid()))` — always an untraced opaque pointer null. Call sites coerce the nil to match the destination/comparand type when needed:
+- `AssignStmt.CompileMSIR`: if the rhs is `ConstNil` and the slot element type is non-void and ≠ `ptr void`, retype to the slot element type (e.g. `gc_ref void` for traced ref slots)
+- `ReturnStmt.CompileMSIR`: retype nil to match the procedure result type
+- `EqualExpr.CompileMSIR` (both SimpleScalar and Complex/procedure branches): retype nil to match the other icmp operand
+
+This is cleaner than returning `gc_ref void` for traced NIL and `ptr void` for untraced NIL because LLVM in opaque-pointer mode emits `null` for any ConstNil regardless of MSIR type, and the distinction only matters for the MSIR verifier.
 
 ### GC Write Barrier Container Protocol
 
