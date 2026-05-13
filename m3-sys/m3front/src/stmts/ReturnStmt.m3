@@ -75,6 +75,17 @@ PROCEDURE CompileMSIR (p: P) =
     IF p.expr # NIL THEN
       v := Expr.CompileMSIR (p.expr);
       IF v = NIL THEN RETURN END;
+      (* Coerce nil constant to match the procedure result type (e.g. RETURN NIL
+         from an ADDRESS-returning proc: gc_ref void → ptr void). *)
+      IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstNil THEN
+        VAR resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
+        BEGIN
+          IF resultT # NIL AND MSIR.Kind (resultT) # MSIR.TypeKind.Void AND
+             NOT MSIR.Equal (MSIR.ValueType (v), resultT) THEN
+            v := MSIR.RetypeValue (v, resultT);
+          END;
+        END;
+      END;
     END;
     (* If returning from inside a catch handler, release the exception first. *)
     endCatch := MSIRBuilder.CurrentCatchEndProc ();
