@@ -162,12 +162,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("non-NIL address constant not supported in MSIR v0");
       RETURN NIL;
     END;
-    (* NIL: untraced null pointer or null gc-ref depending on context.
-       Return gc_ref void — EqualExpr's icmp handles mixed pointer comparisons. *)
-    IF p.type = Null.T
-      THEN RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
-      ELSE RETURN MSIR.ConstNil (MSIR.TPtr  (MSIR.TVoid ()));
-    END;
+    (* NIL always compiles as ptr void null. Call sites coerce to gc_ref void
+       when storing to traced slots (AssignStmt, ReturnStmt, EqualExpr). *)
+    RETURN MSIR.ConstNil (MSIR.TPtr (MSIR.TVoid ()));
   END CompileMSIR;
 
 PROCEDURE Bounder (p: P;   VAR min, max: Target.Int) =
