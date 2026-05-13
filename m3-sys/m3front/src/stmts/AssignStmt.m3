@@ -874,6 +874,23 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
     END;
+    (* Coerce narrower integer value to match wider slot element type.
+       This handles CHAR (i8) assigned to WIDECHAR (i16) slot and similar
+       ordinal widening that M3 permits implicitly.  Use ZExt because
+       CHAR and WIDECHAR are unsigned (ordinal) types. *)
+    BEGIN
+      VAR slotT   := MSIR.ValueType (lhsPtr);
+          eltT    := MSIR.EltType (slotT);
+          rhsT    := MSIR.ValueType (rhsVal);
+          dstBits := MSIR.BitWidth (eltT);
+          srcBits := MSIR.BitWidth (rhsT);
+      BEGIN
+        IF dstBits > 0 AND srcBits > 0 AND dstBits > srcBits AND
+           NOT MSIR.Equal (eltT, rhsT) THEN
+          rhsVal := MSIR.BuildZExt (MSIRBuilder.CurrentBlock(), "", rhsVal, eltT);
+        END;
+      END;
+    END;
     (* Use CurrentBlock() after RHS compilation: a call in the RHS (via
        EmitCall inside a TRY) may switch curBlock to a new continuation block. *)
     IF MSIR.Kind (MSIR.ValueType (lhsPtr)) = MSIR.TypeKind.GcSlot THEN
