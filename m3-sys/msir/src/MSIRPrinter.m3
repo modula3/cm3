@@ -251,6 +251,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.OpenArrayDeref     => RETURN "openarray.deref";
     | MSIR.Op.ArrayElemAddr      => RETURN "array.elem_addr";
     | MSIR.Op.PtrAdd             => RETURN "ptr.add";
+    | MSIR.Op.GepByte            => RETURN "gep.byte";
     | MSIR.Op.CallIndirect       => RETURN "call.indirect";
     | MSIR.Op.InvokeIndirect     => RETURN "invoke.indirect";
     END;
@@ -528,6 +529,11 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", " & Fmt.Int(MSIR.InsnExtractIdx(i)));
+    | MSIR.Op.GepByte =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
     | MSIR.Op.CallIndirect, MSIR.Op.InvokeIndirect =>
         (* ops[0]=fn, ops[1..n-1]=args *)
         Wr.PutText(wr, " ");

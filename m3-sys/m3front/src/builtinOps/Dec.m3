@@ -140,10 +140,20 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     IF NUMBER (ce.args^) > 1 THEN
       delta := Expr.CompileMSIR (ce.args[1]);
       IF delta = NIL THEN RETURN NIL END;
+    ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
+      delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1L);
     ELSE
       delta := MSIR.ConstInt (MSIR.ValueType (old), 1L);
     END;
-    updated := MSIR.BuildISub (blk, "", old, delta);
+    IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
+      (* ADDRESS arithmetic: negate delta, then GepByte *)
+      VAR negDelta := MSIR.BuildISub (blk, "", MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L), delta);
+      BEGIN
+        updated := MSIR.BuildGepByte (blk, "", old, negDelta);
+      END;
+    ELSE
+      updated := MSIR.BuildISub (blk, "", old, delta);
+    END;
     MSIR.BuildStore (blk, updated, addr);
     RETURN NIL;
   END CompileMSIR;

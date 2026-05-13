@@ -448,6 +448,7 @@ TYPE Op = {
   SetUnion, SetIntersect, SetDifference, SetMember,
   (* indirect dispatch *)
   PtrAdd,         (* getelementptr ptr, ptr %base, i64 N  — vtable slot address *)
+  GepByte,        (* getelementptr i8, ptr %base, i64 %offset — dynamic byte-offset ptr arith *)
   CallIndirect,   (* call via function-pointer value (no static Proc target) *)
   InvokeIndirect  (* invoke via function-pointer value, with normal/unwind targets *)
 };
@@ -683,6 +684,10 @@ PROCEDURE BuildSetMember    (b: Block;  name: TEXT;
    Used for vtable slot indexing (pass idx = method_slot * sizeof(ptr))
    and for heap object field access (pass idx = total byte offset). *)
 PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value;
+
+(* Dynamic byte-offset GEP: getelementptr inbounds i8, ptr %base, i64 %offset.
+   Used for ADDRESS arithmetic (INC/DEC on ADDRESS variables). *)
+PROCEDURE BuildGepByte(b: Block;  name: TEXT;  base, offset: Value): Value;
 
 (* Call through a function-pointer value.  fn must have ptr type.
    rtype is the MSIR return type (NIL for void).  Like BuildCall but the

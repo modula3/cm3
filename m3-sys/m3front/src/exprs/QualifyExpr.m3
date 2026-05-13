@@ -833,7 +833,11 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
             MSIRBuilder.SetPendingContainer (baseAddr);
             IF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.GcRef THEN
               slot := MSIR.RetypeValue (slot, MSIR.TGcSlot (MSIR.EltType (ft)));
+            ELSIF ft # NIL THEN
+              slot := MSIR.RetypeValue (slot, MSIR.TPtr (ft));
             END;
+          ELSIF ft # NIL THEN
+            slot := MSIR.RetypeValue (slot, MSIR.TPtr (ft));
           END;
           RETURN slot;
         END;
@@ -856,12 +860,14 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         VAR slotAddr: MSIR.Value;
         BEGIN
           slotAddr := MSIR.BuildPtrAdd(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
-          (* Retype as GcSlot if this field holds a traced reference,
-             so AssignStmt.CompileMSIR emits the write barrier. *)
+          (* Retype: GcRef fields → GcSlot (write barrier); others → TPtr(ft) for
+             type-preserving access (e.g. array field subscript needs FixedArray type). *)
           VAR ft := MSIRType.Translate(fieldInfo.type);
           BEGIN
             IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.GcRef THEN
               slotAddr := MSIR.RetypeValue(slotAddr, MSIR.TGcSlot(MSIR.EltType(ft)));
+            ELSIF ft # NIL THEN
+              slotAddr := MSIR.RetypeValue(slotAddr, MSIR.TPtr(ft));
             END;
           END;
           RETURN slotAddr;

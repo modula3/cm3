@@ -107,10 +107,17 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     IF NUMBER (ce.args^) > 1 THEN
       delta := Expr.CompileMSIR (ce.args[1]);
       IF delta = NIL THEN RETURN NIL END;
+    ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
+      delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1L);
     ELSE
       delta := MSIR.ConstInt (MSIR.ValueType (old), 1L);
     END;
-    updated := MSIR.BuildIAdd (blk, "", old, delta);
+    IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
+      (* ADDRESS arithmetic: getelementptr i8 — delta is byte count *)
+      updated := MSIR.BuildGepByte (blk, "", old, delta);
+    ELSE
+      updated := MSIR.BuildIAdd (blk, "", old, delta);
+    END;
     MSIR.BuildStore (blk, updated, addr);
     RETURN NIL;
   END CompileMSIR;

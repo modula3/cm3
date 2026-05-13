@@ -704,6 +704,19 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, ", i64 " & Fmt.Int(idx) & "\n");
         END;
 
+    | MSIR.Op.GepByte =>
+        (* getelementptr inbounds i8, ptr %base, i64 %offset — dynamic byte-offset ptr arith *)
+        VAR
+          baseV   := MSIR.InsnOperand(i, 0);
+          offsetV := MSIR.InsnOperand(i, 1);
+        BEGIN
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr inbounds i8, ptr ");
+          LLOpVal(wr, baseV);
+          Wr.PutText(wr, ", i64 ");
+          LLOpVal(wr, offsetV);
+          Wr.PutText(wr, "\n");
+        END;
+
     | MSIR.Op.CallIndirect =>
         (* ops[0]=fn, ops[1..n-1]=args; targetType=return type *)
         VAR

@@ -1736,6 +1736,19 @@ PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value
     RETURN i.result;
   END BuildPtrAdd;
 
+PROCEDURE BuildGepByte(b: Block;  name: TEXT;  base, offset: Value): Value =
+  VAR i := NEW(Insn);
+      ops := NEW(REF ARRAY OF Value, 2);
+  BEGIN
+    i.op := Op.GepByte;
+    ops[0] := base;
+    ops[1] := offset;
+    i.operands := ops;
+    i.result   := makeResult(b, TPtr(TVoid()), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildGepByte;
+
 PROCEDURE BuildCallIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
                              READONLY args: ARRAY OF Value): Value =
   VAR

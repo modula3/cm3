@@ -184,9 +184,19 @@ PROCEDURE NoteWrites (p: P) =
   END NoteWrites;
 
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  VAR addr: MSIR.Value;  elemT: MSIR.T;
   BEGIN
-    (* p^ as lvalue: the address is the pointer value itself. *)
-    RETURN Expr.CompileMSIR (p.a);
+    addr := Expr.CompileMSIR (p.a);
+    IF addr = NIL THEN RETURN NIL END;
+    (* Retype the opaque pointer to TPtr(elemT) so callers (e.g. BuildArrayElemAddr)
+       know the element type.  GcRef stays as-is (GC barrier already handled). *)
+    IF MSIR.Kind (MSIR.ValueType (addr)) # MSIR.TypeKind.GcRef THEN
+      elemT := MSIRType.Translate (p.type);
+      IF elemT # NIL THEN
+        addr := MSIR.RetypeValue (addr, MSIR.TPtr (elemT));
+      END;
+    END;
+    RETURN addr;
   END LValueMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =

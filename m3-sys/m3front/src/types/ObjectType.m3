@@ -669,7 +669,17 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
     END;
     names := NEW (REF ARRAY OF TEXT, nSlots);
     IF FillMethodNames (p, names^) THEN
-      vtableKnown := TRUE;
+      (* Verify no inherited slots are NIL (inherited methods not visible here). *)
+      VAR allKnown := TRUE;
+      BEGIN
+        FOR i := 0 TO nSlots - 1 DO
+          IF names[i] = NIL THEN allKnown := FALSE; EXIT END;
+        END;
+        IF allKnown
+          THEN vtableKnown := TRUE;
+          ELSE names := NIL; nSlots := 0;
+        END;
+      END;
     ELSE
       names  := NIL;
       nSlots := 0;

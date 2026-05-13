@@ -15,7 +15,7 @@ MODULE CallExpr;
 
 IMPORT CG, Expr, ExprRep, Error, ProcType, Type, UserProc;
 IMPORT KeywordExpr, ESet, QualifyExpr, ErrType, Value, Target;
-IMPORT MSIR, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 REVEAL
   MethodList = BRANDED "CallExpr.MethodList" REF RECORD
@@ -460,6 +460,10 @@ PROCEDURE IsWritable (p: T;  lhs: BOOLEAN): BOOLEAN =
 
 PROCEDURE CompileMSIR (p: T): MSIR.Value =
   BEGIN
+    IF p.methods = NIL OR p.methods.compileMSIR = NIL THEN
+      MSIRBuilder.Abandon("builtin has no MSIR handler");
+      RETURN NIL;
+    END;
     RETURN p.methods.compileMSIR(p);
   END CompileMSIR;
 

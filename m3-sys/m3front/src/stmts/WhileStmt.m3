@@ -96,7 +96,8 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.SetCurrentBlock (headerBlock);
     condVal := Expr.CompileMSIR (p.cond);
     IF condVal = NIL THEN RETURN END;
-    MSIR.BuildCondBr (headerBlock, condVal,
+    (* Use CurrentBlock() — AND/OR short-circuit may have switched to a merge block. *)
+    MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), condVal,
                       bodyBlock,   ARRAY OF MSIR.Value{},
                       exitBlock,   ARRAY OF MSIR.Value{});
 
