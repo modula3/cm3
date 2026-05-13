@@ -89,7 +89,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     e    := ce.args[0];
     srcT := Type.Base (Expr.TypeOf (e));
     dstT := TypeOf (ce);
-    blk  := MSIRBuilder.CurrentBlock ();
+    blk  : MSIR.Block;
     src  : MSIR.Value;
     dst  : MSIR.T;
     srcIsFloat := (srcT = Reel.T) OR (srcT = LReel.T) OR (srcT = EReel.T);
@@ -100,6 +100,8 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       RETURN NIL;
     END;
     src := Expr.CompileMSIR (e);  IF src = NIL THEN RETURN NIL END;
+    (* Capture currentBlock AFTER compiling e — an invoke inside a TRY may switch it. *)
+    blk := MSIRBuilder.CurrentBlock ();
     dst := MSIRType.Translate (dstT);
     IF dst = NIL THEN
       MSIRBuilder.Abandon ("FLOAT: unsupported dest type in MSIR");

@@ -140,6 +140,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     IF NUMBER (ce.args^) > 1 THEN
       delta := Expr.CompileMSIR (ce.args[1]);
       IF delta = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();  (* delta may have emitted an invoke *)
     ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
       delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1L);
     ELSE

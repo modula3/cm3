@@ -55,10 +55,11 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
     e    := ce.args[0];
     dstT := MSIRType.Translate (TypeOf (ce));
-    blk  := MSIRBuilder.CurrentBlock ();
+    blk  : MSIR.Block;
     src  : MSIR.Value;
   BEGIN
     src := Expr.CompileMSIR (e);  IF src = NIL THEN RETURN NIL END;
+    blk := MSIRBuilder.CurrentBlock ();
     IF dstT = NIL THEN
       MSIRBuilder.Abandon ("ROUND: unsupported dest type");  RETURN NIL
     END;

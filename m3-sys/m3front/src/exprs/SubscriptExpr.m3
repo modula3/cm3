@@ -510,7 +510,7 @@ PROCEDURE NoteWrites (p: P) =
 (* MSIR support: fixed (non-open) 1-D subscript only for v0. The index is
    already biased to 0..N-1 in p.biased_b. *)
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
-  VAR blk := MSIRBuilder.CurrentBlock ();
+  VAR blk: MSIR.Block;
       arrAddr, idxVal, oa: MSIR.Value;
   BEGIN
     idxVal := Expr.CompileMSIR (p.biased_b);
@@ -521,11 +521,13 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
          compute the element address. *)
       oa := Expr.CompileMSIR (p.a);
       IF oa = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
       RETURN MSIR.BuildOpenArrayElemAddr (blk, "", oa,
                                           ARRAY OF MSIR.Value{idxVal});
     END;
     arrAddr := Expr.LValueMSIR (p.a);
     IF arrAddr = NIL THEN RETURN NIL END;
+    blk := MSIRBuilder.CurrentBlock ();
     RETURN MSIR.BuildArrayElemAddr (blk, "", arrAddr, idxVal);
   END LValueMSIR;
 
