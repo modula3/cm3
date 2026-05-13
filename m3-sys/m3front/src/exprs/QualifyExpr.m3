@@ -910,6 +910,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             RETURN NIL;
         END;
     | Class.recField =>
+        (* Fold CONST record field access: e.g. EVAL OK.rank where OK is a CONST.
+           StripNamedCons pierces the NamedExpr+ConsExpr wrapper to get the
+           underlying RecordExpr.P; RecordExpr.Qualify extracts the field value.
+           This avoids going through LValueMSIR, which requires an addressable base. *)
+        folded := NIL;
+        VAR stripped := Expr.StripNamedCons (p.lhsExpr);
+        BEGIN
+          IF stripped # NIL THEN
+            EVAL RecordExpr.Qualify (stripped, p.name, folded);
+          END;
+        END;
+        IF folded # NIL THEN RETURN Expr.CompileMSIR (folded) END;
         addr := LValueMSIR (p);
         IF addr = NIL THEN RETURN NIL END;
         Field.Split (p.rhsValue, fieldInfo);

@@ -469,13 +469,40 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
     | Type.Class.OpenArray =>
         RETURN GenOpenArrayMSIR (t, t_info, r, ce);
     | Type.Class.Record =>
-        (* Keyword-arg field initializers not yet supported in MSIR. *)
-        IF NUMBER (ce.args^) > 1 THEN
-          MSIRBuilder.Abandon ("NEW(REF record, field:=val): not yet in MSIR");
-          RETURN NIL;
+        VAR
+          refVal   : MSIR.Value;
+          key      : M3ID.T;
+          value    : Expr.T;
+          v        : Value.T;
+          fieldInfo: Field.Info;
+          fieldMsirT: MSIR.T;
+          valV     : MSIR.Value;
+          fieldAddr: MSIR.Value;
+          byteOff  : LONGINT;
+          b        : MSIR.Block;
+        BEGIN
+          refVal := CallAllocHook (t, PHook [t_info.isTraced],
+                                   MSIRBuilder.TypeLinkValueForRef (t));
+          IF refVal = NIL THEN RETURN NIL END;
+          (* Keyword-arg field initialization (initializing := TRUE, no GC barrier). *)
+          FOR i := 1 TO LAST (ce.args^) DO
+            EVAL KeywordExpr.Split (ce.args[i], key, value);
+            EVAL RecordType.LookUp (r, key, v);
+            Field.Split (v, fieldInfo);
+            byteOff   := VAL (fieldInfo.offset, LONGINT) DIV 8L;
+            fieldMsirT := MSIRType.Translate (fieldInfo.type);
+            IF fieldMsirT = NIL THEN
+              MSIRBuilder.Abandon ("NEW(REF record): unsupported field type");
+              RETURN NIL;
+            END;
+            valV := Expr.CompileMSIR (value);
+            IF valV = NIL THEN RETURN NIL END;
+            b := MSIRBuilder.CurrentBlock ();
+            fieldAddr := MSIR.BuildPtrAdd (b, "", refVal, byteOff);
+            MSIR.BuildStore (b, valV, fieldAddr);
+          END;
+          RETURN refVal;
         END;
-        RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                              MSIRBuilder.TypeLinkValueForRef (t));
     ELSE
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
                               MSIRBuilder.TypeLinkValueForRef (t));
