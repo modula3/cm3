@@ -324,8 +324,28 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
           RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
         END;
       END;
-      MSIRBuilder.Abandon("indirect/closure call not supported in MSIR v0");
-      RETURN NIL;
+      (* Indirect call through a procedure-typed variable or expression. *)
+      VAR
+        fnVal   : MSIR.Value;
+        rtype   : MSIR.T;
+        iArgVals: REF ARRAY OF MSIR.Value;
+      BEGIN
+        fnVal := Expr.CompileMSIR(p.proc);
+        IF fnVal = NIL THEN RETURN NIL END;
+        rtype := MSIRType.TranslateResult(ProcType.Result(procType));
+        n := NUMBER(p.args^);
+        iArgVals := NEW(REF ARRAY OF MSIR.Value, n);
+        VAR fv := ProcType.Formals(procType); BEGIN
+          FOR i := 0 TO n - 1 DO
+            <* ASSERT fv # NIL *>
+            argVal := Formal.EmitArgMSIR(fv, p.args[i]);
+            fv := fv.next;
+            IF argVal = NIL THEN RETURN NIL END;
+            iArgVals[i] := argVal;
+          END;
+        END;
+        RETURN MSIRBuilder.EmitCallIndirect("", fnVal, rtype, iArgVals^);
+      END;
     END;
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
     IF msirCallee = NIL THEN RETURN NIL END;

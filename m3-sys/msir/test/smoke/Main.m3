@@ -565,6 +565,16 @@ PROCEDURE GetPrime (i: INTEGER): INTEGER =
 PROCEDURE GetBoolName (b: BOOLEAN): TEXT =
   BEGIN RETURN BoolName[b] END GetBoolName;
 
+(* Procedure-variable (indirect) calls *)
+TYPE BinaryIntOp = PROCEDURE(a, b: INTEGER): INTEGER;
+TYPE UnaryIntOp  = PROCEDURE(n: INTEGER): INTEGER;
+
+PROCEDURE ApplyBinOp (f: BinaryIntOp; a, b: INTEGER): INTEGER =
+  BEGIN RETURN f(a, b) END ApplyBinOp;
+
+PROCEDURE ApplyUnary (f: UnaryIntOp; n: INTEGER): INTEGER =
+  BEGIN RETURN f(n) END ApplyUnary;
+
 (* VALUE open-array formal: caller-side copy *)
 PROCEDURE SumOA (a: ARRAY OF INTEGER): INTEGER =
   VAR s := 0;
@@ -698,6 +708,11 @@ BEGIN
   (* VALUE open-array formal tests *)
   IO.Put ("SumOA({10,20,30}) = " & Fmt.Int(SumOA(ARRAY OF INTEGER{10, 20, 30})) & "\n");
   IO.Put ("SumOA({1,2,3,4,5}) = " & Fmt.Int(SumOA(ARRAY OF INTEGER{1, 2, 3, 4, 5})) & "\n");
+
+  (* Procedure-variable (indirect) call tests *)
+  IO.Put ("ApplyBinOp(Add,7,8) = " & Fmt.Int(ApplyBinOp(Add, 7, 8)) & "\n");
+  IO.Put ("ApplyUnary(Abs,-5) = " & Fmt.Int(ApplyUnary(Abs, -5)) & "\n");
+  IO.Put ("ApplyUnary(Factorial,5) = " & Fmt.Int(ApplyUnary(Factorial, 5)) & "\n");
 
   (* TRUNC / FLOOR / CEILING / ROUND tests *)
   IO.Put ("TruncTest(2.7) = " & Fmt.Int(TruncTest(FLOAT(2.7))) & "\n");

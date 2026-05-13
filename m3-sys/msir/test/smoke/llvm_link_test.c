@@ -108,6 +108,12 @@ extern void  *Main__GetBoolName(M3Bool b);   /* BoolName[b] — returns TEXT ptr
 /* VALUE open-array formal — caller provides dope vector, callee sums elements */
 extern M3Int  Main__SumOA(OpenArray *a);
 
+/* Indirect (proc-variable) calls */
+typedef M3Int (*BinaryIntOp)(M3Int, M3Int);
+typedef M3Int (*UnaryIntOp)(M3Int);
+extern M3Int  Main__ApplyBinOp(BinaryIntOp f, M3Int a, M3Int b);
+extern M3Int  Main__ApplyUnary(UnaryIntOp f, M3Int n);
+
 /* RTHooks__ScanTypecase is provided by libm3core.  For ref=NIL (our only
    harness test) it returns 0 immediately without touching runtime state. */
 
@@ -316,6 +322,11 @@ int main(void) {
     { M3Int d5[5] = {1, 2, 3, 4, 5};
       OpenArray oa5 = {d5, 5};
       check_int("SumOA({1,2,3,4,5})", Main__SumOA(&oa5), 15); }
+
+    /* Indirect (proc-variable) calls */
+    check_int("ApplyBinOp(Add,7,8)",   Main__ApplyBinOp(Main__Add, 7, 8),    15);
+    check_int("ApplyUnary(Abs,-5)",    Main__ApplyUnary(Main__Abs, -5),        5);
+    check_int("ApplyUnary(Fact,5)",    Main__ApplyUnary(Main__Factorial, 5),  120);
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

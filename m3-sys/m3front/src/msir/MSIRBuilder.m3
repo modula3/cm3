@@ -571,6 +571,26 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
     RETURN result;
   END EmitCall;
 
+PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
+                            READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+  VAR
+    b:       MSIR.Block;
+    unwind:  MSIR.Block;
+    normalB: MSIR.Block;
+    result:  MSIR.Value;
+  BEGIN
+    b      := CurrentBlock();
+    unwind := CurrentUnwindBlock();
+    IF unwind # NIL THEN
+      normalB := NewBlock("invoke.ind.cont");
+      result  := MSIR.BuildInvokeIndirect(b, name, fn, rtype, args, normalB, unwind);
+      curBlock := normalB;
+    ELSE
+      result := MSIR.BuildCallIndirect(b, name, fn, rtype, args);
+    END;
+    RETURN result;
+  END EmitCallIndirect;
+
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =

@@ -135,6 +135,12 @@ PROCEDURE CurrentUnwindBlock(): MSIR.Block;  (* NIL if not in a try *)
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
+(* Like EmitCall but dispatches through a runtime function-pointer value.
+   fn is the ptr-typed callee value; rtype is the return type (NIL for void).
+   Emits call or invoke depending on current try context. *)
+PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
+                            READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
 (* Like EmitCall but prepends the capture arguments for a lambda-lifted nested
    proc.  calleeVal is the Value.T for the nested proc (used to look up the
    capture list registered by RegisterProc).  For each capture, passes
