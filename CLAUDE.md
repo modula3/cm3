@@ -262,6 +262,9 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **TRUNC/FLOOR/CEILING/ROUND builtins**: new unary float ops `FPFloor`, `FPCeil`, `FPRound` in `MSIR`; lowered to `llvm.floor.*`, `llvm.ceil.*`, `llvm.roundeven.*` intrinsics (suffix `f32`/`f64`/`f128` from bit width); `Trunc.m3` emits direct `fptosi`; `Floor.m3`/`Ceiling.m3`/`Round.m3` emit the rounding op followed by `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`); note `FloatMode.SetRounding` explicitly does not affect the ROUND builtin, so ROUND always uses `llvm.roundeven.*` regardless of the current FPU mode; the CG backend (M3C.m3) uses C `round()` (half-away-from-zero) which is a spec deviation, but MSIR is correct
 - **Extern variable auto-registration**: `NamedExpr.CompileMSIR` calls `Variable.RegisterExternMSIR(vv)` on demand for `FROM X IMPORT y` style variables not pre-registered by `DeclareGlobalsMSIR`
 - **EVAL / ASSERT / LOOP stmts**: `EvalStmt`, `AssertStmt`, `LoopStmt` have `CompileMSIR` implementations
+- **Open→fixed-array copy**: `AssignStmt.CompileMSIR` and `ReturnStmt.CompileMSIR` handle the case where an `openarray<1> T` value is assigned or returned into a `[N]T` slot — extracts the data pointer from the dope vector via `BuildOpenArrayElemAddr`, retypes to `ptr([N]T)`, and loads the fixed array; covers `READONLY FOpen: ARRAY OF T` → `[N]T` return (p032 pattern) and local variable assignment
+- **Rvalue-base array subscript**: `SubscriptExpr.LValueMSIR` now handles subscripting a call result (`FirstFour(src)[i]`) by materializing the returned fixed array into a temp alloca; tries `Expr.LValueMSIR(base)` first (handles VAR designators and CONST arrays via `MaterializeConstArray`); if that abandoned, clears the flag via `MSIRBuilder.ClearAbandoned` and falls back to `Expr.CompileMSIR(base)` + `BuildAlloca` + `BuildStore`; `MSIRBuilder.IsAbandoned`/`ClearAbandoned` added to support the try-first pattern
+- **CONST array subscript with runtime index**: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` arrays (e.g. `CONST SmallPrimes = ARRAY [0..4] OF INTEGER{…}`) by calling `MSIRBuilder.MaterializeConstArray`, which registers the array as a private LLVM constant global and returns a pointer to it; this falls naturally out of the rvalue-base subscript fix
 
 ### EH Model Requirement
 
@@ -303,7 +306,7 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 This script:
 1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
 2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 77 checks
+3. Links with the C test harness (`llvm_link_test.c`) and runs 82 checks
 
 The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
 
@@ -326,7 +329,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` and `.ll` at end of unit |
 | `m3-sys/m3front/src/stmts/TryStmt.m3` | `CompileMSIR`: EH lowering for TRY/EXCEPT (UID comparison chain) |
 | `m3-sys/m3front/src/stmts/TryFinStmt.m3` | `CompileMSIR`: EH lowering for TRY/FINALLY (cleanup landingpad) |
-| `m3-sys/m3front/src/stmts/AssignStmt.m3` | `CompileMSIR`: fetches `CurrentBlock()` AFTER RHS to handle invoke-in-RHS |
+| `m3-sys/m3front/src/stmts/AssignStmt.m3` | `CompileMSIR`: fetches `CurrentBlock()` AFTER RHS to handle invoke-in-RHS; open→fixed-array copy via dope-vector extraction |
 | `m3-sys/m3front/src/stmts/BlockStmt.m3` | `CompileMSIR`: calls `Scope.InitValues` (vars already registered by `BeginProc`) |
 | `m3-sys/m3front/src/values/Variable.m3` | Owns MSIR declarations: `DeclareGlobalMSIR`, `RegisterExternMSIR`, `AddLocalMSIR` (with zero-init), `BindFormalMSIR`; MSIR init in `UserInit` |
 | `m3-sys/m3front/src/values/Procedure.m3` | `GenBody`: `BeginProc` sets up MSIR proc; `Stmt.CompileMSIR`/`EndProc` follow CG body; `GenBodyMSIR`: MSIR-only inline compilation of nested procs |
@@ -340,8 +343,9 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
 | `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
 | `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`: formal-aware arg-passing for MSIR call sites; `GenOpenArgMSIR`: builds stack dope vector when fixed array is passed to open-array formal |
+| `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR`: try-first pattern for rvalue bases (call results and CONST arrays); materializes call-result arrays into temp allocas via `IsAbandoned`/`ClearAbandoned` fallback |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 76-test C harness |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 82-check C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
 
@@ -396,7 +400,7 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 
 All known `msir-verify` issues have been eliminated. Remaining limitations are cases that emit `msir-abandon` (proc falls back to CG) rather than producing incorrect IR:
 
-- **Array-copy assignments**: `v^ := arr` where `v` is a `REF` to a multi-dimensional open array and `arr` is a fixed-array variable requires a memcpy that is not yet implemented in MSIR (`AssignStmt.CompileMSIR` abandons). Similarly, returning an open-array VAR parameter from a fixed-array-result procedure abandons in `ReturnStmt.CompileMSIR`.
+- **Array-copy through REF**: `v^ := arr` where `v` is a `REF` to a multi-dimensional open array and `arr` is a fixed-array variable requires a memcpy not yet in MSIR (`AssignStmt.CompileMSIR` abandons). Rank-1 open→fixed copy (assignment and return) is implemented; multi-rank and REF-indirect cases are not.
 - **Packed / sub-word-element array subscript**: `SubscriptExpr.LValueMSIR` abandons for arrays whose element MSIR type is not `FixedArray` (e.g. `ARRAY OF BITS 5 FOR [0..31]`). Sub-word element addressing requires bit-field extraction not yet in MSIR.
 - **VALUE open-array formals with open actuals**: fixed-size actuals work; open actuals (dynamic element count) still abandon — requires dynamic alloca not yet in MSIR.
 - **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls all work. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests.
@@ -408,7 +412,6 @@ All known `msir-verify` issues have been eliminated. Remaining limitations are c
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks.
 - **Debug symbols**: no source locations reach LLVM IR; see below.
 - **SET type operations**: `IN` operator on small constant SETs works; SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented.
-- **CONST array subscript with runtime index**: works — `NamedExpr.LValueMSIR` handles `Value.Class.Expr` array by calling `MSIRBuilder.MaterializeConstArray`.
 
 ### NIL Typing Convention
 
