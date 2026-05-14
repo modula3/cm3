@@ -136,6 +136,9 @@ extern void  *Main__MakePointRef(M3Int a, M3Int b);
 
 /* GC write barrier: linked list using traced-ref heap field stores */
 extern M3Int  Main__BuildChain(M3Int n);
+/* GC write barrier: traced refs stored into heap-allocated arrays */
+extern M3Int  Main__StoreInFixedHeapArr(void);
+extern M3Int  Main__StoreInOpenHeapArr(M3Int n);
 
 /* ISTYPE / NARROW / TYPECASE-with-var */
 extern void  *Main__MakeIntRef(M3Int n);
@@ -409,6 +412,12 @@ int main(void) {
 
     /* GC write barrier: build a 5-node linked list via prev^.next := cur */
     check_int("BuildChain(5)",           Main__BuildChain(5),       15); /* 1+2+3+4+5 */
+
+    /* GC write barrier: store traced refs into heap-allocated fixed-size array */
+    check_int("StoreInFixedHeapArr()",   Main__StoreInFixedHeapArr(),   60); /* 10+20+30 */
+
+    /* GC write barrier: store traced refs into heap-allocated open array */
+    check_int("StoreInOpenHeapArr(4)",   Main__StoreInOpenHeapArr(4),   10); /* 1+2+3+4 */
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

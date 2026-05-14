@@ -490,6 +490,42 @@ PROCEDURE BuildChain (n: INTEGER): INTEGER =
     RETURN sum;
   END BuildChain;
 
+(* GC write barrier: store traced refs into a heap-allocated fixed-size array. *)
+TYPE NodeArr3    = ARRAY [0..2] OF Node;
+TYPE NodeArr3Ref = REF NodeArr3;
+
+PROCEDURE StoreInFixedHeapArr (): INTEGER =
+  VAR r: NodeArr3Ref;  n0, n1, n2: Node;
+  BEGIN
+    r := NEW (NodeArr3Ref);
+    n0 := NEW (Node);  n0^.val := 10;  n0^.next := NIL;
+    n1 := NEW (Node);  n1^.val := 20;  n1^.next := NIL;
+    n2 := NEW (Node);  n2^.val := 30;  n2^.next := NIL;
+    r^[0] := n0;   (* GcStore: traced ref into heap fixed-array element *)
+    r^[1] := n1;
+    r^[2] := n2;
+    RETURN r^[0]^.val + r^[1]^.val + r^[2]^.val;
+  END StoreInFixedHeapArr;
+
+(* GC write barrier: store traced refs into a heap-allocated open array. *)
+TYPE NodeArrRef = REF ARRAY OF Node;
+
+PROCEDURE StoreInOpenHeapArr (n: INTEGER): INTEGER =
+  VAR r: NodeArrRef;  cur: Node;  sum := 0;
+  BEGIN
+    r := NEW (NodeArrRef, n);
+    FOR i := 0 TO n - 1 DO
+      cur := NEW (Node);
+      cur^.val  := i + 1;
+      cur^.next := NIL;
+      r^[i] := cur;   (* GcStore: traced ref into heap open-array element *)
+    END;
+    FOR j := 0 TO n - 1 DO
+      sum := sum + r^[j]^.val;
+    END;
+    RETURN sum;
+  END StoreInOpenHeapArr;
+
 (* NEW: allocate a REF INTEGER, store, and return the stored value. *)
 PROCEDURE AllocInt (n: INTEGER): INTEGER =
   VAR r: REF INTEGER;

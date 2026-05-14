@@ -512,6 +512,7 @@ PROCEDURE NoteWrites (p: P) =
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
   VAR blk: MSIR.Block;
       arrAddr, idxVal, oa: MSIR.Value;
+      heapBase := FALSE;
   BEGIN
     idxVal := Expr.CompileMSIR (p.biased_b);
     IF idxVal = NIL THEN RETURN NIL END;
@@ -526,14 +527,52 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       END;
     END;
     IF p.lhsOpenDepth # 0 THEN
-      (* Open array: load the fat pointer value via CompileMSIR (which does a
-         BuildLoad through the TPtr(OpenArray) stored in the var map), then
-         compute the element address. *)
-      oa := Expr.CompileMSIR (p.a);
+      (* Open array: try LValueMSIR on the base to detect a heap gc_ref.
+         - If LValueMSIR succeeds (e.g. Subarray.LValueMSIR → ptr(OAT), or
+           DerefExpr.LValueMSIR → gc_ref(OAT)): load the dope vector from the
+           result.  For gc_ref(OAT), also set the GC write-barrier container.
+         - If LValueMSIR fails (e.g. VAR formal: LValueMSIRDefault abandons),
+           fall back to CompileMSIR which returns the dope vector value directly.
+         This avoids double-emitting code (do NOT call both LValueMSIR and
+         CompileMSIR for the same expression). *)
+      VAR oaBase     : MSIR.Value;
+          preAbandOA := MSIRBuilder.IsAbandoned ();
+      BEGIN
+        oaBase := Expr.LValueMSIR (p.a);
+        IF oaBase # NIL THEN
+          VAR oaBaseT := MSIR.ValueType (oaBase);
+          BEGIN
+            IF MSIR.Kind (oaBaseT) = MSIR.TypeKind.GcRef THEN
+              heapBase := TRUE;
+              MSIRBuilder.SetPendingContainer (oaBase);
+            END;
+            (* Load the dope vector through the pointer (ptr or gc_ref). *)
+            blk := MSIRBuilder.CurrentBlock ();
+            oa  := MSIR.BuildLoad (blk, "", MSIR.EltType (oaBaseT), oaBase);
+          END;
+        ELSE
+          (* LValueMSIR failed — fall back: CompileMSIR returns the dope VALUE. *)
+          IF NOT preAbandOA AND MSIRBuilder.IsAbandoned () THEN
+            MSIRBuilder.ClearAbandoned ();
+          END;
+          oa := Expr.CompileMSIR (p.a);
+        END;
+      END;
       IF oa = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();
-      RETURN MSIR.BuildOpenArrayElemAddr (blk, "", oa,
-                                          ARRAY OF MSIR.Value{idxVal});
+      VAR slot := MSIR.BuildOpenArrayElemAddr (blk, "", oa,
+                                               ARRAY OF MSIR.Value{idxVal});
+      BEGIN
+        IF heapBase THEN
+          VAR elemT := MSIRType.Translate (p.type);
+          BEGIN
+            IF elemT # NIL AND MSIR.Kind (elemT) = MSIR.TypeKind.GcRef THEN
+              RETURN MSIR.RetypeValue (slot, MSIR.TGcSlot (MSIR.EltType (elemT)));
+            END;
+          END;
+        END;
+        RETURN slot;
+      END;
     END;
     (* Try LValueMSIR on the base (handles VAR designators and CONST arrays).
        If that fails (LValueMSIRDefault called Abandon), clear the flag and
@@ -564,13 +603,18 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       END;
     END;
     IF arrAddr = NIL THEN RETURN NIL END;
-    (* Verify the array type is a FixedArray (or ptr→FixedArray) before
-       calling BuildArrayElemAddr.  Packed / sub-word-element arrays
-       produce non-FixedArray MSIR types and are not yet supported. *)
+    (* Verify the array type is a FixedArray (or ptr→FixedArray or gc_ref→FixedArray)
+       before calling BuildArrayElemAddr.  Packed / sub-word-element arrays
+       produce non-FixedArray MSIR types and are not yet supported.
+       For gc_ref(FixedArray) — heap-allocated fixed array via REF ARRAY[0..N-1] OF T —
+       save the base as the GC write-barrier container and retype to ptr before GEP. *)
     VAR arrT := MSIR.ValueType (arrAddr);  arrayT: MSIR.T;
     BEGIN
       IF MSIR.Kind(arrT) = MSIR.TypeKind.Ptr THEN
         arrayT := MSIR.EltType (arrT);
+      ELSIF MSIR.Kind(arrT) = MSIR.TypeKind.GcRef THEN
+        arrayT := MSIR.EltType (arrT);
+        heapBase := TRUE;
       ELSE
         arrayT := arrT;
       END;
@@ -578,9 +622,24 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         MSIRBuilder.Abandon ("packed/sub-word array subscript not yet supported in MSIR");
         RETURN NIL;
       END;
+      IF heapBase THEN
+        MSIRBuilder.SetPendingContainer (arrAddr);
+        arrAddr := MSIR.RetypeValue (arrAddr, MSIR.TPtr (arrayT));
+      END;
     END;
     blk := MSIRBuilder.CurrentBlock ();
-    RETURN MSIR.BuildArrayElemAddr (blk, "", arrAddr, idxVal);
+    VAR slot := MSIR.BuildArrayElemAddr (blk, "", arrAddr, idxVal);
+    BEGIN
+      IF heapBase THEN
+        VAR elemT := MSIRType.Translate (p.type);
+        BEGIN
+          IF elemT # NIL AND MSIR.Kind (elemT) = MSIR.TypeKind.GcRef THEN
+            RETURN MSIR.RetypeValue (slot, MSIR.TGcSlot (MSIR.EltType (elemT)));
+          END;
+        END;
+      END;
+      RETURN slot;
+    END;
   END LValueMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
@@ -588,6 +647,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   BEGIN
     addr := LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
+    (* Traced ref from a heap array slot: use GcLoad (read barrier). *)
+    IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+      RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
+    END;
     ty := MSIRType.Translate (p.type);
     IF ty = NIL THEN
       MSIRBuilder.Abandon ("unsupported subscript element type");
