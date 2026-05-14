@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-verify events across the entire buildable subset of the CM3 repository** (full m3tests suite p0/p1/p2/c0/c1/e0/r0/x0, all of m3core, libm3, m3-sys, m3-libs, m3-comm, m3-db, m3-tools, elego, caltech-other, ESC, m3-obliq, examples, and more). Packages that depend on unshipped UI/network libraries (formsvbt, netobj, tcp, vbtkit, etc.) are skipped but that is an installation gap, not an MSIR issue. The following features are implemented and tested (96/96 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-verify events across the entire buildable subset of the CM3 repository** (full m3tests suite p0/p1/p2/c0/c1/e0/r0/x0, all of m3core, libm3, m3-sys, m3-libs, m3-comm, m3-db, m3-tools, elego, caltech-other, ESC, m3-obliq, examples, and more). Packages that depend on unshipped UI/network libraries (formsvbt, netobj, tcp, vbtkit, etc.) are skipped but that is an installation gap, not an MSIR issue. The following features are implemented and tested (104/104 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -265,6 +265,7 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **EVAL / ASSERT / LOOP stmts**: `EvalStmt`, `AssertStmt`, `LoopStmt` have `CompileMSIR` implementations
 - **Open→fixed-array copy**: `AssignStmt.CompileMSIR` and `ReturnStmt.CompileMSIR` handle the case where an `openarray<1> T` value is assigned or returned into a `[N]T` slot — extracts the data pointer from the dope vector via `BuildOpenArrayElemAddr`, retypes to `ptr([N]T)`, and loads the fixed array; covers `READONLY FOpen: ARRAY OF T` → `[N]T` return (p032 pattern) and local variable assignment
 - **Rvalue-base array subscript**: `SubscriptExpr.LValueMSIR` now handles subscripting a call result (`FirstFour(src)[i]`) by materializing the returned fixed array into a temp alloca; tries `Expr.LValueMSIR(base)` first (handles VAR designators and CONST arrays via `MaterializeConstArray`); if that abandoned, clears the flag via `MSIRBuilder.ClearAbandoned` and falls back to `Expr.CompileMSIR(base)` + `BuildAlloca` + `BuildStore`; `MSIRBuilder.IsAbandoned`/`ClearAbandoned` added to support the try-first pattern
+- **REF FixedArray deref-copy** (`v^ := arr` and `arr := v^`): `DerefExpr.LValueMSIR` now always retypes the GcRef/opaque pointer to `ptr(elemT)` when the element type is known and non-void; previously GcRef values were returned as `gc_ref void`, causing `AssignStmt.CompileMSIR`'s array-type check to abandon on fixed-array element types; with the retype, `eltT = [N]i64 = rhsT` so the check passes and `BuildStore` emits the copy directly
 - **CONST array subscript with runtime index**: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` arrays (e.g. `CONST SmallPrimes = ARRAY [0..4] OF INTEGER{…}`) by calling `MSIRBuilder.MaterializeConstArray`, which registers the array as a private LLVM constant global and returns a pointer to it; this falls naturally out of the rvalue-base subscript fix
 
 ### EH Model Requirement
@@ -401,10 +402,10 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 
 All known `msir-verify` issues have been eliminated. Remaining limitations are cases that emit `msir-abandon` (proc falls back to CG) rather than producing incorrect IR:
 
-- **Array-copy through REF**: `v^ := arr` where `v` is a `REF` to a multi-dimensional open array and `arr` is a fixed-array variable requires a memcpy not yet in MSIR (`AssignStmt.CompileMSIR` abandons). Rank-1 open→fixed copy (assignment and return) is implemented; multi-rank and REF-indirect cases are not.
+- **Array-copy through REF**: `v^ := arr` where `v` is a `REF` to a fixed array works (`r^ := src; copy := r^` round-trip implemented). `v^ := arr` where `v` is a `REF` to a multi-dimensional open array requires a memcpy not yet in MSIR (`AssignStmt.CompileMSIR` abandons for open-array deref LHS).
 - **Packed / sub-word-element array subscript**: `SubscriptExpr.LValueMSIR` abandons for arrays whose element MSIR type is not `FixedArray` (e.g. `ARRAY OF BITS 5 FOR [0..31]`). Sub-word element addressing requires bit-field extraction not yet in MSIR.
 - **VALUE open-array formals with open actuals**: implemented for rank-1 and multi-rank cases where `actDepth = formDepth`; partial depth coercion (`actDepth < formDepth`) still abandons (rare in practice).
-- **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls all work. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests.
+- **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, `Fmt.Real` (floating-point formatting), and TEXT-returning library calls all work. `Text.Sub` and other TEXT manipulation operations not yet exercised in tests.
 - **GC write barrier for heap fields**: activated; see container protocol below.
 - **`var_map`/`gc_map`**: implemented; see architecture note below.
 - **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested.
