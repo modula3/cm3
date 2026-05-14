@@ -225,7 +225,7 @@ The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-
 
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-abandon and zero msir-verify events across the full p0/p1/p2 test suite, all of libm3, and all of m3core.** The following features are implemented and tested (96/96 smoke tests):
+The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-verify events across the entire buildable subset of the CM3 repository** (full m3tests suite p0/p1/p2/c0/c1/e0/r0/x0, all of m3core, libm3, m3-sys, m3-libs, m3-comm, m3-db, m3-tools, elego, caltech-other, ESC, m3-obliq, examples, and more). Packages that depend on unshipped UI/network libraries (formsvbt, netobj, tcp, vbtkit, etc.) are skipped but that is an installation gap, not an MSIR issue. The following features are implemented and tested (96/96 smoke tests):
 
 - Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
 - Records (by-value and by-ref), fixed and open arrays, enums, globals
@@ -394,17 +394,21 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 
 ### Known Limitations / Remaining Work
 
-- **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls (`Fmt.Bool`, `Text.Length`, etc.) all work — external calls are emitted correctly and the calling convention matches the C backend. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests
-- **GC write barrier for heap fields**: activated; see container protocol below
-- **`var_map`/`gc_map`**: implemented; see architecture note below
-- **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested
-- **NEW(REF record with keyword args)**: `GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works
-- **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred
-- **VALUE open-array formals**: fixed-size actuals work (caller-side copy-in via `GenValueOpenArgMSIR`: alloca eltType×N + `@memcpy` + dope vector); open actuals (dynamic element count) still abandon — requires dynamic alloca not yet in MSIR
-- **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks
-- **Debug symbols**: no source locations reach LLVM IR; see below
-- **SET type operations**: `IN` operator on small constant SETs works (word-size bit-mask extraction via `SetExpr.GetWordBitMask`, bitwise shift/and ops); SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented
-- **CONST array subscript with runtime index**: works — `NamedExpr.LValueMSIR` handles `Value.Class.Expr` array by calling `MSIRBuilder.MaterializeConstArray`; the array is registered as `@constarray_N = private constant [N x T] [...]`; `ArrayElemAddr` GEP emits the actual index type (not hardcoded i64)
+All known `msir-verify` issues have been eliminated. Remaining limitations are cases that emit `msir-abandon` (proc falls back to CG) rather than producing incorrect IR:
+
+- **Array-copy assignments**: `v^ := arr` where `v` is a `REF` to a multi-dimensional open array and `arr` is a fixed-array variable requires a memcpy that is not yet implemented in MSIR (`AssignStmt.CompileMSIR` abandons). Similarly, returning an open-array VAR parameter from a fixed-array-result procedure abandons in `ReturnStmt.CompileMSIR`.
+- **Packed / sub-word-element array subscript**: `SubscriptExpr.LValueMSIR` abandons for arrays whose element MSIR type is not `FixedArray` (e.g. `ARRAY OF BITS 5 FOR [0..31]`). Sub-word element addressing requires bit-field extraction not yet in MSIR.
+- **VALUE open-array formals with open actuals**: fixed-size actuals work; open actuals (dynamic element count) still abandon — requires dynamic alloca not yet in MSIR.
+- **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls all work. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests.
+- **GC write barrier for heap fields**: activated; see container protocol below.
+- **`var_map`/`gc_map`**: implemented; see architecture note below.
+- **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested.
+- **NEW(REF record with keyword args)**: `GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works.
+- **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred.
+- **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks.
+- **Debug symbols**: no source locations reach LLVM IR; see below.
+- **SET type operations**: `IN` operator on small constant SETs works; SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented.
+- **CONST array subscript with runtime index**: works — `NamedExpr.LValueMSIR` handles `Value.Class.Expr` array by calling `MSIRBuilder.MaterializeConstArray`.
 
 ### NIL Typing Convention
 
