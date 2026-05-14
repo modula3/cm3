@@ -16,6 +16,7 @@ MODULE ConsExpr;
 
 IMPORT M3, Expr, ExprRep, Error, ErrType, Type;
 IMPORT TypeExpr, SetExpr, RecordExpr, ArrayExpr, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE Kind = {Unknown, NonConstr, Record, Set, Array};
 
@@ -52,7 +53,9 @@ TYPE
         staticLength := StaticLength;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
-        capture  := Capture;
+        capture          := Capture;
+        compileMSIR      := CompileMSIR_Cons;
+        compileLValueMSIR := LValueMSIR_Cons;
       END;
 
 (* EXPORTED: *)
@@ -272,6 +275,26 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
       END;
     END;
   END Capture;
+
+PROCEDURE LValueMSIR_Cons (p: P): MSIR.Value =
+  BEGIN
+    InnerSeal (p);
+    IF p.base = NIL THEN
+      MSIRBuilder.Abandon ("ConsExpr: base not set for LValueMSIR");
+      RETURN NIL;
+    END;
+    RETURN Expr.LValueMSIR (p.base);
+  END LValueMSIR_Cons;
+
+PROCEDURE CompileMSIR_Cons (p: P): MSIR.Value =
+  BEGIN
+    InnerSeal (p);
+    IF p.base = NIL THEN
+      MSIRBuilder.Abandon ("ConsExpr: base not set for CompileMSIR");
+      RETURN NIL;
+    END;
+    RETURN Expr.CompileMSIR (p.base);
+  END CompileMSIR_Cons;
 
 BEGIN
 END ConsExpr.

@@ -515,6 +515,16 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
   BEGIN
     idxVal := Expr.CompileMSIR (p.biased_b);
     IF idxVal = NIL THEN RETURN NIL END;
+    (* GEP indices are sign-extended by LLVM; narrow types (e.g. i1 for
+       BOOLEAN) must be zero-extended to i64 before use as an array index. *)
+    VAR idxBits := MSIR.BitWidth (MSIR.ValueType (idxVal));
+        intBits := Target.Integer.size;
+    BEGIN
+      IF idxBits > 0 AND idxBits < intBits THEN
+        blk := MSIRBuilder.CurrentBlock ();
+        idxVal := MSIR.BuildZExt (blk, "", idxVal, MSIR.TI (intBits));
+      END;
+    END;
     IF p.lhsOpenDepth # 0 THEN
       (* Open array: load the fat pointer value via CompileMSIR (which does a
          BuildLoad through the TPtr(OpenArray) stored in the var map), then

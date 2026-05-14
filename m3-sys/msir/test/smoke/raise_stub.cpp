@@ -136,10 +136,10 @@ extern "C" void *Fmt_I3(long)    { return nullptr; }
 extern "C" void *IO_I3(long)     { return nullptr; }
 extern "C" void *Text_I3(long)   { return nullptr; }
 
-/* Fmt / IO stubs: called only from the M3 module body (Main__Main_M3),
-   which the harness never invokes. */
+/* Fmt / IO stubs: referenced from Main__Main_M3 (module body). */
 extern "C" void *Fmt__Int(long, long)  { return nullptr; }
 extern "C" void *Fmt__Bool(int)        { return nullptr; }
+extern "C" void *Fmt__Real(float, int, int, int) { return nullptr; }
 extern "C" void  IO__Put(void *, void *) { }
 
 /* Text.Length: read cnt field (i64 at offset 8 from TEXT ptr).

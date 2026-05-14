@@ -28,6 +28,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
 IMPORT KeywordExpr, RangeExpr, NamedExpr, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, ConsExpr, SubrangeType, Target, TInt, Int, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 (* Monitor sequencing of operations: *)
 TYPE StateTyp
@@ -179,7 +180,9 @@ REVEAL
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
     checkUseFailure := CheckUseFailure;
-    capture  := Capture
+    capture  := Capture;
+    compileMSIR       := CompileMSIR_MSIR;
+    compileLValueMSIR := LValueMSIR_MSIR
   END (*OBJECT*);
 
 (* EXPORTED: *) 
@@ -2366,6 +2369,68 @@ PROCEDURE CheckUseFailure (top: T): BOOLEAN =
     ELSE RETURN TRUE;
     END;
   END CheckUseFailure;
+
+PROCEDURE LValueMSIR_MSIR (p: T): MSIR.Value =
+(* Materialize the array constructor into a fresh alloca and return its address.
+   Handles 1-D and multi-D constructors where each element is a simple expression
+   or a nested ArrayExpr.  Abandons on keyword/range elements or unsupported types. *)
+VAR
+  b        : MSIR.Block;
+  arrT     : MSIR.T;
+  eltT     : MSIR.T;
+  alloca   : MSIR.Value;
+  elemAddr, elemVal : MSIR.Value;
+  indexT, innerT : Type.T;
+  nElts    : INTEGER;
+  intT     : MSIR.T;
+  baseType : Type.T;
+BEGIN
+  nElts := p.eltCt;
+  IF nElts < 0 THEN
+    MSIRBuilder.Abandon ("ArrayExpr: element count not computed");
+    RETURN NIL;
+  END;
+  (* Use repType (set by Represent) for the concrete type if available, else semType. *)
+  baseType := p.repType;
+  IF baseType = NIL THEN baseType := p.type END;
+  (* Split to get element type. *)
+  IF NOT ArrayType.Split (baseType, indexT, innerT) THEN
+    MSIRBuilder.Abandon ("ArrayExpr: cannot split array type");
+    RETURN NIL;
+  END;
+  eltT := MSIRType.Translate (innerT);
+  IF eltT = NIL THEN
+    MSIRBuilder.Abandon ("ArrayExpr: unsupported element type");
+    RETURN NIL;
+  END;
+  IF nElts <= 0 THEN nElts := 1 END;  (* alloca needs at least 1 element *)
+  arrT := MSIR.TFixedArray (VAL (nElts, LONGINT), eltT);
+  b := MSIRBuilder.CurrentBlock ();
+  alloca := MSIR.BuildAlloca (b, "", arrT);
+  intT := MSIR.TI (Target.Integer.size);
+  FOR i := 0 TO p.eltCt - 1 DO
+    IF p.args = NIL OR i > LAST (p.args^) THEN
+      elemVal := MSIR.ConstZero (eltT);
+    ELSE
+      elemVal := Expr.CompileMSIR (p.args^[i]);
+      IF elemVal = NIL THEN RETURN NIL END;
+    END;
+    b := MSIRBuilder.CurrentBlock ();
+    elemAddr := MSIR.BuildArrayElemAddr (b, "", alloca,
+                  MSIR.ConstInt (intT, VAL (i, LONGINT)));
+    MSIR.BuildStore (b, elemVal, elemAddr);
+  END;
+  RETURN alloca;
+END LValueMSIR_MSIR;
+
+PROCEDURE CompileMSIR_MSIR (p: T): MSIR.Value =
+  VAR addr: MSIR.Value;  arrT: MSIR.T;
+  BEGIN
+    addr := LValueMSIR_MSIR (p);
+    IF addr = NIL THEN RETURN NIL END;
+    arrT := MSIR.EltType (MSIR.ValueType (addr));  (* TFixedArray(n, eltT) *)
+    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", arrT, addr);
+  END CompileMSIR_MSIR;
 
 PROCEDURE Capture (p: T;  ca: CaptureAnalysis.T) =
   BEGIN

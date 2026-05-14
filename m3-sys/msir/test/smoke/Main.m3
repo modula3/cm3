@@ -790,10 +790,15 @@ BEGIN
   IO.Put ("CopyFirst4Elem({1,2,3,4},0) = " & Fmt.Int(CopyFirst4Elem(ARRAY OF INTEGER{1,2,3,4}, 0)) & "\n");
   IO.Put ("CopyFirst4Elem({1,2,3,4},3) = " & Fmt.Int(CopyFirst4Elem(ARRAY OF INTEGER{1,2,3,4}, 3)) & "\n");
 
-  (* REF FixedArray deref-copy tests *)
-  VAR srcArr := FixedIntArr{10,20,30,40};
+  (* REF FixedArray deref-copy tests (element-by-element init to avoid ArrayExpr) *)
+  VAR srcArr: FixedIntArr;
   BEGIN
+    srcArr[0] := 10;  srcArr[1] := 20;  srcArr[2] := 30;  srcArr[3] := 40;
     IO.Put ("RefFixedArrCopy({10,20,30,40},0) = " & Fmt.Int(RefFixedArrCopy(srcArr, 0)) & "\n");
     IO.Put ("RefFixedArrCopy({10,20,30,40},3) = " & Fmt.Int(RefFixedArrCopy(srcArr, 3)) & "\n");
   END;
+
+  (* Fmt.Real — floating-point TEXT formatting *)
+  IO.Put ("Fmt.Real(1.5) = " & Fmt.Real(1.5) & "\n");
+  IO.Put ("Fmt.Real(2.5) = " & Fmt.Real(2.5) & "\n");
 END Main.

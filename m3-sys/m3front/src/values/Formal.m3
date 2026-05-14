@@ -1328,7 +1328,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
                            totalEltsDyn,
                            MSIR.ConstInt (intT, eltSizeBytesL));
         (* Dynamic stack alloc for the copy. *)
-        VAR copyPtr := MSIR.BuildAllocaDyn (b2, "oa.copy", totalBytesDyn);
+        VAR copyPtr := MSIR.BuildAllocaDyn (b2, "", totalBytesDyn);
         BEGIN
           MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
           (* Build new dope vector. *)
@@ -1382,7 +1382,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
 
     (* Alloca element copy with element-type alignment. *)
     b     := MSIRBuilder.CurrentBlock ();
-    copyA := MSIR.BuildAlloca (b, "oa.copy", eltMsirT);
+    copyA := MSIR.BuildAlloca (b, "", eltMsirT);
     IF totalElts > 1L THEN MSIR.AllocaSetCount (copyA, VAL (totalElts, INTEGER)) END;
 
     (* Emit memcpy(copyA, dataPtr, totalBytes). *)

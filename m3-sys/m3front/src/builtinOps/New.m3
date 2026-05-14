@@ -553,7 +553,7 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     END;
     sizesT := MSIR.TStruct ("__oa_shape", flds^);
     b := MSIRBuilder.CurrentBlock ();
-    sizesA := MSIR.BuildAlloca (b, "__oa_sz", sizesT);
+    sizesA := MSIR.BuildAlloca (b, "", sizesT);
 
     apBytes := VAL (Target.Address.size DIV Target.Byte, LONGINT);
     ipBytes := VAL (Target.Integer.size DIV Target.Byte, LONGINT);

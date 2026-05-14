@@ -421,11 +421,16 @@ PROCEDURE EndProc() =
   END EndProc;
 
 PROCEDURE Abandon(reason: TEXT) =
+  VAR pname: TEXT;
   BEGIN
-    IF NOT abandoned AND curProc # NIL THEN
-      MSIREmit.NoteSkipped(MSIR.ProcName(curProc), "abandon: " & reason);
+    IF NOT abandoned THEN
+      IF curProc # NIL
+        THEN pname := MSIR.ProcName(curProc)
+        ELSE pname := "<no-proc>"
+      END;
+      MSIREmit.NoteSkipped(pname, "msir-abandon: " & reason);
+      abandoned := TRUE;
     END;
-    abandoned := TRUE;
   END Abandon;
 
 PROCEDURE InProc(): BOOLEAN =
