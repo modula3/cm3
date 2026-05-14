@@ -729,3 +729,170 @@ until statepoints replace it.
 - `m3-sys/llvm/llvm22/src/M3CG_LLVM.m3` — existing experimental LLVM
   backend (consumes M3CG; superseded by MSIR for LLVM path, retained as
   a diff-test oracle during transition).
+
+---
+
+## Implementation Reference
+
+This section records current implementation status, key source files,
+internal architecture notes, and known limitations.  It is updated
+incrementally as features land.
+
+### Current Status
+
+The end-to-end path is working: MSIR is emitted for a real module, lowered
+to LLVM IR, compiled to a native object, and linked into a passing test
+binary.  The production binary (`smoke-realrt`) runs to completion (exit 0)
+against the real CM3 runtime.  **Zero msir-verify events** across the entire
+buildable subset of the CM3 repository.  109/109 smoke tests pass.
+
+Implemented and tested features:
+
+- Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
+- Records (by-value and by-ref), fixed and open arrays, enums, globals
+- VAR/READONLY params, INC/DEC
+- Exception handling: TRY/EXCEPT (UID-dispatch landingpad) and TRY/FINALLY
+  (cleanup landingpad + resume)
+- RAISE statement, exception value binding (`EXCEPT E(v) =>`)
+- RTLinker binder (`@Module_M3`/`@Module_I3`), `RT0.ImportInfo` chain
+- GC read barrier (nil/misaligned/gray-bit inline fast path +
+  `RTHooks__CheckLoadTracedRef`)
+- GC write barrier for heap fields (container protocol; globals need no barrier)
+- TypeCells: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR`
+  alongside CG counterparts; driven by type declarations
+- NEW(REF T), NEW(OBJECT T), NEW(REF ARRAY OF T, n)
+- Vtable dispatch via `OTC_defaultMethods`
+- Module global initialization; external/imported variable auto-registration
+- TEXT literals (ASCII and WIDECHAR), TEXT concatenation
+- `var_map`/`gc_map`: globals embedded as trailing fields of `@Mod_M3_info`;
+  gc_map TipeMap skips non-traced fields; LLVM aliases for symbol compat
+- Nested procedures: lambda-lifted; read-only scalar captures by value
+- Fixed→open-array argument coercion; VALUE open-array formal with open actual
+- Procedure values; indirect (proc-variable) calls
+- Float conversions (FLOAT, TRUNC, FLOOR, CEILING, ROUND)
+- SUBARRAY (fixed and rank-1 open source); WITH `= SUBARRAY(…)` binding
+- ADR, BITSIZE/BYTESIZE builtins
+- LOOPHOLE operator (rvalue and lvalue)
+- ADDRESS arithmetic (+/-)
+- IN operator for small constant SETs (≤ 64-bit domain)
+- EVAL / ASSERT / LOOP statements
+- Array constructor expressions as call arguments (ConsExpr delegation)
+- Rvalue-base array subscript (call-result arrays materialised to temp alloca)
+- REF FixedArray deref-copy; CONST array subscript with runtime index
+- Narrow array index zero-extension (prevents GEP sign-extension of BOOLEAN)
+
+### Known Limitations
+
+All known `msir-verify` issues eliminated.  Remaining gaps emit
+`msir-abandon` (proc falls back to CG); no incorrect IR is produced.
+
+- **Open-array deref LHS**: `v^ := arr` where `v: REF OPEN ARRAY` requires
+  memcpy not yet in MSIR.
+- **Packed / sub-word-element array subscript**: bit-field extraction
+  not yet implemented.
+- **VALUE open-array formals, partial depth coercion** (`actDepth <
+  formDepth`): rare; abandons gracefully.
+- **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
+- **Opaque types**: REF revelation works; OBJECT revelation deferred.
+- **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR silently omits callbacks.
+- **Debug symbols**: no DWARF emitted yet (self-contained additive work;
+  see hook points in `BeginProc` / `AddLocalMSIR`).
+- **SET type operations**: multi-word sets and set arithmetic (+/-/*/)
+  not yet implemented.
+- **NEW(REF open-array) multi-D**: 1-D tested; higher ranks untested.
+
+### Key Source Files
+
+| File | Role |
+|---|---|
+| `m3-sys/msir/src/MSIR.i3/.m3` | IR types, values, ops, builders |
+| `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR |
+| `m3-sys/msir/src/MSIRPrinter.m3` | Prints `.msir` text |
+| `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks |
+| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; var/proc maps; try-context stack |
+| `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` / `.ll` |
+| `m3-sys/m3front/src/stmts/TryStmt.m3` | TRY/EXCEPT EH lowering |
+| `m3-sys/m3front/src/stmts/TryFinStmt.m3` | TRY/FINALLY EH lowering |
+| `m3-sys/m3front/src/stmts/AssignStmt.m3` | Assignment + open→fixed-array copy |
+| `m3-sys/m3front/src/stmts/BlockStmt.m3` | Block scope handling |
+| `m3-sys/m3front/src/values/Variable.m3` | All MSIR variable registration |
+| `m3-sys/m3front/src/values/Procedure.m3` | `GenBodyMSIR`, `BeginProc`/`EndProc` |
+| `m3-sys/m3front/src/values/Module.m3` | `DeclareGlobalsMSIR`, module-init MSIR |
+| `m3-sys/m3front/src/types/RefType.m3` | `InitTypecellMSIR` |
+| `m3-sys/m3front/src/types/ObjectType.m3` | `InitTypecellMSIR`, vtable |
+| `m3-sys/m3front/src/types/Type.m3` | `GenCells` — drives both CG and MSIR init |
+| `m3-sys/m3front/src/builtinOps/New.m3` | NEW dispatch (Ref/Object/OpenArray) |
+| `m3-sys/m3front/src/builtinOps/Subarray.m3` | SUBARRAY lvalue + rvalue |
+| `m3-sys/m3front/src/misc/CaptureAnalysis.i3/.m3` | Up-level variable capture walk |
+| `m3-sys/m3front/src/exprs/CallExpr.m3` | `MethodList` dispatch for MSIR + Capture |
+| `m3-sys/m3front/src/types/UserProc.m3` | Direct / vtable / nested-lambda calls |
+| `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`, open-array arg coercion |
+| `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR` with try-first rvalue base |
+| `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 109-check C harness |
+| `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ runtime stubs |
+| `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver |
+
+### Declaration Lifecycle
+
+MSIR declarations are co-located with CG declarations, not in separate passes:
+
+| What | When | Where |
+|---|---|---|
+| Module globals + exception descs | `Module.Compile`, before type compilation | `Module.DeclareGlobalsMSIR` |
+| Type cells (Ref + Object) | `Type.GenCells` in `GenLinkerInfo` | `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` |
+| Proc formals + locals | `MSIRBuilder.BeginProc` | `Variable.BindFormalMSIR` + `Variable.AddLocalMSIR` |
+| Variable initializers | CG-path `Scope.InitValues` | `Variable.UserInit` MSIR blocks fire because `BeginProc` is active |
+| Nested proc body | `Procedure.LangInit` via `Scope.InitValues` | `Stmt.Capture` pre-scan → `GenBodyMSIR` |
+
+### Lambda-Lifting: Nested Procedures
+
+Each captured up-level variable becomes an explicit `ptr` parameter in the
+inner proc's LLVM signature (`%__cap_0`, `%__cap_1`, …).  The outer proc's
+captured vars are ordinary allocas whose addresses are passed as capture args.
+Multi-level nesting works naturally: inner procs see outer capture params as
+their own allocas.
+
+Key routines:
+- `Stmt.Capture(body, ca)` — pre-pass recording `(Variable.T, written)` pairs
+- `MSIRBuilder.BeginProc(…, captures)` — generates capture params; binds in varMap
+- `MSIRBuilder.RegisterProc(p, proc, caps)` — stores capture list
+- `MSIRBuilder.EmitNestedCall(…)` — prepends capture addr args at call sites
+
+Read-only scalar captures are passed by value (LLVM alias analysis benefit);
+GcRef captures always pass by pointer (conservative GC stack-scan requirement).
+
+### CallExpr MSIR Dispatch
+
+`CallExpr.m3` dispatches MSIR compilation and capture analysis through its
+`MethodList` with no per-kind logic inside `CallExpr` itself.
+
+- `CompilerMSIR = PROCEDURE (t: T): MSIR.Value` — MSIR compilation callback
+- `CompilerLValueMSIR = PROCEDURE (t: T): MSIR.Value` — lvalue callback (SUBARRAY)
+- `Capturer = PROCEDURE (t: T; ca: CaptureAnalysis.T)` — capture-analysis callback
+- `CaptureDefault` — set by `NewMethodList`; scans all args as reads
+- Per-builtin callbacks wired in each module's `Initialize`
+
+### Conventions
+
+**NIL**: always `ConstNil(TPtr(TVoid()))`.  Call sites coerce to destination
+type (`AssignStmt`, `ReturnStmt`, `EqualExpr`).
+
+**GC write barrier (container protocol)**: `QualifyExpr.LValueMSIR` calls
+`MSIRBuilder.SetPendingContainer(baseAddr)` before returning the field GEP;
+`AssignStmt.CompileMSIR` calls `TakePendingContainer()` and passes it to
+`BuildGcStore`.  Globals return NIL container (no barrier needed).
+
+**TEXT literals**: `TextExpr.P` carries `cgOffset`; a single `LiteralTable`
+serves both CG and MSIR.  `MSIREmit.EndUnit` bridges data to `MSIR.Module`.
+
+**Module globals (var_map/gc_map)**: embedded as trailing fields of
+`@Mod_M3_info` (after 104-byte `RT0.ModuleInfo` header).  gc_map TipeMap
+encodes `Ref` ops for traced fields; LLVM aliases preserve mangled names.
+
+### Cosmetic Issues
+
+- **Unreachable merge blocks**: when all IF branches end with `ret`, the
+  `if.merge` block has no predecessors.  Harmless (LLVM DCE removes it).
+- **Repeated block label names**: ELSIF chains reuse `if.then`/`if.next`
+  hints.  Fix: add counter suffix in `NewBlock`.

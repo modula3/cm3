@@ -124,6 +124,11 @@ extern M3Int  Main__ApplyUnary(UnaryIntOp f, M3Int n);
 /* RTHooks__ScanTypecase is provided by libm3core.  For ref=NIL (our only
    harness test) it returns 0 immediately without touching runtime state. */
 
+/* SUBARRAY — slicing fixed and open arrays */
+extern M3Int  Main__SubarrayFixedElem(M3Int start, M3Int len, M3Int idx);
+extern M3Int  Main__SubarrayOpenElem(OpenArray *a, M3Int start, M3Int len, M3Int idx);
+extern M3Int  Main__SumSubarray(OpenArray *a, M3Int start, M3Int len);
+
 /* Direct access to module globals (zeroinitialised — no M3 module init runs) */
 extern M3Int  Main__gCounter;
 extern M3Int  Main__gBase;
@@ -356,6 +361,18 @@ int main(void) {
     { M3Int arr[4] = {10, 20, 30, 40};
       check_int("RefFixedArrCopy({10,20,30,40},0)", Main__RefFixedArrCopy(arr, 0), 10);
       check_int("RefFixedArrCopy({10,20,30,40},3)", Main__RefFixedArrCopy(arr, 3), 40); }
+
+    /* SUBARRAY — fixed array slice */
+    check_int("SubarrayFixed(2,4,0)", Main__SubarrayFixedElem(2, 4, 0), 30); /* a[2]=30 */
+    check_int("SubarrayFixed(2,4,3)", Main__SubarrayFixedElem(2, 4, 3), 60); /* a[5]=60 */
+
+    /* SUBARRAY — open array slice */
+    { M3Int data8[8] = {10,20,30,40,50,60,70,80};
+      OpenArray oa8 = {data8, 8};
+      check_int("SubarrayOpen(3,3,0)", Main__SubarrayOpenElem(&oa8, 3, 3, 0), 40); /* a[3]=40 */
+      check_int("SubarrayOpen(3,3,2)", Main__SubarrayOpenElem(&oa8, 3, 3, 2), 60); /* a[5]=60 */
+      check_int("SumSubarray(2,4)",    Main__SumSubarray(&oa8, 2, 4),        180); /* 30+40+50+60 */
+    }
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

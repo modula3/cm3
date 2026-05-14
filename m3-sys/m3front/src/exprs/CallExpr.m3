@@ -44,6 +44,7 @@ REVEAL
                  builtinAlign : BuiltinAlign;
                  capture      : Capturer := NIL;
                  compileMSIR  : CompilerMSIR := NIL;
+                 lvalueMSIR   : CompilerLValueMSIR := NIL;
                END;
 
 REVEAL
@@ -73,8 +74,9 @@ REVEAL
         note_write   := NoteWrites;
         exprAlign    := CallExprAlign;
         usesAssignProtocol := UsesAssignProtocol;
-        capture  := Capture;
-        compileMSIR  := CompileMSIR;
+        capture           := Capture;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR_CE;
       END;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
@@ -466,6 +468,18 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
     END;
     RETURN p.methods.compileMSIR(p);
   END CompileMSIR;
+
+PROCEDURE LValueMSIR_CE (p: T): MSIR.Value =
+  BEGIN
+    IF p.methods = NIL OR p.methods.lvalueMSIR = NIL THEN
+      MSIRBuilder.Abandon ("no lvalue MSIR for this builtin");
+      RETURN NIL;
+    END;
+    RETURN p.methods.lvalueMSIR (p);
+  END LValueMSIR_CE;
+
+PROCEDURE SetMethodLValueMSIR (ml: MethodList;  c: CompilerLValueMSIR) =
+  BEGIN ml.lvalueMSIR := c END SetMethodLValueMSIR;
 
 PROCEDURE Capture (ce: T;  ca: CaptureAnalysis.T) =
   BEGIN

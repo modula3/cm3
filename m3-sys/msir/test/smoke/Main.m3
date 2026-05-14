@@ -629,6 +629,33 @@ PROCEDURE CopyFirst4Elem (READONLY src: ARRAY OF INTEGER; i: INTEGER): INTEGER =
     RETURN CopyFirst4(src)[i];
   END CopyFirst4Elem;
 
+(* SUBARRAY — slicing a fixed array *)
+PROCEDURE SubarrayFixedElem (start, len, idx: INTEGER): INTEGER =
+  VAR a: ARRAY [0..7] OF INTEGER;
+  BEGIN
+    a[0] := 10; a[1] := 20; a[2] := 30; a[3] := 40;
+    a[4] := 50; a[5] := 60; a[6] := 70; a[7] := 80;
+    RETURN SUBARRAY (a, start, len) [idx];
+  END SubarrayFixedElem;
+
+(* SUBARRAY — slicing an open array *)
+PROCEDURE SubarrayOpenElem (READONLY a: ARRAY OF INTEGER;
+                             start, len, idx: INTEGER): INTEGER =
+  BEGIN
+    RETURN SUBARRAY (a, start, len) [idx];
+  END SubarrayOpenElem;
+
+(* SUBARRAY — sum a slice of an open array *)
+PROCEDURE SumSubarray (READONLY a: ARRAY OF INTEGER;
+                        start, len: INTEGER): INTEGER =
+  VAR sum := 0;
+  BEGIN
+    WITH s = SUBARRAY (a, start, len) DO
+      FOR i := 0 TO len - 1 DO sum := sum + s[i] END;
+    END;
+    RETURN sum;
+  END SumSubarray;
+
 (* TRUNC/FLOOR/CEILING/ROUND — runtime params prevent constant folding *)
 PROCEDURE TruncTest (x: REAL): INTEGER =
   BEGIN RETURN TRUNC(x) END TruncTest;
@@ -796,6 +823,21 @@ BEGIN
     srcArr[0] := 10;  srcArr[1] := 20;  srcArr[2] := 30;  srcArr[3] := 40;
     IO.Put ("RefFixedArrCopy({10,20,30,40},0) = " & Fmt.Int(RefFixedArrCopy(srcArr, 0)) & "\n");
     IO.Put ("RefFixedArrCopy({10,20,30,40},3) = " & Fmt.Int(RefFixedArrCopy(srcArr, 3)) & "\n");
+  END;
+
+  (* SUBARRAY tests *)
+  IO.Put ("SubarrayFixed(2,4,0) = " &
+          Fmt.Int(SubarrayFixedElem(2, 4, 0)) & "\n");  (* a[2] = 30 *)
+  IO.Put ("SubarrayFixed(2,4,3) = " &
+          Fmt.Int(SubarrayFixedElem(2, 4, 3)) & "\n");  (* a[5] = 60 *)
+  VAR oa8 := ARRAY [0..7] OF INTEGER{10, 20, 30, 40, 50, 60, 70, 80};
+  BEGIN
+    IO.Put ("SubarrayOpen(3,3,0) = " &
+            Fmt.Int(SubarrayOpenElem(oa8, 3, 3, 0)) & "\n");  (* a[3] = 40 *)
+    IO.Put ("SubarrayOpen(3,3,2) = " &
+            Fmt.Int(SubarrayOpenElem(oa8, 3, 3, 2)) & "\n");  (* a[5] = 60 *)
+    IO.Put ("SumSubarray(2,4) = " &
+            Fmt.Int(SumSubarray(oa8, 2, 4)) & "\n");  (* 30+40+50+60 = 180 *)
   END;
 
   (* Fmt.Real — floating-point TEXT formatting *)

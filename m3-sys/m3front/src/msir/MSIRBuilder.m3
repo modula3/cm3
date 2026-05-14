@@ -414,6 +414,16 @@ PROCEDURE EndProc() =
     END;
     IF NOT abandoned THEN
       MSIREmit.AddProc(curProc);
+    ELSE
+      (* Abandoned: remove from procMap so call sites get a fresh external stub
+         with the fully-qualified name (dots → __ in LLSymbol). *)
+      FOR i := 0 TO procMapN - 1 DO
+        IF procMap[i].val = curProc THEN
+          FOR j := i TO procMapN - 2 DO procMap[j] := procMap[j+1] END;
+          DEC(procMapN);
+          EXIT;
+        END;
+      END;
     END;
     (* Pop saved outer proc context if we're returning from a nested proc. *)
     IF procContextDepth > 0 THEN

@@ -221,281 +221,55 @@ Per-target CI (e.g., `arm64_darwin.yml`) is called via `workflow_call` from `int
 
 ## MSIR Development Notes
 
-The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA mid-level IR layer being built toward LLVM retargeting.
-
-### Current Status
-
-The end-to-end path is working: MSIR is emitted for a real module, lowered to LLVM IR, compiled to a native object, and linked into a passing test binary. The production binary (`smoke-realrt`) also runs to completion (exit 0) against the real CM3 runtime (`libm3core.a`/`libm3.a`). **Zero msir-verify events across the entire buildable subset of the CM3 repository** (full m3tests suite p0/p1/p2/c0/c1/e0/r0/x0, all of m3core, libm3, m3-sys, m3-libs, m3-comm, m3-db, m3-tools, elego, caltech-other, ESC, m3-obliq, examples, and more). Packages that depend on unshipped UI/network libraries (formsvbt, netobj, tcp, vbtkit, etc.) are skipped but that is an installation gap, not an MSIR issue. The following features are implemented and tested (104/104 smoke tests):
-
-- Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
-- Records (by-value and by-ref), fixed and open arrays, enums, globals
-- VAR/READONLY params, INC/DEC
-- Exception handling: TRY/EXCEPT (UID-dispatch landingpad) and TRY/FINALLY (cleanup landingpad + resume)
-- RAISE statement: per-exception `ExceptionDesc` static global (`{ uid, null, 0 }`), calls `RTHooks__Raise` via `HookProc(RaiseEx)`, emits `unreachable` after
-- Exception value binding (`EXCEPT E(v) =>`): loads `act.arg` at `EA_arg = 8` bytes, stores to bound-variable alloca; `inttoptr`/`ptrtoint` for scalar arg packing
-- RTLinker binder `@Module_I3` (interface view, returns same MI) and `@Module_M3`
-- `RT0.ImportInfo` chain in `MI_imports`: linked list of `{ null, binder_fn, next }` records; `BuildImportLink` registers imports via `MSIREmit.RegisterImport`; RTHooks excluded (always pre-initialised by `InitRuntime`)
-- GC read barrier (nil/misaligned/gray-bit inline fast path + `RTHooks__CheckLoadTracedRef`)
-- GC write barrier infrastructure (`GcStore` container operand, dirty-bit check + `RTHooks__CheckStoreTraced` for heap fields; globals are GC roots and need no barrier)
-- RTLinker binder (`@Module_M3`) and `RT0.ModuleInfo` struct (`@Module_M3_info`) emitted in LLVM IR
-- M3 symbol mangling (`Module.Proc` → `Module__Proc`), target triple/datalayout for LLVM 22
-- `target triple` / `target datalayout` for ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX
-- **TypeCells**: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` called from `Type.GenCells` alongside CG counterparts; driven by type *declarations*, not NEW sites
-- **NEW(REF T)** and **NEW(OBJECT T)**: full support; `GenRefMSIR`/`GenObjectMSIR`/`CallAllocHook` in `New.m3`; vtable (`OTC_defaultMethods`) populated from `ObjectType.GetObjectTypeInfo`/`FillMethodNames`
-- **NEW(REF ARRAY OF T, n)**: `GenOpenArrayMSIR` in `New.m3`; computes ATC parameters (dopeSize, elementSize, nDimensions) and calls `TypeDescValueForRefArray` eagerly at the call site (not deferred to `InitTypecellMSIR`) to handle the case where the type's UID is visible from an imported module; sizes struct layout `{ ptr &dim0, i64 ndims, i64 dim0 }`; stub in `raise_stub.cpp`
-- **Vtable dispatch**: `ShapeDispatch(s)` correctly dispatches via `s.vtable[0](s)` in LLVM IR; `AllocateTracedObj` stub initialises vtable pointer from `OTC_defaultMethods`
-- **Module global initialization**: variable initializers (user-specified and language-default zero-init) emitted in MSIR module body; traced globals use `BuildGcStore`
-- **External/imported variable registration**: `DeclareGlobalsMSIR` in `Module.Compile` pre-registers all module-level variables and exception descriptors before proc bodies compile
-- **TEXT literals**: static `TextLiteral.T` globals (`{ i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }`); `ConstTextLit` value kind carries uid+chars for readable MSIR text; lowered to LLVM constant-expression GEP `getelementptr inbounds (i8, ptr @textlit_N, i64 8)`
-- **TEXT concatenation**: `ConcatExpr.CompileMSIR` calls `RTHooks__Concat(a, b)` via `HookProc(RunTyme.Hook.Concat)`; module body now passes real TEXT values to `IO.Put`
-- **GC write barrier for heap fields**: activated — `QualifyExpr.LValueMSIR` sets pending container (object pointer) via `MSIRBuilder.SetPendingContainer`; `AssignStmt.CompileMSIR` calls `TakePendingContainer` and passes it to `BuildGcStore`; traced object fields are retyped from `GcRef` to `GcSlot` so the barrier fires correctly
-- **`var_map`/`gc_map`**: module globals embedded as trailing fields of `@Mod_M3_info` struct (after MI_SIZE=104 bytes); gc_map TipeMap byte sequence skips non-traced fields and emits `Op.Ref` for each traced global; LLVM aliases (`@Main__gCounter` etc.) preserve binary symbol compatibility with CG-compiled modules; GC now correctly scans MSIR module globals as roots
-- **Nested procedures**: lambda-lifted — each captured up-level variable becomes an explicit `ptr` parameter in the inner proc's LLVM signature (`%__cap_0`, `%__cap_1`, …); outer proc's up-level vars are ordinary allocas whose addresses are passed as capture args; `Stmt.Capture` pre-scans the body to collect captures before `GenBodyMSIR`; `RegisterProc` stores the capture list so call sites build the right arg list; qualified LLVM name (`Main__NestedSum__Add`) avoids collision with module-level procs of the same base name; multi-level nesting supported naturally (inner proc passes its own capture params through to deeper procs)
-- **Read-only scalar capture optimisation**: captures classified `written=FALSE` by `CaptureAnalysis` and of scalar MSIR type (integer, float, or untraced pointer) are passed by value instead of by pointer, giving LLVM's alias analysis better information; GcRef captures always pass by pointer so the conservative GC scanner keeps them on the stack
-- **WIDECHAR text literals**: `M3WString.GetChar` provides raw code-point access; `MSIREmit` encodes each WIDECHAR as little-endian bytes (`Target.WideCharSize() DIV Target.Char.size` bytes); `MSIRToLLVM` emits the correct `[wcharBytes*len + wcharBytes x i8]` struct field with a wide null terminator; `cnt` is negative to distinguish from ASCII literals
-- **TextLiteral vtable hooks**: the five `@textlit_methods` function pointers (`RTHooks__TextLitInfo` etc.) are resolved via `MSIRBuilder.HookProc`/`RunTyme.LookUpProc` in `MSIREmit.EndUnit` and stored in the MSIR module; `MSIRToLLVM` uses `LLSymbol(hook)` for names and `EmitDeclare` for signatures, eliminating all hardcoded strings and deriving correct types from the M3 type system
-- **TypeCell alignment**: `InitTypecellMSIR` in `RefType.m3` and `ObjectType.m3` now correctly converts alignment from bits to bytes (divides by `Target.Byte`) before passing to `TypeDescValueForRef`/`TypeDescValueForRefArray`; `RTType__FinishTypecell` requires bytes in {1,2,4,8,16}
-- **Fixed→open-array argument coercion**: `Formal.EmitArgMSIR` / `GenOpenArgMSIR` (in `Formal.m3`) build a stack dope vector `{ ptr data, i64 dim0, … }` when a fixed-size array actual is passed to a VAR/READONLY open-array formal; `UserProc.CompileMSIR` walks formals via `Formal.EmitArgMSIR` rather than the old Ptr-check heuristic; VALUE open-array formals with fixed-size actuals work
-- **VALUE open-array formal with open actual**: `GenValueOpenArgMSIR` (in `Formal.m3`) handles the dynamic case — loads the actual's dope vector at runtime, computes `totalBytes = dim_0 * … * dim_{D-1} * eltSizeBytes` via `BuildIMul`, allocates a stack copy with the new `Op.AllocaDyn` (`alloca i8, i64 %n`), copies via `EmitMemcpyDyn`, and builds a fresh dope vector pointing at the copy; `MSIR.BuildAllocaDyn` and `MSIRBuilder.EmitMemcpyDyn` are the supporting primitives
-- **Procedure values**: `ProcExpr.CompileMSIR` returns `MSIR.ConstProcRef(proc)` — a `ptr @procname` constant; `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`; `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` guards `Kind(EltType) ≠ Void` so proc formals are treated as by-value scalars
-- **Indirect (proc-variable) calls**: `UserProc.CompileMSIR` handles non-literal, non-method call expressions via `Expr.CompileMSIR(p.proc)` to get the function pointer value, then `MSIRBuilder.EmitCallIndirect`; routes to `BuildCallIndirect` or `BuildInvokeIndirect` based on active TRY context
-- **Float type conversions**: new cast ops `SIToFP`, `FPToSI`, `FPExt`, `FPTrunc`, `ZExt`, `SExt`, `Trunc` in `MSIR`; `Floatt.CompileMSIR` implements `FLOAT()` via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float)
-- **TRUNC/FLOOR/CEILING/ROUND builtins**: new unary float ops `FPFloor`, `FPCeil`, `FPRound` in `MSIR`; lowered to `llvm.floor.*`, `llvm.ceil.*`, `llvm.roundeven.*` intrinsics (suffix `f32`/`f64`/`f128` from bit width); `Trunc.m3` emits direct `fptosi`; `Floor.m3`/`Ceiling.m3`/`Round.m3` emit the rounding op followed by `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`); note `FloatMode.SetRounding` explicitly does not affect the ROUND builtin, so ROUND always uses `llvm.roundeven.*` regardless of the current FPU mode; the CG backend (M3C.m3) uses C `round()` (half-away-from-zero) which is a spec deviation, but MSIR is correct
-- **Extern variable auto-registration**: `NamedExpr.CompileMSIR` calls `Variable.RegisterExternMSIR(vv)` on demand for `FROM X IMPORT y` style variables not pre-registered by `DeclareGlobalsMSIR`
-- **EVAL / ASSERT / LOOP stmts**: `EvalStmt`, `AssertStmt`, `LoopStmt` have `CompileMSIR` implementations
-- **Open→fixed-array copy**: `AssignStmt.CompileMSIR` and `ReturnStmt.CompileMSIR` handle the case where an `openarray<1> T` value is assigned or returned into a `[N]T` slot — extracts the data pointer from the dope vector via `BuildOpenArrayElemAddr`, retypes to `ptr([N]T)`, and loads the fixed array; covers `READONLY FOpen: ARRAY OF T` → `[N]T` return (p032 pattern) and local variable assignment
-- **Rvalue-base array subscript**: `SubscriptExpr.LValueMSIR` now handles subscripting a call result (`FirstFour(src)[i]`) by materializing the returned fixed array into a temp alloca; tries `Expr.LValueMSIR(base)` first (handles VAR designators and CONST arrays via `MaterializeConstArray`); if that abandoned, clears the flag via `MSIRBuilder.ClearAbandoned` and falls back to `Expr.CompileMSIR(base)` + `BuildAlloca` + `BuildStore`; `MSIRBuilder.IsAbandoned`/`ClearAbandoned` added to support the try-first pattern
-- **REF FixedArray deref-copy** (`v^ := arr` and `arr := v^`): `DerefExpr.LValueMSIR` now always retypes the GcRef/opaque pointer to `ptr(elemT)` when the element type is known and non-void; previously GcRef values were returned as `gc_ref void`, causing `AssignStmt.CompileMSIR`'s array-type check to abandon on fixed-array element types; with the retype, `eltT = [N]i64 = rhsT` so the check passes and `BuildStore` emits the copy directly
-- **CONST array subscript with runtime index**: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` arrays (e.g. `CONST SmallPrimes = ARRAY [0..4] OF INTEGER{…}`) by calling `MSIRBuilder.MaterializeConstArray`, which registers the array as a private LLVM constant global and returns a pointer to it; this falls naturally out of the rvalue-base subscript fix
-- **Array constructor expressions (`ARRAY OF T{…}`) as call arguments**: `ConsExpr.P` now has `compileMSIR`/`compileLValueMSIR` methods that call `InnerSeal` (which creates the actual `ArrayExpr.T` / `RecordExpr.T` / `SetExpr.T` in `p.base`) and then delegate to the sealed base; without this, passing an array constructor literal to an open-array formal hit `LValueMSIRDefault` and abandoned the entire module body proc
-- **Narrow array index zero-extension**: `SubscriptExpr.LValueMSIR` zero-extends any index value narrower than `Target.Integer.size` bits to `i64` before passing to `BuildArrayElemAddr`; LLVM sign-extends GEP indices, so an `i1` index of `1` (BOOLEAN `TRUE`) was sign-extended to `-1` and returned a garbage element address
-- **ADR builtin**: `Adr.m3` `CompileMSIR` returns `Expr.LValueMSIR(ce.args[0])` — the address of the designator; wired via `CallExpr.SetMethodMSIR`
-- **BITSIZE / BYTESIZE builtins**: `BitSize.m3` `DoCompileMSIR` extracts `info.size` via `Type.CheckInfo` and divides by the unit (1 for BITSIZE, 8 for BYTESIZE) → `MSIR.ConstInt`; abandons gracefully for open-array actuals; `ByteSize.m3` delegates to `BitSize.DoCompileMSIR` with unit=8
-- **LOOPHOLE operator**: `LoopholeExpr.CompileMSIR` handles rvalue cases: `Noop` → `RetypeValue`; `D_to_V` → load from lvalue address; `S_to_V` → load from rvalue address; `V_to_V` → `BuildConvert` (ptrtoint/inttoptr/bitcast); `LValueMSIR` passes the inner lvalue through for designator/struct/scalar cases; aggregate→open-array and struct target cases abandon
-- **ADDRESS arithmetic**: `AddExpr.CompileMSIR` handles `ADDRESS + INTEGER` → `BuildGepByte`; `SubtractExpr.CompileMSIR` handles `ADDRESS - INTEGER` → `BuildGepByte` with negated offset, and `ADDRESS - ADDRESS` → `ptrtoint` both operands then `BuildISub` for byte-count result
+The `m3-sys/msir` package and `m3-sys/m3front/src/msir/` form the typed-SSA
+mid-level IR layer being built toward LLVM retargeting.  See `MSIR-design.md`
+for architecture decisions, implementation status, key source files, and
+known limitations.
 
 ### EH Model Requirement
 
-MSIR's LLVM lowering uses the C++ EH personality model (`invoke`/`landingpad`/`resume` with `@__gxx_personality_v0`) exclusively.  This maps directly to `ex_stack` (C++ zero-cost EH) and cannot be used with `ex_frame` (setjmp/longjmp).  MSIR emission should only be enabled on `ex_stack` platforms (ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX).  On `ex_frame` platforms the C backend remains the only path.
+MSIR's LLVM lowering uses the C++ EH personality (`invoke`/`landingpad`/`resume`
+with `@__gxx_personality_v0`) exclusively.  It maps to `ex_stack` and cannot
+be used with `ex_frame`.  MSIR emission is only valid on `ex_stack` platforms
+(ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX).
 
 ### Enabling MSIR Emission
-
-MSIR output is gated behind a runtime parameter so it doesn't slow normal builds. Pass `@M3m3front-msir` to the `cm3` process — the `@M3` prefix is consumed by `RTParams` and never reaches the compiled program's argument list:
 
 ```sh
 cm3 '@M3m3front-msir' -build
 ```
 
-This writes `<Module>.msir` and `<Module>.ll` to the build directory for every module compiled in that invocation.
+Writes `<Module>.msir` and `<Module>.ll` to the build directory for every
+module compiled in that invocation.
 
 ### Build Order After Editing MSIR or m3front
 
-When you change files in `m3-sys/msir/src/` or `m3-sys/m3front/src/msir/`, or any of the m3front files that touch MSIR (stmts, values, exprs), rebuild in this order:
-
 ```sh
 # From the repo root, with ~/cm3/bin on PATH
-cd m3-sys/msir   && cm3 -build && cm3 -ship
+cd m3-sys/msir    && cm3 -build && cm3 -ship
 cd m3-sys/m3front && cm3 -build && cm3 -ship
-cd m3-sys/cm3    && cm3 -build
+cd m3-sys/cm3     && cm3 -build
 cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3
 ```
 
-The `cm3` driver links m3front statically, so you must relink and reinstall the binary before the new MSIR code takes effect in compilations.
+The `cm3` driver links m3front statically; reinstall the binary before the
+new MSIR code takes effect in compilations.
 
 ### End-to-End LLVM Link Test
-
-The canonical test is in `m3-sys/msir/test/`:
 
 ```sh
 # Requires LLVM clang on PATH (or export LLVM_PREFIX=$(brew --prefix llvm))
 bash m3-sys/msir/test/run-llvm-link-test.sh
 ```
 
-This script:
-1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
-2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 104 checks
+Builds `Main.m3` with `@M3m3front-msir`, lowers to LLVM, and runs 109 checks.
+Current result: **109/109 pass**.
 
-The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, `Fmt__Real`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
-
-To run as a full M3 program against the real runtime:
+To run against the real runtime:
 ```sh
 clang _m3main.cpp Main-llvm.o libm3core.a libm3.a -lc++ -o smoke-realrt
-./smoke-realrt
+./smoke-realrt   # exits 0
 ```
-The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run the module body. The module body runs to completion (exit 0) — all IO.Put / Fmt / Text calls in Main.m3 work correctly against the real runtime.
-
-### Key Source Files
-
-| File | Role |
-|---|---|
-| `m3-sys/msir/src/MSIR.i3/.m3` | IR types, values, ops, builders; `TypeDesc`, `ConstZero`, `TypeCellRef` |
-| `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR; handles EH, GC barriers, TypeCells, RTLinker binder |
-| `m3-sys/msir/src/MSIRPrinter.m3` | Prints MSIR text (`.msir` files) |
-| `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks on completed procs |
-| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`); `EmitCall`/`EmitNestedCall`; try-context stack; `RegisterProc`/`GetProcCaptures` for lambda-lifted nested proc capture lists |
-| `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` and `.ll` at end of unit |
-| `m3-sys/m3front/src/stmts/TryStmt.m3` | `CompileMSIR`: EH lowering for TRY/EXCEPT (UID comparison chain) |
-| `m3-sys/m3front/src/stmts/TryFinStmt.m3` | `CompileMSIR`: EH lowering for TRY/FINALLY (cleanup landingpad) |
-| `m3-sys/m3front/src/stmts/AssignStmt.m3` | `CompileMSIR`: fetches `CurrentBlock()` AFTER RHS to handle invoke-in-RHS; open→fixed-array copy via dope-vector extraction |
-| `m3-sys/m3front/src/stmts/BlockStmt.m3` | `CompileMSIR`: calls `Scope.InitValues` (vars already registered by `BeginProc`) |
-| `m3-sys/m3front/src/values/Variable.m3` | Owns MSIR declarations: `DeclareGlobalMSIR`, `RegisterExternMSIR`, `AddLocalMSIR` (with zero-init), `BindFormalMSIR`; MSIR init in `UserInit` |
-| `m3-sys/m3front/src/values/Procedure.m3` | `GenBody`: `BeginProc` sets up MSIR proc; `Stmt.CompileMSIR`/`EndProc` follow CG body; `GenBodyMSIR`: MSIR-only inline compilation of nested procs |
-| `m3-sys/m3front/src/values/Module.m3` | `DeclareGlobalsMSIR`: pre-registers globals + exception descs; `EmitBody`: module-init MSIR |
-| `m3-sys/m3front/src/types/RefType.m3` | `InitTypecellMSIR`: registers MSIR TypeDesc; called from `Type.GenCells` |
-| `m3-sys/m3front/src/types/ObjectType.m3` | `InitTypecellMSIR`: registers MSIR ObjectTypeDesc with vtable; `GetObjectTypeInfo`, `FillMethodNames` |
-| `m3-sys/m3front/src/types/Type.m3` | `GenCells`: calls CG and MSIR `InitTypecell` together for each type cell |
-| `m3-sys/m3front/src/builtinOps/New.m3` | `CompileMSIR`: dispatches to `GenRefMSIR`/`GenObjectMSIR`/`GenOpaqueMSIR`; `CallAllocHook` is common tail |
-| `m3-sys/m3front/src/builtinOps/Adr.m3` | `CompileMSIR`: ADR(x) → `Expr.LValueMSIR(x)` |
-| `m3-sys/m3front/src/builtinOps/BitSize.m3` | `DoCompileMSIR(e, unit)`: BITSIZE/BYTESIZE → `ConstInt(info.size DIV unit)`; shared by `ByteSize.m3` |
-| `m3-sys/m3front/src/exprs/LoopholeExpr.m3` | `CompileMSIR`/`LValueMSIR`: LOOPHOLE rvalue (Noop/D_to_V/S_to_V/V_to_V) and lvalue passthrough |
-| `m3-sys/m3front/src/exprs/AddExpr.m3` | `CompileMSIR`: `cADDR + INTEGER` → `BuildGepByte`; integer and float cases already covered |
-| `m3-sys/m3front/src/exprs/SubtractExpr.m3` | `CompileMSIR`: `cADDR - INTEGER` → negated GEP; `cADDR - cADDR` → ptrtoint/sub |
-| `m3-sys/m3front/src/exprs/InExpr.m3` | `CompileMSIR`: `IN` for small constant SETs via bit-mask shift; abandons for multi-word/non-constant sets |
-| `m3-sys/m3front/src/misc/CaptureAnalysis.i3/.m3` | Capture-analysis module: `Note(ca, v, written)` records up-level variable accesses; `GetCaptures` returns the set; `T` is the accumulator passed through `Stmt.Capture`/`Expr.Capture` walks |
-| `m3-sys/m3front/src/misc/M3WString.m3` | Wide-char string representation; `GetChar(t, i)` gives raw code-point access used by `MSIREmit` to encode WIDECHAR literals as little-endian byte sequences |
-| `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
-| `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
-| `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`: formal-aware arg-passing for MSIR call sites; `GenOpenArgMSIR`: builds stack dope vector when fixed array is passed to open-array formal |
-| `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR`: try-first pattern for rvalue bases (call results and CONST arrays); materializes call-result arrays into temp allocas via `IsAbandoned`/`ClearAbandoned` fallback; zero-extends narrow index types (e.g. `i1` for BOOLEAN) to `i64` to prevent GEP sign-extension |
-| `m3-sys/m3front/src/exprs/ConsExpr.m3` | `compileMSIR`/`compileLValueMSIR`: calls `InnerSeal` then delegates to `p.base` (the sealed `ArrayExpr.T`/`RecordExpr.T`/`SetExpr.T`); enables array constructor literals as call arguments |
-| `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 104-check C harness |
-| `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
-| `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
-
-### Architecture: MSIR Declaration Lifecycle
-
-MSIR declarations are co-located with CG declarations, not in separate passes:
-
-| What | When | Where |
-|---|---|---|
-| Module globals (vars + exception descs) | `Module.Compile`, before type compilation | `Module.DeclareGlobalsMSIR` → `Variable.DeclareGlobalMSIR` / `RegisterExternMSIR` |
-| Type cells (Ref + Object) | `Type.GenCells` in `GenLinkerInfo` | `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR` alongside CG `InitTypecell` |
-| Proc formals + locals | `MSIRBuilder.BeginProc`, before CG `Scope.InitValues` | `Variable.BindFormalMSIR` + `Variable.AddLocalMSIR` (zero-init if `InitCost > 0`) |
-| Variable initializers | CG-path `Scope.InitValues` (guarded by `t.initDone`) | MSIR blocks inside `Variable.UserInit` fire here because `BeginProc` has set `curBlock` |
-| Exception descriptors | `Module.DeclareGlobalsMSIR` | `MSIRBuilder.ExcDescValue` called upfront; lazy calls from TryStmt/RaiseStmt find existing desc |
-| Nested proc body (MSIR) | `Procedure.LangInit` via `Scope.InitValues`, when `inline_nested_procs=FALSE` | `Stmt.Capture` pre-scans the body; `GenBodyMSIR(t)` calls `BeginProc` with the captures, registers the proc+captures; `ProcMapContains` guards `GenBody` against re-emitting MSIR on the second (CG-only) pass |
-
-`Variable.m3` owns all MSIR registration for variables; `MSIRBuilder` exposes only raw map helpers (`GlobalMapAdd`, `VarMapAdd`, `VarMapContains`). The `Scope.InitValues` call in `GenBody`'s MSIR phase is intentionally absent — init fires during the CG-path call because `BeginProc` is already active.
-
-**Nested proc note**: the C backend always sets `inline_nested_procs=FALSE` (via `-unfold_nested_procs` in `cm3cfg.common`). MSIR still calls `GenBodyMSIR` inline from `LangInit` — not because the outer proc's context is required (the old frame-struct reason), but to guarantee that the nested proc is registered in `procMap` before any call site in the outer body is compiled. Call sites call `LookupOrCreateProc` and `GetProcCaptures`; both must find the nested proc's MSIR.Proc and capture list already registered.
-
-**Lambda-lifting: how nested procs work in MSIR**
-
-Up-level variables are identified by `Stmt.Capture`, which dispatches through the `capture`/`captureLV` virtual methods on `Stmt.T` and `Expr.T` to walk the nested proc's AST before compilation and record each up-level variable reference. The nested proc gets one explicit `ptr` parameter per captured variable (`%__cap_0`, `%__cap_1`, …). In the outer proc, captured variables are ordinary `alloca` locals; their addresses are passed as capture arguments at each call site.
-
-- `Stmt.Capture(body, ca)` — pre-pass that walks the AST via the `capture`/`captureLV` virtual methods on `Stmt.T` and `Expr.T`, recording `(Variable.T, written)` pairs in `ca`
-- `MSIRBuilder.BeginProc(..., captures := ca)` — generates explicit capture params; binds each in the inner proc's varMap so `LookupVar`/`LookupVarAddr` work transparently
-- `MSIRBuilder.RegisterProc(p, proc, caps)` — stores the capture list alongside the proc
-- `MSIRBuilder.EmitNestedCall(name, callee, calleeVal, args)` — looks up captures for `calleeVal`, calls `LookupVarAddr(cap.var)` for each, prepends these to `args`
-
-Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `acc`, and `SubAdd` (nested in `Add`) also uses `acc`, then `SubAdd`'s `BeginProc` runs inside `Add`'s varMap context where `acc` maps to `Add`'s `%__cap_0` param. `LookupVarAddr(acc)` returns `%__cap_0`, which is passed directly as `SubAdd`'s capture arg.
-
-**Parameter explosion note**: a proc that captures many up-level variables acquires many extra pointer parameters. LLVM's inliner and middle-end optimisations (mem2reg, SROA) typically eliminate this overhead after inlining — the pointers are promoted back to registers and the indirections disappear. O16 in MSIR-design.md discusses frame-struct grouping as a future performance tuning step for hot paths where inlining does not apply.
-
-### CallExpr MSIR Dispatch Architecture
-
-`CallExpr.m3` dispatches both MSIR compilation and capture analysis through its `MethodList` mechanism, with no per-kind logic inside `CallExpr` itself.
-
-**Types and setters** (in `CallExpr.i3`):
-- `CompilerMSIR = PROCEDURE (t: T): MSIR.Value` — MSIR compilation callback
-- `Capturer = PROCEDURE (t: T; ca: CaptureAnalysis.T)` — capture-analysis callback
-- `SetMethodMSIR(ml, c)` / `SetMethodCapture(ml, s)` — wiring helpers
-- `CaptureDefault` — set by `NewMethodList` on every `MethodList`; scans all args as reads
-
-**Per-module callbacks**:
-- `UserProc.m3`: `CompileMSIR` (direct call, vtable dispatch, nested lambda) + `Capture` (formal-mode scan); wired in `Initialize`
-- `Inc.m3`, `Dec.m3`: each defines `CompileMSIR` (arithmetic) + `Capture` (ScanLV arg0, Scan rest); wired in `Initialize`
-- `Adr.m3`: `CompileMSIR` → `Expr.LValueMSIR(arg0)`; wired in `Initialize`
-- `BitSize.m3`, `ByteSize.m3`: `CompileMSIR` → `DoCompileMSIR(arg0, unit)`; wired in `Initialize`
-- Other builtins inherit `CaptureDefault` (all args read-only)
-
-**`capture`/`captureLV` virtual methods**: defined on `Expr.T` (in `ExprRep.i3`) and `Stmt.T` (in `StmtRep.i3`). `Stmt.Capture(s, ca)` chains through `.next`; `Expr.Capture(e, ca)` dispatches to `e.capture(ca)`. Each concrete stmt/expr type overrides these to recurse into its sub-nodes. `Expr.CaptureLV` propagates the lvalue context so that directly-assigned variables are marked `written=TRUE` by `VarExpr` and `NamedExpr`.
-
-### Known Limitations / Remaining Work
-
-All known `msir-verify` issues have been eliminated. Remaining limitations are cases that emit `msir-abandon` (proc falls back to CG) rather than producing incorrect IR:
-
-- **Array-copy through REF**: `v^ := arr` where `v` is a `REF` to a fixed array works (`r^ := src; copy := r^` round-trip implemented). `v^ := arr` where `v` is a `REF` to a multi-dimensional open array requires a memcpy not yet in MSIR (`AssignStmt.CompileMSIR` abandons for open-array deref LHS).
-- **Packed / sub-word-element array subscript**: `SubscriptExpr.LValueMSIR` abandons for arrays whose element MSIR type is not `FixedArray` (e.g. `ARRAY OF BITS 5 FOR [0..31]`). Sub-word element addressing requires bit-field extraction not yet in MSIR.
-- **VALUE open-array formals with open actuals**: implemented for rank-1 and multi-rank cases where `actDepth = formDepth`; partial depth coercion (`actDepth < formDepth`) still abandons (rare in practice).
-- **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, `Fmt.Real` (floating-point formatting), and TEXT-returning library calls all work. `Text.Sub` and other TEXT manipulation operations not yet exercised in tests.
-- **GC write barrier for heap fields**: activated; see container protocol below.
-- **`var_map`/`gc_map`**: implemented; see architecture note below.
-- **NEW(REF open-array)**: `GenOpenArrayMSIR` supports 1-D open-array refs; multi-D untested.
-- **NEW(REF record with keyword args)**: `GenRefMSIR` abandons when `NUMBER(ce.args^) > 1`; plain `NEW(REF Record)` works.
-- **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred.
-- **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks.
-- **Debug symbols**: no source locations reach LLVM IR; see below.
-- **SET type operations**: `IN` operator on small constant SETs (≤ 64-bit domain) works via bit-mask shift; multi-word sets (`info.size > Target.Word.size`, e.g. `SET OF ASCII.Range`) and non-constant sets abandon gracefully. SET literals, set arithmetic (+/-/*/) not yet implemented.
-
-### NIL Typing Convention
-
-`NIL` in M3 is represented in MSIR as `ConstNil(TPtr(TVoid()))` — always an untraced opaque pointer null. Call sites coerce the nil to match the destination/comparand type when needed:
-- `AssignStmt.CompileMSIR`: if the rhs is `ConstNil` and the slot element type is non-void and ≠ `ptr void`, retype to the slot element type (e.g. `gc_ref void` for traced ref slots)
-- `ReturnStmt.CompileMSIR`: retype nil to match the procedure result type
-- `EqualExpr.CompileMSIR` (both SimpleScalar and Complex/procedure branches): retype nil to match the other icmp operand
-
-This is cleaner than returning `gc_ref void` for traced NIL and `ptr void` for untraced NIL because LLVM in opaque-pointer mode emits `null` for any ConstNil regardless of MSIR type, and the distinction only matters for the MSIR verifier.
-
-### GC Write Barrier Container Protocol
-
-In the **CG path**, write barriers are explicit and emitted by the front-end before the store: `QualifyExpr.PrepLV` (and `DerefExpr.CompileLV`) call `RunTyme.EmitCheckStoreTraced()` when `Host.doGenGC` is true and the field is traced. That helper pops the container (object pointer) off the M3CG stack, emits a dirty-bit test inline, and conditionally calls `RTHooks__CheckStoreTraced` — all as M3CG ops before the subsequent `Store_indirect`. The C backend (`M3C.m3`) merely translates these M3CG ops to C; it does not independently decide when to add barriers.
-
-In the **MSIR path**, LLVM IR is lower-level and barriers must be emitted explicitly. The protocol:
-
-1. `QualifyExpr.LValueMSIR` (objField case) computes the base object pointer (`baseAddr`) before GEP-ing to the field. It calls `MSIRBuilder.SetPendingContainer(baseAddr)` as a side-effect and retypes the GEP result from `GcRef` to `GcSlot(elemType)` if the field is a traced ref.
-2. `AssignStmt.CompileMSIR` calls `MSIRBuilder.TakePendingContainer()` immediately after `LValueMSIR`. The result is NIL for module globals (GC roots, no barrier) and the object pointer for heap fields.
-3. `MSIR.BuildGcStore(block, slot, value, container)`: when `container != NIL`, emits the inline dirty-bit check + `RTHooks__CheckStoreTraced`.
-
-The `SetPendingContainer`/`TakePendingContainer` side-channel avoids changing any expression interface while threading the container from the LValue expression to the assignment statement.
-
-### TEXT Literal Architecture Note
-
-`TextExpr.P` is extended with `cgOffset: INTEGER` to store the `Module.Allocate` result directly on the expression object. `LiteralTable = REF ARRAY OF P` (indexed by uid) is the single per-module registry for both CG and MSIR — no parallel tracking needed. `Split8`/`Split32` on `literals[uid]` gives string content; `literals[uid].cgOffset` gives the CG const-area offset. `ExpandLiterals` grows the array; `Reset` clears entries to NIL for reuse across modules. `MSIREmit.EndUnit` bridges the data to `MSIR.Module` since `MSIRToLLVM` (in the `msir` package) cannot import `TextExpr` from `m3front`.
-
-### Module Global Layout and var_map/gc_map
-
-Module globals in MSIR are **embedded as trailing fields of `@Mod_M3_info`** (after the standard 104-byte `RT0.ModuleInfo` header), matching the CG convention exactly. The GC walker `RTHeapMap.Walk(m, m.gc_map, v)` starts at `m` (the `@Mod_M3_info` address) and uses the TipeMap to find traced fields.
-
-**Struct layout** (example: `gLock: MUTEX; gCounter: INTEGER; gRef: REFANY`):
-```
-@Main_M3_info = global %RT0_ModuleInfo_t {
-  [13 standard MI fields, bytes 0..103]
-  ptr null,  ; gLock (+104, traced MUTEX)
-  i64 0,     ; gCounter (+112, untraced INTEGER)
-  i64 0,     ; gBase (+120, untraced INTEGER)
-  ptr null,  ; gRef (+128, traced REFANY)
-}
-```
-
-**gc_map TipeMap** (`@Main_M3_gc_map`): byte sequence `SkipF_1(104), Ref, SkipF_1(16), Ref, Stop` — skips the header, visits `gLock`, skips the two untraced integers, visits `gRef`.
-
-**LLVM aliases** (`@Main__gCounter = alias i64, ptr getelementptr ...`) preserve binary symbol compatibility so C code and CG-compiled modules can still access globals by their mangled names.
-
-**Access in proc bodies**: `LookupVarAddr(g)` returns `getelementptr inbounds (i8, ptr @Main_M3_info, i64 <byteOffset>)` as a constant expression (a `StructFieldRef` value kind in MSIR).
-
-### Debug Symbol Support (Future Work)
-
-The MSIR → LLVM path currently emits no debug metadata. Adding DWARF support is self-contained additive work with no architectural changes required.
-
-**What LLVM needs**: `!DICompileUnit`, `!DIFile`, `!DISubprogram` per proc, `!DILocalVariable` per local, `!DILocation` on every instruction, and `llvm.dbg.declare` intrinsics linking allocas to their variable descriptors.
-
-**Natural hook points** (already in the code):
-- `Scanner.offset` / `t.origin` carry (file, line) information throughout m3front
-- `CG.Gen_location(offset)` is called at statement boundaries, proc entry, etc. — MSIR needs a parallel `MSIRBuilder.SetLocation(offset)` at the same sites
-- `AddLocalMSIR` is where `llvm.dbg.declare` intrinsics would be emitted after each alloca
-- `BeginProc` is where `!DISubprogram` would be attached to the proc definition
-
-**Complication**: CM3's `Scanner.offset` packs file identity and line number into a single integer using m3front-internal encoding. Decoding back to a human-readable (file, line) requires `Scanner.Here` or equivalent — currently only callable during active scanning. A mapping table from file-id to path would need to be maintained during compilation.
-
-**Right time to implement**: once the LLVM path is the primary production path. Debug metadata roughly doubles emitted LLVM IR size, so deferring until stability is established is reasonable.
-
-### Cosmetic Issues in Emitted MSIR
-
-- **Unreachable merge blocks**: when all branches of an IF end with `ret`, the `if.merge` block gets no predecessors. Harmless; LLVM DCE removes it.
-- **Repeated block label names**: ELSIF chains reuse label hints (`if.then`, `if.next`) for each clause. The blocks are distinct objects; only the printed names collide. Fix: add a counter suffix in `NewBlock`.
 
 ---
 

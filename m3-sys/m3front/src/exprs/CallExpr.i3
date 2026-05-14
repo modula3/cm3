@@ -43,9 +43,10 @@ TYPE
   CompilerBR   = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
   NoteWriter   = PROCEDURE (t: T);
   BuiltinAlign = PROCEDURE (t: T): Type.BitAlignT;
-  Capturer     = PROCEDURE (t: T;  ca: CaptureAnalysis.T);
-  CompilerMSIR = PROCEDURE (t: T): MSIR.Value;
-  
+  Capturer            = PROCEDURE (t: T;  ca: CaptureAnalysis.T);
+  CompilerMSIR        = PROCEDURE (t: T): MSIR.Value;
+  CompilerLValueMSIR  = PROCEDURE (t: T): MSIR.Value;
+
 PROCEDURE NewMethodList
   (minArgs      : INTEGER;
    maxArgs      : INTEGER;
@@ -87,7 +88,8 @@ PROCEDURE NoBranch       (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NotWritable    (t: T);
 PROCEDURE BuiltinAlignDefault (t: T): Type.BitAlignT;
 
-PROCEDURE SetMethodCapture (ml: MethodList;  s: Capturer);
-PROCEDURE SetMethodMSIR    (ml: MethodList;  c: CompilerMSIR);
+PROCEDURE SetMethodCapture    (ml: MethodList;  s: Capturer);
+PROCEDURE SetMethodMSIR       (ml: MethodList;  c: CompilerMSIR);
+PROCEDURE SetMethodLValueMSIR (ml: MethodList;  c: CompilerLValueMSIR);
 
 END CallExpr.

@@ -10,7 +10,8 @@ MODULE Subarray;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, ArrayType, Card;
 IMPORT OpenArrayType, CheckExpr, Host, Target, TInt, M3RT, IntegerExpr;
-IMPORT ErrType; 
+IMPORT ErrType;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -471,6 +472,105 @@ PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> traced: BOOLEAN) =
     ce.tmp := NIL;
   END CompileLV;
 
+PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    base      := ce.args[0];
+    start     := ce.args[1];
+    len       := ce.args[2];
+    array     := Type.Base (Expr.TypeOf (base));
+    open      := ArrayType.OpenCousin (array);
+    src_depth := OpenArrayType.OpenDepth (array);
+    elt_pack  := ArrayType.EltPack (array);  (* bits *)
+
+    ptrT      := MSIR.TPtr (MSIR.TVoid ());
+    intT      := MSIR.TI (Target.Integer.size);
+    apB       := VAL (Target.Address.size DIV Target.Byte, LONGINT);
+
+    blk                        : MSIR.Block;
+    basePtr, startVal, lenVal  : MSIR.Value;
+    startOff, newEltPtr, dopeA : MSIR.Value;
+    eltMsirT                   : MSIR.T;
+    eltBytes                   : LONGINT;
+    indexT, eltT               : Type.T;
+  BEGIN
+    IF src_depth > 1 THEN
+      MSIRBuilder.Abandon ("SUBARRAY: rank>1 open source not yet in MSIR");
+      RETURN NIL;
+    END;
+
+    eltBytes := VAL (elt_pack DIV Target.Byte, LONGINT);
+    IF eltBytes <= 0L THEN
+      MSIRBuilder.Abandon ("SUBARRAY: non-byte-aligned element");
+      RETURN NIL;
+    END;
+
+    startVal := Expr.CompileMSIR (start);
+    IF startVal = NIL THEN RETURN NIL END;
+    blk := MSIRBuilder.CurrentBlock ();
+    IF MSIR.BitWidth (MSIR.ValueType (startVal)) < Target.Integer.size THEN
+      startVal := MSIR.BuildZExt (blk, "sa.start", startVal, intT);
+    END;
+
+    lenVal := Expr.CompileMSIR (len);
+    IF lenVal = NIL THEN RETURN NIL END;
+    blk := MSIRBuilder.CurrentBlock ();
+    IF MSIR.BitWidth (MSIR.ValueType (lenVal)) < Target.Integer.size THEN
+      lenVal := MSIR.BuildZExt (blk, "sa.len", lenVal, intT);
+    END;
+
+    IF src_depth = 0 THEN
+      basePtr := Expr.LValueMSIR (base);
+      IF basePtr = NIL THEN RETURN NIL END;
+    ELSE
+      VAR dopeAddr := Expr.LValueMSIR (base);
+      BEGIN
+        IF dopeAddr = NIL THEN RETURN NIL END;
+        blk := MSIRBuilder.CurrentBlock ();
+        basePtr := MSIR.BuildLoad (blk, "sa.base", ptrT,
+                     MSIR.BuildPtrAdd (blk, "", dopeAddr, 0L));
+      END;
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+
+    startOff  := MSIR.BuildIMul (blk, "sa.off", startVal,
+                                 MSIR.ConstInt (intT, eltBytes));
+    newEltPtr := MSIR.BuildGepByte (blk, "sa.elt", basePtr, startOff);
+
+    EVAL ArrayType.Split (Type.Base (open), indexT, eltT);
+    eltMsirT := MSIRType.Translate (eltT);
+    IF eltMsirT = NIL THEN
+      MSIRBuilder.Abandon ("SUBARRAY: unsupported element type");
+      RETURN NIL;
+    END;
+
+    blk   := MSIRBuilder.CurrentBlock ();
+    dopeA := MSIR.BuildAlloca (blk, "sa.dope", MSIR.TOpenArray (1, eltMsirT));
+    MSIR.BuildStore (blk, newEltPtr, MSIR.BuildPtrAdd (blk, "", dopeA, 0L));
+    MSIR.BuildStore (blk, lenVal,    MSIR.BuildPtrAdd (blk, "", dopeA, apB));
+    RETURN dopeA;
+  END LValueMSIR;
+
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    array    := Type.Base (Expr.TypeOf (ce.args[0]));
+    open     := ArrayType.OpenCousin (array);
+    indexT, eltT : Type.T;
+    eltMsirT : MSIR.T;
+    dopeA    : MSIR.Value;
+    blk      : MSIR.Block;
+  BEGIN
+    dopeA := LValueMSIR (ce);
+    IF dopeA = NIL THEN RETURN NIL END;
+    EVAL ArrayType.Split (Type.Base (open), indexT, eltT);
+    eltMsirT := MSIRType.Translate (eltT);
+    IF eltMsirT = NIL THEN
+      MSIRBuilder.Abandon ("SUBARRAY: unsupported element type");
+      RETURN NIL;
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+    RETURN MSIR.BuildLoad (blk, "sa.val", MSIR.TOpenArray (1, eltMsirT), dopeA);
+  END CompileMSIR;
+
 (* Called indirectly through MethodList. *)
 PROCEDURE IsWritable (ce: CallExpr.T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
@@ -509,6 +609,8 @@ PROCEDURE Initialize () =
                                  IsDesignator,
                                  NoteWrites,
                                  SubarrayExprAlign);
+    CallExpr.SetMethodMSIR       (Z, CompileMSIR);
+    CallExpr.SetMethodLValueMSIR (Z, LValueMSIR);
     Procedure.DefinePredefined ("SUBARRAY", Z, TRUE);
   END Initialize;
 
