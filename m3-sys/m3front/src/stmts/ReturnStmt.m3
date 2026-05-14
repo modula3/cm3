@@ -89,6 +89,11 @@ PROCEDURE CompileMSIR (p: P) =
               (MSIR.Kind (resultT) = MSIR.TypeKind.GcRef OR
                MSIR.Kind (resultT) = MSIR.TypeKind.Ptr)) THEN
             v := MSIR.RetypeValue (v, resultT);
+          ELSE
+            (* Unhandled type mismatch (e.g. open-array returned as fixed-array).
+               Array-copy return is not yet implemented in MSIR. *)
+            MSIRBuilder.Abandon ("return type mismatch not yet supported in MSIR");
+            RETURN;
           END;
         END;
       END;

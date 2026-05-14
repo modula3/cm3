@@ -891,6 +891,24 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
     END;
+    (* Guard against residual type mismatches that require array-copy semantics
+       (e.g. fixed-array rhs into open-array slot, or mismatched fixed-array
+       shapes).  These are not yet implemented in MSIR. *)
+    BEGIN
+      VAR slotT := MSIR.ValueType (lhsPtr);
+          eltT  := MSIR.EltType (slotT);
+          rhsT  := MSIR.ValueType (rhsVal);
+      BEGIN
+        IF NOT MSIR.Equal (eltT, rhsT) AND
+           (MSIR.Kind (eltT)  = MSIR.TypeKind.FixedArray OR
+            MSIR.Kind (eltT)  = MSIR.TypeKind.OpenArray  OR
+            MSIR.Kind (rhsT)  = MSIR.TypeKind.FixedArray OR
+            MSIR.Kind (rhsT)  = MSIR.TypeKind.OpenArray) THEN
+          MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");
+          RETURN;
+        END;
+      END;
+    END;
     (* Use CurrentBlock() after RHS compilation: a call in the RHS (via
        EmitCall inside a TRY) may switch curBlock to a new continuation block. *)
     IF MSIR.Kind (MSIR.ValueType (lhsPtr)) = MSIR.TypeKind.GcSlot THEN
