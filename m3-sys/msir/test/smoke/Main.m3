@@ -462,6 +462,34 @@ PROCEDURE TestTypecaseVar (r: REFANY): INTEGER =
     END;
   END TestTypecaseVar;
 
+(* GC write barrier: linked list with traced-ref field stores.
+   prev^.next := cur exercises GcStore with container (write barrier). *)
+TYPE
+  Node    = REF NodeRec;
+  NodeRec = RECORD next: Node; val: INTEGER END;
+
+PROCEDURE BuildChain (n: INTEGER): INTEGER =
+  VAR head, prev, cur: Node;  sum := 0;
+  BEGIN
+    FOR i := 1 TO n DO
+      cur := NEW (Node);
+      cur^.next := NIL;
+      cur^.val  := i;
+      IF head = NIL THEN
+        head := cur;
+      ELSE
+        prev^.next := cur;   (* GcStore: traced ref into heap field *)
+      END;
+      prev := cur;
+    END;
+    cur := head;
+    WHILE cur # NIL DO
+      sum := sum + cur^.val;
+      cur := cur^.next;
+    END;
+    RETURN sum;
+  END BuildChain;
+
 (* NEW: allocate a REF INTEGER, store, and return the stored value. *)
 PROCEDURE AllocInt (n: INTEGER): INTEGER =
   VAR r: REF INTEGER;

@@ -188,12 +188,16 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
   BEGIN
     addr := Expr.CompileMSIR (p.a);
     IF addr = NIL THEN RETURN NIL END;
-    (* Always retype the opaque pointer to ptr(elemT) so callers know the element
-       type.  Even GcRef values (loaded from GcSlot globals) must be retyped here
-       because the pointer itself is an LValue address, not a GC-barrier operand. *)
+    (* Retype to give callers the element type.  Preserve GcRef wrapper when the
+       ref is traced: QualifyExpr.LValueMSIR checks GcRef to detect heap objects
+       and set the write-barrier container (SetPendingContainer). *)
     elemT := MSIRType.Translate (p.type);
     IF elemT # NIL AND MSIR.Kind (elemT) # MSIR.TypeKind.Void THEN
-      addr := MSIR.RetypeValue (addr, MSIR.TPtr (elemT));
+      IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcRef THEN
+        addr := MSIR.RetypeValue (addr, MSIR.TGcRef (elemT));
+      ELSE
+        addr := MSIR.RetypeValue (addr, MSIR.TPtr (elemT));
+      END;
     END;
     RETURN addr;
   END LValueMSIR;

@@ -134,6 +134,9 @@ extern M3Int  Main__TypecodeOfRef(void *r);
 extern M3Int  Main__TypecodeOfPointRef(void);
 extern void  *Main__MakePointRef(M3Int a, M3Int b);
 
+/* GC write barrier: linked list using traced-ref heap field stores */
+extern M3Int  Main__BuildChain(M3Int n);
+
 /* ISTYPE / NARROW / TYPECASE-with-var */
 extern void  *Main__MakeIntRef(M3Int n);
 extern M3Int  Main__TestIsType(void *r);
@@ -403,6 +406,9 @@ int main(void) {
       check_int("Narrow(ri)^",            Main__TestNarrow(ri),       42);
       check_int("TypecaseVar(ri)",        Main__TestTypecaseVar(ri),  42);
     }
+
+    /* GC write barrier: build a 5-node linked list via prev^.next := cur */
+    check_int("BuildChain(5)",           Main__BuildChain(5),       15); /* 1+2+3+4+5 */
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

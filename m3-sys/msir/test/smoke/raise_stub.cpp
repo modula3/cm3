@@ -162,6 +162,11 @@ extern "C" long  Text__Length(void *t) {
 /* GC read barrier: a no-op in the harness — no real GC runs. */
 extern "C" void  RTHooks__CheckLoadTracedRef(void *) { }
 
+/* GC write barrier: a no-op in the harness — dirty-bit fast-path skips it
+   for newly allocated objects (dirty bit = 0), so this is only called when
+   a real GC is running and the object is not already dirty.  No GC here. */
+extern "C" void  RTHooks__CheckStoreTraced(void *) { }
+
 /* TYPECASE dispatch: NIL → no match (returns -1 → switch default = ELSE);
    non-NIL → first clause (returns 0). */
 extern "C" long  RTHooks__ScanTypecase(void *ref, void *) {

@@ -28,7 +28,8 @@ if [ ! -x "$LLVM_CLANG" ]; then
 fi
 
 echo "=== Step 1: build M3 smoke test with MSIR emission ==="
-(cd "$SMOKE_SRC" && cm3 -clean && cm3 '@M3m3front-msir' -build)
+rm -rf "$BUILD_DIR"
+(cd "$SMOKE_SRC" && cm3 '@M3m3front-msir' -build)
 
 LL="$BUILD_DIR/Main.ll"
 if [ ! -f "$LL" ]; then
