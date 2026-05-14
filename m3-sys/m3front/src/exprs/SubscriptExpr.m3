@@ -525,7 +525,34 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       RETURN MSIR.BuildOpenArrayElemAddr (blk, "", oa,
                                           ARRAY OF MSIR.Value{idxVal});
     END;
-    arrAddr := Expr.LValueMSIR (p.a);
+    (* Try LValueMSIR on the base (handles VAR designators and CONST arrays).
+       If that fails (LValueMSIRDefault called Abandon), clear the flag and
+       fall back to rvalue materialization into a temp alloca, which handles
+       call expressions that return fixed arrays. *)
+    VAR preAbandoned := MSIRBuilder.IsAbandoned ();
+    BEGIN
+      arrAddr := Expr.LValueMSIR (p.a);
+      IF arrAddr = NIL AND NOT preAbandoned AND MSIRBuilder.IsAbandoned () THEN
+        (* LValueMSIR abandoned — try rvalue materialization. *)
+        MSIRBuilder.ClearAbandoned ();
+        VAR arrVal := Expr.CompileMSIR (p.a);
+            arrT2  : MSIR.T;
+        BEGIN
+          IF arrVal = NIL THEN RETURN NIL END;
+          arrT2 := MSIR.ValueType (arrVal);
+          IF MSIR.Kind (arrT2) # MSIR.TypeKind.FixedArray THEN
+            MSIRBuilder.Abandon ("rvalue subscript base is not a fixed array in MSIR");
+            RETURN NIL;
+          END;
+          blk := MSIRBuilder.CurrentBlock ();
+          VAR tmp := MSIR.BuildAlloca (blk, "", arrT2);
+          BEGIN
+            MSIR.BuildStore (blk, arrVal, tmp);
+            arrAddr := tmp;
+          END;
+        END;
+      END;
+    END;
     IF arrAddr = NIL THEN RETURN NIL END;
     (* Verify the array type is a FixedArray (or ptr→FixedArray) before
        calling BuildArrayElemAddr.  Packed / sub-word-element arrays

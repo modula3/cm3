@@ -108,6 +108,10 @@ extern void  *Main__GetBoolName(M3Bool b);   /* BoolName[b] — returns TEXT ptr
 /* VALUE open-array formal — caller provides dope vector, callee sums elements */
 extern M3Int  Main__SumOA(OpenArray *a);
 
+/* Array-copy: open→fixed.  Scalar wrappers index into the result. */
+extern M3Int  Main__FirstFourElem(OpenArray *src, M3Int i);
+extern M3Int  Main__CopyFirst4Elem(OpenArray *src, M3Int i);
+
 /* Indirect (proc-variable) calls */
 typedef M3Int (*BinaryIntOp)(M3Int, M3Int);
 typedef M3Int (*UnaryIntOp)(M3Int);
@@ -327,6 +331,14 @@ int main(void) {
     check_int("ApplyBinOp(Add,7,8)",   Main__ApplyBinOp(Main__Add, 7, 8),    15);
     check_int("ApplyUnary(Abs,-5)",    Main__ApplyUnary(Main__Abs, -5),        5);
     check_int("ApplyUnary(Fact,5)",    Main__ApplyUnary(Main__Factorial, 5),  120);
+
+    /* Array-copy: open→fixed (FirstFour, CopyFirst4) via scalar wrappers */
+    { M3Int src4[] = {7,8,9,10};  OpenArray oa4 = {src4, 4};
+      check_int("FirstFour({7,8,9,10})[0]", Main__FirstFourElem(&oa4, 0), 7);
+      check_int("FirstFour({7,8,9,10})[3]", Main__FirstFourElem(&oa4, 3), 10); }
+    { M3Int src4[] = {1,2,3,4};  OpenArray oa4 = {src4, 4};
+      check_int("CopyFirst4({1,2,3,4})[0]", Main__CopyFirst4Elem(&oa4, 0), 1);
+      check_int("CopyFirst4({1,2,3,4})[3]", Main__CopyFirst4Elem(&oa4, 3), 4); }
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;

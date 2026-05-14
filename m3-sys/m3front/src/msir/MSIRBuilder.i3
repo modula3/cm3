@@ -68,6 +68,13 @@ PROCEDURE Abandon(reason: TEXT);
    supported? Body translators check this gate before doing anything. *)
 PROCEDURE InProc(): BOOLEAN;
 
+(* Query/clear the abandoned flag.  Used by SubscriptExpr.LValueMSIR to
+   attempt LValueMSIR on a base expression, then fall back to rvalue
+   materialization if LValueMSIR abandoned.  ClearAbandoned must only be
+   called when the caller knows it can handle the failure itself. *)
+PROCEDURE IsAbandoned(): BOOLEAN;
+PROCEDURE ClearAbandoned();
+
 (* GC write barrier container side-channel.
    LValueMSIR for heap object fields calls SetPendingContainer with the
    object pointer (the GC container) before returning the slot address.

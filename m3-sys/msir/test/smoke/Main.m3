@@ -583,6 +583,33 @@ PROCEDURE SumOA (a: ARRAY OF INTEGER): INTEGER =
     RETURN s;
   END SumOA;
 
+(* Array-copy: open→fixed.  RETURN an open-array VAR param as a fixed result. *)
+TYPE Fixed4 = ARRAY [0..3] OF INTEGER;
+
+PROCEDURE FirstFour (READONLY src: ARRAY OF INTEGER): Fixed4 =
+  BEGIN
+    RETURN src;
+  END FirstFour;
+
+PROCEDURE CopyFirst4 (READONLY src: ARRAY OF INTEGER): Fixed4 =
+  VAR dst: Fixed4;
+  BEGIN
+    dst := src;
+    RETURN dst;
+  END CopyFirst4;
+
+(* Scalar wrappers to allow C-harness testing without ABI issues for
+   large-aggregate returns.  Index the fixed-array result directly. *)
+PROCEDURE FirstFourElem (READONLY src: ARRAY OF INTEGER; i: INTEGER): INTEGER =
+  BEGIN
+    RETURN FirstFour(src)[i];
+  END FirstFourElem;
+
+PROCEDURE CopyFirst4Elem (READONLY src: ARRAY OF INTEGER; i: INTEGER): INTEGER =
+  BEGIN
+    RETURN CopyFirst4(src)[i];
+  END CopyFirst4Elem;
+
 (* TRUNC/FLOOR/CEILING/ROUND — runtime params prevent constant folding *)
 PROCEDURE TruncTest (x: REAL): INTEGER =
   BEGIN RETURN TRUNC(x) END TruncTest;
@@ -728,4 +755,10 @@ BEGIN
   (* EH tests *)
   IO.Put ("TryFinNormal() = " & Fmt.Int(TryFinNormal()) & "\n");
   IO.Put ("TryExceptNormal() = " & Fmt.Int(TryExceptNormal()) & "\n");
+
+  (* Array-copy tests: open→fixed-array (via scalar wrappers to avoid ABI issues) *)
+  IO.Put ("FirstFourElem({7,8,9,10},0) = " & Fmt.Int(FirstFourElem(ARRAY OF INTEGER{7,8,9,10}, 0)) & "\n");
+  IO.Put ("FirstFourElem({7,8,9,10},3) = " & Fmt.Int(FirstFourElem(ARRAY OF INTEGER{7,8,9,10}, 3)) & "\n");
+  IO.Put ("CopyFirst4Elem({1,2,3,4},0) = " & Fmt.Int(CopyFirst4Elem(ARRAY OF INTEGER{1,2,3,4}, 0)) & "\n");
+  IO.Put ("CopyFirst4Elem({1,2,3,4},3) = " & Fmt.Int(CopyFirst4Elem(ARRAY OF INTEGER{1,2,3,4}, 3)) & "\n");
 END Main.

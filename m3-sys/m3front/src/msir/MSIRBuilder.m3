@@ -433,6 +433,12 @@ PROCEDURE InProc(): BOOLEAN =
     RETURN curProc # NIL AND NOT abandoned;
   END InProc;
 
+PROCEDURE IsAbandoned(): BOOLEAN =
+  BEGIN RETURN abandoned END IsAbandoned;
+
+PROCEDURE ClearAbandoned() =
+  BEGIN abandoned := FALSE END ClearAbandoned;
+
 PROCEDURE SetPendingContainer(v: MSIR.Value) =
   BEGIN pendingContainer := v END SetPendingContainer;
 
