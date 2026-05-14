@@ -267,6 +267,8 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **Rvalue-base array subscript**: `SubscriptExpr.LValueMSIR` now handles subscripting a call result (`FirstFour(src)[i]`) by materializing the returned fixed array into a temp alloca; tries `Expr.LValueMSIR(base)` first (handles VAR designators and CONST arrays via `MaterializeConstArray`); if that abandoned, clears the flag via `MSIRBuilder.ClearAbandoned` and falls back to `Expr.CompileMSIR(base)` + `BuildAlloca` + `BuildStore`; `MSIRBuilder.IsAbandoned`/`ClearAbandoned` added to support the try-first pattern
 - **REF FixedArray deref-copy** (`v^ := arr` and `arr := v^`): `DerefExpr.LValueMSIR` now always retypes the GcRef/opaque pointer to `ptr(elemT)` when the element type is known and non-void; previously GcRef values were returned as `gc_ref void`, causing `AssignStmt.CompileMSIR`'s array-type check to abandon on fixed-array element types; with the retype, `eltT = [N]i64 = rhsT` so the check passes and `BuildStore` emits the copy directly
 - **CONST array subscript with runtime index**: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` arrays (e.g. `CONST SmallPrimes = ARRAY [0..4] OF INTEGER{…}`) by calling `MSIRBuilder.MaterializeConstArray`, which registers the array as a private LLVM constant global and returns a pointer to it; this falls naturally out of the rvalue-base subscript fix
+- **Array constructor expressions (`ARRAY OF T{…}`) as call arguments**: `ConsExpr.P` now has `compileMSIR`/`compileLValueMSIR` methods that call `InnerSeal` (which creates the actual `ArrayExpr.T` / `RecordExpr.T` / `SetExpr.T` in `p.base`) and then delegate to the sealed base; without this, passing an array constructor literal to an open-array formal hit `LValueMSIRDefault` and abandoned the entire module body proc
+- **Narrow array index zero-extension**: `SubscriptExpr.LValueMSIR` zero-extends any index value narrower than `Target.Integer.size` bits to `i64` before passing to `BuildArrayElemAddr`; LLVM sign-extends GEP indices, so an `i1` index of `1` (BOOLEAN `TRUE`) was sign-extended to `-1` and returned a garbage element address
 
 ### EH Model Requirement
 
@@ -308,9 +310,9 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 This script:
 1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
 2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 84 checks
+3. Links with the C test harness (`llvm_link_test.c`) and runs 104 checks
 
-The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
+The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, `Fmt__Real`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
 
 To run as a full M3 program against the real runtime:
 ```sh
@@ -345,9 +347,10 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
 | `m3-sys/m3front/src/types/UserProc.m3` | `CompileMSIR`: user-proc MSIR handler (direct, vtable, nested lambda); `Capture`: formal-mode scan; both wired onto `UserProc.Methods` in `Initialize` |
 | `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`: formal-aware arg-passing for MSIR call sites; `GenOpenArgMSIR`: builds stack dope vector when fixed array is passed to open-array formal |
-| `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR`: try-first pattern for rvalue bases (call results and CONST arrays); materializes call-result arrays into temp allocas via `IsAbandoned`/`ClearAbandoned` fallback |
+| `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR`: try-first pattern for rvalue bases (call results and CONST arrays); materializes call-result arrays into temp allocas via `IsAbandoned`/`ClearAbandoned` fallback; zero-extends narrow index types (e.g. `i1` for BOOLEAN) to `i64` to prevent GEP sign-extension |
+| `m3-sys/m3front/src/exprs/ConsExpr.m3` | `compileMSIR`/`compileLValueMSIR`: calls `InnerSeal` then delegates to `p.base` (the sealed `ArrayExpr.T`/`RecordExpr.T`/`SetExpr.T`); enables array constructor literals as call arguments |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 84-check C harness |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 104-check C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
 
