@@ -255,7 +255,8 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **WIDECHAR text literals**: `M3WString.GetChar` provides raw code-point access; `MSIREmit` encodes each WIDECHAR as little-endian bytes (`Target.WideCharSize() DIV Target.Char.size` bytes); `MSIRToLLVM` emits the correct `[wcharBytes*len + wcharBytes x i8]` struct field with a wide null terminator; `cnt` is negative to distinguish from ASCII literals
 - **TextLiteral vtable hooks**: the five `@textlit_methods` function pointers (`RTHooks__TextLitInfo` etc.) are resolved via `MSIRBuilder.HookProc`/`RunTyme.LookUpProc` in `MSIREmit.EndUnit` and stored in the MSIR module; `MSIRToLLVM` uses `LLSymbol(hook)` for names and `EmitDeclare` for signatures, eliminating all hardcoded strings and deriving correct types from the M3 type system
 - **TypeCell alignment**: `InitTypecellMSIR` in `RefType.m3` and `ObjectType.m3` now correctly converts alignment from bits to bytes (divides by `Target.Byte`) before passing to `TypeDescValueForRef`/`TypeDescValueForRefArray`; `RTType__FinishTypecell` requires bytes in {1,2,4,8,16}
-- **Fixed→open-array argument coercion**: `Formal.EmitArgMSIR` / `GenOpenArgMSIR` (in `Formal.m3`) build a stack dope vector `{ ptr data, i64 dim0, … }` when a fixed-size array actual is passed to a VAR/READONLY open-array formal; `UserProc.CompileMSIR` walks formals via `Formal.EmitArgMSIR` rather than the old Ptr-check heuristic; VALUE open-array formals with fixed-size actuals work; open-actual → VALUE open formal still abandons
+- **Fixed→open-array argument coercion**: `Formal.EmitArgMSIR` / `GenOpenArgMSIR` (in `Formal.m3`) build a stack dope vector `{ ptr data, i64 dim0, … }` when a fixed-size array actual is passed to a VAR/READONLY open-array formal; `UserProc.CompileMSIR` walks formals via `Formal.EmitArgMSIR` rather than the old Ptr-check heuristic; VALUE open-array formals with fixed-size actuals work
+- **VALUE open-array formal with open actual**: `GenValueOpenArgMSIR` (in `Formal.m3`) handles the dynamic case — loads the actual's dope vector at runtime, computes `totalBytes = dim_0 * … * dim_{D-1} * eltSizeBytes` via `BuildIMul`, allocates a stack copy with the new `Op.AllocaDyn` (`alloca i8, i64 %n`), copies via `EmitMemcpyDyn`, and builds a fresh dope vector pointing at the copy; `MSIR.BuildAllocaDyn` and `MSIRBuilder.EmitMemcpyDyn` are the supporting primitives
 - **Procedure values**: `ProcExpr.CompileMSIR` returns `MSIR.ConstProcRef(proc)` — a `ptr @procname` constant; `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`; `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` guards `Kind(EltType) ≠ Void` so proc formals are treated as by-value scalars
 - **Indirect (proc-variable) calls**: `UserProc.CompileMSIR` handles non-literal, non-method call expressions via `Expr.CompileMSIR(p.proc)` to get the function pointer value, then `MSIRBuilder.EmitCallIndirect`; routes to `BuildCallIndirect` or `BuildInvokeIndirect` based on active TRY context
 - **Float type conversions**: new cast ops `SIToFP`, `FPToSI`, `FPExt`, `FPTrunc`, `ZExt`, `SExt`, `Trunc` in `MSIR`; `Floatt.CompileMSIR` implements `FLOAT()` via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float)
@@ -306,7 +307,7 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 This script:
 1. Builds `m3-sys/msir/test/smoke/Main.m3` with `@M3m3front-msir` → produces `Main.ll`
 2. Compiles `Main.ll` via LLVM clang → `Main-llvm.o`
-3. Links with the C test harness (`llvm_link_test.c`) and runs 82 checks
+3. Links with the C test harness (`llvm_link_test.c`) and runs 84 checks
 
 The harness (`raise_stub.cpp`) provides C stubs for runtime symbols: `RTHooks__Raise`, `RTHooks__AllocateTracedRef`, `RTHooks__AllocateTracedObj`, `RTHooks__CheckLoadTracedRef`, `RTHooks__ScanTypecase`, import binder stubs (`Thread_I3`, `Fmt_I3`, `IO_I3`), and `RTHooks_M3`/`RTAllocator_M3` anti-pull-in stubs.
 
@@ -345,7 +346,7 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`: formal-aware arg-passing for MSIR call sites; `GenOpenArgMSIR`: builds stack dope vector when fixed array is passed to open-array formal |
 | `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR`: try-first pattern for rvalue bases (call results and CONST arrays); materializes call-result arrays into temp allocas via `IsAbandoned`/`ClearAbandoned` fallback |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test (arithmetic, arrays, EH, globals, NEW, vtable dispatch, …) |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 82-check C harness |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 84-check C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ stubs: `RTHooks__Raise`, allocators, import binders, barriers |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver script |
 
@@ -402,7 +403,7 @@ All known `msir-verify` issues have been eliminated. Remaining limitations are c
 
 - **Array-copy through REF**: `v^ := arr` where `v` is a `REF` to a multi-dimensional open array and `arr` is a fixed-array variable requires a memcpy not yet in MSIR (`AssignStmt.CompileMSIR` abandons). Rank-1 open→fixed copy (assignment and return) is implemented; multi-rank and REF-indirect cases are not.
 - **Packed / sub-word-element array subscript**: `SubscriptExpr.LValueMSIR` abandons for arrays whose element MSIR type is not `FixedArray` (e.g. `ARRAY OF BITS 5 FOR [0..31]`). Sub-word element addressing requires bit-field extraction not yet in MSIR.
-- **VALUE open-array formals with open actuals**: fixed-size actuals work; open actuals (dynamic element count) still abandon — requires dynamic alloca not yet in MSIR.
+- **VALUE open-array formals with open actuals**: implemented for rank-1 and multi-rank cases where `actDepth = formDepth`; partial depth coercion (`actDepth < formDepth`) still abandons (rare in practice).
 - **TEXT**: literals (ASCII and WIDECHAR), `&` concatenation, and TEXT-returning library calls all work. Remaining gaps: `Fmt.Real` (floating-point formatting), `Text.Sub` and other TEXT manipulation operations not yet exercised in tests.
 - **GC write barrier for heap fields**: activated; see container protocol below.
 - **`var_map`/`gc_map`**: implemented; see architecture note below.
