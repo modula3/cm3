@@ -186,6 +186,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
   BEGIN
     CASE op OF
     | MSIR.Op.Alloca             => RETURN "alloca";
+    | MSIR.Op.AllocaDyn          => RETURN "alloca.dyn";
     | MSIR.Op.Load               => RETURN "load";
     | MSIR.Op.Store              => RETURN "store";
     | MSIR.Op.GcLoad             => RETURN "gc.load";
@@ -355,6 +356,9 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.Alloca =>
         Wr.PutText(wr, " ");
         Type(wr, MSIR.InsnTargetType(i));
+    | MSIR.Op.AllocaDyn =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
     | MSIR.Op.GcLoad =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));

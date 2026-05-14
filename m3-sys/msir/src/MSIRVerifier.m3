@@ -406,6 +406,16 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckStore(c, i);
     | MSIR.Op.Alloca =>
         CheckAlloca(c, i);
+    | MSIR.Op.AllocaDyn =>
+        (* byteCount operand must be an integer; result is ptr void *)
+        VAR res := MSIR.InsnResult(i);  resT: MSIR.T;
+        BEGIN
+          IF res = NIL THEN Err(c, "alloca.dyn must have a result"); RETURN END;
+          resT := MSIR.ValueType(res);
+          IF MSIR.Kind(resT) # MSIR.TypeKind.Ptr THEN
+            Err(c, "alloca.dyn result must be ptr type");
+          END;
+        END;
     | MSIR.Op.Convert =>
         CheckConvert(c, i);
     | MSIR.Op.SIToFP, MSIR.Op.FPToSI,

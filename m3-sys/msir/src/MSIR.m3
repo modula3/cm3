@@ -1436,6 +1436,19 @@ PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value =
     RETURN i.result;
   END BuildAlloca;
 
+PROCEDURE BuildAllocaDyn(b: Block;  name: TEXT;  byteCount: Value): Value =
+  VAR i    := NEW(Insn);
+      ops  := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    IF b = NIL THEN RETURN NIL END;
+    ops[0]       := byteCount;
+    i.op         := Op.AllocaDyn;
+    i.operands   := ops;
+    i.result     := makeResult(b, TPtr(TVoid()), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildAllocaDyn;
+
 PROCEDURE AllocaSetCount(v: Value;  count: INTEGER) =
   (* v must be the result of BuildAlloca.  Patches extractIdx to the new count. *)
   BEGIN

@@ -988,6 +988,13 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER) =
         MSIR.ConstInt(MSIR.TI(Target.Integer.size), VAL(byteCount, LONGINT))});
   END EmitMemcpy;
 
+PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
+  BEGIN
+    IF curBlock = NIL OR abandoned THEN RETURN END;
+    EVAL MSIR.BuildCall(curBlock, "", GetMemcpyProc(),
+      ARRAY OF MSIR.Value{dst, src, byteCount});
+  END EmitMemcpyDyn;
+
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR
     ae:       ArrayExpr.T;

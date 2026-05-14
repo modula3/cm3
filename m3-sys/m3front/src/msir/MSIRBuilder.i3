@@ -244,6 +244,9 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value;
    No-op when not inside a proc or already abandoned. *)
 PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 
+(* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
+PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
+
 (* Reset the global map.  Call once at the start of each new module
    (from MSIREmit.BeginUnit). *)
 PROCEDURE BeginModule();

@@ -525,6 +525,12 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "\n");
         END;
 
+    | MSIR.Op.AllocaDyn =>
+        (* alloca i8, i64 %byteCount — dynamic stack buffer *)
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca i8, i64 ");
+        LLOpVal(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, "\n");
+
     | MSIR.Op.Load =>
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = load ");
         LLType(wr, MSIR.ValueType(res));

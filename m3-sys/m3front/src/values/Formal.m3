@@ -1289,10 +1289,62 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     totalBytes : INTEGER;
   BEGIN
     IF actDepth > 0 THEN
-      (* Open actual → VALUE open formal: dynamic alloca not yet in MSIR *)
-      MSIRBuilder.Abandon (
-        "VALUE open-array formal with open actual: not yet in MSIR");
-      RETURN NIL;
+      (* Open actual → VALUE open formal: dynamic alloca + memcpy. *)
+      IF actDepth < formDepth THEN
+        MSIRBuilder.Abandon ("VALUE open-array: partial depth coercion not yet in MSIR");
+        RETURN NIL;
+      END;
+      (* Get dope vector of the actual. *)
+      VAR dopeAddr := Expr.LValueMSIR (actual);
+          b2       : MSIR.Block;
+          dims     : REF ARRAY OF MSIR.Value;
+          nDims    := MIN (formDepth, actDepth);
+          totalEltsDyn, totalBytesDyn, srcDataPtr : MSIR.Value;
+          eltSizeBytesL : LONGINT;
+      BEGIN
+        IF dopeAddr = NIL THEN RETURN NIL END;
+        b2 := MSIRBuilder.CurrentBlock ();
+        (* Load source data pointer from dope[0]. *)
+        srcDataPtr := MSIR.BuildLoad (b2, "", ptrT, dopeAddr);
+        (* Load each dimension from dope[apB + k*ipB]. *)
+        dims := NEW (REF ARRAY OF MSIR.Value, nDims);
+        FOR k := 0 TO nDims - 1 DO
+          dims[k] := MSIR.BuildLoad (b2, "", intT,
+                       MSIR.BuildPtrAdd (b2, "", dopeAddr,
+                                         apB + ipB * VAL (k, LONGINT)));
+        END;
+        (* Compute totalElts = dim_0 * dim_1 * ... at runtime. *)
+        totalEltsDyn := dims[0];
+        FOR k := 1 TO nDims - 1 DO
+          totalEltsDyn := MSIR.BuildIMul (b2, "", totalEltsDyn, dims[k]);
+        END;
+        (* totalBytes = totalElts * eltSizeBytes *)
+        eltSizeBytesL := VAL (OpenArrayType.EltPack (formType) DIV Target.Char.size,
+                               LONGINT);
+        totalBytesDyn := MSIR.BuildIMul (b2, "",
+                           totalEltsDyn,
+                           MSIR.ConstInt (intT, eltSizeBytesL));
+        (* Dynamic stack alloc for the copy. *)
+        VAR copyPtr := MSIR.BuildAllocaDyn (b2, "oa.copy", totalBytesDyn);
+        BEGIN
+          MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
+          (* Build new dope vector. *)
+          flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
+          flds[0] := MSIR.Field {name := "", type := ptrT};
+          FOR k := 0 TO formDepth - 1 DO
+            flds[1 + k] := MSIR.Field {name := "", type := intT};
+          END;
+          b2 := MSIRBuilder.CurrentBlock ();
+          dopeA := MSIR.BuildAlloca (b2, "", MSIR.TStruct ("", flds^));
+          MSIR.BuildStore (b2, copyPtr, MSIR.BuildPtrAdd (b2, "", dopeA, 0L));
+          FOR k := 0 TO formDepth - 1 DO
+            MSIR.BuildStore (b2, dims[k],
+                             MSIR.BuildPtrAdd (b2, "", dopeA,
+                                               apB + ipB * VAL (k, LONGINT)));
+          END;
+          RETURN dopeA;
+        END;
+      END;
     END;
 
     (* Compute static element count by walking the fixed-array dimensions. *)

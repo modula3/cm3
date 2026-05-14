@@ -405,7 +405,9 @@ TYPE Insn <: REFANY;
 
 TYPE Op = {
   (* memory *)
-  Alloca, Load, Store, GcLoad, GcStore, FieldAddr,
+  Alloca,    (* static-count stack alloc: alloca T, i64 N    *)
+  AllocaDyn, (* dynamic-count stack alloc: alloca i8, i64 %n — byteCount is operand 0 *)
+  Load, Store, GcLoad, GcStore, FieldAddr,
   (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
   IAnd, IOr, IXor, IShl, ILShr, IAShr, (* bitwise / shift *)
@@ -538,6 +540,11 @@ PROCEDURE BuildCall(b: Block;  name: TEXT;  callee: Proc;
 (*-------------------------------------------------- Object / RTTI builders *)
 
 PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value;
+
+(* Dynamic stack alloc: alloca i8, i64 byteCount.  Returns ptr void.
+   Used for runtime-sized copies of open-array VALUE formals. *)
+PROCEDURE BuildAllocaDyn(b: Block;  name: TEXT;  byteCount: Value): Value;
+
                                              (* result: ptr type *)
 (* Change an existing alloca's element count (for frame-size fixup).
    count >= 1; when count > 1 emits "alloca T, i64 count". *)

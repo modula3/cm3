@@ -583,6 +583,11 @@ PROCEDURE SumOA (a: ARRAY OF INTEGER): INTEGER =
     RETURN s;
   END SumOA;
 
+(* VALUE open-array formal with open actual: passes a VAR open-array to SumOA.
+   Exercises the dynamic alloca + memcpy path (open actual → VALUE open formal). *)
+PROCEDURE SumViaOpenActual (VAR src: ARRAY OF INTEGER): INTEGER =
+  BEGIN RETURN SumOA (src) END SumViaOpenActual;
+
 (* Array-copy: open→fixed.  RETURN an open-array VAR param as a fixed result. *)
 TYPE Fixed4 = ARRAY [0..3] OF INTEGER;
 
@@ -732,9 +737,18 @@ BEGIN
   IO.Put ("GetBoolName(FALSE) = " & GetBoolName(FALSE) & "\n");
   IO.Put ("GetBoolName(TRUE) = " & GetBoolName(TRUE) & "\n");
 
-  (* VALUE open-array formal tests *)
+  (* VALUE open-array formal tests: fixed actuals *)
   IO.Put ("SumOA({10,20,30}) = " & Fmt.Int(SumOA(ARRAY OF INTEGER{10, 20, 30})) & "\n");
   IO.Put ("SumOA({1,2,3,4,5}) = " & Fmt.Int(SumOA(ARRAY OF INTEGER{1, 2, 3, 4, 5})) & "\n");
+  (* VALUE open-array formal tests: open actuals (dynamic alloca + memcpy) *)
+  VAR oa3 := ARRAY [0..2] OF INTEGER{10, 20, 30};
+      oa5 := ARRAY [0..4] OF INTEGER{1, 2, 3, 4, 5};
+  BEGIN
+    IO.Put ("SumViaOpenActual({10,20,30}) = " &
+            Fmt.Int(SumViaOpenActual(oa3)) & "\n");
+    IO.Put ("SumViaOpenActual({1,2,3,4,5}) = " &
+            Fmt.Int(SumViaOpenActual(oa5)) & "\n");
+  END;
 
   (* Procedure-variable (indirect) call tests *)
   IO.Put ("ApplyBinOp(Add,7,8) = " & Fmt.Int(ApplyBinOp(Add, 7, 8)) & "\n");
