@@ -10,6 +10,7 @@ MODULE Adr;
 
 IMPORT CallExpr, Expr, ExprRep, Procedure, Error, Module, Addr, CG;
 IMPORT RefType, Type, Host, Target;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 
@@ -56,6 +57,12 @@ PROCEDURE Compile (ce: CallExpr.T) =
     CG.Check_byte_aligned ();
   END Compile;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  BEGIN
+    IF ce.hasError THEN MSIRBuilder.Abandon ("ADR: hasError"); RETURN NIL END;
+    RETURN Expr.LValueMSIR (ce.args[0]);
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, NIL,
@@ -74,6 +81,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("ADR", Z, TRUE);
   END Initialize;
 

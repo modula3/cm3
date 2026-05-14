@@ -95,6 +95,26 @@ PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
     END;
   END IsScalarType;
 
+(* Called on failed BeginProc after we've already pushed the outer context.
+   Restores the outer proc's state so the caller can continue normally. *)
+PROCEDURE PopBeginContext() =
+  BEGIN
+    IF procContextDepth <= 0 THEN RETURN END;
+    DEC(procContextDepth);
+    WITH ctx = procContextStack[procContextDepth] DO
+      curProc          := ctx.proc;
+      curBlock         := ctx.block;
+      abandoned        := ctx.abandoned;
+      blockSeq         := ctx.blockSeq;
+      pendingContainer := ctx.pending;
+      varMapN          := ctx.varMapN;
+      exitDepth        := ctx.exitDepth;
+      tryDepth         := ctx.tryDepth;
+      catchDepth       := ctx.catchDepth;
+      FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
+    END;
+  END PopBeginContext;
+
 PROCEDURE BeginProc(name: TEXT;
                     formals: Value.T;
                     syms: Scope.T;
@@ -142,6 +162,7 @@ PROCEDURE BeginProc(name: TEXT;
     resultT := MSIRType.TranslateResult(result);
     IF resultT = NIL THEN
       MSIREmit.NoteSkipped(name, "unsupported result type");
+      PopBeginContext();
       RETURN FALSE;
     END;
 
@@ -186,6 +207,7 @@ PROCEDURE BeginProc(name: TEXT;
         BEGIN
           IF pt = NIL THEN
             MSIREmit.NoteSkipped(name, "unsupported formal type");
+            PopBeginContext();
             RETURN FALSE;
           END;
           params[i + pBase].name := M3ID.ToText(info.name);

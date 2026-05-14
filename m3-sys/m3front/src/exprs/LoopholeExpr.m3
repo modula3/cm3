@@ -11,6 +11,7 @@ MODULE LoopholeExpr;
 IMPORT M3Buf, CG, Expr, ExprRep, Type, Error, OpenArrayType;
 IMPORT M3, M3ID, M3RT, Target, TInt, Fmt;
 IMPORT CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM Target IMPORT FloatType;
 
 TYPE
@@ -56,7 +57,9 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := LoopholeExprAlign;
-        capture  := Capture;
+        capture      := Capture;
+        compileMSIR       := CompileMSIR;
+        compileLValueMSIR := LValueMSIR;
       END;
 
 (*EXPORTED:*)
@@ -518,6 +521,65 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     Expr.Capture (p.expr, ca);
   END Capture;
+
+(* MSIR: rvalue LOOPHOLE *)
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR dstT := MSIRType.Translate (p.tipe);
+      blk  : MSIR.Block;
+  BEGIN
+    CASE p.kind OF
+    | Kind.Noop =>
+        (* Same stk_type — retag value with destination MSIR type. *)
+        VAR v := Expr.CompileMSIR (p.expr); BEGIN
+          IF v = NIL THEN RETURN NIL END;
+          RETURN MSIR.RetypeValue (v, dstT);
+        END;
+    | Kind.D_to_V =>
+        (* Designator reinterpreted as scalar: load from the address. *)
+        VAR addr := Expr.LValueMSIR (p.expr); BEGIN
+          IF addr = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+        END;
+    | Kind.S_to_V =>
+        (* Structure rvalue → scalar: materialise then load. *)
+        VAR addr := Expr.CompileMSIR (p.expr); BEGIN
+          IF addr = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+        END;
+    | Kind.V_to_V =>
+        (* Different stk_types, same size: emit ptrtoint/inttoptr/bitcast. *)
+        VAR v := Expr.CompileMSIR (p.expr); BEGIN
+          IF v = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          RETURN MSIR.BuildConvert (blk, "", v, dstT);
+        END;
+    | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A, Kind.V_to_S =>
+        MSIRBuilder.Abandon ("LOOPHOLE to open-array/struct not yet in MSIR");
+        RETURN NIL;
+    ELSE
+        MSIRBuilder.Abandon ("LOOPHOLE: unhandled kind in MSIR");
+        RETURN NIL;
+    END;
+  END CompileMSIR;
+
+(* MSIR: lvalue LOOPHOLE — the inner designator through a different type *)
+PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  BEGIN
+    CASE p.kind OF
+    | Kind.Noop,
+      Kind.D_to_S, Kind.S_to_S,
+      Kind.D_to_V, Kind.S_to_V, Kind.V_to_V =>
+        RETURN Expr.LValueMSIR (p.expr);
+    | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A, Kind.V_to_S =>
+        MSIRBuilder.Abandon ("LOOPHOLE lvalue: open-array target not yet in MSIR");
+        RETURN NIL;
+    ELSE
+        MSIRBuilder.Abandon ("LOOPHOLE lvalue: unhandled kind in MSIR");
+        RETURN NIL;
+    END;
+  END LValueMSIR;
 
 BEGIN
 END LoopholeExpr.

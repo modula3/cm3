@@ -10,6 +10,7 @@ MODULE BitSize;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, IntegerExpr;
 IMPORT TypeExpr, OpenArrayType, Error, Card, Target, TInt, Int;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 
@@ -104,6 +105,21 @@ PROCEDURE DoCompile (e: Expr.T;  unit: INTEGER) =
     END;
   END DoCompile;
 
+PROCEDURE DoCompileMSIR (e: Expr.T;  unit: INTEGER): MSIR.Value =
+  VAR t: Type.T;  info: Type.Info;  iT := MSIR.TI (Target.Integer.size);
+  BEGIN
+    IF TypeExpr.Split (e, t) THEN
+      t := Type.CheckInfo (t, info);
+    ELSE
+      t := Type.CheckInfo (Expr.TypeOf (e), info);
+      IF info.class = Type.Class.OpenArray THEN
+        MSIRBuilder.Abandon ("BITSIZE/BYTESIZE of open array not yet in MSIR");
+        RETURN NIL;
+      END;
+    END;
+    RETURN MSIR.ConstInt (iT, VAL((info.size + unit - 1) DIV unit, LONGINT));
+  END DoCompileMSIR;
+
 PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =
   VAR t: Type.T;  size, a, b, c, d: Target.Int;  info: Type.Info;
   BEGIN
@@ -124,6 +140,9 @@ PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =
     END;
   END DoFold;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  BEGIN  RETURN DoCompileMSIR (ce.args[0], 1)  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, Card.T,
@@ -141,6 +160,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("BITSIZE", Z, TRUE);
   END Initialize;
 

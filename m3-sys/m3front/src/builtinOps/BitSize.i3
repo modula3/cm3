@@ -8,7 +8,7 @@
 
 INTERFACE BitSize;
 
-IMPORT Expr, CallExpr;
+IMPORT Expr, CallExpr, MSIR;
 
 PROCEDURE Initialize ();
 
@@ -16,6 +16,7 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;  VAR cs: Expr.CheckState);
 
 PROCEDURE DoPrep (e: Expr.T);
 PROCEDURE DoCompile (e: Expr.T;  unit: INTEGER);
+PROCEDURE DoCompileMSIR (e: Expr.T;  unit: INTEGER): MSIR.Value;
 
 PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T;
 

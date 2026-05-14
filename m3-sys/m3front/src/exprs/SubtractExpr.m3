@@ -206,6 +206,23 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         RETURN MSIR.BuildISub (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFSub (blk, "", a, b);
+    | Class.cADDR =>
+        IF p.type = Addr.T THEN
+          (* ADDRESS - INTEGER: negate the offset, GEP by -b bytes *)
+          VAR iT  := MSIR.ValueType (b);
+              neg := MSIR.BuildISub (blk, "", MSIR.ConstInt(iT, VAL(0,LONGINT)), b);
+          BEGIN
+            RETURN MSIR.BuildGepByte (blk, "", a, neg);
+          END;
+        ELSE
+          (* ADDRESS - ADDRESS: ptrtoint both, subtract → byte count *)
+          VAR iT := MSIR.TI (Target.Integer.size);
+              ai := MSIR.BuildConvert (blk, "", a, iT);
+              bi := MSIR.BuildConvert (blk, "", b, iT);
+          BEGIN
+            RETURN MSIR.BuildISub (blk, "", ai, bi);
+          END;
+        END;
     ELSE
       MSIRBuilder.Abandon ("unsupported '-' class");
       RETURN NIL;
