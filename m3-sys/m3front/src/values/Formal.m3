@@ -1304,8 +1304,11 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
       BEGIN
         IF dopeAddr = NIL THEN RETURN NIL END;
         b2 := MSIRBuilder.CurrentBlock ();
-        (* Load source data pointer from dope[0]. *)
-        srcDataPtr := MSIR.BuildLoad (b2, "", ptrT, dopeAddr);
+        (* Load source data pointer from dope[0].
+           Use BuildPtrAdd(dopeAddr, 0) to get an opaque-pointer operand;
+           a direct load from a typed ptr(openarray) would trip the verifier. *)
+        srcDataPtr := MSIR.BuildLoad (b2, "", ptrT,
+                        MSIR.BuildPtrAdd (b2, "", dopeAddr, 0L));
         (* Load each dimension from dope[apB + k*ipB]. *)
         dims := NEW (REF ARRAY OF MSIR.Value, nDims);
         FOR k := 0 TO nDims - 1 DO

@@ -349,6 +349,14 @@ int main(void) {
       check_int("CopyFirst4({1,2,3,4})[0]", Main__CopyFirst4Elem(&oa4, 0), 1);
       check_int("CopyFirst4({1,2,3,4})[3]", Main__CopyFirst4Elem(&oa4, 3), 4); }
 
+    /* REF FixedArray deref-copy: r^ := src; copy := r^; return copy[idx]
+       src is READONLY FixedIntArr — passed as ptr in C (decayed array). */
+    extern M3Int Main__RefFixedArrCopy(M3Int *arr, M3Int idx);
+    MSIR_InitTypeLinks();
+    { M3Int arr[4] = {10, 20, 30, 40};
+      check_int("RefFixedArrCopy({10,20,30,40},0)", Main__RefFixedArrCopy(arr, 0), 10);
+      check_int("RefFixedArrCopy({10,20,30,40},3)", Main__RefFixedArrCopy(arr, 3), 40); }
+
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;
 }

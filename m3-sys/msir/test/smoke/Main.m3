@@ -448,6 +448,20 @@ PROCEDURE AllocIntArr (n: INTEGER): INTEGER =
     RETURN r^[0];
   END AllocIntArr;
 
+(* REF FixedArray deref-copy: allocate a REF [4]INTEGER, copy src into it,
+   return element at index idx. *)
+TYPE FixedIntArr = ARRAY [0..3] OF INTEGER;
+TYPE FixedIntArrRef = REF FixedIntArr;
+
+PROCEDURE RefFixedArrCopy (READONLY src: FixedIntArr; idx: INTEGER): INTEGER =
+  VAR r: FixedIntArrRef;  copy: FixedIntArr;
+  BEGIN
+    r := NEW(FixedIntArrRef);
+    r^ := src;
+    copy := r^;
+    RETURN copy[idx];
+  END RefFixedArrCopy;
+
 (* NEW: allocate a Square object, set the side field, return side*side. *)
 PROCEDURE AllocSquare (side: INTEGER): INTEGER =
   VAR s: Square;
@@ -775,4 +789,11 @@ BEGIN
   IO.Put ("FirstFourElem({7,8,9,10},3) = " & Fmt.Int(FirstFourElem(ARRAY OF INTEGER{7,8,9,10}, 3)) & "\n");
   IO.Put ("CopyFirst4Elem({1,2,3,4},0) = " & Fmt.Int(CopyFirst4Elem(ARRAY OF INTEGER{1,2,3,4}, 0)) & "\n");
   IO.Put ("CopyFirst4Elem({1,2,3,4},3) = " & Fmt.Int(CopyFirst4Elem(ARRAY OF INTEGER{1,2,3,4}, 3)) & "\n");
+
+  (* REF FixedArray deref-copy tests *)
+  VAR srcArr := FixedIntArr{10,20,30,40};
+  BEGIN
+    IO.Put ("RefFixedArrCopy({10,20,30,40},0) = " & Fmt.Int(RefFixedArrCopy(srcArr, 0)) & "\n");
+    IO.Put ("RefFixedArrCopy({10,20,30,40},3) = " & Fmt.Int(RefFixedArrCopy(srcArr, 3)) & "\n");
+  END;
 END Main.

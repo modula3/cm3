@@ -188,13 +188,12 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
   BEGIN
     addr := Expr.CompileMSIR (p.a);
     IF addr = NIL THEN RETURN NIL END;
-    (* Retype the opaque pointer to TPtr(elemT) so callers (e.g. BuildArrayElemAddr)
-       know the element type.  GcRef stays as-is (GC barrier already handled). *)
-    IF MSIR.Kind (MSIR.ValueType (addr)) # MSIR.TypeKind.GcRef THEN
-      elemT := MSIRType.Translate (p.type);
-      IF elemT # NIL THEN
-        addr := MSIR.RetypeValue (addr, MSIR.TPtr (elemT));
-      END;
+    (* Always retype the opaque pointer to ptr(elemT) so callers know the element
+       type.  Even GcRef values (loaded from GcSlot globals) must be retyped here
+       because the pointer itself is an LValue address, not a GC-barrier operand. *)
+    elemT := MSIRType.Translate (p.type);
+    IF elemT # NIL AND MSIR.Kind (elemT) # MSIR.TypeKind.Void THEN
+      addr := MSIR.RetypeValue (addr, MSIR.TPtr (elemT));
     END;
     RETURN addr;
   END LValueMSIR;
