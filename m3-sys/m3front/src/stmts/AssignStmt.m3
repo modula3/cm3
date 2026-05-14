@@ -891,9 +891,11 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
     END;
-    (* Guard against residual type mismatches that require array-copy semantics
-       (e.g. fixed-array rhs into open-array slot, or mismatched fixed-array
-       shapes).  These are not yet implemented in MSIR. *)
+    (* Handle array-type copies.  Same-type FixedArray falls through to
+       BuildStore below (load+store is valid LLVM IR for value-typed arrays).
+       The specific case handled here: FixedArray destination, rank-1 OpenArray
+       source — extract the data pointer from the dope vector, retype to
+       ptr([N]T), load the fixed-array value, and store it. *)
     BEGIN
       VAR slotT := MSIR.ValueType (lhsPtr);
           eltT  := MSIR.EltType (slotT);
@@ -904,7 +906,22 @@ PROCEDURE CompileMSIR (p: P) =
             MSIR.Kind (eltT)  = MSIR.TypeKind.OpenArray  OR
             MSIR.Kind (rhsT)  = MSIR.TypeKind.FixedArray OR
             MSIR.Kind (rhsT)  = MSIR.TypeKind.OpenArray) THEN
-          MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");
+          IF MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray AND
+             MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray  AND
+             MSIR.OpenArrayRank (rhsT) = 1               AND
+             MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
+            VAR blk2 := MSIRBuilder.CurrentBlock ();
+                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L);
+                dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
+                          ARRAY OF MSIR.Value {zero});
+                tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (eltT));
+                arr  := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", eltT, tPtr);
+            BEGIN
+              MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arr, lhsPtr);
+            END;
+          ELSE
+            MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");
+          END;
           RETURN;
         END;
       END;

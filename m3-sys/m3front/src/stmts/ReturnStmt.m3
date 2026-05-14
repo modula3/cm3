@@ -9,7 +9,7 @@
 MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
-IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr;
+IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr, Target;
 IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
@@ -89,9 +89,26 @@ PROCEDURE CompileMSIR (p: P) =
               (MSIR.Kind (resultT) = MSIR.TypeKind.GcRef OR
                MSIR.Kind (resultT) = MSIR.TypeKind.Ptr)) THEN
             v := MSIR.RetypeValue (v, resultT);
+          ELSIF MSIR.Kind (MSIR.ValueType (v))  = MSIR.TypeKind.OpenArray AND
+                MSIR.OpenArrayRank (MSIR.ValueType (v)) = 1              AND
+                MSIR.Kind (resultT) = MSIR.TypeKind.FixedArray           AND
+                MSIR.Equal (MSIR.OpenArrayElt  (MSIR.ValueType (v)),
+                             MSIR.FixedArrayElt (resultT)) THEN
+            (* RETURN open_array_var from a fixed-array-result proc.
+               Extract the data pointer from the dope vector, retype it to
+               ptr([N]T) so the verifier accepts the load, then load the
+               fixed-array value. *)
+            VAR blk  := MSIRBuilder.CurrentBlock ();
+                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L);
+                dPtr := MSIR.BuildOpenArrayElemAddr (blk, "", v,
+                          ARRAY OF MSIR.Value {zero});
+                tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (resultT));
+            BEGIN
+              v := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", resultT, tPtr);
+            END;
           ELSE
-            (* Unhandled type mismatch (e.g. open-array returned as fixed-array).
-               Array-copy return is not yet implemented in MSIR. *)
+            (* Unhandled type mismatch.  Array-copy with memcpy is not yet
+               implemented for all cases (e.g. multi-rank open arrays). *)
             MSIRBuilder.Abandon ("return type mismatch not yet supported in MSIR");
             RETURN;
           END;
