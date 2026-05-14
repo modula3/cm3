@@ -129,6 +129,12 @@ extern M3Int  Main__SubarrayFixedElem(M3Int start, M3Int len, M3Int idx);
 extern M3Int  Main__SubarrayOpenElem(OpenArray *a, M3Int start, M3Int len, M3Int idx);
 extern M3Int  Main__SumSubarray(OpenArray *a, M3Int start, M3Int len);
 
+/* ISTYPE / NARROW / TYPECASE-with-var */
+extern void  *Main__MakeIntRef(M3Int n);
+extern M3Int  Main__TestIsType(void *r);
+extern M3Int  Main__TestNarrow(void *r);
+extern M3Int  Main__TestTypecaseVar(void *r);
+
 /* Direct access to module globals (zeroinitialised — no M3 module init runs) */
 extern M3Int  Main__gCounter;
 extern M3Int  Main__gBase;
@@ -299,8 +305,8 @@ int main(void) {
     struct { void *vtable; M3Int side; } fake_square = { NULL, 7 };
     check_int("SquareArea(side=7)",   Main__SquareArea(&fake_square), 49);
 
-    /* TYPECASE dispatch — NIL path: ScanTypecase(NIL)=0 → first clause → 1 */
-    check_int("TypecaseKind(NULL)",   Main__TypecaseKind(NULL), 1);
+    /* TYPECASE dispatch — NIL path: ScanTypecase(NIL)=-1 → ELSE clause → 0 */
+    check_int("TypecaseKind(NULL)",   Main__TypecaseKind(NULL), 0);
 
     /* IN operator — element IN constant SET (Weekday enum, ordinals 0..6) */
     check_bool("IsWeekend(Sat=5)",   Main__IsWeekend(5),  1); /* Sat is ordinal 5 */
@@ -372,6 +378,13 @@ int main(void) {
       check_int("SubarrayOpen(3,3,0)", Main__SubarrayOpenElem(&oa8, 3, 3, 0), 40); /* a[3]=40 */
       check_int("SubarrayOpen(3,3,2)", Main__SubarrayOpenElem(&oa8, 3, 3, 2), 60); /* a[5]=60 */
       check_int("SumSubarray(2,4)",    Main__SumSubarray(&oa8, 2, 4),        180); /* 30+40+50+60 */
+    }
+
+    /* ISTYPE / NARROW / TYPECASE-with-var */
+    { void *ri = Main__MakeIntRef(42);
+      check_int("IsType(ri, REF INTEGER)", Main__TestIsType(ri),       1);
+      check_int("Narrow(ri)^",            Main__TestNarrow(ri),       42);
+      check_int("TypecaseVar(ri)",        Main__TestTypecaseVar(ri),  42);
     }
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");

@@ -11,6 +11,7 @@ MODULE IsType;
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr, Reff, RefType;
 IMPORT Procedure, Bool, ObjectType, Null, Value, M3RT, Target, RunTyme;
 IMPORT TInt;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 
@@ -210,6 +211,51 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
     END;
   END PrepBR;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e          := ce.args[0];
+    t, u       : Type.T;
+    refVal, tc : MSIR.Value;
+    hook       : MSIR.Proc;
+    blk        : MSIR.Block;
+  BEGIN
+    IF NOT TypeExpr.Split (ce.args[1], t) THEN t := Expr.TypeOf (e) END;
+    Type.Compile (t);
+    t := Type.Base (t);
+    u := Expr.TypeOf (e);
+    refVal := Expr.CompileMSIR (e);
+    IF refVal = NIL THEN RETURN NIL END;
+    blk := MSIRBuilder.CurrentBlock ();
+    IF Type.IsSubtype (u, t) THEN
+      RETURN MSIR.ConstInt (MSIR.TI1 (), 1L);
+    END;
+    IF Type.IsEqual (t, Null.T, NIL) THEN
+      RETURN MSIR.BuildICmp (blk, "istype.nil", MSIR.CmpPred.Eq,
+               refVal, MSIR.ConstNil (MSIR.ValueType (refVal)));
+    END;
+    IF ObjectType.Is (t) THEN
+      tc := MSIRBuilder.TypeLinkValueForObject (t);
+    ELSE
+      tc := MSIRBuilder.TypeLinkValueForRef (t);
+    END;
+    IF tc = NIL THEN
+      MSIRBuilder.Abandon ("ISTYPE: cannot get typecell");  RETURN NIL;
+    END;
+    hook := MSIRBuilder.HookProc (RunTyme.Hook.CheckIsType);
+    IF hook = NIL THEN
+      MSIRBuilder.Abandon ("ISTYPE: CheckIsType hook missing");  RETURN NIL;
+    END;
+    (* CheckIsType returns INTEGER; convert to i1 (Bool.T) for ISTYPE result. *)
+    VAR raw := MSIRBuilder.EmitCall ("istype.raw", hook,
+                                     ARRAY OF MSIR.Value {refVal, tc});
+    BEGIN
+      IF raw = NIL THEN RETURN NIL END;
+      RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "istype",
+                             MSIR.CmpPred.Ne,
+                             raw, MSIR.ConstInt (MSIR.ValueType (raw), 0L));
+    END;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, Bool.T,
@@ -227,6 +273,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("ISTYPE", Z, TRUE);
   END Initialize;
 

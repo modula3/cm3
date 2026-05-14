@@ -7,12 +7,16 @@
 
 INTERFACE Narrow;
 
-IMPORT Type;
+IMPORT Type, MSIR;
 
 PROCEDURE Initialize ();
 
 PROCEDURE Emit (tlhs, trhs: Type.T);
 (* generate  "NARROW (s0.trhs, tlhs)"  -- Note: the generated code
    may include a procedure call. *)
+
+PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value;
+(* MSIR equivalent of Emit: checks refVal against tlhs at runtime,
+   aborts on failure (RuntimeError.NarrowFailed = 5), returns refVal. *)
 
 END Narrow.

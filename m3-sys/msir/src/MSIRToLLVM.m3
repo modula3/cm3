@@ -13,6 +13,7 @@ END;
 
 VAR
   auxN:          INTEGER     := 0;
+  tcN:           INTEGER     := 0;   (* module-level counter for TYPECASE tables *)
   curEmitModule: MSIR.Module := NIL;
   pendingTC:     RefSeq.T    := NIL;   (* TCEntry list, built during EmitInsn *)
 
@@ -926,8 +927,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           idxName  : TEXT;
           uids     : REF ARRAY OF LONGINT;
         BEGIN
-          INC(auxN);
-          tblN    := Fmt.Int(auxN);
+          INC(tcN);
+          tblN    := Fmt.Int(tcN);
           tblName := "@tc.table." & tblN;
           idxName := "%__tc_idx." & tblN;
 
@@ -1883,6 +1884,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
   BEGIN
     curEmitModule := m;
     auxN          := 0;
+    tcN           := 0;
     pendingTC     := NIL;
     needsEH       := ModuleHasEH(m);
     needsGC       := ModuleHasGcOps(m);

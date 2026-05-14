@@ -153,8 +153,18 @@ extern "C" long  Text__Length(void *t) {
 /* GC read barrier: a no-op in the harness — no real GC runs. */
 extern "C" void  RTHooks__CheckLoadTracedRef(void *) { }
 
-/* TYPECASE dispatch: for NIL input, returns 0 (→ first TYPECASE branch). */
-extern "C" long  RTHooks__ScanTypecase(void *, void *) { return 0; }
+/* TYPECASE dispatch: NIL → no match (returns -1 → switch default = ELSE);
+   non-NIL → first clause (returns 0). */
+extern "C" long  RTHooks__ScanTypecase(void *ref, void *) {
+    return (ref == nullptr) ? -1L : 0L;
+}
+
+/* ISTYPE / NARROW runtime check: stub always returns 1 (TRUE / non-zero INTEGER).
+   Correct for tests that pass a valid ref; NIL→1 matches M3 semantics
+   (NIL is accepted by ISTYPE for any traced ref type). */
+extern "C" long  RTHooks__CheckIsType(void *, void *) { return 1L; }
+
+/* RTHooks__ReportFault is declared above; Hook.Abort maps to it. */
 
 /* TEXT concatenation — only called from module body, not harness tests. */
 extern "C" void *RTHooks__Concat(void *, void *) { return nullptr; }

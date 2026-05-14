@@ -4,6 +4,7 @@
 MODULE NarrowExpr;
 
 IMPORT M3, Expr, ExprRep, Type, Narrow, CG, Host, Target, CaptureAnalysis;
+IMPORT MSIR;
 
 TYPE
   P = Expr.T BRANDED "NarrowExpr" OBJECT
@@ -32,7 +33,8 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := NarrowExprAlign;
-        capture  := Capture;
+        capture      := Capture;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a: Expr.T;  t: Type.T): Expr.T =
@@ -106,6 +108,15 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
     RETURN p;
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR refVal: MSIR.Value;
+  BEGIN
+    refVal := Expr.CompileMSIR (p.expr);
+    IF refVal = NIL THEN RETURN NIL END;
+    IF NOT Host.doNarrowChk THEN RETURN refVal END;
+    RETURN Narrow.EmitMSIR (refVal, p.tipe, Expr.TypeOf (p.expr));
+  END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

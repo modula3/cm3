@@ -436,6 +436,16 @@ PROCEDURE CompileMSIR (p: P) =
 
     merge := MSIRBuilder.NewBlock ("tc.merge");
 
+    (* Pre-register scoped case variables so LookupVarAddr works in case bodies. *)
+    VAR preBlk := MSIRBuilder.CurrentBlock ();
+    BEGIN
+      c := p.cases;
+      WHILE c # NIL DO
+        IF c.scope # NIL THEN EVAL Variable.AddLocalMSIR (c.var, preBlk) END;
+        c := c.next;
+      END;
+    END;
+
     (* Emit the typecase terminator on the current block. *)
     MSIR.BuildTypecase (MSIRBuilder.CurrentBlock (), refVal, clauses^);
 

@@ -11,6 +11,7 @@ MODULE Narrow;
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr;
 IMPORT Procedure, ObjectType, Reff, Null, M3RT, RefType;
 IMPORT Target, RunTyme, TInt;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -177,6 +178,89 @@ PROCEDURE NoteWrites (ce: CallExpr.T) =
     Expr.NoteWrite (ce.args[0]);
   END NoteWrites;
 
+PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
+  VAR
+    lhs_info              : Type.Info;
+    tc, checkVal          : MSIR.Value;
+    hook                  : MSIR.Proc;
+    okBlk, failBlk        : MSIR.Block;
+  BEGIN
+    EVAL Type.CheckInfo (tlhs, lhs_info);
+
+    (* Static: trhs <: tlhs → no check needed *)
+    IF Type.IsSubtype (trhs, tlhs) THEN RETURN refVal END;
+
+    (* Untraced, non-object → cast only, no runtime check *)
+    IF (NOT ObjectType.Is (tlhs)) AND (NOT lhs_info.isTraced) THEN
+      RETURN refVal;
+    END;
+
+    (* General: call RTHooks__CheckIsType(ref, typecell) *)
+    IF ObjectType.Is (tlhs) THEN
+      tc := MSIRBuilder.TypeLinkValueForObject (tlhs);
+    ELSE
+      tc := MSIRBuilder.TypeLinkValueForRef (tlhs);
+    END;
+    IF tc = NIL THEN
+      MSIRBuilder.Abandon ("NARROW: cannot get typecell");  RETURN NIL;
+    END;
+    hook := MSIRBuilder.HookProc (RunTyme.Hook.CheckIsType);
+    IF hook = NIL THEN
+      MSIRBuilder.Abandon ("NARROW: CheckIsType hook missing");  RETURN NIL;
+    END;
+    checkVal := MSIRBuilder.EmitCall ("narrow.chk", hook,
+                                      ARRAY OF MSIR.Value {refVal, tc});
+    IF checkVal = NIL THEN RETURN NIL END;
+
+    (* CheckIsType returns INTEGER; convert to i1 for conditional branch. *)
+    VAR cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "narrow.cond",
+                                MSIR.CmpPred.Ne,
+                                checkVal,
+                                MSIR.ConstInt (MSIR.ValueType (checkVal), 0L));
+    BEGIN
+      okBlk   := MSIRBuilder.NewBlock ("narrow.ok");
+      failBlk := MSIRBuilder.NewBlock ("narrow.fail");
+      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                        okBlk,   ARRAY OF MSIR.Value {},
+                        failBlk, ARRAY OF MSIR.Value {});
+    END;
+
+    (* Abort branch: RTHooks__ReportFault(NIL, NarrowFailed=5) + unreachable *)
+    MSIRBuilder.SetCurrentBlock (failBlk);
+    VAR faultHook := MSIRBuilder.HookProc (RunTyme.Hook.Abort);
+    BEGIN
+      IF faultHook # NIL THEN
+        EVAL MSIRBuilder.EmitCall ("", faultHook,
+               ARRAY OF MSIR.Value {
+                 MSIR.ConstNil (MSIR.TPtr (MSIR.TVoid ())),
+                 MSIR.ConstInt (MSIR.TI (Target.Integer.size), 5L)});
+      END;
+    END;
+    MSIR.BuildUnreachable (MSIRBuilder.CurrentBlock ());
+
+    MSIRBuilder.SetCurrentBlock (okBlk);
+    (* Retype refVal to the destination type so assignment type-checks pass. *)
+    VAR lhsT := MSIRType.Translate (tlhs);
+    BEGIN
+      IF lhsT # NIL THEN RETURN MSIR.RetypeValue (refVal, lhsT) END;
+    END;
+    RETURN refVal;
+  END EmitMSIR;
+
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    t    : Type.T;
+    trhs := Expr.TypeOf (ce.args[0]);
+    refVal : MSIR.Value;
+  BEGIN
+    EVAL TypeExpr.Split (ce.args[1], t);
+    Type.Compile (t);
+    t := Type.Base (t);
+    refVal := Expr.CompileMSIR (ce.args[0]);
+    IF refVal = NIL THEN RETURN NIL END;
+    RETURN EmitMSIR (refVal, t, trhs);
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
@@ -195,6 +279,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  NoteWrites);
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("NARROW", Z, TRUE);
   END Initialize;
 

@@ -420,6 +420,32 @@ PROCEDURE TypecaseKind (r: REFANY): INTEGER =
     END;
   END TypecaseKind;
 
+(* ISTYPE / NARROW / TYPECASE-with-var tests. *)
+
+PROCEDURE MakeIntRef (n: INTEGER): REFANY =
+  VAR r: REF INTEGER;
+  BEGIN r := NEW (REF INTEGER); r^ := n; RETURN r END MakeIntRef;
+
+PROCEDURE TestIsType (r: REFANY): INTEGER =
+  BEGIN
+    IF ISTYPE (r, REF INTEGER) THEN RETURN 1 ELSE RETURN 0 END;
+  END TestIsType;
+
+PROCEDURE TestNarrow (r: REFANY): INTEGER =
+  VAR p: REF INTEGER;
+  BEGIN
+    p := NARROW (r, REF INTEGER);
+    RETURN p^;
+  END TestNarrow;
+
+PROCEDURE TestTypecaseVar (r: REFANY): INTEGER =
+  BEGIN
+    TYPECASE r OF
+    | REF INTEGER (v) => RETURN v^;
+    ELSE RETURN -1;
+    END;
+  END TestTypecaseVar;
+
 (* NEW: allocate a REF INTEGER, store, and return the stored value. *)
 PROCEDURE AllocInt (n: INTEGER): INTEGER =
   VAR r: REF INTEGER;
@@ -843,4 +869,14 @@ BEGIN
   (* Fmt.Real — floating-point TEXT formatting *)
   IO.Put ("Fmt.Real(1.5) = " & Fmt.Real(1.5) & "\n");
   IO.Put ("Fmt.Real(2.5) = " & Fmt.Real(2.5) & "\n");
+
+  (* ISTYPE / NARROW / TYPECASE-with-var tests *)
+  VAR ri2: REF INTEGER;
+  BEGIN
+    ri2 := NEW (REF INTEGER);
+    ri2^ := 42;
+    IO.Put ("IsType(ri, REF INTEGER) = " & Fmt.Int(TestIsType(ri2)) & "\n");
+    IO.Put ("Narrow(ri, REF INTEGER)^ = " & Fmt.Int(TestNarrow(ri2)) & "\n");
+    IO.Put ("TypecaseVar(ri) = " & Fmt.Int(TestTypecaseVar(ri2)) & "\n");
+  END;
 END Main.
