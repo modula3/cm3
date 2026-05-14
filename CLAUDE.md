@@ -269,6 +269,10 @@ The end-to-end path is working: MSIR is emitted for a real module, lowered to LL
 - **CONST array subscript with runtime index**: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` arrays (e.g. `CONST SmallPrimes = ARRAY [0..4] OF INTEGER{…}`) by calling `MSIRBuilder.MaterializeConstArray`, which registers the array as a private LLVM constant global and returns a pointer to it; this falls naturally out of the rvalue-base subscript fix
 - **Array constructor expressions (`ARRAY OF T{…}`) as call arguments**: `ConsExpr.P` now has `compileMSIR`/`compileLValueMSIR` methods that call `InnerSeal` (which creates the actual `ArrayExpr.T` / `RecordExpr.T` / `SetExpr.T` in `p.base`) and then delegate to the sealed base; without this, passing an array constructor literal to an open-array formal hit `LValueMSIRDefault` and abandoned the entire module body proc
 - **Narrow array index zero-extension**: `SubscriptExpr.LValueMSIR` zero-extends any index value narrower than `Target.Integer.size` bits to `i64` before passing to `BuildArrayElemAddr`; LLVM sign-extends GEP indices, so an `i1` index of `1` (BOOLEAN `TRUE`) was sign-extended to `-1` and returned a garbage element address
+- **ADR builtin**: `Adr.m3` `CompileMSIR` returns `Expr.LValueMSIR(ce.args[0])` — the address of the designator; wired via `CallExpr.SetMethodMSIR`
+- **BITSIZE / BYTESIZE builtins**: `BitSize.m3` `DoCompileMSIR` extracts `info.size` via `Type.CheckInfo` and divides by the unit (1 for BITSIZE, 8 for BYTESIZE) → `MSIR.ConstInt`; abandons gracefully for open-array actuals; `ByteSize.m3` delegates to `BitSize.DoCompileMSIR` with unit=8
+- **LOOPHOLE operator**: `LoopholeExpr.CompileMSIR` handles rvalue cases: `Noop` → `RetypeValue`; `D_to_V` → load from lvalue address; `S_to_V` → load from rvalue address; `V_to_V` → `BuildConvert` (ptrtoint/inttoptr/bitcast); `LValueMSIR` passes the inner lvalue through for designator/struct/scalar cases; aggregate→open-array and struct target cases abandon
+- **ADDRESS arithmetic**: `AddExpr.CompileMSIR` handles `ADDRESS + INTEGER` → `BuildGepByte`; `SubtractExpr.CompileMSIR` handles `ADDRESS - INTEGER` → `BuildGepByte` with negated offset, and `ADDRESS - ADDRESS` → `ptrtoint` both operands then `BuildISub` for byte-count result
 
 ### EH Model Requirement
 
@@ -342,6 +346,12 @@ The RTLinker calls `Main_M3(0)` to register the module, then `Main_M3(1)` to run
 | `m3-sys/m3front/src/types/ObjectType.m3` | `InitTypecellMSIR`: registers MSIR ObjectTypeDesc with vtable; `GetObjectTypeInfo`, `FillMethodNames` |
 | `m3-sys/m3front/src/types/Type.m3` | `GenCells`: calls CG and MSIR `InitTypecell` together for each type cell |
 | `m3-sys/m3front/src/builtinOps/New.m3` | `CompileMSIR`: dispatches to `GenRefMSIR`/`GenObjectMSIR`/`GenOpaqueMSIR`; `CallAllocHook` is common tail |
+| `m3-sys/m3front/src/builtinOps/Adr.m3` | `CompileMSIR`: ADR(x) → `Expr.LValueMSIR(x)` |
+| `m3-sys/m3front/src/builtinOps/BitSize.m3` | `DoCompileMSIR(e, unit)`: BITSIZE/BYTESIZE → `ConstInt(info.size DIV unit)`; shared by `ByteSize.m3` |
+| `m3-sys/m3front/src/exprs/LoopholeExpr.m3` | `CompileMSIR`/`LValueMSIR`: LOOPHOLE rvalue (Noop/D_to_V/S_to_V/V_to_V) and lvalue passthrough |
+| `m3-sys/m3front/src/exprs/AddExpr.m3` | `CompileMSIR`: `cADDR + INTEGER` → `BuildGepByte`; integer and float cases already covered |
+| `m3-sys/m3front/src/exprs/SubtractExpr.m3` | `CompileMSIR`: `cADDR - INTEGER` → negated GEP; `cADDR - cADDR` → ptrtoint/sub |
+| `m3-sys/m3front/src/exprs/InExpr.m3` | `CompileMSIR`: `IN` for small constant SETs via bit-mask shift; abandons for multi-word/non-constant sets |
 | `m3-sys/m3front/src/misc/CaptureAnalysis.i3/.m3` | Capture-analysis module: `Note(ca, v, written)` records up-level variable accesses; `GetCaptures` returns the set; `T` is the accumulator passed through `Stmt.Capture`/`Expr.Capture` walks |
 | `m3-sys/m3front/src/misc/M3WString.m3` | Wide-char string representation; `GetChar(t, i)` gives raw code-point access used by `MSIREmit` to encode WIDECHAR literals as little-endian byte sequences |
 | `m3-sys/m3front/src/exprs/CallExpr.m3` | Uniform `.methods` dispatch for `CompileMSIR` and `Capture` (capture analysis); `Capturer`/`CompilerMSIR` callback types; `CaptureDefault` (scan all args as reads) wired by `NewMethodList`; `SetMethodCapture`/`SetMethodMSIR` for per-builtin overrides |
@@ -397,6 +407,8 @@ Multi-level nesting works naturally: if `Add` (nested in `NestedSum`) captures `
 **Per-module callbacks**:
 - `UserProc.m3`: `CompileMSIR` (direct call, vtable dispatch, nested lambda) + `Capture` (formal-mode scan); wired in `Initialize`
 - `Inc.m3`, `Dec.m3`: each defines `CompileMSIR` (arithmetic) + `Capture` (ScanLV arg0, Scan rest); wired in `Initialize`
+- `Adr.m3`: `CompileMSIR` → `Expr.LValueMSIR(arg0)`; wired in `Initialize`
+- `BitSize.m3`, `ByteSize.m3`: `CompileMSIR` → `DoCompileMSIR(arg0, unit)`; wired in `Initialize`
 - Other builtins inherit `CaptureDefault` (all args read-only)
 
 **`capture`/`captureLV` virtual methods**: defined on `Expr.T` (in `ExprRep.i3`) and `Stmt.T` (in `StmtRep.i3`). `Stmt.Capture(s, ca)` chains through `.next`; `Expr.Capture(e, ca)` dispatches to `e.capture(ca)`. Each concrete stmt/expr type overrides these to recurse into its sub-nodes. `Expr.CaptureLV` propagates the lvalue context so that directly-assigned variables are marked `written=TRUE` by `VarExpr` and `NamedExpr`.
@@ -416,7 +428,7 @@ All known `msir-verify` issues have been eliminated. Remaining limitations are c
 - **Opaque types**: `GenOpaqueMSIR` only handles REF revelation; OBJECT revelation deferred.
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR-compiled code silently omits trace callbacks.
 - **Debug symbols**: no source locations reach LLVM IR; see below.
-- **SET type operations**: `IN` operator on small constant SETs works; SET literals, IN on non-constant/large sets, and set arithmetic (+/-/*/) not yet implemented.
+- **SET type operations**: `IN` operator on small constant SETs (≤ 64-bit domain) works via bit-mask shift; multi-word sets (`info.size > Target.Word.size`, e.g. `SET OF ASCII.Range`) and non-constant sets abandon gracefully. SET literals, set arithmetic (+/-/*/) not yet implemented.
 
 ### NIL Typing Convention
 
