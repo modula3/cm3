@@ -131,7 +131,8 @@ extern M3Int  Main__SumSubarray(OpenArray *a, M3Int start, M3Int len);
 
 /* TYPECODE */
 extern M3Int  Main__TypecodeOfRef(void *r);
-extern M3Int  Main__TypecodeOfType(void);
+extern M3Int  Main__TypecodeOfPointRef(void);
+extern void  *Main__MakePointRef(M3Int a, M3Int b);
 
 /* ISTYPE / NARROW / TYPECASE-with-var */
 extern void  *Main__MakeIntRef(M3Int n);
@@ -384,13 +385,16 @@ int main(void) {
       check_int("SumSubarray(2,4)",    Main__SumSubarray(&oa8, 2, 4),        180); /* 30+40+50+60 */
     }
 
-    /* TYPECODE */
-    { void *ri = Main__MakeIntRef(7);   /* reuse allocator for a live REF INTEGER */
-      M3Int tc_ref  = Main__TypecodeOfRef(ri);
-      M3Int tc_type = Main__TypecodeOfType();
-      check_int("TYPECODE(NIL)",           Main__TypecodeOfRef(NULL), 0);
-      check_int("TYPECODE(T) > 0",         tc_type > 0 ? 1 : 0,      1);
-      check_int("TYPECODE(r)==TYPECODE(T)", tc_ref == tc_type ? 1 : 0, 1);
+    /* TYPECODE — use PointRef (locally defined in Main, so TypeCell is in this module).
+       REF INTEGER is typically owned by an imported module and its TypeLink would be
+       unresolved in the minimal harness (no RTLinker).  PointRef's TypeLink is always
+       initialized by MSIR_InitTypeLinks since the TypeCell is in the same compilation. */
+    { void *pr = Main__MakePointRef(3, 4);
+      M3Int tc_ref  = Main__TypecodeOfRef(pr);
+      M3Int tc_type = Main__TypecodeOfPointRef();
+      check_int("TYPECODE(NIL)",                    Main__TypecodeOfRef(NULL), 0);
+      check_int("TYPECODE(PointRef) > 0",           tc_type > 0 ? 1 : 0,      1);
+      check_int("TYPECODE(r)==TYPECODE(PointRef)",  tc_ref == tc_type ? 1 : 0, 1);
     }
 
     /* ISTYPE / NARROW / TYPECASE-with-var */

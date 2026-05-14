@@ -420,13 +420,21 @@ PROCEDURE TypecaseKind (r: REFANY): INTEGER =
     END;
   END TypecaseKind;
 
-(* TYPECODE tests. *)
+(* TYPECODE tests.
+   REF INTEGER is typically owned by an imported module (visible_cells), so
+   its TypeCell may not be generated in this module.  PointRef is locally
+   defined here and always gets a TypeCell, making it safe to use in the
+   TYPECODE(T) test. *)
 
 PROCEDURE TypecodeOfRef (r: REFANY): INTEGER =
   BEGIN RETURN TYPECODE (r) END TypecodeOfRef;
 
-PROCEDURE TypecodeOfType (): INTEGER =
-  BEGIN RETURN TYPECODE (REF INTEGER) END TypecodeOfType;
+PROCEDURE TypecodeOfPointRef (): INTEGER =
+  BEGIN RETURN TYPECODE (PointRef) END TypecodeOfPointRef;
+
+PROCEDURE MakePointRef (a, b: INTEGER): REFANY =
+  VAR r: PointRef;
+  BEGIN r := NEW (PointRef); r^.x := a; r^.y := b; RETURN r END MakePointRef;
 
 (* ISTYPE / NARROW / TYPECASE-with-var tests. *)
 
@@ -878,14 +886,13 @@ BEGIN
   IO.Put ("Fmt.Real(1.5) = " & Fmt.Real(1.5) & "\n");
   IO.Put ("Fmt.Real(2.5) = " & Fmt.Real(2.5) & "\n");
 
-  (* TYPECODE tests *)
+  (* TYPECODE tests — use PointRef, which is locally defined and has a TypeCell *)
   IO.Put ("TYPECODE(NIL) = " & Fmt.Int(TypecodeOfRef(NIL)) & "\n");
-  VAR ri3: REF INTEGER;
+  VAR pr: PointRef;
   BEGIN
-    ri3 := NEW (REF INTEGER);
-    ri3^ := 0;
-    IO.Put ("TYPECODE(ri)=TYPECODE(REF INTEGER) = " &
-            Fmt.Int(ORD(TypecodeOfRef(ri3) = TypecodeOfType())) & "\n");
+    pr := NEW (PointRef);
+    IO.Put ("TYPECODE(pr)=TYPECODE(PointRef) = " &
+            Fmt.Int(ORD(TypecodeOfRef(pr) = TypecodeOfPointRef())) & "\n");
   END;
 
   (* ISTYPE / NARROW / TYPECASE-with-var tests *)

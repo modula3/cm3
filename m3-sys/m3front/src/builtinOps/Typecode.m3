@@ -10,7 +10,7 @@ MODULE Typecode;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Card, Error;
 IMPORT Reff, TypeExpr, ObjectType, M3RT, Target, TInt;
-IMPORT MSIR, MSIRBuilder, Word, RefType;
+IMPORT MSIR, MSIRBuilder, Word;
 
 VAR Z: CallExpr.MethodList;
 
@@ -103,7 +103,6 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         IF ObjectType.Is (t) THEN
           tc := MSIRBuilder.TypeLinkValueForObject (t);
         ELSE
-          RefType.InitTypecellMSIR (t);  (* force TypeCell creation; SetGlobals may skip imported ref types *)
           tc := MSIRBuilder.TypeLinkValueForRef (t);
         END;
         IF tc = NIL THEN
