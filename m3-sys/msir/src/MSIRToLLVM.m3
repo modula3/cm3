@@ -1457,9 +1457,19 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
     END;
 
     (* Emit MSIR_InitTypeLinks: for each TypeLink, if a TypeDesc with
-       matching uid and kind exists, store the TypeCell address into defn. *)
+       matching uid and kind exists, store the TypeCell address into defn.
+       Also assign sequential harness typecodes (starting from 1) to each
+       TypeCell — real typecodes are assigned by RTLinker at startup. *)
     Wr.PutText(wr, "\ndefine void @MSIR_InitTypeLinks() {\n");
     Wr.PutText(wr, "entry:\n");
+    (* Assign sequential typecodes to all TypeDescs (harness-only). *)
+    FOR j := 0 TO nDescs - 1 DO
+      VAR d := MSIR.ModuleTypeDesc(m, j);
+      BEGIN
+        Wr.PutText(wr, "  store i64 " & Fmt.Int(j + 1)
+                       & ", ptr @" & MSIR.TypeDescName(d) & "\n");
+      END;
+    END;
     FOR k := 0 TO nLinks - 1 DO
       VAR
         tl   := MSIR.ModuleTypeLink(m, k);

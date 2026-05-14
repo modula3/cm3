@@ -129,6 +129,10 @@ extern M3Int  Main__SubarrayFixedElem(M3Int start, M3Int len, M3Int idx);
 extern M3Int  Main__SubarrayOpenElem(OpenArray *a, M3Int start, M3Int len, M3Int idx);
 extern M3Int  Main__SumSubarray(OpenArray *a, M3Int start, M3Int len);
 
+/* TYPECODE */
+extern M3Int  Main__TypecodeOfRef(void *r);
+extern M3Int  Main__TypecodeOfType(void);
+
 /* ISTYPE / NARROW / TYPECASE-with-var */
 extern void  *Main__MakeIntRef(M3Int n);
 extern M3Int  Main__TestIsType(void *r);
@@ -378,6 +382,15 @@ int main(void) {
       check_int("SubarrayOpen(3,3,0)", Main__SubarrayOpenElem(&oa8, 3, 3, 0), 40); /* a[3]=40 */
       check_int("SubarrayOpen(3,3,2)", Main__SubarrayOpenElem(&oa8, 3, 3, 2), 60); /* a[5]=60 */
       check_int("SumSubarray(2,4)",    Main__SumSubarray(&oa8, 2, 4),        180); /* 30+40+50+60 */
+    }
+
+    /* TYPECODE */
+    { void *ri = Main__MakeIntRef(7);   /* reuse allocator for a live REF INTEGER */
+      M3Int tc_ref  = Main__TypecodeOfRef(ri);
+      M3Int tc_type = Main__TypecodeOfType();
+      check_int("TYPECODE(NIL)",           Main__TypecodeOfRef(NULL), 0);
+      check_int("TYPECODE(T) > 0",         tc_type > 0 ? 1 : 0,      1);
+      check_int("TYPECODE(r)==TYPECODE(T)", tc_ref == tc_type ? 1 : 0, 1);
     }
 
     /* ISTYPE / NARROW / TYPECASE-with-var */

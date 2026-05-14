@@ -10,6 +10,7 @@ MODULE Typecode;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Card, Error;
 IMPORT Reff, TypeExpr, ObjectType, M3RT, Target, TInt;
+IMPORT MSIR, MSIRBuilder, Word, RefType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -87,6 +88,84 @@ PROCEDURE Compile (ce: CallExpr.T) =
     END;
   END Compile;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    e    := ce.args[0];
+    t    : Type.T;
+    intT := MSIR.TI (Target.Integer.size);
+  BEGIN
+    IF TypeExpr.Split (e, t) THEN
+      (* TYPECODE(T) — byte 0 of the TypeCell holds TC_typecode. *)
+      Type.Compile (t);
+      t := Type.Base (t);
+      VAR tc: MSIR.Value;
+      BEGIN
+        IF ObjectType.Is (t) THEN
+          tc := MSIRBuilder.TypeLinkValueForObject (t);
+        ELSE
+          RefType.InitTypecellMSIR (t);  (* force TypeCell creation; SetGlobals may skip imported ref types *)
+          tc := MSIRBuilder.TypeLinkValueForRef (t);
+        END;
+        IF tc = NIL THEN
+          MSIRBuilder.Abandon ("TYPECODE: cannot get typecell");  RETURN NIL;
+        END;
+        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "typecode", intT, tc);
+      END;
+    ELSE
+      (* TYPECODE(r) — read typecode from ref header at runtime.
+         TYPECODE(NIL) = 0 (NULL_typecode), matching CM3's CG behaviour. *)
+      VAR
+        refVal   : MSIR.Value;
+        resAlloca: MSIR.Value;
+        nilBlk, normalBlk, mergeBlk : MSIR.Block;
+        nilCond  : MSIR.Value;
+        hdrPtr, hdrWord, shifted, masked : MSIR.Value;
+        blk      : MSIR.Block;
+        wordBytes := VAL (Target.Address.size DIV 8, LONGINT);
+      BEGIN
+        refVal := Expr.CompileMSIR (e);
+        IF refVal = NIL THEN RETURN NIL END;
+        blk := MSIRBuilder.CurrentBlock ();
+
+        (* Allocate result slot before branching. *)
+        resAlloca := MSIR.BuildAlloca (blk, "tc.slot", intT);
+
+        nilBlk    := MSIRBuilder.NewBlock ("tc.nil");
+        normalBlk := MSIRBuilder.NewBlock ("tc.normal");
+        mergeBlk  := MSIRBuilder.NewBlock ("tc.merge");
+
+        (* NIL → NULL_typecode = 0 *)
+        nilCond := MSIR.BuildICmp (blk, "tc.isnil", MSIR.CmpPred.Eq,
+                                   refVal, MSIR.ConstNil (MSIR.ValueType (refVal)));
+        MSIR.BuildCondBr (blk, nilCond,
+                          nilBlk,    ARRAY OF MSIR.Value {},
+                          normalBlk, ARRAY OF MSIR.Value {});
+
+        MSIR.BuildStore (nilBlk,
+                         MSIR.ConstInt (intT, VAL (M3RT.NULL_typecode, LONGINT)),
+                         resAlloca);
+        MSIR.BuildBr (nilBlk, mergeBlk, ARRAY OF MSIR.Value {});
+
+        (* Non-NIL: ref header is one word before the data pointer.
+           RH layout: bits [RH_typecode_offset .. +RH_typecode_size) = bits [1..20]. *)
+        hdrPtr  := MSIR.BuildPtrAdd (normalBlk, "tc.hdrptr", refVal, -wordBytes);
+        hdrWord := MSIR.BuildLoad (normalBlk, "tc.hdrword", intT, hdrPtr);
+        shifted := MSIR.BuildILShr (normalBlk, "tc.shr", hdrWord,
+                                    MSIR.ConstInt (intT,
+                                      VAL (M3RT.RH_typecode_offset, LONGINT)));
+        masked  := MSIR.BuildIAnd (normalBlk, "tc.mask", shifted,
+                                   MSIR.ConstInt (intT,
+                                     VAL (Word.LeftShift (1, M3RT.RH_typecode_size) - 1,
+                                          LONGINT)));
+        MSIR.BuildStore (normalBlk, masked, resAlloca);
+        MSIR.BuildBr (normalBlk, mergeBlk, ARRAY OF MSIR.Value {});
+
+        MSIRBuilder.SetCurrentBlock (mergeBlk);
+        RETURN MSIR.BuildLoad (mergeBlk, "tc", intT, resAlloca);
+      END;
+    END;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, Card.T,
@@ -104,6 +183,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("TYPECODE", Z, TRUE);
   END Initialize;
 

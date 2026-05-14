@@ -420,6 +420,14 @@ PROCEDURE TypecaseKind (r: REFANY): INTEGER =
     END;
   END TypecaseKind;
 
+(* TYPECODE tests. *)
+
+PROCEDURE TypecodeOfRef (r: REFANY): INTEGER =
+  BEGIN RETURN TYPECODE (r) END TypecodeOfRef;
+
+PROCEDURE TypecodeOfType (): INTEGER =
+  BEGIN RETURN TYPECODE (REF INTEGER) END TypecodeOfType;
+
 (* ISTYPE / NARROW / TYPECASE-with-var tests. *)
 
 PROCEDURE MakeIntRef (n: INTEGER): REFANY =
@@ -869,6 +877,16 @@ BEGIN
   (* Fmt.Real — floating-point TEXT formatting *)
   IO.Put ("Fmt.Real(1.5) = " & Fmt.Real(1.5) & "\n");
   IO.Put ("Fmt.Real(2.5) = " & Fmt.Real(2.5) & "\n");
+
+  (* TYPECODE tests *)
+  IO.Put ("TYPECODE(NIL) = " & Fmt.Int(TypecodeOfRef(NIL)) & "\n");
+  VAR ri3: REF INTEGER;
+  BEGIN
+    ri3 := NEW (REF INTEGER);
+    ri3^ := 0;
+    IO.Put ("TYPECODE(ri)=TYPECODE(REF INTEGER) = " &
+            Fmt.Int(ORD(TypecodeOfRef(ri3) = TypecodeOfType())) & "\n");
+  END;
 
   (* ISTYPE / NARROW / TYPECASE-with-var tests *)
   VAR ri2: REF INTEGER;

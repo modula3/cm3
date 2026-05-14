@@ -42,13 +42,18 @@ extern "C" void *RTAllocator_M3(long)  { return nullptr; }
    by MSIR_InitTypeLinks; fall back to allocating 64 bytes in that case. */
 extern "C" void *RTHooks__AllocateTracedRef(void *typeDescr) {
     long dataSize = 64;  /* safe fallback for unresolved TypeLinks */
+    long typecode = 0;
     if (typeDescr) {
-        /* TC_dataSize is at byte offset 32 of the TypeCell. */
+        /* TC_typecode is at byte offset 0 (long index 0).
+           TC_dataSize is at byte offset 32 (long index 4). */
         long *tc = (long *)typeDescr;
-        dataSize = tc[4];  /* byte 32 / sizeof(long) = index 4 */
+        typecode = tc[0];
+        dataSize = tc[4];
         if (dataSize <= 0) dataSize = 8;
     }
     char *mem = (char *)calloc(1, (size_t)(dataSize + 8));
+    /* Store typecode in GC header: RH_typecode_offset=1, so header = typecode<<1 */
+    *(long *)mem = typecode << 1;
     return mem + 8;  /* skip fake header */
 }
 
@@ -60,15 +65,19 @@ extern "C" void *RTHooks__AllocateTracedRef(void *typeDescr) {
    allocating 64 bytes with a null vtable. */
 extern "C" void *RTHooks__AllocateTracedObj(void *typeDescr) {
     long dataSize = 64;  /* safe fallback */
+    long typecode = 0;
     void *defaultMethods = nullptr;
     if (typeDescr) {
         long *tc = (long *)typeDescr;
+        typecode = tc[0];          /* TC_typecode */
         dataSize = tc[4];          /* TC_dataSize */
         if (dataSize < 0) dataSize = 0;
         defaultMethods = (void *)tc[17];  /* OTC_defaultMethods */
     }
     size_t total = (size_t)(8 + 8 + dataSize);  /* fake-header + vtable + fields */
     char *mem = (char *)calloc(1, total);
+    /* Store typecode in GC header: RH_typecode_offset=1, so header = typecode<<1 */
+    *(long *)mem = typecode << 1;
     char *obj = mem + 8;            /* skip fake GC header */
     *(void **)obj = defaultMethods; /* InitObj: obj[0] = vtable ptr */
     return obj;
