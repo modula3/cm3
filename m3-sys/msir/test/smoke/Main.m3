@@ -34,6 +34,20 @@ PROCEDURE SetProperSubset (a, b: ColorSet): BOOLEAN =
 PROCEDURE SmallSetMember (n: INTEGER; s: SmallSet): BOOLEAN =
   BEGIN RETURN n IN s END SmallSetMember;
 
+(* Multi-word (128-bit) SET operations *)
+PROCEDURE WideSetUnion (a, b: WideSet): WideSet =
+  BEGIN RETURN a + b END WideSetUnion;
+PROCEDURE WideSetInter (a, b: WideSet): WideSet =
+  BEGIN RETURN a * b END WideSetInter;
+PROCEDURE WideSetDiff  (a, b: WideSet): WideSet =
+  BEGIN RETURN a - b END WideSetDiff;
+PROCEDURE WideSetEqual (a, b: WideSet): BOOLEAN =
+  BEGIN RETURN a = b END WideSetEqual;
+PROCEDURE WideSetSubset(a, b: WideSet): BOOLEAN =
+  BEGIN RETURN a <= b END WideSetSubset;
+PROCEDURE WideSetMember(n: INTEGER; s: WideSet): BOOLEAN =
+  BEGIN RETURN n IN s END WideSetMember;
+
 (* Packed byte-array: load element at index i *)
 PROCEDURE PackedByteGet (VAR a: ARRAY [0..3] OF Byte8; i: INTEGER): INTEGER =
   BEGIN RETURN a[i] END PackedByteGet;
@@ -181,6 +195,7 @@ TYPE
   Color    = {Red, Green, Blue};
   ColorSet = SET OF Color;
   SmallSet = SET OF [0..15];
+  WideSet  = SET OF [0..127];  (* 128-bit set — multi-word *)
   Byte8    = BITS 8 FOR [0..255];
 
 PROCEDURE MakePoint (x, y: INTEGER): Point =
@@ -1077,6 +1092,26 @@ BEGIN
     IO.Put ("SetProperSubset(rg,rg) = " & Fmt.Int(ORD(SetProperSubset(sRG,sRG))) & "\n");
     IO.Put ("SmallSetMember(7,sm)   = " & Fmt.Int(ORD(SmallSetMember(7,sm))) & "\n");
     IO.Put ("SmallSetMember(5,sm)   = " & Fmt.Int(ORD(SmallSetMember(5,sm))) & "\n");
+  END;
+
+  (* Multi-word (128-bit) SET tests — WideSet = SET OF [0..127] *)
+  (* wlo={0,63}: bits 0 and 63 (low 64-bit half only)  *)
+  (* whi={64,127}: bits 64 and 127 (high 64-bit half only) *)
+  (* wboth={0,63,64,127}: all four corner bits *)
+  VAR wlo   := WideSet{0, 63};
+      whi   := WideSet{64, 127};
+      wboth := WideSet{0, 63, 64, 127};
+  BEGIN
+    IO.Put ("WideSetUnion(lo,hi)=both = " & Fmt.Int(ORD(WideSetUnion(wlo,whi) = wboth)) & "\n");
+    IO.Put ("WideSetInter(lo,wboth)=lo= " & Fmt.Int(ORD(WideSetInter(wlo,wboth) = wlo)) & "\n");
+    IO.Put ("WideSetDiff(wboth,whi)=lo= " & Fmt.Int(ORD(WideSetDiff(wboth,whi) = wlo)) & "\n");
+    IO.Put ("WideSetEqual(lo,lo)      = " & Fmt.Int(ORD(WideSetEqual(wlo,wlo))) & "\n");
+    IO.Put ("WideSetEqual(lo,hi)      = " & Fmt.Int(ORD(WideSetEqual(wlo,whi))) & "\n");
+    IO.Put ("WideSetSubset(lo,wboth)  = " & Fmt.Int(ORD(WideSetSubset(wlo,wboth))) & "\n");
+    IO.Put ("WideSetSubset(wboth,lo)  = " & Fmt.Int(ORD(WideSetSubset(wboth,wlo))) & "\n");
+    IO.Put ("WideSetMember(63,wboth)  = " & Fmt.Int(ORD(WideSetMember(63,wboth))) & "\n");
+    IO.Put ("WideSetMember(64,wboth)  = " & Fmt.Int(ORD(WideSetMember(64,wboth))) & "\n");
+    IO.Put ("WideSetMember(63,whi)    = " & Fmt.Int(ORD(WideSetMember(63,whi))) & "\n");
   END;
 
   (* Packed byte-array tests *)

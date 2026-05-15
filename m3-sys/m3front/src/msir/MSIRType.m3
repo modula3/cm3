@@ -71,8 +71,8 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
         RETURN TranslateRecord(base, typeName);
 
     | Type.Class.Set =>
-        (* Small sets (≤ 1 word) map to an integer; large sets are unsupported. *)
-        IF info.size > 0 AND info.size <= Target.Word.size THEN
+        (* All set sizes map to iN — LLVM supports arbitrary-width integers. *)
+        IF info.size > 0 THEN
           RETURN MSIR.TI (info.size);
         END;
         RETURN NIL;

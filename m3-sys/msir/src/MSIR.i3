@@ -16,6 +16,7 @@ TYPE T <: REFANY;                     (* opaque MSIR type *)
 TYPE TypeKind = {
   Void,
   I1, I8, I16, I32, I64,              (* signed integer widths *)
+  IWide,                               (* arbitrary-width signed integer (multi-word sets) *)
   W8, W16, W32, W64,                  (* unsigned (word) widths *)
   F32, F64, F128,
   Ptr,                                (* untraced pointer *)
@@ -36,7 +37,7 @@ TYPE Method = RECORD name: TEXT;  procType: T  END;
 
 PROCEDURE TVoid(): T;
 PROCEDURE TI1(): T;
-PROCEDURE TI(bits: INTEGER): T;       (* bits in {8,16,32,64} *)
+PROCEDURE TI(bits: INTEGER): T;       (* bits in {8,16,32,64} or any multiple of 8 > 64 (IWide) *)
 PROCEDURE TW(bits: INTEGER): T;
 PROCEDURE TF(bits: INTEGER): T;       (* bits in {32,64,128} *)
 PROCEDURE TPtr(elt: T): T;

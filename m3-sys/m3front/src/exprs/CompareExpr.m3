@@ -280,9 +280,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
       rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();
-      IF p.bad_set THEN
+      IF (p.op = CG.Cmp.LT) OR (p.op = CG.Cmp.GT) THEN
         (* LT = proper subset: (lv | rv) == rv AND lv != rv
-           GT = proper superset: (lv | rv) == lv AND lv != rv *)
+           GT = proper superset: (lv | rv) == lv AND lv != rv
+           Works for any set width (single-word or multi-word iN). *)
         VAR lorv   := MSIR.BuildIOr  (blk, "", lv, rv);
             cmpRef : MSIR.Value;
             sub, neq : MSIR.Value;
@@ -294,7 +295,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         END;
       ELSE
         (* LE = subset: (lv & rv) == lv
-           GE = superset: (lv & rv) == rv *)
+           GE = superset: (lv & rv) == rv
+           Works for any set width. *)
         VAR landv  := MSIR.BuildIAnd (blk, "", lv, rv);
             cmpRef : MSIR.Value;
         BEGIN

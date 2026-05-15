@@ -472,6 +472,38 @@ int main(void) {
       check_int("SmallSetMember(5,sm)",      Main__SmallSetMember(5,sm),     0);
     }
 
+    /* Multi-word (128-bit) SET operations — WideSet = SET OF [0..127]
+       Procs returning WideSet use hidden first-ptr (large-result convention).
+       wlo={0,63}: low half only;  whi={64,127}: high half only;
+       wboth={0,63,64,127}: corners in both halves. */
+    {
+      typedef unsigned __int128 M3WideSet;
+      /* Construct bit patterns: bit k of i128 → 1<<k */
+      M3WideSet wlo   = ((M3WideSet)1 << 0)  | ((M3WideSet)1 << 63);
+      M3WideSet whi   = ((M3WideSet)1 << 64) | ((M3WideSet)1 << 127);
+      M3WideSet wboth = wlo | whi;
+      extern void Main__WideSetUnion (M3WideSet *r, M3WideSet a, M3WideSet b);
+      extern void Main__WideSetInter (M3WideSet *r, M3WideSet a, M3WideSet b);
+      extern void Main__WideSetDiff  (M3WideSet *r, M3WideSet a, M3WideSet b);
+      extern M3Bool Main__WideSetEqual (M3WideSet a, M3WideSet b);
+      extern M3Bool Main__WideSetSubset(M3WideSet a, M3WideSet b);
+      extern M3Bool Main__WideSetMember(M3Int n, M3WideSet s);
+      M3WideSet res;
+      Main__WideSetUnion(&res, wlo, whi);
+      check_int("WideSetUnion(lo,hi)=both", res == wboth,                 1);
+      Main__WideSetInter(&res, wlo, wboth);
+      check_int("WideSetInter(lo,wboth)=lo",res == wlo,                   1);
+      Main__WideSetDiff(&res, wboth, whi);
+      check_int("WideSetDiff(wboth,whi)=lo", res == wlo,                  1);
+      check_int("WideSetEqual(lo,lo)",       Main__WideSetEqual(wlo,wlo),  1);
+      check_int("WideSetEqual(lo,hi)",       Main__WideSetEqual(wlo,whi),  0);
+      check_int("WideSetSubset(lo,wboth)",   Main__WideSetSubset(wlo,wboth),1);
+      check_int("WideSetSubset(wboth,lo)",   Main__WideSetSubset(wboth,wlo),0);
+      check_int("WideSetMember(63,wboth)",   Main__WideSetMember(63,wboth), 1);
+      check_int("WideSetMember(64,wboth)",   Main__WideSetMember(64,wboth), 1);
+      check_int("WideSetMember(63,whi)",     Main__WideSetMember(63,whi),   0);
+    }
+
     /* Records with compact fields — filled via VAR pointer to avoid struct-return
        ABI mismatch (LLVM element-per-register vs AAPCS64 packed-bytes). */
     {

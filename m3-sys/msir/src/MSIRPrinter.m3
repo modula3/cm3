@@ -14,6 +14,9 @@ PROCEDURE Type(wr: Wr.T;  t: MSIR.T) =
     | MSIR.TypeKind.I16  => Wr.PutText(wr, "i16");
     | MSIR.TypeKind.I32  => Wr.PutText(wr, "i32");
     | MSIR.TypeKind.I64  => Wr.PutText(wr, "i64");
+    | MSIR.TypeKind.IWide =>
+        Wr.PutText(wr, "i");
+        Wr.PutText(wr, Fmt.Int(MSIR.BitWidth(t)));
     | MSIR.TypeKind.W8   => Wr.PutText(wr, "word8");
     | MSIR.TypeKind.W16  => Wr.PutText(wr, "word16");
     | MSIR.TypeKind.W32  => Wr.PutText(wr, "word32");

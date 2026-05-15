@@ -161,10 +161,6 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     ti                        : MSIR.T;
   BEGIN
     set := Type.Base (Type.CheckInfo (Expr.TypeOf (p.b), info));
-    IF info.size > Target.Word.size THEN
-      MSIRBuilder.Abandon ("InExpr: multi-word set not supported");
-      RETURN NIL;
-    END;
     b := SetType.Split (set, range);
     IF NOT b THEN MSIRBuilder.Abandon ("InExpr: SetType.Split failed"); RETURN NIL END;
     b := Type.GetBounds (range, min, max);

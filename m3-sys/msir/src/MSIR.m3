@@ -43,7 +43,7 @@ PROCEDURE TI(bits: INTEGER): T =
     | 16 => t.kind := TypeKind.I16;
     | 32 => t.kind := TypeKind.I32;
     | 64 => t.kind := TypeKind.I64;
-    ELSE  <* ASSERT FALSE, "TI: invalid bit width" *>
+    ELSE   t.kind := TypeKind.IWide;   (* arbitrary-width integer: i128, i256, etc. *)
     END;
     t.bits := bits;
     RETURN t;
@@ -248,6 +248,7 @@ PROCEDURE BitWidth(t: T): INTEGER =
     CASE t.kind OF
     | TypeKind.I1 => RETURN 1;
     | TypeKind.I8, TypeKind.I16, TypeKind.I32, TypeKind.I64,
+      TypeKind.IWide,
       TypeKind.W8, TypeKind.W16, TypeKind.W32, TypeKind.W64,
       TypeKind.F32, TypeKind.F64, TypeKind.F128 => RETURN t.bits;
     ELSE RETURN -1
@@ -410,6 +411,7 @@ PROCEDURE ConstZero(t: T): Value =
     | TypeKind.I1                        => RETURN ConstBool(FALSE);
     | TypeKind.I8, TypeKind.I16,
       TypeKind.I32, TypeKind.I64,
+      TypeKind.IWide,
       TypeKind.W8, TypeKind.W16,
       TypeKind.W32, TypeKind.W64        => RETURN ConstInt(t, 0L);
     | TypeKind.Ptr, TypeKind.GcRef       => RETURN ConstNil(t);

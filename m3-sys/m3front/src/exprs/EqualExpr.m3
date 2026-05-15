@@ -875,6 +875,19 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       END;
       RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
     ELSIF p.kind # Kind.SimpleScalar THEN
+      (* Multi-word SETs map to wide integers (iN) in MSIR — compare with icmp. *)
+      ta := Type.Base (Expr.TypeOf (p.a));
+      EVAL Type.CheckInfo (ta, taInfo);
+      IF taInfo.class = Type.Class.Set THEN
+        lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+        rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+        blk := MSIRBuilder.CurrentBlock ();
+        CASE p.op OF
+        | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
+        | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+        END;
+        RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
+      END;
       MSIRBuilder.Abandon ("non-scalar equality not supported in MSIR v0");
       RETURN NIL;
     END;

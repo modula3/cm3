@@ -1011,24 +1011,65 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     ti     : MSIR.T;
     blk    : MSIR.Block;
     minOrd : INTEGER;
-    mask   : LONGINT;
     result : MSIR.Value;
     elt    : MSIR.Value;
     bit    : MSIR.Value;
     lo, hi : Expr.T;
   BEGIN
     EVAL Type.CheckInfo (p.type, info);
-    IF info.size > Target.Word.size THEN
-      MSIRBuilder.Abandon ("SetExpr MSIR: multi-word set not supported");
-      RETURN NIL;
+    ti     := MSIR.TI (info.size);
+    (* MSIR compilation skips Prep, so BuildMap may not have been called yet.
+       Populate p.tree (constant ranges) and p.others (runtime elements) here. *)
+    IF NOT p.mapped THEN EVAL BuildMap (p, p) END;
+    minOrd := p.minI;
+
+    IF info.size <= Target.Word.size THEN
+      (* Single-word set: iterate constant tree nodes to accumulate a LONGINT mask.
+         The left/right tables (precomputed in Init) give word masks for each bit range. *)
+      VAR n   := p.tree;
+          cur : Target.Int := TInt.Zero;
+          tmp : Target.Int;
+          v   : INTEGER;
+      BEGIN
+        WHILE n # NIL DO
+          TWord.And (left [n.min - minOrd], right [n.max - minOrd], tmp);
+          TWord.Or  (cur, tmp, cur);
+          n := n.next;
+        END;
+        IF NOT TInt.ToInt (cur, v) THEN
+          MSIRBuilder.Abandon ("SetExpr MSIR: set mask overflows INTEGER");
+          RETURN NIL;
+        END;
+        result := MSIR.ConstInt (ti, VAL (v, LONGINT));
+      END;
+    ELSE
+      (* Multi-word set: build constant part by iterating the range tree.
+         For each range [n.min..n.max] set bits [lo_bit..hi_bit] using:
+           range_mask = lshr(ones, N-1-hi) AND shl(ones, lo)
+         LLVM constant-folds these when shift amounts are constants. *)
+      VAR n     := p.tree;
+          ones  := MSIR.ConstInt (ti, -1L);   (* iN with all bits set *)
+          nbits := info.size;
+      BEGIN
+        result := MSIR.ConstInt (ti, 0L);
+        blk    := MSIRBuilder.CurrentBlock ();
+        WHILE n # NIL DO
+          VAR lo_bit := n.min - minOrd;
+              hi_bit := n.max - minOrd;
+              upper, lower, rng : MSIR.Value;
+          BEGIN
+            upper := MSIR.BuildILShr (blk, "", ones,
+                       MSIR.ConstInt (ti, VAL (nbits - 1 - hi_bit, LONGINT)));
+            lower := MSIR.BuildIShl  (blk, "", ones,
+                       MSIR.ConstInt (ti, VAL (lo_bit, LONGINT)));
+            rng   := MSIR.BuildIAnd (blk, "", upper, lower);
+            result := MSIR.BuildIOr (blk, "", result, rng);
+          END;
+          n := n.next;
+        END;
+      END;
     END;
-    ti := MSIR.TI (info.size);
-    (* Constant part — GetWordBitMask extracts the tree's bitmask (ignores p.others). *)
-    IF NOT GetWordBitMask (p, minOrd, mask) THEN
-      MSIRBuilder.Abandon ("SetExpr MSIR: cannot compute constant mask");
-      RETURN NIL;
-    END;
-    result := MSIR.ConstInt (ti, mask);
+
     (* OR in non-constant single-element members from p.others. *)
     IF p.nOthers > 0 THEN
       blk := MSIRBuilder.CurrentBlock ();
