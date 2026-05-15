@@ -46,7 +46,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] EVAL, ASSERT, LOOP statements: `CompileMSIR` implementations
 - [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
 - [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.roundeven.*`; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`, per spec: `SetRounding` does not affect ROUND)
-- [x] `IN` operator on SETs: `InExpr.CompileMSIR` extracts the word-size bit mask via `SetExpr.GetWordBitMask`; emits `lshr(mask, zext(elt - minOrd)) & 1 != 0`; supports single-word sets; abandons for multi-word sets
+- [x] `IN` operator on SETs: `InExpr.CompileMSIR` emits `lshr(setVal, zext(elt - minOrd)) & 1 != 0`; works at any set width (single-word iN or IWide iN)
 - [x] CONST array subscript: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` for array types by calling `MSIRBuilder.MaterializeConstArray`; `ArrayExpr.EltCount`/`Elt` enumerate elements; per-element `Expr.CompileMSIR` yields constant MSIR values; result registered as `@constarray_N = private constant [N x T] [...]` global
 - [x] Indirect (proc-variable) calls: `UserProc.CompileMSIR` handles non-literal, non-method case via `Expr.CompileMSIR(p.proc)` + `MSIRBuilder.EmitCallIndirect`; routes to `BuildCallIndirect` or `BuildInvokeIndirect` depending on active TRY context
 - [x] CONST record field access: `QualifyExpr.CompileMSIR` folds `OK.rank` (CONST RECORD field) via `StripNamedCons + RecordExpr.Qualify` before attempting `LValueMSIR`
@@ -57,7 +57,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] NARROW: `NarrowExpr.CompileMSIR` asserts type with `RTHooks__CheckIsType`; abandons and falls back on nil check failure
 - [x] TYPECASE-with-var: binding variable tied to tested expression; block variable resolved from MSIR locals
 - [x] TYPECODE: `TypecodeExpr.CompileMSIR` for both type forms and ref forms; type-link load via `MSIRBuilder.TypeLinkValue*`
-- [x] SET type: constructor (`SetExpr.CompileMSIR` builds bit-OR of ordinal-shifted 1s); arithmetic (`+`, `-`, `*`, `/` → `or`, `and(a, not b)`, `and`, `xor`); comparison (`=`, `#`, `<=`, `<`); word-sized sets (≤ 64 bits); stored as `TI(info.size)`
+- [x] SET type: constructor (`SetExpr.CompileMSIR` iterates `p.tree` constant ranges via lshr/shl/and/or + singleton OR for `p.others`); arithmetic (`+`, `-`, `*`, `/` → `or`, `and(a, not b)`, `and`, `xor`); comparison (`=`, `#`, `<=`, `<`); equality (`EqualExpr.CompileMSIR` icmp eq/ne); all widths supported via IWide `iN` (LLVM arbitrary-width integers); stored as `TI(info.size)` for ≤ 64 bits, `IWide(info.size)` for > 64 bits
 - [x] Packed byte-array (BITS N FOR T): `SubscriptExpr.CompileMSIR` detects storage/natural-type width mismatch; emits load at storage type + ZExt/SExt/Trunc to natural type; `AssignStmt.CompileMSIR` emits Trunc when storing wider value to narrower slot
 - [x] Compact subrange arrays (`[0..255]`, `[0..65535]`, BOOLEAN): `MSIRType.TranslateFixedArray` uses `ArrayType.EltPack(t)` to detect reduced storage width; element type in array IR uses storage width (e.g. `[N x i8]` for `[0..255]` elements); `SubscriptExpr.CompileMSIR` ZExt/SExt/Trunc on load to recover natural type
 - [x] Records with compact/packed fields: `MSIRType.TranslateRecord` uses `fti.size` (storage bits) for LLVM struct field type when it differs from natural `Translate` result (e.g. `[0..255]` → i8, `[0..65535]` → i16, BOOLEAN → i8); `BitWidth > 0` guard prevents replacing traced-ref fields (TGcRef, BitWidth=-1) with `TI(64)`; `QualifyExpr.LValueMSIR` uses storage type for GEP pointer; `QualifyExpr.CompileMSIR` ZExt/SExt/Trunc via `LoadFieldValue` helper
@@ -92,9 +92,9 @@ not exercised by p0/p1/p2 or architectural limitations.
 
 ### A. Large/runtime SET operations
 
-The `IN` operator and all SET arithmetic are implemented for word-sized sets (≤ 64 bits).
-Remaining:
-- Multi-word sets (size > 64 bits) — requires runtime helpers or loop emission
+Multi-word sets (> 64 bits) are fully implemented via `IWide` (`iN` LLVM type).
+Runtime-element SET constructors (`T{lo..hi}` with non-constant bounds) emit an
+`Abandon`; these are not exercised by p0/p1/p2.
 
 ### B. NEW(REF open-array): multi-dimensional
 
