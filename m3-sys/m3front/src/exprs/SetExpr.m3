@@ -1070,26 +1070,59 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       END;
     END;
 
-    (* OR in non-constant single-element members from p.others. *)
+    (* OR in non-constant members from p.others (single elements and ranges). *)
     IF p.nOthers > 0 THEN
       blk := MSIRBuilder.CurrentBlock ();
       FOR i := 0 TO p.nOthers - 1 DO
         IF RangeExpr.Split (p.others[i], lo, hi) THEN
-          MSIRBuilder.Abandon ("SetExpr MSIR: runtime range in set not yet supported");
-          RETURN NIL;
+          (* Runtime range lo..hi: set bits [lo-minOrd .. hi-minOrd].
+             mask = lshr(ones, (size-1) - hi_bit) AND shl(ones, lo_bit)
+             This naturally yields 0 for empty ranges (lo > hi). *)
+          VAR loV, hiV, ones, upper, lower, rng : MSIR.Value;
+          BEGIN
+            loV := Expr.CompileMSIR (lo);  IF loV = NIL THEN RETURN NIL END;
+            hiV := Expr.CompileMSIR (hi);  IF hiV = NIL THEN RETURN NIL END;
+            blk := MSIRBuilder.CurrentBlock ();
+            IF MSIR.BitWidth (MSIR.ValueType (loV)) < info.size THEN
+              loV := MSIR.BuildZExt (blk, "", loV, ti);
+            ELSIF MSIR.BitWidth (MSIR.ValueType (loV)) > info.size THEN
+              loV := MSIR.BuildTrunc (blk, "", loV, ti);
+            END;
+            IF MSIR.BitWidth (MSIR.ValueType (hiV)) < info.size THEN
+              hiV := MSIR.BuildZExt (blk, "", hiV, ti);
+            ELSIF MSIR.BitWidth (MSIR.ValueType (hiV)) > info.size THEN
+              hiV := MSIR.BuildTrunc (blk, "", hiV, ti);
+            END;
+            IF minOrd # 0 THEN
+              VAR m := MSIR.ConstInt (ti, VAL (minOrd, LONGINT));
+              BEGIN
+                loV := MSIR.BuildISub (blk, "", loV, m);
+                hiV := MSIR.BuildISub (blk, "", hiV, m);
+              END;
+            END;
+            ones  := MSIR.ConstInt (ti, -1L);
+            upper := MSIR.BuildILShr (blk, "", ones,
+                       MSIR.BuildISub (blk, "", MSIR.ConstInt (ti, VAL (info.size - 1, LONGINT)), hiV));
+            lower := MSIR.BuildIShl (blk, "", ones, loV);
+            rng   := MSIR.BuildIAnd (blk, "", upper, lower);
+            result := MSIR.BuildIOr (blk, "", result, rng);
+          END;
+        ELSE
+          elt := Expr.CompileMSIR (p.others[i]);
+          IF elt = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          IF MSIR.BitWidth (MSIR.ValueType (elt)) < info.size THEN
+            elt := MSIR.BuildZExt (blk, "", elt, ti);
+          ELSIF MSIR.BitWidth (MSIR.ValueType (elt)) > info.size THEN
+            elt := MSIR.BuildTrunc (blk, "", elt, ti);
+          END;
+          IF minOrd # 0 THEN
+            elt := MSIR.BuildISub (blk, "", elt,
+                                   MSIR.ConstInt (ti, VAL (minOrd, LONGINT)));
+          END;
+          bit    := MSIR.BuildIShl (blk, "", MSIR.ConstInt (ti, 1L), elt);
+          result := MSIR.BuildIOr  (blk, "", result, bit);
         END;
-        elt := Expr.CompileMSIR (p.others[i]);
-        IF elt = NIL THEN RETURN NIL END;
-        blk := MSIRBuilder.CurrentBlock ();
-        IF MSIR.BitWidth (MSIR.ValueType (elt)) < info.size THEN
-          elt := MSIR.BuildZExt (blk, "", elt, ti);
-        END;
-        IF minOrd # 0 THEN
-          elt := MSIR.BuildISub (blk, "", elt,
-                                 MSIR.ConstInt (ti, VAL (minOrd, LONGINT)));
-        END;
-        bit    := MSIR.BuildIShl (blk, "", MSIR.ConstInt (ti, 1L), elt);
-        result := MSIR.BuildIOr  (blk, "", result, bit);
       END;
     END;
     RETURN result;

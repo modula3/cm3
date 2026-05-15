@@ -90,11 +90,13 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 **Zero abandons** in the full p0/p1/p2 test suite. Remaining gaps are constructs
 not exercised by p0/p1/p2 or architectural limitations.
 
-### A. Large/runtime SET operations
+### A. Large/runtime SET operations — complete
 
 Multi-word sets (> 64 bits) are fully implemented via `IWide` (`iN` LLVM type).
-Runtime-element SET constructors (`T{lo..hi}` with non-constant bounds) emit an
-`Abandon`; these are not exercised by p0/p1/p2.
+Runtime-element SET constructors (`T{lo..hi}` with non-constant bounds) are now
+implemented via `lshr(ones,(size-1)-hi) AND shl(ones,lo)` — naturally yields 0
+for empty ranges (lo > hi).  Verified with a standalone test for S{lo..hi} with
+non-constant lo/hi.
 
 ### B. NEW(REF open-array): multi-dimensional
 
