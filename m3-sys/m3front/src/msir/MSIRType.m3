@@ -169,12 +169,23 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     indexT, eltT: Type.T;
     nElts:        INTEGER;
     eltMsir:      MSIR.T;
+    eltInfo:      Type.Info;
   BEGIN
     IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL END;
     IF indexT = NIL THEN RETURN NIL END;  (* open: should not reach here *)
-    eltMsir := Translate(eltT);
-    IF eltMsir = NIL THEN RETURN NIL END;
     IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN NIL END;
+    EVAL Type.CheckInfo(eltT, eltInfo);
+    IF eltInfo.class = Type.Class.Packed THEN
+      IF ArrayType.EltsAreBitAddressed(t) THEN
+        RETURN NIL;  (* sub-byte: not representable as a standard LLVM array *)
+      END;
+      (* Byte-aligned packed element: use the packed bit width so GEP strides
+         match actual memory layout (e.g. BITS 8 FOR [0..255] → i8, not i64). *)
+      eltMsir := MSIR.TI(ArrayType.EltPack(t));
+    ELSE
+      eltMsir := Translate(eltT);
+      IF eltMsir = NIL THEN RETURN NIL END;
+    END;
     RETURN MSIR.TFixedArray(VAL(nElts, LONGINT), eltMsir);
   END TranslateFixedArray;
 

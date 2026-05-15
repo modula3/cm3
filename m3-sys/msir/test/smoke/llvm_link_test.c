@@ -140,6 +140,11 @@ extern M3Int  Main__BuildChain(M3Int n);
 extern M3Int  Main__StoreInFixedHeapArr(void);
 extern M3Int  Main__StoreInOpenHeapArr(M3Int n);
 
+/* Packed byte-array (BITS 8 FOR [0..255]) load / store / sum */
+extern M3Int  Main__PackedByteGet(M3Byte *a, M3Int i);
+extern M3Int  Main__PackedByteSet(M3Byte *a, M3Int i, M3Int val);
+extern M3Int  Main__PackedByteSum(M3Byte *a);
+
 /* ISTYPE / NARROW / TYPECASE-with-var */
 extern void  *Main__MakeIntRef(M3Int n);
 extern M3Int  Main__TestIsType(void *r);
@@ -447,6 +452,17 @@ int main(void) {
       check_int("SetProperSubset(rg,rg)",    Main__SetProperSubset(rg,rg),   0);
       check_int("SmallSetMember(7,sm)",      Main__SmallSetMember(7,sm),     1);
       check_int("SmallSetMember(5,sm)",      Main__SmallSetMember(5,sm),     0);
+    }
+
+    /* Packed byte-array: BITS 8 FOR [0..255] element load, store, and sum */
+    {
+      M3Byte pb[4] = {10, 20, 30, 40};
+      check_int("PackedByteGet(pb,0)",   Main__PackedByteGet(pb, 0),       10);
+      check_int("PackedByteGet(pb,2)",   Main__PackedByteGet(pb, 2),       30);
+      check_int("PackedByteSet(pb,1,99)",Main__PackedByteSet(pb, 1, 99),   99);
+      check_int("PackedByteGet(pb,1)",   Main__PackedByteGet(pb, 1),       99);
+      pb[0]=5; pb[1]=10; pb[2]=15; pb[3]=20;
+      check_int("PackedByteSum(pb)",     Main__PackedByteSum(pb),          50);
     }
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");

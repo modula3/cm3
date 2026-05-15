@@ -643,7 +643,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
   END LValueMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR addr: MSIR.Value;  ty: MSIR.T;
+  VAR addr: MSIR.Value;  ty: MSIR.T;  blk: MSIR.Block;
   BEGIN
     addr := LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
@@ -656,7 +656,28 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("unsupported subscript element type");
       RETURN NIL;
     END;
-    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
+    blk := MSIRBuilder.CurrentBlock ();
+    (* For byte-aligned packed elements the GEP points to a narrow integer
+       (e.g. i8 for BITS 8 FOR [0..255]).  Load at that width then widen to
+       the natural expression type (e.g. i64 on 64-bit targets). *)
+    VAR addrEltT := MSIR.EltType (MSIR.ValueType (addr));
+        addrBits := MSIR.BitWidth (addrEltT);
+        tyBits   := MSIR.BitWidth (ty);
+    BEGIN
+      IF addrBits > 0 AND addrBits < tyBits THEN
+        VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
+            lo, hi : Target.Int;
+            doSExt := Type.GetBounds (Type.StripPacked (p.type), lo, hi)
+                        AND TInt.LT (lo, TInt.Zero);
+        BEGIN
+          IF doSExt
+            THEN RETURN MSIR.BuildSExt (blk, "", loaded, ty);
+            ELSE RETURN MSIR.BuildZExt (blk, "", loaded, ty);
+          END;
+        END;
+      END;
+    END;
+    RETURN MSIR.BuildLoad (blk, "", ty, addr);
   END CompileMSIR;
 
 PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =

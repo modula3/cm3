@@ -874,10 +874,10 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
     END;
-    (* Coerce narrower integer value to match wider slot element type.
-       This handles CHAR (i8) assigned to WIDECHAR (i16) slot and similar
-       ordinal widening that M3 permits implicitly.  Use ZExt because
-       CHAR and WIDECHAR are unsigned (ordinal) types. *)
+    (* Coerce narrower integer value to match wider slot element type, and
+       truncate wider values to narrower packed slots.
+       - Widening: CHAR (i8) → WIDECHAR (i16): ZExt (unsigned ordinals).
+       - Narrowing: i64 → i8 for BITS 8 FOR [0..255] packed element stores. *)
     BEGIN
       VAR slotT   := MSIR.ValueType (lhsPtr);
           eltT    := MSIR.EltType (slotT);
@@ -885,9 +885,12 @@ PROCEDURE CompileMSIR (p: P) =
           dstBits := MSIR.BitWidth (eltT);
           srcBits := MSIR.BitWidth (rhsT);
       BEGIN
-        IF dstBits > 0 AND srcBits > 0 AND dstBits > srcBits AND
-           NOT MSIR.Equal (eltT, rhsT) THEN
-          rhsVal := MSIR.BuildZExt (MSIRBuilder.CurrentBlock(), "", rhsVal, eltT);
+        IF dstBits > 0 AND srcBits > 0 AND NOT MSIR.Equal (eltT, rhsT) THEN
+          IF dstBits > srcBits THEN
+            rhsVal := MSIR.BuildZExt (MSIRBuilder.CurrentBlock(), "", rhsVal, eltT);
+          ELSIF dstBits < srcBits THEN
+            rhsVal := MSIR.BuildTrunc (MSIRBuilder.CurrentBlock(), "", rhsVal, eltT);
+          END;
         END;
       END;
     END;

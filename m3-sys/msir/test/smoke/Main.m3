@@ -34,6 +34,22 @@ PROCEDURE SetProperSubset (a, b: ColorSet): BOOLEAN =
 PROCEDURE SmallSetMember (n: INTEGER; s: SmallSet): BOOLEAN =
   BEGIN RETURN n IN s END SmallSetMember;
 
+(* Packed byte-array: load element at index i *)
+PROCEDURE PackedByteGet (VAR a: ARRAY [0..3] OF Byte8; i: INTEGER): INTEGER =
+  BEGIN RETURN a[i] END PackedByteGet;
+
+(* Packed byte-array: store val at index i then return element at i *)
+PROCEDURE PackedByteSet (VAR a: ARRAY [0..3] OF Byte8; i: INTEGER; val: INTEGER): INTEGER =
+  BEGIN a[i] := val; RETURN a[i] END PackedByteSet;
+
+(* Packed byte-array: sum elements *)
+PROCEDURE PackedByteSum (VAR a: ARRAY [0..3] OF Byte8): INTEGER =
+  VAR s := 0;
+  BEGIN
+    FOR i := 0 TO 3 DO s := s + a[i] END;
+    RETURN s;
+  END PackedByteSum;
+
 VAR gLock: MUTEX := NIL;  (* initialised in module body *)
 VAR gCounter: INTEGER := 0;
 VAR gBase: INTEGER := 100;
@@ -126,6 +142,7 @@ TYPE
   Color    = {Red, Green, Blue};
   ColorSet = SET OF Color;
   SmallSet = SET OF [0..15];
+  Byte8    = BITS 8 FOR [0..255];
 
 PROCEDURE MakePoint (x, y: INTEGER): Point =
   VAR p: Point;
@@ -1021,5 +1038,18 @@ BEGIN
     IO.Put ("SetProperSubset(rg,rg) = " & Fmt.Int(ORD(SetProperSubset(sRG,sRG))) & "\n");
     IO.Put ("SmallSetMember(7,sm)   = " & Fmt.Int(ORD(SmallSetMember(7,sm))) & "\n");
     IO.Put ("SmallSetMember(5,sm)   = " & Fmt.Int(ORD(SmallSetMember(5,sm))) & "\n");
+  END;
+
+  (* Packed byte-array tests *)
+  VAR pb: ARRAY [0..3] OF Byte8;
+  BEGIN
+    pb[0] := 10;
+    pb[1] := 20;
+    pb[2] := 30;
+    pb[3] := 40;
+    IO.Put ("PackedByte[0] = " & Fmt.Int(pb[0]) & "\n");
+    IO.Put ("PackedByte[2] = " & Fmt.Int(pb[2]) & "\n");
+    pb[2] := pb[0] + pb[1];
+    IO.Put ("PackedByte[0]+[1] stored in [2] = " & Fmt.Int(pb[2]) & "\n");
   END;
 END Main.
