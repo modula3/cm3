@@ -1266,8 +1266,9 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
 
 PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
   (* VALUE open-array formal: caller-side copy.
-     For fixed-actual (actDepth=0): alloca element copy, memcpy, build dope.
-     For open-actual: abandon (rare; callee-side copy not yet implemented). *)
+     Dispatch is based on the MSIR lvalue type, not the M3 type, because array
+     constructors like ARRAY OF T{e1,...,en} can have M3 type ARRAY OF T (open)
+     but an MSIR lvalue that is a flat [n x T] fixed array. *)
   VAR
     formType   := form.type;
     actType    := Type.Base (Expr.TypeOf (actual));
@@ -1287,70 +1288,117 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     eltMsirT   : MSIR.T;
     eltPackBits: INTEGER;
     totalBytes : INTEGER;
+    lval       : MSIR.Value;
+    lvalT      : MSIR.T;
+    lvalEltT   : MSIR.T;
   BEGIN
     IF actDepth > 0 THEN
-      (* Open actual → VALUE open formal: dynamic alloca + memcpy. *)
-      IF actDepth < formDepth THEN
-        MSIRBuilder.Abandon ("VALUE open-array: partial depth coercion not yet in MSIR");
-        RETURN NIL;
+      (* M3 type says open actual.  Get the lvalue first and check MSIR layout. *)
+      lval := Expr.LValueMSIR (actual);
+      IF lval = NIL THEN RETURN NIL END;
+      lvalT := MSIR.ValueType (lval);
+      lvalEltT := NIL;
+      IF MSIR.Kind (lvalT) = MSIR.TypeKind.Ptr THEN
+        lvalEltT := MSIR.EltType (lvalT);
       END;
-      (* Get dope vector of the actual. *)
-      VAR dopeAddr := Expr.LValueMSIR (actual);
-          b2       : MSIR.Block;
-          dims     : REF ARRAY OF MSIR.Value;
-          nDims    := MIN (formDepth, actDepth);
-          totalEltsDyn, totalBytesDyn, srcDataPtr : MSIR.Value;
-          eltSizeBytesL : LONGINT;
-      BEGIN
-        IF dopeAddr = NIL THEN RETURN NIL END;
-        b2 := MSIRBuilder.CurrentBlock ();
-        (* Load source data pointer from dope[0].
-           Use BuildPtrAdd(dopeAddr, 0) to get an opaque-pointer operand;
-           a direct load from a typed ptr(openarray) would trip the verifier. *)
-        srcDataPtr := MSIR.BuildLoad (b2, "", ptrT,
-                        MSIR.BuildPtrAdd (b2, "", dopeAddr, 0L));
-        (* Load each dimension from dope[apB + k*ipB]. *)
-        dims := NEW (REF ARRAY OF MSIR.Value, nDims);
-        FOR k := 0 TO nDims - 1 DO
-          dims[k] := MSIR.BuildLoad (b2, "", intT,
-                       MSIR.BuildPtrAdd (b2, "", dopeAddr,
-                                         apB + ipB * VAL (k, LONGINT)));
-        END;
-        (* Compute totalElts = dim_0 * dim_1 * ... at runtime. *)
-        totalEltsDyn := dims[0];
-        FOR k := 1 TO nDims - 1 DO
-          totalEltsDyn := MSIR.BuildIMul (b2, "", totalEltsDyn, dims[k]);
-        END;
-        (* totalBytes = totalElts * eltSizeBytes *)
-        eltSizeBytesL := VAL (OpenArrayType.EltPack (formType) DIV Target.Char.size,
-                               LONGINT);
-        totalBytesDyn := MSIR.BuildIMul (b2, "",
-                           totalEltsDyn,
-                           MSIR.ConstInt (intT, eltSizeBytesL));
-        (* Dynamic stack alloc for the copy. *)
-        VAR copyPtr := MSIR.BuildAllocaDyn (b2, "", totalBytesDyn);
+      IF lvalEltT # NIL AND MSIR.Kind (lvalEltT) = MSIR.TypeKind.FixedArray THEN
+        (* The actual's MSIR lvalue is a flat fixed array (e.g., an array
+           constructor ARRAY OF T{e1,...,en} whose M3 type appears open).
+           Walk the MSIR type to get per-dimension lengths. *)
+        VAR dimSizes  : REF ARRAY OF LONGINT;
+            msirInner : MSIR.T;
         BEGIN
-          MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
-          (* Build new dope vector. *)
+          dimSizes  := NEW (REF ARRAY OF LONGINT, formDepth);
+          msirInner := lvalEltT;
+          totalElts := 1L;
+          FOR k := 0 TO formDepth - 1 DO
+            IF MSIR.Kind (msirInner) # MSIR.TypeKind.FixedArray THEN
+              MSIRBuilder.Abandon ("VALUE open-array: MSIR fixed-array depth mismatch");
+              RETURN NIL;
+            END;
+            dimSizes[k] := MSIR.FixedArrayLen (msirInner);
+            totalElts   := totalElts * dimSizes[k];
+            msirInner   := MSIR.FixedArrayElt (msirInner);
+          END;
+          eltMsirT    := msirInner;
+          eltPackBits := OpenArrayType.EltPack (formType);
+          IF totalElts < 1L THEN totalElts := 1L END;
+          totalBytes  := VAL (totalElts, INTEGER) * (eltPackBits DIV Target.Char.size);
+          b     := MSIRBuilder.CurrentBlock ();
+          copyA := MSIR.BuildAlloca (b, "", eltMsirT);
+          IF totalElts > 1L THEN
+            MSIR.AllocaSetCount (copyA, VAL (totalElts, INTEGER))
+          END;
+          MSIRBuilder.EmitMemcpy (copyA, lval, totalBytes);
           flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
           flds[0] := MSIR.Field {name := "", type := ptrT};
           FOR k := 0 TO formDepth - 1 DO
             flds[1 + k] := MSIR.Field {name := "", type := intT};
           END;
-          b2 := MSIRBuilder.CurrentBlock ();
-          dopeA := MSIR.BuildAlloca (b2, "", MSIR.TStruct ("", flds^));
-          MSIR.BuildStore (b2, copyPtr, MSIR.BuildPtrAdd (b2, "", dopeA, 0L));
+          b     := MSIRBuilder.CurrentBlock ();
+          dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+          MSIR.BuildStore (b, copyA, MSIR.BuildPtrAdd (b, "", dopeA, 0L));
           FOR k := 0 TO formDepth - 1 DO
-            MSIR.BuildStore (b2, dims[k],
-                             MSIR.BuildPtrAdd (b2, "", dopeA,
+            MSIR.BuildStore (b, MSIR.ConstInt (intT, dimSizes[k]),
+                             MSIR.BuildPtrAdd (b, "", dopeA,
                                                apB + ipB * VAL (k, LONGINT)));
           END;
           RETURN dopeA;
         END;
+      ELSE
+        (* Genuine open actual: lval points to a dope vector. *)
+        IF actDepth < formDepth THEN
+          MSIRBuilder.Abandon ("VALUE open-array: partial depth coercion not yet in MSIR");
+          RETURN NIL;
+        END;
+        VAR dopeAddr := lval;
+            b2       : MSIR.Block;
+            dims     : REF ARRAY OF MSIR.Value;
+            nDims    := MIN (formDepth, actDepth);
+            totalEltsDyn, totalBytesDyn, srcDataPtr : MSIR.Value;
+            eltSizeBytesL : LONGINT;
+        BEGIN
+          b2 := MSIRBuilder.CurrentBlock ();
+          srcDataPtr := MSIR.BuildLoad (b2, "", ptrT,
+                          MSIR.BuildPtrAdd (b2, "", dopeAddr, 0L));
+          dims := NEW (REF ARRAY OF MSIR.Value, nDims);
+          FOR k := 0 TO nDims - 1 DO
+            dims[k] := MSIR.BuildLoad (b2, "", intT,
+                         MSIR.BuildPtrAdd (b2, "", dopeAddr,
+                                           apB + ipB * VAL (k, LONGINT)));
+          END;
+          totalEltsDyn := dims[0];
+          FOR k := 1 TO nDims - 1 DO
+            totalEltsDyn := MSIR.BuildIMul (b2, "", totalEltsDyn, dims[k]);
+          END;
+          eltSizeBytesL := VAL (OpenArrayType.EltPack (formType) DIV Target.Char.size,
+                                 LONGINT);
+          totalBytesDyn := MSIR.BuildIMul (b2, "",
+                             totalEltsDyn,
+                             MSIR.ConstInt (intT, eltSizeBytesL));
+          VAR copyPtr := MSIR.BuildAllocaDyn (b2, "", totalBytesDyn);
+          BEGIN
+            MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
+            flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
+            flds[0] := MSIR.Field {name := "", type := ptrT};
+            FOR k := 0 TO formDepth - 1 DO
+              flds[1 + k] := MSIR.Field {name := "", type := intT};
+            END;
+            b2 := MSIRBuilder.CurrentBlock ();
+            dopeA := MSIR.BuildAlloca (b2, "", MSIR.TStruct ("", flds^));
+            MSIR.BuildStore (b2, copyPtr, MSIR.BuildPtrAdd (b2, "", dopeA, 0L));
+            FOR k := 0 TO formDepth - 1 DO
+              MSIR.BuildStore (b2, dims[k],
+                               MSIR.BuildPtrAdd (b2, "", dopeA,
+                                                 apB + ipB * VAL (k, LONGINT)));
+            END;
+            RETURN dopeA;
+          END;
+        END;
       END;
     END;
 
-    (* Compute static element count by walking the fixed-array dimensions. *)
+    (* Fixed-actual path (actDepth = 0): static element count from M3 type. *)
     totalElts := 1L;
     innerT    := actType;
     FOR k := 0 TO formDepth - 1 DO
@@ -1366,29 +1414,23 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
       totalElts := totalElts * VAL (cntI, LONGINT);
       innerT    := eltT;
     END;
-    (* innerT is now the innermost element type. *)
     eltMsirT := MSIRType.Translate (innerT);
     IF eltMsirT = NIL THEN
       MSIRBuilder.Abandon ("VALUE open-array: unsupported element type");
       RETURN NIL;
     END;
-    eltPackBits := OpenArrayType.EltPack (formType);   (* bits/element *)
-    IF totalElts < 1L THEN totalElts := 1L END;        (* alloca needs count >= 1 *)
+    eltPackBits := OpenArrayType.EltPack (formType);
+    IF totalElts < 1L THEN totalElts := 1L END;
     totalBytes := VAL (totalElts, INTEGER) * (eltPackBits DIV Target.Char.size);
 
-    (* Get original data pointer. *)
     dataPtr := Expr.LValueMSIR (actual);
     IF dataPtr = NIL THEN RETURN NIL END;
 
-    (* Alloca element copy with element-type alignment. *)
     b     := MSIRBuilder.CurrentBlock ();
     copyA := MSIR.BuildAlloca (b, "", eltMsirT);
     IF totalElts > 1L THEN MSIR.AllocaSetCount (copyA, VAL (totalElts, INTEGER)) END;
-
-    (* Emit memcpy(copyA, dataPtr, totalBytes). *)
     MSIRBuilder.EmitMemcpy (copyA, dataPtr, totalBytes);
 
-    (* Build dope vector { ptr, i64 x formDepth } on stack. *)
     flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
     flds[0] := MSIR.Field {name := "", type := ptrT};
     FOR k := 0 TO formDepth - 1 DO

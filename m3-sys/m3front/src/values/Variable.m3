@@ -1086,7 +1086,17 @@ PROCEDURE UserInit (t: T) =
         ELSE
           (* Expr.CheckUseFailure will have generated an unconditional RT error. *)
         END;
-        (* MSIR: const-area copy not yet supported; skip *)
+        (* MSIR: memcpy from the initializer lvalue to the local alloca *)
+        IF NOT t.global AND MSIRBuilder.InProc () THEN
+          VAR lval      := Expr.LValueMSIR (t.initExpr);
+              addr      := MSIRBuilder.LookupVarAddr (t);
+              byteCount := t.size DIV Target.Char.size;
+          BEGIN
+            IF lval # NIL AND addr # NIL AND byteCount > 0 THEN
+              MSIRBuilder.EmitMemcpy (addr, lval, byteCount);
+            END;
+          END;
+        END;
       ELSE
         t.initPending := FALSE;
         ArrayExpr.NoteUseTargetVar (t.initExpr);
