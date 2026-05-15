@@ -8,6 +8,7 @@ GENERIC MODULE IsLockFree (Rep);
 
 IMPORT CallExpr, Expr, ExprRep, Procedure, Target;
 IMPORT Value, Formal, Type, ProcType, Bool;
+IMPORT MSIR;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -32,6 +33,15 @@ PROCEDURE Fold (<*UNUSED*> ce: CallExpr.T): Expr.T =
     RETURN Bool.Map[bool];
   END Fold;
 
+PROCEDURE CompileMSIR (<*UNUSED*> ce: CallExpr.T): MSIR.Value =
+  VAR bool := Target.Atomic_lock_free[Type.CGType(Rep.T, in_memory := TRUE)];
+  BEGIN
+    IF bool
+      THEN RETURN MSIR.ConstInt(MSIR.TI1(), 1L);
+      ELSE RETURN MSIR.ConstInt(MSIR.TI1(), 0L);
+    END;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   VAR t0 := ProcType.New (Bool.T);
   BEGIN
@@ -50,6 +60,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("IsLockFree", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;

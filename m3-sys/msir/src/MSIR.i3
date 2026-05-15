@@ -411,7 +411,10 @@ TYPE Op = {
   Load, Store, GcLoad, GcStore, FieldAddr,
   (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
-  IAnd, IOr, IXor, IShl, ILShr, IAShr, (* bitwise / shift *)
+  IUDiv, IURem,                          (* unsigned divide / remainder *)
+  IAnd, IOr, IXor, IShl, ILShr, IAShr,  (* bitwise / shift *)
+  IRotL, IRotR,                          (* rotate left/right → llvm.fshl/fshr *)
+  Select,                                (* conditional select: select i1, T, T → T *)
   (* float arithmetic *)
   FAdd, FSub, FMul, FDiv, FNeg,
   (* compare *)
@@ -453,7 +456,13 @@ TYPE Op = {
   PtrAdd,         (* getelementptr ptr, ptr %base, i64 N  — vtable slot address *)
   GepByte,        (* getelementptr i8, ptr %base, i64 %offset — dynamic byte-offset ptr arith *)
   CallIndirect,   (* call via function-pointer value (no static Proc target) *)
-  InvokeIndirect  (* invoke via function-pointer value, with normal/unwind targets *)
+  InvokeIndirect, (* invoke via function-pointer value, with normal/unwind targets *)
+  (* atomic memory operations *)
+  AtomicFence,    (* fence <ordering> *)
+  AtomicLoad,     (* %v = load atomic T, ptr %p <ordering>, align N; targetType = elem type *)
+  AtomicStore,    (* store atomic T %v, ptr %p <ordering>, align N; no result *)
+  AtomicRMW,      (* %old = atomicrmw <op> ptr %p, T %v <ordering>; targetType = elem type *)
+  AtomicCmpXchg   (* %ok = cmpxchg expanded (load exp, cmpxchg, store back); result = i1 *)
 };
 
 TYPE CmpPred = {
@@ -470,6 +479,10 @@ TYPE FCmpPred = {
   ULt, ULe, UGt, UGe
 };
 
+TYPE MemOrder = { Relaxed, Release, Acquire, AcqRel, SeqCst };
+
+TYPE AtomicRMWOp = { Xchg, Add, Sub, And, Or, Xor };
+
 PROCEDURE InsnOp(i: Insn): Op;
 PROCEDURE InsnResult(i: Insn): Value;        (* NIL if Void-typed *)
 PROCEDURE InsnOperandCount(i: Insn): INTEGER;
@@ -483,10 +496,13 @@ PROCEDURE InsnBrTarget(i: Insn;  k: INTEGER): Block;
 PROCEDURE InsnBrArgCount(i: Insn;  k: INTEGER): INTEGER;
 PROCEDURE InsnBrArg(i: Insn;  k, j: INTEGER): Value;
 PROCEDURE InsnCallee(i: Insn): Proc;         (* Call only *)
-PROCEDURE InsnTargetType(i: Insn): T;        (* Alloca, New, Narrow, Istype *)
+PROCEDURE InsnTargetType(i: Insn): T;        (* Alloca, New, Narrow, Istype, AtomicLoad/RMW/CmpXchg *)
 PROCEDURE InsnSelector(i: Insn): TEXT;       (* Dispatch: method name; FieldAddr: field name *)
 PROCEDURE InsnExtractIdx(i: Insn): INTEGER;  (* ExtractValue: field index *)
 PROCEDURE InsnIsCleanup(i: Insn): BOOLEAN;   (* LandingPad: TRUE=cleanup, FALSE=catch *)
+PROCEDURE InsnMemOrder(i: Insn): MemOrder;   (* Atomic ops *)
+PROCEDURE InsnMemOrder2(i: Insn): MemOrder;  (* AtomicCmpXchg failure ordering *)
+PROCEDURE InsnAtomicOp(i: Insn): AtomicRMWOp; (* AtomicRMW op code *)
 
 (*---------------------------------------------------------------- Builders *)
 
@@ -501,6 +517,11 @@ PROCEDURE BuildIXor(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIShl(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildILShr(b: Block; name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildIAShr(b: Block; name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIUDiv(b: Block; name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIURem(b: Block; name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIRotL(b: Block; name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildIRotR(b: Block; name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildSelect(b: Block; name: TEXT;  cond, ifTrue, ifFalse: Value): Value;
 PROCEDURE BuildICmp(b: Block;  name: TEXT;  pred: CmpPred;  x, y: Value): Value;
 
 PROCEDURE BuildFAdd(b: Block;  name: TEXT;  x, y: Value): Value;
@@ -509,6 +530,18 @@ PROCEDURE BuildFMul(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildFDiv(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildFNeg(b: Block;  name: TEXT;  x: Value): Value;
 PROCEDURE BuildFCmp(b: Block;  name: TEXT;  pred: FCmpPred;  x, y: Value): Value;
+
+PROCEDURE BuildAtomicFence(b: Block; order: MemOrder);
+PROCEDURE BuildAtomicLoad(b: Block; name: TEXT; elemType: T; ptr: Value; order: MemOrder): Value;
+PROCEDURE BuildAtomicStore(b: Block; value: Value; ptr: Value; order: MemOrder;
+                            container: Value := NIL);
+PROCEDURE BuildAtomicRMW(b: Block; name: TEXT; op: AtomicRMWOp; ptr: Value;
+                          val: Value; order: MemOrder;
+                          container: Value := NIL): Value;
+PROCEDURE BuildAtomicCmpXchg(b: Block; name: TEXT; elemType: T; varPtr: Value;
+                              expectedPtr: Value; desired: Value;
+                              succOrder: MemOrder; failOrder: MemOrder;
+                              container: Value := NIL): Value;
 
 (* Type-converting casts — result type is supplied explicitly. *)
 PROCEDURE BuildSIToFP (b: Block;  name: TEXT;  x: Value;  dstType: T): Value;

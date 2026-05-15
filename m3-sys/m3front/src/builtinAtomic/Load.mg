@@ -8,6 +8,7 @@ GENERIC MODULE Load (Rep, Atomic);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TInt, M3ID;
 IMPORT Value, Formal, Type, ProcType, Error, EnumExpr;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -48,6 +49,29 @@ PROCEDURE Compile (ce: CallExpr.T) =
                      order := VAL(z, CG.MemoryOrder));
   END Compile;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    ptr    := Expr.LValueMSIR (ce.args[0]);
+    b      := MSIRBuilder.CurrentBlock ();
+    elemT  := MSIRType.Translate (Rep.T);
+    atomT  := elemT;
+    order  : Target.Int;  t: Type.T;  z: INTEGER;  ord: MSIR.MemOrder;
+    loaded : MSIR.Value;
+  BEGIN
+    EVAL MSIRBuilder.TakePendingContainer (); (* clear pending; read-only op *)
+    IF ptr = NIL THEN RETURN NIL END;
+    IF MSIR.BitWidth(elemT) > 0 AND MSIR.BitWidth(elemT) < 8 THEN atomT := MSIR.TI(8) END;
+    IF EnumExpr.Split(ce.args[1], order, t) AND TInt.ToInt(order, z)
+      THEN ord := VAL(z, MSIR.MemOrder);
+      ELSE ord := MSIR.MemOrder.SeqCst;
+    END;
+    loaded := MSIR.BuildAtomicLoad(b, "", atomT, ptr, ord);
+    IF atomT # elemT THEN
+      RETURN MSIR.BuildTrunc(b, "", loaded, elemT);
+    END;
+    RETURN loaded;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   VAR
     var := Formal.Info { name := M3ID.Add ("var"),
@@ -81,6 +105,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("Load", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;

@@ -8,6 +8,7 @@ GENERIC MODULE Fence (Atomic);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TInt, M3ID;
 IMPORT Value, Formal, Type, ProcType, Error, EnumExpr;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -37,6 +38,12 @@ PROCEDURE Compile (ce: CallExpr.T) =
     CG.Fence (order := VAL(z, CG.MemoryOrder));
   END Compile;
 
+PROCEDURE CompileMSIR (<*UNUSED*> ce: CallExpr.T): MSIR.Value =
+  BEGIN
+    MSIR.BuildAtomicFence(MSIRBuilder.CurrentBlock(), MSIR.MemOrder.SeqCst);
+    RETURN NIL;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   VAR
     order := Formal.Info { name := M3ID.Add ("order"),
@@ -63,6 +70,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("Fence", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;

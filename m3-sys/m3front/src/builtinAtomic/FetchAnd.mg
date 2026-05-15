@@ -8,6 +8,7 @@ GENERIC MODULE FetchAnd (Rep, Atomic);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TInt, M3ID;
 IMPORT Value, Formal, Type, ProcType, Error, EnumExpr, Addr, Module;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -63,6 +64,37 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.NoteWrite (ce.args[0]);
   END Compile;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    ptr   := Expr.LValueMSIR (ce.args[0]);
+    val   := Expr.CompileMSIR (ce.args[1]);
+    b     := MSIRBuilder.CurrentBlock ();
+    elemT : MSIR.T;  atomT : MSIR.T;
+    order : Target.Int;  t: Type.T;  z: INTEGER;  ord: MSIR.MemOrder;
+    old   : MSIR.Value;
+  BEGIN
+    EVAL MSIRBuilder.TakePendingContainer ();
+    IF ptr = NIL OR val = NIL THEN RETURN NIL END;
+    elemT := MSIR.ValueType(val);
+    atomT := elemT;
+    IF MSIR.BitWidth(elemT) < 0 THEN  (* pointer type: not supported *)
+      MSIRBuilder.Abandon("AtomicFetchAnd on pointer type not supported in MSIR");
+      RETURN NIL;
+    ELSIF MSIR.BitWidth(elemT) < 8 THEN  (* i1: upgrade to i8 *)
+      atomT := MSIR.TI(8);
+      val := MSIR.BuildZExt(b, "", val, atomT);
+    END;
+    IF EnumExpr.Split(ce.args[2], order, t) AND TInt.ToInt(order, z)
+      THEN ord := VAL(z, MSIR.MemOrder);
+      ELSE ord := MSIR.MemOrder.SeqCst;
+    END;
+    old := MSIR.BuildAtomicRMW(b, "", MSIR.AtomicRMWOp.And, ptr, val, ord);
+    IF atomT # elemT THEN
+      RETURN MSIR.BuildTrunc(b, "", old, elemT);
+    END;
+    RETURN old;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   VAR
     var := Formal.Info { name := M3ID.Add ("var"),
@@ -97,6 +129,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("FetchAnd", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;

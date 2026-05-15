@@ -8,6 +8,7 @@ GENERIC MODULE CompareSwap (Rep, Atomic);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TInt, M3ID;
 IMPORT Value, Formal, Type, ProcType, Error, EnumExpr, Bool;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -73,6 +74,39 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.NoteWrite (ce.args[1]);
   END Compile;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    varPtr    := Expr.LValueMSIR (ce.args[0]);
+    container := MSIRBuilder.TakePendingContainer ();
+    expPtr    := Expr.LValueMSIR (ce.args[1]);
+    desired   := Expr.CompileMSIR (ce.args[2]);
+    b         := MSIRBuilder.CurrentBlock ();
+    elemT     := MSIRType.Translate (Rep.T);
+    atomT     := elemT;
+    order     : Target.Int;  t: Type.T;  succZ, failZ: INTEGER;
+    succOrd, failOrd: MSIR.MemOrder;
+    desVal    : MSIR.Value;
+  BEGIN
+    EVAL MSIRBuilder.TakePendingContainer (); (* clear pending from expPtr eval *)
+    IF varPtr = NIL OR expPtr = NIL OR desired = NIL THEN RETURN NIL END;
+    IF MSIR.BitWidth(elemT) > 0 AND MSIR.BitWidth(elemT) < 8 THEN
+      atomT := MSIR.TI(8);
+      desVal := MSIR.BuildZExt(b, "", desired, atomT);
+    ELSE
+      desVal := desired;
+    END;
+    IF EnumExpr.Split(ce.args[3], order, t) AND TInt.ToInt(order, succZ)
+      THEN succOrd := VAL(succZ, MSIR.MemOrder);
+      ELSE succOrd := MSIR.MemOrder.SeqCst;
+    END;
+    IF EnumExpr.Split(ce.args[4], order, t) AND TInt.ToInt(order, failZ)
+      THEN failOrd := VAL(failZ, MSIR.MemOrder);
+      ELSE failOrd := MSIR.MemOrder.SeqCst;
+    END;
+    RETURN MSIR.BuildAtomicCmpXchg(b, "", atomT, varPtr, expPtr, desVal,
+                                   succOrd, failOrd, container);
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   VAR
     var := Formal.Info { name := M3ID.Add ("var"),
@@ -122,6 +156,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("CompareSwap", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;

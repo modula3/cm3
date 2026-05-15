@@ -206,6 +206,11 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.IShl               => RETURN "ishl";
     | MSIR.Op.ILShr              => RETURN "ilshr";
     | MSIR.Op.IAShr              => RETURN "iashr";
+    | MSIR.Op.IUDiv              => RETURN "iudiv";
+    | MSIR.Op.IURem              => RETURN "iurem";
+    | MSIR.Op.IRotL              => RETURN "irotl";
+    | MSIR.Op.IRotR              => RETURN "irotr";
+    | MSIR.Op.Select             => RETURN "select";
     | MSIR.Op.ICmp               => RETURN "icmp";
     | MSIR.Op.FAdd               => RETURN "fadd";
     | MSIR.Op.FSub               => RETURN "fsub";
@@ -258,6 +263,11 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.GepByte            => RETURN "gep.byte";
     | MSIR.Op.CallIndirect       => RETURN "call.indirect";
     | MSIR.Op.InvokeIndirect     => RETURN "invoke.indirect";
+    | MSIR.Op.AtomicFence        => RETURN "atomic.fence";
+    | MSIR.Op.AtomicLoad         => RETURN "atomic.load";
+    | MSIR.Op.AtomicStore        => RETURN "atomic.store";
+    | MSIR.Op.AtomicRMW          => RETURN "atomic.rmw";
+    | MSIR.Op.AtomicCmpXchg      => RETURN "atomic.cmpxchg";
     END;
   END OpText;
 
@@ -299,11 +309,22 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
     | MSIR.Op.IAdd, MSIR.Op.ISub, MSIR.Op.IMul,
-      MSIR.Op.IDiv, MSIR.Op.IMod =>
+      MSIR.Op.IDiv, MSIR.Op.IMod,
+      MSIR.Op.IUDiv, MSIR.Op.IURem,
+      MSIR.Op.IAnd, MSIR.Op.IOr, MSIR.Op.IXor,
+      MSIR.Op.IShl, MSIR.Op.ILShr, MSIR.Op.IAShr,
+      MSIR.Op.IRotL, MSIR.Op.IRotR =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
+    | MSIR.Op.Select =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 2));
     | MSIR.Op.FAdd, MSIR.Op.FSub, MSIR.Op.FMul, MSIR.Op.FDiv =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
@@ -556,6 +577,43 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, MSIR.BlockLabel(MSIR.InsnBrTarget(i, 0)));
           Wr.PutText(wr, " unwind ");
           Wr.PutText(wr, MSIR.BlockLabel(MSIR.InsnBrTarget(i, 1)));
+        END;
+    | MSIR.Op.AtomicFence =>
+        (* no operands; ordering is implicit in the op *)
+    | MSIR.Op.AtomicLoad =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+    | MSIR.Op.AtomicStore =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+        IF nOps = 3 THEN
+          Wr.PutText(wr, " [container=");
+          NameRef(wr, MSIR.InsnOperand(i, 2));
+          Wr.PutText(wr, "]");
+        END;
+    | MSIR.Op.AtomicRMW =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+        IF nOps = 3 THEN
+          Wr.PutText(wr, " [container=");
+          NameRef(wr, MSIR.InsnOperand(i, 2));
+          Wr.PutText(wr, "]");
+        END;
+    | MSIR.Op.AtomicCmpXchg =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 2));
+        IF nOps = 4 THEN
+          Wr.PutText(wr, " [container=");
+          NameRef(wr, MSIR.InsnOperand(i, 3));
+          Wr.PutText(wr, "]");
         END;
     ELSE (* no extra operands printed for other ops *)
     END;

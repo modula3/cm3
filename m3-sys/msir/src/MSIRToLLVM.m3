@@ -488,6 +488,36 @@ PROCEDURE FCmpPredText(p: MSIR.FCmpPred): TEXT =
     END;
   END FCmpPredText;
 
+PROCEDURE MemOrderStr(ord: MSIR.MemOrder): TEXT =
+  BEGIN
+    CASE ord OF
+    | MSIR.MemOrder.Relaxed => RETURN "monotonic";
+    | MSIR.MemOrder.Release => RETURN "release";
+    | MSIR.MemOrder.Acquire => RETURN "acquire";
+    | MSIR.MemOrder.AcqRel  => RETURN "acq_rel";
+    | MSIR.MemOrder.SeqCst  => RETURN "seq_cst";
+    END;
+  END MemOrderStr;
+
+PROCEDURE AtomicRMWOpStr(op: MSIR.AtomicRMWOp): TEXT =
+  BEGIN
+    CASE op OF
+    | MSIR.AtomicRMWOp.Xchg => RETURN "xchg";
+    | MSIR.AtomicRMWOp.Add  => RETURN "add";
+    | MSIR.AtomicRMWOp.Sub  => RETURN "sub";
+    | MSIR.AtomicRMWOp.And  => RETURN "and";
+    | MSIR.AtomicRMWOp.Or   => RETURN "or";
+    | MSIR.AtomicRMWOp.Xor  => RETURN "xor";
+    END;
+  END AtomicRMWOpStr;
+
+PROCEDURE AtomicAlign(t: MSIR.T): INTEGER =
+  VAR w := MSIR.BitWidth(t);
+  BEGIN
+    IF w <= 0 THEN RETURN 8 END;   (* pointer types → 8 bytes *)
+    RETURN (w + 7) DIV 8;
+  END AtomicAlign;
+
 PROCEDURE EmitBinop(wr: Wr.T;  llop: TEXT;  res, a, b: MSIR.Value) =
   BEGIN
     Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & llop & " ");
@@ -583,6 +613,152 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.IShl  => EmitBinop(wr, "shl",  res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
     | MSIR.Op.ILShr => EmitBinop(wr, "lshr", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
     | MSIR.Op.IAShr => EmitBinop(wr, "ashr", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IUDiv => EmitBinop(wr, "udiv", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.IURem => EmitBinop(wr, "urem", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+
+    | MSIR.Op.IRotL, MSIR.Op.IRotR =>
+        VAR
+          x      := MSIR.InsnOperand(i, 0);
+          n      := MSIR.InsnOperand(i, 1);
+          xt     := MSIR.ValueType(x);
+          bits   := MSIR.BitWidth(xt);
+          fsuf   := "i" & Fmt.Int(bits);
+          iname  : TEXT;
+        BEGIN
+          IF MSIR.InsnOp(i) = MSIR.Op.IRotL
+            THEN iname := "llvm.fshl." & fsuf;
+            ELSE iname := "llvm.fshr." & fsuf;
+          END;
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = call ");
+          LLType(wr, xt);
+          Wr.PutText(wr, " @" & iname & "(");
+          LLTypedVal(wr, x);
+          Wr.PutText(wr, ", ");
+          LLTypedVal(wr, x);
+          Wr.PutText(wr, ", ");
+          LLTypedVal(wr, n);
+          Wr.PutText(wr, ")\n");
+        END;
+
+    | MSIR.Op.Select =>
+        VAR
+          cond    := MSIR.InsnOperand(i, 0);
+          ifTrue  := MSIR.InsnOperand(i, 1);
+          ifFalse := MSIR.InsnOperand(i, 2);
+        BEGIN
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = select ");
+          LLTypedVal(wr, cond);
+          Wr.PutText(wr, ", ");
+          LLTypedVal(wr, ifTrue);
+          Wr.PutText(wr, ", ");
+          LLTypedVal(wr, ifFalse);
+          Wr.PutText(wr, "\n");
+        END;
+
+    | MSIR.Op.AtomicFence =>
+        Wr.PutText(wr, "  fence " & MemOrderStr(MSIR.InsnMemOrder(i)) & "\n");
+
+    | MSIR.Op.AtomicLoad =>
+        VAR
+          ptr   := MSIR.InsnOperand(i, 0);
+          elemT := MSIR.InsnTargetType(i);
+          align := AtomicAlign(elemT);
+        BEGIN
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = load atomic ");
+          LLType(wr, elemT);
+          Wr.PutText(wr, ", ptr ");
+          LLOpVal(wr, ptr);
+          Wr.PutText(wr, " " & MemOrderStr(MSIR.InsnMemOrder(i)));
+          Wr.PutText(wr, ", align " & Fmt.Int(align) & "\n");
+          IF MSIR.Kind(elemT) = MSIR.TypeKind.GcRef THEN
+            EmitGcReadBarrier(wr, MSIR.ValueName(res));
+          END;
+        END;
+
+    | MSIR.Op.AtomicStore =>
+        VAR
+          val   := MSIR.InsnOperand(i, 0);
+          ptr   := MSIR.InsnOperand(i, 1);
+          elemT := MSIR.ValueType(val);
+          align := AtomicAlign(elemT);
+        BEGIN
+          IF nOps = 3 THEN
+            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)));
+          END;
+          Wr.PutText(wr, "  store atomic ");
+          LLTypedVal(wr, val);
+          Wr.PutText(wr, ", ptr ");
+          LLOpVal(wr, ptr);
+          Wr.PutText(wr, " " & MemOrderStr(MSIR.InsnMemOrder(i)));
+          Wr.PutText(wr, ", align " & Fmt.Int(align) & "\n");
+        END;
+
+    | MSIR.Op.AtomicRMW =>
+        VAR
+          ptr    := MSIR.InsnOperand(i, 0);
+          val    := MSIR.InsnOperand(i, 1);
+          elemT  := MSIR.InsnTargetType(i);
+        BEGIN
+          IF nOps = 3 THEN
+            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)));
+          END;
+          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = atomicrmw ");
+          Wr.PutText(wr, AtomicRMWOpStr(MSIR.InsnAtomicOp(i)) & " ptr ");
+          LLOpVal(wr, ptr);
+          Wr.PutText(wr, ", ");
+          LLTypedVal(wr, val);
+          Wr.PutText(wr, " " & MemOrderStr(MSIR.InsnMemOrder(i)) & "\n");
+          IF MSIR.Kind(elemT) = MSIR.TypeKind.GcRef THEN
+            EmitGcReadBarrier(wr, MSIR.ValueName(res));
+          END;
+        END;
+
+    | MSIR.Op.AtomicCmpXchg =>
+        VAR
+          varPtr  := MSIR.InsnOperand(i, 0);
+          expPtr  := MSIR.InsnOperand(i, 1);
+          desired := MSIR.InsnOperand(i, 2);
+          elemT   := MSIR.InsnTargetType(i);
+          align   := AtomicAlign(elemT);
+          rn      := MSIR.ValueName(res);
+          succOrd := MemOrderStr(MSIR.InsnMemOrder(i));
+          failOrd := MemOrderStr(MSIR.InsnMemOrder2(i));
+        BEGIN
+          IF nOps = 4 THEN
+            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 3)));
+          END;
+          (* Load expected value from expected_ptr *)
+          Wr.PutText(wr, "  " & rn & ".exp = load ");
+          LLType(wr, elemT);
+          Wr.PutText(wr, ", ptr ");
+          LLOpVal(wr, expPtr);
+          Wr.PutText(wr, ", align " & Fmt.Int(align) & "\n");
+          (* Do cmpxchg; rn already starts with '%' *)
+          Wr.PutText(wr, "  " & rn & ".cx = cmpxchg ptr ");
+          LLOpVal(wr, varPtr);
+          Wr.PutText(wr, ", ");
+          LLType(wr, elemT);
+          Wr.PutText(wr, " " & rn & ".exp, ");
+          LLTypedVal(wr, desired);
+          Wr.PutText(wr, " " & succOrd & " " & failOrd & "\n");
+          (* Extract old value *)
+          Wr.PutText(wr, "  " & rn & ".old = extractvalue {");
+          LLType(wr, elemT);
+          Wr.PutText(wr, ", i1} " & rn & ".cx, 0\n");
+          (* Extract success flag — this is the MSIR result *)
+          Wr.PutText(wr, "  " & rn & " = extractvalue {");
+          LLType(wr, elemT);
+          Wr.PutText(wr, ", i1} " & rn & ".cx, 1\n");
+          (* Store old value back to expected_ptr; apply read barrier if traced ref *)
+          Wr.PutText(wr, "  store ");
+          LLType(wr, elemT);
+          Wr.PutText(wr, " " & rn & ".old, ptr ");
+          LLOpVal(wr, expPtr);
+          Wr.PutText(wr, ", align " & Fmt.Int(align) & "\n");
+          IF MSIR.Kind(elemT) = MSIR.TypeKind.GcRef THEN
+            EmitGcReadBarrier(wr, rn & ".old");
+          END;
+        END;
 
     | MSIR.Op.FAdd => EmitBinop(wr, "fadd", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
     | MSIR.Op.FSub => EmitBinop(wr, "fsub", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));

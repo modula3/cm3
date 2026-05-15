@@ -487,6 +487,9 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   typecaseClauses: REF ARRAY OF TypecaseClause := NIL;
   extractIdx: INTEGER := 0;       (* ExtractValue: field index *)
   isCleanup:  BOOLEAN := FALSE;   (* LandingPad: cleanup vs. catch *)
+  memOrder:  MemOrder    := MemOrder.SeqCst;   (* atomic ops *)
+  memOrder2: MemOrder    := MemOrder.SeqCst;   (* AtomicCmpXchg failure ordering *)
+  atomicOp:  AtomicRMWOp := AtomicRMWOp.Xchg; (* AtomicRMW op code *)
 END;
 
 PROCEDURE InsnOp(i: Insn): Op = BEGIN RETURN i.op END InsnOp;
@@ -521,6 +524,9 @@ PROCEDURE InsnTargetType(i: Insn): T = BEGIN RETURN i.targetType END InsnTargetT
 PROCEDURE InsnSelector(i: Insn): TEXT = BEGIN RETURN i.selector END InsnSelector;
 PROCEDURE InsnExtractIdx(i: Insn): INTEGER = BEGIN RETURN i.extractIdx END InsnExtractIdx;
 PROCEDURE InsnIsCleanup(i: Insn): BOOLEAN = BEGIN RETURN i.isCleanup END InsnIsCleanup;
+PROCEDURE InsnMemOrder(i: Insn): MemOrder = BEGIN RETURN i.memOrder END InsnMemOrder;
+PROCEDURE InsnMemOrder2(i: Insn): MemOrder = BEGIN RETURN i.memOrder2 END InsnMemOrder2;
+PROCEDURE InsnAtomicOp(i: Insn): AtomicRMWOp = BEGIN RETURN i.atomicOp END InsnAtomicOp;
 PROCEDURE InsnTypecaseClauseCount(i: Insn): INTEGER =
   BEGIN
     IF i.typecaseClauses = NIL THEN RETURN 0 END;
@@ -1248,6 +1254,27 @@ PROCEDURE BuildILShr(b: Block; name: TEXT; x, y: Value): Value =
   BEGIN RETURN buildBin(b, Op.ILShr, name, x, y) END BuildILShr;
 PROCEDURE BuildIAShr(b: Block; name: TEXT; x, y: Value): Value =
   BEGIN RETURN buildBin(b, Op.IAShr, name, x, y) END BuildIAShr;
+PROCEDURE BuildIUDiv(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IUDiv, name, x, y) END BuildIUDiv;
+PROCEDURE BuildIURem(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IURem, name, x, y) END BuildIURem;
+PROCEDURE BuildIRotL(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IRotL, name, x, y) END BuildIRotL;
+PROCEDURE BuildIRotR(b: Block; name: TEXT; x, y: Value): Value =
+  BEGIN RETURN buildBin(b, Op.IRotR, name, x, y) END BuildIRotR;
+
+PROCEDURE BuildSelect(b: Block; name: TEXT; cond, ifTrue, ifFalse: Value): Value =
+  VAR
+    i   := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 3);
+  BEGIN
+    i.op := Op.Select;
+    ops[0] := cond; ops[1] := ifTrue; ops[2] := ifFalse;
+    i.operands := ops;
+    i.result := makeResult(b, ifTrue.type, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildSelect;
 
 PROCEDURE BuildICmp(b: Block; name: TEXT; pred: CmpPred; x, y: Value): Value =
   VAR
@@ -1298,6 +1325,93 @@ PROCEDURE BuildFCmp(b: Block; name: TEXT; pred: FCmpPred; x, y: Value): Value =
     addInsn(b, i);
     RETURN i.result;
   END BuildFCmp;
+
+PROCEDURE BuildAtomicFence(b: Block; order: MemOrder) =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op       := Op.AtomicFence;
+    i.memOrder := order;
+    i.result   := NIL;
+    addInsn(b, i);
+  END BuildAtomicFence;
+
+PROCEDURE BuildAtomicLoad(b: Block; name: TEXT; elemType: T; ptr: Value; order: MemOrder): Value =
+  VAR i := NEW(Insn); ops := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    i.op         := Op.AtomicLoad;
+    ops[0]       := ptr;
+    i.operands   := ops;
+    i.targetType := elemType;
+    i.memOrder   := order;
+    i.result     := makeResult(b, elemType, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildAtomicLoad;
+
+PROCEDURE BuildAtomicStore(b: Block; value: Value; ptr: Value; order: MemOrder;
+                            container: Value := NIL) =
+  VAR i    := NEW(Insn);
+      n    : INTEGER;
+      ops  : REF ARRAY OF Value;
+  BEGIN
+    IF container = NIL THEN n := 2 ELSE n := 3 END;
+    ops        := NEW(REF ARRAY OF Value, n);
+    i.op       := Op.AtomicStore;
+    ops[0]     := value;
+    ops[1]     := ptr;
+    IF container # NIL THEN ops[2] := container END;
+    i.operands := ops;
+    i.memOrder := order;
+    i.result   := NIL;
+    addInsn(b, i);
+  END BuildAtomicStore;
+
+PROCEDURE BuildAtomicRMW(b: Block; name: TEXT; op: AtomicRMWOp; ptr: Value;
+                          val: Value; order: MemOrder;
+                          container: Value := NIL): Value =
+  VAR i        := NEW(Insn);
+      elemType := ValueType(val);
+      n        : INTEGER;
+      ops      : REF ARRAY OF Value;
+  BEGIN
+    IF container = NIL THEN n := 2 ELSE n := 3 END;
+    ops          := NEW(REF ARRAY OF Value, n);
+    i.op         := Op.AtomicRMW;
+    ops[0]       := ptr;
+    ops[1]       := val;
+    IF container # NIL THEN ops[2] := container END;
+    i.operands   := ops;
+    i.atomicOp   := op;
+    i.targetType := elemType;
+    i.memOrder   := order;
+    i.result     := makeResult(b, elemType, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildAtomicRMW;
+
+PROCEDURE BuildAtomicCmpXchg(b: Block; name: TEXT; elemType: T; varPtr: Value;
+                              expectedPtr: Value; desired: Value;
+                              succOrder: MemOrder; failOrder: MemOrder;
+                              container: Value := NIL): Value =
+  VAR i    := NEW(Insn);
+      n    : INTEGER;
+      ops  : REF ARRAY OF Value;
+  BEGIN
+    IF container = NIL THEN n := 3 ELSE n := 4 END;
+    ops          := NEW(REF ARRAY OF Value, n);
+    i.op         := Op.AtomicCmpXchg;
+    ops[0]       := varPtr;
+    ops[1]       := expectedPtr;
+    ops[2]       := desired;
+    IF container # NIL THEN ops[3] := container END;
+    i.operands   := ops;
+    i.targetType := elemType;
+    i.memOrder   := succOrder;
+    i.memOrder2  := failOrder;
+    i.result     := makeResult(b, TI1(), name, i);  (* returns i1 success flag *)
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildAtomicCmpXchg;
 
 PROCEDURE buildCast(b: Block;  op: Op;  name: TEXT;  x: Value;  dstType: T): Value =
   VAR
