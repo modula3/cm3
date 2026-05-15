@@ -657,22 +657,31 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       RETURN NIL;
     END;
     blk := MSIRBuilder.CurrentBlock ();
-    (* For byte-aligned packed elements the GEP points to a narrow integer
-       (e.g. i8 for BITS 8 FOR [0..255]).  Load at that width then widen to
-       the natural expression type (e.g. i64 on 64-bit targets). *)
+    (* When the array's actual element storage width differs from the natural
+       expression type, load at the storage width and cast:
+       - narrow storage → wide type: ZExt (unsigned) or SExt (signed).
+         E.g. [0..255] stored as i8, natural type i64 → ZExt.
+       - wide storage → narrow type: Trunc.
+         E.g. BOOLEAN stored as i8, natural type i1 → Trunc. *)
     VAR addrEltT := MSIR.EltType (MSIR.ValueType (addr));
         addrBits := MSIR.BitWidth (addrEltT);
         tyBits   := MSIR.BitWidth (ty);
     BEGIN
-      IF addrBits > 0 AND addrBits < tyBits THEN
+      IF addrBits > 0 AND tyBits > 0 AND addrBits # tyBits THEN
         VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
-            lo, hi : Target.Int;
-            doSExt := Type.GetBounds (Type.StripPacked (p.type), lo, hi)
-                        AND TInt.LT (lo, TInt.Zero);
         BEGIN
-          IF doSExt
-            THEN RETURN MSIR.BuildSExt (blk, "", loaded, ty);
-            ELSE RETURN MSIR.BuildZExt (blk, "", loaded, ty);
+          IF addrBits < tyBits THEN
+            VAR lo, hi : Target.Int;
+                doSExt := Type.GetBounds (Type.StripPacked (p.type), lo, hi)
+                            AND TInt.LT (lo, TInt.Zero);
+            BEGIN
+              IF doSExt
+                THEN RETURN MSIR.BuildSExt (blk, "", loaded, ty);
+                ELSE RETURN MSIR.BuildZExt (blk, "", loaded, ty);
+              END;
+            END;
+          ELSE
+            RETURN MSIR.BuildTrunc (blk, "", loaded, ty);
           END;
         END;
       END;

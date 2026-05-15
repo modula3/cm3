@@ -263,7 +263,7 @@ bash m3-sys/msir/test/run-llvm-link-test.sh
 ```
 
 Builds `Main.m3` with `@M3m3front-msir`, lowers to LLVM, and runs 112 checks.
-Current result: **137/137 pass**.
+Current result: **148/148 pass**.
 
 To run against the real runtime:
 ```sh

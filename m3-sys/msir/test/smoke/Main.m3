@@ -50,6 +50,28 @@ PROCEDURE PackedByteSum (VAR a: ARRAY [0..3] OF Byte8): INTEGER =
     RETURN s;
   END PackedByteSum;
 
+(* Compact subrange array: [0..255] stored as byte without explicit BITS *)
+PROCEDURE ByteSubGet (VAR a: ARRAY [0..3] OF [0..255]; i: INTEGER): INTEGER =
+  BEGIN RETURN a[i] END ByteSubGet;
+
+PROCEDURE ByteSubSum (VAR a: ARRAY [0..3] OF [0..255]): INTEGER =
+  VAR s := 0;
+  BEGIN
+    FOR i := 0 TO 3 DO s := s + a[i] END;
+    RETURN s;
+  END ByteSubSum;
+
+(* BOOLEAN array: stored as i8 per element, natural type i1 *)
+PROCEDURE BoolArrGet (VAR a: ARRAY [0..3] OF BOOLEAN; i: INTEGER): BOOLEAN =
+  BEGIN RETURN a[i] END BoolArrGet;
+
+PROCEDURE BoolArrCount (VAR a: ARRAY [0..3] OF BOOLEAN): INTEGER =
+  VAR n := 0;
+  BEGIN
+    FOR i := 0 TO 3 DO IF a[i] THEN INC(n) END END;
+    RETURN n;
+  END BoolArrCount;
+
 VAR gLock: MUTEX := NIL;  (* initialised in module body *)
 VAR gCounter: INTEGER := 0;
 VAR gBase: INTEGER := 100;

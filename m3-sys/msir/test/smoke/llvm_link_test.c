@@ -145,6 +145,14 @@ extern M3Int  Main__PackedByteGet(M3Byte *a, M3Int i);
 extern M3Int  Main__PackedByteSet(M3Byte *a, M3Int i, M3Int val);
 extern M3Int  Main__PackedByteSum(M3Byte *a);
 
+/* Compact subrange array ([0..255] without BITS — stored as byte) */
+extern M3Int  Main__ByteSubGet(M3Byte *a, M3Int i);
+extern M3Int  Main__ByteSubSum(M3Byte *a);
+
+/* BOOLEAN array: i8 storage per element, natural type i1 */
+extern M3Bool Main__BoolArrGet(M3Bool *a, M3Int i);
+extern M3Int  Main__BoolArrCount(M3Bool *a);
+
 /* ISTYPE / NARROW / TYPECASE-with-var */
 extern void  *Main__MakeIntRef(M3Int n);
 extern M3Int  Main__TestIsType(void *r);
@@ -463,6 +471,22 @@ int main(void) {
       check_int("PackedByteGet(pb,1)",   Main__PackedByteGet(pb, 1),       99);
       pb[0]=5; pb[1]=10; pb[2]=15; pb[3]=20;
       check_int("PackedByteSum(pb)",     Main__PackedByteSum(pb),          50);
+    }
+
+    /* Compact subrange [0..255]: same byte layout as BITS 8, no explicit annotation */
+    {
+      M3Byte sb[4] = {3, 7, 11, 19};
+      check_int("ByteSubGet(sb,0)",  Main__ByteSubGet(sb, 0),   3);
+      check_int("ByteSubGet(sb,3)",  Main__ByteSubGet(sb, 3),  19);
+      check_int("ByteSubSum(sb)",    Main__ByteSubSum(sb),      40);
+    }
+
+    /* BOOLEAN array: i8 per element in memory, i1 natural type */
+    {
+      M3Bool ba[4] = {1, 0, 1, 1};
+      check_int("BoolArrGet(ba,0)",  (int)Main__BoolArrGet(ba, 0),  1);
+      check_int("BoolArrGet(ba,1)",  (int)Main__BoolArrGet(ba, 1),  0);
+      check_int("BoolArrCount(ba)",  Main__BoolArrCount(ba),        3);
     }
 
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
