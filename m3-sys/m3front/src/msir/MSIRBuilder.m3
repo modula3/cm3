@@ -9,7 +9,7 @@ CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
 CONST MaxTryDepth  = 16;
 CONST MaxCatchDepth = 16;
-CONST MaxProcMap   = 128;
+CONST MaxProcMap   = 2048;
 CONST MaxGlobalMap  = 256;
 CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 

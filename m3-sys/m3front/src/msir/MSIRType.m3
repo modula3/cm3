@@ -133,6 +133,7 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
     n:      INTEGER := 0;
     v:      Value.T;
     finfo:  Field.Info;
+    fti:    Type.Info;
   BEGIN
     IF NOT RecordType.Split(t, fields) THEN RETURN NIL END;
     v := fields;
@@ -142,9 +143,23 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
       v := fields;
       FOR i := 0 TO n - 1 DO
         Field.Split(v, finfo);
+        (* Reject sub-byte field offsets: bit-manipulation not yet supported. *)
+        IF finfo.offset MOD Target.Byte # 0 THEN RETURN NIL END;
+        EVAL Type.CheckInfo(finfo.type, fti);
+        (* Reject sub-byte field sizes. *)
+        IF fti.size MOD Target.Byte # 0 THEN RETURN NIL END;
         VAR ft := Translate(finfo.type);
         BEGIN
           IF ft = NIL THEN RETURN NIL END;
+          (* When actual storage width differs from natural MSIR type (e.g.
+             [0..255] stored as 8 bits but Translate gives i64), use TI(size).
+             Guard on BitWidth > 0 to leave non-scalar types (GcRef, Ptr, …)
+             unchanged — their CM3 size matches pointer width but they carry
+             GC metadata that must not be erased. *)
+          IF fti.size > 0 AND MSIR.BitWidth(ft) > 0
+                          AND fti.size # MSIR.BitWidth(ft) THEN
+            ft := MSIR.TI(fti.size);
+          END;
           msirFields[i].name := M3ID.ToText(finfo.name);
           msirFields[i].type := ft;
         END;

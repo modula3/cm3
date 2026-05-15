@@ -992,9 +992,15 @@ PROCEDURE EmitBlock(wr: Wr.T;  b: MSIR.Block) =
 (*---------------------------------------------- extern proc collection *)
 
 PROCEDURE ProcSeen(procs: RefSeq.T;  p: MSIR.Proc): BOOLEAN =
+  (* Deduplicate by name — procMap overflow can create multiple distinct stubs
+     for the same external function; name equality prevents duplicate declares. *)
+  VAR pName := MSIR.ProcName(p);
   BEGIN
     FOR i := 0 TO procs.size() - 1 DO
-      IF procs.get(i) = p THEN RETURN TRUE END;
+      VAR q: MSIR.Proc := procs.get(i);
+      BEGIN
+        IF q = p OR Text.Equal(MSIR.ProcName(q), pName) THEN RETURN TRUE END;
+      END;
     END;
     RETURN FALSE;
   END ProcSeen;

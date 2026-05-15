@@ -50,6 +50,21 @@ PROCEDURE PackedByteSum (VAR a: ARRAY [0..3] OF Byte8): INTEGER =
     RETURN s;
   END PackedByteSum;
 
+(* Records with compact fields *)
+PROCEDURE FillByteRec (VAR r: ByteRec; a, b, c: INTEGER) =
+  BEGIN r.a := a;  r.b := b;  r.c := c  END FillByteRec;
+
+PROCEDURE ByteRecSum (VAR r: ByteRec): INTEGER =
+  BEGIN RETURN r.a + r.b + r.c END ByteRecSum;
+
+PROCEDURE FillMixedRec (VAR r: MixedRec; flag: BOOLEAN; val, n: INTEGER) =
+  BEGIN r.flag := flag;  r.val := val;  r.n := n  END FillMixedRec;
+
+PROCEDURE MixedRecVal (VAR r: MixedRec): INTEGER =
+  BEGIN
+    IF r.flag THEN RETURN r.val + r.n ELSE RETURN r.n END
+  END MixedRecVal;
+
 (* Compact subrange array: [0..255] stored as byte without explicit BITS *)
 PROCEDURE ByteSubGet (VAR a: ARRAY [0..3] OF [0..255]; i: INTEGER): INTEGER =
   BEGIN RETURN a[i] END ByteSubGet;
@@ -161,6 +176,8 @@ PROCEDURE FactSum (n: INTEGER): INTEGER =
 
 TYPE
   Point    = RECORD x, y: INTEGER END;
+  ByteRec  = RECORD a: [0..255];  b: [0..255];  c: INTEGER END;
+  MixedRec = RECORD flag: BOOLEAN; val: [0..65535]; n: INTEGER END;
   Color    = {Red, Green, Blue};
   ColorSet = SET OF Color;
   SmallSet = SET OF [0..15];

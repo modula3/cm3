@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
 IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
-IMPORT Method, Field, Target, M3RT, Host, RunTyme;
+IMPORT Method, Field, Target, TInt, M3RT, Host, RunTyme;
 IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
@@ -818,14 +818,31 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         baseAddr := Expr.LValueMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
         Field.Split (p.rhsValue, fieldInfo);
-        (* Use compile-time field offset — same as CG.Add_offset (field.offset DIV 8).
-           No struct-type lookup needed; fieldInfo.offset is authoritative. *)
+        (* Sub-byte field offsets require bit manipulation — not yet supported. *)
+        IF fieldInfo.offset MOD Target.Byte # 0 THEN
+          MSIRBuilder.Abandon ("sub-byte record field offset not supported in MSIR");
+          RETURN NIL;
+        END;
         byteOff := VAL (fieldInfo.offset, LONGINT) DIV 8L;
         VAR
-          b    := MSIRBuilder.CurrentBlock ();
-          ft   := MSIRType.Translate (fieldInfo.type);
-          slot : MSIR.Value;
+          b      := MSIRBuilder.CurrentBlock ();
+          ft     := MSIRType.Translate (fieldInfo.type);
+          fti    : Type.Info;
+          slot   : MSIR.Value;
         BEGIN
+          EVAL Type.CheckInfo (fieldInfo.type, fti);
+          (* Sub-byte field sizes also require bit manipulation. *)
+          IF fti.size MOD Target.Byte # 0 THEN
+            MSIRBuilder.Abandon ("sub-byte record field size not supported in MSIR");
+            RETURN NIL;
+          END;
+          (* When actual storage width differs from natural MSIR type (e.g.
+             [0..255] stored as i8 but Translate gives i64), use TI(size) so
+             the pointer element type matches the real field width. *)
+          IF ft # NIL AND fti.size > 0 AND MSIR.BitWidth (ft) > 0
+                      AND fti.size # MSIR.BitWidth (ft) THEN
+            ft := MSIR.TI (fti.size);
+          END;
           slot := MSIR.BuildPtrAdd (b, "", baseAddr, byteOff);
           (* Heap record (GcRef base): set container and retype traced fields
              as GcSlot so AssignStmt.CompileMSIR fires the write barrier. *)
@@ -852,6 +869,10 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("object field: non-static data offset");
           RETURN NIL;
         END;
+        IF (objOff + fieldInfo.offset) MOD Target.Byte # 0 THEN
+          MSIRBuilder.Abandon ("sub-byte object field offset not supported in MSIR");
+          RETURN NIL;
+        END;
         byteOff := VAL (objOff + fieldInfo.offset, LONGINT) DIV 8L;
         baseAddr := Expr.CompileMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
@@ -861,9 +882,19 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         BEGIN
           slotAddr := MSIR.BuildPtrAdd(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
           (* Retype: GcRef fields → GcSlot (write barrier); others → TPtr(ft) for
-             type-preserving access (e.g. array field subscript needs FixedArray type). *)
-          VAR ft := MSIRType.Translate(fieldInfo.type);
+             type-preserving access (e.g. array field subscript needs FixedArray type).
+             Use storage type TI(size) when it differs from the natural MSIR type. *)
+          VAR ft  := MSIRType.Translate(fieldInfo.type);
+              fti : Type.Info;
           BEGIN
+            EVAL Type.CheckInfo(fieldInfo.type, fti);
+            IF ft # NIL AND fti.size MOD Target.Byte # 0 THEN
+              MSIRBuilder.Abandon("sub-byte object field size not supported in MSIR");
+              RETURN NIL;
+            END;
+            IF ft # NIL AND fti.size > 0 AND fti.size # MSIR.BitWidth(ft) THEN
+              ft := MSIR.TI(fti.size);
+            END;
             IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.GcRef THEN
               slotAddr := MSIR.RetypeValue(slotAddr, MSIR.TGcSlot(MSIR.EltType(ft)));
             ELSIF ft # NIL THEN
@@ -877,6 +908,38 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       RETURN NIL;
     END;
   END LValueMSIR;
+
+(* Load a record/object field value from 'addr', casting narrow storage to the
+   natural expression type.  Same narrowing/widening logic as SubscriptExpr:
+   - narrow storage (e.g. i8 for [0..255]) → ZExt or SExt to natural type
+   - wide storage (e.g. i8 for BOOLEAN) → Trunc to natural type (i1) *)
+PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
+                          rawFieldType: Type.T): MSIR.Value =
+  VAR blk      := MSIRBuilder.CurrentBlock ();
+      addrEltT := MSIR.EltType (MSIR.ValueType (addr));
+      addrBits := MSIR.BitWidth (addrEltT);
+      tyBits   := MSIR.BitWidth (naturalT);
+  BEGIN
+    IF addrBits > 0 AND tyBits > 0 AND addrBits # tyBits THEN
+      VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
+      BEGIN
+        IF addrBits < tyBits THEN
+          VAR lo, hi : Target.Int;
+              doSExt := Type.GetBounds (Type.StripPacked (rawFieldType), lo, hi)
+                          AND TInt.LT (lo, TInt.Zero);
+          BEGIN
+            IF doSExt
+              THEN RETURN MSIR.BuildSExt (blk, "", loaded, naturalT);
+              ELSE RETURN MSIR.BuildZExt (blk, "", loaded, naturalT);
+            END;
+          END;
+        ELSE
+          RETURN MSIR.BuildTrunc (blk, "", loaded, naturalT);
+        END;
+      END;
+    END;
+    RETURN MSIR.BuildLoad (blk, "", naturalT, addr);
+  END LoadFieldValue;
 
 PROCEDURE LhsExpr (e: Expr.T): Expr.T =
   BEGIN
@@ -941,7 +1004,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
           RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
         END;
-        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);
+        RETURN LoadFieldValue (addr, fieldType, fieldInfo.type);
     | Class.objField =>
         (* Load a scalar field from a heap object.  LValueMSIR computes the
            byte address; we load the field value from that address. *)
@@ -958,7 +1021,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
           RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
         END;
-        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", fieldType, addr);
+        RETURN LoadFieldValue (addr, fieldType, fieldInfo.type);
     | Class.enumLit =>
         folded := Fold (p);
         IF folded = NIL THEN

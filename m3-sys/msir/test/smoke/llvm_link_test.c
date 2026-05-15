@@ -140,6 +140,16 @@ extern M3Int  Main__BuildChain(M3Int n);
 extern M3Int  Main__StoreInFixedHeapArr(void);
 extern M3Int  Main__StoreInOpenHeapArr(M3Int n);
 
+/* Records with compact (sub-word) fields.
+   FillByteRec/FillMixedRec write via VAR (pointer) to avoid struct-return ABI
+   issues between LLVM element-per-register and AAPCS64 packed-bytes-in-regs. */
+typedef struct { unsigned char a; unsigned char b; long n; } ByteRec;
+typedef struct { _Bool flag; unsigned short val; long n; } MixedRec;
+extern void Main__FillByteRec(ByteRec *r, long a, long b, long n);
+extern long Main__ByteRecSum(ByteRec *r);
+extern void Main__FillMixedRec(MixedRec *r, _Bool flag, long val, long n);
+extern long Main__MixedRecVal(MixedRec *r);
+
 /* Packed byte-array (BITS 8 FOR [0..255]) load / store / sum */
 extern M3Int  Main__PackedByteGet(M3Byte *a, M3Int i);
 extern M3Int  Main__PackedByteSet(M3Byte *a, M3Int i, M3Int val);
@@ -460,6 +470,22 @@ int main(void) {
       check_int("SetProperSubset(rg,rg)",    Main__SetProperSubset(rg,rg),   0);
       check_int("SmallSetMember(7,sm)",      Main__SmallSetMember(7,sm),     1);
       check_int("SmallSetMember(5,sm)",      Main__SmallSetMember(5,sm),     0);
+    }
+
+    /* Records with compact fields — filled via VAR pointer to avoid struct-return
+       ABI mismatch (LLVM element-per-register vs AAPCS64 packed-bytes). */
+    {
+      ByteRec br;
+      Main__FillByteRec(&br, 10, 20, 100);
+      check_int("ByteRec.a",           (int)br.a,              10);
+      check_int("ByteRec.b",           (int)br.b,              20);
+      check_int("ByteRec.n",           (int)br.n,             100);
+      check_int("ByteRecSum",          Main__ByteRecSum(&br),  130);
+      MixedRec mr;
+      Main__FillMixedRec(&mr, 1, 42, 8);
+      check_int("MixedRecVal(T,42,8)", Main__MixedRecVal(&mr),  50);
+      Main__FillMixedRec(&mr, 0, 42, 8);
+      check_int("MixedRecVal(F,42,8)", Main__MixedRecVal(&mr),   8);
     }
 
     /* Packed byte-array: BITS 8 FOR [0..255] element load, store, and sum */
