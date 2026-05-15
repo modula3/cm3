@@ -70,6 +70,13 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
     | Type.Class.Record =>
         RETURN TranslateRecord(base, typeName);
 
+    | Type.Class.Set =>
+        (* Small sets (≤ 1 word) map to an integer; large sets are unsupported. *)
+        IF info.size > 0 AND info.size <= Target.Word.size THEN
+          RETURN MSIR.TI (info.size);
+        END;
+        RETURN NIL;
+
     | Type.Class.Array =>
         RETURN TranslateFixedArray(base);
 

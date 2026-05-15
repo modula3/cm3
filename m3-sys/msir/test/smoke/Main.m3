@@ -5,6 +5,35 @@ IMPORT IO, Fmt, Text, Thread;
 EXCEPTION TestExcept;
 EXCEPTION TestExceptArg(INTEGER);  (* exception with an INTEGER argument *)
 
+(* SET type tests — ColorSet and SmallSet declared after Color below *)
+
+PROCEDURE SetUnion (a, b: ColorSet): ColorSet =
+  BEGIN RETURN a + b END SetUnion;
+
+PROCEDURE SetInter (a, b: ColorSet): ColorSet =
+  BEGIN RETURN a * b END SetInter;
+
+PROCEDURE SetDiff (a, b: ColorSet): ColorSet =
+  BEGIN RETURN a - b END SetDiff;
+
+PROCEDURE SetSymDiff (a, b: ColorSet): ColorSet =
+  BEGIN RETURN a / b END SetSymDiff;
+
+PROCEDURE SetMember (c: Color; s: ColorSet): BOOLEAN =
+  BEGIN RETURN c IN s END SetMember;
+
+PROCEDURE SetEqual (a, b: ColorSet): BOOLEAN =
+  BEGIN RETURN a = b END SetEqual;
+
+PROCEDURE SetSubset (a, b: ColorSet): BOOLEAN =
+  BEGIN RETURN a <= b END SetSubset;
+
+PROCEDURE SetProperSubset (a, b: ColorSet): BOOLEAN =
+  BEGIN RETURN a < b END SetProperSubset;
+
+PROCEDURE SmallSetMember (n: INTEGER; s: SmallSet): BOOLEAN =
+  BEGIN RETURN n IN s END SmallSetMember;
+
 VAR gLock: MUTEX := NIL;  (* initialised in module body *)
 VAR gCounter: INTEGER := 0;
 VAR gBase: INTEGER := 100;
@@ -93,8 +122,10 @@ PROCEDURE FactSum (n: INTEGER): INTEGER =
   END FactSum;
 
 TYPE
-  Point = RECORD x, y: INTEGER END;
-  Color = {Red, Green, Blue};
+  Point    = RECORD x, y: INTEGER END;
+  Color    = {Red, Green, Blue};
+  ColorSet = SET OF Color;
+  SmallSet = SET OF [0..15];
 
 PROCEDURE MakePoint (x, y: INTEGER): Point =
   VAR p: Point;
@@ -967,5 +998,28 @@ BEGIN
     IO.Put ("IsType(ri, REF INTEGER) = " & Fmt.Int(TestIsType(ri2)) & "\n");
     IO.Put ("Narrow(ri, REF INTEGER)^ = " & Fmt.Int(TestNarrow(ri2)) & "\n");
     IO.Put ("TypecaseVar(ri) = " & Fmt.Int(TestTypecaseVar(ri2)) & "\n");
+  END;
+
+  (* SET type tests *)
+  VAR sRG  := ColorSet{Color.Red, Color.Green};
+      sGB  := ColorSet{Color.Green, Color.Blue};
+      sR   := ColorSet{Color.Red};
+      sAll := ColorSet{Color.Red, Color.Green, Color.Blue};
+      sm   := SmallSet{3, 7, 12};
+  BEGIN
+    IO.Put ("SetUnion(rg,gb)=rgb = " & Fmt.Int(ORD(SetUnion(sRG,sGB) = sAll)) & "\n");
+    IO.Put ("SetInter(rg,gb)=g   = " & Fmt.Int(ORD(SetInter(sRG,sGB) = ColorSet{Color.Green})) & "\n");
+    IO.Put ("SetDiff(rg,gb)=r    = " & Fmt.Int(ORD(SetDiff(sRG,sGB) = sR)) & "\n");
+    IO.Put ("SetSymDiff(rg,gb)=rb= " & Fmt.Int(ORD(SetSymDiff(sRG,sGB) = ColorSet{Color.Red,Color.Blue})) & "\n");
+    IO.Put ("SetMember(Red,rg)   = " & Fmt.Int(ORD(SetMember(Color.Red,sRG))) & "\n");
+    IO.Put ("SetMember(Blue,rg)  = " & Fmt.Int(ORD(SetMember(Color.Blue,sRG))) & "\n");
+    IO.Put ("SetEqual(rg,rg)     = " & Fmt.Int(ORD(SetEqual(sRG,sRG))) & "\n");
+    IO.Put ("SetEqual(rg,gb)     = " & Fmt.Int(ORD(SetEqual(sRG,sGB))) & "\n");
+    IO.Put ("SetSubset(r,rg)     = " & Fmt.Int(ORD(SetSubset(sR,sRG))) & "\n");
+    IO.Put ("SetSubset(rg,r)     = " & Fmt.Int(ORD(SetSubset(sRG,sR))) & "\n");
+    IO.Put ("SetProperSubset(r,rg)  = " & Fmt.Int(ORD(SetProperSubset(sR,sRG))) & "\n");
+    IO.Put ("SetProperSubset(rg,rg) = " & Fmt.Int(ORD(SetProperSubset(sRG,sRG))) & "\n");
+    IO.Put ("SmallSetMember(7,sm)   = " & Fmt.Int(ORD(SmallSetMember(7,sm))) & "\n");
+    IO.Put ("SmallSetMember(5,sm)   = " & Fmt.Int(ORD(SmallSetMember(5,sm))) & "\n");
   END;
 END Main.

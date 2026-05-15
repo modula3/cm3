@@ -162,6 +162,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         RETURN MSIR.BuildIMul (blk, "", a, b);
     | cREAL, cLONG, cEXTND =>
         RETURN MSIR.BuildFMul (blk, "", a, b);
+    | cSET =>
+        RETURN MSIR.BuildIAnd (blk, "", a, b);
     ELSE
       MSIRBuilder.Abandon ("unsupported '*' class");
       RETURN NIL;

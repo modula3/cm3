@@ -252,6 +252,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     lv, rv:   MSIR.Value;
     pred:     MSIR.CmpPred;
     fpred:    MSIR.FCmpPred;
+    blk:      MSIR.Block;
     isFloat   := (p.class = cREAL) OR (p.class = cLONG) OR (p.class = cEXTND);
   BEGIN
     IF isFloat THEN
@@ -275,6 +276,32 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
       rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
       RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, lv, rv);
+    ELSIF p.class = cSET THEN
+      lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+      rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
+      IF p.bad_set THEN
+        (* LT = proper subset: (lv | rv) == rv AND lv != rv
+           GT = proper superset: (lv | rv) == lv AND lv != rv *)
+        VAR lorv   := MSIR.BuildIOr  (blk, "", lv, rv);
+            cmpRef : MSIR.Value;
+            sub, neq : MSIR.Value;
+        BEGIN
+          IF p.op = CG.Cmp.LT THEN cmpRef := rv ELSE cmpRef := lv END;
+          sub := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, lorv, cmpRef);
+          neq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, lv, rv);
+          RETURN MSIR.BuildIAnd (blk, "", sub, neq);
+        END;
+      ELSE
+        (* LE = subset: (lv & rv) == lv
+           GE = superset: (lv & rv) == rv *)
+        VAR landv  := MSIR.BuildIAnd (blk, "", lv, rv);
+            cmpRef : MSIR.Value;
+        BEGIN
+          IF p.op = CG.Cmp.LE THEN cmpRef := lv ELSE cmpRef := rv END;
+          RETURN MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, landv, cmpRef);
+        END;
+      END;
     ELSE
       MSIRBuilder.Abandon ("unsupported comparison class in MSIR");
       RETURN NIL;

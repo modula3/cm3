@@ -419,6 +419,36 @@ int main(void) {
     /* GC write barrier: store traced refs into heap-allocated open array */
     check_int("StoreInOpenHeapArr(4)",   Main__StoreInOpenHeapArr(4),   10); /* 1+2+3+4 */
 
+    /* SET type operations — ColorSet is SET OF {Red,Green,Blue}, stored as i8 */
+    /* ColorSet values: Red=bit0=1, Green=bit1=2, Blue=bit2=4 */
+    /* rg={R,G}=3, gb={G,B}=6, r={R}=1, all={R,G,B}=7, sm=SmallSet{3,7,12}=bit3|bit7|bit12=0x1088 */
+    extern M3Byte Main__SetUnion(M3Byte a, M3Byte b);
+    extern M3Byte Main__SetInter(M3Byte a, M3Byte b);
+    extern M3Byte Main__SetDiff(M3Byte a, M3Byte b);
+    extern M3Byte Main__SetSymDiff(M3Byte a, M3Byte b);
+    extern M3Bool Main__SetMember(M3Byte c, M3Byte s);
+    extern M3Bool Main__SetEqual(M3Byte a, M3Byte b);
+    extern M3Bool Main__SetSubset(M3Byte a, M3Byte b);
+    extern M3Bool Main__SetProperSubset(M3Byte a, M3Byte b);
+    extern M3Bool Main__SmallSetMember(M3Int n, M3Int s);
+    { M3Byte rg=3, gb=6, r=1, all=7;
+      M3Int   sm = (1<<3)|(1<<7)|(1<<12);
+      check_int("SetUnion(rg,gb)=rgb",       Main__SetUnion(rg,gb),          all);
+      check_int("SetInter(rg,gb)=g",         Main__SetInter(rg,gb),          2);
+      check_int("SetDiff(rg,gb)=r",          Main__SetDiff(rg,gb),           1);
+      check_int("SetSymDiff(rg,gb)=rb",      Main__SetSymDiff(rg,gb),        5);
+      check_int("SetMember(Red,rg)",         Main__SetMember(0,rg),          1);
+      check_int("SetMember(Blue,rg)",        Main__SetMember(2,rg),          0);
+      check_int("SetEqual(rg,rg)",           Main__SetEqual(rg,rg),          1);
+      check_int("SetEqual(rg,gb)",           Main__SetEqual(rg,gb),          0);
+      check_int("SetSubset(r,rg)",           Main__SetSubset(r,rg),          1);
+      check_int("SetSubset(rg,r)",           Main__SetSubset(rg,r),          0);
+      check_int("SetProperSubset(r,rg)",     Main__SetProperSubset(r,rg),    1);
+      check_int("SetProperSubset(rg,rg)",    Main__SetProperSubset(rg,rg),   0);
+      check_int("SmallSetMember(7,sm)",      Main__SmallSetMember(7,sm),     1);
+      check_int("SmallSetMember(5,sm)",      Main__SmallSetMember(5,sm),     0);
+    }
+
     printf("\n%s\n", failures == 0 ? "All tests passed." : "*** FAILURES ABOVE ***");
     return failures;
 }

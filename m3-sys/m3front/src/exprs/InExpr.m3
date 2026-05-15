@@ -149,15 +149,16 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR
-    set, range            : Type.T;
-    b                     : BOOLEAN;
-    min, max, emin, emax  : Target.Int;
-    info                  : Type.Info;
-    mask                  : LONGINT;
-    minOrd                : INTEGER;
-    elt, maskVal, shifted, bit : MSIR.Value;
-    blk                        : MSIR.Block;
-    ti64                       : MSIR.T;
+    set, range              : Type.T;
+    b                       : BOOLEAN;
+    min, max, emin, emax    : Target.Int;
+    info                    : Type.Info;
+    minI, maxI              : INTEGER;
+    minOrd, maxOrd          : INTEGER;
+    needRangeCheck          : BOOLEAN;
+    elt, setVal, shifted, bit : MSIR.Value;
+    blk                       : MSIR.Block;
+    ti                        : MSIR.T;
   BEGIN
     set := Type.Base (Type.CheckInfo (Expr.TypeOf (p.b), info));
     IF info.size > Target.Word.size THEN
@@ -169,38 +170,83 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     b := Type.GetBounds (range, min, max);
     IF NOT b THEN MSIRBuilder.Abandon ("InExpr: GetBounds failed"); RETURN NIL END;
     Expr.GetBounds (p.a, emin, emax);
+    needRangeCheck := TInt.LT (emin, min) OR TInt.LT (max, emax);
 
-    IF NOT SetExpr.GetWordBitMask (p.b, minOrd, mask) THEN
-      MSIRBuilder.Abandon ("InExpr: non-constant or large set");
+    IF NOT TInt.ToInt (min, minI) THEN
+      MSIRBuilder.Abandon ("InExpr: set domain min out of INTEGER range");
       RETURN NIL;
     END;
-    IF TInt.LT (emin, min) OR TInt.LT (max, emax) THEN
-      MSIRBuilder.Abandon ("InExpr: element needs range check");
-      RETURN NIL;
+    minOrd := minI;
+    maxOrd := 0;
+    IF needRangeCheck THEN
+      IF NOT TInt.ToInt (max, maxI) THEN
+        MSIRBuilder.Abandon ("InExpr: set domain max out of INTEGER range");
+        RETURN NIL;
+      END;
+      maxOrd := maxI;
     END;
 
-    blk  := MSIRBuilder.CurrentBlock ();
-    elt  := Expr.CompileMSIR (p.a);
+    ti  := MSIR.TI (info.size);
+    blk := MSIRBuilder.CurrentBlock ();
+    setVal := Expr.CompileMSIR (p.b);
+    IF setVal = NIL THEN RETURN NIL END;
+    blk := MSIRBuilder.CurrentBlock ();
+    elt := Expr.CompileMSIR (p.a);
     IF elt = NIL THEN RETURN NIL END;
-    blk  := MSIRBuilder.CurrentBlock ();
-    ti64 := MSIR.TI (64);
+    blk := MSIRBuilder.CurrentBlock ();
 
-    (* Zero-extend element to i64 if narrower. *)
-    IF MSIR.BitWidth (MSIR.ValueType (elt)) < 64 THEN
-      elt := MSIR.BuildZExt (blk, "in.ext", elt, ti64);
+    (* Work in the wider of the set type and the element type so that all
+       operands to binary instructions have the same type.  setVal is
+       zero-extended (set bits stay in the low bits); elt is sign-extended
+       so that negative ordinals become large unsigned values and correctly
+       fail the range check. *)
+    VAR wt := ti;
+        wBW := info.size;
+    BEGIN
+      IF MSIR.BitWidth (MSIR.ValueType (elt)) > info.size THEN
+        wt  := MSIR.ValueType (elt);
+        wBW := MSIR.BitWidth (wt);
+      END;
+      IF MSIR.BitWidth (MSIR.ValueType (setVal)) < wBW THEN
+        setVal := MSIR.BuildZExt (blk, "", setVal, wt);
+      END;
+      IF MSIR.BitWidth (MSIR.ValueType (elt)) < wBW THEN
+        elt := MSIR.BuildSExt (blk, "", elt, wt);
+      END;
+
+      (* adj = elt - minOrd; negative/large elt → large unsigned → range check fails *)
+      VAR adj := elt;
+      BEGIN
+        IF minOrd # 0 THEN
+          adj := MSIR.BuildISub (blk, "", elt,
+                                 MSIR.ConstInt (wt, VAL (minOrd, LONGINT)));
+        END;
+
+        (* Clamp shift count to [0, wBW-1] so lshr is always defined.
+           Out-of-range adj maps to an in-range shift count, but the inRange
+           guard below ensures the final result is still correct. *)
+        VAR adjMasked := MSIR.BuildIAnd (blk, "", adj,
+                           MSIR.ConstInt (wt, VAL (wBW - 1, LONGINT)));
+        BEGIN
+          shifted := MSIR.BuildILShr (blk, "", setVal, adjMasked);
+          bit     := MSIR.BuildIAnd  (blk, "", shifted, MSIR.ConstInt (wt, 1L));
+          VAR membership := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne,
+                                            bit, MSIR.ConstZero (wt));
+          BEGIN
+            IF needRangeCheck THEN
+              (* inRange: (adj as unsigned) <= (maxOrd - minOrd) *)
+              VAR cardinality := VAL (maxOrd - minOrd, LONGINT);
+                  inRange     := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ule, adj,
+                                                 MSIR.ConstInt (wt, cardinality));
+              BEGIN
+                RETURN MSIR.BuildIAnd (blk, "", inRange, membership);
+              END;
+            END;
+            RETURN membership;
+          END;
+        END;
+      END;
     END;
-
-    maskVal := MSIR.ConstInt (ti64, mask);
-
-    IF minOrd # 0 THEN
-      elt := MSIR.BuildISub (blk, "in.adj", elt,
-                             MSIR.ConstInt (ti64, VAL (minOrd, LONGINT)));
-    END;
-
-    shifted := MSIR.BuildILShr (blk, "in.shr", maskVal, elt);
-    bit     := MSIR.BuildIAnd  (blk, "in.bit", shifted, MSIR.ConstInt (ti64, 1L));
-    RETURN MSIR.BuildICmp (blk, "in.cmp", MSIR.CmpPred.Ne,
-                           bit, MSIR.ConstZero (ti64));
   END CompileMSIR;
 
 PROCEDURE Fold (p: P): Expr.T =

@@ -152,11 +152,15 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR a, b: MSIR.Value;
+  VAR a, b: MSIR.Value;  blk: MSIR.Block;
   BEGIN
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildFDiv (MSIRBuilder.CurrentBlock (), "", a, b);
+    blk := MSIRBuilder.CurrentBlock ();
+    IF p.class = cSET THEN
+      RETURN MSIR.BuildIXor (blk, "", a, b);
+    END;
+    RETURN MSIR.BuildFDiv (blk, "", a, b);
   END CompileMSIR;
 
 BEGIN

@@ -177,6 +177,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         RETURN MSIR.BuildIAdd (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFAdd (blk, "", a, b);
+    | Class.cSET =>
+        RETURN MSIR.BuildIOr (blk, "", a, b);
     | Class.cADDR =>
         (* ADDRESS + INTEGER: advance pointer by b bytes *)
         RETURN MSIR.BuildGepByte (blk, "", a, b);

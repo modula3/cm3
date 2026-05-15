@@ -14,6 +14,7 @@ IMPORT Text, Fmt, CaptureAnalysis;
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
 IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Node = REF RECORD
@@ -61,6 +62,7 @@ TYPE
         note_write   := ExprRep.NotWritable;
         checkUseFailure := CheckUseFailure;
         capture  := Capture;
+        compileMSIR  := CompileMSIR;
       END;
 
 TYPE
@@ -1003,6 +1005,55 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   END Capture;
 
 (*EXPORTED:*)
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    info   : Type.Info;
+    ti     : MSIR.T;
+    blk    : MSIR.Block;
+    minOrd : INTEGER;
+    mask   : LONGINT;
+    result : MSIR.Value;
+    elt    : MSIR.Value;
+    bit    : MSIR.Value;
+    lo, hi : Expr.T;
+  BEGIN
+    EVAL Type.CheckInfo (p.type, info);
+    IF info.size > Target.Word.size THEN
+      MSIRBuilder.Abandon ("SetExpr MSIR: multi-word set not supported");
+      RETURN NIL;
+    END;
+    ti := MSIR.TI (info.size);
+    (* Constant part — GetWordBitMask extracts the tree's bitmask (ignores p.others). *)
+    IF NOT GetWordBitMask (p, minOrd, mask) THEN
+      MSIRBuilder.Abandon ("SetExpr MSIR: cannot compute constant mask");
+      RETURN NIL;
+    END;
+    result := MSIR.ConstInt (ti, mask);
+    (* OR in non-constant single-element members from p.others. *)
+    IF p.nOthers > 0 THEN
+      blk := MSIRBuilder.CurrentBlock ();
+      FOR i := 0 TO p.nOthers - 1 DO
+        IF RangeExpr.Split (p.others[i], lo, hi) THEN
+          MSIRBuilder.Abandon ("SetExpr MSIR: runtime range in set not yet supported");
+          RETURN NIL;
+        END;
+        elt := Expr.CompileMSIR (p.others[i]);
+        IF elt = NIL THEN RETURN NIL END;
+        blk := MSIRBuilder.CurrentBlock ();
+        IF MSIR.BitWidth (MSIR.ValueType (elt)) < info.size THEN
+          elt := MSIR.BuildZExt (blk, "", elt, ti);
+        END;
+        IF minOrd # 0 THEN
+          elt := MSIR.BuildISub (blk, "", elt,
+                                 MSIR.ConstInt (ti, VAL (minOrd, LONGINT)));
+        END;
+        bit    := MSIR.BuildIShl (blk, "", MSIR.ConstInt (ti, 1L), elt);
+        result := MSIR.BuildIOr  (blk, "", result, bit);
+      END;
+    END;
+    RETURN result;
+  END CompileMSIR;
+
 PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: LONGINT): BOOLEAN =
   VAR
     p      : P;

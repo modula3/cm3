@@ -206,6 +206,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         RETURN MSIR.BuildISub (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFSub (blk, "", a, b);
+    | Class.cSET =>
+        (* A - B = A AND NOT B *)
+        VAR notB := MSIR.BuildIXor (blk, "", b, MSIR.ConstInt (MSIR.ValueType (b), -1L));
+        BEGIN
+          RETURN MSIR.BuildIAnd (blk, "", a, notB);
+        END;
     | Class.cADDR =>
         IF p.type = Addr.T THEN
           (* ADDRESS - INTEGER: negate the offset, GEP by -b bytes *)
