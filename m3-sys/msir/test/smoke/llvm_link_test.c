@@ -26,7 +26,7 @@ extern M3Int  Main__SumTo(M3Int n);
 extern M3Int  Main__AbsSum(M3Int a, M3Int b);
 extern M3Int  Main__FactSum(M3Int n);
 
-extern Point  Main__MakePoint(M3Int x, M3Int y);
+extern void   Main__MakePoint(Point *result, M3Int x, M3Int y);
 extern M3Int  Main__PointSum(Point p);
 extern M3Int  Main__ColorToInt(M3Byte c);
 
@@ -219,8 +219,8 @@ int main(void) {
     check_int("AbsSum(-3,4)",     Main__AbsSum(-3, 4),      7);
     check_int("FactSum(4)",       Main__FactSum(4),         34);
 
-    /* records */
-    Point p = Main__MakePoint(3, 4);
+    /* records — MakePoint uses hidden result ptr (large-result convention) */
+    Point p; Main__MakePoint(&p, 3, 4);
     check_int("MakePoint(3,4).x", p.x,                     3);
     check_int("MakePoint(3,4).y", p.y,                     4);
     check_int("PointSum({3,4})",  Main__PointSum(p),        7);

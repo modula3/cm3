@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-15 (msir branch, commit 675dc047f1)
+Last updated: 2026-05-15 (msir branch)
 
 ## What's Working (149/149 tests pass)
 
@@ -61,6 +61,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Packed byte-array (BITS N FOR T): `SubscriptExpr.CompileMSIR` detects storage/natural-type width mismatch; emits load at storage type + ZExt/SExt/Trunc to natural type; `AssignStmt.CompileMSIR` emits Trunc when storing wider value to narrower slot
 - [x] Compact subrange arrays (`[0..255]`, `[0..65535]`, BOOLEAN): `MSIRType.TranslateFixedArray` uses `ArrayType.EltPack(t)` to detect reduced storage width; element type in array IR uses storage width (e.g. `[N x i8]` for `[0..255]` elements); `SubscriptExpr.CompileMSIR` ZExt/SExt/Trunc on load to recover natural type
 - [x] Records with compact/packed fields: `MSIRType.TranslateRecord` uses `fti.size` (storage bits) for LLVM struct field type when it differs from natural `Translate` result (e.g. `[0..255]` → i8, `[0..65535]` → i16, BOOLEAN → i8); `BitWidth > 0` guard prevents replacing traced-ref fields (TGcRef, BitWidth=-1) with `TI(64)`; `QualifyExpr.LValueMSIR` uses storage type for GEP pointer; `QualifyExpr.CompileMSIR` ZExt/SExt/Trunc via `LoadFieldValue` helper
+- [x] Struct-by-value return (records, fixed arrays, large sets): hidden first `ptr` parameter (`_result_ptr`) — callee stores result through it and returns void; `BeginProc` detects `ProcType.LargeResult`, prepends hidden param, saves ptr as `curResultPtr`/`curResultType`; `ReturnStmt.CompileMSIR` stores through `curResultPtr` + `ret void`; `LookupOrCreateProc` mirrors convention for external stubs; `UserProc.CompileMSIR` allocas result slot, prepends to args, loads after call (nested large-result: Abandon)
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -99,26 +100,17 @@ Remaining:
 
 `GenOpenArrayMSIR` handles 1-D; multi-D untested.
 
-### C. Struct-by-value return ABI
-
-LLVM returns `{ i8, i8, i64 }` element-per-register (x0=a, x1=b, x2=n) rather than
-AAPCS64's packed-bytes convention (x0=bytes[0..7], x1=bytes[8..15]). This means
-record-returning M3 procedures are not directly callable from C using a matching C struct
-when the record has mixed-size fields. Homogeneous aggregates (e.g. `{ i64, i64 }`) work
-fine. Fix: emit sret (hidden return-pointer argument) for aggregate returns, matching the
-C ABI exactly.
-
-### D. Opaque types
+### C. Opaque types
 
 `GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
 
-### E. Debug symbols
+### D. Debug symbols
 
 No source locations in emitted LLVM IR. See debug symbol architecture note in
 `CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,
 `AddLocalMSIR`, `BeginProc`).
 
-### F. TEXT: remaining cases
+### E. TEXT: remaining cases
 
 - `Fmt.Real` (floating-point formatting) — not yet exercised in tests
 - `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
@@ -127,7 +119,8 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 
 ## Known ABI Notes
 
-- **Struct-by-value return**: LLVM places each struct element in its own register on ARM64. For homogeneous aggregates (all elements same size, e.g. `{ i64, i64 }`) this coincides with AAPCS64. For mixed-width fields (e.g. `{ i8, i8, i64 }`) it diverges. The test suite uses VAR output parameters for record-returning functions to avoid this until sret support is added.
+- **Struct-by-value return (implemented)**: M3 procs with `ProcType.LargeResult` result (records, fixed arrays, large sets) use a hidden first `ptr` parameter — no `sret` attribute needed for M3-to-M3 calls. Mixed-width records (`ByteRec`, `MixedRec`) still use VAR output params because they would require `sret` for correct C interop; pure-M3 struct-return via hidden ptr is fully correct.
+- **Nested large-result procs**: If a nested proc has a large result, its call site emits Abandon (the nested+large-result ordering of cap params + hidden ptr + explicit params is complex). Not exercised in the test suite.
 - **procMap size**: `MaxProcMap = 2048` in `MSIRBuilder.m3`. For extremely large modules (>2000 unique external callees + internal procs), this could still overflow. The safe fix is to make procMap dynamic; increasing the constant is a stopgap.
 
 ---

@@ -87,6 +87,14 @@ PROCEDURE TakePendingContainer(): MSIR.Value;
 PROCEDURE CurrentProc(): MSIR.Proc;
 PROCEDURE CurrentBlock(): MSIR.Block;
 
+(* Hidden result pointer for large-result procs (records, arrays, large sets).
+   Non-NIL while inside a proc whose M3 result type satisfies ProcType.LargeResult.
+   ReturnStmt.CompileMSIR stores through this pointer and emits ret void.
+   CurrentResultType() is the non-void MSIR type of the result (same as what
+   the proc would have returned before the hidden-ptr convention was applied). *)
+PROCEDURE CurrentResultPtr(): MSIR.Value;
+PROCEDURE CurrentResultType(): MSIR.T;
+
 (*-------------------------------------------------------------- Control flow *)
 
 (* Create a new block, add it to curProc, return it.

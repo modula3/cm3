@@ -79,9 +79,14 @@ PROCEDURE CompileMSIR (p: P) =
          M3 subtyping allows assignment but MSIR requires exact kind match:
          - NIL constant → any non-void result type (e.g. RETURN NIL from ADDRESS proc)
          - gc_ref X → gc_ref void when the proc result is REFANY / gc_ref void
-           (REF T <: REFANY is valid M3 but MSIR types are not structurally equal) *)
-      VAR resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
+           (REF T <: REFANY is valid M3 but MSIR types are not structurally equal)
+         For large-result procs the LLVM result type is void; use CurrentResultType()
+         to get the actual M3-level type for coercion purposes. *)
+      VAR resultT := MSIRBuilder.CurrentResultType ();
       BEGIN
+        IF resultT = NIL THEN
+          resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
+        END;
         IF resultT # NIL AND MSIR.Kind (resultT) # MSIR.TypeKind.Void AND
            NOT MSIR.Equal (MSIR.ValueType (v), resultT) THEN
           IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstNil OR
@@ -121,7 +126,15 @@ PROCEDURE CompileMSIR (p: P) =
       EVAL MSIR.BuildCall (MSIRBuilder.CurrentBlock (), "", endCatch,
                            ARRAY OF MSIR.Value {});
     END;
-    MSIR.BuildRet (MSIRBuilder.CurrentBlock (), v);
+    VAR resultPtr := MSIRBuilder.CurrentResultPtr ();  blk := MSIRBuilder.CurrentBlock ();
+    BEGIN
+      IF resultPtr # NIL AND v # NIL THEN
+        MSIR.BuildStore (blk, v, resultPtr);
+        MSIR.BuildRet (blk, NIL);
+      ELSE
+        MSIR.BuildRet (blk, v);
+      END;
+    END;
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

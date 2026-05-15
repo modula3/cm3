@@ -28,6 +28,8 @@ TYPE ProcContext = RECORD
   abandoned:     BOOLEAN;
   blockSeq:      INTEGER;
   pending:       MSIR.Value;   (* pendingContainer *)
+  resultPtr:     MSIR.Value;   (* curResultPtr *)
+  resultType:    MSIR.T;       (* curResultType *)
   varMapN:       INTEGER;
   varMap:        ARRAY [0..MaxVarMap-1] OF VarEntry;
   exitDepth:     INTEGER;
@@ -48,6 +50,8 @@ VAR
   abandoned:        BOOLEAN    := FALSE;
   blockSeq:         INTEGER    := 0;
   pendingContainer: MSIR.Value := NIL;
+  curResultPtr:     MSIR.Value := NIL;
+  curResultType:    MSIR.T     := NIL;  (* non-void MSIR type for large-result procs *)
 
   (* Saved contexts for nested proc compilation. *)
   procContextStack: ARRAY [0..MaxNestDepth-1] OF ProcContext;
@@ -107,6 +111,8 @@ PROCEDURE PopBeginContext() =
       abandoned        := ctx.abandoned;
       blockSeq         := ctx.blockSeq;
       pendingContainer := ctx.pending;
+      curResultPtr     := ctx.resultPtr;
+      curResultType    := ctx.resultType;
       varMapN          := ctx.varMapN;
       exitDepth        := ctx.exitDepth;
       tryDepth         := ctx.tryDepth;
@@ -122,14 +128,16 @@ PROCEDURE BeginProc(name: TEXT;
                     isExternal: BOOLEAN;
                     captures: CaptureAnalysis.T := NIL): BOOLEAN =
   VAR
-    info:      Formal.Info;
-    nFormals:  INTEGER := 0;
-    nCaptures: INTEGER := 0;
-    f:         Value.T;
-    resultT:   MSIR.T;
-    isNested:  BOOLEAN;
-    pBase:     INTEGER;  (* param index offset = nCaptures *)
-    caps:      REF ARRAY OF CaptureAnalysis.Capture;
+    info:          Formal.Info;
+    nFormals:      INTEGER := 0;
+    nCaptures:     INTEGER := 0;
+    f:             Value.T;
+    resultT:       MSIR.T;
+    isNested:      BOOLEAN;
+    isLargeResult: BOOLEAN := FALSE;
+    nHidden:       INTEGER := 0;
+    pBase:         INTEGER;  (* param index offset = nHidden + nCaptures *)
+    caps:          REF ARRAY OF CaptureAnalysis.Capture;
   BEGIN
     IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
     (* Push current state if we're already inside a proc (nested proc). *)
@@ -144,6 +152,8 @@ PROCEDURE BeginProc(name: TEXT;
         ctx.abandoned  := abandoned;
         ctx.blockSeq   := blockSeq;
         ctx.pending    := pendingContainer;
+        ctx.resultPtr  := curResultPtr;
+        ctx.resultType := curResultType;
         ctx.varMapN    := varMapN;
         ctx.exitDepth  := exitDepth;
         ctx.tryDepth   := tryDepth;
@@ -152,18 +162,28 @@ PROCEDURE BeginProc(name: TEXT;
       END;
       INC(procContextDepth);
     END;
-    abandoned  := FALSE;
-    varMapN    := 0;
-    exitDepth  := 0;
-    tryDepth   := 0;
-    catchDepth := 0;
-    blockSeq   := 0;
+    abandoned      := FALSE;
+    varMapN        := 0;
+    exitDepth      := 0;
+    tryDepth       := 0;
+    catchDepth     := 0;
+    blockSeq       := 0;
+    curResultPtr   := NIL;
+    curResultType  := NIL;
 
     resultT := MSIRType.TranslateResult(result);
     IF resultT = NIL THEN
       MSIREmit.NoteSkipped(name, "unsupported result type");
       PopBeginContext();
       RETURN FALSE;
+    END;
+    isLargeResult := ProcType.LargeResult(result);
+    IF isLargeResult THEN
+      curResultType := resultT;  (* save translated type before overriding *)
+      resultT       := MSIR.TVoid();
+      nHidden       := 1;
+    ELSE
+      nHidden := 0;
     END;
 
     isNested  := procContextDepth > 0;
@@ -173,13 +193,19 @@ PROCEDURE BeginProc(name: TEXT;
     IF caps = NIL THEN nCaptures := 0
     ELSE nCaptures := NUMBER(caps^)
     END;
-    pBase := nCaptures;
+    pBase := nHidden + nCaptures;
 
     f := formals;
     WHILE f # NIL DO INC(nFormals); f := f.next END;
 
-    VAR params := NEW(REF ARRAY OF MSIR.Param, nCaptures + nFormals);
+    VAR params := NEW(REF ARRAY OF MSIR.Param, nHidden + nCaptures + nFormals);
     BEGIN
+      (* Hidden result pointer: first param for large-result procs. *)
+      IF isLargeResult THEN
+        params[0].name := "_result_ptr";
+        params[0].type := MSIR.TPtr(MSIR.TVoid());
+        params[0].mode := MSIR.ParamMode.ByValue;
+      END;
       (* Lambda-lifted capture params.
          Read-only scalar captures pass by value (Integer, Float, Ptr).
          Written or aggregate captures pass by opaque ptr. *)
@@ -190,12 +216,12 @@ PROCEDURE BeginProc(name: TEXT;
         BEGIN
           Variable.Split(v, vt, vg, vi, vlhs);
           mt := MSIRType.Translate(vt);
-          params[i].name := "__cap_" & Fmt.Int(i);
-          params[i].mode := MSIR.ParamMode.ByValue;
+          params[nHidden + i].name := "__cap_" & Fmt.Int(i);
+          params[nHidden + i].mode := MSIR.ParamMode.ByValue;
           IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
-            params[i].type := mt;          (* pass the value directly *)
+            params[nHidden + i].type := mt;          (* pass the value directly *)
           ELSE
-            params[i].type := MSIR.TPtr(MSIR.TVoid());  (* pass ptr *)
+            params[nHidden + i].type := MSIR.TPtr(MSIR.TVoid());  (* pass ptr *)
           END;
         END;
       END;
@@ -243,6 +269,11 @@ PROCEDURE BeginProc(name: TEXT;
         MSIR.ProcSetLinkage(curProc, MSIR.Linkage.Internal);
       END;
 
+      (* Hidden result ptr: first param for large-result procs. *)
+      IF isLargeResult THEN
+        curResultPtr := MSIR.ProcParam(curProc, 0);
+      END;
+
       (* For nested procs: bind capture params in the inner proc's varMap.
          Read-only scalar captures: param holds the value directly (elemType=NIL).
          Written or aggregate captures: param holds a ptr; loads go through it. *)
@@ -256,7 +287,7 @@ PROCEDURE BeginProc(name: TEXT;
             mt := MSIRType.Translate(vt);
             IF mt # NIL AND varMapN < MaxVarMap THEN
               varMap[varMapN].key := v;
-              varMap[varMapN].val := MSIR.ProcParam(curProc, i);
+              varMap[varMapN].val := MSIR.ProcParam(curProc, nHidden + i);
               IF NOT caps[i].written AND IsScalarType(mt) THEN
                 varMap[varMapN].elemType := NIL;  (* value: return param directly *)
               ELSE
@@ -434,6 +465,8 @@ PROCEDURE EndProc() =
         abandoned        := ctx.abandoned;
         blockSeq         := ctx.blockSeq;
         pendingContainer := ctx.pending;
+        curResultPtr     := ctx.resultPtr;
+        curResultType    := ctx.resultType;
         varMapN          := ctx.varMapN;
         exitDepth        := ctx.exitDepth;
         tryDepth         := ctx.tryDepth;
@@ -449,6 +482,8 @@ PROCEDURE EndProc() =
       tryDepth         := 0;
       catchDepth       := 0;
       pendingContainer := NIL;
+      curResultPtr     := NIL;
+      curResultType    := NIL;
     END;
   END EndProc;
 
@@ -498,6 +533,12 @@ PROCEDURE CurrentBlock(): MSIR.Block =
     END;
     RETURN curBlock;
   END CurrentBlock;
+
+PROCEDURE CurrentResultPtr(): MSIR.Value =
+  BEGIN RETURN curResultPtr END CurrentResultPtr;
+
+PROCEDURE CurrentResultType(): MSIR.T =
+  BEGIN RETURN curResultType END CurrentResultType;
 
 PROCEDURE NewBlock(label: TEXT): MSIR.Block =
   VAR b: MSIR.Block;  uniq: TEXT;
@@ -930,10 +971,12 @@ PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
 
 PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
   VAR
-    f:        Value.T;
-    info:     Formal.Info;
-    nFormals: INTEGER := 0;
-    resultT:  MSIR.T;
+    f:            Value.T;
+    info:         Formal.Info;
+    nFormals:     INTEGER := 0;
+    resultT:      MSIR.T;
+    largeResult:  BOOLEAN;
+    nHidden:      INTEGER;
   BEGIN
     FOR i := 0 TO procMapN - 1 DO
       IF procMap[i].key = v THEN RETURN procMap[i].val END;
@@ -944,10 +987,19 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
       Abandon("unsupported result type in callee");
       RETURN NIL;
     END;
+    largeResult := ProcType.LargeResult(ProcType.Result(procType));
+    IF largeResult THEN resultT := MSIR.TVoid(); nHidden := 1
+    ELSE nHidden := 0
+    END;
     f := ProcType.Formals(procType);
     WHILE f # NIL DO INC(nFormals);  f := f.next END;
-    VAR params := NEW(REF ARRAY OF MSIR.Param, nFormals);
+    VAR params := NEW(REF ARRAY OF MSIR.Param, nHidden + nFormals);
     BEGIN
+      IF largeResult THEN
+        params[0].name := "_result_ptr";
+        params[0].type := MSIR.TPtr(MSIR.TVoid());
+        params[0].mode := MSIR.ParamMode.ByValue;
+      END;
       f := ProcType.Formals(procType);
       FOR i := 0 TO nFormals - 1 DO
         Formal.Split(f, info);
@@ -957,26 +1009,26 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
             Abandon("unsupported parameter type in callee");
             RETURN NIL;
           END;
-          params[i].name := M3ID.ToText(info.name);
+          params[i + nHidden].name := M3ID.ToText(info.name);
           CASE info.mode OF
           | Formal.Mode.mVALUE =>
-              params[i].mode := MSIR.ParamMode.ByValue;
+              params[i + nHidden].mode := MSIR.ParamMode.ByValue;
               IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
-                params[i].type := MSIR.TPtr(pt);
+                params[i + nHidden].type := MSIR.TPtr(pt);
               ELSE
-                params[i].type := pt;
+                params[i + nHidden].type := pt;
               END;
-          | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
-                                     params[i].type := MSIR.TPtr(pt);
+          | Formal.Mode.mVAR      => params[i + nHidden].mode := MSIR.ParamMode.Var;
+                                     params[i + nHidden].type := MSIR.TPtr(pt);
           | Formal.Mode.mREADONLY =>
-              params[i].mode := MSIR.ParamMode.Readonly;
+              params[i + nHidden].mode := MSIR.ParamMode.Readonly;
               CASE MSIR.Kind(pt) OF
               | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
                 MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
                 MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
-                  params[i].type := MSIR.TPtr(pt);
+                  params[i + nHidden].type := MSIR.TPtr(pt);
               ELSE
-                  params[i].type := pt;
+                  params[i + nHidden].type := pt;
               END;
           END;
         END;
