@@ -87,9 +87,12 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
         RETURN MSIR.TPtr(MSIR.TVoid());   (* function pointer, opaque *)
 
     | Type.Class.Object, Type.Class.Opaque =>
-        (* Conservative: all object and opaque types are traced references.
-           Vtable-aware typed descriptors are future work. *)
-        RETURN MSIR.TGcRef(MSIR.TVoid());
+        (* Use isTraced so that UNTRACED OBJECT and untraced opaque supertypes
+           get TPtr rather than TGcRef.  Vtable-aware typed refs are future work. *)
+        IF info.isTraced
+          THEN RETURN MSIR.TGcRef(MSIR.TVoid());
+          ELSE RETURN MSIR.TPtr (MSIR.TVoid());
+        END;
 
     | Type.Class.Ref =>
         VAR target: Type.T;  targetMsir: MSIR.T := MSIR.TVoid();

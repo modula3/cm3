@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-15 (msir branch)
 
-## What's Working (149/149 tests pass)
+## What's Working (159/159 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 **Zero msir-abandon events** across the full p0/p1/p2 compiler validation test suite.
@@ -100,9 +100,15 @@ Runtime-element SET constructors (`T{lo..hi}` with non-constant bounds) emit an
 
 `GenOpenArrayMSIR` handles 1-D; multi-D untested.
 
-### C. Opaque types
+### C. Opaque types — complete
 
-`GenOpaqueMSIR` handles only REF revelation; OBJECT revelation is deferred.
+`GenOpaqueMSIR` now handles both revelation kinds:
+- REF revelation → `GenRefMSIR(x, r, ce)`
+- OBJECT revelation → `GenObjectMSIR(x, ce)` (dispatched to concrete type)
+- NIL or unknown revelation → Abandon with descriptive message
+
+`MSIRType.Translate` for `Type.Class.Opaque` (and `Object`) now uses `info.isTraced`
+to emit `TGcRef(void*)` for traced types and `TPtr(void*)` for untraced types.
 
 ### D. Debug symbols
 

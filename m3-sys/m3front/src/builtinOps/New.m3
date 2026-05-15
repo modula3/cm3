@@ -605,10 +605,17 @@ PROCEDURE GenObjectMSIR (t: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
 PROCEDURE GenOpaqueMSIR (t: Type.T;  ce: CallExpr.T): MSIR.Value =
   VAR x := Revelation.LookUp (t);  r: Type.T;
   BEGIN
+    IF x = NIL THEN
+      MSIRBuilder.Abandon ("NEW(OPAQUE): no full revelation visible");
+      RETURN NIL;
+    END;
     IF RefType.Split (x, r) THEN
       RETURN GenRefMSIR (x, Type.StripPacked (r), ce);
     END;
-    MSIRBuilder.Abandon ("NEW(OPAQUE): not yet in MSIR");
+    IF ObjectType.Is (x) THEN
+      RETURN GenObjectMSIR (x, ce);
+    END;
+    MSIRBuilder.Abandon ("NEW(OPAQUE): unsupported revelation type in MSIR");
     RETURN NIL;
   END GenOpaqueMSIR;
 
