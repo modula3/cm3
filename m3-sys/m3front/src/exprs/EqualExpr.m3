@@ -850,10 +850,21 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     taInfo:  Type.Info;
   BEGIN
     IF p.kind = Kind.Complex THEN
-      (* Only procedure equality is supported in MSIR v0 (both sides are
-         function pointer values; compare as opaque pointers). *)
       ta := Type.Base (Expr.TypeOf (p.a));
       EVAL Type.CheckInfo (ta, taInfo);
+      (* Multi-word SET (IWide): large sets are Complex but still comparable
+         as wide integers via icmp eq/ne. *)
+      IF taInfo.class = Type.Class.Set THEN
+        lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+        rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+        blk := MSIRBuilder.CurrentBlock ();
+        CASE p.op OF
+        | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
+        | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+        END;
+        RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
+      END;
+      (* Procedure equality: both sides are function pointer values. *)
       IF taInfo.class # Type.Class.Procedure THEN
         MSIRBuilder.Abandon ("non-scalar equality not supported in MSIR v0");
         RETURN NIL;

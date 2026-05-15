@@ -7,6 +7,7 @@ GENERIC MODULE Insert (Rep);
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure;
 IMPORT IntegerExpr, Type, ProcType, Host, Card;
 IMPORT Target, TInt, TWord, Value, Formal, CheckExpr, Error;
+IMPORT MSIR, MSIRBuilder;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -103,6 +104,38 @@ PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
        AND (0 <= i) AND (i <= Word_types[rep].size);
   END GetBitIndex;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  (* Insert(x, y, i, n): insert n low-order bits of y into x at position i.
+     mask        = lshr(allones, W-n)    -- n-bit mask in LSB
+     shifted_mask = shl(mask, i)         -- mask at position i
+     result = or(and(x, xor(shifted_mask, allones)), shl(and(y, mask), i)) *)
+  VAR
+    x  := Expr.CompileMSIR (ce.args[0]);
+    y  := Expr.CompileMSIR (ce.args[1]);
+    i  := Expr.CompileMSIR (ce.args[2]);
+    n  := Expr.CompileMSIR (ce.args[3]);
+    b  := MSIRBuilder.CurrentBlock ();
+    xt, nt : MSIR.T;
+    W       : LONGINT;
+    ones, wConst, wMinusN, mask, shiftedMask, invMask,
+    xCleared, yBits, yShifted: MSIR.Value;
+  BEGIN
+    IF x = NIL OR y = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
+    xt     := MSIR.ValueType (x);
+    nt     := MSIR.ValueType (n);
+    W      := VAL (Word_types[rep].size, LONGINT);
+    ones   := MSIR.ConstInt (xt, -1L);
+    wConst := MSIR.ConstInt (nt, W);
+    wMinusN     := MSIR.BuildISub  (b, "", wConst, n);
+    mask        := MSIR.BuildILShr (b, "", ones, wMinusN);
+    shiftedMask := MSIR.BuildIShl  (b, "", mask, i);
+    invMask     := MSIR.BuildIXor  (b, "", shiftedMask, ones);
+    xCleared    := MSIR.BuildIAnd  (b, "", x, invMask);
+    yBits       := MSIR.BuildIAnd  (b, "", y, mask);
+    yShifted    := MSIR.BuildIShl  (b, "", yBits, i);
+    RETURN MSIR.BuildIOr (b, "", xCleared, yShifted);
+  END CompileMSIR;
+
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR e0, e1: Expr.T;  w0, w1, result: Target.Int; i2, i3: INTEGER;  t: Type.T;
   BEGIN
@@ -145,6 +178,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("Insert", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
   END Initialize;

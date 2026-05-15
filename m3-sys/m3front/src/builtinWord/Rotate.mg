@@ -6,6 +6,7 @@ GENERIC MODULE Rotate (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Formal, Type, SubrangeType;
 IMPORT Int, IntegerExpr, Value, ProcType, CheckExpr, Target, TInt, TWord;
+IMPORT MSIR, MSIRBuilder;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -105,6 +106,39 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     RETURN NIL;
   END FoldR;
 
+PROCEDURE RotateMSIR (ce: CallExpr.T): MSIR.Value =
+  (* General rotate: Rotate(x, n) = fshl(x, x, n mod W).
+     LLVM fshl takes n mod W automatically (unsigned interpretation).
+     For signed negative n: -k as unsigned mod W = W-k (right rotate by k). *)
+  VAR
+    x := Expr.CompileMSIR (ce.args[0]);
+    n := Expr.CompileMSIR (ce.args[1]);
+    b := MSIRBuilder.CurrentBlock ();
+  BEGIN
+    IF x = NIL OR n = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildIRotL (b, "", x, n);
+  END RotateMSIR;
+
+PROCEDURE RotateLeftMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    x := Expr.CompileMSIR (ce.args[0]);
+    n := Expr.CompileMSIR (ce.args[1]);
+    b := MSIRBuilder.CurrentBlock ();
+  BEGIN
+    IF x = NIL OR n = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildIRotL (b, "", x, n);
+  END RotateLeftMSIR;
+
+PROCEDURE RotateRightMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    x := Expr.CompileMSIR (ce.args[0]);
+    n := Expr.CompileMSIR (ce.args[1]);
+    b := MSIRBuilder.CurrentBlock ();
+  BEGIN
+    IF x = NIL OR n = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildIRotR (b, "", x, n);
+  END RotateRightMSIR;
+
 PROCEDURE Initialize (r: INTEGER) =
   VAR
     b   := TInt.FromInt (Word_types[r].size-1, max);
@@ -139,6 +173,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, RotateMSIR);
     Procedure.DefinePredefined ("Rotate", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
 
@@ -157,6 +192,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (ZL, RotateLeftMSIR);
     Procedure.DefinePredefined ("LeftRotate", ZL, FALSE, Lt, assignable:=TRUE);
     formalsL := ProcType.Formals (Lt);
 
@@ -175,6 +211,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (ZR, RotateRightMSIR);
     Procedure.DefinePredefined ("RightRotate", ZR, FALSE, Rt, assignable:=TRUE);
     formalsR := ProcType.Formals (Rt);
   END Initialize;

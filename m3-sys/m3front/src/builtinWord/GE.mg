@@ -6,6 +6,7 @@ GENERIC MODULE GE (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
 IMPORT Bool, IntegerExpr, Value, Formal, Type, ProcType;
+IMPORT MSIR, MSIRBuilder;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -34,6 +35,13 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
     Expr.Compile (ce.args[1]);
     CG.If_then (Word_types[rep].cg_type, CG.Cmp.GE, true, false, freq);
   END PrepBR;
+
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR x := Expr.CompileMSIR (ce.args[0]);  y := Expr.CompileMSIR (ce.args[1]);
+  BEGIN
+    IF x = NIL OR y = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Uge, x, y);
+  END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1: Target.Int;
@@ -82,6 +90,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("GE", Z, FALSE, t1, assignable:=TRUE);
     formals := ProcType.Formals (t1);
   END Initialize;

@@ -6,6 +6,7 @@ GENERIC MODULE Not (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
 IMPORT IntegerExpr, Value, Formal, Type, ProcType, TInt;
+IMPORT MSIR, MSIRBuilder;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Integer_types;
 
@@ -24,6 +25,17 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.Compile (ce.args[0]);
     CG.Not (Integer_types[rep].cg_type);
   END Compile;
+
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR
+    x := Expr.CompileMSIR (ce.args[0]);
+    b := MSIRBuilder.CurrentBlock ();
+    t : MSIR.T;
+  BEGIN
+    IF x = NIL THEN RETURN NIL END;
+    t := MSIR.ValueType (x);
+    RETURN MSIR.BuildIXor (b, "", x, MSIR.ConstInt (t, -1L));
+  END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR e: Expr.T;  w, result: Target.Int;  t: Type.T;
@@ -58,6 +70,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("Not", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
   END Initialize;

@@ -6,6 +6,7 @@ GENERIC MODULE Shift (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, SubrangeType, Formal;
 IMPORT Int, IntegerExpr, Value, ProcType, CheckExpr, Target, TInt, TWord;
+IMPORT MSIR, MSIRBuilder;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -105,6 +106,65 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     RETURN NIL;
   END FoldR;
 
+PROCEDURE ShiftMSIR (ce: CallExpr.T): MSIR.Value =
+  (* General shift: n may be any signed integer.
+     n > 0 → left shift; n < 0 → logical right shift by |n|; |n| >= W → 0. *)
+  VAR
+    x      := Expr.CompileMSIR (ce.args[0]);
+    n      := Expr.CompileMSIR (ce.args[1]);
+    b      := MSIRBuilder.CurrentBlock ();
+    xt, nt : MSIR.T;
+    W      : LONGINT;
+    zero, zeroN, wConst, wm1, isNeg, negN, absN, ltW,
+    nMasked, absNMasked, shlV, lshrV, safeShl, safeShr: MSIR.Value;
+  BEGIN
+    IF x = NIL OR n = NIL THEN RETURN NIL END;
+    xt     := MSIR.ValueType (x);
+    nt     := MSIR.ValueType (n);
+    W      := VAL (Word_types[rep].size, LONGINT);
+    zero   := MSIR.ConstInt (xt, 0L);
+    zeroN  := MSIR.ConstInt (nt, 0L);
+    wConst := MSIR.ConstInt (nt, W);
+    wm1    := MSIR.ConstInt (nt, W - 1L);
+    isNeg  := MSIR.BuildICmp   (b, "", MSIR.CmpPred.Slt, n, zeroN);
+    negN   := MSIR.BuildISub   (b, "", zeroN, n);
+    absN   := MSIR.BuildSelect (b, "", isNeg, negN, n);
+    ltW    := MSIR.BuildICmp   (b, "", MSIR.CmpPred.Slt, absN, wConst);
+    nMasked    := MSIR.BuildIAnd (b, "", n,    wm1);
+    absNMasked := MSIR.BuildIAnd (b, "", absN, wm1);
+    shlV   := MSIR.BuildIShl  (b, "", x, nMasked);
+    lshrV  := MSIR.BuildILShr (b, "", x, absNMasked);
+    safeShl := MSIR.BuildSelect (b, "", ltW, shlV,  zero);
+    safeShr := MSIR.BuildSelect (b, "", ltW, lshrV, zero);
+    RETURN MSIR.BuildSelect (b, "", isNeg, safeShr, safeShl);
+  END ShiftMSIR;
+
+PROCEDURE ShiftLeftMSIR (ce: CallExpr.T): MSIR.Value =
+  (* LeftShift: 0 <= n < W guaranteed by type; emit shl with safety mask. *)
+  VAR
+    x  := Expr.CompileMSIR (ce.args[0]);
+    n  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    wm1 : MSIR.Value;
+  BEGIN
+    IF x = NIL OR n = NIL THEN RETURN NIL END;
+    wm1 := MSIR.ConstInt (MSIR.ValueType (n), VAL (Word_types[rep].size - 1, LONGINT));
+    RETURN MSIR.BuildIShl (b, "", x, MSIR.BuildIAnd (b, "", n, wm1));
+  END ShiftLeftMSIR;
+
+PROCEDURE ShiftRightMSIR (ce: CallExpr.T): MSIR.Value =
+  (* RightShift: 0 <= n < W guaranteed by type; emit lshr with safety mask. *)
+  VAR
+    x  := Expr.CompileMSIR (ce.args[0]);
+    n  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    wm1 : MSIR.Value;
+  BEGIN
+    IF x = NIL OR n = NIL THEN RETURN NIL END;
+    wm1 := MSIR.ConstInt (MSIR.ValueType (n), VAL (Word_types[rep].size - 1, LONGINT));
+    RETURN MSIR.BuildILShr (b, "", x, MSIR.BuildIAnd (b, "", n, wm1));
+  END ShiftRightMSIR;
+
 PROCEDURE Initialize (r: INTEGER) =
   VAR
     b   := TInt.FromInt (Word_types[r].size-1, max);
@@ -139,6 +199,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, ShiftMSIR);
     Procedure.DefinePredefined ("Shift", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
 
@@ -158,6 +219,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (ZL, ShiftLeftMSIR);
     Procedure.DefinePredefined ("LeftShift", ZL, FALSE, Lt, assignable:=TRUE);
     formalsL := ProcType.Formals (Lt);
 
@@ -177,6 +239,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (ZR, ShiftRightMSIR);
     Procedure.DefinePredefined ("RightShift", ZR, FALSE, Rt, assignable:=TRUE);
     formalsR := ProcType.Formals (Rt);
 

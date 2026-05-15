@@ -7,6 +7,7 @@ GENERIC MODULE Extract (Rep);
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure;
 IMPORT IntegerExpr, Type, ProcType, Host, Card;
 IMPORT Target, TInt, TWord, Value, Formal, CheckExpr, Error;
+IMPORT MSIR, MSIRBuilder;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -112,6 +113,30 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     RETURN IntegerExpr.New (T, result);
   END Fold;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  (* Extract(x, i, n): (x >> i) & ((1 << n) - 1)
+     Mask computed as lshr(allones, W - n) to handle n = 0 safely (gives 0). *)
+  VAR
+    x  := Expr.CompileMSIR (ce.args[0]);
+    i  := Expr.CompileMSIR (ce.args[1]);
+    n  := Expr.CompileMSIR (ce.args[2]);
+    b  := MSIRBuilder.CurrentBlock ();
+    xt, nt : MSIR.T;
+    W      : LONGINT;
+    ones, wConst, wMinusN, mask, shifted: MSIR.Value;
+  BEGIN
+    IF x = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
+    xt     := MSIR.ValueType (x);
+    nt     := MSIR.ValueType (n);
+    W      := VAL (Word_types[rep].size, LONGINT);
+    ones   := MSIR.ConstInt (xt, -1L);
+    wConst := MSIR.ConstInt (nt, W);
+    wMinusN := MSIR.BuildISub (b, "", wConst, n);
+    mask    := MSIR.BuildILShr (b, "", ones, wMinusN);
+    shifted := MSIR.BuildILShr (b, "", x, i);
+    RETURN MSIR.BuildIAnd (b, "", shifted, mask);
+  END CompileMSIR;
+
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   VAR min_bits, max_bits: Target.Int;  i: INTEGER;
   BEGIN
@@ -150,6 +175,7 @@ PROCEDURE Initialize (r: INTEGER) =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("Extract", Z, FALSE, t, assignable:=TRUE);
     formals := ProcType.Formals (t);
   END Initialize;
