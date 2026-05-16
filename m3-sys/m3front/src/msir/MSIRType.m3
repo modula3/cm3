@@ -141,16 +141,24 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
     IF NOT RecordType.Split(t, fields) THEN RETURN NIL END;
     v := fields;
     WHILE v # NIL DO INC(n);  v := v.next END;
+    (* Pre-check: if any field has a sub-byte offset or size (packed record),
+       fall back to [N x i8] so the variable can still enter the varMap.
+       Field accesses on such records emit a more specific abandon. *)
+    v := fields;
+    WHILE v # NIL DO
+      Field.Split(v, finfo);
+      EVAL Type.CheckInfo(finfo.type, fti);
+      IF finfo.offset MOD Target.Byte # 0 OR fti.size MOD Target.Byte # 0 THEN
+        RETURN ByteArrayFallback(t);
+      END;
+      v := v.next;
+    END;
     VAR msirFields := NEW(REF ARRAY OF MSIR.Field, n);
     BEGIN
       v := fields;
       FOR i := 0 TO n - 1 DO
         Field.Split(v, finfo);
-        (* Reject sub-byte field offsets: bit-manipulation not yet supported. *)
-        IF finfo.offset MOD Target.Byte # 0 THEN RETURN NIL END;
         EVAL Type.CheckInfo(finfo.type, fti);
-        (* Reject sub-byte field sizes. *)
-        IF fti.size MOD Target.Byte # 0 THEN RETURN NIL END;
         VAR ft := Translate(finfo.type);
         BEGIN
           IF ft = NIL THEN RETURN NIL END;
@@ -182,6 +190,18 @@ PROCEDURE TranslateOpenArray(t: Type.T): MSIR.T =
     RETURN MSIR.TOpenArray(1, eltMsir);
   END TranslateOpenArray;
 
+PROCEDURE ByteArrayFallback(t: Type.T): MSIR.T =
+  (* Return [N x i8] for a type whose contents can't be directly represented.
+     Used for packed arrays/records so variables enter the varMap even when
+     element-level access will emit a more-specific abandon. *)
+  VAR tinfo: Type.Info;  nb: INTEGER;
+  BEGIN
+    EVAL Type.CheckInfo(t, tinfo);
+    nb := (tinfo.size + Target.Byte - 1) DIV Target.Byte;
+    IF nb <= 0 THEN RETURN NIL END;
+    RETURN MSIR.TFixedArray(VAL(nb, LONGINT), MSIR.TI1());
+  END ByteArrayFallback;
+
 PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
   VAR
     indexT, eltT : Type.T;
@@ -193,10 +213,16 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     IF indexT = NIL THEN RETURN NIL END;  (* open: should not reach here *)
     IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN NIL END;
     IF ArrayType.EltsAreBitAddressed(t) THEN
-      RETURN NIL;  (* sub-byte: not representable as a standard LLVM array *)
+      (* Sub-byte elements: fall back to [N x i8] so the variable enters the
+         varMap; element-level access will emit a more-specific abandon. *)
+      RETURN ByteArrayFallback(t);
     END;
     eltMsir := Translate(eltT);
-    IF eltMsir = NIL THEN RETURN NIL END;
+    IF eltMsir = NIL THEN
+      (* Element type (e.g. a packed sub-array) not directly translatable:
+         fall back to [N x i8] for the same reason. *)
+      RETURN ByteArrayFallback(t);
+    END;
     eltPack := ArrayType.EltPack(t);
     IF eltPack > 0 AND eltPack # MSIR.BitWidth(eltMsir) THEN
       (* Actual storage width differs from the natural expression type.

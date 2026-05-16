@@ -42,7 +42,11 @@ TYPE ProcEntry   = RECORD
   val:  MSIR.Proc;
   caps: REF ARRAY OF CaptureAnalysis.Capture;  (* NIL for non-nested procs *)
 END;
-TYPE GlobalEntry = RECORD key: Variable.T; val: MSIR.Global END;
+TYPE GlobalEntry = RECORD
+  key:       Variable.T;
+  val:       MSIR.Global;
+  needsLoad: BOOLEAN := FALSE;  (* TRUE for large indirect globals: struct holds ptr-to-data *)
+END;
 
 VAR
   curProc:          MSIR.Proc  := NIL;
@@ -276,8 +280,11 @@ PROCEDURE BeginProc(name: TEXT;
 
       (* For nested procs: bind capture params in the inner proc's varMap.
          Read-only scalar captures: param holds the value directly (elemType=NIL).
-         Written or aggregate captures: param holds a ptr; loads go through it. *)
-      IF isNested AND nCaptures > 0 THEN
+         Written or aggregate captures: param holds a ptr; loads go through it.
+         Use nCaptures > 0 (not isNested) because GenBody may call BeginProc
+         at procContextDepth=0 — after the outer proc's EndProc — even for
+         genuinely nested procs that have capture params. *)
+      IF nCaptures > 0 THEN
         FOR i := 0 TO nCaptures - 1 DO
           VAR v:  Variable.T := caps[i].var;
               vt: Type.T;  vg, vi, vlhs: BOOLEAN;
@@ -348,7 +355,15 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN
         gv := MSIR.GlobalValue(globalMap[i].val);
-        IF MSIR.Kind(MSIR.ValueType(gv)) = MSIR.TypeKind.GcSlot THEN
+        IF globalMap[i].needsLoad THEN
+          (* Large indirect global: struct field holds ptr-to-data.
+             Load the ptr, then load the value through it. *)
+          VAR dataPtr := MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), gv);
+          BEGIN
+            gt := MSIR.GlobalType(globalMap[i].val);
+            RETURN MSIR.BuildLoad(curBlock, "", gt, dataPtr);
+          END;
+        ELSIF MSIR.Kind(MSIR.ValueType(gv)) = MSIR.TypeKind.GcSlot THEN
           RETURN MSIR.BuildGcLoad(curBlock, "", gv);
         ELSE
           gt := MSIR.GlobalType(globalMap[i].val);
@@ -372,7 +387,15 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
     END;
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN
-        RETURN MSIR.GlobalValue(globalMap[i].val);
+        VAR ref := MSIR.GlobalValue(globalMap[i].val);
+        BEGIN
+          IF globalMap[i].needsLoad THEN
+            (* Large indirect global: the struct field holds a ptr-to-data.
+               Load it to get the address of the actual variable storage. *)
+            RETURN MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), ref);
+          END;
+          RETURN ref;
+        END;
       END;
     END;
     RETURN NIL;
@@ -1146,15 +1169,16 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
 
 PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
                               infoName: TEXT;  byteOff: INTEGER;
-                              fieldType: MSIR.T) =
+                              fieldType: MSIR.T;  needsLoad: BOOLEAN := FALSE) =
   BEGIN
     IF globalMapN >= MaxGlobalMap THEN RETURN END;
     (* Patch the global with struct field info and a StructFieldRef value. *)
     MSIR.GlobalSetStructField(g, byteOff,
                               MSIR.StructFieldRef(infoName, byteOff, fieldType));
     MSIR.ModuleAddGlobal(m, g);
-    globalMap[globalMapN].key := v;
-    globalMap[globalMapN].val := g;
+    globalMap[globalMapN].key       := v;
+    globalMap[globalMapN].val       := g;
+    globalMap[globalMapN].needsLoad := needsLoad;
     INC(globalMapN);
   END GlobalMapAddStruct;
 

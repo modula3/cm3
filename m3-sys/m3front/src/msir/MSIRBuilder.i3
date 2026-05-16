@@ -268,7 +268,7 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
    Sets the global's byteOffset and refValue to a StructFieldRef GEP. *)
 PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
                               infoName: TEXT;  byteOff: INTEGER;
-                              fieldType: MSIR.T);
+                              fieldType: MSIR.T;  needsLoad: BOOLEAN := FALSE);
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T);
 PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
 

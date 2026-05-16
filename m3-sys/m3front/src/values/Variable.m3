@@ -273,11 +273,26 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
       infoName: TEXT;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
-    IF NOT t.global OR t.indirect THEN RETURN END;
+    IF NOT t.global THEN RETURN END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN END;
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
+    infoName  := MSIR.ModuleName(m) & "_M3_info";
+    IF t.indirect THEN
+      (* Large global (size > Max_zero_global): the module info struct holds
+         a pointer to separately-allocated storage.  Register as a pointer
+         slot and flag that LookupVarAddr must load through it. *)
+      byteSize  := Target.Address.bytes;
+      byteAlign := Target.Address.align DIV Target.Char.size;
+      byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
+      g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=FALSE),
+                          MSIR.TPtr(MSIR.TVoid()), isTraced := FALSE);
+      MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff,
+                                     MSIR.TPtr(MSIR.TPtr(MSIR.TVoid())),
+                                     needsLoad := TRUE);
+      RETURN;
+    END;
     isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
                  OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
     eltType  := mt;
@@ -287,7 +302,6 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
     byteAlign := MAX(1, t.align DIV Target.Char.size);
     IF byteSize <= 0 THEN byteSize := Target.Address.bytes END;
     byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
-    infoName  := MSIR.ModuleName(m) & "_M3_info";
     g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=FALSE),
                         eltType, isTraced);
     (* Attach struct field info and update refValue to a StructFieldRef. *)

@@ -697,11 +697,28 @@ PROCEDURE GenBody (p: T) =
     CG.Gen_location (p.origin);
     CG.Begin_procedure (p.cg_proc);
     IF NOT msirSkip THEN
-      EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
-                                  ProcType.Formals (p.signature),
-                                  p.syms,
-                                  tresult,
-                                  isExternal := TRUE);
+      IF (p.body # NIL) AND (p.body.level > 0) THEN
+        (* Nested proc: redo capture analysis so BeginProc receives the right
+           capture params.  GenBodyMSIR (called from LangInit) may have failed
+           or abandoned and left the proc out of procMap; we must not lose the
+           capture bindings on this second attempt. *)
+        VAR ca := CaptureAnalysis.New();
+        BEGIN
+          Stmt.Capture(p.block, ca);
+          EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
+                                      ProcType.Formals (p.signature),
+                                      p.syms,
+                                      tresult,
+                                      isExternal := TRUE,
+                                      captures := ca);
+        END;
+      ELSE
+        EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
+                                    ProcType.Formals (p.signature),
+                                    p.syms,
+                                    tresult,
+                                    isExternal := TRUE);
+      END;
       IF MSIRBuilder.InProc () THEN
         MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
       END;
