@@ -11,10 +11,6 @@
   "p267": [
     "TIMEOUT"
   ],
-  "p268": [
-    "WithInline: msir-abandon: WITH: structure kind not yet in MSIR",
-    "WithGlobal: msir-abandon: WITH: structure kind not yet in MSIR"
-  ],
   "p269": [
     "FillArrRefs: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
     "OpenSSDD32_a: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
@@ -41,9 +37,7 @@
     "AssignLocConst: msir-abandon: array-type store mismatch not yet supported in MSIR",
     "AssignGlobalConst: msir-abandon: array-type store mismatch not yet supported in MSIR",
     "AssignImportConst: msir-abandon: array-type store mismatch not yet supported in MSIR",
-    "ProcOpenConstr: msir-abandon: array-type store mismatch not yet supported in MSIR",
-    "WithInline: msir-abandon: WITH: structure kind not yet in MSIR",
-    "WithGlobal: msir-abandon: WITH: structure kind not yet in MSIR"
+    "ProcOpenConstr: msir-abandon: array-type store mismatch not yet supported in MSIR"
   ],
   "p277": [
     "CRecsInCRec: msir-abandon: record expr: expected struct type in MSIR",

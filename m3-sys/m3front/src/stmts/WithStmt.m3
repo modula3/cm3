@@ -204,7 +204,9 @@ PROCEDURE CompileMSIR (p: P) =
         END;
         MSIRBuilder.BindVarAddr (p.var, addr, mt);
 
-    | Kind.other =>
+    | Kind.other, Kind.structure =>
+        (* Structure: compile expression into an alloca slot for the variable,
+           then execute the body with that slot as the variable's address. *)
         val := Expr.CompileMSIR (p.expr);
         IF val = NIL THEN RETURN END;
         IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock()) THEN RETURN END;
@@ -213,7 +215,7 @@ PROCEDURE CompileMSIR (p: P) =
         MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
 
     ELSE
-        MSIRBuilder.Abandon ("WITH: structure kind not yet in MSIR");
+        MSIRBuilder.Abandon ("WITH: unhandled kind not yet in MSIR");
         RETURN;
     END;
 
