@@ -98,9 +98,18 @@ implemented via `lshr(ones,(size-1)-hi) AND shl(ones,lo)` — naturally yields 0
 for empty ranges (lo > hi).  Verified with a standalone test for S{lo..hi} with
 non-constant lo/hi.
 
-### B. NEW(REF open-array): multi-dimensional
+### B. NEW(REF open-array): multi-dimensional — complete
 
-`GenOpenArrayMSIR` handles 1-D; multi-D untested.
+`GenOpenArrayMSIR` correctly handles any number of open dimensions: the sizes
+struct `{ ptr elt_ptr, i64 count, i64 dim0, ... }` is filled in by a
+`FOR i := 1 TO ndims` loop; `elt_ptr` points to `dim0` inside the struct,
+giving `RTHooks__AllocateOpenArray` a valid `RTHooks__ArrayShape*`.
+
+Also fixed: `Subarray.m3` `LValueMSIR`/`CompileMSIR` used hardcoded SSA names
+(`"sa.base"`, `"sa.off"`, `"sa.elt"`, `"sa.dope"`) that collided when two
+SUBARRAY expressions appeared in the same procedure.  All hints replaced with
+`""` so the builder auto-numbers them uniquely.  Verified with p260 (1-D through
+4-D NEW, multiple SUBARRAY in one proc), all pass end-to-end.
 
 ### C. Opaque types — complete
 
