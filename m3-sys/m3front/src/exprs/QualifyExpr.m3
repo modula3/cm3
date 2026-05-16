@@ -811,12 +811,16 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
             Variable.RegisterExternMSIR (v);
             RETURN MSIRBuilder.LookupVarAddr (v);
         ELSE
-          (* Constant import (e.g. CONST NondesigVal1 = ArrayExpr{...}):
-             fold to rvalue, spill to a fresh alloca. *)
+          (* Constant import: fold, then try LValueMSIR first — ArrayExpr and
+             RecordExpr implement it and return their own alloca. Scalars return
+             NIL (no abandon); fall back to compile+spill in that case. *)
           VAR folded := Fold (p); BEGIN
             IF folded = NIL THEN
               MSIRBuilder.Abandon ("importDecl lvalue: cannot fold constant");
               RETURN NIL;
+            END;
+            VAR lv := Expr.LValueMSIR (folded); BEGIN
+              IF lv # NIL THEN RETURN lv END;
             END;
             VAR v := Expr.CompileMSIR (folded); BEGIN
               IF v = NIL THEN RETURN NIL END;

@@ -107,7 +107,7 @@ PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
 (* default: signals "not yet supported" by calling MSIRBuilder.Abandon
    and returning NIL. Subclasses override when they have a translation. *)
 PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;
-(* default lvalue: calls Abandon. Override in designator expressions. *)
+(* default lvalue: returns NIL silently. Override in designator/aggregate expressions. *)
 
 PROCEDURE ExprCaptureDefault   (e: M3.Expr;  ca: CaptureAnalysis.T);
 (* no-op: correct for leaf expressions with no sub-expressions *)

@@ -597,7 +597,6 @@ PROCEDURE MSIRDefault (<*UNUSED*> e: T): MSIR.Value =
 
 PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T): MSIR.Value =
   BEGIN
-    MSIRBuilder.Abandon ("lvalue address unsupported for this expression");
     RETURN NIL;
   END LValueMSIRDefault;
 
