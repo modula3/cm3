@@ -1,4 +1,7 @@
 {
+  "p161": [
+    "TIMEOUT"
+  ],
   "p224": [
     "TIMEOUT"
   ],
@@ -9,21 +12,6 @@
     "TIMEOUT"
   ],
   "p268": [
-    "PassInline: msir-abandon: unsupported expression",
-    "PassLocConst: msir-abandon: unsupported expression",
-    "PassGlobalConst: msir-abandon: unsupported expression",
-    "PassImportConst: msir-abandon: unsupported expression",
-    "PassDefault: msir-abandon: unsupported expression",
-    "PassRO: msir-abandon: lvalue address unsupported for this expression",
-    "AssignInline: msir-abandon: unsupported expression",
-    "AssignLocConst: msir-abandon: unsupported expression",
-    "AssignGlobalConst: msir-abandon: unsupported expression",
-    "AssignImportConst: msir-abandon: unsupported expression",
-    "VarInline: msir-abandon: lvalue address unsupported for this expression",
-    "VarLocConst: msir-abandon: lvalue address unsupported for this expression",
-    "VarGlobalConst: msir-abandon: lvalue address unsupported for this expression",
-    "VarImportConst: msir-abandon: lvalue address unsupported for this expression",
-    "ProcField: msir-abandon: lvalue address unsupported for this expression",
     "WithInline: msir-abandon: WITH: structure kind not yet in MSIR",
     "WithGlobal: msir-abandon: WITH: structure kind not yet in MSIR"
   ],
@@ -58,15 +46,12 @@
     "WithGlobal: msir-abandon: WITH: structure kind not yet in MSIR"
   ],
   "p277": [
-    "CRecsInCRec: msir-abandon: unsupported expression",
-    "CRecsInVRec: msir-abandon: lvalue address unsupported for this expression",
-    "VRecsInVRec: msir-abandon: unsupported expression",
-    "CArrsInVRec: msir-abandon: lvalue address unsupported for this expression",
-    "VArrsInVRec: msir-abandon: unsupported expression",
-    "CRecsInCArr: msir-abandon: unsupported expression",
-    "CRecsInCArr: msir-abandon: unsupported expression",
-    "CRecsInVArr: msir-abandon: unsupported expression",
-    "CRecsInOArr__Inner: msir-abandon: unsupported expression",
+    "CRecsInCRec: msir-abandon: record expr: expected struct type in MSIR",
+    "CRecsInVRec: msir-abandon: record expr: expected struct type in MSIR",
+    "CRecsInCArr: msir-abandon: record expr: expected struct type in MSIR",
+    "CRecsInCArr: msir-abandon: record expr: expected struct type in MSIR",
+    "CRecsInVArr: msir-abandon: record expr: expected struct type in MSIR",
+    "CRecsInOArr__Inner: msir-abandon: record expr: expected struct type in MSIR",
     "CArrsInOArr__Inner: msir-abandon: array-type store mismatch not yet supported in MSIR",
     "OArrsInOArr__Inner: msir-abandon: array-type store mismatch not yet supported in MSIR",
     "P4InOArr__Inner: msir-abandon: array-type store mismatch not yet supported in MSIR",

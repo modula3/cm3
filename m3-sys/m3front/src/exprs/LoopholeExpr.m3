@@ -575,6 +575,28 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           blk := MSIRBuilder.CurrentBlock ();
           RETURN MSIR.BuildConvert (blk, "", v, dstT);
         END;
+    | Kind.D_to_S =>
+        (* Designator reinterpreted as struct: load dstT from address. *)
+        IF dstT = NIL THEN
+          MSIRBuilder.Abandon ("LOOPHOLE D_to_S: dest type not translatable in MSIR");
+          RETURN NIL;
+        END;
+        VAR addr := Expr.LValueMSIR (p.expr); BEGIN
+          IF addr = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+        END;
+    | Kind.S_to_S =>
+        (* Struct rvalue reinterpreted as different struct: get address, load dstT. *)
+        IF dstT = NIL THEN
+          MSIRBuilder.Abandon ("LOOPHOLE S_to_S: dest type not translatable in MSIR");
+          RETURN NIL;
+        END;
+        VAR addr := Expr.LValueMSIR (p.expr); BEGIN
+          IF addr = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+        END;
     | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A, Kind.V_to_S =>
         MSIRBuilder.Abandon ("LOOPHOLE to open-array/struct not yet in MSIR");
         RETURN NIL;

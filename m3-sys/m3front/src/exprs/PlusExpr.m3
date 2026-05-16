@@ -11,6 +11,7 @@
 MODULE PlusExpr;
 
 IMPORT M3, Expr, ExprRep, Type, Int, Reel, LReel, EReel;
+IMPORT MSIR;
 
 TYPE
   P = ExprRep.Ta BRANDED "PlusExpr.P" OBJECT
@@ -35,6 +36,7 @@ TYPE
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (a: Expr.T): Expr.T =
@@ -90,6 +92,11 @@ PROCEDURE Fold (p: P): Expr.T =
   BEGIN
     RETURN Expr.ConstValue (p.a);
   END Fold;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    RETURN Expr.CompileMSIR (p.a);
+  END CompileMSIR;
 
 BEGIN
 END PlusExpr.

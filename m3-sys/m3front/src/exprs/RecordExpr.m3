@@ -10,9 +10,10 @@
 MODULE RecordExpr;
 (* A record constructor. *) 
 
-IMPORT M3, M3ID, CG, Error, Type, RecordType, Module;
+IMPORT M3, M3ID, CG, Error, Type, RecordType, Module, Target;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   Info = RECORD
@@ -65,6 +66,8 @@ TYPE
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
         capture  := Capture;
+        compileMSIR      := CompileMSIR;
+        compileLValueMSIR := CompileLValueMSIR;
       END;
 
 (* EXPORTED: *)
@@ -597,6 +600,86 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
       END;
     END;
   END Capture;
+
+PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
+  VAR
+    msirT    : MSIR.T;
+    slot     : MSIR.Value;
+    b        : MSIR.Block;
+    fieldInfo: Field.Info;
+    fti      : Type.Info;
+    ft       : MSIR.T;
+    fieldPtr : MSIR.Value;
+    fieldVal : MSIR.Value;
+    byteOff  : LONGINT;
+    dstBits  : INTEGER;
+    srcBits  : INTEGER;
+  BEGIN
+    msirT := MSIRType.Translate (p.tipe);
+    IF msirT = NIL THEN
+      MSIRBuilder.Abandon ("record expr: type not translatable in MSIR");
+      RETURN NIL;
+    END;
+    IF MSIR.Kind (msirT) # MSIR.TypeKind.Struct THEN
+      MSIRBuilder.Abandon ("record expr: expected struct type in MSIR");
+      RETURN NIL;
+    END;
+    b := MSIRBuilder.CurrentBlock ();
+    slot := MSIR.BuildAlloca (b, "", msirT);
+    FOR i := 0 TO LAST (p.map^) DO
+      WITH info = p.map^[i] DO
+        IF info.expr # NIL THEN
+          Field.Split (info.field, fieldInfo);
+          IF fieldInfo.offset MOD Target.Byte # 0 THEN
+            MSIRBuilder.Abandon
+              ("record expr: sub-byte field offset not supported in MSIR");
+            RETURN NIL;
+          END;
+          EVAL Type.CheckInfo (fieldInfo.type, fti);
+          byteOff := VAL (fieldInfo.offset DIV Target.Byte, LONGINT);
+          ft := MSIRType.Translate (fieldInfo.type);
+          IF ft = NIL THEN
+            MSIRBuilder.Abandon
+              ("record expr: field type not translatable in MSIR");
+            RETURN NIL;
+          END;
+          IF fti.size > 0 AND MSIR.BitWidth (ft) > 0
+                          AND fti.size # MSIR.BitWidth (ft) THEN
+            ft := MSIR.TI (fti.size);
+          END;
+          fieldVal := Expr.CompileMSIR (info.expr);
+          IF fieldVal = NIL THEN RETURN NIL END;
+          b := MSIRBuilder.CurrentBlock ();
+          fieldPtr := MSIR.BuildPtrAdd (b, "", slot, byteOff);
+          fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (ft));
+          dstBits := MSIR.BitWidth (ft);
+          srcBits := MSIR.BitWidth (MSIR.ValueType (fieldVal));
+          IF dstBits > 0 AND srcBits > 0
+             AND NOT MSIR.Equal (ft, MSIR.ValueType (fieldVal)) THEN
+            IF dstBits > srcBits THEN
+              fieldVal := MSIR.BuildZExt (b, "", fieldVal, ft);
+            ELSIF dstBits < srcBits THEN
+              fieldVal := MSIR.BuildTrunc (b, "", fieldVal, ft);
+            END;
+          END;
+          MSIR.BuildStore (b, fieldVal, fieldPtr);
+        END;
+      END;
+    END;
+    RETURN slot;
+  END CompileLValueMSIR;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR
+    slot  : MSIR.Value;
+    msirT : MSIR.T;
+  BEGIN
+    slot := CompileLValueMSIR (p);
+    IF slot = NIL THEN RETURN NIL END;
+    msirT := MSIRType.Translate (p.tipe);
+    IF msirT = NIL THEN RETURN NIL END;
+    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirT, slot);
+  END CompileMSIR;
 
 BEGIN
 END RecordExpr.
