@@ -44,9 +44,9 @@ TYPE
       occupied: BOOLEAN;
     END;
 
-(*
+
   Buckets = REF ARRAY OF EntryA;
-*)
+
 
 VAR BucketsVal := NEW (Buckets, 1);
 
