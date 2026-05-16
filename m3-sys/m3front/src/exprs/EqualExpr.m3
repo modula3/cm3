@@ -14,7 +14,7 @@ IMPORT IntegerExpr, ReelExpr, EnumExpr, AddressExpr, UserProc;
 IMPORT ProcExpr, ProcType, TextExpr, Error, M3WString;
 IMPORT RecordType, ArrayType, Field, Value, M3String, Textt;
 IMPORT NamedExpr, QualifyExpr, OpenArrayType, Target, TInt;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 CONST
   Max_unroll = 4; (* max # of iterations in an unrolled loop *)
@@ -22,11 +22,9 @@ CONST
 TYPE
   Kind = {SimpleScalar, SimpleStruct, Complex};
 
-TYPE
-  Op = [ CG.Cmp.EQ .. CG.Cmp.NE ];
-
 CONST
   OpName = ARRAY Op OF TEXT { "\'=\'", "\'#\'" };
+  CGOp = ARRAY Op OF CG.Cmp { CG.Cmp.EQ, CG.Cmp.NE };
 
 TYPE
   P = ExprRep.Tabc BRANDED "EqualExpr.P" OBJECT
@@ -195,7 +193,7 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     IF (p.kind = Kind.SimpleScalar) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      CG.Compare (Type.CGType (t), p.op);
+      CG.Compare (Type.CGType (t), CGOp[p.op]);
     ELSIF (p.kind = Kind.SimpleStruct) THEN
       CompileSolidUnrolled (p);
     ELSE
@@ -228,9 +226,9 @@ PROCEDURE CompileSolidUnrolled (p: P) =
       CG.Load_indirect (cmp_type, i * chunk_size, chunk_size, info.alignment);
       CG.Push (xb);
       CG.Load_indirect (cmp_type, i * chunk_size, chunk_size, info.alignment);
-      CG.Compare (Target.Word.cg_type, p.op);
+      CG.Compare (Target.Word.cg_type, CGOp[p.op]);
       IF (i > 0) THEN
-        IF (p.op = CG.Cmp.EQ)
+        IF (p.op = Op.EQ)
           THEN CG.And (Target.Word.cg_type);
           ELSE CG.Or  (Target.Word.cg_type);
         END;
@@ -256,7 +254,7 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
     IF (p.kind = Kind.SimpleScalar) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      CG.If_then (info.stk_type, p.op, true, false, freq);
+      CG.If_then (info.stk_type, CGOp[p.op], true, false, freq);
       RETURN;
  
     (************ better to generate "If_eq" than  "eq; if_true" 
@@ -272,7 +270,7 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
     ELSIF (info.class = Type.Class.Set) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      CG.Set_compare (info.size, p.op);
+      CG.Set_compare (info.size, CGOp[p.op]);
       IF (true = CG.No_label)
         THEN CG.If_false (false, freq);
         ELSE CG.If_true (true, freq);
@@ -280,7 +278,7 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
       RETURN;
 
     ELSIF (info.class = Type.Class.Procedure) OR ProcType.Is (tb) THEN
-      IF (p.op = CG.Cmp.EQ)
+      IF (p.op = Op.EQ)
         THEN CompileProcs (p, true, false, freq);
         ELSE CompileProcs (p, false, true, freq);
       END;
@@ -290,7 +288,7 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
        OR (info.class = Type.Class.OpenArray) THEN
       Expr.Compile (p.a);  xa := CG.Pop ();
       Expr.Compile (p.b);  xb := CG.Pop ();
-      IF (p.op = CG.Cmp.NE) THEN  (* swap true and false labels *)
+      IF (p.op = Op.NE) THEN  (* swap true and false labels *)
         skip := true;  true := false;  false := skip;
       END;
       IF (false = CG.No_label) THEN
@@ -834,7 +832,7 @@ PROCEDURE Fold (p: P): Expr.T =
       OR AddressExpr.Compare (e1, e2, s)
       OR SetExpr.Compare (e1, e2, s)
       OR ProcExpr.Compare (e1, e2, s) THEN
-      RETURN Bool.Map[(p.op = CG.Cmp.EQ) = (s = 0)];
+      RETURN Bool.Map[(p.op = Op.EQ) = (s = 0)];
     END;
     RETURN NIL;
   END Fold;
@@ -859,8 +857,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
         blk := MSIRBuilder.CurrentBlock ();
         CASE p.op OF
-        | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
-        | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+        | Op.EQ => pred := MSIR.CmpPred.Eq;
+        | Op.NE => pred := MSIR.CmpPred.Ne;
         END;
         RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
       END;
@@ -881,8 +879,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         rv := MSIR.RetypeValue (rv, MSIR.ValueType (lv));
       END;
       CASE p.op OF
-      | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
-      | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+      | Op.EQ => pred := MSIR.CmpPred.Eq;
+      | Op.NE => pred := MSIR.CmpPred.Ne;
       END;
       RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
     ELSIF p.kind # Kind.SimpleScalar THEN
@@ -894,13 +892,82 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
         blk := MSIRBuilder.CurrentBlock ();
         CASE p.op OF
-        | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
-        | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+        | Op.EQ => pred := MSIR.CmpPred.Eq;
+        | Op.NE => pred := MSIR.CmpPred.Ne;
         END;
         RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
       END;
-      MSIRBuilder.Abandon ("non-scalar equality not supported in MSIR v0");
-      RETURN NIL;
+      (* SimpleStruct: load each chunk as integer and compare chunk-by-chunk. *)
+      VAR cmpT: CG.Type;  chunkBits, nChunks: INTEGER;
+          iT: MSIR.T;  addrA, addrB, cmpVal, result: MSIR.Value;
+          msirT: MSIR.T;
+      BEGIN
+        cmpT := FindCompareType (taInfo.size, taInfo.alignment);
+        IF cmpT = CG.Type.Void THEN
+          MSIRBuilder.Abandon ("non-scalar equality: no compare chunk type");
+          RETURN NIL;
+        END;
+        chunkBits := TargetMap.CG_Size [cmpT];
+        nChunks   := taInfo.size DIV chunkBits;
+        iT  := MSIR.TI (chunkBits);
+        blk := MSIRBuilder.CurrentBlock ();
+        CASE p.op OF
+        | Op.EQ => pred := MSIR.CmpPred.Eq;
+        | Op.NE => pred := MSIR.CmpPred.Ne;
+        END;
+        addrA := Expr.LValueMSIR (p.a);
+        IF addrA = NIL THEN
+          VAR v := Expr.CompileMSIR (p.a); BEGIN
+            IF v = NIL THEN RETURN NIL END;
+            msirT := MSIRType.Translate (ta);
+            blk := MSIRBuilder.CurrentBlock ();
+            IF msirT = NIL THEN
+              MSIRBuilder.Abandon ("non-scalar equality: lhs not translatable");
+              RETURN NIL;
+            END;
+            addrA := MSIR.BuildAlloca (blk, "", msirT);
+            MSIR.BuildStore (blk, v, addrA);
+          END;
+        END;
+        addrB := Expr.LValueMSIR (p.b);
+        IF addrB = NIL THEN
+          VAR v := Expr.CompileMSIR (p.b); BEGIN
+            IF v = NIL THEN RETURN NIL END;
+            msirT := MSIRType.Translate (ta);
+            blk := MSIRBuilder.CurrentBlock ();
+            IF msirT = NIL THEN
+              MSIRBuilder.Abandon ("non-scalar equality: rhs not translatable");
+              RETURN NIL;
+            END;
+            addrB := MSIR.BuildAlloca (blk, "", msirT);
+            MSIR.BuildStore (blk, v, addrB);
+          END;
+        END;
+        blk := MSIRBuilder.CurrentBlock ();
+        result := NIL;
+        FOR i := 0 TO nChunks - 1 DO
+          VAR byteOff := VAL (i * chunkBits DIV Target.Byte, LONGINT);
+              pA := MSIR.BuildPtrAdd (blk, "", addrA, byteOff);
+              pB := MSIR.BuildPtrAdd (blk, "", addrB, byteOff);
+              vA := MSIR.BuildLoad   (blk, "", iT, pA);
+              vB := MSIR.BuildLoad   (blk, "", iT, pB);
+          BEGIN
+            cmpVal := MSIR.BuildICmp (blk, "", pred, vA, vB);
+            IF result = NIL THEN
+              result := cmpVal;
+            ELSIF p.op = Op.EQ THEN
+              result := MSIR.BuildIAnd (blk, "", result, cmpVal);
+            ELSE
+              result := MSIR.BuildIOr  (blk, "", result, cmpVal);
+            END;
+          END;
+        END;
+        IF result = NIL THEN
+          MSIRBuilder.Abandon ("non-scalar equality: zero chunks");
+          RETURN NIL;
+        END;
+        RETURN result;
+      END;
     END;
     lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
     rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
@@ -908,8 +975,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     lvKind := MSIR.Kind (MSIR.ValueType (lv));
     IF (lvKind = MSIR.TypeKind.F32) OR (lvKind = MSIR.TypeKind.F64) THEN
       CASE p.op OF
-      | CG.Cmp.EQ => fpred := MSIR.FCmpPred.OEq;
-      | CG.Cmp.NE => fpred := MSIR.FCmpPred.ONe;
+      | Op.EQ => fpred := MSIR.FCmpPred.OEq;
+      | Op.NE => fpred := MSIR.FCmpPred.ONe;
       END;
       RETURN MSIR.BuildFCmp (blk, "", fpred, lv, rv);
     ELSE
@@ -922,8 +989,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         rv := MSIR.RetypeValue (rv, MSIR.ValueType (lv));
       END;
       CASE p.op OF
-      | CG.Cmp.EQ => pred := MSIR.CmpPred.Eq;
-      | CG.Cmp.NE => pred := MSIR.CmpPred.Ne;
+      | Op.EQ => pred := MSIR.CmpPred.Eq;
+      | Op.NE => pred := MSIR.CmpPred.Ne;
       END;
       RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
     END;

@@ -2403,6 +2403,13 @@ BEGIN
     MSIRBuilder.Abandon ("ArrayExpr: unsupported element type");
     RETURN NIL;
   END;
+  (* Apply EltPack correction, matching TranslateFixedArray: compact subranges
+     like [0..15] are stored as i8 in arrays, not as i64 (the base INTEGER type). *)
+  VAR eltPack := ArrayType.EltPack (baseType); BEGIN
+    IF eltPack > 0 AND eltPack # MSIR.BitWidth (eltT) THEN
+      eltT := MSIR.TI (eltPack);
+    END;
+  END;
   IF nElts <= 0 THEN nElts := 1 END;  (* alloca needs at least 1 element *)
   arrT := MSIR.TFixedArray (VAL (nElts, LONGINT), eltT);
   b := MSIRBuilder.CurrentBlock ();
@@ -2414,6 +2421,18 @@ BEGIN
     ELSE
       elemVal := Expr.CompileMSIR (p.args^[i]);
       IF elemVal = NIL THEN RETURN NIL END;
+      (* Truncate/ZExt element value to match packed element width. *)
+      b := MSIRBuilder.CurrentBlock ();
+      VAR srcBits := MSIR.BitWidth (MSIR.ValueType (elemVal));
+          dstBits := MSIR.BitWidth (eltT);
+      BEGIN
+        IF srcBits > 0 AND dstBits > 0 AND srcBits # dstBits THEN
+          IF srcBits > dstBits
+            THEN elemVal := MSIR.BuildTrunc (b, "", elemVal, eltT);
+            ELSE elemVal := MSIR.BuildZExt  (b, "", elemVal, eltT);
+          END;
+        END;
+      END;
     END;
     b := MSIRBuilder.CurrentBlock ();
     elemAddr := MSIR.BuildArrayElemAddr (b, "", alloca,

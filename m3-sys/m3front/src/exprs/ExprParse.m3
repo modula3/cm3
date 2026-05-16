@@ -14,7 +14,7 @@ IMPORT DivideExpr, ModExpr, AddExpr, SubtractExpr, InExpr, PlusExpr;
 IMPORT NegateExpr, NotExpr, ConcatExpr, IntegerExpr, ReelExpr;
 IMPORT TextExpr, DerefExpr, QualifyExpr, SubscriptExpr, TypeExpr;
 IMPORT CallExpr, ConsExpr, RangeExpr, NamedExpr, KeywordExpr, EnumExpr;
-IMPORT NamedType, TInt, WCharr, CG, Brand, Int, LInt;
+IMPORT NamedType, TInt, WCharr, Brand, Int, LInt;
 
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur, offset;
 
@@ -78,12 +78,12 @@ PROCEDURE E3 (types: BOOLEAN;  ): Expr.T =
       GetToken ();
       b := E4 (FALSE);
       CASE t OF
-      | TK.tEQUAL   => a := EqualExpr.New (a, b, CG.Cmp.EQ);
-      | TK.tSHARP   => a := EqualExpr.New (a, b, CG.Cmp.NE);
-      | TK.tLESS    => a := CompareExpr.New (a, b, CG.Cmp.LT);
-      | TK.tLSEQUAL => a := CompareExpr.New (a, b, CG.Cmp.LE);
-      | TK.tGREATER => a := CompareExpr.New (a, b, CG.Cmp.GT);
-      | TK.tGREQUAL => a := CompareExpr.New (a, b, CG.Cmp.GE);
+      | TK.tEQUAL   => a := EqualExpr.New (a, b, EqualExpr.Op.EQ);
+      | TK.tSHARP   => a := EqualExpr.New (a, b, EqualExpr.Op.NE);
+      | TK.tLESS    => a := CompareExpr.New (a, b, CompareExpr.Op.LT);
+      | TK.tLSEQUAL => a := CompareExpr.New (a, b, CompareExpr.Op.LE);
+      | TK.tGREATER => a := CompareExpr.New (a, b, CompareExpr.Op.GT);
+      | TK.tGREQUAL => a := CompareExpr.New (a, b, CompareExpr.Op.GE);
       | TK.tIN      => a := InExpr.New (a, b);
       ELSE             <*ASSERT FALSE*>
       END;

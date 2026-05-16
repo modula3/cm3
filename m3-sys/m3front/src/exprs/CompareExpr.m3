@@ -28,8 +28,7 @@ CONST
   CGType = ARRAY [cREAL..cADDR] OF CG.Type {
              CG.Type.Reel, CG.Type.LReel, CG.Type.XReel,  CG.Type.Addr };
 
-TYPE
-  Op = [ CG.Cmp.GT .. CG.Cmp.LE ];
+  CGOp = ARRAY Op OF CG.Cmp { CG.Cmp.GT, CG.Cmp.GE, CG.Cmp.LT, CG.Cmp.LE };
 
 TYPE
   OpDesc = RECORD signA, signB : INTEGER;  name: TEXT END;
@@ -109,7 +108,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     END;
 
     IF (p.class = cSET)
-      AND ((p.op = CG.Cmp.LT) OR (p.op = CG.Cmp.GT))
+      AND ((p.op = Op.LT) OR (p.op = Op.GT))
       AND (info.size <= Target.Integer.size) THEN
       p.bad_set := TRUE;
     END;
@@ -151,12 +150,12 @@ PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
       ELSE
         type := CGType [p.class];
       END;
-      CG.Compare (type, p.op);
+      CG.Compare (type, CGOp[p.op]);
 
     ELSIF (p.bad_set) THEN
       Expr.Compile (p.a);  ta := CG.Pop ();
       Expr.Compile (p.b);  tb := CG.Pop ();
-      IF (p.op = CG.Cmp.GT) THEN tmp := ta;  ta := tb;  tb := tmp END;
+      IF (p.op = Op.GT) THEN tmp := ta;  ta := tb;  tb := tmp END;
       CG.Push (ta);
       CG.Push (tb);
       CG.Compare (Target.Word.cg_type, CG.Cmp.NE);
@@ -173,7 +172,7 @@ PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
       Expr.Compile (p.a);
       Expr.Compile (p.b);
       EVAL Type.CheckInfo (Expr.TypeOf (p.a), info);
-      CG.Set_compare (info.size, p.op);
+      CG.Set_compare (info.size, CGOp[p.op]);
 
     END;
   END Compile;
@@ -194,12 +193,12 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
       ELSE
         type := CGType [p.class];
       END;
-      CG.If_then (type, p.op, true, false, freq);
+      CG.If_then (type, CGOp[p.op], true, false, freq);
 
     ELSIF (p.bad_set) THEN
       Expr.Compile (p.a);  ta := CG.Pop ();
       Expr.Compile (p.b);  tb := CG.Pop ();
-      IF (p.op = CG.Cmp.GT) THEN tmp := ta;  ta := tb;  tb := tmp END;
+      IF (p.op = Op.GT) THEN tmp := ta;  ta := tb;  tb := tmp END;
       CG.Push (ta);
       CG.Push (tb);
       CG.Compare (Target.Word.cg_type, CG.Cmp.NE);
@@ -221,7 +220,7 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
       Expr.Compile (p.a);
       Expr.Compile (p.b);
       EVAL Type.CheckInfo (Expr.TypeOf (p.a), info);
-      CG.Set_compare (info.size, p.op);
+      CG.Set_compare (info.size, CGOp[p.op]);
       IF (true # CG.No_label)
         THEN CG.If_true  (true, freq);
         ELSE CG.If_false (false, freq);
@@ -257,10 +256,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   BEGIN
     IF isFloat THEN
       CASE p.op OF
-      | CG.Cmp.GT => fpred := MSIR.FCmpPred.OGt;
-      | CG.Cmp.GE => fpred := MSIR.FCmpPred.OGe;
-      | CG.Cmp.LT => fpred := MSIR.FCmpPred.OLt;
-      | CG.Cmp.LE => fpred := MSIR.FCmpPred.OLe;
+      | Op.GT => fpred := MSIR.FCmpPred.OGt;
+      | Op.GE => fpred := MSIR.FCmpPred.OGe;
+      | Op.LT => fpred := MSIR.FCmpPred.OLt;
+      | Op.LE => fpred := MSIR.FCmpPred.OLe;
       END;
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
       rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
@@ -268,10 +267,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     ELSIF (p.class = cINT) OR (p.class = cLINT)
        OR (p.class = cADDR) OR (p.class = cENUM) THEN
       CASE p.op OF
-      | CG.Cmp.GT => pred := MSIR.CmpPred.Sgt;
-      | CG.Cmp.GE => pred := MSIR.CmpPred.Sge;
-      | CG.Cmp.LT => pred := MSIR.CmpPred.Slt;
-      | CG.Cmp.LE => pred := MSIR.CmpPred.Sle;
+      | Op.GT => pred := MSIR.CmpPred.Sgt;
+      | Op.GE => pred := MSIR.CmpPred.Sge;
+      | Op.LT => pred := MSIR.CmpPred.Slt;
+      | Op.LE => pred := MSIR.CmpPred.Sle;
       END;
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
       rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
@@ -280,7 +279,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
       rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();
-      IF (p.op = CG.Cmp.LT) OR (p.op = CG.Cmp.GT) THEN
+      IF (p.op = Op.LT) OR (p.op = Op.GT) THEN
         (* LT = proper subset: (lv | rv) == rv AND lv != rv
            GT = proper superset: (lv | rv) == lv AND lv != rv
            Works for any set width (single-word or multi-word iN). *)
@@ -288,7 +287,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             cmpRef : MSIR.Value;
             sub, neq : MSIR.Value;
         BEGIN
-          IF p.op = CG.Cmp.LT THEN cmpRef := rv ELSE cmpRef := lv END;
+          IF p.op = Op.LT THEN cmpRef := rv ELSE cmpRef := lv END;
           sub := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, lorv, cmpRef);
           neq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, lv, rv);
           RETURN MSIR.BuildIAnd (blk, "", sub, neq);
@@ -300,7 +299,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         VAR landv  := MSIR.BuildIAnd (blk, "", lv, rv);
             cmpRef : MSIR.Value;
         BEGIN
-          IF p.op = CG.Cmp.LE THEN cmpRef := lv ELSE cmpRef := rv END;
+          IF p.op = Op.LE THEN cmpRef := lv ELSE cmpRef := rv END;
           RETURN MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, landv, cmpRef);
         END;
       END;

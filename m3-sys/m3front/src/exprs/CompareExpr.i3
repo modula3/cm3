@@ -8,8 +8,10 @@
 
 INTERFACE CompareExpr;
 
-IMPORT Expr, CG;
+IMPORT Expr;
 
-PROCEDURE New (a, b: Expr.T;  op: [CG.Cmp.GT .. CG.Cmp.LE]): Expr.T;
+TYPE Op = {GT,GE,LT,LE};
+
+PROCEDURE New (a, b: Expr.T;  op: Op): Expr.T;
 
 END CompareExpr.

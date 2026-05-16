@@ -7,8 +7,10 @@
 
 INTERFACE EqualExpr;
 
-IMPORT Expr, CG;
+IMPORT Expr;
 
-PROCEDURE New (a, b: Expr.T;  op: [ CG.Cmp.EQ .. CG.Cmp.NE ]): Expr.T;
+TYPE Op = { EQ, NE };
+
+PROCEDURE New (a, b: Expr.T;  op: Op): Expr.T;
 
 END EqualExpr.
