@@ -22,13 +22,14 @@ Usage (run from repo root):
       Rebuild every test that had any abandons in the baseline, diff vs baseline.
 """
 
-import argparse, json, os, re, subprocess, sys
+import argparse, json, os, re, signal, subprocess, sys
 from pathlib import Path
 
 REPO_ROOT   = Path(__file__).resolve().parent.parent.parent.parent
 TESTS_SRC   = REPO_ROOT / "m3-sys" / "m3tests" / "src"
 BASELINE    = Path(__file__).parent / "sweep-baseline.json"
 DEBUG_FILE  = Path("/tmp/msir-debug.txt")
+TEST_TIMEOUT = 60   # seconds; kills hanging test binaries (e.g. p267)
 
 # ---------------------------------------------------------------------------
 # Test discovery
@@ -53,10 +54,18 @@ def run_one(path: Path) -> list[str]:
     """Build one test with MSIR; return list of abandon/verify message strings."""
     before = DEBUG_FILE.stat().st_size if DEBUG_FILE.exists() else 0
 
-    result = subprocess.run(
+    proc = subprocess.Popen(
         ["cm3", "@M3m3front-msir", "-build"],
-        capture_output=True, text=True, cwd=path,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        cwd=path, start_new_session=True,   # own process group → kills grandchildren
     )
+    try:
+        stdout, stderr = proc.communicate(timeout=TEST_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        proc.communicate()
+        stdout, stderr = "", ""
+        return ["TIMEOUT"]
 
     messages = []
 
@@ -71,7 +80,7 @@ def run_one(path: Path) -> list[str]:
                 messages.append(line)
 
     # Verify errors on stderr
-    for line in result.stderr.splitlines():
+    for line in stderr.splitlines():
         line = line.strip()
         if "msir-verify:" in line:
             messages.append(line)
