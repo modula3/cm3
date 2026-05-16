@@ -127,10 +127,19 @@ No source locations in emitted LLVM IR. See debug symbol architecture note in
 `CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,
 `AddLocalMSIR`, `BeginProc`).
 
-### E. TEXT: remaining cases
+### E. TEXT: remaining cases — complete
 
-- `Fmt.Real` (floating-point formatting) — not yet exercised in tests
-- `Text.Sub` and other TEXT manipulation operations — likely work (same pattern as `Fmt.Bool` / `Text.Length`) but not yet tested
+All TEXT library calls (`Fmt.Real`, `Fmt.LongReal`, `Text.Sub`, `Text.Equal`,
+`Text.Cat`, etc.) work via the existing external-call pattern.
+
+Also fixed: `MSIRToLLVM.EmitFloatHex` was emitting 32-bit float IEEE bits
+zero-padded into the high 4 bytes of a 64-bit hex literal, which LLVM rejects
+for `float` type (the double value would be out of float range).  LLVM requires
+that a `float` hex literal be the 64-bit double representation of the same
+value.  `EmitFloatHex` now properly widens float32 → double64 (rebias exponent
+by 896, extend mantissa by 29 bits) before emitting the 16-hex-digit literal.
+Verified: `Fmt.Real(3.14)`, `Fmt.Real(0.0)`, `Fmt.Real(-1.5)`, `Fmt.Real(1.0e10)`
+all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirmed.
 
 ---
 

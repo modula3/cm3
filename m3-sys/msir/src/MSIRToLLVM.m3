@@ -151,35 +151,62 @@ CONST HexDigit = ARRAY [0..15] OF CHAR {
   '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
 
 (* Emit a float constant as LLVM hex.
-   For float (32-bit): LLVM requires 0x + 16 hex chars of the 64-bit double
-   that has the same value (i.e., the float widened to double).
-   For double (64-bit): 0x + 16 hex chars of the 64-bit IEEE pattern.
-   We use TFloat.ToBytes to get little-endian bytes, then emit big-endian hex. *)
+   LLVM always requires 0x + 16 hex chars for any FP type.
+   For float (32-bit): 16 hex chars must represent the VALUE as a 64-bit
+   IEEE 754 double (widened from float32 — not the raw float bits padded).
+   For double (64-bit): 16 hex chars of the native 64-bit IEEE pattern. *)
 PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
   VAR
-    f    : Target.Float;
-    buf  : ARRAY [0..15] OF TFloat.Byte;
+    f      : Target.Float;
+    buf    : ARRAY [0..15] OF TFloat.Byte;
     nBytes : INTEGER;
-    dbuf : ARRAY [0..7] OF TFloat.Byte;  (* always 8 bytes for LLVM *)
+    bits64 : Word.T;
   BEGIN
     MSIR.GetFloatVal(v, f);
     nBytes := TFloat.ToBytes(f, buf);
-    (* Zero-extend to 8 bytes. For 4-byte REAL, we widen to the 8-byte IEEE
-       double with the same value by letting clang/LLVM do the right thing:
-       emit 0x + 8 zero-padded digits for the 32-bit pattern.
-       LLVM accepts 0xHHHHHHHH (8 hex = 4 bytes) for float literals. *)
-    FOR i := 0 TO 7 DO dbuf[i] := 0 END;
-    FOR i := 0 TO nBytes - 1 DO dbuf[i] := buf[i] END;
-    Wr.PutText(wr, "0x");
-    (* Big-endian hex: most-significant byte first. *)
-    FOR i := nBytes - 1 TO 0 BY -1 DO
-      Wr.PutChar(wr, HexDigit[Word.And(Word.RightShift(dbuf[i], 4), 16_f)]);
-      Wr.PutChar(wr, HexDigit[Word.And(dbuf[i], 16_f)]);
+    IF nBytes = 4 THEN
+      (* Widen float32 → double64.  Reconstruct 32-bit IEEE from little-endian
+         bytes, then rebias the exponent and extend the mantissa. *)
+      VAR
+        b32    : Word.T;
+        sign, exp32, mant32, exp64, mant64 : Word.T;
+      BEGIN
+        b32 := Word.Or(Word.Or(Word.Or(
+                 Word.Shift(VAL(buf[3], Word.T), 24),
+                 Word.Shift(VAL(buf[2], Word.T), 16)),
+                 Word.Shift(VAL(buf[1], Word.T),  8)),
+                 VAL(buf[0], Word.T));
+        sign  := Word.Shift(b32, -31);
+        exp32 := Word.And(Word.Shift(b32, -23), 16_FF);
+        mant32 := Word.And(b32, 16_7FFFFF);
+        IF exp32 = 16_FF THEN
+          exp64 := 16_7FF;          (* infinity or NaN *)
+        ELSIF exp32 = 0 THEN
+          exp64 := 0;               (* ±0 or denormal *)
+        ELSE
+          exp64 := exp32 + 896;     (* rebias: 1023 - 127 *)
+        END;
+        mant64 := Word.Shift(mant32, 29);   (* float has 23 mant bits; double 52 *)
+        bits64 := Word.Or(Word.Or(
+                    Word.Shift(sign, 63),
+                    Word.Shift(exp64, 52)),
+                    mant64);
+      END;
+    ELSE
+      (* Double (8 bytes), little-endian → Word.T *)
+      bits64 := 0;
+      FOR i := 7 TO 0 BY -1 DO
+        bits64 := Word.Or(Word.Shift(bits64, 8), VAL(buf[i], Word.T));
+      END;
     END;
-    (* If 32-bit float: pad remaining 8 hex digits with zeros so LLVM sees
-       a valid 16-hex-digit constant (float 0xHHHHHHHH00000000). *)
-    FOR i := nBytes TO 7 DO
-      Wr.PutText(wr, "00");
+    (* Emit big-endian 16 hex digits *)
+    Wr.PutText(wr, "0x");
+    FOR i := 7 TO 0 BY -1 DO
+      VAR byte := Word.And(Word.Shift(bits64, -(8*i)), 16_FF);
+      BEGIN
+        Wr.PutChar(wr, HexDigit[Word.And(Word.Shift(byte, -4), 16_F)]);
+        Wr.PutChar(wr, HexDigit[Word.And(byte, 16_F)]);
+      END;
     END;
   END EmitFloatHex;
 
