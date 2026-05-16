@@ -56,10 +56,8 @@
     "TestVALUE: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallShortTypeDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR",
-    "CallSameUnpackedTypeNondesig: msir-abandon: importDecl lvalue: unsupported value class",
     "TestVALUE: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallShortTypeDesig: msir-abandon: sub-byte record field size not supported in MSIR",
-    "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR",
-    "CallSameUnpackedTypeNondesig: msir-abandon: importDecl lvalue: unsupported value class"
+    "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR"
   ]
 }

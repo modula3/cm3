@@ -811,8 +811,23 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
             Variable.RegisterExternMSIR (v);
             RETURN MSIRBuilder.LookupVarAddr (v);
         ELSE
-          MSIRBuilder.Abandon ("importDecl lvalue: unsupported value class");
-          RETURN NIL;
+          (* Constant import (e.g. CONST NondesigVal1 = ArrayExpr{...}):
+             fold to rvalue, spill to a fresh alloca. *)
+          VAR folded := Fold (p); BEGIN
+            IF folded = NIL THEN
+              MSIRBuilder.Abandon ("importDecl lvalue: cannot fold constant");
+              RETURN NIL;
+            END;
+            VAR v := Expr.CompileMSIR (folded); BEGIN
+              IF v = NIL THEN RETURN NIL END;
+              VAR blk  := MSIRBuilder.CurrentBlock ();
+                  slot := MSIR.BuildAlloca (blk, "", MSIR.ValueType (v));
+              BEGIN
+                MSIR.BuildStore (blk, v, slot);
+                RETURN slot;
+              END;
+            END;
+          END;
         END;
     | Class.recField =>
         baseAddr := Expr.LValueMSIR (p.lhsExpr);
