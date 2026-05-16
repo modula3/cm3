@@ -61,9 +61,5 @@
     "CallShortTypeDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallSameUnpackedTypeNondesig: msir-abandon: importDecl lvalue: unsupported value class"
-  ],
-  "p292": [
-    "LengthBlock: msir-abandon: LOOPHOLE to open-array/struct not yet in MSIR",
-    "Work: msir-abandon: non-scalar equality not supported in MSIR v0"
   ]
 }

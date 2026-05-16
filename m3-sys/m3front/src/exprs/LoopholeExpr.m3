@@ -597,8 +597,27 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           blk := MSIRBuilder.CurrentBlock ();
           RETURN MSIR.BuildLoad (blk, "", dstT, addr);
         END;
-    | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A, Kind.V_to_S =>
-        MSIRBuilder.Abandon ("LOOPHOLE to open-array/struct not yet in MSIR");
+    | Kind.V_to_S =>
+        (* Scalar value reinterpreted as struct: store to a srcT alloca,
+           then load dstT from the same memory (bit-cast via stack slot). *)
+        IF dstT = NIL THEN
+          MSIRBuilder.Abandon ("LOOPHOLE V_to_S: dest type not translatable in MSIR");
+          RETURN NIL;
+        END;
+        VAR v := Expr.CompileMSIR (p.expr); BEGIN
+          IF v = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          VAR srcT := MSIR.ValueType (v);
+              slot := MSIR.BuildAlloca (blk, "", srcT);
+          BEGIN
+            MSIR.BuildStore (blk, v, slot);
+            VAR dstSlot := MSIR.RetypeValue (slot, MSIR.TPtr (dstT)); BEGIN
+              RETURN MSIR.BuildLoad (blk, "", dstT, dstSlot);
+            END;
+          END;
+        END;
+    | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A =>
+        MSIRBuilder.Abandon ("LOOPHOLE to open-array not yet in MSIR");
         RETURN NIL;
     ELSE
         MSIRBuilder.Abandon ("LOOPHOLE: unhandled kind in MSIR");
@@ -614,8 +633,11 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       Kind.D_to_S, Kind.S_to_S,
       Kind.D_to_V, Kind.S_to_V, Kind.V_to_V =>
         RETURN Expr.LValueMSIR (p.expr);
-    | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A, Kind.V_to_S =>
+    | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A =>
         MSIRBuilder.Abandon ("LOOPHOLE lvalue: open-array target not yet in MSIR");
+        RETURN NIL;
+    | Kind.V_to_S =>
+        MSIRBuilder.Abandon ("LOOPHOLE lvalue: V_to_S has no lvalue");
         RETURN NIL;
     ELSE
         MSIRBuilder.Abandon ("LOOPHOLE lvalue: unhandled kind in MSIR");
