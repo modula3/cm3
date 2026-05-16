@@ -862,6 +862,149 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         END;
         RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
       END;
+      (* Open-array equality: shape check then element-by-element loop. *)
+      IF taInfo.class = Type.Class.OpenArray THEN
+        VAR
+          openRank   := OpenArrayType.OpenDepth (ta);
+          eltT       := OpenArrayType.NonopenEltType (ta);
+          eltMsir    : MSIR.T;
+          eltInfo    : Type.Info;
+          elemBytes  : LONGINT;
+          shapeOk    : MSIR.Value;
+          total      : MSIR.Value;
+          zeros      : REF ARRAY OF MSIR.Value;
+          zero       : MSIR.Value;
+          pA, pB     : MSIR.Value;
+          idxSlot    : MSIR.Value;
+          resSlot    : MSIR.Value;
+          eqConst    : MSIR.Value;
+          neqConst   : MSIR.Value;
+          checkBlk   : MSIR.Block;
+          loopHdrBlk : MSIR.Block;
+          loopBodBlk : MSIR.Block;
+          incrBlk    : MSIR.Block;
+          failBlk    : MSIR.Block;
+          mergeBlk   : MSIR.Block;
+          isEmpty    : MSIR.Value;
+          idx0, hdrCond : MSIR.Value;
+          idx1, ebV, byteOff, eA, eB, bodCond : MSIR.Value;
+          idx2, nxt  : MSIR.Value;
+        BEGIN
+          eltMsir := MSIRType.Translate (eltT);
+          IF eltMsir = NIL THEN
+            MSIRBuilder.Abandon ("open-array equality: cannot translate element type");
+            RETURN NIL;
+          END;
+          EVAL Type.CheckInfo (eltT, eltInfo);
+          IF eltInfo.size <= 0 OR eltInfo.size MOD Target.Byte # 0 THEN
+            MSIRBuilder.Abandon ("open-array equality: non-byte-sized element");
+            RETURN NIL;
+          END;
+          elemBytes := VAL (eltInfo.size DIV Target.Byte, LONGINT);
+
+          lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
+          rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+
+          (* Shape check: AND of (sizeA[dim] = sizeB[dim]) for each dim *)
+          shapeOk := NIL;
+          FOR dim := 0 TO openRank - 1 DO
+            VAR sa := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+                sb := MSIR.BuildOpenArraySize (blk, "", rv, dim);
+                eq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, sa, sb);
+            BEGIN
+              IF shapeOk = NIL
+                THEN shapeOk := eq;
+                ELSE shapeOk := MSIR.BuildIAnd (blk, "", shapeOk, eq);
+              END;
+            END;
+          END;
+
+          (* Total element count = product of all dimension sizes *)
+          total := MSIR.BuildOpenArraySize (blk, "", lv, 0);
+          FOR dim := 1 TO openRank - 1 DO
+            VAR sd := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+            BEGIN
+              total := MSIR.BuildIMul (blk, "", total, sd);
+            END;
+          END;
+
+          (* Data pointers: address of flat element[0] *)
+          zeros := NEW (REF ARRAY OF MSIR.Value, openRank);
+          zero  := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L);
+          FOR k := 0 TO openRank - 1 DO zeros[k] := zero END;
+          pA := MSIR.BuildOpenArrayElemAddr (blk, "", lv, zeros^);
+          pB := MSIR.BuildOpenArrayElemAddr (blk, "", rv, zeros^);
+
+          idxSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI (Target.Integer.size));
+          resSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI1 ());
+          checkBlk   := MSIRBuilder.NewBlock ("oa.check");
+          loopHdrBlk := MSIRBuilder.NewBlock ("oa.hdr");
+          loopBodBlk := MSIRBuilder.NewBlock ("oa.body");
+          incrBlk    := MSIRBuilder.NewBlock ("oa.incr");
+          failBlk    := MSIRBuilder.NewBlock ("oa.fail");
+          mergeBlk   := MSIRBuilder.NewBlock ("oa.merge");
+
+          IF p.op = Op.EQ
+            THEN eqConst  := MSIR.ConstInt (MSIR.TI1 (), 1L);
+                 neqConst := MSIR.ConstInt (MSIR.TI1 (), 0L);
+            ELSE eqConst  := MSIR.ConstInt (MSIR.TI1 (), 0L);
+                 neqConst := MSIR.ConstInt (MSIR.TI1 (), 1L);
+          END;
+          MSIR.BuildStore (blk, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L), idxSlot);
+          MSIR.BuildStore (blk, eqConst, resSlot);
+          (* if shape ok → check empty; else → fail *)
+          MSIR.BuildCondBr (blk, shapeOk,
+                            checkBlk, ARRAY OF MSIR.Value{},
+                            failBlk,  ARRAY OF MSIR.Value{});
+
+          (* check empty: skip loop if total = 0 *)
+          MSIRBuilder.SetCurrentBlock (checkBlk);
+          isEmpty := MSIR.BuildICmp (checkBlk, "", MSIR.CmpPred.Eq,
+                       total, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L));
+          MSIR.BuildCondBr (checkBlk, isEmpty,
+                            mergeBlk,   ARRAY OF MSIR.Value{},
+                            loopHdrBlk, ARRAY OF MSIR.Value{});
+
+          (* loop header: if idx < total → body; else → merge (all matched) *)
+          MSIRBuilder.SetCurrentBlock (loopHdrBlk);
+          idx0    := MSIR.BuildLoad (loopHdrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
+          hdrCond := MSIR.BuildICmp (loopHdrBlk, "", MSIR.CmpPred.Slt, idx0, total);
+          MSIR.BuildCondBr (loopHdrBlk, hdrCond,
+                            loopBodBlk, ARRAY OF MSIR.Value{},
+                            mergeBlk,   ARRAY OF MSIR.Value{});
+
+          (* loop body: compare element at current index *)
+          MSIRBuilder.SetCurrentBlock (loopBodBlk);
+          idx1    := MSIR.BuildLoad (loopBodBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
+          ebV     := MSIR.ConstInt (MSIR.TI (Target.Integer.size), elemBytes);
+          byteOff := MSIR.BuildIMul (loopBodBlk, "", idx1, ebV);
+          eA      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
+                       MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff));
+          eB      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
+                       MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff));
+          bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq, eA, eB);
+          MSIR.BuildCondBr (loopBodBlk, bodCond,
+                            incrBlk,  ARRAY OF MSIR.Value{},
+                            failBlk,  ARRAY OF MSIR.Value{});
+
+          (* increment: advance index, loop back *)
+          MSIRBuilder.SetCurrentBlock (incrBlk);
+          idx2 := MSIR.BuildLoad (incrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
+          nxt  := MSIR.BuildIAdd (incrBlk, "", idx2, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1L));
+          MSIR.BuildStore (incrBlk, nxt, idxSlot);
+          MSIR.BuildBr (incrBlk, loopHdrBlk, ARRAY OF MSIR.Value{});
+
+          (* fail: shape or element mismatch → neq result *)
+          MSIRBuilder.SetCurrentBlock (failBlk);
+          MSIR.BuildStore (failBlk, neqConst, resSlot);
+          MSIR.BuildBr (failBlk, mergeBlk, ARRAY OF MSIR.Value{});
+
+          (* merge: return the result *)
+          MSIRBuilder.SetCurrentBlock (mergeBlk);
+          RETURN MSIR.BuildLoad (mergeBlk, "", MSIR.TI1 (), resSlot);
+        END;
+      END;
       (* Procedure equality: both sides are function pointer values. *)
       IF taInfo.class # Type.Class.Procedure THEN
         MSIRBuilder.Abandon ("non-scalar equality not supported in MSIR v0");

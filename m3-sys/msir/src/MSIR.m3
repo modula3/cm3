@@ -1959,7 +1959,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
-    dimVal := ConstInt(TI(64), VAL(dim, LONGINT));
+    dimVal := ConstInt(TI(Target.Integer.size), VAL(dim, LONGINT));
   BEGIN
     <* ASSERT Kind(oa.type) = TypeKind.OpenArray,
        "BuildOpenArraySize: operand must be openarray" *>
@@ -1969,7 +1969,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
     ops[0] := oa;
     ops[1] := dimVal;
     i.operands := ops;
-    i.result := makeResult(b, TI(64), name, i);
+    i.result := makeResult(b, TI(Target.Integer.size), name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildOpenArraySize;

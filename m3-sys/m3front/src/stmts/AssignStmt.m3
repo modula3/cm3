@@ -922,6 +922,20 @@ PROCEDURE CompileMSIR (p: P) =
             BEGIN
               MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arr, lhsPtr);
             END;
+          ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray AND
+                MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray AND
+                MSIR.OpenArrayRank (eltT) = 1                AND
+                MSIR.Equal (MSIR.OpenArrayElt (eltT), MSIR.FixedArrayElt (rhsT)) THEN
+            (* OpenArray dest ← FixedArray src: lhsPtr is a GcRef pointing to a
+               heap dope vector { data_ptr: ptr, size0: i64 }.  Load data_ptr
+               (field 0) and store the fixed array value there.  Valid because
+               CM3 heap arrays store elements at the data_ptr address. *)
+            VAR blk2 := MSIRBuilder.CurrentBlock ();
+                dPtr := MSIR.BuildLoad (blk2, "", MSIR.TPtr (MSIR.TVoid ()), lhsPtr);
+                sPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (rhsT));
+            BEGIN
+              MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, sPtr);
+            END;
           ELSE
             MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");
           END;

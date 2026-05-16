@@ -125,7 +125,7 @@ PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
     | MSIR.TypeKind.OpenArray =>
         Wr.PutText(wr, "{ ptr");
         FOR k := 0 TO MSIR.OpenArrayRank(t) - 1 DO
-          Wr.PutText(wr, ", i64");
+          Wr.PutText(wr, ", i" & Fmt.Int(Target.Integer.size));
         END;
         Wr.PutText(wr, " }");
     | MSIR.TypeKind.HeapArray =>
