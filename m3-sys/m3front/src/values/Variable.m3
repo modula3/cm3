@@ -353,8 +353,15 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
       IF Text.Equal (MSIR.ProcParamName (p, i), fName) THEN
         paramVal := MSIR.ProcParam (p, i);
         mt       := MSIR.ValueType (paramVal);
-        IF NOT t.indirect THEN
-          (* VALUE formal: alloca so the body can assign to it *)
+        IF t.indirect AND MSIR.Kind(mt) = MSIR.TypeKind.Ptr
+              AND MSIR.Kind(MSIR.EltType(mt)) # MSIR.TypeKind.Void THEN
+          (* VAR or READONLY aggregate: passed as pointer, load through it.
+             t.indirect guards VALUE formals of pointer type (e.g. p: IntPtr) from
+             being misclassified here.  TPtr(TVoid()) falls to the else branch. *)
+          MSIRBuilder.VarMapAdd (t, paramVal, MSIR.EltType(mt));
+        ELSE
+          (* VALUE, or READONLY scalar/proc-ref: spill to alloca so ADR works
+             and the body can assign (VALUE) or take address (READONLY). *)
           VAR slot := MSIR.BuildAlloca(b,
                         Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot",
                         mt);
@@ -362,15 +369,6 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
             MSIR.BuildStore(b, paramVal, slot);
             MSIRBuilder.VarMapAdd(t, slot, mt);
           END;
-        ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Ptr
-              AND MSIR.Kind(MSIR.EltType(mt)) # MSIR.TypeKind.Void THEN
-          (* VAR or READONLY aggregate: passed as pointer, load through it.
-             But TPtr(TVoid()) is an opaque pointer value (proc/address) — treat
-             as a by-value scalar rather than by-reference aggregate. *)
-          MSIRBuilder.VarMapAdd (t, paramVal, MSIR.EltType(mt));
-        ELSE
-          (* READONLY scalar/reference: passed by value, use directly *)
-          MSIRBuilder.VarMapAdd(t, paramVal, NIL);
         END;
         RETURN;
       END;

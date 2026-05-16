@@ -95,6 +95,12 @@ PROCEDURE CheckBinaryArith(c: Ctx;  i: MSIR.Insn) =
     END;
   END CheckBinaryArith;
 
+PROCEDURE IsPointerLike(t: MSIR.T): BOOLEAN =
+  VAR k := MSIR.Kind(t);
+  BEGIN
+    RETURN k = MSIR.TypeKind.Ptr OR k = MSIR.TypeKind.GcRef OR k = MSIR.TypeKind.GcSlot;
+  END IsPointerLike;
+
 PROCEDURE CheckICmp(c: Ctx;  i: MSIR.Insn) =
   VAR a, b: MSIR.Value;
   BEGIN
@@ -105,7 +111,10 @@ PROCEDURE CheckICmp(c: Ctx;  i: MSIR.Insn) =
     a := MSIR.InsnOperand(i, 0);
     b := MSIR.InsnOperand(i, 1);
     IF NOT MSIR.Equal(MSIR.ValueType(a), MSIR.ValueType(b)) THEN
-      Err(c, "icmp operand type mismatch");
+      (* In LLVM opaque-pointer mode all pointer kinds lower to ptr — compatible *)
+      IF NOT (IsPointerLike(MSIR.ValueType(a)) AND IsPointerLike(MSIR.ValueType(b))) THEN
+        Err(c, "icmp operand type mismatch");
+      END;
     END;
     IF MSIR.Kind(MSIR.ValueType(MSIR.InsnResult(i))) # MSIR.TypeKind.I1 THEN
       Err(c, "icmp result must be i1");
@@ -265,7 +274,10 @@ PROCEDURE CheckStore(c: Ctx;  i: MSIR.Insn) =
     END;
     IF MSIR.Kind(MSIR.EltType(addrT)) # MSIR.TypeKind.Void AND
        NOT MSIR.Equal(MSIR.EltType(addrT), valT) THEN
-      Err(c, "store value type does not match pointer element type");
+      (* In LLVM opaque-pointer mode pointer types are all compatible *)
+      IF NOT (IsPointerLike(MSIR.EltType(addrT)) AND IsPointerLike(valT)) THEN
+        Err(c, "store value type does not match pointer element type");
+      END;
     END;
     IF MSIR.InsnResult(i) # NIL THEN Err(c, "store must not have a result") END;
   END CheckStore;
