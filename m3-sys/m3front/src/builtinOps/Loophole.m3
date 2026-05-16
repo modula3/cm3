@@ -10,6 +10,7 @@ MODULE Loophole;
 
 IMPORT CallExpr, Expr, ExprRep, Type, Procedure, LoopholeExpr;
 IMPORT Int, Module, TypeExpr, Error;
+IMPORT MSIR;
 
 VAR Z: CallExpr.MethodList;
 
@@ -85,6 +86,17 @@ PROCEDURE NoteWrites (ce: CallExpr.T) =
     Expr.NoteWrite (ce.args[0]);
   END NoteWrites;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  (* Check transforms ce.args[0] into a LoopholeExpr; delegate to it. *)
+  BEGIN
+    RETURN Expr.CompileMSIR (ce.args[0]);
+  END CompileMSIR;
+
+PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
+  BEGIN
+    RETURN Expr.LValueMSIR (ce.args[0]);
+  END LValueMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, FALSE, TRUE, NIL,
@@ -104,6 +116,8 @@ PROCEDURE Initialize () =
                                  IsDesignator,
                                  NoteWrites,
                                  LoopholeExprAlign);
+    CallExpr.SetMethodMSIR      (Z, CompileMSIR);
+    CallExpr.SetMethodLValueMSIR(Z, LValueMSIR);
     Procedure.DefinePredefined ("LOOPHOLE", Z, TRUE);
   END Initialize;
 

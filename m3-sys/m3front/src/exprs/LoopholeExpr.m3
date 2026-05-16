@@ -535,11 +535,31 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           RETURN MSIR.RetypeValue (v, dstT);
         END;
     | Kind.D_to_V =>
-        (* Designator reinterpreted as scalar: load from the address. *)
+        (* Designator reinterpreted as scalar.
+           Load with the pointer's element type (srcT) then convert to dstT.
+           This keeps MSIR type-consistent.  If srcT is a struct/array that
+           cannot be represented as a register value, fall back to a direct
+           load of dstT (memory reinterpretation; MSIR verify may flag it). *)
         VAR addr := Expr.LValueMSIR (p.expr); BEGIN
           IF addr = NIL THEN RETURN NIL END;
           blk := MSIRBuilder.CurrentBlock ();
-          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+          VAR srcT := MSIR.EltType (MSIR.ValueType (addr));
+              srcK : MSIR.TypeKind;
+          BEGIN
+            IF srcT # NIL THEN srcK := MSIR.Kind (srcT) END;
+            IF srcT = NIL
+               OR srcK = MSIR.TypeKind.Void
+               OR srcK = MSIR.TypeKind.Struct
+               OR srcK = MSIR.TypeKind.FixedArray
+               OR srcK = MSIR.TypeKind.OpenArray THEN
+              (* Non-scalar source: load dstT directly. *)
+              RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+            END;
+            VAR v := MSIR.BuildLoad (blk, "", srcT, addr); BEGIN
+              IF MSIR.Equal (srcT, dstT) THEN RETURN v END;
+              RETURN MSIR.BuildConvert (blk, "", v, dstT);
+            END;
+          END;
         END;
     | Kind.S_to_V =>
         (* Structure rvalue → scalar: materialise then load. *)

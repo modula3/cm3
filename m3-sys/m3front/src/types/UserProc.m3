@@ -397,6 +397,76 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     END;
   END CompileMSIR;
 
+PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
+  (* Return the address of the call result so it can be passed READONLY by-ref.
+     Only direct (non-nested, non-virtual) calls are supported. *)
+  VAR
+    v         : Value.T;
+    procType  : Type.T;
+    msirCallee: MSIR.Proc;
+    argVals   : REF ARRAY OF MSIR.Value;
+    n         : INTEGER;
+    argVal    : MSIR.Value;
+  BEGIN
+    VAR t := Expr.TypeOf(p.proc); BEGIN
+      IF t = NIL THEN t := QualifyExpr.MethodType(p.proc) END;
+      procType := Type.Base(t);
+    END;
+    IF NOT IsProcedureLiteral(p.proc, v) THEN
+      MSIRBuilder.Abandon("lvalue of indirect call result not yet supported in MSIR");
+      RETURN NIL;
+    END;
+    IF Procedure.IsNested(v) THEN
+      MSIRBuilder.Abandon("lvalue of nested proc result not yet supported in MSIR");
+      RETURN NIL;
+    END;
+    msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
+    IF msirCallee = NIL THEN RETURN NIL END;
+    n := NUMBER(p.args^);
+    argVals := NEW(REF ARRAY OF MSIR.Value, n);
+    VAR fv := ProcType.Formals(procType);
+    BEGIN
+      FOR i := 0 TO n - 1 DO
+        <* ASSERT fv # NIL *>
+        argVal := Formal.EmitArgMSIR(fv, p.args[i]);
+        fv := fv.next;
+        IF argVal = NIL THEN RETURN NIL END;
+        argVals[i] := argVal;
+      END;
+    END;
+    VAR procResult    := ProcType.Result(procType);
+        isLargeResult := ProcType.LargeResult(procResult);
+        resultMsirT   : MSIR.T;
+    BEGIN
+      resultMsirT := MSIRType.Translate(procResult);
+      IF resultMsirT = NIL THEN
+        MSIRBuilder.Abandon("proc lvalue: result type not translatable");
+        RETURN NIL;
+      END;
+      IF isLargeResult THEN
+        (* Hidden-ptr convention: alloca slot, prepend as arg, call, return slot. *)
+        VAR actualArgs := NEW(REF ARRAY OF MSIR.Value, 1 + n);
+            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+        BEGIN
+          actualArgs[0] := resultSlot;
+          FOR i := 0 TO n - 1 DO actualArgs[1 + i] := argVals[i] END;
+          EVAL MSIRBuilder.EmitCall("", msirCallee, actualArgs^);
+          RETURN resultSlot;
+        END;
+      ELSE
+        (* Small result: call, alloca temp, store, return temp address. *)
+        VAR callResult := MSIRBuilder.EmitCall("", msirCallee, argVals^);
+            tmpSlot    : MSIR.Value;
+        BEGIN
+          IF callResult = NIL THEN RETURN NIL END;
+          tmpSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+          MSIR.BuildStore(MSIRBuilder.CurrentBlock(), callResult, tmpSlot);
+          RETURN tmpSlot;
+        END;
+      END;
+    END;
+  END LValueMSIR;
+
 PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
   (* Capture proc and call arguments using formal parameter modes. *)
   VAR
@@ -439,8 +509,9 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    CallExpr.SetMethodMSIR    (Methods, CompileMSIR);
-    CallExpr.SetMethodCapture (Methods, Capture);
+    CallExpr.SetMethodMSIR      (Methods, CompileMSIR);
+    CallExpr.SetMethodLValueMSIR(Methods, LValueMSIR);
+    CallExpr.SetMethodCapture   (Methods, Capture);
   END Initialize;
 
 BEGIN

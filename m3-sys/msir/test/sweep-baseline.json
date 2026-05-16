@@ -2,10 +2,6 @@
   "p224": [
     "TIMEOUT"
   ],
-  "p226": [
-    "Test_AtomicRefany_LoadStore: msir-abandon: builtin has no MSIR handler",
-    "Test_AtomicAddress_LoadStore: msir-abandon: builtin has no MSIR handler"
-  ],
   "p248": [
     "FR1: msir-abandon: sub-byte record field size not supported in MSIR"
   ],
@@ -78,23 +74,17 @@
   ],
   "p280": [
     "Equal3D: msir-abandon: non-scalar equality not supported in MSIR v0",
-    "StripDope: msir-abandon: builtin has no MSIR handler",
     "TestVALUE: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallShortTypeDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR",
-    "RefImage: msir-abandon: builtin has no MSIR handler",
     "Image: msir-abandon: non-scalar equality not supported in MSIR v0",
     "TestVALUE: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallShortTypeDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR",
-    "CallSameTypeAnon: msir-abandon: no lvalue MSIR for this builtin",
-    "CallSameUnpackedTypeAnon: msir-abandon: no lvalue MSIR for this builtin",
     "CallSameUnpackedTypeNondesig: msir-abandon: importDecl lvalue: unsupported value class",
     "Equal: msir-abandon: non-scalar equality not supported in MSIR v0",
     "TestVALUE: msir-abandon: sub-byte record field size not supported in MSIR",
     "TestVAR: msir-abandon: non-scalar equality not supported in MSIR v0",
-    "CallSameTypeAnon: msir-abandon: no lvalue MSIR for this builtin",
-    "CallSameUnpackedTypeAnon: msir-abandon: no lvalue MSIR for this builtin",
     "CallShortTypeDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallMisalignedDesig: msir-abandon: sub-byte record field size not supported in MSIR",
     "CallSameUnpackedTypeNondesig: msir-abandon: importDecl lvalue: unsupported value class"
