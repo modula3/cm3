@@ -224,12 +224,17 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
       RETURN ByteArrayFallback(t);
     END;
     eltPack := ArrayType.EltPack(t);
-    IF eltPack > 0 AND eltPack # MSIR.BitWidth(eltMsir) THEN
+    IF eltPack > 0 AND MSIR.BitWidth(eltMsir) > 0
+                   AND eltPack # MSIR.BitWidth(eltMsir) THEN
       (* Actual storage width differs from the natural expression type.
          Use the packed width so GEP strides match actual memory layout.
          This covers BITS-annotated packed types AND compact subranges like
          [0..255] (which CM3 stores as a byte without an explicit BITS annotation)
-         and BOOLEAN (enum size=8 stored in a byte, but Translate gives i1). *)
+         and BOOLEAN (enum size=8 stored in a byte, but Translate gives i1).
+         Guard: only override scalar element types (BitWidth > 0).  For aggregate
+         element types (FixedArray, GcRef, …) BitWidth = -1; their natural MSIR
+         size already matches EltPack, so no override is needed — and replacing
+         them with TI(eltPack) destroys type info needed for nested subscripts. *)
       eltMsir := MSIR.TI(eltPack);
     END;
     RETURN MSIR.TFixedArray(VAL(nElts, LONGINT), eltMsir);
