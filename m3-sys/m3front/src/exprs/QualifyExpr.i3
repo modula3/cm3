@@ -8,7 +8,7 @@
 
 INTERFACE QualifyExpr;
 
-IMPORT M3ID, Expr, Value, Type;
+IMPORT M3ID, Expr, Value, Type, MSIR;
 
 PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T;
 
@@ -24,5 +24,9 @@ PROCEDURE MethodType (e: Expr.T): Type.T;
    return the left-hand object expression.  Otherwise return NIL.
    Used by the MSIR path to compile virtual dispatch. *)
 PROCEDURE LhsExpr (e: Expr.T): Expr.T;
+
+(* If e is a QualifyExpr whose field is sub-byte, emit a read-modify-write
+   bit-insertion of rhs and return TRUE.  Otherwise return FALSE immediately. *)
+PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;
 
 END QualifyExpr.

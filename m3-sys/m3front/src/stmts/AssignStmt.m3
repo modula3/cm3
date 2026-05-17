@@ -859,7 +859,13 @@ PROCEDURE CompileMSIR (p: P) =
     lhsPtr := Expr.LValueMSIR (p.lhs);
     (* Collect container set as side-effect by LValueMSIR (heap field stores). *)
     container := MSIRBuilder.TakePendingContainer ();
-    IF lhsPtr = NIL THEN RETURN END;
+    IF lhsPtr = NIL THEN
+      (* Sub-byte field write: no lvalue; use read-modify-write bit insertion. *)
+      rhsVal := Expr.CompileMSIR (p.rhs);
+      IF rhsVal = NIL THEN RETURN END;
+      EVAL QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal);
+      RETURN;
+    END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
     (* Coerce nil constant to match the slot's element type for untraced pointer stores.
