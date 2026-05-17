@@ -152,6 +152,7 @@ all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirm
 ### F. Small language gaps (not exercised by p0/p1/p2)
 
 These each require a handful of lines; none touches the core IR shape.
+All are live `Abandon` paths confirmed by grepping `m3front/src`.
 
 - **NEW(REF record, >1 keyword arg)**: `GenRefMSIR` abandons when
   `NUMBER(ce.args^) > 1`; needs to iterate remaining keyword exprs.
@@ -161,6 +162,32 @@ These each require a handful of lines; none touches the core IR shape.
 - **Nested proc `PROCEDURE` values**: taking a `PROCEDURE` value of a
   lambda-lifted nested proc requires emitting a trampoline or a
   `{proc_ptr, env_ptr}` closure struct at the use site (see D15).
+- **Packed element array subscript** (`packed/sub-word array subscript`):
+  direct subscript of `ARRAY OF BITS N FOR T` still abandons in
+  `SubscriptExpr.LValueMSIR`.  p269 appeared fixed because those outer
+  arrays held `gc_ref` elements, not packed elements; actual packed-element
+  subscripts were never exercised.  Fix: detect `[N x i1]` element type
+  (ByteArrayFallback) in `SubscriptExpr.CompileMSIR` and route to
+  `MSIRBuilder.ExtractBitField`; mirror in `AssignStmt` via
+  `MSIRBuilder.InsertBitField`.
+- **Non-scalar record equality** (`non-scalar equality not supported in MSIR v0`):
+  `a = b` on record types still abandons; array equality was fixed via a
+  byte-comparison loop but the record branch was not wired up.
+- **`array-type store mismatch`**: catch-all in `AssignStmt.CompileMSIR`
+  fires when LHS and RHS open-array types differ structurally; specific
+  patterns (open constructor assign) were fixed but the general case
+  remains.
+- **Non-constant `FOR` step** (`FOR step must be constant in MSIR v0`):
+  `FOR i := lo TO hi BY expr DO` with a runtime step; fix requires
+  emitting a runtime increment and a signed-vs-unsigned branch.
+- **`ABS` on float types** (`ABS: non-integer type`): `ABS(x)` for
+  `REAL`/`LONGREAL`/`EXTENDED`; lowers to `llvm.fabs.*`.
+- **`BITSIZE`/`BYTESIZE` of open array**: open-array size is a runtime
+  product of element size and shape dims; not yet computed in MSIR.
+- **`SUBARRAY` of rank > 1 open source** (`SUBARRAY: rank>1 open source`):
+  multi-dim open-array slice; needs multi-dim dope-vector construction.
+- **`WITH` unhandled kinds**: `WITH w = expr OF` for expression kinds
+  beyond scalar designator and open-array dope; catch-all abandons.
 
 ### G. Dynamic procMap
 
