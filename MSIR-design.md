@@ -31,12 +31,13 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 149/149 smoke tests pass; 34 abandons remain in 7 p2xx tests |
+| `m3-sys/msir` v0 package       | Built; ships; 149/149 smoke tests pass; 0 abandons across 288 p2xx test runs |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
 NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
-open-array equality, struct-by-value return.
+open-array equality, struct-by-value return,
+BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers).
 
 ## Terminology: what "structured" means here
 
@@ -161,7 +162,9 @@ them):
   `openarray.new <T, rank>, sz…`.
 - **Sets**: `set_union`, `set_intersect`, `set_difference`,
   `set_member`, `set_singleton`, `set_construct`.
-- **Bitfields**: `bitfield_load`, `bitfield_store`.
+- **Bitfields**: `BITS N FOR T` packed fields are lowered inline via
+  shift/mask on `i8` loads/stores (no dedicated op); see ByteArrayFallback
+  convention in the Implementation Notes section.
 - **Conversions**: `convert from_type to_type` with a documented set of
   permissible (from, to) pairs.
 
@@ -784,13 +787,11 @@ Implemented and tested features:
 
 ### Known Limitations
 
-All known `msir-verify` issues eliminated.  Remaining gaps emit
-`msir-abandon` (proc falls back to CG); no incorrect IR is produced.
+All known `msir-verify` issues eliminated.  All 288 p2xx test runs produce
+0 `msir-abandon` messages.  Remaining gaps are language features not yet
+exercised by the test suite; they emit `msir-abandon` (proc falls back to
+CG) rather than incorrect IR.
 
-- **Open-array deref LHS**: `v^ := arr` where `v: REF OPEN ARRAY` requires
-  memcpy not yet in MSIR.
-- **Packed / sub-word-element array subscript**: bit-field extraction
-  not yet implemented.
 - **VALUE open-array formals, partial depth coercion** (`actDepth <
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
@@ -810,7 +811,7 @@ All known `msir-verify` issues eliminated.  Remaining gaps emit
 | `m3-sys/msir/src/MSIRToLLVM.m3` | Lowers MSIR → LLVM text IR |
 | `m3-sys/msir/src/MSIRPrinter.m3` | Prints `.msir` text |
 | `m3-sys/msir/src/MSIRVerifier.m3` | Structural checks |
-| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; var/proc maps; try-context stack |
+| `m3-sys/m3front/src/msir/MSIRBuilder.m3` | Per-proc builder state; var/proc maps; try-context stack; `ExtractBitField`/`InsertBitField` shared bitfield helpers |
 | `m3-sys/m3front/src/msir/MSIREmit.m3` | Module-level gate; writes `.msir` / `.ll` |
 | `m3-sys/m3front/src/stmts/TryStmt.m3` | TRY/EXCEPT EH lowering |
 | `m3-sys/m3front/src/stmts/TryFinStmt.m3` | TRY/FINALLY EH lowering |
@@ -878,6 +879,18 @@ GcRef captures always pass by pointer (conservative GC stack-scan requirement).
 
 **NIL**: always `ConstNil(TPtr(TVoid()))`.  Call sites coerce to destination
 type (`AssignStmt`, `ReturnStmt`, `EqualExpr`).
+
+**ByteArrayFallback / BITS-N-FOR-T packed fields**: any record or array
+whose fields or elements are not byte-aligned is represented as `[N x i1]`
+(one i1 slot per bit) by `MSIRType.ByteArrayFallback`.  Reads use
+`MSIRBuilder.ExtractBitField(base, bitOff, bitWidth, rawFieldType)` — one
+or two `i8` loads, shift + mask, then ZExt/SExt to the field's natural M3
+type.  Writes use `MSIRBuilder.InsertBitField(base, bitOff, bitWidth, rhs)`
+— read-modify-write on one or two bytes.  Both helpers are exported from
+`MSIRBuilder` so `QualifyExpr`, `RecordExpr`, and any future subscriber can
+call them without circular imports.  The `i1` sentinel distinguishes
+ByteArrayFallback from ordinary `[N x i8]` byte arrays used elsewhere
+(e.g. `memcpy` destinations).
 
 **GC write barrier (container protocol)**: `QualifyExpr.LValueMSIR` calls
 `MSIRBuilder.SetPendingContainer(baseAddr)` before returning the field GEP;
