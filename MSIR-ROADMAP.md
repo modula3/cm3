@@ -129,11 +129,75 @@ to emit `TGcRef(void*)` for traced types and `TPtr(void*)` for untraced types.
 
 ### D. Debug symbols
 
-No source locations in emitted LLVM IR. See debug symbol architecture note in
-`CLAUDE.md` for the natural hook points (`Scanner.offset`, `CG.Gen_location`,
-`AddLocalMSIR`, `BeginProc`).
+No source locations in emitted LLVM IR. Natural hook points:
+`Scanner.offset` (current source position), `CG.Gen_location` (CG path
+equivalent), `MSIRBuilder.BeginProc` (function-level DISubprogram),
+`Variable.AddLocalMSIR` (DILocalVariable + dbg.declare).  Self-contained
+additive work; does not affect correctness.
 
 ### E. TEXT: remaining cases — complete
+
+All TEXT library calls (`Fmt.Real`, `Fmt.LongReal`, `Text.Sub`, `Text.Equal`,
+`Text.Cat`, etc.) work via the existing external-call pattern.
+
+Also fixed: `MSIRToLLVM.EmitFloatHex` was emitting 32-bit float IEEE bits
+zero-padded into the high 4 bytes of a 64-bit hex literal, which LLVM rejects
+for `float` type (the double value would be out of float range).  LLVM requires
+that a `float` hex literal be the 64-bit double representation of the same
+value.  `EmitFloatHex` now properly widens float32 → double64 (rebias exponent
+by 896, extend mantissa by 29 bits) before emitting the 16-hex-digit literal.
+Verified: `Fmt.Real(3.14)`, `Fmt.Real(0.0)`, `Fmt.Real(-1.5)`, `Fmt.Real(1.0e10)`
+all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirmed.
+
+### F. Small language gaps (not exercised by p0/p1/p2)
+
+These each require a handful of lines; none touches the core IR shape.
+
+- **NEW(REF record, >1 keyword arg)**: `GenRefMSIR` abandons when
+  `NUMBER(ce.args^) > 1`; needs to iterate remaining keyword exprs.
+- **VALUE open-array partial depth coercion** (`actDepth < formDepth`):
+  the caller-side copy-in only handles matching ranks; needs a loop over
+  the remaining open dimensions.
+- **Nested proc `PROCEDURE` values**: taking a `PROCEDURE` value of a
+  lambda-lifted nested proc requires emitting a trampoline or a
+  `{proc_ptr, env_ptr}` closure struct at the use site (see D15).
+
+### G. Dynamic procMap
+
+`MaxProcMap = 2048` in `MSIRBuilder.m3` is a fixed-size array.  Replacing
+it with a heap-allocated table removes a latent overflow risk for large
+modules with many unique external callees.  Mechanical change; no IR impact.
+
+### H. LLVM optimizer integration
+
+Currently the `.ll` text file is handed off to `clang` for compilation.
+The actual payoff of the LLVM retargeting is running LLVM middle-end passes
+(mem2reg, inlining, LICM, loop unrolling, …) before codegen.  Options:
+
+1. **Drive `opt` + `llc` in the build pipeline** — pipe `.ll` through
+   `opt -O2 | llc`; lowest friction, no new bindings.
+2. **LLVM-C API / bitcode emission** — replace the text-IR writer with
+   direct LLVM-C calls; eliminates the text round-trip; requires binding
+   `libLLVM`.
+3. **MLIR / TableGen dialect** — longer-term; enables M3-specific analyses
+   before LLVM lowering.
+
+Option 1 is the recommended first step; options 2/3 are follow-on.
+
+### I. Statepoint / precise GC
+
+MVP uses conservative stack scanning (Bartlett interior-pointer pinning).
+LLVM's statepoint intrinsics (`gc.statepoint`, `gc.relocate`, `gc.result`)
+enable precise stack maps, eliminating the conservative scan and the
+`addrspacecast` at open-array ABI boundaries (see O11, O12 in
+`MSIR-design.md`).
+
+This is a transformation pass over already-built MSIR: insert
+`gc.statepoint` wrappers around calls, thread `gc.relocate` for every
+live `gc_ref` across call sites.  CM3's mostly-copying collector is closer
+to the statepoint model than a typical framing suggests — the to-space
+stack invariant already guarantees the collector never moves an object
+that a conservative interior pointer points into.
 
 All TEXT library calls (`Fmt.Real`, `Fmt.LongReal`, `Text.Sub`, `Text.Equal`,
 `Text.Cat`, etc.) work via the existing external-call pattern.
