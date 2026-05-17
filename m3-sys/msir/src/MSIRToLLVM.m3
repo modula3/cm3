@@ -1540,16 +1540,21 @@ PROCEDURE EmitConstArrays(wr: Wr.T;  m: MSIR.Module) =
 
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   VAR
-    n   := MSIR.ModuleTypeDescCount(m);
-    ip  := "i" & Fmt.Int(Target.Integer.size);
-    pad := Fmt.Int(Target.Integer.bytes - 4);
+    n    := MSIR.ModuleTypeDescCount(m);
+    ip   := "i" & Fmt.Int(Target.Integer.size);
+    padN := Target.Integer.bytes - 4;
+    padFld : TEXT;
   BEGIN
     IF n = 0 THEN RETURN END;
+    IF padN > 0
+      THEN padFld := ", [" & Fmt.Int(padN) & " x i8]";
+      ELSE padFld := "";
+    END;
 
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
-    Wr.PutText(wr, "%TC_t  = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8, [" & pad & " x i8], " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
-    Wr.PutText(wr, "%OTC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8, [" & pad & " x i8], " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", ptr, " & ip & ", " & ip & ", " & ip & ", ptr, ptr }\n");
-    Wr.PutText(wr, "%ATC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8, [" & pad & " x i8], " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", " & ip & " }\n");
+    Wr.PutText(wr, "%TC_t  = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8" & padFld & ", " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
+    Wr.PutText(wr, "%OTC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8" & padFld & ", " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", ptr, " & ip & ", " & ip & ", " & ip & ", ptr, ptr }\n");
+    Wr.PutText(wr, "%ATC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8" & padFld & ", " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", " & ip & " }\n");
 
     FOR k := 0 TO n - 1 DO
       VAR
@@ -1587,7 +1592,9 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          Wr.PutText(wr, "  [" & pad & " x i8] zeroinitializer,\n");
+          IF padN > 0 THEN
+            Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+          END;
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
@@ -1614,7 +1621,9 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          Wr.PutText(wr, "  [" & pad & " x i8] zeroinitializer,\n");
+          IF padN > 0 THEN
+            Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+          END;
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dopeSize *)
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
@@ -1630,7 +1639,9 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          Wr.PutText(wr, "  [" & pad & " x i8] zeroinitializer,\n");
+          IF padN > 0 THEN
+            Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+          END;
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n");
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & "\n");  (* TC_next *)
