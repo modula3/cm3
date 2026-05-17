@@ -134,8 +134,11 @@ Commitments:
 - Lowering is **target-conditional**: `Has_stack_walker` targets emit
   `invoke`/`landingpad`/`resume`; non-stack-walker targets fall back to
   setjmp scaffolding, with the same MSIR input.
-- Personality function: **`__m3_personality_v0`** (thin wrapper over the
-  existing C++ personality).
+- Personality function: **`__gxx_personality_v0`** (the standard Itanium
+  C++ personality, used directly).  The originally-planned thin-wrapper
+  `__m3_personality_v0` was not built; the C++ personality is sufficient
+  because M3 exception identity is handled at the M3 dispatch level, not
+  inside the personality function itself.
 
 ### A5. Module / init contract
 
@@ -611,11 +614,8 @@ explosion note.
 
 ### O5. LOCK statement.
 
-**Defer to:** Probably never needs its own walkthrough; falls out of
-TRY/FINALLY lowering.
-
-**Constraint:** Must produce identical byte semantics to current C
-backend output for `LOCK m DO body END`.
+**Resolved.** Falls out of TRY/FINALLY lowering; `[x]` in the ROADMAP
+checklist.  No dedicated walkthrough needed.
 
 ### O6. Module init order.
 
@@ -640,11 +640,17 @@ Until then, MSIR ships as a non-default backend mode.
 
 ### O9. Unsafe constructs: LOOPHOLE, ADR, ADDRESS arithmetic.
 
-**Defer to:** Walkthrough that compiles UNSAFE module.
+**Partially resolved.** `ADR`, `LOOPHOLE` (rvalue and lvalue), and
+`ADDRESS` arithmetic (`PtrToInt`/`IntToPtr`/`PtrAdd`) are implemented
+and tested (`[x]` in the ROADMAP checklist).  The `addrspace(1)`
+invariant is preserved: LOOPHOLE between traced-ref and non-traced types
+is encoded as an `addrspacecast` at the LLVM level and documented as
+unsafe.  Full UNSAFE module compilation (arbitrary pointer casts, `BITS
+FOR` overlays) has not been walked through end-to-end.
 
-**Constraint:** Must not undermine `addrspace(1)` invariants. LOOPHOLE
-across address spaces likely needs an explicit `unsafe_cast` op with
-documented (un)safety.
+**Remaining constraint:** A dedicated unsafe-module walkthrough to shake
+out any remaining edge cases (self-referential packed types, LOOPHOLE
+into aggregate types, ADDRESS-of formal params in unsafe context).
 
 ### O10. VAR / READONLY parameter lowering.
 
@@ -747,43 +753,18 @@ incrementally as features land.
 The end-to-end path is working: MSIR is emitted for a real module, lowered
 to LLVM IR, compiled to a native object, and linked into a passing test
 binary.  The production binary (`smoke-realrt`) runs to completion (exit 0)
-against the real CM3 runtime.  **Zero msir-verify events** across the entire
-buildable subset of the CM3 repository.  109/109 smoke tests pass.
+against the real CM3 runtime.  **Zero msir-verify events.**  **149/149
+smoke tests pass.**  **0 msir-abandon messages across 288 p2xx test runs.**
 
-Implemented and tested features:
-
-- Arithmetic, control flow (IF/WHILE/FOR/CASE/REPEAT/WITH/AND/OR)
-- Records (by-value and by-ref), fixed and open arrays, enums, globals
-- VAR/READONLY params, INC/DEC
-- Exception handling: TRY/EXCEPT (UID-dispatch landingpad) and TRY/FINALLY
-  (cleanup landingpad + resume)
-- RAISE statement, exception value binding (`EXCEPT E(v) =>`)
-- RTLinker binder (`@Module_M3`/`@Module_I3`), `RT0.ImportInfo` chain
-- GC read barrier (nil/misaligned/gray-bit inline fast path +
-  `RTHooks__CheckLoadTracedRef`)
-- GC write barrier for heap fields (container protocol; globals need no barrier)
-- TypeCells: `RefType.InitTypecellMSIR` / `ObjectType.InitTypecellMSIR`
-  alongside CG counterparts; driven by type declarations
-- NEW(REF T), NEW(OBJECT T), NEW(REF ARRAY OF T, n)
-- Vtable dispatch via `OTC_defaultMethods`
-- Module global initialization; external/imported variable auto-registration
-- TEXT literals (ASCII and WIDECHAR), TEXT concatenation
-- `var_map`/`gc_map`: globals embedded as trailing fields of `@Mod_M3_info`;
-  gc_map TipeMap skips non-traced fields; LLVM aliases for symbol compat
-- Nested procedures: lambda-lifted; read-only scalar captures by value
-- Fixed→open-array argument coercion; VALUE open-array formal with open actual
-- Procedure values; indirect (proc-variable) calls
-- Float conversions (FLOAT, TRUNC, FLOOR, CEILING, ROUND)
-- SUBARRAY (fixed and rank-1 open source); WITH `= SUBARRAY(…)` binding
-- ADR, BITSIZE/BYTESIZE builtins
-- LOOPHOLE operator (rvalue and lvalue)
-- ADDRESS arithmetic (+/-)
-- IN operator for small constant SETs (≤ 64-bit domain)
-- EVAL / ASSERT / LOOP statements
-- Array constructor expressions as call arguments (ConsExpr delegation)
-- Rvalue-base array subscript (call-result arrays materialised to temp alloca)
-- REF FixedArray deref-copy; CONST array subscript with runtime index
-- Narrow array index zero-extension (prevents GEP sign-extension of BOOLEAN)
+The authoritative feature checklist (emission and lowering, item by item)
+is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
+control flow, records, fixed/open arrays, enums, SETs (all widths), globals,
+VAR/READONLY/VALUE params, TRY/EXCEPT/FINALLY, RAISE, GC barriers,
+TypeCells, NEW (REF/OBJECT/open-array, all ranks), vtable dispatch,
+TYPECASE/NARROW/ISTYPE, nested procedures (lambda-lifted), TEXT,
+SUBARRAY, ADR/LOOPHOLE/ADDRESS, float conversions, procedure values,
+BITS-N-FOR-T packed fields (ByteArrayFallback), compact subrange arrays,
+struct-by-value return, opaque types, SET arithmetic, LOCK.
 
 ### Known Limitations
 
@@ -795,13 +776,11 @@ CG) rather than incorrect IR.
 - **VALUE open-array formals, partial depth coercion** (`actDepth <
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
-- **Opaque types**: REF revelation works; OBJECT revelation deferred.
+- **Nested proc procedure values**: taking a `PROCEDURE` value of a nested
+  (lambda-lifted) proc is not yet supported; abandons at the call site.
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR silently omits callbacks.
 - **Debug symbols**: no DWARF emitted yet (self-contained additive work;
   see hook points in `BeginProc` / `AddLocalMSIR`).
-- **SET type operations**: multi-word sets and set arithmetic (+/-/*/)
-  not yet implemented.
-- **NEW(REF open-array) multi-D**: 1-D tested; higher ranks untested.
 
 ### Key Source Files
 
