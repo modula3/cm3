@@ -1,8 +1,8 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-17 (msir branch)
+Last updated: 2026-05-18 (msir branch)
 
-## What's Working (166/166 tests pass)
+## What's Working (173/173 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -47,6 +47,8 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] READONLY scalar formals: addressable via alloca spill — `BindFormalMSIR` spills all non-aggregate-pointer formals (VALUE and READONLY scalar) to an alloca; `t.indirect` guard prevents VALUE formals of pointer type (e.g. `p: IntPtr`) from being misclassified as aggregate-by-reference
 - [x] `MSIRVerifier`: relaxed store/icmp pointer checks — all `Ptr`/`GcRef`/`GcSlot` pointer kinds are compatible in LLVM opaque-pointer mode; cross-kind pointer stores (e.g. `store alloca-result, ADDRESS-slot`) and pointer comparisons no longer emit false-positive type-mismatch errors
 - [x] TRUNC/FLOOR/CEILING/ROUND builtins: `FPFloor`/`FPCeil`/`FPRound` unary float ops; lower to `llvm.floor.*`/`llvm.ceil.*`/`llvm.roundeven.*`; TRUNC emits direct `fptosi`; others emit rounding op then `fptosi`; ROUND uses `llvm.roundeven.*` (NearestElseEven = `FloatMode.RoundDefault`, per spec: `SetRounding` does not affect ROUND)
+- [x] `ABS` on float types: `Abs.AbsMSIR` emits `MSIR.BuildFPAbs` (new `Op.FPAbs`); lowers to `llvm.fabs.f32` / `llvm.fabs.f64`
+- [x] Non-scalar record/array equality: `EqualExpr.CompileMSIR` handles `Kind.Complex` for `Record`/`Array` via a byte-comparison loop; short-circuits on first differing byte
 - [x] `IN` operator on SETs: `InExpr.CompileMSIR` emits `lshr(setVal, zext(elt - minOrd)) & 1 != 0`; works at any set width (single-word iN or IWide iN)
 - [x] CONST array subscript: `NamedExpr.LValueMSIR` handles `Value.Class.Expr` for array types by calling `MSIRBuilder.MaterializeConstArray`; `ArrayExpr.EltCount`/`Elt` enumerate elements; per-element `Expr.CompileMSIR` yields constant MSIR values; result registered as `@constarray_N = private constant [N x T] [...]` global
 - [x] Indirect (proc-variable) calls: `UserProc.CompileMSIR` handles non-literal, non-method case via `Expr.CompileMSIR(p.proc)` + `MSIRBuilder.EmitCallIndirect`; routes to `BuildCallIndirect` or `BuildInvokeIndirect` depending on active TRY context
@@ -169,9 +171,10 @@ All are live `Abandon` paths confirmed by grepping `m3front/src`.
   `bitInByte = (idx & mask) * eltPack` dynamically; `SubByteStoreElemMSIR`
   exported for the write path.  Only eltPack ∈ {1,2,4} (divides 8)
   supported; other values Abandon.
-- **Non-scalar record equality** (`non-scalar equality not supported in MSIR v0`):
-  `a = b` on record types still abandons; array equality was fixed via a
-  byte-comparison loop but the record branch was not wired up.
+- ~~**Non-scalar record equality**~~ — **done**: `EqualExpr.CompileMSIR` handles
+  `Kind.Complex` for `Type.Class.Record` and `Type.Class.Array` via a byte-comparison
+  loop (`rec.eq.hdr/body/incr/fail/merge` blocks); result stored in alloca, loop
+  short-circuits on first differing byte.
 - **`array-type store mismatch`**: catch-all in `AssignStmt.CompileMSIR`
   fires when LHS and RHS open-array types differ structurally; specific
   patterns (open constructor assign) were fixed but the general case
@@ -179,8 +182,8 @@ All are live `Abandon` paths confirmed by grepping `m3front/src`.
 - **Non-constant `FOR` step** (`FOR step must be constant in MSIR v0`):
   `FOR i := lo TO hi BY expr DO` with a runtime step; fix requires
   emitting a runtime increment and a signed-vs-unsigned branch.
-- **`ABS` on float types** (`ABS: non-integer type`): `ABS(x)` for
-  `REAL`/`LONGREAL`/`EXTENDED`; lowers to `llvm.fabs.*`.
+- ~~**`ABS` on float types**~~ — **done**: `Abs.AbsMSIR` emits `MSIR.BuildFPAbs`
+  (new `Op.FPAbs`); `MSIRToLLVM` lowers to `llvm.fabs.f32`/`llvm.fabs.f64`.
 - **`BITSIZE`/`BYTESIZE` of open array**: open-array size is a runtime
   product of element size and shape dims; not yet computed in MSIR.
 - **`SUBARRAY` of rank > 1 open source** (`SUBARRAY: rank>1 open source`):
@@ -262,7 +265,7 @@ all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirm
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (166 checks)
+# Full end-to-end LLVM link test (173 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

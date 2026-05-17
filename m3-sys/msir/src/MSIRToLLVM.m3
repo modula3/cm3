@@ -808,7 +808,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, "\n");
 
-    | MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound =>
+    | MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound, MSIR.Op.FPAbs =>
         VAR
           src   := MSIR.InsnOperand(i, 0);
           ftype := MSIR.ValueType(src);
@@ -819,6 +819,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           CASE MSIR.InsnOp(i) OF
           | MSIR.Op.FPFloor     => iname := "llvm.floor.";
           | MSIR.Op.FPCeil      => iname := "llvm.ceil.";
+          | MSIR.Op.FPAbs       => iname := "llvm.fabs.";
           ELSE                     iname := "llvm.roundeven."; (* NearestElseEven = FloatMode.RoundDefault *)
           END;
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = call ");

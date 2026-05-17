@@ -1447,6 +1447,8 @@ PROCEDURE BuildFPCeil     (b: Block; name: TEXT; x: Value): Value =
   BEGIN RETURN buildCast(b, Op.FPCeil,      name, x, x.type) END BuildFPCeil;
 PROCEDURE BuildFPRound    (b: Block; name: TEXT; x: Value): Value =
   BEGIN RETURN buildCast(b, Op.FPRound,     name, x, x.type) END BuildFPRound;
+PROCEDURE BuildFPAbs      (b: Block; name: TEXT; x: Value): Value =
+  BEGIN RETURN buildCast(b, Op.FPAbs,       name, x, x.type) END BuildFPAbs;
 
 PROCEDURE BuildLoad(b: Block; name: TEXT; type: T; addr: Value): Value =
   VAR

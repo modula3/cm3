@@ -26,8 +26,13 @@ extern M3Int  Main__SumTo(M3Int n);
 extern M3Int  Main__AbsSum(M3Int a, M3Int b);
 extern M3Int  Main__FactSum(M3Int n);
 
+extern float  Main__AbsReal(float x);
+extern double Main__AbsLongReal(double x);
+
 extern void   Main__MakePoint(Point *result, M3Int x, M3Int y);
 extern M3Int  Main__PointSum(Point p);
+extern M3Bool Main__PointEq(Point a, Point b);
+extern M3Bool Main__PointNe(Point a, Point b);
 extern M3Int  Main__ColorToInt(M3Byte c);
 
 extern void   Main__Swap(M3Int *a, M3Int *b);
@@ -208,6 +213,15 @@ static void check_bool(const char *name, M3Bool got, M3Bool expected) {
     }
 }
 
+static void check_double(const char *name, double got, double expected) {
+    if (got == expected)
+        printf("ok   %-30s = %g\n", name, got);
+    else {
+        printf("FAIL %-30s : got %g, expected %g\n", name, got, expected);
+        failures++;
+    }
+}
+
 int main(void) {
     /* Resolve TypeLink defn pointers before any allocator calls. */
     MSIR_InitTypeLinks();
@@ -224,11 +238,25 @@ int main(void) {
     check_int("AbsSum(-3,4)",     Main__AbsSum(-3, 4),      7);
     check_int("FactSum(4)",       Main__FactSum(4),         34);
 
+    /* ABS on float types — llvm.fabs.* */
+    check_double("AbsReal(-2.5)",     (double)Main__AbsReal(-2.5f),    2.5);
+    check_double("AbsReal(1.5)",      (double)Main__AbsReal(1.5f),     1.5);
+    check_double("AbsLongReal(-3.0)", Main__AbsLongReal(-3.0),         3.0);
+    check_double("AbsLongReal(0.0)",  Main__AbsLongReal(0.0),          0.0);
+
     /* records — MakePoint uses hidden result ptr (large-result convention) */
     Point p; Main__MakePoint(&p, 3, 4);
     check_int("MakePoint(3,4).x", p.x,                     3);
     check_int("MakePoint(3,4).y", p.y,                     4);
     check_int("PointSum({3,4})",  Main__PointSum(p),        7);
+
+    /* record equality — byte-comparison loop */
+    Point p2; Main__MakePoint(&p2, 3, 4);
+    Point p3; Main__MakePoint(&p3, 3, 5);
+    check_bool("PointEq(same)",   Main__PointEq(p, p2),    1);
+    check_bool("PointEq(diff)",   Main__PointEq(p, p3),    0);
+    check_bool("PointNe(same)",   Main__PointNe(p, p2),    0);
+    check_bool("PointNe(diff)",   Main__PointNe(p, p3),    1);
 
     /* enum */
     check_int("ColorToInt(2)",    Main__ColorToInt(2),      2);

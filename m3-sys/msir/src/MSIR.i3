@@ -450,6 +450,7 @@ TYPE Op = {
   FPFloor,    (* floor(x): round toward -inf; lowers to llvm.floor.* *)
   FPCeil,     (* ceil(x):  round toward +inf; lowers to llvm.ceil.* *)
   FPRound,    (* round-half-to-even (FloatMode.RoundDefault=NearestElseEven); lowers to llvm.roundeven.* *)
+  FPAbs,      (* fabs(x): floating-point absolute value; lowers to llvm.fabs.* *)
   (* sets *)
   SetUnion, SetIntersect, SetDifference, SetMember,
   (* indirect dispatch *)
@@ -555,6 +556,7 @@ PROCEDURE BuildTrunc      (b: Block;  name: TEXT;  x: Value;  dstType: T): Value
 PROCEDURE BuildFPFloor    (b: Block;  name: TEXT;  x: Value): Value;
 PROCEDURE BuildFPCeil     (b: Block;  name: TEXT;  x: Value): Value;
 PROCEDURE BuildFPRound    (b: Block;  name: TEXT;  x: Value): Value;
+PROCEDURE BuildFPAbs      (b: Block;  name: TEXT;  x: Value): Value;
 
 PROCEDURE BuildLoad (b: Block;  name: TEXT;  type: T;  addr: Value): Value;
 PROCEDURE BuildStore(b: Block;  value: Value;  addr: Value);

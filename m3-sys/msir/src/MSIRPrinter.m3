@@ -252,6 +252,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.FPFloor            => RETURN "fpfloor";
     | MSIR.Op.FPCeil             => RETURN "fpceil";
     | MSIR.Op.FPRound            => RETURN "fpround";
+    | MSIR.Op.FPAbs              => RETURN "fpabs";
     | MSIR.Op.SetUnion           => RETURN "set_union";
     | MSIR.Op.SetIntersect       => RETURN "set_intersect";
     | MSIR.Op.SetDifference      => RETURN "set_difference";
@@ -331,7 +332,7 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
     | MSIR.Op.FNeg,
-      MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound =>
+      MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound, MSIR.Op.FPAbs =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
     | MSIR.Op.ICmp =>

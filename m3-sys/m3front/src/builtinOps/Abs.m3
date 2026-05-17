@@ -73,8 +73,13 @@ PROCEDURE AbsMSIR (ce: CallExpr.T): MSIR.Value =
     mergeBlk: MSIR.Block;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
+    IF (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
+      arg := Expr.CompileMSIR (ce.args[0]);
+      IF arg = NIL THEN RETURN NIL END;
+      RETURN MSIR.BuildFPAbs (MSIRBuilder.CurrentBlock (), "", arg);
+    END;
     IF (t # Int.T) AND (t # LInt.T) THEN
-      MSIRBuilder.Abandon ("ABS: non-integer type not supported in MSIR v0");
+      MSIRBuilder.Abandon ("ABS: unsupported type in MSIR");
       RETURN NIL;
     END;
     arg := Expr.CompileMSIR (ce.args[0]);

@@ -1005,6 +1005,105 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           RETURN MSIR.BuildLoad (mergeBlk, "", MSIR.TI1 (), resSlot);
         END;
       END;
+      (* Record / fixed-array equality: byte-chunk loop over taInfo.size DIV 8 bytes. *)
+      IF (taInfo.class = Type.Class.Record) OR (taInfo.class = Type.Class.Array) THEN
+        VAR
+          totalBytes  := taInfo.size DIV Target.Byte;
+          iT          := MSIR.TI (Target.Byte);
+          msirT       : MSIR.T;
+          addrA, addrB: MSIR.Value;
+          idxSlot     : MSIR.Value;
+          resSlot     : MSIR.Value;
+          loopHdrBlk  : MSIR.Block;
+          loopBodBlk  : MSIR.Block;
+          incrBlk     : MSIR.Block;
+          failBlk     : MSIR.Block;
+          mergeBlk    : MSIR.Block;
+          eqConst     : MSIR.Value;
+          neqConst    : MSIR.Value;
+          idx0, hdrCond : MSIR.Value;
+          idx1, byteOff, vA, vB, cmpVal, nxt, idx2 : MSIR.Value;
+        BEGIN
+          IF taInfo.size <= 0 OR taInfo.size MOD Target.Byte # 0 THEN
+            MSIRBuilder.Abandon ("record equality: non-byte-sized record");
+            RETURN NIL;
+          END;
+          addrA := Expr.LValueMSIR (p.a);
+          IF addrA = NIL THEN
+            VAR v := Expr.CompileMSIR (p.a); BEGIN
+              IF v = NIL THEN RETURN NIL END;
+              msirT := MSIRType.Translate (ta);
+              blk := MSIRBuilder.CurrentBlock ();
+              IF msirT = NIL THEN
+                MSIRBuilder.Abandon ("record equality: lhs not translatable");
+                RETURN NIL;
+              END;
+              addrA := MSIR.BuildAlloca (blk, "", msirT);
+              MSIR.BuildStore (blk, v, addrA);
+            END;
+          END;
+          addrB := Expr.LValueMSIR (p.b);
+          IF addrB = NIL THEN
+            VAR v := Expr.CompileMSIR (p.b); BEGIN
+              IF v = NIL THEN RETURN NIL END;
+              msirT := MSIRType.Translate (ta);
+              blk := MSIRBuilder.CurrentBlock ();
+              IF msirT = NIL THEN
+                MSIRBuilder.Abandon ("record equality: rhs not translatable");
+                RETURN NIL;
+              END;
+              addrB := MSIR.BuildAlloca (blk, "", msirT);
+              MSIR.BuildStore (blk, v, addrB);
+            END;
+          END;
+          blk := MSIRBuilder.CurrentBlock ();
+          idxSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI (Target.Integer.size));
+          resSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI1 ());
+          loopHdrBlk := MSIRBuilder.NewBlock ("rec.eq.hdr");
+          loopBodBlk := MSIRBuilder.NewBlock ("rec.eq.body");
+          incrBlk    := MSIRBuilder.NewBlock ("rec.eq.incr");
+          failBlk    := MSIRBuilder.NewBlock ("rec.eq.fail");
+          mergeBlk   := MSIRBuilder.NewBlock ("rec.eq.merge");
+          CASE p.op OF
+          | Op.EQ => eqConst  := MSIR.ConstInt (MSIR.TI1 (), 1L);
+                     neqConst := MSIR.ConstInt (MSIR.TI1 (), 0L);
+          | Op.NE => eqConst  := MSIR.ConstInt (MSIR.TI1 (), 0L);
+                     neqConst := MSIR.ConstInt (MSIR.TI1 (), 1L);
+          END;
+          MSIR.BuildStore (blk, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L), idxSlot);
+          MSIR.BuildStore (blk, eqConst, resSlot);
+          MSIR.BuildBr (blk, loopHdrBlk, ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock (loopHdrBlk);
+          idx0 := MSIR.BuildLoad (loopHdrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
+          hdrCond := MSIR.BuildICmp (loopHdrBlk, "", MSIR.CmpPred.Slt, idx0,
+                       MSIR.ConstInt (MSIR.TI (Target.Integer.size), VAL (totalBytes, LONGINT)));
+          MSIR.BuildCondBr (loopHdrBlk, hdrCond,
+                            loopBodBlk, ARRAY OF MSIR.Value{},
+                            mergeBlk,   ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock (loopBodBlk);
+          idx1    := MSIR.BuildLoad (loopBodBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
+          byteOff := idx1;
+          vA      := MSIR.BuildLoad (loopBodBlk, "", iT,
+                       MSIR.BuildGepByte (loopBodBlk, "", addrA, byteOff));
+          vB      := MSIR.BuildLoad (loopBodBlk, "", iT,
+                       MSIR.BuildGepByte (loopBodBlk, "", addrB, byteOff));
+          cmpVal  := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq, vA, vB);
+          MSIR.BuildCondBr (loopBodBlk, cmpVal,
+                            incrBlk, ARRAY OF MSIR.Value{},
+                            failBlk, ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock (incrBlk);
+          idx2 := MSIR.BuildLoad (incrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
+          nxt  := MSIR.BuildIAdd (incrBlk, "", idx2,
+                    MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1L));
+          MSIR.BuildStore (incrBlk, nxt, idxSlot);
+          MSIR.BuildBr (incrBlk, loopHdrBlk, ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock (failBlk);
+          MSIR.BuildStore (failBlk, neqConst, resSlot);
+          MSIR.BuildBr (failBlk, mergeBlk, ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock (mergeBlk);
+          RETURN MSIR.BuildLoad (mergeBlk, "", MSIR.TI1 (), resSlot);
+        END;
+      END;
       (* Procedure equality: both sides are function pointer values. *)
       IF taInfo.class # Type.Class.Procedure THEN
         MSIRBuilder.Abandon ("non-scalar equality not supported in MSIR v0");

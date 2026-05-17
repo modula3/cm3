@@ -197,6 +197,13 @@ PROCEDURE AbsSum (a, b: INTEGER): INTEGER =
     RETURN Abs(a) + Abs(b);
   END AbsSum;
 
+(* ABS on floating-point types — lowers to llvm.fabs.* *)
+PROCEDURE AbsReal (x: REAL): REAL =
+  BEGIN RETURN ABS(x) END AbsReal;
+
+PROCEDURE AbsLongReal (x: LONGREAL): LONGREAL =
+  BEGIN RETURN ABS(x) END AbsLongReal;
+
 PROCEDURE FactSum (n: INTEGER): INTEGER =
   BEGIN
     RETURN Add(Factorial(n), SumTo(n));
@@ -226,6 +233,13 @@ PROCEDURE PointSum (p: Point): INTEGER =
   BEGIN
     RETURN p.x + p.y;
   END PointSum;
+
+(* Record equality: a = b and a # b — lowers to byte-comparison loop *)
+PROCEDURE PointEq (a, b: Point): BOOLEAN =
+  BEGIN RETURN a = b END PointEq;
+
+PROCEDURE PointNe (a, b: Point): BOOLEAN =
+  BEGIN RETURN a # b END PointNe;
 
 PROCEDURE ColorToInt (c: Color): INTEGER =
   BEGIN
