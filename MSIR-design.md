@@ -31,13 +31,14 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 149/149 smoke tests pass; 0 abandons across 288 p2xx test runs |
+| `m3-sys/msir` v0 package       | Built; ships; 166/166 smoke tests pass; 0 abandons across 288 p2xx test runs |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
 NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
 open-array equality, struct-by-value return,
-BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers).
+BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers),
+sub-byte packed-element array subscript (ExtractBitFieldDyn/InsertBitFieldDyn).
 
 ## Terminology: what "structured" means here
 
@@ -753,7 +754,7 @@ incrementally as features land.
 The end-to-end path is working: MSIR is emitted for a real module, lowered
 to LLVM IR, compiled to a native object, and linked into a passing test
 binary.  The production binary (`smoke-realrt`) runs to completion (exit 0)
-against the real CM3 runtime.  **Zero msir-verify events.**  **149/149
+against the real CM3 runtime.  **Zero msir-verify events.**  **166/166
 smoke tests pass.**  **0 msir-abandon messages across 288 p2xx test runs.**
 
 The authoritative feature checklist (emission and lowering, item by item)

@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-17 (msir branch)
 
-## What's Working (149/149 tests pass)
+## What's Working (166/166 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -67,7 +67,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Packed record constructors: `RecordExpr.CompileMSIR` detects `[N x i1]` result type (ByteArrayFallback), zero-fills the byte array, then inserts each field value via `MSIRBuilder.InsertBitField` (sub-byte) or direct byte-aligned store (byte-multiple); nested packed aggregate fields are copied byte-by-byte via `i8` load/insert loops
 - [x] Nested arrays of aggregate element types (`ARRAY OF ARRAY OF gc_ref`, etc.): `MSIRType.TranslateFixedArray` guards the EltPack storage-width override with `MSIR.BitWidth(eltMsir) > 0`; prevents aggregate element types (GcRef, FixedArray, …) with `BitWidth = -1` from being collapsed to `IWide(eltPack)`, which would break inner subscripts
 - [x] `MSIRBuilder.ExtractBitField` / `MSIRBuilder.InsertBitField`: shared bitfield helpers exported from the builder layer so `QualifyExpr`, `RecordExpr`, and future callers can use them without circular imports; use `curBlock` directly (no `b` parameter)
-- [x] Sub-byte packed-element array subscript (`ARRAY OF BITS N FOR T`, eltPack ∈ {1,2,4}): `MSIRBuilder.ExtractBitFieldDyn`/`InsertBitFieldDyn` compute dynamic byte/bit offsets; `SubscriptExpr.CompileMSIR` detects `[N x i1]` ByteArrayFallback and dispatches; `SubscriptExpr.SubByteStoreElemMSIR` handles writes from `AssignStmt.CompileMSIR`
+- [x] Sub-byte packed-element array subscript (`ARRAY OF BITS N FOR T`, eltPack ∈ {1,2,4}): `MSIRBuilder.ExtractBitFieldDyn`/`InsertBitFieldDyn` compute dynamic byte/bit offsets; `SubscriptExpr.CompileMSIR` detects `[N x i1]` ByteArrayFallback and dispatches; `SubscriptExpr.SubByteStoreElemMSIR` handles writes from `AssignStmt.CompileMSIR`; CG path fixed (`CG.Index_bits` now materialises `VKind.Direct` address before attaching bit-offset temp, preventing assertion in `ForceAddr2SAP`)
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -262,7 +262,7 @@ all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirm
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (149 checks)
+# Full end-to-end LLVM link test (166 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)
