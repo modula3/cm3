@@ -64,6 +64,20 @@ PROCEDURE PackedByteSum (VAR a: ARRAY [0..3] OF Byte8): INTEGER =
     RETURN s;
   END PackedByteSum;
 
+(* Packed nibble array (BITS 4 FOR [0..15]): dynamic bit extraction *)
+PROCEDURE NibGet (VAR a: NibArr; i: INTEGER): INTEGER =
+  BEGIN RETURN a[i] END NibGet;
+
+PROCEDURE NibSet (VAR a: NibArr; i, val: INTEGER): INTEGER =
+  BEGIN a[i] := val; RETURN a[i] END NibSet;
+
+PROCEDURE NibSum (VAR a: NibArr): INTEGER =
+  VAR s := 0;
+  BEGIN
+    FOR i := 0 TO 7 DO s := s + a[i] END;
+    RETURN s;
+  END NibSum;
+
 (* Records with compact fields *)
 PROCEDURE FillByteRec (VAR r: ByteRec; a, b, c: INTEGER) =
   BEGIN r.a := a;  r.b := b;  r.c := c  END FillByteRec;
@@ -197,6 +211,8 @@ TYPE
   SmallSet = SET OF [0..15];
   WideSet  = SET OF [0..127];  (* 128-bit set — multi-word *)
   Byte8    = BITS 8 FOR [0..255];
+  Nib      = BITS 4 FOR [0..15];
+  NibArr   = ARRAY [0..7] OF Nib;
 
 PROCEDURE MakePoint (x, y: INTEGER): Point =
   VAR p: Point;

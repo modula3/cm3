@@ -3594,6 +3594,12 @@ PROCEDURE Index_bits (bits_addr_align: Alignment := 1) =
         cg.add (Target.Integer.cg_type); 
         cg.store (index.base, 0, Target.Integer.cg_type, Target.Integer.cg_type);
       END;
+      IF (x.kind = VKind.Direct) THEN
+        (* Materialize the address from the direct variable now; ForceAddr2SAP
+           cannot handle VKind.Direct with a non-NIL bits field. *)
+        ForceStacked ();
+        x.kind := VKind.Stacked;
+      END;
       IF (x.kind = VKind.Stacked) THEN x.kind := VKind.Pointer; END;
       x.bits := index.base;
       x.temp_bits := TRUE;

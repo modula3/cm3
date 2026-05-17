@@ -155,6 +155,11 @@ extern M3Int  Main__PackedByteGet(M3Byte *a, M3Int i);
 extern M3Int  Main__PackedByteSet(M3Byte *a, M3Int i, M3Int val);
 extern M3Int  Main__PackedByteSum(M3Byte *a);
 
+/* Packed nibble array (BITS 4 FOR [0..15]): 8 nibbles packed into 4 bytes */
+extern M3Int  Main__NibGet(M3Byte *a, M3Int i);
+extern M3Int  Main__NibSet(M3Byte *a, M3Int i, M3Int val);
+extern M3Int  Main__NibSum(M3Byte *a);
+
 /* Compact subrange array ([0..255] without BITS — stored as byte) */
 extern M3Int  Main__ByteSubGet(M3Byte *a, M3Int i);
 extern M3Int  Main__ByteSubSum(M3Byte *a);
@@ -529,6 +534,19 @@ int main(void) {
       check_int("PackedByteGet(pb,1)",   Main__PackedByteGet(pb, 1),       99);
       pb[0]=5; pb[1]=10; pb[2]=15; pb[3]=20;
       check_int("PackedByteSum(pb)",     Main__PackedByteSum(pb),          50);
+    }
+
+    /* Packed nibble array: 8 x 4-bit elements in 4 bytes.
+       Layout: nibble n stored at bits [(n%2)*4 .. (n%2)*4+3] of byte n/2.
+       {0x21,0x43,0x65,0x87} => elements {1,2,3,4,5,6,7,8} (lo-nibble first) */
+    {
+      M3Byte nibs[4] = {0x21, 0x43, 0x65, 0x87};
+      check_int("NibGet(nibs,0)",     Main__NibGet(nibs, 0),          1);
+      check_int("NibGet(nibs,7)",     Main__NibGet(nibs, 7),          8);
+      check_int("NibSet(nibs,3,9)",   Main__NibSet(nibs, 3, 9),       9);
+      check_int("NibGet(nibs,2)",     Main__NibGet(nibs, 2),          3);  /* unchanged */
+      check_int("NibGet(nibs,3)",     Main__NibGet(nibs, 3),          9);  /* modified */
+      check_int("NibSum(nibs)",       Main__NibSum(nibs),            41);  /* 1+2+3+9+5+6+7+8 */
     }
 
     /* Compact subrange [0..255]: same byte layout as BITS 8, no explicit annotation */
