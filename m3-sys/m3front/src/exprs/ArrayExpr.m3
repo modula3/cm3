@@ -2404,9 +2404,22 @@ BEGIN
     RETURN NIL;
   END;
   (* Apply EltPack correction, matching TranslateFixedArray: compact subranges
-     like [0..15] are stored as i8 in arrays, not as i64 (the base INTEGER type). *)
-  VAR eltPack := ArrayType.EltPack (baseType); BEGIN
-    IF eltPack > 0 AND eltPack # MSIR.BitWidth (eltT) THEN
+     like [0..15] are stored as i8 in arrays, not as i64 (the base INTEGER type).
+     For element types with no scalar bit width (BitWidth <= 0):
+       - Ptr/GcRef/GcSlot: keep the natural pointer type (procedure values etc.).
+       - OpenArray/FixedArray: return NIL — cannot build constructor in MSIR yet.
+         Callers (CompileMSIR_MSIR, UserInit initAllocated path) handle NIL. *)
+  VAR eltPack := ArrayType.EltPack (baseType);
+      eltBits := MSIR.BitWidth (eltT);
+  BEGIN
+    IF eltBits < 0 THEN
+      VAR k := MSIR.Kind (eltT); BEGIN
+        IF k = MSIR.TypeKind.OpenArray OR k = MSIR.TypeKind.FixedArray THEN
+          RETURN NIL;
+        END;
+        (* Ptr/GcRef/GcSlot: keep eltT as-is; no integer override. *)
+      END;
+    ELSIF eltPack > 0 AND eltPack # eltBits THEN
       eltT := MSIR.TI (eltPack);
     END;
   END;
