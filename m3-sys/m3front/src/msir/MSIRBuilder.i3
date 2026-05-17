@@ -238,6 +238,19 @@ PROCEDURE TypeLinkValueForRef      (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForRefArray (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForObject   (t: Type.T): MSIR.Value;
 
+(*----------------------------------------------- Bitfield read/write helpers *)
+
+(* Extract bitWidth bits at bit offset bitOff from the byte array at base.
+   Uses one i8 load when the field fits in a single byte, two i8 loads (stitched)
+   when it spans a byte boundary.  ZExt/SExt to rawFieldType's natural M3 type. *)
+PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
+                            rawFieldType: Type.T): MSIR.Value;
+
+(* Read-modify-write: store rhs into bitWidth bits at bit offset bitOff
+   in the byte array at base.  Single-byte or two-byte depending on span. *)
+PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
+                           rhs: MSIR.Value);
+
 (*------------------------------------------------------------- Module globals *)
 
 (* Materialise a CONST ARRAY OF T expression as a private constant LLVM global.

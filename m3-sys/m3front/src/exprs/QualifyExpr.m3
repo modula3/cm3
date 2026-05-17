@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
 IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
-IMPORT Method, Field, PackedType, Target, TInt, M3RT, Host, RunTyme;
+IMPORT Method, Field, Target, TInt, M3RT, Host, RunTyme;
 IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
@@ -930,133 +930,6 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
    natural expression type.  Same narrowing/widening logic as SubscriptExpr:
    - narrow storage (e.g. i8 for [0..255]) → ZExt or SExt to natural type
    - wide storage (e.g. i8 for BOOLEAN) → Trunc to natural type (i1) *)
-(* Extract `bitWidth` bits at bit offset `bitOff` from the byte array at `base`.
-   Uses one i8 load when the field fits in a single byte, two i8 loads (stitched)
-   when it spans a byte boundary.  Always ZExts/SExt to the field's natural M3 type. *)
-PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
-                            rawFieldType: Type.T): MSIR.Value =
-  VAR
-    b         := MSIRBuilder.CurrentBlock ();
-    byteStart := bitOff DIV 8;
-    bitInByte := bitOff MOD 8;
-    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
-    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
-    word      : MSIR.Value;
-    wordBits  : INTEGER;
-  BEGIN
-    IF bitInByte + bitWidth <= 8 THEN
-      word     := b0;
-      wordBits := 8;
-    ELSE
-      (* Field spans two bytes: stitch b0 | (b1 << 8) as i16 *)
-      VAR p1  := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
-          b1  := MSIR.BuildLoad (b, "", MSIR.TI (8), p1);
-          b0w := MSIR.BuildZExt (b, "", b0, MSIR.TI (16));
-          b1w := MSIR.BuildZExt (b, "", b1, MSIR.TI (16));
-      BEGIN
-        word := MSIR.BuildIOr (b, "", b0w,
-                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
-      END;
-      wordBits := 16;
-    END;
-    VAR
-      wordT    := MSIR.TI (wordBits);
-      shifted  := MSIR.BuildILShr (b, "", word,
-                      MSIR.ConstInt (wordT, VAL (bitInByte, LONGINT)));
-      mask     := MSIR.ConstInt (wordT, VAL (16_FF, LONGINT)  (* will be correct below *));
-      (* Compute mask = (1 << bitWidth) - 1 as LONGINT *)
-      maskVal  : LONGINT := 1L;
-      extracted: MSIR.Value;
-    BEGIN
-      FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
-      maskVal := maskVal - 1L;
-      mask := MSIR.ConstInt (wordT, maskVal);
-      extracted := MSIR.BuildIAnd (b, "", shifted, mask);
-      (* Widen to natural Modula-3 type *)
-      VAR
-        packedBase : Type.T;
-        packedSize : INTEGER;
-        naturalT   : MSIR.T;
-        lo, hi     : Target.Int;
-        doSExt     : BOOLEAN;
-      BEGIN
-        PackedType.Split (rawFieldType, packedSize, packedBase);
-        naturalT := MSIRType.Translate (packedBase);
-        IF naturalT = NIL THEN naturalT := MSIR.TI (Target.Integer.size) END;
-        doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
-        IF doSExt
-          THEN RETURN MSIR.BuildSExt (b, "", extracted, naturalT)
-          ELSE RETURN MSIR.BuildZExt (b, "", extracted, naturalT)
-        END;
-      END;
-    END;
-  END ExtractBitField;
-
-(* Read-modify-write to store `rhs` into `bitWidth` bits at bit offset `bitOff`
-   in the byte array at `base`.  Single-byte or two-byte depending on span. *)
-PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
-                           rhs: MSIR.Value) =
-  VAR
-    b         := MSIRBuilder.CurrentBlock ();
-    byteStart := bitOff DIV 8;
-    bitInByte := bitOff MOD 8;
-    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
-    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
-    maskVal   : LONGINT := 1L;
-  BEGIN
-    FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
-    maskVal := maskVal - 1L;   (* (1 << bitWidth) - 1 *)
-    IF bitInByte + bitWidth <= 8 THEN
-      (* Single-byte read-modify-write *)
-      VAR
-        (* notMask = ~(mask << bitInByte) in i8 *)
-        mk  : LONGINT := maskVal;
-      BEGIN
-        FOR i := 1 TO bitInByte DO mk := mk * 2L END;
-        mk := mk MOD 256L;  (* keep 8 bits *)
-        VAR
-          notMask := MSIR.ConstInt (MSIR.TI (8), (256L - mk - 1L) MOD 256L);
-          val8    := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (8));
-          shifted := MSIR.BuildIShl (b, "", val8,
-                         MSIR.ConstInt (MSIR.TI (8), VAL (bitInByte, LONGINT)));
-          cleared := MSIR.BuildIAnd (b, "", b0, notMask);
-          merged  := MSIR.BuildIOr  (b, "", cleared, shifted);
-        BEGIN
-          MSIR.BuildStore (b, merged, p0);
-        END;
-      END;
-    ELSE
-      (* Two-byte read-modify-write *)
-      VAR
-        p1   := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
-        b1   := MSIR.BuildLoad   (b, "", MSIR.TI (8), p1);
-        b0w  := MSIR.BuildZExt   (b, "", b0, MSIR.TI (16));
-        b1w  := MSIR.BuildZExt   (b, "", b1, MSIR.TI (16));
-        word := MSIR.BuildIOr    (b, "", b0w,
-                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
-        (* mask16 = ((1 << bitWidth) - 1) << bitInByte *)
-        mk16 : LONGINT := maskVal;
-      BEGIN
-        FOR i := 1 TO bitInByte DO mk16 := mk16 * 2L END;
-        VAR
-          notMask16 := MSIR.ConstInt (MSIR.TI (16), (16_10000L - mk16 - 1L) MOD 16_10000L);
-          valTrunc  := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (bitWidth));
-          val16     := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
-          shiftedV  := MSIR.BuildIShl  (b, "", val16,
-                           MSIR.ConstInt (MSIR.TI (16), VAL (bitInByte, LONGINT)));
-          merged    := MSIR.BuildIOr (b, "",
-                           MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
-        BEGIN
-          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "", merged, MSIR.TI (8)), p0);
-          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "",
-                                MSIR.BuildILShr (b, "", merged,
-                                    MSIR.ConstInt (MSIR.TI (16), 8L)),
-                                MSIR.TI (8)), p1);
-        END;
-      END;
-    END;
-  END InsertBitField;
-
 PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
   VAR
     p         : P;
@@ -1079,7 +952,7 @@ PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
         VAR baseAddr := Expr.LValueMSIR (p.lhsExpr);
         BEGIN
           IF baseAddr = NIL THEN RETURN FALSE END;
-          InsertBitField (baseAddr, fieldInfo.offset, fti.size, rhs);
+          MSIRBuilder.InsertBitField (baseAddr, fieldInfo.offset, fti.size, rhs);
           RETURN TRUE;
         END;
     | Class.objField =>
@@ -1096,7 +969,7 @@ PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
           VAR baseAddr := Expr.CompileMSIR (p.lhsExpr);
           BEGIN
             IF baseAddr = NIL THEN RETURN FALSE END;
-            InsertBitField (baseAddr, bitOff, fti.size, rhs);
+            MSIRBuilder.InsertBitField (baseAddr, bitOff, fti.size, rhs);
             RETURN TRUE;
           END;
         END;
@@ -1192,7 +1065,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             VAR baseAddr := Expr.LValueMSIR (p.lhsExpr);
             BEGIN
               IF baseAddr = NIL THEN RETURN NIL END;
-              RETURN ExtractBitField (baseAddr, fieldInfo.offset, ftiRec.size,
+              RETURN MSIRBuilder.ExtractBitField (baseAddr, fieldInfo.offset, ftiRec.size,
                                       fieldInfo.type);
             END;
           END;
@@ -1225,7 +1098,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
                 VAR baseAddr := Expr.CompileMSIR (p.lhsExpr);
                 BEGIN
                   IF baseAddr = NIL THEN RETURN NIL END;
-                  RETURN ExtractBitField (baseAddr, totalBitOff, ftiObj.size,
+                  RETURN MSIRBuilder.ExtractBitField (baseAddr, totalBitOff, ftiObj.size,
                                           fieldInfo.type);
                 END;
               END;

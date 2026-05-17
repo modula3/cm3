@@ -601,66 +601,6 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
     END;
   END Capture;
 
-PROCEDURE InsertBitFieldIntoSlot (b: MSIR.Block; base: MSIR.Value;
-                                   bitOff, bitWidth: INTEGER;
-                                   rhs: MSIR.Value) =
-  VAR
-    byteStart := bitOff DIV 8;
-    bitInByte := bitOff MOD 8;
-    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
-    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
-    maskVal   : LONGINT := 1L;
-  BEGIN
-    FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
-    maskVal := maskVal - 1L;   (* (1 << bitWidth) - 1 *)
-    IF bitInByte + bitWidth <= 8 THEN
-      VAR
-        mk : LONGINT := maskVal;
-      BEGIN
-        FOR i := 1 TO bitInByte DO mk := mk * 2L END;
-        mk := mk MOD 256L;
-        VAR
-          notMask := MSIR.ConstInt (MSIR.TI (8), (256L - mk - 1L) MOD 256L);
-          val8    := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (8));
-          shifted := MSIR.BuildIShl (b, "", val8,
-                         MSIR.ConstInt (MSIR.TI (8), VAL (bitInByte, LONGINT)));
-          cleared := MSIR.BuildIAnd (b, "", b0, notMask);
-          merged  := MSIR.BuildIOr  (b, "", cleared, shifted);
-        BEGIN
-          MSIR.BuildStore (b, merged, p0);
-        END;
-      END;
-    ELSE
-      VAR
-        p1   := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
-        b1   := MSIR.BuildLoad   (b, "", MSIR.TI (8), p1);
-        b0w  := MSIR.BuildZExt   (b, "", b0, MSIR.TI (16));
-        b1w  := MSIR.BuildZExt   (b, "", b1, MSIR.TI (16));
-        word := MSIR.BuildIOr    (b, "", b0w,
-                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
-        mk16 : LONGINT := maskVal;
-      BEGIN
-        FOR i := 1 TO bitInByte DO mk16 := mk16 * 2L END;
-        VAR
-          notMask16 := MSIR.ConstInt (MSIR.TI (16),
-                           (16_10000L - mk16 - 1L) MOD 16_10000L);
-          valTrunc  := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (bitWidth));
-          val16     := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
-          shiftedV  := MSIR.BuildIShl  (b, "", val16,
-                           MSIR.ConstInt (MSIR.TI (16), VAL (bitInByte, LONGINT)));
-          merged    := MSIR.BuildIOr (b, "",
-                           MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
-        BEGIN
-          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "", merged, MSIR.TI (8)), p0);
-          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "",
-                                MSIR.BuildILShr (b, "", merged,
-                                    MSIR.ConstInt (MSIR.TI (16), 8L)),
-                                MSIR.TI (8)), p1);
-        END;
-      END;
-    END;
-  END InsertBitFieldIntoSlot;
-
 PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
   VAR
     msirT    : MSIR.T;
@@ -717,7 +657,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
                       bitsNow := fti.size - j * Target.Byte;
                     BEGIN
                       IF bitsNow > 8 THEN bitsNow := 8 END;
-                      InsertBitFieldIntoSlot (b, slot,
+                      MSIRBuilder.InsertBitField (slot,
                           fieldInfo.offset + j * Target.Byte, bitsNow,
                           MSIR.BuildZExt (b, "", srcByte, MSIR.TI (Target.Integer.size)));
                     END;
@@ -731,7 +671,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
                 IF fti.size MOD Target.Byte # 0
                    OR fieldInfo.offset MOD Target.Byte # 0 THEN
                   (* Sub-byte: read-modify-write into the byte array *)
-                  InsertBitFieldIntoSlot (b, slot, fieldInfo.offset, fti.size, fieldVal);
+                  MSIRBuilder.InsertBitField (slot, fieldInfo.offset, fti.size, fieldVal);
                 ELSE
                   (* Byte-aligned scalar: store directly *)
                   byteOff := VAL (fieldInfo.offset DIV Target.Byte, LONGINT);

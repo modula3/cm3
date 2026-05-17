@@ -4,6 +4,7 @@ IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
 IMPORT Expr, ArrayExpr, ArrayType;
+IMPORT PackedType, TInt;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -1216,6 +1217,119 @@ PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
     MSIR.ProcAddBlock(curProc, curBlock);
     RETURN TRUE;
   END BeginModuleInit;
+
+PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
+                            rawFieldType: Type.T): MSIR.Value =
+  VAR
+    b         := curBlock;
+    byteStart := bitOff DIV 8;
+    bitInByte := bitOff MOD 8;
+    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
+    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
+    word      : MSIR.Value;
+    wordBits  : INTEGER;
+  BEGIN
+    IF bitInByte + bitWidth <= 8 THEN
+      word     := b0;
+      wordBits := 8;
+    ELSE
+      (* Field spans two bytes: stitch b0 | (b1 << 8) as i16 *)
+      VAR p1  := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
+          b1  := MSIR.BuildLoad (b, "", MSIR.TI (8), p1);
+          b0w := MSIR.BuildZExt (b, "", b0, MSIR.TI (16));
+          b1w := MSIR.BuildZExt (b, "", b1, MSIR.TI (16));
+      BEGIN
+        word := MSIR.BuildIOr (b, "", b0w,
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
+      END;
+      wordBits := 16;
+    END;
+    VAR
+      wordT    := MSIR.TI (wordBits);
+      shifted  := MSIR.BuildILShr (b, "", word,
+                      MSIR.ConstInt (wordT, VAL (bitInByte, LONGINT)));
+      maskVal  : LONGINT := 1L;
+      extracted: MSIR.Value;
+    BEGIN
+      FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
+      maskVal := maskVal - 1L;
+      extracted := MSIR.BuildIAnd (b, "", shifted, MSIR.ConstInt (wordT, maskVal));
+      VAR
+        packedBase : Type.T;
+        packedSize : INTEGER;
+        naturalT   : MSIR.T;
+        lo, hi     : Target.Int;
+        doSExt     : BOOLEAN;
+      BEGIN
+        PackedType.Split (rawFieldType, packedSize, packedBase);
+        naturalT := MSIRType.Translate (packedBase);
+        IF naturalT = NIL THEN naturalT := MSIR.TI (Target.Integer.size) END;
+        doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
+        IF doSExt
+          THEN RETURN MSIR.BuildSExt (b, "", extracted, naturalT)
+          ELSE RETURN MSIR.BuildZExt (b, "", extracted, naturalT)
+        END;
+      END;
+    END;
+  END ExtractBitField;
+
+PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
+                           rhs: MSIR.Value) =
+  VAR
+    b         := curBlock;
+    byteStart := bitOff DIV 8;
+    bitInByte := bitOff MOD 8;
+    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
+    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
+    maskVal   : LONGINT := 1L;
+  BEGIN
+    FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
+    maskVal := maskVal - 1L;   (* (1 << bitWidth) - 1 *)
+    IF bitInByte + bitWidth <= 8 THEN
+      VAR mk : LONGINT := maskVal;
+      BEGIN
+        FOR i := 1 TO bitInByte DO mk := mk * 2L END;
+        mk := mk MOD 256L;
+        VAR
+          notMask := MSIR.ConstInt (MSIR.TI (8), (256L - mk - 1L) MOD 256L);
+          val8    := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (8));
+          shifted := MSIR.BuildIShl (b, "", val8,
+                         MSIR.ConstInt (MSIR.TI (8), VAL (bitInByte, LONGINT)));
+          cleared := MSIR.BuildIAnd (b, "", b0, notMask);
+          merged  := MSIR.BuildIOr  (b, "", cleared, shifted);
+        BEGIN
+          MSIR.BuildStore (b, merged, p0);
+        END;
+      END;
+    ELSE
+      VAR
+        p1   := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
+        b1   := MSIR.BuildLoad   (b, "", MSIR.TI (8), p1);
+        b0w  := MSIR.BuildZExt   (b, "", b0, MSIR.TI (16));
+        b1w  := MSIR.BuildZExt   (b, "", b1, MSIR.TI (16));
+        word := MSIR.BuildIOr    (b, "", b0w,
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
+        mk16 : LONGINT := maskVal;
+      BEGIN
+        FOR i := 1 TO bitInByte DO mk16 := mk16 * 2L END;
+        VAR
+          notMask16 := MSIR.ConstInt (MSIR.TI (16), (16_10000L - mk16 - 1L) MOD 16_10000L);
+          valTrunc  := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (bitWidth));
+          val16     := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
+          shiftedV  := MSIR.BuildIShl  (b, "", val16,
+                           MSIR.ConstInt (MSIR.TI (16), VAL (bitInByte, LONGINT)));
+          merged    := MSIR.BuildIOr (b, "",
+                           MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
+        BEGIN
+          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "", merged, MSIR.TI (8)), p0);
+          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "",
+                                MSIR.BuildILShr (b, "", merged,
+                                    MSIR.ConstInt (MSIR.TI (16), 8L)),
+                                MSIR.TI (8)), p1);
+        END;
+      END;
+    END;
+  END InsertBitField;
 
 BEGIN
 END MSIRBuilder.
