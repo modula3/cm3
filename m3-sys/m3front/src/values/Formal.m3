@@ -1476,10 +1476,6 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     IF formDepth <= actDepth THEN
       RETURN Expr.LValueMSIR (actual);
     END;
-    IF actDepth > 0 THEN
-      MSIRBuilder.Abandon ("partial open-array depth coercion not yet in MSIR");
-      RETURN NIL;
-    END;
     flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
     flds[0] := MSIR.Field {name := "", type := ptrT};
     FOR k := 0 TO formDepth - 1 DO
@@ -1487,20 +1483,57 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     END;
     b     := MSIRBuilder.CurrentBlock ();
     dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
-    dataPtr := Expr.LValueMSIR (actual);
-    IF dataPtr = NIL THEN RETURN NIL END;
-    b := MSIRBuilder.CurrentBlock ();
-    MSIR.BuildStore (b, dataPtr, MSIR.BuildPtrAdd (b, "", dopeA, 0L));
-    innerT := actType;
-    FOR k := 0 TO formDepth - 1 DO
-      IF NOT ArrayType.Split (innerT, indexT, eltT) THEN RETURN NIL END;
-      cnt := Type.Number (indexT);
-      IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
-      MSIR.BuildStore (b,
-                       MSIR.ConstInt (intT, VAL (cntI, LONGINT)),
-                       MSIR.BuildPtrAdd (b, "", dopeA,
+    IF actDepth > 0 THEN
+      (* Partial coercion: actual is open at actDepth < formDepth.
+         Load the data ptr and actDepth dynamic dim counts from the existing
+         dope, then append the static counts from the inner fixed type. *)
+      VAR dopeAddr := Expr.LValueMSIR (actual); BEGIN
+        IF dopeAddr = NIL THEN RETURN NIL END;
+        b := MSIRBuilder.CurrentBlock ();
+        dataPtr := MSIR.BuildLoad (b, "", ptrT,
+                     MSIR.BuildPtrAdd (b, "", dopeAddr, 0L));
+        MSIR.BuildStore (b, dataPtr, MSIR.BuildPtrAdd (b, "", dopeA, 0L));
+        FOR k := 0 TO actDepth - 1 DO
+          VAR dim := MSIR.BuildLoad (b, "", intT,
+                       MSIR.BuildPtrAdd (b, "", dopeAddr,
                                          apB + ipB * VAL (k, LONGINT)));
-      innerT := eltT;
+          BEGIN
+            MSIR.BuildStore (b, dim,
+                             MSIR.BuildPtrAdd (b, "", dopeA,
+                                               apB + ipB * VAL (k, LONGINT)));
+          END;
+        END;
+        innerT := actType;
+        FOR k := 0 TO actDepth - 1 DO
+          IF NOT OpenArrayType.Split (innerT, innerT) THEN RETURN NIL END;
+        END;
+        FOR k := actDepth TO formDepth - 1 DO
+          IF NOT ArrayType.Split (innerT, indexT, eltT) THEN RETURN NIL END;
+          cnt := Type.Number (indexT);
+          IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
+          MSIR.BuildStore (b,
+                           MSIR.ConstInt (intT, VAL (cntI, LONGINT)),
+                           MSIR.BuildPtrAdd (b, "", dopeA,
+                                             apB + ipB * VAL (k, LONGINT)));
+          innerT := eltT;
+        END;
+      END;
+    ELSE
+      dataPtr := Expr.LValueMSIR (actual);
+      IF dataPtr = NIL THEN RETURN NIL END;
+      b := MSIRBuilder.CurrentBlock ();
+      MSIR.BuildStore (b, dataPtr, MSIR.BuildPtrAdd (b, "", dopeA, 0L));
+      innerT := actType;
+      FOR k := 0 TO formDepth - 1 DO
+        IF NOT ArrayType.Split (innerT, indexT, eltT) THEN RETURN NIL END;
+        cnt := Type.Number (indexT);
+        IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
+        MSIR.BuildStore (b,
+                         MSIR.ConstInt (intT, VAL (cntI, LONGINT)),
+                         MSIR.BuildPtrAdd (b, "", dopeA,
+                                           apB + ipB * VAL (k, LONGINT)));
+        innerT := eltT;
+      END;
     END;
     RETURN dopeA;
   END GenOpenArgMSIR;
