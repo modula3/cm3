@@ -12,7 +12,7 @@ MODULE AssignStmt;
 IMPORT CG, Stmt, StmtRep, Expr, Type, Error, Module, Target, TInt;
 IMPORT Token, Scanner, CallStmt, Addr, CheckExpr, ErrType;
 IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
-IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
+IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr, SubscriptExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
@@ -860,10 +860,11 @@ PROCEDURE CompileMSIR (p: P) =
     (* Collect container set as side-effect by LValueMSIR (heap field stores). *)
     container := MSIRBuilder.TakePendingContainer ();
     IF lhsPtr = NIL THEN
-      (* Sub-byte field write: no lvalue; use read-modify-write bit insertion. *)
+      (* Sub-byte field/element write: no lvalue; use read-modify-write. *)
       rhsVal := Expr.CompileMSIR (p.rhs);
       IF rhsVal = NIL THEN RETURN END;
-      EVAL QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal);
+      IF QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal) THEN RETURN END;
+      EVAL SubscriptExpr.SubByteStoreElemMSIR (p.lhs, rhsVal);
       RETURN;
     END;
     rhsVal := Expr.CompileMSIR (p.rhs);

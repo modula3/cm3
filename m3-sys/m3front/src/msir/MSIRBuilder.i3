@@ -251,6 +251,14 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
 PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
                            rhs: MSIR.Value);
 
+(* Dynamic (runtime index) variants for packed-element arrays.
+   eltPack must divide 8 (i.e. eltPack ∈ {1,2,4}); otherwise Abandon is called.
+   idx is the element index (biased to 0); base points to the ByteArrayFallback. *)
+PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
+                               idx: MSIR.Value;  rawEltType: Type.T): MSIR.Value;
+PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
+                               idx: MSIR.Value;  rhs: MSIR.Value);
+
 (*------------------------------------------------------------- Module globals *)
 
 (* Materialise a CONST ARRAY OF T expression as a private constant LLVM global.

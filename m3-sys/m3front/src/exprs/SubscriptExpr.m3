@@ -618,6 +618,12 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       ELSE
         arrayT := arrT;
       END;
+      (* ByteArrayFallback [N x i1]: packed-element array with no element lvalue.
+         CompileMSIR handles reads via dynamic bit extraction. *)
+      IF MSIR.Kind (arrayT) = MSIR.TypeKind.FixedArray AND
+         MSIR.Kind (MSIR.FixedArrayElt (arrayT)) = MSIR.TypeKind.I1 THEN
+        RETURN NIL;
+      END;
       IF MSIR.Kind(arrayT) # MSIR.TypeKind.FixedArray THEN
         MSIRBuilder.Abandon ("packed/sub-word array subscript not yet supported in MSIR");
         RETURN NIL;
@@ -642,9 +648,64 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     END;
   END LValueMSIR;
 
+PROCEDURE GetPackedElemBase (p: P;  VAR idxVal: MSIR.Value;
+                             VAR eltPack: INTEGER): MSIR.Value =
+(* Shared helper for packed-element fixed-array subscripts.
+   Computes the base pointer (points to the ByteArrayFallback byte array),
+   the element index (biased, extended to Integer width), and eltPack.
+   Returns NIL on failure (base not lvalue or index compilation failed). *)
+  VAR arrBase: MSIR.Value;  blk: MSIR.Block;
+  BEGIN
+    eltPack := ArrayType.EltPack (p.taBase);
+    arrBase := Expr.LValueMSIR (p.a);
+    IF arrBase = NIL THEN RETURN NIL END;
+    idxVal := Expr.CompileMSIR (p.biased_b);
+    IF idxVal = NIL THEN RETURN NIL END;
+    VAR idxBits := MSIR.BitWidth (MSIR.ValueType (idxVal));
+        intBits := Target.Integer.size;
+    BEGIN
+      IF idxBits > 0 AND idxBits < intBits THEN
+        blk    := MSIRBuilder.CurrentBlock ();
+        idxVal := MSIR.BuildZExt (blk, "", idxVal, MSIR.TI (intBits));
+      END;
+    END;
+    RETURN arrBase;
+  END GetPackedElemBase;
+
+PROCEDURE CompilePackedElemMSIR (p: P): MSIR.Value =
+(* Read a sub-byte element from a ByteArrayFallback packed array. *)
+  VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
+  BEGIN
+    arrBase := GetPackedElemBase (p, idxVal, eltPack);
+    IF arrBase = NIL THEN RETURN NIL END;
+    RETURN MSIRBuilder.ExtractBitFieldDyn (arrBase, eltPack, idxVal, p.type);
+  END CompilePackedElemMSIR;
+
+PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
+(* Write a sub-byte element into a ByteArrayFallback packed array. *)
+  BEGIN
+    TYPECASE e OF
+    | P (p) =>
+        IF p.lhsOpenDepth # 0 THEN RETURN FALSE END;
+        IF NOT ArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN FALSE END;
+        VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
+        BEGIN
+          arrBase := GetPackedElemBase (p, idxVal, eltPack);
+          IF arrBase = NIL THEN RETURN FALSE END;
+          MSIRBuilder.InsertBitFieldDyn (arrBase, eltPack, idxVal, rhs);
+          RETURN TRUE;
+        END;
+    ELSE RETURN FALSE;
+    END;
+  END SubByteStoreElemMSIR;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR addr: MSIR.Value;  ty: MSIR.T;  blk: MSIR.Block;
   BEGIN
+    (* Packed-element fixed array: ByteArrayFallback [N x i1] sentinel. *)
+    IF p.lhsOpenDepth = 0 AND ArrayType.EltsAreBitAddressed (p.taBase) THEN
+      RETURN CompilePackedElemMSIR (p);
+    END;
     addr := LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
     (* Traced ref from a heap array slot: use GcLoad (read barrier). *)
