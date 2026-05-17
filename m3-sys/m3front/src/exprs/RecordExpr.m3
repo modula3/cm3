@@ -601,6 +601,66 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
     END;
   END Capture;
 
+PROCEDURE InsertBitFieldIntoSlot (b: MSIR.Block; base: MSIR.Value;
+                                   bitOff, bitWidth: INTEGER;
+                                   rhs: MSIR.Value) =
+  VAR
+    byteStart := bitOff DIV 8;
+    bitInByte := bitOff MOD 8;
+    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
+    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
+    maskVal   : LONGINT := 1L;
+  BEGIN
+    FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
+    maskVal := maskVal - 1L;   (* (1 << bitWidth) - 1 *)
+    IF bitInByte + bitWidth <= 8 THEN
+      VAR
+        mk : LONGINT := maskVal;
+      BEGIN
+        FOR i := 1 TO bitInByte DO mk := mk * 2L END;
+        mk := mk MOD 256L;
+        VAR
+          notMask := MSIR.ConstInt (MSIR.TI (8), (256L - mk - 1L) MOD 256L);
+          val8    := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (8));
+          shifted := MSIR.BuildIShl (b, "", val8,
+                         MSIR.ConstInt (MSIR.TI (8), VAL (bitInByte, LONGINT)));
+          cleared := MSIR.BuildIAnd (b, "", b0, notMask);
+          merged  := MSIR.BuildIOr  (b, "", cleared, shifted);
+        BEGIN
+          MSIR.BuildStore (b, merged, p0);
+        END;
+      END;
+    ELSE
+      VAR
+        p1   := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
+        b1   := MSIR.BuildLoad   (b, "", MSIR.TI (8), p1);
+        b0w  := MSIR.BuildZExt   (b, "", b0, MSIR.TI (16));
+        b1w  := MSIR.BuildZExt   (b, "", b1, MSIR.TI (16));
+        word := MSIR.BuildIOr    (b, "", b0w,
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
+        mk16 : LONGINT := maskVal;
+      BEGIN
+        FOR i := 1 TO bitInByte DO mk16 := mk16 * 2L END;
+        VAR
+          notMask16 := MSIR.ConstInt (MSIR.TI (16),
+                           (16_10000L - mk16 - 1L) MOD 16_10000L);
+          valTrunc  := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (bitWidth));
+          val16     := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
+          shiftedV  := MSIR.BuildIShl  (b, "", val16,
+                           MSIR.ConstInt (MSIR.TI (16), VAL (bitInByte, LONGINT)));
+          merged    := MSIR.BuildIOr (b, "",
+                           MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
+        BEGIN
+          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "", merged, MSIR.TI (8)), p0);
+          MSIR.BuildStore (b, MSIR.BuildTrunc (b, "",
+                                MSIR.BuildILShr (b, "", merged,
+                                    MSIR.ConstInt (MSIR.TI (16), 8L)),
+                                MSIR.TI (8)), p1);
+        END;
+      END;
+    END;
+  END InsertBitFieldIntoSlot;
+
 PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
   VAR
     msirT    : MSIR.T;
@@ -620,12 +680,92 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("record expr: type not translatable in MSIR");
       RETURN NIL;
     END;
+    b := MSIRBuilder.CurrentBlock ();
+    slot := MSIR.BuildAlloca (b, "", msirT);
+
+    IF MSIR.Kind (msirT) = MSIR.TypeKind.FixedArray
+       AND MSIR.Kind (MSIR.FixedArrayElt (msirT)) = MSIR.TypeKind.I1 THEN
+      (* Packed record represented as [N x i1] (ByteArrayFallback).
+         Zero-fill then insert each field using byte-level or sub-byte ops. *)
+      VAR nBytes := MSIR.FixedArrayLen (msirT);
+      BEGIN
+        FOR i := 0L TO nBytes - 1L DO
+          MSIR.BuildStore (b, MSIR.ConstInt (MSIR.TI (8), 0L),
+                           MSIR.BuildPtrAdd (b, "", slot, i));
+        END;
+        FOR i := 0 TO LAST (p.map^) DO
+          WITH info = p.map^[i] DO
+            IF info.expr # NIL THEN
+              Field.Split (info.field, fieldInfo);
+              EVAL Type.CheckInfo (fieldInfo.type, fti);
+              ft := MSIRType.Translate (fieldInfo.type);
+              b := MSIRBuilder.CurrentBlock ();
+              IF ft # NIL
+                 AND MSIR.Kind (ft) = MSIR.TypeKind.FixedArray
+                 AND MSIR.Kind (MSIR.FixedArrayElt (ft)) = MSIR.TypeKind.I1 THEN
+                (* Field is itself a [N x i1] aggregate (nested packed record or
+                   packed array).  Copy its bytes into the outer byte array. *)
+                VAR srcPtr  := Expr.LValueMSIR (info.expr);
+                    srcBytes := (fti.size + 7) DIV 8;
+                BEGIN
+                  IF srcPtr = NIL THEN RETURN NIL END;
+                  FOR j := 0 TO srcBytes - 1 DO
+                    b := MSIRBuilder.CurrentBlock ();
+                    VAR
+                      srcByte := MSIR.BuildLoad (b, "", MSIR.TI (8),
+                                     MSIR.BuildPtrAdd (b, "", srcPtr, VAL (j, LONGINT)));
+                      bitsNow := fti.size - j * Target.Byte;
+                    BEGIN
+                      IF bitsNow > 8 THEN bitsNow := 8 END;
+                      InsertBitFieldIntoSlot (b, slot,
+                          fieldInfo.offset + j * Target.Byte, bitsNow,
+                          MSIR.BuildZExt (b, "", srcByte, MSIR.TI (Target.Integer.size)));
+                    END;
+                  END;
+                END;
+              ELSE
+                (* Scalar field: compile and insert directly. *)
+                fieldVal := Expr.CompileMSIR (info.expr);
+                IF fieldVal = NIL THEN RETURN NIL END;
+                b := MSIRBuilder.CurrentBlock ();
+                IF fti.size MOD Target.Byte # 0
+                   OR fieldInfo.offset MOD Target.Byte # 0 THEN
+                  (* Sub-byte: read-modify-write into the byte array *)
+                  InsertBitFieldIntoSlot (b, slot, fieldInfo.offset, fti.size, fieldVal);
+                ELSE
+                  (* Byte-aligned scalar: store directly *)
+                  byteOff := VAL (fieldInfo.offset DIV Target.Byte, LONGINT);
+                  IF ft = NIL THEN ft := MSIR.TI (fti.size) END;
+                  IF fti.size > 0 AND MSIR.BitWidth (ft) > 0
+                                 AND fti.size # MSIR.BitWidth (ft) THEN
+                    ft := MSIR.TI (fti.size);
+                  END;
+                  fieldPtr := MSIR.BuildPtrAdd (b, "", slot, byteOff);
+                  fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (ft));
+                  dstBits := MSIR.BitWidth (ft);
+                  srcBits := MSIR.BitWidth (MSIR.ValueType (fieldVal));
+                  IF dstBits > 0 AND srcBits > 0
+                     AND NOT MSIR.Equal (ft, MSIR.ValueType (fieldVal)) THEN
+                    IF dstBits > srcBits THEN
+                      fieldVal := MSIR.BuildZExt (b, "", fieldVal, ft);
+                    ELSIF dstBits < srcBits THEN
+                      fieldVal := MSIR.BuildTrunc (b, "", fieldVal, ft);
+                    END;
+                  END;
+                  MSIR.BuildStore (b, fieldVal, fieldPtr);
+                END;
+              END;
+            END;
+          END;
+        END;
+      END;
+      RETURN slot;
+    END;
+
     IF MSIR.Kind (msirT) # MSIR.TypeKind.Struct THEN
       MSIRBuilder.Abandon ("record expr: expected struct type in MSIR");
       RETURN NIL;
     END;
-    b := MSIRBuilder.CurrentBlock ();
-    slot := MSIR.BuildAlloca (b, "", msirT);
     FOR i := 0 TO LAST (p.map^) DO
       WITH info = p.map^[i] DO
         IF info.expr # NIL THEN
