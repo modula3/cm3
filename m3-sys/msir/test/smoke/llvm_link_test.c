@@ -114,6 +114,8 @@ extern void  *Main__GetBoolName(M3Bool b);   /* BoolName[b] — returns TEXT ptr
 
 /* VALUE open-array formal — caller provides dope vector, callee sums elements */
 extern M3Int  Main__SumOA(OpenArray *a);
+extern M3Int  Main__OpenBitSize(OpenArray *a);
+extern M3Int  Main__OpenByteSize(OpenArray *a);
 
 /* VALUE open-array formal with open actual: SumViaOpenActual(VAR src) calls SumOA(src) */
 extern M3Int  Main__SumViaOpenActual(OpenArray *src);
@@ -420,6 +422,14 @@ int main(void) {
       check_int("SumViaOpenActual({10,20,30})", Main__SumViaOpenActual(&oa3), 60); }
     { M3Int d5[5] = {1, 2, 3, 4, 5};  OpenArray oa5 = {d5, 5};
       check_int("SumViaOpenActual({1,2,3,4,5})", Main__SumViaOpenActual(&oa5), 15); }
+
+    /* BITSIZE / BYTESIZE of open arrays (runtime product of dims * eltPack) */
+    { M3Int d5[5] = {0};  OpenArray oa5 = {d5, 5};
+      check_int("OpenBitSize([5]INTEGER)",  Main__OpenBitSize(&oa5),  5*64);
+      check_int("OpenByteSize([5]INTEGER)", Main__OpenByteSize(&oa5), 5*8); }
+    { M3Int d3[3] = {0};  OpenArray oa3 = {d3, 3};
+      check_int("OpenBitSize([3]INTEGER)",  Main__OpenBitSize(&oa3),  3*64);
+      check_int("OpenByteSize([3]INTEGER)", Main__OpenByteSize(&oa3), 3*8); }
 
     /* Indirect (proc-variable) calls */
     check_int("ApplyBinOp(Add,7,8)",   Main__ApplyBinOp(Main__Add, 7, 8),    15);

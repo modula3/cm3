@@ -106,18 +106,48 @@ PROCEDURE DoCompile (e: Expr.T;  unit: INTEGER) =
   END DoCompile;
 
 PROCEDURE DoCompileMSIR (e: Expr.T;  unit: INTEGER): MSIR.Value =
-  VAR t: Type.T;  info: Type.Info;  iT := MSIR.TI (Target.Integer.size);
+  VAR
+    t:       Type.T;
+    info:    Type.Info;
+    iT:      MSIR.T    := MSIR.TI (Target.Integer.size);
+    oa:      MSIR.Value;
+    total:   MSIR.Value;
+    dim:     MSIR.Value;
+    eltPack: INTEGER;
+    depth:   INTEGER;
+    blk:     MSIR.Block;
   BEGIN
     IF TypeExpr.Split (e, t) THEN
       t := Type.CheckInfo (t, info);
-    ELSE
-      t := Type.CheckInfo (Expr.TypeOf (e), info);
-      IF info.class = Type.Class.OpenArray THEN
-        MSIRBuilder.Abandon ("BITSIZE/BYTESIZE of open array not yet in MSIR");
-        RETURN NIL;
-      END;
+      RETURN MSIR.ConstInt (iT, VAL((info.size + unit - 1) DIV unit, LONGINT));
     END;
-    RETURN MSIR.ConstInt (iT, VAL((info.size + unit - 1) DIV unit, LONGINT));
+    t := Type.CheckInfo (Expr.TypeOf (e), info);
+    IF info.class # Type.Class.OpenArray THEN
+      RETURN MSIR.ConstInt (iT, VAL((info.size + unit - 1) DIV unit, LONGINT));
+    END;
+    (* Open array: compute total element count at runtime. *)
+    oa := Expr.CompileMSIR (e);
+    IF oa = NIL THEN RETURN NIL END;
+    blk   := MSIRBuilder.CurrentBlock ();
+    depth := OpenArrayType.OpenDepth (t);
+    total := MSIR.BuildOpenArraySize (blk, "", oa, 0);
+    FOR i := 1 TO depth - 1 DO
+      dim   := MSIR.BuildOpenArraySize (blk, "", oa, i);
+      total := MSIR.BuildIMul (blk, "", total, dim);
+    END;
+    eltPack := OpenArrayType.EltPack (t);
+    IF (eltPack MOD unit) = 0 THEN
+      RETURN MSIR.BuildIMul (blk, "", total,
+               MSIR.ConstInt (iT, VAL(eltPack DIV unit, LONGINT)));
+    ELSE
+      (* (total * eltPack + unit - 1) DIV unit *)
+      total := MSIR.BuildIMul (blk, "", total,
+                 MSIR.ConstInt (iT, VAL(eltPack, LONGINT)));
+      total := MSIR.BuildIAdd (blk, "", total,
+                 MSIR.ConstInt (iT, VAL(unit - 1, LONGINT)));
+      RETURN MSIR.BuildIDiv (blk, "", total,
+               MSIR.ConstInt (iT, VAL(unit, LONGINT)));
+    END;
   END DoCompileMSIR;
 
 PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =

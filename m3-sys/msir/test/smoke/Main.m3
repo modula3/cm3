@@ -854,6 +854,12 @@ PROCEDURE SumOA (a: ARRAY OF INTEGER): INTEGER =
     RETURN s;
   END SumOA;
 
+PROCEDURE OpenBitSize (a: ARRAY OF INTEGER): INTEGER =
+  BEGIN RETURN BITSIZE(a) END OpenBitSize;
+
+PROCEDURE OpenByteSize (a: ARRAY OF INTEGER): INTEGER =
+  BEGIN RETURN BYTESIZE(a) END OpenByteSize;
+
 (* VALUE open-array formal with open actual: passes a VAR open-array to SumOA.
    Exercises the dynamic alloca + memcpy path (open actual → VALUE open formal). *)
 PROCEDURE SumViaOpenActual (VAR src: ARRAY OF INTEGER): INTEGER =

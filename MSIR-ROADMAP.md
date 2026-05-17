@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-18 (msir branch)
 
-## What's Working (177/177 tests pass)
+## What's Working (181/181 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -44,6 +44,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Float type conversions: `FLOAT()` builtin via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float); cast ops `ZExt`/`SExt`/`Trunc` for integer widening/narrowing
 - [x] EVAL, ASSERT, LOOP statements: `CompileMSIR` implementations
 - [x] Non-constant `FOR` step: step expression compiled once and spilled to alloca; direction analysis via `Expr.GetBounds` — single header when sign is statically known, three-block runtime dispatch (`for.header → for.pos_test / for.neg_test`) for unknown-sign steps
+- [x] `BITSIZE`/`BYTESIZE` of open array: `BuildOpenArraySize` per dimension, multiply dims, scale by `EltPack`; rounding-up division when `EltPack` not a multiple of `unit`
 - [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
 - [x] READONLY scalar formals: addressable via alloca spill — `BindFormalMSIR` spills all non-aggregate-pointer formals (VALUE and READONLY scalar) to an alloca; `t.indirect` guard prevents VALUE formals of pointer type (e.g. `p: IntPtr`) from being misclassified as aggregate-by-reference
 - [x] `MSIRVerifier`: relaxed store/icmp pointer checks — all `Ptr`/`GcRef`/`GcSlot` pointer kinds are compatible in LLVM opaque-pointer mode; cross-kind pointer stores (e.g. `store alloca-result, ADDRESS-slot`) and pointer comparisons no longer emit false-positive type-mismatch errors
@@ -187,8 +188,10 @@ All are live `Abandon` paths confirmed by grepping `m3front/src`.
   for.neg_test`) for unknown-sign steps.
 - ~~**`ABS` on float types**~~ — **done**: `Abs.AbsMSIR` emits `MSIR.BuildFPAbs`
   (new `Op.FPAbs`); `MSIRToLLVM` lowers to `llvm.fabs.f32`/`llvm.fabs.f64`.
-- **`BITSIZE`/`BYTESIZE` of open array**: open-array size is a runtime
-  product of element size and shape dims; not yet computed in MSIR.
+- ~~**`BITSIZE`/`BYTESIZE` of open array**~~ — **done**: `BitSize.DoCompileMSIR`
+  compiles the open-array expression, calls `BuildOpenArraySize` for each open
+  dimension and multiplies, then scales by `EltPack`; rounding-up division
+  emitted when `EltPack` is not a multiple of `unit`.
 - **`SUBARRAY` of rank > 1 open source** (`SUBARRAY: rank>1 open source`):
   multi-dim open-array slice; needs multi-dim dope-vector construction.
 - **`WITH` unhandled kinds**: `WITH w = expr OF` for expression kinds
@@ -268,7 +271,7 @@ all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirm
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (177 checks)
+# Full end-to-end LLVM link test (181 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)
