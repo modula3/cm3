@@ -50,6 +50,8 @@ extern M3Int  Main__GetSecond(M3Int *v);
 extern M3Int  Main__SumForUp(M3Int n);
 extern M3Int  Main__SumForDown(M3Int n);
 extern M3Int  Main__SumForBy2(M3Int n);
+extern M3Int  Main__SumForByDyn(M3Int n, M3Int step);
+extern M3Int  Main__SumDownByDyn(M3Int n, M3Int step);
 
 extern M3Int  Main__WeekdayNum(M3Int n);
 extern M3Int  Main__ColorCode(M3Byte c);
@@ -290,9 +292,14 @@ int main(void) {
     check_int("RelaySum",         Main__RelaySum(&oa),      104); /* 99+1+4 */
 
     /* FOR loops */
-    check_int("SumForUp(10)",     Main__SumForUp(10),       55);
-    check_int("SumForDown(10)",   Main__SumForDown(10),     55);
-    check_int("SumForBy2(10)",    Main__SumForBy2(10),      30);
+    check_int("SumForUp(10)",          Main__SumForUp(10),           55);
+    check_int("SumForDown(10)",        Main__SumForDown(10),         55);
+    check_int("SumForBy2(10)",         Main__SumForBy2(10),          30);
+    /* non-constant FOR step: mixed-sign runtime check */
+    check_int("SumForByDyn(10,2)",     Main__SumForByDyn(10, 2),     30);
+    check_int("SumForByDyn(10,-1)",    Main__SumForByDyn(10, -1),    0);
+    check_int("SumDownByDyn(10,-1)",   Main__SumDownByDyn(10, -1),   55);
+    check_int("SumDownByDyn(10,-2)",   Main__SumDownByDyn(10, -2),   30);
 
     /* CASE */
     check_int("WeekdayNum(3)",    Main__WeekdayNum(3),      30);

@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-18 (msir branch)
 
-## What's Working (173/173 tests pass)
+## What's Working (177/177 tests pass)
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 
@@ -43,6 +43,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Procedure values: `ProcExpr.CompileMSIR` → `MSIR.ConstProcRef(proc)` (`ptr @procname`); `NamedExpr.CompileMSIR` handles `Value.Class.Procedure` by folding to `ProcExpr`; auto-registers extern variables on demand for `FROM X IMPORT y` names; `EqualExpr.CompileMSIR` handles procedure equality as `icmp eq ptr`
 - [x] Float type conversions: `FLOAT()` builtin via `SIToFP` (int→float) or `FPExt`/`FPTrunc` (float→float); cast ops `ZExt`/`SExt`/`Trunc` for integer widening/narrowing
 - [x] EVAL, ASSERT, LOOP statements: `CompileMSIR` implementations
+- [x] Non-constant `FOR` step: step expression compiled once and spilled to alloca; direction analysis via `Expr.GetBounds` — single header when sign is statically known, three-block runtime dispatch (`for.header → for.pos_test / for.neg_test`) for unknown-sign steps
 - [x] `MSIRType.Translate` maps `Type.Class.Procedure` to `TPtr(TVoid())`; `BindFormalMSIR` treats proc formals as by-value scalars (guards `Kind(EltType) ≠ Void`)
 - [x] READONLY scalar formals: addressable via alloca spill — `BindFormalMSIR` spills all non-aggregate-pointer formals (VALUE and READONLY scalar) to an alloca; `t.indirect` guard prevents VALUE formals of pointer type (e.g. `p: IntPtr`) from being misclassified as aggregate-by-reference
 - [x] `MSIRVerifier`: relaxed store/icmp pointer checks — all `Ptr`/`GcRef`/`GcSlot` pointer kinds are compatible in LLVM opaque-pointer mode; cross-kind pointer stores (e.g. `store alloca-result, ADDRESS-slot`) and pointer comparisons no longer emit false-positive type-mismatch errors
@@ -179,9 +180,11 @@ All are live `Abandon` paths confirmed by grepping `m3front/src`.
   fires when LHS and RHS open-array types differ structurally; specific
   patterns (open constructor assign) were fixed but the general case
   remains.
-- **Non-constant `FOR` step** (`FOR step must be constant in MSIR v0`):
-  `FOR i := lo TO hi BY expr DO` with a runtime step; fix requires
-  emitting a runtime increment and a signed-vs-unsigned branch.
+- ~~**Non-constant `FOR` step**~~ — **done**: `ForStmt.CompileMSIR` compiles the
+  step expression once and spills it to an alloca; direction analysis via
+  `Expr.GetBounds` selects single-header (`Sle`/`Sge`) when sign is statically
+  known, or a three-block runtime dispatch (`for.header → for.pos_test /
+  for.neg_test`) for unknown-sign steps.
 - ~~**`ABS` on float types**~~ — **done**: `Abs.AbsMSIR` emits `MSIR.BuildFPAbs`
   (new `Op.FPAbs`); `MSIRToLLVM` lowers to `llvm.fabs.f32`/`llvm.fabs.f64`.
 - **`BITSIZE`/`BYTESIZE` of open array**: open-array size is a runtime
@@ -265,7 +268,7 @@ all produce correct output; `Text.Sub`, `Text.Equal`, `Text.Length` also confirm
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (173 checks)
+# Full end-to-end LLVM link test (177 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)

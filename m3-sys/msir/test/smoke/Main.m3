@@ -367,6 +367,25 @@ PROCEDURE SumForBy2 (n: INTEGER): INTEGER =
     RETURN result;
   END SumForBy2;
 
+(* Non-constant FOR step: plain INTEGER parameter → mixed-sign runtime check *)
+PROCEDURE SumForByDyn (n: INTEGER; step: INTEGER): INTEGER =
+  VAR result: INTEGER := 0;
+  BEGIN
+    FOR i := 0 TO n BY step DO
+      result := result + i;
+    END;
+    RETURN result;
+  END SumForByDyn;
+
+PROCEDURE SumDownByDyn (n: INTEGER; step: INTEGER): INTEGER =
+  VAR result: INTEGER := 0;
+  BEGIN
+    FOR i := n TO 1 BY step DO
+      result := result + i;
+    END;
+    RETURN result;
+  END SumDownByDyn;
+
 (* --- CASE statements --- *)
 
 PROCEDURE WeekdayNum (n: INTEGER): INTEGER =

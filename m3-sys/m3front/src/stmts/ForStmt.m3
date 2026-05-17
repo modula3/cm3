@@ -408,10 +408,15 @@ PROCEDURE CompileMSIR (p: P) =
     varLhs:     BOOLEAN;
     msirType:   MSIR.T;
     stepVal:    Target.Int;
+    step_min,
+    step_max:   Target.Int;
     stepI:      INTEGER;
     fromVal:    MSIR.Value;
     limitVal:   MSIR.Value;
     stepConst:  MSIR.Value;
+    stepSlot:   MSIR.Value;
+    stepDyn:    MSIR.Value;
+    stepLoaded: MSIR.Value;
     varAddr:    MSIR.Value;
     cur:        MSIR.Value;
     next:       MSIR.Value;
@@ -420,6 +425,11 @@ PROCEDURE CompileMSIR (p: P) =
     headerBlk:  MSIR.Block;
     bodyBlk:    MSIR.Block;
     exitBlk:    MSIR.Block;
+    posHdrBlk:  MSIR.Block;
+    negHdrBlk:  MSIR.Block;
+    isConst:    BOOLEAN;
+    alwaysPos:  BOOLEAN;
+    alwaysNeg:  BOOLEAN;
     zz:         Scope.T;
   BEGIN
     Variable.Split (loopVar, varType, varGlobal, varIndir, varLhs);
@@ -429,20 +439,24 @@ PROCEDURE CompileMSIR (p: P) =
       RETURN;
     END;
 
-    (* Step is always a constant after Check. *)
-    IF NOT Reduce (p.step, stepVal) THEN
-      MSIRBuilder.Abandon ("FOR step must be constant in MSIR v0");
-      RETURN;
+    isConst := Reduce (p.step, stepVal);
+    IF isConst THEN
+      IF NOT TInt.ToInt (stepVal, stepI) THEN
+        MSIRBuilder.Abandon ("FOR step out of INTEGER range");
+        RETURN;
+      END;
+      IF stepI = 0 THEN
+        MSIRBuilder.Abandon ("zero FOR step");
+        RETURN;
+      END;
+      stepConst := MSIR.ConstInt (msirType, VAL(stepI, LONGINT));
+      alwaysPos := stepI > 0;
+      alwaysNeg := stepI < 0;
+    ELSE
+      Expr.GetBounds (p.step, step_min, step_max);
+      alwaysPos := TInt.LE (TInt.Zero, step_min);
+      alwaysNeg := TInt.LT (step_max, TInt.Zero);
     END;
-    IF NOT TInt.ToInt (stepVal, stepI) THEN
-      MSIRBuilder.Abandon ("FOR step out of INTEGER range");
-      RETURN;
-    END;
-    IF stepI = 0 THEN
-      MSIRBuilder.Abandon ("zero FOR step");
-      RETURN;
-    END;
-    stepConst := MSIR.ConstInt (msirType, VAL(stepI, LONGINT));
 
     (* Register the loop variable as a local so it gets an alloca. *)
     zz := Scope.Push (p.scope);
@@ -459,27 +473,69 @@ PROCEDURE CompileMSIR (p: P) =
     IF fromVal = NIL THEN RETURN END;
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), fromVal, varAddr);
 
+    (* Compile non-constant step once and spill to an alloca. *)
+    IF NOT isConst THEN
+      stepDyn := Expr.CompileMSIR (p.step);
+      IF stepDyn = NIL THEN RETURN END;
+      stepSlot := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", msirType);
+      MSIR.BuildStore (MSIRBuilder.CurrentBlock (), stepDyn, stepSlot);
+    END;
+
     (* Create blocks. *)
     headerBlk := MSIRBuilder.NewBlock ("for.header");
     bodyBlk   := MSIRBuilder.NewBlock ("for.body");
     exitBlk   := MSIRBuilder.NewBlock ("for.exit");
 
-    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk,
-                  ARRAY OF MSIR.Value{});
+    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk, ARRAY OF MSIR.Value{});
 
-    (* Header: test index against limit. *)
-    MSIRBuilder.SetCurrentBlock (headerBlk);
-    cur      := MSIR.BuildLoad (headerBlk, "", msirType, varAddr);
-    limitVal := Expr.CompileMSIR (p.limit);
-    IF limitVal = NIL THEN RETURN END;
-    IF stepI > 0
-      THEN pred := MSIR.CmpPred.Sle;
-      ELSE pred := MSIR.CmpPred.Sge;
+    IF alwaysPos OR alwaysNeg THEN
+      (* Direction known statically: single comparison in the header. *)
+      MSIRBuilder.SetCurrentBlock (headerBlk);
+      cur      := MSIR.BuildLoad (headerBlk, "", msirType, varAddr);
+      limitVal := Expr.CompileMSIR (p.limit);
+      IF limitVal = NIL THEN RETURN END;
+      IF alwaysPos
+        THEN pred := MSIR.CmpPred.Sle;
+        ELSE pred := MSIR.CmpPred.Sge;
+      END;
+      cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, cur, limitVal);
+      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                        bodyBlk, ARRAY OF MSIR.Value{},
+                        exitBlk, ARRAY OF MSIR.Value{});
+    ELSE
+      (* Runtime direction check: header dispatches to pos/neg test blocks. *)
+      posHdrBlk := MSIRBuilder.NewBlock ("for.pos_test");
+      negHdrBlk := MSIRBuilder.NewBlock ("for.neg_test");
+      MSIRBuilder.SetCurrentBlock (headerBlk);
+      stepLoaded := MSIR.BuildLoad (headerBlk, "", msirType, stepSlot);
+      cond := MSIR.BuildICmp (headerBlk, "", MSIR.CmpPred.Slt,
+                              stepLoaded, MSIR.ConstInt (msirType, 0L));
+      MSIR.BuildCondBr (headerBlk, cond,
+                        negHdrBlk, ARRAY OF MSIR.Value{},
+                        posHdrBlk, ARRAY OF MSIR.Value{});
+
+      (* Positive branch: idx <= limit → body. *)
+      MSIRBuilder.SetCurrentBlock (posHdrBlk);
+      cur      := MSIR.BuildLoad (posHdrBlk, "", msirType, varAddr);
+      limitVal := Expr.CompileMSIR (p.limit);
+      IF limitVal = NIL THEN RETURN END;
+      cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sle,
+                              cur, limitVal);
+      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                        bodyBlk, ARRAY OF MSIR.Value{},
+                        exitBlk, ARRAY OF MSIR.Value{});
+
+      (* Negative branch: idx >= limit → body. *)
+      MSIRBuilder.SetCurrentBlock (negHdrBlk);
+      cur      := MSIR.BuildLoad (negHdrBlk, "", msirType, varAddr);
+      limitVal := Expr.CompileMSIR (p.limit);
+      IF limitVal = NIL THEN RETURN END;
+      cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sge,
+                              cur, limitVal);
+      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
+                        bodyBlk, ARRAY OF MSIR.Value{},
+                        exitBlk, ARRAY OF MSIR.Value{});
     END;
-    cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, cur, limitVal);
-    MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
-                      bodyBlk, ARRAY OF MSIR.Value{},
-                      exitBlk, ARRAY OF MSIR.Value{});
 
     (* Body. *)
     MSIRBuilder.SetCurrentBlock (bodyBlk);
@@ -489,11 +545,15 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Increment and loop back if body didn't terminate. *)
     IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
-      cur  := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, varAddr);
-      next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepConst);
+      cur := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, varAddr);
+      IF isConst THEN
+        next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepConst);
+      ELSE
+        stepLoaded := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, stepSlot);
+        next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepLoaded);
+      END;
       MSIR.BuildStore (MSIRBuilder.CurrentBlock (), next, varAddr);
-      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk,
-                    ARRAY OF MSIR.Value{});
+      MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk, ARRAY OF MSIR.Value{});
     END;
 
     MSIRBuilder.SetCurrentBlock (exitBlk);
