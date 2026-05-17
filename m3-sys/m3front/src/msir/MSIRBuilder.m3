@@ -1140,9 +1140,7 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
     elts := NEW(REF ARRAY OF MSIR.Value, n);
     FOR i := 0 TO n - 1 DO
       elts[i] := Expr.CompileMSIR(ArrayExpr.Elt(ae, i));
-      IF elts[i] = NIL THEN
-        Abandon("ConstArray: element " & Fmt.Int(i) & " failed");  RETURN NIL;
-      END;
+      IF elts[i] = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
     END;
     m    := MSIREmit.CurrentModule();
     name := "constarray_" & Fmt.Int(constArraySeq);  INC(constArraySeq);

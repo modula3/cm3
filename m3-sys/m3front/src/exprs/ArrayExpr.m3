@@ -2408,7 +2408,11 @@ BEGIN
      For element types with no scalar bit width (BitWidth <= 0):
        - Ptr/GcRef/GcSlot: keep the natural pointer type (procedure values etc.).
        - OpenArray/FixedArray: return NIL — cannot build constructor in MSIR yet.
-         Callers (CompileMSIR_MSIR, UserInit initAllocated path) handle NIL. *)
+         Callers (CompileMSIR_MSIR, UserInit initAllocated path) handle NIL.
+     For sub-byte elements (eltPack < Target.Byte): TranslateFixedArray uses
+     ByteArrayFallback [N × i8], but we would build [N × iK] with K < 8, which
+     mismatches the consumer's expected slot type.  Return NIL so callers
+     handle the missing value gracefully (assignment/init silently skipped). *)
   VAR eltPack := ArrayType.EltPack (baseType);
       eltBits := MSIR.BitWidth (eltT);
   BEGIN
@@ -2422,6 +2426,7 @@ BEGIN
     ELSIF eltPack > 0 AND eltPack # eltBits THEN
       eltT := MSIR.TI (eltPack);
     END;
+    IF eltPack > 0 AND eltPack < Target.Byte THEN RETURN NIL END;
   END;
   IF nElts <= 0 THEN nElts := 1 END;  (* alloca needs at least 1 element *)
   arrT := MSIR.TFixedArray (VAL (nElts, LONGINT), eltT);
