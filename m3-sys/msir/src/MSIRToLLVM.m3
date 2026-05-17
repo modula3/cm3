@@ -226,19 +226,25 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, LLSymbol(MSIR.GetConstProc(v)));
     | MSIR.ValueKind.ConstTextLit =>
         (* Emit as a constant-expression GEP: no separate instruction needed. *)
-        Wr.PutText(wr, "getelementptr inbounds (i8, ptr @textlit_");
-        Wr.PutText(wr, Fmt.Int(MSIR.GetTextLitUID(v)));
-        Wr.PutText(wr, ", i64 " & Fmt.Int(Target.Address.bytes) & ")");
+        VAR ap := "i" & Fmt.Int(Target.Address.size);
+        BEGIN
+          Wr.PutText(wr, "getelementptr inbounds (i8, ptr @textlit_");
+          Wr.PutText(wr, Fmt.Int(MSIR.GetTextLitUID(v)));
+          Wr.PutText(wr, ", " & ap & " " & Fmt.Int(Target.Address.bytes) & ")");
+        END;
     | MSIR.ValueKind.GlobalRef =>
         Wr.PutText(wr, "@");
         Wr.PutText(wr, LLGlobalSym(MSIR.ValueName(v)));
     | MSIR.ValueKind.StructFieldRef =>
-        (* getelementptr inbounds (i8, ptr @Mod_M3_info, i64 N) *)
-        Wr.PutText(wr, "getelementptr inbounds (i8, ptr ");
-        Wr.PutText(wr, MSIR.ValueName(v));   (* "@Mod_M3_info" *)
-        Wr.PutText(wr, ", i64 ");
-        Wr.PutText(wr, Fmt.Int(MSIR.GetStructFieldOffset(v)));
-        Wr.PutText(wr, ")");
+        (* getelementptr inbounds (i8, ptr @Mod_M3_info, i{AP} N) *)
+        VAR ap := "i" & Fmt.Int(Target.Address.size);
+        BEGIN
+          Wr.PutText(wr, "getelementptr inbounds (i8, ptr ");
+          Wr.PutText(wr, MSIR.ValueName(v));   (* "@Mod_M3_info" *)
+          Wr.PutText(wr, ", " & ap & " ");
+          Wr.PutText(wr, Fmt.Int(MSIR.GetStructFieldOffset(v)));
+          Wr.PutText(wr, ")");
+        END;
     ELSE
         (* InsnResult/Param names: % prefix; bare param names get % added.
            ExcDesc values start with @ (full symbol) and are emitted as-is. *)
@@ -295,7 +301,9 @@ PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
    Header layout (RT0.RefHeader = Target.Address.bytes before object ptr):
      bit M3RT.RH_gray_offset = gray bit (mask = 1 << RH_gray_offset) *)
 PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
-  VAR n: TEXT;
+  VAR
+    n  : TEXT;
+    ap := "i" & Fmt.Int(Target.Address.size);
   BEGIN
     INC(auxN);
     n := Fmt.Int(auxN);
@@ -305,23 +313,23 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
                    & ", label %gc.skip." & n & ", label %gc.check." & n & "\n");
     (* misaligned check: low bit set → not a real heap pointer *)
     Wr.PutText(wr, "gc.check." & n & ":\n");
-    Wr.PutText(wr, "  %__gc_int." & n & " = ptrtoint ptr " & refName & " to i64\n");
-    Wr.PutText(wr, "  %__gc_low." & n & " = and i64 %__gc_int." & n & ", 1\n");
-    Wr.PutText(wr, "  %__gc_ma."  & n & " = icmp ne i64 %__gc_low." & n & ", 0\n");
+    Wr.PutText(wr, "  %__gc_int." & n & " = ptrtoint ptr " & refName & " to " & ap & "\n");
+    Wr.PutText(wr, "  %__gc_low." & n & " = and " & ap & " %__gc_int." & n & ", 1\n");
+    Wr.PutText(wr, "  %__gc_ma."  & n & " = icmp ne " & ap & " %__gc_low." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_ma." & n
                    & ", label %gc.skip." & n & ", label %gc.gray." & n & "\n");
     (* gray-bit check: read object header word (8 bytes before object ptr) *)
     Wr.PutText(wr, "gc.gray." & n & ":\n");
     Wr.PutText(wr, "  %__gc_hptr." & n
                    & " = getelementptr i8, ptr " & refName
-                   & ", i64 -" & Fmt.Int(Target.Address.bytes) & "\n");
+                   & ", " & ap & " -" & Fmt.Int(Target.Address.bytes) & "\n");
     Wr.PutText(wr, "  %__gc_hdr."  & n
-                   & " = load i64, ptr %__gc_hptr." & n & "\n");
+                   & " = load " & ap & ", ptr %__gc_hptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_gb."   & n
-                   & " = and i64 %__gc_hdr." & n
+                   & " = and " & ap & " %__gc_hdr." & n
                    & ", " & Fmt.Int(Word.Shift(1, M3RT.RH_gray_offset)) & "\n");
     Wr.PutText(wr, "  %__gc_gr."   & n
-                   & " = icmp ne i64 %__gc_gb." & n & ", 0\n");
+                   & " = icmp ne " & ap & " %__gc_gb." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_gr." & n
                    & ", label %gc.slow." & n & ", label %gc.skip." & n & "\n");
     (* slow path *)
@@ -355,21 +363,23 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
      bit RH_dirty_offset:  dirty
      bit RH_gray_offset:   gray *)
 PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
-  VAR n: TEXT;
+  VAR
+    n  : TEXT;
+    ap := "i" & Fmt.Int(Target.Address.size);
   BEGIN
     INC(auxN);
     n := Fmt.Int(auxN);
     (* Read object header; skip barrier if already dirty. *)
     Wr.PutText(wr, "  %__gc_whptr." & n
                    & " = getelementptr i8, ptr " & containerName
-                   & ", i64 -" & Fmt.Int(Target.Address.bytes) & "\n");
+                   & ", " & ap & " -" & Fmt.Int(Target.Address.bytes) & "\n");
     Wr.PutText(wr, "  %__gc_whdr."  & n
-                   & " = load i64, ptr %__gc_whptr." & n & "\n");
+                   & " = load " & ap & ", ptr %__gc_whptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_wdb."   & n
-                   & " = and i64 %__gc_whdr." & n
+                   & " = and " & ap & " %__gc_whdr." & n
                    & ", " & Fmt.Int(Word.Shift(1, M3RT.RH_dirty_offset)) & "\n");
     Wr.PutText(wr, "  %__gc_wdirty." & n
-                   & " = icmp ne i64 %__gc_wdb." & n & ", 0\n");
+                   & " = icmp ne " & ap & " %__gc_wdb." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_wdirty." & n
                    & ", label %gc.wskip." & n & ", label %gc.wslow." & n & "\n");
     Wr.PutText(wr, "gc.wslow." & n & ":\n");
@@ -473,8 +483,8 @@ PROCEDURE EmitOAElemAddr(wr: Wr.T;  i: MSIR.Insn) =
     LLType(wr, eltType);
     Wr.PutText(wr, ", ptr " & dataPtr);
     FOR k := 0 TO rank - 1 DO
-      Wr.PutText(wr, ", i64 ");
-      LLOpVal(wr, MSIR.InsnOperand(i, 1 + k));
+      Wr.PutText(wr, ", ");
+      LLTypedVal(wr, MSIR.InsnOperand(i, 1 + k));
     END;
     Wr.PutText(wr, "\n");
   END EmitOAElemAddr;
@@ -559,6 +569,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     op   := MSIR.InsnOp(i);
     res  := MSIR.InsnResult(i);
     nOps := MSIR.InsnOperandCount(i);
+    ip   := "i" & Fmt.Int(Target.Integer.size);
+    ap   := "i" & Fmt.Int(Target.Address.size);
   BEGIN
     CASE op OF
 
@@ -581,15 +593,15 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca ");
           LLType(wr, MSIR.InsnTargetType(i));
           IF cnt > 1 THEN
-            Wr.PutText(wr, ", i64 " & Fmt.Int(cnt));
+            Wr.PutText(wr, ", " & ip & " " & Fmt.Int(cnt));
           END;
           Wr.PutText(wr, "\n");
         END;
 
     | MSIR.Op.AllocaDyn =>
-        (* alloca i8, i64 %byteCount — dynamic stack buffer *)
-        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca i8, i64 ");
-        LLOpVal(wr, MSIR.InsnOperand(i, 0));
+        (* alloca i8, i{IP} %byteCount — dynamic stack buffer *)
+        Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca i8, ");
+        LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, "\n");
 
     | MSIR.Op.Load =>
@@ -907,26 +919,26 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         END;
 
     | MSIR.Op.PtrAdd =>
-        (* getelementptr i8, ptr %base, i64 N — advances base by N bytes *)
+        (* getelementptr i8, ptr %base, i{AP} N — advances base by N bytes *)
         VAR
           baseV := MSIR.InsnOperand(i, 0);
           idx   := MSIR.InsnExtractIdx(i);
         BEGIN
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr i8, ptr ");
           LLOpVal(wr, baseV);
-          Wr.PutText(wr, ", i64 " & Fmt.Int(idx) & "\n");
+          Wr.PutText(wr, ", " & ap & " " & Fmt.Int(idx) & "\n");
         END;
 
     | MSIR.Op.GepByte =>
-        (* getelementptr inbounds i8, ptr %base, i64 %offset — dynamic byte-offset ptr arith *)
+        (* getelementptr inbounds i8, ptr %base, i{AP} %offset — dynamic byte-offset ptr arith *)
         VAR
           baseV   := MSIR.InsnOperand(i, 0);
           offsetV := MSIR.InsnOperand(i, 1);
         BEGIN
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr inbounds i8, ptr ");
           LLOpVal(wr, baseV);
-          Wr.PutText(wr, ", i64 ");
-          LLOpVal(wr, offsetV);
+          Wr.PutText(wr, ", ");
+          LLTypedVal(wr, offsetV);
           Wr.PutText(wr, "\n");
         END;
 
@@ -1036,7 +1048,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           LLType(wr, fixedArrT);
           Wr.PutText(wr, ", ptr ");
           LLOpVal(wr, arrV);
-          Wr.PutText(wr, ", i64 0, ");
+          Wr.PutText(wr, ", " & ap & " 0, ");
           LLTypedVal(wr, idxV);
           Wr.PutText(wr, "\n");
         END;
@@ -1425,11 +1437,13 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
   (* Emit TextLiteral.T globals for every string literal in the module.
      Layout of each @textlit_N:
-       { i64 gc_header, ptr method_list, i64 cnt, [len+1 x i8] chars }
+       { i{AP} gc_header, ptr method_list, i{IP} cnt, [len+1 x i8] chars }
      Literal data comes from TextExpr.LiteralCount/Chars/Cnt — the same
      per-module registry the CG path uses (SetUID tracking). *)
   VAR
     GcHeader := VAL(Word.Shift(M3RT.TEXT_typecode, M3RT.RH_typecode_offset), LONGINT);
+    ip       := "i" & Fmt.Int(Target.Integer.size);
+    ap       := "i" & Fmt.Int(Target.Address.size);
   VAR n := MSIR.ModuleTextLitCount(m);
   BEGIN
     IF n = 0 THEN RETURN END;
@@ -1470,10 +1484,10 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
           ELSE wcharBytes := 1;
         END;
         byteCount := len * wcharBytes + wcharBytes;
-        Wr.PutText(wr, "@textlit_" & Fmt.Int(uid) & " = internal constant { i64, ptr, i64, ["
-                       & Fmt.Int(byteCount) & " x i8] } { i64 "
+        Wr.PutText(wr, "@textlit_" & Fmt.Int(uid) & " = internal constant { " & ap & ", ptr, " & ip & ", ["
+                       & Fmt.Int(byteCount) & " x i8] } { " & ap & " "
                        & Fmt.LongInt(GcHeader)
-                       & ", ptr @textlit_methods, i64 " & Fmt.Int(cnt) & ", ["
+                       & ", ptr @textlit_methods, " & ip & " " & Fmt.Int(cnt) & ", ["
                        & Fmt.Int(byteCount) & " x i8] c\"");
         (* Emit body bytes: for 8-bit, 1 byte/char; for wide, wcharBytes bytes/char *)
         FOR j := 0 TO len * wcharBytes - 1 DO
@@ -1526,14 +1540,16 @@ PROCEDURE EmitConstArrays(wr: Wr.T;  m: MSIR.Module) =
 
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   VAR
-    n := MSIR.ModuleTypeDescCount(m);
+    n   := MSIR.ModuleTypeDescCount(m);
+    ip  := "i" & Fmt.Int(Target.Integer.size);
+    pad := Fmt.Int(Target.Integer.bytes - 4);
   BEGIN
     IF n = 0 THEN RETURN END;
 
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
-    Wr.PutText(wr, "%TC_t  = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
-    Wr.PutText(wr, "%OTC_t = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, ptr, i64, i64, i64, ptr, ptr }\n");
-    Wr.PutText(wr, "%ATC_t = type { i64, i64, i64, i8, i8, i8, i8, [4 x i8], i64, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i64, i64 }\n");
+    Wr.PutText(wr, "%TC_t  = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8, [" & pad & " x i8], " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
+    Wr.PutText(wr, "%OTC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8, [" & pad & " x i8], " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", ptr, " & ip & ", " & ip & ", " & ip & ", ptr, ptr }\n");
+    Wr.PutText(wr, "%ATC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8, [" & pad & " x i8], " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", " & ip & " }\n");
 
     FOR k := 0 TO n - 1 DO
       VAR
@@ -1565,23 +1581,23 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
             END;
           END;
           Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
-          Wr.PutText(wr, "  i64 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* fp *)
+          Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* fp — always i64 *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)
+          Wr.PutText(wr, "  [" & pad & " x i8] zeroinitializer,\n");
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
           Wr.PutText(wr, "  ptr null,\n");  (* linkProc *)
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescDataOffset(d)) & ",\n"); (* dataOffset bits *)
-          Wr.PutText(wr, "  i64 0,\n");  (* methodOffset *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescDataOffset(d)) & ",\n"); (* dataOffset bits *)
+          Wr.PutText(wr, "  " & ip & " 0,\n");  (* methodOffset *)
           VAR nMeth2 := MSIR.TypeDescMethodCount(d);
           BEGIN
-            Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescMethodBytes(d)) & ",\n"); (* methodSize *)
+            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescMethodBytes(d)) & ",\n"); (* methodSize *)
             IF nMeth2 > 0
               THEN Wr.PutText(wr, "  ptr @" & nm & ".methods,\n");
               ELSE Wr.PutText(wr, "  ptr null,\n");
@@ -1592,30 +1608,30 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         ELSIF isArr THEN
           (* ArrayTypeCell: plain TC fields + nDimensions + elementSize *)
           Wr.PutText(wr, "@" & nm & " = internal global %ATC_t {\n");
-          Wr.PutText(wr, "  i64 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dopeSize *)
+          Wr.PutText(wr, "  [" & pad & " x i8] zeroinitializer,\n");
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dopeSize *)
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescNDimensions(d)) & ",\n"); (* nDimensions *)
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescElementSize(d)) & "\n");  (* elementSize *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescNDimensions(d)) & ",\n"); (* nDimensions *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescElementSize(d)) & "\n");  (* elementSize *)
           Wr.PutText(wr, "}\n");
         ELSE
           (* Plain TypeCell (REF, etc.) *)
           Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
-          Wr.PutText(wr, "  i64 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          Wr.PutText(wr, "  [4 x i8] zeroinitializer,\n");
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n");
+          Wr.PutText(wr, "  [" & pad & " x i8] zeroinitializer,\n");
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n");
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & "\n");  (* TC_next *)
           Wr.PutText(wr, "}\n");
@@ -1675,11 +1691,14 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
     Wr.PutText(wr, "\ndefine void @MSIR_InitTypeLinks() {\n");
     Wr.PutText(wr, "entry:\n");
     (* Assign sequential typecodes to all TypeDescs (harness-only). *)
-    FOR j := 0 TO nDescs - 1 DO
-      VAR d := MSIR.ModuleTypeDesc(m, j);
-      BEGIN
-        Wr.PutText(wr, "  store i64 " & Fmt.Int(j + 1)
-                       & ", ptr @" & MSIR.TypeDescName(d) & "\n");
+    VAR ip := "i" & Fmt.Int(Target.Integer.size);
+    BEGIN
+      FOR j := 0 TO nDescs - 1 DO
+        VAR d := MSIR.ModuleTypeDesc(m, j);
+        BEGIN
+          Wr.PutText(wr, "  store " & ip & " " & Fmt.Int(j + 1)
+                         & ", ptr @" & MSIR.TypeDescName(d) & "\n");
+        END;
       END;
     END;
     FOR k := 0 TO nLinks - 1 DO
@@ -1825,6 +1844,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     fieldVal   : TEXT;
     byteOff    : INTEGER;
     gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
+    ip_t       := "i" & Fmt.Int(Target.Integer.size);   (* INTEGER type string *)
+    ap_t       := "i" & Fmt.Int(Target.Address.size);   (* ADDRESS type string *)
   BEGIN
     <* ASSERT M3RT.MI_SIZE MOD cs = 0,
        "RT0.ModuleInfo size not a multiple of char size" *>
@@ -1845,7 +1866,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
        All other binders are external and need explicit declare statements. *)
     IF nImports > 0 THEN
       (* Define the interface binder for this module before the ImportInfo globals. *)
-      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(i64 %mode) {\n");
+      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
       Wr.PutText(wr, "entry:\n");
       Wr.PutText(wr, "  ret ptr " & infoName & "\n");
       Wr.PutText(wr, "}\n");
@@ -1856,7 +1877,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
         VAR b := MSIR.ModuleImportBinder(m, k);
         BEGIN
           IF NOT Text.Equal(b, modName & "_I3") THEN
-            Wr.PutText(wr, "declare ptr @" & b & "(i64)\n");
+            Wr.PutText(wr, "declare ptr @" & b & "(" & ip_t & ")\n");
           END;
         END;
       END;
@@ -1893,7 +1914,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       IF k > 0 THEN Wr.PutText(wr, ", ") END;
       byteOff := k * ap;
       IF byteOff = M3RT.MI_link_state DIV cs OR byteOff = M3RT.MI_gc_flags DIV cs
-        THEN Wr.PutText(wr, "i64");
+        THEN Wr.PutText(wr, ip_t);
         ELSE Wr.PutText(wr, "ptr");
       END;
     END;
@@ -1952,9 +1973,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
                                                             THEN fieldVal := "@" & modName & "_M3_imp.0";
                                                             ELSE fieldVal := "null";
                                                           END;
-      ELSIF byteOff = M3RT.MI_link_state DIV cs     THEN fieldType := "i64"; fieldVal := "0";               fieldName := "MI_link_state";
+      ELSIF byteOff = M3RT.MI_link_state DIV cs     THEN fieldType := ip_t; fieldVal := "0";               fieldName := "MI_link_state";
       ELSIF byteOff = M3RT.MI_binder DIV cs         THEN fieldType := "ptr"; fieldVal := "@" & binderName;  fieldName := "MI_binder";
-      ELSIF byteOff = M3RT.MI_gc_flags DIV cs       THEN fieldType := "i64";
+      ELSIF byteOff = M3RT.MI_gc_flags DIV cs       THEN fieldType := ip_t;
                                                    (* RT0.GC_both = GC_gen | GC_inc = 3; literal used
                                                       because RT0 is in m3core, not m3middle. *)
                                                    fieldVal := "3";                                   fieldName := "MI_gc_flags";
@@ -2024,7 +2045,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
             Wr.PutText(wr, "@" & LLGlobalSym(MSIR.GlobalName(g))
                            & " = alias " & lltype
                            & ", ptr getelementptr inbounds (i8, ptr "
-                           & infoName & ", i64 " & Fmt.Int(off) & ")\n");
+                           & infoName & ", " & ap_t & " " & Fmt.Int(off) & ")\n");
           END;
         END;
       END;
@@ -2034,17 +2055,17 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
        emitted it already (that section defines it first to avoid declare
        conflicts).  For modules with no imports, emit it here. *)
     IF nImports = 0 THEN
-      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(i64 %mode) {\n");
+      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
       Wr.PutText(wr, "entry:\n");
       Wr.PutText(wr, "  ret ptr " & infoName & "\n");
       Wr.PutText(wr, "}\n");
     END;
 
     (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI. *)
-    Wr.PutText(wr, "\ndefine ptr @" & binderName & "(i64 %mode) {\n");
+    Wr.PutText(wr, "\ndefine ptr @" & binderName & "(" & ip_t & " %mode) {\n");
     IF bodyExists THEN
       Wr.PutText(wr, "entry:\n");
-      Wr.PutText(wr, "  %do_body = icmp ne i64 %mode, 0\n");
+      Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
       Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
       Wr.PutText(wr, "run:\n");
       Wr.PutText(wr, "  call void " & bodyName & "()\n");
