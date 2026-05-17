@@ -67,6 +67,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Packed record constructors: `RecordExpr.CompileMSIR` detects `[N x i1]` result type (ByteArrayFallback), zero-fills the byte array, then inserts each field value via `MSIRBuilder.InsertBitField` (sub-byte) or direct byte-aligned store (byte-multiple); nested packed aggregate fields are copied byte-by-byte via `i8` load/insert loops
 - [x] Nested arrays of aggregate element types (`ARRAY OF ARRAY OF gc_ref`, etc.): `MSIRType.TranslateFixedArray` guards the EltPack storage-width override with `MSIR.BitWidth(eltMsir) > 0`; prevents aggregate element types (GcRef, FixedArray, …) with `BitWidth = -1` from being collapsed to `IWide(eltPack)`, which would break inner subscripts
 - [x] `MSIRBuilder.ExtractBitField` / `MSIRBuilder.InsertBitField`: shared bitfield helpers exported from the builder layer so `QualifyExpr`, `RecordExpr`, and future callers can use them without circular imports; use `curBlock` directly (no `b` parameter)
+- [x] Sub-byte packed-element array subscript (`ARRAY OF BITS N FOR T`, eltPack ∈ {1,2,4}): `MSIRBuilder.ExtractBitFieldDyn`/`InsertBitFieldDyn` compute dynamic byte/bit offsets; `SubscriptExpr.CompileMSIR` detects `[N x i1]` ByteArrayFallback and dispatches; `SubscriptExpr.SubByteStoreElemMSIR` handles writes from `AssignStmt.CompileMSIR`
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -162,14 +163,12 @@ All are live `Abandon` paths confirmed by grepping `m3front/src`.
 - **Nested proc `PROCEDURE` values**: taking a `PROCEDURE` value of a
   lambda-lifted nested proc requires emitting a trampoline or a
   `{proc_ptr, env_ptr}` closure struct at the use site (see D15).
-- **Packed element array subscript** (`packed/sub-word array subscript`):
-  direct subscript of `ARRAY OF BITS N FOR T` still abandons in
-  `SubscriptExpr.LValueMSIR`.  p269 appeared fixed because those outer
-  arrays held `gc_ref` elements, not packed elements; actual packed-element
-  subscripts were never exercised.  Fix: detect `[N x i1]` element type
-  (ByteArrayFallback) in `SubscriptExpr.CompileMSIR` and route to
-  `MSIRBuilder.ExtractBitField`; mirror in `AssignStmt` via
-  `MSIRBuilder.InsertBitField`.
+- ~~**Packed element array subscript**~~ — **done**: `ExtractBitFieldDyn`/
+  `InsertBitFieldDyn` in `MSIRBuilder`; `SubscriptExpr.CompileMSIR` detects
+  `[N x i1]` ByteArrayFallback, computes `byteOff = idx >> logEPB` and
+  `bitInByte = (idx & mask) * eltPack` dynamically; `SubByteStoreElemMSIR`
+  exported for the write path.  Only eltPack ∈ {1,2,4} (divides 8)
+  supported; other values Abandon.
 - **Non-scalar record equality** (`non-scalar equality not supported in MSIR v0`):
   `a = b` on record types still abandons; array equality was fixed via a
   byte-comparison loop but the record branch was not wired up.
