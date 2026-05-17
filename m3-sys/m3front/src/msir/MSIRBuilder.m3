@@ -1108,6 +1108,15 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
       ARRAY OF MSIR.Value{dst, src, byteCount});
   END EmitMemcpyDyn;
 
+PROCEDURE ConstNat(t: MSIR.T;  v: INTEGER): MSIR.Value =
+  BEGIN RETURN MSIR.ConstInt(t, VAL(v, LONGINT)) END ConstNat;
+
+PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value =
+  BEGIN RETURN MSIR.BuildPtrAdd(b, name, base, VAL(off, LONGINT)) END BuildPtrByteOff;
+
+PROCEDURE TFixedArrayI(len: INTEGER;  elt: MSIR.T): MSIR.T =
+  BEGIN RETURN MSIR.TFixedArray(VAL(len, LONGINT), elt) END TFixedArrayI;
+
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR
     ae:       ArrayExpr.T;
@@ -1335,10 +1344,7 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
       intT := MSIR.TI (Target.Integer.size);
       i8T  := MSIR.TI (8);
   BEGIN
-    IF 8 MOD eltPack # 0 THEN
-      Abandon ("packed array elem: eltPack does not divide 8");
-      RETURN NIL;
-    END;
+    IF 8 MOD eltPack # 0 THEN RETURN NIL END;  (* non-power-of-2 eltPack: not yet supported *)
     VAR idxW := idx;
     BEGIN
       IF MSIR.BitWidth (MSIR.ValueType (idx)) # Target.Integer.size THEN
@@ -1395,10 +1401,7 @@ PROCEDURE InsertBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
       intT := MSIR.TI (Target.Integer.size);
       i8T  := MSIR.TI (8);
   BEGIN
-    IF 8 MOD eltPack # 0 THEN
-      Abandon ("packed array elem: eltPack does not divide 8");
-      RETURN;
-    END;
+    IF 8 MOD eltPack # 0 THEN RETURN END;  (* non-power-of-2 eltPack: not yet supported *)
     VAR idxW := idx;
     BEGIN
       IF MSIR.BitWidth (MSIR.ValueType (idx)) # Target.Integer.size THEN

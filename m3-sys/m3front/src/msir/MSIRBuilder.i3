@@ -276,6 +276,11 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 
+(* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
+PROCEDURE ConstNat       (t: MSIR.T;  v: INTEGER): MSIR.Value;
+PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;
+PROCEDURE TFixedArrayI   (len: INTEGER;  elt: MSIR.T): MSIR.T;
+
 (* Reset the global map.  Call once at the start of each new module
    (from MSIREmit.BeginUnit). *)
 PROCEDURE BeginModule();

@@ -921,7 +921,7 @@ PROCEDURE CompileMSIR (p: P) =
              MSIR.OpenArrayRank (rhsT) = 1               AND
              MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
             VAR blk2 := MSIRBuilder.CurrentBlock ();
-                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L);
+                zero := MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0);
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
                           ARRAY OF MSIR.Value {zero});
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (eltT));
@@ -942,6 +942,38 @@ PROCEDURE CompileMSIR (p: P) =
                 sPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (rhsT));
             BEGIN
               MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, sPtr);
+            END;
+          ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray AND
+                MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray THEN
+            (* Open ← Open (different ranks): dynamic memcpy of element data.
+               Load both dopes as open-array values, then use BuildOpenArrayElemAddr
+               to get each data pointer (element [0,...] addr = start of data block). *)
+            VAR blk2     := MSIRBuilder.CurrentBlock ();
+                intT     := MSIR.TI (Target.Integer.size);
+                lhsRank  := MSIR.OpenArrayRank (eltT);
+                rhsRank  := MSIR.OpenArrayRank (rhsT);
+                lhsZeros := NEW (REF ARRAY OF MSIR.Value, lhsRank);
+                rhsZeros := NEW (REF ARRAY OF MSIR.Value, rhsRank);
+            BEGIN
+              FOR k := 0 TO lhsRank - 1 DO lhsZeros[k] := MSIRBuilder.ConstNat (intT, 0) END;
+              FOR k := 0 TO rhsRank - 1 DO rhsZeros[k] := MSIRBuilder.ConstNat (intT, 0) END;
+              VAR lhsOA      := MSIR.BuildLoad (blk2, "", eltT, lhsPtr);
+                  dstDataPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", lhsOA, lhsZeros^);
+                  srcDataPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal, rhsZeros^);
+                  totalElts  := MSIR.BuildOpenArraySize (blk2, "", rhsVal, 0);
+              BEGIN
+                FOR k := 1 TO rhsRank - 1 DO
+                  totalElts := MSIR.BuildIMul (blk2, "", totalElts,
+                                 MSIR.BuildOpenArraySize (blk2, "", rhsVal, k));
+                END;
+                VAR totalBytes := MSIR.BuildIMul (blk2, "", totalElts,
+                                    MSIRBuilder.ConstNat (intT,
+                                      OpenArrayType.EltPack (Expr.TypeOf (p.lhs))
+                                        DIV Target.Char.size));
+                BEGIN
+                  MSIRBuilder.EmitMemcpyDyn (dstDataPtr, srcDataPtr, totalBytes);
+                END;
+              END;
             END;
           ELSE
             MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");

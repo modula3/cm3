@@ -2429,7 +2429,7 @@ BEGIN
     IF eltPack > 0 AND eltPack < Target.Byte THEN RETURN NIL END;
   END;
   IF nElts <= 0 THEN nElts := 1 END;  (* alloca needs at least 1 element *)
-  arrT := MSIR.TFixedArray (VAL (nElts, LONGINT), eltT);
+  arrT := MSIRBuilder.TFixedArrayI (nElts, eltT);
   b := MSIRBuilder.CurrentBlock ();
   alloca := MSIR.BuildAlloca (b, "", arrT);
   intT := MSIR.TI (Target.Integer.size);
@@ -2454,7 +2454,7 @@ BEGIN
     END;
     b := MSIRBuilder.CurrentBlock ();
     elemAddr := MSIR.BuildArrayElemAddr (b, "", alloca,
-                  MSIR.ConstInt (intT, VAL (i, LONGINT)));
+                  MSIRBuilder.ConstNat (intT, i));
     MSIR.BuildStore (b, elemVal, elemAddr);
   END;
   RETURN alloca;
