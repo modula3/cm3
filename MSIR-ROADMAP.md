@@ -63,6 +63,10 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] Compact subrange arrays (`[0..255]`, `[0..65535]`, BOOLEAN): `MSIRType.TranslateFixedArray` uses `ArrayType.EltPack(t)` to detect reduced storage width; element type in array IR uses storage width (e.g. `[N x i8]` for `[0..255]` elements); `SubscriptExpr.CompileMSIR` ZExt/SExt/Trunc on load to recover natural type
 - [x] Records with compact/packed fields: `MSIRType.TranslateRecord` uses `fti.size` (storage bits) for LLVM struct field type when it differs from natural `Translate` result (e.g. `[0..255]` → i8, `[0..65535]` → i16, BOOLEAN → i8); `BitWidth > 0` guard prevents replacing traced-ref fields (TGcRef, BitWidth=-1) with `TI(64)`; `QualifyExpr.LValueMSIR` uses storage type for GEP pointer; `QualifyExpr.CompileMSIR` ZExt/SExt/Trunc via `LoadFieldValue` helper
 - [x] Struct-by-value return (records, fixed arrays, large sets): hidden first `ptr` parameter (`_result_ptr`) — callee stores result through it and returns void; `BeginProc` detects `ProcType.LargeResult`, prepends hidden param, saves ptr as `curResultPtr`/`curResultType`; `ReturnStmt.CompileMSIR` stores through `curResultPtr` + `ret void`; `LookupOrCreateProc` mirrors convention for external stubs; `UserProc.CompileMSIR` allocas result slot, prepends to args, loads after call (nested large-result: Abandon)
+- [x] Sub-byte BITS-N-FOR-T packed fields (field offset or size not a byte multiple): `MSIRType.ByteArrayFallback` represents the enclosing record/array as `[N x i1]` (one i1 per bit, sentinel distinguishing it from byte arrays); field reads via `MSIRBuilder.ExtractBitField` (one or two `i8` loads, shift+mask, ZExt/SExt to natural M3 type); field writes via `MSIRBuilder.InsertBitField` (read-modify-write on one or two bytes); `QualifyExpr.LValueMSIR` returns NIL silently for sub-byte fields; `QualifyExpr.CompileMSIR` and `AssignStmt.CompileMSIR` detect the nil lvalue and route to the bitfield helpers
+- [x] Packed record constructors: `RecordExpr.CompileMSIR` detects `[N x i1]` result type (ByteArrayFallback), zero-fills the byte array, then inserts each field value via `MSIRBuilder.InsertBitField` (sub-byte) or direct byte-aligned store (byte-multiple); nested packed aggregate fields are copied byte-by-byte via `i8` load/insert loops
+- [x] Nested arrays of aggregate element types (`ARRAY OF ARRAY OF gc_ref`, etc.): `MSIRType.TranslateFixedArray` guards the EltPack storage-width override with `MSIR.BitWidth(eltMsir) > 0`; prevents aggregate element types (GcRef, FixedArray, …) with `BitWidth = -1` from being collapsed to `IWide(eltPack)`, which would break inner subscripts
+- [x] `MSIRBuilder.ExtractBitField` / `MSIRBuilder.InsertBitField`: shared bitfield helpers exported from the builder layer so `QualifyExpr`, `RecordExpr`, and future callers can use them without circular imports; use `curBlock` directly (no `b` parameter)
 
 ### Lowering (MSIR → LLVM IR)
 - [x] All scalar types, struct, fixed/open arrays, ptr/gc_ref
@@ -167,10 +171,10 @@ clang _m3main.cpp Main-llvm.o libm3core.a libm3.a -lc++ -o smoke-realrt
 cd /any/m3-program && cm3 '@M3m3front-msir' -build
 cat ARM64_DARWIN/Main.ll
 
-# Full p0/p1/p2 abandon sweep
-cd m3-sys/m3tests && rm -f /tmp/msir-debug.txt
-for d in src/p0/p0?? src/p1/p1?? src/p2/p2??; do
-  [ -d "$d" ] && (cd "$d" && cm3 '@M3m3front-msir' -build 2>/dev/null)
-done
-grep -c 'abandon' /tmp/msir-debug.txt 2>/dev/null || echo "0 abandons"
+# p2xx abandon sweep — capture baseline once, then use incremental check
+cd m3-sys/msir/test
+python3 sweep.py baseline      # run all 89 test dirs; write sweep-baseline.json
+python3 sweep.py check         # re-run only tests with prior abandons; report Δ
+python3 sweep.py summary       # tabulate abandon counts by message
+python3 sweep.py grep <msg>    # list tests containing a specific abandon text
 ```
