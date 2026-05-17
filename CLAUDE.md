@@ -262,7 +262,7 @@ new MSIR code takes effect in compilations.
 bash m3-sys/msir/test/run-llvm-link-test.sh
 ```
 
-Builds `Main.m3` with `@M3m3front-msir`, lowers to LLVM, and runs 112 checks.
+Builds `Main.m3` with `@M3m3front-msir`, lowers to LLVM, and runs 149 checks.
 Current result: **149/149 pass**.
 
 To run against the real runtime:

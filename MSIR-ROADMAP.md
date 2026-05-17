@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-16 (msir branch)
+Last updated: 2026-05-17 (msir branch)
 
 ## What's Working (149/149 tests pass)
 
@@ -78,6 +78,7 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 - [x] `RT0.ImportInfo` chain in `MI_imports`: `BuildImportLink`; RTHooks filtered (pre-initialised)
 - [x] TypeCell and ObjectTypeDesc (vtable) emission
 - [x] TC_kind bytes: use `ORD(M3RT.TypeKind.*)` (was hardcoded 6/13); GcHeader and TEXT GEP offset use M3RT/Target constants
+- [x] Portability: all LLVM integer widths derive from `Target.Integer.size` / `Target.Address.size` (no hardcoded `i64`); OpenArray size fields, GC header/barrier operands, alloca count, GEP byte offsets, binder signatures all parameterised; TypeCell struct uses `i{IP}` for INTEGER fields, `i64` only for the always-64-bit fingerprint; padding field `[N x i8]` where `N = Target.Integer.bytes - 4` (omitted entirely when N=0 on 32-bit targets); verified field-by-field against `M3RT.m3` layout formulas and CG `Init_intt` call sites in `RefType.m3` / `ObjectType.m3`
 - [x] TextLiteral vtable method names resolved via `RunTyme.LookUpProc` → `MSIRBuilder.HookProc`; `EmitDeclare` derives signatures from M3 types (no hardcoded strings)
 - [x] Procedure constants: `ConstProc` value kind lowers to `ptr @procname`
 - [x] Cast instructions: `sitofp`, `fptosi`, `fpext`, `fptrunc`, `zext`, `sext`, `trunc`

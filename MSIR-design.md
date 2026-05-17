@@ -31,11 +31,12 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 73/73 smoke tests pass; 0 abandons across p0/p1/p2 |
+| `m3-sys/msir` v0 package       | Built; ships; 149/149 smoke tests pass; 34 abandons remain in 7 p2xx tests |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
-NARROW/TYPECASE/ISTYPE, sets + subrange.
+NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
+open-array equality, struct-by-value return.
 
 ## Terminology: what "structured" means here
 
