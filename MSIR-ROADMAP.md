@@ -197,19 +197,27 @@ modules with many unique external callees.  Mechanical change; no IR impact.
 
 ### H. LLVM optimizer integration
 
-Currently the `.ll` text file is handed off to `clang` for compilation.
-The actual payoff of the LLVM retargeting is running LLVM middle-end passes
-(mem2reg, inlining, LICM, loop unrolling, …) before codegen.  Options:
+**Deferred until MSIR replaces the C backend as the default codegen path.**
+
+Optimization level must be controlled by cm3's existing flags (e.g.
+`-O`, `-O2`, `-O3` / `M3_OPTIMIZE` in the platform config), not bolted on
+independently.  Introducing a separate `opt -O2` invocation now would
+create a parallel flag system that conflicts with cm3's optimization
+controls and complicates the eventual clean integration.
+
+When MSIR becomes the default backend, the build driver maps cm3 optimization
+flags to the appropriate LLVM pipeline:
 
 1. **Drive `opt` + `llc` in the build pipeline** — pipe `.ll` through
-   `opt -O2 | llc`; lowest friction, no new bindings.
+   `opt -On | llc`; lowest friction, no new bindings.  Recommended first step.
 2. **LLVM-C API / bitcode emission** — replace the text-IR writer with
    direct LLVM-C calls; eliminates the text round-trip; requires binding
    `libLLVM`.
 3. **MLIR / TableGen dialect** — longer-term; enables M3-specific analyses
    before LLVM lowering.
 
-Option 1 is the recommended first step; options 2/3 are follow-on.
+**Prerequisite:** C codegen switch-off (MSIR as default backend on
+`ex_stack` platforms).  See also O8 (bootstrap path).
 
 ### I. Statepoint / precise GC
 
