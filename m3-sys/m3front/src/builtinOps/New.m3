@@ -567,7 +567,7 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     (* OA_size_0 (byte AP) = number of open dimensions *)
     VAR cntAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes);
     BEGIN
-      MSIR.BuildStore (b, MSIRBuilder.ConstNat (intT, ndims), cntAddr);
+      MSIR.BuildStore (b, MSIR.ConstInt (intT, ndims), cntAddr);
     END;
 
     (* OA_size_i (byte AP + IP*i, i in 1..ndims) = ce.args[i] dimension expression *)

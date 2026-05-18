@@ -1339,7 +1339,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
           MSIR.BuildStore (b, copyA, MSIRBuilder.BuildPtrByteOff (b, "", dopeA, 0));
           FOR k := 0 TO formDepth - 1 DO
-            MSIR.BuildStore (b, MSIRBuilder.ConstNat (intT, dimSizes[k]),
+            MSIR.BuildStore (b, MSIR.ConstInt (intT, dimSizes[k]),
                              MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
                                                           apB + ipB * k));
           END;
@@ -1374,7 +1374,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           eltSizeBytes  := OpenArrayType.EltPack (formType) DIV Target.Char.size;
           totalBytesDyn := MSIR.BuildIMul (b2, "",
                              totalEltsDyn,
-                             MSIRBuilder.ConstNat (intT, eltSizeBytes));
+                             MSIR.ConstInt (intT, eltSizeBytes));
           VAR copyPtr := MSIR.BuildAllocaDyn (b2, "", totalBytesDyn);
           BEGIN
             MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
@@ -1444,7 +1444,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
       cnt := Type.Number (indexT);
       IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
       MSIR.BuildStore (b,
-                       MSIRBuilder.ConstNat (intT, cntI),
+                       MSIR.ConstInt (intT, cntI),
                        MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
                                                     apB + ipB * k));
       innerT := eltT;
@@ -1511,7 +1511,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           cnt := Type.Number (indexT);
           IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
           MSIR.BuildStore (b,
-                           MSIRBuilder.ConstNat (intT, cntI),
+                           MSIR.ConstInt (intT, cntI),
                            MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
                                                         apB + ipB * k));
           innerT := eltT;
@@ -1528,7 +1528,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
         cnt := Type.Number (indexT);
         IF NOT TInt.ToInt (cnt, cntI) THEN RETURN NIL END;
         MSIR.BuildStore (b,
-                         MSIRBuilder.ConstNat (intT, cntI),
+                         MSIR.ConstInt (intT, cntI),
                          MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
                                                       apB + ipB * k));
         innerT := eltT;

@@ -122,10 +122,10 @@ PROCEDURE ShiftMSIR (ce: CallExpr.T): MSIR.Value =
     xt     := MSIR.ValueType (x);
     nt     := MSIR.ValueType (n);
     W      := Word_types[rep].size;
-    zero   := MSIRBuilder.ConstNat (xt, 0);
-    zeroN  := MSIRBuilder.ConstNat (nt, 0);
-    wConst := MSIRBuilder.ConstNat (nt, W);
-    wm1    := MSIRBuilder.ConstNat (nt, W - 1);
+    zero   := MSIR.ConstInt (xt, 0);
+    zeroN  := MSIR.ConstInt (nt, 0);
+    wConst := MSIR.ConstInt (nt, W);
+    wm1    := MSIR.ConstInt (nt, W - 1);
     isNeg  := MSIR.BuildICmp   (b, "", MSIR.CmpPred.Slt, n, zeroN);
     negN   := MSIR.BuildISub   (b, "", zeroN, n);
     absN   := MSIR.BuildSelect (b, "", isNeg, negN, n);
@@ -148,7 +148,7 @@ PROCEDURE ShiftLeftMSIR (ce: CallExpr.T): MSIR.Value =
     wm1 : MSIR.Value;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
-    wm1 := MSIRBuilder.ConstNat (MSIR.ValueType (n), Word_types[rep].size - 1);
+    wm1 := MSIR.ConstInt (MSIR.ValueType (n), Word_types[rep].size - 1);
     RETURN MSIR.BuildIShl (b, "", x, MSIR.BuildIAnd (b, "", n, wm1));
   END ShiftLeftMSIR;
 
@@ -161,7 +161,7 @@ PROCEDURE ShiftRightMSIR (ce: CallExpr.T): MSIR.Value =
     wm1 : MSIR.Value;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
-    wm1 := MSIRBuilder.ConstNat (MSIR.ValueType (n), Word_types[rep].size - 1);
+    wm1 := MSIR.ConstInt (MSIR.ValueType (n), Word_types[rep].size - 1);
     RETURN MSIR.BuildILShr (b, "", x, MSIR.BuildIAnd (b, "", n, wm1));
   END ShiftRightMSIR;
 

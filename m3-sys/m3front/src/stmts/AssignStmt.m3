@@ -921,7 +921,7 @@ PROCEDURE CompileMSIR (p: P) =
              MSIR.OpenArrayRank (rhsT) = 1               AND
              MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
             VAR blk2 := MSIRBuilder.CurrentBlock ();
-                zero := MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0);
+                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
                           ARRAY OF MSIR.Value {zero});
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (eltT));
@@ -955,8 +955,8 @@ PROCEDURE CompileMSIR (p: P) =
                 lhsZeros := NEW (REF ARRAY OF MSIR.Value, lhsRank);
                 rhsZeros := NEW (REF ARRAY OF MSIR.Value, rhsRank);
             BEGIN
-              FOR k := 0 TO lhsRank - 1 DO lhsZeros[k] := MSIRBuilder.ConstNat (intT, 0) END;
-              FOR k := 0 TO rhsRank - 1 DO rhsZeros[k] := MSIRBuilder.ConstNat (intT, 0) END;
+              FOR k := 0 TO lhsRank - 1 DO lhsZeros[k] := MSIR.ConstInt (intT, 0) END;
+              FOR k := 0 TO rhsRank - 1 DO rhsZeros[k] := MSIR.ConstInt (intT, 0) END;
               VAR lhsOA      := MSIR.BuildLoad (blk2, "", eltT, lhsPtr);
                   dstDataPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", lhsOA, lhsZeros^);
                   srcDataPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal, rhsZeros^);
@@ -967,7 +967,7 @@ PROCEDURE CompileMSIR (p: P) =
                                  MSIR.BuildOpenArraySize (blk2, "", rhsVal, k));
                 END;
                 VAR totalBytes := MSIR.BuildIMul (blk2, "", totalElts,
-                                    MSIRBuilder.ConstNat (intT,
+                                    MSIR.ConstInt (intT,
                                       OpenArrayType.EltPack (Expr.TypeOf (p.lhs))
                                         DIV Target.Char.size));
                 BEGIN

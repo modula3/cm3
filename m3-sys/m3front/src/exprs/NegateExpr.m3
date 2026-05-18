@@ -120,7 +120,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF (k = MSIR.TypeKind.F32) OR (k = MSIR.TypeKind.F64) THEN
       RETURN MSIR.BuildFNeg (blk, "", v);
     ELSE
-      RETURN MSIR.BuildISub (blk, "", MSIRBuilder.ConstNat (t, 0), v);
+      RETURN MSIR.BuildISub (blk, "", MSIR.ConstInt (t, 0), v);
     END;
   END CompileMSIR;
 

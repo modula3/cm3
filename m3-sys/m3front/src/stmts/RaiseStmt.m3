@@ -162,7 +162,7 @@ PROCEDURE CompileMSIR (p: P) =
     args[0] := descVal;
     args[1] := argVal;
     args[2] := MSIR.ConstNil(ptrT);    (* module: NIL *)
-    args[3] := MSIRBuilder.ConstNat(MSIR.TI(64), 0);  (* line: 0 *)
+    args[3] := MSIR.ConstInt(MSIR.TI(64), 0);  (* line: 0 *)
 
     EVAL MSIRBuilder.EmitCall("", raiseProc, args^);
     (* RTHooks__Raise never returns normally. *)

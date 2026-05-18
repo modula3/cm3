@@ -216,7 +216,7 @@ PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
     VAR cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "narrow.cond",
                                 MSIR.CmpPred.Ne,
                                 checkVal,
-                                MSIRBuilder.ConstNat (MSIR.ValueType (checkVal), 0));
+                                MSIR.ConstInt (MSIR.ValueType (checkVal), 0));
     BEGIN
       okBlk   := MSIRBuilder.NewBlock ("narrow.ok");
       failBlk := MSIRBuilder.NewBlock ("narrow.fail");
@@ -233,7 +233,7 @@ PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
         EVAL MSIRBuilder.EmitCall ("", faultHook,
                ARRAY OF MSIR.Value {
                  MSIR.ConstNil (MSIR.TPtr (MSIR.TVoid ())),
-                 MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 5)});
+                 MSIR.ConstInt (MSIR.TI (Target.Integer.size), 5)});
       END;
     END;
     MSIR.BuildUnreachable (MSIRBuilder.CurrentBlock ());

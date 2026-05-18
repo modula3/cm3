@@ -86,7 +86,7 @@ PROCEDURE AbsMSIR (ce: CallExpr.T): MSIR.Value =
     IF arg = NIL THEN RETURN NIL END;
     mt := MSIR.ValueType (arg);
     slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", mt);
-    zero     := MSIRBuilder.ConstNat (mt, 0);
+    zero     := MSIR.ConstInt (mt, 0);
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arg, slot);
     cond     := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
                                 MSIR.CmpPred.Slt, arg, zero);

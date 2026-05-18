@@ -100,7 +100,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     (* NOT x: emit icmp eq x, 0  (false == 0 in i1) *)
     RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
                             MSIR.CmpPred.Eq, v,
-                            MSIRBuilder.ConstNat (MSIR.TI1 (), 0));
+                            MSIR.ConstInt (MSIR.TI1 (), 0));
   END CompileMSIR;
 
 BEGIN

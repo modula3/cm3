@@ -109,9 +109,9 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       IF delta = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();  (* delta may have emitted an invoke *)
     ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-      delta := MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 1);
+      delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1);
     ELSE
-      delta := MSIRBuilder.ConstNat (MSIR.ValueType (old), 1);
+      delta := MSIR.ConstInt (MSIR.ValueType (old), 1);
     END;
     IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
       (* ADDRESS arithmetic: getelementptr i8 — delta is byte count *)

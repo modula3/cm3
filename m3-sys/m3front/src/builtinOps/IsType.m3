@@ -227,7 +227,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     IF refVal = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
     IF Type.IsSubtype (u, t) THEN
-      RETURN MSIRBuilder.ConstNat (MSIR.TI1 (), 1);
+      RETURN MSIR.ConstInt (MSIR.TI1 (), 1);
     END;
     IF Type.IsEqual (t, Null.T, NIL) THEN
       RETURN MSIR.BuildICmp (blk, "istype.nil", MSIR.CmpPred.Eq,
@@ -252,7 +252,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       IF raw = NIL THEN RETURN NIL END;
       RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "istype",
                              MSIR.CmpPred.Ne,
-                             raw, MSIRBuilder.ConstNat (MSIR.ValueType (raw), 0));
+                             raw, MSIR.ConstInt (MSIR.ValueType (raw), 0));
     END;
   END CompileMSIR;
 

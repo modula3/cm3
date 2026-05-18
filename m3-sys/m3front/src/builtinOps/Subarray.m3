@@ -533,7 +533,7 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
     blk := MSIRBuilder.CurrentBlock ();
 
     startOff  := MSIR.BuildIMul (blk, "", startVal,
-                                 MSIRBuilder.ConstNat (intT, eltBytes));
+                                 MSIR.ConstInt (intT, eltBytes));
     newEltPtr := MSIR.BuildGepByte (blk, "", basePtr, startOff);
 
     EVAL ArrayType.Split (Type.Base (open), indexT, eltT);

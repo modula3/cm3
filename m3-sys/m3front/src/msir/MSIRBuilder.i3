@@ -277,7 +277,6 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 
 (* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
-PROCEDURE ConstNat       (t: MSIR.T;  v: INTEGER): MSIR.Value;
 PROCEDURE ConstInt       (t: MSIR.T;  READONLY v: Target.Int): MSIR.Value;
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;
 PROCEDURE TFixedArrayI   (len: INTEGER;  elt: MSIR.T): MSIR.T;

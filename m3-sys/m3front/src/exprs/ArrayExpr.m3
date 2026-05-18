@@ -2454,7 +2454,7 @@ BEGIN
     END;
     b := MSIRBuilder.CurrentBlock ();
     elemAddr := MSIR.BuildArrayElemAddr (b, "", alloca,
-                  MSIRBuilder.ConstNat (intT, i));
+                  MSIR.ConstInt (intT, i));
     MSIR.BuildStore (b, elemVal, elemAddr);
   END;
   RETURN alloca;

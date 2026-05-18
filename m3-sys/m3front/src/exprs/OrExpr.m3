@@ -129,7 +129,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   BEGIN
     boolT    := MSIR.TI1 ();
     slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", boolT);
-    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), MSIRBuilder.ConstNat(boolT, 1), slot);
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), MSIR.ConstInt(boolT, 1), slot);
     condA    := Expr.CompileMSIR (p.a);
     IF condA = NIL THEN RETURN NIL END;
     rhsBlock   := MSIRBuilder.NewBlock ("or.rhs");

@@ -140,7 +140,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
                           normalBlk, ARRAY OF MSIR.Value {});
 
         MSIR.BuildStore (nilBlk,
-                         MSIRBuilder.ConstNat (intT, M3RT.NULL_typecode),
+                         MSIR.ConstInt (intT, M3RT.NULL_typecode),
                          resAlloca);
         MSIR.BuildBr (nilBlk, mergeBlk, ARRAY OF MSIR.Value {});
 
@@ -150,9 +150,9 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
                                                 -(Target.Address.size DIV 8));
         hdrWord := MSIR.BuildLoad (normalBlk, "tc.hdrword", intT, hdrPtr);
         shifted := MSIR.BuildILShr (normalBlk, "tc.shr", hdrWord,
-                                    MSIRBuilder.ConstNat (intT, M3RT.RH_typecode_offset));
+                                    MSIR.ConstInt (intT, M3RT.RH_typecode_offset));
         masked  := MSIR.BuildIAnd (normalBlk, "tc.mask", shifted,
-                                   MSIRBuilder.ConstNat (intT,
+                                   MSIR.ConstInt (intT,
                                      Word.LeftShift (1, M3RT.RH_typecode_size) - 1));
         MSIR.BuildStore (normalBlk, masked, resAlloca);
         MSIR.BuildBr (normalBlk, mergeBlk, ARRAY OF MSIR.Value {});

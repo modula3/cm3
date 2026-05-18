@@ -931,7 +931,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
 
           (* Data pointers: address of flat element[0] *)
           zeros := NEW (REF ARRAY OF MSIR.Value, openRank);
-          zero  := MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0);
+          zero  := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
           FOR k := 0 TO openRank - 1 DO zeros[k] := zero END;
           pA := MSIR.BuildOpenArrayElemAddr (blk, "", lv, zeros^);
           pB := MSIR.BuildOpenArrayElemAddr (blk, "", rv, zeros^);
@@ -946,12 +946,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           mergeBlk   := MSIRBuilder.NewBlock ("oa.merge");
 
           IF p.op = Op.EQ
-            THEN eqConst  := MSIRBuilder.ConstNat (MSIR.TI1 (), 1);
-                 neqConst := MSIRBuilder.ConstNat (MSIR.TI1 (), 0);
-            ELSE eqConst  := MSIRBuilder.ConstNat (MSIR.TI1 (), 0);
-                 neqConst := MSIRBuilder.ConstNat (MSIR.TI1 (), 1);
+            THEN eqConst  := MSIR.ConstInt (MSIR.TI1 (), 1);
+                 neqConst := MSIR.ConstInt (MSIR.TI1 (), 0);
+            ELSE eqConst  := MSIR.ConstInt (MSIR.TI1 (), 0);
+                 neqConst := MSIR.ConstInt (MSIR.TI1 (), 1);
           END;
-          MSIR.BuildStore (blk, MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0), idxSlot);
+          MSIR.BuildStore (blk, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0), idxSlot);
           MSIR.BuildStore (blk, eqConst, resSlot);
           (* if shape ok → check empty; else → fail *)
           MSIR.BuildCondBr (blk, shapeOk,
@@ -961,7 +961,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           (* check empty: skip loop if total = 0 *)
           MSIRBuilder.SetCurrentBlock (checkBlk);
           isEmpty := MSIR.BuildICmp (checkBlk, "", MSIR.CmpPred.Eq,
-                       total, MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0));
+                       total, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0));
           MSIR.BuildCondBr (checkBlk, isEmpty,
                             mergeBlk,   ARRAY OF MSIR.Value{},
                             loopHdrBlk, ARRAY OF MSIR.Value{});
@@ -977,7 +977,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           (* loop body: compare element at current index *)
           MSIRBuilder.SetCurrentBlock (loopBodBlk);
           idx1    := MSIR.BuildLoad (loopBodBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
-          ebV     := MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), elemBytes);
+          ebV     := MSIR.ConstInt (MSIR.TI (Target.Integer.size), elemBytes);
           byteOff := MSIR.BuildIMul (loopBodBlk, "", idx1, ebV);
           eA      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
                        MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff));
@@ -991,7 +991,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           (* increment: advance index, loop back *)
           MSIRBuilder.SetCurrentBlock (incrBlk);
           idx2 := MSIR.BuildLoad (incrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
-          nxt  := MSIR.BuildIAdd (incrBlk, "", idx2, MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 1));
+          nxt  := MSIR.BuildIAdd (incrBlk, "", idx2, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1));
           MSIR.BuildStore (incrBlk, nxt, idxSlot);
           MSIR.BuildBr (incrBlk, loopHdrBlk, ARRAY OF MSIR.Value{});
 
@@ -1065,18 +1065,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           failBlk    := MSIRBuilder.NewBlock ("rec.eq.fail");
           mergeBlk   := MSIRBuilder.NewBlock ("rec.eq.merge");
           CASE p.op OF
-          | Op.EQ => eqConst  := MSIRBuilder.ConstNat (MSIR.TI1 (), 1);
-                     neqConst := MSIRBuilder.ConstNat (MSIR.TI1 (), 0);
-          | Op.NE => eqConst  := MSIRBuilder.ConstNat (MSIR.TI1 (), 0);
-                     neqConst := MSIRBuilder.ConstNat (MSIR.TI1 (), 1);
+          | Op.EQ => eqConst  := MSIR.ConstInt (MSIR.TI1 (), 1);
+                     neqConst := MSIR.ConstInt (MSIR.TI1 (), 0);
+          | Op.NE => eqConst  := MSIR.ConstInt (MSIR.TI1 (), 0);
+                     neqConst := MSIR.ConstInt (MSIR.TI1 (), 1);
           END;
-          MSIR.BuildStore (blk, MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0), idxSlot);
+          MSIR.BuildStore (blk, MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0), idxSlot);
           MSIR.BuildStore (blk, eqConst, resSlot);
           MSIR.BuildBr (blk, loopHdrBlk, ARRAY OF MSIR.Value{});
           MSIRBuilder.SetCurrentBlock (loopHdrBlk);
           idx0 := MSIR.BuildLoad (loopHdrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
           hdrCond := MSIR.BuildICmp (loopHdrBlk, "", MSIR.CmpPred.Slt, idx0,
-                       MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), totalBytes));
+                       MSIR.ConstInt (MSIR.TI (Target.Integer.size), totalBytes));
           MSIR.BuildCondBr (loopHdrBlk, hdrCond,
                             loopBodBlk, ARRAY OF MSIR.Value{},
                             mergeBlk,   ARRAY OF MSIR.Value{});
@@ -1094,7 +1094,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           MSIRBuilder.SetCurrentBlock (incrBlk);
           idx2 := MSIR.BuildLoad (incrBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
           nxt  := MSIR.BuildIAdd (incrBlk, "", idx2,
-                    MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 1));
+                    MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1));
           MSIR.BuildStore (incrBlk, nxt, idxSlot);
           MSIR.BuildBr (incrBlk, loopHdrBlk, ARRAY OF MSIR.Value{});
           MSIRBuilder.SetCurrentBlock (failBlk);

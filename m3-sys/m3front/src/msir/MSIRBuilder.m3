@@ -1107,9 +1107,6 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
       ARRAY OF MSIR.Value{dst, src, byteCount});
   END EmitMemcpyDyn;
 
-PROCEDURE ConstNat(t: MSIR.T;  v: INTEGER): MSIR.Value =
-  BEGIN RETURN MSIR.ConstInt(t, v) END ConstNat;
-
 PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
   VAR x: INTEGER;
   BEGIN

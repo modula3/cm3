@@ -694,7 +694,7 @@ PROCEDURE CompileMSIR (p: P) =
       hBody := MSIRBuilder.NewBlock("h.body");
       e := h.tags;
       WHILE e # NIL DO
-        uidConst := MSIRBuilder.ConstNat(MSIR.TI(64),
+        uidConst := MSIR.ConstInt(MSIR.TI(64),
                       M3FP.ToInt(M3FP.FromText(Value.GlobalName(e.obj))));
         cmp     := MSIR.BuildICmp(checkBlk, "",
                                    MSIR.CmpPred.Eq, uid, uidConst);

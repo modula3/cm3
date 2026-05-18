@@ -630,7 +630,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
       VAR nBytes := VAL (MSIR.FixedArrayLen (msirT), INTEGER);
       BEGIN
         FOR i := 0 TO nBytes - 1 DO
-          MSIR.BuildStore (b, MSIRBuilder.ConstNat (MSIR.TI (8), 0),
+          MSIR.BuildStore (b, MSIR.ConstInt (MSIR.TI (8), 0),
                            MSIRBuilder.BuildPtrByteOff (b, "", slot, i));
         END;
         FOR i := 0 TO LAST (p.map^) DO

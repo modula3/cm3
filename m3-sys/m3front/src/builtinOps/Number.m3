@@ -148,14 +148,14 @@ PROCEDURE NumberMSIR (ce: CallExpr.T): MSIR.Value =
       MSIRBuilder.Abandon ("NUMBER: cannot get bounds");  RETURN NIL
     END;
     IF TInt.LT (max, min) THEN
-      RETURN MSIRBuilder.ConstNat (mt, 0);
+      RETURN MSIR.ConstInt (mt, 0);
     ELSIF TInt.Subtract (max, min, tmp) AND TInt.Add (tmp, TInt.One, num) THEN
       VAR n: INTEGER;
       BEGIN
         IF NOT TInt.ToInt (num, n) THEN
           MSIRBuilder.Abandon ("NUMBER: result too large");  RETURN NIL
         END;
-        RETURN MSIRBuilder.ConstNat (mt, n);
+        RETURN MSIR.ConstInt (mt, n);
       END;
     ELSE
       MSIRBuilder.Abandon ("NUMBER: result too large");  RETURN NIL

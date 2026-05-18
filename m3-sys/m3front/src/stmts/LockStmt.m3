@@ -232,8 +232,8 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR. *)
     lpType := MSIR.TLandingPad();
-    zero   := MSIRBuilder.ConstNat(MSIR.TI1(), 0);
-    one    := MSIRBuilder.ConstNat(MSIR.TI1(), 1);
+    zero   := MSIR.ConstInt(MSIR.TI1(), 0);
+    one    := MSIR.ConstInt(MSIR.TI1(), 1);
 
     lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
     excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());

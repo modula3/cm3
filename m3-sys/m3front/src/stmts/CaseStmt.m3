@@ -592,8 +592,8 @@ PROCEDURE CompileMSIR (p: P) =
           MSIRBuilder.Abandon ("CASE label out of INTEGER range");
           RETURN;
         END;
-        minVal := MSIRBuilder.ConstNat (selType, minI);
-        maxVal := MSIRBuilder.ConstNat (selType, maxI);
+        minVal := MSIR.ConstInt (selType, minI);
+        maxVal := MSIR.ConstInt (selType, maxI);
 
         (* sel < min → else (tree is sorted, so no later node can match) *)
         inRangeBlk := MSIRBuilder.NewBlock ("case.inrange");

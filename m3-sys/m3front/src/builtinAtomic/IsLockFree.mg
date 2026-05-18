@@ -8,7 +8,7 @@ GENERIC MODULE IsLockFree (Rep);
 
 IMPORT CallExpr, Expr, ExprRep, Procedure, Target;
 IMPORT Value, Formal, Type, ProcType, Bool;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -37,8 +37,8 @@ PROCEDURE CompileMSIR (<*UNUSED*> ce: CallExpr.T): MSIR.Value =
   VAR bool := Target.Atomic_lock_free[Type.CGType(Rep.T, in_memory := TRUE)];
   BEGIN
     IF bool
-      THEN RETURN MSIRBuilder.ConstNat(MSIR.TI1(), 1);
-      ELSE RETURN MSIRBuilder.ConstNat(MSIR.TI1(), 0);
+      THEN RETURN MSIR.ConstInt(MSIR.TI1(), 1);
+      ELSE RETURN MSIR.ConstInt(MSIR.TI1(), 0);
     END;
   END CompileMSIR;
 
