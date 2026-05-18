@@ -245,6 +245,7 @@ PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
 
 (* A per-exception static descriptor: { uid: i64, name: ptr, implicit: i64 }.
    Created by NewExcDesc; emitted as a module-level internal global.
+   uid = M3FP.ToInt(fingerprint of exception global name) — 32-bit hash.
    The Value returned by ExcDescValue has ptr type and may be passed
    directly as the 'ex' argument to RTHooks__Raise. *)
 TYPE ExcDesc <: REFANY;
@@ -267,7 +268,8 @@ PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc;
    so AllocateTracedObj -> InitObj stores the vtable without needing linkProc. *)
 TYPE TypeDesc <: REFANY;
 
-(* uid = M3FP fingerprint.  kind: ORD(M3RT.TypeKind) — Ref=1, Obj=2, Array=3.
+(* uid = Type.GlobalUID = M3FP.ToInt(fp), a 32-bit hash of the 64-bit fingerprint.
+   kind: ORD(M3RT.TypeKind) — Ref=1, Obj=2, Array=3.
    dataSize in bytes; dataAlignment in bits (matches M3RT TC_dataAlignment).
    methods: names of vtable function symbols, one per slot (OBJECT only).
    methodBytes: total vtable byte size; -1 means compute from methods array. *)
@@ -308,6 +310,7 @@ PROCEDURE TypeCellRef (name: TEXT): Value;
 (* Analog of RT0.TypeLink / CG cell_ptrs.  Each entry is a { ptr defn, i64 uid }
    global added to MI_type_cell_ptrs.  RTLinker.ResolveTypeLinks fills defn with
    the actual TypeCell pointer at module-init time.
+   uid = Type.GlobalUID (32-bit hash of 64-bit FP); stored as i64 in LLVM IR.
    Loading defn at runtime (after RTLinker) gives the TypeCell pointer. *)
 TYPE TypeLink <: REFANY;
 
@@ -621,7 +624,7 @@ PROCEDURE BuildIstype(b: Block;  name: TEXT;
 
 (* TYPECASE is a structured terminator op.  Each clause names a target type
    (or ELSE) and a parameterized block.  ELSE is mandatory at MSIR level.
-   uid  = M3 type fingerprint (Type.GlobalUID) used to build the
+   uid  = Type.GlobalUID (32-bit hash of the 64-bit FP) used to build the
           RTHooks__ScanTypecase type table; 0 for the ELSE terminator.
    targetType = MSIR type of the narrowed value (NIL if isElse). *)
 TYPE TypecaseClause = RECORD
