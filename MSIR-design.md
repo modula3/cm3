@@ -492,13 +492,71 @@ stack slot containing the traced ref (which the conservative scan
 finds). After inlining, mem2reg reverses any address-take introduced
 purely for capture support.
 
-**Procedure values** (nested proc passed as a callback): represented as
-an explicit `{ proc_ptr, env_ptr }` struct. Call sites that receive a
-procedure value emit an indirect call threading the `env_ptr` as an
-extra argument. This mirrors CM3's existing C-backend closure
-representation.
+**Procedure values** (first-class `PROCEDURE`-typed value of a nested proc):
+represented as a stack-allocated M3RT fat-pointer closure struct
+`{CL_marker: i64 = -1, CL_proc: ptr = shim, CL_frame: ptr = env}`
+at byte offsets 0 / IP (8) / IP+AP (16) on 64-bit targets.
+`CL_frame` points to a capture-env array `[nCaps x ptr]` where each
+slot holds the `alloca` address of a captured outer-proc variable.
+`CL_proc` points to a *closure shim*: a generated `internal` function
+with signature `(ptr %__env, explicit_params...) → result` that unpacks
+the env array and tail-calls the lambda-lifted nested proc.
 
-**Implementation status (2026-05-11): D15 is now fully implemented.**
+Call sites that receive a `PROCEDURE`-typed value (indirect calls) emit a
+runtime CL_marker check: load the first `i64` of the callee value, compare
+to −1.  If equal: extract shim and env, call `shim(env, args...)`.  If not:
+call the raw function pointer directly.  This is always emitted for indirect
+calls — distinguishing closure from plain proc pointer requires only the
+marker check, which is free at direct-call sites that prove the callee is
+a plain proc.
+
+Stack lifetime is guaranteed by M3 §4.13: nested-proc values cannot escape
+their enclosing scope, so the closure struct and env array can safely live
+on the outer proc's stack frame.
+
+**Implementation status (2026-05-19): D15 is fully implemented,**
+**including first-class nested-proc procedure values.**
+
+**Design rationale — hybrid lambda-lifting + closure shim (vs universal env-ptr):**
+
+An alternative design would unify all nested-proc calls under a single `ptr %__env`
+ABI (no capture params; the env pointer carries all captures for every call,
+whether direct or indirect).  This eliminates the shim entirely — procedure values
+can be represented as a plain `(proc_ptr, env_ptr)` pair without a runtime marker
+check.
+
+The hybrid (lambda-lifting for direct calls, shim only for procedure values) is
+better for the common M3 case:
+
+- **Direct calls are the norm.** Most nested procs in M3 are called directly in
+  the same enclosing scope.  Lambda-lifting passes captures as ordinary scalar or
+  pointer arguments: readonly scalars go in registers, LLVM can inline freely,
+  and mem2reg promotes away any remaining indirection.  No alloca+store+load
+  per call.
+- **Env-ptr imposes baseline overhead on ALL calls.** With universal env-ptr,
+  even a direct `inner(x)` must spill captures to a stack struct and pass a
+  pointer.  LLVM's SROA may recover this — but only when the call site is
+  inlined.  For non-inlined nested procs (library callbacks, recursion), the
+  overhead is permanent.
+- **Register allocation.** Lambda-lifting surfaces captures as named SSA
+  parameters; LLVM assigns them to registers via the normal calling convention.
+  Readonly scalar captures benefit especially (no memory traffic at all for
+  direct calls).  An env-ptr treats all captures as memory loads inside the
+  callee regardless of access pattern.
+- **Inlining and constant propagation.** When the outer proc is inlined into
+  a call site that holds a constant capture value, LLVM can propagate that
+  constant through the explicit parameter.  With env-ptr the constant is
+  hidden behind a pointer, blocking propagation until IPSCCP loads the env
+  field — a harder analysis.
+- **Shim cost amortized.** A shim is generated only when the proc value is
+  actually taken (`ProcExpr.CompileMSIR` detects `IsNested`).  Procs that are
+  always called directly never generate a shim; the hybrid has zero overhead
+  for the pure-direct-call case.
+
+**Future optimisation:** if capture analysis can prove a nested proc *never*
+escapes (its address is never stored in a PROCEDURE-typed slot), shim generation
+can be suppressed entirely.  The proc stays purely lambda-lifted at zero
+procedure-value overhead.  This is O16 territory — deferred until post-MVP.
 
 Lambda-lifting replaced the earlier static-link / frame-struct approach. The initial
 implementation used `%__env: ptr` with byte-offset GEPs and a back-patched frame
@@ -778,8 +836,6 @@ CG) rather than incorrect IR.
 - **VALUE open-array formals, partial depth coercion** (`actDepth <
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
-- **Nested proc procedure values**: taking a `PROCEDURE` value of a nested
-  (lambda-lifted) proc is not yet supported; abandons at the call site.
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR silently omits callbacks.
 - **Debug symbols**: no DWARF emitted yet (self-contained additive work;
   see hook points in `BeginProc` / `AddLocalMSIR`).
