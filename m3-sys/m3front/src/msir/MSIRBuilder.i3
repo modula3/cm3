@@ -159,8 +159,11 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
 (* Like EmitCall but prepends the capture arguments for a lambda-lifted nested
    proc.  calleeVal is the Value.T for the nested proc (used to look up the
    capture list registered by RegisterProc).  For each capture, passes
-   LookupVarAddr(cap.var) from the current (outer) proc's varMap. *)
+   LookupVarAddr(cap.var) from the current (outer) proc's varMap.
+   resultPtr: for large-result procs, the hidden result-slot pointer to place
+   at arg index 0, before the capture args; pass NIL for normal-result procs. *)
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
+                         resultPtr: MSIR.Value;
                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
 (* Emit a virtual method dispatch on a CM3 object reference.
@@ -190,6 +193,22 @@ PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
+(* Like EmitCallIndirect but emits a runtime CL_marker check so the call
+   works whether fn is a plain function pointer or a fat-pointer closure.
+   If the first word of fn equals M3RT.CL_marker_value (-1), the closure
+   path loads CL_frame (env) and CL_proc (shim) and calls shim(env, args…).
+   Otherwise calls fn(args…) directly.
+   Used by indirect-call sites where CouldBeClosure is true. *)
+PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
+                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+
+(* Construct a stack-allocated fat-pointer closure for a nested procedure
+   value.  v is the nested Procedure.T; procType is its M3 PROCEDURE type.
+   Returns a ptr-typed MSIR.Value pointing to the closure struct
+   {CL_marker=-1, CL_proc=shim, CL_frame=env}.
+   Abandons and returns NIL if captures are unsupported. *)
+PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value;
 
 (*---------------------------------------------- RunTyme hook lookup for MSIR *)
 

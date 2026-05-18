@@ -11,6 +11,7 @@ CONST MaxExitStack = 16;
 CONST MaxTryDepth  = 16;
 CONST MaxCatchDepth = 16;
 CONST MaxProcMap   = 2048;
+CONST MaxShimMap   = 256;
 CONST MaxGlobalMap  = 256;
 CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 
@@ -77,7 +78,12 @@ VAR
   procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
   procMapN: INTEGER := 0;
 
-  globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
+TYPE ShimEntry = RECORD key: Value.T; val: MSIR.Proc END;
+VAR
+  shimMap:  ARRAY [0..MaxShimMap-1] OF ShimEntry;
+  shimMapN: INTEGER := 0;
+
+VAR globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
   globalMapN: INTEGER := 0;
 
 TYPE ConstArrayEntry = RECORD key: Value.T; val: MSIR.Value END;
@@ -627,12 +633,16 @@ PROCEDURE CurrentUnwindBlock(): MSIR.Block =
   END CurrentUnwindBlock;
 
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
+                          resultPtr: MSIR.Value;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   (* Build capture args from the outer proc's varMap, then call.
-     Read-only scalar captures are passed by value; others by pointer. *)
+     Read-only scalar captures are passed by value; others by pointer.
+     resultPtr (non-NIL for large-result procs) is placed at arg index 0
+     before captures, matching the BeginProc hidden-result-ptr convention. *)
   VAR
     caps    : REF ARRAY OF CaptureAnalysis.Capture;
     nCaps   : INTEGER;
+    nHidden : INTEGER;
     allArgs : REF ARRAY OF MSIR.Value;
     v       : Variable.T;
     vt      : Type.T;  vg, vi, vlhs: BOOLEAN;
@@ -640,24 +650,370 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
   BEGIN
     caps := GetProcCaptures(calleeVal);
     IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
-    allArgs := NEW(REF ARRAY OF MSIR.Value, nCaps + NUMBER(args));
+    IF resultPtr = NIL THEN nHidden := 0 ELSE nHidden := 1 END;
+    allArgs := NEW(REF ARRAY OF MSIR.Value, nHidden + nCaps + NUMBER(args));
+    IF resultPtr # NIL THEN allArgs[0] := resultPtr END;
     FOR i := 0 TO nCaps - 1 DO
       v := caps[i].var;
       Variable.Split(v, vt, vg, vi, vlhs);
       mt := MSIRType.Translate(vt);
       IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
-        allArgs[i] := LookupVar(v);   (* pass the current value *)
+        allArgs[nHidden + i] := LookupVar(v);   (* pass the current value *)
       ELSE
-        allArgs[i] := LookupVarAddr(v);  (* pass the alloca address *)
+        allArgs[nHidden + i] := LookupVarAddr(v);  (* pass the alloca address *)
       END;
-      IF allArgs[i] = NIL THEN
+      IF allArgs[nHidden + i] = NIL THEN
         Abandon("capture var not found in outer proc varMap");
         RETURN NIL;
       END;
     END;
-    FOR i := 0 TO NUMBER(args) - 1 DO allArgs[nCaps + i] := args[i] END;
+    FOR i := 0 TO NUMBER(args) - 1 DO allArgs[nHidden + nCaps + i] := args[i] END;
     RETURN EmitCall(name, callee, allArgs^);
   END EmitNestedCall;
+
+PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
+                                   caps: REF ARRAY OF CaptureAnalysis.Capture;
+                                   procType: Type.T): MSIR.Proc =
+  (* Build a shim function  @F__shim(ptr %__env, explicit_params…) → result
+     that unpacks env and calls the lambda-lifted nested proc. *)
+  VAR
+    ptrT    := MSIR.TPtr(MSIR.TVoid());
+    AP      := Target.Address.bytes;
+    nCaps   : INTEGER;
+    nFormals: INTEGER;
+    nHidden : INTEGER;
+    resultT : MSIR.T;
+    isLR    : BOOLEAN;
+    params  : REF ARRAY OF MSIR.Param;
+    shimProc: MSIR.Proc;
+    shimBlk : MSIR.Block;
+    shimName: TEXT;
+    envP    : MSIR.Value;
+    capArgs : REF ARRAY OF MSIR.Value;
+    allArgs : REF ARRAY OF MSIR.Value;
+    f       : Value.T;
+    info    : Formal.Info;
+    result  : MSIR.Value;
+  BEGIN
+    FOR i := 0 TO shimMapN - 1 DO
+      IF shimMap[i].key = v THEN RETURN shimMap[i].val END;
+    END;
+
+    IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
+    resultT := MSIRType.TranslateResult(ProcType.Result(procType));
+    IF resultT = NIL THEN RETURN NIL END;
+    isLR := ProcType.LargeResult(ProcType.Result(procType));
+    IF isLR THEN resultT := MSIR.TVoid(); nHidden := 1
+    ELSE nHidden := 0
+    END;
+
+    (* Count explicit formals. *)
+    f := ProcType.Formals(procType);
+    nFormals := 0;
+    WHILE f # NIL DO INC(nFormals); f := f.next END;
+
+    (* params: [hidden_result_ptr?, ptr %__env, explicit_formals…] *)
+    params := NEW(REF ARRAY OF MSIR.Param, nHidden + 1 + nFormals);
+    IF isLR THEN
+      params[0].name := "_result_ptr";
+      params[0].type := ptrT;
+      params[0].mode := MSIR.ParamMode.ByValue;
+    END;
+    params[nHidden].name := "__env";
+    params[nHidden].type := ptrT;
+    params[nHidden].mode := MSIR.ParamMode.ByValue;
+    f := ProcType.Formals(procType);
+    FOR i := 0 TO nFormals - 1 DO
+      Formal.Split(f, info);
+      VAR pt := MSIRType.Translate(info.type);
+      BEGIN
+        IF pt = NIL THEN RETURN NIL END;
+        params[nHidden + 1 + i].name := M3ID.ToText(info.name);
+        CASE info.mode OF
+        | Formal.Mode.mVALUE =>
+            params[nHidden + 1 + i].mode := MSIR.ParamMode.ByValue;
+            IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
+              params[nHidden + 1 + i].type := MSIR.TPtr(pt);
+            ELSE
+              params[nHidden + 1 + i].type := pt;
+            END;
+        | Formal.Mode.mVAR =>
+            params[nHidden + 1 + i].mode := MSIR.ParamMode.Var;
+            params[nHidden + 1 + i].type := MSIR.TPtr(pt);
+        | Formal.Mode.mREADONLY =>
+            params[nHidden + 1 + i].mode := MSIR.ParamMode.Readonly;
+            CASE MSIR.Kind(pt) OF
+            | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
+              MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
+              MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
+                params[nHidden + 1 + i].type := MSIR.TPtr(pt);
+            ELSE
+                params[nHidden + 1 + i].type := pt;
+            END;
+        END;
+        f := f.next;
+      END;
+    END;
+
+    shimName := MSIR.ProcName(nested) & "__shim";
+
+    (* Save outer proc context. *)
+    IF curProc # NIL THEN
+      IF procContextDepth >= MaxNestDepth THEN
+        Abandon("shim: nesting too deep");
+        RETURN NIL;
+      END;
+      WITH ctx = procContextStack[procContextDepth] DO
+        ctx.proc       := curProc;
+        ctx.block      := curBlock;
+        ctx.abandoned  := abandoned;
+        ctx.blockSeq   := blockSeq;
+        ctx.pending    := pendingContainer;
+        ctx.resultPtr  := curResultPtr;
+        ctx.resultType := curResultType;
+        ctx.varMapN    := varMapN;
+        ctx.exitDepth  := exitDepth;
+        ctx.tryDepth   := tryDepth;
+        ctx.catchDepth := catchDepth;
+        FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
+      END;
+      INC(procContextDepth);
+    END;
+
+    abandoned      := FALSE;
+    varMapN        := 0;
+    exitDepth      := 0;
+    tryDepth       := 0;
+    catchDepth     := 0;
+    blockSeq       := 0;
+    curResultPtr   := NIL;
+    curResultType  := NIL;
+
+    shimProc := MSIR.NewProc(shimName, params^, resultT);
+    shimBlk  := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
+    MSIR.ProcAddBlock(shimProc, shimBlk);
+    MSIR.ProcSetLinkage(shimProc, MSIR.Linkage.Internal);
+    curProc  := shimProc;
+    curBlock := shimBlk;
+
+    IF isLR THEN
+      curResultPtr  := MSIR.ProcParam(shimProc, 0);
+      curResultType := MSIRType.Translate(ProcType.Result(procType));
+    END;
+
+    (* Unpack capture env: env is param[nHidden]. *)
+    envP := MSIR.ProcParam(shimProc, nHidden);
+    capArgs := NEW(REF ARRAY OF MSIR.Value, nCaps);
+    FOR k := 0 TO nCaps - 1 DO
+      VAR v_k  := caps[k].var;
+          vt   : Type.T;  vg, vi, vlhs: BOOLEAN;
+          mt   : MSIR.T;
+          slot : MSIR.Value;
+          ptr  : MSIR.Value;
+      BEGIN
+        Variable.Split(v_k, vt, vg, vi, vlhs);
+        mt   := MSIRType.Translate(vt);
+        slot := MSIR.BuildPtrAdd(curBlock, "", envP, k * AP);
+        ptr  := MSIR.BuildLoad(curBlock, "", ptrT, slot);
+        IF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
+          capArgs[k] := MSIR.BuildLoad(curBlock, "", mt, ptr);
+        ELSE
+          capArgs[k] := ptr;
+        END;
+      END;
+    END;
+
+    (* Build allArgs: [hidden_result_ptr?, caps…, explicit_formals…] *)
+    allArgs := NEW(REF ARRAY OF MSIR.Value, nHidden + nCaps + nFormals);
+    IF isLR THEN allArgs[0] := curResultPtr END;
+    FOR k := 0 TO nCaps - 1 DO allArgs[nHidden + k] := capArgs[k] END;
+    FOR i := 0 TO nFormals - 1 DO
+      allArgs[nHidden + nCaps + i] := MSIR.ProcParam(shimProc, nHidden + 1 + i);
+    END;
+
+    result := MSIR.BuildCall(curBlock, "", nested, allArgs^);
+    IF isLR THEN
+      MSIR.BuildRet(curBlock, NIL);
+    ELSE
+      MSIR.BuildRet(curBlock, result);
+    END;
+
+    (* Register shim with module. *)
+    VAR m := MSIREmit.CurrentModule();
+    BEGIN
+      IF m # NIL THEN MSIR.ModuleAddProc(m, shimProc) END;
+    END;
+
+    (* Restore outer proc context. *)
+    IF procContextDepth > 0 THEN
+      DEC(procContextDepth);
+      WITH ctx = procContextStack[procContextDepth] DO
+        curProc          := ctx.proc;
+        curBlock         := ctx.block;
+        abandoned        := ctx.abandoned;
+        blockSeq         := ctx.blockSeq;
+        pendingContainer := ctx.pending;
+        curResultPtr     := ctx.resultPtr;
+        curResultType    := ctx.resultType;
+        varMapN          := ctx.varMapN;
+        exitDepth        := ctx.exitDepth;
+        tryDepth         := ctx.tryDepth;
+        catchDepth       := ctx.catchDepth;
+        FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
+      END;
+    ELSE
+      curProc  := NIL;
+      curBlock := NIL;
+    END;
+
+    IF shimMapN < MaxShimMap THEN
+      shimMap[shimMapN].key := v;
+      shimMap[shimMapN].val := shimProc;
+      INC(shimMapN);
+    END;
+    RETURN shimProc;
+  END GetOrCreateClosureShim;
+
+PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
+  VAR
+    ptrT     := MSIR.TPtr(MSIR.TVoid());
+    intT     := MSIR.TI(Target.Integer.size);
+    IP       := Target.Integer.bytes;
+    AP       := Target.Address.bytes;
+    clSize   := IP + AP + AP;
+    b        : MSIR.Block;
+    msirProc : MSIR.Proc;
+    caps     : REF ARRAY OF CaptureAnalysis.Capture;
+    nCaps    : INTEGER;
+    shim     : MSIR.Proc;
+    envAlloca: MSIR.Value;
+    clAlloca : MSIR.Value;
+    markerV  : MSIR.Value;
+  BEGIN
+    IF NOT InProc() THEN RETURN NIL END;
+    msirProc := LookupOrCreateProc(v, procType);
+    IF msirProc = NIL THEN RETURN NIL END;
+    caps := GetProcCaptures(v);
+    IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
+
+    shim := GetOrCreateClosureShim(v, msirProc, caps, procType);
+    IF shim = NIL THEN
+      Abandon("BuildClosureValue: shim creation failed");
+      RETURN NIL;
+    END;
+    IF abandoned THEN RETURN NIL END;
+
+    b := CurrentBlock();
+
+    (* Allocate env: nCaps consecutive ptr slots (at least 1 byte). *)
+    IF nCaps > 0 THEN
+      envAlloca := MSIR.BuildAlloca(b, "", TFixedArrayI(nCaps, ptrT));
+      FOR k := 0 TO nCaps - 1 DO
+        VAR capAddr := LookupVarAddr(caps[k].var);
+        BEGIN
+          IF capAddr = NIL THEN
+            Abandon("BuildClosureValue: cap var not in outer proc varMap");
+            RETURN NIL;
+          END;
+          MSIR.BuildStore(b, capAddr, MSIR.BuildPtrAdd(b, "", envAlloca, k * AP));
+        END;
+      END;
+    ELSE
+      (* No captures: allocate a 1-byte dummy so envAlloca is a valid ptr. *)
+      envAlloca := MSIR.BuildAlloca(b, "", MSIR.TI(8));
+    END;
+
+    (* Allocate closure struct as [clSize x i8]. *)
+    clAlloca := MSIR.BuildAlloca(b, "", TFixedArrayI(clSize, MSIR.TI(8)));
+
+    (* Store CL_marker = -1 at byte offset 0. Use BuildPtrAdd(…,0) to get a
+       TPtr(TVoid()) destination so the verifier's type-match check is skipped. *)
+    markerV := MSIR.ConstInt(intT, M3RT.CL_marker_value);
+    MSIR.BuildStore(b, markerV, MSIR.BuildPtrAdd(b, "", clAlloca, 0));
+
+    (* Store CL_proc = shim at byte offset IP. *)
+    MSIR.BuildStore(b, MSIR.ConstProcRef(shim),
+                    MSIR.BuildPtrAdd(b, "", clAlloca, IP));
+
+    (* Store CL_frame = envAlloca at byte offset IP+AP. *)
+    MSIR.BuildStore(b, envAlloca,
+                    MSIR.BuildPtrAdd(b, "", clAlloca, IP + AP));
+
+    RETURN clAlloca;
+  END BuildClosureValue;
+
+PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
+                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+  (* Runtime CL_marker check: if *fn == -1 it's a closure, else a direct ptr.
+     Uses an alloca slot to merge the result across the two paths, since
+     MSIRToLLVM does not yet lower block-param values to phi nodes. *)
+  VAR
+    ptrT       := MSIR.TPtr(MSIR.TVoid());
+    intT       := MSIR.TI(Target.Integer.size);
+    IP         := Target.Integer.bytes;
+    AP         := Target.Address.bytes;
+    b          := CurrentBlock();
+    markerVal  : MSIR.Value;
+    isClosure  : MSIR.Value;
+    closureBlk : MSIR.Block;
+    directBlk  : MSIR.Block;
+    mergeBlk   : MSIR.Block;
+    shimPtr    : MSIR.Value;
+    envPtr     : MSIR.Value;
+    shimArgs   : REF ARRAY OF MSIR.Value;
+    nArgs      := NUMBER(args);
+    isVoid     : BOOLEAN;
+    resultSlot : MSIR.Value;
+    closureRes : MSIR.Value;
+    directRes  : MSIR.Value;
+  BEGIN
+    isVoid := (rtype = NIL) OR (MSIR.Kind(rtype) = MSIR.TypeKind.Void);
+    IF NOT isVoid THEN
+      resultSlot := MSIR.BuildAlloca(b, "", rtype);
+    END;
+
+    markerVal := MSIR.BuildLoad(b, "", intT, fn);
+    isClosure := MSIR.BuildICmp(b, "", MSIR.CmpPred.Eq, markerVal,
+                                MSIR.ConstInt(intT, M3RT.CL_marker_value));
+
+    closureBlk := NewBlock("cl.closure");
+    directBlk  := NewBlock("cl.direct");
+    mergeBlk   := NewBlock("cl.merge");
+
+    MSIR.BuildCondBr(b, isClosure,
+      closureBlk, ARRAY OF MSIR.Value{},
+      directBlk,  ARRAY OF MSIR.Value{});
+
+    (* Closure path: unpack CL_proc (shim) and CL_frame (env), call shim. *)
+    SetCurrentBlock(closureBlk);
+    shimPtr := MSIR.BuildLoad(curBlock, "", ptrT,
+                 MSIR.BuildPtrAdd(curBlock, "", fn, IP));
+    envPtr  := MSIR.BuildLoad(curBlock, "", ptrT,
+                 MSIR.BuildPtrAdd(curBlock, "", fn, IP + AP));
+    shimArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
+    shimArgs[0] := envPtr;
+    FOR i := 0 TO nArgs - 1 DO shimArgs[1 + i] := args[i] END;
+    closureRes := EmitCallIndirect(name, shimPtr, rtype, shimArgs^);
+    IF NOT isVoid THEN
+      MSIR.BuildStore(curBlock, closureRes, resultSlot);
+    END;
+    MSIR.BuildBr(curBlock, mergeBlk, ARRAY OF MSIR.Value{});
+
+    (* Direct path: call fn directly. *)
+    SetCurrentBlock(directBlk);
+    directRes := EmitCallIndirect(name, fn, rtype, args);
+    IF NOT isVoid THEN
+      MSIR.BuildStore(curBlock, directRes, resultSlot);
+    END;
+    MSIR.BuildBr(curBlock, mergeBlk, ARRAY OF MSIR.Value{});
+
+    SetCurrentBlock(mergeBlk);
+    IF isVoid THEN
+      RETURN NIL;
+    ELSE
+      RETURN MSIR.BuildLoad(curBlock, name, rtype, resultSlot);
+    END;
+  END EmitClosureCall;
 
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
@@ -1069,6 +1425,7 @@ PROCEDURE BeginModule() =
   BEGIN
     globalMapN       := 0;
     procMapN         := 0;
+    shimMapN         := 0;
     procContextDepth := 0;
     constArrayMapN   := 0;
     constArraySeq    := 0;

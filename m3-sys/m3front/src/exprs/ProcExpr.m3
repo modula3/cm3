@@ -116,15 +116,19 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T;
   END GenLiteral;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR
-    procType := Type.Base (Expr.TypeOf (p));
-    msirProc := MSIRBuilder.LookupOrCreateProc (p.proc, procType);
+  VAR procType := Type.Base (Expr.TypeOf (p));
   BEGIN
-    IF msirProc = NIL THEN
-      MSIRBuilder.Abandon ("ProcExpr: cannot get MSIR proc");
-      RETURN NIL;
+    IF Procedure.IsNested (p.proc) THEN
+      RETURN MSIRBuilder.BuildClosureValue (p.proc, procType);
     END;
-    RETURN MSIR.ConstProcRef (msirProc);
+    VAR msirProc := MSIRBuilder.LookupOrCreateProc (p.proc, procType);
+    BEGIN
+      IF msirProc = NIL THEN
+        MSIRBuilder.Abandon ("ProcExpr: cannot get MSIR proc");
+        RETURN NIL;
+      END;
+      RETURN MSIR.ConstProcRef (msirProc);
+    END;
   END CompileMSIR;
 
 BEGIN

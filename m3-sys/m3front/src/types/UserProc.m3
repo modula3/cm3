@@ -343,7 +343,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             iArgVals[i] := argVal;
           END;
         END;
-        RETURN MSIRBuilder.EmitCallIndirect("", fnVal, rtype, iArgVals^);
+        RETURN MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^);
       END;
     END;
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
@@ -362,32 +362,32 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
       END;
     END;
     (* Large-result: alloca slot, prepend hidden result ptr, load after call. *)
-    VAR procResult   := ProcType.Result(procType);
+    VAR procResult    := ProcType.Result(procType);
         isLargeResult := ProcType.LargeResult(procResult);
-        resultSlot   : MSIR.Value := NIL;
-        resultMsirT  : MSIR.T    := NIL;
-        actualArgs   : REF ARRAY OF MSIR.Value;
-        callResult   : MSIR.Value;
+        resultSlot    : MSIR.Value := NIL;
+        resultMsirT   : MSIR.T    := NIL;
+        actualArgs    : REF ARRAY OF MSIR.Value;
+        callResult    : MSIR.Value;
     BEGIN
       IF isLargeResult THEN
-        IF isNested THEN
-          MSIRBuilder.Abandon("nested large-result proc call not yet supported");
-          RETURN NIL;
-        END;
         resultMsirT := MSIRType.Translate(procResult);
         IF resultMsirT = NIL THEN
           MSIRBuilder.Abandon("large-result type not translatable");
           RETURN NIL;
         END;
         resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-        actualArgs := NEW(REF ARRAY OF MSIR.Value, 1 + n);
-        actualArgs[0] := resultSlot;
-        FOR i := 0 TO n - 1 DO actualArgs[1 + i] := argVals[i] END;
-        callResult := MSIRBuilder.EmitCall("", msirCallee, actualArgs^);
+        IF isNested THEN
+          callResult := MSIRBuilder.EmitNestedCall("", msirCallee, v, resultSlot, argVals^);
+        ELSE
+          actualArgs := NEW(REF ARRAY OF MSIR.Value, 1 + n);
+          actualArgs[0] := resultSlot;
+          FOR i := 0 TO n - 1 DO actualArgs[1 + i] := argVals[i] END;
+          callResult := MSIRBuilder.EmitCall("", msirCallee, actualArgs^);
+        END;
         RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT, resultSlot);
       ELSE
         IF isNested THEN
-          callResult := MSIRBuilder.EmitNestedCall("", msirCallee, v, argVals^);
+          callResult := MSIRBuilder.EmitNestedCall("", msirCallee, v, NIL, argVals^);
         ELSE
           callResult := MSIRBuilder.EmitCall("", msirCallee, argVals^);
         END;
