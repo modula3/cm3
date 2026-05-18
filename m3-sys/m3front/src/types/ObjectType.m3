@@ -707,15 +707,15 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     fldAlign := fldAlign DIV Target.Byte;
     IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
     IF vtableKnown AND names # NIL THEN
-      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), VAL (uid, LONGINT),
+      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
-                                VAL (parUID, LONGINT), dataOff, names^, methBytes);
+                                parUID, dataOff, names^, methBytes);
     ELSE
-      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), VAL (uid, LONGINT),
+      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
-                                VAL (parUID, LONGINT), dataOff, ARRAY OF TEXT{}, methBytes);
+                                parUID, dataOff, ARRAY OF TEXT{}, methBytes);
     END;
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;

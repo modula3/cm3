@@ -420,7 +420,7 @@ PROCEDURE CompileMSIR (p: P) =
       FOR z := 0 TO c.nTags - 1 DO
         mt := MSIRType.Translate (c.tags[z]);
         clauses[cIdx].isElse     := FALSE;
-        clauses[cIdx].uid        := VAL (Type.GlobalUID (c.tags[z]), LONGINT);
+        clauses[cIdx].uid        := Type.GlobalUID (c.tags[z]);
         clauses[cIdx].targetType := mt;
         clauses[cIdx].block      := cBlk;
         INC (cIdx);
@@ -430,7 +430,7 @@ PROCEDURE CompileMSIR (p: P) =
     (* ELSE terminator (uid=0). *)
     elseBlk := MSIRBuilder.NewBlock ("tc.else");
     clauses[cIdx].isElse     := TRUE;
-    clauses[cIdx].uid        := VAL (0, LONGINT);
+    clauses[cIdx].uid        := 0;
     clauses[cIdx].targetType := NIL;
     clauses[cIdx].block      := elseBlk;
 

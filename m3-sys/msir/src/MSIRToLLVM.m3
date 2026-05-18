@@ -8,7 +8,7 @@ IMPORT M3RT, Target, TFloat;
 
 TYPE TCEntry = REF RECORD
   name : TEXT;                   (* "@tc.table.N" *)
-  uids : REF ARRAY OF LONGINT;   (* type UIDs; last entry is 0 (ELSE) *)
+  uids : REF ARRAY OF INTEGER;   (* type UIDs; last entry is 0 (ELSE) *)
 END;
 
 VAR
@@ -1144,7 +1144,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           tblN     : TEXT;
           tblName  : TEXT;
           idxName  : TEXT;
-          uids     : REF ARRAY OF LONGINT;
+          uids     : REF ARRAY OF INTEGER;
         BEGIN
           INC(tcN);
           tblN    := Fmt.Int(tcN);
@@ -1152,7 +1152,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           idxName := "%__tc_idx." & tblN;
 
           (* Collect UIDs for the pending type table. *)
-          uids := NEW(REF ARRAY OF LONGINT, nClauses);
+          uids := NEW(REF ARRAY OF INTEGER, nClauses);
           FOR k := 0 TO nClauses - 1 DO
             uids[k] := MSIR.InsnTypecaseClause(i, k).uid;
           END;
@@ -1588,8 +1588,8 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           END;
           Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n"); (* fp — always i64 *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* fp — always i64 *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
@@ -1599,7 +1599,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)
           Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
           Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
           Wr.PutText(wr, "  ptr null,\n");  (* linkProc *)
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescDataOffset(d)) & ",\n"); (* dataOffset bits *)
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* methodOffset *)
@@ -1617,8 +1617,8 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           (* ArrayTypeCell: plain TC fields + nDimensions + elementSize *)
           Wr.PutText(wr, "@" & nm & " = internal global %ATC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
@@ -1635,8 +1635,8 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           (* Plain TypeCell (REF, etc.) *)
           Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & Fmt.LongInt(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
+          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
+          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
@@ -1692,7 +1692,7 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
           ELSE prev := "ptr @" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, k-1));
         END;
         Wr.PutText(wr, "@" & nm & " = internal global %TypeLink_t { "
-                       & prev & ", i64 " & Fmt.LongInt(uid) & " }\n");
+                       & prev & ", i64 " & Fmt.Int(uid) & " }\n");
       END;
     END;
 
@@ -2220,7 +2220,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
       BEGIN
         Wr.PutText(wr, "\n@" & MSIR.ExcDescName(d)
                        & " = internal global { i64, ptr, i64 } { i64 "
-                       & Fmt.LongInt(MSIR.ExcDescUID(d))
+                       & Fmt.Int(MSIR.ExcDescUID(d))
                        & ", ptr null, i64 0 }\n");
       END;
     END;
@@ -2249,7 +2249,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
           FOR k := 0 TO n - 1 DO
             IF k > 0 THEN Wr.PutText(wr, ", ") END;
             (* Each element needs the struct type prefix in LLVM array literals. *)
-            Wr.PutText(wr, "{ ptr, i64 } { ptr null, i64 " & Fmt.LongInt(ent.uids[k]) & " }");
+            Wr.PutText(wr, "{ ptr, i64 } { ptr null, i64 " & Fmt.Int(ent.uids[k]) & " }");
           END;
           Wr.PutText(wr, "]\n");
         END;

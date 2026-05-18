@@ -925,11 +925,11 @@ PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
 
 REVEAL ExcDesc = BRANDED "MSIR.ExcDesc" REF RECORD
   name  : TEXT;
-  uid   : LONGINT;
+  uid   : INTEGER;
   ptrVal: Value := NIL;  (* cached ptr value *)
 END;
 
-PROCEDURE NewExcDesc(name: TEXT;  uid: LONGINT): ExcDesc =
+PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER): ExcDesc =
   VAR d := NEW(ExcDesc);  v := NEW(Value);
   BEGIN
     d.name := name;
@@ -944,7 +944,7 @@ PROCEDURE NewExcDesc(name: TEXT;  uid: LONGINT): ExcDesc =
   END NewExcDesc;
 
 PROCEDURE ExcDescName (d: ExcDesc): TEXT    = BEGIN RETURN d.name   END ExcDescName;
-PROCEDURE ExcDescUID  (d: ExcDesc): LONGINT = BEGIN RETURN d.uid    END ExcDescUID;
+PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER = BEGIN RETURN d.uid    END ExcDescUID;
 PROCEDURE ExcDescValue(d: ExcDesc): Value   = BEGIN RETURN d.ptrVal END ExcDescValue;
 
 PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc) = BEGIN m.excDescs.addhi(d) END ModuleAddExcDesc;
@@ -956,12 +956,12 @@ PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
 
 REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   name          : TEXT;
-  uid           : LONGINT;
+  uid           : INTEGER;
   isTraced      : BOOLEAN;
   kind          : INTEGER;  (* ORD(M3RT.TypeKind) *)
   dataSize      : INTEGER;  (* bytes *)
   dataAlignment : INTEGER;  (* bits *)
-  parentUID     : LONGINT;  (* OBJ: parent fingerprint *)
+  parentUID     : INTEGER;  (* OBJ: parent fingerprint *)
   dataOffset    : INTEGER;  (* OBJ: field region byte offset *)
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
@@ -970,10 +970,10 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   ptrVal        : Value := NIL;
 END;
 
-PROCEDURE NewTypeDesc(name: TEXT; uid: LONGINT; isTraced: BOOLEAN;
+PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
                       kind: INTEGER; dataSize: INTEGER;
                       dataAlignment: INTEGER;
-                      parentUID: LONGINT := 0L;
+                      parentUID: INTEGER := 0;
                       dataOffset: INTEGER := 0;
                       READONLY methods: ARRAY OF TEXT := ARRAY OF TEXT{};
                       methodBytes: INTEGER := -1): TypeDesc =
@@ -1000,12 +1000,12 @@ PROCEDURE NewTypeDesc(name: TEXT; uid: LONGINT; isTraced: BOOLEAN;
 
 PROCEDURE TypeDescName       (d: TypeDesc): TEXT    = BEGIN RETURN d.name          END TypeDescName;
 PROCEDURE TypeDescValue      (d: TypeDesc): Value   = BEGIN RETURN d.ptrVal        END TypeDescValue;
-PROCEDURE TypeDescUID        (d: TypeDesc): LONGINT = BEGIN RETURN d.uid           END TypeDescUID;
+PROCEDURE TypeDescUID        (d: TypeDesc): INTEGER = BEGIN RETURN d.uid           END TypeDescUID;
 PROCEDURE TypeDescTraced     (d: TypeDesc): BOOLEAN = BEGIN RETURN d.isTraced      END TypeDescTraced;
 PROCEDURE TypeDescKind       (d: TypeDesc): INTEGER = BEGIN RETURN d.kind          END TypeDescKind;
 PROCEDURE TypeDescSize       (d: TypeDesc): INTEGER = BEGIN RETURN d.dataSize      END TypeDescSize;
 PROCEDURE TypeDescAlign      (d: TypeDesc): INTEGER = BEGIN RETURN d.dataAlignment END TypeDescAlign;
-PROCEDURE TypeDescParentUID  (d: TypeDesc): LONGINT = BEGIN RETURN d.parentUID     END TypeDescParentUID;
+PROCEDURE TypeDescParentUID  (d: TypeDesc): INTEGER = BEGIN RETURN d.parentUID     END TypeDescParentUID;
 PROCEDURE TypeDescDataOffset (d: TypeDesc): INTEGER = BEGIN RETURN d.dataOffset    END TypeDescDataOffset;
 PROCEDURE TypeDescMethodBytes(d: TypeDesc): INTEGER =
   BEGIN
@@ -1078,17 +1078,17 @@ PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
 
 REVEAL TypeLink = BRANDED "MSIR.TypeLink" REF RECORD
   name : TEXT;
-  uid  : LONGINT;
+  uid  : INTEGER;
 END;
 
-PROCEDURE NewTypeLink(name: TEXT; uid: LONGINT): TypeLink =
+PROCEDURE NewTypeLink(name: TEXT; uid: INTEGER): TypeLink =
   VAR tl := NEW(TypeLink);
   BEGIN tl.name := name; tl.uid := uid; RETURN tl END NewTypeLink;
 
 PROCEDURE TypeLinkName(tl: TypeLink): TEXT =
   BEGIN RETURN tl.name END TypeLinkName;
 
-PROCEDURE TypeLinkUID(tl: TypeLink): LONGINT =
+PROCEDURE TypeLinkUID(tl: TypeLink): INTEGER =
   BEGIN RETURN tl.uid END TypeLinkUID;
 
 PROCEDURE ModuleAddTypeLink(m: Module; tl: TypeLink) =

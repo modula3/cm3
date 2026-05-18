@@ -249,9 +249,9 @@ PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
    directly as the 'ex' argument to RTHooks__Raise. *)
 TYPE ExcDesc <: REFANY;
 
-PROCEDURE NewExcDesc(name: TEXT;  uid: LONGINT): ExcDesc;
+PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER): ExcDesc;
 PROCEDURE ExcDescName (d: ExcDesc): TEXT;    (* LLVM global symbol *)
-PROCEDURE ExcDescUID  (d: ExcDesc): LONGINT;
+PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER;
 PROCEDURE ExcDescValue(d: ExcDesc): Value;   (* ptr to descriptor *)
 
 PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc);
@@ -271,21 +271,21 @@ TYPE TypeDesc <: REFANY;
    dataSize in bytes; dataAlignment in bits (matches M3RT TC_dataAlignment).
    methods: names of vtable function symbols, one per slot (OBJECT only).
    methodBytes: total vtable byte size; -1 means compute from methods array. *)
-PROCEDURE NewTypeDesc(name: TEXT; uid: LONGINT; isTraced: BOOLEAN;
+PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
                       kind: INTEGER; dataSize: INTEGER;
                       dataAlignment: INTEGER;
-                      parentUID: LONGINT := 0L;
+                      parentUID: INTEGER := 0;
                       dataOffset: INTEGER := 0;
                       READONLY methods: ARRAY OF TEXT := ARRAY OF TEXT{};
                       methodBytes: INTEGER := -1): TypeDesc;
 PROCEDURE TypeDescName        (d: TypeDesc): TEXT;
 PROCEDURE TypeDescValue       (d: TypeDesc): Value;   (* ptr to the TypeCell global *)
-PROCEDURE TypeDescUID         (d: TypeDesc): LONGINT;
+PROCEDURE TypeDescUID         (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescTraced      (d: TypeDesc): BOOLEAN;
 PROCEDURE TypeDescKind        (d: TypeDesc): INTEGER; (* ORD(M3RT.TypeKind) *)
 PROCEDURE TypeDescSize        (d: TypeDesc): INTEGER; (* dataSize in bytes *)
 PROCEDURE TypeDescAlign       (d: TypeDesc): INTEGER; (* dataAlignment in bits *)
-PROCEDURE TypeDescParentUID   (d: TypeDesc): LONGINT; (* OBJ: parent fingerprint *)
+PROCEDURE TypeDescParentUID   (d: TypeDesc): INTEGER; (* OBJ: parent fingerprint *)
 PROCEDURE TypeDescDataOffset  (d: TypeDesc): INTEGER; (* OBJ: field region byte offset *)
 PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
 PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
@@ -311,9 +311,9 @@ PROCEDURE TypeCellRef (name: TEXT): Value;
    Loading defn at runtime (after RTLinker) gives the TypeCell pointer. *)
 TYPE TypeLink <: REFANY;
 
-PROCEDURE NewTypeLink (name: TEXT;  uid: LONGINT): TypeLink;
+PROCEDURE NewTypeLink (name: TEXT;  uid: INTEGER): TypeLink;
 PROCEDURE TypeLinkName (tl: TypeLink): TEXT;
-PROCEDURE TypeLinkUID  (tl: TypeLink): LONGINT;
+PROCEDURE TypeLinkUID  (tl: TypeLink): INTEGER;
 
 PROCEDURE ModuleAddTypeLink  (m: Module;  tl: TypeLink);
 PROCEDURE ModuleTypeLinkCount(m: Module): INTEGER;
@@ -626,7 +626,7 @@ PROCEDURE BuildIstype(b: Block;  name: TEXT;
    targetType = MSIR type of the narrowed value (NIL if isElse). *)
 TYPE TypecaseClause = RECORD
   isElse:     BOOLEAN;
-  uid:        LONGINT;  (* M3 type UID; 0 for ELSE *)
+  uid:        INTEGER;  (* M3 type UID; 0 for ELSE *)
   targetType: T;        (* NIL if isElse *)
   block:      Block;
 END;

@@ -753,7 +753,7 @@ PROCEDURE ExcDescValue (v: Value.T): MSIR.Value =
   VAR
     m    := MSIREmit.CurrentModule();
     name := Value.GlobalName(v, dots := FALSE, with_module := TRUE) & "_excptr";
-    uid  := VAL(M3FP.ToInt(M3FP.FromText(Value.GlobalName(v))), LONGINT);
+    uid  := M3FP.ToInt(M3FP.FromText(Value.GlobalName(v)));
     desc : MSIR.ExcDesc;
   BEGIN
     IF m = NIL THEN RETURN NIL END;
@@ -837,8 +837,8 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
                                isTraced: BOOLEAN): MSIR.Value =
   VAR
     m   := MSIREmit.CurrentModule();
-    uid := VAL(Type.GlobalUID(t), LONGINT);
-    nm  := "tc_ref_" & Fmt.LongInt(uid);
+    uid := Type.GlobalUID(t);
+    nm  := "tc_ref_" & Fmt.Int(uid);
     desc: MSIR.TypeDesc;
   BEGIN
     IF m = NIL THEN RETURN NIL END;
@@ -862,8 +862,8 @@ PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
                                     isTraced: BOOLEAN): MSIR.Value =
   VAR
     m    := MSIREmit.CurrentModule();
-    uid  := VAL(Type.GlobalUID(t), LONGINT);
-    nm   := "tc_arr_" & Fmt.LongInt(uid);
+    uid  := Type.GlobalUID(t);
+    nm   := "tc_arr_" & Fmt.Int(uid);
     desc : MSIR.TypeDesc;
   BEGIN
     IF m = NIL THEN RETURN NIL END;
@@ -882,21 +882,21 @@ PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
   END TypeDescValueForRefArray;
 
 PROCEDURE ObjectTypeCellRef(t: Type.T): MSIR.Value =
-  VAR uid := VAL(Type.GlobalUID(t), LONGINT);
+  VAR uid := Type.GlobalUID(t);
   BEGIN
-    RETURN MSIR.TypeCellRef("tc_obj_" & Fmt.LongInt(uid));
+    RETURN MSIR.TypeCellRef("tc_obj_" & Fmt.Int(uid));
   END ObjectTypeCellRef;
 
 PROCEDURE ArrayTypeCellRef(t: Type.T): MSIR.Value =
-  VAR uid := VAL(Type.GlobalUID(t), LONGINT);
+  VAR uid := Type.GlobalUID(t);
   BEGIN
-    RETURN MSIR.TypeCellRef("tc_arr_" & Fmt.LongInt(uid));
+    RETURN MSIR.TypeCellRef("tc_arr_" & Fmt.Int(uid));
   END ArrayTypeCellRef;
 
 PROCEDURE TypeLinkValueForRef(t: Type.T): MSIR.Value =
   VAR m    := MSIREmit.CurrentModule();
-      uid  := VAL(Type.GlobalUID(t), LONGINT);
-      nm   := "tl_ref_" & Fmt.LongInt(uid);
+      uid  := Type.GlobalUID(t);
+      nm   := "tl_ref_" & Fmt.Int(uid);
       tl   : MSIR.TypeLink;
       addr : MSIR.Value;
   BEGIN
@@ -916,8 +916,8 @@ PROCEDURE TypeLinkValueForRef(t: Type.T): MSIR.Value =
 
 PROCEDURE TypeLinkValueForRefArray(t: Type.T): MSIR.Value =
   VAR m    := MSIREmit.CurrentModule();
-      uid  := VAL(Type.GlobalUID(t), LONGINT);
-      nm   := "tl_arr_" & Fmt.LongInt(uid);
+      uid  := Type.GlobalUID(t);
+      nm   := "tl_arr_" & Fmt.Int(uid);
       tl   : MSIR.TypeLink;
       addr : MSIR.Value;
   BEGIN
@@ -937,8 +937,8 @@ PROCEDURE TypeLinkValueForRefArray(t: Type.T): MSIR.Value =
 
 PROCEDURE TypeLinkValueForObject(t: Type.T): MSIR.Value =
   VAR m    := MSIREmit.CurrentModule();
-      uid  := VAL(Type.GlobalUID(t), LONGINT);
-      nm   := "tl_obj_" & Fmt.LongInt(uid);
+      uid  := Type.GlobalUID(t);
+      nm   := "tl_obj_" & Fmt.Int(uid);
       tl   : MSIR.TypeLink;
       addr : MSIR.Value;
   BEGIN
