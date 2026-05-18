@@ -31,14 +31,15 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 166/166 smoke tests pass; 0 abandons across 288 p2xx test runs |
+| `m3-sys/msir` v0 package       | Built; ships; 149/149 LLVM link test checks; 0 abandons across 288 p2xx tests |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
 NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
 open-array equality, struct-by-value return,
 BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers),
-sub-byte packed-element array subscript (ExtractBitFieldDyn/InsertBitFieldDyn).
+sub-byte packed-element array subscript (ExtractBitFieldDyn/InsertBitFieldDyn),
+LONGINT elimination (msir/src + m3front/src/msir — all INTEGER now).
 
 ## Terminology: what "structured" means here
 
