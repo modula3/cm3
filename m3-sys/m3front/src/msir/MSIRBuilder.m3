@@ -725,7 +725,7 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
       slotPtr := suite;
     ELSE
       slotPtr := MSIR.BuildPtrAdd(b, "", suite,
-                                  VAL(midx * Target.Address.bytes, LONGINT));
+                                  midx * Target.Address.bytes);
     END;
 
     (* 3. Load function pointer from the slot. *)
@@ -1097,7 +1097,7 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER) =
     IF curBlock = NIL OR abandoned THEN RETURN END;
     EVAL MSIR.BuildCall(curBlock, "", GetMemcpyProc(),
       ARRAY OF MSIR.Value{dst, src,
-        MSIR.ConstInt(MSIR.TI(Target.Integer.size), VAL(byteCount, LONGINT))});
+        MSIR.ConstInt(MSIR.TI(Target.Integer.size), byteCount)});
   END EmitMemcpy;
 
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
@@ -1108,7 +1108,7 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
   END EmitMemcpyDyn;
 
 PROCEDURE ConstNat(t: MSIR.T;  v: INTEGER): MSIR.Value =
-  BEGIN RETURN MSIR.ConstInt(t, VAL(v, LONGINT)) END ConstNat;
+  BEGIN RETURN MSIR.ConstInt(t, v) END ConstNat;
 
 PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
   VAR x: INTEGER;
@@ -1117,14 +1117,14 @@ PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
       Abandon("ConstInt: value out of range for host INTEGER");
       RETURN NIL;
     END;
-    RETURN MSIR.ConstInt(t, VAL(x, LONGINT));
+    RETURN MSIR.ConstInt(t, x);
   END ConstInt;
 
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value =
-  BEGIN RETURN MSIR.BuildPtrAdd(b, name, base, VAL(off, LONGINT)) END BuildPtrByteOff;
+  BEGIN RETURN MSIR.BuildPtrAdd(b, name, base, off) END BuildPtrByteOff;
 
 PROCEDURE TFixedArrayI(len: INTEGER;  elt: MSIR.T): MSIR.T =
-  BEGIN RETURN MSIR.TFixedArray(VAL(len, LONGINT), elt) END TFixedArrayI;
+  BEGIN RETURN MSIR.TFixedArray(len, elt) END TFixedArrayI;
 
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR
@@ -1240,7 +1240,7 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     b         := curBlock;
     byteStart := bitOff DIV 8;
     bitInByte := bitOff MOD 8;
-    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
+    p0        := MSIR.BuildPtrAdd (b, "", base, byteStart);
     b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
     word      : MSIR.Value;
     wordBits  : INTEGER;
@@ -1250,25 +1250,25 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
       wordBits := 8;
     ELSE
       (* Field spans two bytes: stitch b0 | (b1 << 8) as i16 *)
-      VAR p1  := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
+      VAR p1  := MSIR.BuildPtrAdd (b, "", base, byteStart + 1);
           b1  := MSIR.BuildLoad (b, "", MSIR.TI (8), p1);
           b0w := MSIR.BuildZExt (b, "", b0, MSIR.TI (16));
           b1w := MSIR.BuildZExt (b, "", b1, MSIR.TI (16));
       BEGIN
         word := MSIR.BuildIOr (b, "", b0w,
-                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8)));
       END;
       wordBits := 16;
     END;
     VAR
       wordT    := MSIR.TI (wordBits);
       shifted  := MSIR.BuildILShr (b, "", word,
-                      MSIR.ConstInt (wordT, VAL (bitInByte, LONGINT)));
-      maskVal  : LONGINT := 1L;
+                      MSIR.ConstInt (wordT, bitInByte));
+      maskVal  : INTEGER := 1;
       extracted: MSIR.Value;
     BEGIN
-      FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
-      maskVal := maskVal - 1L;
+      FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
+      maskVal := maskVal - 1;
       extracted := MSIR.BuildIAnd (b, "", shifted, MSIR.ConstInt (wordT, maskVal));
       VAR
         packedBase : Type.T;
@@ -1295,22 +1295,22 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     b         := curBlock;
     byteStart := bitOff DIV 8;
     bitInByte := bitOff MOD 8;
-    p0        := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart, LONGINT));
+    p0        := MSIR.BuildPtrAdd (b, "", base, byteStart);
     b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
-    maskVal   : LONGINT := 1L;
+    maskVal   : INTEGER := 1;
   BEGIN
-    FOR i := 1 TO bitWidth DO maskVal := maskVal * 2L END;
-    maskVal := maskVal - 1L;   (* (1 << bitWidth) - 1 *)
+    FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
+    maskVal := maskVal - 1;   (* (1 << bitWidth) - 1 *)
     IF bitInByte + bitWidth <= 8 THEN
-      VAR mk : LONGINT := maskVal;
+      VAR mk : INTEGER := maskVal;
       BEGIN
-        FOR i := 1 TO bitInByte DO mk := mk * 2L END;
-        mk := mk MOD 256L;
+        FOR i := 1 TO bitInByte DO mk := mk * 2 END;
+        mk := mk MOD 256;
         VAR
-          notMask := MSIR.ConstInt (MSIR.TI (8), (256L - mk - 1L) MOD 256L);
+          notMask := MSIR.ConstInt (MSIR.TI (8), (256 - mk - 1) MOD 256);
           val8    := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (8));
           shifted := MSIR.BuildIShl (b, "", val8,
-                         MSIR.ConstInt (MSIR.TI (8), VAL (bitInByte, LONGINT)));
+                         MSIR.ConstInt (MSIR.TI (8), bitInByte));
           cleared := MSIR.BuildIAnd (b, "", b0, notMask);
           merged  := MSIR.BuildIOr  (b, "", cleared, shifted);
         BEGIN
@@ -1319,28 +1319,28 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
       END;
     ELSE
       VAR
-        p1   := MSIR.BuildPtrAdd (b, "", base, VAL (byteStart + 1, LONGINT));
+        p1   := MSIR.BuildPtrAdd (b, "", base, byteStart + 1);
         b1   := MSIR.BuildLoad   (b, "", MSIR.TI (8), p1);
         b0w  := MSIR.BuildZExt   (b, "", b0, MSIR.TI (16));
         b1w  := MSIR.BuildZExt   (b, "", b1, MSIR.TI (16));
         word := MSIR.BuildIOr    (b, "", b0w,
-                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8L)));
-        mk16 : LONGINT := maskVal;
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8)));
+        mk16 : INTEGER := maskVal;
       BEGIN
-        FOR i := 1 TO bitInByte DO mk16 := mk16 * 2L END;
+        FOR i := 1 TO bitInByte DO mk16 := mk16 * 2 END;
         VAR
-          notMask16 := MSIR.ConstInt (MSIR.TI (16), (16_10000L - mk16 - 1L) MOD 16_10000L);
+          notMask16 := MSIR.ConstInt (MSIR.TI (16), (16_10000 - mk16 - 1) MOD 16_10000);
           valTrunc  := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (bitWidth));
           val16     := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
           shiftedV  := MSIR.BuildIShl  (b, "", val16,
-                           MSIR.ConstInt (MSIR.TI (16), VAL (bitInByte, LONGINT)));
+                           MSIR.ConstInt (MSIR.TI (16), bitInByte));
           merged    := MSIR.BuildIOr (b, "",
                            MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
         BEGIN
           MSIR.BuildStore (b, MSIR.BuildTrunc (b, "", merged, MSIR.TI (8)), p0);
           MSIR.BuildStore (b, MSIR.BuildTrunc (b, "",
                                 MSIR.BuildILShr (b, "", merged,
-                                    MSIR.ConstInt (MSIR.TI (16), 8L)),
+                                    MSIR.ConstInt (MSIR.TI (16), 8)),
                                 MSIR.TI (8)), p1);
         END;
       END;
@@ -1366,21 +1366,21 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
         WHILE tmp > 1 DO logEPB := logEPB + 1; tmp := tmp DIV 2 END;
         (* byteOff = idx >> logEPB  (byte containing element idx) *)
         VAR byteOff    := MSIR.BuildILShr (b, "", idxW,
-                              MSIR.ConstInt (intT, VAL (logEPB, LONGINT)));
+                              MSIR.ConstInt (intT, logEPB));
             bytePtr    := MSIR.BuildGepByte (b, "", base, byteOff);
             loaded     := MSIR.BuildLoad (b, "", i8T, bytePtr);
             (* bitInByte = (idx AND (elemsPerByte-1)) * eltPack *)
-            modMask    := MSIR.ConstInt (intT, VAL (elemsPerByte - 1, LONGINT));
+            modMask    := MSIR.ConstInt (intT, elemsPerByte - 1);
             bitInByteW := MSIR.BuildIMul (b, "",
                               MSIR.BuildIAnd (b, "", idxW, modMask),
-                              MSIR.ConstInt (intT, VAL (eltPack, LONGINT)));
+                              MSIR.ConstInt (intT, eltPack));
             bitInByte8 := MSIR.BuildTrunc (b, "", bitInByteW, i8T);
             shifted    := MSIR.BuildILShr (b, "", loaded, bitInByte8);
-            maskVal    : LONGINT := 1L;
+            maskVal    : INTEGER := 1;
             extracted  : MSIR.Value;
         BEGIN
-          FOR i := 1 TO eltPack DO maskVal := maskVal * 2L END;
-          maskVal := maskVal - 1L;   (* (1 << eltPack) - 1 *)
+          FOR i := 1 TO eltPack DO maskVal := maskVal * 2 END;
+          maskVal := maskVal - 1;   (* (1 << eltPack) - 1 *)
           extracted := MSIR.BuildIAnd (b, "", shifted,
                            MSIR.ConstInt (i8T, maskVal));
           VAR
@@ -1422,23 +1422,23 @@ PROCEDURE InsertBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
       BEGIN
         WHILE tmp > 1 DO logEPB := logEPB + 1; tmp := tmp DIV 2 END;
         VAR byteOff    := MSIR.BuildILShr (b, "", idxW,
-                              MSIR.ConstInt (intT, VAL (logEPB, LONGINT)));
+                              MSIR.ConstInt (intT, logEPB));
             bytePtr    := MSIR.BuildGepByte (b, "", base, byteOff);
             b0         := MSIR.BuildLoad (b, "", i8T, bytePtr);
-            modMask    := MSIR.ConstInt (intT, VAL (elemsPerByte - 1, LONGINT));
+            modMask    := MSIR.ConstInt (intT, elemsPerByte - 1);
             bitInByteW := MSIR.BuildIMul (b, "",
                               MSIR.BuildIAnd (b, "", idxW, modMask),
-                              MSIR.ConstInt (intT, VAL (eltPack, LONGINT)));
+                              MSIR.ConstInt (intT, eltPack));
             bitInByte8 := MSIR.BuildTrunc (b, "", bitInByteW, i8T);
-            maskVal    : LONGINT := 1L;
+            maskVal    : INTEGER := 1;
         BEGIN
-          FOR i := 1 TO eltPack DO maskVal := maskVal * 2L END;
-          maskVal := maskVal - 1L;   (* (1 << eltPack) - 1 *)
+          FOR i := 1 TO eltPack DO maskVal := maskVal * 2 END;
+          maskVal := maskVal - 1;   (* (1 << eltPack) - 1 *)
           VAR
             mask8       := MSIR.ConstInt (i8T, maskVal);
             shiftedMask := MSIR.BuildIShl  (b, "", mask8, bitInByte8);
             notMask8    := MSIR.BuildIXor  (b, "", shiftedMask,
-                               MSIR.ConstInt (i8T, 255L));
+                               MSIR.ConstInt (i8T, 255));
             val8        := MSIR.BuildTrunc (b, "", rhs, i8T);
             positioned  := MSIR.BuildIShl  (b, "", val8, bitInByte8);
             cleared     := MSIR.BuildIAnd  (b, "", b0, notMask8);

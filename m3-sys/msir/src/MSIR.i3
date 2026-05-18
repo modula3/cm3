@@ -52,9 +52,9 @@ PROCEDURE TObject(name: TEXT;
                   descriptorSym: TEXT): T;
 PROCEDURE TOpenArray(rank: INTEGER;  elt: T): T;
 PROCEDURE THeapArray(rank: INTEGER;  elt: T): T;
-PROCEDURE TFixedArray(len: LONGINT;  elt: T): T;
-PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T;
-PROCEDURE TSet(elt: T;  lo, hi: LONGINT): T;
+PROCEDURE TFixedArray(len: INTEGER;  elt: T): T;
+PROCEDURE TSubrange(parent: T;  lo, hi: INTEGER): T;
+PROCEDURE TSet(elt: T;  lo, hi: INTEGER): T;
 
 (* Landing-pad aggregate: { ptr, i32 } — the LLVM EH landingpad result type. *)
 PROCEDURE TLandingPad(): T;
@@ -83,16 +83,16 @@ PROCEDURE OpenArrayElt(t: T): T;
 PROCEDURE HeapArrayRank(t: T): INTEGER;
 PROCEDURE HeapArrayElt(t: T): T;
 
-PROCEDURE FixedArrayLen(t: T): LONGINT;
+PROCEDURE FixedArrayLen(t: T): INTEGER;
 PROCEDURE FixedArrayElt(t: T): T;
 
 PROCEDURE SubrangeParent(t: T): T;
-PROCEDURE SubrangeLo(t: T): LONGINT;
-PROCEDURE SubrangeHi(t: T): LONGINT;
+PROCEDURE SubrangeLo(t: T): INTEGER;
+PROCEDURE SubrangeHi(t: T): INTEGER;
 
 PROCEDURE SetElt(t: T): T;
-PROCEDURE SetLo(t: T): LONGINT;
-PROCEDURE SetHi(t: T): LONGINT;
+PROCEDURE SetLo(t: T): INTEGER;
+PROCEDURE SetHi(t: T): INTEGER;
 
 (*----------------------------------------------------------------- Values *)
 
@@ -101,7 +101,7 @@ TYPE Value <: REFANY;
 TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef,
                   StructFieldRef (* GEP into module's @Mod_M3_info struct *) };
 
-PROCEDURE ConstInt(t: T;  v: LONGINT): Value;
+PROCEDURE ConstInt(t: T;  v: INTEGER): Value;
 PROCEDURE ConstFloat(t: T;  READONLY v: Target.Float): Value;
 PROCEDURE GetFloatVal(v: Value;  VAR f: Target.Float);  (* ConstFloat only *)
 PROCEDURE ConstBool(v: BOOLEAN): Value;
@@ -128,7 +128,7 @@ PROCEDURE GetTextLitCnt  (v: Value): INTEGER;
 PROCEDURE ValueType(v: Value): T;
 PROCEDURE ValueName(v: Value): TEXT;  (* SSA name, e.g. "%5" or "a" *)
 PROCEDURE GetValueKind(v: Value): ValueKind;
-PROCEDURE GetIntVal(v: Value): LONGINT;            (* for ConstInt only *)
+PROCEDURE GetIntVal(v: Value): INTEGER;            (* for ConstInt only *)
 
 (*------------------------------------------------------- Parameters / modes *)
 
@@ -729,7 +729,7 @@ PROCEDURE BuildSetMember    (b: Block;  name: TEXT;
    General byte-offset GEP; result type = same as base.
    Used for vtable slot indexing (pass idx = method_slot * sizeof(ptr))
    and for heap object field access (pass idx = total byte offset). *)
-PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value;
+PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: INTEGER): Value;
 
 (* Dynamic byte-offset GEP: getelementptr inbounds i8, ptr %base, i64 %offset.
    Used for ADDRESS arithmetic (INC/DEC on ADDRESS variables). *)

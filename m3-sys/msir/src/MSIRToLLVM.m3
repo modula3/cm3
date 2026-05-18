@@ -132,7 +132,7 @@ PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
         Wr.PutText(wr, "ptr");  (* opaque heap-array dope pointer *)
     | MSIR.TypeKind.FixedArray =>
         Wr.PutText(wr, "[");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.FixedArrayLen(t)));
+        Wr.PutText(wr, Fmt.Int(MSIR.FixedArrayLen(t)));
         Wr.PutText(wr, " x ");
         LLType(wr, MSIR.FixedArrayElt(t));
         Wr.PutText(wr, "]");
@@ -216,7 +216,7 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     IF v = NIL THEN Wr.PutText(wr, "undef"); RETURN END;
     CASE MSIR.GetValueKind(v) OF
     | MSIR.ValueKind.ConstInt =>
-        Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
+        Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
         EmitFloatHex(wr, v);
     | MSIR.ValueKind.ConstNil =>
@@ -1064,7 +1064,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "  " & MSIR.ValueName(res));
           Wr.PutText(wr, " = extractvalue ");
           LLType(wr, oaT); Wr.PutText(wr, " "); LLOpVal(wr, oaV);
-          Wr.PutText(wr, ", " & Fmt.LongInt(dim + 1L) & "\n");
+          Wr.PutText(wr, ", " & Fmt.Int(dim + 1) & "\n");
         END;
 
     | MSIR.Op.Convert =>
@@ -1442,7 +1442,7 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
      Literal data comes from TextExpr.LiteralCount/Chars/Cnt — the same
      per-module registry the CG path uses (SetUID tracking). *)
   VAR
-    GcHeader := VAL(Word.Shift(M3RT.TEXT_typecode, M3RT.RH_typecode_offset), LONGINT);
+    GcHeader := Word.Shift(M3RT.TEXT_typecode, M3RT.RH_typecode_offset);
     ip       := "i" & Fmt.Int(Target.Integer.size);
     ap       := "i" & Fmt.Int(Target.Address.size);
   VAR n := MSIR.ModuleTextLitCount(m);
@@ -1487,7 +1487,7 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
         byteCount := len * wcharBytes + wcharBytes;
         Wr.PutText(wr, "@textlit_" & Fmt.Int(uid) & " = internal constant { " & ap & ", ptr, " & ip & ", ["
                        & Fmt.Int(byteCount) & " x i8] } { " & ap & " "
-                       & Fmt.LongInt(GcHeader)
+                       & Fmt.Int(GcHeader)
                        & ", ptr @textlit_methods, " & ip & " " & Fmt.Int(cnt) & ", ["
                        & Fmt.Int(byteCount) & " x i8] c\"");
         (* Emit body bytes: for 8-bit, 1 byte/char; for wide, wcharBytes bytes/char *)

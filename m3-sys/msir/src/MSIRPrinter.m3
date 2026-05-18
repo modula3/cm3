@@ -51,24 +51,24 @@ PROCEDURE Type(wr: Wr.T;  t: MSIR.T) =
         Type(wr, MSIR.HeapArrayElt(t));
     | MSIR.TypeKind.FixedArray =>
         Wr.PutText(wr, "[");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.FixedArrayLen(t)));
+        Wr.PutText(wr, Fmt.Int(MSIR.FixedArrayLen(t)));
         Wr.PutText(wr, "]");
         Type(wr, MSIR.FixedArrayElt(t));
     | MSIR.TypeKind.Subrange =>
         Wr.PutText(wr, "subrange<");
         Type(wr, MSIR.SubrangeParent(t));
         Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.SubrangeLo(t)));
+        Wr.PutText(wr, Fmt.Int(MSIR.SubrangeLo(t)));
         Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.SubrangeHi(t)));
+        Wr.PutText(wr, Fmt.Int(MSIR.SubrangeHi(t)));
         Wr.PutText(wr, ">");
     | MSIR.TypeKind.Set =>
         Wr.PutText(wr, "set<");
         Type(wr, MSIR.SetElt(t));
         Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.SetLo(t)));
+        Wr.PutText(wr, Fmt.Int(MSIR.SetLo(t)));
         Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.SetHi(t)));
+        Wr.PutText(wr, Fmt.Int(MSIR.SetHi(t)));
         Wr.PutText(wr, ">");
     | MSIR.TypeKind.ProcType =>
         Wr.PutText(wr, "proc(...)");          (* v0: terse *)
@@ -101,7 +101,7 @@ PROCEDURE Value(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.ConstInt =>
         Type(wr, MSIR.ValueType(v));
         Wr.PutText(wr, " ");
-        Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
+        Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
         Type(wr, MSIR.ValueType(v));
         Wr.PutText(wr, " ");
@@ -132,7 +132,7 @@ PROCEDURE NameRef(wr: Wr.T;  v: MSIR.Value) =
     IF v = NIL THEN Wr.PutText(wr, "<nil-value>"); RETURN END;
     CASE MSIR.GetValueKind(v) OF
     | MSIR.ValueKind.ConstInt =>
-        Wr.PutText(wr, Fmt.LongInt(MSIR.GetIntVal(v)));
+        Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
         Wr.PutText(wr, MSIR.ValueName(v));
     | MSIR.ValueKind.ConstNil =>

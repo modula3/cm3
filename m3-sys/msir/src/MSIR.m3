@@ -18,8 +18,8 @@ REVEAL T = BRANDED "MSIR.T" REF RECORD
   objMethods:       REF ARRAY OF Method := NIL;
   objDescriptorSym: TEXT                := NIL;
   openArrayRank:    INTEGER             := 0;    (* OpenArray *)
-  arrayLen:         LONGINT              := 0L;   (* FixedArray length *)
-  subrLo, subrHi:   LONGINT              := 0L;   (* Subrange / Set bounds *)
+  arrayLen:         INTEGER              := 0;    (* FixedArray length *)
+  subrLo, subrHi:   INTEGER              := 0;    (* Subrange / Set bounds *)
 END;
 
 PROCEDURE NewType(k: TypeKind): T =
@@ -148,16 +148,16 @@ PROCEDURE THeapArray(rank: INTEGER;  elt: T): T =
     RETURN t;
   END THeapArray;
 
-PROCEDURE TFixedArray(len: LONGINT;  elt: T): T =
+PROCEDURE TFixedArray(len: INTEGER;  elt: T): T =
   VAR t := NewType(TypeKind.FixedArray);
   BEGIN
-    <* ASSERT len >= 0L, "TFixedArray: length must be >= 0" *>
+    <* ASSERT len >= 0, "TFixedArray: length must be >= 0" *>
     t.arrayLen := len;
     t.elt      := elt;
     RETURN t;
   END TFixedArray;
 
-PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T =
+PROCEDURE TSubrange(parent: T;  lo, hi: INTEGER): T =
   VAR t := NewType(TypeKind.Subrange);
   BEGIN
     t.elt := parent;
@@ -174,7 +174,7 @@ PROCEDURE TLandingPad(): T =
     });
   END TLandingPad;
 
-PROCEDURE TSet(elt: T;  lo, hi: LONGINT): T =
+PROCEDURE TSet(elt: T;  lo, hi: INTEGER): T =
   VAR t := NewType(TypeKind.Set);
   BEGIN
     t.elt := elt;
@@ -278,15 +278,15 @@ PROCEDURE OpenArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END OpenAr
 PROCEDURE OpenArrayElt(t: T): T        = BEGIN RETURN t.elt           END OpenArrayElt;
 PROCEDURE HeapArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END HeapArrayRank;
 PROCEDURE HeapArrayElt(t: T): T        = BEGIN RETURN t.elt           END HeapArrayElt;
-PROCEDURE FixedArrayLen(t: T): LONGINT = BEGIN RETURN t.arrayLen      END FixedArrayLen;
+PROCEDURE FixedArrayLen(t: T): INTEGER = BEGIN RETURN t.arrayLen      END FixedArrayLen;
 PROCEDURE FixedArrayElt(t: T): T       = BEGIN RETURN t.elt           END FixedArrayElt;
 
 PROCEDURE SubrangeParent(t: T): T   = BEGIN RETURN t.elt    END SubrangeParent;
-PROCEDURE SubrangeLo(t: T): LONGINT = BEGIN RETURN t.subrLo END SubrangeLo;
-PROCEDURE SubrangeHi(t: T): LONGINT = BEGIN RETURN t.subrHi END SubrangeHi;
+PROCEDURE SubrangeLo(t: T): INTEGER = BEGIN RETURN t.subrLo END SubrangeLo;
+PROCEDURE SubrangeHi(t: T): INTEGER = BEGIN RETURN t.subrHi END SubrangeHi;
 PROCEDURE SetElt(t: T): T           = BEGIN RETURN t.elt    END SetElt;
-PROCEDURE SetLo(t: T): LONGINT      = BEGIN RETURN t.subrLo END SetLo;
-PROCEDURE SetHi(t: T): LONGINT      = BEGIN RETURN t.subrHi END SetHi;
+PROCEDURE SetLo(t: T): INTEGER      = BEGIN RETURN t.subrLo END SetLo;
+PROCEDURE SetHi(t: T): INTEGER      = BEGIN RETURN t.subrHi END SetHi;
 
 (* Look up a method by selector, walking the super chain. *)
 PROCEDURE ObjectMethodIndex(t: T;  selector: TEXT): INTEGER =
@@ -334,7 +334,7 @@ REVEAL Value = BRANDED "MSIR.Value" REF RECORD
   type:        T          := NIL;
   name:        TEXT       := NIL;
   vKind:       ValueKind;
-  intVal:      LONGINT    := 0L;
+  intVal:      INTEGER    := 0;
   floatVal:    Target.Float;           (* ConstFloat *)
   proc:        Proc       := NIL;     (* Param, ConstProc *)
   paramIdx:    INTEGER    := -1;
@@ -347,20 +347,20 @@ REVEAL Value = BRANDED "MSIR.Value" REF RECORD
   structOff:   INTEGER    := -1;      (* StructFieldRef: byte offset in @Mod_M3_info *)
 END;
 
-PROCEDURE ConstInt(t: T;  v: LONGINT): Value =
+PROCEDURE ConstInt(t: T;  v: INTEGER): Value =
   VAR
     val := NEW(Value);
   BEGIN
     val.type   := t;
     val.vKind  := ValueKind.ConstInt;
     val.intVal := v;
-    val.name   := Fmt.LongInt(v);
+    val.name   := Fmt.Int(v);
     RETURN val;
   END ConstInt;
 
 PROCEDURE ConstBool(v: BOOLEAN): Value =
   BEGIN
-    IF v THEN RETURN ConstInt(TI1(), 1L) ELSE RETURN ConstInt(TI1(), 0L) END;
+    IF v THEN RETURN ConstInt(TI1(), 1) ELSE RETURN ConstInt(TI1(), 0) END;
   END ConstBool;
 
 PROCEDURE ConstNil(t: T): Value =
@@ -413,7 +413,7 @@ PROCEDURE ConstZero(t: T): Value =
       TypeKind.I32, TypeKind.I64,
       TypeKind.IWide,
       TypeKind.W8, TypeKind.W16,
-      TypeKind.W32, TypeKind.W64        => RETURN ConstInt(t, 0L);
+      TypeKind.W32, TypeKind.W64        => RETURN ConstInt(t, 0);
     | TypeKind.Ptr, TypeKind.GcRef       => RETURN ConstNil(t);
     | TypeKind.F32                       => RETURN ConstFloat(t, TFloat.ZeroR);
     | TypeKind.F64                       => RETURN ConstFloat(t, TFloat.ZeroL);
@@ -464,7 +464,7 @@ PROCEDURE ValueType(v: Value): T = BEGIN RETURN v.type END ValueType;
 PROCEDURE ValueName(v: Value): TEXT = BEGIN RETURN v.name END ValueName;
 
 PROCEDURE GetValueKind(v: Value): ValueKind = BEGIN RETURN v.vKind END GetValueKind;
-PROCEDURE GetIntVal(v: Value): LONGINT = BEGIN RETURN v.intVal END GetIntVal;
+PROCEDURE GetIntVal(v: Value): INTEGER = BEGIN RETURN v.intVal END GetIntVal;
 
 (*------------------------------------------------------------------- Insn *)
 
@@ -874,7 +874,7 @@ PROCEDURE NewConstArray(name: TEXT; eltType: T;
     ca.eltType := eltType;
     ca.elts    := NEW(REF ARRAY OF Value, n);
     ca.elts^   := elts;
-    v.type     := TPtr(TFixedArray(VAL(n, LONGINT), eltType));
+    v.type     := TPtr(TFixedArray(n, eltType));
     v.vKind    := ValueKind.InsnResult;
     v.name     := "@" & name;
     ca.ptrVal  := v;
@@ -1854,13 +1854,13 @@ PROCEDURE BuildResume(b: Block;  lp: Value) =
     addInsn(b, i);
   END BuildResume;
 
-PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: LONGINT): Value =
+PROCEDURE BuildPtrAdd(b: Block;  name: TEXT;  base: Value;  idx: INTEGER): Value =
   VAR i := NEW(Insn);
   BEGIN
     i.op         := Op.PtrAdd;
     i.operands   := NEW(REF ARRAY OF Value, 1);
     i.operands[0] := base;
-    i.extractIdx := VAL(idx, INTEGER);   (* reuse extractIdx for the constant index *)
+    i.extractIdx := idx;   (* reuse extractIdx for the constant index *)
     (* Byte arithmetic yields an opaque pointer; element type is unknown. *)
     i.result     := makeResult(b, TPtr(TVoid()), name, i);
     addInsn(b, i);
@@ -1961,7 +1961,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
-    dimVal := ConstInt(TI(Target.Integer.size), VAL(dim, LONGINT));
+    dimVal := ConstInt(TI(Target.Integer.size), dim);
   BEGIN
     <* ASSERT Kind(oa.type) = TypeKind.OpenArray,
        "BuildOpenArraySize: operand must be openarray" *>

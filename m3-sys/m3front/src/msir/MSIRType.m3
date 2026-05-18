@@ -199,7 +199,7 @@ PROCEDURE ByteArrayFallback(t: Type.T): MSIR.T =
     EVAL Type.CheckInfo(t, tinfo);
     nb := (tinfo.size + Target.Byte - 1) DIV Target.Byte;
     IF nb <= 0 THEN RETURN NIL END;
-    RETURN MSIR.TFixedArray(VAL(nb, LONGINT), MSIR.TI1());
+    RETURN MSIR.TFixedArray(nb, MSIR.TI1());
   END ByteArrayFallback;
 
 PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
@@ -237,7 +237,7 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
          them with TI(eltPack) destroys type info needed for nested subscripts. *)
       eltMsir := MSIR.TI(eltPack);
     END;
-    RETURN MSIR.TFixedArray(VAL(nElts, LONGINT), eltMsir);
+    RETURN MSIR.TFixedArray(nElts, eltMsir);
   END TranslateFixedArray;
 
 PROCEDURE TranslateResult(t: Type.T): MSIR.T =
