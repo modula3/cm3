@@ -1,3 +1,13 @@
-"../Main.m3", line 9: Illegal recursive declaration (2.4.8). (N)
-1 error encountered
+"../Main.m3", line 9: Illegal recursive declaration (2.4.8). (N0)
+"../Main.m3", line 10: Illegal recursive declaration (2.4.8). (N1)
+"../Main.m3", line 11: Illegal recursive declaration (2.4.8). (N2)
+"../Main.m3", line 12: Illegal recursive declaration (2.4.8). (N3)
+"../Main.m3", line 13: Illegal recursive declaration (2.4.8). (N4)
+"../Main.m3", line 13: illegal operand(s) for MOD
+"../Main.m3", line 15: Illegal recursive declaration (2.4.8). (N5)
+"../Main.m3", line 16: Illegal recursive declaration (2.4.8). (N6)
+"../Main.m3", line 17: Illegal recursive declaration (2.4.8). (N7)
+"../Main.m3", line 19: Illegal recursive declaration (2.4.8). (N8)
+"../Main.m3", line 19: Value of CONST is not constant (2.4.2, 2.6.15).
+11 errors encountered
 Fatal Error: package build failed
