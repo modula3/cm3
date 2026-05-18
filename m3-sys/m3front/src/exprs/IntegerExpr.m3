@@ -85,18 +85,14 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR i: INTEGER;  t: MSIR.T;
+  VAR t: MSIR.T;
   BEGIN
-    IF NOT TInt.ToInt (p.value, i) THEN
-      MSIRBuilder.Abandon ("integer literal out of INTEGER range");
-      RETURN NIL;
-    END;
     t := MSIRType.Translate (p.type);
     IF t = NIL THEN
       MSIRBuilder.Abandon ("unsupported integer literal type");
       RETURN NIL;
     END;
-    RETURN MSIR.ConstInt (t, VAL (i, LONGINT));
+    RETURN MSIRBuilder.ConstInt (t, p.value);
   END CompileMSIR;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =

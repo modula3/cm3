@@ -215,25 +215,25 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       BEGIN
         IF minOrd # 0 THEN
           adj := MSIR.BuildISub (blk, "", elt,
-                                 MSIR.ConstInt (wt, VAL (minOrd, LONGINT)));
+                                 MSIRBuilder.ConstNat (wt, minOrd));
         END;
 
         (* Clamp shift count to [0, wBW-1] so lshr is always defined.
            Out-of-range adj maps to an in-range shift count, but the inRange
            guard below ensures the final result is still correct. *)
         VAR adjMasked := MSIR.BuildIAnd (blk, "", adj,
-                           MSIR.ConstInt (wt, VAL (wBW - 1, LONGINT)));
+                           MSIRBuilder.ConstNat (wt, wBW - 1));
         BEGIN
           shifted := MSIR.BuildILShr (blk, "", setVal, adjMasked);
-          bit     := MSIR.BuildIAnd  (blk, "", shifted, MSIR.ConstInt (wt, 1L));
+          bit     := MSIR.BuildIAnd  (blk, "", shifted, MSIRBuilder.ConstNat (wt, 1));
           VAR membership := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne,
                                             bit, MSIR.ConstZero (wt));
           BEGIN
             IF needRangeCheck THEN
               (* inRange: (adj as unsigned) <= (maxOrd - minOrd) *)
-              VAR cardinality := VAL (maxOrd - minOrd, LONGINT);
+              VAR cardinality := maxOrd - minOrd;
                   inRange     := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ule, adj,
-                                                 MSIR.ConstInt (wt, cardinality));
+                                                 MSIRBuilder.ConstNat (wt, cardinality));
               BEGIN
                 RETURN MSIR.BuildIAnd (blk, "", inRange, membership);
               END;

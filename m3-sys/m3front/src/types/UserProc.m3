@@ -300,7 +300,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
         objVal    : MSIR.Value;
         rtype     : MSIR.T;
         dispArgs  : REF ARRAY OF MSIR.Value;
-        midx      : LONGINT;
+        midx      : INTEGER;
       BEGIN
         IF QualifyExpr.Split(p.proc, methodVal) AND
            Value.ClassOf(methodVal) = Value.Class.Method THEN
@@ -310,8 +310,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             RETURN NIL;
           END;
           EVAL Method.Split(methodVal, methodInfo);
-          midx := VAL(methodInfo.offset, LONGINT)
-                    DIV VAL(Target.Address.size, LONGINT);
+          midx := methodInfo.offset DIV Target.Address.size;
           objVal := Expr.CompileMSIR(objExpr);
           IF objVal = NIL THEN RETURN NIL END;
           n       := NUMBER(p.args^);

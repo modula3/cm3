@@ -422,8 +422,8 @@ PROCEDURE CompileMSIR (p: P) =
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     lpType := MSIR.TLandingPad();
-    zero   := MSIR.ConstInt(MSIR.TI1(), 0L);
-    one    := MSIR.ConstInt(MSIR.TI1(), 1L);
+    zero   := MSIRBuilder.ConstNat(MSIR.TI1(), 0);
+    one    := MSIRBuilder.ConstNat(MSIR.TI1(), 1);
 
     (* Allocas go in the current (pre-try) block so they land in the entry. *)
     lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);

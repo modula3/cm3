@@ -430,7 +430,7 @@ PROCEDURE CompileMSIR (p: P) =
     (* ELSE terminator (uid=0). *)
     elseBlk := MSIRBuilder.NewBlock ("tc.else");
     clauses[cIdx].isElse     := TRUE;
-    clauses[cIdx].uid        := 0L;
+    clauses[cIdx].uid        := VAL (0, LONGINT);
     clauses[cIdx].targetType := NIL;
     clauses[cIdx].block      := elseBlk;
 

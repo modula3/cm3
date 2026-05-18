@@ -116,16 +116,16 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     n  := Expr.CompileMSIR (ce.args[3]);
     b  := MSIRBuilder.CurrentBlock ();
     xt, nt : MSIR.T;
-    W       : LONGINT;
+    W       : INTEGER;
     ones, wConst, wMinusN, mask, shiftedMask, invMask,
     xCleared, yBits, yShifted: MSIR.Value;
   BEGIN
     IF x = NIL OR y = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
     xt     := MSIR.ValueType (x);
     nt     := MSIR.ValueType (n);
-    W      := VAL (Word_types[rep].size, LONGINT);
-    ones   := MSIR.ConstInt (xt, -1L);
-    wConst := MSIR.ConstInt (nt, W);
+    W      := Word_types[rep].size;
+    ones   := MSIRBuilder.ConstNat (xt, -1);
+    wConst := MSIRBuilder.ConstNat (nt, W);
     wMinusN     := MSIR.BuildISub  (b, "", wConst, n);
     mask        := MSIR.BuildILShr (b, "", ones, wMinusN);
     shiftedMask := MSIR.BuildIShl  (b, "", mask, i);

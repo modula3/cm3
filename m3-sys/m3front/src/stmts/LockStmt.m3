@@ -226,14 +226,14 @@ PROCEDURE CompileMSIR (p: P) =
     (* Acquire the mutex: mu.acquire() — vtable slot M3RT.MUTEX_acquire / AP. *)
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
-           VAL(M3RT.MUTEX_acquire, LONGINT) DIV VAL(Target.Address.bytes, LONGINT),
+           M3RT.MUTEX_acquire DIV Target.Address.bytes,
            MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR. *)
     lpType := MSIR.TLandingPad();
-    zero   := MSIR.ConstInt(MSIR.TI1(), 0L);
-    one    := MSIR.ConstInt(MSIR.TI1(), 1L);
+    zero   := MSIRBuilder.ConstNat(MSIR.TI1(), 0);
+    one    := MSIRBuilder.ConstNat(MSIR.TI1(), 1);
 
     lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
     excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());
@@ -265,7 +265,7 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.SetCurrentBlock(finBody);
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
-           VAL(M3RT.MUTEX_release, LONGINT) DIV VAL(Target.Address.bytes, LONGINT),
+           M3RT.MUTEX_release DIV Target.Address.bytes,
            MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 

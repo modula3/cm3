@@ -29,7 +29,7 @@ PROCEDURE CheckStaticRTErrEval
 (* Set Code and Msg if they are not set and expr is known to produce a
    statically unconditional runtime error when evaluated. *)
 
-PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: LONGINT): BOOLEAN;
+PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: INTEGER): BOOLEAN;
 (* If e is a compile-time constant SET that fits in one word, sets minOrd to the
    minimum element ordinal and mask to the set's word-sized bit pattern (bit k
    is set iff ordinal minOrd+k is a member), then returns TRUE.  Returns FALSE

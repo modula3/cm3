@@ -630,7 +630,7 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
                               VAR dataAlignment: INTEGER;
                               VAR methodSize   : INTEGER;
                               VAR dataOffset   : INTEGER;
-                              VAR parentUID    : LONGINT;
+                              VAR parentUID    : INTEGER;
                               VAR nSlots       : INTEGER;
                               VAR names        : REF ARRAY OF TEXT;
                               VAR vtableKnown  : BOOLEAN) =
@@ -643,7 +643,7 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
     vtableKnown  := FALSE;
     IF p = NIL THEN
       fieldSize := 0;  dataAlignment := Target.Address.align;
-      methodSize := 0;  dataOffset := -1;  parentUID := 0L;
+      methodSize := 0;  dataOffset := -1;  parentUID := 0;
       RETURN;
     END;
     GetSizes (p);
@@ -656,8 +656,8 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
       ELSE dataOffset := -1;
     END;
     IF p.superType # NIL
-      THEN parentUID := VAL (Type.GlobalUID (p.superType), LONGINT);
-      ELSE parentUID := 0L;
+      THEN parentUID := Type.GlobalUID (p.superType);
+      ELSE parentUID := 0;
     END;
     mBase := MethodOffset (p);
     IF mBase < 0 THEN RETURN END;  (* unknown super chain — vtableKnown stays FALSE *)
@@ -689,11 +689,11 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
 PROCEDURE InitTypecellMSIR (t: Type.T) =
   VAR
     fldSize, fldAlign, methBytes, dataOff, nSlots: INTEGER;
-    parUID      : LONGINT;
+    parUID      : INTEGER;
     names       : REF ARRAY OF TEXT;
     vtableKnown : BOOLEAN;
     info        : Type.Info;
-    uid         : LONGINT;
+    uid         : INTEGER;
     m           : MSIR.Module;
     desc        : MSIR.TypeDesc;
   BEGIN
@@ -701,21 +701,21 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
     EVAL Type.CheckInfo (t, info);
-    uid := VAL (Type.GlobalUID (t), LONGINT);
+    uid := Type.GlobalUID (t);
     GetObjectTypeInfo (t, fldSize, fldAlign, methBytes, dataOff, parUID,
                        nSlots, names, vtableKnown);
     fldAlign := fldAlign DIV Target.Byte;
     IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
     IF vtableKnown AND names # NIL THEN
-      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
+      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), VAL (uid, LONGINT),
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
-                                parUID, dataOff, names^, methBytes);
+                                VAL (parUID, LONGINT), dataOff, names^, methBytes);
     ELSE
-      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.LongInt (uid), uid,
+      desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), VAL (uid, LONGINT),
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
-                                parUID, dataOff, ARRAY OF TEXT{}, methBytes);
+                                VAL (parUID, LONGINT), dataOff, ARRAY OF TEXT{}, methBytes);
     END;
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;

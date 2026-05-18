@@ -126,7 +126,7 @@ PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
       mt  := MSIRType.Translate (Int.T);
       IF mt = NIL THEN MSIRBuilder.Abandon ("LAST: cannot translate INTEGER"); RETURN NIL END;
       sz  := MSIR.BuildOpenArraySize (MSIRBuilder.CurrentBlock (), "", oa, 0);
-      one := MSIR.ConstInt (MSIR.ValueType (sz), 1L);
+      one := MSIRBuilder.ConstNat (MSIR.ValueType (sz), 1);
       RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "", sz, one);
     END;
     mt := MSIRType.Translate (Type.Base (t));
@@ -137,7 +137,7 @@ PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
     IF NOT TInt.ToInt (max, n) THEN
       MSIRBuilder.Abandon ("LAST: bound out of range");  RETURN NIL
     END;
-    RETURN MSIR.ConstInt (mt, VAL (n, LONGINT));
+    RETURN MSIRBuilder.ConstNat (mt, n);
   END LastMSIR;
 
 PROCEDURE Initialize () =

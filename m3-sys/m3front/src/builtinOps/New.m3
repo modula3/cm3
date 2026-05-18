@@ -478,7 +478,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
           fieldMsirT: MSIR.T;
           valV     : MSIR.Value;
           fieldAddr: MSIR.Value;
-          byteOff  : LONGINT;
+          byteOff  : INTEGER;
           b        : MSIR.Block;
         BEGIN
           refVal := CallAllocHook (t, PHook [t_info.isTraced],
@@ -489,7 +489,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
             EVAL KeywordExpr.Split (ce.args[i], key, value);
             EVAL RecordType.LookUp (r, key, v);
             Field.Split (v, fieldInfo);
-            byteOff   := VAL (fieldInfo.offset, LONGINT) DIV 8L;
+            byteOff   := fieldInfo.offset DIV 8;
             fieldMsirT := MSIRType.Translate (fieldInfo.type);
             IF fieldMsirT = NIL THEN
               MSIRBuilder.Abandon ("NEW(REF record): unsupported field type");
@@ -498,7 +498,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
             valV := Expr.CompileMSIR (value);
             IF valV = NIL THEN RETURN NIL END;
             b := MSIRBuilder.CurrentBlock ();
-            fieldAddr := MSIR.BuildPtrAdd (b, "", refVal, byteOff);
+            fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", refVal, byteOff);
             MSIR.BuildStore (b, valV, fieldAddr);
           END;
           RETURN refVal;
@@ -529,8 +529,8 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     res      : MSIR.Value;
     mt       : MSIR.T;
     descV    : MSIR.Value;
-    apBytes  : LONGINT;
-    ipBytes  : LONGINT;
+    apBytes  : INTEGER;
+    ipBytes  : INTEGER;
   BEGIN
     ndims := OpenArrayType.OpenDepth (ta);
     IF ndims < 1 THEN
@@ -555,26 +555,25 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     b := MSIRBuilder.CurrentBlock ();
     sizesA := MSIR.BuildAlloca (b, "", sizesT);
 
-    apBytes := VAL (Target.Address.size DIV Target.Byte, LONGINT);
-    ipBytes := VAL (Target.Integer.size DIV Target.Byte, LONGINT);
+    apBytes := Target.Address.size DIV Target.Byte;
+    ipBytes := Target.Integer.size DIV Target.Byte;
 
     (* OA_elt_ptr (byte 0) = &sizes.dim0 = sizesA + (AP + IP) bytes *)
-    VAR dim0Addr := MSIR.BuildPtrAdd (b, "", sizesA, apBytes + ipBytes);
+    VAR dim0Addr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes + ipBytes);
     BEGIN
-      MSIR.BuildStore (b, dim0Addr, MSIR.BuildPtrAdd (b, "", sizesA, 0L));
+      MSIR.BuildStore (b, dim0Addr, MSIRBuilder.BuildPtrByteOff (b, "", sizesA, 0));
     END;
 
     (* OA_size_0 (byte AP) = number of open dimensions *)
-    VAR cntAddr := MSIR.BuildPtrAdd (b, "", sizesA, apBytes);
+    VAR cntAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes);
     BEGIN
-      MSIR.BuildStore (b, MSIR.ConstInt (intT, VAL (ndims, LONGINT)), cntAddr);
+      MSIR.BuildStore (b, MSIRBuilder.ConstNat (intT, ndims), cntAddr);
     END;
 
     (* OA_size_i (byte AP + IP*i, i in 1..ndims) = ce.args[i] dimension expression *)
     FOR i := 1 TO ndims DO
       VAR
-        dimAddr := MSIR.BuildPtrAdd (b, "",
-                     sizesA, apBytes + ipBytes * VAL (i, LONGINT));
+        dimAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes + ipBytes * i);
         dimVal  : MSIR.Value;
       BEGIN
         dimVal := Expr.CompileMSIR (ce.args[i]);

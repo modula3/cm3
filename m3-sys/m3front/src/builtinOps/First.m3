@@ -149,7 +149,7 @@ PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
       (* open array: FIRST is always 0 *)
       mt := MSIRType.Translate (Int.T);
       IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: cannot translate INTEGER"); RETURN NIL END;
-      RETURN MSIR.ConstInt (mt, 0L);
+      RETURN MSIRBuilder.ConstNat (mt, 0);
     END;
     mt := MSIRType.Translate (Type.Base (t));
     IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: unsupported type"); RETURN NIL END;
@@ -159,7 +159,7 @@ PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
     IF NOT TInt.ToInt (min, n) THEN
       MSIRBuilder.Abandon ("FIRST: bound out of range");  RETURN NIL
     END;
-    RETURN MSIR.ConstInt (mt, VAL (n, LONGINT));
+    RETURN MSIRBuilder.ConstNat (mt, n);
   END FirstMSIR;
 
 PROCEDURE Initialize () =

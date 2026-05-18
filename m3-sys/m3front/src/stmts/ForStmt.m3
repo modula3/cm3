@@ -449,7 +449,7 @@ PROCEDURE CompileMSIR (p: P) =
         MSIRBuilder.Abandon ("zero FOR step");
         RETURN;
       END;
-      stepConst := MSIR.ConstInt (msirType, VAL(stepI, LONGINT));
+      stepConst := MSIRBuilder.ConstNat (msirType, stepI);
       alwaysPos := stepI > 0;
       alwaysNeg := stepI < 0;
     ELSE
@@ -509,7 +509,7 @@ PROCEDURE CompileMSIR (p: P) =
       MSIRBuilder.SetCurrentBlock (headerBlk);
       stepLoaded := MSIR.BuildLoad (headerBlk, "", msirType, stepSlot);
       cond := MSIR.BuildICmp (headerBlk, "", MSIR.CmpPred.Slt,
-                              stepLoaded, MSIR.ConstInt (msirType, 0L));
+                              stepLoaded, MSIRBuilder.ConstNat (msirType, 0));
       MSIR.BuildCondBr (headerBlk, cond,
                         negHdrBlk, ARRAY OF MSIR.Value{},
                         posHdrBlk, ARRAY OF MSIR.Value{});

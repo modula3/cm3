@@ -611,7 +611,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
     ft       : MSIR.T;
     fieldPtr : MSIR.Value;
     fieldVal : MSIR.Value;
-    byteOff  : LONGINT;
+    byteOff  : INTEGER;
     dstBits  : INTEGER;
     srcBits  : INTEGER;
   BEGIN
@@ -627,11 +627,11 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
        AND MSIR.Kind (MSIR.FixedArrayElt (msirT)) = MSIR.TypeKind.I1 THEN
       (* Packed record represented as [N x i1] (ByteArrayFallback).
          Zero-fill then insert each field using byte-level or sub-byte ops. *)
-      VAR nBytes := MSIR.FixedArrayLen (msirT);
+      VAR nBytes := VAL (MSIR.FixedArrayLen (msirT), INTEGER);
       BEGIN
-        FOR i := 0L TO nBytes - 1L DO
-          MSIR.BuildStore (b, MSIR.ConstInt (MSIR.TI (8), 0L),
-                           MSIR.BuildPtrAdd (b, "", slot, i));
+        FOR i := 0 TO nBytes - 1 DO
+          MSIR.BuildStore (b, MSIRBuilder.ConstNat (MSIR.TI (8), 0),
+                           MSIRBuilder.BuildPtrByteOff (b, "", slot, i));
         END;
         FOR i := 0 TO LAST (p.map^) DO
           WITH info = p.map^[i] DO
@@ -653,7 +653,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
                     b := MSIRBuilder.CurrentBlock ();
                     VAR
                       srcByte := MSIR.BuildLoad (b, "", MSIR.TI (8),
-                                     MSIR.BuildPtrAdd (b, "", srcPtr, VAL (j, LONGINT)));
+                                     MSIRBuilder.BuildPtrByteOff (b, "", srcPtr, j));
                       bitsNow := fti.size - j * Target.Byte;
                     BEGIN
                       IF bitsNow > 8 THEN bitsNow := 8 END;
@@ -674,13 +674,13 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
                   MSIRBuilder.InsertBitField (slot, fieldInfo.offset, fti.size, fieldVal);
                 ELSE
                   (* Byte-aligned scalar: store directly *)
-                  byteOff := VAL (fieldInfo.offset DIV Target.Byte, LONGINT);
+                  byteOff := fieldInfo.offset DIV Target.Byte;
                   IF ft = NIL THEN ft := MSIR.TI (fti.size) END;
                   IF fti.size > 0 AND MSIR.BitWidth (ft) > 0
                                  AND fti.size # MSIR.BitWidth (ft) THEN
                     ft := MSIR.TI (fti.size);
                   END;
-                  fieldPtr := MSIR.BuildPtrAdd (b, "", slot, byteOff);
+                  fieldPtr := MSIRBuilder.BuildPtrByteOff (b, "", slot, byteOff);
                   fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (ft));
                   dstBits := MSIR.BitWidth (ft);
                   srcBits := MSIR.BitWidth (MSIR.ValueType (fieldVal));
@@ -716,7 +716,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
             RETURN NIL;
           END;
           EVAL Type.CheckInfo (fieldInfo.type, fti);
-          byteOff := VAL (fieldInfo.offset DIV Target.Byte, LONGINT);
+          byteOff := fieldInfo.offset DIV Target.Byte;
           ft := MSIRType.Translate (fieldInfo.type);
           IF ft = NIL THEN
             MSIRBuilder.Abandon
@@ -730,7 +730,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
           fieldVal := Expr.CompileMSIR (info.expr);
           IF fieldVal = NIL THEN RETURN NIL END;
           b := MSIRBuilder.CurrentBlock ();
-          fieldPtr := MSIR.BuildPtrAdd (b, "", slot, byteOff);
+          fieldPtr := MSIRBuilder.BuildPtrByteOff (b, "", slot, byteOff);
           fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (ft));
           dstBits := MSIR.BitWidth (ft);
           srcBits := MSIR.BitWidth (MSIR.ValueType (fieldVal));

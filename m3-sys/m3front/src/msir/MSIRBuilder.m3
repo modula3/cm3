@@ -699,7 +699,7 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     RETURN result;
   END EmitCallIndirect;
 
-PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
+PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   VAR
@@ -721,12 +721,11 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
 
     (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
     (* Vtable slot N is at byte offset N * Target.Address.bytes. *)
-    IF midx = 0L THEN
+    IF midx = 0 THEN
       slotPtr := suite;
     ELSE
-      slotPtr := MSIR.BuildPtrAdd(b, "",
-                                  suite,
-                                  midx * VAL(Target.Address.bytes, LONGINT));
+      slotPtr := MSIR.BuildPtrAdd(b, "", suite,
+                                  VAL(midx * Target.Address.bytes, LONGINT));
     END;
 
     (* 3. Load function pointer from the slot. *)
@@ -1110,6 +1109,16 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
 
 PROCEDURE ConstNat(t: MSIR.T;  v: INTEGER): MSIR.Value =
   BEGIN RETURN MSIR.ConstInt(t, VAL(v, LONGINT)) END ConstNat;
+
+PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
+  VAR x: INTEGER;
+  BEGIN
+    IF NOT TInt.ToInt(v, x) THEN
+      Abandon("ConstInt: value out of range for host INTEGER");
+      RETURN NIL;
+    END;
+    RETURN MSIR.ConstInt(t, VAL(x, LONGINT));
+  END ConstInt;
 
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value =
   BEGIN RETURN MSIR.BuildPtrAdd(b, name, base, VAL(off, LONGINT)) END BuildPtrByteOff;

@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, Expr, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis;
+IMPORT MSIR, Expr, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis, Target;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -187,7 +187,7 @@ PROCEDURE PushCatchContext (endCatch: MSIR.Proc);
 PROCEDURE PopCatchContext  ();
 PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
 
-PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: LONGINT;
+PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
@@ -278,6 +278,7 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 
 (* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
 PROCEDURE ConstNat       (t: MSIR.T;  v: INTEGER): MSIR.Value;
+PROCEDURE ConstInt       (t: MSIR.T;  READONLY v: Target.Int): MSIR.Value;
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;
 PROCEDURE TFixedArrayI   (len: INTEGER;  elt: MSIR.T): MSIR.T;
 

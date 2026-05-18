@@ -1040,7 +1040,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("SetExpr MSIR: set mask overflows INTEGER");
           RETURN NIL;
         END;
-        result := MSIR.ConstInt (ti, VAL (v, LONGINT));
+        result := MSIRBuilder.ConstNat (ti, v);
       END;
     ELSE
       (* Multi-word set: build constant part by iterating the range tree.
@@ -1048,10 +1048,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
            range_mask = lshr(ones, N-1-hi) AND shl(ones, lo)
          LLVM constant-folds these when shift amounts are constants. *)
       VAR n     := p.tree;
-          ones  := MSIR.ConstInt (ti, -1L);   (* iN with all bits set *)
+          ones  := MSIRBuilder.ConstNat (ti, -1);   (* iN with all bits set *)
           nbits := info.size;
       BEGIN
-        result := MSIR.ConstInt (ti, 0L);
+        result := MSIRBuilder.ConstNat (ti, 0);
         blk    := MSIRBuilder.CurrentBlock ();
         WHILE n # NIL DO
           VAR lo_bit := n.min - minOrd;
@@ -1059,9 +1059,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
               upper, lower, rng : MSIR.Value;
           BEGIN
             upper := MSIR.BuildILShr (blk, "", ones,
-                       MSIR.ConstInt (ti, VAL (nbits - 1 - hi_bit, LONGINT)));
+                       MSIRBuilder.ConstNat (ti, nbits - 1 - hi_bit));
             lower := MSIR.BuildIShl  (blk, "", ones,
-                       MSIR.ConstInt (ti, VAL (lo_bit, LONGINT)));
+                       MSIRBuilder.ConstNat (ti, lo_bit));
             rng   := MSIR.BuildIAnd (blk, "", upper, lower);
             result := MSIR.BuildIOr (blk, "", result, rng);
           END;
@@ -1094,15 +1094,15 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
               hiV := MSIR.BuildTrunc (blk, "", hiV, ti);
             END;
             IF minOrd # 0 THEN
-              VAR m := MSIR.ConstInt (ti, VAL (minOrd, LONGINT));
+              VAR m := MSIRBuilder.ConstNat (ti, minOrd);
               BEGIN
                 loV := MSIR.BuildISub (blk, "", loV, m);
                 hiV := MSIR.BuildISub (blk, "", hiV, m);
               END;
             END;
-            ones  := MSIR.ConstInt (ti, -1L);
+            ones  := MSIRBuilder.ConstNat (ti, -1);
             upper := MSIR.BuildILShr (blk, "", ones,
-                       MSIR.BuildISub (blk, "", MSIR.ConstInt (ti, VAL (info.size - 1, LONGINT)), hiV));
+                       MSIR.BuildISub (blk, "", MSIRBuilder.ConstNat (ti, info.size - 1), hiV));
             lower := MSIR.BuildIShl (blk, "", ones, loV);
             rng   := MSIR.BuildIAnd (blk, "", upper, lower);
             result := MSIR.BuildIOr (blk, "", result, rng);
@@ -1118,9 +1118,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           END;
           IF minOrd # 0 THEN
             elt := MSIR.BuildISub (blk, "", elt,
-                                   MSIR.ConstInt (ti, VAL (minOrd, LONGINT)));
+                                   MSIRBuilder.ConstNat (ti, minOrd));
           END;
-          bit    := MSIR.BuildIShl (blk, "", MSIR.ConstInt (ti, 1L), elt);
+          bit    := MSIR.BuildIShl (blk, "", MSIRBuilder.ConstNat (ti, 1), elt);
           result := MSIR.BuildIOr  (blk, "", result, bit);
         END;
       END;
@@ -1128,7 +1128,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN result;
   END CompileMSIR;
 
-PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: LONGINT): BOOLEAN =
+PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: INTEGER): BOOLEAN =
   VAR
     p      : P;
     n      : Node;
@@ -1151,7 +1151,7 @@ PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: LONGINT): 
       n := n.next;
     END;
     IF NOT TInt.ToInt (cur, v) THEN RETURN FALSE END;
-    mask := VAL (v, LONGINT);
+    mask := v;
     RETURN TRUE;
   END GetWordBitMask;
 

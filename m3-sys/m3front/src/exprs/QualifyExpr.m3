@@ -801,7 +801,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     baseAddr:  MSIR.Value;
     objOff:    INTEGER;
     objAlign:  INTEGER;
-    byteOff:   LONGINT;
+    byteOff:   INTEGER;
   BEGIN
     Resolve (p);
     CASE p.class OF
@@ -841,7 +841,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         IF fieldInfo.offset MOD Target.Byte # 0 THEN
           RETURN NIL;
         END;
-        byteOff := VAL (fieldInfo.offset, LONGINT) DIV 8L;
+        byteOff := fieldInfo.offset DIV 8;
         VAR
           b      := MSIRBuilder.CurrentBlock ();
           ft     := MSIRType.Translate (fieldInfo.type);
@@ -860,7 +860,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
                       AND fti.size # MSIR.BitWidth (ft) THEN
             ft := MSIR.TI (fti.size);
           END;
-          slot := MSIR.BuildPtrAdd (b, "", baseAddr, byteOff);
+          slot := MSIRBuilder.BuildPtrByteOff (b, "", baseAddr, byteOff);
           (* Heap record (GcRef base): set container and retype traced fields
              as GcSlot so AssignStmt.CompileMSIR fires the write barrier. *)
           IF MSIR.Kind (MSIR.ValueType (baseAddr)) = MSIR.TypeKind.GcRef THEN
@@ -890,14 +890,14 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("sub-byte object field offset not supported in MSIR");
           RETURN NIL;
         END;
-        byteOff := VAL (objOff + fieldInfo.offset, LONGINT) DIV 8L;
+        byteOff := (objOff + fieldInfo.offset) DIV 8;
         baseAddr := Expr.CompileMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
         (* Set container for GC write barrier in AssignStmt.CompileMSIR. *)
         MSIRBuilder.SetPendingContainer (baseAddr);
         VAR slotAddr: MSIR.Value;
         BEGIN
-          slotAddr := MSIR.BuildPtrAdd(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
+          slotAddr := MSIRBuilder.BuildPtrByteOff(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
           (* Retype: GcRef fields → GcSlot (write barrier); others → TPtr(ft) for
              type-preserving access (e.g. array field subscript needs FixedArray type).
              Use storage type TI(size) when it differs from the natural MSIR type. *)

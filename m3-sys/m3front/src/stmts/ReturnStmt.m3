@@ -104,7 +104,7 @@ PROCEDURE CompileMSIR (p: P) =
                ptr([N]T) so the verifier accepts the load, then load the
                fixed-array value. *)
             VAR blk  := MSIRBuilder.CurrentBlock ();
-                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0L);
+                zero := MSIRBuilder.ConstNat (MSIR.TI (Target.Integer.size), 0);
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk, "", v,
                           ARRAY OF MSIR.Value {zero});
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (resultT));

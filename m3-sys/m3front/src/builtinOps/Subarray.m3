@@ -484,13 +484,13 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
 
     ptrT      := MSIR.TPtr (MSIR.TVoid ());
     intT      := MSIR.TI (Target.Integer.size);
-    apB       := VAL (Target.Address.size DIV Target.Byte, LONGINT);
+    apB       := Target.Address.size DIV Target.Byte;
 
     blk                        : MSIR.Block;
     basePtr, startVal, lenVal  : MSIR.Value;
     startOff, newEltPtr, dopeA : MSIR.Value;
     eltMsirT                   : MSIR.T;
-    eltBytes                   : LONGINT;
+    eltBytes                   : INTEGER;
     indexT, eltT               : Type.T;
   BEGIN
     IF src_depth > 1 THEN
@@ -498,8 +498,8 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
       RETURN NIL;
     END;
 
-    eltBytes := VAL (elt_pack DIV Target.Byte, LONGINT);
-    IF eltBytes <= 0L THEN
+    eltBytes := elt_pack DIV Target.Byte;
+    IF eltBytes <= 0 THEN
       MSIRBuilder.Abandon ("SUBARRAY: non-byte-aligned element");
       RETURN NIL;
     END;
@@ -527,13 +527,13 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
         IF dopeAddr = NIL THEN RETURN NIL END;
         blk := MSIRBuilder.CurrentBlock ();
         basePtr := MSIR.BuildLoad (blk, "", ptrT,
-                     MSIR.BuildPtrAdd (blk, "", dopeAddr, 0L));
+                     MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, 0));
       END;
     END;
     blk := MSIRBuilder.CurrentBlock ();
 
     startOff  := MSIR.BuildIMul (blk, "", startVal,
-                                 MSIR.ConstInt (intT, eltBytes));
+                                 MSIRBuilder.ConstNat (intT, eltBytes));
     newEltPtr := MSIR.BuildGepByte (blk, "", basePtr, startOff);
 
     EVAL ArrayType.Split (Type.Base (open), indexT, eltT);
@@ -545,8 +545,8 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
 
     blk   := MSIRBuilder.CurrentBlock ();
     dopeA := MSIR.BuildAlloca (blk, "", MSIR.TOpenArray (1, eltMsirT));
-    MSIR.BuildStore (blk, newEltPtr, MSIR.BuildPtrAdd (blk, "", dopeA, 0L));
-    MSIR.BuildStore (blk, lenVal,    MSIR.BuildPtrAdd (blk, "", dopeA, apB));
+    MSIR.BuildStore (blk, newEltPtr, MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
+    MSIR.BuildStore (blk, lenVal,    MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB));
     RETURN dopeA;
   END LValueMSIR;
 
