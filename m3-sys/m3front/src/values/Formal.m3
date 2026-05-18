@@ -1347,28 +1347,41 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
         END;
       ELSE
         (* Genuine open actual: lval points to a dope vector. *)
-        IF actDepth < formDepth THEN
-          MSIRBuilder.Abandon ("VALUE open-array: partial depth coercion not yet in MSIR");
-          RETURN NIL;
-        END;
         VAR dopeAddr := lval;
             b2       : MSIR.Block;
             dims     : REF ARRAY OF MSIR.Value;
-            nDims    := MIN (formDepth, actDepth);
+            nDynDims := MIN (formDepth, actDepth);
             totalEltsDyn, totalBytesDyn, srcDataPtr : MSIR.Value;
             eltSizeBytes  : INTEGER;
+            innerT2  : Type.T;  ix2, et2 : Type.T;
+            cnt2     : Target.Int;  cntI2 : INTEGER;
         BEGIN
           b2 := MSIRBuilder.CurrentBlock ();
           srcDataPtr := MSIR.BuildLoad (b2, "", ptrT,
                           MSIRBuilder.BuildPtrByteOff (b2, "", dopeAddr, 0));
-          dims := NEW (REF ARRAY OF MSIR.Value, nDims);
-          FOR k := 0 TO nDims - 1 DO
+          dims := NEW (REF ARRAY OF MSIR.Value, formDepth);
+          (* Load the dynamic dims from the actual dope. *)
+          FOR k := 0 TO nDynDims - 1 DO
             dims[k] := MSIR.BuildLoad (b2, "", intT,
                          MSIRBuilder.BuildPtrByteOff (b2, "", dopeAddr,
                                                       apB + ipB * k));
           END;
+          IF actDepth < formDepth THEN
+            (* Partial depth: inner dims are fixed; extract from M3 type. *)
+            innerT2 := actType;
+            FOR k := 0 TO actDepth - 1 DO
+              EVAL ArrayType.Split (innerT2, ix2, et2);  innerT2 := et2;
+            END;
+            FOR k := actDepth TO formDepth - 1 DO
+              IF NOT ArrayType.Split (innerT2, ix2, et2) THEN RETURN NIL END;
+              cnt2 := Type.Number (ix2);
+              IF NOT TInt.ToInt (cnt2, cntI2) THEN RETURN NIL END;
+              dims[k] := MSIR.ConstInt (intT, cntI2);
+              innerT2  := et2;
+            END;
+          END;
           totalEltsDyn := dims[0];
-          FOR k := 1 TO nDims - 1 DO
+          FOR k := 1 TO formDepth - 1 DO
             totalEltsDyn := MSIR.BuildIMul (b2, "", totalEltsDyn, dims[k]);
           END;
           eltSizeBytes  := OpenArrayType.EltPack (formType) DIV Target.Char.size;
