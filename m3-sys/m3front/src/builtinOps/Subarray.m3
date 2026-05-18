@@ -478,26 +478,22 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
     start     := ce.args[1];
     len       := ce.args[2];
     array     := Type.Base (Expr.TypeOf (base));
-    open      := ArrayType.OpenCousin (array);
     src_depth := OpenArrayType.OpenDepth (array);
-    elt_pack  := ArrayType.EltPack (array);  (* bits *)
+    elt_pack  := ArrayType.EltPack (array);  (* bits of innermost element *)
 
     ptrT      := MSIR.TPtr (MSIR.TVoid ());
     intT      := MSIR.TI (Target.Integer.size);
     apB       := Target.Address.size DIV Target.Byte;
+    intB      := Target.Integer.size DIV Target.Byte;
 
     blk                        : MSIR.Block;
     basePtr, startVal, lenVal  : MSIR.Value;
     startOff, newEltPtr, dopeA : MSIR.Value;
+    dopeAddr                   : MSIR.Value := NIL;
     eltMsirT                   : MSIR.T;
-    eltBytes                   : INTEGER;
+    eltBytes, resultDepth      : INTEGER;
     indexT, eltT               : Type.T;
   BEGIN
-    IF src_depth > 1 THEN
-      MSIRBuilder.Abandon ("SUBARRAY: rank>1 open source not yet in MSIR");
-      RETURN NIL;
-    END;
-
     eltBytes := elt_pack DIV Target.Byte;
     IF eltBytes <= 0 THEN
       MSIRBuilder.Abandon ("SUBARRAY: non-byte-aligned element");
@@ -522,53 +518,80 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
       basePtr := Expr.LValueMSIR (base);
       IF basePtr = NIL THEN RETURN NIL END;
     ELSE
-      VAR dopeAddr := Expr.LValueMSIR (base);
-      BEGIN
-        IF dopeAddr = NIL THEN RETURN NIL END;
-        blk := MSIRBuilder.CurrentBlock ();
-        basePtr := MSIR.BuildLoad (blk, "", ptrT,
-                     MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, 0));
-      END;
+      dopeAddr := Expr.LValueMSIR (base);
+      IF dopeAddr = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
+      basePtr := MSIR.BuildLoad (blk, "", ptrT,
+                   MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, 0));
     END;
     blk := MSIRBuilder.CurrentBlock ();
 
-    startOff  := MSIR.BuildIMul (blk, "", startVal,
-                                 MSIR.ConstInt (intT, eltBytes));
+    (* Byte offset = start * stride.
+       For rank-1 open or fixed source, stride = eltBytes.
+       For rank-N open source (N > 1), stride = size[1]*...*size[N-1]*eltBytes. *)
+    IF src_depth > 1 THEN
+      VAR stride : MSIR.Value := MSIR.ConstInt (intT, eltBytes);
+      BEGIN
+        FOR k := 1 TO src_depth - 1 DO
+          VAR dimK := MSIR.BuildLoad (blk, "", intT,
+                        MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr,
+                                                     apB + k * intB));
+          BEGIN
+            blk := MSIRBuilder.CurrentBlock ();
+            stride := MSIR.BuildIMul (blk, "", stride, dimK);
+          END;
+        END;
+        blk := MSIRBuilder.CurrentBlock ();
+        startOff := MSIR.BuildIMul (blk, "", startVal, stride);
+      END;
+    ELSE
+      startOff := MSIR.BuildIMul (blk, "", startVal, MSIR.ConstInt (intT, eltBytes));
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
     newEltPtr := MSIR.BuildGepByte (blk, "", basePtr, startOff);
 
-    EVAL ArrayType.Split (Type.Base (open), indexT, eltT);
+    IF src_depth > 0 THEN
+      eltT := OpenArrayType.NonopenEltType (array);
+    ELSE
+      EVAL ArrayType.Split (array, indexT, eltT);
+    END;
     eltMsirT := MSIRType.Translate (eltT);
     IF eltMsirT = NIL THEN
       MSIRBuilder.Abandon ("SUBARRAY: unsupported element type");
       RETURN NIL;
     END;
 
+    resultDepth := MAX (1, src_depth);
     blk   := MSIRBuilder.CurrentBlock ();
-    dopeA := MSIR.BuildAlloca (blk, "", MSIR.TOpenArray (1, eltMsirT));
+    dopeA := MSIR.BuildAlloca (blk, "", MSIR.TOpenArray (resultDepth, eltMsirT));
     MSIR.BuildStore (blk, newEltPtr, MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
     MSIR.BuildStore (blk, lenVal,    MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB));
+
+    IF src_depth > 1 THEN
+      (* Copy inner dimension sizes size[1..N-1] from source dope to result. *)
+      FOR k := 1 TO src_depth - 1 DO
+        VAR dimK := MSIR.BuildLoad (blk, "", intT,
+                      MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, apB + k * intB));
+        BEGIN
+          blk := MSIRBuilder.CurrentBlock ();
+          MSIR.BuildStore (blk, dimK,
+            MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB + k * intB));
+        END;
+      END;
+    END;
+
     RETURN dopeA;
   END LValueMSIR;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
-    array    := Type.Base (Expr.TypeOf (ce.args[0]));
-    open     := ArrayType.OpenCousin (array);
-    indexT, eltT : Type.T;
-    eltMsirT : MSIR.T;
-    dopeA    : MSIR.Value;
-    blk      : MSIR.Block;
+    dopeA : MSIR.Value;
+    blk   : MSIR.Block;
   BEGIN
     dopeA := LValueMSIR (ce);
     IF dopeA = NIL THEN RETURN NIL END;
-    EVAL ArrayType.Split (Type.Base (open), indexT, eltT);
-    eltMsirT := MSIRType.Translate (eltT);
-    IF eltMsirT = NIL THEN
-      MSIRBuilder.Abandon ("SUBARRAY: unsupported element type");
-      RETURN NIL;
-    END;
     blk := MSIRBuilder.CurrentBlock ();
-    RETURN MSIR.BuildLoad (blk, "", MSIR.TOpenArray (1, eltMsirT), dopeA);
+    RETURN MSIR.BuildLoad (blk, "", MSIR.EltType (MSIR.ValueType (dopeA)), dopeA);
   END CompileMSIR;
 
 (* Called indirectly through MethodList. *)
