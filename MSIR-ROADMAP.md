@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-18 (msir branch)
+Last updated: 2026-05-18 (msir branch — language gap sweep complete)
 
 ## What's Working
 
@@ -108,27 +108,29 @@ The end-to-end path is live: MSIR emission → LLVM IR lowering → native objec
 ### 1. Remaining language gaps
 
 Live `Abandon` paths that real programs outside the p0/p1/p2 suite can hit.
-Each is a handful of lines; none reshapes the core IR.
+Items marked [done] are fixed on the msir branch.
 
-- **`WITH` unhandled kinds**: `WITH w = expr OF` for expression kinds beyond
-  scalar designator and open-array dope; the catch-all abandons.  Fix:
-  extend `WithStmt.CompileMSIR` to handle the missing cases (array rvalue,
-  record rvalue, …).
-- **`array-type store mismatch`**: catch-all in `AssignStmt.CompileMSIR` fires
-  when LHS and RHS open-array types differ structurally; specific patterns
-  (open constructor assign) were fixed but the general case remains.
-- **`SUBARRAY` of rank > 1 open source**: multi-dim open-array slice; needs
-  multi-dim dope-vector construction in `GenSubarray`.
-- **`NEW(REF record, >1 keyword arg)`**: `GenRefMSIR` abandons when
-  `NUMBER(ce.args^) > 1`; needs to iterate remaining keyword exprs.
-- **VALUE open-array partial depth coercion** (`actDepth < formDepth`):
-  the caller-side copy-in only handles matching ranks; needs a loop over
-  the remaining open dimensions.
+- [done] **`WITH` unhandled kinds**: all 4 `Kind` values handled; dead ELSE removed.
+- [done] **`array-type store mismatch`**: `AssignStmt.CompileMSIR` now handles
+  FixedArray←OpenArray (memcpy) and OpenArray←FixedArray (load data_ptr + store)
+  for any element type combination.
+- [done] **`SUBARRAY` of rank > 1 open source**: `LValueMSIR` now computes
+  stride = eltBytes * size[1] * … * size[N-1], allocates rank-N result dope, and
+  copies inner dimension sizes from source.
+- [done] **`NEW(REF record, >1 keyword arg)`**: `GenRefMSIR` already iterates all
+  keyword args (fixed in an earlier commit; never an active bug in this session).
+- [done] **VALUE open-array partial depth coercion** (`actDepth < formDepth`):
+  `GenValueOpenArgMSIR` now loads `actDepth` dynamic dims from the actual dope and
+  reads the remaining `formDepth - actDepth` dims from M3 type constants.
 - **Nested proc `PROCEDURE` values**: taking a `PROCEDURE` value of a
-  lambda-lifted nested proc requires emitting a trampoline or a
-  `{proc_ptr, env_ptr}` closure struct at the use site.
+  lambda-lifted nested proc requires a trampoline or `{proc_ptr, env_ptr}` closure.
+  The nested proc's MSIR function has extra capture params that the PROCEDURE type
+  doesn't expose; a call through the proc variable would use the wrong ABI.
+  Deferred: requires heap-allocated trampolines (GC-visible) or a closure ABI change.
 - **`eltPack` not divisible by 8 in sub-byte array subscript**: only
-  eltPack ∈ {1,2,4} handled; other values Abandon.
+  eltPack ∈ {1,2,4} handled; other values Abandon.  Elements with eltPack ∈ {3,5,6,7}
+  can straddle byte boundaries, requiring a 2-byte load or a dynamic branch.
+  Deferred: extremely rare in practice.
 
 ### 2. Make MSIR the default backend on ex_stack platforms
 
