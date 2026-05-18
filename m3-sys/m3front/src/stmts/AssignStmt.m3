@@ -920,6 +920,8 @@ PROCEDURE CompileMSIR (p: P) =
              MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray  AND
              MSIR.OpenArrayRank (rhsT) = 1               AND
              MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
+            (* FixedArray ← rank-1 OpenArray, matching element types:
+               extract data pointer from dope, typed load, store. *)
             VAR blk2 := MSIRBuilder.CurrentBlock ();
                 zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
@@ -929,14 +931,28 @@ PROCEDURE CompileMSIR (p: P) =
             BEGIN
               MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arr, lhsPtr);
             END;
+          ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray AND
+                MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray THEN
+            (* FixedArray ← OpenArray, element types differ in MSIR (e.g. nested
+               arrays: TFixedArray(n,TFixedArray(m,T)) ← TOpenArray(1,TOpenArray(1,T))).
+               M3 type safety guarantees compatible byte sizes; use a compile-time
+               memcpy from the open-array data pointer. *)
+            VAR blk2    := MSIRBuilder.CurrentBlock ();
+                lhsInfo : Type.Info;
+                zero    := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
+                srcPtr  := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
+                             ARRAY OF MSIR.Value {zero});
+                nBytes  : INTEGER;
+            BEGIN
+              EVAL Type.CheckInfo (Expr.TypeOf (p.lhs), lhsInfo);
+              nBytes := lhsInfo.size DIV Target.Char.size;
+              MSIRBuilder.EmitMemcpy (lhsPtr, srcPtr, nBytes);
+            END;
           ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray AND
-                MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray AND
-                MSIR.OpenArrayRank (eltT) = 1                AND
-                MSIR.Equal (MSIR.OpenArrayElt (eltT), MSIR.FixedArrayElt (rhsT)) THEN
-            (* OpenArray dest ← FixedArray src: lhsPtr is a GcRef pointing to a
-               heap dope vector { data_ptr: ptr, size0: i64 }.  Load data_ptr
-               (field 0) and store the fixed array value there.  Valid because
-               CM3 heap arrays store elements at the data_ptr address. *)
+                MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray THEN
+            (* OpenArray ← FixedArray (any element types): load data_ptr from
+               LHS dope and store the fixed-array value there.  M3 type safety
+               guarantees compatible byte sizes. *)
             VAR blk2 := MSIRBuilder.CurrentBlock ();
                 dPtr := MSIR.BuildLoad (blk2, "", MSIR.TPtr (MSIR.TVoid ()), lhsPtr);
                 sPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (rhsT));
