@@ -120,7 +120,6 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         nilCond  : MSIR.Value;
         hdrPtr, hdrWord, shifted, masked : MSIR.Value;
         blk      : MSIR.Block;
-        wordBytes := VAL (Target.Address.size DIV 8, LONGINT);
       BEGIN
         refVal := Expr.CompileMSIR (e);
         IF refVal = NIL THEN RETURN NIL END;
@@ -141,21 +140,20 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
                           normalBlk, ARRAY OF MSIR.Value {});
 
         MSIR.BuildStore (nilBlk,
-                         MSIR.ConstInt (intT, VAL (M3RT.NULL_typecode, LONGINT)),
+                         MSIRBuilder.ConstNat (intT, M3RT.NULL_typecode),
                          resAlloca);
         MSIR.BuildBr (nilBlk, mergeBlk, ARRAY OF MSIR.Value {});
 
         (* Non-NIL: ref header is one word before the data pointer.
            RH layout: bits [RH_typecode_offset .. +RH_typecode_size) = bits [1..20]. *)
-        hdrPtr  := MSIR.BuildPtrAdd (normalBlk, "tc.hdrptr", refVal, -wordBytes);
+        hdrPtr  := MSIRBuilder.BuildPtrByteOff (normalBlk, "tc.hdrptr", refVal,
+                                                -(Target.Address.size DIV 8));
         hdrWord := MSIR.BuildLoad (normalBlk, "tc.hdrword", intT, hdrPtr);
         shifted := MSIR.BuildILShr (normalBlk, "tc.shr", hdrWord,
-                                    MSIR.ConstInt (intT,
-                                      VAL (M3RT.RH_typecode_offset, LONGINT)));
+                                    MSIRBuilder.ConstNat (intT, M3RT.RH_typecode_offset));
         masked  := MSIR.BuildIAnd (normalBlk, "tc.mask", shifted,
-                                   MSIR.ConstInt (intT,
-                                     VAL (Word.LeftShift (1, M3RT.RH_typecode_size) - 1,
-                                          LONGINT)));
+                                   MSIRBuilder.ConstNat (intT,
+                                     Word.LeftShift (1, M3RT.RH_typecode_size) - 1));
         MSIR.BuildStore (normalBlk, masked, resAlloca);
         MSIR.BuildBr (normalBlk, mergeBlk, ARRAY OF MSIR.Value {});
 

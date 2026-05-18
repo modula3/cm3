@@ -119,11 +119,11 @@ PROCEDURE DoCompileMSIR (e: Expr.T;  unit: INTEGER): MSIR.Value =
   BEGIN
     IF TypeExpr.Split (e, t) THEN
       t := Type.CheckInfo (t, info);
-      RETURN MSIR.ConstInt (iT, VAL((info.size + unit - 1) DIV unit, LONGINT));
+      RETURN MSIRBuilder.ConstNat (iT, (info.size + unit - 1) DIV unit);
     END;
     t := Type.CheckInfo (Expr.TypeOf (e), info);
     IF info.class # Type.Class.OpenArray THEN
-      RETURN MSIR.ConstInt (iT, VAL((info.size + unit - 1) DIV unit, LONGINT));
+      RETURN MSIRBuilder.ConstNat (iT, (info.size + unit - 1) DIV unit);
     END;
     (* Open array: compute total element count at runtime. *)
     oa := Expr.CompileMSIR (e);
@@ -138,15 +138,15 @@ PROCEDURE DoCompileMSIR (e: Expr.T;  unit: INTEGER): MSIR.Value =
     eltPack := OpenArrayType.EltPack (t);
     IF (eltPack MOD unit) = 0 THEN
       RETURN MSIR.BuildIMul (blk, "", total,
-               MSIR.ConstInt (iT, VAL(eltPack DIV unit, LONGINT)));
+               MSIRBuilder.ConstNat (iT, eltPack DIV unit));
     ELSE
       (* (total * eltPack + unit - 1) DIV unit *)
       total := MSIR.BuildIMul (blk, "", total,
-                 MSIR.ConstInt (iT, VAL(eltPack, LONGINT)));
+                 MSIRBuilder.ConstNat (iT, eltPack));
       total := MSIR.BuildIAdd (blk, "", total,
-                 MSIR.ConstInt (iT, VAL(unit - 1, LONGINT)));
+                 MSIRBuilder.ConstNat (iT, unit - 1));
       RETURN MSIR.BuildIDiv (blk, "", total,
-               MSIR.ConstInt (iT, VAL(unit, LONGINT)));
+               MSIRBuilder.ConstNat (iT, unit));
     END;
   END DoCompileMSIR;
 

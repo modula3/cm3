@@ -34,7 +34,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   BEGIN
     IF x = NIL THEN RETURN NIL END;
     t := MSIR.ValueType (x);
-    RETURN MSIR.BuildIXor (b, "", x, MSIR.ConstInt (t, -1L));
+    RETURN MSIR.BuildIXor (b, "", x, MSIRBuilder.ConstNat (t, -1));
   END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

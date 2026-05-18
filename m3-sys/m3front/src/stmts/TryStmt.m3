@@ -694,9 +694,8 @@ PROCEDURE CompileMSIR (p: P) =
       hBody := MSIRBuilder.NewBlock("h.body");
       e := h.tags;
       WHILE e # NIL DO
-        uidConst := MSIR.ConstInt(MSIR.TI(64),
-                      VAL(M3FP.ToInt(M3FP.FromText(Value.GlobalName(e.obj))),
-                          LONGINT));
+        uidConst := MSIRBuilder.ConstNat(MSIR.TI(64),
+                      M3FP.ToInt(M3FP.FromText(Value.GlobalName(e.obj))));
         cmp     := MSIR.BuildICmp(checkBlk, "",
                                    MSIR.CmpPred.Eq, uid, uidConst);
         nextBlk := MSIRBuilder.NewBlock("exc.next");
@@ -729,8 +728,8 @@ PROCEDURE CompileMSIR (p: P) =
            — load the value through it → store to alloca. *)
       IF h.scope # NIL THEN
         VAR
-          eaArgBytes := VAL(M3RT.EA_arg, LONGINT) DIV VAL(Target.Char.size, LONGINT);
-          argFldPtr  := MSIR.BuildPtrAdd(hBody, "", actPtr, eaArgBytes);
+          eaArgBytes := M3RT.EA_arg DIV Target.Char.size;
+          argFldPtr  := MSIRBuilder.BuildPtrByteOff(hBody, "", actPtr, eaArgBytes);
           argRaw     := MSIR.BuildLoad(hBody, "", ptrT, argFldPtr);
           argType    := h.type;  (* set by Check from Exceptionz.ArgType *)
           mt         := MSIRType.Translate(argType);

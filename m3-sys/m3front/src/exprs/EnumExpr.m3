@@ -123,7 +123,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("unsupported enum literal type");
       RETURN NIL;
     END;
-    RETURN MSIR.ConstInt (t, VAL (i, LONGINT));
+    RETURN MSIRBuilder.ConstNat (t, i);
   END CompileMSIR;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
