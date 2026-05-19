@@ -1,8 +1,18 @@
 MODULE MSIRToLLVM;
 
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT M3RT, Target, TFloat;
+IMPORT Target, TFloat;
 <*FATAL Thread.Alerted, Wr.Failure*>
+
+(* RT0.RefHeaderBits bit-field offsets — derived from the BITS declarations:
+     forwarded : BITS 1; typecode : BITS 20; dirty : BITS 1; gray : BITS 1 *)
+CONST
+  RH_typecode_offset = 1;           (* after 1-bit forwarded *)
+  RH_dirty_offset    = RH_typecode_offset + 20;
+  RH_gray_offset     = RH_dirty_offset + 1;
+
+(* TEXT is always typecode 1: it is the first type registered at runtime. *)
+CONST TEXT_typecode = 1;
 
 (*----------------------------------------------------- module-level state *)
 
@@ -378,7 +388,7 @@ PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
      slow path:        call RTHooks__CheckLoadTracedRef(ref)
 
    Header layout (RT0.RefHeader = Target.Address.bytes before object ptr):
-     bit M3RT.RH_gray_offset = gray bit (mask = 1 << RH_gray_offset) *)
+     bit RH_gray_offset = gray bit (mask = 1 << RH_gray_offset) *)
 PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
   VAR
     n  : TEXT;
@@ -406,7 +416,7 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
                    & " = load " & ap & ", ptr %__gc_hptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_gb."   & n
                    & " = and " & ap & " %__gc_hdr." & n
-                   & ", " & Fmt.Int(Word.Shift(1, M3RT.RH_gray_offset)) & "\n");
+                   & ", " & Fmt.Int(Word.Shift(1, RH_gray_offset)) & "\n");
     Wr.PutText(wr, "  %__gc_gr."   & n
                    & " = icmp ne " & ap & " %__gc_gb." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_gr." & n
@@ -432,11 +442,11 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
    GC will re-scan the object's reference fields in the next sweep.
 
    Fast path: read the header word (Target.Address.bytes before the object
-   pointer); if the dirty bit (bit M3RT.RH_dirty_offset, 1<<RH_dirty_offset)
+   pointer); if the dirty bit (bit RH_dirty_offset, 1<<RH_dirty_offset)
    is already set, skip the slow-path call.
    Otherwise call RTHooks__CheckStoreTraced.
 
-   Header layout matches RT0.RefHeaderBits (M3RT constants):
+   Header layout matches RT0.RefHeaderBits:
      bit 0:                forwarded  (RH_forwarded_offset)
      bits 1-20:            typecode   (RH_typecode_offset, RH_typecode_size)
      bit RH_dirty_offset:  dirty
@@ -456,7 +466,7 @@ PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
                    & " = load " & ap & ", ptr %__gc_whptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_wdb."   & n
                    & " = and " & ap & " %__gc_whdr." & n
-                   & ", " & Fmt.Int(Word.Shift(1, M3RT.RH_dirty_offset)) & "\n");
+                   & ", " & Fmt.Int(Word.Shift(1, RH_dirty_offset)) & "\n");
     Wr.PutText(wr, "  %__gc_wdirty." & n
                    & " = icmp ne " & ap & " %__gc_wdb." & n & ", 0\n");
     Wr.PutText(wr, "  br i1 %__gc_wdirty." & n
@@ -2592,7 +2602,7 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
      Literal data comes from TextExpr.LiteralCount/Chars/Cnt — the same
      per-module registry the CG path uses (SetUID tracking). *)
   VAR
-    GcHeader := Word.Shift(M3RT.TEXT_typecode, M3RT.RH_typecode_offset);
+    GcHeader := Word.Shift(TEXT_typecode, RH_typecode_offset);
     ip       := "i" & Fmt.Int(Target.Integer.size);
     ap       := "i" & Fmt.Int(Target.Address.size);
   VAR n := MSIR.ModuleTextLitCount(m);
@@ -3206,10 +3216,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     infoName   := "@" & modName & "_M3_info";
     bodyName   := "@" & modName & "__" & modName & "_M3";
     bodyExists := FALSE;
-    cs         := Target.Char.size;       (* bits per byte = 8 *)
     ap         := Target.Address.bytes;   (* bytes per field slot *)
-    miBytes    := M3RT.MI_SIZE DIV cs;    (* total struct size in bytes *)
-    nFields    := miBytes DIV ap;         (* number of fields *)
+    miBytes    := MI_nFields * ap;        (* RT0.ModuleInfo total size in bytes *)
+    nFields    := MI_nFields;
     nImports   := MSIR.ModuleImportBinderCount(m);
     fieldName  : TEXT;
     fieldType  : TEXT;
@@ -3218,11 +3227,6 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     ip_t       := "i" & Fmt.Int(Target.Integer.size);   (* INTEGER type string *)
     ap_t       := "i" & Fmt.Int(Target.Address.size);   (* ADDRESS type string *)
   BEGIN
-    <* ASSERT M3RT.MI_SIZE MOD cs = 0,
-       "RT0.ModuleInfo size not a multiple of char size" *>
-    <* ASSERT miBytes MOD ap = 0,
-       "RT0.ModuleInfo byte size not a multiple of address size" *>
-
     (* Check whether the module body proc was compiled (not abandoned). *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_M3") THEN
