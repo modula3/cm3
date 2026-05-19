@@ -3,7 +3,7 @@ MODULE MSIRType;
 IMPORT MSIR, Type, Int, LInt, Bool, Target;
 IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
 IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType, TInt;
-IMPORT EnumType;
+IMPORT EnumType, ObjectType;
 
 (* Per-module translation cache: maps base Type.T pointer → MSIR.T.
    Ensures repeated calls for the same M3 type return the same MSIR.T
@@ -16,29 +16,50 @@ VAR cache : ARRAY [0..MaxTypeCache-1] OF CacheEntry;
 PROCEDURE Reset() =
   BEGIN cacheN := 0 END Reset;
 
+PROCEDURE StripModulePrefix(raw: TEXT): TEXT =
+  (* Given "Module__Name", return "Name".  Returns raw unchanged if no "__". *)
+  VAR n := Text.Length(raw);  i := 0;
+  BEGIN
+    WHILE i + 1 < n DO
+      IF Text.GetChar(raw, i) = '_'
+         AND Text.GetChar(raw, i + 1) = '_' THEN
+        RETURN Text.Sub(raw, i + 2);
+      END;
+      INC(i);
+    END;
+    RETURN raw;
+  END StripModulePrefix;
+
+PROCEDURE ObjectShortName(t: Type.T;  hint: TEXT): TEXT =
+  (* Returns the user-visible short name for an object base type.
+     Uses hint if non-empty, otherwise falls back to ObjectType.UserName.
+     ObjectType.UserName uses GlobalName(dots=TRUE,with_module=TRUE) which
+     returns "Module.Name"; strip the "Module." prefix at the last dot. *)
+  VAR raw: TEXT;  n: INTEGER;  last: INTEGER;
+  BEGIN
+    IF hint # NIL AND Text.Length(hint) > 0 THEN RETURN hint END;
+    raw := ObjectType.UserName(t);
+    IF raw = NIL THEN RETURN "" END;
+    (* Find the last '.' and return everything after it. *)
+    n := Text.Length(raw);
+    last := -1;
+    FOR i := 0 TO n - 1 DO
+      IF Text.GetChar(raw, i) = '.' THEN last := i END;
+    END;
+    IF last >= 0 THEN RETURN Text.Sub(raw, last + 1) END;
+    RETURN raw;
+  END ObjectShortName;
+
 PROCEDURE Translate(t: Type.T): MSIR.T =
   VAR base: Type.T;  info: Type.Info;  nameId: M3ID.T;  typeName: TEXT;
   BEGIN
     IF t = NIL THEN RETURN NIL END;
     (* Capture the human-readable name BEFORE stripping the Named wrapper.
-       Typename uses underscores for dots (e.g. "Main__Point").
-       Strip the "Module__" prefix so we show just "Point". *)
+       Type.Typename returns "Module__Name"; strip the "Module__" prefix. *)
     Type.Typename(t, nameId);
-    IF nameId = M3ID.NoID THEN
-      typeName := "";
-    ELSE
-      typeName := M3ID.ToText(nameId);
-      VAR n := Text.Length(typeName);  i := 0;
-      BEGIN
-        WHILE i + 1 < n DO
-          IF Text.GetChar(typeName, i) = '_'
-             AND Text.GetChar(typeName, i + 1) = '_' THEN
-            typeName := Text.Sub(typeName, i + 2);
-            EXIT
-          END;
-          INC(i);
-        END;
-      END;
+    IF nameId = M3ID.NoID
+      THEN typeName := ""
+      ELSE typeName := StripModulePrefix(M3ID.ToText(nameId))
     END;
     base := Type.Base(t);  (* strips Named, Packed, Subrange layers *)
 
@@ -99,11 +120,19 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
         RETURN MSIR.TPtr(MSIR.TVoid());   (* function pointer, opaque *)
 
     | Type.Class.Object, Type.Class.Opaque =>
-        (* Use isTraced so that UNTRACED OBJECT and untraced opaque supertypes
-           get TPtr rather than TGcRef.  Vtable-aware typed refs are future work. *)
-        IF info.isTraced
-          THEN RETURN MSIR.TGcRef(MSIR.TVoid());
-          ELSE RETURN MSIR.TPtr (MSIR.TVoid());
+        (* Build a typed object ref so DWARF can show fields.
+           typeName may be empty when the base type has no Named wrapper;
+           fall back to the user_name recorded by NoteRefName. *)
+        VAR mt := TranslateObject(base, ObjectShortName(base, typeName));
+        BEGIN
+          IF mt = NIL THEN
+            IF info.isTraced THEN RETURN MSIR.TGcRef(MSIR.TVoid())
+            ELSE RETURN MSIR.TPtr(MSIR.TVoid())
+            END;
+          END;
+          IF info.isTraced THEN RETURN MSIR.TGcRef(mt)
+          ELSE RETURN MSIR.TPtr(mt)
+          END;
         END;
 
     | Type.Class.Ref =>
@@ -141,6 +170,78 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
       RETURN NIL;
     END;
   END Translate;
+
+PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
+  (* Build MSIR.TObject for an OBJECT or Opaque type, with own fields at their
+     absolute bit offsets.  Returns NIL if the type is opaque or offsets unknown.
+     Pre-registers a NIL sentinel in the cache before recursing to break cycles
+     (e.g. TYPE T = OBJECT next: T END). *)
+  VAR
+    flds     : Value.T;
+    finfo    : Field.Info;
+    n        : INTEGER := 0;
+    bitOff   : INTEGER;
+    align    : INTEGER;
+    v        : Value.T;
+    super    : Type.T;
+    superM   : MSIR.T := NIL;
+    ft       : MSIR.T;
+    fi       : INTEGER;
+    selfIdx  : INTEGER := -1;
+  BEGIN
+    FOR k := 0 TO cacheN - 1 DO
+      IF cache[k].key = t THEN RETURN cache[k].val END;
+    END;
+    ObjectType.GetFieldsOffsetAndAlign(t, bitOff, align);
+    IF bitOff < 0 THEN RETURN NIL END;  (* opaque — offsets unknown *)
+    (* Pre-register NIL to break self-referential cycles. *)
+    IF cacheN < MaxTypeCache THEN
+      selfIdx := cacheN;
+      cache[cacheN].key := t;
+      cache[cacheN].val := NIL;
+      INC(cacheN);
+    END;
+    flds := ObjectType.FieldList(t);
+    v := flds;
+    WHILE v # NIL DO INC(n);  v := v.next END;
+    (* Translate super type recursively, extracting its user-visible name
+       so the MSIR.TObject gets a proper name regardless of call order. *)
+    super := ObjectType.Super(t);
+    IF super # NIL THEN
+      superM := TranslateObject(super, ObjectShortName(super, ""));
+    END;
+    (* Build own-field array with absolute bit offsets. *)
+    VAR msirFs := NEW(REF ARRAY OF MSIR.Field, n);
+    BEGIN
+      fi := 0;
+      v  := flds;
+      WHILE v # NIL DO
+        Field.Split(v, finfo);
+        ft := Translate(finfo.type);
+        IF ft = NIL THEN ft := MSIR.TPtr(MSIR.TVoid()) END;  (* opaque / cycle *)
+        msirFs[fi].name   := M3ID.ToText(finfo.name);
+        msirFs[fi].type   := ft;
+        msirFs[fi].offset := bitOff + finfo.offset;
+        INC(fi);
+        v := v.next;
+      END;
+      VAR objName : TEXT;
+          result  : MSIR.T;
+      BEGIN
+        IF name = NIL OR Text.Length(name) = 0
+          THEN objName := Type.Name(t)
+          ELSE objName := name
+        END;
+        result := MSIR.TObject(
+                    objName,
+                    superM, msirFs^, ARRAY OF MSIR.Method{}, "");
+        IF selfIdx >= 0 THEN
+          cache[selfIdx].val := result;  (* update sentinel with real type *)
+        END;
+        RETURN result;
+      END;
+    END;
+  END TranslateObject;
 
 PROCEDURE TranslateEnum(t: Type.T;  name: TEXT;  bits: INTEGER): MSIR.T =
   VAR n  := EnumType.NumElts(t);

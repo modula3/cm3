@@ -33,6 +33,10 @@ PROCEDURE GetFieldsOffsetAndAlign (t: Type.T;  VAR offset, align: INTEGER);
    are visible, sets 'offset' to the bit offset of 't's fields,
    otherwise sets 'offset' to -1. *)
 
+PROCEDURE FieldList (t: Type.T): Value.T;
+(* Returns the list of field Values defined directly in t (not inherited).
+   Iterate with v.next; call Field.Split(v, info) for each entry. *)
+
 PROCEDURE FieldAlignment (t: Type.T): INTEGER;
 (* Return the alignment of 't's fields. *)
 
@@ -46,6 +50,10 @@ PROCEDURE NoteOffsets (t, u: Type.T);
 
 PROCEDURE NoteRefName (t: Type.T;  name: TEXT);
 (* record a user name for the ref type 't' *)
+
+PROCEDURE UserName (t: Type.T): TEXT;
+(* Returns the user-visible global name recorded by NoteRefName, e.g.
+   "Main__Animal", or NIL if none has been recorded yet. *)
 
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER);
 

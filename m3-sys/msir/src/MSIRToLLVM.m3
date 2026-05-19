@@ -1579,6 +1579,23 @@ PROCEDURE TotalBitsOf(t: MSIR.T): INTEGER =
         END;
     | MSIR.TypeKind.FixedArray =>
         RETURN MSIR.FixedArrayLen(t) * TotalBitsOf(MSIR.FixedArrayElt(t));
+    | MSIR.TypeKind.Object =>
+        (* Walk the full super chain + own fields to find the last field end. *)
+        VAR maxEnd := Target.Address.size;  (* vtable ptr at offset 0 *)
+            cur    := t;
+        BEGIN
+          WHILE cur # NIL DO
+            FOR i := 0 TO MSIR.ObjectFieldCount(cur) - 1 DO
+              VAR f  := MSIR.ObjectField(cur, i);
+                  fe := f.offset + TotalBitsOf(f.type);
+              BEGIN
+                IF fe > maxEnd THEN maxEnd := fe END;
+              END;
+            END;
+            cur := MSIR.ObjectSuper(cur);
+          END;
+          RETURN maxEnd;
+        END;
     ELSE RETURN Target.Address.size;
     END;
   END TotalBitsOf;
@@ -1639,14 +1656,120 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
     RETURN dbgTypes[entry].metaIdx;
   END GetOrBuildOpenArrayDvType;
 
+PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
+  (* Build a DW_TAG_structure_type for an OBJECT type body.
+     Flattens the full super chain: __vtable at 0, then all inherited and own fields.
+     Returns the metadata index of the DICompositeType node (kind=4).
+     Deduplicates by MSIR.T pointer identity. *)
+  VAR entry    : INTEGER;
+      AP       := Target.Address.size;
+      addrRef  := dbgBtBase + 8;  (* ADDRESS *)
+      nEmitted : INTEGER;
+      cur      : MSIR.T;
+  BEGIN
+    (* Dedup: check all existing kind=4 entries. *)
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].kind = 4 AND dbgTypes[k].msirType = t THEN
+        RETURN dbgTypes[k].metaIdx;
+      END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN addrRef END;
+    entry := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[entry].msirType      := t;
+    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[entry].baseTypeRef   := -1;
+    dbgTypes[entry].kind          := 4;  (* Object struct *)
+    dbgTypes[entry].childBase     := dbgChildN;
+    dbgTypes[entry].totalBits     := TotalBitsOf(t);
+    nEmitted := 0;
+    (* Field 0: implicit vtable pointer at bit offset 0. *)
+    IF dbgChildN < MaxDbgChildren THEN
+      dbgChildren[dbgChildN].kind    := 0;   (* member *)
+      dbgChildren[dbgChildN].name    := "__vtable";
+      dbgChildren[dbgChildN].typeRef := addrRef;
+      dbgChildren[dbgChildN].size    := AP;
+      dbgChildren[dbgChildN].offset  := 0;
+      dbgChildren[dbgChildN].metaIdx := metaN;
+      INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+    END;
+    (* Collect fields from all ancestor types (root first) then own fields.
+       Walk to root, collect types in a small stack, emit root-first. *)
+    CONST MaxDepth = 32;
+    VAR chain : ARRAY [0..MaxDepth-1] OF MSIR.T;
+        depth : INTEGER := 0;
+    BEGIN
+      cur := t;
+      WHILE cur # NIL AND depth < MaxDepth DO
+        chain[depth] := cur;  INC(depth);
+        cur := MSIR.ObjectSuper(cur);
+      END;
+      (* Emit root first (highest index), then toward leaf. *)
+      FOR lvl := depth - 1 TO 0 BY -1 DO
+        cur := chain[lvl];
+        FOR i := 0 TO MSIR.ObjectFieldCount(cur) - 1 DO
+          IF dbgChildN < MaxDbgChildren THEN
+            VAR f     := MSIR.ObjectField(cur, i);
+                tRef  := GetDbgTypeRef(f.type, metaN);
+                fBits := TotalBitsOf(f.type);
+            BEGIN
+              dbgChildren[dbgChildN].kind    := 0;
+              dbgChildren[dbgChildN].name    := f.name;
+              dbgChildren[dbgChildN].typeRef := tRef;
+              dbgChildren[dbgChildN].size    := fBits;
+              dbgChildren[dbgChildN].offset  := f.offset;
+              dbgChildren[dbgChildN].metaIdx := metaN;
+              INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+            END;
+          END;
+        END;
+      END;
+    END;
+    dbgTypes[entry].childCount := nEmitted;
+    RETURN dbgTypes[entry].metaIdx;
+  END GetOrBuildObjectStructType;
+
+PROCEDURE GetOrBuildObjectPtrType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
+  (* Build a DW_TAG_pointer_type → object struct for GcRef(Object(...)).
+     Returns the metadata index of the DIDerivedType(pointer) node (kind=5).
+     Deduplicates by the struct metaIdx it points to. *)
+  VAR structIdx : INTEGER;
+      entry     : INTEGER;
+  BEGIN
+    structIdx := GetOrBuildObjectStructType(t, metaN);
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].kind = 5 AND dbgTypes[k].baseTypeRef = structIdx THEN
+        RETURN dbgTypes[k].metaIdx;
+      END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    entry := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[entry].msirType      := t;
+    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[entry].elemsTupleIdx := -1;
+    dbgTypes[entry].baseTypeRef   := structIdx;
+    dbgTypes[entry].kind          := 5;  (* Object pointer *)
+    dbgTypes[entry].childBase     := 0;
+    dbgTypes[entry].childCount    := 0;
+    dbgTypes[entry].totalBits     := Target.Address.size;
+    RETURN dbgTypes[entry].metaIdx;
+  END GetOrBuildObjectPtrType;
+
 PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
   (* Return the metadata index of the DWARF type for t.
      For basic scalar/pointer types returns a DIBasicType index.
-     For Struct/FixedArray/Enum/OpenArray builds and returns a DICompositeType.
+     For Struct/FixedArray/Enum/OpenArray/Object builds and returns a composite.
      For unknown kinds returns ADDRESS as fallback (index 8 in basic table). *)
   VAR btI: INTEGER;
   BEGIN
     IF t = NIL OR dbgBtBase < 0 THEN RETURN -1 END;
+    (* GcRef to Object: DW_TAG_pointer_type → object body struct. Must check
+       before BTypeIdx so we don't short-circuit to ADDRESS. *)
+    IF MSIR.Kind(t) = MSIR.TypeKind.GcRef
+       AND MSIR.Kind(MSIR.EltType(t)) = MSIR.TypeKind.Object
+    THEN
+      RETURN GetOrBuildObjectPtrType(MSIR.EltType(t), metaN);
+    END;
     btI := BTypeIdx(MSIR.Kind(t));
     IF btI >= 0 THEN RETURN dbgBtBase + btI END;
     CASE MSIR.Kind(t) OF
@@ -2204,7 +2327,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
                 & ", value: " & Fmt.Int(ch.value) & ")\n");
             END;
           END;
-        ELSE
+        ELSIF e.kind = 3 THEN
           (* kind = 3: OpenArray dope-vector — DW_TAG_structure_type with
              {data: ADDRESS, count: INTEGER} or {data, count0, count1, ...} fields *)
           VAR rank := e.totalBits DIV Target.Address.size - 1;
@@ -2232,6 +2355,40 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
               END;
             END;
           END;
+        ELSIF e.kind = 4 THEN
+          (* kind = 4: Object body — DW_TAG_structure_type with vtable ptr + all fields. *)
+          VAR objName := MSIR.ObjectName(e.msirType);
+          BEGIN
+            IF objName = NIL THEN objName := "OBJECT" END;
+            Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+              & " = !DICompositeType(tag: DW_TAG_structure_type"
+              & ", name: \""    & objName & "\""
+              & ", size: "      & Fmt.Int(e.totalBits)
+              & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
+            Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
+            FOR c := 0 TO e.childCount - 1 DO
+              IF c > 0 THEN Wr.PutText(wr, ", ") END;
+              Wr.PutText(wr, "!" & Fmt.Int(dbgChildren[e.childBase + c].metaIdx));
+            END;
+            Wr.PutText(wr, "}\n");
+            FOR c := 0 TO e.childCount - 1 DO
+              VAR ch := dbgChildren[e.childBase + c];
+              BEGIN
+                Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
+                  & " = !DIDerivedType(tag: DW_TAG_member"
+                  & ", name: \""  & ch.name & "\""
+                  & ", baseType: !" & Fmt.Int(ch.typeRef)
+                  & ", size: "    & Fmt.Int(ch.size)
+                  & ", offset: "  & Fmt.Int(ch.offset) & ")\n");
+              END;
+            END;
+          END;
+        ELSIF e.kind = 5 THEN
+          (* kind = 5: Object pointer — DW_TAG_pointer_type → object body struct. *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DIDerivedType(tag: DW_TAG_pointer_type"
+            & ", baseType: !" & Fmt.Int(e.baseTypeRef)
+            & ", size: "      & Fmt.Int(Target.Address.size) & ")\n");
         END;
       END;
     END;

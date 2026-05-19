@@ -552,6 +552,14 @@ PROCEDURE NoteRefName (t: Type.T;  name: TEXT) =
   END NoteRefName;
 
 (*EXPORTED*)
+PROCEDURE UserName (t: Type.T): TEXT =
+  VAR p := Confirm (t);
+  BEGIN
+    IF p = NIL THEN RETURN NIL END;
+    RETURN p.user_name;
+  END UserName;
+
+(*EXPORTED*)
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   VAR
     p         : P := t;
@@ -1318,6 +1326,13 @@ PROCEDURE FindMagic (t_id: INTEGER;  VAR d_size, m_size: INTEGER): BOOLEAN =
 
     END;
   END FindMagic;
+
+PROCEDURE FieldList (t: Type.T): Value.T =
+  VAR p := Confirm(t);
+  BEGIN
+    IF p = NIL THEN RETURN NIL END;
+    RETURN Scope.ToList(p.fields);
+  END FieldList;
 
 PROCEDURE Confirm (t: Type.T): P =
   VAR info: Type.Info;
