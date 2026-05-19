@@ -133,17 +133,37 @@ Items marked [done] are fixed on the msir branch.
   can straddle byte boundaries, requiring a 2-byte load or a dynamic branch.
   Deferred: extremely rare in practice.
 
-### 2. Make MSIR the default backend on ex_stack platforms
+### 2. Activate MSIR via explicit M3_BACKEND_MODE
 
-The biggest architectural step: when `M3_USE_STACK_WALKER = TRUE`,
-cm3 should drive MSIR → LLVM instead of M3CG → C by default.
+`M3_USE_STACK_WALKER` is the wrong discriminator: `ex_stack` works fine with
+the C backend (`M3_BACKEND_MODE = "C"`), and the backend choice should be
+explicit, not inferred from the EH model.
 
-Concretely:
-- Wire `@M3m3front-msir` into the build driver so it activates
-  automatically on ex_stack targets without a manual flag.
-- Drive `opt` + `llc` (or `clang`) in the build pipeline in place of
-  the C compiler invocation.
-- The C backend (`M3C.m3`) remains intact for non-ex_stack platforms.
+The right approach mirrors the existing `StAloneLlvmObj`/`StAloneLlvmAsm`
+modes (9/10) which call the external `m3llvm` translator.  MSIR is the
+cm3-integrated replacement for m3llvm, so two new enum values sit naturally
+alongside them:
+
+| New value | String | Pipeline |
+|---|---|---|
+| `MSIRObj` ("11") | `"MSIRObj"` | m3front → MSIR → `.ll` → clang → `.o` |
+| `MSIRAsm` ("12") | `"MSIRAsm"` | m3front → MSIR → `.ll` → clang → `.s` → `.o` |
+
+**Files to change:**
+
+| File | Change |
+|---|---|
+| `m3-sys/m3middle/src/Target.i3` | Add `MSIRObj`, `MSIRAsm` to `M3BackendMode_t`; add to `BackendModeStrings`; add `BackendMSIRSet` |
+| `m3-sys/cm3/src/Builder.m3` | Handle `BackendMSIRSet` in the compilation pipeline (activate MSIR emission flag, call clang on `.ll` output) |
+| `m3-sys/cm3/src/M3Backend.m3` | Route `MSIRObj`/`MSIRAsm` modes through MSIR emission rather than M3CG |
+| `m3-sys/cminstall/src/config/ARM64_DARWIN` | Opt-in: change `M3_BACKEND_MODE = "C"` → `"MSIRObj"` |
+
+**Constraint**: MSIR requires `ex_stack` (C++ EH personality).  Builder should
+emit a fatal error if `MSIRObj`/`MSIRAsm` is selected but `M3_USE_STACK_WALKER`
+is not TRUE.
+
+The C backend (`M3_BACKEND_MODE = "C"`) remains unchanged for all existing
+platforms; no existing config needs to change until opt-in.
 
 This is the gating item for LLVM optimizer integration and bootstrap.
 
