@@ -15,6 +15,8 @@ END;
 
 CONST MaxDbgFiles   = 64;
 CONST MaxDbgEntries = 2048;
+CONST MaxDbgVars    = 4096;
+CONST NBT           = 9;     (* number of fixed DIBasicType nodes emitted *)
 
 TYPE DbgFileEntry = RECORD name: TEXT; metaIdx: INTEGER END;
 TYPE DbgEntry     = RECORD
@@ -23,14 +25,30 @@ TYPE DbgEntry     = RECORD
   locIdx:  INTEGER;    (* !DILocation(line:0, scope:subprogram) index — satisfies
                           LLVM's "inlinable call must have !dbg" verifier rule *)
 END;
+TYPE DbgVarEntry  = RECORD
+  allocaVal: MSIR.Value;   (* alloca instruction result — identity key *)
+  varName:   TEXT;          (* display name (stripped of % and .slot) *)
+  spIdx:     INTEGER;       (* DISubprogram metadata index for scope *)
+  fileIdx:   INTEGER;       (* DIFile metadata index *)
+  line:      INTEGER;       (* declaration line *)
+  btIdx:     INTEGER;       (* 0..NBT-1 basic-type slot, or -1 *)
+  metaIdx:   INTEGER;       (* !DILocalVariable metadata index *)
+END;
 
 VAR
   dbgFiles:      ARRAY [0..MaxDbgFiles-1]   OF DbgFileEntry;
   dbgFileN:      INTEGER := 0;
   dbgEntries:    ARRAY [0..MaxDbgEntries-1] OF DbgEntry;
   dbgEntryN:     INTEGER := 0;
+  dbgVars:       ARRAY [0..MaxDbgVars-1]   OF DbgVarEntry;
+  dbgVarN:       INTEGER := 0;
   dbgEnabled:    BOOLEAN := FALSE;
   curDbgLocIdx:  INTEGER := -1;   (* locIdx for the proc currently being emitted *)
+  (* pre-computed metadata indices set by BuildDebugInfo: *)
+  dbgNsIdx:      INTEGER := -1;   (* DINamespace *)
+  dbgNlIdx:      INTEGER := -1;   (* null-list !{null} *)
+  dbgStIdx:      INTEGER := -1;   (* shared DISubroutineType *)
+  dbgBtBase:     INTEGER := -1;   (* first DIBasicType (slots 0..NBT-1) *)
 
 VAR
   auxN:          INTEGER     := 0;
@@ -609,7 +627,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     (* --- single-instruction ops --- *)
 
     | MSIR.Op.Alloca =>
-        VAR cnt := MSIR.InsnExtractIdx(i);
+        VAR cnt    := MSIR.InsnExtractIdx(i);
+            varIdx := GetDbgVarMetaIdx(res);
         BEGIN
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = alloca ");
           LLType(wr, MSIR.InsnTargetType(i));
@@ -617,6 +636,13 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             Wr.PutText(wr, ", " & ip & " " & Fmt.Int(cnt));
           END;
           Wr.PutText(wr, "\n");
+          IF varIdx >= 0 AND curDbgLocIdx >= 0 THEN
+            Wr.PutText(wr, "  call void @llvm.dbg.declare(metadata ptr "
+              & MSIR.ValueName(res)
+              & ", metadata !" & Fmt.Int(varIdx)
+              & ", metadata !DIExpression()), !dbg !"
+              & Fmt.Int(curDbgLocIdx) & "\n");
+          END;
         END;
 
     | MSIR.Op.AllocaDyn =>
@@ -1346,6 +1372,67 @@ PROCEDURE EmitParamTypeList(wr: Wr.T;  p: MSIR.Proc) =
 (* Split an absolute path into directory and basename.
    "/a/b/Main.m3" → dir="/a/b", base="Main.m3".
    A path with no slash → dir=".", base=path. *)
+(* Map an MSIR TypeKind to a 0..NBT-1 basic-type slot, or -1 if unsupported.
+   Ptr / GcRef / GcSlot map to the ADDRESS slot (slot 8); all other
+   composite kinds return -1 so no type annotation is emitted.
+   IMPORTANT: a DILocalVariable with no type combined with @llvm.dbg.declare
+   crashes LLVM 22's DWARF emitter — every var that gets a declare call must
+   have a type. *)
+PROCEDURE BTypeIdx(kind: MSIR.TypeKind): INTEGER =
+  BEGIN
+    CASE kind OF
+    | MSIR.TypeKind.I64                             => RETURN 0;   (* INTEGER *)
+    | MSIR.TypeKind.W64                             => RETURN 1;   (* CARDINAL *)
+    | MSIR.TypeKind.I32                             => RETURN 2;   (* INTEGER32 *)
+    | MSIR.TypeKind.W32                             => RETURN 3;   (* CARDINAL32 *)
+    | MSIR.TypeKind.I1                              => RETURN 4;   (* BOOLEAN *)
+    | MSIR.TypeKind.F32                             => RETURN 5;   (* REAL *)
+    | MSIR.TypeKind.F64                             => RETURN 6;   (* LONGREAL *)
+    | MSIR.TypeKind.W8                              => RETURN 7;   (* CHAR *)
+    | MSIR.TypeKind.Ptr,
+      MSIR.TypeKind.GcRef,
+      MSIR.TypeKind.GcSlot                          => RETURN 8;   (* ADDRESS *)
+    ELSE                                               RETURN -1;
+    END;
+  END BTypeIdx;
+
+(* Strip the leading '%' from an SSA name and the trailing '.slot' suffix
+   used for spilled VALUE formals, yielding the M3 display name. *)
+PROCEDURE StripVarName(ssaName: TEXT): TEXT =
+  VAR n := ssaName;  len: INTEGER;
+  BEGIN
+    IF Text.Length(n) > 0 AND Text.GetChar(n, 0) = '%' THEN
+      n := Text.Sub(n, 1);
+    END;
+    len := Text.Length(n);
+    IF len > 5 AND Text.Equal(Text.Sub(n, len - 5), ".slot") THEN
+      n := Text.Sub(n, 0, len - 5);
+    END;
+    RETURN n;
+  END StripVarName;
+
+(* Return TRUE for SSA names that are internal compiler temporaries and
+   should not get DILocalVariable entries (e.g. %__ll3, %__env). *)
+PROCEDURE IsInternalVarName(ssaName: TEXT): BOOLEAN =
+  BEGIN
+    RETURN Text.Length(ssaName) >= 3
+       AND Text.GetChar(ssaName, 0) = '%'
+       AND Text.GetChar(ssaName, 1) = '_'
+       AND Text.GetChar(ssaName, 2) = '_';
+  END IsInternalVarName;
+
+(* Return the DILocalVariable metadata index for the alloca result value,
+   or -1 if not recorded. *)
+PROCEDURE GetDbgVarMetaIdx(allocaVal: MSIR.Value): INTEGER =
+  BEGIN
+    FOR j := 0 TO dbgVarN - 1 DO
+      IF dbgVars[j].allocaVal = allocaVal THEN
+        RETURN dbgVars[j].metaIdx;
+      END;
+    END;
+    RETURN -1;
+  END GetDbgVarMetaIdx;
+
 PROCEDURE SplitPath(path: TEXT;  VAR dir: TEXT;  VAR base: TEXT) =
   VAR last := -1;
       n    := Text.Length(path);
@@ -1414,21 +1501,33 @@ PROCEDURE GetProcLocIdx(p: MSIR.Proc): INTEGER =
     RETURN -1;
   END GetProcLocIdx;
 
-(* Pre-pass: assign metadata indices to all procs that have source locations.
+(* Pre-pass: assign metadata indices to all procs that have source locations,
+   and scan alloca instructions to build DILocalVariable entries.
+
    Index layout (all module-global):
-     0 = !{i32 2, !"Dwarf Version", i32 4}
-     1 = !{i32 2, !"Debug Info Version", i32 3}
-     2 = distinct !DICompileUnit(...)
-     3 .. 3+nFiles-1  = !DIFile nodes
-     3+nFiles         = !{null}  (void types list)
-     3+nFiles+1       = !DISubroutineType(types: !{null})
-     3+nFiles+2+k     = distinct !DISubprogram for k-th proc with src info *)
+     0,1  = module flags (Dwarf version, Debug Info Version)
+     2    = distinct !DICompileUnit
+     3..3+F-1          = F !DIFile nodes
+     3+F               = !DINamespace (one per module)
+     3+F+1             = !{null}
+     3+F+2             = !DISubroutineType(types: !{null})
+     3+F+3..3+F+3+NBT-1 = NBT !DIBasicType nodes
+     spBase=3+F+3+NBT  = distinct !DISubprogram[0]
+     spBase+1          = !DILocation[0]
+     spBase+2k, spBase+2k+1 = subprogram/location for k-th proc
+     varBase = spBase+2*P  = !DILocalVariable[0..V-1]  *)
 PROCEDURE BuildDebugInfo(m: MSIR.Module) =
-  VAR metaN: INTEGER := 3;   (* 0,1,2 are reserved for flags + CU *)
+  VAR metaN: INTEGER := 3;   (* 0,1,2 reserved for flags + CU *)
   BEGIN
     dbgEnabled := FALSE;
     dbgEntryN  := 0;
     dbgFileN   := 0;
+    dbgVarN    := 0;
+    dbgNsIdx   := -1;
+    dbgNlIdx   := -1;
+    dbgStIdx   := -1;
+    dbgBtBase  := -1;
+
     (* First pass: collect unique source files. *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       VAR p := MSIR.ModuleProc(m, i);
@@ -1442,7 +1541,13 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
       END;
     END;
     IF NOT dbgEnabled THEN RETURN END;
-    INC(metaN, 2);    (* reserve null-list and shared subtype *)
+
+    (* Reserve namespace, null-list, subroutine-type, and basic-type slots. *)
+    dbgNsIdx  := metaN;  INC(metaN);
+    dbgNlIdx  := metaN;  INC(metaN);
+    dbgStIdx  := metaN;  INC(metaN);
+    dbgBtBase := metaN;  INC(metaN, NBT);
+
     (* Second pass: assign per-proc DISubprogram + DILocation indices. *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       VAR p := MSIR.ModuleProc(m, i);
@@ -1457,44 +1562,125 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
         END;
       END;
     END;
+
+    (* Third pass: collect alloca instructions for DILocalVariable entries.
+       Each alloca in a proc with debug info that has a non-internal name gets
+       a DILocalVariable node.  We use the proc's source line as a fallback
+       since per-variable line info is not yet threaded through MSIR. *)
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      VAR p       := MSIR.ModuleProc(m, i);
+          spIdx   := GetProcMetaIdx(p);
+          fileIdx := GetProcFileIdx(p);
+          pline   := MSIR.ProcSrcLine(p);
+      BEGIN
+        IF spIdx >= 0 THEN
+          FOR bi := 0 TO MSIR.ProcBlockCount(p) - 1 DO
+            VAR b := MSIR.ProcBlock(p, bi);
+            BEGIN
+              FOR ii := 0 TO MSIR.BlockInsnCount(b) - 1 DO
+                VAR insn := MSIR.BlockInsn(b, ii);
+                BEGIN
+                  IF MSIR.InsnOp(insn) = MSIR.Op.Alloca THEN
+                    VAR res  := MSIR.InsnResult(insn);
+                        nm   := MSIR.ValueName(res);
+                        elt  := MSIR.InsnTargetType(insn);
+                        btI  := BTypeIdx(MSIR.Kind(elt));
+                    BEGIN
+                      (* Only track allocas with a recognised type.
+                         DILocalVariable nodes without a type crash LLVM 22's
+                         DWARF emitter when combined with @llvm.dbg.declare. *)
+                      IF NOT IsInternalVarName(nm)
+                         AND btI >= 0
+                         AND dbgVarN < MaxDbgVars
+                      THEN
+                        dbgVars[dbgVarN].allocaVal := res;
+                        dbgVars[dbgVarN].varName   := StripVarName(nm);
+                        dbgVars[dbgVarN].spIdx     := spIdx;
+                        dbgVars[dbgVarN].fileIdx   := fileIdx;
+                        dbgVars[dbgVarN].line      := pline;
+                        dbgVars[dbgVarN].btIdx     := btI;
+                        dbgVars[dbgVarN].metaIdx   := metaN;
+                        INC(dbgVarN);
+                        INC(metaN);
+                      END;
+                    END;
+                  END;
+                END;
+              END;
+            END;
+          END;
+        END;
+      END;
+    END;
   END BuildDebugInfo;
 
 (* Emit all DWARF metadata nodes at the end of the module .ll output. *)
 PROCEDURE EmitDebugMetadata(wr: Wr.T) =
-  VAR nullListIdx  := 3 + dbgFileN;
-      sharedTypeIdx := 3 + dbgFileN + 1;
-      cuFileIdx    : INTEGER;
-      dir, base    : TEXT;
+  CONST
+    (* name / DW_ATE encoding / bit size for the NBT fixed basic types.
+       Indices must match BTypeIdx().
+       Slot 8 = ADDRESS: used for Ptr/GcRef/GcSlot allocas — ensures every
+       DILocalVariable that gets an @llvm.dbg.declare call has a type,
+       which is required by LLVM 22's DWARF emitter. *)
+    BName = ARRAY [0..NBT-1] OF TEXT {
+      "INTEGER", "CARDINAL", "INTEGER32", "CARDINAL32",
+      "BOOLEAN", "REAL",     "LONGREAL",  "CHAR",    "ADDRESS" };
+    BAte  = ARRAY [0..NBT-1] OF TEXT {
+      "DW_ATE_signed",      "DW_ATE_unsigned",     "DW_ATE_signed",       "DW_ATE_unsigned",
+      "DW_ATE_boolean",     "DW_ATE_float",        "DW_ATE_float",        "DW_ATE_unsigned_char",
+      "DW_ATE_address" };
+    BBits = ARRAY [0..NBT-1] OF INTEGER { 64, 64, 32, 32, 1, 32, 64, 8, 64 };
+  VAR cuFileIdx: INTEGER;
+      dir, base: TEXT;
   BEGIN
     IF dbgFileN = 0 OR dbgEntryN = 0 THEN RETURN END;
     cuFileIdx := dbgFiles[0].metaIdx;
     Wr.PutText(wr, "\n; DWARF debug metadata\n");
-    (* DISubprogram nodes for each proc that has source info. *)
+
+    (* DISubprogram nodes: name = short display name, linkageName = mangled linker name,
+       scope = DINamespace so LLDB exposes Module::Proc lookup. *)
     FOR k := 0 TO dbgEntryN - 1 DO
       VAR p       := dbgEntries[k].proc;
           spIdx   := dbgEntries[k].metaIdx;
-          pname   := MSIR.ProcName(p);
+          dispName := MSIR.ProcName(p);
+          mangName := LLSymbol(p);
           fileIdx := GetProcFileIdx(p);
           line    := MSIR.ProcSrcLine(p);
       BEGIN
         Wr.PutText(wr, "!" & Fmt.Int(spIdx)
-          & " = distinct !DISubprogram(name: \""     & pname
-          & "\", linkageName: \""                    & pname
-          & "\", scope: !"                           & Fmt.Int(fileIdx)
+          & " = distinct !DISubprogram(name: \""     & dispName
+          & "\", linkageName: \""                    & mangName
+          & "\", scope: !"                           & Fmt.Int(dbgNsIdx)
           & ", file: !"                              & Fmt.Int(fileIdx)
           & ", line: "                               & Fmt.Int(line)
-          & ", type: !"                              & Fmt.Int(sharedTypeIdx)
+          & ", type: !"                              & Fmt.Int(dbgStIdx)
           & ", scopeLine: "                          & Fmt.Int(line)
           & ", unit: !2, spFlags: DISPFlagDefinition)\n");
       END;
     END;
-    (* DILocation(line:0) nodes — one per proc; used as !dbg on call/invoke
-       instructions to satisfy LLVM's "inlinable call must have !dbg" check. *)
+
+    (* DILocation(line:0) nodes — one per proc, used as !dbg on call/invoke
+       to satisfy LLVM's "inlinable call must have !dbg" check. *)
     FOR k := 0 TO dbgEntryN - 1 DO
       Wr.PutText(wr, "!" & Fmt.Int(dbgEntries[k].locIdx)
         & " = !DILocation(line: 0, column: 0, scope: !"
         & Fmt.Int(dbgEntries[k].metaIdx) & ")\n");
     END;
+
+    (* DILocalVariable nodes — one per tracked alloca (all have btIdx >= 0). *)
+    FOR j := 0 TO dbgVarN - 1 DO
+      VAR e := dbgVars[j];
+      BEGIN
+        Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+          & " = !DILocalVariable(name: \""   & e.varName
+          & "\", scope: !"                   & Fmt.Int(e.spIdx)
+          & ", file: !"                      & Fmt.Int(e.fileIdx)
+          & ", line: "                       & Fmt.Int(e.line)
+          & ", type: !"                      & Fmt.Int(dbgBtBase + e.btIdx)
+          & ")\n");
+      END;
+    END;
+
     (* DIFile nodes. *)
     FOR j := 0 TO dbgFileN - 1 DO
       SplitPath(dbgFiles[j].name, dir, base);
@@ -1502,10 +1688,25 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
         & " = !DIFile(filename: \"" & base
         & "\", directory: \""       & dir & "\")\n");
     END;
-    (* Shared void-return type. *)
-    Wr.PutText(wr, "!" & Fmt.Int(nullListIdx)   & " = !{null}\n");
-    Wr.PutText(wr, "!" & Fmt.Int(sharedTypeIdx)
-      & " = !DISubroutineType(types: !" & Fmt.Int(nullListIdx) & ")\n");
+
+    (* DINamespace — wraps all procs in the module so LLDB exposes Module::Proc. *)
+    Wr.PutText(wr, "!" & Fmt.Int(dbgNsIdx)
+      & " = !DINamespace(name: \""  & MSIR.ModuleName(curEmitModule)
+      & "\", scope: !2)\n");
+
+    (* Null-list and shared void-return subroutine type. *)
+    Wr.PutText(wr, "!" & Fmt.Int(dbgNlIdx) & " = !{null}\n");
+    Wr.PutText(wr, "!" & Fmt.Int(dbgStIdx)
+      & " = !DISubroutineType(types: !" & Fmt.Int(dbgNlIdx) & ")\n");
+
+    (* Fixed set of DIBasicType nodes (indices BTypeIdx → btBase+k). *)
+    FOR k := 0 TO NBT - 1 DO
+      Wr.PutText(wr, "!" & Fmt.Int(dbgBtBase + k)
+        & " = !DIBasicType(name: \""  & BName[k]
+        & "\", size: "                & Fmt.Int(BBits[k])
+        & ", encoding: "              & BAte[k]  & ")\n");
+    END;
+
     (* Compile unit and module-level flags. *)
     Wr.PutText(wr, "!2 = distinct !DICompileUnit("
       & "language: DW_LANG_Modula3, file: !" & Fmt.Int(cuFileIdx)
@@ -2416,6 +2617,11 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     (* Pre-assign DWARF metadata indices before emitting any define lines
        so that forward !dbg references are correct. *)
     BuildDebugInfo(m);
+
+    (* Declare the llvm.dbg.declare intrinsic when variable debug info is present. *)
+    IF dbgEnabled AND dbgVarN > 0 THEN
+      Wr.PutText(wr, "declare void @llvm.dbg.declare(metadata, metadata, metadata)\n\n");
+    END;
 
     (* internal proc definitions *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
