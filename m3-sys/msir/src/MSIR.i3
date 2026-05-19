@@ -164,6 +164,10 @@ PROCEDURE ProcGetLinkage(p: Proc): Linkage;
 PROCEDURE ProcSetCallingConvention(p: Proc;  cc: CallingConvention);
 PROCEDURE ProcGetCallingConvention(p: Proc): CallingConvention;
 
+PROCEDURE ProcSetSrcLoc(p: Proc;  file: TEXT;  line: INTEGER);
+PROCEDURE ProcSrcFile(p: Proc): TEXT;      (* NIL if no location recorded *)
+PROCEDURE ProcSrcLine(p: Proc): INTEGER;   (* 0 if no location recorded *)
+
 PROCEDURE ProcName(p: Proc): TEXT;
 PROCEDURE ProcParamCount(p: Proc): INTEGER;
 PROCEDURE ProcParam    (p: Proc;  i: INTEGER): Value;

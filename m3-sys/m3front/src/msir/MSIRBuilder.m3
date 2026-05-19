@@ -5,6 +5,7 @@ IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
 IMPORT Expr, ArrayExpr, ArrayType;
 IMPORT PackedType, TInt;
+IMPORT Scanner;
 
 CONST MaxVarMap    = 64;
 CONST MaxExitStack = 16;
@@ -278,6 +279,13 @@ PROCEDURE BeginProc(name: TEXT;
       MSIR.ProcAddBlock(curProc, curBlock);
       IF NOT isExternal THEN
         MSIR.ProcSetLinkage(curProc, MSIR.Linkage.Internal);
+      END;
+      VAR srcFile: TEXT;  srcLine: INTEGER;
+      BEGIN
+        Scanner.Here(srcFile, srcLine);
+        IF srcFile # NIL AND srcLine > 0 THEN
+          MSIR.ProcSetSrcLoc(curProc, srcFile, srcLine);
+        END;
       END;
 
       (* Hidden result ptr: first param for large-result procs. *)

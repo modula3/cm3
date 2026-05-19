@@ -607,6 +607,8 @@ REVEAL Proc = BRANDED "MSIR.Proc" REF RECORD
   noReturn:    BOOLEAN := FALSE;
   linkage:     Linkage := Linkage.External;
   cc:          CallingConvention := CallingConvention.M3;
+  srcFile:     TEXT    := NIL;   (* source filename; NIL = no location *)
+  srcLine:     INTEGER := 0;     (* 1-based line number; 0 = no location *)
 END;
 
 (*--------------------------------------------------------------- Envelope *)
@@ -760,6 +762,13 @@ PROCEDURE ProcSetCallingConvention(p: Proc;  cc: CallingConvention) =
   BEGIN p.cc := cc END ProcSetCallingConvention;
 PROCEDURE ProcGetCallingConvention(p: Proc): CallingConvention =
   BEGIN RETURN p.cc END ProcGetCallingConvention;
+
+PROCEDURE ProcSetSrcLoc(p: Proc;  file: TEXT;  line: INTEGER) =
+  BEGIN p.srcFile := file; p.srcLine := line END ProcSetSrcLoc;
+PROCEDURE ProcSrcFile(p: Proc): TEXT =
+  BEGIN RETURN p.srcFile END ProcSrcFile;
+PROCEDURE ProcSrcLine(p: Proc): INTEGER =
+  BEGIN RETURN p.srcLine END ProcSrcLine;
 
 PROCEDURE ProcAddEnvelope(p: Proc;  e: Envelope) =
   BEGIN

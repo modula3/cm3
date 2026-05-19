@@ -11,6 +11,27 @@ TYPE TCEntry = REF RECORD
   uids : REF ARRAY OF INTEGER;   (* type UIDs; last entry is 0 (ELSE) *)
 END;
 
+(*------------------------------------------------------ debug info state *)
+
+CONST MaxDbgFiles   = 64;
+CONST MaxDbgEntries = 2048;
+
+TYPE DbgFileEntry = RECORD name: TEXT; metaIdx: INTEGER END;
+TYPE DbgEntry     = RECORD
+  proc:    MSIR.Proc;
+  metaIdx: INTEGER;    (* !DISubprogram index *)
+  locIdx:  INTEGER;    (* !DILocation(line:0, scope:subprogram) index — satisfies
+                          LLVM's "inlinable call must have !dbg" verifier rule *)
+END;
+
+VAR
+  dbgFiles:      ARRAY [0..MaxDbgFiles-1]   OF DbgFileEntry;
+  dbgFileN:      INTEGER := 0;
+  dbgEntries:    ARRAY [0..MaxDbgEntries-1] OF DbgEntry;
+  dbgEntryN:     INTEGER := 0;
+  dbgEnabled:    BOOLEAN := FALSE;
+  curDbgLocIdx:  INTEGER := -1;   (* locIdx for the proc currently being emitted *)
+
 VAR
   auxN:          INTEGER     := 0;
   tcN:           INTEGER     := 0;   (* module-level counter for TYPECASE tables *)
@@ -891,7 +912,10 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             IF k > 0 THEN Wr.PutText(wr, ", ") END;
             LLTypedVal(wr, MSIR.InsnOperand(i, k));
           END;
-          Wr.PutText(wr, ")\n");
+          IF curDbgLocIdx >= 0
+            THEN Wr.PutText(wr, "), !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+            ELSE Wr.PutText(wr, ")\n");
+          END;
         END;
 
     | MSIR.Op.Invoke =>
@@ -916,7 +940,10 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, MSIR.BlockLabel(normalB));
           Wr.PutText(wr, " unwind label %");
           Wr.PutText(wr, MSIR.BlockLabel(unwindB));
-          Wr.PutText(wr, "\n");
+          IF curDbgLocIdx >= 0
+            THEN Wr.PutText(wr, ", !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+            ELSE Wr.PutText(wr, "\n");
+          END;
         END;
 
     | MSIR.Op.PtrAdd =>
@@ -960,7 +987,10 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             IF k > 1 THEN Wr.PutText(wr, ", ") END;
             LLTypedVal(wr, MSIR.InsnOperand(i, k));
           END;
-          Wr.PutText(wr, ")\n");
+          IF curDbgLocIdx >= 0
+            THEN Wr.PutText(wr, "), !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+            ELSE Wr.PutText(wr, ")\n");
+          END;
         END;
 
     | MSIR.Op.InvokeIndirect =>
@@ -986,7 +1016,10 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, MSIR.BlockLabel(normalB));
           Wr.PutText(wr, " unwind label %");
           Wr.PutText(wr, MSIR.BlockLabel(unwindB));
-          Wr.PutText(wr, "\n");
+          IF curDbgLocIdx >= 0
+            THEN Wr.PutText(wr, ", !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+            ELSE Wr.PutText(wr, "\n");
+          END;
         END;
 
     | MSIR.Op.LandingPad =>
@@ -1308,6 +1341,182 @@ PROCEDURE EmitParamTypeList(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, ")");
   END EmitParamTypeList;
 
+(*------------------------------------------------------- debug info *)
+
+(* Split an absolute path into directory and basename.
+   "/a/b/Main.m3" → dir="/a/b", base="Main.m3".
+   A path with no slash → dir=".", base=path. *)
+PROCEDURE SplitPath(path: TEXT;  VAR dir: TEXT;  VAR base: TEXT) =
+  VAR last := -1;
+      n    := Text.Length(path);
+  BEGIN
+    FOR i := 0 TO n - 1 DO
+      IF Text.GetChar(path, i) = '/' THEN last := i END;
+    END;
+    IF last < 0 THEN
+      dir  := ".";
+      base := path;
+    ELSE
+      dir  := Text.Sub(path, 0, last);
+      base := Text.Sub(path, last + 1);
+    END;
+  END SplitPath;
+
+(* Return the metadata index for 'file', adding it if not yet seen.
+   nextMetaN is incremented only when a new file is registered. *)
+PROCEDURE GetOrAddDbgFile(file: TEXT;  VAR nextMetaN: INTEGER): INTEGER =
+  BEGIN
+    FOR i := 0 TO dbgFileN - 1 DO
+      IF Text.Equal(dbgFiles[i].name, file) THEN
+        RETURN dbgFiles[i].metaIdx;
+      END;
+    END;
+    IF dbgFileN >= MaxDbgFiles THEN RETURN -1 END;
+    VAR idx := nextMetaN;
+    BEGIN
+      dbgFiles[dbgFileN].name    := file;
+      dbgFiles[dbgFileN].metaIdx := idx;
+      INC(dbgFileN);
+      INC(nextMetaN);
+      RETURN idx;
+    END;
+  END GetOrAddDbgFile;
+
+(* Return the DIFile metadata index for the given proc's srcFile,
+   or dbgFiles[0].metaIdx as a fallback. *)
+PROCEDURE GetProcFileIdx(p: MSIR.Proc): INTEGER =
+  VAR f := MSIR.ProcSrcFile(p);
+  BEGIN
+    IF f # NIL THEN
+      FOR i := 0 TO dbgFileN - 1 DO
+        IF Text.Equal(dbgFiles[i].name, f) THEN RETURN dbgFiles[i].metaIdx END;
+      END;
+    END;
+    IF dbgFileN > 0 THEN RETURN dbgFiles[0].metaIdx END;
+    RETURN -1;
+  END GetProcFileIdx;
+
+(* Return the DISubprogram metadata index for proc p, or -1 if not recorded. *)
+PROCEDURE GetProcMetaIdx(p: MSIR.Proc): INTEGER =
+  BEGIN
+    FOR i := 0 TO dbgEntryN - 1 DO
+      IF dbgEntries[i].proc = p THEN RETURN dbgEntries[i].metaIdx END;
+    END;
+    RETURN -1;
+  END GetProcMetaIdx;
+
+(* Return the DILocation(line:0) index for proc p, or -1 if not recorded. *)
+PROCEDURE GetProcLocIdx(p: MSIR.Proc): INTEGER =
+  BEGIN
+    FOR i := 0 TO dbgEntryN - 1 DO
+      IF dbgEntries[i].proc = p THEN RETURN dbgEntries[i].locIdx END;
+    END;
+    RETURN -1;
+  END GetProcLocIdx;
+
+(* Pre-pass: assign metadata indices to all procs that have source locations.
+   Index layout (all module-global):
+     0 = !{i32 2, !"Dwarf Version", i32 4}
+     1 = !{i32 2, !"Debug Info Version", i32 3}
+     2 = distinct !DICompileUnit(...)
+     3 .. 3+nFiles-1  = !DIFile nodes
+     3+nFiles         = !{null}  (void types list)
+     3+nFiles+1       = !DISubroutineType(types: !{null})
+     3+nFiles+2+k     = distinct !DISubprogram for k-th proc with src info *)
+PROCEDURE BuildDebugInfo(m: MSIR.Module) =
+  VAR metaN: INTEGER := 3;   (* 0,1,2 are reserved for flags + CU *)
+  BEGIN
+    dbgEnabled := FALSE;
+    dbgEntryN  := 0;
+    dbgFileN   := 0;
+    (* First pass: collect unique source files. *)
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      VAR p := MSIR.ModuleProc(m, i);
+          f := MSIR.ProcSrcFile(p);
+          l := MSIR.ProcSrcLine(p);
+      BEGIN
+        IF f # NIL AND l > 0 THEN
+          dbgEnabled := TRUE;
+          EVAL GetOrAddDbgFile(f, metaN);
+        END;
+      END;
+    END;
+    IF NOT dbgEnabled THEN RETURN END;
+    INC(metaN, 2);    (* reserve null-list and shared subtype *)
+    (* Second pass: assign per-proc DISubprogram + DILocation indices. *)
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      VAR p := MSIR.ModuleProc(m, i);
+          f := MSIR.ProcSrcFile(p);
+          l := MSIR.ProcSrcLine(p);
+      BEGIN
+        IF f # NIL AND l > 0 AND dbgEntryN < MaxDbgEntries THEN
+          dbgEntries[dbgEntryN].proc    := p;
+          dbgEntries[dbgEntryN].metaIdx := metaN;  INC(metaN);
+          dbgEntries[dbgEntryN].locIdx  := metaN;  INC(metaN);
+          INC(dbgEntryN);
+        END;
+      END;
+    END;
+  END BuildDebugInfo;
+
+(* Emit all DWARF metadata nodes at the end of the module .ll output. *)
+PROCEDURE EmitDebugMetadata(wr: Wr.T) =
+  VAR nullListIdx  := 3 + dbgFileN;
+      sharedTypeIdx := 3 + dbgFileN + 1;
+      cuFileIdx    : INTEGER;
+      dir, base    : TEXT;
+  BEGIN
+    IF dbgFileN = 0 OR dbgEntryN = 0 THEN RETURN END;
+    cuFileIdx := dbgFiles[0].metaIdx;
+    Wr.PutText(wr, "\n; DWARF debug metadata\n");
+    (* DISubprogram nodes for each proc that has source info. *)
+    FOR k := 0 TO dbgEntryN - 1 DO
+      VAR p       := dbgEntries[k].proc;
+          spIdx   := dbgEntries[k].metaIdx;
+          pname   := MSIR.ProcName(p);
+          fileIdx := GetProcFileIdx(p);
+          line    := MSIR.ProcSrcLine(p);
+      BEGIN
+        Wr.PutText(wr, "!" & Fmt.Int(spIdx)
+          & " = distinct !DISubprogram(name: \""     & pname
+          & "\", linkageName: \""                    & pname
+          & "\", scope: !"                           & Fmt.Int(fileIdx)
+          & ", file: !"                              & Fmt.Int(fileIdx)
+          & ", line: "                               & Fmt.Int(line)
+          & ", type: !"                              & Fmt.Int(sharedTypeIdx)
+          & ", scopeLine: "                          & Fmt.Int(line)
+          & ", unit: !2, spFlags: DISPFlagDefinition)\n");
+      END;
+    END;
+    (* DILocation(line:0) nodes — one per proc; used as !dbg on call/invoke
+       instructions to satisfy LLVM's "inlinable call must have !dbg" check. *)
+    FOR k := 0 TO dbgEntryN - 1 DO
+      Wr.PutText(wr, "!" & Fmt.Int(dbgEntries[k].locIdx)
+        & " = !DILocation(line: 0, column: 0, scope: !"
+        & Fmt.Int(dbgEntries[k].metaIdx) & ")\n");
+    END;
+    (* DIFile nodes. *)
+    FOR j := 0 TO dbgFileN - 1 DO
+      SplitPath(dbgFiles[j].name, dir, base);
+      Wr.PutText(wr, "!" & Fmt.Int(dbgFiles[j].metaIdx)
+        & " = !DIFile(filename: \"" & base
+        & "\", directory: \""       & dir & "\")\n");
+    END;
+    (* Shared void-return type. *)
+    Wr.PutText(wr, "!" & Fmt.Int(nullListIdx)   & " = !{null}\n");
+    Wr.PutText(wr, "!" & Fmt.Int(sharedTypeIdx)
+      & " = !DISubroutineType(types: !" & Fmt.Int(nullListIdx) & ")\n");
+    (* Compile unit and module-level flags. *)
+    Wr.PutText(wr, "!2 = distinct !DICompileUnit("
+      & "language: DW_LANG_Modula3, file: !" & Fmt.Int(cuFileIdx)
+      & ", producer: \"CM3 MSIR\", isOptimized: false"
+      & ", runtimeVersion: 0, emissionKind: FullDebug)\n");
+    Wr.PutText(wr, "!0 = !{i32 2, !\"Dwarf Version\", i32 4}\n");
+    Wr.PutText(wr, "!1 = !{i32 2, !\"Debug Info Version\", i32 3}\n");
+    Wr.PutText(wr, "!llvm.module.flags = !{!0, !1}\n");
+    Wr.PutText(wr, "!llvm.dbg.cu = !{!2}\n");
+  END EmitDebugMetadata;
+
 (*------------------------------------------------------- proc emission *)
 
 PROCEDURE HasInvoke(p: MSIR.Proc): BOOLEAN =
@@ -1360,11 +1569,18 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
     IF HasInvoke(p) THEN
       Wr.PutText(wr, " personality ptr @__gxx_personality_v0");
     END;
+    VAR dbgIdx := GetProcMetaIdx(p); BEGIN
+      IF dbgIdx >= 0 THEN
+        Wr.PutText(wr, " !dbg !" & Fmt.Int(dbgIdx));
+      END;
+    END;
     Wr.PutText(wr, " {\n");
 
+    curDbgLocIdx := GetProcLocIdx(p);
     FOR bi := 0 TO nb - 1 DO
       EmitBlock(wr, MSIR.ProcBlock(p, bi));
     END;
+    curDbgLocIdx := -1;
 
     Wr.PutText(wr, "}\n");
   END EmitProc;
@@ -2197,6 +2413,10 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
 
+    (* Pre-assign DWARF metadata indices before emitting any define lines
+       so that forward !dbg references are correct. *)
+    BuildDebugInfo(m);
+
     (* internal proc definitions *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       EmitProc(wr, MSIR.ModuleProc(m, i));
@@ -2255,6 +2475,12 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
         END;
       END;
       pendingTC := NIL;
+    END;
+
+    (* DWARF debug metadata section — emitted last so all forward !dbg
+       refs in define lines are satisfied by the time the assembler sees them. *)
+    IF dbgEnabled THEN
+      EmitDebugMetadata(wr);
     END;
   END Module;
 
