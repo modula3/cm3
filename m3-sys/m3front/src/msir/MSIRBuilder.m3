@@ -106,7 +106,7 @@ PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
     | MSIR.TypeKind.I1,  MSIR.TypeKind.I8,  MSIR.TypeKind.I16, MSIR.TypeKind.I32,
       MSIR.TypeKind.I64, MSIR.TypeKind.W8,  MSIR.TypeKind.W16, MSIR.TypeKind.W32,
       MSIR.TypeKind.W64, MSIR.TypeKind.F32, MSIR.TypeKind.F64, MSIR.TypeKind.F128,
-      MSIR.TypeKind.Ptr  => RETURN TRUE;
+      MSIR.TypeKind.Ptr, MSIR.TypeKind.Enum => RETURN TRUE;
     ELSE RETURN FALSE;
     END;
   END IsScalarType;

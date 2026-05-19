@@ -29,6 +29,7 @@ TYPE TypeKind = {
   FixedArray,                         (* ARRAY [lo..hi] OF T: contiguous storage *)
   Subrange,                           (* parent type T constrained to [lo..hi] *)
   Set,                                (* set with element type and domain [lo..hi] *)
+  Enum,                               (* enumeration type: integer storage + label names for DWARF *)
   ProcType
 };
 
@@ -60,6 +61,11 @@ PROCEDURE THeapArray(rank: INTEGER;  elt: T): T;
 PROCEDURE TFixedArray(len: INTEGER;  elt: T): T;
 PROCEDURE TSubrange(parent: T;  lo, hi: INTEGER): T;
 PROCEDURE TSet(elt: T;  lo, hi: INTEGER): T;
+PROCEDURE TEnum(name: TEXT;  bits: INTEGER;  READONLY labels: ARRAY OF TEXT): T;
+(* Enum: lowers to iN in LLVM IR; carries label names for DW_TAG_enumeration_type. *)
+
+PROCEDURE EnumLabelCount(t: T): INTEGER;
+PROCEDURE EnumLabel(t: T;  i: INTEGER): TEXT;
 
 (* Landing-pad aggregate: { ptr, i32 } — the LLVM EH landingpad result type. *)
 PROCEDURE TLandingPad(): T;

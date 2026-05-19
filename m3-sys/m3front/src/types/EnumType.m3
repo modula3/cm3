@@ -105,6 +105,13 @@ PROCEDURE NumElts (t: Type.T): INTEGER =
     RETURN p.n_elts;
   END NumElts;
 
+PROCEDURE EltList (t: Type.T): Value.T =
+  VAR p := Reduce (t);
+  BEGIN
+    IF p = NIL OR p.scope = NIL THEN RETURN NIL END;
+    RETURN Scope.ToList (p.scope);
+  END EltList;
+
 (************************************************************************)
 
 PROCEDURE Create (elts: Scope.T): P =

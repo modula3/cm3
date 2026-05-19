@@ -21,6 +21,7 @@ REVEAL T = BRANDED "MSIR.T" REF RECORD
   arrayLen:         INTEGER              := 0;    (* FixedArray length *)
   subrLo, subrHi:   INTEGER              := 0;    (* Subrange / Set bounds *)
   typeUID:          INTEGER              := 0;    (* CM3 GlobalUID fingerprint; 0 = unset *)
+  labels:           REF ARRAY OF TEXT   := NIL;  (* Enum label names, index = ordinal *)
 END;
 
 PROCEDURE NewType(k: TypeKind): T =
@@ -251,10 +252,31 @@ PROCEDURE BitWidth(t: T): INTEGER =
     | TypeKind.I8, TypeKind.I16, TypeKind.I32, TypeKind.I64,
       TypeKind.IWide,
       TypeKind.W8, TypeKind.W16, TypeKind.W32, TypeKind.W64,
-      TypeKind.F32, TypeKind.F64, TypeKind.F128 => RETURN t.bits;
+      TypeKind.F32, TypeKind.F64, TypeKind.F128,
+      TypeKind.Enum => RETURN t.bits;
     ELSE RETURN -1
     END;
   END BitWidth;
+
+PROCEDURE TEnum(name: TEXT;  bits: INTEGER;  READONLY labels: ARRAY OF TEXT): T =
+  VAR t  := NewType(TypeKind.Enum);
+      ls := NEW(REF ARRAY OF TEXT, NUMBER(labels));
+  BEGIN
+    t.structName := name;
+    t.bits       := bits;
+    FOR i := FIRST(labels) TO LAST(labels) DO ls[i] := labels[i] END;
+    t.labels := ls;
+    RETURN t;
+  END TEnum;
+
+PROCEDURE EnumLabelCount(t: T): INTEGER =
+  BEGIN
+    IF t.labels = NIL THEN RETURN 0 END;
+    RETURN NUMBER(t.labels^);
+  END EnumLabelCount;
+
+PROCEDURE EnumLabel(t: T;  i: INTEGER): TEXT =
+  BEGIN RETURN t.labels[i] END EnumLabel;
 
 PROCEDURE SetTypeUID(t: T; uid: INTEGER) = BEGIN t.typeUID := uid END SetTypeUID;
 PROCEDURE TypeUID(t: T): INTEGER = BEGIN RETURN t.typeUID END TypeUID;

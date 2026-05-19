@@ -70,6 +70,9 @@ PROCEDURE Type(wr: Wr.T;  t: MSIR.T) =
         Wr.PutText(wr, ", ");
         Wr.PutText(wr, Fmt.Int(MSIR.SetHi(t)));
         Wr.PutText(wr, ">");
+    | MSIR.TypeKind.Enum =>
+        Wr.PutText(wr, "enum ");
+        Wr.PutText(wr, MSIR.StructName(t));
     | MSIR.TypeKind.ProcType =>
         Wr.PutText(wr, "proc(...)");          (* v0: terse *)
     END;

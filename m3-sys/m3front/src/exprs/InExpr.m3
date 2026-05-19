@@ -190,6 +190,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     elt := Expr.CompileMSIR (p.a);
     IF elt = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
+    (* Enum-typed element values are integers in representation; retype to TI(N)
+       so that arithmetic operations receive consistently-kinded operands.
+       RetypeValue emits no instruction — TEnum and TI(N) both lower to iN. *)
+    IF MSIR.Kind (MSIR.ValueType (elt)) = MSIR.TypeKind.Enum THEN
+      elt := MSIR.RetypeValue (elt, MSIR.TI (MSIR.BitWidth (MSIR.ValueType (elt))));
+    END;
 
     (* Work in the wider of the set type and the element type so that all
        operands to binary instructions have the same type.  setVal is

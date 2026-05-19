@@ -43,22 +43,24 @@ TYPE DbgTypeEntry = RECORD
   metaIdx:       INTEGER;   (* !DICompositeType node index *)
   elemsTupleIdx: INTEGER;   (* !{child1, child2, ...} tuple node index *)
   baseTypeRef:   INTEGER;   (* FixedArray: element type metaIdx; Struct: -1 *)
-  kind:          INTEGER;   (* 0 = Struct, 1 = FixedArray *)
+  kind:          INTEGER;   (* 0 = Struct, 1 = FixedArray, 2 = Enum *)
   childBase:     INTEGER;   (* first index in dbgChildren[] *)
   childCount:    INTEGER;
   totalBits:     INTEGER;   (* total size in bits *)
 END;
 TYPE DbgChildEntry = RECORD
-  isSubrange: BOOLEAN;
-  (* member fields (isSubrange = FALSE): *)
-  name:       TEXT;
-  typeRef:    INTEGER;   (* base type metadata index *)
-  size:       INTEGER;   (* field size in bits *)
-  offset:     INTEGER;   (* field bit offset in containing struct *)
-  (* subrange fields (isSubrange = TRUE): *)
-  count:      INTEGER;   (* FixedArray element count *)
+  kind:    INTEGER;      (* 0 = DW_TAG_member, 1 = DISubrange, 2 = DIEnumerator *)
+  (* member (kind=0): *)
+  name:    TEXT;
+  typeRef: INTEGER;      (* base type metadata index *)
+  size:    INTEGER;      (* field size in bits *)
+  offset:  INTEGER;      (* field bit offset in containing struct *)
+  (* subrange (kind=1): *)
+  count:   INTEGER;      (* FixedArray element count *)
+  (* enumerator (kind=2): *)
+  value:   INTEGER;      (* ordinal value *)
   (* shared: *)
-  metaIdx:    INTEGER;
+  metaIdx: INTEGER;
 END;
 
 VAR
@@ -210,6 +212,9 @@ PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
         Wr.PutText(wr, "]");
     | MSIR.TypeKind.Subrange =>
         LLType(wr, MSIR.SubrangeParent(t));
+    | MSIR.TypeKind.Enum =>
+        Wr.PutText(wr, "i");
+        Wr.PutText(wr, Fmt.Int(MSIR.BitWidth(t)));
     | MSIR.TypeKind.ProcType =>
         Wr.PutText(wr, "ptr");  (* function pointer *)
     ELSE
@@ -1576,6 +1581,7 @@ PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     CASE MSIR.Kind(t) OF
     | MSIR.TypeKind.Struct     => RETURN GetOrBuildStructType(t, metaN);
     | MSIR.TypeKind.FixedArray => RETURN GetOrBuildFixedArrayType(t, metaN);
+    | MSIR.TypeKind.Enum       => RETURN GetOrBuildEnumType(t, metaN);
     ELSE RETURN dbgBtBase + 8;  (* ADDRESS fallback *)
     END;
   END GetDbgTypeRef;
@@ -1619,7 +1625,7 @@ PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
             fBits := TotalBitsOf(f.type);
         BEGIN
           IF dbgChildN < MaxDbgChildren THEN
-            dbgChildren[dbgChildN].isSubrange := FALSE;
+            dbgChildren[dbgChildN].kind       := 0;   (* member *)
             dbgChildren[dbgChildN].name       := f.name;
             dbgChildren[dbgChildN].typeRef    := tRef;
             dbgChildren[dbgChildN].size       := fBits;
@@ -1668,8 +1674,8 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     dbgTypes[entry].baseTypeRef   := eltRef;
     (* One DISubrange child: count = len. *)
     IF dbgChildN < MaxDbgChildren THEN
-      dbgChildren[dbgChildN].isSubrange := TRUE;
-      dbgChildren[dbgChildN].count      := len;
+      dbgChildren[dbgChildN].kind  := 1;   (* subrange *)
+      dbgChildren[dbgChildN].count := len;
       dbgChildren[dbgChildN].metaIdx    := metaN;
       INC(dbgChildN);  INC(metaN);
       dbgTypes[entry].childCount := 1;
@@ -1679,6 +1685,50 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     dbgTypes[entry].totalBits := TotalBitsOf(t);
     RETURN dbgTypes[entry].metaIdx;
   END GetOrBuildFixedArrayType;
+
+PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
+  VAR entry: INTEGER;
+      n     := MSIR.EnumLabelCount(t);
+      uid   := MSIR.TypeUID(t);
+      nm    := MSIR.StructName(t);
+  BEGIN
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].kind = 2 THEN
+        VAR kt := dbgTypes[k].msirType;
+        BEGIN
+          IF kt = t THEN RETURN dbgTypes[k].metaIdx END;
+          IF uid # 0 AND MSIR.TypeUID(kt) = uid THEN RETURN dbgTypes[k].metaIdx END;
+          IF nm # NIL AND Text.Equal(MSIR.StructName(kt), nm)
+             AND MSIR.EnumLabelCount(kt) = n THEN
+            RETURN dbgTypes[k].metaIdx
+          END;
+        END;
+      END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    entry := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[entry].msirType      := t;
+    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[entry].baseTypeRef   := -1;
+    dbgTypes[entry].kind          := 2;  (* Enum *)
+    dbgTypes[entry].childBase     := dbgChildN;
+    VAR nEmitted := 0;
+    BEGIN
+      FOR i := 0 TO n - 1 DO
+        IF dbgChildN < MaxDbgChildren THEN
+          dbgChildren[dbgChildN].kind    := 2;   (* enumerator *)
+          dbgChildren[dbgChildN].name    := MSIR.EnumLabel(t, i);
+          dbgChildren[dbgChildN].value   := i;   (* ordinal = position *)
+          dbgChildren[dbgChildN].metaIdx := metaN;
+          INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+        END;
+      END;
+      dbgTypes[entry].childCount := nEmitted;
+      dbgTypes[entry].totalBits  := MSIR.BitWidth(t);
+    END;
+    RETURN dbgTypes[entry].metaIdx;
+  END GetOrBuildEnumType;
 
 PROCEDURE SplitPath(path: TEXT;  VAR dir: TEXT;  VAR base: TEXT) =
   VAR last := -1;
@@ -1988,7 +2038,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
                 & ", offset: " & Fmt.Int(ch.offset) & ")\n");
             END;
           END;
-        ELSE
+        ELSIF e.kind = 1 THEN
           (* FixedArray: DW_TAG_array_type with one DISubrange child *)
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
             & " = !DICompositeType(tag: DW_TAG_array_type");
@@ -2009,6 +2059,27 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
             BEGIN
               Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
                 & " = !DISubrange(count: " & Fmt.Int(ch.count) & ")\n");
+            END;
+          END;
+        ELSE
+          (* Enum: DW_TAG_enumeration_type with DIEnumerator children *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DICompositeType(tag: DW_TAG_enumeration_type"
+            & ", name: \""    & MSIR.StructName(e.msirType) & "\""
+            & ", size: "      & Fmt.Int(e.totalBits)
+            & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
+          Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
+          FOR c := 0 TO e.childCount - 1 DO
+            IF c > 0 THEN Wr.PutText(wr, ", ") END;
+            Wr.PutText(wr, "!" & Fmt.Int(dbgChildren[e.childBase + c].metaIdx));
+          END;
+          Wr.PutText(wr, "}\n");
+          FOR c := 0 TO e.childCount - 1 DO
+            VAR ch := dbgChildren[e.childBase + c];
+            BEGIN
+              Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
+                & " = !DIEnumerator(name: \"" & ch.name & "\""
+                & ", value: " & Fmt.Int(ch.value) & ")\n");
             END;
           END;
         END;

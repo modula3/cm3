@@ -3,6 +3,7 @@ MODULE MSIRType;
 IMPORT MSIR, Type, Int, LInt, Bool, Target;
 IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
 IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType, TInt;
+IMPORT EnumType;
 
 (* Per-module translation cache: maps base Type.T pointer → MSIR.T.
    Ensures repeated calls for the same M3 type return the same MSIR.T
@@ -72,7 +73,7 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
 
     | Type.Class.Enum =>
         IF info.size <= 0 THEN RETURN NIL END;
-        RETURN MSIR.TI(info.size);
+        RETURN TranslateEnum(base, typeName, info.size);
 
     | Type.Class.Real     => RETURN MSIR.TF(32);
     | Type.Class.Longreal => RETURN MSIR.TF(64);
@@ -140,6 +141,31 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
       RETURN NIL;
     END;
   END Translate;
+
+PROCEDURE TranslateEnum(t: Type.T;  name: TEXT;  bits: INTEGER): MSIR.T =
+  VAR n  := EnumType.NumElts(t);
+      ls := NEW(REF ARRAY OF TEXT, MAX(n, 0));
+      v  : Value.T;
+      i  : INTEGER := 0;
+  BEGIN
+    FOR k := 0 TO cacheN - 1 DO
+      IF cache[k].key = t THEN RETURN cache[k].val END;
+    END;
+    v := EnumType.EltList(t);
+    WHILE v # NIL AND i < n DO
+      ls[i] := M3ID.ToText(Value.CName(v));
+      v := v.next;  INC(i);
+    END;
+    VAR result := MSIR.TEnum(name, bits, ls^);
+    BEGIN
+      IF cacheN < MaxTypeCache THEN
+        cache[cacheN].key := t;
+        cache[cacheN].val := result;
+        INC(cacheN);
+      END;
+      RETURN result;
+    END;
+  END TranslateEnum;
 
 PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
   VAR

@@ -22,4 +22,7 @@ PROCEDURE LookUp (t: Type.T;  name: M3ID.T;  VAR value: Value.T): BOOLEAN;
 
 PROCEDURE NumElts (t: Type.T): INTEGER;
 
+PROCEDURE EltList (t: Type.T): Value.T;
+(* Returns the linked list of enum element values (Value.CName gives M3ID). *)
+
 END EnumType.
