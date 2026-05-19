@@ -3194,10 +3194,9 @@ CONST
   MI_link_state     = 10;
   MI_binder         = 11;
   MI_gc_flags       = 12;
-  MI_nFields        = 13;
 
 (* TRUE at each field index where the type is INTEGER (not ptr). *)
-CONST MIIsInt = ARRAY [0..MI_nFields-1] OF BOOLEAN {
+CONST MIIsInt = ARRAY [0..MSIR.MI_nFields-1] OF BOOLEAN {
   FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
   TRUE,   (* MI_link_state *)
   FALSE,
@@ -3217,8 +3216,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     bodyName   := "@" & modName & "__" & modName & "_M3";
     bodyExists := FALSE;
     ap         := Target.Address.bytes;   (* bytes per field slot *)
-    miBytes    := MI_nFields * ap;        (* RT0.ModuleInfo total size in bytes *)
-    nFields    := MI_nFields;
+    miBytes    := MSIR.MI_nFields * ap;   (* RT0.ModuleInfo total size in bytes *)
+    nFields    := MSIR.MI_nFields;
     nImports   := MSIR.ModuleImportBinderCount(m);
     fieldName  : TEXT;
     fieldType  : TEXT;

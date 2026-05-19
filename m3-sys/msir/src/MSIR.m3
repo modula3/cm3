@@ -4,10 +4,6 @@ MODULE MSIR;
 
 IMPORT RefSeq, Fmt, Text, Target, TFloat;
 
-(* RT0.ModuleInfo field count; all 13 fields are pointer-or-integer-sized,
-   no padding on any M3 target, so byte size = MI_nFields * Address.bytes. *)
-CONST MI_nFields = 13;
-
 (*------------------------------------------------------------------- Types *)
 
 REVEAL T = BRANDED "MSIR.T" REF RECORD

@@ -410,10 +410,14 @@ PROCEDURE GlobalValue(g: Global): Value;
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global);
 
+(* Number of fields in RT0.ModuleInfo; all are pointer-or-integer-sized,
+   so the struct byte size is MI_nFields * Target.Address.bytes. *)
+CONST MI_nFields = 13;
+
 (* Allocate space for a struct-embedded global in the module's @Mod_M3_info
    struct.  Returns the byte offset allocated; advances the internal cursor.
    byteSize is the size in bytes; byteAlign is the required byte alignment.
-   After MI_SIZE bytes of standard ModuleInfo fields, user globals follow. *)
+   User globals follow the standard MI_nFields * Address.bytes header. *)
 PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
                              byteAlign: INTEGER): INTEGER;
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER;
