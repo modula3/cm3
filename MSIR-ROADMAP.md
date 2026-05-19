@@ -247,9 +247,15 @@ entries. Enables function-name backtraces and function-entry breakpoints in
 
 **Known Phase 4 gaps** (tracked for future phases):
 
-| Gap | Detail |
-|---|---|
-| OBJECT types | VMT pointer not emitted as first `DW_TAG_member`; OBJECT variables get ADDRESS fallback |
+None — all composite-type DWARF is now emitted correctly.
+
+OBJECT types (complete, 2026-05-19): Variables of OBJECT type now get
+`DW_TAG_pointer_type` → `DW_TAG_structure_type` with a flat field list:
+`__vtable` at bit 0, all inherited fields (in super-chain order), then own
+fields; vtable and TEXT fields use ADDRESS. Type names are resolved via
+`ObjectType.UserName` (the `user_name` recorded by `NoteRefName`) so `Dog`
+and `Animal` appear as real names rather than hex UIDs. `GetOrBuildObjectStructType`
+(kind=4) and `GetOrBuildObjectPtrType` (kind=5) handle the two-level metadata.
 
 **Phase 5 — Optimized builds:**
 
@@ -314,7 +320,7 @@ conservative interior pointer points into.
 ## Test Infrastructure
 
 ```sh
-# Full end-to-end LLVM link test (149 checks)
+# Full end-to-end LLVM link test (181 checks)
 bash m3-sys/msir/test/run-llvm-link-test.sh
 
 # Standalone M3 program (RTLinker path)
