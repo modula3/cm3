@@ -139,31 +139,116 @@ Items marked [done] are fixed on the msir branch.
 the C backend (`M3_BACKEND_MODE = "C"`), and the backend choice should be
 explicit, not inferred from the EH model.
 
-The right approach mirrors the existing `StAloneLlvmObj`/`StAloneLlvmAsm`
-modes (9/10) which call the external `m3llvm` translator.  MSIR is the
-cm3-integrated replacement for m3llvm, so two new enum values sit naturally
-alongside them:
+#### Pipeline comparison
 
-| New value | String | Pipeline |
+`StAloneLlvmAsm` (the closest existing mode, "10") runs:
+```
+.m3 → RunM3Front → CM3 IR (.mc)
+        → RunM3Llvm (external m3llvm binary) → LLVM IR (.ll)
+          → [RunLlvmOpt] → RunLlcBack (llc) → .s → RunAsm → .o
+```
+
+MSIR bypasses M3CG and m3llvm entirely — m3front emits `.ll` directly:
+```
+.m3 → RunM3Front (MSIR emission active) → LLVM IR (.ll)
+        → [RunLlvmOpt] → RunLlcBack (clang/llc) → .o
+```
+
+Two new enum values sit naturally after the `StAloneLlvm` pair:
+
+| Value | String | Pipeline |
 |---|---|---|
-| `MSIRObj` ("11") | `"MSIRObj"` | m3front → MSIR → `.ll` → clang → `.o` |
-| `MSIRAsm` ("12") | `"MSIRAsm"` | m3front → MSIR → `.ll` → clang → `.s` → `.o` |
+| `MSIRObj` ("11") | `"MSIRObj"` | m3front → `.ll` → clang → `.o` |
+| `MSIRAsm` ("12") | `"MSIRAsm"` | m3front → `.ll` → clang → `.s` → `.o` |
 
-**Files to change:**
+#### Files to change
 
-| File | Change |
-|---|---|
-| `m3-sys/m3middle/src/Target.i3` | Add `MSIRObj`, `MSIRAsm` to `M3BackendMode_t`; add to `BackendModeStrings`; add `BackendMSIRSet` |
-| `m3-sys/cm3/src/Builder.m3` | Handle `BackendMSIRSet` in the compilation pipeline (activate MSIR emission flag, call clang on `.ll` output) |
-| `m3-sys/cm3/src/M3Backend.m3` | Route `MSIRObj`/`MSIRAsm` modes through MSIR emission rather than M3CG |
-| `m3-sys/cminstall/src/config/ARM64_DARWIN` | Opt-in: change `M3_BACKEND_MODE = "C"` → `"MSIRObj"` |
+**`m3-sys/m3middle/src/Target.i3`**
 
-**Constraint**: MSIR requires `ex_stack` (C++ EH personality).  Builder should
-emit a fatal error if `MSIRObj`/`MSIRAsm` is selected but `M3_USE_STACK_WALKER`
-is not TRUE.
+Add to `M3BackendMode_t` (after `StAloneLlvmAsm`):
+```modula3
+MSIRObj,   (* "11" — m3front emits LLVM IR; call compile_llvm → object *)
+MSIRAsm    (* "12" — m3front emits LLVM IR; call compile_llvm → asm → object *)
+```
+Add strings `"MSIRObj"`, `"MSIRAsm"` to `BackendModeStrings`.
+Add `BackendMSIRSet = SET OF M3BackendMode_t { MT.MSIRObj, MT.MSIRAsm }`.
 
-The C backend (`M3_BACKEND_MODE = "C"`) remains unchanged for all existing
-platforms; no existing config needs to change until opt-in.
+**`m3-sys/cm3/src/Builder.m3`** — `CompileM3` plan block
+
+Add two new cases alongside the `StAloneLlvm` ones:
+```modula3
+| Mode_t.MSIRObj =>
+    llvmIRName     := LlvmIRNameForUnit(u);
+    llvmIROptName  := LlvmIROptNameForUnit(u);
+    cm3OutName     := llvmIRName;   (* m3front writes .ll here *)
+    codeGenOutName := u.object;
+    DoRunLlc       := TRUE;
+    (* DoRunM3llvm = FALSE — no m3llvm step; MSIR emission IS the translator *)
+| Mode_t.MSIRAsm =>
+    llvmIRName     := LlvmIRNameForUnit(u);
+    llvmIROptName  := LlvmIROptNameForUnit(u);
+    cm3OutName     := llvmIRName;
+    codeGenOutName := AsmNameForUnit(u);
+    DoWriteAsm     := TRUE;
+    DoRunLlc       := TRUE;
+    DoRunAsm       := NOT boot;
+    asmName        := codeGenOutName;
+```
+
+Add `BackendMSIRSet` to the parallel-backend label and to the `CompileOne`
+dispatch (alongside `BackendStAloneLlvmSet` — both use `CompileM3llvm` for
+`UK.IC`/`UK.MC` units, since in MSIR mode that path is a no-op / not reached).
+
+**`m3-sys/m3front/src/msir/MSIREmit.m3`** — activation and output path
+
+`IsEnabled` currently checks only `RTParams.IsPresent("m3front-msir")`.  Add:
+```modula3
+enabled := RTParams.IsPresent("m3front-msir")
+        OR (Target.BackendMode IN Target.BackendMSIRSet);
+```
+
+Output path: currently `EndUnit` writes to `MSIR.ModuleName(curModule) & ".ll"`
+in the working directory.  For the integrated mode the builder expects the file
+at `LlvmIRNameForUnit(u)` (the path it set as `cm3OutName`).  Bridge via a new
+module-level variable:
+```modula3
+VAR llOutPath: TEXT := NIL;
+PROCEDURE SetLLOutPath(path: TEXT) = BEGIN llOutPath := path END SetLLOutPath;
+```
+Builder calls `MSIREmit.SetLLOutPath(llvmIRName)` in `ResetEnv` when the mode
+is in `BackendMSIRSet`; `EndUnit` writes to `llOutPath` when non-NIL, else the
+current default `<ModuleName>.ll`.  Export `SetLLOutPath` from `MSIREmit.i3`.
+
+**M3CG null backend**: In MSIR mode `Pass0_InitCodeGenerator` still opens an
+`M3CG.T` (m3front calls CG ops unconditionally).  Use the existing
+`M3CG_DoNothing.T` no-op backend; it discards all CG output and never opens
+a file.  `M3Backend.Open` already returns `M3CG_DoNothing.New()` when
+`object = NIL`; set `cm3OutName := NIL` for the M3CG side so no C file is
+opened.  (The `.ll` is written directly by `MSIREmit`, not via M3CG.)
+
+**`m3-sys/cm3/src/Builder.m3`** — validation
+
+In `GetConfig` (where `M3_BACKEND_MODE` is read), after setting
+`s.m3backend_mode`, add:
+```modula3
+IF s.m3backend_mode IN Target.BackendMSIRSet THEN
+  IF GetDefn(s, "M3_USE_STACK_WALKER") = NIL THEN
+    ConfigErr(s, "M3_BACKEND_MODE", "MSIRObj/MSIRAsm requires M3_USE_STACK_WALKER = TRUE");
+  END;
+END;
+```
+
+**`m3-sys/cminstall/src/config/ARM64_DARWIN`** — opt-in
+
+Change `M3_BACKEND_MODE = "C"` → `M3_BACKEND_MODE = "MSIRObj"` to activate
+the new path.  The C backend (`"C"`) remains the default for all other
+platforms; no other config changes until opt-in.
+
+#### Constraint
+
+MSIR requires `ex_stack` (C++ EH personality, `@__gxx_personality_v0`).
+Setting `M3_BACKEND_MODE = "MSIRObj"` without `M3_USE_STACK_WALKER = TRUE` is
+a fatal configuration error (detected at build startup).
 
 This is the gating item for LLVM optimizer integration and bootstrap.
 
