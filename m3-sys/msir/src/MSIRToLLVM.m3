@@ -2585,32 +2585,6 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 
 (*----------------------------------------------- TypeCell / ObjectTypeCell emission *)
 
-(* TypeCell layout (M3RT offsets, 64-bit, all byte values unless noted):
-   [0]  typecode       i64  (0, assigned by RTLinker.FixTypes)
-   [8]  selfID         i64  (M3FP.ToInt: XOR-fold of the 64-bit fingerprint)
-   [16] fp             i64  (Fingerprint.T bytes[0..7] in little-endian order)
-   [24] traced         i8   (1=traced)
-   [25] kind           i8   (6=Ref, 13=Obj)
-   [26] link_state     i8   (0=unlinked)
-   [27] dataAlignment  i8   (bits, e.g. 64 for INTEGER)
-   [28-31]             [4 x i8] padding (to align dataSize to 8 bytes)
-   [32] dataSize       i64  (bytes)
-   [40] type_map       ptr  (null)
-   [48] gc_map         ptr  (null)
-   [56] type_desc      ptr  (null)
-   [64] initProc       ptr  (null)
-   [72] brand          ptr  (null)
-   [80] name           ptr  (null)
-   [88] next           ptr  (→ next TypeDesc, or null)
-   ObjectTypeCell extends at [96]:
-   [96]  parentID        i64  (parent fingerprint)
-   [104] linkProc        ptr  (null; defaultMethods pre-set instead)
-   [112] dataOffset      i64  (bits: byte offset of field region, e.g. 64)
-   [120] methodOffset    i64  (0)
-   [128] methodSize      i64  (N * address bytes)
-   [136] defaultMethods  ptr  (→ vtable array)
-   [144] parent          ptr  (null for now) *)
-
 PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
   (* Emit TextLiteral.T globals for every string literal in the module.
      Layout of each @textlit_N:
@@ -2715,6 +2689,113 @@ PROCEDURE EmitConstArrays(wr: Wr.T;  m: MSIR.Module) =
     END;
   END EmitConstArrays;
 
+(* FieldKind: abstract category driving the RT0 struct layout walker.
+   Walker converts each kind to its LLVM type and natural-alignment size,
+   inserting [N x i8] padding fields where the ABI requires it. *)
+TYPE FieldKind = { I8, I64, IP, Ptr };
+
+(* Logical field indices for RT0.Typecell — no slots for padding. *)
+CONST
+  TC_typecode   = 0;   TC_selfID    = 1;   TC_fp         = 2;
+  TC_traced     = 3;   TC_kind      = 4;   TC_link_state = 5;
+  TC_dataAlign  = 6;   TC_dataSize  = 7;   TC_type_map   = 8;
+  TC_gc_map     = 9;   TC_type_desc = 10;  TC_initProc   = 11;
+  TC_brand_ptr  = 12;  TC_name      = 13;  TC_next       = 14;
+  TC_nBase      = 15;
+
+(* RT0.ObjectTypecell: Typecell base + 7 extension fields (absolute indices). *)
+CONST
+  OTC_parentID       = TC_nBase + 0;
+  OTC_linkProc       = TC_nBase + 1;
+  OTC_dataOffset     = TC_nBase + 2;
+  OTC_methodOffset   = TC_nBase + 3;
+  OTC_methodSize     = TC_nBase + 4;
+  OTC_defaultMethods = TC_nBase + 5;
+  OTC_parent         = TC_nBase + 6;
+  OTC_nFields        = TC_nBase + 7;
+
+(* RT0.ArrayTypecell: Typecell base + 2 extension fields (absolute indices). *)
+CONST
+  ATC_nDimensions = TC_nBase + 0;
+  ATC_elementSize = TC_nBase + 1;
+  ATC_nFields     = TC_nBase + 2;
+
+(* RT0.TypeLink field indices. *)
+CONST
+  TL_defn     = 0;
+  TL_typecode = 1;
+  TL_nFields  = 2;
+
+(* Field-kind arrays: one entry per logical field, parallel to field values.
+   Walker inserts alignment padding between fields automatically. *)
+CONST TCKinds = ARRAY [0 .. TC_nBase - 1] OF FieldKind {
+  FieldKind.IP,   (* typecode *)
+  FieldKind.IP,   (* selfID *)
+  FieldKind.I64,  (* fp *)
+  FieldKind.I8,   (* traced *)
+  FieldKind.I8,   (* kind *)
+  FieldKind.I8,   (* link_state *)
+  FieldKind.I8,   (* dataAlignment *)
+  FieldKind.IP,   (* dataSize *)
+  FieldKind.Ptr,  (* type_map *)
+  FieldKind.Ptr,  (* gc_map *)
+  FieldKind.Ptr,  (* type_desc *)
+  FieldKind.Ptr,  (* initProc *)
+  FieldKind.Ptr,  (* brand_ptr *)
+  FieldKind.Ptr,  (* name *)
+  FieldKind.Ptr   (* next *)
+};
+
+CONST OTCKinds = ARRAY [0 .. OTC_nFields - 1] OF FieldKind {
+  FieldKind.IP,   (* typecode *)
+  FieldKind.IP,   (* selfID *)
+  FieldKind.I64,  (* fp *)
+  FieldKind.I8,   (* traced *)
+  FieldKind.I8,   (* kind *)
+  FieldKind.I8,   (* link_state *)
+  FieldKind.I8,   (* dataAlignment *)
+  FieldKind.IP,   (* dataSize *)
+  FieldKind.Ptr,  (* type_map *)
+  FieldKind.Ptr,  (* gc_map *)
+  FieldKind.Ptr,  (* type_desc *)
+  FieldKind.Ptr,  (* initProc *)
+  FieldKind.Ptr,  (* brand_ptr *)
+  FieldKind.Ptr,  (* name *)
+  FieldKind.Ptr,  (* next *)
+  FieldKind.IP,   (* parentID *)
+  FieldKind.Ptr,  (* linkProc *)
+  FieldKind.IP,   (* dataOffset *)
+  FieldKind.IP,   (* methodOffset *)
+  FieldKind.IP,   (* methodSize *)
+  FieldKind.Ptr,  (* defaultMethods *)
+  FieldKind.Ptr   (* parent *)
+};
+
+CONST ATCKinds = ARRAY [0 .. ATC_nFields - 1] OF FieldKind {
+  FieldKind.IP,   (* typecode *)
+  FieldKind.IP,   (* selfID *)
+  FieldKind.I64,  (* fp *)
+  FieldKind.I8,   (* traced *)
+  FieldKind.I8,   (* kind *)
+  FieldKind.I8,   (* link_state *)
+  FieldKind.I8,   (* dataAlignment *)
+  FieldKind.IP,   (* dataSize *)
+  FieldKind.Ptr,  (* type_map *)
+  FieldKind.Ptr,  (* gc_map *)
+  FieldKind.Ptr,  (* type_desc *)
+  FieldKind.Ptr,  (* initProc *)
+  FieldKind.Ptr,  (* brand_ptr *)
+  FieldKind.Ptr,  (* name *)
+  FieldKind.Ptr,  (* next *)
+  FieldKind.IP,   (* nDimensions *)
+  FieldKind.IP    (* elementSize *)
+};
+
+CONST TLKinds = ARRAY [0 .. TL_nFields - 1] OF FieldKind {
+  FieldKind.Ptr,  (* defn *)
+  FieldKind.IP    (* typecode *)
+};
+
 (* Render the 64-bit fingerprint from a TypeDesc as an unsigned hex LLVM i64.
    Bytes are stored little-endian (byte[0]=LSB); emit byte[7..0] MSB-first.
    Uses the LLVM IR u0x prefix for unsigned hex integer constants. *)
@@ -2727,157 +2808,105 @@ PROCEDURE FPHex(d: MSIR.TypeDesc): TEXT =
     RETURN s;
   END FPHex;
 
-(* Returns TRUE if 'bits' is a named field start in a TC/OTC/ATC struct. *)
-PROCEDURE IsKnownTCBit(bits: INTEGER; isObj, isArr: BOOLEAN): BOOLEAN =
+PROCEDURE RTFieldSize(fk: FieldKind): INTEGER =
   BEGIN
-    RETURN bits = M3RT.TC_typecode      OR bits = M3RT.TC_selfID
-        OR bits = M3RT.TC_fp            OR bits = M3RT.TC_traced
-        OR bits = M3RT.TC_kind          OR bits = M3RT.TC_link_state
-        OR bits = M3RT.TC_dataAlignment OR bits = M3RT.TC_dataSize
-        OR bits = M3RT.TC_type_map      OR bits = M3RT.TC_gc_map
-        OR bits = M3RT.TC_type_desc     OR bits = M3RT.TC_initProc
-        OR bits = M3RT.TC_brand         OR bits = M3RT.TC_name
-        OR bits = M3RT.TC_next
-        OR (isObj AND (bits = M3RT.OTC_parentID       OR bits = M3RT.OTC_linkProc
-                    OR bits = M3RT.OTC_dataOffset      OR bits = M3RT.OTC_methodOffset
-                    OR bits = M3RT.OTC_methodSize      OR bits = M3RT.OTC_defaultMethods
-                    OR bits = M3RT.OTC_parent))
-        OR (isArr AND (bits = M3RT.ATC_nDimensions    OR bits = M3RT.ATC_elementSize));
-  END IsKnownTCBit;
+    CASE fk OF
+    | FieldKind.I8  => RETURN 1;
+    | FieldKind.I64 => RETURN 8;
+    | FieldKind.IP  => RETURN Target.Integer.bytes;
+    | FieldKind.Ptr => RETURN Target.Address.bytes;
+    END;
+  END RTFieldSize;
 
-(* Emit one %TC_t / %OTC_t / %ATC_t named struct type definition.
-   Field types and padding are derived from M3RT bit-offset constants. *)
-PROCEDURE EmitOneTCType(wr: Wr.T; name: TEXT; sizeBits: INTEGER;
-                        ip: TEXT; isObj, isArr: BOOLEAN) =
-  VAR
-    bits  := 0;
-    IP    := Target.Integer.size;
-    cs    := Target.Char.size;
-    first := TRUE;
+PROCEDURE RTFieldLLType(fk: FieldKind): TEXT =
+  BEGIN
+    CASE fk OF
+    | FieldKind.I8  => RETURN "i8";
+    | FieldKind.I64 => RETURN "i64";
+    | FieldKind.IP  => RETURN "i" & Fmt.Int(Target.Integer.size);
+    | FieldKind.Ptr => RETURN "ptr";
+    END;
+  END RTFieldLLType;
+
+(* Emit an LLVM named struct type for an RT0 record, inserting [N x i8] padding
+   between fields to match the C ABI natural-alignment layout. *)
+PROCEDURE EmitRTStructType(wr: Wr.T; name: TEXT;
+                            READONLY kinds: ARRAY OF FieldKind) =
+  VAR off := 0; first := TRUE;
   BEGIN
     Wr.PutText(wr, "%" & name & " = type { ");
-    WHILE bits < sizeBits DO
-      VAR ftype: TEXT;  fBits: INTEGER;
+    FOR i := 0 TO LAST(kinds) DO
+      VAR
+        sz  := RTFieldSize(kinds[i]);
+        pad := (-off) MOD sz;
       BEGIN
-        IF    bits = M3RT.TC_typecode        THEN ftype := ip;    fBits := IP
-        ELSIF bits = M3RT.TC_selfID          THEN ftype := ip;    fBits := IP
-        ELSIF bits = M3RT.TC_fp              THEN ftype := "i64"; fBits := 64
-        ELSIF bits = M3RT.TC_traced          THEN ftype := "i8";  fBits := cs
-        ELSIF bits = M3RT.TC_kind            THEN ftype := "i8";  fBits := cs
-        ELSIF bits = M3RT.TC_link_state      THEN ftype := "i8";  fBits := cs
-        ELSIF bits = M3RT.TC_dataAlignment   THEN ftype := "i8";  fBits := cs
-        ELSIF bits = M3RT.TC_dataSize        THEN ftype := ip;    fBits := IP
-        ELSIF bits = M3RT.TC_type_map        THEN ftype := "ptr"; fBits := IP
-        ELSIF bits = M3RT.TC_gc_map          THEN ftype := "ptr"; fBits := IP
-        ELSIF bits = M3RT.TC_type_desc       THEN ftype := "ptr"; fBits := IP
-        ELSIF bits = M3RT.TC_initProc        THEN ftype := "ptr"; fBits := IP
-        ELSIF bits = M3RT.TC_brand           THEN ftype := "ptr"; fBits := IP
-        ELSIF bits = M3RT.TC_name            THEN ftype := "ptr"; fBits := IP
-        ELSIF bits = M3RT.TC_next            THEN ftype := "ptr"; fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_parentID       THEN ftype := ip;    fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_linkProc       THEN ftype := "ptr"; fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_dataOffset     THEN ftype := ip;    fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_methodOffset   THEN ftype := ip;    fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_methodSize     THEN ftype := ip;    fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_defaultMethods THEN ftype := "ptr"; fBits := IP
-        ELSIF isObj AND bits = M3RT.OTC_parent         THEN ftype := "ptr"; fBits := IP
-        ELSIF isArr AND bits = M3RT.ATC_nDimensions    THEN ftype := ip;    fBits := IP
-        ELSIF isArr AND bits = M3RT.ATC_elementSize    THEN ftype := ip;    fBits := IP
-        ELSE
-          (* Padding: accumulate bytes until the next named field. *)
-          VAR padEnd := bits + cs;
-          BEGIN
-            WHILE padEnd < sizeBits AND NOT IsKnownTCBit(padEnd, isObj, isArr) DO
-              INC(padEnd, cs);
-            END;
-            ftype := "[" & Fmt.Int((padEnd - bits) DIV cs) & " x i8]";
-            fBits := padEnd - bits;
-          END;
+        IF pad > 0 THEN
+          IF NOT first THEN Wr.PutText(wr, ", ") END;
+          Wr.PutText(wr, "[" & Fmt.Int(pad) & " x i8]");
+          first := FALSE;
+          INC(off, pad);
         END;
         IF NOT first THEN Wr.PutText(wr, ", ") END;
+        Wr.PutText(wr, RTFieldLLType(kinds[i]));
         first := FALSE;
-        Wr.PutText(wr, ftype);
-        INC(bits, fBits);
+        INC(off, sz);
       END;
     END;
     Wr.PutText(wr, " }\n");
-  END EmitOneTCType;
+  END EmitRTStructType;
 
-(* Emit one field of a TC/OTC/ATC initializer at bit offset 'bits'.
-   sizeBits is the total struct size.  Sets fBits to the field width consumed.
-   Emits "  <type> <value>" (no trailing comma/newline). *)
-PROCEDURE EmitOneTCField(wr: Wr.T; bits, sizeBits: INTEGER; ip: TEXT;
-                         isObj, isArr: BOOLEAN;  d: MSIR.TypeDesc;
-                         nm, nameSym, nextVal: TEXT;  nMethods: INTEGER;
-                         VAR fBits: INTEGER) =
-  VAR
-    IP := Target.Integer.size;
-    cs := Target.Char.size;
-    ftype, fval: TEXT;
+(* Emit the initializer fields for an RT0 struct global, inserting
+   zeroinitializer padding between logical fields to match the layout.
+   Pre: NUMBER(vals) = NUMBER(kinds). *)
+PROCEDURE EmitRTStructFields(wr: Wr.T;
+                              READONLY kinds: ARRAY OF FieldKind;
+                              READONLY vals:  ARRAY OF TEXT) =
+  VAR off := 0; first := TRUE;
   BEGIN
-    IF    bits = M3RT.TC_typecode        THEN ftype := ip;    fBits := IP; fval := "0"
-    ELSIF bits = M3RT.TC_selfID          THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescUID(d))
-    ELSIF bits = M3RT.TC_fp              THEN ftype := "i64"; fBits := 64; fval := FPHex(d)
-    ELSIF bits = M3RT.TC_traced          THEN ftype := "i8";  fBits := cs; fval := Fmt.Int(ORD(MSIR.TypeDescTraced(d)))
-    ELSIF bits = M3RT.TC_kind            THEN ftype := "i8";  fBits := cs; fval := Fmt.Int(MSIR.TypeDescKind(d))
-    ELSIF bits = M3RT.TC_link_state      THEN ftype := "i8";  fBits := cs; fval := "0"
-    ELSIF bits = M3RT.TC_dataAlignment   THEN ftype := "i8";  fBits := cs; fval := Fmt.Int(MSIR.TypeDescAlign(d))
-    ELSIF bits = M3RT.TC_dataSize        THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescSize(d))
-    ELSIF bits = M3RT.TC_type_map        THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF bits = M3RT.TC_gc_map          THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF bits = M3RT.TC_type_desc       THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF bits = M3RT.TC_initProc        THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF bits = M3RT.TC_brand           THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF bits = M3RT.TC_name            THEN ftype := "ptr"; fBits := IP;
-      IF nameSym # NIL THEN fval := nameSym ELSE fval := "null" END
-    ELSIF bits = M3RT.TC_next            THEN ftype := "ptr"; fBits := IP; fval := nextVal
-    ELSIF isObj AND bits = M3RT.OTC_parentID       THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescParentUID(d))
-    ELSIF isObj AND bits = M3RT.OTC_linkProc       THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF isObj AND bits = M3RT.OTC_dataOffset     THEN ftype := ip;    fBits := IP; fval := "0"
-    ELSIF isObj AND bits = M3RT.OTC_methodOffset   THEN ftype := ip;    fBits := IP; fval := "0"
-    ELSIF isObj AND bits = M3RT.OTC_methodSize     THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescMethodBytes(d))
-    ELSIF isObj AND bits = M3RT.OTC_defaultMethods THEN ftype := "ptr"; fBits := IP;
-      IF nMethods > 0 THEN fval := "@" & nm & ".methods" ELSE fval := "null" END
-    ELSIF isObj AND bits = M3RT.OTC_parent         THEN ftype := "ptr"; fBits := IP; fval := "null"
-    ELSIF isArr AND bits = M3RT.ATC_nDimensions    THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescNDimensions(d))
-    ELSIF isArr AND bits = M3RT.ATC_elementSize    THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescElementSize(d))
-    ELSE
-      (* Padding: gather bytes until next named field (or end of struct). *)
-      VAR padEnd := bits + cs;
+    FOR i := 0 TO LAST(kinds) DO
+      VAR
+        sz  := RTFieldSize(kinds[i]);
+        pad := (-off) MOD sz;
       BEGIN
-        WHILE padEnd < sizeBits AND NOT IsKnownTCBit(padEnd, isObj, isArr) DO
-          INC(padEnd, cs);
+        IF pad > 0 THEN
+          IF NOT first THEN Wr.PutText(wr, ",\n") END;
+          Wr.PutText(wr, "  [" & Fmt.Int(pad) & " x i8] zeroinitializer");
+          first := FALSE;
+          INC(off, pad);
         END;
-        ftype := "[" & Fmt.Int((padEnd - bits) DIV cs) & " x i8]";
-        fBits := padEnd - bits;
-        fval  := "zeroinitializer";
+        IF NOT first THEN Wr.PutText(wr, ",\n") END;
+        Wr.PutText(wr, "  " & RTFieldLLType(kinds[i]) & " " & vals[i]);
+        first := FALSE;
+        INC(off, sz);
       END;
     END;
-    Wr.PutText(wr, "  " & ftype & " " & fval);
-  END EmitOneTCField;
+    Wr.PutText(wr, "\n");
+  END EmitRTStructFields;
 
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
-  VAR
-    n  := MSIR.ModuleTypeDescCount(m);
-    ip := "i" & Fmt.Int(Target.Integer.size);
+  (* RT0.TypeKind ordinals: { Unknown=0, Ref=1, Obj=2, Array=3 } *)
+  CONST TK_Obj = 2;  TK_Array = 3;
+  VAR n := MSIR.ModuleTypeDescCount(m);
   BEGIN
     IF n = 0 THEN RETURN END;
 
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
-    EmitOneTCType(wr, "TC_t",  M3RT.TC_SIZE,  ip, FALSE, FALSE);
-    EmitOneTCType(wr, "OTC_t", M3RT.OTC_SIZE, ip, TRUE,  FALSE);
-    EmitOneTCType(wr, "ATC_t", M3RT.ATC_SIZE, ip, FALSE, TRUE);
+    EmitRTStructType(wr, "TC_t",  TCKinds);
+    EmitRTStructType(wr, "OTC_t", OTCKinds);
+    EmitRTStructType(wr, "ATC_t", ATCKinds);
 
     FOR k := 0 TO n - 1 DO
       VAR
         d       := MSIR.ModuleTypeDesc(m, k);
         nm      := MSIR.TypeDescName(d);
         knd     := MSIR.TypeDescKind(d);
-        isObj   := knd = ORD(M3RT.TypeKind.Obj);
-        isArr   := knd = ORD(M3RT.TypeKind.Array);
-        nextVal : TEXT;
-        sizeBits: INTEGER;
+        isObj   := knd = TK_Obj;
+        isArr   := knd = TK_Array;
+        nTotal  : INTEGER;
         structNm: TEXT;
+        nameSym : TEXT := NIL;
+        nextVal : TEXT;
+        vals    : REF ARRAY OF TEXT;
       BEGIN
         IF k < n - 1
           THEN nextVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
@@ -2885,67 +2914,80 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         END;
 
         IF isObj THEN
-          (* Emit name string constant and vtable before the cell. *)
+          structNm := "OTC_t"; nTotal := OTC_nFields;
+        ELSIF isArr THEN
+          structNm := "ATC_t"; nTotal := ATC_nFields;
+        ELSE
+          structNm := "TC_t";  nTotal := TC_nBase;
+        END;
+
+        vals := NEW(REF ARRAY OF TEXT, nTotal);
+
+        (* OTC extension — sets nameSym and emits ancillary globals *)
+        IF isObj THEN
           VAR
-            nMethods := MSIR.TypeDescMethodCount(d);
             uName    := MSIR.TypeDescUserName(d);
-            nameSym  : TEXT := NIL;
+            nMethods := MSIR.TypeDescMethodCount(d);
+            dmv      : TEXT := "null";
           BEGIN
             IF uName # NIL THEN
               nameSym := "@" & nm & ".tc_name";
-              Wr.PutText(wr, nameSym & " = private unnamed_addr constant [" &
-                             Fmt.Int(Text.Length(uName) + 1) & " x i8] c\"" &
-                             uName & "\\00\"\n");
+              Wr.PutText(wr, nameSym & " = private unnamed_addr constant ["
+                & Fmt.Int(Text.Length(uName) + 1) & " x i8] c\""
+                & uName & "\\00\"\n");
             END;
             IF nMethods > 0 THEN
-              Wr.PutText(wr, "@" & nm & ".methods = internal constant [");
-              Wr.PutText(wr, Fmt.Int(nMethods) & " x ptr] [");
+              dmv := "@" & nm & ".methods";
+              Wr.PutText(wr, "@" & nm & ".methods = internal constant ["
+                & Fmt.Int(nMethods) & " x ptr] [");
               FOR j := 0 TO nMethods - 1 DO
                 IF j > 0 THEN Wr.PutText(wr, ", ") END;
                 Wr.PutText(wr, "ptr @" & MSIR.TypeDescMethod(d, j));
               END;
               Wr.PutText(wr, "]\n");
             END;
-            sizeBits := M3RT.OTC_SIZE;  structNm := "OTC_t";
-            Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
-            VAR bits := 0;  first := TRUE;  fBits: INTEGER;
-            BEGIN
-              WHILE bits < sizeBits DO
-                IF NOT first THEN Wr.PutText(wr, ",\n") END;
-                first := FALSE;
-                EmitOneTCField(wr, bits, sizeBits, ip, TRUE, FALSE, d, nm, nameSym, nextVal, nMethods, fBits);
-                INC(bits, fBits);
-              END;
-            END;
-            Wr.PutText(wr, "\n}\n");
+            vals[OTC_parentID]       := Fmt.Int(MSIR.TypeDescParentUID(d));
+            vals[OTC_linkProc]       := "null";
+            vals[OTC_dataOffset]     := "0";
+            vals[OTC_methodOffset]   := "0";
+            vals[OTC_methodSize]     := Fmt.Int(MSIR.TypeDescMethodBytes(d));
+            vals[OTC_defaultMethods] := dmv;
+            vals[OTC_parent]         := "null";
           END;
-        ELSIF isArr THEN
-          sizeBits := M3RT.ATC_SIZE;  structNm := "ATC_t";
-          Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
-          VAR bits := 0;  first := TRUE;  fBits: INTEGER;
-          BEGIN
-            WHILE bits < sizeBits DO
-              IF NOT first THEN Wr.PutText(wr, ",\n") END;
-              first := FALSE;
-              EmitOneTCField(wr, bits, sizeBits, ip, FALSE, TRUE, d, nm, NIL, nextVal, 0, fBits);
-              INC(bits, fBits);
-            END;
-          END;
-          Wr.PutText(wr, "\n}\n");
-        ELSE
-          sizeBits := M3RT.TC_SIZE;  structNm := "TC_t";
-          Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
-          VAR bits := 0;  first := TRUE;  fBits: INTEGER;
-          BEGIN
-            WHILE bits < sizeBits DO
-              IF NOT first THEN Wr.PutText(wr, ",\n") END;
-              first := FALSE;
-              EmitOneTCField(wr, bits, sizeBits, ip, FALSE, FALSE, d, nm, NIL, nextVal, 0, fBits);
-              INC(bits, fBits);
-            END;
-          END;
-          Wr.PutText(wr, "\n}\n");
         END;
+
+        (* ATC extension *)
+        IF isArr THEN
+          vals[ATC_nDimensions] := Fmt.Int(MSIR.TypeDescNDimensions(d));
+          vals[ATC_elementSize] := Fmt.Int(MSIR.TypeDescElementSize(d));
+        END;
+
+        (* Typecell base fields *)
+        vals[TC_typecode]   := "0";
+        vals[TC_selfID]     := Fmt.Int(MSIR.TypeDescUID(d));
+        vals[TC_fp]         := FPHex(d);
+        vals[TC_traced]     := Fmt.Int(ORD(MSIR.TypeDescTraced(d)));
+        vals[TC_kind]       := Fmt.Int(knd);
+        vals[TC_link_state] := "0";
+        vals[TC_dataAlign]  := Fmt.Int(MSIR.TypeDescAlign(d));
+        vals[TC_dataSize]   := Fmt.Int(MSIR.TypeDescSize(d));
+        vals[TC_type_map]   := "null";
+        vals[TC_gc_map]     := "null";
+        vals[TC_type_desc]  := "null";
+        vals[TC_initProc]   := "null";
+        vals[TC_brand_ptr]  := "null";
+        IF nameSym # NIL
+          THEN vals[TC_name] := nameSym;
+          ELSE vals[TC_name] := "null";
+        END;
+        vals[TC_next] := nextVal;
+
+        Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
+        IF isObj THEN EmitRTStructFields(wr, OTCKinds, vals^);
+        ELSIF isArr THEN EmitRTStructFields(wr, ATCKinds, vals^);
+        ELSE EmitRTStructFields(wr, TCKinds, vals^);
+        END;
+        Wr.PutText(wr, "}\n");
       END;
     END;
   END EmitTypeCells;
@@ -2953,7 +2995,6 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
 (*----------------------------------------------- TypeLink / cell_ptrs emission *)
 
 (* Emit TypeLink globals (MI_type_cell_ptrs chain) and MSIR_InitTypeLinks.
-   Each TypeLink is a { ptr defn, i64 uid } global.
    Chain: TypeLink[0].defn = null (terminus), TypeLink[k].defn = &TypeLink[k-1].
    MI_type_cell_ptrs points to TypeLink[n-1] (head).
    MSIR_InitTypeLinks is a harness helper: for each TypeLink that has a matching
@@ -2973,24 +3014,28 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
     END;
 
     Wr.PutText(wr, "\n; TypeLink globals (MI_type_cell_ptrs chain)\n");
-    Wr.PutText(wr, "%TypeLink_t = type { ptr, i64 }\n");
+    EmitRTStructType(wr, "TypeLink_t", TLKinds);
 
     (* Emit each TypeLink global.
        TypeLink[0].defn = null (chain terminus).
        TypeLink[k].defn = ptr @TypeLink[k-1] for k >= 1. *)
     FOR k := 0 TO nLinks - 1 DO
       VAR
-        tl   := MSIR.ModuleTypeLink(m, k);
-        nm   := MSIR.TypeLinkName(tl);
-        uid  := MSIR.TypeLinkUID(tl);
-        prev : TEXT;
+        tl      := MSIR.ModuleTypeLink(m, k);
+        nm      := MSIR.TypeLinkName(tl);
+        uid     := MSIR.TypeLinkUID(tl);
+        prevVal : TEXT;
+        tlVals  : ARRAY [0 .. TL_nFields - 1] OF TEXT;
       BEGIN
         IF k = 0
-          THEN prev := "ptr null";
-          ELSE prev := "ptr @" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, k-1));
+          THEN prevVal := "null";
+          ELSE prevVal := "@" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, k-1));
         END;
-        Wr.PutText(wr, "@" & nm & " = internal global %TypeLink_t { "
-                       & prev & ", i64 " & Fmt.Int(uid) & " }\n");
+        tlVals[TL_defn]     := prevVal;
+        tlVals[TL_typecode] := Fmt.Int(uid);
+        Wr.PutText(wr, "@" & nm & " = internal global %TypeLink_t {\n");
+        EmitRTStructFields(wr, TLKinds, tlVals);
+        Wr.PutText(wr, "}\n");
       END;
     END;
 
@@ -3124,15 +3169,32 @@ PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
 
 (*----------------------------------------------- module binder emission *)
 
+(* RT0.ModuleInfo field indices (0-based, in declaration order). *)
+CONST
+  MI_file           = 0;
+  MI_type_cells     = 1;
+  MI_type_cell_ptrs = 2;
+  MI_full_rev       = 3;
+  MI_part_rev       = 4;
+  MI_proc_info      = 5;
+  MI_try_scopes     = 6;
+  MI_var_map        = 7;
+  MI_gc_map         = 8;
+  MI_imports        = 9;
+  MI_link_state     = 10;
+  MI_binder         = 11;
+  MI_gc_flags       = 12;
+  MI_nFields        = 13;
+
+(* TRUE at each field index where the type is INTEGER (not ptr). *)
+CONST MIIsInt = ARRAY [0..MI_nFields-1] OF BOOLEAN {
+  FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+  TRUE,   (* MI_link_state *)
+  FALSE,
+  TRUE    (* MI_gc_flags *)
+};
+
 (* Emit the RTLinker binder @<Mod>_M3 and RT0.ModuleInfo struct @<Mod>_M3_info.
-
-   The struct layout is derived entirely from M3RT.MI_* byte offsets and
-   Target.Address.bytes so it stays correct if ModuleInfo grows new fields.
-
-   Field type rules (from RT0.ModuleInfo):
-     - MI_link_state and MI_gc_flags are INTEGER  → i64 in LLVM
-     - all other fields are ADDRESS or PROC       → ptr in LLVM
-   Fields are AP = Target.Address.bytes bytes each (IP = AP on all targets).
 
    Binder convention (RT0.Binder):
      mode=0 : return MI pointer (AddUnit path — do NOT run body)
@@ -3144,7 +3206,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     infoName   := "@" & modName & "_M3_info";
     bodyName   := "@" & modName & "__" & modName & "_M3";
     bodyExists := FALSE;
-    cs         := Target.Char.size;        (* bits per byte = 8 *)
+    cs         := Target.Char.size;       (* bits per byte = 8 *)
     ap         := Target.Address.bytes;   (* bytes per field slot *)
     miBytes    := M3RT.MI_SIZE DIV cs;    (* total struct size in bytes *)
     nFields    := miBytes DIV ap;         (* number of fields *)
@@ -3152,7 +3214,6 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     fieldName  : TEXT;
     fieldType  : TEXT;
     fieldVal   : TEXT;
-    byteOff    : INTEGER;
     gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
     ip_t       := "i" & Fmt.Int(Target.Integer.size);   (* INTEGER type string *)
     ap_t       := "i" & Fmt.Int(Target.Address.size);   (* ADDRESS type string *)
@@ -3214,7 +3275,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       gcMapName := modName & "_M3_gc_map";
     END;
 
-    (* Emit named type — field types derived from M3RT offsets. *)
+    (* Emit named type — field types from MIIsInt array. *)
     Wr.PutText(wr, "\n");
     Wr.PutText(wr, "; RT0.ModuleInfo for " & modName
                    & " (" & Fmt.Int(nFields) & " fields, "
@@ -3222,8 +3283,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     Wr.PutText(wr, "%RT0_ModuleInfo_t = type { ");
     FOR k := 0 TO nFields - 1 DO
       IF k > 0 THEN Wr.PutText(wr, ", ") END;
-      byteOff := k * ap;
-      IF byteOff = M3RT.MI_link_state DIV cs OR byteOff = M3RT.MI_gc_flags DIV cs
+      IF MIIsInt[k]
         THEN Wr.PutText(wr, ip_t);
         ELSE Wr.PutText(wr, "ptr");
       END;
@@ -3243,53 +3303,46 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     END;
     Wr.PutText(wr, " }\n");
 
-    (* Emit global initializer — values derived from M3RT offsets. *)
+    (* Emit global initializer — one CASE arm per RT0.ModuleInfo field. *)
     Wr.PutText(wr, infoName & " = global %RT0_ModuleInfo_t {\n");
     FOR k := 0 TO nFields - 1 DO
-      byteOff := k * ap;
-      (* Determine LLVM type, value, and M3RT field name for this slot. *)
-      IF    byteOff = M3RT.MI_file DIV cs           THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_file";
-      ELSIF byteOff = M3RT.MI_type_cells DIV cs     THEN fieldType := "ptr";
-                                                          fieldName := "MI_type_cells";
-                                                          IF MSIR.ModuleTypeDescCount(m) > 0
-                                                            THEN fieldVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, 0));
-                                                            ELSE fieldVal := "null";
-                                                          END;
-      ELSIF byteOff = M3RT.MI_type_cell_ptrs DIV cs THEN fieldType := "ptr";
-                                                          fieldName := "MI_type_cell_ptrs";
-                                                          IF MSIR.ModuleTypeLinkCount(m) > 0
-                                                            THEN fieldVal := "@" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, MSIR.ModuleTypeLinkCount(m)-1));
-                                                            ELSE fieldVal := "null";
-                                                          END;
-      ELSIF byteOff = M3RT.MI_full_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_full_rev";
-      ELSIF byteOff = M3RT.MI_part_rev DIV cs       THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_part_rev";
-      ELSIF byteOff = M3RT.MI_proc_info DIV cs      THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_proc_info";
-      ELSIF byteOff = M3RT.MI_try_scopes DIV cs     THEN fieldType := "ptr"; fieldVal := "null";             fieldName := "MI_try_scopes";
-      ELSIF byteOff = M3RT.MI_var_map DIV cs        THEN fieldType := "ptr";
-                                                          fieldName := "MI_var_map";
-                                                          IF gcMapName # NIL
-                                                            THEN fieldVal := "@" & gcMapName;
-                                                            ELSE fieldVal := "null";
-                                                          END;
-      ELSIF byteOff = M3RT.MI_gc_map DIV cs         THEN fieldType := "ptr";
-                                                          fieldName := "MI_gc_map";
-                                                          IF gcMapName # NIL
-                                                            THEN fieldVal := "@" & gcMapName;
-                                                            ELSE fieldVal := "null";
-                                                          END;
-      ELSIF byteOff = M3RT.MI_imports DIV cs        THEN fieldType := "ptr";
-                                                          fieldName := "MI_imports";
-                                                          IF nImports > 0
-                                                            THEN fieldVal := "@" & modName & "_M3_imp.0";
-                                                            ELSE fieldVal := "null";
-                                                          END;
-      ELSIF byteOff = M3RT.MI_link_state DIV cs     THEN fieldType := ip_t; fieldVal := "0";               fieldName := "MI_link_state";
-      ELSIF byteOff = M3RT.MI_binder DIV cs         THEN fieldType := "ptr"; fieldVal := "@" & binderName;  fieldName := "MI_binder";
-      ELSIF byteOff = M3RT.MI_gc_flags DIV cs       THEN fieldType := ip_t;
-                                                   (* RT0.GC_both = GC_gen | GC_inc = 3; literal used
-                                                      because RT0 is in m3core, not m3middle. *)
-                                                   fieldVal := "3";                                   fieldName := "MI_gc_flags";
-      ELSE                                         fieldType := "ptr"; fieldVal := "null";             fieldName := "?";
+      CASE k OF
+      | MI_file           => fieldType := "ptr"; fieldVal := "null";           fieldName := "file";
+      | MI_type_cells     => fieldType := "ptr"; fieldName := "type_cells";
+                             IF MSIR.ModuleTypeDescCount(m) > 0
+                               THEN fieldVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, 0));
+                               ELSE fieldVal := "null";
+                             END;
+      | MI_type_cell_ptrs => fieldType := "ptr"; fieldName := "type_cell_ptrs";
+                             IF MSIR.ModuleTypeLinkCount(m) > 0
+                               THEN fieldVal := "@" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, MSIR.ModuleTypeLinkCount(m)-1));
+                               ELSE fieldVal := "null";
+                             END;
+      | MI_full_rev       => fieldType := "ptr"; fieldVal := "null";           fieldName := "full_rev";
+      | MI_part_rev       => fieldType := "ptr"; fieldVal := "null";           fieldName := "part_rev";
+      | MI_proc_info      => fieldType := "ptr"; fieldVal := "null";           fieldName := "proc_info";
+      | MI_try_scopes     => fieldType := "ptr"; fieldVal := "null";           fieldName := "try_scopes";
+      | MI_var_map        => fieldType := "ptr"; fieldName := "var_map";
+                             IF gcMapName # NIL
+                               THEN fieldVal := "@" & gcMapName;
+                               ELSE fieldVal := "null";
+                             END;
+      | MI_gc_map         => fieldType := "ptr"; fieldName := "gc_map";
+                             IF gcMapName # NIL
+                               THEN fieldVal := "@" & gcMapName;
+                               ELSE fieldVal := "null";
+                             END;
+      | MI_imports        => fieldType := "ptr"; fieldName := "imports";
+                             IF nImports > 0
+                               THEN fieldVal := "@" & modName & "_M3_imp.0";
+                               ELSE fieldVal := "null";
+                             END;
+      | MI_link_state     => fieldType := ip_t; fieldVal := "0";               fieldName := "link_state";
+      | MI_binder         => fieldType := "ptr"; fieldVal := "@" & binderName; fieldName := "binder";
+      | MI_gc_flags       => fieldType := ip_t;
+                             (* RT0.GC_both = GC_gen | GC_inc = 3 *)
+                             fieldVal := "3";                                   fieldName := "gc_flags";
+      ELSE                   fieldType := "ptr"; fieldVal := "null";            fieldName := "?";
       END;
       IF k < nFields - 1
         THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
@@ -3310,7 +3363,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
                END;
              END;
       END;
-      Wr.PutText(wr, "  ; " & fieldName & " (+" & Fmt.Int(byteOff) & ")\n");
+      Wr.PutText(wr, "  ; " & fieldName & " (+" & Fmt.Int(k * ap) & ")\n");
     END;
     (* Append zero initializers for struct-embedded user globals. *)
     VAR embGlobs: RefSeq.T := NEW(RefSeq.T).init();
