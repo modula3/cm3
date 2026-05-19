@@ -29,13 +29,14 @@ TYPE DbgEntry     = RECORD
   locIdx:  INTEGER;    (* !DILocation(line:0, scope:subprogram) index *)
 END;
 TYPE DbgVarEntry  = RECORD
-  allocaVal:   MSIR.Value;  (* alloca instruction result — identity key *)
+  allocaVal:   MSIR.Value;  (* alloca result or (isParam) param value *)
   varName:     TEXT;        (* display name (stripped of % and .slot) *)
   spIdx:       INTEGER;     (* DISubprogram metadata index for scope *)
   fileIdx:     INTEGER;     (* DIFile metadata index *)
   line:        INTEGER;     (* declaration line *)
   typeMetaIdx: INTEGER;     (* DWARF type metadata index (-1 to skip) *)
   metaIdx:     INTEGER;     (* !DILocalVariable metadata index *)
+  isParam:     BOOLEAN;     (* TRUE => allocaVal is a param value, not alloca *)
 END;
 (* Phase 4: composite type (Struct / FixedArray) DWARF nodes. *)
 TYPE DbgTypeEntry = RECORD
@@ -1582,10 +1583,66 @@ PROCEDURE TotalBitsOf(t: MSIR.T): INTEGER =
     END;
   END TotalBitsOf;
 
+PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER =
+  (* Build a DICompositeType(DW_TAG_structure_type) representing the open-array
+     dope vector { ptr data, i64 count0, i64 count1, ... }.
+     Deduplication is by rank since the dope layout depends only on rank. *)
+  VAR entry    : INTEGER;
+      AP       := Target.Address.size;
+      totalBits := (1 + rank) * AP;
+      addrRef  := dbgBtBase + 8;   (* ADDRESS *)
+      intRef   := dbgBtBase + 0;   (* INTEGER *)
+      nEmitted : INTEGER;
+      cname    : TEXT;
+  BEGIN
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].kind = 3 AND dbgTypes[k].totalBits = totalBits THEN
+        RETURN dbgTypes[k].metaIdx;
+      END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN addrRef END;
+    entry := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[entry].msirType      := NIL;
+    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[entry].baseTypeRef   := -1;
+    dbgTypes[entry].kind          := 3;   (* OpenArray dope vector *)
+    dbgTypes[entry].childBase     := dbgChildN;
+    dbgTypes[entry].totalBits     := totalBits;
+    nEmitted := 0;
+    (* Field 0: data pointer *)
+    IF dbgChildN < MaxDbgChildren THEN
+      dbgChildren[dbgChildN].kind    := 0;   (* member *)
+      dbgChildren[dbgChildN].name    := "data";
+      dbgChildren[dbgChildN].typeRef := addrRef;
+      dbgChildren[dbgChildN].size    := AP;
+      dbgChildren[dbgChildN].offset  := 0;
+      dbgChildren[dbgChildN].metaIdx := metaN;
+      INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+    END;
+    (* Fields 1..rank: element counts *)
+    FOR k := 0 TO rank - 1 DO
+      IF dbgChildN < MaxDbgChildren THEN
+        IF rank = 1 THEN cname := "count"
+        ELSE cname := "count" & Fmt.Int(k)
+        END;
+        dbgChildren[dbgChildN].kind    := 0;
+        dbgChildren[dbgChildN].name    := cname;
+        dbgChildren[dbgChildN].typeRef := intRef;
+        dbgChildren[dbgChildN].size    := AP;
+        dbgChildren[dbgChildN].offset  := AP * (k + 1);
+        dbgChildren[dbgChildN].metaIdx := metaN;
+        INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+      END;
+    END;
+    dbgTypes[entry].childCount := nEmitted;
+    RETURN dbgTypes[entry].metaIdx;
+  END GetOrBuildOpenArrayDvType;
+
 PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
   (* Return the metadata index of the DWARF type for t.
      For basic scalar/pointer types returns a DIBasicType index.
-     For Struct/FixedArray builds and returns a DICompositeType.
+     For Struct/FixedArray/Enum/OpenArray builds and returns a DICompositeType.
      For unknown kinds returns ADDRESS as fallback (index 8 in basic table). *)
   VAR btI: INTEGER;
   BEGIN
@@ -1596,6 +1653,7 @@ PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     | MSIR.TypeKind.Struct     => RETURN GetOrBuildStructType(t, metaN);
     | MSIR.TypeKind.FixedArray => RETURN GetOrBuildFixedArrayType(t, metaN);
     | MSIR.TypeKind.Enum       => RETURN GetOrBuildEnumType(t, metaN);
+    | MSIR.TypeKind.OpenArray  => RETURN GetOrBuildOpenArrayDvType(MSIR.OpenArrayRank(t), metaN);
     ELSE RETURN dbgBtBase + 8;  (* ADDRESS fallback *)
     END;
   END GetDbgTypeRef;
@@ -1917,12 +1975,55 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                         dbgVars[dbgVarN].line        := pline;
                         dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
                         dbgVars[dbgVarN].metaIdx     := metaN;
+                        dbgVars[dbgVarN].isParam     := FALSE;
                         INC(dbgVarN);
                         INC(metaN);
                       END;
                     END;
                   END;
                 END;
+              END;
+            END;
+          END;
+        END;
+      END;
+    END;
+
+    (* Third-pass addendum: track READONLY/VAR open-array formal params.
+       These are ptr-to-dope-vector params; llvm.dbg.declare on the ptr value
+       itself tells the debugger where the dope vector lives. *)
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      VAR p       := MSIR.ModuleProc(m, i);
+          spIdx   := GetProcMetaIdx(p);
+          fileIdx := GetProcFileIdx(p);
+          pline   := MSIR.ProcSrcLine(p);
+      BEGIN
+        IF spIdx >= 0 THEN
+          FOR pi := 0 TO MSIR.ProcParamCount(p) - 1 DO
+            VAR pval  := MSIR.ProcParam(p, pi);
+                nm    := MSIR.ProcParamName(p, pi);
+                ptype := MSIR.ValueType(pval);
+                pmode := MSIR.ProcParamMode(p, pi);
+                dvT   : MSIR.T;
+                typeMetaIdx: INTEGER;
+            BEGIN
+              IF NOT IsInternalVarName("%" & nm)
+                 AND (pmode = MSIR.ParamMode.Readonly OR pmode = MSIR.ParamMode.Var)
+                 AND MSIR.Kind(ptype) = MSIR.TypeKind.Ptr
+                 AND MSIR.Kind(MSIR.EltType(ptype)) = MSIR.TypeKind.OpenArray
+                 AND dbgVarN < MaxDbgVars
+              THEN
+                dvT         := MSIR.EltType(ptype);
+                typeMetaIdx := GetOrBuildOpenArrayDvType(MSIR.OpenArrayRank(dvT), metaN);
+                dbgVars[dbgVarN].allocaVal   := pval;
+                dbgVars[dbgVarN].varName     := nm;
+                dbgVars[dbgVarN].spIdx       := spIdx;
+                dbgVars[dbgVarN].fileIdx     := fileIdx;
+                dbgVars[dbgVarN].line        := pline;
+                dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
+                dbgVars[dbgVarN].metaIdx     := metaN;
+                dbgVars[dbgVarN].isParam     := TRUE;
+                INC(dbgVarN);  INC(metaN);
               END;
             END;
           END;
@@ -2082,7 +2183,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
               Wr.PutText(wr, ")\n");
             END;
           END;
-        ELSE
+        ELSIF e.kind = 2 THEN
           (* Enum: DW_TAG_enumeration_type with DIEnumerator children *)
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
             & " = !DICompositeType(tag: DW_TAG_enumeration_type"
@@ -2101,6 +2202,34 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
               Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
                 & " = !DIEnumerator(name: \"" & ch.name & "\""
                 & ", value: " & Fmt.Int(ch.value) & ")\n");
+            END;
+          END;
+        ELSE
+          (* kind = 3: OpenArray dope-vector — DW_TAG_structure_type with
+             {data: ADDRESS, count: INTEGER} or {data, count0, count1, ...} fields *)
+          VAR rank := e.totalBits DIV Target.Address.size - 1;
+          BEGIN
+            Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+              & " = !DICompositeType(tag: DW_TAG_structure_type"
+              & ", name: \"__dope_" & Fmt.Int(rank) & "\""
+              & ", size: "          & Fmt.Int(e.totalBits)
+              & ", elements: !"     & Fmt.Int(e.elemsTupleIdx) & ")\n");
+            Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
+            FOR c := 0 TO e.childCount - 1 DO
+              IF c > 0 THEN Wr.PutText(wr, ", ") END;
+              Wr.PutText(wr, "!" & Fmt.Int(dbgChildren[e.childBase + c].metaIdx));
+            END;
+            Wr.PutText(wr, "}\n");
+            FOR c := 0 TO e.childCount - 1 DO
+              VAR ch := dbgChildren[e.childBase + c];
+              BEGIN
+                Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
+                  & " = !DIDerivedType(tag: DW_TAG_member"
+                  & ", name: \""  & ch.name & "\""
+                  & ", baseType: !" & Fmt.Int(ch.typeRef)
+                  & ", size: "    & Fmt.Int(ch.size)
+                  & ", offset: "  & Fmt.Int(ch.offset) & ")\n");
+              END;
             END;
           END;
         END;
@@ -2215,7 +2344,42 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
 
     curDbgLocIdx := GetProcLocIdx(p);
     curEmitProc  := p;
-    FOR bi := 0 TO nb - 1 DO
+
+    (* Inline the entry block (block 0) so param declares land inside it.
+       @llvm.dbg.declare instructions must be inside a basic block, not before
+       the first block label. *)
+    VAR b0 := MSIR.ProcBlock(p, 0);
+        n0 := MSIR.BlockInsnCount(b0);
+    BEGIN
+      Wr.PutText(wr, MSIR.BlockLabel(b0) & ":\n");
+      (* Emit @llvm.dbg.declare for open-array param formals (ptr-typed params,
+         no alloca — declare points directly at the param value). *)
+      IF dbgEnabled THEN
+        VAR procSpIdx  := GetProcMetaIdx(p);
+            procLocIdx := curDbgLocIdx;
+        BEGIN
+          IF procSpIdx >= 0 AND procLocIdx >= 0 THEN
+            FOR j := 0 TO dbgVarN - 1 DO
+              IF dbgVars[j].isParam AND dbgVars[j].spIdx = procSpIdx THEN
+                Wr.PutText(wr, "  call void @llvm.dbg.declare(metadata ptr ");
+                LLOpVal(wr, dbgVars[j].allocaVal);
+                Wr.PutText(wr, ", metadata !" & Fmt.Int(dbgVars[j].metaIdx)
+                  & ", metadata !DIExpression()), !dbg !"
+                  & Fmt.Int(procLocIdx) & "\n");
+              END;
+            END;
+          END;
+        END;
+      END;
+      FOR k := 0 TO n0 - 1 DO
+        EmitInsn(wr, MSIR.BlockInsn(b0, k));
+      END;
+      IF n0 = 0 OR NOT MSIR.BlockIsTerminated(b0) THEN
+        Wr.PutText(wr, "  unreachable\n");
+      END;
+    END;
+
+    FOR bi := 1 TO nb - 1 DO
       EmitBlock(wr, MSIR.ProcBlock(p, bi));
     END;
     curDbgLocIdx := -1;
