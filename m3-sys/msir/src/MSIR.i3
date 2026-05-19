@@ -305,6 +305,11 @@ PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
 PROCEDURE TypeDescName        (d: TypeDesc): TEXT;
 PROCEDURE TypeDescValue       (d: TypeDesc): Value;   (* ptr to the TypeCell global *)
 PROCEDURE TypeDescUID         (d: TypeDesc): INTEGER;
+(* Set / get the 64-bit Fingerprint2.T bytes (little-endian byte[0..7]).
+   SetTypeDescFP must be called after NewTypeDesc with the actual fingerprint
+   so that TC_fp in the emitted TypeCell matches the real backend. *)
+PROCEDURE SetTypeDescFP(d: TypeDesc; READONLY b: ARRAY OF [0..255]);
+PROCEDURE TypeDescFPByte(d: TypeDesc; i: INTEGER): INTEGER;
 PROCEDURE TypeDescTraced      (d: TypeDesc): BOOLEAN;
 PROCEDURE TypeDescKind        (d: TypeDesc): INTEGER; (* ORD(M3RT.TypeKind) *)
 PROCEDURE TypeDescSize        (d: TypeDesc): INTEGER; (* dataSize in bytes *)

@@ -717,6 +717,12 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
                                 fldSize, fldAlign,
                                 parUID, dataOff, ARRAY OF TEXT{}, methBytes);
     END;
+    VAR tfp := TypeFP.FromType (t);
+        fpa : ARRAY [0..7] OF [0..255];
+    BEGIN
+      FOR i := 0 TO 7 DO fpa[i] := tfp.byte[i] END;
+      MSIR.SetTypeDescFP (desc, fpa);
+    END;
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;
 

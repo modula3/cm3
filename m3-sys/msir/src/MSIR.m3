@@ -975,6 +975,7 @@ PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
 REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   name          : TEXT;
   uid           : INTEGER;
+  fp            : ARRAY [0..7] OF [0..255];  (* Fingerprint2.T bytes, little-endian *)
   isTraced      : BOOLEAN;
   kind          : INTEGER;  (* ORD(M3RT.TypeKind) *)
   dataSize      : INTEGER;  (* bytes *)
@@ -1019,6 +1020,12 @@ PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
 PROCEDURE TypeDescName       (d: TypeDesc): TEXT    = BEGIN RETURN d.name          END TypeDescName;
 PROCEDURE TypeDescValue      (d: TypeDesc): Value   = BEGIN RETURN d.ptrVal        END TypeDescValue;
 PROCEDURE TypeDescUID        (d: TypeDesc): INTEGER = BEGIN RETURN d.uid           END TypeDescUID;
+PROCEDURE SetTypeDescFP(d: TypeDesc; READONLY b: ARRAY OF [0..255]) =
+  BEGIN
+    FOR i := 0 TO MIN(7, LAST(b)) DO d.fp[i] := b[i] END;
+  END SetTypeDescFP;
+PROCEDURE TypeDescFPByte(d: TypeDesc; i: INTEGER): INTEGER =
+  BEGIN RETURN d.fp[i] END TypeDescFPByte;
 PROCEDURE TypeDescTraced     (d: TypeDesc): BOOLEAN = BEGIN RETURN d.isTraced      END TypeDescTraced;
 PROCEDURE TypeDescKind       (d: TypeDesc): INTEGER = BEGIN RETURN d.kind          END TypeDescKind;
 PROCEDURE TypeDescSize       (d: TypeDesc): INTEGER = BEGIN RETURN d.dataSize      END TypeDescSize;

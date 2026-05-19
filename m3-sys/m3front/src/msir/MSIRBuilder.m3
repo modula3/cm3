@@ -2,7 +2,7 @@ MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
-IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
+IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
 IMPORT Expr, ArrayExpr, ArrayType;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
@@ -1217,6 +1217,11 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
     END;
     desc := MSIR.NewTypeDesc(nm, uid, isTraced, ORD(M3RT.TypeKind.Ref),
                               dataSize, dataAlignment);
+    VAR tfp := TypeFP.FromType(t);  fpa: ARRAY [0..7] OF [0..255];
+    BEGIN
+      FOR i := 0 TO 7 DO fpa[i] := tfp.byte[i] END;
+      MSIR.SetTypeDescFP(desc, fpa);
+    END;
     MSIR.ModuleAddTypeDesc(m, desc);
     RETURN MSIR.TypeDescValue(desc);
   END TypeDescValueForRef;
@@ -1242,6 +1247,11 @@ PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
     END;
     desc := MSIR.NewTypeDesc(nm, uid, isTraced, ORD(M3RT.TypeKind.Array),
                               dopeSize, dataAlignment);
+    VAR tfp := TypeFP.FromType(t);  fpa: ARRAY [0..7] OF [0..255];
+    BEGIN
+      FOR i := 0 TO 7 DO fpa[i] := tfp.byte[i] END;
+      MSIR.SetTypeDescFP(desc, fpa);
+    END;
     MSIR.TypeDescSetArrayInfo(desc, nDimensions, elementSize);
     MSIR.ModuleAddTypeDesc(m, desc);
     RETURN MSIR.TypeDescValue(desc);

@@ -2174,8 +2174,8 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 
 (* TypeCell layout (M3RT offsets, 64-bit, all byte values unless noted):
    [0]  typecode       i64  (0, assigned by RTLinker.FixTypes)
-   [8]  selfID         i64  (fingerprint)
-   [16] fp             i64  (fingerprint, same as selfID)
+   [8]  selfID         i64  (M3FP.ToInt: XOR-fold of the 64-bit fingerprint)
+   [16] fp             i64  (Fingerprint2.T bytes[0..7] in little-endian order)
    [24] traced         i8   (1=traced)
    [25] kind           i8   (6=Ref, 13=Obj)
    [26] link_state     i8   (0=unlinked)
@@ -2302,6 +2302,18 @@ PROCEDURE EmitConstArrays(wr: Wr.T;  m: MSIR.Module) =
     END;
   END EmitConstArrays;
 
+(* Render the 64-bit fingerprint from a TypeDesc as a signed decimal LLVM i64.
+   Bytes are stored little-endian (byte[0]=LSB).  LLVM accepts signed decimal
+   for i64 constants; 0x notation triggers LLVM's float-constant path. *)
+PROCEDURE FPDec(d: MSIR.TypeDesc): TEXT =
+  VAR v: INTEGER := 0;
+  BEGIN
+    FOR i := 0 TO 7 DO
+      v := Word.Or(v, Word.LeftShift(MSIR.TypeDescFPByte(d, i), i * 8));
+    END;
+    RETURN Fmt.Int(v);
+  END FPDec;
+
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   VAR
     n    := MSIR.ModuleTypeDescCount(m);
@@ -2352,7 +2364,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* fp — always i64 *)
+          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint2.T bytes *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
@@ -2381,7 +2393,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "@" & nm & " = internal global %ATC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
+          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint2.T bytes *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
@@ -2399,7 +2411,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");  (* fp — always i64 *)
+          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint2.T bytes *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
