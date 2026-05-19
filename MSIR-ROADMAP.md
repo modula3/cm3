@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-18 (msir branch — language gap sweep complete)
+Last updated: 2026-05-19 (nested proc procedure values complete; debug symbols next)
 
 ## What's Working
 
@@ -122,11 +122,12 @@ Items marked [done] are fixed on the msir branch.
 - [done] **VALUE open-array partial depth coercion** (`actDepth < formDepth`):
   `GenValueOpenArgMSIR` now loads `actDepth` dynamic dims from the actual dope and
   reads the remaining `formDepth - actDepth` dims from M3 type constants.
-- **Nested proc `PROCEDURE` values**: taking a `PROCEDURE` value of a
-  lambda-lifted nested proc requires a trampoline or `{proc_ptr, env_ptr}` closure.
-  The nested proc's MSIR function has extra capture params that the PROCEDURE type
-  doesn't expose; a call through the proc variable would use the wrong ABI.
-  Deferred: requires heap-allocated trampolines (GC-visible) or a closure ABI change.
+- [done] **Nested proc `PROCEDURE` values**: stack-allocated M3RT fat-pointer closure
+  `{CL_marker=-1, CL_proc=shim, CL_frame=env}` at offsets 0/IP/IP+AP; a generated
+  closure shim bridges the lambda-lifted ABI to the plain `PROCEDURE` ABI; indirect
+  calls emit a CL_marker runtime check to dispatch closure vs plain proc pointer.
+  Large-result nested procs also supported (hidden result ptr placed at arg 0 before
+  captures). See D15 in MSIR-design.md for design rationale.
 - **`eltPack` not divisible by 8 in sub-byte array subscript**: only
   eltPack ∈ {1,2,4} handled; other values Abandon.  Elements with eltPack ∈ {3,5,6,7}
   can straddle byte boundaries, requiring a 2-byte load or a dynamic branch.
@@ -190,8 +191,7 @@ conservative interior pointer points into.
 ## Known ABI Notes
 
 - **Struct-by-value return**: M3 procs with `ProcType.LargeResult` result (records, fixed arrays, large sets) use a hidden first `ptr` parameter — no `sret` attribute needed for M3-to-M3 calls.
-- **Nested large-result procs**: If a nested proc has a large result, its call site emits Abandon (cap params + hidden ptr + explicit params ordering is complex). Not exercised in the test suite.
-- **Nested procedure calling convention**: Lambda-lifted nested procs have capture-pointer arguments prepended before explicit parameters: `proc(%__cap_0: ptr, %__cap_1: ptr, …, arg0, arg1, …)`. Read-only scalar captures pass by value; GcRef captures always pass by pointer (conservative GC stack-scan requirement). Call sites reconstruct the capture arg list via `MSIRBuilder.GetProcCaptures`. Taking a `PROCEDURE` value of a nested proc is not yet supported (Abandon).
+- **Nested procedure calling convention**: Lambda-lifted nested procs have capture-pointer arguments prepended before explicit parameters: `proc(%__cap_0: ptr, %__cap_1: ptr, …, arg0, arg1, …)`. Read-only scalar captures pass by value; GcRef captures always pass by pointer (conservative GC stack-scan requirement). Call sites reconstruct the capture arg list via `MSIRBuilder.GetProcCaptures`. For large-result nested procs the hidden result `ptr` is placed at arg 0 before the capture args. `PROCEDURE`-typed values of nested procs use a stack-allocated fat-pointer closure (see D15 in MSIR-design.md).
 - **Open-array wire format**: The dope vector is `{ ptr data, i64 nElts }` for rank-1, extended to `{ ptr data, i64 nElts, i64 dim0, … }` for rank-N. `data` points to the first element. VALUE open-array formals copy-in at the call site.
 - **EH personality — `ex_stack` platforms only**: MSIR uses the Itanium C++ personality (`@__gxx_personality_v0`, `invoke`/`landingpad`/`resume`). Linking MSIR-compiled modules against an `ex_frame` runtime is incorrect.
 - **READONLY and VALUE scalar formals are spilled to alloca**: `BindFormalMSIR` spills all non-aggregate-pointer formals to an alloca so that `ADR(formalParam)` is always valid — matching M3 semantics.
