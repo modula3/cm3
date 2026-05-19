@@ -1,11 +1,11 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-19 (Phase 4 debug symbols complete; composite DWARF types for RECORD and fixed arrays)
+Last updated: 2026-05-19 (Phase 4 debug symbols complete; OA/HA dope-vector DWARF; FOR loop SSA name dedup)
 
 ## What's Working
 
 **288/288 p0/p1/p2 tests compile with zero MSIR abandons.**
-**149/149 end-to-end LLVM link test checks pass.**
+**181/181 end-to-end LLVM link test checks pass.**
 
 The remaining 3 baseline entries are runtime timeouts (p161: million-element
 sieve; p224: 303-thread mutex test expected to run minutes; p267: intentional
@@ -219,34 +219,37 @@ entries. Enables function-name backtraces and function-entry breakpoints in
 - `TotalBitsOf(t)` recursively computes struct/array total bit size from field
   layout for `DW_AT_byte_size` on composite type nodes.
 - `GetDbgTypeRef` dispatches to `GetOrBuildStructType` / `GetOrBuildFixedArrayType`
-  for Struct and FixedArray MSIR types; falls back to ADDRESS for others.
+  / `GetOrBuildEnumType` / `GetOrBuildOpenArrayDvType` for composite MSIR types;
+  falls back to ADDRESS for others.
 - `GetOrBuildStructType`: emits `!DICompositeType(tag: DW_TAG_structure_type,
   name: "...", size: N, elements: !tuple)` with one `!DIDerivedType(tag:
   DW_TAG_member, name: "f", baseType: !T, size: N, offset: B)` child per field.
   Pre-reserves metadata indices before recursing into field types to handle nested
   structs without a visited-set.
 - `GetOrBuildFixedArrayType`: emits `!DICompositeType(tag: DW_TAG_array_type,
-  size: N, baseType: !elt, elements: !tuple)` with one `!DISubrange(count: N)`
-  child (zero-based; upper bound deferred — M3 arrays not necessarily zero-indexed).
-- Variables of `Struct` and `FixedArray` MSIR type now appear in `frame variable`
-  with correct composite-type descriptors.  LLDB shows field names and values.
-- `BuildDebugInfo` runs once per module and accumulates `dbgTypes` / `dbgChildren`
-  across all procs; composite type deduplication via pointer identity (type
-  interning) and name+fieldcount fallback (`SameStructType`) — each named struct
-  emits exactly one `DICompositeType` node per module.
-- `clang -g -c Main.ll` accepts output with zero errors (one harmless target-triple
-  warning); `llvm-dwarfdump` shows `DW_TAG_structure_type` and `DW_TAG_array_type`
-  entries correctly.
-- 149/149 LLVM link tests still pass; zero sweep regressions.
+  size: N, baseType: !elt, elements: !tuple)` with one `!DISubrange(count: N,
+  lowerBound: lo)` child; lower bound taken from `MSIR.ArrayLo(t)`.
+- `GetOrBuildEnumType`: emits `!DICompositeType(tag: DW_TAG_enumeration_type)`
+  with one `!DIEnumerator(name: "...", value: N)` child per enum member.
+  Enum label names recovered via `EnumExpr` walk at `BuildDebugInfo` time.
+- `GetOrBuildOpenArrayDvType(rank)`: emits `!DICompositeType(tag: DW_TAG_structure_type,
+  name: "__dope_N")` with fields `{data: ADDRESS, count: INTEGER}` (rank 1) or
+  `{data, count0, count1, ...}` (rank N).  READONLY/VAR open-array formals are
+  ptr-typed params (no alloca); `@llvm.dbg.declare` on the param value lets LLDB
+  show the dope vector.  Param declares are injected inside the `entry:` block
+  (inlined block-0 handling in `EmitProc`).
+- `UniqueLocalName` in `MSIRBuilder` appends `.<N>` suffix when two locals share
+  a name (e.g. two FOR-loop counters both named `i`); `StripVarName` in
+  `MSIRToLLVM` strips the suffix for DWARF so both appear as `"i"`.
+- Variables of `Struct`, `FixedArray`, `Enum`, and `OpenArray` MSIR type now
+  appear in `frame variable` with correct composite-type descriptors.
+- 181/181 LLVM link tests pass; zero sweep regressions.
 
 **Known Phase 4 gaps** (tracked for future phases):
 
 | Gap | Detail |
 |---|---|
 | OBJECT types | VMT pointer not emitted as first `DW_TAG_member`; OBJECT variables get ADDRESS fallback |
-| ENUM types | Enum label names are lost during `MSIRType.Translate` (mapped to `iN`); `DW_TAG_enumeration_type` not emitted |
-| `DISubrange` lower bound | `DW_AT_lower_bound` omitted; assumes zero-based arrays.  M3 arrays can start at any ordinal |
-| OpenArray / HeapArray | Not tracked; dope-vector allocas still excluded |
 
 **Phase 5 — Optimized builds:**
 
