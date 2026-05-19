@@ -307,6 +307,12 @@ PROCEDURE BeginModule();
 (* Raw map-management helpers.  Variable.m3 calls these after doing its own
    type translation and condition checks. *)
 
+(* Return rawName if unused in the current proc's varMap; otherwise return
+   rawName & "." & N for the smallest N >= 1 that is free.
+   M3 identifiers cannot contain '.', so any .<digits> suffix is unambiguous.
+   Must only be called inside a BeginProc/EndProc bracket. *)
+PROCEDURE UniqueLocalName(rawName: TEXT): TEXT;
+
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
 
 (* Like GlobalMapAdd but for globals embedded in the @Mod_M3_info struct.

@@ -1448,6 +1448,19 @@ PROCEDURE StripVarName(ssaName: TEXT): TEXT =
     IF len > 5 AND Text.Equal(Text.Sub(n, len - 5), ".slot") THEN
       n := Text.Sub(n, 0, len - 5);
     END;
+    (* Strip trailing .<digits> de-duplication suffix added by UniqueLocalName. *)
+    len := Text.Length(n);
+    IF len >= 2 THEN
+      VAR i := len - 1;
+      BEGIN
+        WHILE i > 0 AND Text.GetChar(n, i) >= '0' AND Text.GetChar(n, i) <= '9' DO
+          DEC(i);
+        END;
+        IF i > 0 AND i < len - 1 AND Text.GetChar(n, i) = '.' THEN
+          n := Text.Sub(n, 0, i);
+        END;
+      END;
+    END;
     RETURN n;
   END StripVarName;
 

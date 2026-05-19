@@ -417,6 +417,31 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
     RETURN NIL;
   END LookupVarAddr;
 
+PROCEDURE UniqueLocalName(rawName: TEXT): TEXT =
+  (* Return rawName if no existing varMap entry resolves to the same LLVM SSA
+     name in the current function.  If there is a clash, append ".<N>" for the
+     smallest N >= 1 that is free.  Both alloca values (name = "%foo") and
+     param values (name = "foo") are checked by stripping a leading '%'. *)
+  VAR suffix := 0;
+      name   := rawName;
+      clash  : BOOLEAN;
+      vn     : TEXT;
+  BEGIN
+    LOOP
+      clash := FALSE;
+      FOR i := 0 TO varMapN - 1 DO
+        vn := MSIR.ValueName(varMap[i].val);
+        IF Text.Length(vn) > 0 AND Text.GetChar(vn, 0) = '%' THEN
+          vn := Text.Sub(vn, 1);
+        END;
+        IF Text.Equal(vn, name) THEN clash := TRUE;  EXIT END;
+      END;
+      IF NOT clash THEN RETURN name END;
+      INC(suffix);
+      name := rawName & "." & Fmt.Int(suffix);
+    END;
+  END UniqueLocalName;
+
 PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
   VAR
     type:                  Type.T;
@@ -440,7 +465,7 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
     END;
     allocaVal := MSIR.BuildAlloca(
                    curBlock,
-                   Value.GlobalName(v, dots := FALSE, with_module := FALSE),
+                   UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE)),
                    mt);
     IF varMapN >= MaxVarMap THEN
       Abandon("too many variables in proc");

@@ -344,7 +344,8 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
        the outer proc.  Their addresses are passed directly as capture params
        to inner procs, so no special frame-struct handling is needed here. *)
     slotAddr := MSIR.BuildAlloca(b,
-                  Value.GlobalName(t, dots:=FALSE, with_module:=FALSE), mt);
+                  MSIRBuilder.UniqueLocalName(
+                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE)), mt);
     IF slotAddr = NIL THEN RETURN FALSE END;
     MSIRBuilder.VarMapAdd (t, slotAddr, mt);
     (* Emit language-default zero-init alongside CG's Type.InitValue in LangInit *)
