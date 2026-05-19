@@ -2,7 +2,11 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT;
+IMPORT RefSeq, Fmt, Text, Target, TFloat;
+
+(* RT0.ModuleInfo field count; all 13 fields are pointer-or-integer-sized,
+   no padding on any M3 target, so byte size = MI_nFields * Address.bytes. *)
+CONST MI_nFields = 13;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -944,7 +948,7 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
   BEGIN
     (* Initialise on first call: start right after MI_SIZE *)
     IF m.nextGlobalOff = 0 THEN
-      m.nextGlobalOff := M3RT.MI_SIZE DIV Target.Char.size;
+      m.nextGlobalOff := MI_nFields * Target.Address.bytes;
     END;
     (* Round up to alignment *)
     off := m.nextGlobalOff;
@@ -958,7 +962,7 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
   BEGIN
     IF m.nextGlobalOff = 0 THEN
-      RETURN M3RT.MI_SIZE DIV Target.Char.size;
+      RETURN MI_nFields * Target.Address.bytes;
     END;
     RETURN m.nextGlobalOff;
   END ModuleGlobalStructSize;
@@ -1002,7 +1006,7 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   uid           : INTEGER;
   fp            : ARRAY [0..7] OF [0..255];  (* Fingerprint2.T bytes, little-endian *)
   isTraced      : BOOLEAN;
-  kind          : INTEGER;  (* ORD(M3RT.TypeKind) *)
+  kind          : INTEGER;  (* ORD(RT0.TypeKind) *)
   dataSize      : INTEGER;  (* bytes *)
   dataAlignment : INTEGER;  (* bits *)
   parentUID     : INTEGER;  (* OBJ: parent fingerprint *)
