@@ -2713,22 +2713,22 @@ CONST
   TC_brand_ptr  = 12;  TC_name      = 13;  TC_next       = 14;
   TC_nBase      = 15;
 
-(* RT0.ObjectTypecell: Typecell base + 7 extension fields (absolute indices). *)
+(* RT0.ObjectTypecell extension field indices (relative to TC_nBase). *)
 CONST
-  OTC_parentID       = TC_nBase + 0;
-  OTC_linkProc       = TC_nBase + 1;
-  OTC_dataOffset     = TC_nBase + 2;
-  OTC_methodOffset   = TC_nBase + 3;
-  OTC_methodSize     = TC_nBase + 4;
-  OTC_defaultMethods = TC_nBase + 5;
-  OTC_parent         = TC_nBase + 6;
-  OTC_nFields        = TC_nBase + 7;
+  OTCe_parentID       = 0;
+  OTCe_linkProc       = 1;
+  OTCe_dataOffset     = 2;
+  OTCe_methodOffset   = 3;
+  OTCe_methodSize     = 4;
+  OTCe_defaultMethods = 5;
+  OTCe_parent         = 6;
+  OTC_nExt            = 7;
 
-(* RT0.ArrayTypecell: Typecell base + 2 extension fields (absolute indices). *)
+(* RT0.ArrayTypecell extension field indices (relative to TC_nBase). *)
 CONST
-  ATC_nDimensions = TC_nBase + 0;
-  ATC_elementSize = TC_nBase + 1;
-  ATC_nFields     = TC_nBase + 2;
+  ATCe_nDimensions = 0;
+  ATCe_elementSize = 1;
+  ATC_nExt         = 2;
 
 (* RT0.TypeLink field indices. *)
 CONST
@@ -2756,22 +2756,7 @@ CONST TCKinds = ARRAY [0 .. TC_nBase - 1] OF FieldKind {
   FieldKind.Ptr   (* next *)
 };
 
-CONST OTCKinds = ARRAY [0 .. OTC_nFields - 1] OF FieldKind {
-  FieldKind.IP,   (* typecode *)
-  FieldKind.IP,   (* selfID *)
-  FieldKind.I64,  (* fp *)
-  FieldKind.I8,   (* traced *)
-  FieldKind.I8,   (* kind *)
-  FieldKind.I8,   (* link_state *)
-  FieldKind.I8,   (* dataAlignment *)
-  FieldKind.IP,   (* dataSize *)
-  FieldKind.Ptr,  (* type_map *)
-  FieldKind.Ptr,  (* gc_map *)
-  FieldKind.Ptr,  (* type_desc *)
-  FieldKind.Ptr,  (* initProc *)
-  FieldKind.Ptr,  (* brand_ptr *)
-  FieldKind.Ptr,  (* name *)
-  FieldKind.Ptr,  (* next *)
+CONST OTCExtKinds = ARRAY [0 .. OTC_nExt - 1] OF FieldKind {
   FieldKind.IP,   (* parentID *)
   FieldKind.Ptr,  (* linkProc *)
   FieldKind.IP,   (* dataOffset *)
@@ -2781,22 +2766,7 @@ CONST OTCKinds = ARRAY [0 .. OTC_nFields - 1] OF FieldKind {
   FieldKind.Ptr   (* parent *)
 };
 
-CONST ATCKinds = ARRAY [0 .. ATC_nFields - 1] OF FieldKind {
-  FieldKind.IP,   (* typecode *)
-  FieldKind.IP,   (* selfID *)
-  FieldKind.I64,  (* fp *)
-  FieldKind.I8,   (* traced *)
-  FieldKind.I8,   (* kind *)
-  FieldKind.I8,   (* link_state *)
-  FieldKind.I8,   (* dataAlignment *)
-  FieldKind.IP,   (* dataSize *)
-  FieldKind.Ptr,  (* type_map *)
-  FieldKind.Ptr,  (* gc_map *)
-  FieldKind.Ptr,  (* type_desc *)
-  FieldKind.Ptr,  (* initProc *)
-  FieldKind.Ptr,  (* brand_ptr *)
-  FieldKind.Ptr,  (* name *)
-  FieldKind.Ptr,  (* next *)
+CONST ATCExtKinds = ARRAY [0 .. ATC_nExt - 1] OF FieldKind {
   FieldKind.IP,   (* nDimensions *)
   FieldKind.IP    (* elementSize *)
 };
@@ -2838,60 +2808,69 @@ PROCEDURE RTFieldLLType(fk: FieldKind): TEXT =
     END;
   END RTFieldLLType;
 
-(* Emit an LLVM named struct type for an RT0 record, inserting [N x i8] padding
-   between fields to match the C ABI natural-alignment layout. *)
 PROCEDURE EmitRTStructType(wr: Wr.T; name: TEXT;
                             READONLY kinds: ARRAY OF FieldKind) =
-  VAR off := 0; first := TRUE;
   BEGIN
-    Wr.PutText(wr, "%" & name & " = type { ");
-    FOR i := 0 TO LAST(kinds) DO
-      VAR
-        sz  := RTFieldSize(kinds[i]);
-        pad := (-off) MOD sz;
-      BEGIN
-        IF pad > 0 THEN
-          IF NOT first THEN Wr.PutText(wr, ", ") END;
-          Wr.PutText(wr, "[" & Fmt.Int(pad) & " x i8]");
-          first := FALSE;
-          INC(off, pad);
-        END;
-        IF NOT first THEN Wr.PutText(wr, ", ") END;
-        Wr.PutText(wr, RTFieldLLType(kinds[i]));
-        first := FALSE;
-        INC(off, sz);
-      END;
-    END;
-    Wr.PutText(wr, " }\n");
+    EmitRTStructTypeExt(wr, name, kinds, SUBARRAY(kinds, 0, 0));
   END EmitRTStructType;
 
-(* Emit the initializer fields for an RT0 struct global, inserting
-   zeroinitializer padding between logical fields to match the layout.
-   Pre: NUMBER(vals) = NUMBER(kinds). *)
+(* Emit an LLVM named struct type for base + optional extension fields,
+   inserting [N x i8] padding to match the C ABI natural-alignment layout. *)
+PROCEDURE EmitRTStructTypeExt(wr: Wr.T; name: TEXT;
+                               READONLY base: ARRAY OF FieldKind;
+                               READONLY ext:  ARRAY OF FieldKind) =
+  VAR off := 0; first := TRUE;
+  PROCEDURE One(fk: FieldKind) =
+    VAR sz := RTFieldSize(fk); pad := (-off) MOD sz;
+    BEGIN
+      IF pad > 0 THEN
+        IF NOT first THEN Wr.PutText(wr, ", ") END;
+        Wr.PutText(wr, "[" & Fmt.Int(pad) & " x i8]");
+        first := FALSE; INC(off, pad);
+      END;
+      IF NOT first THEN Wr.PutText(wr, ", ") END;
+      Wr.PutText(wr, RTFieldLLType(fk));
+      first := FALSE; INC(off, sz);
+    END One;
+  BEGIN
+    Wr.PutText(wr, "%" & name & " = type { ");
+    FOR i := 0 TO LAST(base) DO One(base[i]) END;
+    FOR i := 0 TO LAST(ext)  DO One(ext[i])  END;
+    Wr.PutText(wr, " }\n");
+  END EmitRTStructTypeExt;
+
 PROCEDURE EmitRTStructFields(wr: Wr.T;
                               READONLY kinds: ARRAY OF FieldKind;
                               READONLY vals:  ARRAY OF TEXT) =
-  VAR off := 0; first := TRUE;
   BEGIN
-    FOR i := 0 TO LAST(kinds) DO
-      VAR
-        sz  := RTFieldSize(kinds[i]);
-        pad := (-off) MOD sz;
-      BEGIN
-        IF pad > 0 THEN
-          IF NOT first THEN Wr.PutText(wr, ",\n") END;
-          Wr.PutText(wr, "  [" & Fmt.Int(pad) & " x i8] zeroinitializer");
-          first := FALSE;
-          INC(off, pad);
-        END;
-        IF NOT first THEN Wr.PutText(wr, ",\n") END;
-        Wr.PutText(wr, "  " & RTFieldLLType(kinds[i]) & " " & vals[i]);
-        first := FALSE;
-        INC(off, sz);
-      END;
-    END;
-    Wr.PutText(wr, "\n");
+    EmitRTStructFieldsExt(wr, kinds, vals, SUBARRAY(kinds, 0, 0), SUBARRAY(vals, 0, 0));
   END EmitRTStructFields;
+
+(* Emit the initializer fields for a base + optional extension RT0 struct global,
+   inserting zeroinitializer padding to maintain the natural-alignment layout. *)
+PROCEDURE EmitRTStructFieldsExt(wr: Wr.T;
+                                 READONLY baseKinds: ARRAY OF FieldKind;
+                                 READONLY baseVals:  ARRAY OF TEXT;
+                                 READONLY extKinds:  ARRAY OF FieldKind;
+                                 READONLY extVals:   ARRAY OF TEXT) =
+  VAR off := 0; first := TRUE;
+  PROCEDURE One(fk: FieldKind; val: TEXT) =
+    VAR sz := RTFieldSize(fk); pad := (-off) MOD sz;
+    BEGIN
+      IF pad > 0 THEN
+        IF NOT first THEN Wr.PutText(wr, ",\n") END;
+        Wr.PutText(wr, "  [" & Fmt.Int(pad) & " x i8] zeroinitializer");
+        first := FALSE; INC(off, pad);
+      END;
+      IF NOT first THEN Wr.PutText(wr, ",\n") END;
+      Wr.PutText(wr, "  " & RTFieldLLType(fk) & " " & val);
+      first := FALSE; INC(off, sz);
+    END One;
+  BEGIN
+    FOR i := 0 TO LAST(baseKinds) DO One(baseKinds[i], baseVals[i]) END;
+    FOR i := 0 TO LAST(extKinds)  DO One(extKinds[i],  extVals[i])  END;
+    Wr.PutText(wr, "\n");
+  END EmitRTStructFieldsExt;
 
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   (* RT0.TypeKind ordinals: { Unknown=0, Ref=1, Obj=2, Array=3 } *)
@@ -2901,22 +2880,22 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
     IF n = 0 THEN RETURN END;
 
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
-    EmitRTStructType(wr, "TC_t",  TCKinds);
-    EmitRTStructType(wr, "OTC_t", OTCKinds);
-    EmitRTStructType(wr, "ATC_t", ATCKinds);
+    EmitRTStructType(wr, "TC_t", TCKinds);
+    EmitRTStructTypeExt(wr, "OTC_t", TCKinds, OTCExtKinds);
+    EmitRTStructTypeExt(wr, "ATC_t", TCKinds, ATCExtKinds);
 
     FOR k := 0 TO n - 1 DO
       VAR
-        d       := MSIR.ModuleTypeDesc(m, k);
-        nm      := MSIR.TypeDescName(d);
-        knd     := MSIR.TypeDescKind(d);
-        isObj   := knd = TK_Obj;
-        isArr   := knd = TK_Array;
-        nTotal  : INTEGER;
-        structNm: TEXT;
-        nameSym : TEXT := NIL;
-        nextVal : TEXT;
-        vals    : REF ARRAY OF TEXT;
+        d        := MSIR.ModuleTypeDesc(m, k);
+        nm       := MSIR.TypeDescName(d);
+        knd      := MSIR.TypeDescKind(d);
+        isObj    := knd = TK_Obj;
+        isArr    := knd = TK_Array;
+        structNm : TEXT;
+        nameSym  : TEXT := NIL;
+        nextVal  : TEXT;
+        tcVals   : ARRAY [0 .. TC_nBase - 1] OF TEXT;
+        extVals  : REF ARRAY OF TEXT := NIL;
       BEGIN
         IF k < n - 1
           THEN nextVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
@@ -2924,14 +2903,14 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         END;
 
         IF isObj THEN
-          structNm := "OTC_t"; nTotal := OTC_nFields;
+          structNm := "OTC_t";
+          extVals  := NEW(REF ARRAY OF TEXT, OTC_nExt);
         ELSIF isArr THEN
-          structNm := "ATC_t"; nTotal := ATC_nFields;
+          structNm := "ATC_t";
+          extVals  := NEW(REF ARRAY OF TEXT, ATC_nExt);
         ELSE
-          structNm := "TC_t";  nTotal := TC_nBase;
+          structNm := "TC_t";
         END;
-
-        vals := NEW(REF ARRAY OF TEXT, nTotal);
 
         (* OTC extension — sets nameSym and emits ancillary globals *)
         IF isObj THEN
@@ -2956,46 +2935,49 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
               END;
               Wr.PutText(wr, "]\n");
             END;
-            vals[OTC_parentID]       := Fmt.Int(MSIR.TypeDescParentUID(d));
-            vals[OTC_linkProc]       := "null";
-            vals[OTC_dataOffset]     := "0";
-            vals[OTC_methodOffset]   := "0";
-            vals[OTC_methodSize]     := Fmt.Int(MSIR.TypeDescMethodBytes(d));
-            vals[OTC_defaultMethods] := dmv;
-            vals[OTC_parent]         := "null";
+            extVals[OTCe_parentID]       := Fmt.Int(MSIR.TypeDescParentUID(d));
+            extVals[OTCe_linkProc]       := "null";
+            extVals[OTCe_dataOffset]     := "0";
+            extVals[OTCe_methodOffset]   := "0";
+            extVals[OTCe_methodSize]     := Fmt.Int(MSIR.TypeDescMethodBytes(d));
+            extVals[OTCe_defaultMethods] := dmv;
+            extVals[OTCe_parent]         := "null";
           END;
         END;
 
         (* ATC extension *)
         IF isArr THEN
-          vals[ATC_nDimensions] := Fmt.Int(MSIR.TypeDescNDimensions(d));
-          vals[ATC_elementSize] := Fmt.Int(MSIR.TypeDescElementSize(d));
+          extVals[ATCe_nDimensions] := Fmt.Int(MSIR.TypeDescNDimensions(d));
+          extVals[ATCe_elementSize] := Fmt.Int(MSIR.TypeDescElementSize(d));
         END;
 
         (* Typecell base fields *)
-        vals[TC_typecode]   := "0";
-        vals[TC_selfID]     := Fmt.Int(MSIR.TypeDescUID(d));
-        vals[TC_fp]         := FPHex(d);
-        vals[TC_traced]     := Fmt.Int(ORD(MSIR.TypeDescTraced(d)));
-        vals[TC_kind]       := Fmt.Int(knd);
-        vals[TC_link_state] := "0";
-        vals[TC_dataAlign]  := Fmt.Int(MSIR.TypeDescAlign(d));
-        vals[TC_dataSize]   := Fmt.Int(MSIR.TypeDescSize(d));
-        vals[TC_type_map]   := "null";
-        vals[TC_gc_map]     := "null";
-        vals[TC_type_desc]  := "null";
-        vals[TC_initProc]   := "null";
-        vals[TC_brand_ptr]  := "null";
+        tcVals[TC_typecode]   := "0";
+        tcVals[TC_selfID]     := Fmt.Int(MSIR.TypeDescUID(d));
+        tcVals[TC_fp]         := FPHex(d);
+        tcVals[TC_traced]     := Fmt.Int(ORD(MSIR.TypeDescTraced(d)));
+        tcVals[TC_kind]       := Fmt.Int(knd);
+        tcVals[TC_link_state] := "0";
+        tcVals[TC_dataAlign]  := Fmt.Int(MSIR.TypeDescAlign(d));
+        tcVals[TC_dataSize]   := Fmt.Int(MSIR.TypeDescSize(d));
+        tcVals[TC_type_map]   := "null";
+        tcVals[TC_gc_map]     := "null";
+        tcVals[TC_type_desc]  := "null";
+        tcVals[TC_initProc]   := "null";
+        tcVals[TC_brand_ptr]  := "null";
         IF nameSym # NIL
-          THEN vals[TC_name] := nameSym;
-          ELSE vals[TC_name] := "null";
+          THEN tcVals[TC_name] := nameSym;
+          ELSE tcVals[TC_name] := "null";
         END;
-        vals[TC_next] := nextVal;
+        tcVals[TC_next] := nextVal;
 
         Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
-        IF isObj THEN EmitRTStructFields(wr, OTCKinds, vals^);
-        ELSIF isArr THEN EmitRTStructFields(wr, ATCKinds, vals^);
-        ELSE EmitRTStructFields(wr, TCKinds, vals^);
+        IF isObj THEN
+          EmitRTStructFieldsExt(wr, TCKinds, tcVals, OTCExtKinds, extVals^);
+        ELSIF isArr THEN
+          EmitRTStructFieldsExt(wr, TCKinds, tcVals, ATCExtKinds, extVals^);
+        ELSE
+          EmitRTStructFields(wr, TCKinds, tcVals);
         END;
         Wr.PutText(wr, "}\n");
       END;
