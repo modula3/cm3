@@ -837,8 +837,15 @@ CG) rather than incorrect IR.
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR silently omits callbacks.
-- **Debug symbols**: no DWARF emitted yet (self-contained additive work;
-  see hook points in `BeginProc` / `AddLocalMSIR`).
+- **Debug symbols (Phase 1 complete):** `DICompileUnit` / `DIFile` /
+  `DISubprogram` per proc with `DW_LANG_Modula3` are emitted; `llvm-as`
+  accepts the IR with zero warnings; function-level backtraces and
+  entry-point breakpoints work in `lldb`.  Remaining phases: (2) variable
+  declarations (`DILocalVariable` + `llvm.dbg.declare`, `DINamespace` per
+  module, split `name`/`linkageName`, `DIBasicType` for primitives);
+  (3) composite types (`RECORD`, `OBJECT`, `ARRAY`) and per-statement
+  `DILocation`; (4) `llvm.dbg.value` for optimized builds.
+  See `MSIR-ROADMAP.md §3` for the full phased plan.
 
 ### Key Source Files
 

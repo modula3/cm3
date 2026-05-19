@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-19 (nested proc procedure values complete; debug symbols next)
+Last updated: 2026-05-19 (Phase 1 debug symbols complete; Phase 2 variable declarations next)
 
 ## What's Working
 
@@ -149,12 +149,60 @@ This is the gating item for LLVM optimizer integration and bootstrap.
 
 ### 3. Debug symbols
 
-No source locations in emitted LLVM IR. Natural hook points:
-`Scanner.offset` (current source position), `CG.Gen_location` (CG path
-equivalent), `MSIRBuilder.BeginProc` (function-level DISubprogram),
-`Variable.AddLocalMSIR` (DILocalVariable + dbg.declare). Self-contained
-additive work; does not affect correctness. Prerequisite for usable
-`lldb` integration.
+**Phase 1 (complete, 2026-05-19):** `DICompileUnit` / `DIFile` /
+`DISubprogram` per proc. `DW_LANG_Modula3` language tag. `DILocation(line:0)`
+stub on call/invoke instructions satisfies LLVM verifier. `llvm-as` accepts
+IR with zero warnings; `llvm-dwarfdump` shows correct `DW_TAG_subprogram`
+entries. Enables function-name backtraces and function-entry breakpoints in
+`lldb`.
+
+**Phase 2 — Variable declarations (next):**
+- Split `name` / `linkageName` in `DISubprogram`: `name` should be the short
+  unmangled proc name (`"Sum"`), `linkageName` the mangled symbol
+  (`"Main__Sum"`). LLDB uses `name` for display and `linkageName` for symbol
+  lookup. Currently both carry the mangled form.
+- Emit one `DINamespace(name: "Main", scope: !cu)` per module and scope all
+  subprograms to it rather than to `DIFile`. This lets `lldb` resolve
+  `Main::Sum` lookups and `frame variable Main::x` syntax.
+- `DILocalVariable` + `llvm.dbg.declare` for each `alloca` in
+  `Variable.AddLocalMSIR` / `BindFormalMSIR`. Hook: `Variable.T.origin`
+  carries the declaration site Scanner offset; decode it with `Scanner.Here`
+  at alloca-emit time.
+- `DIBasicType` nodes for M3 primitive types: `INTEGER`→`DW_ATE_signed 64`,
+  `CARDINAL`→`DW_ATE_unsigned 64`, `BOOLEAN`→`DW_ATE_boolean 8`,
+  `REAL`→`DW_ATE_float 64`, `LONGREAL`→`DW_ATE_float 64`,
+  `CHAR`→`DW_ATE_unsigned_char 8`. Use these in `DISubroutineType` per proc
+  (currently all procs share a stub `!{null}` void type).
+
+**Phase 3 — Composite types and per-statement locations:**
+- `DW_TAG_structure_type` for `RECORD` / `OBJECT`; per-field
+  `DW_TAG_member` with `DW_AT_data_member_location` in bits.  For `OBJECT`,
+  emit the hidden VMT pointer as the first member (`_vptr: void*`).
+- `DW_TAG_array_type` with explicit `DW_TAG_subrange_type` children
+  carrying `DW_AT_lower_bound` and `DW_AT_upper_bound` (M3 arrays are not
+  necessarily zero-indexed; getting the bounds right is essential).
+- `DW_TAG_enumeration_type` for `ENUM` types; LLDB maps these to C enums and
+  prints text labels instead of raw integers in `frame variable` output.
+- Per-instruction `DILocation`: attach `!dbg !loc` to every instruction,
+  advancing the location when `Scanner.offset` changes between statement
+  compilations. Enables source-level single-stepping. Requires a
+  `curLocation: INTEGER` tracker in `MSIRBuilder` analogous to
+  `CG.Gen_location`.
+
+**Phase 4 — Optimized builds:**
+When `opt -O1+` is enabled (gated on MSIR becoming the default backend),
+mem2reg removes allocas and `llvm.dbg.declare` calls become invalid.
+Must switch to `llvm.dbg.value` annotation at every SSA update point.
+This is an opt-in concern; Phase 1–3 target `-O0` equivalents only.
+
+**LLDB fallback behaviour:**
+LLDB recognises `DW_LANG_Modula3`, finds no native TypeSystem for it, and
+falls back to its C parser for expression evaluation. This means `expr x`
+and `p x` invoke Clang and will reject M3 syntax.  Developers should use
+`frame variable` (or `v`) which parses DWARF memory offsets directly and
+bypasses Clang entirely.  A Python data-formatter script auto-loaded at
+LLDB startup can pretty-print M3-specific `DW_TAG_structure_type` nodes
+(e.g. open-array dope vectors, REF fields) — deferred post-MVP tooling.
 
 ### 4. Dynamic procMap
 
