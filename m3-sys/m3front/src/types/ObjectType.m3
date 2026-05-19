@@ -731,6 +731,10 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
       FOR i := 0 TO 7 DO fpa[i] := tfp.byte[i] END;
       MSIR.SetTypeDescFP (desc, fpa);
     END;
+    VAR uName := UserName (t);
+    BEGIN
+      IF uName # NIL THEN MSIR.SetTypeDescUserName (desc, uName) END;
+    END;
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;
 

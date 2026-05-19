@@ -324,6 +324,8 @@ PROCEDURE TypeDescSize        (d: TypeDesc): INTEGER; (* dataSize in bytes *)
 PROCEDURE TypeDescAlign       (d: TypeDesc): INTEGER; (* dataAlignment in bits *)
 PROCEDURE TypeDescParentUID   (d: TypeDesc): INTEGER; (* OBJ: parent fingerprint *)
 PROCEDURE TypeDescDataOffset  (d: TypeDesc): INTEGER; (* OBJ: field region byte offset *)
+PROCEDURE SetTypeDescUserName (d: TypeDesc; name: TEXT); (* OBJ: user-visible name for TC_name *)
+PROCEDURE TypeDescUserName    (d: TypeDesc): TEXT;       (* OBJ: user-visible name or NIL *)
 PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
 PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescMethod      (d: TypeDesc;  i: INTEGER): TEXT;

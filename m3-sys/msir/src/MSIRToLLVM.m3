@@ -2588,7 +2588,7 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
 (* TypeCell layout (M3RT offsets, 64-bit, all byte values unless noted):
    [0]  typecode       i64  (0, assigned by RTLinker.FixTypes)
    [8]  selfID         i64  (M3FP.ToInt: XOR-fold of the 64-bit fingerprint)
-   [16] fp             i64  (Fingerprint2.T bytes[0..7] in little-endian order)
+   [16] fp             i64  (Fingerprint.T bytes[0..7] in little-endian order)
    [24] traced         i8   (1=traced)
    [25] kind           i8   (6=Ref, 13=Obj)
    [26] link_state     i8   (0=unlinked)
@@ -2761,9 +2761,17 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         END;
 
         IF isObj THEN
-          (* ObjectTypeCell: emit vtable first, then the cell *)
-          VAR nMethods := MSIR.TypeDescMethodCount(d);
+          (* ObjectTypeCell: emit name string, vtable, then the cell *)
+          VAR
+            nMethods := MSIR.TypeDescMethodCount(d);
+            uName    := MSIR.TypeDescUserName(d);
+            nameSym  := "@" & nm & ".tc_name";
           BEGIN
+            IF uName # NIL THEN
+              Wr.PutText(wr, nameSym & " = private unnamed_addr constant [" &
+                             Fmt.Int(Text.Length(uName) + 1) & " x i8] c\"" &
+                             uName & "\\00\"\n");
+            END;
             IF nMethods > 0 THEN
               Wr.PutText(wr, "@" & nm & ".methods = internal constant [");
               Wr.PutText(wr, Fmt.Int(nMethods) & " x ptr] [");
@@ -2773,40 +2781,41 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
               END;
               Wr.PutText(wr, "]\n");
             END;
-          END;
-          Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
-          Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
-          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint2.T bytes *)
-          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
-          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
-          Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          IF padN > 0 THEN
-            Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
-          END;
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize *)
-          Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
-          Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
-          Wr.PutText(wr, "  ptr null,\n");  (* linkProc *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescDataOffset(d)) & ",\n"); (* dataOffset bits *)
-          Wr.PutText(wr, "  " & ip & " 0,\n");  (* methodOffset *)
-          VAR nMeth2 := MSIR.TypeDescMethodCount(d);
-          BEGIN
-            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescMethodBytes(d)) & ",\n"); (* methodSize *)
-            IF nMeth2 > 0
+            Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
+            Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
+            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
+            Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint.T bytes *)
+            Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
+            Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
+            Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
+            IF padN > 0 THEN
+              Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+            END;
+            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize: own fields; RTType accumulates *)
+            Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null,\n");  (* type_map..brand *)
+            IF uName # NIL
+              THEN Wr.PutText(wr, "  ptr " & nameSym & ",\n");
+              ELSE Wr.PutText(wr, "  ptr null,\n");
+            END;
+            Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
+            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
+            Wr.PutText(wr, "  ptr null,\n");  (* linkProc *)
+            Wr.PutText(wr, "  " & ip & " 0,\n");  (* dataOffset: RTType fills in *)
+            Wr.PutText(wr, "  " & ip & " 0,\n");  (* methodOffset: RTType fills in *)
+            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescMethodBytes(d)) & ",\n"); (* methodSize: own; RTType accumulates *)
+            IF nMethods > 0
               THEN Wr.PutText(wr, "  ptr @" & nm & ".methods,\n");
               ELSE Wr.PutText(wr, "  ptr null,\n");
             END;
+            Wr.PutText(wr, "  ptr null\n");  (* parent TypeCell *)
+            Wr.PutText(wr, "}\n");
           END;
-          Wr.PutText(wr, "  ptr null\n");  (* parent TypeCell *)
-          Wr.PutText(wr, "}\n");
         ELSIF isArr THEN
           (* ArrayTypeCell: plain TC fields + nDimensions + elementSize *)
           Wr.PutText(wr, "@" & nm & " = internal global %ATC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint2.T bytes *)
+          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint.T bytes *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
@@ -2824,7 +2833,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
           Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
           Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
           Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint2.T bytes *)
+          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint.T bytes *)
           Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
           Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
           Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
