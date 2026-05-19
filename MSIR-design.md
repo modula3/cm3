@@ -837,15 +837,18 @@ CG) rather than incorrect IR.
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR silently omits callbacks.
-- **Debug symbols (Phase 1 complete):** `DICompileUnit` / `DIFile` /
-  `DISubprogram` per proc with `DW_LANG_Modula3` are emitted; `llvm-as`
-  accepts the IR with zero warnings; function-level backtraces and
-  entry-point breakpoints work in `lldb`.  Remaining phases: (2) variable
-  declarations (`DILocalVariable` + `llvm.dbg.declare`, `DINamespace` per
-  module, split `name`/`linkageName`, `DIBasicType` for primitives);
-  (3) composite types (`RECORD`, `OBJECT`, `ARRAY`) and per-statement
-  `DILocation`; (4) `llvm.dbg.value` for optimized builds.
-  See `MSIR-ROADMAP.md §3` for the full phased plan.
+- **Debug symbols (Phase 2 complete):** `DICompileUnit` / `DIFile` /
+  `DISubprogram` per proc with `DW_LANG_Modula3`, `DINamespace` per module,
+  `name`/`linkageName` split in DISubprogram, nine `DIBasicType` nodes
+  (INTEGER…ADDRESS), `DILocalVariable` + `@llvm.dbg.declare` for alloca-backed
+  variables of scalar and pointer types.  `lldb frame variable` shows scalar
+  locals (INTEGER, BOOLEAN, REAL, CARDINAL, CHAR, pointer-typed refs).
+  Untracked: RECORD/ARRAY/SET/proc-value allocas (btIdx = -1; need Phase 3
+  composite types), VAR/READONLY aggregate params (no alloca), per-variable
+  declaration lines (all use proc line as fallback).
+  LLVM 22 constraint: `DILocalVariable` without `type:` crashes the DWARF
+  emitter; fixed by the ADDRESS fallback for pointer kinds and skipping
+  unrecognised types entirely.  See `MSIR-ROADMAP.md §3` for the phased plan.
 
 ### Key Source Files
 

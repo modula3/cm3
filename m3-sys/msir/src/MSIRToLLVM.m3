@@ -1412,13 +1412,30 @@ PROCEDURE StripVarName(ssaName: TEXT): TEXT =
   END StripVarName;
 
 (* Return TRUE for SSA names that are internal compiler temporaries and
-   should not get DILocalVariable entries (e.g. %__ll3, %__env). *)
+   should not get DILocalVariable entries:
+   - %__xxx  — double-underscore helpers (%__env, %__ll3, %__result_ptr …)
+   - %t<digits>  — MSIR freshName-generated names (%t1, %t5 …) used for
+                   unnamed allocas (closure env arrays, result-dispatch slots) *)
 PROCEDURE IsInternalVarName(ssaName: TEXT): BOOLEAN =
+  VAR len := Text.Length(ssaName);
   BEGIN
-    RETURN Text.Length(ssaName) >= 3
-       AND Text.GetChar(ssaName, 0) = '%'
+    IF len < 2 OR Text.GetChar(ssaName, 0) # '%' THEN RETURN FALSE END;
+    (* %__xxx pattern *)
+    IF len >= 3
        AND Text.GetChar(ssaName, 1) = '_'
-       AND Text.GetChar(ssaName, 2) = '_';
+       AND Text.GetChar(ssaName, 2) = '_' THEN
+      RETURN TRUE;
+    END;
+    (* %t<digits> pattern — freshName temporaries *)
+    IF Text.GetChar(ssaName, 1) = 't' AND len >= 3 THEN
+      FOR k := 2 TO len - 1 DO
+        IF Text.GetChar(ssaName, k) < '0' OR Text.GetChar(ssaName, k) > '9' THEN
+          RETURN FALSE;
+        END;
+      END;
+      RETURN TRUE;
+    END;
+    RETURN FALSE;
   END IsInternalVarName;
 
 (* Return the DILocalVariable metadata index for the alloca result value,

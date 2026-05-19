@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-19 (Phase 1 debug symbols complete; Phase 2 variable declarations next)
+Last updated: 2026-05-19 (Phase 2 debug symbols complete; variable declarations working in LLDB)
 
 ## What's Working
 
@@ -156,23 +156,35 @@ IR with zero warnings; `llvm-dwarfdump` shows correct `DW_TAG_subprogram`
 entries. Enables function-name backtraces and function-entry breakpoints in
 `lldb`.
 
-**Phase 2 — Variable declarations (next):**
-- Split `name` / `linkageName` in `DISubprogram`: `name` should be the short
-  unmangled proc name (`"Sum"`), `linkageName` the mangled symbol
-  (`"Main__Sum"`). LLDB uses `name` for display and `linkageName` for symbol
-  lookup. Currently both carry the mangled form.
-- Emit one `DINamespace(name: "Main", scope: !cu)` per module and scope all
-  subprograms to it rather than to `DIFile`. This lets `lldb` resolve
-  `Main::Sum` lookups and `frame variable Main::x` syntax.
-- `DILocalVariable` + `llvm.dbg.declare` for each `alloca` in
-  `Variable.AddLocalMSIR` / `BindFormalMSIR`. Hook: `Variable.T.origin`
-  carries the declaration site Scanner offset; decode it with `Scanner.Here`
-  at alloca-emit time.
-- `DIBasicType` nodes for M3 primitive types: `INTEGER`→`DW_ATE_signed 64`,
-  `CARDINAL`→`DW_ATE_unsigned 64`, `BOOLEAN`→`DW_ATE_boolean 8`,
-  `REAL`→`DW_ATE_float 64`, `LONGREAL`→`DW_ATE_float 64`,
-  `CHAR`→`DW_ATE_unsigned_char 8`. Use these in `DISubroutineType` per proc
-  (currently all procs share a stub `!{null}` void type).
+**Phase 2 (complete, 2026-05-19):** Variable declarations. What works:
+
+- `DISubprogram` now carries separate `name` (short display: `"Sum"`) and
+  `linkageName` (mangled linker: `"Main__Sum"`); LLDB shows the display name
+  in backtraces and function listings.
+- One `DINamespace(name: "Main", scope: !cu)` per module; all subprograms
+  scoped to it.  Enables `Main::Sum` lookups in LLDB.
+- Nine fixed `DIBasicType` nodes: `INTEGER` (DW_ATE_signed 64),
+  `CARDINAL` (DW_ATE_unsigned 64), `INTEGER32` / `CARDINAL32` (32-bit
+  variants), `BOOLEAN` (DW_ATE_boolean 1), `REAL` (DW_ATE_float 32),
+  `LONGREAL` (DW_ATE_float 64), `CHAR` (DW_ATE_unsigned_char 8),
+  `ADDRESS` (DW_ATE_address 64).
+- `DILocalVariable` + `@llvm.dbg.declare` for allocas whose element type maps
+  to one of the nine basic types.  `frame variable` in LLDB shows variable
+  names, values, and types for scalar and pointer-typed locals.
+- Internal MSIR temporaries filtered: `%__xxx` (double-underscore helpers) and
+  `%t<digits>` (freshName-generated unnamed allocas) are excluded so they do
+  not appear as spurious variables in LLDB.
+
+**Known Phase 2 gaps** (tracked for Phase 3):
+
+| Gap | Detail |
+|---|---|
+| Untracked alloca types | `Struct`, `OpenArray`, `HeapArray`, `FixedArray`, `ProcType`, `Set`, `Object`, `Subrange`, `IWide`, `I8/I16/W16` — all yield btIdx = -1, no DILocalVariable emitted |
+| VAR/READONLY aggregate params | Passed as raw pointers into the proc; no alloca created, so invisible to LLDB (`frame variable` can't show them without a `DW_AT_location` expression) |
+| Per-variable declaration line | All variables in a proc use the proc's source line as their `decl_line`. `Variable.T.origin` carries the real scanner offset but is not threaded through MSIR yet |
+| `_result` variable | The implicit return-value alloca appears in `frame variable` as `_result`. This is technically correct (it IS a named M3 variable) but may surprise users expecting C-style return semantics |
+| `AllocaDyn` | Dynamic stack allocas (VLAs) are not tracked |
+| LLVM 22 constraint | `DILocalVariable` without a `type:` field crashes `DwarfCompileUnit::createAndAddScopeChildren` in LLVM 22. All tracked vars must have a basic type — hence the `ADDRESS` fallback for pointer kinds |
 
 **Phase 3 — Composite types and per-statement locations:**
 - `DW_TAG_structure_type` for `RECORD` / `OBJECT`; per-field
