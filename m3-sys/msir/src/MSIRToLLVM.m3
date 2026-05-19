@@ -2715,35 +2715,158 @@ PROCEDURE EmitConstArrays(wr: Wr.T;  m: MSIR.Module) =
     END;
   END EmitConstArrays;
 
-(* Render the 64-bit fingerprint from a TypeDesc as a signed decimal LLVM i64.
-   Bytes are stored little-endian (byte[0]=LSB).  LLVM accepts signed decimal
-   for i64 constants; 0x notation triggers LLVM's float-constant path. *)
-PROCEDURE FPDec(d: MSIR.TypeDesc): TEXT =
-  VAR v: INTEGER := 0;
+(* Render the 64-bit fingerprint from a TypeDesc as an unsigned hex LLVM i64.
+   Bytes are stored little-endian (byte[0]=LSB); emit byte[7..0] MSB-first.
+   Uses the LLVM IR u0x prefix for unsigned hex integer constants. *)
+PROCEDURE FPHex(d: MSIR.TypeDesc): TEXT =
+  VAR s := "u0x";
   BEGIN
-    FOR i := 0 TO 7 DO
-      v := Word.Or(v, Word.LeftShift(MSIR.TypeDescFPByte(d, i), i * 8));
+    FOR i := 7 TO 0 BY -1 DO
+      s := s & Fmt.Pad(Fmt.Int(MSIR.TypeDescFPByte(d, i), 16), 2, '0');
     END;
-    RETURN Fmt.Int(v);
-  END FPDec;
+    RETURN s;
+  END FPHex;
+
+(* Returns TRUE if 'bits' is a named field start in a TC/OTC/ATC struct. *)
+PROCEDURE IsKnownTCBit(bits: INTEGER; isObj, isArr: BOOLEAN): BOOLEAN =
+  BEGIN
+    RETURN bits = M3RT.TC_typecode      OR bits = M3RT.TC_selfID
+        OR bits = M3RT.TC_fp            OR bits = M3RT.TC_traced
+        OR bits = M3RT.TC_kind          OR bits = M3RT.TC_link_state
+        OR bits = M3RT.TC_dataAlignment OR bits = M3RT.TC_dataSize
+        OR bits = M3RT.TC_type_map      OR bits = M3RT.TC_gc_map
+        OR bits = M3RT.TC_type_desc     OR bits = M3RT.TC_initProc
+        OR bits = M3RT.TC_brand         OR bits = M3RT.TC_name
+        OR bits = M3RT.TC_next
+        OR (isObj AND (bits = M3RT.OTC_parentID       OR bits = M3RT.OTC_linkProc
+                    OR bits = M3RT.OTC_dataOffset      OR bits = M3RT.OTC_methodOffset
+                    OR bits = M3RT.OTC_methodSize      OR bits = M3RT.OTC_defaultMethods
+                    OR bits = M3RT.OTC_parent))
+        OR (isArr AND (bits = M3RT.ATC_nDimensions    OR bits = M3RT.ATC_elementSize));
+  END IsKnownTCBit;
+
+(* Emit one %TC_t / %OTC_t / %ATC_t named struct type definition.
+   Field types and padding are derived from M3RT bit-offset constants. *)
+PROCEDURE EmitOneTCType(wr: Wr.T; name: TEXT; sizeBits: INTEGER;
+                        ip: TEXT; isObj, isArr: BOOLEAN) =
+  VAR
+    bits  := 0;
+    IP    := Target.Integer.size;
+    cs    := Target.Char.size;
+    first := TRUE;
+  BEGIN
+    Wr.PutText(wr, "%" & name & " = type { ");
+    WHILE bits < sizeBits DO
+      VAR ftype: TEXT;  fBits: INTEGER;
+      BEGIN
+        IF    bits = M3RT.TC_typecode        THEN ftype := ip;    fBits := IP
+        ELSIF bits = M3RT.TC_selfID          THEN ftype := ip;    fBits := IP
+        ELSIF bits = M3RT.TC_fp              THEN ftype := "i64"; fBits := 64
+        ELSIF bits = M3RT.TC_traced          THEN ftype := "i8";  fBits := cs
+        ELSIF bits = M3RT.TC_kind            THEN ftype := "i8";  fBits := cs
+        ELSIF bits = M3RT.TC_link_state      THEN ftype := "i8";  fBits := cs
+        ELSIF bits = M3RT.TC_dataAlignment   THEN ftype := "i8";  fBits := cs
+        ELSIF bits = M3RT.TC_dataSize        THEN ftype := ip;    fBits := IP
+        ELSIF bits = M3RT.TC_type_map        THEN ftype := "ptr"; fBits := IP
+        ELSIF bits = M3RT.TC_gc_map          THEN ftype := "ptr"; fBits := IP
+        ELSIF bits = M3RT.TC_type_desc       THEN ftype := "ptr"; fBits := IP
+        ELSIF bits = M3RT.TC_initProc        THEN ftype := "ptr"; fBits := IP
+        ELSIF bits = M3RT.TC_brand           THEN ftype := "ptr"; fBits := IP
+        ELSIF bits = M3RT.TC_name            THEN ftype := "ptr"; fBits := IP
+        ELSIF bits = M3RT.TC_next            THEN ftype := "ptr"; fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_parentID       THEN ftype := ip;    fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_linkProc       THEN ftype := "ptr"; fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_dataOffset     THEN ftype := ip;    fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_methodOffset   THEN ftype := ip;    fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_methodSize     THEN ftype := ip;    fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_defaultMethods THEN ftype := "ptr"; fBits := IP
+        ELSIF isObj AND bits = M3RT.OTC_parent         THEN ftype := "ptr"; fBits := IP
+        ELSIF isArr AND bits = M3RT.ATC_nDimensions    THEN ftype := ip;    fBits := IP
+        ELSIF isArr AND bits = M3RT.ATC_elementSize    THEN ftype := ip;    fBits := IP
+        ELSE
+          (* Padding: accumulate bytes until the next named field. *)
+          VAR padEnd := bits + cs;
+          BEGIN
+            WHILE padEnd < sizeBits AND NOT IsKnownTCBit(padEnd, isObj, isArr) DO
+              INC(padEnd, cs);
+            END;
+            ftype := "[" & Fmt.Int((padEnd - bits) DIV cs) & " x i8]";
+            fBits := padEnd - bits;
+          END;
+        END;
+        IF NOT first THEN Wr.PutText(wr, ", ") END;
+        first := FALSE;
+        Wr.PutText(wr, ftype);
+        INC(bits, fBits);
+      END;
+    END;
+    Wr.PutText(wr, " }\n");
+  END EmitOneTCType;
+
+(* Emit one field of a TC/OTC/ATC initializer at bit offset 'bits'.
+   sizeBits is the total struct size.  Sets fBits to the field width consumed.
+   Emits "  <type> <value>" (no trailing comma/newline). *)
+PROCEDURE EmitOneTCField(wr: Wr.T; bits, sizeBits: INTEGER; ip: TEXT;
+                         isObj, isArr: BOOLEAN;  d: MSIR.TypeDesc;
+                         nm, nameSym, nextVal: TEXT;  nMethods: INTEGER;
+                         VAR fBits: INTEGER) =
+  VAR
+    IP := Target.Integer.size;
+    cs := Target.Char.size;
+    ftype, fval: TEXT;
+  BEGIN
+    IF    bits = M3RT.TC_typecode        THEN ftype := ip;    fBits := IP; fval := "0"
+    ELSIF bits = M3RT.TC_selfID          THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescUID(d))
+    ELSIF bits = M3RT.TC_fp              THEN ftype := "i64"; fBits := 64; fval := FPHex(d)
+    ELSIF bits = M3RT.TC_traced          THEN ftype := "i8";  fBits := cs; fval := Fmt.Int(ORD(MSIR.TypeDescTraced(d)))
+    ELSIF bits = M3RT.TC_kind            THEN ftype := "i8";  fBits := cs; fval := Fmt.Int(MSIR.TypeDescKind(d))
+    ELSIF bits = M3RT.TC_link_state      THEN ftype := "i8";  fBits := cs; fval := "0"
+    ELSIF bits = M3RT.TC_dataAlignment   THEN ftype := "i8";  fBits := cs; fval := Fmt.Int(MSIR.TypeDescAlign(d))
+    ELSIF bits = M3RT.TC_dataSize        THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescSize(d))
+    ELSIF bits = M3RT.TC_type_map        THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF bits = M3RT.TC_gc_map          THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF bits = M3RT.TC_type_desc       THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF bits = M3RT.TC_initProc        THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF bits = M3RT.TC_brand           THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF bits = M3RT.TC_name            THEN ftype := "ptr"; fBits := IP;
+      IF nameSym # NIL THEN fval := nameSym ELSE fval := "null" END
+    ELSIF bits = M3RT.TC_next            THEN ftype := "ptr"; fBits := IP; fval := nextVal
+    ELSIF isObj AND bits = M3RT.OTC_parentID       THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescParentUID(d))
+    ELSIF isObj AND bits = M3RT.OTC_linkProc       THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF isObj AND bits = M3RT.OTC_dataOffset     THEN ftype := ip;    fBits := IP; fval := "0"
+    ELSIF isObj AND bits = M3RT.OTC_methodOffset   THEN ftype := ip;    fBits := IP; fval := "0"
+    ELSIF isObj AND bits = M3RT.OTC_methodSize     THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescMethodBytes(d))
+    ELSIF isObj AND bits = M3RT.OTC_defaultMethods THEN ftype := "ptr"; fBits := IP;
+      IF nMethods > 0 THEN fval := "@" & nm & ".methods" ELSE fval := "null" END
+    ELSIF isObj AND bits = M3RT.OTC_parent         THEN ftype := "ptr"; fBits := IP; fval := "null"
+    ELSIF isArr AND bits = M3RT.ATC_nDimensions    THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescNDimensions(d))
+    ELSIF isArr AND bits = M3RT.ATC_elementSize    THEN ftype := ip;    fBits := IP; fval := Fmt.Int(MSIR.TypeDescElementSize(d))
+    ELSE
+      (* Padding: gather bytes until next named field (or end of struct). *)
+      VAR padEnd := bits + cs;
+      BEGIN
+        WHILE padEnd < sizeBits AND NOT IsKnownTCBit(padEnd, isObj, isArr) DO
+          INC(padEnd, cs);
+        END;
+        ftype := "[" & Fmt.Int((padEnd - bits) DIV cs) & " x i8]";
+        fBits := padEnd - bits;
+        fval  := "zeroinitializer";
+      END;
+    END;
+    Wr.PutText(wr, "  " & ftype & " " & fval);
+  END EmitOneTCField;
 
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
   VAR
-    n    := MSIR.ModuleTypeDescCount(m);
-    ip   := "i" & Fmt.Int(Target.Integer.size);
-    padN := Target.Integer.bytes - 4;
-    padFld : TEXT;
+    n  := MSIR.ModuleTypeDescCount(m);
+    ip := "i" & Fmt.Int(Target.Integer.size);
   BEGIN
     IF n = 0 THEN RETURN END;
-    IF padN > 0
-      THEN padFld := ", [" & Fmt.Int(padN) & " x i8]";
-      ELSE padFld := "";
-    END;
 
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
-    Wr.PutText(wr, "%TC_t  = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8" & padFld & ", " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr }\n");
-    Wr.PutText(wr, "%OTC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8" & padFld & ", " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", ptr, " & ip & ", " & ip & ", " & ip & ", ptr, ptr }\n");
-    Wr.PutText(wr, "%ATC_t = type { " & ip & ", " & ip & ", i64, i8, i8, i8, i8" & padFld & ", " & ip & ", ptr, ptr, ptr, ptr, ptr, ptr, ptr, " & ip & ", " & ip & " }\n");
+    EmitOneTCType(wr, "TC_t",  M3RT.TC_SIZE,  ip, FALSE, FALSE);
+    EmitOneTCType(wr, "OTC_t", M3RT.OTC_SIZE, ip, TRUE,  FALSE);
+    EmitOneTCType(wr, "ATC_t", M3RT.ATC_SIZE, ip, FALSE, TRUE);
 
     FOR k := 0 TO n - 1 DO
       VAR
@@ -2753,21 +2876,23 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         isObj   := knd = ORD(M3RT.TypeKind.Obj);
         isArr   := knd = ORD(M3RT.TypeKind.Array);
         nextVal : TEXT;
+        sizeBits: INTEGER;
+        structNm: TEXT;
       BEGIN
-        (* next pointer: chain TypeCells for MI_type_cells list *)
         IF k < n - 1
-          THEN nextVal := "ptr @" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
-          ELSE nextVal := "ptr null";
+          THEN nextVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
+          ELSE nextVal := "null";
         END;
 
         IF isObj THEN
-          (* ObjectTypeCell: emit name string, vtable, then the cell *)
+          (* Emit name string constant and vtable before the cell. *)
           VAR
             nMethods := MSIR.TypeDescMethodCount(d);
             uName    := MSIR.TypeDescUserName(d);
-            nameSym  := "@" & nm & ".tc_name";
+            nameSym  : TEXT := NIL;
           BEGIN
             IF uName # NIL THEN
+              nameSym := "@" & nm & ".tc_name";
               Wr.PutText(wr, nameSym & " = private unnamed_addr constant [" &
                              Fmt.Int(Text.Length(uName) + 1) & " x i8] c\"" &
                              uName & "\\00\"\n");
@@ -2781,69 +2906,45 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
               END;
               Wr.PutText(wr, "]\n");
             END;
-            Wr.PutText(wr, "@" & nm & " = internal global %OTC_t {\n");
-            Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n"); (* selfID *)
-            Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint.T bytes *)
-            Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
-            Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Obj)) & ",\n");  (* kind = Obj *)
-            Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-            IF padN > 0 THEN
-              Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+            sizeBits := M3RT.OTC_SIZE;  structNm := "OTC_t";
+            Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
+            VAR bits := 0;  first := TRUE;  fBits: INTEGER;
+            BEGIN
+              WHILE bits < sizeBits DO
+                IF NOT first THEN Wr.PutText(wr, ",\n") END;
+                first := FALSE;
+                EmitOneTCField(wr, bits, sizeBits, ip, TRUE, FALSE, d, nm, nameSym, nextVal, nMethods, fBits);
+                INC(bits, fBits);
+              END;
             END;
-            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dataSize: own fields; RTType accumulates *)
-            Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null,\n");  (* type_map..brand *)
-            IF uName # NIL
-              THEN Wr.PutText(wr, "  ptr " & nameSym & ",\n");
-              ELSE Wr.PutText(wr, "  ptr null,\n");
-            END;
-            Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
-            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescParentUID(d)) & ",\n"); (* parentID *)
-            Wr.PutText(wr, "  ptr null,\n");  (* linkProc *)
-            Wr.PutText(wr, "  " & ip & " 0,\n");  (* dataOffset: RTType fills in *)
-            Wr.PutText(wr, "  " & ip & " 0,\n");  (* methodOffset: RTType fills in *)
-            Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescMethodBytes(d)) & ",\n"); (* methodSize: own; RTType accumulates *)
-            IF nMethods > 0
-              THEN Wr.PutText(wr, "  ptr @" & nm & ".methods,\n");
-              ELSE Wr.PutText(wr, "  ptr null,\n");
-            END;
-            Wr.PutText(wr, "  ptr null\n");  (* parent TypeCell *)
-            Wr.PutText(wr, "}\n");
+            Wr.PutText(wr, "\n}\n");
           END;
         ELSIF isArr THEN
-          (* ArrayTypeCell: plain TC fields + nDimensions + elementSize *)
-          Wr.PutText(wr, "@" & nm & " = internal global %ATC_t {\n");
-          Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint.T bytes *)
-          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
-          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(M3RT.TypeKind.Array)) & ",\n"); (* kind = Array *)
-          Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          IF padN > 0 THEN
-            Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+          sizeBits := M3RT.ATC_SIZE;  structNm := "ATC_t";
+          Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
+          VAR bits := 0;  first := TRUE;  fBits: INTEGER;
+          BEGIN
+            WHILE bits < sizeBits DO
+              IF NOT first THEN Wr.PutText(wr, ",\n") END;
+              first := FALSE;
+              EmitOneTCField(wr, bits, sizeBits, ip, FALSE, TRUE, d, nm, NIL, nextVal, 0, fBits);
+              INC(bits, fBits);
+            END;
           END;
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n"); (* dopeSize *)
-          Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
-          Wr.PutText(wr, "  " & nextVal & ",\n");  (* TC_next *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescNDimensions(d)) & ",\n"); (* nDimensions *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescElementSize(d)) & "\n");  (* elementSize *)
-          Wr.PutText(wr, "}\n");
+          Wr.PutText(wr, "\n}\n");
         ELSE
-          (* Plain TypeCell (REF, etc.) *)
-          Wr.PutText(wr, "@" & nm & " = internal global %TC_t {\n");
-          Wr.PutText(wr, "  " & ip & " 0,\n");  (* typecode *)
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescUID(d)) & ",\n");
-          Wr.PutText(wr, "  i64 " & FPDec(d) & ",\n"); (* fp: Fingerprint.T bytes *)
-          Wr.PutText(wr, "  i8 " & Fmt.Int(ORD(MSIR.TypeDescTraced(d))) & ",\n");
-          Wr.PutText(wr, "  i8 " & Fmt.Int(MSIR.TypeDescKind(d)) & ",\n"); (* kind *)
-          Wr.PutText(wr, "  i8 0, i8 " & Fmt.Int(MSIR.TypeDescAlign(d)) & ",\n");
-          IF padN > 0 THEN
-            Wr.PutText(wr, "  [" & Fmt.Int(padN) & " x i8] zeroinitializer,\n");
+          sizeBits := M3RT.TC_SIZE;  structNm := "TC_t";
+          Wr.PutText(wr, "@" & nm & " = internal global %" & structNm & " {\n");
+          VAR bits := 0;  first := TRUE;  fBits: INTEGER;
+          BEGIN
+            WHILE bits < sizeBits DO
+              IF NOT first THEN Wr.PutText(wr, ",\n") END;
+              first := FALSE;
+              EmitOneTCField(wr, bits, sizeBits, ip, FALSE, FALSE, d, nm, NIL, nextVal, 0, fBits);
+              INC(bits, fBits);
+            END;
           END;
-          Wr.PutText(wr, "  " & ip & " " & Fmt.Int(MSIR.TypeDescSize(d)) & ",\n");
-          Wr.PutText(wr, "  ptr null, ptr null, ptr null, ptr null, ptr null, ptr null,\n");
-          Wr.PutText(wr, "  " & nextVal & "\n");  (* TC_next *)
-          Wr.PutText(wr, "}\n");
+          Wr.PutText(wr, "\n}\n");
         END;
       END;
     END;
