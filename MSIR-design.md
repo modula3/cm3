@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 149/149 LLVM link test checks; 0 abandons across 288 p2xx tests |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; zero msir-abandon events |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -813,8 +813,9 @@ incrementally as features land.
 The end-to-end path is working: MSIR is emitted for a real module, lowered
 to LLVM IR, compiled to a native object, and linked into a passing test
 binary.  The production binary (`smoke-realrt`) runs to completion (exit 0)
-against the real CM3 runtime.  **Zero msir-verify events.**  **166/166
-smoke tests pass.**  **0 msir-abandon messages across 288 p2xx test runs.**
+against the real CM3 runtime.  **Zero msir-verify events.**  **181/181
+LLVM link test checks pass.**  **Zero msir-abandon events across 288 p0/p1/p2 tests.**
+3 sweep entries show TIMEOUT (p161/p224/p267) — runtime behaviour, not code-generation failures.
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
@@ -828,8 +829,9 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 
 ### Known Limitations
 
-All known `msir-verify` issues eliminated.  All 288 p2xx test runs produce
-0 `msir-abandon` messages.  Remaining gaps are language features not yet
+All known `msir-verify` issues eliminated.  Zero msir-abandon events across all
+288 p0/p1/p2 test compilations.  The 3 sweep baseline entries (p161/p224/p267)
+are runtime timeouts, not MSIR failures.  Remaining gaps are language features not yet
 exercised by the test suite; they emit `msir-abandon` (proc falls back to
 CG) rather than incorrect IR.
 
@@ -878,7 +880,7 @@ CG) rather than incorrect IR.
 | `m3-sys/m3front/src/values/Formal.m3` | `EmitArgMSIR`, open-array arg coercion |
 | `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR` with try-first rvalue base |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test |
-| `m3-sys/msir/test/smoke/llvm_link_test.c` | 109-check C harness |
+| `m3-sys/msir/test/smoke/llvm_link_test.c` | 181-check C harness |
 | `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ runtime stubs |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver |
 

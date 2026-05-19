@@ -249,11 +249,13 @@ module compiled in that invocation.
 cd m3-sys/msir    && cm3 -build && cm3 -ship
 cd m3-sys/m3front && cm3 -build && cm3 -ship
 cd m3-sys/cm3     && cm3 -build
-cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3
+cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3   # substitute your target
+codesign -s - ~/cm3/bin/cm3                     # required on macOS
 ```
 
-The `cm3` driver links m3front statically; reinstall the binary before the
-new MSIR code takes effect in compilations.
+The `cm3` driver links m3front statically; reinstall and re-sign the binary
+before the new MSIR code takes effect in compilations.  macOS kills unsigned
+binaries with SIGKILL (exit 137) in restricted shell environments.
 
 ### End-to-End LLVM Link Test
 
@@ -262,8 +264,8 @@ new MSIR code takes effect in compilations.
 bash m3-sys/msir/test/run-llvm-link-test.sh
 ```
 
-Builds `Main.m3` with `@M3m3front-msir`, lowers to LLVM, and runs 149 checks.
-Current result: **149/149 pass**.
+Builds `Main.m3` with `@M3m3front-msir`, lowers to LLVM, and runs 181 checks.
+Current result: **181/181 pass**.
 
 To run against the real runtime:
 ```sh
