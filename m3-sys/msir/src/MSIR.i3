@@ -102,6 +102,8 @@ PROCEDURE HeapArrayElt(t: T): T;
 
 PROCEDURE FixedArrayLen(t: T): INTEGER;
 PROCEDURE FixedArrayElt(t: T): T;
+PROCEDURE FixedArrayLo(t: T): INTEGER;       (* lower bound of index type; 0 if zero-based *)
+PROCEDURE SetFixedArrayLo(t: T; lo: INTEGER);
 
 PROCEDURE SubrangeParent(t: T): T;
 PROCEDURE SubrangeLo(t: T): INTEGER;

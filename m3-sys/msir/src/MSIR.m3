@@ -306,6 +306,8 @@ PROCEDURE HeapArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END HeapAr
 PROCEDURE HeapArrayElt(t: T): T        = BEGIN RETURN t.elt           END HeapArrayElt;
 PROCEDURE FixedArrayLen(t: T): INTEGER = BEGIN RETURN t.arrayLen      END FixedArrayLen;
 PROCEDURE FixedArrayElt(t: T): T       = BEGIN RETURN t.elt           END FixedArrayElt;
+PROCEDURE FixedArrayLo(t: T): INTEGER  = BEGIN RETURN t.subrLo        END FixedArrayLo;
+PROCEDURE SetFixedArrayLo(t: T; lo: INTEGER) = BEGIN t.subrLo := lo   END SetFixedArrayLo;
 
 PROCEDURE SubrangeParent(t: T): T   = BEGIN RETURN t.elt    END SubrangeParent;
 PROCEDURE SubrangeLo(t: T): INTEGER = BEGIN RETURN t.subrLo END SubrangeLo;

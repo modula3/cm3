@@ -57,6 +57,7 @@ TYPE DbgChildEntry = RECORD
   offset:  INTEGER;      (* field bit offset in containing struct *)
   (* subrange (kind=1): *)
   count:   INTEGER;      (* FixedArray element count *)
+  (* offset field (shared with kind=0) stores lowerBound for kind=1 *)
   (* enumerator (kind=2): *)
   value:   INTEGER;      (* ordinal value *)
   (* shared: *)
@@ -1645,6 +1646,7 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
   VAR entry: INTEGER;
       elt   := MSIR.FixedArrayElt(t);
       len   := MSIR.FixedArrayLen(t);
+      lo    := MSIR.FixedArrayLo(t);
       eltRef: INTEGER;
       uid   := MSIR.TypeUID(t);
   BEGIN
@@ -1657,6 +1659,7 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
             RETURN dbgTypes[k].metaIdx
           END;
           IF MSIR.FixedArrayLen(kt) = len
+             AND MSIR.FixedArrayLo(kt) = lo
              AND MSIR.FixedArrayElt(kt) = elt THEN
             RETURN dbgTypes[k].metaIdx
           END;
@@ -1672,11 +1675,12 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     dbgTypes[entry].childBase     := dbgChildN;
     eltRef := GetDbgTypeRef(elt, metaN);
     dbgTypes[entry].baseTypeRef   := eltRef;
-    (* One DISubrange child: count = len. *)
+    (* One DISubrange child: count = len, lowerBound in offset field. *)
     IF dbgChildN < MaxDbgChildren THEN
-      dbgChildren[dbgChildN].kind  := 1;   (* subrange *)
-      dbgChildren[dbgChildN].count := len;
-      dbgChildren[dbgChildN].metaIdx    := metaN;
+      dbgChildren[dbgChildN].kind    := 1;   (* subrange *)
+      dbgChildren[dbgChildN].count   := len;
+      dbgChildren[dbgChildN].offset  := lo;  (* lower bound of index type *)
+      dbgChildren[dbgChildN].metaIdx := metaN;
       INC(dbgChildN);  INC(metaN);
       dbgTypes[entry].childCount := 1;
     ELSE
@@ -2058,7 +2062,11 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
             VAR ch := dbgChildren[e.childBase];
             BEGIN
               Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
-                & " = !DISubrange(count: " & Fmt.Int(ch.count) & ")\n");
+                & " = !DISubrange(count: " & Fmt.Int(ch.count));
+              IF ch.offset # 0 THEN
+                Wr.PutText(wr, ", lowerBound: " & Fmt.Int(ch.offset));
+              END;
+              Wr.PutText(wr, ")\n");
             END;
           END;
         ELSE

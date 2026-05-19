@@ -257,6 +257,8 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     nElts        : INTEGER;
     eltMsir      : MSIR.T;
     eltPack      : INTEGER;
+    lo, hi       : Target.Int;
+    loI          : INTEGER;
   BEGIN
     FOR k := 0 TO cacheN - 1 DO
       IF cache[k].key = t THEN RETURN cache[k].val END;
@@ -264,6 +266,10 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL END;
     IF indexT = NIL THEN RETURN NIL END;  (* open: should not reach here *)
     IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN NIL END;
+    loI := 0;
+    IF Type.GetBounds(indexT, lo, hi) THEN
+      IF NOT TInt.ToInt(lo, loI) THEN loI := 0 END;
+    END;
     IF ArrayType.EltsAreBitAddressed(t) THEN
       (* Sub-byte elements: fall back to [N x i8] so the variable enters the
          varMap; element-level access will emit a more-specific abandon. *)
@@ -292,6 +298,7 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     VAR result := MSIR.TFixedArray(nElts, eltMsir);
     BEGIN
       MSIR.SetTypeUID(result, Type.GlobalUID(t));
+      IF loI # 0 THEN MSIR.SetFixedArrayLo(result, loI) END;
       IF cacheN < MaxTypeCache THEN
         cache[cacheN].key := t;  cache[cacheN].val := result;
         INC(cacheN);
