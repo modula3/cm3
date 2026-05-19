@@ -322,4 +322,9 @@ PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
    the globalMap).  Returns FALSE when MSIR is not enabled. *)
 PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN;
 
+(* Update the MSIR current-source-line from Scanner.offset.
+   Call once per statement at the top of CompileMSIR statement loops,
+   after setting Scanner.offset := t.origin.  No-op outside a proc. *)
+PROCEDURE GenLocation();
+
 END MSIRBuilder.

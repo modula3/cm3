@@ -13,42 +13,75 @@ END;
 
 (*------------------------------------------------------ debug info state *)
 
-CONST MaxDbgFiles   = 64;
-CONST MaxDbgEntries = 2048;
-CONST MaxDbgVars    = 4096;
-CONST NBT           = 9;     (* number of fixed DIBasicType nodes emitted *)
+CONST MaxDbgFiles    = 64;
+CONST MaxDbgEntries  = 2048;
+CONST MaxDbgVars     = 4096;
+CONST MaxDbgLocs     = 16384;
+CONST MaxDbgTypes    = 1024;
+CONST MaxDbgChildren = 8192;
+CONST NBT            = 9;    (* number of fixed DIBasicType nodes emitted *)
 
 TYPE DbgFileEntry = RECORD name: TEXT; metaIdx: INTEGER END;
+TYPE DbgLocEntry  = RECORD spIdx, line, metaIdx: INTEGER END;
 TYPE DbgEntry     = RECORD
   proc:    MSIR.Proc;
   metaIdx: INTEGER;    (* !DISubprogram index *)
-  locIdx:  INTEGER;    (* !DILocation(line:0, scope:subprogram) index — satisfies
-                          LLVM's "inlinable call must have !dbg" verifier rule *)
+  locIdx:  INTEGER;    (* !DILocation(line:0, scope:subprogram) index *)
 END;
 TYPE DbgVarEntry  = RECORD
-  allocaVal: MSIR.Value;   (* alloca instruction result — identity key *)
-  varName:   TEXT;          (* display name (stripped of % and .slot) *)
-  spIdx:     INTEGER;       (* DISubprogram metadata index for scope *)
-  fileIdx:   INTEGER;       (* DIFile metadata index *)
-  line:      INTEGER;       (* declaration line *)
-  btIdx:     INTEGER;       (* 0..NBT-1 basic-type slot, or -1 *)
-  metaIdx:   INTEGER;       (* !DILocalVariable metadata index *)
+  allocaVal:   MSIR.Value;  (* alloca instruction result — identity key *)
+  varName:     TEXT;        (* display name (stripped of % and .slot) *)
+  spIdx:       INTEGER;     (* DISubprogram metadata index for scope *)
+  fileIdx:     INTEGER;     (* DIFile metadata index *)
+  line:        INTEGER;     (* declaration line *)
+  typeMetaIdx: INTEGER;     (* DWARF type metadata index (-1 to skip) *)
+  metaIdx:     INTEGER;     (* !DILocalVariable metadata index *)
+END;
+(* Phase 4: composite type (Struct / FixedArray) DWARF nodes. *)
+TYPE DbgTypeEntry = RECORD
+  msirType:      MSIR.T;    (* pointer identity key *)
+  metaIdx:       INTEGER;   (* !DICompositeType node index *)
+  elemsTupleIdx: INTEGER;   (* !{child1, child2, ...} tuple node index *)
+  baseTypeRef:   INTEGER;   (* FixedArray: element type metaIdx; Struct: -1 *)
+  kind:          INTEGER;   (* 0 = Struct, 1 = FixedArray *)
+  childBase:     INTEGER;   (* first index in dbgChildren[] *)
+  childCount:    INTEGER;
+  totalBits:     INTEGER;   (* total size in bits *)
+END;
+TYPE DbgChildEntry = RECORD
+  isSubrange: BOOLEAN;
+  (* member fields (isSubrange = FALSE): *)
+  name:       TEXT;
+  typeRef:    INTEGER;   (* base type metadata index *)
+  size:       INTEGER;   (* field size in bits *)
+  offset:     INTEGER;   (* field bit offset in containing struct *)
+  (* subrange fields (isSubrange = TRUE): *)
+  count:      INTEGER;   (* FixedArray element count *)
+  (* shared: *)
+  metaIdx:    INTEGER;
 END;
 
 VAR
-  dbgFiles:      ARRAY [0..MaxDbgFiles-1]   OF DbgFileEntry;
+  dbgFiles:      ARRAY [0..MaxDbgFiles-1]    OF DbgFileEntry;
   dbgFileN:      INTEGER := 0;
-  dbgEntries:    ARRAY [0..MaxDbgEntries-1] OF DbgEntry;
+  dbgEntries:    ARRAY [0..MaxDbgEntries-1]  OF DbgEntry;
   dbgEntryN:     INTEGER := 0;
-  dbgVars:       ARRAY [0..MaxDbgVars-1]   OF DbgVarEntry;
+  dbgVars:       ARRAY [0..MaxDbgVars-1]     OF DbgVarEntry;
   dbgVarN:       INTEGER := 0;
+  dbgLocs:       ARRAY [0..MaxDbgLocs-1]     OF DbgLocEntry;
+  dbgLocN:       INTEGER := 0;
+  dbgTypes:      ARRAY [0..MaxDbgTypes-1]    OF DbgTypeEntry;
+  dbgTypeN:      INTEGER := 0;
+  dbgChildren:   ARRAY [0..MaxDbgChildren-1] OF DbgChildEntry;
+  dbgChildN:     INTEGER := 0;
   dbgEnabled:    BOOLEAN := FALSE;
-  curDbgLocIdx:  INTEGER := -1;   (* locIdx for the proc currently being emitted *)
+  curDbgLocIdx:  INTEGER := -1;    (* line:0 loc index for current proc *)
+  curEmitProc:   MSIR.Proc := NIL; (* proc being emitted — per-insn !dbg lookup *)
   (* pre-computed metadata indices set by BuildDebugInfo: *)
-  dbgNsIdx:      INTEGER := -1;   (* DINamespace *)
-  dbgNlIdx:      INTEGER := -1;   (* null-list !{null} *)
-  dbgStIdx:      INTEGER := -1;   (* shared DISubroutineType *)
-  dbgBtBase:     INTEGER := -1;   (* first DIBasicType (slots 0..NBT-1) *)
+  dbgNsIdx:      INTEGER := -1;    (* DINamespace *)
+  dbgNlIdx:      INTEGER := -1;    (* null-list !{null} *)
+  dbgStIdx:      INTEGER := -1;    (* shared DISubroutineType *)
+  dbgBtBase:     INTEGER := -1;    (* first DIBasicType (slots 0..NBT-1) *)
 
 VAR
   auxN:          INTEGER     := 0;
@@ -605,11 +638,12 @@ PROCEDURE EmitBinop(wr: Wr.T;  llop: TEXT;  res, a, b: MSIR.Value) =
 
 PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
   VAR
-    op   := MSIR.InsnOp(i);
-    res  := MSIR.InsnResult(i);
-    nOps := MSIR.InsnOperandCount(i);
-    ip   := "i" & Fmt.Int(Target.Integer.size);
-    ap   := "i" & Fmt.Int(Target.Address.size);
+    op     := MSIR.InsnOp(i);
+    res    := MSIR.InsnResult(i);
+    nOps   := MSIR.InsnOperandCount(i);
+    ip     := "i" & Fmt.Int(Target.Integer.size);
+    ap     := "i" & Fmt.Int(Target.Address.size);
+    locIdx := InsnDbgLocIdx(i);    (* per-instruction !dbg index (Phase 3) *)
   BEGIN
     CASE op OF
 
@@ -636,12 +670,12 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             Wr.PutText(wr, ", " & ip & " " & Fmt.Int(cnt));
           END;
           Wr.PutText(wr, "\n");
-          IF varIdx >= 0 AND curDbgLocIdx >= 0 THEN
+          IF varIdx >= 0 AND locIdx >= 0 THEN
             Wr.PutText(wr, "  call void @llvm.dbg.declare(metadata ptr "
               & MSIR.ValueName(res)
               & ", metadata !" & Fmt.Int(varIdx)
               & ", metadata !DIExpression()), !dbg !"
-              & Fmt.Int(curDbgLocIdx) & "\n");
+              & Fmt.Int(locIdx) & "\n");
           END;
         END;
 
@@ -938,8 +972,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             IF k > 0 THEN Wr.PutText(wr, ", ") END;
             LLTypedVal(wr, MSIR.InsnOperand(i, k));
           END;
-          IF curDbgLocIdx >= 0
-            THEN Wr.PutText(wr, "), !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+          IF locIdx >= 0
+            THEN Wr.PutText(wr, "), !dbg !" & Fmt.Int(locIdx) & "\n");
             ELSE Wr.PutText(wr, ")\n");
           END;
         END;
@@ -966,8 +1000,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, MSIR.BlockLabel(normalB));
           Wr.PutText(wr, " unwind label %");
           Wr.PutText(wr, MSIR.BlockLabel(unwindB));
-          IF curDbgLocIdx >= 0
-            THEN Wr.PutText(wr, ", !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+          IF locIdx >= 0
+            THEN Wr.PutText(wr, ", !dbg !" & Fmt.Int(locIdx) & "\n");
             ELSE Wr.PutText(wr, "\n");
           END;
         END;
@@ -1013,8 +1047,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             IF k > 1 THEN Wr.PutText(wr, ", ") END;
             LLTypedVal(wr, MSIR.InsnOperand(i, k));
           END;
-          IF curDbgLocIdx >= 0
-            THEN Wr.PutText(wr, "), !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+          IF locIdx >= 0
+            THEN Wr.PutText(wr, "), !dbg !" & Fmt.Int(locIdx) & "\n");
             ELSE Wr.PutText(wr, ")\n");
           END;
         END;
@@ -1042,8 +1076,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, MSIR.BlockLabel(normalB));
           Wr.PutText(wr, " unwind label %");
           Wr.PutText(wr, MSIR.BlockLabel(unwindB));
-          IF curDbgLocIdx >= 0
-            THEN Wr.PutText(wr, ", !dbg !" & Fmt.Int(curDbgLocIdx) & "\n");
+          IF locIdx >= 0
+            THEN Wr.PutText(wr, ", !dbg !" & Fmt.Int(locIdx) & "\n");
             ELSE Wr.PutText(wr, "\n");
           END;
         END;
@@ -1450,6 +1484,202 @@ PROCEDURE GetDbgVarMetaIdx(allocaVal: MSIR.Value): INTEGER =
     RETURN -1;
   END GetDbgVarMetaIdx;
 
+(* Return an existing DbgLocEntry index for (spIdx, line), or allocate a new
+   one at metaN (incrementing metaN) and return it.  Returns -1 if the table
+   is full. *)
+PROCEDURE GetOrAddDbgLoc(spIdx, line: INTEGER;  VAR metaN: INTEGER): INTEGER =
+  BEGIN
+    FOR k := 0 TO dbgLocN - 1 DO
+      IF dbgLocs[k].spIdx = spIdx AND dbgLocs[k].line = line THEN
+        RETURN dbgLocs[k].metaIdx;
+      END;
+    END;
+    IF dbgLocN >= MaxDbgLocs THEN RETURN -1 END;
+    VAR idx := metaN;
+    BEGIN
+      dbgLocs[dbgLocN].spIdx   := spIdx;
+      dbgLocs[dbgLocN].line    := line;
+      dbgLocs[dbgLocN].metaIdx := idx;
+      INC(dbgLocN);
+      INC(metaN);
+      RETURN idx;
+    END;
+  END GetOrAddDbgLoc;
+
+(* Return the pre-built DILocation metadata index for (proc, line),
+   or -1 if no entry exists (i.e. BuildDebugInfo never saw that line). *)
+PROCEDURE GetDbgLocMetaIdx(p: MSIR.Proc;  line: INTEGER): INTEGER =
+  VAR spIdx := GetProcMetaIdx(p);
+  BEGIN
+    IF spIdx < 0 OR line <= 0 THEN RETURN -1 END;
+    FOR k := 0 TO dbgLocN - 1 DO
+      IF dbgLocs[k].spIdx = spIdx AND dbgLocs[k].line = line THEN
+        RETURN dbgLocs[k].metaIdx;
+      END;
+    END;
+    RETURN -1;
+  END GetDbgLocMetaIdx;
+
+(* Return the best !dbg metadata index for instruction i:
+   - per-line DILocation when the instruction has a known srcLine, else
+   - curDbgLocIdx (the line:0 fallback for the current proc). *)
+PROCEDURE InsnDbgLocIdx(i: MSIR.Insn): INTEGER =
+  VAR sl := MSIR.InsnSrcLine(i);
+  BEGIN
+    IF sl > 0 AND dbgEnabled AND curEmitProc # NIL THEN
+      VAR idx := GetDbgLocMetaIdx(curEmitProc, sl);
+      BEGIN
+        IF idx >= 0 THEN RETURN idx END;
+      END;
+    END;
+    RETURN curDbgLocIdx;
+  END InsnDbgLocIdx;
+
+(* Total bit size of an MSIR type for DWARF size: and member offset computation. *)
+PROCEDURE TotalBitsOf(t: MSIR.T): INTEGER =
+  VAR bw := MSIR.BitWidth(t);
+  BEGIN
+    IF t = NIL THEN RETURN Target.Address.size END;
+    IF bw > 0 THEN RETURN bw END;
+    CASE MSIR.Kind(t) OF
+    | MSIR.TypeKind.I1 => RETURN 1;
+    | MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
+        RETURN Target.Address.size;
+    | MSIR.TypeKind.Struct =>
+        VAR n := MSIR.StructFieldCount(t);  maxEnd := 0;
+        BEGIN
+          FOR i := 0 TO n - 1 DO
+            VAR f  := MSIR.StructField(t, i);
+                fe := f.offset + TotalBitsOf(f.type);
+            BEGIN
+              IF fe > maxEnd THEN maxEnd := fe END;
+            END;
+          END;
+          RETURN maxEnd;
+        END;
+    | MSIR.TypeKind.FixedArray =>
+        RETURN MSIR.FixedArrayLen(t) * TotalBitsOf(MSIR.FixedArrayElt(t));
+    ELSE RETURN Target.Address.size;
+    END;
+  END TotalBitsOf;
+
+PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
+  (* Return the metadata index of the DWARF type for t.
+     For basic scalar/pointer types returns a DIBasicType index.
+     For Struct/FixedArray builds and returns a DICompositeType.
+     For unknown kinds returns ADDRESS as fallback (index 8 in basic table). *)
+  VAR btI: INTEGER;
+  BEGIN
+    IF t = NIL OR dbgBtBase < 0 THEN RETURN -1 END;
+    btI := BTypeIdx(MSIR.Kind(t));
+    IF btI >= 0 THEN RETURN dbgBtBase + btI END;
+    CASE MSIR.Kind(t) OF
+    | MSIR.TypeKind.Struct     => RETURN GetOrBuildStructType(t, metaN);
+    | MSIR.TypeKind.FixedArray => RETURN GetOrBuildFixedArrayType(t, metaN);
+    ELSE RETURN dbgBtBase + 8;  (* ADDRESS fallback *)
+    END;
+  END GetDbgTypeRef;
+
+PROCEDURE SameStructType(a, b: MSIR.T): BOOLEAN =
+  VAR na := MSIR.StructName(a);  nb := MSIR.StructName(b);
+  BEGIN
+    IF a = b THEN RETURN TRUE END;   (* identical object *)
+    IF MSIR.TypeUID(a) # 0 AND MSIR.TypeUID(a) = MSIR.TypeUID(b) THEN
+      RETURN TRUE
+    END;
+    (* Name + field-count match: reliable for named M3 record types. *)
+    IF na = NIL OR nb = NIL THEN RETURN FALSE END;
+    RETURN Text.Equal(na, nb)
+        AND MSIR.StructFieldCount(a) = MSIR.StructFieldCount(b);
+  END SameStructType;
+
+PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
+  VAR entry: INTEGER;
+  BEGIN
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].kind = 0 AND SameStructType(dbgTypes[k].msirType, t) THEN
+        RETURN dbgTypes[k].metaIdx
+      END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    entry := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[entry].msirType      := t;
+    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[entry].baseTypeRef   := -1;
+    dbgTypes[entry].kind          := 0;  (* Struct *)
+    dbgTypes[entry].childBase     := dbgChildN;
+    (* Emit one DIDerivedType(member) child per field. *)
+    VAR n        := MSIR.StructFieldCount(t);
+        nEmitted := 0;
+    BEGIN
+      FOR i := 0 TO n - 1 DO
+        VAR f     := MSIR.StructField(t, i);
+            tRef  := GetDbgTypeRef(f.type, metaN);
+            fBits := TotalBitsOf(f.type);
+        BEGIN
+          IF dbgChildN < MaxDbgChildren THEN
+            dbgChildren[dbgChildN].isSubrange := FALSE;
+            dbgChildren[dbgChildN].name       := f.name;
+            dbgChildren[dbgChildN].typeRef    := tRef;
+            dbgChildren[dbgChildN].size       := fBits;
+            dbgChildren[dbgChildN].offset     := f.offset;
+            dbgChildren[dbgChildN].metaIdx    := metaN;
+            INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+          END;
+        END;
+      END;
+      dbgTypes[entry].childCount := nEmitted;
+      dbgTypes[entry].totalBits  := TotalBitsOf(t);
+    END;
+    RETURN dbgTypes[entry].metaIdx;
+  END GetOrBuildStructType;
+
+PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
+  VAR entry: INTEGER;
+      elt   := MSIR.FixedArrayElt(t);
+      len   := MSIR.FixedArrayLen(t);
+      eltRef: INTEGER;
+      uid   := MSIR.TypeUID(t);
+  BEGIN
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].kind = 1 THEN
+        VAR kt := dbgTypes[k].msirType;
+        BEGIN
+          IF kt = t THEN RETURN dbgTypes[k].metaIdx END;
+          IF uid # 0 AND MSIR.TypeUID(kt) = uid THEN
+            RETURN dbgTypes[k].metaIdx
+          END;
+          IF MSIR.FixedArrayLen(kt) = len
+             AND MSIR.FixedArrayElt(kt) = elt THEN
+            RETURN dbgTypes[k].metaIdx
+          END;
+        END;
+      END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    entry := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[entry].msirType      := t;
+    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[entry].kind          := 1;  (* FixedArray *)
+    dbgTypes[entry].childBase     := dbgChildN;
+    eltRef := GetDbgTypeRef(elt, metaN);
+    dbgTypes[entry].baseTypeRef   := eltRef;
+    (* One DISubrange child: count = len. *)
+    IF dbgChildN < MaxDbgChildren THEN
+      dbgChildren[dbgChildN].isSubrange := TRUE;
+      dbgChildren[dbgChildN].count      := len;
+      dbgChildren[dbgChildN].metaIdx    := metaN;
+      INC(dbgChildN);  INC(metaN);
+      dbgTypes[entry].childCount := 1;
+    ELSE
+      dbgTypes[entry].childCount := 0;
+    END;
+    dbgTypes[entry].totalBits := TotalBitsOf(t);
+    RETURN dbgTypes[entry].metaIdx;
+  END GetOrBuildFixedArrayType;
+
 PROCEDURE SplitPath(path: TEXT;  VAR dir: TEXT;  VAR base: TEXT) =
   VAR last := -1;
       n    := Text.Length(path);
@@ -1536,14 +1766,17 @@ PROCEDURE GetProcLocIdx(p: MSIR.Proc): INTEGER =
 PROCEDURE BuildDebugInfo(m: MSIR.Module) =
   VAR metaN: INTEGER := 3;   (* 0,1,2 reserved for flags + CU *)
   BEGIN
-    dbgEnabled := FALSE;
-    dbgEntryN  := 0;
-    dbgFileN   := 0;
-    dbgVarN    := 0;
-    dbgNsIdx   := -1;
-    dbgNlIdx   := -1;
-    dbgStIdx   := -1;
-    dbgBtBase  := -1;
+    dbgEnabled  := FALSE;
+    dbgEntryN   := 0;
+    dbgFileN    := 0;
+    dbgVarN     := 0;
+    dbgLocN     := 0;
+    dbgTypeN    := 0;
+    dbgChildN   := 0;
+    dbgNsIdx    := -1;
+    dbgNlIdx    := -1;
+    dbgStIdx    := -1;
+    dbgBtBase   := -1;
 
     (* First pass: collect unique source files. *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
@@ -1581,9 +1814,9 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     END;
 
     (* Third pass: collect alloca instructions for DILocalVariable entries.
-       Each alloca in a proc with debug info that has a non-internal name gets
-       a DILocalVariable node.  We use the proc's source line as a fallback
-       since per-variable line info is not yet threaded through MSIR. *)
+       GetDbgTypeRef builds composite DWARF types on demand, allocating metaN
+       indices for Struct/FixedArray types and their child nodes.
+       Only allocas whose element type maps to a DWARF type are tracked. *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       VAR p       := MSIR.ModuleProc(m, i);
           spIdx   := GetProcMetaIdx(p);
@@ -1598,29 +1831,54 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                 VAR insn := MSIR.BlockInsn(b, ii);
                 BEGIN
                   IF MSIR.InsnOp(insn) = MSIR.Op.Alloca THEN
-                    VAR res  := MSIR.InsnResult(insn);
-                        nm   := MSIR.ValueName(res);
-                        elt  := MSIR.InsnTargetType(insn);
-                        btI  := BTypeIdx(MSIR.Kind(elt));
+                    VAR res         := MSIR.InsnResult(insn);
+                        nm          := MSIR.ValueName(res);
+                        elt         := MSIR.InsnTargetType(insn);
+                        typeMetaIdx := GetDbgTypeRef(elt, metaN);
                     BEGIN
-                      (* Only track allocas with a recognised type.
-                         DILocalVariable nodes without a type crash LLVM 22's
-                         DWARF emitter when combined with @llvm.dbg.declare. *)
+                      (* Only track allocas with a known DWARF type.
+                         A DILocalVariable without type: crashes LLVM 22's
+                         DWARF emitter when paired with @llvm.dbg.declare. *)
                       IF NOT IsInternalVarName(nm)
-                         AND btI >= 0
+                         AND typeMetaIdx >= 0
                          AND dbgVarN < MaxDbgVars
                       THEN
-                        dbgVars[dbgVarN].allocaVal := res;
-                        dbgVars[dbgVarN].varName   := StripVarName(nm);
-                        dbgVars[dbgVarN].spIdx     := spIdx;
-                        dbgVars[dbgVarN].fileIdx   := fileIdx;
-                        dbgVars[dbgVarN].line      := pline;
-                        dbgVars[dbgVarN].btIdx     := btI;
-                        dbgVars[dbgVarN].metaIdx   := metaN;
+                        dbgVars[dbgVarN].allocaVal   := res;
+                        dbgVars[dbgVarN].varName     := StripVarName(nm);
+                        dbgVars[dbgVarN].spIdx       := spIdx;
+                        dbgVars[dbgVarN].fileIdx     := fileIdx;
+                        dbgVars[dbgVarN].line        := pline;
+                        dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
+                        dbgVars[dbgVarN].metaIdx     := metaN;
                         INC(dbgVarN);
                         INC(metaN);
                       END;
                     END;
+                  END;
+                END;
+              END;
+            END;
+          END;
+        END;
+      END;
+    END;
+
+    (* Fourth pass: collect unique (spIdx, srcLine) pairs from all instructions.
+       These become per-line DILocation nodes used as !dbg annotations. *)
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      VAR p     := MSIR.ModuleProc(m, i);
+          spIdx := GetProcMetaIdx(p);
+      BEGIN
+        IF spIdx >= 0 THEN
+          FOR bi := 0 TO MSIR.ProcBlockCount(p) - 1 DO
+            VAR b := MSIR.ProcBlock(p, bi);
+            BEGIN
+              FOR ii := 0 TO MSIR.BlockInsnCount(b) - 1 DO
+                VAR insn := MSIR.BlockInsn(b, ii);
+                    sl   := MSIR.InsnSrcLine(insn);
+                BEGIN
+                  IF sl > 0 THEN
+                    EVAL GetOrAddDbgLoc(spIdx, sl, metaN);
                   END;
                 END;
               END;
@@ -1684,7 +1942,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
         & Fmt.Int(dbgEntries[k].metaIdx) & ")\n");
     END;
 
-    (* DILocalVariable nodes — one per tracked alloca (all have btIdx >= 0). *)
+    (* DILocalVariable nodes — one per tracked alloca. *)
     FOR j := 0 TO dbgVarN - 1 DO
       VAR e := dbgVars[j];
       BEGIN
@@ -1693,8 +1951,77 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           & "\", scope: !"                   & Fmt.Int(e.spIdx)
           & ", file: !"                      & Fmt.Int(e.fileIdx)
           & ", line: "                       & Fmt.Int(e.line)
-          & ", type: !"                      & Fmt.Int(dbgBtBase + e.btIdx)
+          & ", type: !"                      & Fmt.Int(e.typeMetaIdx)
           & ")\n");
+      END;
+    END;
+
+    (* Phase 4: composite type nodes — !DICompositeType + elements tuple + children. *)
+    FOR k := 0 TO dbgTypeN - 1 DO
+      VAR e := dbgTypes[k];
+      BEGIN
+        IF e.kind = 0 THEN
+          (* Struct: DW_TAG_structure_type with per-field DIDerivedType children *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DICompositeType(tag: DW_TAG_structure_type"
+            & ", name: \""  & MSIR.StructName(e.msirType) & "\""
+            & ", size: "    & Fmt.Int(e.totalBits)
+            & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
+          (* elements tuple *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
+          FOR c := 0 TO e.childCount - 1 DO
+            IF c > 0 THEN Wr.PutText(wr, ", ") END;
+            Wr.PutText(wr, "!" & Fmt.Int(dbgChildren[e.childBase + c].metaIdx));
+          END;
+          Wr.PutText(wr, "}\n");
+          (* member nodes *)
+          FOR c := 0 TO e.childCount - 1 DO
+            VAR ch := dbgChildren[e.childBase + c];
+            BEGIN
+              Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
+                & " = !DIDerivedType(tag: DW_TAG_member"
+                & ", name: \""  & ch.name & "\"");
+              IF ch.typeRef >= 0 THEN
+                Wr.PutText(wr, ", baseType: !" & Fmt.Int(ch.typeRef));
+              END;
+              Wr.PutText(wr, ", size: "   & Fmt.Int(ch.size)
+                & ", offset: " & Fmt.Int(ch.offset) & ")\n");
+            END;
+          END;
+        ELSE
+          (* FixedArray: DW_TAG_array_type with one DISubrange child *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DICompositeType(tag: DW_TAG_array_type");
+          IF e.baseTypeRef >= 0 THEN
+            Wr.PutText(wr, ", baseType: !" & Fmt.Int(e.baseTypeRef));
+          END;
+          Wr.PutText(wr, ", size: "    & Fmt.Int(e.totalBits)
+            & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
+          (* elements tuple *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
+          IF e.childCount > 0 THEN
+            Wr.PutText(wr, "!" & Fmt.Int(dbgChildren[e.childBase].metaIdx));
+          END;
+          Wr.PutText(wr, "}\n");
+          (* single DISubrange child *)
+          IF e.childCount > 0 THEN
+            VAR ch := dbgChildren[e.childBase];
+            BEGIN
+              Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
+                & " = !DISubrange(count: " & Fmt.Int(ch.count) & ")\n");
+            END;
+          END;
+        END;
+      END;
+    END;
+
+    (* Per-line DILocation nodes (Phase 3 — one per unique (subprogram, line) pair). *)
+    FOR k := 0 TO dbgLocN - 1 DO
+      VAR e := dbgLocs[k];
+      BEGIN
+        Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+          & " = !DILocation(line: " & Fmt.Int(e.line)
+          & ", column: 0, scope: !"  & Fmt.Int(e.spIdx) & ")\n");
       END;
     END;
 
@@ -1795,10 +2122,12 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, " {\n");
 
     curDbgLocIdx := GetProcLocIdx(p);
+    curEmitProc  := p;
     FOR bi := 0 TO nb - 1 DO
       EmitBlock(wr, MSIR.ProcBlock(p, bi));
     END;
     curDbgLocIdx := -1;
+    curEmitProc  := NIL;
 
     Wr.PutText(wr, "}\n");
   END EmitProc;

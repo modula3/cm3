@@ -4,6 +4,17 @@ IMPORT MSIR, Type, Int, LInt, Bool, Target;
 IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
 IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType, TInt;
 
+(* Per-module translation cache: maps base Type.T pointer → MSIR.T.
+   Ensures repeated calls for the same M3 type return the same MSIR.T
+   object so that pointer-identity checks in MSIRToLLVM dedup correctly. *)
+CONST MaxTypeCache = 512;
+TYPE CacheEntry = RECORD key: Type.T;  val: MSIR.T END;
+VAR cache : ARRAY [0..MaxTypeCache-1] OF CacheEntry;
+    cacheN: INTEGER := 0;
+
+PROCEDURE Reset() =
+  BEGIN cacheN := 0 END Reset;
+
 PROCEDURE Translate(t: Type.T): MSIR.T =
   VAR base: Type.T;  info: Type.Info;  nameId: M3ID.T;  typeName: TEXT;
   BEGIN
@@ -138,6 +149,9 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
     finfo:  Field.Info;
     fti:    Type.Info;
   BEGIN
+    FOR k := 0 TO cacheN - 1 DO
+      IF cache[k].key = t THEN RETURN cache[k].val END;
+    END;
     IF NOT RecordType.Split(t, fields) THEN RETURN NIL END;
     v := fields;
     WHILE v # NIL DO INC(n);  v := v.next END;
@@ -171,12 +185,21 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
                           AND fti.size # MSIR.BitWidth(ft) THEN
             ft := MSIR.TI(fti.size);
           END;
-          msirFields[i].name := M3ID.ToText(finfo.name);
-          msirFields[i].type := ft;
+          msirFields[i].name   := M3ID.ToText(finfo.name);
+          msirFields[i].type   := ft;
+          msirFields[i].offset := finfo.offset; (* bit offset for DWARF *)
         END;
         v := v.next;
       END;
-      RETURN MSIR.TStruct(name, msirFields^);
+      VAR result := MSIR.TStruct(name, msirFields^);
+      BEGIN
+        MSIR.SetTypeUID(result, Type.GlobalUID(t));
+        IF cacheN < MaxTypeCache THEN
+          cache[cacheN].key := t;  cache[cacheN].val := result;
+          INC(cacheN);
+        END;
+        RETURN result;
+      END;
     END;
   END TranslateRecord;
 
@@ -209,6 +232,9 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     eltMsir      : MSIR.T;
     eltPack      : INTEGER;
   BEGIN
+    FOR k := 0 TO cacheN - 1 DO
+      IF cache[k].key = t THEN RETURN cache[k].val END;
+    END;
     IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL END;
     IF indexT = NIL THEN RETURN NIL END;  (* open: should not reach here *)
     IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN NIL END;
@@ -237,7 +263,15 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
          them with TI(eltPack) destroys type info needed for nested subscripts. *)
       eltMsir := MSIR.TI(eltPack);
     END;
-    RETURN MSIR.TFixedArray(nElts, eltMsir);
+    VAR result := MSIR.TFixedArray(nElts, eltMsir);
+    BEGIN
+      MSIR.SetTypeUID(result, Type.GlobalUID(t));
+      IF cacheN < MaxTypeCache THEN
+        cache[cacheN].key := t;  cache[cacheN].val := result;
+        INC(cacheN);
+      END;
+      RETURN result;
+    END;
   END TranslateFixedArray;
 
 PROCEDURE TranslateResult(t: Type.T): MSIR.T =

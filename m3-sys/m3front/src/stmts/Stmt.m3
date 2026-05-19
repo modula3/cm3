@@ -156,6 +156,8 @@ PROCEDURE GetOutcome (t: T): Outcomes =
 PROCEDURE CompileMSIR (t: T) =
   BEGIN
     WHILE (t # NIL) AND MSIRBuilder.InProc () DO
+      Scanner.offset := t.origin;
+      MSIRBuilder.GenLocation ();
       t.compileMSIR ();
       t := t.next;
     END;

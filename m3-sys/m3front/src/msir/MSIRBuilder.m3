@@ -285,6 +285,7 @@ PROCEDURE BeginProc(name: TEXT;
         Scanner.Here(srcFile, srcLine);
         IF srcFile # NIL AND srcLine > 0 THEN
           MSIR.ProcSetSrcLoc(curProc, srcFile, srcLine);
+          MSIR.SetCurrentSrcLine(srcLine);
         END;
       END;
 
@@ -522,6 +523,7 @@ PROCEDURE EndProc() =
       pendingContainer := NIL;
       curResultPtr     := NIL;
       curResultType    := NIL;
+      MSIR.SetCurrentSrcLine(0);
     END;
   END EndProc;
 
@@ -1438,6 +1440,7 @@ PROCEDURE BeginModule() =
     constArrayMapN   := 0;
     constArraySeq    := 0;
     memcpyProc       := NIL;
+    MSIRType.Reset();
   END BeginModule;
 
 PROCEDURE GetMemcpyProc(): MSIR.Proc =
@@ -1812,6 +1815,14 @@ PROCEDURE InsertBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
       END;
     END;
   END InsertBitFieldDyn;
+
+PROCEDURE GenLocation() =
+  VAR f: TEXT;  l: INTEGER;
+  BEGIN
+    IF NOT InProc() THEN RETURN END;
+    Scanner.Here(f, l);
+    IF l > 0 THEN MSIR.SetCurrentSrcLine(l) END;
+  END GenLocation;
 
 BEGIN
 END MSIRBuilder.

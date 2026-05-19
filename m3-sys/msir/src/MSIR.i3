@@ -32,7 +32,12 @@ TYPE TypeKind = {
   ProcType
 };
 
-TYPE Field  = RECORD name: TEXT;  type: T  END;
+TYPE Field  = RECORD name: TEXT;  type: T;  offset: INTEGER := 0  END;
+                                             (* offset: bit offset of the field
+                                                within its containing struct,
+                                                as computed by M3 record layout.
+                                                Used by MSIRToLLVM for DWARF
+                                                DW_AT_data_member_location. *)
 TYPE Method = RECORD name: TEXT;  procType: T  END;
 
 PROCEDURE TVoid(): T;
@@ -66,6 +71,12 @@ PROCEDURE StructName(t: T): TEXT;
 PROCEDURE StructFieldCount(t: T): INTEGER;
 PROCEDURE StructField(t: T; i: INTEGER): Field;
 PROCEDURE BitWidth(t: T): INTEGER;    (* for scalar kinds; -1 otherwise *)
+
+(* Type UID — the CM3 GlobalUID fingerprint, stored here so the lowering
+   pass can deduplicate composite DWARF nodes across procs without pulling
+   in m3front's Type module.  0 means "no UID assigned". *)
+PROCEDURE SetTypeUID(t: T; uid: INTEGER);
+PROCEDURE TypeUID(t: T): INTEGER;
 
 PROCEDURE ObjectName(t: T): TEXT;
 PROCEDURE ObjectSuper(t: T): T;       (* NIL if root *)
@@ -167,6 +178,13 @@ PROCEDURE ProcGetCallingConvention(p: Proc): CallingConvention;
 PROCEDURE ProcSetSrcLoc(p: Proc;  file: TEXT;  line: INTEGER);
 PROCEDURE ProcSrcFile(p: Proc): TEXT;      (* NIL if no location recorded *)
 PROCEDURE ProcSrcLine(p: Proc): INTEGER;   (* 0 if no location recorded *)
+
+(* Set the module-global current source line; all subsequent addInsn calls
+   stamp this line on the instruction.  Call before each statement. *)
+PROCEDURE SetCurrentSrcLine(line: INTEGER);
+
+(* Return the source line recorded on instruction i; 0 if unknown. *)
+PROCEDURE InsnSrcLine(i: Insn): INTEGER;
 
 PROCEDURE ProcName(p: Proc): TEXT;
 PROCEDURE ProcParamCount(p: Proc): INTEGER;

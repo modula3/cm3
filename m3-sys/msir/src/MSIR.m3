@@ -20,6 +20,7 @@ REVEAL T = BRANDED "MSIR.T" REF RECORD
   openArrayRank:    INTEGER             := 0;    (* OpenArray *)
   arrayLen:         INTEGER              := 0;    (* FixedArray length *)
   subrLo, subrHi:   INTEGER              := 0;    (* Subrange / Set bounds *)
+  typeUID:          INTEGER              := 0;    (* CM3 GlobalUID fingerprint; 0 = unset *)
 END;
 
 PROCEDURE NewType(k: TypeKind): T =
@@ -254,6 +255,9 @@ PROCEDURE BitWidth(t: T): INTEGER =
     ELSE RETURN -1
     END;
   END BitWidth;
+
+PROCEDURE SetTypeUID(t: T; uid: INTEGER) = BEGIN t.typeUID := uid END SetTypeUID;
+PROCEDURE TypeUID(t: T): INTEGER = BEGIN RETURN t.typeUID END TypeUID;
 
 PROCEDURE ObjectName(t: T): TEXT = BEGIN RETURN t.structName END ObjectName;
 PROCEDURE ObjectSuper(t: T): T = BEGIN RETURN t.objSuper END ObjectSuper;
@@ -490,6 +494,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   memOrder:  MemOrder    := MemOrder.SeqCst;   (* atomic ops *)
   memOrder2: MemOrder    := MemOrder.SeqCst;   (* AtomicCmpXchg failure ordering *)
   atomicOp:  AtomicRMWOp := AtomicRMWOp.Xchg; (* AtomicRMW op code *)
+  srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
 END;
 
 PROCEDURE InsnOp(i: Insn): Op = BEGIN RETURN i.op END InsnOp;
@@ -527,6 +532,10 @@ PROCEDURE InsnIsCleanup(i: Insn): BOOLEAN = BEGIN RETURN i.isCleanup END InsnIsC
 PROCEDURE InsnMemOrder(i: Insn): MemOrder = BEGIN RETURN i.memOrder END InsnMemOrder;
 PROCEDURE InsnMemOrder2(i: Insn): MemOrder = BEGIN RETURN i.memOrder2 END InsnMemOrder2;
 PROCEDURE InsnAtomicOp(i: Insn): AtomicRMWOp = BEGIN RETURN i.atomicOp END InsnAtomicOp;
+PROCEDURE SetCurrentSrcLine(line: INTEGER) =
+  BEGIN currentSrcLine := line END SetCurrentSrcLine;
+PROCEDURE InsnSrcLine(i: Insn): INTEGER =
+  BEGIN RETURN i.srcLine END InsnSrcLine;
 PROCEDURE InsnTypecaseClauseCount(i: Insn): INTEGER =
   BEGIN
     IF i.typecaseClauses = NIL THEN RETURN 0 END;
@@ -1190,6 +1199,8 @@ PROCEDURE ModuleProc(m: Module; i: INTEGER): Proc =
 
 (*---------------------------------------------------------------- Builders *)
 
+VAR currentSrcLine: INTEGER := 0;
+
 PROCEDURE freshName(p: Proc): TEXT =
   BEGIN
     INC(p.nameCounter);
@@ -1217,6 +1228,7 @@ PROCEDURE makeResult(b: Block;  type: T;  name: TEXT;  i: Insn): Value =
 
 PROCEDURE addInsn(b: Block;  i: Insn) =
   BEGIN
+    i.srcLine := currentSrcLine;
     i.block := b;
     b.insns.addhi(i);
   END addInsn;

@@ -1,6 +1,6 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-19 (Phase 2 debug symbols complete; variable declarations working in LLDB)
+Last updated: 2026-05-19 (Phase 4 debug symbols complete; composite DWARF types for RECORD and fixed arrays)
 
 ## What's Working
 
@@ -186,26 +186,75 @@ entries. Enables function-name backtraces and function-entry breakpoints in
 | `AllocaDyn` | Dynamic stack allocas (VLAs) are not tracked |
 | LLVM 22 constraint | `DILocalVariable` without a `type:` field crashes `DwarfCompileUnit::createAndAddScopeChildren` in LLVM 22. All tracked vars must have a basic type — hence the `ADDRESS` fallback for pointer kinds |
 
-**Phase 3 — Composite types and per-statement locations:**
-- `DW_TAG_structure_type` for `RECORD` / `OBJECT`; per-field
-  `DW_TAG_member` with `DW_AT_data_member_location` in bits.  For `OBJECT`,
-  emit the hidden VMT pointer as the first member (`_vptr: void*`).
-- `DW_TAG_array_type` with explicit `DW_TAG_subrange_type` children
-  carrying `DW_AT_lower_bound` and `DW_AT_upper_bound` (M3 arrays are not
-  necessarily zero-indexed; getting the bounds right is essential).
-- `DW_TAG_enumeration_type` for `ENUM` types; LLDB maps these to C enums and
-  prints text labels instead of raw integers in `frame variable` output.
-- Per-instruction `DILocation`: attach `!dbg !loc` to every instruction,
-  advancing the location when `Scanner.offset` changes between statement
-  compilations. Enables source-level single-stepping. Requires a
-  `curLocation: INTEGER` tracker in `MSIRBuilder` analogous to
-  `CG.Gen_location`.
+**Phase 3 (complete, 2026-05-19):** Per-statement `DILocation`. What works:
 
-**Phase 4 — Optimized builds:**
+- `MSIR.SetCurrentSrcLine(line)` sets a module-global current source line;
+  `addInsn` stamps every instruction with `i.srcLine := currentSrcLine`.
+- `MSIRBuilder.GenLocation()` calls `Scanner.Here` and calls
+  `MSIR.SetCurrentSrcLine` — called per-statement in `Stmt.CompileMSIR`.
+- `BuildDebugInfo` fourth pass scans all instruction srcLines and allocates
+  unique `(spIdx, line)` pairs as pre-numbered `DILocation` metadata nodes.
+- `EmitInsn` selects the per-instruction DILocation (via `InsnDbgLocIdx`) on
+  every call/invoke instruction; falls back to the proc's `line:0` DILocation
+  when the instruction has no srcLine.
+- `EmitDebugMetadata` emits all per-line `!DILocation(line: N, scope: !SP)`
+  nodes at the module tail.
+- Result: `lldb` source-level single-stepping works — `step` and `next`
+  advance to distinct source lines instead of staying at the function entry.
+  `thread backtrace` shows file:line for each frame.
+- 149/149 LLVM link tests still pass; zero sweep regressions.
+
+**Known Phase 3 gaps** (tracked for Phase 4):
+- `DILocation` line numbers come from `Scanner.offset` at statement granularity.
+  Sub-statement expressions within a single statement all share that line.
+  This is the same resolution as the C backend.
+- `MSIR.SetCurrentSrcLine` is not saved/restored across nested-proc context
+  switches. In practice each statement calls `GenLocation()` which overwrites
+  the global, so no stale lines escape.
+
+**Phase 4 (complete, 2026-05-19):** Composite DWARF types. What works:
+
+- `MSIR.Field` now carries `offset: INTEGER` (bit offset from M3 record layout);
+  `MSIRType.TranslateRecord` fills `msirFields[i].offset := finfo.offset`.
+- `TotalBitsOf(t)` recursively computes struct/array total bit size from field
+  layout for `DW_AT_byte_size` on composite type nodes.
+- `GetDbgTypeRef` dispatches to `GetOrBuildStructType` / `GetOrBuildFixedArrayType`
+  for Struct and FixedArray MSIR types; falls back to ADDRESS for others.
+- `GetOrBuildStructType`: emits `!DICompositeType(tag: DW_TAG_structure_type,
+  name: "...", size: N, elements: !tuple)` with one `!DIDerivedType(tag:
+  DW_TAG_member, name: "f", baseType: !T, size: N, offset: B)` child per field.
+  Pre-reserves metadata indices before recursing into field types to handle nested
+  structs without a visited-set.
+- `GetOrBuildFixedArrayType`: emits `!DICompositeType(tag: DW_TAG_array_type,
+  size: N, baseType: !elt, elements: !tuple)` with one `!DISubrange(count: N)`
+  child (zero-based; upper bound deferred — M3 arrays not necessarily zero-indexed).
+- Variables of `Struct` and `FixedArray` MSIR type now appear in `frame variable`
+  with correct composite-type descriptors.  LLDB shows field names and values.
+- `BuildDebugInfo` runs once per module and accumulates `dbgTypes` / `dbgChildren`
+  across all procs; composite type deduplication via pointer identity (type
+  interning) and name+fieldcount fallback (`SameStructType`) — each named struct
+  emits exactly one `DICompositeType` node per module.
+- `clang -g -c Main.ll` accepts output with zero errors (one harmless target-triple
+  warning); `llvm-dwarfdump` shows `DW_TAG_structure_type` and `DW_TAG_array_type`
+  entries correctly.
+- 149/149 LLVM link tests still pass; zero sweep regressions.
+
+**Known Phase 4 gaps** (tracked for future phases):
+
+| Gap | Detail |
+|---|---|
+| OBJECT types | VMT pointer not emitted as first `DW_TAG_member`; OBJECT variables get ADDRESS fallback |
+| ENUM types | Enum label names are lost during `MSIRType.Translate` (mapped to `iN`); `DW_TAG_enumeration_type` not emitted |
+| `DISubrange` lower bound | `DW_AT_lower_bound` omitted; assumes zero-based arrays.  M3 arrays can start at any ordinal |
+| OpenArray / HeapArray | Not tracked; dope-vector allocas still excluded |
+
+**Phase 5 — Optimized builds:**
+
+**Phase 5 — Optimized builds:**
 When `opt -O1+` is enabled (gated on MSIR becoming the default backend),
 mem2reg removes allocas and `llvm.dbg.declare` calls become invalid.
 Must switch to `llvm.dbg.value` annotation at every SSA update point.
-This is an opt-in concern; Phase 1–3 target `-O0` equivalents only.
+This is an opt-in concern; Phase 1–4 target `-O0` equivalents only.
 
 **LLDB fallback behaviour:**
 LLDB recognises `DW_LANG_Modula3`, finds no native TypeSystem for it, and

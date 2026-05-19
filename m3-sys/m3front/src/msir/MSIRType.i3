@@ -16,4 +16,9 @@ PROCEDURE Translate(t: Type.T): MSIR.T;
 PROCEDURE TranslateResult(t: Type.T): MSIR.T;
 (* Like Translate, but maps NIL (no result) to MSIR.TVoid(). *)
 
+PROCEDURE Reset();
+(* Clear the per-module type-translation cache.  Must be called at the
+   start of each module so stale MSIR.T pointers from a prior module
+   are not confused with new ones. *)
+
 END MSIRType.
