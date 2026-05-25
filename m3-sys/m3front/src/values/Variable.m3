@@ -286,7 +286,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
       byteSize  := Target.Address.bytes;
       byteAlign := Target.Address.align DIV Target.Char.size;
       byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
-      g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=FALSE),
+      g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                           MSIR.TPtr(MSIR.TVoid()), isTraced := FALSE);
       MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff,
                                      MSIR.TPtr(MSIR.TPtr(MSIR.TVoid())),
@@ -302,7 +302,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
     byteAlign := MAX(1, t.align DIV Target.Char.size);
     IF byteSize <= 0 THEN byteSize := Target.Address.bytes END;
     byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
-    g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=FALSE),
+    g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                         eltType, isTraced);
     (* Attach struct field info and update refValue to a StructFieldRef. *)
     VAR fieldType: MSIR.T;

@@ -161,15 +161,15 @@ OVERRIDES
 END;
 
 <*NOWARN*>PROCEDURE next_label(self: T; n: INTEGER := 1): Label = BEGIN RETURN 0; END next_label;
-<*NOWARN*>PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; typename: Name): Var = BEGIN RETURN NIL; END import_global;
-<*NOWARN*>PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var = BEGIN RETURN NIL; END declare_segment;
-<*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var = BEGIN RETURN NIL; END declare_global;
-<*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var = BEGIN RETURN NIL; END declare_constant;
-<*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var = BEGIN RETURN NIL; END declare_local;
-<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var = BEGIN RETURN NIL; END declare_param;
-<*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; typename: Name): Var = BEGIN RETURN NIL; END declare_temp;
-<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID; return_typename: Name): Proc = BEGIN RETURN NIL; END import_procedure;
-<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID; return_typename: Name): Proc = BEGIN RETURN NIL; END declare_procedure;
+<*NOWARN*>PROCEDURE import_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; typename: Name): Var = BEGIN RETURN varSentinel; END import_global;
+<*NOWARN*>PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var = BEGIN RETURN varSentinel; END declare_segment;
+<*NOWARN*>PROCEDURE declare_global(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var = BEGIN RETURN varSentinel; END declare_global;
+<*NOWARN*>PROCEDURE declare_constant(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var = BEGIN RETURN varSentinel; END declare_constant;
+<*NOWARN*>PROCEDURE declare_local(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var = BEGIN RETURN varSentinel; END declare_local;
+<*NOWARN*>PROCEDURE declare_param(self: T; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var = BEGIN RETURN varSentinel; END declare_param;
+<*NOWARN*>PROCEDURE declare_temp(self: T; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; typename: Name): Var = BEGIN RETURN varSentinel; END declare_temp;
+<*NOWARN*>PROCEDURE import_procedure(self: T; name: Name; n_params: INTEGER; ret_type: Type; callingConvention: CallingConvention; return_typeid: TypeUID; return_typename: Name): Proc = BEGIN RETURN procSentinel; END import_procedure;
+<*NOWARN*>PROCEDURE declare_procedure(self: T; name: Name; n_params: INTEGER; return_type: Type; level: INTEGER; callingConvention: CallingConvention; exported: BOOLEAN; parent: Proc; return_typeid: TypeUID; return_typename: Name): Proc = BEGIN RETURN procSentinel; END declare_procedure;
 <*NOWARN*>PROCEDURE set_error_handler(self: T; p: M3CG_Ops.ErrorHandler) = BEGIN END set_error_handler;
 <*NOWARN*>PROCEDURE begin_unit(self: T; optimize: INTEGER) = BEGIN END begin_unit;
 <*NOWARN*>PROCEDURE end_unit(self: T) = BEGIN END end_unit;
@@ -307,5 +307,11 @@ END;
 <*NOWARN*>PROCEDURE fence(self: T; order: MemoryOrder) = BEGIN END fence;
 <*NOWARN*>PROCEDURE fetch_and_op(self: T; op: AtomicOp; mtype: MType; ztype: ZType; order: MemoryOrder) = BEGIN END fetch_and_op;
 
+VAR
+  varSentinel:  M3CG.Var  := NIL;
+  procSentinel: M3CG.Proc := NIL;
+
 BEGIN
+  varSentinel  := NEW (M3CG.Var);
+  procSentinel := NEW (M3CG.Proc);
 END M3CG_DoNothing.

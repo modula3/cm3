@@ -1486,7 +1486,53 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     cntI : INTEGER;
   BEGIN
     IF formDepth <= actDepth THEN
-      RETURN Expr.LValueMSIR (actual);
+      VAR lval     : MSIR.Value;
+          lvalT    : MSIR.T;
+          lvalEltT : MSIR.T;
+      BEGIN
+        lval := Expr.LValueMSIR (actual);
+        IF lval = NIL THEN RETURN NIL END;
+        lvalT    := MSIR.ValueType (lval);
+        lvalEltT := NIL;
+        IF MSIR.Kind (lvalT) = MSIR.TypeKind.Ptr THEN
+          lvalEltT := MSIR.EltType (lvalT);
+        END;
+        IF lvalEltT = NIL OR MSIR.Kind (lvalEltT) # MSIR.TypeKind.FixedArray THEN
+          RETURN lval;  (* genuine dope vector pointer, pass as-is *)
+        END;
+        (* Open array constructor with flat MSIR layout: build dope vector.
+           The constructor (e.g. ARRAY OF T{e1,...}) has M3 open type giving
+           actDepth >= formDepth, but its MSIR lvalue is a flat [N x T] alloca.
+           Construct the {ptr, count} descriptor so the callee sees a valid dope. *)
+        VAR dimSizes  : REF ARRAY OF INTEGER;
+            msirInner : MSIR.T;
+        BEGIN
+          dimSizes  := NEW (REF ARRAY OF INTEGER, formDepth);
+          msirInner := lvalEltT;
+          FOR k := 0 TO formDepth - 1 DO
+            IF MSIR.Kind (msirInner) # MSIR.TypeKind.FixedArray THEN
+              MSIRBuilder.Abandon ("GenOpenArgMSIR: open-array constructor depth mismatch");
+              RETURN NIL;
+            END;
+            dimSizes[k] := VAL (MSIR.FixedArrayLen (msirInner), INTEGER);
+            msirInner   := MSIR.FixedArrayElt (msirInner);
+          END;
+          flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
+          flds[0] := MSIR.Field {name := "", type := ptrT};
+          FOR k := 0 TO formDepth - 1 DO
+            flds[1 + k] := MSIR.Field {name := "", type := intT};
+          END;
+          b     := MSIRBuilder.CurrentBlock ();
+          dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+          MSIR.BuildStore (b, lval, MSIRBuilder.BuildPtrByteOff (b, "", dopeA, 0));
+          FOR k := 0 TO formDepth - 1 DO
+            MSIR.BuildStore (b, MSIR.ConstInt (intT, dimSizes[k]),
+                             MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
+                                                          apB + ipB * k));
+          END;
+          RETURN dopeA;
+        END;
+      END;
     END;
     flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
     flds[0] := MSIR.Field {name := "", type := ptrT};

@@ -560,6 +560,17 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       END;
       IF oa = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();
+      (* CONST open arrays may compile to FixedArray in MSIR (size known at
+         compile time).  Spill to an alloca and use BuildArrayElemAddr so the
+         element address is computed without needing a dope vector. *)
+      IF MSIR.Kind (MSIR.ValueType (oa)) = MSIR.TypeKind.FixedArray THEN
+        VAR tmp := MSIR.BuildAlloca (blk, "", MSIR.ValueType (oa));
+        BEGIN
+          MSIR.BuildStore (blk, oa, tmp);
+          blk := MSIRBuilder.CurrentBlock ();
+          RETURN MSIR.BuildArrayElemAddr (blk, "", tmp, idxVal);
+        END;
+      END;
       VAR slot := MSIR.BuildOpenArrayElemAddr (blk, "", oa,
                                                ARRAY OF MSIR.Value{idxVal});
       BEGIN

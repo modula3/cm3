@@ -828,9 +828,10 @@ PROCEDURE ProcItemIsEnvelope(p: Proc; i: INTEGER): BOOLEAN =
 (*--------------------------------------------------------------- Module *)
 
 REVEAL Module = BRANDED "MSIR.Module" REF RECORD
-  name:       TEXT;
-  triple:     TEXT := NIL;
-  datalayout: TEXT := NIL;
+  name:        TEXT;
+  isInterface: BOOLEAN := FALSE;
+  triple:      TEXT := NIL;
+  datalayout:  TEXT := NIL;
   imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
@@ -872,8 +873,8 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
     g.type       := type;
     g.isTraced   := isTraced;
     g.isExternal := isExternal;
-    v.name  := name;
-    v.vKind := ValueKind.GlobalRef;
+    v.name       := name;
+    v.vKind      := ValueKind.GlobalRef;
     IF isTraced THEN
       v.type := TGcSlot(type);
     ELSE
@@ -886,7 +887,7 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
 PROCEDURE GlobalName       (g: Global): TEXT    = BEGIN RETURN g.name       END GlobalName;
 PROCEDURE GlobalType       (g: Global): T       = BEGIN RETURN g.type       END GlobalType;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
-PROCEDURE GlobalIsExternal (g: Global): BOOLEAN = BEGIN RETURN g.isExternal END GlobalIsExternal;
+PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN = BEGIN RETURN g.isExternal    END GlobalIsExternal;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER = BEGIN RETURN g.byteOffset END GlobalByteOffset;
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value) =
   BEGIN g.byteOffset := byteOff; g.refValue := ref END GlobalSetStructField;
@@ -1195,6 +1196,10 @@ PROCEDURE NewModule(name: TEXT): Module =
   END NewModule;
 
 PROCEDURE ModuleName(m: Module): TEXT = BEGIN RETURN m.name END ModuleName;
+PROCEDURE ModuleSetIsInterface(m: Module;  isInterface: BOOLEAN) =
+  BEGIN m.isInterface := isInterface END ModuleSetIsInterface;
+PROCEDURE ModuleIsInterface(m: Module): BOOLEAN =
+  BEGIN RETURN m.isInterface END ModuleIsInterface;
 
 PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT) =
   BEGIN m.triple := triple;  m.datalayout := datalayout END SetModuleTarget;

@@ -928,7 +928,7 @@ PROCEDURE Compile (t: T) =
     zz := Scope.Push (t.localScope);
       WebInfo.Reset ();
       CG.Begin_unit ();
-      MSIREmit.BeginUnit (t.name);
+      MSIREmit.BeginUnit (t.name, t.interface);
       CG.Widechar_size (Target.WideCharSize());
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
@@ -1150,13 +1150,13 @@ PROCEDURE EmitBody (x: InitBody) =
   VAR t := x.self;  zz: Scope.T;   skip := CG.Next_label ();
       msirOk: BOOLEAN;
   BEGIN
-    IF (x.cg_proc = NIL) THEN RETURN END;
+    (* MSIR: open the module init proc — must happen before the cg_proc guard
+       so the body is compiled for MSIR even when DoNothing discards M3CG output. *)
+    msirOk := MSIRBuilder.BeginModuleInit (x.name);
+    IF (x.cg_proc = NIL) AND NOT msirOk THEN RETURN END;
 
     (* restore my environment *)
     zz := Scope.Push (t.localScope);
-
-    (* MSIR: open the module init proc *)
-    msirOk := MSIRBuilder.BeginModuleInit (x.name);
 
     (* generate my initialization procedure *)
     CG.Comment (-1, FALSE, "module main body ", x.name);

@@ -14,6 +14,8 @@ IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig;
 IMPORT QIdent;
 IMPORT Target;
+IMPORT MSIREmit;
+IMPORT M3CG_DoNothing;
 FROM M3Path IMPORT OSKind, OSKindStrings;
 IMPORT Pathname;
 IMPORT QPromise, QPromiseSeq, RefSeq;
@@ -314,6 +316,13 @@ PROCEDURE CompileUnits (main     : TEXT;
 
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
+
+    IF s.m3backend_mode IN Target.BackendMSIRSet THEN
+      IF NOT Target.Has_stack_walker THEN
+        ConfigErr (s, "M3_BACKEND_MODE",
+          "MSIRObj/MSIRAsm requires M3_USE_STACK_WALKER = TRUE");
+      END;
+    END;
 
     s.info_name   := M3Path.Join (NIL, nm.base, info_kind);
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
@@ -1628,15 +1637,31 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         codeGenOutName := u.object; 
         DoRunLlc := TRUE; 
         (* boot has no effect on this mode. *) 
-    | Mode_t.StAloneLlvmAsm => 
-        llvmIRName := LlvmIRNameForUnit (u);  
+    | Mode_t.StAloneLlvmAsm =>
+        llvmIRName := LlvmIRNameForUnit (u);
         llvmIROptName := LlvmIROptNameForUnit (u);
-        DoRunM3llvm := TRUE; 
-        codeGenOutName := AsmNameForUnit (u);  
-        DoWriteAsm := TRUE; 
-        DoRunLlc := TRUE; 
-        DoRunAsm := NOT boot; 
-        asmName := codeGenOutName; 
+        DoRunM3llvm := TRUE;
+        codeGenOutName := AsmNameForUnit (u);
+        DoWriteAsm := TRUE;
+        DoRunLlc := TRUE;
+        DoRunAsm := NOT boot;
+        asmName := codeGenOutName;
+    | Mode_t.MSIRObj =>
+        (* m3front emits LLVM IR via MSIREmit; M3CG output is discarded.
+           llvmIRName is passed to RunM3Front so SetLLOutPath is applied
+           after Pass0_CheckImports (parallel to how env.object works). *)
+        llvmIRName := LlvmIRNameForUnit (u);
+        llvmIROptName := LlvmIROptNameForUnit (u);
+        codeGenOutName := u.object;
+        DoRunLlc := TRUE;
+    | Mode_t.MSIRAsm =>
+        llvmIRName := LlvmIRNameForUnit (u);
+        llvmIROptName := LlvmIROptNameForUnit (u);
+        codeGenOutName := AsmNameForUnit (u);
+        DoWriteAsm := TRUE;
+        DoRunLlc := TRUE;
+        DoRunAsm := NOT boot;
+        asmName := codeGenOutName;
     END;
     
     (* External code generators always consume cm3IR. *)
@@ -1664,8 +1689,8 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
       Temps_Add (temps, s, CCodeName);
     END;
 
-    ok := RunM3Front (s, u, cm3OutName);
-    IF NOT ok THEN 
+    ok := RunM3Front (s, u, cm3OutName, llvmIRName);
+    IF NOT ok THEN
       Msg.Error (NIL, "m3front failed compiling: ", UnitPath (u));
     ELSE (* Front succeeded. *) 
       IF NOT s.compile_only THEN
@@ -1976,7 +2001,8 @@ PROCEDURE ResetEnv (s: State;  u: M3Unit.T;  source, object: TEXT) =
     env.wishes.cnt            := 0;
   END ResetEnv;
 
-PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
+PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT;
+                      llvmIRName: TEXT := NIL)
   : BOOLEAN (* Success. *) =
   VAR
     ok      : BOOLEAN;
@@ -2022,6 +2048,9 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
     (* do the compilation *)
     IF (ok) THEN
       ResetEnv (s, u, UnitPath (u), object);
+      (* Apply LLVM IR output path after Pass0_CheckImports so recursive
+         import compilations cannot clobber it (mirrors how env.object works). *)
+      MSIREmit.SetLLOutPath (llvmIRName);
       Pass0_Trace (UnitPath (u), s.m3_front_flags, s.m3_options);
       ok := M3Front.Compile (source, s.m3env, options^);
     END;
@@ -2052,16 +2081,24 @@ PROCEDURE RunM3Front (s: State;  u: M3Unit.T;  object: TEXT)
 
 PROCEDURE Pass0_InitCodeGenerator (env: Env): M3CG.T =
   BEGIN
-    env.cg     := NIL;
-    env.target_wr := Utils.OpenWriter (env.object, fatal := FALSE);
-    IF (env.target_wr # NIL) THEN
-      env.cg := M3Backend.Open (
-        env.globals.result_name,
-        env.source_unit.name,
-        env.target_wr,
-        env.object,
-        env.sideIRName,
-        env.globals.m3backend_mode);
+    env.cg := NIL;
+    IF env.globals.m3backend_mode IN Target.BackendMSIRSet THEN
+      (* MSIR modes: m3front emits LLVM IR directly; no real M3CG output needed.
+         DoNothing satisfies M3CG_Check (non-NIL sentinels) while discarding
+         all M3CG operations — the LLVM IR comes from MSIREmit instead. *)
+      env.cg := NEW (M3CG_DoNothing.T);
+      RETURN env.cg;
+    ELSE
+      env.target_wr := Utils.OpenWriter (env.object, fatal := FALSE);
+      IF (env.target_wr # NIL) THEN
+        env.cg := M3Backend.Open (
+          env.globals.result_name,
+          env.source_unit.name,
+          env.target_wr,
+          env.object,
+          env.sideIRName,
+          env.globals.m3backend_mode);
+      END;
     END;
     RETURN env.cg;
   END Pass0_InitCodeGenerator;

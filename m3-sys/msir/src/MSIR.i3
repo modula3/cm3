@@ -252,6 +252,8 @@ TYPE Module <: REFANY;
 
 PROCEDURE NewModule(name: TEXT): Module;
 PROCEDURE ModuleName(m: Module): TEXT;
+PROCEDURE ModuleSetIsInterface(m: Module;  isInterface: BOOLEAN);
+PROCEDURE ModuleIsInterface(m: Module): BOOLEAN;
 PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT);
 PROCEDURE ModuleTriple(m: Module): TEXT;
 PROCEDURE ModuleDataLayout(m: Module): TEXT;
@@ -400,7 +402,7 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
 PROCEDURE GlobalName       (g: Global): TEXT;
 PROCEDURE GlobalType       (g: Global): T;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN;
-PROCEDURE GlobalIsExternal (g: Global): BOOLEAN;
+PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value);
 PROCEDURE GlobalValue(g: Global): Value;

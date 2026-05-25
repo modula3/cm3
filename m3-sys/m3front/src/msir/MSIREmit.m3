@@ -10,30 +10,38 @@ VAR
   enabled:    BOOLEAN     := FALSE;
   enabledSet: BOOLEAN     := FALSE;
   curModule:  MSIR.Module := NIL;
+  llOutPath:  TEXT        := NIL;
+
+PROCEDURE SetLLOutPath(path: TEXT) =
+  BEGIN
+    llOutPath := path;
+  END SetLLOutPath;
 
 PROCEDURE IsEnabled(): BOOLEAN =
   BEGIN
     IF NOT enabledSet THEN
-      enabled := RTParams.IsPresent("m3front-msir");
+      enabled := RTParams.IsPresent("m3front-msir")
+              OR (Target.BackendMode IN Target.BackendMSIRSet);
       enabledSet := TRUE;
     END;
     RETURN enabled;
   END IsEnabled;
 
-PROCEDURE BeginUnit(name: M3ID.T) =
+PROCEDURE BeginUnit(name: M3ID.T;  isInterface: BOOLEAN := FALSE) =
   VAR txt, triple, datalayout: TEXT;
   BEGIN
     IF NOT IsEnabled() THEN RETURN END;
     txt := M3ID.ToText(name);
     IF txt = NIL THEN txt := "<anonymous>" END;
     curModule := MSIR.NewModule(txt);
+    MSIR.ModuleSetIsInterface(curModule, isInterface);
     triple := NIL;  datalayout := NIL;
     IF Target.System_name # NIL THEN
       IF Text.Equal(Target.System_name, "ARM64_DARWIN") THEN
-        triple     := "arm64-apple-macosx";
+        triple     := "arm64-apple-macosx11.0";
         datalayout := "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-n32:64-S128-Fn32";
       ELSIF Text.Equal(Target.System_name, "AMD64_DARWIN") THEN
-        triple     := "x86_64-apple-macosx";
+        triple     := "x86_64-apple-macosx10.15";
         datalayout := "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
       ELSIF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
         triple     := "x86_64-unknown-linux-gnu";
@@ -152,7 +160,16 @@ PROCEDURE EndUnit() =
     EXCEPT
       OSError.E => (* best-effort *)
     END;
-    path := MSIR.ModuleName(curModule) & ".ll";
+    IF llOutPath # NIL THEN
+      path := llOutPath;
+    ELSE
+      path := MSIR.ModuleName(curModule) & ".ll";
+    END;
+    VAR dbgPath: TEXT;
+    BEGIN
+      IF llOutPath = NIL THEN dbgPath := "NIL" ELSE dbgPath := llOutPath END;
+      Wr.PutText(Stdio.stderr, "MSIREmit.EndUnit llOutPath=" & dbgPath & " writing to: " & path & "\n");
+    END;
     TRY
       wr := FileWr.Open(path);
       MSIRToLLVM.Module(wr, curModule);
@@ -160,7 +177,8 @@ PROCEDURE EndUnit() =
     EXCEPT
       OSError.E => (* best-effort *)
     END;
-    curModule := NIL;
+    curModule  := NIL;
+    llOutPath  := NIL;
   END EndUnit;
 
 BEGIN

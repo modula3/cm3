@@ -18,8 +18,8 @@ PROCEDURE IsEnabled(): BOOLEAN;
 PROCEDURE CurrentModule(): MSIR.Module;
 
 (* Begin a new compilation unit. Creates a fresh MSIR.Module.
-   No-op if not enabled. *)
-PROCEDURE BeginUnit(name: M3ID.T);
+   isInterface=TRUE when compiling a .i3 file.  No-op if not enabled. *)
+PROCEDURE BeginUnit(name: M3ID.T;  isInterface: BOOLEAN := FALSE);
 
 (* Add a finished MSIR.Proc to the current module. Called by
    MSIRBuilder.EndProc when a proc was successfully translated. *)
@@ -34,9 +34,16 @@ PROCEDURE RegisterImport(binder: TEXT);
    was called). Appended as a comment in the MSIR output. *)
 PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT);
 
+(* Override the output path for the .ll file.  Used by the MSIRObj/MSIRAsm
+   backend modes in Builder.m3 to redirect LLVM IR output to the path that
+   compile_llvm expects (e.g. Foo.mb rather than Foo.ll).
+   Must be called before BeginUnit.  NIL resets to the default (<name>.ll). *)
+PROCEDURE SetLLOutPath(path: TEXT);
+
 (* Finalize the unit: write the assembled MSIR.Module to
-   <unit-name>.msir in the current working directory and clear
-   state. No-op if not enabled. *)
+   <unit-name>.msir and the LLVM IR to the path set by SetLLOutPath
+   (or <unit-name>.ll by default), then clear state.
+   No-op if not enabled. *)
 PROCEDURE EndUnit();
 
 END MSIREmit.

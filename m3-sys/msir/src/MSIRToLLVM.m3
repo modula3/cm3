@@ -170,10 +170,6 @@ PROCEDURE LLSymbol(p: MSIR.Proc): TEXT =
     END;
   END LLSymbol;
 
-(* LLVM symbol name for a module-local global variable. *)
-PROCEDURE LLGlobalSym(name: TEXT): TEXT =
-  BEGIN RETURN MSIR.ModuleName(curEmitModule) & "__" & name END LLGlobalSym;
-
 (*------------------------------------------------------- type emission *)
 
 PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
@@ -323,7 +319,7 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         END;
     | MSIR.ValueKind.GlobalRef =>
         Wr.PutText(wr, "@");
-        Wr.PutText(wr, LLGlobalSym(MSIR.ValueName(v)));
+        Wr.PutText(wr, MSIR.ValueName(v));
     | MSIR.ValueKind.StructFieldRef =>
         (* getelementptr inbounds (i8, ptr @Mod_M3_info, i{AP} N) *)
         VAR ap := "i" & Fmt.Int(Target.Address.size);
@@ -2568,7 +2564,7 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global) =
       Wr.PutText(wr, " = external global ");
       LLType(wr, t);
     ELSE
-      Wr.PutText(wr, LLGlobalSym(MSIR.GlobalName(g)));
+      Wr.PutText(wr, MSIR.GlobalName(g));
       Wr.PutText(wr, " = global ");
       IF MSIR.GlobalIsTraced(g) THEN
         Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
@@ -3207,11 +3203,17 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
     ip_t       := "i" & Fmt.Int(Target.Integer.size);   (* INTEGER type string *)
     ap_t       := "i" & Fmt.Int(Target.Address.size);   (* ADDRESS type string *)
+  VAR isInterface := MSIR.ModuleIsInterface(m);
   BEGIN
-    (* Check whether the module body proc was compiled (not abandoned). *)
-    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
-      IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_M3") THEN
-        bodyExists := TRUE;
+    IF isInterface THEN
+      binderName := modName & "_I3";
+      (* Interfaces have no compiled _M3 body proc — bodyExists stays FALSE. *)
+    ELSE
+      (* Check whether the implementation body proc was compiled (not abandoned). *)
+      FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+        IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_M3") THEN
+          bodyExists := TRUE;
+        END;
       END;
     END;
 
@@ -3390,7 +3392,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
               THEN lltype := "ptr";
               ELSE lltype := LLTypeStr(MSIR.GlobalType(g));
             END;
-            Wr.PutText(wr, "@" & LLGlobalSym(MSIR.GlobalName(g))
+            Wr.PutText(wr, "@" & MSIR.GlobalName(g)
                            & " = alias " & lltype
                            & ", ptr getelementptr inbounds (i8, ptr "
                            & infoName & ", " & ap_t & " " & Fmt.Int(off) & ")\n");
@@ -3409,21 +3411,26 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       Wr.PutText(wr, "}\n");
     END;
 
-    (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI. *)
-    Wr.PutText(wr, "\ndefine ptr @" & binderName & "(" & ip_t & " %mode) {\n");
-    IF bodyExists THEN
-      Wr.PutText(wr, "entry:\n");
-      Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
-      Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
-      Wr.PutText(wr, "run:\n");
-      Wr.PutText(wr, "  call void " & bodyName & "()\n");
-      Wr.PutText(wr, "  br label %done\n");
-      Wr.PutText(wr, "done:\n");
-    ELSE
-      Wr.PutText(wr, "entry:\n");
+    (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI.
+       For interface modules, @<Mod>_I3 was already defined in the imports section
+       and @<Mod>_M3 is only declared (external — provided by the implementation),
+       so we skip defining the binder here to avoid a redefinition error. *)
+    IF NOT isInterface THEN
+      Wr.PutText(wr, "\ndefine ptr @" & binderName & "(" & ip_t & " %mode) {\n");
+      IF bodyExists THEN
+        Wr.PutText(wr, "entry:\n");
+        Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
+        Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
+        Wr.PutText(wr, "run:\n");
+        Wr.PutText(wr, "  call void " & bodyName & "()\n");
+        Wr.PutText(wr, "  br label %done\n");
+        Wr.PutText(wr, "done:\n");
+      ELSE
+        Wr.PutText(wr, "entry:\n");
+      END;
+      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+      Wr.PutText(wr, "}\n");
     END;
-    Wr.PutText(wr, "  ret ptr " & infoName & "\n");
-    Wr.PutText(wr, "}\n");
   END EmitModuleBinder;
 
 (*------------------------------------------------------ module emission *)
@@ -3489,9 +3496,35 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     END;
     Wr.PutText(wr, "\n");
 
-    (* EH externs — emitted once per module when any proc uses invoke *)
+    (* EH — emitted once per module when any proc uses invoke.
+       @_ZTI6_M3Exc is defined as linkonce_odr so each MSIR-compiled module
+       is self-sufficient, avoiding dependence on the private/unexported copy
+       in libm3core.dylib when the program links against the shared library. *)
     IF needsEH THEN
-      Wr.PutText(wr, "@_ZTI6_M3Exc = external constant ptr\n");
+      VAR isDarwin := (Target.System_name # NIL) AND
+                      (Text.Equal(Target.System_name, "ARM64_DARWIN") OR
+                       Text.Equal(Target.System_name, "AMD64_DARWIN"));
+      BEGIN
+        Wr.PutText(wr, "@_ZTVN10__cxxabiv117__class_type_infoE = external global [0 x ptr]\n");
+        IF isDarwin THEN
+          (* Mach-O: hidden, no comdat; MSB of name pointer set per Darwin ABI. *)
+          Wr.PutText(wr, "@_ZTS6_M3Exc = linkonce_odr hidden constant [8 x i8] c\"6_M3Exc\\00\", align 1\n");
+          Wr.PutText(wr,
+            "@_ZTI6_M3Exc = linkonce_odr hidden constant { ptr, ptr }" &
+            " { ptr getelementptr inbounds (ptr, ptr @_ZTVN10__cxxabiv117__class_type_infoE, i64 2)," &
+            " ptr inttoptr (i64 add (i64 ptrtoint (ptr @_ZTS6_M3Exc to i64)," &
+            " i64 -9223372036854775808) to ptr) }, align 8\n");
+        ELSE
+          (* ELF: dso_local, comdat; plain name pointer. *)
+          Wr.PutText(wr, "$_ZTI6_M3Exc = comdat any\n");
+          Wr.PutText(wr, "$_ZTS6_M3Exc = comdat any\n");
+          Wr.PutText(wr, "@_ZTS6_M3Exc = linkonce_odr dso_local constant [8 x i8] c\"6_M3Exc\\00\", comdat, align 1\n");
+          Wr.PutText(wr,
+            "@_ZTI6_M3Exc = linkonce_odr dso_local constant { ptr, ptr }" &
+            " { ptr getelementptr inbounds (ptr, ptr @_ZTVN10__cxxabiv117__class_type_infoE, i64 2)," &
+            " ptr @_ZTS6_M3Exc }, comdat, align 8\n");
+        END;
+      END;
       Wr.PutText(wr, "declare i32 @__gxx_personality_v0(...)\n");
       (* __cxa_get_exception_ptr, __cxa_begin_catch, __cxa_end_catch are all
          declared automatically by CollectExterns (they appear as Call callees

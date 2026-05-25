@@ -173,6 +173,10 @@ PROCEDURE BeginProc(name: TEXT;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
+      (* Prefix nested proc name with parent's name to prevent clashes with
+         a module-level proc of the same base name (e.g., both 'Add'). *)
+      name := MSIR.ProcName(procContextStack[procContextDepth - 1].proc)
+              & "_" & name;
     END;
     abandoned      := FALSE;
     varMapN        := 0;
@@ -1577,6 +1581,9 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
 
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
   BEGIN
+    FOR i := 0 TO globalMapN-1 DO
+      IF globalMap[i].key = v THEN RETURN END;
+    END;
     IF globalMapN >= MaxGlobalMap THEN RETURN END;
     MSIR.ModuleAddGlobal(m, g);
     globalMap[globalMapN].key := v;

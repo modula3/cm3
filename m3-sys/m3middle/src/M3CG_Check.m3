@@ -8,7 +8,7 @@
 MODULE M3CG_Check;
 
 IMPORT Wr, Thread, Fmt, Text, Stdio, IntIntTbl;
-IMPORT M3ID, M3CG, M3CG_Ops, Target, TargetMap;
+IMPORT M3ID, M3CG, M3CG_Ops, M3CG_DoNothing, Target, TargetMap;
 
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT ByteSize, Alignment, Frequency, RuntimeError;
@@ -400,7 +400,7 @@ PROCEDURE set_runtime_proc (self: U;  n: Name;  p: Proc) =
 
 PROCEDURE CheckVar (self: U;  v: Var) =
   BEGIN
-    IF (v = NIL) THEN
+    IF (v = NIL) AND NOT ISTYPE(self.child, M3CG_DoNothing.T) THEN
       PutErr (self, "NIL variable");
     END;
   END CheckVar;
@@ -530,7 +530,7 @@ PROCEDURE init_float (self: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
 PROCEDURE CheckProc (self: U;  p: Proc) =
   BEGIN
-    IF (p = NIL) THEN
+    IF (p = NIL) AND NOT ISTYPE(self.child, M3CG_DoNothing.T) THEN
       PutErr (self, "NIL procedure");
     END;
   END CheckProc;

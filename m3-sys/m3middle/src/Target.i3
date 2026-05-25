@@ -57,10 +57,13 @@ TYPE
                                    It produces assembly code, run asm. *) 
     (* StAloneLlvm modes emit cm3 IR to a file, then run a stand-alone executable to
        translate it to llvm IR. *) 
-    StAloneLlvmObj,     (* "9"  -- call m3llvm, then call compile_llvm. 
-                                   It produces object code. *) 
-    StAloneLlvmAsm      (* "10" -- call m3llvm, then call compile_llvm. 
-                                   It produces assembly code, run asm. *) 
+    StAloneLlvmObj,     (* "9"  -- call m3llvm, then call compile_llvm.
+                                   It produces object code. *)
+    StAloneLlvmAsm,     (* "10" -- call m3llvm, then call compile_llvm.
+                                   It produces assembly code, run asm. *)
+    (* MSIR modes: m3front emits LLVM IR directly (no M3CG output, no m3llvm). *)
+    MSIRObj,            (* "11" -- m3front emits LLVM IR; call compile_llvm -> object. *)
+    MSIRAsm             (* "12" -- m3front emits LLVM IR; call compile_llvm -> asm -> object. *)
   };
 
 CONST
@@ -75,7 +78,9 @@ CONST
     "ExtLlvmObj", 
     "ExtLlvmAsm",
     "StAloneLlvmObj",
-    "StAloneLlvmAsm" 
+    "StAloneLlvmAsm",
+    "MSIRObj",
+    "MSIRAsm"
    };
 
   TYPE MT = M3BackendMode_t; 
@@ -93,23 +98,27 @@ CONST
     { MT.ExtLlvmObj, MT.ExtLlvmAsm, MT.IntLlvmObj, MT.IntLlvmAsm}; 
     (* Modes linking to the llvm infrastructure to generate assembly or object code. *)
 
-  CONST BackendStAloneLlvmSet = SET OF M3BackendMode_t 
-    { MT.StAloneLlvmObj, MT.StAloneLlvmAsm }; 
+  CONST BackendStAloneLlvmSet = SET OF M3BackendMode_t
+    { MT.StAloneLlvmObj, MT.StAloneLlvmAsm };
     (* Modes using standalone translator m3llvm, from cm3 IR to llvm IR. *)
 
-  CONST BackendCSet = SET OF M3BackendMode_t { MT.C }; 
+  CONST BackendMSIRSet = SET OF M3BackendMode_t
+    { MT.MSIRObj, MT.MSIRAsm };
+    (* Modes where m3front emits LLVM IR directly via MSIR; no M3CG output. *)
+
+  CONST BackendCSet = SET OF M3BackendMode_t { MT.C };
     (* Modes using the C-generating code generator plus a C compiler. *) 
 
-  CONST BackendAsmSet = SET OF M3BackendMode_t 
+  CONST BackendAsmSet = SET OF M3BackendMode_t
     { MT.IntegratedAssembly, MT.ExternalAssembly, MT.ExtLlvmAsm, MT.IntLlvmAsm,
-      MT.StAloneLlvmAsm }; 
+      MT.StAloneLlvmAsm, MT.MSIRAsm };
     (* Modes that require the builder to run the assembler. *) 
     (* NOTE: C may require separate assembly, but the C compiler does it. *)
 
   CONST BackendLlvmAsmSet = SET OF M3BackendMode_t 
     { MT.ExtLlvmAsm, MT.IntLlvmAsm, MT.StAloneLlvmAsm }; 
 
-  CONST BackendSet = SET OF M3BackendMode_t 
+  CONST BackendSet = SET OF M3BackendMode_t
     {
       MT.IntegratedObject,
       MT.IntegratedAssembly,
@@ -121,17 +130,23 @@ CONST
       MT.IntLlvmObj,
       MT.IntLlvmAsm,
       MT.StAloneLlvmObj,
-      MT.StAloneLlvmAsm
-    }; 
+      MT.StAloneLlvmAsm,
+      MT.MSIRObj,
+      MT.MSIRAsm
+    };
   
 (* Provoke compile errors: *) 
   BackendIntegratedXXX
-    = ARRAY M3BackendMode_t OF BOOLEAN 
-        { TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
+    = ARRAY M3BackendMode_t OF BOOLEAN
+        { TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+          FALSE, FALSE };
+        (* MSIRObj, MSIRAsm: m3front runs but M3CG output is discarded. *)
 
-  BackendUsesLlvmXXX 
-    = ARRAY M3BackendMode_t OF BOOLEAN 
-        { FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE };
+  BackendUsesLlvmXXX
+    = ARRAY M3BackendMode_t OF BOOLEAN
+        { FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+          FALSE, FALSE };
+        (* MSIRObj, MSIRAsm: MSIR emits LLVM IR text directly, not via LLGen bitcode. *)
 
   (* BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE, FALSE };  *)
 
