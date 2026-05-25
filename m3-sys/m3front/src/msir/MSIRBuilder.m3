@@ -1374,6 +1374,13 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
                        caps: REF ARRAY OF CaptureAnalysis.Capture := NIL) =
   BEGIN
     IF v = NIL OR p = NIL THEN RETURN END;
+    FOR i := 0 TO procMapN - 1 DO
+      IF procMap[i].key = v THEN
+        procMap[i].val  := p;
+        procMap[i].caps := caps;
+        RETURN;
+      END;
+    END;
     IF procMapN >= MaxProcMap THEN RETURN END;
     procMap[procMapN].key  := v;
     procMap[procMapN].val  := p;

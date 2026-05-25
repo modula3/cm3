@@ -675,6 +675,7 @@ PROCEDURE GenBody (p: T) =
     frame    : CG.Var;
     cconv    : CG.CallingConvention;
     msirSkip : BOOLEAN;
+    msirCa   : CaptureAnalysis.T;
   BEGIN
     IF (Host.inline_nested_procs)
       AND (p.body # NIL) AND (p.body.level > 0) THEN
@@ -702,17 +703,16 @@ PROCEDURE GenBody (p: T) =
            capture params.  GenBodyMSIR (called from LangInit) may have failed
            or abandoned and left the proc out of procMap; we must not lose the
            capture bindings on this second attempt. *)
-        VAR ca := CaptureAnalysis.New();
-        BEGIN
-          Stmt.Capture(p.block, ca);
-          EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
-                                      ProcType.Formals (p.signature),
-                                      p.syms,
-                                      tresult,
-                                      isExternal := TRUE,
-                                      captures := ca);
-        END;
+        msirCa := CaptureAnalysis.New ();
+        Stmt.Capture (p.block, msirCa);
+        EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
+                                    ProcType.Formals (p.signature),
+                                    p.syms,
+                                    tresult,
+                                    isExternal := TRUE,
+                                    captures := msirCa);
       ELSE
+        msirCa := NIL;
         EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
                                     ProcType.Formals (p.signature),
                                     p.syms,
@@ -720,7 +720,12 @@ PROCEDURE GenBody (p: T) =
                                     isExternal := TRUE);
       END;
       IF MSIRBuilder.InProc () THEN
-        MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+        IF msirCa # NIL THEN
+          MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
+                                    CaptureAnalysis.GetCaptures (msirCa));
+        ELSE
+          MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+        END;
       END;
     END;
     Scope.Enter (p.syms);
