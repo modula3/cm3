@@ -808,14 +808,41 @@ This section records current implementation status, key source files,
 internal architecture notes, and known limitations.  It is updated
 incrementally as features land.
 
+### Test Harness
+
+Use `m3-sys/msir/test/sweep.py` (run from the repo root with `cm3` on
+`PATH`) to run the 288 p0/p1/p2 tests with per-test 60-second timeouts:
+
+```sh
+PATH="$HOME/cm3/bin:$PATH" python3 m3-sys/msir/test/sweep.py baseline
+python3 m3-sys/msir/test/sweep.py summary          # categorised abandon counts
+python3 m3-sys/msir/test/sweep.py grep <pattern>   # find tests matching pattern
+python3 m3-sys/msir/test/sweep.py rerun <pattern>  # rebuild matching tests
+python3 m3-sys/msir/test/sweep.py check            # re-run all tests with prior abandons
+```
+
+The harness is essential: `cm3 -DHTML` in m3tests hangs on tests that
+loop at runtime (p161/p224/p267); sweep.py kills those after 60 s.
+
+**Important:** sweep results depend on `M3_BACKEND_MODE` in the installed
+config.  In `"C"` mode, MSIR runs alongside the C backend (abandons short-
+circuit early, VERIFY warnings don't affect linking).  In `"MSIRObj"` mode,
+MSIR IS the backend, so more code paths execute through MSIR and additional
+VERIFY issues surface.  The historical "zero abandon" baseline
+(`fd31d07ba6`) was captured in C mode.
+
 ### Current Status
 
-The end-to-end path is working: MSIR is emitted for a real module, lowered
-to LLVM IR, compiled to a native object, and linked into a passing test
-binary.  The production binary (`smoke-realrt`) runs to completion (exit 0)
-against the real CM3 runtime.  **Zero msir-verify events.**  **181/181
-LLVM link test checks pass.**  **Zero msir-abandon events across 288 p0/p1/p2 tests.**
-3 sweep entries show TIMEOUT (p161/p224/p267) — runtime behaviour, not code-generation failures.
+**MSIRObj mode** (`M3_BACKEND_MODE = "MSIRObj"`, ARM64_DARWIN):
+
+- Smoke test: **124/124 checks pass, exit 0** against real CM3 runtime.
+- **181/181** LLVM link-test checks pass.
+- m3tests sweep (288 tests): **49 tests with abandons, 187 messages**.
+  - 5 TIMEOUTs (p161/p224/p267 + 2 others) — runtime, not codegen.
+  - 11 `packed/sub-word array subscript not yet supported` — genuine gap.
+  - ~160 `VERIFY: arg count mismatch` — nested-proc transitive-capture gap.
+  - 4 `non-integer MOD` — genuine gap.
+  - Remainder: scattered single-instance gaps (see `sweep.py summary`).
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
@@ -829,10 +856,7 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 
 ### Known Limitations
 
-All known `msir-verify` issues eliminated.  Zero msir-abandon events across all
-288 p0/p1/p2 test compilations.  The 3 sweep baseline entries (p161/p224/p267)
-are runtime timeouts, not MSIR failures.  Remaining gaps are language features not yet
-exercised by the test suite; they emit `msir-abandon` (proc falls back to
+Remaining gaps in MSIRObj mode emit `msir-abandon` (proc falls back to
 CG) rather than incorrect IR.
 
 - **VALUE open-array formals, partial depth coercion** (`actDepth <

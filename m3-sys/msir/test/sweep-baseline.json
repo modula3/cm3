@@ -1,11 +1,287 @@
 {
+  "p006": [
+    "msir-verify: task: block loop.header.1: insn 1: load result type does not match pointer element type",
+    "msir-verify: task: block lock.fin.4: insn 0: load result type does not match pointer element type",
+    "msir-verify: task: block fin.body.8: insn 2: load result type does not match pointer element type",
+    "msir-verify: task: block while.body.12: insn 3: load result type does not match pointer element type",
+    "msir-verify: task: block while.body.12: insn 4: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 21: store value type does not match pointer element type"
+  ],
+  "p008": [
+    "msir-verify: TestAlert: block while.body.2: insn 2: load result type does not match pointer element type",
+    "msir-verify: TestAlert: block if.then.4: insn 2: load result type does not match pointer element type"
+  ],
+  "p012": [
+    "msir-verify: P0_P0_0: block entry: insn 4: call to 'P0_P0_0_Dump0_0': arg count 1 does not match procedure parameter count 6",
+    "msir-verify: P0_P0_0: block entry: insn 21: call to 'P0_P0_0_Dump0_0': arg count 1 does not match procedure parameter count 6",
+    "msir-verify: P0_P0_0: block entry: insn 23: call to 'P0_P0_0_P0_0_0': arg count 3 does not match procedure parameter count 7",
+    "msir-verify: P0_P0_0: block entry: insn 25: call to 'P0_P0_0_Dump0_0': arg count 1 does not match procedure parameter count 6",
+    "msir-verify: P0_P0_0__shim: block entry: insn 0: call to 'P0_P0_0': arg count 3 does not match procedure parameter count 11",
+    "msir-verify: P0: block entry: insn 22: call to 'P0_P0_0': arg count 3 does not match procedure parameter count 11"
+  ],
+  "p013": [
+    "msir-verify: P_NPlus15__shim: block entry: insn 0: call to 'P_NPlus15': arg count 1 does not match procedure parameter count 3",
+    "msir-verify: P_NPlus20__shim: block entry: insn 0: call to 'P_NPlus20': arg count 1 does not match procedure parameter count 3"
+  ],
+  "p014": [
+    "msir-verify: X: block entry: insn 14: call to 'X_Q': arg count 0 does not match procedure parameter count 1"
+  ],
+  "p028": [
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p029": [
+    "msir-verify: P_Q: block entry: insn 11: call to 'P_Q_R': arg count 1 does not match procedure parameter count 6",
+    "msir-verify: P: block entry: insn 15: call to 'P_Q': arg count 1 does not match procedure parameter count 6",
+    "msir-verify: P: block entry: insn 18: call to 'P_S': arg count 1 does not match procedure parameter count 4"
+  ],
+  "p030": [
+    "msir-verify: Q2: block entry: insn 11: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 34: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 44: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 60: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 64: load result type does not match pointer element type"
+  ],
+  "p035": [
+    "msir-verify: coco_foo: block entry: insn 5: call to 'coco_foo_bar': arg count 0 does not match procedure parameter count 2",
+    "msir-verify: coco_barbar__shim: block entry: insn 0: call to 'coco_barbar': arg count 0 does not match procedure parameter count 1",
+    "msir-verify: coco: block entry: insn 31: call to 'coco_foo': arg count 1 does not match procedure parameter count 3",
+    "msir-verify: coco: block entry: insn 34: call to 'coco_foo': arg count 1 does not match procedure parameter count 3"
+  ],
+  "p042": [
+    "RelDist: msir-abandon: MAX: non-ordinal type not supported in MSIR v0"
+  ],
+  "p045": [
+    "msir-verify: f_g__shim: block entry: insn 0: call to 'f_g': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: f1_g__shim: block entry: insn 0: call to 'f1_g': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: f2_g__shim: block entry: insn 0: call to 'f2_g': arg count 1 does not match procedure parameter count 2"
+  ],
+  "p047": [
+    "msir-verify: Test: block entry: insn 27: load result type does not match pointer element type"
+  ],
+  "p048": [
+    "msir-verify: Foo_Affiche__shim: block entry: insn 0: call to 'Foo_Affiche': arg count 0 does not match procedure parameter count 2"
+  ],
+  "p049": [
+    "ProcessPoint: msir-abandon: non-scalar equality not supported in MSIR v0"
+  ],
+  "p050": [
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p054": [
+    "msir-verify: Schedule: block if.merge.15: insn 4: load result type does not match pointer element type",
+    "msir-verify: DeviceFunction: block if.then.1: insn 2: load result type does not match pointer element type",
+    "msir-verify: DeviceFunction: block if.next.2: insn 3: store value type does not match pointer element type",
+    "msir-verify: DeviceFunction: block if.merge.4: insn 2: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.merge.2: insn 2: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.then.6: insn 2: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.then.8: insn 4: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.then.8: insn 7: store value type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.merge.9: insn 2: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.then.10: insn 2: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.then.10: insn 8: load result type does not match pointer element type",
+    "msir-verify: HandlerFunction: block if.then.10: insn 11: store value type does not match pointer element type"
+  ],
+  "p062": [
+    "msir-verify: PrintList_DoIt: block while.body.2: insn 6: load result type does not match pointer element type",
+    "msir-verify: PrintList_DoIt: block tc.case.5: insn 3: call to 'PrintList_DoIt': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: PrintList_DoIt: block tc.merge.9: insn 2: load result type does not match pointer element type",
+    "msir-verify: PrintList: block entry: insn 11: call to 'PrintList_DoIt': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: Assoc: block while.body.2: insn 2: load result type does not match pointer element type",
+    "msir-verify: Assoc: block tc.case.5: insn 4: load result type does not match pointer element type",
+    "msir-verify: Assoc: block tc.merge.7: insn 2: load result type does not match pointer element type"
+  ],
+  "p069": [
+    "msir-verify: Main_M3: block entry: insn 5: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 13: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 21: load result type does not match pointer element type"
+  ],
+  "p071": [
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p072": [
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p075": [
+    "msir-verify: f2: block for.exit.3: insn 5: load result type does not match pointer element type",
+    "msir-verify: f2: block for.exit.3: insn 9: load result type does not match pointer element type"
+  ],
+  "p079": [
+    "msir-verify: foo: block for.body.2: insn 2: call to 'foo_aaa': arg count 0 does not match procedure parameter count 2"
+  ],
+  "p084": [
+    "msir-verify: Main_M3: block entry: insn 21: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 25: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 29: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 33: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 37: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 41: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 45: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 49: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 53: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 57: load result type does not match pointer element type"
+  ],
+  "p116b": [
+    "msir-verify: TestFloatMode: block entry: insn 148: call to 'TestFloatMode_SetBehave': arg count 5 does not match procedure parameter count 6",
+    "msir-verify: TestFloatMode: block entry: insn 149: call to 'TestFloatMode_SetBehave': arg count 5 does not match procedure parameter count 6",
+    "msir-verify: TestFloatMode: block entry: insn 150: call to 'TestFloatMode_SetBehave': arg count 5 does not match procedure parameter count 6",
+    "msir-verify: TestFloatMode: block entry: insn 148: call to 'TestFloatMode_SetBehave': arg count 5 does not match procedure parameter count 6",
+    "msir-verify: TestFloatMode: block entry: insn 149: call to 'TestFloatMode_SetBehave': arg count 5 does not match procedure parameter count 6",
+    "msir-verify: TestFloatMode: block entry: insn 150: call to 'TestFloatMode_SetBehave': arg count 5 does not match procedure parameter count 6"
+  ],
+  "p117": [
+    "Main_M3: msir-abandon: LOOPHOLE lvalue: open-array target not yet in MSIR"
+  ],
+  "p118": [
+    "Main: msir-abandon: LAST: cannot get bounds"
+  ],
+  "p126": [
+    "Approx: msir-abandon: MAX: non-ordinal type not supported in MSIR v0",
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p133": [
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p140": [
+    "msir-verify: P12_J: block entry: insn 3: call to 'P12_J_K': arg count 1 does not match procedure parameter count 3",
+    "msir-verify: P12: block entry: insn 2: call to 'P12_J': arg count 1 does not match procedure parameter count 3",
+    "msir-verify: P13: block entry: insn 2: call to 'P13_Q': arg count 0 does not match procedure parameter count 1",
+    "msir-verify: P14: block entry: insn 2: call to 'P14_Q': arg count 0 does not match procedure parameter count 1"
+  ],
+  "p149": [
+    "msir-verify: Outer_Middle: block entry: insn 23: call to 'Outer_Middle_Inner': arg count 2 does not match procedure parameter count 5",
+    "msir-verify: Outer: block entry: insn 19: call to 'Outer_Middle': arg count 2 does not match procedure parameter count 5"
+  ],
+  "p150": [
+    "msir-verify: Outer_Middle: block entry: insn 23: call to 'Outer_Middle_Inner': arg count 2 does not match procedure parameter count 5",
+    "msir-verify: Outer: block entry: insn 19: call to 'Outer_Middle': arg count 2 does not match procedure parameter count 5"
+  ],
   "p161": [
     "TIMEOUT"
+  ],
+  "p163": [
+    "TIMEOUT"
+  ],
+  "p164": [
+    "msir-verify: DoForkScan: block entry: insn 6: load result type does not match pointer element type"
+  ],
+  "p166": [
+    "Reset: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
+    "Check: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
+    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+  ],
+  "p176": [
+    "P1: msir-abandon: array-type store mismatch not yet supported in MSIR"
+  ],
+  "p185": [
+    "TIMEOUT"
+  ],
+  "p190": [
+    "msir-verify: Main_M3: block entry: insn 2: load result type does not match pointer element type"
+  ],
+  "p195": [
+    "msir-verify: Main_M3: block entry: insn 5: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 12: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 19: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 23: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 30: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 33: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 39: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 46: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 53: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 57: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 64: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 67: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 75: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 84: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 95: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 99: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 110: load result type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 113: load result type does not match pointer element type"
+  ],
+  "p205": [
+    "msir-verify: Main_M3: block entry: insn 25: store value type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 44: store value type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 76: store value type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 93: store value type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 110: store value type does not match pointer element type",
+    "msir-verify: Main_M3: block entry: insn 128: store value type does not match pointer element type"
   ],
   "p224": [
     "TIMEOUT"
   ],
+  "p238": [
+    "msir-verify: A_B__shim: block entry: insn 0: call to 'A_B': arg count 0 does not match procedure parameter count 5",
+    "msir-verify: A: block if.next.2: insn 0: call to 'A_B': arg count 0 does not match procedure parameter count 5"
+  ],
+  "p240": [
+    "Mod_var_f64_f64: msir-abandon: non-integer MOD",
+    "Mod_param_f64_f64: msir-abandon: non-integer MOD",
+    "Mod_var_f32_f32: msir-abandon: non-integer MOD",
+    "Mod_param_f32_f32: msir-abandon: non-integer MOD"
+  ],
   "p267": [
     "TIMEOUT"
+  ],
+  "p269": [
+    "NoteModName: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
+    "IsInteresting: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
+    "FindConstAreas: msir-abandon: builtin has no MSIR handler",
+    "Withs: msir-abandon: WITH designator/openarray: cannot get lvalue in MSIR",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: ChangeShape_EltProc__shim: block entry: insn 0: call to 'ChangeShape_EltProc': arg count 2 does not match procedure parameter count 4",
+    "msir-verify: CheckEltVals_EltValProc__shim: block entry: insn 0: call to 'CheckEltVals_EltValProc': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: FillEltVals_AssignEltValProc__shim: block entry: insn 0: call to 'FillEltVals_AssignEltValProc': arg count 2 does not match procedure parameter count 3",
+    "msir-verify: OpenSSDDFFSubsShape_a_MustFail__shim: block entry: insn 0: call to 'OpenSSDDFFSubsShape_a_MustFail': arg count 0 does not match procedure parameter count 2",
+    "msir-verify: OpenSSDDFFSubsShape_b_MustFail__shim: block entry: insn 0: call to 'OpenSSDDFFSubsShape_b_MustFail': arg count 0 does not match procedure parameter count 2",
+    "msir-verify: OpenSSDFFFSubsShape_MustFail__shim: block entry: insn 0: call to 'OpenSSDFFFSubsShape_MustFail': arg count 0 does not match procedure parameter count 3"
+  ],
+  "p270": [
+    "msir-verify: ProcOpenConstr: block entry: insn 31: load result type does not match pointer element type"
+  ],
+  "p272": [
+    "msir-verify: RaiseBig: block entry: insn 5: convert source must be a scalar or ptr type"
+  ],
+  "p274": [
+    "msir-verify: ASetsInOArr: block entry: insn 8: call to 'ASetsInOArr_Inner': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: CRecsInOArr: block entry: insn 8: call to 'CRecsInOArr_Inner': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: CArrsInOArr: block entry: insn 8: call to 'CArrsInOArr_Inner': arg count 1 does not match procedure parameter count 2"
+  ],
+  "p277": [
+    "msir-verify: CRecsInOArr: block entry: insn 8: call to 'CRecsInOArr_Inner': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: CArrsInOArr: block entry: insn 8: call to 'CArrsInOArr_Inner': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: OArrsInOArr: block entry: insn 12: call to 'OArrsInOArr_Inner': arg count 1 does not match procedure parameter count 2",
+    "msir-verify: P4InOArr: block entry: insn 10: call to 'P4InOArr_Inner': arg count 1 does not match procedure parameter count 2"
   ]
 }
