@@ -282,7 +282,8 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
     IF t.indirect THEN
       (* Large global (size > Max_zero_global): the module info struct holds
          a pointer to separately-allocated storage.  Register as a pointer
-         slot and flag that LookupVarAddr must load through it. *)
+         slot and flag that LookupVarAddr must load through it.
+         Store mt as dataType so LookupVarAddr can return a typed pointer. *)
       byteSize  := Target.Address.bytes;
       byteAlign := Target.Address.align DIV Target.Char.size;
       byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
@@ -290,7 +291,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
                           MSIR.TPtr(MSIR.TVoid()), isTraced := FALSE);
       MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff,
                                      MSIR.TPtr(MSIR.TPtr(MSIR.TVoid())),
-                                     needsLoad := TRUE);
+                                     needsLoad := TRUE, dataType := mt);
       RETURN;
     END;
     isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef

@@ -49,6 +49,7 @@ TYPE GlobalEntry = RECORD
   key:       Variable.T;
   val:       MSIR.Global;
   needsLoad: BOOLEAN := FALSE;  (* TRUE for large indirect globals: struct holds ptr-to-data *)
+  dataType:  MSIR.T  := NIL;   (* actual element type for indirect globals; used for typed ptr *)
 END;
 
 VAR
@@ -380,6 +381,13 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
              Load the ptr, then load the value through it. *)
           VAR dataPtr := MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), gv);
           BEGIN
+            IF globalMap[i].dataType # NIL THEN
+              VAR typedPtr := MSIR.RetypeValue(dataPtr,
+                                MSIR.TPtr(globalMap[i].dataType));
+              BEGIN
+                RETURN MSIR.BuildLoad(curBlock, "", globalMap[i].dataType, typedPtr);
+              END;
+            END;
             gt := MSIR.GlobalType(globalMap[i].val);
             RETURN MSIR.BuildLoad(curBlock, "", gt, dataPtr);
           END;
@@ -411,8 +419,15 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
         BEGIN
           IF globalMap[i].needsLoad THEN
             (* Large indirect global: the struct field holds a ptr-to-data.
-               Load it to get the address of the actual variable storage. *)
-            RETURN MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), ref);
+               Load it to get the address of the actual variable storage.
+               Retype to a typed pointer when we know the actual element type. *)
+            VAR dataPtr := MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), ref);
+            BEGIN
+              IF globalMap[i].dataType # NIL THEN
+                RETURN MSIR.RetypeValue(dataPtr, MSIR.TPtr(globalMap[i].dataType));
+              END;
+              RETURN dataPtr;
+            END;
           END;
           RETURN ref;
         END;
@@ -1636,7 +1651,8 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
 
 PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
                               infoName: TEXT;  byteOff: INTEGER;
-                              fieldType: MSIR.T;  needsLoad: BOOLEAN := FALSE) =
+                              fieldType: MSIR.T;  needsLoad: BOOLEAN := FALSE;
+                              dataType: MSIR.T := NIL) =
   BEGIN
     IF globalMapN >= MaxGlobalMap THEN RETURN END;
     (* Patch the global with struct field info and a StructFieldRef value. *)
@@ -1646,6 +1662,7 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
     globalMap[globalMapN].key       := v;
     globalMap[globalMapN].val       := g;
     globalMap[globalMapN].needsLoad := needsLoad;
+    globalMap[globalMapN].dataType  := dataType;
     INC(globalMapN);
   END GlobalMapAddStruct;
 

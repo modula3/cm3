@@ -1,21 +1,9 @@
 {
-  "p028": [
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
-  ],
   "p042": [
     "RelDist: msir-abandon: MAX: non-ordinal type not supported in MSIR v0"
   ],
   "p049": [
     "ProcessPoint: msir-abandon: non-scalar equality not supported in MSIR v0"
-  ],
-  "p050": [
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
-  ],
-  "p071": [
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
-  ],
-  "p072": [
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
   ],
   "p117": [
     "Main_M3: msir-abandon: LOOPHOLE lvalue: open-array target not yet in MSIR"
@@ -25,21 +13,13 @@
   ],
   "p126": [
     "Approx: msir-abandon: MAX: non-ordinal type not supported in MSIR v0",
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
-  ],
-  "p133": [
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+    "Main_M3: msir-abandon: MIN: non-ordinal type not supported in MSIR v0"
   ],
   "p161": [
     "TIMEOUT"
   ],
   "p163": [
     "TIMEOUT"
-  ],
-  "p166": [
-    "Reset: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
-    "Check: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
-    "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
   ],
   "p185": [
     "TIMEOUT"
@@ -55,7 +35,6 @@
     "TIMEOUT"
   ],
   "p269": [
-    "NoteModName: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
-    "IsInteresting: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
+    "Work: msir-abandon: array-type store mismatch not yet supported in MSIR"
   ]
 }
