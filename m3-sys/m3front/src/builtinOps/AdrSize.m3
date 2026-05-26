@@ -8,7 +8,7 @@
 
 MODULE AdrSize;
 
-IMPORT CallExpr, Expr, Procedure, Target, BitSize, Card;
+IMPORT CallExpr, Expr, Procedure, Target, BitSize, Card, MSIR;
 
 VAR Z: CallExpr.MethodList;
 
@@ -32,6 +32,9 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     RETURN BitSize.DoFold (ce.args[0], Target.Byte);
   END Fold;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  BEGIN  RETURN BitSize.DoCompileMSIR (ce.args[0], Target.Byte)  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, FALSE, Card.T,
@@ -49,6 +52,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("ADRSIZE", Z, TRUE);
   END Initialize;
 

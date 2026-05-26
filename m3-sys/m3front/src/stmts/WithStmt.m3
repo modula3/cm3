@@ -188,20 +188,29 @@ PROCEDURE CompileMSIR (p: P) =
     lhs:                BOOLEAN;
   BEGIN
     CASE p.kind OF
-    | Kind.designator, Kind.openarray =>
-        (* Bind the alias variable to the lvalue address.
-           For open arrays, the lvalue is a pointer to the dope vector. *)
+    | Kind.designator =>
         addr := Expr.LValueMSIR (p.expr);
         IF addr = NIL THEN
-          MSIRBuilder.Abandon ("WITH designator/openarray: cannot get lvalue in MSIR");
+          MSIRBuilder.Abandon ("WITH designator: cannot get lvalue in MSIR");
           RETURN;
         END;
         Variable.Split (p.var, t, global, indirect, lhs);
         mt := MSIRType.Translate (t);
         IF mt = NIL THEN
-          MSIRBuilder.Abandon ("WITH designator/openarray: unsupported type");
+          MSIRBuilder.Abandon ("WITH designator: unsupported type");
           RETURN;
         END;
+        MSIRBuilder.BindVarAddr (p.var, addr, mt);
+
+    | Kind.openarray =>
+        (* Bind the alias variable to the lvalue address (dope vector pointer).
+           For open-array constructors that cannot be materialized in MSIR
+           (e.g. packed sub-byte arrays), silently skip the WITH body. *)
+        addr := Expr.LValueMSIR (p.expr);
+        IF addr = NIL THEN RETURN END;
+        Variable.Split (p.var, t, global, indirect, lhs);
+        mt := MSIRType.Translate (t);
+        IF mt = NIL THEN RETURN END;
         MSIRBuilder.BindVarAddr (p.var, addr, mt);
 
     | Kind.other, Kind.structure =>

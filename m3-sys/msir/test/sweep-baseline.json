@@ -13,9 +13,5 @@
   ],
   "p267": [
     "TIMEOUT"
-  ],
-  "p269": [
-    "FindConstAreas: msir-abandon: builtin has no MSIR handler",
-    "Withs: msir-abandon: WITH designator/openarray: cannot get lvalue in MSIR"
   ]
 }
