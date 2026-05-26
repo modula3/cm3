@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; zero msir-abandon events |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; zero msir-abandon events across all 288 p0/p1/p2 tests (MSIRObj mode) |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -822,7 +822,7 @@ python3 m3-sys/msir/test/sweep.py check            # re-run all tests with prior
 ```
 
 The harness is essential: `cm3 -DHTML` in m3tests hangs on tests that
-loop at runtime (p161/p224/p267); sweep.py kills those after 60 s.
+loop at runtime (p161/p163/p185/p224/p267); sweep.py kills those after 60 s.
 
 **Important:** sweep results depend on `M3_BACKEND_MODE` in the installed
 config.  In `"C"` mode, MSIR runs alongside the C backend (abandons short-
@@ -837,12 +837,10 @@ VERIFY issues surface.  The historical "zero abandon" baseline
 
 - Smoke test: **124/124 checks pass, exit 0** against real CM3 runtime.
 - **181/181** LLVM link-test checks pass.
-- m3tests sweep (288 tests): **49 tests with abandons, 187 messages**.
-  - 5 TIMEOUTs (p161/p224/p267 + 2 others) — runtime, not codegen.
-  - 11 `packed/sub-word array subscript not yet supported` — genuine gap.
-  - ~160 `VERIFY: arg count mismatch` — nested-proc transitive-capture gap.
-  - 4 `non-integer MOD` — genuine gap.
-  - Remainder: scattered single-instance gaps (see `sweep.py summary`).
+- m3tests sweep (**288 tests — all of p0, p1, p2**): **zero msir-abandon events**.
+  - 5 TIMEOUTs (p161/p163/p185 in p1; p224/p267 in p2) — runtime infinite
+    loops, not codegen issues.
+  - All other tests compile and link without abandons.
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
