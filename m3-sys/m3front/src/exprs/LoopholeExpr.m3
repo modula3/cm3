@@ -633,6 +633,16 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
 
 (* MSIR: lvalue LOOPHOLE — the inner designator through a different type *)
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
+  VAR
+    blk   : MSIR.Block;
+    src   : Type.T;
+    elt   : Type.T;
+    src_info, elt_info: Type.Info;
+    eltMsirT : MSIR.T;
+    elemPtr, dopeA: MSIR.Value;
+    apB   : INTEGER;
+    intT  : MSIR.T;
+    count : INTEGER;
   BEGIN
     CASE p.kind OF
     | Kind.Noop,
@@ -640,8 +650,53 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       Kind.D_to_V, Kind.S_to_V, Kind.V_to_V =>
         RETURN Expr.LValueMSIR (p.expr);
     | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A =>
-        MSIRBuilder.Abandon ("LOOPHOLE lvalue: open-array target not yet in MSIR");
-        RETURN NIL;
+        (* Build an open-array dope vector on the MSIR stack:
+           { elemPtr, count } where count = src_size / elt_size. *)
+        src := Type.CheckInfo (Expr.TypeOf (p.expr), src_info);
+        elt := OpenArrayType.NonopenEltType (p.tipe);
+        elt := Type.CheckInfo (elt, elt_info);
+        IF elt_info.size <= 0 OR src_info.size MOD elt_info.size # 0 THEN
+          MSIRBuilder.Abandon ("LOOPHOLE to open array: non-integer count");
+          RETURN NIL;
+        END;
+        count    := src_info.size DIV elt_info.size;
+        eltMsirT := MSIRType.Translate (elt);
+        IF eltMsirT = NIL THEN
+          MSIRBuilder.Abandon ("LOOPHOLE to open array: unsupported element type");
+          RETURN NIL;
+        END;
+        apB  := Target.Address.size DIV Target.Byte;
+        intT := MSIR.TI (Target.Integer.size);
+        blk  := MSIRBuilder.CurrentBlock ();
+        IF p.kind = Kind.D_to_A THEN
+          elemPtr := Expr.LValueMSIR (p.expr);
+        ELSE
+          (* S_to_A / V_to_A: spill the value into a temp to obtain an address. *)
+          VAR srcMsirT := MSIRType.Translate (src);
+              slot     : MSIR.Value;
+              v        : MSIR.Value;
+          BEGIN
+            IF srcMsirT = NIL THEN
+              MSIRBuilder.Abandon ("LOOPHOLE to open array: unsupported source type");
+              RETURN NIL;
+            END;
+            blk  := MSIRBuilder.CurrentBlock ();
+            slot := MSIR.BuildAlloca (blk, "", srcMsirT);
+            v    := Expr.CompileMSIR (p.expr);
+            IF v = NIL THEN RETURN NIL END;
+            blk  := MSIRBuilder.CurrentBlock ();
+            MSIR.BuildStore (blk, v, slot);
+            elemPtr := slot;
+          END;
+        END;
+        IF elemPtr = NIL THEN RETURN NIL END;
+        blk   := MSIRBuilder.CurrentBlock ();
+        dopeA := MSIR.BuildAlloca (blk, "", MSIR.TOpenArray (1, eltMsirT));
+        MSIR.BuildStore (blk, elemPtr,
+                         MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
+        MSIR.BuildStore (blk, MSIR.ConstInt (intT, count),
+                         MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB));
+        RETURN dopeA;
     | Kind.V_to_S =>
         MSIRBuilder.Abandon ("LOOPHOLE lvalue: V_to_S has no lvalue");
         RETURN NIL;
