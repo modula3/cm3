@@ -1,7 +1,4 @@
 {
-  "p042": [
-    "RelDist: msir-abandon: MAX: non-ordinal type not supported in MSIR v0"
-  ],
   "p049": [
     "ProcessPoint: msir-abandon: non-scalar equality not supported in MSIR v0"
   ],
@@ -10,10 +7,6 @@
   ],
   "p118": [
     "Main: msir-abandon: LAST: cannot get bounds"
-  ],
-  "p126": [
-    "Approx: msir-abandon: MAX: non-ordinal type not supported in MSIR v0",
-    "Main_M3: msir-abandon: MIN: non-ordinal type not supported in MSIR v0"
   ],
   "p161": [
     "TIMEOUT"

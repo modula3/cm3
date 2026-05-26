@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 276/288 p0/p1/p2 tests clean in MSIRObj mode (8 genuine abandons, 4 TIMEOUTs) |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 278/288 p0/p1/p2 tests clean in MSIRObj mode (6 genuine abandons, 4 TIMEOUTs) |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -836,15 +836,14 @@ MSIR IS the backend, so more code paths execute through MSIR.
 - Smoke test: **124/124 checks pass, exit 0** against real CM3 runtime.
 - **181/181** LLVM link-test checks pass.
 - m3tests sweep (**288 tests — all of p0, p1, p2**, forced clean builds):
-  **276/288 clean; 8 genuine abandons across 8 tests; 4 TIMEOUTs**.
+  **278/288 clean; 6 genuine abandons across 6 tests; 4 TIMEOUTs**.
   - 4 TIMEOUTs (p161/p163/p185 in p1; p267 in p2) — runtime infinite loops,
     not codegen issues.  sweep.py now kills the full process group on timeout
     (`start_new_session=True` + `os.killpg`); p185 no longer hangs sweep.
   - Zero `msir-verify` errors (store-type-mismatch fixed by OpenArrayToFixedStore).
-  - Remaining abandon categories: MAX/MIN on non-ordinal (2), non-scalar equality,
-    LOOPHOLE lvalue open-array, LAST bounds, cannot store to by-value formal,
-    object field non-static offset (2), array-type store mismatch.
-    See Known Limitations below.
+  - Remaining abandon categories: non-scalar equality, LOOPHOLE lvalue open-array,
+    LAST bounds, cannot store to by-value formal, object field non-static offset (2),
+    array-type store mismatch.  See Known Limitations below.
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
@@ -861,7 +860,6 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 Remaining gaps in MSIRObj mode emit `msir-abandon` (proc falls back to
 CG) rather than incorrect IR.
 
-- **MAX/MIN on non-ordinal types** (p042, p126): `MAX(FLOAT, FLOAT)` path.
 - **Non-scalar equality** (p049): record/array `=` outside of assignment.
 - **LOOPHOLE lvalue to open array** (p117): `LOOPHOLE(x, ARRAY OF T)` lvalue.
 - **LAST on open-array formal with unknown bounds** (p118).

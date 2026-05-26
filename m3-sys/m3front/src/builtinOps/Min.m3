@@ -10,7 +10,7 @@ MODULE Min;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Max;
 IMPORT IntegerExpr, EnumExpr, ReelExpr, Target, TInt;
-IMPORT MSIR, MSIRBuilder, Int, LInt;
+IMPORT MSIR, MSIRBuilder, Int, LInt, Reel, LReel, EReel;
 
 VAR Z: CallExpr.MethodList;
 
@@ -73,12 +73,14 @@ PROCEDURE MinMSIR (ce: CallExpr.T): MSIR.Value =
     slot:     MSIR.Value;
     cond:     MSIR.Value;
     result:   MSIR.Value;
+    isFloat:  BOOLEAN;
     useBBlk:  MSIR.Block;
     mergeBlk: MSIR.Block;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
-    IF (t # Int.T) AND (t # LInt.T) AND NOT Type.IsOrdinal (t) THEN
-      MSIRBuilder.Abandon ("MIN: non-ordinal type not supported in MSIR v0");
+    isFloat := (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T);
+    IF NOT isFloat AND (t # Int.T) AND (t # LInt.T) AND NOT Type.IsOrdinal (t) THEN
+      MSIRBuilder.Abandon ("MIN: unsupported type in MSIR");
       RETURN NIL;
     END;
     a := Expr.CompileMSIR (ce.args[0]);
@@ -88,8 +90,13 @@ PROCEDURE MinMSIR (ce: CallExpr.T): MSIR.Value =
     mt       := MSIR.ValueType (a);
     slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", mt);
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), a, slot);
-    cond     := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
-                                MSIR.CmpPred.Sle, a, b);
+    IF isFloat THEN
+      cond := MSIR.BuildFCmp (MSIRBuilder.CurrentBlock (), "",
+                              MSIR.FCmpPred.OLe, a, b);
+    ELSE
+      cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                              MSIR.CmpPred.Sle, a, b);
+    END;
     useBBlk  := MSIRBuilder.NewBlock ("min.useb");
     mergeBlk := MSIRBuilder.NewBlock ("min.merge");
     MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,

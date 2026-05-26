@@ -98,12 +98,14 @@ PROCEDURE MaxMSIR (ce: CallExpr.T): MSIR.Value =
     slot:     MSIR.Value;
     cond:     MSIR.Value;
     result:   MSIR.Value;
+    isFloat:  BOOLEAN;
     useBBlk:  MSIR.Block;
     mergeBlk: MSIR.Block;
   BEGIN
     t := Type.Base (Expr.TypeOf (ce.args[0]));
-    IF (t # Int.T) AND (t # LInt.T) AND NOT Type.IsOrdinal (t) THEN
-      MSIRBuilder.Abandon ("MAX: non-ordinal type not supported in MSIR v0");
+    isFloat := (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T);
+    IF NOT isFloat AND (t # Int.T) AND (t # LInt.T) AND NOT Type.IsOrdinal (t) THEN
+      MSIRBuilder.Abandon ("MAX: unsupported type in MSIR");
       RETURN NIL;
     END;
     a := Expr.CompileMSIR (ce.args[0]);
@@ -113,8 +115,13 @@ PROCEDURE MaxMSIR (ce: CallExpr.T): MSIR.Value =
     mt       := MSIR.ValueType (a);
     slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", mt);
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), a, slot);
-    cond     := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
-                                MSIR.CmpPred.Sge, a, b);
+    IF isFloat THEN
+      cond := MSIR.BuildFCmp (MSIRBuilder.CurrentBlock (), "",
+                              MSIR.FCmpPred.OGe, a, b);
+    ELSE
+      cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
+                              MSIR.CmpPred.Sge, a, b);
+    END;
     useBBlk  := MSIRBuilder.NewBlock ("max.useb");
     mergeBlk := MSIRBuilder.NewBlock ("max.merge");
     MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
