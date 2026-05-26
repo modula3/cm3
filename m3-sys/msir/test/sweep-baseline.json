@@ -1,10 +1,4 @@
 {
-  "p035": [
-    "coco_foofoo: msir-abandon: BuildClosureValue: cap var not in outer proc varMap"
-  ],
-  "p140": [
-    "P12: msir-abandon: capture var not found in outer proc varMap"
-  ],
   "p161": [
     "TIMEOUT"
   ],
