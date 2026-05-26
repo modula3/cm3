@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; zero msir-abandon events and zero msir-verify errors across 283/288 p0/p1/p2 tests (MSIRObj mode; 5 TIMEOUTs) |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 270/288 p0/p1/p2 tests clean in MSIRObj mode (14 genuine abandons, 4 TIMEOUTs) |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -835,11 +835,15 @@ MSIR IS the backend, so more code paths execute through MSIR.
 
 - Smoke test: **124/124 checks pass, exit 0** against real CM3 runtime.
 - **181/181** LLVM link-test checks pass.
-- m3tests sweep (**288 tests — all of p0, p1, p2**): **zero msir-abandon
-  events, zero msir-verify errors**.
-  - 5 TIMEOUTs (p161/p163/p185 in p1; p224/p267 in p2) — runtime infinite
-    loops, not codegen issues.
-  - 283/288 tests compile and link cleanly.
+- m3tests sweep (**288 tests — all of p0, p1, p2**, forced clean builds):
+  **270/288 clean; 14 genuine abandons across 14 tests; 4 TIMEOUTs**.
+  - 4 TIMEOUTs (p161/p163/p185 in p1; p267 in p2) — runtime infinite loops,
+    not codegen issues.
+  - Zero `msir-verify` errors (store-type-mismatch fixed by OpenArrayToFixedStore).
+  - Remaining abandon categories: packed/sub-word array subscript (11),
+    MAX on non-ordinal (2), non-scalar equality, LOOPHOLE lvalue open-array,
+    LAST bounds, cannot store to by-value formal, object field non-static
+    offset (2).  See Known Limitations below.
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
@@ -856,6 +860,18 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 Remaining gaps in MSIRObj mode emit `msir-abandon` (proc falls back to
 CG) rather than incorrect IR.
 
+- **Packed/sub-word array subscript** (11 tests): fixed arrays whose element
+  type is smaller than a byte (e.g. `ARRAY [0..10] OF [-20..20]`, stored as
+  ByteArrayFallback in CG) are correctly lowered to `[N]i8` globals, but
+  indirect large globals of such types present as `ptr void` through the
+  module-info struct; subscript code hits the non-FixedArray guard and abandons.
+- **MAX/MIN on non-ordinal types** (p042, p126): `MAX(FLOAT, FLOAT)` path.
+- **Non-scalar equality** (p049): record/array `=` outside of assignment.
+- **LOOPHOLE lvalue to open array** (p117): `LOOPHOLE(x, ARRAY OF T)` lvalue.
+- **LAST on open-array formal with unknown bounds** (p118).
+- **Cannot store to by-value formal** (p238): write to VALUE parameter.
+- **Object field with non-static data offset** (p253): opaque subtypes where
+  the field byte offset is not a compile-time constant.
 - **VALUE open-array formals, partial depth coercion** (`actDepth <
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
