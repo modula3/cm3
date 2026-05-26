@@ -576,7 +576,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           RETURN MSIR.BuildConvert (blk, "", v, dstT);
         END;
     | Kind.D_to_S =>
-        (* Designator reinterpreted as struct: load dstT from address. *)
+        (* Designator reinterpreted as struct: load dstT from address.
+           Retype addr to ptr(dstT) so the verifier sees a matching element type. *)
         IF dstT = NIL THEN
           MSIRBuilder.Abandon ("LOOPHOLE D_to_S: dest type not translatable in MSIR");
           RETURN NIL;
@@ -584,10 +585,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         VAR addr := Expr.LValueMSIR (p.expr); BEGIN
           IF addr = NIL THEN RETURN NIL END;
           blk := MSIRBuilder.CurrentBlock ();
-          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+          VAR typedAddr := MSIR.RetypeValue (addr, MSIR.TPtr (dstT)); BEGIN
+            RETURN MSIR.BuildLoad (blk, "", dstT, typedAddr);
+          END;
         END;
     | Kind.S_to_S =>
-        (* Struct rvalue reinterpreted as different struct: get address, load dstT. *)
+        (* Struct rvalue reinterpreted as different struct: get address, load dstT.
+           Retype addr to ptr(dstT) so the verifier sees a matching element type. *)
         IF dstT = NIL THEN
           MSIRBuilder.Abandon ("LOOPHOLE S_to_S: dest type not translatable in MSIR");
           RETURN NIL;
@@ -595,7 +599,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         VAR addr := Expr.LValueMSIR (p.expr); BEGIN
           IF addr = NIL THEN RETURN NIL END;
           blk := MSIRBuilder.CurrentBlock ();
-          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+          VAR typedAddr := MSIR.RetypeValue (addr, MSIR.TPtr (dstT)); BEGIN
+            RETURN MSIR.BuildLoad (blk, "", dstT, typedAddr);
+          END;
         END;
     | Kind.V_to_S =>
         (* Scalar value reinterpreted as struct: store to a srcT alloca,

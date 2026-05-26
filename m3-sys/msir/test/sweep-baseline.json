@@ -1,54 +1,6 @@
 {
-  "p006": [
-    "msir-verify: task: block loop.header.1: insn 1: load result type does not match pointer element type",
-    "msir-verify: task: block lock.fin.4: insn 0: load result type does not match pointer element type",
-    "msir-verify: task: block fin.body.8: insn 2: load result type does not match pointer element type",
-    "msir-verify: task: block while.body.12: insn 3: load result type does not match pointer element type",
-    "msir-verify: task: block while.body.12: insn 4: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 21: store value type does not match pointer element type"
-  ],
   "p035": [
     "coco_foofoo: msir-abandon: BuildClosureValue: cap var not in outer proc varMap"
-  ],
-  "p047": [
-    "msir-verify: Test: block entry: insn 27: load result type does not match pointer element type"
-  ],
-  "p054": [
-    "msir-verify: Schedule: block if.merge.15: insn 4: load result type does not match pointer element type",
-    "msir-verify: DeviceFunction: block if.then.1: insn 2: load result type does not match pointer element type",
-    "msir-verify: DeviceFunction: block if.next.2: insn 3: store value type does not match pointer element type",
-    "msir-verify: DeviceFunction: block if.merge.4: insn 2: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.merge.2: insn 2: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.then.6: insn 2: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.then.8: insn 4: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.then.8: insn 7: store value type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.merge.9: insn 2: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.then.10: insn 2: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.then.10: insn 8: load result type does not match pointer element type",
-    "msir-verify: HandlerFunction: block if.then.10: insn 11: store value type does not match pointer element type"
-  ],
-  "p062": [
-    "msir-verify: PrintList_DoIt: block while.body.2: insn 6: load result type does not match pointer element type",
-    "msir-verify: PrintList_DoIt: block tc.merge.9: insn 2: load result type does not match pointer element type",
-    "msir-verify: Assoc: block while.body.2: insn 2: load result type does not match pointer element type",
-    "msir-verify: Assoc: block tc.case.5: insn 4: load result type does not match pointer element type",
-    "msir-verify: Assoc: block tc.merge.7: insn 2: load result type does not match pointer element type"
-  ],
-  "p075": [
-    "msir-verify: f2: block for.exit.3: insn 5: load result type does not match pointer element type",
-    "msir-verify: f2: block for.exit.3: insn 9: load result type does not match pointer element type"
-  ],
-  "p084": [
-    "msir-verify: Main_M3: block entry: insn 21: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 25: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 29: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 33: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 37: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 41: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 45: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 49: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 53: load result type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 57: load result type does not match pointer element type"
   ],
   "p140": [
     "P12: msir-abandon: capture var not found in outer proc varMap"
@@ -57,9 +9,6 @@
     "TIMEOUT"
   ],
   "p163": [
-    "TIMEOUT"
-  ],
-  "p164": [
     "TIMEOUT"
   ],
   "p185": [
@@ -74,11 +23,5 @@
   "p269": [
     "FindConstAreas: msir-abandon: builtin has no MSIR handler",
     "Withs: msir-abandon: WITH designator/openarray: cannot get lvalue in MSIR"
-  ],
-  "p270": [
-    "msir-verify: ProcOpenConstr: block entry: insn 31: load result type does not match pointer element type"
-  ],
-  "p272": [
-    "msir-verify: RaiseBig: block entry: insn 5: convert source must be a scalar or ptr type"
   ]
 }

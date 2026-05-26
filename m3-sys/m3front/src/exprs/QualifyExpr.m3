@@ -909,7 +909,8 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
             IF ft # NIL AND fti.size MOD Target.Byte # 0 THEN
               RETURN NIL;
             END;
-            IF ft # NIL AND fti.size > 0 AND fti.size # MSIR.BitWidth(ft) THEN
+            IF ft # NIL AND fti.size > 0 AND MSIR.BitWidth(ft) > 0
+                        AND fti.size # MSIR.BitWidth(ft) THEN
               ft := MSIR.TI(fti.size);
             END;
             IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.GcRef THEN

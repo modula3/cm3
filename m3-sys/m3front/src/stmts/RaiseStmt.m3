@@ -144,7 +144,8 @@ PROCEDURE CompileMSIR (p: P) =
       BEGIN
         CASE MSIR.Kind(argT) OF
         | MSIR.TypeKind.Struct, MSIR.TypeKind.FixedArray,
-          MSIR.TypeKind.Object =>
+          MSIR.TypeKind.Object, MSIR.TypeKind.IWide =>
+            (* Aggregate or wide-integer arg: spill to stack, pass address. *)
             VAR slot := MSIR.BuildAlloca(b, "", argT);
             BEGIN
               MSIR.BuildStore(b, argVal, slot);

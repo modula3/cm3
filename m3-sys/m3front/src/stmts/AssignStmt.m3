@@ -953,9 +953,10 @@ PROCEDURE CompileMSIR (p: P) =
             (* OpenArray ← FixedArray (any element types): load data_ptr from
                LHS dope and store the fixed-array value there.  M3 type safety
                guarantees compatible byte sizes. *)
-            VAR blk2 := MSIRBuilder.CurrentBlock ();
-                dPtr := MSIR.BuildLoad (blk2, "", MSIR.TPtr (MSIR.TVoid ()), lhsPtr);
-                sPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (rhsT));
+            VAR blk2   := MSIRBuilder.CurrentBlock ();
+                rawPtr := MSIR.RetypeValue (lhsPtr, MSIR.TPtr (MSIR.TVoid ()));
+                dPtr   := MSIR.BuildLoad (blk2, "", MSIR.TPtr (MSIR.TVoid ()), rawPtr);
+                sPtr   := MSIR.RetypeValue (dPtr, MSIR.TPtr (rhsT));
             BEGIN
               MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, sPtr);
             END;

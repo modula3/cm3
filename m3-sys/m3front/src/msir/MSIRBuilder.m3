@@ -1111,8 +1111,12 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
   BEGIN
     b := CurrentBlock();   (* advance past any dead-terminator block *)
 
-    (* 1. Load vtable pointer (first word of object). *)
-    suite := MSIR.BuildLoad(b, "", ptrT, obj);
+    (* 1. Load vtable pointer (first word of object).
+       Cast obj to ptr(ptr void) so the load element type matches ptrT. *)
+    VAR objAsPtr := MSIR.BuildConvert(b, "", obj, MSIR.TPtr(ptrT));
+    BEGIN
+      suite := MSIR.BuildLoad(b, "", ptrT, objAsPtr);
+    END;
 
     (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
     (* Vtable slot N is at byte offset N * Target.Address.bytes. *)
