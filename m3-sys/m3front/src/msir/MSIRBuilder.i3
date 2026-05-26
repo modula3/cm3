@@ -295,6 +295,15 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 
+(* If rhsVal is an OpenArray value and lhsPtr is a pointer to a FixedArray,
+   emit the appropriate element copy (typed load+store for rank-1 matching
+   elements, memcpy otherwise) and return TRUE.
+   Returns FALSE when no special handling is needed (types compatible for
+   a plain BuildStore).  lhsType is the Modula-3 type of the destination
+   (used to compute the byte size for the memcpy branch). *)
+PROCEDURE OpenArrayToFixedStore(lhsPtr, rhsVal: MSIR.Value;
+                                lhsType: Type.T): BOOLEAN;
+
 (* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
 PROCEDURE ConstInt       (t: MSIR.T;  READONLY v: Target.Int): MSIR.Value;
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;

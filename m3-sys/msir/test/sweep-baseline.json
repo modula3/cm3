@@ -41,20 +41,8 @@
     "Check: msir-abandon: packed/sub-word array subscript not yet supported in MSIR",
     "Main_M3: msir-abandon: packed/sub-word array subscript not yet supported in MSIR"
   ],
-  "p176": [
-    "msir-verify: P1: block entry: insn 30: store value type does not match pointer element type",
-    "msir-verify: P1: block entry: insn 34: store value type does not match pointer element type"
-  ],
   "p185": [
     "TIMEOUT"
-  ],
-  "p205": [
-    "msir-verify: Main_M3: block entry: insn 25: store value type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 44: store value type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 76: store value type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 93: store value type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 110: store value type does not match pointer element type",
-    "msir-verify: Main_M3: block entry: insn 128: store value type does not match pointer element type"
   ],
   "p224": [
     "TIMEOUT"

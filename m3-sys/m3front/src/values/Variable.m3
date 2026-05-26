@@ -1124,7 +1124,7 @@ PROCEDURE UserInit (t: T) =
             IF initVal # NIL AND addr # NIL THEN
               IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
                 MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
-              ELSE
+              ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
                 MSIR.BuildStore (MSIRBuilder.CurrentBlock (), initVal, addr);
               END;
             END;

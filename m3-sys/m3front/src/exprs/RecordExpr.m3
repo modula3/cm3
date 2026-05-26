@@ -732,17 +732,20 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
           b := MSIRBuilder.CurrentBlock ();
           fieldPtr := MSIRBuilder.BuildPtrByteOff (b, "", slot, byteOff);
           fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (ft));
-          dstBits := MSIR.BitWidth (ft);
-          srcBits := MSIR.BitWidth (MSIR.ValueType (fieldVal));
-          IF dstBits > 0 AND srcBits > 0
-             AND NOT MSIR.Equal (ft, MSIR.ValueType (fieldVal)) THEN
-            IF dstBits > srcBits THEN
-              fieldVal := MSIR.BuildZExt (b, "", fieldVal, ft);
-            ELSIF dstBits < srcBits THEN
-              fieldVal := MSIR.BuildTrunc (b, "", fieldVal, ft);
+          IF NOT MSIRBuilder.OpenArrayToFixedStore (fieldPtr, fieldVal,
+                                                    fieldInfo.type) THEN
+            dstBits := MSIR.BitWidth (ft);
+            srcBits := MSIR.BitWidth (MSIR.ValueType (fieldVal));
+            IF dstBits > 0 AND srcBits > 0
+               AND NOT MSIR.Equal (ft, MSIR.ValueType (fieldVal)) THEN
+              IF dstBits > srcBits THEN
+                fieldVal := MSIR.BuildZExt (b, "", fieldVal, ft);
+              ELSIF dstBits < srcBits THEN
+                fieldVal := MSIR.BuildTrunc (b, "", fieldVal, ft);
+              END;
             END;
+            MSIR.BuildStore (b, fieldVal, fieldPtr);
           END;
-          MSIR.BuildStore (b, fieldVal, fieldPtr);
         END;
       END;
     END;

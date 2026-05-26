@@ -1525,6 +1525,38 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
       ARRAY OF MSIR.Value{dst, src, byteCount});
   END EmitMemcpyDyn;
 
+PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
+                                  lhsType: Type.T): BOOLEAN =
+  VAR
+    slotT  := MSIR.ValueType (lhsPtr);
+    eltT   := MSIR.EltType (slotT);
+    rhsT   := MSIR.ValueType (rhsVal);
+    zero   : MSIR.Value;
+    srcPtr : MSIR.Value;
+    info   : Type.Info;
+  BEGIN
+    IF MSIR.Kind (eltT) # MSIR.TypeKind.FixedArray OR
+       MSIR.Kind (rhsT) # MSIR.TypeKind.OpenArray THEN
+      RETURN FALSE;
+    END;
+    IF curBlock = NIL OR abandoned THEN RETURN TRUE END;
+    zero   := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
+    srcPtr := MSIR.BuildOpenArrayElemAddr (curBlock, "", rhsVal,
+                ARRAY OF MSIR.Value {zero});
+    IF MSIR.OpenArrayRank (rhsT) = 1 AND
+       MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
+      VAR tPtr := MSIR.RetypeValue (srcPtr, MSIR.TPtr (eltT));
+          arr  := MSIR.BuildLoad (curBlock, "", eltT, tPtr);
+      BEGIN
+        MSIR.BuildStore (curBlock, arr, lhsPtr);
+      END;
+    ELSE
+      EVAL Type.CheckInfo (lhsType, info);
+      EmitMemcpy (lhsPtr, srcPtr, info.size DIV Target.Char.size);
+    END;
+    RETURN TRUE;
+  END OpenArrayToFixedStore;
+
 PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
   VAR x: INTEGER;
   BEGIN
