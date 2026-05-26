@@ -1135,6 +1135,23 @@ PROCEDURE UserInit (t: T) =
       t.initDone := TRUE;
       Tracer.Schedule (t.trace);
     END;
+    (* MSIR: globals with simple constant initializers are statically initialized
+       by ConstInit (CG), setting initDone=TRUE before UserInit runs.  The MSIR
+       _M3_info struct is always zero-initialized, so we must still emit a
+       runtime store in the module init proc for those globals. *)
+    IF t.global AND t.initDone AND (t.initExpr # NIL) AND (NOT t.imported)
+       AND (NOT t.initStatic) AND (NOT t.initZero)
+       AND MSIRBuilder.InProc () THEN
+      IF Expr.ConstValue (t.initExpr) # NIL THEN
+        VAR initVal := Expr.CompileMSIR (t.initExpr);
+            addr    := MSIRBuilder.LookupVarAddr (t);
+        BEGIN
+          IF initVal # NIL AND addr # NIL THEN
+            MSIR.BuildStore (MSIRBuilder.CurrentBlock (), initVal, addr);
+          END;
+        END;
+      END;
+    END;
   END UserInit;
 
 (* EXPORTED *)

@@ -413,6 +413,7 @@ PROCEDURE CompileMSIR (p: P) =
     stepI:      INTEGER;
     fromVal:    MSIR.Value;
     limitVal:   MSIR.Value;
+    limitSlot:  MSIR.Value;
     stepConst:  MSIR.Value;
     stepSlot:   MSIR.Value;
     stepDyn:    MSIR.Value;
@@ -481,6 +482,13 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildStore (MSIRBuilder.CurrentBlock (), stepDyn, stepSlot);
     END;
 
+    (* Snapshot upper bound once before the loop — the body may modify the
+       variable the limit expression reads, which would break termination. *)
+    limitVal := Expr.CompileMSIR (p.limit);
+    IF limitVal = NIL THEN RETURN END;
+    limitSlot := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", msirType);
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), limitVal, limitSlot);
+
     (* Create blocks. *)
     headerBlk := MSIRBuilder.NewBlock ("for.header");
     bodyBlk   := MSIRBuilder.NewBlock ("for.body");
@@ -492,8 +500,7 @@ PROCEDURE CompileMSIR (p: P) =
       (* Direction known statically: single comparison in the header. *)
       MSIRBuilder.SetCurrentBlock (headerBlk);
       cur      := MSIR.BuildLoad (headerBlk, "", msirType, varAddr);
-      limitVal := Expr.CompileMSIR (p.limit);
-      IF limitVal = NIL THEN RETURN END;
+      limitVal := MSIR.BuildLoad (headerBlk, "", msirType, limitSlot);
       IF alwaysPos
         THEN pred := MSIR.CmpPred.Sle;
         ELSE pred := MSIR.CmpPred.Sge;
@@ -517,8 +524,7 @@ PROCEDURE CompileMSIR (p: P) =
       (* Positive branch: idx <= limit → body. *)
       MSIRBuilder.SetCurrentBlock (posHdrBlk);
       cur      := MSIR.BuildLoad (posHdrBlk, "", msirType, varAddr);
-      limitVal := Expr.CompileMSIR (p.limit);
-      IF limitVal = NIL THEN RETURN END;
+      limitVal := MSIR.BuildLoad (posHdrBlk, "", msirType, limitSlot);
       cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sle,
                               cur, limitVal);
       MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
@@ -528,8 +534,7 @@ PROCEDURE CompileMSIR (p: P) =
       (* Negative branch: idx >= limit → body. *)
       MSIRBuilder.SetCurrentBlock (negHdrBlk);
       cur      := MSIR.BuildLoad (negHdrBlk, "", msirType, varAddr);
-      limitVal := Expr.CompileMSIR (p.limit);
-      IF limitVal = NIL THEN RETURN END;
+      limitVal := MSIR.BuildLoad (negHdrBlk, "", msirType, limitSlot);
       cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sge,
                               cur, limitVal);
       MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
