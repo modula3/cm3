@@ -52,6 +52,14 @@ def find_tests(prefixes):
 
 def run_one(path: Path) -> list[str]:
     """Build one test with MSIR; return list of abandon/verify message strings."""
+    # Delete compiled objects so cm3 always recompiles and emits fresh MSIR.
+    # Without this, a cached .o skips compilation entirely and no
+    # abandon/verify messages are emitted, giving false-negative results.
+    for build_dir in path.iterdir():
+        if build_dir.is_dir() and not build_dir.name.startswith("."):
+            for f in build_dir.glob("*.o"):
+                f.unlink(missing_ok=True)
+
     before = DEBUG_FILE.stat().st_size if DEBUG_FILE.exists() else 0
 
     proc = subprocess.Popen(
