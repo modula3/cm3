@@ -43,5 +43,16 @@ PROCEDURE GetCaptures (ca: T): REF ARRAY OF Capture =
     RETURN result
   END GetCaptures;
 
+PROCEDURE Remove (ca: T;  v: Variable.T) =
+  BEGIN
+    FOR i := 0 TO ca.n - 1 DO
+      IF ca.cap[i].var = v THEN
+        FOR j := i TO ca.n - 2 DO ca.cap[j] := ca.cap[j+1] END;
+        DEC (ca.n);
+        RETURN
+      END
+    END
+  END Remove;
+
 BEGIN
 END CaptureAnalysis.

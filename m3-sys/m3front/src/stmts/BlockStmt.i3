@@ -7,13 +7,16 @@
 
 INTERFACE BlockStmt;
 
-IMPORT M3, Stmt, Tracer;
+IMPORT M3, Scope, Stmt, Tracer;
 
 PROCEDURE Parse (needScope := TRUE): Stmt.T;
 
 PROCEDURE ExtractFails (t: Stmt.T): M3.ExSet;
 
 PROCEDURE BodyOffset (t: Stmt.T): INTEGER;
+
+PROCEDURE GetScope (t: Stmt.T): Scope.T;
+(* Return the declaration scope of a BlockStmt, or NIL if t is not a BlockStmt. *)
 
 PROCEDURE ParseTrace (): Tracer.T;
 PROCEDURE CheckTrace (t: Tracer.T;  VAR cs: Stmt.CheckState);

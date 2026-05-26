@@ -394,7 +394,16 @@ PROCEDURE NoteCapture (p: P;  ca: CaptureAnalysis.T;  written: BOOLEAN) =
     TYPECASE p.value OF
     | Variable.T(v) =>
         IF Variable.IsUpLevel (v) THEN CaptureAnalysis.Note (ca, v, written) END;
-    ELSE (* constant, proc, type — not a capturable variable *)
+    ELSE
+        (* Nested proc used as a value: propagate its captures transitively so
+           BuildClosureValue can find them in the enclosing proc's varMap. *)
+        VAR procCaps := MSIRBuilder.GetProcCaptures (p.value); BEGIN
+          IF procCaps # NIL THEN
+            FOR k := 0 TO NUMBER (procCaps^) - 1 DO
+              CaptureAnalysis.Note (ca, procCaps[k].var, procCaps[k].written)
+            END
+          END
+        END
     END;
   END NoteCapture;
 

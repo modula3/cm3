@@ -52,6 +52,14 @@ PROCEDURE Parse (needScope: BOOLEAN): Stmt.T =
     RETURN p;
   END Parse;
 
+PROCEDURE GetScope (t: Stmt.T): Scope.T =
+  BEGIN
+    TYPECASE t OF
+    | P(p) => RETURN p.scope;
+    ELSE      RETURN NIL;
+    END;
+  END GetScope;
+
 PROCEDURE ExtractFails (t: Stmt.T): ESet.T =
   VAR x: ESet.T;
   BEGIN

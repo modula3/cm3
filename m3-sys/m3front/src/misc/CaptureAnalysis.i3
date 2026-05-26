@@ -31,4 +31,7 @@ PROCEDURE GetCaptures (ca: T): REF ARRAY OF Capture;
 (* Return a fresh array containing all captures recorded so far,
    in the order first noted. *)
 
+PROCEDURE Remove (ca: T;  v: Variable.T);
+(* Remove v from the capture set (no-op if v is not present). *)
+
 END CaptureAnalysis.
