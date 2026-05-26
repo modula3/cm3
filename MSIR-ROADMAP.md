@@ -1,15 +1,14 @@
 # MSIR Roadmap: Current Status
 
-Last updated: 2026-05-19 (Phase 4 debug symbols complete; OA/HA dope-vector DWARF; FOR loop SSA name dedup)
+Last updated: 2026-05-26 (FOR-loop upper-bound snapshot; global const-init in module body; p163/p185 cleared)
 
 ## What's Working
 
 **288/288 p0/p1/p2 tests compile with zero MSIR abandons.**
 **181/181 end-to-end LLVM link test checks pass.**
 
-The remaining 3 baseline entries are runtime timeouts (p161: million-element
-sieve; p224: 303-thread mutex test expected to run minutes; p267: intentional
-infinite GC loop) — not code-generation failures.
+The remaining 2 baseline entries are runtime timeouts (p161: million-element
+sieve; p267: intentional infinite GC loop) — not code-generation failures.
 
 The end-to-end path is live: MSIR emission → LLVM IR lowering → native object → linked binary.
 

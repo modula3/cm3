@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 278/288 p0/p1/p2 tests clean in MSIRObj mode (6 genuine abandons, 4 TIMEOUTs) |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs) |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -822,7 +822,7 @@ python3 m3-sys/msir/test/sweep.py check            # re-run all tests with prior
 ```
 
 The harness is essential: `cm3 -DHTML` in m3tests hangs on tests that
-loop at runtime (p161/p163/p185/p224/p267); sweep.py kills those after 60 s.
+loop at runtime (p161/p267); sweep.py kills those after 60 s.
 
 **Important:** sweep results depend on `M3_BACKEND_MODE` in the installed
 config.  In `"C"` mode, MSIR runs alongside the C backend (abandons short-
@@ -836,14 +836,13 @@ MSIR IS the backend, so more code paths execute through MSIR.
 - Smoke test: **124/124 checks pass, exit 0** against real CM3 runtime.
 - **181/181** LLVM link-test checks pass.
 - m3tests sweep (**288 tests — all of p0, p1, p2**, forced clean builds):
-  **278/288 clean; 6 genuine abandons across 6 tests; 4 TIMEOUTs**.
-  - 4 TIMEOUTs (p161/p163/p185 in p1; p267 in p2) — runtime infinite loops,
-    not codegen issues.  sweep.py now kills the full process group on timeout
-    (`start_new_session=True` + `os.killpg`); p185 no longer hangs sweep.
-  - Zero `msir-verify` errors (store-type-mismatch fixed by OpenArrayToFixedStore).
-  - Remaining abandon categories: non-scalar equality, LOOPHOLE lvalue open-array,
-    LAST bounds, cannot store to by-value formal, object field non-static offset (2),
-    array-type store mismatch.  See Known Limitations below.
+  **286/288 clean; 0 genuine abandons; 2 TIMEOUTs**.
+  - 2 TIMEOUTs: p161 (million-element Sieve, takes > 2 min) and p267
+    (intentional `WHILE TRUE DO RTCollector.Collect()` loop) — not codegen
+    issues.  sweep.py kills the full process group on timeout
+    (`start_new_session=True` + `os.killpg`).
+  - Zero `msir-verify` errors.
+  - Zero genuine abandons.
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
@@ -857,17 +856,9 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 
 ### Known Limitations
 
-Remaining gaps in MSIRObj mode emit `msir-abandon` (proc falls back to
-CG) rather than incorrect IR.
+All p0/p1/p2 test-suite procedures now compile without abandons.  The
+remaining minor gaps are listed below; they do not affect any test in the suite.
 
-- **Non-scalar equality** (p049): record/array `=` outside of assignment.
-- **LOOPHOLE lvalue to open array** (p117): `LOOPHOLE(x, ARRAY OF T)` lvalue.
-- **LAST on open-array formal with unknown bounds** (p118).
-- **Cannot store to by-value formal** (p238): write to VALUE parameter.
-- **Array-type store mismatch** (p269): remaining case where source and
-  destination array types differ in a way not handled by OpenArrayToFixedStore.
-- **Object field with non-static data offset** (p253): opaque subtypes where
-  the field byte offset is not a compile-time constant.
 - **VALUE open-array formals, partial depth coercion** (`actDepth <
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
