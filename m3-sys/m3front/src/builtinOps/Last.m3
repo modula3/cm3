@@ -116,6 +116,7 @@ PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
     oa             : MSIR.Value;
     sz             : MSIR.Value;
     one            : MSIR.Value;
+    info           : Type.Info;
   BEGIN
     IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
     IF ArrayType.Split (t, index, elt) THEN t := index END;
@@ -128,6 +129,15 @@ PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
       sz  := MSIR.BuildOpenArraySize (MSIRBuilder.CurrentBlock (), "", oa, 0);
       one := MSIR.ConstInt (MSIR.ValueType (sz), 1);
       RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "", sz, one);
+    END;
+    mt := MSIRType.Translate (Type.Base (t));
+    IF mt = NIL THEN MSIRBuilder.Abandon ("LAST: unsupported type"); RETURN NIL END;
+    EVAL Type.CheckInfo (Type.Base (t), info);
+    CASE info.class OF
+    | Type.Class.Real     => RETURN MSIR.ConstFloat (mt, Target.Real.max);
+    | Type.Class.Longreal => RETURN MSIR.ConstFloat (mt, Target.Longreal.max);
+    | Type.Class.Extended => RETURN MSIR.ConstFloat (mt, Target.Extended.max);
+    ELSE (* fall through to ordinal-bounds path *)
     END;
     mt := MSIRType.Translate (Type.Base (t));
     IF mt = NIL THEN MSIRBuilder.Abandon ("LAST: unsupported type"); RETURN NIL END;

@@ -992,6 +992,15 @@ PROCEDURE CompileMSIR (p: P) =
                 END;
               END;
             END;
+          ELSIF MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray THEN
+            (* FixedArray rhs stored to a slot whose element type is opaque
+               (e.g. record field via ptr @) or has a different MSIR
+               representation (e.g. ByteArrayFallback vs structured type).
+               Both sides have the same M3 type so byte sizes match; retype
+               lhsPtr to ptr(rhsT) and store. *)
+            MSIR.BuildStore (MSIRBuilder.CurrentBlock (),
+                             rhsVal,
+                             MSIR.RetypeValue (lhsPtr, MSIR.TPtr (rhsT)));
           ELSE
             MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");
           END;

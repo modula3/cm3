@@ -963,11 +963,34 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
     IF nCaps > 0 THEN
       envAlloca := MSIR.BuildAlloca(b, "", TFixedArrayI(nCaps, ptrT));
       FOR k := 0 TO nCaps - 1 DO
-        VAR capAddr := LookupVarAddr(caps[k].var);
+        VAR capVar  := caps[k].var;
+            vt      : Type.T;  vg, vi, vlhs: BOOLEAN;
+            mt      : MSIR.T;
+            capAddr : MSIR.Value;
         BEGIN
-          IF capAddr = NIL THEN
-            Abandon("BuildClosureValue: cap var not in outer proc varMap");
-            RETURN NIL;
+          Variable.Split(capVar, vt, vg, vi, vlhs);
+          mt := MSIRType.Translate(vt);
+          IF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
+            (* Scalar read-only capture: no alloca exists for it (it was passed
+               by value).  Spill the current value to a fresh stack slot so the
+               closure env can hold a stable pointer.  The shim will reload the
+               value through this pointer when invoking the nested proc. *)
+            VAR tmp := MSIR.BuildAlloca(b, "", mt);
+                val := LookupVar(capVar);
+            BEGIN
+              IF val = NIL THEN
+                Abandon("BuildClosureValue: scalar cap var not found");
+                RETURN NIL;
+              END;
+              MSIR.BuildStore(b, val, tmp);
+              capAddr := tmp;
+            END;
+          ELSE
+            capAddr := LookupVarAddr(capVar);
+            IF capAddr = NIL THEN
+              Abandon("BuildClosureValue: cap var not in outer proc varMap");
+              RETURN NIL;
+            END;
           END;
           MSIR.BuildStore(b, capAddr, MSIR.BuildPtrAdd(b, "", envAlloca, k * AP));
         END;
@@ -1644,8 +1667,10 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
     END;
     IF globalMapN >= MaxGlobalMap THEN RETURN END;
     MSIR.ModuleAddGlobal(m, g);
-    globalMap[globalMapN].key := v;
-    globalMap[globalMapN].val := g;
+    globalMap[globalMapN].key       := v;
+    globalMap[globalMapN].val       := g;
+    globalMap[globalMapN].needsLoad := FALSE;
+    globalMap[globalMapN].dataType  := NIL;
     INC(globalMapN);
   END GlobalMapAdd;
 

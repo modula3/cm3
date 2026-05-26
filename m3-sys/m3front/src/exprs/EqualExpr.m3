@@ -850,6 +850,17 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF p.kind = Kind.Complex THEN
       ta := Type.Base (Expr.TypeOf (p.a));
       EVAL Type.CheckInfo (ta, taInfo);
+      (* CompileProcs (called during CG Prep/PrepBR) may have swapped p.a and p.b
+         to normalize classA <= classB.  If p.a is now NIL/Null (Ref class) and
+         p.b carries the Procedure type, re-derive ta from p.b instead. *)
+      IF taInfo.class # Type.Class.Procedure THEN
+        VAR tb := Type.Base (Expr.TypeOf (p.b)); tbInfo: Type.Info; BEGIN
+          EVAL Type.CheckInfo (tb, tbInfo);
+          IF tbInfo.class = Type.Class.Procedure THEN
+            ta := tb;  taInfo := tbInfo;
+          END;
+        END;
+      END;
       (* Multi-word SET (IWide): large sets are Complex but still comparable
          as wide integers via icmp eq/ne. *)
       IF taInfo.class = Type.Class.Set THEN

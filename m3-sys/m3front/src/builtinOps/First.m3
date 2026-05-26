@@ -142,6 +142,7 @@ PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
     min, max       : Target.Int;
     mt             : MSIR.T;
     n              : INTEGER;
+    info           : Type.Info;
   BEGIN
     IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
     IF ArrayType.Split (t, index, elt) THEN t := index END;
@@ -150,6 +151,15 @@ PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
       mt := MSIRType.Translate (Int.T);
       IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: cannot translate INTEGER"); RETURN NIL END;
       RETURN MSIR.ConstInt (mt, 0);
+    END;
+    mt := MSIRType.Translate (Type.Base (t));
+    IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: unsupported type"); RETURN NIL END;
+    EVAL Type.CheckInfo (Type.Base (t), info);
+    CASE info.class OF
+    | Type.Class.Real     => RETURN MSIR.ConstFloat (mt, Target.Real.min);
+    | Type.Class.Longreal => RETURN MSIR.ConstFloat (mt, Target.Longreal.min);
+    | Type.Class.Extended => RETURN MSIR.ConstFloat (mt, Target.Extended.min);
+    ELSE (* fall through to ordinal-bounds path *)
     END;
     mt := MSIRType.Translate (Type.Base (t));
     IF mt = NIL THEN MSIRBuilder.Abandon ("FIRST: unsupported type"); RETURN NIL END;
