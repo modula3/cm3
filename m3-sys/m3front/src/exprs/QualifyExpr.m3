@@ -878,26 +878,44 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     | Class.objField =>
         (* Compute byte offset: fields start at obj_offset bits from the object
            pointer (typically 64 bits = 8 bytes for the vtable word), plus the
-           field's own bit offset within the field region.  Abandon when
-           obj_offset is not statically known (complex inheritance chains). *)
+           field's own bit offset within the field region.  When obj_offset is
+           not statically known (complex inheritance chain), load it at runtime
+           from the type cell's OTC_dataOffset field. *)
         Field.Split (p.rhsValue, fieldInfo);
         ObjectType.GetFieldsOffsetAndAlign (p.holder, objOff, objAlign);
-        IF objOff < 0 THEN
-          MSIRBuilder.Abandon ("object field: non-static data offset");
-          RETURN NIL;
-        END;
-        IF (objOff + fieldInfo.offset) MOD Target.Byte # 0 THEN
+        IF fieldInfo.offset MOD Target.Byte # 0 THEN
           MSIRBuilder.Abandon ("sub-byte object field offset not supported in MSIR");
           RETURN NIL;
         END;
-        byteOff := (objOff + fieldInfo.offset) DIV 8;
         baseAddr := Expr.CompileMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
         (* Set container for GC write barrier in AssignStmt.CompileMSIR. *)
         MSIRBuilder.SetPendingContainer (baseAddr);
         VAR slotAddr: MSIR.Value;
         BEGIN
-          slotAddr := MSIRBuilder.BuildPtrByteOff(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
+          IF objOff >= 0 THEN
+            IF (objOff + fieldInfo.offset) MOD Target.Byte # 0 THEN
+              MSIRBuilder.Abandon ("sub-byte object field offset not supported in MSIR");
+              RETURN NIL;
+            END;
+            byteOff := (objOff + fieldInfo.offset) DIV 8;
+            slotAddr := MSIRBuilder.BuildPtrByteOff(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
+          ELSE
+            (* Non-static: load dataOffset from the runtime type cell (OTC_dataOffset),
+               then GepByte(objBase, dataOffset) + fieldByteOff. *)
+            VAR b        := MSIRBuilder.CurrentBlock();
+                tcPtr    := MSIRBuilder.TypeLinkValueForObject(p.holder);
+                otcByte  := M3RT.OTC_dataOffset DIV Target.Byte;
+                offSlot  := MSIRBuilder.BuildPtrByteOff(b, "", tcPtr, otcByte);
+                i64T     := MSIR.TI(Target.Integer.size);
+                dynOff   := MSIR.BuildLoad(b, "", i64T,
+                              MSIR.RetypeValue(offSlot, MSIR.TPtr(i64T)));
+                fieldByte := fieldInfo.offset DIV Target.Byte;
+                dynBase  := MSIR.BuildGepByte(b, "", baseAddr, dynOff);
+            BEGIN
+              slotAddr := MSIRBuilder.BuildPtrByteOff(b, "", dynBase, fieldByte);
+            END;
+          END;
           (* Retype: GcRef fields → GcSlot (write barrier); others → TPtr(ft) for
              type-preserving access (e.g. array field subscript needs FixedArray type).
              Use storage type TI(size) when it differs from the natural MSIR type. *)

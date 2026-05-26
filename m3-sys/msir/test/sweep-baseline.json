@@ -11,10 +11,6 @@
   "p185": [
     "TIMEOUT"
   ],
-  "p253": [
-    "F2: msir-abandon: object field: non-static data offset",
-    "F1: msir-abandon: object field: non-static data offset"
-  ],
   "p267": [
     "TIMEOUT"
   ]
