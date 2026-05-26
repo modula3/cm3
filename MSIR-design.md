@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; zero msir-abandon events across all 288 p0/p1/p2 tests (MSIRObj mode) |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; zero msir-abandon events and zero msir-verify errors across 283/288 p0/p1/p2 tests (MSIRObj mode; 5 TIMEOUTs) |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -827,9 +827,7 @@ loop at runtime (p161/p163/p185/p224/p267); sweep.py kills those after 60 s.
 **Important:** sweep results depend on `M3_BACKEND_MODE` in the installed
 config.  In `"C"` mode, MSIR runs alongside the C backend (abandons short-
 circuit early, VERIFY warnings don't affect linking).  In `"MSIRObj"` mode,
-MSIR IS the backend, so more code paths execute through MSIR and additional
-VERIFY issues surface.  The historical "zero abandon" baseline
-(`fd31d07ba6`) was captured in C mode.
+MSIR IS the backend, so more code paths execute through MSIR.
 
 ### Current Status
 
@@ -837,10 +835,11 @@ VERIFY issues surface.  The historical "zero abandon" baseline
 
 - Smoke test: **124/124 checks pass, exit 0** against real CM3 runtime.
 - **181/181** LLVM link-test checks pass.
-- m3tests sweep (**288 tests — all of p0, p1, p2**): **zero msir-abandon events**.
+- m3tests sweep (**288 tests — all of p0, p1, p2**): **zero msir-abandon
+  events, zero msir-verify errors**.
   - 5 TIMEOUTs (p161/p163/p185 in p1; p224/p267 in p2) — runtime infinite
     loops, not codegen issues.
-  - All other tests compile and link without abandons.
+  - 283/288 tests compile and link cleanly.
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
