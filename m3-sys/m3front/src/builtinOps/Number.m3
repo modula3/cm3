@@ -140,6 +140,11 @@ PROCEDURE NumberMSIR (ce: CallExpr.T): MSIR.Value =
       IF oa = NIL THEN RETURN NIL END;
       mt := MSIRType.Translate (Card.T);
       IF mt = NIL THEN MSIRBuilder.Abandon ("NUMBER: cannot translate CARDINAL"); RETURN NIL END;
+      (* CONST open arrays (e.g. ARRAY OF TEXT {...}) compile to FixedArray in MSIR
+         since their size is known.  Extract the element count from the type directly. *)
+      IF MSIR.Kind (MSIR.ValueType (oa)) = MSIR.TypeKind.FixedArray THEN
+        RETURN MSIR.ConstInt (mt, MSIR.FixedArrayLen (MSIR.ValueType (oa)));
+      END;
       RETURN MSIR.BuildOpenArraySize (MSIRBuilder.CurrentBlock (), "", oa, 0);
     END;
     mt := MSIRType.Translate (Card.T);

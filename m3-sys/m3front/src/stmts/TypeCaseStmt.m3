@@ -466,6 +466,7 @@ PROCEDURE CompileMSIR (p: P) =
             MSIRBuilder.CurrentBlock (), "", refVal, mt);
           MSIR.BuildStore (MSIRBuilder.CurrentBlock (), narrowed, varAddr);
         END;
+        Variable.ScheduleTrace (c.var);
       END;
 
       Stmt.CompileMSIR (c.stmt);

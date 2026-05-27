@@ -9,7 +9,7 @@
 MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
-IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr, Target;
+IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr, Target, TInt;
 IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
@@ -110,6 +110,24 @@ PROCEDURE CompileMSIR (p: P) =
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (resultT));
             BEGIN
               v := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", resultT, tPtr);
+            END;
+          ELSIF MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.I1 AND
+                MSIR.Kind (MSIR.ValueType (v)) <= MSIR.TypeKind.W64 AND
+                MSIR.Kind (resultT) >= MSIR.TypeKind.I1 AND
+                MSIR.Kind (resultT) <= MSIR.TypeKind.W64 AND
+                MSIR.BitWidth (MSIR.ValueType (v)) < MSIR.BitWidth (resultT) THEN
+            (* Packed integer subrange (e.g. BITS 8 FOR [0..255]) widened to INTEGER.
+               Use SExt if the subrange lower bound is negative, ZExt otherwise. *)
+            VAR lo, hi: Target.Int;
+                doSExt := (p.expr # NIL) AND
+                           Type.GetBounds (Type.StripPacked (Expr.TypeOf (p.expr)),
+                                           lo, hi) AND
+                           TInt.LT (lo, TInt.Zero);
+            BEGIN
+              IF doSExt
+                THEN v := MSIR.BuildSExt (MSIRBuilder.CurrentBlock (), "", v, resultT);
+                ELSE v := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", v, resultT);
+              END;
             END;
           ELSE
             (* Unhandled type mismatch.  Array-copy with memcpy is not yet

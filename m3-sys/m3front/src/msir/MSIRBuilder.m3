@@ -3,7 +3,7 @@ MODULE MSIRBuilder;
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
-IMPORT Expr, ArrayExpr, ArrayType;
+IMPORT Expr, ArrayExpr, ArrayType, RecordExpr;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
 
@@ -1642,8 +1642,16 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
     END;
     elts := NEW(REF ARRAY OF MSIR.Value, n);
     FOR i := 0 TO n - 1 DO
-      elts[i] := Expr.CompileMSIR(ArrayExpr.Elt(ae, i));
-      IF elts[i] = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
+      VAR elt := ArrayExpr.Elt(ae, i);  cv: MSIR.Value; BEGIN
+        (* Try to build a compile-time constant struct (avoids emitting function-local
+           alloca/store/load sequences that are invalid in global constant initializers). *)
+        IF RecordExpr.TryCompileConstMSIR(elt, cv) THEN
+          elts[i] := cv;
+        ELSE
+          elts[i] := Expr.CompileMSIR(elt);
+          IF elts[i] = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
+        END;
+      END;
     END;
     m    := MSIREmit.CurrentModule();
     name := "constarray_" & Fmt.Int(constArraySeq);  INC(constArraySeq);

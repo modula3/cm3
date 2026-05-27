@@ -8,7 +8,7 @@
 INTERFACE RecordExpr;
 (* A record constructor. *) 
 
-IMPORT M3ID, Type, Expr, CG;
+IMPORT M3ID, Type, Expr, CG, MSIR;
 
 PROCEDURE New (type: Type.T;  args: Expr.List): Expr.T;
 
@@ -21,5 +21,10 @@ PROCEDURE CheckStaticRTErrEval
   (expr: Expr.T; VAR(*OUT*) Code: CG.RuntimeError; VAR(*OUT*) Msg: TEXT);
 (* Set Code and Msg if they are not set and expr is known to produce a
    statically unconditional runtime error when evaluated. *)
+
+PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN;
+(* If e is a checked, all-constant RecordExpr whose fields are all integer or
+   float constants, set v to a ConstStruct Value and return TRUE.
+   Otherwise return FALSE. *)
 
 END RecordExpr.

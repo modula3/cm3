@@ -225,6 +225,7 @@ PROCEDURE CompileMSIR (p: P) =
 
     END; (* CASE p.kind *)
 
+    Variable.ScheduleTrace (p.var);
     Stmt.CompileMSIR (p.body);
   END CompileMSIR;
 

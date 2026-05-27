@@ -158,9 +158,11 @@ PROCEDURE CompileMSIR (t: T) =
     WHILE (t # NIL) AND MSIRBuilder.InProc () DO
       Scanner.offset := t.origin;
       MSIRBuilder.GenLocation ();
+      Tracer.EmitPendingMSIR ();
       t.compileMSIR ();
       t := t.next;
     END;
+    Tracer.EmitPendingMSIR ();
   END CompileMSIR;
 
 PROCEDURE MSIRDefault (<*UNUSED*> s: T) =

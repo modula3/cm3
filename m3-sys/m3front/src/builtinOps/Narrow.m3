@@ -10,10 +10,11 @@ MODULE Narrow;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr;
 IMPORT Procedure, ObjectType, Reff, Null, M3RT, RefType;
-IMPORT Target, RunTyme, TInt;
+IMPORT Target, RunTyme, TInt, Fmt;
 IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
+    narrowSeq: INTEGER := 0;
 
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;
@@ -184,6 +185,7 @@ PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
     tc, checkVal          : MSIR.Value;
     hook                  : MSIR.Proc;
     okBlk, failBlk        : MSIR.Block;
+    sfx                   : TEXT;
   BEGIN
     EVAL Type.CheckInfo (tlhs, lhs_info);
 
@@ -208,18 +210,21 @@ PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
     IF hook = NIL THEN
       MSIRBuilder.Abandon ("NARROW: CheckIsType hook missing");  RETURN NIL;
     END;
-    checkVal := MSIRBuilder.EmitCall ("narrow.chk", hook,
+    (* Use a unique suffix so multiple NARROW ops in the same function
+       produce distinct LLVM SSA names (LLVM requires unique names per function). *)
+    sfx := Fmt.Int (narrowSeq);  INC (narrowSeq);
+    checkVal := MSIRBuilder.EmitCall ("narrow.chk." & sfx, hook,
                                       ARRAY OF MSIR.Value {refVal, tc});
     IF checkVal = NIL THEN RETURN NIL END;
 
     (* CheckIsType returns INTEGER; convert to i1 for conditional branch. *)
-    VAR cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "narrow.cond",
+    VAR cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "narrow.cond." & sfx,
                                 MSIR.CmpPred.Ne,
                                 checkVal,
                                 MSIR.ConstInt (MSIR.ValueType (checkVal), 0));
     BEGIN
-      okBlk   := MSIRBuilder.NewBlock ("narrow.ok");
-      failBlk := MSIRBuilder.NewBlock ("narrow.fail");
+      okBlk   := MSIRBuilder.NewBlock ("narrow.ok." & sfx);
+      failBlk := MSIRBuilder.NewBlock ("narrow.fail." & sfx);
       MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
                         okBlk,   ARRAY OF MSIR.Value {},
                         failBlk, ARRAY OF MSIR.Value {});

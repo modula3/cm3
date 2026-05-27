@@ -545,6 +545,7 @@ PROCEDURE CompileMSIR (p: P) =
     (* Body. *)
     MSIRBuilder.SetCurrentBlock (bodyBlk);
     MSIRBuilder.PushExitBlock (exitBlk);
+    Variable.ScheduleTrace (p.var);
     Stmt.CompileMSIR (p.body);
     MSIRBuilder.PopExitBlock ();
 

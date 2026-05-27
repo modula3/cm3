@@ -117,7 +117,7 @@ PROCEDURE SetHi(t: T): INTEGER;
 
 TYPE Value <: REFANY;
 
-TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, Param, BlockParam, InsnResult, GlobalRef,
+TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, ConstStruct, Param, BlockParam, InsnResult, GlobalRef,
                   StructFieldRef (* GEP into module's @Mod_M3_info struct *) };
 
 PROCEDURE ConstInt(t: T;  v: INTEGER): Value;
@@ -137,6 +137,12 @@ PROCEDURE StructFieldRef(infoName: TEXT;  byteOffset: INTEGER;  t: T): Value;
 PROCEDURE GetStructFieldOffset(v: Value): INTEGER;
 (* Return a new Value with the same name/kind as v but type t.
    Used to recast a GEP ptr result as GcSlot when the target field is traced. *)
+PROCEDURE ConstStruct(t: T; READONLY fields: ARRAY OF Value): Value;
+(* A compile-time constant struct value, used in global constant array initializers.
+   t must be a Struct type; fields must all be constant-kind Values. *)
+PROCEDURE GetConstStructField(v: Value; i: INTEGER): Value;
+PROCEDURE GetConstStructFieldCount(v: Value): INTEGER;
+
 PROCEDURE ConstTextLit(uid: INTEGER; chars: TEXT; cnt: INTEGER): Value;
 (* A TEXT literal value. uid indexes @textlit_<uid> for LLVM lowering;
    chars/cnt are the string content for readable MSIR text output. *)

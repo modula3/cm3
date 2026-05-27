@@ -18,7 +18,7 @@ IMPORT TextSetDef, Fmt;
 CONST NameT = M3ID.ToText;
 
 VAR debug := TRUE;                (* command line @M3m3c-debug *)
-VAR debug_verbose := TRUE;        (* command line @M3m3c-debug-verbose *)
+VAR debug_verbose := FALSE;       (* command line @M3m3c-debug-verbose; disabled: NarrowFailed in ProcNameOrNIL during multipass replay *)
 VAR debug_comment := TRUE;        (* command line @M3m3c-debug-comment or the rest *)
 VAR debug_comment_stdio := FALSE; (* command line @M3m3c-debug-comment-stdio *)
 VAR debug_types := FALSE;         (* command line @M3m3c-debug-types *)
@@ -5078,10 +5078,32 @@ END AllocateTemps_check_index;
 TYPE Imports_t = M3CG_DoNothing.T OBJECT
     self: T;
 OVERRIDES
-    import_procedure := Imports_import_procedure;
-    declare_param := Imports_declare_param;
-    import_global := Imports_import_global;
+    import_procedure    := Imports_import_procedure;
+    declare_procedure   := Imports_declare_procedure;  (* return NIL so Locals_t can overwrite *)
+    declare_param       := Imports_declare_param;
+    import_global       := Imports_import_global;
 END;
+
+PROCEDURE Imports_declare_procedure (
+    <*UNUSED*> self: Imports_t;
+    <*UNUSED*> name: Name;
+    <*UNUSED*> parameter_count: INTEGER;
+    <*UNUSED*> return_type: CGType;
+    <*UNUSED*> level: INTEGER;
+    <*UNUSED*> callingConvention: CallingConvention;
+    <*UNUSED*> exported: BOOLEAN;
+    <*UNUSED*> parent: M3CG.Proc;
+    <*UNUSED*> return_typeid: TypeUID;
+    <*UNUSED*> return_typename: Name): M3CG.Proc =
+  BEGIN
+    (* Imports_t runs before Locals_t in the multipass replay.  With
+       reuse_refs=TRUE, the ref slot is written here and re-used by Locals_t.
+       Returning NIL leaves the slot NIL so that Locals_t's declare_procedure
+       (which calls the real M3C declare_procedure and stores a valid Proc_t)
+       can overwrite it.  DoNothing returns procSentinel which is NOT a Proc_t,
+       causing NARROW to fail in Locals_begin_procedure. *)
+    RETURN NIL;
+  END Imports_declare_procedure;
 
 PROCEDURE Imports_import_procedure(
     self: Imports_t;

@@ -59,6 +59,10 @@ PROCEDURE Pop (tt: T) =
     END;
   END Pop;
 
+PROCEDURE NoOpMSIR (<*UNUSED*> self: T) =
+  BEGIN
+  END NoOpMSIR;
+
 PROCEDURE EmitPending () =
   VAR t: T;
   BEGIN
@@ -82,6 +86,30 @@ PROCEDURE EmitPending () =
 
     emitting := FALSE;
   END EmitPending;
+
+PROCEDURE EmitPendingMSIR () =
+  VAR t: T;
+  BEGIN
+    IF (emitting) THEN RETURN END;
+    emitting := TRUE;
+
+    (* generate the one-shot MSIR traces *)
+    WHILE (pending # NIL) DO
+      t := pending;
+      pending := t.next;
+      t.next := NIL;
+      t.msir_apply ();
+    END;
+
+    (* generate the persistent MSIR traces *)
+    t := stack;
+    WHILE (t # NIL) DO
+      t.msir_apply ();
+      t := t.next;
+    END;
+
+    emitting := FALSE;
+  END EmitPendingMSIR;
 
 PROCEDURE Reset () =
   BEGIN

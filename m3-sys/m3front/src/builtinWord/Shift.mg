@@ -113,15 +113,28 @@ PROCEDURE ShiftMSIR (ce: CallExpr.T): MSIR.Value =
     x      := Expr.CompileMSIR (ce.args[0]);
     n      := Expr.CompileMSIR (ce.args[1]);
     b      := MSIRBuilder.CurrentBlock ();
+    wt     := MSIR.TI (Word_types[rep].size);
     xt, nt : MSIR.T;
     W      : INTEGER;
     zero, zeroN, wConst, wm1, isNeg, negN, absN, ltW,
     nMasked, absNMasked, shlV, lshrV, safeShl, safeShr: MSIR.Value;
+    xb, nb : INTEGER;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    (* Coerce x to word type bit width. *)
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    nb := MSIR.BitWidth (MSIR.ValueType (n));
+    W  := Word_types[rep].size;
+    IF xb > 0 AND xb # W THEN
+      IF xb > W THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE x := MSIR.BuildZExt (b, "", x, wt) END;
+    END;
+    IF nb > 0 AND nb # W THEN
+      IF nb > W THEN n := MSIR.BuildTrunc (b, "", n, wt)
+      ELSE n := MSIR.BuildZExt (b, "", n, wt) END;
+    END;
     xt     := MSIR.ValueType (x);
     nt     := MSIR.ValueType (n);
-    W      := Word_types[rep].size;
     zero   := MSIR.ConstInt (xt, 0);
     zeroN  := MSIR.ConstInt (nt, 0);
     wConst := MSIR.ConstInt (nt, W);
@@ -142,27 +155,53 @@ PROCEDURE ShiftMSIR (ce: CallExpr.T): MSIR.Value =
 PROCEDURE ShiftLeftMSIR (ce: CallExpr.T): MSIR.Value =
   (* LeftShift: 0 <= n < W guaranteed by type; emit shl with safety mask. *)
   VAR
-    x  := Expr.CompileMSIR (ce.args[0]);
-    n  := Expr.CompileMSIR (ce.args[1]);
-    b  := MSIRBuilder.CurrentBlock ();
-    wm1 : MSIR.Value;
+    x   := Expr.CompileMSIR (ce.args[0]);
+    n   := Expr.CompileMSIR (ce.args[1]);
+    b   := MSIRBuilder.CurrentBlock ();
+    wt  := MSIR.TI (Word_types[rep].size);
+    wm1, masked : MSIR.Value;
+    xb, nb : INTEGER;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
-    wm1 := MSIR.ConstInt (MSIR.ValueType (n), Word_types[rep].size - 1);
-    RETURN MSIR.BuildIShl (b, "", x, MSIR.BuildIAnd (b, "", n, wm1));
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    nb := MSIR.BitWidth (MSIR.ValueType (n));
+    IF xb > 0 AND xb # Word_types[rep].size THEN
+      IF xb > Word_types[rep].size THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE x := MSIR.BuildZExt (b, "", x, wt) END;
+    END;
+    IF nb > 0 AND nb # Word_types[rep].size THEN
+      IF nb > Word_types[rep].size THEN n := MSIR.BuildTrunc (b, "", n, wt)
+      ELSE n := MSIR.BuildZExt (b, "", n, wt) END;
+    END;
+    wm1    := MSIR.ConstInt (wt, Word_types[rep].size - 1);
+    masked := MSIR.BuildIAnd (b, "", n, wm1);
+    RETURN MSIR.BuildIShl (b, "", x, masked);
   END ShiftLeftMSIR;
 
 PROCEDURE ShiftRightMSIR (ce: CallExpr.T): MSIR.Value =
   (* RightShift: 0 <= n < W guaranteed by type; emit lshr with safety mask. *)
   VAR
-    x  := Expr.CompileMSIR (ce.args[0]);
-    n  := Expr.CompileMSIR (ce.args[1]);
-    b  := MSIRBuilder.CurrentBlock ();
-    wm1 : MSIR.Value;
+    x   := Expr.CompileMSIR (ce.args[0]);
+    n   := Expr.CompileMSIR (ce.args[1]);
+    b   := MSIRBuilder.CurrentBlock ();
+    wt  := MSIR.TI (Word_types[rep].size);
+    wm1, masked : MSIR.Value;
+    xb, nb : INTEGER;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
-    wm1 := MSIR.ConstInt (MSIR.ValueType (n), Word_types[rep].size - 1);
-    RETURN MSIR.BuildILShr (b, "", x, MSIR.BuildIAnd (b, "", n, wm1));
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    nb := MSIR.BitWidth (MSIR.ValueType (n));
+    IF xb > 0 AND xb # Word_types[rep].size THEN
+      IF xb > Word_types[rep].size THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE x := MSIR.BuildZExt (b, "", x, wt) END;
+    END;
+    IF nb > 0 AND nb # Word_types[rep].size THEN
+      IF nb > Word_types[rep].size THEN n := MSIR.BuildTrunc (b, "", n, wt)
+      ELSE n := MSIR.BuildZExt (b, "", n, wt) END;
+    END;
+    wm1    := MSIR.ConstInt (wt, Word_types[rep].size - 1);
+    masked := MSIR.BuildIAnd (b, "", n, wm1);
+    RETURN MSIR.BuildILShr (b, "", x, masked);
   END ShiftRightMSIR;
 
 PROCEDURE Initialize (r: INTEGER) =

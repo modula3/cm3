@@ -129,6 +129,15 @@ PROCEDURE DoCompileMSIR (e: Expr.T;  unit: INTEGER): MSIR.Value =
     oa := Expr.CompileMSIR (e);
     IF oa = NIL THEN RETURN NIL END;
     blk   := MSIRBuilder.CurrentBlock ();
+    (* CONST open arrays compile to FixedArray in MSIR (size known at compile time).
+       Extract element count from the type and compute the result statically. *)
+    IF MSIR.Kind (MSIR.ValueType (oa)) = MSIR.TypeKind.FixedArray THEN
+      eltPack := OpenArrayType.EltPack (t);
+      VAR n := MSIR.FixedArrayLen (MSIR.ValueType (oa));
+      BEGIN
+        RETURN MSIR.ConstInt (iT, (n * eltPack + unit - 1) DIV unit);
+      END;
+    END;
     depth := OpenArrayType.OpenDepth (t);
     total := MSIR.BuildOpenArraySize (blk, "", oa, 0);
     FOR i := 1 TO depth - 1 DO

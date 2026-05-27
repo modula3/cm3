@@ -863,8 +863,11 @@ PROCEDURE CompileMSIR (p: P) =
       (* Sub-byte field/element write: no lvalue; use read-modify-write. *)
       rhsVal := Expr.CompileMSIR (p.rhs);
       IF rhsVal = NIL THEN RETURN END;
-      IF QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal) THEN RETURN END;
+      IF QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal) THEN
+        Expr.NoteWrite (p.lhs); RETURN
+      END;
       EVAL SubscriptExpr.SubByteStoreElemMSIR (p.lhs, rhsVal);
+      Expr.NoteWrite (p.lhs);
       RETURN;
     END;
     rhsVal := Expr.CompileMSIR (p.rhs);
@@ -1004,6 +1007,7 @@ PROCEDURE CompileMSIR (p: P) =
           ELSE
             MSIRBuilder.Abandon ("array-type store mismatch not yet supported in MSIR");
           END;
+          Expr.NoteWrite (p.lhs);
           RETURN;
         END;
       END;
@@ -1015,6 +1019,7 @@ PROCEDURE CompileMSIR (p: P) =
     ELSE
       MSIR.BuildStore (MSIRBuilder.CurrentBlock(), rhsVal, lhsPtr);
     END;
+    Expr.NoteWrite (p.lhs);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

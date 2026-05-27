@@ -8,7 +8,8 @@ readonly DarwinArch = "arm64"
 % ARM64 Darwin has no native CM3 code generator; the C backend is required.
 % Darwin.common would default to "3" (native x86 assembler backend), so we
 % must set this before including it.
-M3_BACKEND_MODE = "MSIRObj"
+M3_BACKEND_MODE = "C"
+% M3_BACKEND_MODE = "MSIRObj"
 
 % Enable C++ zero-cost exception handling (ex_stack).
 % Must be set before including Darwin.common so its guard fires correctly.

@@ -373,6 +373,7 @@ REVEAL Value = BRANDED "MSIR.Value" REF RECORD
   textChars:   TEXT       := NIL;     (* ConstTextLit *)
   textCnt:     INTEGER    := 0;       (* ConstTextLit *)
   structOff:   INTEGER    := -1;      (* StructFieldRef: byte offset in @Mod_M3_info *)
+  constFields: REF ARRAY OF Value := NIL;  (* ConstStruct *)
 END;
 
 PROCEDURE ConstInt(t: T;  v: INTEGER): Value =
@@ -487,6 +488,27 @@ PROCEDURE ConstTextLit(uid: INTEGER;  chars: TEXT;  cnt: INTEGER): Value =
 PROCEDURE GetTextLitUID  (v: Value): INTEGER = BEGIN RETURN v.textUid   END GetTextLitUID;
 PROCEDURE GetTextLitChars(v: Value): TEXT    = BEGIN RETURN v.textChars  END GetTextLitChars;
 PROCEDURE GetTextLitCnt  (v: Value): INTEGER = BEGIN RETURN v.textCnt   END GetTextLitCnt;
+
+PROCEDURE ConstStruct(t: T; READONLY fields: ARRAY OF Value): Value =
+  VAR val := NEW(Value);
+      n   := NUMBER(fields);
+  BEGIN
+    val.type        := t;
+    val.vKind       := ValueKind.ConstStruct;
+    val.name        := "<const-struct>";
+    val.constFields := NEW(REF ARRAY OF Value, n);
+    FOR i := 0 TO n - 1 DO val.constFields[i] := fields[i] END;
+    RETURN val;
+  END ConstStruct;
+
+PROCEDURE GetConstStructField(v: Value; i: INTEGER): Value =
+  BEGIN RETURN v.constFields[i] END GetConstStructField;
+
+PROCEDURE GetConstStructFieldCount(v: Value): INTEGER =
+  BEGIN
+    IF v.constFields = NIL THEN RETURN 0 END;
+    RETURN NUMBER(v.constFields^);
+  END GetConstStructFieldCount;
 
 PROCEDURE ValueType(v: Value): T = BEGIN RETURN v.type END ValueType;
 PROCEDURE ValueName(v: Value): TEXT = BEGIN RETURN v.name END ValueName;
@@ -1495,11 +1517,20 @@ PROCEDURE BuildFPExt  (b: Block; name: TEXT; x: Value; dstType: T): Value =
 PROCEDURE BuildFPTrunc(b: Block; name: TEXT; x: Value; dstType: T): Value =
   BEGIN RETURN buildCast(b, Op.FPTrunc, name, x, dstType) END BuildFPTrunc;
 PROCEDURE BuildZExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
-  BEGIN RETURN buildCast(b, Op.ZExt,    name, x, dstType) END BuildZExt;
+  BEGIN
+    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN x END;
+    RETURN buildCast(b, Op.ZExt,    name, x, dstType)
+  END BuildZExt;
 PROCEDURE BuildSExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
-  BEGIN RETURN buildCast(b, Op.SExt,    name, x, dstType) END BuildSExt;
+  BEGIN
+    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN x END;
+    RETURN buildCast(b, Op.SExt,    name, x, dstType)
+  END BuildSExt;
 PROCEDURE BuildTrunc  (b: Block; name: TEXT; x: Value; dstType: T): Value =
-  BEGIN RETURN buildCast(b, Op.Trunc,   name, x, dstType) END BuildTrunc;
+  BEGIN
+    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN x END;
+    RETURN buildCast(b, Op.Trunc,   name, x, dstType)
+  END BuildTrunc;
 
 PROCEDURE BuildFPFloor    (b: Block; name: TEXT; x: Value): Value =
   BEGIN RETURN buildCast(b, Op.FPFloor,     name, x, x.type) END BuildFPFloor;

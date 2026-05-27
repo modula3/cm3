@@ -52,8 +52,14 @@ PROCEDURE ObjectShortName(t: Type.T;  hint: TEXT): TEXT =
 
 PROCEDURE Translate(t: Type.T): MSIR.T =
   VAR base: Type.T;  info: Type.Info;  nameId: M3ID.T;  typeName: TEXT;
+      origInfo: Type.Info;
   BEGIN
     IF t = NIL THEN RETURN NIL END;
+    (* Capture the original type's size BEFORE stripping Named/Packed/Subrange.
+       Subranges of Int.T like Ctypes.int (32-bit) must use their own size, not
+       Target.Integer.size (64-bit), so that LOOPHOLE and field accesses emit the
+       correct bitwidth. *)
+    EVAL Type.CheckInfo(t, origInfo);
     (* Capture the human-readable name BEFORE stripping the Named wrapper.
        Type.Typename returns "Module__Name"; strip the "Module__" prefix. *)
     Type.Typename(t, nameId);
@@ -63,9 +69,22 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
     END;
     base := Type.Base(t);  (* strips Named, Packed, Subrange layers *)
 
-    (* Integer-like builtins — check identity before falling to class *)
-    IF base = Int.T   THEN RETURN MSIR.TI(Target.Integer.size) END;
-    IF base = LInt.T  THEN RETURN MSIR.TI(Target.Longint.size) END;
+    (* Integer-like builtins — use the original type's size so that narrow
+       subranges of INTEGER (e.g. Ctypes.int = 32 bits) get TI(32) not TI(64). *)
+    IF base = Int.T THEN
+      VAR sz := Target.Integer.size;
+      BEGIN
+        IF origInfo.size > 0 THEN sz := origInfo.size END;
+        RETURN MSIR.TI(sz);
+      END;
+    END;
+    IF base = LInt.T THEN
+      VAR sz := Target.Longint.size;
+      BEGIN
+        IF origInfo.size > 0 THEN sz := origInfo.size END;
+        RETURN MSIR.TI(sz);
+      END;
+    END;
     IF base = Bool.T  THEN RETURN MSIR.TI1() END;
     IF base = Charr.T THEN RETURN MSIR.TI(Target.Char.size) END;
     IF base = WCharr.T THEN
@@ -220,6 +239,7 @@ PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
         ft := Translate(finfo.type);
         IF ft = NIL THEN ft := MSIR.TPtr(MSIR.TVoid()) END;  (* opaque / cycle *)
         msirFs[fi].name   := M3ID.ToText(finfo.name);
+        IF msirFs[fi].name = NIL THEN msirFs[fi].name := "" END;
         msirFs[fi].type   := ft;
         msirFs[fi].offset := bitOff + finfo.offset;
         INC(fi);
@@ -232,6 +252,7 @@ PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
           THEN objName := Type.Name(t)
           ELSE objName := name
         END;
+        IF objName = NIL THEN objName := "" END;
         result := MSIR.TObject(
                     objName,
                     superM, msirFs^, ARRAY OF MSIR.Method{}, "");
@@ -313,6 +334,7 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
             ft := MSIR.TI(fti.size);
           END;
           msirFields[i].name   := M3ID.ToText(finfo.name);
+          IF msirFields[i].name = NIL THEN msirFields[i].name := "" END;
           msirFields[i].type   := ft;
           msirFields[i].offset := finfo.offset; (* bit offset for DWARF *)
         END;

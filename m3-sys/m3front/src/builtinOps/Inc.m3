@@ -120,6 +120,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       updated := MSIR.BuildIAdd (blk, "", old, delta);
     END;
     MSIR.BuildStore (blk, updated, addr);
+    Expr.NoteWrite (lhsExpr);
     RETURN NIL;
   END CompileMSIR;
 

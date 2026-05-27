@@ -312,6 +312,9 @@ VAR
   procSentinel: M3CG.Proc := NIL;
 
 BEGIN
-  varSentinel  := NEW (M3CG.Var);
-  procSentinel := NEW (M3CG.Proc);
+  (* Both sentinels stay NIL.  M3CG_MultiPass with reuse_refs=TRUE only
+     overwrites a replay-context slot when it is NIL.  A non-NIL sentinel
+     here would prevent the Locals/Segments passes from storing their real
+     Var_t/Proc_t objects, causing NARROW to fail in begin_procedure or
+     bind_segment. *)
 END M3CG_DoNothing.

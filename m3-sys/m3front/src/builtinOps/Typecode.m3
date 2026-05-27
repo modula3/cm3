@@ -158,7 +158,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         MSIR.BuildBr (normalBlk, mergeBlk, ARRAY OF MSIR.Value {});
 
         MSIRBuilder.SetCurrentBlock (mergeBlk);
-        RETURN MSIR.BuildLoad (mergeBlk, "tc", intT, resAlloca);
+        RETURN MSIR.BuildLoad (mergeBlk, "tc.val", intT, resAlloca);
       END;
     END;
   END CompileMSIR;

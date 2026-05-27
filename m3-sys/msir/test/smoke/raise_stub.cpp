@@ -140,6 +140,7 @@ extern "C" void RTHooks__Raise(void *ex, void *arg,
 
 /* Import-chain binder stubs: stored as function pointers in ImportInfo globals
    but never invoked in the harness (RTLinker is never run). */
+extern "C" void *Main_I3(long)   { return nullptr; }
 extern "C" void *Thread_I3(long) { return nullptr; }
 extern "C" void *Fmt_I3(long)    { return nullptr; }
 extern "C" void *IO_I3(long)     { return nullptr; }

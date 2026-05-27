@@ -753,6 +753,7 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
 
+      IF h.scope # NIL THEN Variable.ScheduleTrace(h.var) END;
       MSIRBuilder.PushCatchContext(endCatch);
       Stmt.CompileMSIR(h.body);
       MSIRBuilder.PopCatchContext();

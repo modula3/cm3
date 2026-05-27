@@ -11,7 +11,7 @@ MODULE AddExpr;
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT SetType, Addr, Module, Error, Target, ErrType, TInt;
 IMPORT AddressExpr, SetExpr, IntegerExpr, ReelExpr;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET };
@@ -165,15 +165,29 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     END;
   END Compile;
 
+PROCEDURE CoerceToMSIR(blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T): MSIR.Value =
+  VAR vb := MSIR.BitWidth(MSIR.ValueType(v));
+      rb := MSIR.BitWidth(rt);
+  BEGIN
+    IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
+    IF vb < rb THEN RETURN MSIR.BuildZExt(blk, "", v, rt) END;
+    RETURN MSIR.BuildTrunc(blk, "", v, rt);
+  END CoerceToMSIR;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;
       blk := MSIRBuilder.CurrentBlock ();
+      rt  : MSIR.T;
   BEGIN
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
     CASE p.class OF
     | Class.cINT, Class.cLINT =>
+        rt := MSIRType.Translate(p.type);
+        IF rt = NIL THEN rt := MSIR.ValueType(a) END;
+        a := CoerceToMSIR(blk, a, rt);
+        b := CoerceToMSIR(blk, b, rt);
         RETURN MSIR.BuildIAdd (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFAdd (blk, "", a, b);

@@ -461,7 +461,17 @@ PROCEDURE IsWritable (p: T;  lhs: BOOLEAN): BOOLEAN =
   END IsWritable;
 
 PROCEDURE CompileMSIR (p: T): MSIR.Value =
+  VAR folded: Expr.T;
   BEGIN
+    (* Try constant folding first.  Builtins like NUMBER/LAST applied to
+       constant arrays (e.g. CONST SystemNames = ARRAY OF TEXT {...}) have
+       open-array M3 type but compile to FixedArray MSIR values.  If the
+       call folds to a constant, compile that directly rather than hitting
+       the builtin MSIR handler (which would crash on the type mismatch). *)
+    folded := Fold (p);
+    IF folded # NIL AND folded # p THEN
+      RETURN Expr.CompileMSIR (folded);
+    END;
     IF p.methods = NIL OR p.methods.compileMSIR = NIL THEN
       MSIRBuilder.Abandon("builtin has no MSIR handler");
       RETURN NIL;

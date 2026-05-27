@@ -1173,11 +1173,13 @@ PROCEDURE EmitBody (x: InitBody) =
     (* initialize my exported variables *)
     External.InitGlobals (t.externals);
 
-    (* perform the main body *)
-    Tracer.Push (t.trace);
-    Jmpbufs.CompileProcAllocateJmpbufs (t.jmpbufs);
-    EVAL Stmt.Compile (t.block);
-    Tracer.Pop (t.trace);
+    (* perform the main body (CG path: skip when cg_proc=NIL/DoNothing) *)
+    IF x.cg_proc # NIL THEN
+      Tracer.Push (t.trace);
+      Jmpbufs.CompileProcAllocateJmpbufs (t.jmpbufs);
+      EVAL Stmt.Compile (t.block);
+      Tracer.Pop (t.trace);
+    END;
 
     IF msirOk THEN
       Stmt.CompileMSIR (t.block);

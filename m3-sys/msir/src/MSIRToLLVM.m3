@@ -320,6 +320,17 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.GlobalRef =>
         Wr.PutText(wr, "@");
         Wr.PutText(wr, MSIR.ValueName(v));
+    | MSIR.ValueKind.ConstStruct =>
+        (* Inline constant struct: { field0, field1, ... } *)
+        VAR n := MSIR.GetConstStructFieldCount(v);
+        BEGIN
+          Wr.PutText(wr, "{ ");
+          FOR i := 0 TO n - 1 DO
+            IF i > 0 THEN Wr.PutText(wr, ", ") END;
+            LLTypedVal(wr, MSIR.GetConstStructField(v, i));
+          END;
+          Wr.PutText(wr, " }");
+        END;
     | MSIR.ValueKind.StructFieldRef =>
         (* getelementptr inbounds (i8, ptr @Mod_M3_info, i{AP} N) *)
         VAR ap := "i" & Fmt.Int(Target.Address.size);
@@ -1183,35 +1194,81 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           convOp  : TEXT;
         BEGIN
           IF dstT = NIL THEN dstT := MSIR.ValueType(res) END;
-          (* Select the right LLVM cast for the source → destination types.
-             ptr↔integer require inttoptr/ptrtoint; bitcast is only for
-             same-sized scalar pairs or ptr↔ptr. *)
           VAR
-            srcIsPtr := MSIR.Kind(srcT) = MSIR.TypeKind.Ptr
-                     OR MSIR.Kind(srcT) = MSIR.TypeKind.GcRef
-                     OR MSIR.Kind(srcT) = MSIR.TypeKind.GcSlot;
-            dstIsPtr := MSIR.Kind(dstT) = MSIR.TypeKind.Ptr
-                     OR MSIR.Kind(dstT) = MSIR.TypeKind.GcRef
-                     OR MSIR.Kind(dstT) = MSIR.TypeKind.GcSlot;
+            srcIsPtr   := MSIR.Kind(srcT) = MSIR.TypeKind.Ptr
+                       OR MSIR.Kind(srcT) = MSIR.TypeKind.GcRef
+                       OR MSIR.Kind(srcT) = MSIR.TypeKind.GcSlot;
+            dstIsPtr   := MSIR.Kind(dstT) = MSIR.TypeKind.Ptr
+                       OR MSIR.Kind(dstT) = MSIR.TypeKind.GcRef
+                       OR MSIR.Kind(dstT) = MSIR.TypeKind.GcSlot;
+            srcIsFloat := MSIR.Kind(srcT) = MSIR.TypeKind.F32
+                       OR MSIR.Kind(srcT) = MSIR.TypeKind.F64
+                       OR MSIR.Kind(srcT) = MSIR.TypeKind.F128;
+            dstIsFloat := MSIR.Kind(dstT) = MSIR.TypeKind.F32
+                       OR MSIR.Kind(dstT) = MSIR.TypeKind.F64
+                       OR MSIR.Kind(dstT) = MSIR.TypeKind.F128;
           BEGIN
             IF srcIsPtr AND dstBits > 0 THEN
-              convOp := "ptrtoint";
+              Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = ptrtoint ");
+              LLTypedVal(wr, src);
+              Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
             ELSIF srcBits > 0 AND dstIsPtr THEN
-              convOp := "inttoptr";
-            ELSIF srcBits > 0 AND dstBits > 0 THEN
-              IF    dstBits > srcBits THEN convOp := "sext";
-              ELSIF dstBits < srcBits THEN convOp := "trunc";
-              ELSE                        convOp := "bitcast";
+              Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = inttoptr ");
+              LLTypedVal(wr, src);
+              Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+            ELSIF srcBits > 0 AND dstBits > 0
+                  AND NOT srcIsFloat AND dstIsFloat AND srcBits # dstBits THEN
+              (* Int → Float LOOPHOLE with size mismatch:
+                 resize integer to match float bit width, then bitcast. *)
+              VAR
+                tmpName  := MSIR.ValueName(res) & ".ri";
+                resizeOp : TEXT;
+                intT     := MSIR.TI(dstBits);
+              BEGIN
+                IF srcBits > dstBits THEN resizeOp := "trunc"
+                ELSE                      resizeOp := "zext"
+                END;
+                Wr.PutText(wr, "  " & tmpName & " = " & resizeOp & " ");
+                LLTypedVal(wr, src);
+                Wr.PutText(wr, " to "); LLType(wr, intT); Wr.PutText(wr, "\n");
+                Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = bitcast ");
+                LLType(wr, intT); Wr.PutText(wr, " " & tmpName);
+                Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+              END;
+            ELSIF srcBits > 0 AND dstBits > 0
+                  AND srcIsFloat AND NOT dstIsFloat AND srcBits # dstBits THEN
+              (* Float → Int LOOPHOLE with size mismatch:
+                 bitcast float to same-size integer, then resize. *)
+              VAR
+                tmpName  := MSIR.ValueName(res) & ".ri";
+                resizeOp : TEXT;
+                intT     := MSIR.TI(srcBits);
+              BEGIN
+                IF srcBits > dstBits THEN resizeOp := "trunc"
+                ELSE                      resizeOp := "zext"
+                END;
+                Wr.PutText(wr, "  " & tmpName & " = bitcast ");
+                LLTypedVal(wr, src);
+                Wr.PutText(wr, " to "); LLType(wr, intT); Wr.PutText(wr, "\n");
+                Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & resizeOp & " ");
+                LLType(wr, intT); Wr.PutText(wr, " " & tmpName);
+                Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
               END;
             ELSE
-              convOp := "bitcast";
+              (* Int ↔ Int or same-size float ↔ int: single cast. *)
+              IF srcBits > 0 AND dstBits > 0 THEN
+                IF    dstBits > srcBits THEN convOp := "sext";
+                ELSIF dstBits < srcBits THEN convOp := "trunc";
+                ELSE                        convOp := "bitcast";
+                END;
+              ELSE
+                convOp := "bitcast";
+              END;
+              Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & convOp & " ");
+              LLTypedVal(wr, src);
+              Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
             END;
           END;
-          Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = " & convOp & " ");
-          LLTypedVal(wr, src);
-          Wr.PutText(wr, " to ");
-          LLType(wr, dstT);
-          Wr.PutText(wr, "\n");
         END;
 
     | MSIR.Op.SIToFP, MSIR.Op.FPToSI,
@@ -1353,16 +1410,34 @@ PROCEDURE IsModuleProcByName(m: MSIR.Module;  name: TEXT): BOOLEAN =
     RETURN FALSE;
   END IsModuleProcByName;
 
+PROCEDURE MaybeAddExtern(m: MSIR.Module;  externs: RefSeq.T;  p: MSIR.Proc) =
+  (* LLVM 22+ disallows 'declare' + 'define' for the same symbol in one module.
+     Use LLSymbol comparison (not raw ProcName) because a forward-reference stub
+     may carry the fully-qualified name (e.g. "RTAllocator__GetTraced") while the
+     module proc has the short name ("GetTraced"); raw name comparison misses this. *)
+  VAR sym: TEXT;
+  BEGIN
+    IF p = NIL OR IsModuleProc(m, p) OR ProcSeen(externs, p) THEN RETURN END;
+    sym := LLSymbol(p);
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      IF Text.Equal(LLSymbol(MSIR.ModuleProc(m, i)), sym) THEN RETURN END;
+    END;
+    externs.addhi(p);
+  END MaybeAddExtern;
+
 PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
-  (* Walk all call insns in all internal procs, collect external callees. *)
+  (* Walk all insns in all internal procs.  Collect:
+     (a) external direct callees (Call/Invoke),
+     (b) external procs used as ConstProc values (function-pointer args). *)
   VAR
-    np := MSIR.ModuleProcCount(m);
-    p  : MSIR.Proc;
-    nb : INTEGER;
-    b  : MSIR.Block;
-    ni : INTEGER;
-    ins: MSIR.Insn;
-    callee: MSIR.Proc;
+    np  := MSIR.ModuleProcCount(m);
+    p   : MSIR.Proc;
+    nb  : INTEGER;
+    b   : MSIR.Block;
+    ni  : INTEGER;
+    ins : MSIR.Insn;
+    nop : INTEGER;
+    v   : MSIR.Value;
   BEGIN
     FOR pi := 0 TO np - 1 DO
       p  := MSIR.ModuleProc(m, pi);
@@ -1372,14 +1447,17 @@ PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
         ni := MSIR.BlockInsnCount(b);
         FOR ii := 0 TO ni - 1 DO
           ins := MSIR.BlockInsn(b, ii);
+          (* (a) Direct callees. *)
           IF MSIR.InsnOp(ins) = MSIR.Op.Call OR
              MSIR.InsnOp(ins) = MSIR.Op.Invoke THEN
-            callee := MSIR.InsnCallee(ins);
-            IF callee # NIL AND
-               NOT IsModuleProc(m, callee) AND
-               NOT IsModuleProcByName(m, MSIR.ProcName(callee)) AND
-               NOT ProcSeen(externs, callee) THEN
-              externs.addhi(callee);
+            MaybeAddExtern(m, externs, MSIR.InsnCallee(ins));
+          END;
+          (* (b) ConstProc operands — external procs used as function-pointer values. *)
+          nop := MSIR.InsnOperandCount(ins);
+          FOR oi := 0 TO nop - 1 DO
+            v := MSIR.InsnOperand(ins, oi);
+            IF v # NIL AND MSIR.GetValueKind(v) = MSIR.ValueKind.ConstProc THEN
+              MaybeAddExtern(m, externs, MSIR.GetConstProc(v));
             END;
           END;
         END;
@@ -1610,7 +1688,7 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
   (* Build a DICompositeType(DW_TAG_structure_type) representing the open-array
      dope vector { ptr data, i64 count0, i64 count1, ... }.
      Deduplication is by rank since the dope layout depends only on rank. *)
-  VAR entry    : INTEGER;
+  VAR eidx     : INTEGER;
       AP       := Target.Address.size;
       totalBits := (1 + rank) * AP;
       addrRef  := dbgBtBase + 8;   (* ADDRESS *)
@@ -1624,14 +1702,14 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
       END;
     END;
     IF dbgTypeN >= MaxDbgTypes THEN RETURN addrRef END;
-    entry := dbgTypeN;  INC(dbgTypeN);
-    dbgTypes[entry].msirType      := NIL;
-    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
-    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
-    dbgTypes[entry].baseTypeRef   := -1;
-    dbgTypes[entry].kind          := 3;   (* OpenArray dope vector *)
-    dbgTypes[entry].childBase     := dbgChildN;
-    dbgTypes[entry].totalBits     := totalBits;
+    eidx := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[eidx].msirType      := NIL;
+    dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[eidx].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[eidx].baseTypeRef   := -1;
+    dbgTypes[eidx].kind          := 3;   (* OpenArray dope vector *)
+    dbgTypes[eidx].childBase     := dbgChildN;
+    dbgTypes[eidx].totalBits     := totalBits;
     nEmitted := 0;
     (* Field 0: data pointer *)
     IF dbgChildN < MaxDbgChildren THEN
@@ -1658,8 +1736,8 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
         INC(dbgChildN);  INC(metaN);  INC(nEmitted);
       END;
     END;
-    dbgTypes[entry].childCount := nEmitted;
-    RETURN dbgTypes[entry].metaIdx;
+    dbgTypes[eidx].childCount := nEmitted;
+    RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildOpenArrayDvType;
 
 PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
@@ -1667,7 +1745,7 @@ PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
      Flattens the full super chain: __vtable at 0, then all inherited and own fields.
      Returns the metadata index of the DICompositeType node (kind=4).
      Deduplicates by MSIR.T pointer identity. *)
-  VAR entry    : INTEGER;
+  VAR eidx     : INTEGER;
       AP       := Target.Address.size;
       addrRef  := dbgBtBase + 8;  (* ADDRESS *)
       nEmitted : INTEGER;
@@ -1680,59 +1758,75 @@ PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       END;
     END;
     IF dbgTypeN >= MaxDbgTypes THEN RETURN addrRef END;
-    entry := dbgTypeN;  INC(dbgTypeN);
-    dbgTypes[entry].msirType      := t;
-    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
-    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
-    dbgTypes[entry].baseTypeRef   := -1;
-    dbgTypes[entry].kind          := 4;  (* Object struct *)
-    dbgTypes[entry].childBase     := dbgChildN;
-    dbgTypes[entry].totalBits     := TotalBitsOf(t);
+    eidx := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[eidx].msirType      := t;
+    dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[eidx].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[eidx].baseTypeRef   := -1;
+    dbgTypes[eidx].kind          := 4;  (* Object struct *)
+    dbgTypes[eidx].totalBits     := TotalBitsOf(t);
     nEmitted := 0;
-    (* Field 0: implicit vtable pointer at bit offset 0. *)
-    IF dbgChildN < MaxDbgChildren THEN
-      dbgChildren[dbgChildN].kind    := 0;   (* member *)
-      dbgChildren[dbgChildN].name    := "__vtable";
-      dbgChildren[dbgChildN].typeRef := addrRef;
-      dbgChildren[dbgChildN].size    := AP;
-      dbgChildren[dbgChildN].offset  := 0;
-      dbgChildren[dbgChildN].metaIdx := metaN;
-      INC(dbgChildN);  INC(metaN);  INC(nEmitted);
-    END;
-    (* Collect fields from all ancestor types (root first) then own fields.
-       Walk to root, collect types in a small stack, emit root-first. *)
+    (* Two-pass: pre-register all field types so their sub-children land before this
+       object type's childBase in dbgChildren[], preventing metadata ID collisions. *)
     CONST MaxDepth = 32;
-    VAR chain : ARRAY [0..MaxDepth-1] OF MSIR.T;
-        depth : INTEGER := 0;
+    CONST MaxF     = 256;
+    VAR chain  : ARRAY [0..MaxDepth-1] OF MSIR.T;
+        depth  : INTEGER := 0;
+        trefs  : ARRAY [0..MaxF-1]    OF INTEGER;
+        fi     : INTEGER := 0;
     BEGIN
+      (* Build inheritance chain (leaf → root). *)
       cur := t;
       WHILE cur # NIL AND depth < MaxDepth DO
         chain[depth] := cur;  INC(depth);
         cur := MSIR.ObjectSuper(cur);
       END;
-      (* Emit root first (highest index), then toward leaf. *)
+      (* Pass 1: pre-register all field types (root-first order). *)
       FOR lvl := depth - 1 TO 0 BY -1 DO
         cur := chain[lvl];
         FOR i := 0 TO MSIR.ObjectFieldCount(cur) - 1 DO
-          IF dbgChildN < MaxDbgChildren THEN
-            VAR f     := MSIR.ObjectField(cur, i);
-                tRef  := GetDbgTypeRef(f.type, metaN);
-                fBits := TotalBitsOf(f.type);
+          IF fi < MaxF THEN
+            VAR f := MSIR.ObjectField(cur, i);
             BEGIN
-              dbgChildren[dbgChildN].kind    := 0;
-              dbgChildren[dbgChildN].name    := f.name;
-              dbgChildren[dbgChildN].typeRef := tRef;
-              dbgChildren[dbgChildN].size    := fBits;
-              dbgChildren[dbgChildN].offset  := f.offset;
-              dbgChildren[dbgChildN].metaIdx := metaN;
-              INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+              trefs[fi] := GetDbgTypeRef(f.type, metaN);
+              INC(fi);
             END;
           END;
         END;
       END;
+      (* Pass 2: set childBase after nested types, then add vtable + field members. *)
+      dbgTypes[eidx].childBase := dbgChildN;
+      IF dbgChildN < MaxDbgChildren THEN
+        dbgChildren[dbgChildN].kind    := 0;   (* member *)
+        dbgChildren[dbgChildN].name    := "__vtable";
+        dbgChildren[dbgChildN].typeRef := addrRef;
+        dbgChildren[dbgChildN].size    := AP;
+        dbgChildren[dbgChildN].offset  := 0;
+        dbgChildren[dbgChildN].metaIdx := metaN;
+        INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+      END;
+      fi := 0;
+      FOR lvl := depth - 1 TO 0 BY -1 DO
+        cur := chain[lvl];
+        FOR i := 0 TO MSIR.ObjectFieldCount(cur) - 1 DO
+          VAR f := MSIR.ObjectField(cur, i);
+          BEGIN
+            IF fi < MaxF AND dbgChildN < MaxDbgChildren THEN
+              dbgChildren[dbgChildN].kind    := 0;
+              dbgChildren[dbgChildN].name    := f.name;
+              dbgChildren[dbgChildN].typeRef := trefs[fi];
+              dbgChildren[dbgChildN].size    := TotalBitsOf(f.type);
+              dbgChildren[dbgChildN].offset  := f.offset;
+              dbgChildren[dbgChildN].metaIdx := metaN;
+              INC(dbgChildN);  INC(metaN);  INC(nEmitted);
+            END;
+            INC(fi);
+          END;
+        END;
+      END;
     END;
-    dbgTypes[entry].childCount := nEmitted;
-    RETURN dbgTypes[entry].metaIdx;
+    dbgTypes[eidx].childCount := nEmitted;
+    RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildObjectStructType;
 
 PROCEDURE GetOrBuildObjectPtrType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
@@ -1740,7 +1834,7 @@ PROCEDURE GetOrBuildObjectPtrType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
      Returns the metadata index of the DIDerivedType(pointer) node (kind=5).
      Deduplicates by the struct metaIdx it points to. *)
   VAR structIdx : INTEGER;
-      entry     : INTEGER;
+      eidx      : INTEGER;
   BEGIN
     structIdx := GetOrBuildObjectStructType(t, metaN);
     FOR k := 0 TO dbgTypeN - 1 DO
@@ -1749,16 +1843,16 @@ PROCEDURE GetOrBuildObjectPtrType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       END;
     END;
     IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
-    entry := dbgTypeN;  INC(dbgTypeN);
-    dbgTypes[entry].msirType      := t;
-    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
-    dbgTypes[entry].elemsTupleIdx := -1;
-    dbgTypes[entry].baseTypeRef   := structIdx;
-    dbgTypes[entry].kind          := 5;  (* Object pointer *)
-    dbgTypes[entry].childBase     := 0;
-    dbgTypes[entry].childCount    := 0;
-    dbgTypes[entry].totalBits     := Target.Address.size;
-    RETURN dbgTypes[entry].metaIdx;
+    eidx := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[eidx].msirType      := t;
+    dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[eidx].elemsTupleIdx := -1;
+    dbgTypes[eidx].baseTypeRef   := structIdx;
+    dbgTypes[eidx].kind          := 5;  (* Object pointer *)
+    dbgTypes[eidx].childBase     := 0;
+    dbgTypes[eidx].childCount    := 0;
+    dbgTypes[eidx].totalBits     := Target.Address.size;
+    RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildObjectPtrType;
 
 PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
@@ -1801,7 +1895,7 @@ PROCEDURE SameStructType(a, b: MSIR.T): BOOLEAN =
   END SameStructType;
 
 PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
-  VAR entry: INTEGER;
+  VAR eidx: INTEGER;
   BEGIN
     FOR k := 0 TO dbgTypeN - 1 DO
       IF dbgTypes[k].kind = 0 AND SameStructType(dbgTypes[k].msirType, t) THEN
@@ -1809,41 +1903,52 @@ PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       END;
     END;
     IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
-    entry := dbgTypeN;  INC(dbgTypeN);
-    dbgTypes[entry].msirType      := t;
-    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
-    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
-    dbgTypes[entry].baseTypeRef   := -1;
-    dbgTypes[entry].kind          := 0;  (* Struct *)
-    dbgTypes[entry].childBase     := dbgChildN;
-    (* Emit one DIDerivedType(member) child per field. *)
+    eidx := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[eidx].msirType      := t;
+    dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[eidx].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[eidx].baseTypeRef   := -1;
+    dbgTypes[eidx].kind          := 0;  (* Struct *)
+    (* Two-pass: pre-register all field types so their sub-children land before this
+       struct's childBase in dbgChildren[], preventing metadata ID collisions when
+       nested composite types (FixedArray, Enum) add their own children. *)
+    CONST MaxF = 256;
     VAR n        := MSIR.StructFieldCount(t);
-        nEmitted := 0;
+        nf       := MIN(n, MaxF);
+        trefs    : ARRAY [0..MaxF-1] OF INTEGER;
+        nEmitted : INTEGER := 0;
     BEGIN
-      FOR i := 0 TO n - 1 DO
-        VAR f     := MSIR.StructField(t, i);
-            tRef  := GetDbgTypeRef(f.type, metaN);
-            fBits := TotalBitsOf(f.type);
+      (* Pass 1: register all field types (may add their sub-children to dbgChildren). *)
+      FOR i := 0 TO nf - 1 DO
+        VAR f := MSIR.StructField(t, i);
         BEGIN
-          IF dbgChildN < MaxDbgChildren THEN
-            dbgChildren[dbgChildN].kind       := 0;   (* member *)
-            dbgChildren[dbgChildN].name       := f.name;
-            dbgChildren[dbgChildN].typeRef    := tRef;
-            dbgChildren[dbgChildN].size       := fBits;
-            dbgChildren[dbgChildN].offset     := f.offset;
-            dbgChildren[dbgChildN].metaIdx    := metaN;
+          trefs[i] := GetDbgTypeRef(f.type, metaN);
+        END;
+      END;
+      (* Pass 2: set childBase after nested types, then add DIDerivedType members. *)
+      dbgTypes[eidx].childBase := dbgChildN;
+      FOR i := 0 TO nf - 1 DO
+        IF dbgChildN < MaxDbgChildren THEN
+          VAR f := MSIR.StructField(t, i);
+          BEGIN
+            dbgChildren[dbgChildN].kind    := 0;   (* member *)
+            dbgChildren[dbgChildN].name    := f.name;
+            dbgChildren[dbgChildN].typeRef := trefs[i];
+            dbgChildren[dbgChildN].size    := TotalBitsOf(f.type);
+            dbgChildren[dbgChildN].offset  := f.offset;
+            dbgChildren[dbgChildN].metaIdx := metaN;
             INC(dbgChildN);  INC(metaN);  INC(nEmitted);
           END;
         END;
       END;
-      dbgTypes[entry].childCount := nEmitted;
-      dbgTypes[entry].totalBits  := TotalBitsOf(t);
+      dbgTypes[eidx].childCount := nEmitted;
+      dbgTypes[eidx].totalBits  := TotalBitsOf(t);
     END;
-    RETURN dbgTypes[entry].metaIdx;
+    RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildStructType;
 
 PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
-  VAR entry: INTEGER;
+  VAR eidx  : INTEGER;
       elt   := MSIR.FixedArrayElt(t);
       len   := MSIR.FixedArrayLen(t);
       lo    := MSIR.FixedArrayLo(t);
@@ -1867,14 +1972,14 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       END;
     END;
     IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
-    entry := dbgTypeN;  INC(dbgTypeN);
-    dbgTypes[entry].msirType      := t;
-    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
-    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
-    dbgTypes[entry].kind          := 1;  (* FixedArray *)
-    dbgTypes[entry].childBase     := dbgChildN;
-    eltRef := GetDbgTypeRef(elt, metaN);
-    dbgTypes[entry].baseTypeRef   := eltRef;
+    eidx := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[eidx].msirType      := t;
+    dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[eidx].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[eidx].kind          := 1;  (* FixedArray *)
+    eltRef := GetDbgTypeRef(elt, metaN);   (* BEFORE childBase: element-type sub-children *)
+    dbgTypes[eidx].baseTypeRef   := eltRef;  (* must not land in our [childBase..] range *)
+    dbgTypes[eidx].childBase     := dbgChildN;
     (* One DISubrange child: count = len, lowerBound in offset field. *)
     IF dbgChildN < MaxDbgChildren THEN
       dbgChildren[dbgChildN].kind    := 1;   (* subrange *)
@@ -1882,16 +1987,16 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       dbgChildren[dbgChildN].offset  := lo;  (* lower bound of index type *)
       dbgChildren[dbgChildN].metaIdx := metaN;
       INC(dbgChildN);  INC(metaN);
-      dbgTypes[entry].childCount := 1;
+      dbgTypes[eidx].childCount := 1;
     ELSE
-      dbgTypes[entry].childCount := 0;
+      dbgTypes[eidx].childCount := 0;
     END;
-    dbgTypes[entry].totalBits := TotalBitsOf(t);
-    RETURN dbgTypes[entry].metaIdx;
+    dbgTypes[eidx].totalBits := TotalBitsOf(t);
+    RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildFixedArrayType;
 
 PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
-  VAR entry: INTEGER;
+  VAR eidx  : INTEGER;
       n     := MSIR.EnumLabelCount(t);
       uid   := MSIR.TypeUID(t);
       nm    := MSIR.StructName(t);
@@ -1910,13 +2015,13 @@ PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       END;
     END;
     IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
-    entry := dbgTypeN;  INC(dbgTypeN);
-    dbgTypes[entry].msirType      := t;
-    dbgTypes[entry].metaIdx       := metaN;   INC(metaN);
-    dbgTypes[entry].elemsTupleIdx := metaN;   INC(metaN);
-    dbgTypes[entry].baseTypeRef   := -1;
-    dbgTypes[entry].kind          := 2;  (* Enum *)
-    dbgTypes[entry].childBase     := dbgChildN;
+    eidx := dbgTypeN;  INC(dbgTypeN);
+    dbgTypes[eidx].msirType      := t;
+    dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
+    dbgTypes[eidx].elemsTupleIdx := metaN;   INC(metaN);
+    dbgTypes[eidx].baseTypeRef   := -1;
+    dbgTypes[eidx].kind          := 2;  (* Enum *)
+    dbgTypes[eidx].childBase     := dbgChildN;
     VAR nEmitted := 0;
     BEGIN
       FOR i := 0 TO n - 1 DO
@@ -1928,10 +2033,10 @@ PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
           INC(dbgChildN);  INC(metaN);  INC(nEmitted);
         END;
       END;
-      dbgTypes[entry].childCount := nEmitted;
-      dbgTypes[entry].totalBits  := MSIR.BitWidth(t);
+      dbgTypes[eidx].childCount := nEmitted;
+      dbgTypes[eidx].totalBits  := MSIR.BitWidth(t);
     END;
-    RETURN dbgTypes[entry].metaIdx;
+    RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildEnumType;
 
 PROCEDURE SplitPath(path: TEXT;  VAR dir: TEXT;  VAR base: TEXT) =
@@ -2255,13 +2360,18 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
 
     (* Phase 4: composite type nodes — !DICompositeType + elements tuple + children. *)
     FOR k := 0 TO dbgTypeN - 1 DO
-      VAR e := dbgTypes[k];
+      VAR e  := dbgTypes[k];
+          nm : TEXT := NIL;
       BEGIN
+        IF dbgTypes[k].msirType # NIL THEN
+          nm := MSIR.StructName(dbgTypes[k].msirType);
+        END;
+        IF nm = NIL THEN nm := "" END;
         IF e.kind = 0 THEN
           (* Struct: DW_TAG_structure_type with per-field DIDerivedType children *)
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
             & " = !DICompositeType(tag: DW_TAG_structure_type"
-            & ", name: \""  & MSIR.StructName(e.msirType) & "\""
+            & ", name: \""  & nm & "\""
             & ", size: "    & Fmt.Int(e.totalBits)
             & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
           (* elements tuple *)
@@ -2274,10 +2384,12 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           (* member nodes *)
           FOR c := 0 TO e.childCount - 1 DO
             VAR ch := dbgChildren[e.childBase + c];
+                chName := ch.name;
             BEGIN
+              IF chName = NIL THEN chName := "" END;
               Wr.PutText(wr, "!" & Fmt.Int(ch.metaIdx)
                 & " = !DIDerivedType(tag: DW_TAG_member"
-                & ", name: \""  & ch.name & "\"");
+                & ", name: \""  & chName & "\"");
               IF ch.typeRef >= 0 THEN
                 Wr.PutText(wr, ", baseType: !" & Fmt.Int(ch.typeRef));
               END;
@@ -2316,7 +2428,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           (* Enum: DW_TAG_enumeration_type with DIEnumerator children *)
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
             & " = !DICompositeType(tag: DW_TAG_enumeration_type"
-            & ", name: \""    & MSIR.StructName(e.msirType) & "\""
+            & ", name: \""    & nm & "\""
             & ", size: "      & Fmt.Int(e.totalBits)
             & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
           Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
@@ -2588,6 +2700,16 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
     EmitParamTypeList(wr, p);
     Wr.PutText(wr, "\n");
   END EmitDeclare;
+
+PROCEDURE EmitDeclareFromSeq(wr: Wr.T;  seq: RefSeq.T;  i: INTEGER) =
+  (* Wrapper that isolates the implicit NARROW (REFANY → MSIR.Proc) from RefSeq.get
+     into its own procedure.  Two NARROWs in the same LLVM function produce duplicate
+     %narrow.chk SSA names; moving one to a callee avoids the collision until the
+     permanent fix (unique names in Narrow.m3) is compiled into cm3. *)
+  VAR p: MSIR.Proc := seq.get(i);
+  BEGIN
+    EmitDeclare(wr, p);
+  END EmitDeclareFromSeq;
 
 (*----------------------------------------------- TypeCell / ObjectTypeCell emission *)
 
@@ -2988,16 +3110,28 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
    MSIR_InitTypeLinks is a harness helper: for each TypeLink that has a matching
    TypeDesc (same uid and kind prefix), stores the TypeCell address into defn. *)
 PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
+  (* Interface units do not emit MSIR_InitTypeLinks — the implementation unit
+     owns the TypeDesc registration for shared types.  Each implementation unit
+     emits @MSIR_InitTypeLinks_<Mod>_M3 and registers it via @llvm.global_ctors
+     so the linker merges all modules' initializers without symbol conflicts. *)
   VAR
-    nLinks := MSIR.ModuleTypeLinkCount(m);
-    nDescs := MSIR.ModuleTypeDescCount(m);
+    nLinks   := MSIR.ModuleTypeLinkCount(m);
+    nDescs   := MSIR.ModuleTypeDescCount(m);
+    isIface  := MSIR.ModuleIsInterface(m);
+    initName := "MSIR_InitTypeLinks_" & MSIR.ModuleName(m) & "_M3";
   BEGIN
+    IF isIface THEN RETURN END;   (* interface units carry no init function *)
+
     IF nLinks = 0 THEN
-      (* Emit a no-op MSIR_InitTypeLinks so the harness always links. *)
-      Wr.PutText(wr, "\ndefine void @MSIR_InitTypeLinks() {\n");
+      (* No-op init — registered via ctors so link-time symbol is unique. *)
+      Wr.PutText(wr, "\ndefine void @" & initName & "() {\n");
       Wr.PutText(wr, "entry:\n");
       Wr.PutText(wr, "  ret void\n");
       Wr.PutText(wr, "}\n");
+      Wr.PutText(wr, "@llvm.global_ctors = appending global"
+                     & " [1 x { i32, ptr, ptr }] ["
+                     & " { i32, ptr, ptr } { i32 65535, ptr @" & initName & ", ptr null }"
+                     & " ]\n");
       RETURN;
     END;
 
@@ -3027,13 +3161,11 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
 
-    (* Emit MSIR_InitTypeLinks: for each TypeLink, if a TypeDesc with
-       matching uid and kind exists, store the TypeCell address into defn.
-       Also assign sequential harness typecodes (starting from 1) to each
-       TypeCell — real typecodes are assigned by RTLinker at startup. *)
-    Wr.PutText(wr, "\ndefine void @MSIR_InitTypeLinks() {\n");
+    (* Emit per-module init: assign typecodes + store TypeCell addresses into defn.
+       Each module emits a uniquely named function registered via @llvm.global_ctors. *)
+    Wr.PutText(wr, "\ndefine void @" & initName & "() {\n");
     Wr.PutText(wr, "entry:\n");
-    (* Assign sequential typecodes to all TypeDescs (harness-only). *)
+    (* Assign sequential typecodes to all TypeDescs (harness-only fallback). *)
     VAR ip := "i" & Fmt.Int(Target.Integer.size);
     BEGIN
       FOR j := 0 TO nDescs - 1 DO
@@ -3079,6 +3211,10 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
     END;
     Wr.PutText(wr, "  ret void\n");
     Wr.PutText(wr, "}\n");
+    Wr.PutText(wr, "@llvm.global_ctors = appending global"
+                   & " [1 x { i32, ptr, ptr }] ["
+                   & " { i32, ptr, ptr } { i32 65535, ptr @" & initName & ", ptr null }"
+                   & " ]\n");
   END EmitTypeLinks;
 
 (*----------------------------------------------- gc_map emission *)
@@ -3203,7 +3339,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
     ip_t       := "i" & Fmt.Int(Target.Integer.size);   (* INTEGER type string *)
     ap_t       := "i" & Fmt.Int(Target.Address.size);   (* ADDRESS type string *)
-  VAR isInterface := MSIR.ModuleIsInterface(m);
+  VAR isInterface  := MSIR.ModuleIsInterface(m);
+      i3InImports  := FALSE;   (* TRUE if modName_I3 appears in import binders *)
   BEGIN
     IF isInterface THEN
       binderName := modName & "_I3";
@@ -3215,6 +3352,14 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
           bodyExists := TRUE;
         END;
       END;
+      (* Check whether a separate interface unit (_I3) is listed in the imports.
+         If so, that unit defines @<Mod>_I3; we only declare it here.
+         If not (standalone implementation), we must define it ourselves. *)
+      FOR k := 0 TO nImports - 1 DO
+        IF Text.Equal(MSIR.ModuleImportBinder(m, k), modName & "_I3") THEN
+          i3InImports := TRUE;
+        END;
+      END;
     END;
 
     (* Emit RT0.ImportInfo chain — one record per imported module binder.
@@ -3223,11 +3368,17 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
        referenced without a preceding declare (which would conflict).
        All other binders are external and need explicit declare statements. *)
     IF nImports > 0 THEN
-      (* Define the interface binder for this module before the ImportInfo globals. *)
-      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
-      Wr.PutText(wr, "entry:\n");
-      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
-      Wr.PutText(wr, "}\n");
+      (* Define @<Mod>_I3 if: (a) this IS the interface unit, or
+         (b) this is a standalone implementation with no separate interface.
+         Declare only when a separate _I3 unit exists and will define it. *)
+      IF isInterface OR NOT i3InImports THEN
+        Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+        Wr.PutText(wr, "entry:\n");
+        Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+        Wr.PutText(wr, "}\n");
+      ELSE
+        Wr.PutText(wr, "\ndeclare ptr @" & modName & "_I3(" & ip_t & ")\n");
+      END;
 
       Wr.PutText(wr, "\n; RT0.ImportInfo chain for " & modName & "\n");
       (* Declare external binders (skip modName_I3 which we just defined). *)
@@ -3290,8 +3441,13 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     END;
     Wr.PutText(wr, " }\n");
 
-    (* Emit global initializer — one CASE arm per RT0.ModuleInfo field. *)
-    Wr.PutText(wr, infoName & " = global %RT0_ModuleInfo_t {\n");
+    (* Emit global initializer — one CASE arm per RT0.ModuleInfo field.
+       Interface units use internal linkage to avoid conflicts with the
+       implementation unit's exported module info (mirrors C-mode 'static'). *)
+    IF isInterface
+      THEN Wr.PutText(wr, infoName & " = internal global %RT0_ModuleInfo_t {\n");
+      ELSE Wr.PutText(wr, infoName & " = global %RT0_ModuleInfo_t {\n");
+    END;
     FOR k := 0 TO nFields - 1 DO
       CASE k OF
       | MI_file           => fieldType := "ptr"; fieldVal := "null";           fieldName := "file";
@@ -3401,14 +3557,17 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
       END;
     END;
 
-    (* Interface binder @<Mod>_I3 — only needed when no imports section
-       emitted it already (that section defines it first to avoid declare
-       conflicts).  For modules with no imports, emit it here. *)
+    (* Interface binder @<Mod>_I3.  Define it when this is the interface unit or
+       a standalone implementation; declare it when a separate interface exists. *)
     IF nImports = 0 THEN
-      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
-      Wr.PutText(wr, "entry:\n");
-      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
-      Wr.PutText(wr, "}\n");
+      IF isInterface OR NOT i3InImports THEN
+        Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+        Wr.PutText(wr, "entry:\n");
+        Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+        Wr.PutText(wr, "}\n");
+      ELSE
+        Wr.PutText(wr, "\ndeclare ptr @" & modName & "_I3(" & ip_t & ")\n");
+      END;
     END;
 
     (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI.
@@ -3471,6 +3630,22 @@ PROCEDURE ModuleHasGcOps(m: MSIR.Module): BOOLEAN =
     END;
     RETURN FALSE;
   END ModuleHasGcOps;
+
+PROCEDURE EmitOneTCEntry (wr: Wr.T;  ent: TCEntry) =
+  (* Helper: emit one TYPECASE type table global.  Isolated so that all
+     gc.loads of ent.uids stay in this proc's MSIR scope and do not leak
+     pendingContainer into Module, avoiding a dominance violation on the
+     subsequent pendingTC := NIL gc.store in Module. *)
+  VAR n := NUMBER(ent.uids^);
+  BEGIN
+    Wr.PutText(wr, ent.name & " = internal global [" & Fmt.Int(n));
+    Wr.PutText(wr, " x { ptr, i64 }] [");
+    FOR k := 0 TO n - 1 DO
+      IF k > 0 THEN Wr.PutText(wr, ", ") END;
+      Wr.PutText(wr, "{ ptr, i64 } { ptr null, i64 " & Fmt.Int(ent.uids[k]) & " }");
+    END;
+    Wr.PutText(wr, "]\n");
+  END EmitOneTCEntry;
 
 PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
   VAR
@@ -3562,7 +3737,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     IF externs.size() > 0 THEN
       Wr.PutText(wr, "\n");
       FOR i := 0 TO externs.size() - 1 DO
-        EmitDeclare(wr, externs.get(i));
+        EmitDeclareFromSeq(wr, externs, i);
       END;
     END;
 
@@ -3619,18 +3794,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
                                    "RTHooks__ScanTypecase")
                      & "(ptr, ptr)\n");
       FOR ti := 0 TO pendingTC.size() - 1 DO
-        VAR ent := NARROW(pendingTC.get(ti), TCEntry);
-            n   := NUMBER(ent.uids^);
-        BEGIN
-          Wr.PutText(wr, ent.name & " = internal global [" & Fmt.Int(n));
-          Wr.PutText(wr, " x { ptr, i64 }] [");
-          FOR k := 0 TO n - 1 DO
-            IF k > 0 THEN Wr.PutText(wr, ", ") END;
-            (* Each element needs the struct type prefix in LLVM array literals. *)
-            Wr.PutText(wr, "{ ptr, i64 } { ptr null, i64 " & Fmt.Int(ent.uids[k]) & " }");
-          END;
-          Wr.PutText(wr, "]\n");
-        END;
+        EmitOneTCEntry(wr, NARROW(pendingTC.get(ti), TCEntry));
       END;
       pendingTC := NIL;
     END;

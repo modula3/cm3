@@ -98,6 +98,7 @@ proc configure_c_compiler() is
   SYSTEM_CC = "g++ -g -fPIC"
   SYSTEM_CC = SYSTEM_CC & " -Wall"
   SYSTEM_CC = SYSTEM_CC & " -Werror"
+  SYSTEM_CC = SYSTEM_CC & " -Wno-error=invalid-noreturn"
   SYSTEM_CC = SYSTEM_CC & " -Wno-return-type"
   SYSTEM_CC = SYSTEM_CC & " -Wno-missing-braces"
   %SYSTEM_CC = SYSTEM_CC & " -Wextra"

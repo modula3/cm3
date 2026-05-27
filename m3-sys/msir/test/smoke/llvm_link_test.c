@@ -187,11 +187,6 @@ extern M3Int  Main__TestTypecaseVar(void *r);
 extern M3Int  Main__gCounter;
 extern M3Int  Main__gBase;
 
-/* Initialise TypeLink defn pointers so allocator hooks get real TypeCells.
-   This is a harness-only helper emitted by MSIRToLLVM — in production,
-   RTLinker.ResolveTypeLinks walks MI_type_cell_ptrs instead. */
-extern void MSIR_InitTypeLinks(void);
-
 /* ---- test harness ---- */
 
 static int failures = 0;
@@ -227,8 +222,8 @@ static void check_double(const char *name, double got, double expected) {
 }
 
 int main(void) {
-    /* Resolve TypeLink defn pointers before any allocator calls. */
-    MSIR_InitTypeLinks();
+    /* TypeLink defn pointers are now resolved via @llvm.global_ctors before
+       main() — MSIR_InitTypeLinks_Main_M3 runs automatically at startup. */
 
     /* arithmetic */
     check_int("Add(2,3)",         Main__Add(2, 3),         5);
@@ -447,7 +442,6 @@ int main(void) {
     /* REF FixedArray deref-copy: r^ := src; copy := r^; return copy[idx]
        src is READONLY FixedIntArr — passed as ptr in C (decayed array). */
     extern M3Int Main__RefFixedArrCopy(M3Int *arr, M3Int idx);
-    MSIR_InitTypeLinks();
     { M3Int arr[4] = {10, 20, 30, 40};
       check_int("RefFixedArrCopy({10,20,30,40},0)", Main__RefFixedArrCopy(arr, 0), 10);
       check_int("RefFixedArrCopy({10,20,30,40},3)", Main__RefFixedArrCopy(arr, 3), 40); }

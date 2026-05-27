@@ -8,7 +8,14 @@
 
 INTERFACE Tracer;
 
-TYPE T = BRANDED "Tracer.T" OBJECT next: T METHODS apply () END;
+TYPE T = BRANDED "Tracer.T" OBJECT next: T
+           METHODS
+             apply ();                         (* CG code-gen callback *)
+             msir_apply () := NoOpMSIR;        (* MSIR code-gen callback, default no-op *)
+           END;
+
+PROCEDURE NoOpMSIR (self: T);
+(* default no-op for msir_apply; exported so subclasses may re-use it *)
 
 PROCEDURE Schedule (t: T);
 (* schedule 't' to be called during the next 'EmitPending' *)
@@ -18,7 +25,10 @@ PROCEDURE Pop (t: T);
 (* delimits the region of code that's to be traced by 't'. *)
 
 PROCEDURE EmitPending ();
-(* generate all pending trace calls *)
+(* generate all pending CG trace calls *)
+
+PROCEDURE EmitPendingMSIR ();
+(* generate all pending MSIR trace calls (mirrors EmitPending for the MSIR pass) *)
 
 PROCEDURE Reset ();
 

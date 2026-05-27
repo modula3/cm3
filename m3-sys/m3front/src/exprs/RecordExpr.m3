@@ -14,6 +14,7 @@ IMPORT M3, M3ID, CG, Error, Type, RecordType, Module, Target;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
 IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT IntegerExpr, EnumExpr, TInt;
 
 TYPE
   Info = RECORD
@@ -763,6 +764,69 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF msirT = NIL THEN RETURN NIL END;
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirT, slot);
   END CompileMSIR;
+
+PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
+(* Try to extract a compile-time constant MSIR value from a field expression.
+   Only handles integer and enum constants (safe: no instruction emission).
+   Returns NIL for float or other field types. *)
+  VAR
+    folded : Expr.T;
+    ti     : Target.Int;
+    tt     : Type.T;
+    intV   : INTEGER;
+  BEGIN
+    folded := Expr.ConstValue(fieldExpr);
+    IF folded = NIL THEN RETURN NIL END;
+    IF IntegerExpr.Split(folded, ti, tt) THEN
+      IF NOT TInt.ToInt(ti, intV) THEN RETURN NIL END;
+      IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
+      RETURN MSIR.ConstInt(ft, intV);
+    END;
+    IF EnumExpr.Split(folded, ti, tt) THEN
+      IF NOT TInt.ToInt(ti, intV) THEN RETURN NIL END;
+      IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
+      RETURN MSIR.ConstInt(ft, intV);
+    END;
+    RETURN NIL;
+  END TryConstFieldMSIR;
+
+PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
+  VAR
+    p     : P;
+    msirT : MSIR.T;
+    nf    : INTEGER;
+    fields: REF ARRAY OF MSIR.Value;
+    fv    : MSIR.Value;
+    ft    : MSIR.T;
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN FALSE;
+    | P(x) => p := x;
+    ELSE      RETURN FALSE;
+    END;
+    IF NOT p.is_const THEN RETURN FALSE END;
+    IF p.map = NIL    THEN RETURN FALSE END;
+    msirT := MSIRType.Translate(p.tipe);
+    IF msirT = NIL OR MSIR.Kind(msirT) # MSIR.TypeKind.Struct THEN
+      RETURN FALSE;
+    END;
+    nf := NUMBER(p.map^);
+    IF nf # MSIR.StructFieldCount(msirT) THEN RETURN FALSE END;
+    fields := NEW(REF ARRAY OF MSIR.Value, nf);
+    FOR i := 0 TO nf - 1 DO
+      IF p.map^[i].expr = NIL THEN
+        ft := MSIR.StructField(msirT, i).type;
+        fields[i] := MSIR.ConstZero(ft);
+      ELSE
+        ft := MSIR.StructField(msirT, i).type;
+        fv := TryConstFieldMSIR(p.map^[i].expr, ft);
+        IF fv = NIL THEN RETURN FALSE END;
+        fields[i] := fv;
+      END;
+    END;
+    v := MSIR.ConstStruct(msirT, fields^);
+    RETURN TRUE;
+  END TryCompileConstMSIR;
 
 BEGIN
 END RecordExpr.
