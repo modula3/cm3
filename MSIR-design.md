@@ -39,6 +39,7 @@ NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
 open-array equality, struct-by-value return,
 BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers),
 sub-byte packed-element array subscript (ExtractBitFieldDyn/InsertBitFieldDyn),
+packed integer subrange return widening (ZExt/SExt in ReturnStmt.CompileMSIR),
 LONGINT elimination (msir/src + m3front/src/msir — all INTEGER now).
 
 ## Terminology: what "structured" means here
@@ -905,7 +906,7 @@ remaining minor gaps are listed below; they do not affect any test in the suite.
 | `m3-sys/m3front/src/exprs/SubscriptExpr.m3` | `LValueMSIR` with try-first rvalue base |
 | `m3-sys/msir/test/smoke/Main.m3` | Comprehensive smoke test |
 | `m3-sys/msir/test/smoke/llvm_link_test.c` | 181-check C harness |
-| `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ runtime stubs |
+| `m3-sys/msir/test/smoke/raise_stub.cpp` | C++ runtime stubs: `RTHooks__Raise`, allocation helpers, and import-chain binder stubs (`Main_I3`, `Thread_I3`, `Fmt_I3`, `IO_I3`, `Text_I3`) that satisfy linker without pulling in `libm3core` |
 | `m3-sys/msir/test/run-llvm-link-test.sh` | End-to-end driver |
 
 ### Declaration Lifecycle
@@ -952,6 +953,22 @@ GcRef captures always pass by pointer (conservative GC stack-scan requirement).
 
 **NIL**: always `ConstNil(TPtr(TVoid()))`.  Call sites coerce to destination
 type (`AssignStmt`, `ReturnStmt`, `EqualExpr`).
+
+**Packed integer return widening**: when a procedure's declared return type is
+a wider integer (e.g. `INTEGER` → i64) but the expression produces a narrower
+packed subrange type (e.g. `BITS 8 FOR [0..255]` → i8), `ReturnStmt.CompileMSIR`
+emits a ZExt or SExt before the `ret`.  Sign is determined by `Type.GetBounds`:
+ZExt if lower bound ≥ 0, SExt if lower bound < 0.  Same-width casts (`zext i8
+to i8`) are suppressed in `MSIR.BuildZExt/BuildSExt/BuildTrunc` — source value
+returned unchanged when `BitWidth(src) = BitWidth(dst)`.
+
+**MSIRObj / DoNothing guard in `Module.EmitBody`**: the CG path inside
+`EmitBody` (specifically `Stmt.Compile(t.block)`) is guarded by
+`IF x.cg_proc # NIL`.  When `M3CG_DoNothing` is the active backend,
+`Declare_procedure` returns `NIL`; calling CG procedures like `Declare_temp`
+on a DoNothing backend also returns NIL, which triggers `<* ASSERT dopeTempVar # NIL *>`
+in `Formal.m3`.  The guard avoids the CG path entirely in MSIRObj mode, where
+`Stmt.CompileMSIR` handles the body instead.
 
 **ByteArrayFallback / BITS-N-FOR-T packed fields**: any record or array
 whose fields or elements are not byte-aligned is represented as `[N x i1]`
