@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs) |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 287/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 1 TIMEOUT) |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -39,7 +39,8 @@ NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
 open-array equality, struct-by-value return,
 BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers),
 sub-byte packed-element array subscript (ExtractBitFieldDyn/InsertBitFieldDyn),
-packed integer subrange return widening (ZExt/SExt in ReturnStmt.CompileMSIR),
+packed integer subrange return widening (ZExt/SExt/Trunc in ReturnStmt.CompileMSIR),
+compact subrange coercion in global/local init stores and ICmp/FOR loop contexts,
 LONGINT elimination (msir/src + m3front/src/msir — all INTEGER now).
 
 ## Terminology: what "structured" means here
@@ -954,13 +955,36 @@ GcRef captures always pass by pointer (conservative GC stack-scan requirement).
 **NIL**: always `ConstNil(TPtr(TVoid()))`.  Call sites coerce to destination
 type (`AssignStmt`, `ReturnStmt`, `EqualExpr`).
 
-**Packed integer return widening**: when a procedure's declared return type is
-a wider integer (e.g. `INTEGER` → i64) but the expression produces a narrower
-packed subrange type (e.g. `BITS 8 FOR [0..255]` → i8), `ReturnStmt.CompileMSIR`
-emits a ZExt or SExt before the `ret`.  Sign is determined by `Type.GetBounds`:
-ZExt if lower bound ≥ 0, SExt if lower bound < 0.  Same-width casts (`zext i8
-to i8`) are suppressed in `MSIR.BuildZExt/BuildSExt/BuildTrunc` — source value
-returned unchanged when `BitWidth(src) = BitWidth(dst)`.
+**Packed integer return widening/narrowing**: when a procedure's declared return
+type differs in width from the expression's MSIR type, `ReturnStmt.CompileMSIR`
+coerces before the `ret`:
+- Narrower expression → wider result: ZExt (if lower bound ≥ 0) or SExt (< 0),
+  determined by `Type.GetBounds` on the expression's M3 type.
+- Wider expression → narrower result (e.g. `INTEGER` i64 returned into
+  `[-1..+1]` i8): Trunc.
+Same-width casts are suppressed in `MSIR.BuildZExt/SExt/Trunc`.
+
+**Compact subrange coercion at store sites**: any `MSIR.BuildStore` that writes
+a compact subrange value (e.g. i8 from `foo=[0..255]`) into a wider slot (e.g.
+i64) must explicitly coerce.  Three sites require this:
+- `Variable.UserInit` global init path (lines ~1142–1165): `initVal` from
+  `Expr.CompileMSIR(initExpr)` may be narrower than the global slot type; Trunc
+  or ZExt to `MSIR.EltType(MSIR.ValueType(addr))` before `BuildStore`.
+- `Variable.UserInit` local init path (lines ~1121–1133): same coercion for
+  local variables with constant initializers (e.g. `VS4: S4 := 16_FFFFFFFF`
+  where S4=[16_FFFFFFFF..16_FFFFFFFF] → i32 slot, literal is i64).
+- `ForStmt.CompileMSIR`: the FROM and LIMIT expressions of a FOR loop whose
+  bounds are compact subrange variables (e.g. `x, y: [0..255]` stored as i8)
+  must be widened (ZExt/SExt) to the loop variable's INTEGER-width (i64) type
+  before storing into the loop counter and limit allocas.
+
+**ICmp operand widening in `CompareExpr.CompileMSIR`**: M3 integer comparison
+operands must have equal MSIR types.  Compact subrange operands (i8) compared
+with INTEGER (i64) — e.g. `i * i <= Big` where `i: [1..100]` — cause
+`icmp sle i8 X, i64 100`, which is invalid LLVM IR.  The fix: after compiling
+both operands, if `BitWidth(lv) ≠ BitWidth(rv)`, widen the narrower to the
+wider's type using `WidenICmpOp` (a module-level helper).  Use ZExt for unsigned
+(W8..W64) types, SExt for signed (I1..I64) types.
 
 **MSIRObj / DoNothing guard in `Module.EmitBody`**: the CG path inside
 `EmitBody` (specifically `Stmt.Compile(t.block)`) is guarded by
