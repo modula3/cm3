@@ -770,29 +770,32 @@ PROCEDURE GenBody (p: T) =
     END;
     Scope.Enter (p.syms);
 
-    Marker.PushProcedure (tresult, p.result, cconv);
-    Marker.AllocReturnTemp ();
-      StartRaises (p, l, frame);
-        Scope.InitValues (p.syms);
-        Scanner.offset := BlockStmt.BodyOffset (p.block);
-        Coverage.CountProcedure (p);
-        Jmpbufs.CompileProcAllocateJmpbufs (p.jmpbufs);
-        oc := Stmt.Compile (p.block);
-        fallThru := (Stmt.Outcome.FallThrough IN oc);
-      EndRaises (p, l, frame, fallThru);
-      IF (fallThru) THEN
-        CG.Gen_location (p.end_origin);
-        IF (tresult = NIL) THEN
-          Marker.EmitReturn (NIL, fromFinally := FALSE);
-        ELSE
-          Error.WarnID (1, p.name, "function may not return a value");
-          IF Host.doReturnChk THEN
-            CG.Abort (CG.RuntimeError.NoReturnValue);
-            oc := oc - Stmt.Outcomes {Stmt.Outcome.FallThrough};
+    (* CG path: skip when cg_proc=NIL (M3CG_DoNothing / MSIRObj mode) *)
+    IF p.cg_proc # NIL THEN
+      Marker.PushProcedure (tresult, p.result, cconv);
+      Marker.AllocReturnTemp ();
+        StartRaises (p, l, frame);
+          Scope.InitValues (p.syms);
+          Scanner.offset := BlockStmt.BodyOffset (p.block);
+          Coverage.CountProcedure (p);
+          Jmpbufs.CompileProcAllocateJmpbufs (p.jmpbufs);
+          oc := Stmt.Compile (p.block);
+          fallThru := (Stmt.Outcome.FallThrough IN oc);
+        EndRaises (p, l, frame, fallThru);
+        IF (fallThru) THEN
+          CG.Gen_location (p.end_origin);
+          IF (tresult = NIL) THEN
+            Marker.EmitReturn (NIL, fromFinally := FALSE);
+          ELSE
+            Error.WarnID (1, p.name, "function may not return a value");
+            IF Host.doReturnChk THEN
+              CG.Abort (CG.RuntimeError.NoReturnValue);
+              oc := oc - Stmt.Outcomes {Stmt.Outcome.FallThrough};
+            END;
           END;
         END;
-      END;
-    Marker.Pop ();
+      Marker.Pop ();
+    END;
     Scope.Exit (p.syms);
 
     IF NOT msirSkip AND MSIRBuilder.InProc () THEN

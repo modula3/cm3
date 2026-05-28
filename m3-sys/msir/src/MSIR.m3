@@ -169,11 +169,14 @@ PROCEDURE TSubrange(parent: T;  lo, hi: INTEGER): T =
   END TSubrange;
 
 PROCEDURE TLandingPad(): T =
+  VAR t := NewType(TypeKind.Struct);
+      fs := NEW(REF ARRAY OF Field, 2);
   BEGIN
-    RETURN TStruct("lpad_t", ARRAY OF Field{
-      Field{name := "excobj", type := TPtr(TVoid())},
-      Field{name := "sel",    type := TI(32)}
-    });
+    fs[0].name := "excobj"; fs[0].type := TPtr(TVoid()); fs[0].offset := 0;
+    fs[1].name := "sel";    fs[1].type := TI(32);        fs[1].offset := 0;
+    t.structName := "lpad_t";
+    t.fields     := fs;
+    RETURN t;
   END TLandingPad;
 
 PROCEDURE TSet(elt: T;  lo, hi: INTEGER): T =
@@ -443,7 +446,9 @@ PROCEDURE ConstZero(t: T): Value =
       TypeKind.IWide,
       TypeKind.W8, TypeKind.W16,
       TypeKind.W32, TypeKind.W64        => RETURN ConstInt(t, 0);
-    | TypeKind.Ptr, TypeKind.GcRef       => RETURN ConstNil(t);
+    | TypeKind.Enum                      => RETURN ConstInt(t, 0);
+    | TypeKind.Ptr, TypeKind.GcRef,
+      TypeKind.GcSlot                   => RETURN ConstNil(t);
     | TypeKind.F32                       => RETURN ConstFloat(t, TFloat.ZeroR);
     | TypeKind.F64                       => RETURN ConstFloat(t, TFloat.ZeroL);
     ELSE                                   RETURN NIL;
@@ -453,10 +458,21 @@ PROCEDURE ConstZero(t: T): Value =
 PROCEDURE RetypeValue(v: Value;  t: T): Value =
   VAR w := NEW(Value);
   BEGIN
-    w.type  := t;
-    w.name  := v.name;
-    w.vKind := v.vKind;
-    w.insn  := v.insn;
+    w.type        := t;
+    w.name        := v.name;
+    w.vKind       := v.vKind;
+    w.intVal      := v.intVal;
+    (* floatVal intentionally omitted: RetypeValue is never called on ConstFloat values *)
+    w.proc        := v.proc;
+    w.paramIdx    := v.paramIdx;
+    w.block       := v.block;
+    w.bparamIdx   := v.bparamIdx;
+    w.insn        := v.insn;
+    w.textUid     := v.textUid;
+    w.textChars   := v.textChars;
+    w.textCnt     := v.textCnt;
+    w.structOff   := v.structOff;
+    w.constFields := v.constFields;
     RETURN w;
   END RetypeValue;
 
@@ -916,7 +932,12 @@ PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value) =
 PROCEDURE GlobalValue(g: Global): Value         = BEGIN RETURN g.refValue   END GlobalValue;
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global) =
-  BEGIN m.globals.addhi(g) END ModuleAddGlobal;
+  BEGIN
+    FOR i := 0 TO m.globals.size() - 1 DO
+      IF m.globals.get(i) = g THEN RETURN END;
+    END;
+    m.globals.addhi(g)
+  END ModuleAddGlobal;
 PROCEDURE ModuleGlobalCount(m: Module): INTEGER =
   BEGIN RETURN m.globals.size() END ModuleGlobalCount;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global =
@@ -967,7 +988,7 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
   BEGIN
     (* Initialise on first call: start right after MI_SIZE *)
     IF m.nextGlobalOff = 0 THEN
-      m.nextGlobalOff := MI_nFields * Target.Address.bytes;
+      m.nextGlobalOff := MI_nFields * Target.AddressBytes();
     END;
     (* Round up to alignment *)
     off := m.nextGlobalOff;
@@ -981,7 +1002,7 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
   BEGIN
     IF m.nextGlobalOff = 0 THEN
-      RETURN MI_nFields * Target.Address.bytes;
+      RETURN MI_nFields * Target.AddressBytes();
     END;
     RETURN m.nextGlobalOff;
   END ModuleGlobalStructSize;
@@ -1086,7 +1107,7 @@ PROCEDURE TypeDescMethodBytes(d: TypeDesc): INTEGER =
   BEGIN
     IF d.methodBytes >= 0 THEN RETURN d.methodBytes END;
     IF d.methods = NIL THEN RETURN 0 END;
-    RETURN NUMBER(d.methods^) * Target.Address.bytes;
+    RETURN NUMBER(d.methods^) * Target.AddressBytes();
   END TypeDescMethodBytes;
 PROCEDURE TypeDescMethodCount(d: TypeDesc): INTEGER =
   BEGIN
@@ -1272,7 +1293,10 @@ PROCEDURE freshName(p: Proc): TEXT =
 
 PROCEDURE finalName(b: Block;  name: TEXT): TEXT =
   BEGIN
-    IF Text.Length(name) = 0 THEN RETURN freshName(b.proc) END;
+    IF Text.Length(name) = 0 THEN
+      IF b = NIL OR b.proc = NIL THEN RETURN "%anon" END;
+      RETURN freshName(b.proc)
+    END;
     IF Text.GetChar(name, 0) = '%' THEN RETURN name END;
     RETURN "%" & name;
   END finalName;
@@ -1559,6 +1583,8 @@ PROCEDURE BuildStore(b: Block; value: Value; addr: Value) =
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
   BEGIN
+    <* ASSERT value # NIL *>
+    <* ASSERT addr  # NIL *>
     i.op := Op.Store;
     ops[0] := value; ops[1] := addr;
     i.operands := ops;
@@ -2052,7 +2078,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
-    dimVal := ConstInt(TI(Target.Integer.size), dim);
+    dimVal := ConstInt(TI(Target.IntegerSize()), dim);
   BEGIN
     <* ASSERT Kind(oa.type) = TypeKind.OpenArray,
        "BuildOpenArraySize: operand must be openarray" *>
@@ -2062,7 +2088,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
     ops[0] := oa;
     ops[1] := dimVal;
     i.operands := ops;
-    i.result := makeResult(b, TI(Target.Integer.size), name, i);
+    i.result := makeResult(b, TI(Target.IntegerSize()), name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildOpenArraySize;

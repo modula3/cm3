@@ -87,6 +87,20 @@ PROCEDURE MinMSIR (ce: CallExpr.T): MSIR.Value =
     IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (ce.args[1]);
     IF b = NIL THEN RETURN NIL END;
+    (* Widen the narrower operand so both have the same type. *)
+    IF NOT isFloat THEN
+      VAR aBits := MSIR.BitWidth (MSIR.ValueType (a));
+          bBits := MSIR.BitWidth (MSIR.ValueType (b));
+          blk   := MSIRBuilder.CurrentBlock ();
+      BEGIN
+        IF aBits > 0 AND bBits > 0 AND aBits # bBits THEN
+          IF aBits < bBits
+            THEN a := MSIR.BuildZExt (blk, "", a, MSIR.ValueType (b))
+            ELSE b := MSIR.BuildZExt (blk, "", b, MSIR.ValueType (a))
+          END
+        END
+      END
+    END;
     mt       := MSIR.ValueType (a);
     slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", mt);
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), a, slot);

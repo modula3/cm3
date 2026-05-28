@@ -2436,6 +2436,7 @@ BEGIN
   FOR i := 0 TO p.eltCt - 1 DO
     IF p.args = NIL OR i > LAST (p.args^) THEN
       elemVal := MSIR.ConstZero (eltT);
+      IF elemVal = NIL THEN RETURN NIL END;
     ELSE
       elemVal := Expr.CompileMSIR (p.args^[i]);
       IF elemVal = NIL THEN RETURN NIL END;

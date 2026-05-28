@@ -517,8 +517,10 @@ PROCEDURE CheckEnvelope(c: Ctx;  e: MSIR.Envelope;  resultT: MSIR.T) =
 PROCEDURE VerifyProc(p: MSIR.Proc): REF ARRAY OF TEXT =
   VAR
     c := NEW(Ctx);
-    resultT := MSIR.ProcResultType(p);
+    resultT: MSIR.T;
   BEGIN
+    IF p = NIL THEN RETURN NIL END;
+    resultT := MSIR.ProcResultType(p);
     c.errors := NEW(RefSeq.T).init();
     c.procName := MSIR.ProcName(p);
     IF MSIR.ProcItemCount(p) = 0 THEN

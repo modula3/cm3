@@ -108,6 +108,19 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       delta := Expr.CompileMSIR (ce.args[1]);
       IF delta = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();  (* delta may have emitted an invoke *)
+      (* Widen delta to match destination type (e.g. IByte arg to INTEGER INC) *)
+      IF MSIR.Kind (mt) # MSIR.TypeKind.Ptr THEN
+        VAR mtBits := MSIR.BitWidth (mt);
+            dBits  := MSIR.BitWidth (MSIR.ValueType (delta));
+        BEGIN
+          IF mtBits > 0 AND dBits > 0 AND mtBits # dBits THEN
+            IF dBits < mtBits
+              THEN delta := MSIR.BuildZExt (blk, "", delta, mt)
+              ELSE delta := MSIR.BuildTrunc (blk, "", delta, mt)
+            END
+          END
+        END
+      END;
     ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
       delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1);
     ELSE

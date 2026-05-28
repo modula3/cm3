@@ -10,7 +10,7 @@ MODULE DivExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, TInt, Target;
 IMPORT TargetMap;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   P = ExprRep.Tab BRANDED "DivExpr.P" OBJECT
@@ -155,8 +155,17 @@ PROCEDURE SmallPowerOfTwo (READONLY x: Target.Int;  VAR log: INTEGER): BOOLEAN=
     RETURN FALSE;
   END SmallPowerOfTwo;
 
+PROCEDURE CoerceToMSIR (blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T): MSIR.Value =
+  VAR vb := MSIR.BitWidth (MSIR.ValueType (v));
+      rb := MSIR.BitWidth (rt);
+  BEGIN
+    IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
+    IF vb < rb THEN RETURN MSIR.BuildZExt (blk, "", v, rt) END;
+    RETURN MSIR.BuildTrunc (blk, "", v, rt);
+  END CoerceToMSIR;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR a, b: MSIR.Value;
+  VAR a, b: MSIR.Value;  blk: MSIR.Block;
   BEGIN
     IF (p.type # Int.T) AND (p.type # LInt.T) THEN
       MSIRBuilder.Abandon ("non-integer DIV");
@@ -164,7 +173,14 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildIDiv (MSIRBuilder.CurrentBlock (), "", a, b);
+    blk := MSIRBuilder.CurrentBlock ();
+    VAR rt := MSIRType.Translate (p.type);
+    BEGIN
+      IF rt = NIL THEN rt := MSIR.ValueType (a) END;
+      a := CoerceToMSIR (blk, a, rt);
+      b := CoerceToMSIR (blk, b, rt);
+      RETURN MSIR.BuildIDiv (blk, "", a, b);
+    END;
   END CompileMSIR;
 
 BEGIN

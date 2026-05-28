@@ -278,6 +278,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
     IF mt = NIL THEN RETURN END;
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
+    IF MSIR.ModuleIsInterface(m) THEN RETURN END;
     infoName  := MSIR.ModuleName(m) & "_M3_info";
     IF t.indirect THEN
       (* Large global (size > Max_zero_global): the module info struct holds
@@ -327,7 +328,13 @@ PROCEDURE RegisterExternMSIR (t: T) =
     isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
                  OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
     eltType  := mt;
-    IF isTraced THEN eltType := MSIR.EltType(mt) END;
+    IF isTraced THEN
+      (* GC reference: the storage slot is a pointer.  Use TPtr(void) so the
+         LLVM external global declaration gets type "ptr" rather than "void".
+         LLVM does not allow global variables or loads of type void. *)
+      eltType := MSIR.TPtr(MSIR.TVoid());
+      isTraced := FALSE;
+    END;
     g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                         eltType, isTraced, isExternal:=TRUE);
     MSIRBuilder.GlobalMapAdd(t, g, m);
@@ -742,6 +749,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
     ELSIF (t.global) THEN
       <*ASSERT t.allocated*>
       CG.Declare_global_field (t.name, t.offset, size, typeUID, FALSE);
+      DeclareGlobalMSIR(t);
       IF (t.initZero) THEN t.initDone := TRUE END;
       t.cg_align := align;
       IF (t.indirect) THEN

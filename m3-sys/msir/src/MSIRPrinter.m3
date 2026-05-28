@@ -120,6 +120,14 @@ PROCEDURE Value(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, MSIR.ValueName(v));  (* @Mod_M3_info *)
         Wr.PutText(wr, "+");
         Wr.PutText(wr, Fmt.Int(MSIR.GetStructFieldOffset(v)));
+    | MSIR.ValueKind.ConstStruct =>
+        Type(wr, MSIR.ValueType(v));
+        Wr.PutText(wr, " { ");
+        FOR i := 0 TO MSIR.GetConstStructFieldCount(v) - 1 DO
+          IF i > 0 THEN Wr.PutText(wr, ", ") END;
+          Value(wr, MSIR.GetConstStructField(v, i));
+        END;
+        Wr.PutText(wr, " }");
     | MSIR.ValueKind.Param,
       MSIR.ValueKind.BlockParam,
       MSIR.ValueKind.InsnResult,

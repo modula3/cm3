@@ -146,12 +146,6 @@ PROCEDURE EndUnit() =
       END;
     END;
 
-    errs := MSIRVerifier.VerifyModule(curModule);
-    IF errs # NIL THEN
-      FOR i := 0 TO LAST(errs^) DO
-        Wr.PutText(Stdio.stderr, "msir-verify: " & errs[i] & "\n");
-      END;
-    END;
     path := MSIR.ModuleName(curModule) & ".msir";
     TRY
       wr := FileWr.Open(path);
@@ -159,6 +153,12 @@ PROCEDURE EndUnit() =
       Wr.Close(wr);
     EXCEPT
       OSError.E => (* best-effort *)
+    END;
+    errs := MSIRVerifier.VerifyModule(curModule);
+    IF errs # NIL THEN
+      FOR i := 0 TO LAST(errs^) DO
+        Wr.PutText(Stdio.stderr, "msir-verify: " & errs[i] & "\n");
+      END;
     END;
     IF llOutPath # NIL THEN
       path := llOutPath;

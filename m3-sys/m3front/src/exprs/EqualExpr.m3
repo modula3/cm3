@@ -1241,6 +1241,20 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             NOT MSIR.Equal (MSIR.ValueType (rv), MSIR.ValueType (lv)) THEN
         rv := MSIR.RetypeValue (rv, MSIR.ValueType (lv));
       END;
+      (* Widen narrow integer operand to the wider type before comparison.
+         E.g. IByte subscript (i8) compared with INTEGER variable (i64). *)
+      BEGIN
+        VAR lvBits := MSIR.BitWidth (MSIR.ValueType (lv));
+            rvBits := MSIR.BitWidth (MSIR.ValueType (rv));
+        BEGIN
+          IF lvBits > 0 AND rvBits > 0 AND lvBits # rvBits THEN
+            IF lvBits < rvBits
+              THEN lv := MSIR.BuildZExt (blk, "", lv, MSIR.ValueType (rv))
+              ELSE rv := MSIR.BuildZExt (blk, "", rv, MSIR.ValueType (lv))
+            END;
+          END;
+        END;
+      END;
       CASE p.op OF
       | Op.EQ => pred := MSIR.CmpPred.Eq;
       | Op.NE => pred := MSIR.CmpPred.Ne;

@@ -7,7 +7,7 @@ IMPORT Expr, ArrayExpr, ArrayType, RecordExpr;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
 
-CONST MaxVarMap    = 64;
+CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 CONST MaxExitStack = 16;
 CONST MaxTryDepth  = 16;
 CONST MaxCatchDepth = 16;
@@ -1632,9 +1632,18 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
     IF ae = NIL THEN
       Abandon("ConstArray: not an array constructor");  RETURN NIL;
     END;
-    n := ArrayExpr.EltCount(ae);
-    IF NOT ArrayType.Split(Expr.TypeOf(constExpr), indexT, eltT) THEN
-      Abandon("ConstArray: not an array type");  RETURN NIL;
+    (* EltCount returns only the number of explicit elements in the constructor
+       (e.g. 2 for Int{10, 0, ..}).  The total array size comes from the type.
+       Use the type-derived count to handle '..' (repeat-last) constructors. *)
+    VAR nExplicit := ArrayExpr.EltCount(ae);  nTotal: INTEGER;
+    BEGIN
+      IF NOT ArrayType.Split(Expr.TypeOf(constExpr), indexT, eltT) THEN
+        Abandon("ConstArray: not an array type");  RETURN NIL;
+      END;
+      IF NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
+        nTotal := nExplicit;
+      END;
+      n := nTotal;
     END;
     eltMsir := MSIRType.Translate(eltT);
     IF eltMsir = NIL THEN
@@ -1642,7 +1651,11 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
     END;
     elts := NEW(REF ARRAY OF MSIR.Value, n);
     FOR i := 0 TO n - 1 DO
-      VAR elt := ArrayExpr.Elt(ae, i);  cv: MSIR.Value; BEGIN
+      (* For elements beyond the explicit args, repeat the last explicit value
+         ('..' constructor).  MIN ensures we never go past the args array. *)
+      VAR eltIdx := MIN(i, ArrayExpr.EltCount(ae) - 1);
+          elt := ArrayExpr.Elt(ae, eltIdx);  cv: MSIR.Value;
+      BEGIN
         (* Try to build a compile-time constant struct (avoids emitting function-local
            alloca/store/load sequences that are invalid in global constant initializers). *)
         IF RecordExpr.TryCompileConstMSIR(elt, cv) THEN
@@ -1650,6 +1663,28 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
         ELSE
           elts[i] := Expr.CompileMSIR(elt);
           IF elts[i] = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
+          (* Non-constant values (function-local alloca/load results) cannot
+             appear in a global constant array initializer — abandon and let
+             the caller fall back to CG. *)
+          CASE MSIR.GetValueKind(elts[i]) OF
+          | MSIR.ValueKind.ConstInt, MSIR.ValueKind.ConstFloat,
+            MSIR.ValueKind.ConstNil, MSIR.ValueKind.ConstProc,
+            MSIR.ValueKind.ConstTextLit, MSIR.ValueKind.ConstStruct,
+            MSIR.ValueKind.GlobalRef, MSIR.ValueKind.StructFieldRef => (* OK *)
+          ELSE
+            Abandon("ConstArray: element has non-constant value — cannot emit global");
+            RETURN NIL;
+          END;
+        END;
+        (* Coerce integer constants to the declared element type.
+           E.g. IntegerExpr produces TI(64) for literal 10 even when the array
+           element type is IByte = TI(8).  Re-create as a same-value ConstInt
+           with the target element type so the LLVM array initializer is typed
+           consistently.  Only safe for ConstInt values (other constant kinds
+           already carry the correct type). *)
+        IF MSIR.GetValueKind(elts[i]) = MSIR.ValueKind.ConstInt AND
+           NOT MSIR.Equal(MSIR.ValueType(elts[i]), eltMsir) THEN
+          elts[i] := MSIR.ConstInt(eltMsir, MSIR.GetIntVal(elts[i]));
         END;
       END;
     END;
@@ -1687,6 +1722,9 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
                               fieldType: MSIR.T;  needsLoad: BOOLEAN := FALSE;
                               dataType: MSIR.T := NIL) =
   BEGIN
+    FOR i := 0 TO globalMapN - 1 DO
+      IF globalMap[i].key = v THEN RETURN END;
+    END;
     IF globalMapN >= MaxGlobalMap THEN RETURN END;
     (* Patch the global with struct field info and a StructFieldRef value. *)
     MSIR.GlobalSetStructField(g, byteOff,
@@ -1701,7 +1739,10 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
 
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T) =
   BEGIN
-    IF varMapN >= MaxVarMap THEN RETURN END;
+    IF varMapN >= MaxVarMap THEN
+      Abandon("VarMapAdd: overflow — increase MaxVarMap");
+      RETURN;
+    END;
     varMap[varMapN].key      := v;
     varMap[varMapN].val      := val;
     varMap[varMapN].elemType := elt;

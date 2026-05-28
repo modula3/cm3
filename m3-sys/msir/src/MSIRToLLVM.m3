@@ -207,7 +207,7 @@ PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
     | MSIR.TypeKind.OpenArray =>
         Wr.PutText(wr, "{ ptr");
         FOR k := 0 TO MSIR.OpenArrayRank(t) - 1 DO
-          Wr.PutText(wr, ", i" & Fmt.Int(Target.Integer.size));
+          Wr.PutText(wr, ", i" & Fmt.Int(Target.IntegerSize()));
         END;
         Wr.PutText(wr, " }");
     | MSIR.TypeKind.HeapArray =>
@@ -311,11 +311,11 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, LLSymbol(MSIR.GetConstProc(v)));
     | MSIR.ValueKind.ConstTextLit =>
         (* Emit as a constant-expression GEP: no separate instruction needed. *)
-        VAR ap := "i" & Fmt.Int(Target.Address.size);
+        VAR ap := "i" & Fmt.Int(Target.AddressSize());
         BEGIN
           Wr.PutText(wr, "getelementptr inbounds (i8, ptr @textlit_");
           Wr.PutText(wr, Fmt.Int(MSIR.GetTextLitUID(v)));
-          Wr.PutText(wr, ", " & ap & " " & Fmt.Int(Target.Address.bytes) & ")");
+          Wr.PutText(wr, ", " & ap & " " & Fmt.Int(Target.AddressBytes()) & ")");
         END;
     | MSIR.ValueKind.GlobalRef =>
         Wr.PutText(wr, "@");
@@ -333,7 +333,7 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         END;
     | MSIR.ValueKind.StructFieldRef =>
         (* getelementptr inbounds (i8, ptr @Mod_M3_info, i{AP} N) *)
-        VAR ap := "i" & Fmt.Int(Target.Address.size);
+        VAR ap := "i" & Fmt.Int(Target.AddressSize());
         BEGIN
           Wr.PutText(wr, "getelementptr inbounds (i8, ptr ");
           Wr.PutText(wr, MSIR.ValueName(v));   (* "@Mod_M3_info" *)
@@ -394,12 +394,12 @@ PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
      gray-bit check:   skip if header gray bit is clear (object is clean)
      slow path:        call RTHooks__CheckLoadTracedRef(ref)
 
-   Header layout (RT0.RefHeader = Target.Address.bytes before object ptr):
+   Header layout (RT0.RefHeader = Target.AddressBytes() before object ptr):
      bit RH_gray_offset = gray bit (mask = 1 << RH_gray_offset) *)
 PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
   VAR
     n  : TEXT;
-    ap := "i" & Fmt.Int(Target.Address.size);
+    ap := "i" & Fmt.Int(Target.AddressSize());
   BEGIN
     INC(auxN);
     n := Fmt.Int(auxN);
@@ -418,7 +418,7 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
     Wr.PutText(wr, "gc.gray." & n & ":\n");
     Wr.PutText(wr, "  %__gc_hptr." & n
                    & " = getelementptr i8, ptr " & refName
-                   & ", " & ap & " -" & Fmt.Int(Target.Address.bytes) & "\n");
+                   & ", " & ap & " -" & Fmt.Int(Target.AddressBytes()) & "\n");
     Wr.PutText(wr, "  %__gc_hdr."  & n
                    & " = load " & ap & ", ptr %__gc_hptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_gb."   & n
@@ -448,7 +448,7 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
    The barrier marks the containing object and its page as dirty so the
    GC will re-scan the object's reference fields in the next sweep.
 
-   Fast path: read the header word (Target.Address.bytes before the object
+   Fast path: read the header word (Target.AddressBytes() before the object
    pointer); if the dirty bit (bit RH_dirty_offset, 1<<RH_dirty_offset)
    is already set, skip the slow-path call.
    Otherwise call RTHooks__CheckStoreTraced.
@@ -461,14 +461,14 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
 PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
   VAR
     n  : TEXT;
-    ap := "i" & Fmt.Int(Target.Address.size);
+    ap := "i" & Fmt.Int(Target.AddressSize());
   BEGIN
     INC(auxN);
     n := Fmt.Int(auxN);
     (* Read object header; skip barrier if already dirty. *)
     Wr.PutText(wr, "  %__gc_whptr." & n
                    & " = getelementptr i8, ptr " & containerName
-                   & ", " & ap & " -" & Fmt.Int(Target.Address.bytes) & "\n");
+                   & ", " & ap & " -" & Fmt.Int(Target.AddressBytes()) & "\n");
     Wr.PutText(wr, "  %__gc_whdr."  & n
                    & " = load " & ap & ", ptr %__gc_whptr." & n & "\n");
     Wr.PutText(wr, "  %__gc_wdb."   & n
@@ -665,8 +665,8 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
     op     := MSIR.InsnOp(i);
     res    := MSIR.InsnResult(i);
     nOps   := MSIR.InsnOperandCount(i);
-    ip     := "i" & Fmt.Int(Target.Integer.size);
-    ap     := "i" & Fmt.Int(Target.Address.size);
+    ip     := "i" & Fmt.Int(Target.IntegerSize());
+    ap     := "i" & Fmt.Int(Target.AddressSize());
     locIdx := InsnDbgLocIdx(i);    (* per-instruction !dbg index (Phase 3) *)
   BEGIN
     CASE op OF
@@ -1643,12 +1643,12 @@ PROCEDURE InsnDbgLocIdx(i: MSIR.Insn): INTEGER =
 PROCEDURE TotalBitsOf(t: MSIR.T): INTEGER =
   VAR bw := MSIR.BitWidth(t);
   BEGIN
-    IF t = NIL THEN RETURN Target.Address.size END;
+    IF t = NIL THEN RETURN Target.AddressSize() END;
     IF bw > 0 THEN RETURN bw END;
     CASE MSIR.Kind(t) OF
     | MSIR.TypeKind.I1 => RETURN 1;
     | MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
-        RETURN Target.Address.size;
+        RETURN Target.AddressSize();
     | MSIR.TypeKind.Struct =>
         VAR n := MSIR.StructFieldCount(t);  maxEnd := 0;
         BEGIN
@@ -1665,7 +1665,7 @@ PROCEDURE TotalBitsOf(t: MSIR.T): INTEGER =
         RETURN MSIR.FixedArrayLen(t) * TotalBitsOf(MSIR.FixedArrayElt(t));
     | MSIR.TypeKind.Object =>
         (* Walk the full super chain + own fields to find the last field end. *)
-        VAR maxEnd := Target.Address.size;  (* vtable ptr at offset 0 *)
+        VAR maxEnd := Target.AddressSize();  (* vtable ptr at offset 0 *)
             cur    := t;
         BEGIN
           WHILE cur # NIL DO
@@ -1680,7 +1680,7 @@ PROCEDURE TotalBitsOf(t: MSIR.T): INTEGER =
           END;
           RETURN maxEnd;
         END;
-    ELSE RETURN Target.Address.size;
+    ELSE RETURN Target.AddressSize();
     END;
   END TotalBitsOf;
 
@@ -1689,7 +1689,7 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
      dope vector { ptr data, i64 count0, i64 count1, ... }.
      Deduplication is by rank since the dope layout depends only on rank. *)
   VAR eidx     : INTEGER;
-      AP       := Target.Address.size;
+      AP       := Target.AddressSize();
       totalBits := (1 + rank) * AP;
       addrRef  := dbgBtBase + 8;   (* ADDRESS *)
       intRef   := dbgBtBase + 0;   (* INTEGER *)
@@ -1746,7 +1746,7 @@ PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
      Returns the metadata index of the DICompositeType node (kind=4).
      Deduplicates by MSIR.T pointer identity. *)
   VAR eidx     : INTEGER;
-      AP       := Target.Address.size;
+      AP       := Target.AddressSize();
       addrRef  := dbgBtBase + 8;  (* ADDRESS *)
       nEmitted : INTEGER;
       cur      : MSIR.T;
@@ -1851,7 +1851,7 @@ PROCEDURE GetOrBuildObjectPtrType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     dbgTypes[eidx].kind          := 5;  (* Object pointer *)
     dbgTypes[eidx].childBase     := 0;
     dbgTypes[eidx].childCount    := 0;
-    dbgTypes[eidx].totalBits     := Target.Address.size;
+    dbgTypes[eidx].totalBits     := Target.AddressSize();
     RETURN dbgTypes[eidx].metaIdx;
   END GetOrBuildObjectPtrType;
 
@@ -2448,7 +2448,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
         ELSIF e.kind = 3 THEN
           (* kind = 3: OpenArray dope-vector — DW_TAG_structure_type with
              {data: ADDRESS, count: INTEGER} or {data, count0, count1, ...} fields *)
-          VAR rank := e.totalBits DIV Target.Address.size - 1;
+          VAR rank := e.totalBits DIV Target.AddressSize() - 1;
           BEGIN
             Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
               & " = !DICompositeType(tag: DW_TAG_structure_type"
@@ -2506,7 +2506,7 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
             & " = !DIDerivedType(tag: DW_TAG_pointer_type"
             & ", baseType: !" & Fmt.Int(e.baseTypeRef)
-            & ", size: "      & Fmt.Int(Target.Address.size) & ")\n");
+            & ", size: "      & Fmt.Int(Target.AddressSize()) & ")\n");
         END;
       END;
     END;
@@ -2665,11 +2665,13 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
 
 (*----------------------------------------------------- global emission *)
 
-PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global) =
+PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
   VAR t := MSIR.GlobalType(g);
   BEGIN
-    (* Struct-embedded globals live in @Mod_M3_info, not as standalone globals. *)
-    IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN RETURN END;
+    IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
+      (* Struct-embedded: alias is emitted by the typed-alias loop; skip here. *)
+      RETURN;
+    END;
     Wr.PutText(wr, "@");
     IF MSIR.GlobalIsExternal(g) THEN
       Wr.PutText(wr, MSIR.GlobalName(g));
@@ -2721,8 +2723,8 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
      per-module registry the CG path uses (SetUID tracking). *)
   VAR
     GcHeader := Word.Shift(TEXT_typecode, RH_typecode_offset);
-    ip       := "i" & Fmt.Int(Target.Integer.size);
-    ap       := "i" & Fmt.Int(Target.Address.size);
+    ip       := "i" & Fmt.Int(Target.IntegerSize());
+    ap       := "i" & Fmt.Int(Target.AddressSize());
   VAR n := MSIR.ModuleTextLitCount(m);
   BEGIN
     IF n = 0 THEN RETURN END;
@@ -2911,8 +2913,8 @@ PROCEDURE RTFieldSize(fk: FieldKind): INTEGER =
     CASE fk OF
     | FieldKind.I8  => RETURN 1;
     | FieldKind.I64 => RETURN 8;
-    | FieldKind.IP  => RETURN Target.Integer.bytes;
-    | FieldKind.Ptr => RETURN Target.Address.bytes;
+    | FieldKind.IP  => RETURN Target.IntegerBytes();
+    | FieldKind.Ptr => RETURN Target.AddressBytes();
     END;
   END RTFieldSize;
 
@@ -2921,7 +2923,7 @@ PROCEDURE RTFieldLLType(fk: FieldKind): TEXT =
     CASE fk OF
     | FieldKind.I8  => RETURN "i8";
     | FieldKind.I64 => RETURN "i64";
-    | FieldKind.IP  => RETURN "i" & Fmt.Int(Target.Integer.size);
+    | FieldKind.IP  => RETURN "i" & Fmt.Int(Target.IntegerSize());
     | FieldKind.Ptr => RETURN "ptr";
     END;
   END RTFieldLLType;
@@ -2938,22 +2940,34 @@ PROCEDURE EmitRTStructTypeExt(wr: Wr.T; name: TEXT;
                                READONLY base: ARRAY OF FieldKind;
                                READONLY ext:  ARRAY OF FieldKind) =
   VAR off := 0; first := TRUE;
-  PROCEDURE One(fk: FieldKind) =
-    VAR sz := RTFieldSize(fk); pad := (-off) MOD sz;
-    BEGIN
-      IF pad > 0 THEN
-        IF NOT first THEN Wr.PutText(wr, ", ") END;
-        Wr.PutText(wr, "[" & Fmt.Int(pad) & " x i8]");
-        first := FALSE; INC(off, pad);
-      END;
-      IF NOT first THEN Wr.PutText(wr, ", ") END;
-      Wr.PutText(wr, RTFieldLLType(fk));
-      first := FALSE; INC(off, sz);
-    END One;
   BEGIN
     Wr.PutText(wr, "%" & name & " = type { ");
-    FOR i := 0 TO LAST(base) DO One(base[i]) END;
-    FOR i := 0 TO LAST(ext)  DO One(ext[i])  END;
+    FOR i := 0 TO LAST(base) DO
+      VAR fk := base[i]; sz := RTFieldSize(fk); pad := (-off) MOD sz;
+      BEGIN
+        IF pad > 0 THEN
+          IF NOT first THEN Wr.PutText(wr, ", ") END;
+          Wr.PutText(wr, "[" & Fmt.Int(pad) & " x i8]");
+          first := FALSE; INC(off, pad);
+        END;
+        IF NOT first THEN Wr.PutText(wr, ", ") END;
+        Wr.PutText(wr, RTFieldLLType(fk));
+        first := FALSE; INC(off, sz);
+      END;
+    END;
+    FOR i := 0 TO LAST(ext) DO
+      VAR fk := ext[i]; sz := RTFieldSize(fk); pad := (-off) MOD sz;
+      BEGIN
+        IF pad > 0 THEN
+          IF NOT first THEN Wr.PutText(wr, ", ") END;
+          Wr.PutText(wr, "[" & Fmt.Int(pad) & " x i8]");
+          first := FALSE; INC(off, pad);
+        END;
+        IF NOT first THEN Wr.PutText(wr, ", ") END;
+        Wr.PutText(wr, RTFieldLLType(fk));
+        first := FALSE; INC(off, sz);
+      END;
+    END;
     Wr.PutText(wr, " }\n");
   END EmitRTStructTypeExt;
 
@@ -2972,21 +2986,35 @@ PROCEDURE EmitRTStructFieldsExt(wr: Wr.T;
                                  READONLY extKinds:  ARRAY OF FieldKind;
                                  READONLY extVals:   ARRAY OF TEXT) =
   VAR off := 0; first := TRUE;
-  PROCEDURE One(fk: FieldKind; val: TEXT) =
-    VAR sz := RTFieldSize(fk); pad := (-off) MOD sz;
-    BEGIN
-      IF pad > 0 THEN
-        IF NOT first THEN Wr.PutText(wr, ",\n") END;
-        Wr.PutText(wr, "  [" & Fmt.Int(pad) & " x i8] zeroinitializer");
-        first := FALSE; INC(off, pad);
-      END;
-      IF NOT first THEN Wr.PutText(wr, ",\n") END;
-      Wr.PutText(wr, "  " & RTFieldLLType(fk) & " " & val);
-      first := FALSE; INC(off, sz);
-    END One;
   BEGIN
-    FOR i := 0 TO LAST(baseKinds) DO One(baseKinds[i], baseVals[i]) END;
-    FOR i := 0 TO LAST(extKinds)  DO One(extKinds[i],  extVals[i])  END;
+    FOR i := 0 TO LAST(baseKinds) DO
+      VAR fk := baseKinds[i]; val := baseVals[i];
+          sz := RTFieldSize(fk); pad := (-off) MOD sz;
+      BEGIN
+        IF pad > 0 THEN
+          IF NOT first THEN Wr.PutText(wr, ",\n") END;
+          Wr.PutText(wr, "  [" & Fmt.Int(pad) & " x i8] zeroinitializer");
+          first := FALSE; INC(off, pad);
+        END;
+        IF NOT first THEN Wr.PutText(wr, ",\n") END;
+        Wr.PutText(wr, "  " & RTFieldLLType(fk) & " " & val);
+        first := FALSE; INC(off, sz);
+      END;
+    END;
+    FOR i := 0 TO LAST(extKinds) DO
+      VAR fk := extKinds[i]; val := extVals[i];
+          sz := RTFieldSize(fk); pad := (-off) MOD sz;
+      BEGIN
+        IF pad > 0 THEN
+          IF NOT first THEN Wr.PutText(wr, ",\n") END;
+          Wr.PutText(wr, "  [" & Fmt.Int(pad) & " x i8] zeroinitializer");
+          first := FALSE; INC(off, pad);
+        END;
+        IF NOT first THEN Wr.PutText(wr, ",\n") END;
+        Wr.PutText(wr, "  " & RTFieldLLType(fk) & " " & val);
+        first := FALSE; INC(off, sz);
+      END;
+    END;
     Wr.PutText(wr, "\n");
   END EmitRTStructFieldsExt;
 
@@ -3166,7 +3194,7 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
     Wr.PutText(wr, "\ndefine void @" & initName & "() {\n");
     Wr.PutText(wr, "entry:\n");
     (* Assign sequential typecodes to all TypeDescs (harness-only fallback). *)
-    VAR ip := "i" & Fmt.Int(Target.Integer.size);
+    VAR ip := "i" & Fmt.Int(Target.IntegerSize());
     BEGIN
       FOR j := 0 TO nDescs - 1 DO
         VAR d := MSIR.ModuleTypeDesc(m, j);
@@ -3219,39 +3247,40 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
 
 (*----------------------------------------------- gc_map emission *)
 
-(* Emit a TipeMap byte-array global for module global scanning.
-   Returns TRUE if any traced globals exist (and the global was emitted). *)
-PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
-                           modName: TEXT;  miBytes: INTEGER): BOOLEAN =
-  TYPE ByteArr = REF ARRAY OF INTEGER;
-  VAR bytes := NEW(ByteArr, 64);  n := 0;  cursor := 0;
+TYPE GcMapBytes = REF ARRAY OF INTEGER;
 
-  PROCEDURE AddByte(b: INTEGER) =
+PROCEDURE GcMapAddByte(VAR bytes: GcMapBytes; VAR n: INTEGER; b: INTEGER) =
   BEGIN
     IF n >= NUMBER(bytes^) THEN
-      VAR nb := NEW(ByteArr, 2 * NUMBER(bytes^));
+      VAR nb := NEW(GcMapBytes, 2 * NUMBER(bytes^));
       BEGIN SUBARRAY(nb^, 0, NUMBER(bytes^)) := bytes^; bytes := nb END;
     END;
     bytes[n] := b;  INC(n);
-  END AddByte;
+  END GcMapAddByte;
 
-  PROCEDURE SkipTo(target: INTEGER) =
+PROCEDURE GcMapSkipTo(VAR bytes: GcMapBytes; VAR n, cursor: INTEGER;
+                       target: INTEGER) =
   VAR delta := target - cursor;
   BEGIN
     WHILE delta > 0 DO
       IF delta <= 255 THEN
-        AddByte(42);  AddByte(delta);   (* SkipF_1 + 1-byte count *)
+        GcMapAddByte(bytes, n, 42);  GcMapAddByte(bytes, n, delta);
         INC(cursor, delta);  delta := 0;
       ELSE
-        AddByte(43);  (* SkipF_2 + 2-byte little-endian count *)
-        AddByte(Word.And(delta, 16_ff));
-        AddByte(Word.And(Word.RightShift(delta, 8), 16_ff));
+        GcMapAddByte(bytes, n, 43);
+        GcMapAddByte(bytes, n, Word.And(delta, 16_ff));
+        GcMapAddByte(bytes, n, Word.And(Word.RightShift(delta, 8), 16_ff));
         INC(cursor, delta);  delta := 0;
       END;
     END;
-  END SkipTo;
+  END GcMapSkipTo;
 
-  VAR nGlob := MSIR.ModuleGlobalCount(m);  hasTraced := FALSE;
+(* Emit a TipeMap byte-array global for module global scanning.
+   Returns TRUE if any traced globals exist (and the global was emitted). *)
+PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
+                           modName: TEXT;  miBytes: INTEGER): BOOLEAN =
+  VAR bytes: GcMapBytes := NEW(GcMapBytes, 64);  n := 0;  cursor := 0;
+      nGlob := MSIR.ModuleGlobalCount(m);  hasTraced := FALSE;
   BEGIN
     FOR i := 0 TO nGlob - 1 DO
       VAR g := MSIR.ModuleGlobal(m, i);
@@ -3265,7 +3294,7 @@ PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
     IF NOT hasTraced THEN RETURN FALSE END;
 
     (* Skip past standard ModuleInfo fields. *)
-    SkipTo(miBytes);
+    GcMapSkipTo(bytes, n, cursor, miBytes);
 
     (* Visit each traced struct-embedded global in allocation order. *)
     FOR i := 0 TO nGlob - 1 DO
@@ -3273,13 +3302,13 @@ PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
           off := MSIR.GlobalByteOffset(g);
       BEGIN
         IF off >= 0 AND NOT MSIR.GlobalIsExternal(g) AND MSIR.GlobalIsTraced(g) THEN
-          SkipTo(off);
-          AddByte(4);   (* Op.Ref: visit, advance cursor by address size *)
-          INC(cursor, Target.Address.bytes);
+          GcMapSkipTo(bytes, n, cursor, off);
+          GcMapAddByte(bytes, n, 4);   (* Op.Ref: visit, advance cursor by address size *)
+          INC(cursor, Target.AddressBytes());
         END;
       END;
     END;
-    AddByte(0);  (* Op.Stop *)
+    GcMapAddByte(bytes, n, 0);  (* Op.Stop *)
 
     Wr.PutText(wr, "@" & modName & "_M3_gc_map = internal constant ["
                    & Fmt.Int(n) & " x i8] c\"");
@@ -3329,7 +3358,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     infoName   := "@" & modName & "_M3_info";
     bodyName   := "@" & modName & "__" & modName & "_M3";
     bodyExists := FALSE;
-    ap         := Target.Address.bytes;   (* bytes per field slot *)
+    ap         := Target.AddressBytes();   (* bytes per field slot *)
     miBytes    := MSIR.MI_nFields * ap;   (* RT0.ModuleInfo total size in bytes *)
     nFields    := MSIR.MI_nFields;
     nImports   := MSIR.ModuleImportBinderCount(m);
@@ -3337,8 +3366,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     fieldType  : TEXT;
     fieldVal   : TEXT;
     gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
-    ip_t       := "i" & Fmt.Int(Target.Integer.size);   (* INTEGER type string *)
-    ap_t       := "i" & Fmt.Int(Target.Address.size);   (* ADDRESS type string *)
+    ip_t       := "i" & Fmt.Int(Target.IntegerSize());   (* INTEGER type string *)
+    ap_t       := "i" & Fmt.Int(Target.AddressSize());   (* ADDRESS type string *)
   VAR isInterface  := MSIR.ModuleIsInterface(m);
       i3InImports  := FALSE;   (* TRUE if modName_I3 appears in import binders *)
   BEGIN
@@ -3676,9 +3705,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
        is self-sufficient, avoiding dependence on the private/unexported copy
        in libm3core.dylib when the program links against the shared library. *)
     IF needsEH THEN
-      VAR isDarwin := (Target.System_name # NIL) AND
-                      (Text.Equal(Target.System_name, "ARM64_DARWIN") OR
-                       Text.Equal(Target.System_name, "AMD64_DARWIN"));
+      VAR isDarwin := (Target.GetSystemName() # NIL) AND
+                      (Text.Equal(Target.GetSystemName(), "ARM64_DARWIN") OR
+                       Text.Equal(Target.GetSystemName(), "AMD64_DARWIN"));
       BEGIN
         Wr.PutText(wr, "@_ZTVN10__cxxabiv117__class_type_infoE = external global [0 x ptr]\n");
         IF isDarwin THEN
@@ -3722,7 +3751,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
 
     (* globals *)
     FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
-      EmitGlobal(wr, MSIR.ModuleGlobal(m, i));
+      EmitGlobal(wr, MSIR.ModuleGlobal(m, i), m);
     END;
 
     (* collect extern callees and TextLiteral vtable method procs *)
