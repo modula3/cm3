@@ -469,9 +469,20 @@ PROCEDURE CompileMSIR (p: P) =
       RETURN;
     END;
 
-    (* Compile and store the initial value. *)
+    (* Compile and store the initial value, widening compact subrange → INTEGER. *)
     fromVal := Expr.CompileMSIR (p.from);
     IF fromVal = NIL THEN RETURN END;
+    VAR fromW := MSIR.BitWidth (MSIR.ValueType (fromVal));
+        dstW  := MSIR.BitWidth (msirType);
+    BEGIN
+      IF fromW > 0 AND dstW > 0 AND fromW < dstW THEN
+        IF MSIR.Kind (MSIR.ValueType (fromVal)) >= MSIR.TypeKind.W8 AND
+           MSIR.Kind (MSIR.ValueType (fromVal)) <= MSIR.TypeKind.W64
+          THEN fromVal := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", fromVal, msirType)
+          ELSE fromVal := MSIR.BuildSExt (MSIRBuilder.CurrentBlock (), "", fromVal, msirType)
+        END;
+      END;
+    END;
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), fromVal, varAddr);
 
     (* Compile non-constant step once and spill to an alloca. *)
@@ -483,9 +494,21 @@ PROCEDURE CompileMSIR (p: P) =
     END;
 
     (* Snapshot upper bound once before the loop — the body may modify the
-       variable the limit expression reads, which would break termination. *)
+       variable the limit expression reads, which would break termination.
+       Widen compact subrange limit to msirType (INTEGER). *)
     limitVal := Expr.CompileMSIR (p.limit);
     IF limitVal = NIL THEN RETURN END;
+    VAR limW := MSIR.BitWidth (MSIR.ValueType (limitVal));
+        lmDW := MSIR.BitWidth (msirType);
+    BEGIN
+      IF limW > 0 AND lmDW > 0 AND limW < lmDW THEN
+        IF MSIR.Kind (MSIR.ValueType (limitVal)) >= MSIR.TypeKind.W8 AND
+           MSIR.Kind (MSIR.ValueType (limitVal)) <= MSIR.TypeKind.W64
+          THEN limitVal := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", limitVal, msirType)
+          ELSE limitVal := MSIR.BuildSExt (MSIRBuilder.CurrentBlock (), "", limitVal, msirType)
+        END;
+      END;
+    END;
     limitSlot := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", msirType);
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), limitVal, limitSlot);
 

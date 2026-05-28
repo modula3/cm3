@@ -1126,7 +1126,19 @@ PROCEDURE UserInit (t: T) =
               IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
                 MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
               ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
-                MSIR.BuildStore (MSIRBuilder.CurrentBlock (), initVal, addr);
+                VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
+                    blk   := MSIRBuilder.CurrentBlock ();
+                    srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
+                    dstW  := MSIR.BitWidth (slotT);
+                BEGIN
+                  IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                    IF srcW > dstW
+                      THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
+                      ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
+                    END;
+                  END;
+                  MSIR.BuildStore (blk, initVal, addr);
+                END;
               END;
             END;
           END;
@@ -1147,7 +1159,19 @@ PROCEDURE UserInit (t: T) =
             addr    := MSIRBuilder.LookupVarAddr (t);
         BEGIN
           IF initVal # NIL AND addr # NIL THEN
-            MSIR.BuildStore (MSIRBuilder.CurrentBlock (), initVal, addr);
+            VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
+                blk   := MSIRBuilder.CurrentBlock ();
+                srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
+                dstW  := MSIR.BitWidth (slotT);
+            BEGIN
+              IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                IF srcW > dstW
+                  THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
+                  ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
+                END;
+              END;
+              MSIR.BuildStore (blk, initVal, addr);
+            END;
           END;
         END;
       END;

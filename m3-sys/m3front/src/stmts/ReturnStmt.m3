@@ -129,6 +129,14 @@ PROCEDURE CompileMSIR (p: P) =
                 ELSE v := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", v, resultT);
               END;
             END;
+          ELSIF MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.I1 AND
+                MSIR.Kind (MSIR.ValueType (v)) <= MSIR.TypeKind.W64 AND
+                MSIR.Kind (resultT) >= MSIR.TypeKind.I1 AND
+                MSIR.Kind (resultT) <= MSIR.TypeKind.W64 AND
+                MSIR.BitWidth (MSIR.ValueType (v)) > MSIR.BitWidth (resultT) THEN
+            (* INTEGER (i64) returned into a packed subrange result (e.g. [-1..+1] → i8).
+               Truncate to the narrower type. *)
+            v := MSIR.BuildTrunc (MSIRBuilder.CurrentBlock (), "", v, resultT);
           ELSE
             (* Unhandled type mismatch.  Array-copy with memcpy is not yet
                implemented for all cases (e.g. multi-rank open arrays). *)
