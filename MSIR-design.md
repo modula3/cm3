@@ -32,6 +32,7 @@ the rationale in the commit.
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
 | `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 287/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 1 TIMEOUT) |
+| `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
@@ -41,7 +42,11 @@ BITS-N-FOR-T bitfield read/write (ByteArrayFallback + shift/mask helpers),
 sub-byte packed-element array subscript (ExtractBitFieldDyn/InsertBitFieldDyn),
 packed integer subrange return widening (ZExt/SExt/Trunc in ReturnStmt.CompileMSIR),
 compact subrange coercion in global/local init stores and ICmp/FOR loop contexts,
-LONGINT elimination (msir/src + m3front/src/msir — all INTEGER now).
+LONGINT elimination (msir/src + m3front/src/msir — all INTEGER now),
+IByte-width type coercion in INC/DEC/MIN/MAX builtins,
+Enum/GcSlot zero constants and `..'` array constructor guard (ConstZero),
+global variable deduplication (GlobalMapAddStruct dedup + EmitGlobal alias dedup),
+non-constant ConstArray element guard (Abandon before emitting bad global init).
 
 ## Terminology: what "structured" means here
 
