@@ -165,17 +165,18 @@ PROCEDURE EndUnit() =
     ELSE
       path := MSIR.ModuleName(curModule) & ".ll";
     END;
-    VAR dbgPath: TEXT;
-    BEGIN
-      IF llOutPath = NIL THEN dbgPath := "NIL" ELSE dbgPath := llOutPath END;
-      Wr.PutText(Stdio.stderr, "MSIREmit.EndUnit llOutPath=" & dbgPath & " writing to: " & path & "\n");
-    END;
     TRY
       wr := FileWr.Open(path);
-      MSIRToLLVM.Module(wr, curModule);
+      MSIRToLLVM.Module(wr, curModule,
+        forRuntime := Target.BackendMode IN Target.BackendMSIRSet);
       Wr.Close(wr);
     EXCEPT
       OSError.E => (* best-effort *)
+    ELSE
+        (* MSIRToLLVM raised an unchecked exception (e.g. ASSERT failure).
+           Log to stderr and continue; the .ll file may be incomplete. *)
+        Wr.PutText(Stdio.stderr, "msir: MSIRToLLVM.Module crashed for "
+          & MSIR.ModuleName(curModule) & "\n");
     END;
     curModule  := NIL;
     llOutPath  := NIL;
