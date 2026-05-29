@@ -50,8 +50,8 @@ PROCEDURE BuildSum0ToN(m: MSIR.Module) =
     MSIR.ProcAddBlock(p, body);
     MSIR.ProcAddBlock(p, exit);
 
-    zero := MSIR.ConstInt(i64, 0L);
-    one  := MSIR.ConstInt(i64, 1L);
+    zero := MSIR.ConstInt(i64, 0);
+    one  := MSIR.ConstInt(i64, 1);
 
     MSIR.BuildBr(entry, loop, ARRAY OF MSIR.Value{zero, zero});
 
@@ -136,7 +136,7 @@ PROCEDURE BuildMaybeArea(m: MSIR.Module) =
                             ARRAY OF MSIR.Value{});
     MSIR.BuildRet(doDispatch, r);
 
-    zero := MSIR.ConstInt(i64, 0L);
+    zero := MSIR.ConstInt(i64, 0);
     MSIR.BuildRet(retZero, zero);
 
     MSIR.ModuleAddProc(m, p);
@@ -170,27 +170,36 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
                   MSIR.BlockParam{"n", i64}
                 });
 
-    v       : MSIR.Value;
-    n       : MSIR.Value;
-    negOne  := MSIR.ConstInt(i64, -1L);
-    negTwo  := MSIR.ConstInt(i64, -2L);
+    cont  := MSIR.NewBlock("cont", ARRAY OF MSIR.BlockParam{});
+    lp    := MSIR.NewBlock("lp",   ARRAY OF MSIR.BlockParam{});
+
+    v, n, lp_val, negOne, negTwo : MSIR.Value;
     env     : MSIR.Envelope;
   BEGIN
     MSIR.ProcSetRaises(lookup, ARRAY OF TEXT{"@NotFound", "@Bad"});
     MSIR.ModuleAddProc(m, lookup);
 
-    (* entry: br body — entering the try envelope *)
+    negOne := MSIR.ConstInt(i64, -1);
+    negTwo := MSIR.ConstInt(i64, -2);
+
+    (* entry: br body *)
     MSIR.BuildBr(entry, body, ARRAY OF MSIR.Value{});
 
-    (* body: %v = invoke @Lookup(key); unwind_to merge(%v) *)
-    v := MSIR.BuildInvoke(body, "v", lookup, ARRAY OF MSIR.Value{key});
-    MSIR.BuildUnwindTo(body, merge, ARRAY OF MSIR.Value{v});
+    (* body: %v = invoke @Lookup(key), normal->cont, unwind->lp *)
+    v := MSIR.BuildInvoke(body, "v", lookup, ARRAY OF MSIR.Value{key}, cont, lp);
 
-    (* h1 (NotFound): unwind_to merge(-1) *)
-    MSIR.BuildUnwindTo(h1, merge, ARRAY OF MSIR.Value{negOne});
+    (* cont (normal return): br merge(%v) *)
+    MSIR.BuildBr(cont, merge, ARRAY OF MSIR.Value{v});
 
-    (* h2 (Bad(msg)): unwind_to merge(-2) *)
-    MSIR.BuildUnwindTo(h2, merge, ARRAY OF MSIR.Value{negTwo});
+    (* lp (landing pad): re-raise *)
+    lp_val := MSIR.BuildLandingPad(lp, "lp", FALSE);
+    MSIR.BuildResume(lp, lp_val);
+
+    (* h1 (NotFound): br merge(-1) *)
+    MSIR.BuildBr(h1, merge, ARRAY OF MSIR.Value{negOne});
+
+    (* h2 (Bad(msg)): br merge(-2) *)
+    MSIR.BuildBr(h2, merge, ARRAY OF MSIR.Value{negTwo});
 
     (* merge: ret %n *)
     n := MSIR.BlockParamValue(merge, 0);
@@ -204,6 +213,10 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
 
     MSIR.ProcAddBlock(p, entry);
     MSIR.ProcAddEnvelope(p, env);
+    MSIR.ProcAddBlock(p, cont);
+    MSIR.ProcAddBlock(p, lp);
+    MSIR.ProcAddBlock(p, h1);
+    MSIR.ProcAddBlock(p, h2);
     MSIR.ProcAddBlock(p, merge);
 
     MSIR.ModuleAddProc(m, p);
@@ -250,8 +263,8 @@ PROCEDURE BuildOpenArraySum(m: MSIR.Module) =
     MSIR.ProcAddBlock(p, body);
     MSIR.ProcAddBlock(p, exit);
 
-    zero := MSIR.ConstInt(i64, 0L);
-    one  := MSIR.ConstInt(i64, 1L);
+    zero := MSIR.ConstInt(i64, 0);
+    one  := MSIR.ConstInt(i64, 1);
 
     (* entry: %n = openarray.size a, 0; br loop(0, 0) *)
     n := MSIR.BuildOpenArraySize(entry, "n", a, 0);
@@ -298,7 +311,7 @@ PROCEDURE BuildClamp(m: MSIR.Module) =
        END Clamp; *)
   VAR
     i64    := MSIR.TI(64);
-    pct    := MSIR.TSubrange(i64, 0L, 100L);
+    pct    := MSIR.TSubrange(i64, 0, 100);
 
     p := MSIR.NewProc(
         "@Clamp",
@@ -310,8 +323,8 @@ PROCEDURE BuildClamp(m: MSIR.Module) =
     lo, hi, narrowed : MSIR.Value;
   BEGIN
     MSIR.ProcAddBlock(p, entry);
-    lo := MSIR.ConstInt(i64,   0L);
-    hi := MSIR.ConstInt(i64, 100L);
+    lo := MSIR.ConstInt(i64,   0);
+    hi := MSIR.ConstInt(i64, 100);
     MSIR.BuildRangeCheck(entry, v, lo, hi);
     narrowed := MSIR.BuildConvert(entry, "p", v, pct);
     MSIR.BuildRet(entry, narrowed);
@@ -323,7 +336,7 @@ PROCEDURE BuildSetCombine(m: MSIR.Module) =
        BEGIN RETURN d IN (a * b) END Both; *)
   VAR
     i64     := MSIR.TI(64);
-    daySet  := MSIR.TSet(i64, 0L, 6L);
+    daySet  := MSIR.TSet(i64, 0, 6);
 
     p := MSIR.NewProc(
         "@Both",
@@ -390,10 +403,10 @@ PROCEDURE BuildDescribe(m: MSIR.Module) =
     catB     := MSIR.NewBlock("cat", ARRAY OF MSIR.BlockParam{});
     elseB    := MSIR.NewBlock("else_b", ARRAY OF MSIR.BlockParam{});
 
-    one  := MSIR.ConstInt(i64, 1L);
-    two  := MSIR.ConstInt(i64, 2L);
-    three := MSIR.ConstInt(i64, 3L);
-    zero := MSIR.ConstInt(i64, 0L);
+    one  := MSIR.ConstInt(i64, 1);
+    two  := MSIR.ConstInt(i64, 2);
+    three := MSIR.ConstInt(i64, 3);
+    zero := MSIR.ConstInt(i64, 0);
   BEGIN
     MSIR.ProcAddBlock(p, entry);
     MSIR.ProcAddBlock(p, puppyB);
@@ -401,13 +414,13 @@ PROCEDURE BuildDescribe(m: MSIR.Module) =
     MSIR.ProcAddBlock(p, catB);
     MSIR.ProcAddBlock(p, elseB);
 
-    MSIR.BuildTypecase(entry, a,
-        ARRAY OF MSIR.TypecaseClause {
-          MSIR.TypecaseClause{FALSE, puppy, puppyB},
-          MSIR.TypecaseClause{FALSE, dog,   dogB},
-          MSIR.TypecaseClause{FALSE, cat,   catB},
-          MSIR.TypecaseClause{TRUE,  NIL,   elseB}
-        });
+    VAR tc := NEW(REF ARRAY OF MSIR.TypecaseClause, 4); BEGIN
+      tc[0] := MSIR.TypecaseClause{FALSE, 1, puppy, puppyB};
+      tc[1] := MSIR.TypecaseClause{FALSE, 2, dog,   dogB};
+      tc[2] := MSIR.TypecaseClause{FALSE, 3, cat,   catB};
+      tc[3] := MSIR.TypecaseClause{TRUE,  0, NIL,   elseB};
+      MSIR.BuildTypecase(entry, a, tc);
+    END;
 
     MSIR.BuildRet(puppyB, one);
     MSIR.BuildRet(dogB,   two);
@@ -468,7 +481,7 @@ PROCEDURE BuildCounter(m: MSIR.Module) =
         ARRAY OF MSIR.Param{},
         i64);
     entry := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
-    one  := MSIR.ConstInt(i64, 1L);
+    one  := MSIR.ConstInt(i64, 1);
     cur, sum: MSIR.Value;
   BEGIN
     MSIR.ModuleAddGlobal(m, counter);

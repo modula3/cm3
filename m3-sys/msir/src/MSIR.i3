@@ -684,7 +684,7 @@ TYPE TypecaseClause = RECORD
 END;
 
 PROCEDURE BuildTypecase(b: Block;  value: Value;
-                        READONLY clauses: ARRAY OF TypecaseClause);
+                        clauses: REF ARRAY OF TypecaseClause);
 
 PROCEDURE InsnTypecaseClauseCount(i: Insn): INTEGER;
 PROCEDURE InsnTypecaseClause(i: Insn;  k: INTEGER): TypecaseClause;

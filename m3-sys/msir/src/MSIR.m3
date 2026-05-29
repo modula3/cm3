@@ -1891,23 +1891,20 @@ PROCEDURE BuildIstype(b: Block;  name: TEXT;
   END BuildIstype;
 
 PROCEDURE BuildTypecase(b: Block;  value: Value;
-                        READONLY clauses: ARRAY OF TypecaseClause) =
+                        clauses: REF ARRAY OF TypecaseClause) =
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 1);
-    n := NUMBER(clauses);
-    cs := NEW(REF ARRAY OF TypecaseClause, n);
     sawElse := FALSE;
   BEGIN
     i.op := Op.Typecase;
     ops[0] := value;
     i.operands := ops;
-    FOR k := 0 TO n - 1 DO
-      cs[k] := clauses[k];
+    FOR k := 0 TO LAST(clauses^) DO
       IF clauses[k].isElse THEN sawElse := TRUE END;
     END;
     <* ASSERT sawElse, "BuildTypecase: ELSE clause is mandatory" *>
-    i.typecaseClauses := cs;
+    i.typecaseClauses := clauses;
     addInsn(b, i);
   END BuildTypecase;
 

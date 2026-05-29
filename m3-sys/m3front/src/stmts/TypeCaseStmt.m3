@@ -447,7 +447,7 @@ PROCEDURE CompileMSIR (p: P) =
     END;
 
     (* Emit the typecase terminator on the current block. *)
-    MSIR.BuildTypecase (MSIRBuilder.CurrentBlock (), refVal, clauses^);
+    MSIR.BuildTypecase (MSIRBuilder.CurrentBlock (), refVal, clauses);
 
     (* Compile each case body. *)
     cIdx := 0;
