@@ -132,124 +132,83 @@ Items marked [done] are fixed on the msir branch.
   can straddle byte boundaries, requiring a 2-byte load or a dynamic branch.
   Deferred: extremely rare in practice.
 
-### 2. Activate MSIR via explicit M3_BACKEND_MODE
+### 2. Activate MSIR via explicit M3_BACKEND_MODE — **DONE**
 
-`M3_USE_STACK_WALKER` is the wrong discriminator: `ex_stack` works fine with
-the C backend (`M3_BACKEND_MODE = "C"`), and the backend choice should be
-explicit, not inferred from the EH model.
+**Complete as of 2026-05-30.**  All plumbing is committed on the `msir` branch.
 
-#### Pipeline comparison
+What was done:
+- `Target.i3`: `M3BackendMode_t` extended with `MSIRObj` ("11") and `MSIRAsm` ("12");
+  `BackendMSIRSet`, `BackendModeStrings`, and `BackendSet` updated accordingly.
+- `Builder.m3`: `CompileM3` plan block handles `MSIRObj`/`MSIRAsm` — sets
+  `llvmIRName`, `DoRunLlc`, etc.; `GetConfig` enforces `M3_USE_STACK_WALKER = TRUE`
+  when the mode is in `BackendMSIRSet`; `ResetEnv` calls `MSIREmit.SetLLOutPath`.
+- `MSIREmit.m3`: `IsEnabled` checks `Target.BackendMode IN Target.BackendMSIRSet`
+  in addition to the `@M3m3front-msir` RTParam; `SetLLOutPath` routes `.ll` output
+  to the builder-supplied path.
+- `cm3cfg.common`: `MSIRObj`/`MSIRAsm` included in the recognised backend-mode set.
+- `M3CG_DoNothing.m3`: no-op backend discards CG output in MSIR mode; no `.cpp`
+  file is opened.
 
-`StAloneLlvmAsm` (the closest existing mode, "10") runs:
+Pipeline (MSIRObj):
 ```
-.m3 → RunM3Front → CM3 IR (.mc)
-        → RunM3Llvm (external m3llvm binary) → LLVM IR (.ll)
-          → [RunLlvmOpt] → RunLlcBack (llc) → .s → RunAsm → .o
-```
-
-MSIR bypasses M3CG and m3llvm entirely — m3front emits `.ll` directly:
-```
-.m3 → RunM3Front (MSIR emission active) → LLVM IR (.ll)
-        → [RunLlvmOpt] → RunLlcBack (clang/llc) → .o
-```
-
-Two new enum values sit naturally after the `StAloneLlvm` pair:
-
-| Value | String | Pipeline |
-|---|---|---|
-| `MSIRObj` ("11") | `"MSIRObj"` | m3front → `.ll` → clang → `.o` |
-| `MSIRAsm` ("12") | `"MSIRAsm"` | m3front → `.ll` → clang → `.s` → `.o` |
-
-#### Files to change
-
-**`m3-sys/m3middle/src/Target.i3`**
-
-Add to `M3BackendMode_t` (after `StAloneLlvmAsm`):
-```modula3
-MSIRObj,   (* "11" — m3front emits LLVM IR; call compile_llvm → object *)
-MSIRAsm    (* "12" — m3front emits LLVM IR; call compile_llvm → asm → object *)
-```
-Add strings `"MSIRObj"`, `"MSIRAsm"` to `BackendModeStrings`.
-Add `BackendMSIRSet = SET OF M3BackendMode_t { MT.MSIRObj, MT.MSIRAsm }`.
-
-**`m3-sys/cm3/src/Builder.m3`** — `CompileM3` plan block
-
-Add two new cases alongside the `StAloneLlvm` ones:
-```modula3
-| Mode_t.MSIRObj =>
-    llvmIRName     := LlvmIRNameForUnit(u);
-    llvmIROptName  := LlvmIROptNameForUnit(u);
-    cm3OutName     := llvmIRName;   (* m3front writes .ll here *)
-    codeGenOutName := u.object;
-    DoRunLlc       := TRUE;
-    (* DoRunM3llvm = FALSE — no m3llvm step; MSIR emission IS the translator *)
-| Mode_t.MSIRAsm =>
-    llvmIRName     := LlvmIRNameForUnit(u);
-    llvmIROptName  := LlvmIROptNameForUnit(u);
-    cm3OutName     := llvmIRName;
-    codeGenOutName := AsmNameForUnit(u);
-    DoWriteAsm     := TRUE;
-    DoRunLlc       := TRUE;
-    DoRunAsm       := NOT boot;
-    asmName        := codeGenOutName;
+.m3 → RunM3Front (MSIR emission → <Module>.ll) → RunLlcBack (llc) → <Module>.o
 ```
 
-Add `BackendMSIRSet` to the parallel-backend label and to the `CompileOne`
-dispatch (alongside `BackendStAloneLlvmSet` — both use `CompileM3llvm` for
-`UK.IC`/`UK.MC` units, since in MSIR mode that path is a no-op / not reached).
+What remains for full activation: flip `M3_BACKEND_MODE = "MSIRObj"` in the
+**installed** config (`~/cm3/bin/config/ARM64_DARWIN`) and rebuild the full
+stack (see §2a Self-hosting below).  The source-tree config
+(`m3-sys/cminstall/src/config/ARM64_DARWIN`) still ships with `"C"` so
+bootstrap tarballs built from HEAD continue to work.
 
-**`m3-sys/m3front/src/msir/MSIREmit.m3`** — activation and output path
+Constraint: MSIR requires `ex_stack` — `M3_BACKEND_MODE = "MSIRObj"` without
+`M3_USE_STACK_WALKER = TRUE` is a fatal configuration error caught at build startup.
 
-`IsEnabled` currently checks only `RTParams.IsPresent("m3front-msir")`.  Add:
-```modula3
-enabled := RTParams.IsPresent("m3front-msir")
-        OR (Target.BackendMode IN Target.BackendMSIRSet);
+### 2a. Self-hosting
+
+The decisive next milestone: compile the full compiler stack in MSIRObj mode
+and verify that the resulting `cm3` binary passes the test suite.
+
+**Why this matters**: p0/p1/p2 cover the language well in isolation but the
+compiler itself is a much larger Modula-3 program — it uses generic modules,
+deep object hierarchies, wide exception handling, and complex control flow that
+the test suite does not exercise at the same scale.  A self-hosted binary is
+the production-readiness proof.
+
+**How to attempt it**:
+
+```sh
+# 1. Enable MSIRObj in the installed config
+#    Edit ~/cm3/bin/config/ARM64_DARWIN:
+#      M3_BACKEND_MODE = "MSIRObj"   (uncomment; comment out "C" line)
+
+# 2. Make sure llc is on PATH
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+
+# 3. Rebuild the full compiler stack
+scripts/concierge.py upgrade      # m3core → libm3 → m3middle → … → cm3
+# Or just the front-end packages:
+./scripts/do-cm3-front.sh buildglobal
+
+# 4. Install and sign
+cp m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3
+codesign -s - ~/cm3/bin/cm3
+
+# 5. Run the test suite
+cd m3-sys/m3tests && ~/cm3/bin/cm3 -DHTML
 ```
 
-Output path: currently `EndUnit` writes to `MSIR.ModuleName(curModule) & ".ll"`
-in the working directory.  For the integrated mode the builder expects the file
-at `LlvmIRNameForUnit(u)` (the path it set as `cm3OutName`).  Bridge via a new
-module-level variable:
-```modula3
-VAR llOutPath: TEXT := NIL;
-PROCEDURE SetLLOutPath(path: TEXT) = BEGIN llOutPath := path END SetLLOutPath;
-```
-Builder calls `MSIREmit.SetLLOutPath(llvmIRName)` in `ResetEnv` when the mode
-is in `BackendMSIRSet`; `EndUnit` writes to `llOutPath` when non-NIL, else the
-current default `<ModuleName>.ll`.  Export `SetLLOutPath` from `MSIREmit.i3`.
+**What to watch for**:
+- New MSIR abandons in compiler packages (m3front, m3back, m3middle, cm3, m3quake).
+  These are the gaps that self-hosting will flush out.
+- Linker errors due to stale `.o` files.  Do a full `cm3 -clean` in each package
+  before the MSIRObj build.
+- EH mode mismatches (duplicate d/D `_*_M3_info` symbols from leftover C-mode
+  objects).  Check with `nm ~/cm3/bin/cm3 | grep "_M3_info" | grep " d "`.
+- `MaxProcMap` overflow in large modules (see §6).
 
-**M3CG null backend**: In MSIR mode `Pass0_InitCodeGenerator` still opens an
-`M3CG.T` (m3front calls CG ops unconditionally).  Use the existing
-`M3CG_DoNothing.T` no-op backend; it discards all CG output and never opens
-a file.  `M3Backend.Open` already returns `M3CG_DoNothing.New()` when
-`object = NIL`; set `cm3OutName := NIL` for the M3CG side so no C file is
-opened.  (The `.ll` is written directly by `MSIREmit`, not via M3CG.)
-
-**`m3-sys/cm3/src/Builder.m3`** — validation
-
-In `GetConfig` (where `M3_BACKEND_MODE` is read), after setting
-`s.m3backend_mode`, add:
-```modula3
-IF s.m3backend_mode IN Target.BackendMSIRSet THEN
-  IF GetDefn(s, "M3_USE_STACK_WALKER") = NIL THEN
-    ConfigErr(s, "M3_BACKEND_MODE", "MSIRObj/MSIRAsm requires M3_USE_STACK_WALKER = TRUE");
-  END;
-END;
-```
-
-**`m3-sys/cminstall/src/config/ARM64_DARWIN`** — opt-in
-
-Change `M3_BACKEND_MODE = "C"` → `M3_BACKEND_MODE = "MSIRObj"` to activate
-the new path.  The C backend (`"C"`) remains the default for all other
-platforms; no other config changes until opt-in.
-
-#### Constraint
-
-MSIR requires `ex_stack` (C++ EH personality, `@__gxx_personality_v0`).
-Setting `M3_BACKEND_MODE = "MSIRObj"` without `M3_USE_STACK_WALKER = TRUE` is
-a fatal configuration error (detected at build startup).
-
-This is the gating item for LLVM optimizer integration and bootstrap.
+**Success criterion**: `cm3 -DHTML` in `m3-sys/m3tests` passes at least as many
+tests as the C-backend baseline (currently 286/288 — the 2 TIMEOUTs are not
+codegen failures).
 
 ### 3. Debug symbols
 
@@ -386,13 +345,39 @@ modules with many unique external callees. Mechanical change; no IR impact.
 
 ### 5. LLVM optimizer integration
 
-**Deferred until MSIR is the default backend (item 2 above).**
+**Unblocked** (§2 complete).  Gated in practice on self-hosting (§2a) being
+stable — optimized builds surface DWARF issues (Phase 5, §3) and may expose
+MSIR lowering bugs that `-O0` misses.
 
-Optimization level must be controlled by cm3's existing flags (`-O`, `-O2`,
-`-O3` / `M3_OPTIMIZE` in the platform config), not bolted on independently.
-Recommended first step: pipe `.ll` through `opt -On | llc` in the build
-driver; then migrate to LLVM-C API bitcode emission to eliminate the text
-round-trip.
+**Goal**: pipe the emitted `.ll` through `opt -On` before `llc`, giving LLVM's
+full optimization pipeline (mem2reg, inlining, vectorization, …) to
+MSIR-compiled code.
+
+**Planned implementation** (`Builder.m3`):
+
+1. Add a `RunOpt` step between the MSIR `.ll` output and `RunLlcBack`:
+   ```
+   RunM3Front → <Module>.ll → opt -O<n> → <Module>-opt.ll → llc → <Module>.o
+   ```
+   Use `LlvmIROptNameForUnit(u)` (already wired, returns `<Module>-opt.ll`) as
+   the intermediate.  `DoRunOpt := (optLevel > 0)` guards the step.
+
+2. Drive from CM3's existing optimization flags: `M3_OPTIMIZE` Quake variable
+   (or `-O`/`-O2`/`-O3` command-line flags) sets `optLevel` in `State`;
+   `CompileM3` passes `optLevel` to `RunOpt`.
+
+3. `opt` binary: `/opt/homebrew/opt/llvm/bin/opt` (same LLVM install as `llc`).
+   Builder already locates `llc` via `s.m3llvm_compile`; add parallel
+   `s.m3llvm_opt` resolved from the same directory.
+
+4. Default: `optLevel = 0` (no `opt` invocation, identical to current behaviour).
+   Platform config opts in: `M3_OPTIMIZE = "2"` in `ARM64_DARWIN` enables `-O2`.
+
+**DWARF constraint**: at `-O1+`, `mem2reg` removes allocas and
+`@llvm.dbg.declare` becomes invalid.  Before enabling optimized builds, switch
+debug-variable annotation to `@llvm.dbg.value` at every SSA update point (see
+§3 Phase 5).  Without this, `llvm-as` will warn and LLDB variable display will
+break.  Optimized builds without debug info (`-g0`) are unaffected.
 
 ### 6. Statepoint / precise GC
 
