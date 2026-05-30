@@ -31,7 +31,7 @@ the rationale in the commit.
 | Non-local control              | Pinned                         |
 | Opacity / visibility           | Pinned (D21); not yet wired    |
 | Verifier                       | Sketched (see A9 / D20)        |
-| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 287/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 1 TIMEOUT) |
+| `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs); smoke test 124/124 exit 0 |
 | `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
 
 Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
@@ -46,7 +46,11 @@ LONGINT elimination (msir/src + m3front/src/msir — all INTEGER now),
 IByte-width type coercion in INC/DEC/MIN/MAX builtins,
 Enum/GcSlot zero constants and `..'` array constructor guard (ConstZero),
 global variable deduplication (GlobalMapAddStruct dedup + EmitGlobal alias dedup),
-non-constant ConstArray element guard (Abandon before emitting bad global init).
+non-constant ConstArray element guard (Abandon before emitting bad global init),
+READONLY TEXT dispatch (CompileLValueMSIR alloca spill + Formal.EmitArgMSIR in virtual dispatch),
+Word built-in ops (Plus/Minus/Times/Divide/Mod/Rotate/Extract/Insert),
+import-chain variable access (GlobalMapAddImport + ImportChainAddr),
+MSIRObj end-to-end smoke test (124/124 checks, exit 0 against real CM3 runtime).
 
 ## Terminology: what "structured" means here
 
@@ -1018,6 +1022,18 @@ ByteArrayFallback from ordinary `[N x i8]` byte arrays used elsewhere
 
 **TEXT literals**: `TextExpr.P` carries `cgOffset`; a single `LiteralTable`
 serves both CG and MSIR.  `MSIREmit.EndUnit` bridges data to `MSIR.Module`.
+
+**READONLY TEXT dispatch**: Text literals have no addressable storage.
+When a text literal is passed as a READONLY formal (by-reference), `compileLValueMSIR`
+in `TextExpr.m3` spills the literal reference into a local alloca and returns that
+address.  Previously `compileLValueMSIR` was missing from `TextExpr.P`'s method table,
+so the READONLY path fell through to an assertion failure or wrong-type value.
+
+The virtual dispatch path in `UserProc.CompileMSIR` was separately broken: it called
+`Expr.CompileMSIR` for all arguments, ignoring READONLY/VAR modes.  Fixed to iterate
+formals and call `Formal.EmitArgMSIR(fv, arg)` so that pass-by-reference semantics are
+respected.  `TextExpr.i3` now exports `IsTextExpr`, `LiteralCount`, and `LiteralExpr`
+to support `MSIREmit.EndUnit` text-literal registration.
 
 **Module globals (var_map/gc_map)**: embedded as trailing fields of
 `@Mod_M3_info` (after 104-byte `RT0.ModuleInfo` header).  gc_map TipeMap
