@@ -310,17 +310,48 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             RETURN NIL;
           END;
           EVAL Method.Split(methodVal, methodInfo);
-          midx := methodInfo.offset DIV Target.Address.size;
+          VAR mBase := QualifyExpr.MethodSlotBase(p.proc); BEGIN
+            IF mBase < 0 THEN
+              MSIRBuilder.Abandon("method call: vtable base offset unknown (opaque type)");
+              RETURN NIL;
+            END;
+            midx := (mBase + methodInfo.offset) DIV Target.Address.size;
+          END;
           objVal := Expr.CompileMSIR(objExpr);
           IF objVal = NIL THEN RETURN NIL END;
           n       := NUMBER(p.args^);
-          rtype   := MSIRType.TranslateResult(ProcType.Result(procType));
           dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
-          FOR i := 0 TO n - 1 DO
-            dispArgs[i] := Expr.CompileMSIR(p.args[i]);
-            IF dispArgs[i] = NIL THEN RETURN NIL END;
+          VAR fv := ProcType.Formals(procType); BEGIN
+            FOR i := 0 TO n - 1 DO
+              <* ASSERT fv # NIL *>
+              dispArgs[i] := Formal.EmitArgMSIR(fv, p.args[i]);
+              fv := fv.next;
+              IF dispArgs[i] = NIL THEN RETURN NIL END;
+            END;
           END;
-          RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
+          VAR procResult    := ProcType.Result(procType);
+              isLargeResult := ProcType.LargeResult(procResult);
+              resultMsirT   : MSIR.T;
+              resultSlot    : MSIR.Value := NIL;
+          BEGIN
+            IF isLargeResult THEN
+              resultMsirT := MSIRType.Translate(procResult);
+              IF resultMsirT = NIL THEN
+                MSIRBuilder.Abandon("method call: large-result type not translatable");
+                RETURN NIL;
+              END;
+              resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+              rtype := NIL;
+            ELSE
+              rtype := MSIRType.TranslateResult(procResult);
+            END;
+            IF isLargeResult THEN
+              EVAL MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, resultSlot, dispArgs^);
+              RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT, resultSlot);
+            ELSE
+              RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, NIL, dispArgs^);
+            END;
+          END;
         END;
       END;
       (* Indirect call through a procedure-typed variable or expression. *)
@@ -412,6 +443,70 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
       procType := Type.Base(t);
     END;
     IF NOT IsProcedureLiteral(p.proc, v) THEN
+      (* Virtual method dispatch or indirect proc call — handle the lvalue case.
+         We need an addressable result: allocate a slot, emit the method call
+         using the CM3 large-result hidden-pointer convention, return the slot. *)
+      VAR
+        methodVal : Value.T;
+        methodInfo: Method.Info;
+        objExpr   : Expr.T;
+        objVal    : MSIR.Value;
+        dispArgs  : REF ARRAY OF MSIR.Value;
+        midx      : INTEGER;
+        procResult    : Type.T;
+        isLargeResult : BOOLEAN;
+        resultMsirT   : MSIR.T;
+        resultSlot    : MSIR.Value;
+        rtype         : MSIR.T;
+      BEGIN
+        IF QualifyExpr.Split(p.proc, methodVal) AND
+           Value.ClassOf(methodVal) = Value.Class.Method THEN
+          objExpr := QualifyExpr.LhsExpr(p.proc);
+          IF objExpr = NIL THEN
+            MSIRBuilder.Abandon("method lvalue: cannot get receiver");
+            RETURN NIL;
+          END;
+          EVAL Method.Split(methodVal, methodInfo);
+          VAR mBase2 := QualifyExpr.MethodSlotBase(p.proc); BEGIN
+            IF mBase2 < 0 THEN
+              MSIRBuilder.Abandon("method lvalue: vtable base offset unknown (opaque type)");
+              RETURN NIL;
+            END;
+            midx := (mBase2 + methodInfo.offset) DIV Target.Address.size;
+          END;
+          objVal     := Expr.CompileMSIR(objExpr);
+          IF objVal = NIL THEN RETURN NIL END;
+          n          := NUMBER(p.args^);
+          procResult := ProcType.Result(procType);
+          isLargeResult := ProcType.LargeResult(procResult);
+          resultMsirT   := MSIRType.Translate(procResult);
+          IF resultMsirT = NIL THEN
+            MSIRBuilder.Abandon("method lvalue: result type not translatable");
+            RETURN NIL;
+          END;
+          dispArgs   := NEW(REF ARRAY OF MSIR.Value, n);
+          FOR i := 0 TO n - 1 DO
+            dispArgs[i] := Expr.CompileMSIR(p.args[i]);
+            IF dispArgs[i] = NIL THEN RETURN NIL END;
+          END;
+          IF isLargeResult THEN
+            (* Hidden-ptr convention: alloca receives result written by callee. *)
+            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+            EVAL MSIRBuilder.EmitMethodCall("", objVal, midx, NIL, resultSlot, dispArgs^);
+            RETURN resultSlot;
+          ELSE
+            (* Small result: make call, spill return value to alloca. *)
+            rtype      := MSIRType.TranslateResult(procResult);
+            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+            VAR callVal := MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, NIL, dispArgs^);
+            BEGIN
+              IF callVal = NIL THEN RETURN NIL END;
+              MSIR.BuildStore(MSIRBuilder.CurrentBlock(), callVal, resultSlot);
+            END;
+            RETURN resultSlot;
+          END;
+        END;
+      END;
       MSIRBuilder.Abandon("lvalue of indirect call result not yet supported in MSIR");
       RETURN NIL;
     END;

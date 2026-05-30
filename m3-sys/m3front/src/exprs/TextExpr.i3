@@ -16,6 +16,7 @@ PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 
 PROCEDURE Split8  (e: Expr.T;  VAR value: M3String.T): BOOLEAN;
 PROCEDURE Split32 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN;
+PROCEDURE IsTextExpr (e: Expr.T): BOOLEAN;
 
 PROCEDURE Reset ();
 

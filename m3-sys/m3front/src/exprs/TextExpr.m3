@@ -39,7 +39,8 @@ TYPE
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := ExprRep.ExprAddrAlign;
-        compileMSIR  := CompileMSIR;
+        compileMSIR      := CompileMSIR;
+        compileLValueMSIR := CompileLValueMSIR;
       END;
 
 (* NOTE! These UIDs have nothing to do with the UIDs that are hashes
@@ -232,6 +233,15 @@ PROCEDURE Split32 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN =
     END;
   END Split32;
 
+PROCEDURE IsTextExpr (e: Expr.T): BOOLEAN =
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN FALSE;
+    | P    => RETURN TRUE;
+    ELSE      RETURN FALSE;
+    END;
+  END IsTextExpr;
+
 PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR sa, sb: M3String.T;  wa, wb: M3WString.T;
   BEGIN
@@ -317,6 +327,28 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     RETURN MSIR.ConstTextLit (uid, chars, cnt);
   END CompileMSIR;
+
+PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
+  (* A text literal has no addressable storage, but READONLY formal passing
+     requires a pointer.  Spill the literal reference into a local alloca
+     and return that address. *)
+  VAR
+    textVal : MSIR.Value;
+    textT   : MSIR.T;
+    slot    : MSIR.Value;
+    b       : MSIR.Block;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () OR NOT MSIRBuilder.InProc () THEN
+      RETURN NIL;
+    END;
+    textVal := CompileMSIR (p);
+    IF textVal = NIL THEN RETURN NIL END;
+    textT := MSIR.TGcRef (MSIR.TVoid ());
+    b     := MSIRBuilder.CurrentBlock ();
+    slot  := MSIR.BuildAlloca (b, "", textT);
+    MSIR.BuildStore (b, textVal, slot);
+    RETURN slot;
+  END CompileLValueMSIR;
 
 PROCEDURE LiteralCount (): INTEGER =
   BEGIN RETURN nextUID END LiteralCount;
