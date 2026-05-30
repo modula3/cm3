@@ -2086,7 +2086,7 @@ PROCEDURE Pass0_InitCodeGenerator (env: Env): M3CG.T =
       (* MSIR modes: m3front emits LLVM IR directly; no real M3CG output needed.
          DoNothing satisfies M3CG_Check (non-NIL sentinels) while discarding
          all M3CG operations — the LLVM IR comes from MSIREmit instead. *)
-      env.cg := NEW (M3CG_DoNothing.T);
+      env.cg := M3CG_DoNothing.New ();
       RETURN env.cg;
     ELSE
       env.target_wr := Utils.OpenWriter (env.object, fatal := FALSE);

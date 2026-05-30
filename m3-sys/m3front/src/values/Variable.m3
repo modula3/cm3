@@ -318,6 +318,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
 PROCEDURE RegisterExternMSIR (t: T) =
   VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
       m : MSIR.Module;  g: MSIR.Global;
+      nm: TEXT;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     IF t.indirect THEN RETURN END;
@@ -325,6 +326,40 @@ PROCEDURE RegisterExternMSIR (t: T) =
     IF mt = NIL THEN RETURN END;
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
+
+    (* For variables imported from other M3 modules (not C-external), use the
+       RT0 import-chain mechanism.  C-compiled libraries store exported vars as
+       fields in a static interface struct (not as exported symbols), so we must
+       load through the II_import pointer at runtime rather than referencing a
+       standalone external symbol. *)
+    IF t.imported AND NOT t.external THEN
+      VAR unit      := Scope.ToUnit (t);
+          ownerName : TEXT;
+          binderName: TEXT;
+          byteOff   : INTEGER;
+      BEGIN
+        IF unit = NIL THEN RETURN END;
+        ownerName  := M3ID.ToText (Module.Name (NARROW (unit, Module.T)));
+        binderName := ownerName & "_I3";
+        byteOff    := t.offset DIV Target.Char.size;
+        (* Pass the actual MSIR type (not ptr(void)) so LookupVar returns a
+           correctly-typed value for traced references (gc_ref @T) rather than
+           a raw ptr that causes a type mismatch at every RETURN site. *)
+        MSIRBuilder.GlobalMapAddImport(t, m, binderName, byteOff, mt);
+      END;
+      RETURN;
+    END;
+
+    nm := Value.GlobalName(t, dots:=FALSE, with_module:=TRUE);
+    (* Two different interfaces may declare the same <*EXTERNAL*> variable.
+       Deduplicate by name to avoid emitting the same external global twice. *)
+    FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
+      g := MSIR.ModuleGlobal(m, i);
+      IF MSIR.GlobalIsExternal(g) AND Text.Equal(MSIR.GlobalName(g), nm) THEN
+        MSIRBuilder.GlobalMapAdd(t, g, m);
+        RETURN;
+      END;
+    END;
     isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
                  OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
     eltType  := mt;
@@ -335,8 +370,7 @@ PROCEDURE RegisterExternMSIR (t: T) =
       eltType := MSIR.TPtr(MSIR.TVoid());
       isTraced := FALSE;
     END;
-    g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
-                        eltType, isTraced, isExternal:=TRUE);
+    g := MSIR.NewGlobal(nm, eltType, isTraced, isExternal:=TRUE);
     MSIRBuilder.GlobalMapAdd(t, g, m);
   END RegisterExternMSIR;
 
@@ -353,7 +387,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
        to inner procs, so no special frame-struct handling is needed here. *)
     slotAddr := MSIR.BuildAlloca(b,
                   MSIRBuilder.UniqueLocalName(
-                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE)), mt);
+                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), mt);
     IF slotAddr = NIL THEN RETURN FALSE END;
     MSIRBuilder.VarMapAdd (t, slotAddr, mt);
     (* Emit language-default zero-init alongside CG's Type.InitValue in LangInit *)
@@ -373,7 +407,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
     IF p = NIL OR b = NIL THEN RETURN END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN END;
     FOR i := 0 TO n - 1 DO
-      IF Text.Equal (MSIR.ProcParamName (p, i), fName) THEN
+      IF Text.Equal (MSIR.ProcParamName (p, i), "a." & fName) THEN
         paramVal := MSIR.ProcParam (p, i);
         mt       := MSIR.ValueType (paramVal);
         IF t.indirect AND MSIR.Kind(mt) = MSIR.TypeKind.Ptr

@@ -25,6 +25,13 @@ PROCEDURE MethodType (e: Expr.T): Type.T;
    Used by the MSIR path to compile virtual dispatch. *)
 PROCEDURE LhsExpr (e: Expr.T): Expr.T;
 
+(* If e is a QualifyExpr for an object method (class=objMethod), return the
+   bit-offset of the holder type's own methods within the vtable (i.e.
+   ObjectType.MethodOffset(p.holder)).  Returns -1 if the offset is not known
+   at compile time (opaque supertype).  Used by the MSIR path to compute the
+   absolute vtable slot index: (MethodSlotBase + method.offset) / ptr_size. *)
+PROCEDURE MethodSlotBase (e: Expr.T): INTEGER;
+
 (* If e is a QualifyExpr whose field is sub-byte, emit a read-modify-write
    bit-insertion of rhs and return TRUE.  Otherwise return FALSE immediately. *)
 PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;

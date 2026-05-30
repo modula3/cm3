@@ -136,6 +136,19 @@ PROCEDURE LLOpValStr(v: MSIR.Value): TEXT =
 
 (*------------------------------------------------------ symbol mangling *)
 
+(* TRUE if n contains the substring "__". *)
+PROCEDURE ContainsDunder(n: TEXT): BOOLEAN =
+  VAR i: INTEGER;
+  BEGIN
+    IF n = NIL THEN RETURN FALSE END;
+    i := Text.FindChar(n, '_');
+    WHILE i >= 0 AND i + 1 < Text.Length(n) DO
+      IF Text.GetChar(n, i + 1) = '_' THEN RETURN TRUE END;
+      i := Text.FindChar(n, '_', i + 1);
+    END;
+    RETURN FALSE;
+  END ContainsDunder;
+
 (* Replace every '.' in n with '__' — M3 module-separator to C ABI. *)
 PROCEDURE DotsToUnderscore(n: TEXT): TEXT =
   VAR result := "";  start, dot: INTEGER;
@@ -156,15 +169,27 @@ PROCEDURE DotsToUnderscore(n: TEXT): TEXT =
 PROCEDURE LLSymbol(p: MSIR.Proc): TEXT =
   VAR n := MSIR.ProcName(p);
   BEGIN
+    IF n = NIL THEN n := "" END;
     IF IsModuleProc(curEmitModule, p) THEN
-      RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
+      (* Name may already carry a module/interface prefix (e.g.
+         "ExprRep__DefaultCheckUseFailure" compiled in Expr.m3 which
+         EXPORTS ExprRep).  Only prepend when the name is unqualified. *)
+      IF ContainsDunder(n) THEN
+        RETURN n;
+      ELSE
+        RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
+      END;
     ELSIF Text.FindChar(n, '.') >= 0 THEN
       (* Fully qualified M3 name ("Fmt.Int") → replace dots with __ *)
       RETURN DotsToUnderscore(n);
     ELSIF IsModuleProcByName(curEmitModule, n) THEN
       (* Extern stub whose scope name was empty: unqualified name matches a
          module proc — prepend the module prefix. *)
-      RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
+      IF ContainsDunder(n) THEN
+        RETURN n;
+      ELSE
+        RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
+      END;
     ELSE
       RETURN n;  (* C extern or truly external M3 symbol *)
     END;
@@ -295,6 +320,13 @@ PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
     END;
   END EmitFloatHex;
 
+(* Emit a float constant.  LLVM 22+ rejects decimal literals for float (32-bit)
+   so we always use hex notation via EmitFloatHex, which handles both F32 and F64. *)
+PROCEDURE EmitFloatDecimal(wr: Wr.T;  v: MSIR.Value) =
+  BEGIN
+    EmitFloatHex(wr, v);
+  END EmitFloatDecimal;
+
 (* Emit just the LLVM name/constant for a value (no type prefix). *)
 PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
   BEGIN
@@ -303,7 +335,7 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.ConstInt =>
         Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
-        EmitFloatHex(wr, v);
+        EmitFloatDecimal(wr, v);
     | MSIR.ValueKind.ConstNil =>
         Wr.PutText(wr, "null");
     | MSIR.ValueKind.ConstProc =>
@@ -1209,13 +1241,41 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
                        OR MSIR.Kind(dstT) = MSIR.TypeKind.F128;
           BEGIN
             IF srcIsPtr AND dstBits > 0 THEN
-              Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = ptrtoint ");
-              LLTypedVal(wr, src);
-              Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+              IF dstIsFloat THEN
+                (* ptr → float LOOPHOLE: ptrtoint ptr to i<dstBits>, bitcast to float *)
+                VAR tmpName := MSIR.ValueName(res) & ".pi";
+                    intT    := MSIR.TI(dstBits);
+                BEGIN
+                  Wr.PutText(wr, "  " & tmpName & " = ptrtoint ");
+                  LLTypedVal(wr, src);
+                  Wr.PutText(wr, " to "); LLType(wr, intT); Wr.PutText(wr, "\n");
+                  Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = bitcast ");
+                  LLType(wr, intT); Wr.PutText(wr, " " & tmpName);
+                  Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+                END;
+              ELSE
+                Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = ptrtoint ");
+                LLTypedVal(wr, src);
+                Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+              END;
             ELSIF srcBits > 0 AND dstIsPtr THEN
-              Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = inttoptr ");
-              LLTypedVal(wr, src);
-              Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+              IF srcIsFloat THEN
+                (* float → ptr LOOPHOLE: bitcast float to i<srcBits>, inttoptr to ptr *)
+                VAR tmpName := MSIR.ValueName(res) & ".fp";
+                    intT    := MSIR.TI(srcBits);
+                BEGIN
+                  Wr.PutText(wr, "  " & tmpName & " = bitcast ");
+                  LLTypedVal(wr, src);
+                  Wr.PutText(wr, " to "); LLType(wr, intT); Wr.PutText(wr, "\n");
+                  Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = inttoptr ");
+                  LLType(wr, intT); Wr.PutText(wr, " " & tmpName);
+                  Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+                END;
+              ELSE
+                Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = inttoptr ");
+                LLTypedVal(wr, src);
+                Wr.PutText(wr, " to "); LLType(wr, dstT); Wr.PutText(wr, "\n");
+              END;
             ELSIF srcBits > 0 AND dstBits > 0
                   AND NOT srcIsFloat AND dstIsFloat AND srcBits # dstBits THEN
               (* Int → Float LOOPHOLE with size mismatch:
@@ -1381,7 +1441,12 @@ PROCEDURE ProcSeen(procs: RefSeq.T;  p: MSIR.Proc): BOOLEAN =
     FOR i := 0 TO procs.size() - 1 DO
       VAR q: MSIR.Proc := procs.get(i);
       BEGIN
-        IF q = p OR Text.Equal(MSIR.ProcName(q), pName) THEN RETURN TRUE END;
+        IF q = p THEN RETURN TRUE END;
+        VAR qName := MSIR.ProcName(q); BEGIN
+          IF pName # NIL AND qName # NIL AND Text.Equal(qName, pName) THEN
+            RETURN TRUE
+          END;
+        END;
       END;
     END;
     RETURN FALSE;
@@ -1403,8 +1468,10 @@ PROCEDURE IsModuleProcByName(m: MSIR.Module;  name: TEXT): BOOLEAN =
      local name ("Abs") rather than the qualified form ("Main.Abs"). *)
   BEGIN
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
-      IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), name) THEN
-        RETURN TRUE;
+      VAR pn := MSIR.ProcName(MSIR.ModuleProc(m, i)); BEGIN
+        IF pn # NIL AND name # NIL AND Text.Equal(pn, name) THEN
+          RETURN TRUE;
+        END;
       END;
     END;
     RETURN FALSE;
@@ -1417,7 +1484,7 @@ PROCEDURE MaybeAddExtern(m: MSIR.Module;  externs: RefSeq.T;  p: MSIR.Proc) =
      module proc has the short name ("GetTraced"); raw name comparison misses this. *)
   VAR sym: TEXT;
   BEGIN
-    IF p = NIL OR IsModuleProc(m, p) OR ProcSeen(externs, p) THEN RETURN END;
+    IF p = NIL OR MSIR.ProcName(p) = NIL OR IsModuleProc(m, p) OR ProcSeen(externs, p) THEN RETURN END;
     sym := LLSymbol(p);
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       IF Text.Equal(LLSymbol(MSIR.ModuleProc(m, i)), sym) THEN RETURN END;
@@ -2676,12 +2743,18 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
     IF MSIR.GlobalIsExternal(g) THEN
       Wr.PutText(wr, MSIR.GlobalName(g));
       Wr.PutText(wr, " = external global ");
-      LLType(wr, t);
+      IF MSIR.GlobalIsTraced(g) OR t = NIL OR MSIR.Kind(t) = MSIR.TypeKind.Void THEN
+        Wr.PutText(wr, "ptr");
+      ELSE
+        LLType(wr, t);
+      END;
     ELSE
       Wr.PutText(wr, MSIR.GlobalName(g));
       Wr.PutText(wr, " = global ");
       IF MSIR.GlobalIsTraced(g) THEN
         Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
+      ELSIF t = NIL OR MSIR.Kind(t) = MSIR.TypeKind.Void THEN
+        Wr.PutText(wr, "ptr null");  (* void-typed untraced slot — treat as ptr *)
       ELSE
         LLType(wr, t);
         Wr.PutText(wr, " zeroinitializer");
@@ -3018,11 +3091,34 @@ PROCEDURE EmitRTStructFieldsExt(wr: Wr.T;
     Wr.PutText(wr, "\n");
   END EmitRTStructFieldsExt;
 
-PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
-  (* RT0.TypeKind ordinals: { Unknown=0, Ref=1, Obj=2, Array=3 } *)
-  CONST TK_Obj = 2;  TK_Array = 3;
-  VAR n := MSIR.ModuleTypeDescCount(m);
+PROCEDURE IsMethodProcDefined(m: MSIR.Module;  name: TEXT): BOOLEAN =
+  (* Return TRUE if a proc with LLVM symbol equal to 'name' is defined in m. *)
   BEGIN
+    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      IF Text.Equal(LLSymbol(MSIR.ModuleProc(m, i)), name) THEN
+        RETURN TRUE;
+      END;
+    END;
+    RETURN FALSE;
+  END IsMethodProcDefined;
+
+PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
+  (* RT0.TypeKind ordinals: { Unknown=0, Ref=1, Obj=2, Array=3 } *)
+  CONST TK_Ref = 1;  TK_Obj = 2;  TK_Array = 3;
+  VAR n := MSIR.ModuleTypeDescCount(m);
+      declaredMethods := NEW(RefSeq.T).init();  (* dedup declare void @m() *)
+  BEGIN
+    (* Pre-populate declaredMethods with externs already declared by CollectExterns
+       so that EmitTypeCells does not re-declare the same symbol with a conflicting
+       (void @name()) signature. *)
+    IF externs # NIL THEN
+      FOR ei := 0 TO externs.size() - 1 DO
+        VAR ep: MSIR.Proc := externs.get(ei);  sym: TEXT; BEGIN
+          sym := LLSymbol(ep);
+          declaredMethods.addhi(sym);
+        END;
+      END;
+    END;
     IF n = 0 THEN RETURN END;
 
     Wr.PutText(wr, "\n; TypeCell / ObjectTypeCell globals\n");
@@ -3040,8 +3136,9 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         structNm : TEXT;
         nameSym  : TEXT := NIL;
         nextVal  : TEXT;
-        tcVals   : ARRAY [0 .. TC_nBase - 1] OF TEXT;
-        extVals  : REF ARRAY OF TEXT := NIL;
+        tcVals    : ARRAY [0 .. TC_nBase - 1] OF TEXT;
+        extVals   : REF ARRAY OF TEXT := NIL;
+        gcMapName : TEXT := NIL;
       BEGIN
         IF k < n - 1
           THEN nextVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
@@ -3073,6 +3170,24 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
             END;
             IF nMethods > 0 THEN
               dmv := "@" & nm & ".methods";
+              (* Declare external method procs so LLVM can resolve their addresses.
+                 Use declaredMethods to deduplicate across type descriptors (the same
+                 default method, e.g. ExprRep__NoType, may appear in multiple OTCs). *)
+              FOR j := 0 TO nMethods - 1 DO
+                VAR mname := MSIR.TypeDescMethod(d, j);
+                    alreadyDeclared := FALSE;
+                BEGIN
+                  FOR di := 0 TO declaredMethods.size() - 1 DO
+                    IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
+                      alreadyDeclared := TRUE; EXIT
+                    END;
+                  END;
+                  IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
+                    Wr.PutText(wr, "declare void @" & mname & "()\n");
+                    declaredMethods.addhi(mname);
+                  END;
+                END;
+              END;
               Wr.PutText(wr, "@" & nm & ".methods = internal constant ["
                 & Fmt.Int(nMethods) & " x ptr] [");
               FOR j := 0 TO nMethods - 1 DO
@@ -3107,7 +3222,56 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
         tcVals[TC_dataAlign]  := Fmt.Int(MSIR.TypeDescAlign(d));
         tcVals[TC_dataSize]   := Fmt.Int(MSIR.TypeDescSize(d));
         tcVals[TC_type_map]   := "null";
-        tcVals[TC_gc_map]     := "null";
+        (* Emit gc_maps for traced types that the GC would otherwise treat as
+           "pure" (no traced references).  The CM3 GC checks:
+             (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj))
+           If that condition holds, the GC makes a bitwise copy without pointer
+           fixup, leaving stale pointers after collection.
+
+           TK.Ref (1): REF RECORD / REF to opaque type.
+             Conservative map: one Op.Ref (byte 4) per pointer-sized slot,
+             terminated by Op.Stop (byte 0).  Emitted only when size > 0.
+
+           TK.Array (3): REF ARRAY OF T (open array).
+             Safe map only for the common single-traced-pointer-per-element
+             case (elementSize = addressBytes, nDimensions <= 255):
+               [Op.OpenArray_1 (24), nDimensions, Op.Ref (4), Op.Stop (0)]
+             This correctly traces REF ARRAY OF REFANY and similar types.
+             More complex element layouts are left with gc_map=null for now. *)
+        IF MSIR.TypeDescTraced(d) THEN
+          IF knd = TK_Ref AND MSIR.TypeDescSize(d) > 0 THEN
+            VAR nSlots := MSIR.TypeDescSize(d) DIV Target.AddressBytes();
+            BEGIN
+              IF nSlots > 0 THEN
+                gcMapName := nm & "_gc_map";
+                Wr.PutText(wr, "@" & gcMapName & " = internal constant ["
+                               & Fmt.Int(nSlots + 1) & " x i8] [");
+                FOR s := 0 TO nSlots - 1 DO
+                  IF s > 0 THEN Wr.PutText(wr, ", ") END;
+                  Wr.PutText(wr, "i8 4");  (* RTMapOp.T.Ref = 4 *)
+                END;
+                Wr.PutText(wr, ", i8 0]\n");  (* RTMapOp.T.Stop = 0 *)
+              END;
+            END;
+          ELSIF knd = TK_Array THEN
+            VAR nDims := MSIR.TypeDescNDimensions(d);
+                eltSz := MSIR.TypeDescElementSize(d);
+            BEGIN
+              (* Only handle the safe case: 1 pointer per element, <=255 dims *)
+              IF nDims > 0 AND nDims <= 255
+                 AND eltSz = Target.AddressBytes() THEN
+                gcMapName := nm & "_gc_map";
+                (* [OpenArray_1 (24), nDims, Ref (4), Stop (0)] *)
+                Wr.PutText(wr, "@" & gcMapName & " = internal constant [4 x i8]"
+                             & " [i8 24, i8 " & Fmt.Int(nDims) & ", i8 4, i8 0]\n");
+              END;
+            END;
+          END;
+        END;
+        IF gcMapName # NIL
+          THEN tcVals[TC_gc_map] := "@" & gcMapName;
+          ELSE tcVals[TC_gc_map] := "null";
+        END;
         tcVals[TC_type_desc]  := "null";
         tcVals[TC_initProc]   := "null";
         tcVals[TC_brand_ptr]  := "null";
@@ -3137,7 +3301,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module) =
    MI_type_cell_ptrs points to TypeLink[n-1] (head).
    MSIR_InitTypeLinks is a harness helper: for each TypeLink that has a matching
    TypeDesc (same uid and kind prefix), stores the TypeCell address into defn. *)
-PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
+PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN) =
   (* Interface units do not emit MSIR_InitTypeLinks — the implementation unit
      owns the TypeDesc registration for shared types.  Each implementation unit
      emits @MSIR_InitTypeLinks_<Mod>_M3 and registers it via @llvm.global_ctors
@@ -3150,6 +3314,36 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
   BEGIN
     IF isIface THEN RETURN END;   (* interface units carry no init function *)
 
+    IF forRuntime THEN
+      (* In runtime mode (MSIRObj), the CM3 runtime handles TypeLink traversal and
+         TypeCell registration.  Just emit the TypeLink globals; no ctors needed. *)
+      IF nLinks > 0 THEN
+        Wr.PutText(wr, "\n; TypeLink globals (MI_type_cell_ptrs chain)\n");
+        EmitRTStructType(wr, "TypeLink_t", TLKinds);
+        FOR k := 0 TO nLinks - 1 DO
+          VAR
+            tl      := MSIR.ModuleTypeLink(m, k);
+            nm      := MSIR.TypeLinkName(tl);
+            uid     := MSIR.TypeLinkUID(tl);
+            prevVal : TEXT;
+            tlVals  : ARRAY [0 .. TL_nFields - 1] OF TEXT;
+          BEGIN
+            IF k = 0
+              THEN prevVal := "null";
+              ELSE prevVal := "@" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, k-1));
+            END;
+            tlVals[TL_defn]     := prevVal;
+            tlVals[TL_typecode] := Fmt.Int(uid);
+            Wr.PutText(wr, "@" & nm & " = internal global %TypeLink_t {\n");
+            EmitRTStructFields(wr, TLKinds, tlVals);
+            Wr.PutText(wr, "}\n");
+          END;
+        END;
+      END;
+      RETURN;
+    END;
+
+    (* Standalone harness mode: emit TypeLinks + MSIR_InitTypeLinks ctor. *)
     IF nLinks = 0 THEN
       (* No-op init — registered via ctors so link-time symbol is unique. *)
       Wr.PutText(wr, "\ndefine void @" & initName & "() {\n");
@@ -3244,6 +3438,33 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module) =
                    & " { i32, ptr, ptr } { i32 65535, ptr @" & initName & ", ptr null }"
                    & " ]\n");
   END EmitTypeLinks;
+
+(*----------------------------------------------- full_rev emission *)
+
+(* Emit the null-terminated RT0.Revelation array for full REVEAL records.
+   Returns the global name if any revelations exist, NIL otherwise.
+   RTLinker.DeclareModuleTypes traverses m.full_rev calling NoteFullRevelation
+   for each entry to map the opaque TypeLink UID to the revealed TypeCell slot. *)
+PROCEDURE EmitRevelations(wr: Wr.T;  m: MSIR.Module;  modName, ip_t: TEXT): TEXT =
+  VAR nRev := MSIR.ModuleRevelationCount(m);
+      nm   := modName & "_M3_full_rev";
+  BEGIN
+    IF nRev = 0 THEN RETURN NIL END;
+    (* RT0.Revelation = RECORD lhs_id, rhs_id: INTEGER END — terminated by { 0, 0 } *)
+    Wr.PutText(wr, "\n; full_rev — REVEAL records for RTLinker.NoteFullRevelation\n");
+    Wr.PutText(wr, "%RT0_RV_t = type { " & ip_t & ", " & ip_t & " }\n");
+    Wr.PutText(wr, "@" & nm & " = internal global ["
+                       & Fmt.Int(nRev + 1) & " x %RT0_RV_t] [\n");
+    FOR i := 0 TO nRev - 1 DO
+      VAR r := MSIR.ModuleRevelation(m, i);
+      BEGIN
+        Wr.PutText(wr, "  %RT0_RV_t { " & ip_t & " " & Fmt.Int(MSIR.RevelationLhsUID(r))
+                       & ", " & ip_t & " " & Fmt.Int(MSIR.RevelationRhsUID(r)) & " },\n");
+      END;
+    END;
+    Wr.PutText(wr, "  %RT0_RV_t { " & ip_t & " 0, " & ip_t & " 0 }\n]\n");
+    RETURN nm;
+  END EmitRevelations;
 
 (*----------------------------------------------- gc_map emission *)
 
@@ -3351,7 +3572,19 @@ CONST MIIsInt = ARRAY [0..MSIR.MI_nFields-1] OF BOOLEAN {
    Binder convention (RT0.Binder):
      mode=0 : return MI pointer (AddUnit path — do NOT run body)
      mode≠0 : run module body then return MI pointer (RunMainBody path) *)
-PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
+PROCEDURE NameInExterns(externs: RefSeq.T;  name: TEXT): BOOLEAN =
+  BEGIN
+    FOR i := 0 TO externs.size() - 1 DO
+      VAR p: MSIR.Proc := NARROW(externs.get(i), MSIR.Proc);
+          pn := MSIR.ProcName(p);
+      BEGIN
+        IF pn # NIL AND Text.Equal(pn, name) THEN RETURN TRUE END;
+      END;
+    END;
+    RETURN FALSE;
+  END NameInExterns;
+
+PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
   VAR
     modName    := MSIR.ModuleName(m);
     binderName := modName & "_M3";
@@ -3365,7 +3598,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     fieldName  : TEXT;
     fieldType  : TEXT;
     fieldVal   : TEXT;
-    gcMapName  : TEXT := NIL;  (* NIL if no traced module globals *)
+    gcMapName   : TEXT := NIL;  (* NIL if no traced module globals *)
+    fullRevName : TEXT := NIL;  (* NIL if no full REVEAL records *)
     ip_t       := "i" & Fmt.Int(Target.IntegerSize());   (* INTEGER type string *)
     ap_t       := "i" & Fmt.Int(Target.AddressSize());   (* ADDRESS type string *)
   VAR isInterface  := MSIR.ModuleIsInterface(m);
@@ -3405,16 +3639,19 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
         Wr.PutText(wr, "entry:\n");
         Wr.PutText(wr, "  ret ptr " & infoName & "\n");
         Wr.PutText(wr, "}\n");
-      ELSE
+      ELSIF NOT NameInExterns(externs, modName & "_I3") THEN
+        (* LLVM 22+ rejects duplicate declares: skip if CollectExterns already
+           emitted this binder as a declare at the top of the file. *)
         Wr.PutText(wr, "\ndeclare ptr @" & modName & "_I3(" & ip_t & ")\n");
       END;
 
       Wr.PutText(wr, "\n; RT0.ImportInfo chain for " & modName & "\n");
-      (* Declare external binders (skip modName_I3 which we just defined). *)
+      (* Declare external binders (skip modName_I3 and any already declared by
+         CollectExterns — LLVM 22+ rejects duplicate declare statements). *)
       FOR k := 0 TO nImports - 1 DO
         VAR b := MSIR.ModuleImportBinder(m, k);
         BEGIN
-          IF NOT Text.Equal(b, modName & "_I3") THEN
+          IF NOT Text.Equal(b, modName & "_I3") AND NOT NameInExterns(externs, b) THEN
             Wr.PutText(wr, "declare ptr @" & b & "(" & ip_t & ")\n");
           END;
         END;
@@ -3441,6 +3678,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     IF EmitGcMapGlobal(wr, m, modName, miBytes) THEN
       gcMapName := modName & "_M3_gc_map";
     END;
+
+    (* Emit full_rev array for REVEAL records (RTLinker.NoteFullRevelation). *)
+    fullRevName := EmitRevelations(wr, m, modName, ip_t);
 
     (* Emit named type — field types from MIIsInt array. *)
     Wr.PutText(wr, "\n");
@@ -3471,8 +3711,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
     Wr.PutText(wr, " }\n");
 
     (* Emit global initializer — one CASE arm per RT0.ModuleInfo field.
-       Interface units use internal linkage to avoid conflicts with the
-       implementation unit's exported module info (mirrors C-mode 'static'). *)
+       Interface units use internal linkage (mirrors C-mode 'static') to avoid
+       duplicate-symbol conflicts with the implementation unit's exported info. *)
     IF isInterface
       THEN Wr.PutText(wr, infoName & " = internal global %RT0_ModuleInfo_t {\n");
       ELSE Wr.PutText(wr, infoName & " = global %RT0_ModuleInfo_t {\n");
@@ -3490,7 +3730,11 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
                                THEN fieldVal := "@" & MSIR.TypeLinkName(MSIR.ModuleTypeLink(m, MSIR.ModuleTypeLinkCount(m)-1));
                                ELSE fieldVal := "null";
                              END;
-      | MI_full_rev       => fieldType := "ptr"; fieldVal := "null";           fieldName := "full_rev";
+      | MI_full_rev       => fieldType := "ptr"; fieldName := "full_rev";
+                             IF fullRevName # NIL
+                               THEN fieldVal := "@" & fullRevName;
+                               ELSE fieldVal := "null";
+                             END;
       | MI_part_rev       => fieldType := "ptr"; fieldVal := "null";           fieldName := "part_rev";
       | MI_proc_info      => fieldType := "ptr"; fieldVal := "null";           fieldName := "proc_info";
       | MI_try_scopes     => fieldType := "ptr"; fieldVal := "null";           fieldName := "try_scopes";
@@ -3585,7 +3829,6 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module) =
         END;
       END;
     END;
-
     (* Interface binder @<Mod>_I3.  Define it when this is the interface unit or
        a standalone implementation; declare it when a separate interface exists. *)
     IF nImports = 0 THEN
@@ -3676,7 +3919,7 @@ PROCEDURE EmitOneTCEntry (wr: Wr.T;  ent: TCEntry) =
     Wr.PutText(wr, "]\n");
   END EmitOneTCEntry;
 
-PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
+PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
   VAR
     externs    := NEW(RefSeq.T).init();
     triple     := MSIR.ModuleTriple(m);
@@ -3736,17 +3979,28 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
       Wr.PutText(wr, "\n");
     END;
 
-    (* GC barrier externs — emitted when any proc uses gc.load / gc.store *)
+    (* GC barrier externs — emitted when any proc uses gc.load / gc.store.
+       LLVM 22+ treats declare+define for the same symbol as an invalid
+       redefinition, so skip the declare when the barrier is a module proc
+       (e.g. RTCollector.m3 defines CheckLoadTracedRef itself). *)
     IF needsGC THEN
-      Wr.PutText(wr, "declare void @"
-                     & LLHookName(MSIR.ModuleGCLoadBarrier(m),
-                                   "RTHooks__CheckLoadTracedRef")
-                     & "(ptr)\n");
-      Wr.PutText(wr, "declare void @"
-                     & LLHookName(MSIR.ModuleGCStoreBarrier(m),
-                                   "RTHooks__CheckStoreTraced")
-                     & "(ptr)\n");
-      Wr.PutText(wr, "\n");
+      VAR barrierLoad  := MSIR.ModuleGCLoadBarrier(m);
+          barrierStore := MSIR.ModuleGCStoreBarrier(m);
+      BEGIN
+        IF barrierLoad = NIL OR NOT IsModuleProc(m, barrierLoad) THEN
+          Wr.PutText(wr, "declare void @"
+                         & LLHookName(barrierLoad,
+                                       "RTHooks__CheckLoadTracedRef")
+                         & "(ptr)\n");
+        END;
+        IF barrierStore = NIL OR NOT IsModuleProc(m, barrierStore) THEN
+          Wr.PutText(wr, "declare void @"
+                         & LLHookName(barrierStore,
+                                       "RTHooks__CheckStoreTraced")
+                         & "(ptr)\n");
+        END;
+        Wr.PutText(wr, "\n");
+      END;
     END;
 
     (* globals *)
@@ -3779,9 +4033,30 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
       Wr.PutText(wr, "declare void @llvm.dbg.declare(metadata, metadata, metadata)\n\n");
     END;
 
-    (* internal proc definitions *)
-    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
-      EmitProc(wr, MSIR.ModuleProc(m, i));
+    (* internal proc definitions — guard against duplicate symbol names that
+       can arise when a hook proc (e.g. RTHooks__CheckLoadTracedRef) is both
+       compiled as a module proc and re-looked-up by EndUnit's HookProc call,
+       landing two entries with the same LLSymbol in the proc list. *)
+    VAR emittedNames := NEW(RefSeq.T).init();
+    BEGIN
+      FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+        VAR p := MSIR.ModuleProc(m, i);
+            sym := LLSymbol(p);
+            dup := FALSE;
+        BEGIN
+          IF sym # NIL THEN
+            FOR j := 0 TO emittedNames.size() - 1 DO
+              VAR s: TEXT := emittedNames.get(j); BEGIN
+                IF Text.Equal(s, sym) THEN dup := TRUE; EXIT END;
+              END;
+            END;
+          END;
+          IF NOT dup THEN
+            IF sym # NIL THEN emittedNames.addhi(sym) END;
+            EmitProc(wr, p);
+          END;
+        END;
+      END;
     END;
 
     (* TextLiteral globals *)
@@ -3791,10 +4066,10 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     EmitConstArrays(wr, m);
 
     (* TypeCell / ObjectTypeCell globals for type_cells *)
-    EmitTypeCells(wr, m);
+    EmitTypeCells(wr, m, externs);
 
     (* TypeLink globals for type_cell_ptrs chain, plus MSIR_InitTypeLinks *)
-    EmitTypeLinks(wr, m);
+    EmitTypeLinks(wr, m, forRuntime);
 
     (* Exception descriptors: { i64 uid, ptr null, i64 0 } = ExceptionDesc *)
     FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO
@@ -3808,24 +4083,28 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
     END;
 
     (* RTLinker binder and ModuleInfo descriptor *)
-    EmitModuleBinder(wr, m);
+    EmitModuleBinder(wr, m, externs);
 
     (* Emit mutable type-table globals collected during typecase emission.
        ScanTypecase lazily fills the defn pointer so these must be global
        (not constant).  TypecaseCell = { ptr defn, i64 uid } (16 bytes). *)
     IF pendingTC # NIL AND pendingTC.size() > 0 THEN
+      VAR tcHook := MSIR.ModuleScanTypecase(m); BEGIN
       Wr.PutText(wr, "\n; TYPECASE type tables ("
-                     & LLHookName(MSIR.ModuleScanTypecase(m),
-                                   "RTHooks__ScanTypecase")
+                     & LLHookName(tcHook, "RTHooks__ScanTypecase")
                      & ")\n");
-      Wr.PutText(wr, "declare i64 @"
-                     & LLHookName(MSIR.ModuleScanTypecase(m),
-                                   "RTHooks__ScanTypecase")
-                     & "(ptr, ptr)\n");
+      (* Skip declare if ScanTypecase is defined in this module (LLVM 22+
+         treats declare+define for the same symbol as an invalid redefinition.) *)
+      IF tcHook = NIL OR NOT IsModuleProc(m, tcHook) THEN
+        Wr.PutText(wr, "declare i64 @"
+                       & LLHookName(tcHook, "RTHooks__ScanTypecase")
+                       & "(ptr, ptr)\n");
+      END;
       FOR ti := 0 TO pendingTC.size() - 1 DO
         EmitOneTCEntry(wr, NARROW(pendingTC.get(ti), TCEntry));
       END;
       pendingTC := NIL;
+      END; (* VAR tcHook *)
     END;
 
     (* DWARF debug metadata section — emitted last so all forward !dbg

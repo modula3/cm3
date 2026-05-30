@@ -265,28 +265,34 @@ PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
   END TranslateObject;
 
 PROCEDURE TranslateEnum(t: Type.T;  name: TEXT;  bits: INTEGER): MSIR.T =
-  VAR n  := EnumType.NumElts(t);
-      ls := NEW(REF ARRAY OF TEXT, MAX(n, 0));
-      v  : Value.T;
-      i  : INTEGER := 0;
+  (* VAR inits that call into the type system are deferred until after the
+     NIL guard and cache check so that a NIL or cache-hit t does not crash
+     before we have a chance to handle it. *)
+  VAR n      : INTEGER;
+      ls     : REF ARRAY OF TEXT;
+      v      : Value.T;
+      i      : INTEGER;
+      result : MSIR.T;
   BEGIN
+    IF t = NIL THEN RETURN NIL END;
     FOR k := 0 TO cacheN - 1 DO
       IF cache[k].key = t THEN RETURN cache[k].val END;
     END;
-    v := EnumType.EltList(t);
+    n  := EnumType.NumElts(t);
+    ls := NEW(REF ARRAY OF TEXT, MAX(n, 0));
+    i  := 0;
+    v  := EnumType.EltList(t);
     WHILE v # NIL AND i < n DO
       ls[i] := M3ID.ToText(Value.CName(v));
       v := v.next;  INC(i);
     END;
-    VAR result := MSIR.TEnum(name, bits, ls^);
-    BEGIN
-      IF cacheN < MaxTypeCache THEN
-        cache[cacheN].key := t;
-        cache[cacheN].val := result;
-        INC(cacheN);
-      END;
-      RETURN result;
+    result := MSIR.TEnum(name, bits, ls^);
+    IF cacheN < MaxTypeCache THEN
+      cache[cacheN].key := t;
+      cache[cacheN].val := result;
+      INC(cacheN);
     END;
+    RETURN result;
   END TranslateEnum;
 
 PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =

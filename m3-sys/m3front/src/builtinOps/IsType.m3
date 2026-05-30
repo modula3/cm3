@@ -246,11 +246,11 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       MSIRBuilder.Abandon ("ISTYPE: CheckIsType hook missing");  RETURN NIL;
     END;
     (* CheckIsType returns INTEGER; convert to i1 (Bool.T) for ISTYPE result. *)
-    VAR raw := MSIRBuilder.EmitCall ("istype.raw", hook,
+    VAR raw := MSIRBuilder.EmitCall ("", hook,
                                      ARRAY OF MSIR.Value {refVal, tc});
     BEGIN
       IF raw = NIL THEN RETURN NIL END;
-      RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "istype",
+      RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
                              MSIR.CmpPred.Ne,
                              raw, MSIR.ConstInt (MSIR.ValueType (raw), 0));
     END;

@@ -108,7 +108,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         IF tc = NIL THEN
           MSIRBuilder.Abandon ("TYPECODE: cannot get typecell");  RETURN NIL;
         END;
-        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "typecode", intT, tc);
+        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", intT, tc);
       END;
     ELSE
       (* TYPECODE(r) — read typecode from ref header at runtime.
@@ -126,14 +126,14 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         blk := MSIRBuilder.CurrentBlock ();
 
         (* Allocate result slot before branching. *)
-        resAlloca := MSIR.BuildAlloca (blk, "tc.slot", intT);
+        resAlloca := MSIR.BuildAlloca (blk, "", intT);
 
-        nilBlk    := MSIRBuilder.NewBlock ("tc.nil");
-        normalBlk := MSIRBuilder.NewBlock ("tc.normal");
-        mergeBlk  := MSIRBuilder.NewBlock ("tc.merge");
+        nilBlk    := MSIRBuilder.NewBlock ("");
+        normalBlk := MSIRBuilder.NewBlock ("");
+        mergeBlk  := MSIRBuilder.NewBlock ("");
 
         (* NIL → NULL_typecode = 0 *)
-        nilCond := MSIR.BuildICmp (blk, "tc.isnil", MSIR.CmpPred.Eq,
+        nilCond := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq,
                                    refVal, MSIR.ConstNil (MSIR.ValueType (refVal)));
         MSIR.BuildCondBr (blk, nilCond,
                           nilBlk,    ARRAY OF MSIR.Value {},
@@ -146,19 +146,19 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
 
         (* Non-NIL: ref header is one word before the data pointer.
            RH layout: bits [RH_typecode_offset .. +RH_typecode_size) = bits [1..20]. *)
-        hdrPtr  := MSIRBuilder.BuildPtrByteOff (normalBlk, "tc.hdrptr", refVal,
+        hdrPtr  := MSIRBuilder.BuildPtrByteOff (normalBlk, "", refVal,
                                                 -(Target.Address.size DIV 8));
-        hdrWord := MSIR.BuildLoad (normalBlk, "tc.hdrword", intT, hdrPtr);
-        shifted := MSIR.BuildILShr (normalBlk, "tc.shr", hdrWord,
+        hdrWord := MSIR.BuildLoad (normalBlk, "", intT, hdrPtr);
+        shifted := MSIR.BuildILShr (normalBlk, "", hdrWord,
                                     MSIR.ConstInt (intT, M3RT.RH_typecode_offset));
-        masked  := MSIR.BuildIAnd (normalBlk, "tc.mask", shifted,
+        masked  := MSIR.BuildIAnd (normalBlk, "", shifted,
                                    MSIR.ConstInt (intT,
                                      Word.LeftShift (1, M3RT.RH_typecode_size) - 1));
         MSIR.BuildStore (normalBlk, masked, resAlloca);
         MSIR.BuildBr (normalBlk, mergeBlk, ARRAY OF MSIR.Value {});
 
         MSIRBuilder.SetCurrentBlock (mergeBlk);
-        RETURN MSIR.BuildLoad (mergeBlk, "tc.val", intT, resAlloca);
+        RETURN MSIR.BuildLoad (mergeBlk, "", intT, resAlloca);
       END;
     END;
   END CompileMSIR;

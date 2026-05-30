@@ -666,19 +666,19 @@ PROCEDURE GetPackedElemBase (p: P;  VAR idxVal: MSIR.Value;
    the element index (biased, extended to Integer width), and eltPack.
    Returns NIL on failure (base not lvalue or index compilation failed). *)
   VAR arrBase: MSIR.Value;  blk: MSIR.Block;
+      idxType: MSIR.T;  idxBits, intBits: INTEGER;
   BEGIN
     eltPack := ArrayType.EltPack (p.taBase);
     arrBase := Expr.LValueMSIR (p.a);
     IF arrBase = NIL THEN RETURN NIL END;
     idxVal := Expr.CompileMSIR (p.biased_b);
     IF idxVal = NIL THEN RETURN NIL END;
-    VAR idxBits := MSIR.BitWidth (MSIR.ValueType (idxVal));
-        intBits := Target.Integer.size;
-    BEGIN
-      IF idxBits > 0 AND idxBits < intBits THEN
-        blk    := MSIRBuilder.CurrentBlock ();
-        idxVal := MSIR.BuildZExt (blk, "", idxVal, MSIR.TI (intBits));
-      END;
+    idxType := MSIR.ValueType (idxVal);
+    idxBits := MSIR.BitWidth (idxType);
+    intBits := Target.Integer.size;
+    IF idxBits > 0 AND idxBits < intBits THEN
+      blk    := MSIRBuilder.CurrentBlock ();
+      idxVal := MSIR.BuildZExt (blk, "", idxVal, MSIR.TI (intBits));
     END;
     RETURN arrBase;
   END GetPackedElemBase;
@@ -711,7 +711,18 @@ PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
   END SubByteStoreElemMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR addr: MSIR.Value;  ty: MSIR.T;  blk: MSIR.Block;
+  VAR addr    : MSIR.Value;
+      ty      : MSIR.T;
+      blk     : MSIR.Block;
+      addrType: MSIR.T;
+      addrEltT: MSIR.T;
+      addrBits: INTEGER;
+      tyBits  : INTEGER;
+      loaded  : MSIR.Value;
+      lo, hi  : Target.Int;
+      stripped: Type.T;
+      hasBnds : BOOLEAN;
+      doSExt  : BOOLEAN;
   BEGIN
     (* Packed-element fixed array: ByteArrayFallback [N x i1] sentinel. *)
     IF p.lhsOpenDepth = 0 AND ArrayType.EltsAreBitAddressed (p.taBase) THEN
@@ -720,7 +731,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     addr := LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
     (* Traced ref from a heap array slot: use GcLoad (read barrier). *)
-    IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+    addrType := MSIR.ValueType (addr);
+    IF MSIR.Kind (addrType) = MSIR.TypeKind.GcSlot THEN
       RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
     END;
     ty := MSIRType.Translate (p.type);
@@ -735,27 +747,21 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
          E.g. [0..255] stored as i8, natural type i64 → ZExt.
        - wide storage → narrow type: Trunc.
          E.g. BOOLEAN stored as i8, natural type i1 → Trunc. *)
-    VAR addrEltT := MSIR.EltType (MSIR.ValueType (addr));
-        addrBits := MSIR.BitWidth (addrEltT);
-        tyBits   := MSIR.BitWidth (ty);
-    BEGIN
-      IF addrBits > 0 AND tyBits > 0 AND addrBits # tyBits THEN
-        VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
-        BEGIN
-          IF addrBits < tyBits THEN
-            VAR lo, hi : Target.Int;
-                doSExt := Type.GetBounds (Type.StripPacked (p.type), lo, hi)
-                            AND TInt.LT (lo, TInt.Zero);
-            BEGIN
-              IF doSExt
-                THEN RETURN MSIR.BuildSExt (blk, "", loaded, ty);
-                ELSE RETURN MSIR.BuildZExt (blk, "", loaded, ty);
-              END;
-            END;
-          ELSE
-            RETURN MSIR.BuildTrunc (blk, "", loaded, ty);
-          END;
+    addrEltT := MSIR.EltType (addrType);
+    addrBits := MSIR.BitWidth (addrEltT);
+    tyBits   := MSIR.BitWidth (ty);
+    IF addrBits > 0 AND tyBits > 0 AND addrBits # tyBits THEN
+      loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
+      IF addrBits < tyBits THEN
+        stripped := Type.StripPacked (p.type);
+        hasBnds  := Type.GetBounds (stripped, lo, hi);
+        doSExt   := hasBnds AND TInt.LT (lo, TInt.Zero);
+        IF doSExt
+          THEN RETURN MSIR.BuildSExt (blk, "", loaded, ty);
+          ELSE RETURN MSIR.BuildZExt (blk, "", loaded, ty);
         END;
+      ELSE
+        RETURN MSIR.BuildTrunc (blk, "", loaded, ty);
       END;
     END;
     RETURN MSIR.BuildLoad (blk, "", ty, addr);

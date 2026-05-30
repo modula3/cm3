@@ -10,7 +10,7 @@ MODULE Revelation;
 
 IMPORT M3ID, Value, Type, Error, OpaqueType, Scope, Decl, Host;
 IMPORT ObjectType, RefType, Scanner, Token, Module, ValueRep, CG;
-IMPORT M3RT, Target, Reff;
+IMPORT M3RT, Target, Reff, MSIRBuilder, MSIREmit;
 IMPORT PersistentRevelation, PersistentRevelationArraySort, PersistentRevelationSeq, PersistentRevelationSeqRep;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 FROM M3 IMPORT QID;
@@ -578,6 +578,9 @@ PROCEDURE GenList (s: Set;  cnt: INTEGER;  eq: BOOLEAN): INTEGER =
       CG.Init_intt (offs + M3RT.RV_lhs_id, Target.Integer.size, array[i].lhs_id, TRUE);
       CG.Init_intt (offs + M3RT.RV_rhs_id, Target.Integer.size, array[i].rhs_id, TRUE);
       INC (offs, M3RT.RV_SIZE);
+      IF MSIREmit.IsEnabled() AND eq THEN
+        MSIRBuilder.AddRevelation(array[i].lhs_id, array[i].rhs_id);
+      END;
     END;
 
     RETURN base;

@@ -651,17 +651,22 @@ PROCEDURE GenBodyMSIR (p: T) =
        referencing them — they live in p's own frame and are not captures of p. *)
     Stmt.Capture (p.block, ca);
     FilterOwnScope (p, ca);
-    (* Use the fully-qualified unmangled name so nested procs don't collide
-       with module-level procs of the same base name. *)
+    (* Use the short name: BeginProc is always entered in a nested context here
+       (called from LangInit when InProc() is TRUE) and will prefix the outer
+       proc's name to produce a unique qualified symbol. *)
     IF NOT MSIRBuilder.BeginProc (
-              Value.GlobalName (p, dots := FALSE, with_module := FALSE),
+              M3ID.ToText (p.name),
               ProcType.Formals (p.signature),
               p.syms, ProcType.Result (p.signature),
               isExternal := TRUE,
               captures := ca) THEN RETURN END;
     MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
                                CaptureAnalysis.GetCaptures (ca));
-    Stmt.CompileMSIR (p.block);
+    TRY
+      Stmt.CompileMSIR (p.block);
+    EXCEPT ELSE
+      MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
+    END;
     MSIRBuilder.EndProc ();
   END GenBodyMSIR;
 
@@ -745,7 +750,7 @@ PROCEDURE GenBody (p: T) =
         msirCa := CaptureAnalysis.New ();
         Stmt.Capture (p.block, msirCa);
         FilterOwnScope (p, msirCa);
-        EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
+        EVAL MSIRBuilder.BeginProc (Value.GlobalName (p, dots := FALSE, with_module := TRUE),
                                     ProcType.Formals (p.signature),
                                     p.syms,
                                     tresult,
@@ -753,7 +758,7 @@ PROCEDURE GenBody (p: T) =
                                     captures := msirCa);
       ELSE
         msirCa := NIL;
-        EVAL MSIRBuilder.BeginProc (M3ID.ToText (p.name),
+        EVAL MSIRBuilder.BeginProc (Value.GlobalName (p, dots := FALSE, with_module := TRUE),
                                     ProcType.Formals (p.signature),
                                     p.syms,
                                     tresult,
@@ -796,10 +801,22 @@ PROCEDURE GenBody (p: T) =
         END;
       Marker.Pop ();
     END;
+    (* MSIRObj mode: the CG path above was skipped (p.cg_proc = NIL), so
+       Scope.InitValues(p.syms) was never called.  Nested procs live in p.syms
+       and require LangInit (→ GenBodyMSIR) to be triggered before the MSIR
+       body is compiled below.  In normal C-mode the call at line 783 handles
+       this; here we do it explicitly for the MSIR-only path. *)
+    IF p.cg_proc = NIL AND NOT msirSkip AND MSIRBuilder.InProc () THEN
+      Scope.InitValues (p.syms);
+    END;
     Scope.Exit (p.syms);
 
     IF NOT msirSkip AND MSIRBuilder.InProc () THEN
-      Stmt.CompileMSIR (p.block);
+      TRY
+        Stmt.CompileMSIR (p.block);
+      EXCEPT ELSE
+        MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
+      END;
     END;
     IF NOT msirSkip THEN
       MSIRBuilder.EndProc ();

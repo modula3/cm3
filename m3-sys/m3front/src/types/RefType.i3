@@ -19,6 +19,10 @@ PROCEDURE IsBranded (t: Type.T): BOOLEAN;
 
 PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN;
 
+PROCEDURE ReduceToRef (t: Type.T): Type.T;
+(* Return the underlying revealed REF type: follows opaque revelation chains.
+   Returns NIL if t is not a REF type (directly or via revelation). *)
+
 PROCEDURE NoteRefName (t: Type.T;  name: TEXT);
 (* record a user name for the ref type 't' *)
 

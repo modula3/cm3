@@ -763,13 +763,12 @@ PROCEDURE FillMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
       mOff := (mBase + method.offset) DIV Target.Address.size;
       expr := Expr.ConstValue (method.dfault);
       IF expr = NIL THEN
-        RETURN FALSE;  (* non-constant default *)
+        (* abstract or non-constant default — leave slot NIL; a concrete
+           subtype's OVERRIDES will fill it in on the next recursion level *)
       ELSIF UserProc.IsProcedureLiteral (expr, proc) THEN
         m[mOff] := Value.GlobalName (proc, dots := FALSE, with_module := TRUE);
-      ELSIF AddressExpr.Split (expr, addr) AND TInt.EQ (addr, TInt.Zero) THEN
-        RETURN FALSE;  (* NIL default — runtime must patch *)
       ELSE
-        RETURN FALSE;  (* unknown *)
+        (* NIL default or unknown expr — leave slot NIL for caller to detect *)
       END;
       v := v.next;
     END;

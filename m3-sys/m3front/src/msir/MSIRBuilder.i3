@@ -191,8 +191,12 @@ PROCEDURE PopCatchContext  ();
 PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
 
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
-                          rtype: MSIR.T;
+                          rtype: MSIR.T;  resultSlot: MSIR.Value;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+(* rtype is the return type for small-result calls (resultSlot = NIL).
+   For large-result (struct) calls, pass resultSlot = the alloca that receives
+   the result; rtype is ignored and the call uses void return with the hidden
+   result pointer prepended as arg[0] before obj. *)
 
 (* Like EmitCallIndirect but emits a runtime CL_marker check so the call
    works whether fn is a plain function pointer or a fat-pointer closure.
@@ -256,6 +260,10 @@ PROCEDURE ArrayTypeCellRef(t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForRef      (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForRefArray (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForObject   (t: Type.T): MSIR.Value;
+
+(* Record a REVEAL entry (lhs=opaque UID, rhs=revealed UID) for this module.
+   Called from Revelation.GenList so MSIRToLLVM can emit the full_rev array. *)
+PROCEDURE AddRevelation (lhsUID, rhsUID: INTEGER);
 
 (*----------------------------------------------- Bitfield read/write helpers *)
 
@@ -330,6 +338,17 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
                               infoName: TEXT;  byteOff: INTEGER;
                               fieldType: MSIR.T;  needsLoad: BOOLEAN := FALSE;
                               dataType: MSIR.T := NIL);
+
+(* Register an imported (non-external) M3 variable for access via the RT0
+   import-chain mechanism.  At code-generation time, LookupVar/LookupVarAddr
+   loads the II_import pointer from @<curMod>_M3_imp.k (where k is the index
+   of ownerBinder in the current module's import binder list) and advances by
+   varByteOff bytes to reach the variable's storage in the imported module's
+   interface struct.  varMSIRType is the MSIR element type of the stored value
+   (use TPtr(TVoid()) for traced GcRef types). *)
+PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
+                              ownerBinder: TEXT;  varByteOff: INTEGER;
+                              varMSIRType: MSIR.T);
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T);
 PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
 

@@ -6,6 +6,7 @@ IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
 IMPORT Expr, ArrayExpr, ArrayType, RecordExpr;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
+IMPORT RefType;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 CONST MaxExitStack = 16;
@@ -46,10 +47,13 @@ TYPE ProcEntry   = RECORD
   caps: REF ARRAY OF CaptureAnalysis.Capture;  (* NIL for non-nested procs *)
 END;
 TYPE GlobalEntry = RECORD
-  key:       Variable.T;
-  val:       MSIR.Global;
-  needsLoad: BOOLEAN := FALSE;  (* TRUE for large indirect globals: struct holds ptr-to-data *)
-  dataType:  MSIR.T  := NIL;   (* actual element type for indirect globals; used for typed ptr *)
+  key:         Variable.T;
+  val:         MSIR.Global;
+  needsLoad:   BOOLEAN := FALSE;  (* TRUE for large indirect globals: struct holds ptr-to-data *)
+  dataType:    MSIR.T  := NIL;   (* actual element type for indirect globals; used for typed ptr *)
+  importBind:  TEXT    := NIL;   (* non-NIL for import chain entries: owning module binder name *)
+  varByteOff:  INTEGER := 0;     (* byte offset of variable in imported module's interface struct *)
+  varMSIRType: MSIR.T  := NIL;  (* stored element type for import chain entries *)
 END;
 
 VAR
@@ -151,6 +155,7 @@ PROCEDURE BeginProc(name: TEXT;
     nHidden:       INTEGER := 0;
     pBase:         INTEGER;  (* param index offset = nHidden + nCaptures *)
     caps:          REF ARRAY OF CaptureAnalysis.Capture;
+    reuseProc:     MSIR.Proc;
   BEGIN
     IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
     (* Push current state if we're already inside a proc (nested proc). *)
@@ -174,10 +179,10 @@ PROCEDURE BeginProc(name: TEXT;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
-      (* Prefix nested proc name with parent's name to prevent clashes with
-         a module-level proc of the same base name (e.g., both 'Add'). *)
+      (* Prefix nested proc name with parent's fully-qualified name using "__"
+         (the M3 ABI separator) so the LLVM symbol matches the C backend. *)
       name := MSIR.ProcName(procContextStack[procContextDepth - 1].proc)
-              & "_" & name;
+              & "__" & name;
     END;
     abandoned      := FALSE;
     varMapN        := 0;
@@ -253,7 +258,7 @@ PROCEDURE BeginProc(name: TEXT;
             PopBeginContext();
             RETURN FALSE;
           END;
-          params[i + pBase].name := M3ID.ToText(info.name);
+          params[i + pBase].name := "a." & M3ID.ToText(info.name);
           CASE info.mode OF
           | Formal.Mode.mVALUE =>
               params[i + pBase].mode := MSIR.ParamMode.ByValue;
@@ -279,7 +284,50 @@ PROCEDURE BeginProc(name: TEXT;
         f := f.next;
       END;
 
-      curProc  := MSIR.NewProc(name, params^, resultT);
+      (* If LookupOrCreateProc already built a bodyless stub with this name
+         (because the proc was called before its body was compiled), reuse
+         that stub as curProc so the definition and the call-site reference
+         the same MSIR.Proc object and end up at the same LLVM symbol.
+         Only fall through to the uniqueness rename when no bodyless stub
+         exists — that path handles genuinely duplicate proc names (e.g.
+         sequential BEGIN...END blocks that happen to share a generated name). *)
+      reuseProc := NIL;
+      FOR i := 0 TO procMapN - 1 DO
+        VAR pn := MSIR.ProcName(procMap[i].val); BEGIN
+          IF pn # NIL AND Text.Equal(pn, name)
+             AND MSIR.ProcBlockCount(procMap[i].val) = 0 THEN
+            reuseProc := procMap[i].val;
+            EXIT;
+          END;
+        END;
+      END;
+      IF reuseProc # NIL THEN
+        curProc := reuseProc;
+      ELSE
+        (* Ensure unique LLVM function name; multiple Modula-3 procs of the
+           same name at the same nesting level would produce an "invalid
+           redefinition" llc error. *)
+        VAR uniqueName := name;  nameCounter := 1;
+        BEGIN
+          LOOP
+            VAR clash := FALSE;
+            BEGIN
+              FOR i := 0 TO procMapN - 1 DO
+                VAR pn := MSIR.ProcName(procMap[i].val); BEGIN
+                  IF pn # NIL AND Text.Equal(pn, uniqueName) THEN
+                    clash := TRUE;  EXIT;
+                  END;
+                END;
+              END;
+              IF NOT clash THEN EXIT END;
+            END;
+            INC(nameCounter);
+            uniqueName := name & "__" & Fmt.Int(nameCounter);
+          END;
+          name := uniqueName;
+        END;
+        curProc := MSIR.NewProc(name, params^, resultT);
+      END;
       curBlock := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
       MSIR.ProcAddBlock(curProc, curBlock);
       IF NOT isExternal THEN
@@ -375,6 +423,15 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
     END;
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN
+        IF globalMap[i].importBind # NIL THEN
+          (* Import chain: load the import ptr, GEP to the var, load the value. *)
+          VAR addr := ImportChainAddr(globalMap[i].importBind, globalMap[i].varByteOff);
+          VAR mt   := globalMap[i].varMSIRType;
+          BEGIN
+            IF addr = NIL OR mt = NIL THEN RETURN NIL END;
+            RETURN MSIR.BuildLoad(curBlock, "", mt, addr);
+          END;
+        END;
         gv := MSIR.GlobalValue(globalMap[i].val);
         IF globalMap[i].needsLoad THEN
           (* Large indirect global: struct field holds ptr-to-data.
@@ -415,6 +472,18 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
     END;
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN
+        IF globalMap[i].importBind # NIL THEN
+          (* Import chain: load the import ptr, GEP to the var's address.
+             Retype to Ptr(varMSIRType) so subscript/field accesses get a
+             typed pointer instead of ptr void. *)
+          VAR addr := ImportChainAddr(globalMap[i].importBind, globalMap[i].varByteOff);
+              mt   := globalMap[i].varMSIRType;
+          BEGIN
+            IF addr = NIL THEN RETURN NIL END;
+            IF mt # NIL THEN RETURN MSIR.RetypeValue(addr, MSIR.TPtr(mt)) END;
+            RETURN addr;
+          END;
+        END;
         VAR ref := MSIR.GlobalValue(globalMap[i].val);
         BEGIN
           IF globalMap[i].needsLoad THEN
@@ -484,7 +553,7 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
     END;
     allocaVal := MSIR.BuildAlloca(
                    curBlock,
-                   UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE)),
+                   UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE) & ".slot"),
                    mt);
     IF varMapN >= MaxVarMap THEN
       Abandon("too many variables in proc");
@@ -529,15 +598,16 @@ PROCEDURE EndProc() =
     IF NOT abandoned THEN
       MSIREmit.AddProc(curProc);
     ELSE
-      (* Abandoned: remove from procMap so call sites get a fresh external stub
-         with the fully-qualified name (dots → __ in LLSymbol). *)
-      FOR i := 0 TO procMapN - 1 DO
-        IF procMap[i].val = curProc THEN
-          FOR j := i TO procMapN - 2 DO procMap[j] := procMap[j+1] END;
-          DEC(procMapN);
-          EXIT;
-        END;
+      (* Abandoned: emit an unreachable stub so the linker still finds the
+         symbol.  This prevents undefined-symbol link errors when the proc is
+         called from other procs in the same module that compiled successfully.
+         Add `unreachable` to the current (partial) block, then emit. *)
+      IF curBlock # NIL AND NOT MSIR.BlockIsTerminated(curBlock) THEN
+        MSIR.BuildUnreachable(curBlock);
       END;
+      MSIREmit.AddProc(curProc);
+      (* Keep in procMap so callers in this module find the stub definition
+         rather than creating a fresh external reference. *)
     END;
     (* Pop saved outer proc context if we're returning from a nested proc. *)
     IF procContextDepth > 0 THEN
@@ -609,7 +679,9 @@ PROCEDURE CurrentProc(): MSIR.Proc =
 PROCEDURE CurrentBlock(): MSIR.Block =
   BEGIN
     IF curBlock # NIL AND MSIR.BlockIsTerminated(curBlock) THEN
-      VAR dead := MSIR.NewBlock("dead", ARRAY OF MSIR.BlockParam{});
+      INC(blockSeq);
+      VAR dead := MSIR.NewBlock("dead." & Fmt.Int(blockSeq),
+                                ARRAY OF MSIR.BlockParam{});
       BEGIN
         MSIR.ProcAddBlock(curProc, dead);
         curBlock := dead;
@@ -782,7 +854,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
       VAR pt := MSIRType.Translate(info.type);
       BEGIN
         IF pt = NIL THEN RETURN NIL END;
-        params[nHidden + 1 + i].name := M3ID.ToText(info.name);
+        params[nHidden + 1 + i].name := "a." & M3ID.ToText(info.name);
         CASE info.mode OF
         | Formal.Mode.mVALUE =>
             params[nHidden + 1 + i].mode := MSIR.ParamMode.ByValue;
@@ -1133,7 +1205,7 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
   END EmitCallIndirect;
 
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
-                          rtype: MSIR.T;
+                          rtype: MSIR.T;  resultSlot: MSIR.Value;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   VAR
     ptrT    := MSIR.TPtr(MSIR.TVoid());
@@ -1146,6 +1218,8 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
     unwind  : MSIR.Block;
     normalB : MSIR.Block;
     result  : MSIR.Value;
+    largeRes := resultSlot # NIL;
+    nExtra  : INTEGER;
   BEGIN
     b := CurrentBlock();   (* advance past any dead-terminator block *)
 
@@ -1157,7 +1231,6 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
     END;
 
     (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
-    (* Vtable slot N is at byte offset N * Target.Address.bytes. *)
     IF midx = 0 THEN
       slotPtr := suite;
     ELSE
@@ -1168,12 +1241,23 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
     (* 3. Load function pointer from the slot. *)
     fn := MSIR.BuildLoad(b, "", ptrT, slotPtr);
 
-    (* 4. Build argument list: obj (implicit self) first, then explicit args. *)
-    allArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
-    allArgs[0] := obj;
-    FOR k := 0 TO nArgs - 1 DO allArgs[1 + k] := args[k] END;
+    (* 4. Build argument list.
+       CM3 large-result convention: resultSlot (hidden ptr) is prepended
+       before obj (self), matching the CG path: GenResultArg before PassObject.
+       Small-result: obj first, then explicit args. *)
+    nExtra := 1 + ORD(largeRes);  (* 1 for obj; +1 for resultSlot if large *)
+    allArgs := NEW(REF ARRAY OF MSIR.Value, nExtra + nArgs);
+    IF largeRes THEN
+      allArgs[0] := resultSlot;
+      allArgs[1] := obj;
+    ELSE
+      allArgs[0] := obj;
+    END;
+    FOR k := 0 TO nArgs - 1 DO allArgs[nExtra + k] := args[k] END;
 
-    (* 5. Indirect call or invoke depending on TRY context. *)
+    (* 5. Indirect call or invoke depending on TRY context.
+       Large-result: call with void return (result written through resultSlot). *)
+    IF largeRes THEN rtype := NIL END;
     unwind := CurrentUnwindBlock();
     IF unwind # NIL THEN
       normalB := NewBlock("dispatch.cont");
@@ -1212,8 +1296,10 @@ PROCEDURE CxaStub(name: TEXT;  READONLY params: ARRAY OF MSIR.Param;
   (* Return a cached MSIR extern stub for a C++ ABI function. *)
   BEGIN
     FOR i := 0 TO procMapN - 1 DO
-      IF Text.Equal(MSIR.ProcName(procMap[i].val), name) THEN
-        RETURN procMap[i].val;
+      VAR pn := MSIR.ProcName(procMap[i].val); BEGIN
+        IF pn # NIL AND Text.Equal(pn, name) THEN
+          RETURN procMap[i].val;
+        END;
       END;
     END;
     VAR p := MSIR.NewProc(name, params, rtype);
@@ -1342,12 +1428,18 @@ PROCEDURE ArrayTypeCellRef(t: Type.T): MSIR.Value =
 
 PROCEDURE TypeLinkValueForRef(t: Type.T): MSIR.Value =
   VAR m    := MSIREmit.CurrentModule();
-      uid  := Type.GlobalUID(t);
-      nm   := "tl_ref_" & Fmt.Int(uid);
+      (* Resolve opaque types to their revealed REF type so the TypeLink UID
+         matches the TypeCell UID registered by InitTypecellMSIR. *)
+      tRef := RefType.ReduceToRef(t);
+      uid  : INTEGER;
+      nm   : TEXT;
       tl   : MSIR.TypeLink;
       addr : MSIR.Value;
   BEGIN
     IF m = NIL THEN RETURN NIL END;
+    IF tRef # NIL THEN t := tRef END;
+    uid := Type.GlobalUID(t);
+    nm  := "tl_ref_" & Fmt.Int(uid);
     FOR i := 0 TO MSIR.ModuleTypeLinkCount(m) - 1 DO
       tl := MSIR.ModuleTypeLink(m, i);
       IF Text.Equal(MSIR.TypeLinkName(tl), nm) THEN
@@ -1402,6 +1494,13 @@ PROCEDURE TypeLinkValueForObject(t: Type.T): MSIR.Value =
     addr := MSIR.TypeCellRef(nm);
     RETURN MSIR.BuildLoad(CurrentBlock(), "", MSIR.TPtr(MSIR.TVoid()), addr);
   END TypeLinkValueForObject;
+
+PROCEDURE AddRevelation (lhsUID, rhsUID: INTEGER) =
+  VAR m := MSIREmit.CurrentModule();
+  BEGIN
+    IF m = NIL THEN RETURN END;
+    MSIR.ModuleAddRevelation(m, MSIR.NewRevelation(lhsUID, rhsUID));
+  END AddRevelation;
 
 PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
   VAR proc: Procedure.T;
@@ -1486,7 +1585,7 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
             Abandon("unsupported parameter type in callee");
             RETURN NIL;
           END;
-          params[i + nHidden].name := M3ID.ToText(info.name);
+          params[i + nHidden].name := "a." & M3ID.ToText(info.name);
           CASE info.mode OF
           | Formal.Mode.mVALUE =>
               params[i + nHidden].mode := MSIR.ParamMode.ByValue;
@@ -1511,7 +1610,10 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
         END;
         f := f.next;
       END;
-      VAR stub := MSIR.NewProc(Value.GlobalName(v), params^, resultT);
+      (* dots := FALSE → considerExternal = TRUE in NameToPrefix, so
+         <* EXTERNAL ThreadPThread__foo *> pragmas are respected instead
+         of generating "InterfaceName.proc" with the interface's name. *)
+      VAR stub := MSIR.NewProc(Value.GlobalName(v, dots := FALSE), params^, resultT);
       BEGIN
         RegisterProc(v, stub);
         RETURN stub;
@@ -1710,12 +1812,75 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
     END;
     IF globalMapN >= MaxGlobalMap THEN RETURN END;
     MSIR.ModuleAddGlobal(m, g);
-    globalMap[globalMapN].key       := v;
-    globalMap[globalMapN].val       := g;
-    globalMap[globalMapN].needsLoad := FALSE;
-    globalMap[globalMapN].dataType  := NIL;
+    globalMap[globalMapN].key         := v;
+    globalMap[globalMapN].val         := g;
+    globalMap[globalMapN].needsLoad   := FALSE;
+    globalMap[globalMapN].dataType    := NIL;
+    globalMap[globalMapN].importBind  := NIL;
+    globalMap[globalMapN].varByteOff  := 0;
+    globalMap[globalMapN].varMSIRType := NIL;
     INC(globalMapN);
   END GlobalMapAdd;
+
+PROCEDURE ImportChainAddr(binderName: TEXT;  varByteOff: INTEGER): MSIR.Value =
+  (* Load the import pointer for the module whose binder is 'binderName',
+     then GEP by varByteOff bytes to get the address of the imported variable.
+     The RT0.ImportInfo chain for the current module has its II_import field
+     (at byte offset 0) filled in by RTLinker at runtime with a pointer to the
+     imported module's interface struct. *)
+  VAR
+    m       := MSIREmit.CurrentModule();
+    modName : TEXT;
+    k       : INTEGER := -1;
+    nBind   : INTEGER;
+    i       : INTEGER;
+    impRef  : MSIR.Value;
+    impPtr  : MSIR.Value;
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    modName := MSIR.ModuleName(m);
+    nBind   := MSIR.ModuleImportBinderCount(m);
+    i       := 0;
+    WHILE i < nBind AND k < 0 DO
+      IF Text.Equal(MSIR.ModuleImportBinder(m, i), binderName) THEN
+        k := i;
+      END;
+      INC(i);
+    END;
+    IF k < 0 THEN
+      Abandon("import chain: binder not registered: " & binderName);
+      RETURN NIL;
+    END;
+    (* @<modName>_M3_imp.k field 0 = II_import (ptr to imported interface struct). *)
+    impRef := MSIR.StructFieldRef(modName & "_M3_imp." & Fmt.Int(k), 0,
+                                  MSIR.TPtr(MSIR.TPtr(MSIR.TVoid())));
+    impPtr := MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), impRef);
+    IF impPtr = NIL THEN RETURN NIL END;
+    IF varByteOff = 0 THEN RETURN impPtr END;
+    RETURN MSIR.BuildPtrAdd(curBlock, "", impPtr, varByteOff);
+  END ImportChainAddr;
+
+PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
+                              ownerBinder: TEXT;  varByteOff: INTEGER;
+                              varMSIRType: MSIR.T) =
+  (* Register an imported (non-external) M3 variable as an import-chain entry.
+     At code-generation time, LookupVar/LookupVarAddr loads the import pointer
+     from @<curMod>_M3_imp.k and GEPs to varByteOff to reach the variable. *)
+  BEGIN
+    FOR i := 0 TO globalMapN - 1 DO
+      IF globalMap[i].key = v THEN RETURN END;
+    END;
+    IF globalMapN >= MaxGlobalMap THEN RETURN END;
+    (* No MSIR.ModuleAddGlobal call — import chain entries have no standalone global. *)
+    globalMap[globalMapN].key         := v;
+    globalMap[globalMapN].val         := NIL;
+    globalMap[globalMapN].needsLoad   := FALSE;
+    globalMap[globalMapN].dataType    := NIL;
+    globalMap[globalMapN].importBind  := ownerBinder;
+    globalMap[globalMapN].varByteOff  := varByteOff;
+    globalMap[globalMapN].varMSIRType := varMSIRType;
+    INC(globalMapN);
+  END GlobalMapAddImport;
 
 PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
                               infoName: TEXT;  byteOff: INTEGER;
@@ -1730,10 +1895,13 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
     MSIR.GlobalSetStructField(g, byteOff,
                               MSIR.StructFieldRef(infoName, byteOff, fieldType));
     MSIR.ModuleAddGlobal(m, g);
-    globalMap[globalMapN].key       := v;
-    globalMap[globalMapN].val       := g;
-    globalMap[globalMapN].needsLoad := needsLoad;
-    globalMap[globalMapN].dataType  := dataType;
+    globalMap[globalMapN].key         := v;
+    globalMap[globalMapN].val         := g;
+    globalMap[globalMapN].needsLoad   := needsLoad;
+    globalMap[globalMapN].dataType    := dataType;
+    globalMap[globalMapN].importBind  := NIL;
+    globalMap[globalMapN].varByteOff  := 0;
+    globalMap[globalMapN].varMSIRType := NIL;
     INC(globalMapN);
   END GlobalMapAddStruct;
 
@@ -1822,9 +1990,27 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
         naturalT := MSIRType.Translate (packedBase);
         IF naturalT = NIL THEN naturalT := MSIR.TI (Target.Integer.size) END;
         doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
-        IF doSExt
-          THEN RETURN MSIR.BuildSExt (b, "", extracted, naturalT)
-          ELSE RETURN MSIR.BuildZExt (b, "", extracted, naturalT)
+        VAR srcBits := wordBits;
+            dstBits := MSIR.BitWidth (naturalT);
+            inNat   : MSIR.Value;
+        BEGIN
+          (* First widen or narrow extracted to naturalT width. *)
+          IF srcBits > dstBits
+            THEN inNat := MSIR.BuildTrunc (b, "", extracted, naturalT)
+          ELSIF srcBits < dstBits
+            THEN inNat := MSIR.BuildZExt  (b, "", extracted, naturalT)
+          ELSE       inNat := extracted
+          END;
+          IF doSExt AND dstBits > bitWidth THEN
+            (* Sign-extend from bitWidth bits to dstBits via shift trick. *)
+            VAR shift := MSIR.ConstInt (naturalT, dstBits - bitWidth);
+            BEGIN
+              RETURN MSIR.BuildIAShr (b, "",
+                       MSIR.BuildIShl (b, "", inNat, shift), shift)
+            END
+          ELSE
+            RETURN inNat
+          END
         END;
       END;
     END;
@@ -1836,10 +2022,44 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     b         := curBlock;
     byteStart := bitOff DIV 8;
     bitInByte := bitOff MOD 8;
-    p0        := MSIR.BuildPtrAdd (b, "", base, byteStart);
-    b0        := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
+    p0        : MSIR.Value;
+    b0        : MSIR.Value;
     maskVal   : INTEGER := 1;
   BEGIN
+    (* Wide field: > 16 bits (> 2 bytes).  Decompose into 8-bit chunks, each
+       injected by a recursive single/two-byte InsertBitField call. *)
+    IF bitInByte + bitWidth > 16 THEN
+      VAR intT     := MSIR.TI (Target.Integer.size);
+          rhsBits  := MSIR.BitWidth (MSIR.ValueType (rhs));
+          rhsNat   : MSIR.Value;
+          bitsLeft := bitWidth;
+          boff     := bitOff;
+      BEGIN
+        IF rhsBits < Target.Integer.size
+          THEN rhsNat := MSIR.BuildZExt  (b, "", rhs, intT)
+        ELSIF rhsBits > Target.Integer.size
+          THEN rhsNat := MSIR.BuildTrunc (b, "", rhs, intT)
+        ELSE       rhsNat := rhs
+        END;
+        WHILE bitsLeft > 0 DO
+          b := curBlock;
+          VAR bitsNow := MIN (8, bitsLeft);
+              jByte   := (boff - bitOff) DIV 8;
+              shifted := MSIR.BuildILShr (b, "", rhsNat,
+                             MSIR.ConstInt (intT, jByte * 8));
+              byteJ   := MSIR.BuildIAnd (b, "", shifted,
+                             MSIR.ConstInt (intT, 16_FF));
+          BEGIN
+            InsertBitField (base, boff, bitsNow, byteJ);
+            INC (boff, bitsNow);
+            DEC (bitsLeft, bitsNow);
+          END;
+        END;
+      END;
+      RETURN;
+    END;
+    p0 := MSIR.BuildPtrAdd (b, "", base, byteStart);
+    b0 := MSIR.BuildLoad (b, "", MSIR.TI (8), p0);
     FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
     maskVal := maskVal - 1;   (* (1 << bitWidth) - 1 *)
     IF bitInByte + bitWidth <= 8 THEN
@@ -1847,14 +2067,26 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
       BEGIN
         FOR i := 1 TO bitInByte DO mk := mk * 2 END;
         mk := mk MOD 256;
-        VAR
-          notMask := MSIR.ConstInt (MSIR.TI (8), (256 - mk - 1) MOD 256);
-          val8    := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (8));
+        VAR i8T     := MSIR.TI (8);
+            rhsBits := MSIR.BitWidth (MSIR.ValueType (rhs));
+            notMask := MSIR.ConstInt (i8T, (256 - mk - 1) MOD 256);
+            val8    : MSIR.Value;
+            shifted : MSIR.Value;
+          cleared : MSIR.Value;
+          merged  : MSIR.Value;
+        BEGIN
+          IF rhsBits > 8
+            THEN val8 := MSIR.BuildTrunc (b, "", rhs, i8T)
+          ELSIF rhsBits < 8
+            THEN val8 := MSIR.BuildZExt  (b, "", rhs, i8T)
+          ELSIF MSIR.Equal (MSIR.ValueType (rhs), i8T)
+            THEN val8 := rhs
+          ELSE       val8 := MSIR.RetypeValue (rhs, i8T)
+          END;
           shifted := MSIR.BuildIShl (b, "", val8,
-                         MSIR.ConstInt (MSIR.TI (8), bitInByte));
+                       MSIR.ConstInt (i8T, bitInByte));
           cleared := MSIR.BuildIAnd (b, "", b0, notMask);
           merged  := MSIR.BuildIOr  (b, "", cleared, shifted);
-        BEGIN
           MSIR.BuildStore (b, merged, p0);
         END;
       END;
@@ -1871,13 +2103,24 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
         FOR i := 1 TO bitInByte DO mk16 := mk16 * 2 END;
         VAR
           notMask16 := MSIR.ConstInt (MSIR.TI (16), (16_10000 - mk16 - 1) MOD 16_10000);
-          valTrunc  := MSIR.BuildTrunc (b, "", rhs, MSIR.TI (bitWidth));
-          val16     := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
-          shiftedV  := MSIR.BuildIShl  (b, "", val16,
-                           MSIR.ConstInt (MSIR.TI (16), bitInByte));
-          merged    := MSIR.BuildIOr (b, "",
-                           MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
+          rhsBitsX  := MSIR.BitWidth (MSIR.ValueType (rhs));
+          bwT       := MSIR.TI (bitWidth);
+          valTrunc  : MSIR.Value;
+          val16     : MSIR.Value;
+          shiftedV  : MSIR.Value;
+          merged    : MSIR.Value;
         BEGIN
+          IF rhsBitsX > bitWidth
+            THEN valTrunc := MSIR.BuildTrunc (b, "", rhs, bwT)
+          ELSIF rhsBitsX < bitWidth
+            THEN valTrunc := MSIR.BuildZExt  (b, "", rhs, bwT)
+          ELSE       valTrunc := rhs
+          END;
+          val16    := MSIR.BuildZExt  (b, "", valTrunc, MSIR.TI (16));
+          shiftedV := MSIR.BuildIShl  (b, "", val16,
+                          MSIR.ConstInt (MSIR.TI (16), bitInByte));
+          merged   := MSIR.BuildIOr (b, "",
+                          MSIR.BuildIAnd (b, "", word, notMask16), shiftedV);
           MSIR.BuildStore (b, MSIR.BuildTrunc (b, "", merged, MSIR.TI (8)), p0);
           MSIR.BuildStore (b, MSIR.BuildTrunc (b, "",
                                 MSIR.BuildILShr (b, "", merged,
@@ -1935,9 +2178,25 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
             naturalT := MSIRType.Translate (packedBase);
             IF naturalT = NIL THEN naturalT := MSIR.TI (Target.Integer.size) END;
             doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
-            IF doSExt
-              THEN RETURN MSIR.BuildSExt (b, "", extracted, naturalT)
-              ELSE RETURN MSIR.BuildZExt (b, "", extracted, naturalT)
+            VAR srcBits8 := 8;  (* extracted is always i8 here *)
+                dstBits  := MSIR.BitWidth (naturalT);
+                inNat    : MSIR.Value;
+            BEGIN
+              IF srcBits8 > dstBits
+                THEN inNat := MSIR.BuildTrunc (b, "", extracted, naturalT)
+              ELSIF srcBits8 < dstBits
+                THEN inNat := MSIR.BuildZExt  (b, "", extracted, naturalT)
+              ELSE       inNat := extracted
+              END;
+              IF doSExt AND dstBits > eltPack THEN
+                VAR shift := MSIR.ConstInt (naturalT, dstBits - eltPack);
+                BEGIN
+                  RETURN MSIR.BuildIAShr (b, "",
+                           MSIR.BuildIShl (b, "", inNat, shift), shift)
+                END
+              ELSE
+                RETURN inNat
+              END
             END;
           END;
         END;

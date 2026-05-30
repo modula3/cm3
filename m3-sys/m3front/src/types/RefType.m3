@@ -125,6 +125,10 @@ PROCEDURE Split (t: Type.T;  VAR target: Type.T): BOOLEAN =
     RETURN TRUE;
   END Split;
 
+(* EXPORTED *)
+PROCEDURE ReduceToRef (t: Type.T): Type.T =
+  BEGIN RETURN Reduce (t) END ReduceToRef;
+
 (* Externally dispatched-to: *)
 PROCEDURE Check (p: P) =
   VAR

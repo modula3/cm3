@@ -115,23 +115,38 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   (* Extract(x, i, n): (x >> i) & ((1 << n) - 1)
-     Mask computed as lshr(allones, W - n) to handle n = 0 safely (gives 0). *)
+     Mask computed as lshr(allones, W - n) to handle n = 0 safely (gives 0).
+     All operands are coerced to the canonical word type wt so that LLVM shift
+     operands have consistent types and shift amounts stay < W. *)
   VAR
     x  := Expr.CompileMSIR (ce.args[0]);
     i  := Expr.CompileMSIR (ce.args[1]);
     n  := Expr.CompileMSIR (ce.args[2]);
     b  := MSIRBuilder.CurrentBlock ();
-    xt, nt : MSIR.T;
-    W      : INTEGER;
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
     ones, wConst, wMinusN, mask, shifted: MSIR.Value;
+    xb, ib, nb : INTEGER;
   BEGIN
     IF x = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
-    xt     := MSIR.ValueType (x);
-    nt     := MSIR.ValueType (n);
-    W      := Word_types[rep].size;
-    ones   := MSIR.ConstInt (xt, -1);
-    wConst := MSIR.ConstInt (nt, W);
-    wMinusN := MSIR.BuildISub (b, "", wConst, n);
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    ib := MSIR.BitWidth (MSIR.ValueType (i));
+    nb := MSIR.BitWidth (MSIR.ValueType (n));
+    IF xb > 0 AND xb # W THEN
+      IF xb > W THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE            x := MSIR.BuildZExt  (b, "", x, wt) END;
+    END;
+    IF ib > 0 AND ib # W THEN
+      IF ib > W THEN i := MSIR.BuildTrunc (b, "", i, wt)
+      ELSE            i := MSIR.BuildZExt  (b, "", i, wt) END;
+    END;
+    IF nb > 0 AND nb # W THEN
+      IF nb > W THEN n := MSIR.BuildTrunc (b, "", n, wt)
+      ELSE            n := MSIR.BuildZExt  (b, "", n, wt) END;
+    END;
+    ones    := MSIR.ConstInt (wt, -1);
+    wConst  := MSIR.ConstInt (wt, W);
+    wMinusN := MSIR.BuildISub  (b, "", wConst, n);
     mask    := MSIR.BuildILShr (b, "", ones, wMinusN);
     shifted := MSIR.BuildILShr (b, "", x, i);
     RETURN MSIR.BuildIAnd (b, "", shifted, mask);

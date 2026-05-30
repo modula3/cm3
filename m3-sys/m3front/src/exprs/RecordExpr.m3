@@ -14,7 +14,7 @@ IMPORT M3, M3ID, CG, Error, Type, RecordType, Module, Target;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
 IMPORT MSIR, MSIRBuilder, MSIRType;
-IMPORT IntegerExpr, EnumExpr, TInt;
+IMPORT IntegerExpr, EnumExpr, TextExpr, TInt;
 
 TYPE
   Info = RECORD
@@ -767,13 +767,14 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
 
 PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
 (* Try to extract a compile-time constant MSIR value from a field expression.
-   Only handles integer and enum constants (safe: no instruction emission).
-   Returns NIL for float or other field types. *)
+   Handles integers, enums, and TEXT literals — all safe (no instruction emission).
+   Returns NIL for other field types. *)
   VAR
     folded : Expr.T;
     ti     : Target.Int;
     tt     : Type.T;
     intV   : INTEGER;
+    cv     : MSIR.Value;
   BEGIN
     folded := Expr.ConstValue(fieldExpr);
     IF folded = NIL THEN RETURN NIL END;
@@ -786,6 +787,14 @@ PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
       IF NOT TInt.ToInt(ti, intV) THEN RETURN NIL END;
       IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
       RETURN MSIR.ConstInt(ft, intV);
+    END;
+    (* TEXT literal — CompileMSIR on a const TextExpr emits no IR instructions,
+       it just registers the literal and returns a ConstTextLit value. *)
+    IF TextExpr.IsTextExpr(folded) THEN
+      cv := Expr.CompileMSIR(folded);
+      IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstTextLit THEN
+        RETURN cv;
+      END;
     END;
     RETURN NIL;
   END TryConstFieldMSIR;

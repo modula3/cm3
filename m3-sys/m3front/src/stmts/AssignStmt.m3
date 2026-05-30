@@ -856,6 +856,10 @@ PROCEDURE CompileMSIR (p: P) =
     rhsVal    : MSIR.Value;
     container : MSIR.Value;
   BEGIN
+    (* Discard any stale pending container from prior sub-expression evaluation
+       (e.g. QualifyExpr.CompileMSIR calls LValueMSIR as a side effect, which
+       leaves a container set even for pure value reads). *)
+    EVAL MSIRBuilder.TakePendingContainer ();
     lhsPtr := Expr.LValueMSIR (p.lhs);
     (* Collect container set as side-effect by LValueMSIR (heap field stores). *)
     container := MSIRBuilder.TakePendingContainer ();

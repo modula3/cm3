@@ -106,26 +106,41 @@ PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   (* Insert(x, y, i, n): insert n low-order bits of y into x at position i.
-     mask        = lshr(allones, W-n)    -- n-bit mask in LSB
-     shifted_mask = shl(mask, i)         -- mask at position i
-     result = or(and(x, xor(shifted_mask, allones)), shl(and(y, mask), i)) *)
+     mask         = lshr(allones, W-n)    -- n-bit mask in LSB
+     shifted_mask = shl(mask, i)          -- mask at position i
+     result = or(and(x, xor(shifted_mask, allones)), shl(and(y, mask), i))
+     All operands coerced to canonical word type wt (same pattern as Shift.mg). *)
   VAR
     x  := Expr.CompileMSIR (ce.args[0]);
     y  := Expr.CompileMSIR (ce.args[1]);
     i  := Expr.CompileMSIR (ce.args[2]);
     n  := Expr.CompileMSIR (ce.args[3]);
     b  := MSIRBuilder.CurrentBlock ();
-    xt, nt : MSIR.T;
-    W       : INTEGER;
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
     ones, wConst, wMinusN, mask, shiftedMask, invMask,
     xCleared, yBits, yShifted: MSIR.Value;
+    xb, yb, ib, nb : INTEGER;
   BEGIN
     IF x = NIL OR y = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
-    xt     := MSIR.ValueType (x);
-    nt     := MSIR.ValueType (n);
-    W      := Word_types[rep].size;
-    ones   := MSIR.ConstInt (xt, -1);
-    wConst := MSIR.ConstInt (nt, W);
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    yb := MSIR.BitWidth (MSIR.ValueType (y));
+    ib := MSIR.BitWidth (MSIR.ValueType (i));
+    nb := MSIR.BitWidth (MSIR.ValueType (n));
+    IF xb > 0 AND xb # W THEN
+      IF xb > W THEN x := MSIR.BuildTrunc (b, "", x, wt) ELSE x := MSIR.BuildZExt (b, "", x, wt) END;
+    END;
+    IF yb > 0 AND yb # W THEN
+      IF yb > W THEN y := MSIR.BuildTrunc (b, "", y, wt) ELSE y := MSIR.BuildZExt (b, "", y, wt) END;
+    END;
+    IF ib > 0 AND ib # W THEN
+      IF ib > W THEN i := MSIR.BuildTrunc (b, "", i, wt) ELSE i := MSIR.BuildZExt (b, "", i, wt) END;
+    END;
+    IF nb > 0 AND nb # W THEN
+      IF nb > W THEN n := MSIR.BuildTrunc (b, "", n, wt) ELSE n := MSIR.BuildZExt (b, "", n, wt) END;
+    END;
+    ones        := MSIR.ConstInt (wt, -1);
+    wConst      := MSIR.ConstInt (wt, W);
     wMinusN     := MSIR.BuildISub  (b, "", wConst, n);
     mask        := MSIR.BuildILShr (b, "", ones, wMinusN);
     shiftedMask := MSIR.BuildIShl  (b, "", mask, i);

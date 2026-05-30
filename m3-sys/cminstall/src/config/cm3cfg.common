@@ -191,18 +191,20 @@ end
 
 % TODO: Surely Quake provides a more efficient way to do this. 
 proc IsBackendLlvm() is
-  if    equal(M3_BACKEND_MODE, "IntLlvmObj") 
-     or equal(M3_BACKEND_MODE, "IntLlvmAsm") 
-     or equal(M3_BACKEND_MODE, "ExtLlvmObj") 
+  if    equal(M3_BACKEND_MODE, "IntLlvmObj")
+     or equal(M3_BACKEND_MODE, "IntLlvmAsm")
+     or equal(M3_BACKEND_MODE, "ExtLlvmObj")
      or equal(M3_BACKEND_MODE, "ExtLlvmAsm")
      or equal(M3_BACKEND_MODE, "StAloneLlvmObj")
-     or equal(M3_BACKEND_MODE, "StAloneLlvmAsm") 
-     or equal(M3_BACKEND_MODE, "5") 
-     or equal(M3_BACKEND_MODE, "6") 
-     or equal(M3_BACKEND_MODE, "7") 
-     or equal(M3_BACKEND_MODE, "8") 
-     or equal(M3_BACKEND_MODE, "9") 
-     or equal(M3_BACKEND_MODE, "10") 
+     or equal(M3_BACKEND_MODE, "StAloneLlvmAsm")
+     or equal(M3_BACKEND_MODE, "MSIRObj")
+     or equal(M3_BACKEND_MODE, "MSIRAsm")
+     or equal(M3_BACKEND_MODE, "5")
+     or equal(M3_BACKEND_MODE, "6")
+     or equal(M3_BACKEND_MODE, "7")
+     or equal(M3_BACKEND_MODE, "8")
+     or equal(M3_BACKEND_MODE, "9")
+     or equal(M3_BACKEND_MODE, "10")
     return TRUE
   else
     return FALSE

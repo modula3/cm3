@@ -766,14 +766,24 @@ PROCEDURE CompileMSIR (p: P) =
       h := h.next;
     END;
 
-    (* No ownership was acquired for the no-match path — just resume. *)
     MSIRBuilder.SetCurrentBlock(checkBlk);
     IF p.hasElse THEN
+      (* The catch clause matched, so we must claim ownership via begin_catch /
+         end_catch exactly as for specific handlers.  Omitting begin_catch leaves
+         the C++ EH state machine with an unclaimed exception, which corrupts
+         subsequent EH and typically causes std::terminate. *)
+      EVAL MSIR.BuildCall(checkBlk, "", beginCatch,
+                           ARRAY OF MSIR.Value{excHeader});
+      MSIRBuilder.PushCatchContext(endCatch);
       Stmt.CompileMSIR(p.elseBody);
+      MSIRBuilder.PopCatchContext();
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+        EVAL MSIR.BuildCall(MSIRBuilder.CurrentBlock(), "", endCatch,
+                             ARRAY OF MSIR.Value{});
         MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
       END;
     ELSE
+      (* No ownership acquired on the no-match path — just resume. *)
       MSIR.BuildResume(checkBlk, lpVal);
     END;
     END; (* VAR getPtr, beginCatch, endCatch, excHeader *)

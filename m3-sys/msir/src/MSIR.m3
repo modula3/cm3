@@ -887,8 +887,10 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   textLitHooks : ARRAY [0..4] OF Proc;
   (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
      3=TextLitGetChars 4=TextLitGetWideChars — NIL = not yet registered *)
-  typeLinks    : REF ARRAY OF TypeLink := NIL;
-  nTypeLinks   : INTEGER               := 0;
+  typeLinks    : REF ARRAY OF TypeLink    := NIL;
+  nTypeLinks   : INTEGER                  := 0;
+  revelations  : REF ARRAY OF Revelation := NIL;
+  nRevelations : INTEGER                  := 0;
 END;
 
 
@@ -1208,6 +1210,45 @@ PROCEDURE ModuleTypeLinkCount(m: Module): INTEGER =
 
 PROCEDURE ModuleTypeLink(m: Module; i: INTEGER): TypeLink =
   BEGIN RETURN m.typeLinks[i] END ModuleTypeLink;
+
+(*----------------------------------------------- Revelation --------------------*)
+
+REVEAL Revelation = BRANDED "MSIR.Revelation" REF RECORD
+  lhsUID: INTEGER;
+  rhsUID: INTEGER;
+END;
+
+PROCEDURE NewRevelation(lhsUID, rhsUID: INTEGER): Revelation =
+  VAR r := NEW(Revelation);
+  BEGIN r.lhsUID := lhsUID; r.rhsUID := rhsUID; RETURN r END NewRevelation;
+
+PROCEDURE RevelationLhsUID(r: Revelation): INTEGER =
+  BEGIN RETURN r.lhsUID END RevelationLhsUID;
+
+PROCEDURE RevelationRhsUID(r: Revelation): INTEGER =
+  BEGIN RETURN r.rhsUID END RevelationRhsUID;
+
+PROCEDURE ModuleAddRevelation(m: Module; r: Revelation) =
+  BEGIN
+    IF m.revelations = NIL OR m.nRevelations >= NUMBER(m.revelations^) THEN
+      VAR n  := MAX(4, 2 * m.nRevelations);
+          nb := NEW(REF ARRAY OF Revelation, n);
+      BEGIN
+        IF m.revelations # NIL THEN
+          SUBARRAY(nb^, 0, m.nRevelations) := SUBARRAY(m.revelations^, 0, m.nRevelations);
+        END;
+        m.revelations := nb;
+      END;
+    END;
+    m.revelations[m.nRevelations] := r;
+    INC(m.nRevelations);
+  END ModuleAddRevelation;
+
+PROCEDURE ModuleRevelationCount(m: Module): INTEGER =
+  BEGIN RETURN m.nRevelations END ModuleRevelationCount;
+
+PROCEDURE ModuleRevelation(m: Module; i: INTEGER): Revelation =
+  BEGIN RETURN m.revelations[i] END ModuleRevelation;
 
 PROCEDURE ModuleAddImportBinder  (m: Module;  binder: TEXT) =
   BEGIN
@@ -1542,17 +1583,21 @@ PROCEDURE BuildFPTrunc(b: Block; name: TEXT; x: Value; dstType: T): Value =
   BEGIN RETURN buildCast(b, Op.FPTrunc, name, x, dstType) END BuildFPTrunc;
 PROCEDURE BuildZExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
   BEGIN
-    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN x END;
+    IF Equal(x.type, dstType) THEN RETURN x END;
+    (* Same-width different-sign (e.g. W8→I8): no LLVM cast needed; retype. *)
+    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN RetypeValue(x, dstType) END;
     RETURN buildCast(b, Op.ZExt,    name, x, dstType)
   END BuildZExt;
 PROCEDURE BuildSExt   (b: Block; name: TEXT; x: Value; dstType: T): Value =
   BEGIN
-    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN x END;
+    IF Equal(x.type, dstType) THEN RETURN x END;
+    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN RetypeValue(x, dstType) END;
     RETURN buildCast(b, Op.SExt,    name, x, dstType)
   END BuildSExt;
 PROCEDURE BuildTrunc  (b: Block; name: TEXT; x: Value; dstType: T): Value =
   BEGIN
-    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN x END;
+    IF Equal(x.type, dstType) THEN RETURN x END;
+    IF BitWidth(x.type) = BitWidth(dstType) THEN RETURN RetypeValue(x, dstType) END;
     RETURN buildCast(b, Op.Trunc,   name, x, dstType)
   END BuildTrunc;
 

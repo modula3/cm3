@@ -367,6 +367,19 @@ PROCEDURE ModuleAddTypeLink  (m: Module;  tl: TypeLink);
 PROCEDURE ModuleTypeLinkCount(m: Module): INTEGER;
 PROCEDURE ModuleTypeLink     (m: Module;  i: INTEGER): TypeLink;
 
+(* REVEAL records — analog of RT0.Revelation / CG full_rev array.
+   Each entry records (lhs_id = opaque UID, rhs_id = revealed UID) so that
+   RTLinker.NoteFullRevelation can map opaque TypeLinks to revealed TypeCells. *)
+TYPE Revelation <: REFANY;
+
+PROCEDURE NewRevelation (lhsUID, rhsUID: INTEGER): Revelation;
+PROCEDURE RevelationLhsUID (r: Revelation): INTEGER;
+PROCEDURE RevelationRhsUID (r: Revelation): INTEGER;
+
+PROCEDURE ModuleAddRevelation  (m: Module;  r: Revelation);
+PROCEDURE ModuleRevelationCount(m: Module): INTEGER;
+PROCEDURE ModuleRevelation     (m: Module;  i: INTEGER): Revelation;
+
 (* TEXT literals — populated by MSIREmit.EndUnit from TextExpr.Literal* *)
 PROCEDURE ModuleAddTextLit  (m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER;
 PROCEDURE ModuleTextLitCount(m: Module): INTEGER;

@@ -28,10 +28,26 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
-  VAR x := Expr.CompileMSIR (ce.args[0]);  y := Expr.CompileMSIR (ce.args[1]);
+  VAR
+    x  := Expr.CompileMSIR (ce.args[0]);
+    y  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
+    xb, yb: INTEGER;
   BEGIN
     IF x = NIL OR y = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildISub (MSIRBuilder.CurrentBlock (), "", x, y);
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    yb := MSIR.BitWidth (MSIR.ValueType (y));
+    IF xb > 0 AND xb # W THEN
+      IF xb > W THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE            x := MSIR.BuildZExt  (b, "", x, wt) END;
+    END;
+    IF yb > 0 AND yb # W THEN
+      IF yb > W THEN y := MSIR.BuildTrunc (b, "", y, wt)
+      ELSE            y := MSIR.BuildZExt  (b, "", y, wt) END;
+    END;
+    RETURN MSIR.BuildISub (b, "", x, y);
   END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

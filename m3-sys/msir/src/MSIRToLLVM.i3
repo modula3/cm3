@@ -5,6 +5,6 @@ INTERFACE MSIRToLLVM;
 
 IMPORT MSIR, Wr;
 
-PROCEDURE Module(wr: Wr.T;  m: MSIR.Module);
+PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE);
 
 END MSIRToLLVM.

@@ -1037,7 +1037,7 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
      CompileModule/CompileInterface.  Registers module-level variables and
      exception descriptors with MSIR before any proc bodies are compiled.
      Parallel to BeginProc registering formals and locals. *)
-  VAR sv: Value.T;
+  VAR sv: Value.T;  base: Value.T;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     sv := Scope.ToList (t.localScope);
@@ -1057,6 +1057,25 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
           END;
       END;
       sv := sv.next;
+    END;
+    (* Exported interface variables appear in importScope as External.T
+       wrappers with exportable=TRUE, not in localScope — the variable is
+       declared in the interface file, not the module body.  These variables
+       ARE owned by this module and must be defined (not declared external)
+       in the MSIR.  Walk the import scope and register them. *)
+    IF NOT t.interface THEN
+      sv := Scope.ToList (t.importScope);
+      WHILE sv # NIL DO
+        IF External.IsExportable (sv) THEN
+          base := Value.Base (sv);
+          TYPECASE base OF
+          | Variable.T (v) =>
+              Variable.DeclareGlobalMSIR (v);
+          ELSE (* procedure, type, exception — skip *)
+          END;
+        END;
+        sv := sv.next;
+      END;
     END;
   END DeclareGlobalsMSIR;
 
@@ -1182,7 +1201,11 @@ PROCEDURE EmitBody (x: InitBody) =
     END;
 
     IF msirOk THEN
-      Stmt.CompileMSIR (t.block);
+      TRY
+        Stmt.CompileMSIR (t.block);
+      EXCEPT ELSE
+        MSIRBuilder.Abandon ("uncaught exception in module body MSIR compilation");
+      END;
       MSIRBuilder.EndProc ();
     END;
 

@@ -529,10 +529,41 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   BEGIN
     CASE p.kind OF
     | Kind.Noop =>
-        (* Same stk_type — retag value with destination MSIR type. *)
-        VAR v := Expr.CompileMSIR (p.expr); BEGIN
-          IF v = NIL THEN RETURN NIL END;
-          RETURN MSIR.RetypeValue (v, dstT);
+        (* Same stk_type — retag value with destination MSIR type.
+           For scalar types (iN, ptr, float) RetypeValue is safe because
+           the LLVM IR type is the same bit pattern.  For struct/array types
+           the LLVM struct types may differ (e.g. { i32,i32 } vs { [8xi8] }),
+           so RetypeValue would produce a name collision; use an alloca-based
+           reinterpretation instead. *)
+        blk := MSIRBuilder.CurrentBlock ();
+        IF dstT # NIL AND
+           (MSIR.Kind (dstT) = MSIR.TypeKind.Struct OR
+            MSIR.Kind (dstT) = MSIR.TypeKind.FixedArray) THEN
+          IF Expr.IsDesignator (p.expr) THEN
+            VAR addr := Expr.LValueMSIR (p.expr); BEGIN
+              IF addr = NIL THEN RETURN NIL END;
+              VAR typedAddr := MSIR.RetypeValue (addr, MSIR.TPtr (dstT)); BEGIN
+                RETURN MSIR.BuildLoad (blk, "", dstT, typedAddr);
+              END;
+            END;
+          ELSE
+            VAR v := Expr.CompileMSIR (p.expr); BEGIN
+              IF v = NIL THEN RETURN NIL END;
+              VAR srcT := MSIR.ValueType (v);
+                  slot := MSIR.BuildAlloca (blk, "", srcT);
+              BEGIN
+                MSIR.BuildStore (blk, v, slot);
+                VAR dstSlot := MSIR.RetypeValue (slot, MSIR.TPtr (dstT)); BEGIN
+                  RETURN MSIR.BuildLoad (blk, "", dstT, dstSlot);
+                END;
+              END;
+            END;
+          END;
+        ELSE
+          VAR v := Expr.CompileMSIR (p.expr); BEGIN
+            IF v = NIL THEN RETURN NIL END;
+            RETURN MSIR.RetypeValue (v, dstT);
+          END;
         END;
     | Kind.D_to_V =>
         (* Designator reinterpreted as scalar.
@@ -562,11 +593,27 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           END;
         END;
     | Kind.S_to_V =>
-        (* Structure rvalue → scalar: materialise then load. *)
-        VAR addr := Expr.CompileMSIR (p.expr); BEGIN
-          IF addr = NIL THEN RETURN NIL END;
-          blk := MSIRBuilder.CurrentBlock ();
-          RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+        (* Structure → scalar.  If the source expression is a designator
+           (local or global variable), take its address and load dstT from it.
+           Otherwise spill the struct value to a temporary alloca first. *)
+        blk := MSIRBuilder.CurrentBlock ();
+        IF Expr.IsDesignator (p.expr) THEN
+          VAR addr := Expr.LValueMSIR (p.expr); BEGIN
+            IF addr = NIL THEN RETURN NIL END;
+            RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+          END;
+        ELSE
+          VAR v := Expr.CompileMSIR (p.expr); BEGIN
+            IF v = NIL THEN RETURN NIL END;
+            VAR srcT := MSIR.ValueType (v);
+                slot := MSIR.BuildAlloca (blk, "", srcT);
+            BEGIN
+              MSIR.BuildStore (blk, v, slot);
+              VAR dstSlot := MSIR.RetypeValue (slot, MSIR.TPtr (dstT)); BEGIN
+                RETURN MSIR.BuildLoad (blk, "", dstT, dstSlot);
+              END;
+            END;
+          END;
         END;
     | Kind.V_to_V =>
         (* Different stk_types, same size: emit ptrtoint/inttoptr/bitcast. *)

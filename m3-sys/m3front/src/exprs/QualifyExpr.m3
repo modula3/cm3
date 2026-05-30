@@ -1036,6 +1036,19 @@ PROCEDURE LhsExpr (e: Expr.T): Expr.T =
     END;
   END LhsExpr;
 
+PROCEDURE MethodSlotBase (e: Expr.T): INTEGER =
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN -1;
+    | P(p) => Resolve (p);
+              IF p.class = Class.objMethod THEN
+                RETURN ObjectType.MethodOffset (p.holder);
+              END;
+              RETURN -1;
+    ELSE RETURN -1;
+    END;
+  END MethodSlotBase;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR fieldInfo: Field.Info;  fieldType: MSIR.T;  addr: MSIR.Value;
       folded: Expr.T;

@@ -227,7 +227,7 @@ PROCEDURE CompileMSIR (p: P) =
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
            M3RT.MUTEX_acquire DIV Target.Address.bytes,
-           MSIR.TVoid(), ARRAY OF MSIR.Value{});
+           MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR. *)
@@ -266,7 +266,7 @@ PROCEDURE CompileMSIR (p: P) =
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
            M3RT.MUTEX_release DIV Target.Address.bytes,
-           MSIR.TVoid(), ARRAY OF MSIR.Value{});
+           MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN

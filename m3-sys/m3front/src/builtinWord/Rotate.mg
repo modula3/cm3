@@ -106,36 +106,61 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     RETURN NIL;
   END FoldR;
 
+PROCEDURE CoerceWordOperands (b: MSIR.Block;  W: INTEGER;  wt: MSIR.T;
+                               VAR x, n: MSIR.Value) =
+  VAR xb, nb: INTEGER;
+  BEGIN
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    nb := MSIR.BitWidth (MSIR.ValueType (n));
+    IF xb > 0 AND xb # W THEN
+      IF xb > W THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE            x := MSIR.BuildZExt  (b, "", x, wt) END;
+    END;
+    IF nb > 0 AND nb # W THEN
+      IF nb > W THEN n := MSIR.BuildTrunc (b, "", n, wt)
+      ELSE            n := MSIR.BuildZExt  (b, "", n, wt) END;
+    END;
+  END CoerceWordOperands;
+
 PROCEDURE RotateMSIR (ce: CallExpr.T): MSIR.Value =
   (* General rotate: Rotate(x, n) = fshl(x, x, n mod W).
      LLVM fshl takes n mod W automatically (unsigned interpretation).
      For signed negative n: -k as unsigned mod W = W-k (right rotate by k). *)
   VAR
-    x := Expr.CompileMSIR (ce.args[0]);
-    n := Expr.CompileMSIR (ce.args[1]);
-    b := MSIRBuilder.CurrentBlock ();
+    x  := Expr.CompileMSIR (ce.args[0]);
+    n  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    CoerceWordOperands (b, W, wt, x, n);
     RETURN MSIR.BuildIRotL (b, "", x, n);
   END RotateMSIR;
 
 PROCEDURE RotateLeftMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
-    x := Expr.CompileMSIR (ce.args[0]);
-    n := Expr.CompileMSIR (ce.args[1]);
-    b := MSIRBuilder.CurrentBlock ();
+    x  := Expr.CompileMSIR (ce.args[0]);
+    n  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    CoerceWordOperands (b, W, wt, x, n);
     RETURN MSIR.BuildIRotL (b, "", x, n);
   END RotateLeftMSIR;
 
 PROCEDURE RotateRightMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
-    x := Expr.CompileMSIR (ce.args[0]);
-    n := Expr.CompileMSIR (ce.args[1]);
-    b := MSIRBuilder.CurrentBlock ();
+    x  := Expr.CompileMSIR (ce.args[0]);
+    n  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    CoerceWordOperands (b, W, wt, x, n);
     RETURN MSIR.BuildIRotR (b, "", x, n);
   END RotateRightMSIR;
 

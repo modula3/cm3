@@ -307,6 +307,40 @@ END;
 <*NOWARN*>PROCEDURE fence(self: T; order: MemoryOrder) = BEGIN END fence;
 <*NOWARN*>PROCEDURE fetch_and_op(self: T; op: AtomicOp; mtype: MType; ztype: ZType; order: MemoryOrder) = BEGIN END fetch_and_op;
 
+(* Private subtype used only by New().
+   T's layout is unchanged so M3C.m3 subtypes (DeclareTypes_t, Locals_t, etc.)
+   remain binary-compatible.  NonNil_t adds a per-instance Var so declare_temp
+   and friends return non-NIL, satisfying m3front assertions (e.g.
+   dopeTempVar # NIL in Formal.m3) without disturbing M3CG_MultiPass replay. *)
+TYPE NonNil_t = T OBJECT
+  nonNilVar: M3CG.Var;
+OVERRIDES
+  import_global    := NonNil_import_global;
+  declare_segment  := NonNil_declare_segment;
+  declare_global   := NonNil_declare_global;
+  declare_constant := NonNil_declare_constant;
+  declare_local    := NonNil_declare_local;
+  declare_param    := NonNil_declare_param;
+  declare_temp     := NonNil_declare_temp;
+END;
+
+<*NOWARN*>PROCEDURE NonNil_import_global   (self: NonNil_t; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; typename: Name): Var = BEGIN RETURN self.nonNilVar; END NonNil_import_global;
+<*NOWARN*>PROCEDURE NonNil_declare_segment (self: NonNil_t; name: Name; typeid: TypeUID; is_const: BOOLEAN): Var = BEGIN RETURN self.nonNilVar; END NonNil_declare_segment;
+<*NOWARN*>PROCEDURE NonNil_declare_global  (self: NonNil_t; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var = BEGIN RETURN self.nonNilVar; END NonNil_declare_global;
+<*NOWARN*>PROCEDURE NonNil_declare_constant(self: NonNil_t; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; exported, inited: BOOLEAN; typename: Name): Var = BEGIN RETURN self.nonNilVar; END NonNil_declare_constant;
+<*NOWARN*>PROCEDURE NonNil_declare_local   (self: NonNil_t; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var = BEGIN RETURN self.nonNilVar; END NonNil_declare_local;
+<*NOWARN*>PROCEDURE NonNil_declare_param   (self: NonNil_t; name: Name; byte_size: ByteSize; alignment: Alignment; type: Type; typeid: TypeUID; in_memory, up_level: BOOLEAN; frequency: Frequency; typename: Name): Var = BEGIN RETURN self.nonNilVar; END NonNil_declare_param;
+<*NOWARN*>PROCEDURE NonNil_declare_temp    (self: NonNil_t; byte_size: ByteSize; alignment: Alignment; type: Type; in_memory: BOOLEAN; typename: Name): Var = BEGIN RETURN self.nonNilVar; END NonNil_declare_temp;
+
+PROCEDURE New (): T =
+  BEGIN
+    (* nonNilVar non-NIL so all declare_* methods satisfy m3front's non-NIL
+       assertions on Var results (e.g. dopeTempVar # NIL in Formal.m3).
+       procSentinel remains the module-level NIL so IF cg_proc # NIL THEN
+       guards in Module.m3 correctly detect MSIRObj mode. *)
+    RETURN NEW (NonNil_t, nonNilVar := NEW (M3CG.Var));
+  END New;
+
 VAR
   varSentinel:  M3CG.Var  := NIL;
   procSentinel: M3CG.Proc := NIL;
