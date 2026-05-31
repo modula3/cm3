@@ -356,14 +356,26 @@ executable.  This genuinely executes MSIR code on the real (C) runtime.
    a nested-EH repro before committing).  Verified: EXIT-through-finally runs the
    finally; nested-EH rethrow, raise-in-finally, smoke 181/181 unaffected.
 
+6. *Re-raise to the ENCLOSING handler, not the caller (2026-05-31).*  Both
+   TryStmt's no-match path and TryFinStmt re-raised via a plain LLVM `resume`,
+   which continues unwinding to the CALLER — so an enclosing TRY/EXCEPT or
+   TRY/FINALLY in the *same* procedure was bypassed.  Symptoms: nested
+   TRY/EXCEPT where the inner handler doesn't match (RAISE e through an inner
+   EXCEPT h to an outer EXCEPT e) hung the unwinder, and a FINALLY that raises a
+   new exception which then passes a non-matching handler hung the same way
+   (the half-claimed begin_catch made it worse).  Fix: re-raise the activation
+   via a fresh `RTHooks.ResumeRaise` throw — an INVOKE unwinding to
+   `CurrentUnwindBlock` (the enclosing handler) when one exists; `resume` only
+   when outermost.  TryFinStmt also stopped using begin_catch/__cxa_rethrow
+   entirely (peek the activation via `__cxa_get_exception_ptr`, re-raise via
+   ResumeRaise) — no half-claimed C++ exception to dangle.  Mirrors the C
+   backend.  **p0/p004 (the full TRY/EXCEPT/FINALLY torture test) now PASSES** —
+   the first of the finally/EH cluster to flip.
+
 **Still open for full finally correctness:**
 - **RETURN through FINALLY** — not yet handled (needs return-value threading
   through the finally chain; the EXIT machinery generalises to it via a
   `Sel_Return` code + a per-proc pending-return-value slot).
-- **RAISE in a FINALLY that replaces the in-flight exception** — p0/p004's later
-  patterns (`TRY RAISE h(7) FINALLY RAISE e END`); the finally currently has
-  `__cxa_begin_catch`'d h(7) and then raises e without balancing the catch.
-  p004 still hangs (rc=124) on these, so it is not yet a PASS.
 
 **Next:** the immediate blocker is no longer "extend up the stack" but **make
 MSIRObj m3core actually run**: keep fixing the abandons fatal-verification
