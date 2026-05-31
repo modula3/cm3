@@ -406,68 +406,97 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
   END Compile3;
 
 PROCEDURE CompileMSIR (p: P) =
+  (* TRY body FINALLY finally END.
+     The finally must run on BOTH the normal exit and the exceptional exit, and
+     on the exceptional exit the in-flight exception must continue to the
+     enclosing handler.  We model this exactly as the C backend does — as
+     `catch (...) { finally; throw; }`:
+
+       - The landing pad is a CATCH-ALL (isCleanup := FALSE → `catch _M3Exc`),
+         NOT a cleanup.  A cleanup is invisible to the Itanium phase-1 search,
+         so a raise in the body would find no handler and std::terminate before
+         the finally ran (and bypassing any enclosing TRY/EXCEPT in this frame).
+         A catch-all is a real handler, so phase 1 stops here.
+       - On the exceptional path we claim the exception (__cxa_begin_catch), set
+         excFlag, run the finally, then __cxa_rethrow to re-raise it.  The
+         rethrow is an INVOKE unwinding to the ENCLOSING try context's landing
+         pad (so a nested TRY/EXCEPT in the same frame catches it); with no
+         enclosing handler it is a plain call that propagates to the caller.
+       - On the normal path excFlag stays 0 and control falls to the merge. *)
   VAR
     lpad:      MSIR.Block;
     finBody:   MSIR.Block;
-    resumeBlk: MSIR.Block;
+    rethrow:   MSIR.Block;
+    rcont:     MSIR.Block;
     merge:     MSIR.Block;
-    lpSlot:    MSIR.Value;
+    enclosing: MSIR.Block;
     excFlag:   MSIR.Value;
     lpVal:     MSIR.Value;
+    excHeader: MSIR.Value;
     excFlagV:  MSIR.Value;
-    lpLoaded:  MSIR.Value;
-    lpType:    MSIR.T;
     zero, one: MSIR.Value;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
-    lpType := MSIR.TLandingPad();
-    zero   := MSIR.ConstInt(MSIR.TI1(), 0);
-    one    := MSIR.ConstInt(MSIR.TI1(), 1);
+    zero := MSIR.ConstInt(MSIR.TI1(), 0);
+    one  := MSIR.ConstInt(MSIR.TI1(), 1);
 
-    (* Allocas go in the current (pre-try) block so they land in the entry. *)
-    lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
+    (* Alloca goes in the current (pre-try) block so it lands in the entry. *)
     excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());
     MSIR.BuildStore(MSIRBuilder.CurrentBlock(), zero, excFlag);
 
-    lpad      := MSIRBuilder.NewBlock("fin.lpad");
-    finBody   := MSIRBuilder.NewBlock("fin.body");
-    resumeBlk := MSIRBuilder.NewBlock("fin.resume");
-    merge     := MSIRBuilder.NewBlock("fin.done");
+    lpad    := MSIRBuilder.NewBlock("fin.lpad");
+    finBody := MSIRBuilder.NewBlock("fin.body");
+    rethrow := MSIRBuilder.NewBlock("fin.rethrow");
+    merge   := MSIRBuilder.NewBlock("fin.done");
 
-    (* Compile body with cleanup lpad as unwind target. *)
+    (* Compile body with the finally landing pad as unwind target. *)
     MSIRBuilder.PushTryContext(lpad);
     Stmt.CompileMSIR(p.body);
     MSIRBuilder.PopTryContext();
+    (* After Pop, the current unwind block is the ENCLOSING try context (NIL if
+       this finally is outermost in the procedure). *)
+    enclosing := MSIRBuilder.CurrentUnwindBlock();
 
-    (* Normal fall-through → finBody *)
+    (* Normal fall-through → finBody (excFlag stays 0). *)
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
 
-    (* Landing pad: save lp value, set flag, jump to finally body. *)
-    lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := TRUE);
-    MSIR.BuildStore(lpad, lpVal, lpSlot);
+    (* Exceptional path: catch-all, claim the exception, set flag, run finally. *)
+    lpVal     := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
+    excHeader := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
+    EVAL MSIR.BuildCall(lpad, "", MSIRBuilder.CxaBeginCatch(),
+                        ARRAY OF MSIR.Value{excHeader});
     MSIR.BuildStore(lpad, one, excFlag);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
-    (* Finally body. *)
+    (* Finally body (shared by both paths). *)
     MSIRBuilder.SetCurrentBlock(finBody);
     Stmt.CompileMSIR(p.finally);
 
-    (* After finally: check flag; resume if exceptional, else continue. *)
+    (* After finally: rethrow if exceptional, else continue to merge. *)
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       excFlagV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "",
                                  MSIR.TI1(), excFlag);
       MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), excFlagV,
-                       resumeBlk, ARRAY OF MSIR.Value{},
+                       rethrow, ARRAY OF MSIR.Value{},
                        merge, ARRAY OF MSIR.Value{});
     END;
 
-    (* Resume block: reload saved lp and resume unwinding. *)
-    MSIRBuilder.SetCurrentBlock(resumeBlk);
-    lpLoaded := MSIR.BuildLoad(resumeBlk, "", lpType, lpSlot);
-    MSIR.BuildResume(resumeBlk, lpLoaded);
+    (* Rethrow the claimed exception to the enclosing handler (or the caller). *)
+    MSIRBuilder.SetCurrentBlock(rethrow);
+    IF enclosing # NIL THEN
+      rcont := MSIRBuilder.NewBlock("fin.rethrow.cont");
+      EVAL MSIR.BuildInvoke(rethrow, "", MSIRBuilder.CxaRethrow(),
+                            ARRAY OF MSIR.Value{}, rcont, enclosing);
+      MSIRBuilder.SetCurrentBlock(rcont);
+      MSIR.BuildUnreachable(rcont);
+    ELSE
+      EVAL MSIR.BuildCall(rethrow, "", MSIRBuilder.CxaRethrow(),
+                          ARRAY OF MSIR.Value{});
+      MSIR.BuildUnreachable(rethrow);
+    END;
 
     MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;

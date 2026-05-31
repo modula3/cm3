@@ -179,6 +179,10 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
      per CxaBeginCatch, before every exit from the handler (including resume). *)
 PROCEDURE CxaBeginCatch      (): MSIR.Proc;
 PROCEDURE CxaEndCatch        (): MSIR.Proc;
+PROCEDURE CxaRethrow         (): MSIR.Proc;
+  (* __cxa_rethrow(): re-throw the exception currently being handled (after a
+     CxaBeginCatch).  noreturn — unwinds to the enclosing handler.  Used to
+     implement TRY/FINALLY: catch-all, run the finally, then rethrow. *)
 PROCEDURE CxaGetExceptionPtr (): MSIR.Proc;
   (* __cxa_get_exception_ptr(ptr) -> ptr: peek at the exception object
      WITHOUT acquiring ownership — no matching __cxa_end_catch needed. *)

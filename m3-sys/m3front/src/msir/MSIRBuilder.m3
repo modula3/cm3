@@ -1336,6 +1336,11 @@ PROCEDURE CxaEndCatch(): MSIR.Proc =
     RETURN CxaStub("__cxa_end_catch", ARRAY OF MSIR.Param{}, MSIR.TVoid());
   END CxaEndCatch;
 
+PROCEDURE CxaRethrow(): MSIR.Proc =
+  BEGIN
+    RETURN CxaStub("__cxa_rethrow", ARRAY OF MSIR.Param{}, MSIR.TVoid());
+  END CxaRethrow;
+
 PROCEDURE CxaGetExceptionPtr(): MSIR.Proc =
   VAR params := ARRAY [0..0] OF MSIR.Param{
     MSIR.Param{name := "exc_header", type := MSIR.TPtr(MSIR.TVoid()),

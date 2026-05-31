@@ -52,8 +52,29 @@ done
 DEFAULT_TESTS="p0/p001 p0/p002 p0/p004 p0/p005 p0/p013 p0/p015 \
 p1/p116 p1/p130 p1/p135 p1/p147 p2/p202 p2/p230 p2/p231 p2/p232"
 
-TESTS="$*"
-[ -n "$TESTS" ] || TESTS="$DEFAULT_TESTS"
+# Expand group arguments (p0/p1/p2/p3/all) into the individual tests under them.
+expand_args() {
+    for a in "$@"; do
+        case "$a" in
+            all) for g in p0 p1 p2 p3; do
+                     for d in "$TESTS_ROOT/$g"/p*; do
+                         [ -d "$d" ] && echo "$g/$(basename "$d")"
+                     done
+                 done ;;
+            p0|p1|p2|p3)
+                 for d in "$TESTS_ROOT/$a"/p*; do
+                     [ -d "$d" ] && echo "$a/$(basename "$d")"
+                 done ;;
+            *)   echo "$a" ;;
+        esac
+    done
+}
+
+if [ "$#" -gt 0 ]; then
+    TESTS="$(expand_args "$@")"
+else
+    TESTS="$DEFAULT_TESTS"
+fi
 
 LOGDIR="${TMPDIR:-/tmp}/msir-conformance"
 mkdir -p "$LOGDIR"
