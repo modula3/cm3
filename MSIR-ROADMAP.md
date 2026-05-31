@@ -377,11 +377,23 @@ executable.  This genuinely executes MSIR code on the real (C) runtime.
   through the finally chain; the EXIT machinery generalises to it via a
   `Sel_Return` code + a per-proc pending-return-value slot).
 
-**Next:** the immediate blocker is no longer "extend up the stack" but **make
-MSIRObj m3core actually run**: keep fixing the abandons fatal-verification
-exposes (start with the ≈99 unbound-variable-reference cases — likely one varMap
-gap), and the finally non-local-exit bug above.  Use
-`m3-sys/msir/test/run-msir-conformance.sh all` to measure runtime correctness.
+7. *Indirect imported globals (2026-05-31).*  The dominant m3core abandon class,
+   "unbound variable reference", was a single root cause: `RegisterExternMSIR`
+   bailed on any indirect (large) global before the import-chain path, so a
+   large imported interface variable — `RTHeapRep.align` (the GC alignment
+   table) — was never registered.  Fixed by routing indirect imported globals
+   through the import chain with `needsLoad` (the owner's struct holds a pointer
+   at `t.offset`; `LookupVar*` load through it).  Cleared all `RTHeapRep.align`
+   abandons across RTAllocator/RTCollector.
+
+**Next:** the immediate blocker is **make MSIRObj m3core actually run** — keep
+clearing the abandons fatal verification exposes.  Remaining m3core abandon
+classes (after the unbound-variable fix): `ConstArray: element non-constant`
+(non-constant global array initializers, ~40 — now the largest), `builtin has no
+MSIR handler` (~16, e.g. DISPOSE), `uncaught exception in procedure body` (an
+emitter bug), packed-array subscript, DEC lvalue, WITH-designator lvalue, float
+MOD.  Use `m3-sys/msir/test/run-msir-conformance.sh all` to measure runtime
+correctness.
 Only once a shipped MSIRObj m3core runs can libm3 → … → cm3 self-hosting proceed
 (libm3 also needs the `Capability__New` terminator-mid-block fix and the `FmtBuf`
 const-array / uncaught-emitter-exception / void-value fixes).  Watch for
