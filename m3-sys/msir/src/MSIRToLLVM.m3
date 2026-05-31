@@ -363,6 +363,17 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
           END;
           Wr.PutText(wr, " }");
         END;
+    | MSIR.ValueKind.ConstAggArray =>
+        (* Inline constant array literal: [ elt0, elt1, ... ] *)
+        VAR n := MSIR.GetConstStructFieldCount(v);
+        BEGIN
+          Wr.PutText(wr, "[");
+          FOR i := 0 TO n - 1 DO
+            IF i > 0 THEN Wr.PutText(wr, ", ") END;
+            LLTypedVal(wr, MSIR.GetConstStructField(v, i));
+          END;
+          Wr.PutText(wr, "]");
+        END;
     | MSIR.ValueKind.StructFieldRef =>
         (* getelementptr inbounds (i8, ptr @Mod_M3_info, i{AP} N) *)
         VAR ap := "i" & Fmt.Int(Target.AddressSize());

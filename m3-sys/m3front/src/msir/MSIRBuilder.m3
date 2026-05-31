@@ -1854,6 +1854,85 @@ PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: I
 PROCEDURE TFixedArrayI(len: INTEGER;  elt: MSIR.T): MSIR.T =
   BEGIN RETURN MSIR.TFixedArray(len, elt) END TFixedArrayI;
 
+(* Build a compile-time-constant MSIR value for one element of a CONST
+   aggregate.  Handles nested fixed-array constructors (recurses to produce an
+   inline ConstAggArray) and record constructors (ConstStruct); falls back to
+   Expr.CompileMSIR for scalars.  Returns NIL on a value that cannot appear in a
+   global constant initializer (caller abandons). *)
+PROCEDURE MaterializeConstElt(elt: Expr.T; eltMsir: MSIR.T): MSIR.Value =
+  VAR ae: ArrayExpr.T;  cv, v: MSIR.Value;
+  BEGIN
+    ae := ArrayExpr.ArrayConstrExpr(elt);
+    IF ae # NIL
+       AND MSIR.Kind(eltMsir) = MSIR.TypeKind.FixedArray
+       AND NOT ArrayType.EltsAreBitAddressed(Expr.TypeOf(elt)) THEN
+      (* Recurse into a nested array constructor only when the declared element
+         type is a genuine, naturally-aligned fixed array:
+         - non-FixedArray MSIR kinds (e.g. an open array 'ARRAY OF T', which
+           translates to a '{ptr,len}' dope struct) must not be rendered as an
+           inline '[...]' literal — those need a separate data global + dope and
+           are left to the abandon/fallback path; and
+         - a bit-addressed/packed nested array's byte-packed MSIR type does not
+           correspond element-for-element to its logical constructor elements. *)
+      RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), eltMsir);
+    END;
+    IF RecordExpr.TryCompileConstMSIR(elt, cv) THEN RETURN cv END;
+    v := Expr.CompileMSIR(elt);
+    IF v = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
+    (* Coerce integer constants to the declared element type (IntegerExpr
+       produces TI(64) for literals even when the element type is narrower). *)
+    IF MSIR.GetValueKind(v) = MSIR.ValueKind.ConstInt AND
+       NOT MSIR.Equal(MSIR.ValueType(v), eltMsir) THEN
+      v := MSIR.ConstInt(eltMsir, MSIR.GetIntVal(v));
+    END;
+    CASE MSIR.GetValueKind(v) OF
+    | MSIR.ValueKind.ConstInt, MSIR.ValueKind.ConstFloat,
+      MSIR.ValueKind.ConstNil, MSIR.ValueKind.ConstProc,
+      MSIR.ValueKind.ConstTextLit, MSIR.ValueKind.ConstStruct,
+      MSIR.ValueKind.ConstAggArray,
+      MSIR.ValueKind.GlobalRef, MSIR.ValueKind.StructFieldRef => (* OK *)
+    ELSE
+      Abandon("ConstArray: element has non-constant value (kind "
+              & Fmt.Int(ORD(MSIR.GetValueKind(v)))
+              & ") — cannot emit global");
+      RETURN NIL;
+    END;
+    RETURN v;
+  END MaterializeConstElt;
+
+(* Build an inline ConstAggArray value for a nested fixed-array constructor
+   'ae' of Modula-3 type 'arrType' (translated MSIR type 'arrMsir'). *)
+PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
+                             arrMsir: MSIR.T): MSIR.Value =
+  VAR
+    indexT, eltT: Type.T;
+    eltMsir: MSIR.T;
+    nExplicit, nTotal: INTEGER;
+    elts: REF ARRAY OF MSIR.Value;
+  BEGIN
+    IF NOT ArrayType.Split(arrType, indexT, eltT) THEN
+      Abandon("ConstArray: nested element is not an array type");  RETURN NIL;
+    END;
+    eltMsir := MSIRType.Translate(eltT);
+    IF eltMsir = NIL THEN
+      Abandon("ConstArray: nested element has unsupported element type");
+      RETURN NIL;
+    END;
+    nExplicit := ArrayExpr.EltCount(ae);
+    IF NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
+      nTotal := nExplicit;
+    END;
+    elts := NEW(REF ARRAY OF MSIR.Value, nTotal);
+    FOR i := 0 TO nTotal - 1 DO
+      VAR eltIdx := MIN(i, nExplicit - 1);
+      BEGIN
+        elts[i] := MaterializeConstElt(ArrayExpr.Elt(ae, eltIdx), eltMsir);
+        IF elts[i] = NIL THEN RETURN NIL END;
+      END;
+    END;
+    RETURN MSIR.ConstAggArray(arrMsir, elts^);
+  END BuildConstAggArray;
+
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR
     ae:       ArrayExpr.T;
@@ -1897,38 +1976,9 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
       (* For elements beyond the explicit args, repeat the last explicit value
          ('..' constructor).  MIN ensures we never go past the args array. *)
       VAR eltIdx := MIN(i, ArrayExpr.EltCount(ae) - 1);
-          elt := ArrayExpr.Elt(ae, eltIdx);  cv: MSIR.Value;
       BEGIN
-        (* Try to build a compile-time constant struct (avoids emitting function-local
-           alloca/store/load sequences that are invalid in global constant initializers). *)
-        IF RecordExpr.TryCompileConstMSIR(elt, cv) THEN
-          elts[i] := cv;
-        ELSE
-          elts[i] := Expr.CompileMSIR(elt);
-          IF elts[i] = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
-          (* Non-constant values (function-local alloca/load results) cannot
-             appear in a global constant array initializer — abandon and let
-             the caller fall back to CG. *)
-          CASE MSIR.GetValueKind(elts[i]) OF
-          | MSIR.ValueKind.ConstInt, MSIR.ValueKind.ConstFloat,
-            MSIR.ValueKind.ConstNil, MSIR.ValueKind.ConstProc,
-            MSIR.ValueKind.ConstTextLit, MSIR.ValueKind.ConstStruct,
-            MSIR.ValueKind.GlobalRef, MSIR.ValueKind.StructFieldRef => (* OK *)
-          ELSE
-            Abandon("ConstArray: element has non-constant value — cannot emit global");
-            RETURN NIL;
-          END;
-        END;
-        (* Coerce integer constants to the declared element type.
-           E.g. IntegerExpr produces TI(64) for literal 10 even when the array
-           element type is IByte = TI(8).  Re-create as a same-value ConstInt
-           with the target element type so the LLVM array initializer is typed
-           consistently.  Only safe for ConstInt values (other constant kinds
-           already carry the correct type). *)
-        IF MSIR.GetValueKind(elts[i]) = MSIR.ValueKind.ConstInt AND
-           NOT MSIR.Equal(MSIR.ValueType(elts[i]), eltMsir) THEN
-          elts[i] := MSIR.ConstInt(eltMsir, MSIR.GetIntVal(elts[i]));
-        END;
+        elts[i] := MaterializeConstElt(ArrayExpr.Elt(ae, eltIdx), eltMsir);
+        IF elts[i] = NIL THEN RETURN NIL END;
       END;
     END;
     m    := MSIREmit.CurrentModule();

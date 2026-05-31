@@ -247,7 +247,7 @@ constructs** the abandons name.  Distinct categories across an m3core
 
 | count | abandon reason | what's needed |
 |------:|----------------|---------------|
-| 703 | `ConstArray: element has non-constant value` | non-constant global array initializers |
+| ~~703~~ → 0 | ~~`ConstArray: element has non-constant value`~~ **FIXED 2026-05-31** | nested fixed-array elements (`X{a,b}` inside `T{...}`) now materialize as inline `ConstAggArray` values (LLVM `[N x T] [...]`), recursing through `MaterializeConstElt`/`BuildConstAggArray`; was abandoning because nested array constructors compiled to `InsnResult` (kind 8). Recursion is guarded to `MSIR.Kind(eltMsir)=FixedArray AND NOT EltsAreBitAddressed`: open-array elements (`ARRAY OF T` → `{ptr,len}` dope struct, e.g. p081's `ARRAY OF ARRAY OF INTEGER`) and bit-addressed/packed inner arrays (e.g. p269's `BITS 16 FOR ARRAY OF`) still abandon — emitting an inline `[...]` literal for them produced invalid LLVM (`{ptr,i64} [i64..]` / `[2 x i1] [i4..]`). |
 | 327 | `builtin has no MSIR handler` | builtins with no `methods.compileMSIR` (DISPOSE, Compiler.ThisException, …) |
 | 147 | `method call: vtable base offset unknown (opaque type)` | virtual dispatch through an opaque supertype |
 | 127 | `uncaught exception in procedure body` | emitter bug (it throws) — needs a repro + fix |

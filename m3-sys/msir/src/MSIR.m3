@@ -517,6 +517,18 @@ PROCEDURE ConstStruct(t: T; READONLY fields: ARRAY OF Value): Value =
     RETURN val;
   END ConstStruct;
 
+PROCEDURE ConstAggArray(t: T; READONLY elts: ARRAY OF Value): Value =
+  VAR val := NEW(Value);
+      n   := NUMBER(elts);
+  BEGIN
+    val.type        := t;
+    val.vKind       := ValueKind.ConstAggArray;
+    val.name        := "<const-array>";
+    val.constFields := NEW(REF ARRAY OF Value, n);
+    FOR i := 0 TO n - 1 DO val.constFields[i] := elts[i] END;
+    RETURN val;
+  END ConstAggArray;
+
 PROCEDURE GetConstStructField(v: Value; i: INTEGER): Value =
   BEGIN RETURN v.constFields[i] END GetConstStructField;
 

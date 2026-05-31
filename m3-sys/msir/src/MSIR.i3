@@ -117,7 +117,7 @@ PROCEDURE SetHi(t: T): INTEGER;
 
 TYPE Value <: REFANY;
 
-TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, ConstStruct, Param, BlockParam, InsnResult, GlobalRef,
+TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, ConstStruct, ConstAggArray, Param, BlockParam, InsnResult, GlobalRef,
                   StructFieldRef (* GEP into module's @Mod_M3_info struct *) };
 
 PROCEDURE ConstInt(t: T;  v: INTEGER): Value;
@@ -142,6 +142,11 @@ PROCEDURE ConstStruct(t: T; READONLY fields: ARRAY OF Value): Value;
    t must be a Struct type; fields must all be constant-kind Values. *)
 PROCEDURE GetConstStructField(v: Value; i: INTEGER): Value;
 PROCEDURE GetConstStructFieldCount(v: Value): INTEGER;
+
+(* Inline constant array literal (e.g. a nested fixed array used as an element
+   of an outer CONST array).  Rendered as LLVM '[ <typedval>, ... ]'.  Shares
+   the ConstStruct element accessors above. *)
+PROCEDURE ConstAggArray(t: T; READONLY elts: ARRAY OF Value): Value;
 
 PROCEDURE ConstTextLit(uid: INTEGER; chars: TEXT; cnt: INTEGER): Value;
 (* A TEXT literal value. uid indexes @textlit_<uid> for LLVM lowering;
