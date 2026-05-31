@@ -265,6 +265,27 @@ Each is its own feature; tackle highest-frequency first.  `unbound variable
 reference` (≈99 combined) is likely a single systemic varMap-registration gap and
 a high-value early target.
 
+**MSIR runtime conformance harness (2026-05-31):
+`m3-sys/msir/test/run-msir-conformance.sh`.**  The sweep (`sweep.py`) is a
+compile-time *abandon census* only — it builds tests with `@M3m3front-msir`
+(parallel, backend = C) and greps for abandon messages; the executable it
+produces is C, so a "clean sweep" says nothing about whether MSIR *runs* (or
+whether it silently miscompiles without abandoning).  Likewise `cm3 -DHTML` in
+m3tests runs the C backend.  The new harness closes that gap: per standalone
+p-test it compiles every emitted `<Mod>.ll` with `llc`/clang, links
+`_m3main.o` + the MSIR objects + the m3tests `Test` objects + the C-compiled
+`libm3.a`/`libm3core.a`, runs the result, and diffs stdout+rc against the C
+executable.  This genuinely executes MSIR code on the real (C) runtime.
+
+  Initial run (14-test default set): **5 PASS, 4 MISMATCH, 2 MSIR-FAIL, 3 SKIP**
+  — proving MSIR is NOT yet runtime-correct.  Concrete bugs it surfaced that the
+  sweep could not: p0/p004 and p0/p005 MSIR aborts (rc=134) on nested
+  TRY/EXCEPT/FINALLY where C runs clean; p1/p130 & p2/p230 MSIR exits 0 where C
+  aborts (MSIR misses a runtime check); p1/p116 abandon-truncated `.ll`.  SKIP =
+  no standalone exe (library/parse tests); MSIR-FAIL link = test imports a lib
+  the harness doesn't yet link.  This harness — generalising the single smoke
+  test over the m3tests — is the right CI gate for MSIR runtime correctness.
+
 **Two fixes already landed toward this:**
 
 1. *Interface-variable ownership.*  An interface variable has a single owner: the
