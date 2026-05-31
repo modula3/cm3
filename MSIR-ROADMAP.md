@@ -249,6 +249,40 @@ runtime, GC init, and the module-init/import chain.  Two fixes got here:
 the next layer links against it.  Watch for new MSIR abandons in larger compiler
 modules and `MaxProcMap` overflow (§6).
 
+**libm3 blocker — `objTypeMethod` supercall (2026-05-31):** building libm3 in
+MSIRObj stops at `BuiltinSpecials2.m3` with `msir-abandon: method call: cannot
+get receiver` (→ verifier "empty block", since an abandon mid-proc in MSIRObj
+mode leaves malformed IR — there is no C fallback).  The construct is a *static
+supercall* through a type: `Special.write(sp, r, pwr)` where `sp: Special` is a
+parameter and `Special <: SpecialPublic` is opaque.  `T.m(obj, …)` denotes type
+T's own binding of method `m` (the default/inherited body), NOT `obj`'s dynamic
+override — the receiver is passed explicitly as the first actual.
+
+  The C path (`QualifyExpr.Compile`, `Class.objTypeMethod`, lines ~455-468) loads
+  the proc from the **type's** default-methods table: `Type.LoadInfo(objType,
+  M3RT.OTC_defaultMethods, addr:=TRUE)` then `Load_indirect(method.offset)`, then
+  an indirect call.  This works for opaque types because the table is reached via
+  the typecell at runtime.  MSIR has no handler: `UserProc.CompileMSIR` abandons
+  at `QualifyExpr.LhsExpr = NIL` ("cannot get receiver"), and
+  `QualifyExpr.CompileMSIR` has no `objTypeMethod` case.
+
+  *Fix recipe* (mirrors `MSIRBuilder.EmitMethodCall`, which loads a proc from the
+  object vtable): in `UserProc.CompileMSIR`'s `objExpr = NIL` branch — (1) get the
+  object type + holder + `method.offset` (add a `QualifyExpr` accessor); (2) typecell
+  ptr via `MSIRBuilder.TypeLinkValueForObject(objType)`; (3) load the
+  `OTC_defaultMethods` field (byte offset `M3RT.OTC_defaultMethods`) to get the
+  table; (4) load the proc at word index `method.offset DIV Address.size`
+  (+ `ObjectType.MethodOffset(holder)` when ≥ 0; abandon the runtime-`methodOffset`
+  case for now); (5) `EmitClosureCall(fn, rtype, args)` with `args` = `p.args`
+  (receiver already included).  **Prerequisite to verify first:** that MSIR's
+  emitted object typecell (`@tc_obj_<uid>`) lays out `OTC_defaultMethods` at the
+  RT0 byte offset the load assumes.  NOTE: a tempting `methodInfo.dfault`
+  static-resolution shortcut is wrong — `dfault` is the declaration-site default,
+  not type T's binding (differs under override), and is NIL for opaque types.
+
+  This is expected to be the first of several codegen gaps libm3 exercises that
+  m3core did not (libm3 is larger and uses more of the object system).
+
 **Success criterion**: `cm3 -DHTML` in `m3-sys/m3tests` passes at least as many
 tests as the C-backend baseline (currently 286/288 — the 2 TIMEOUTs are not
 codegen failures).
