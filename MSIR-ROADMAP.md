@@ -326,11 +326,38 @@ executable.  This genuinely executes MSIR code on the real (C) runtime.
    TypeLink is resolved (very early init) would read an unresolved cell — if such
    a case appears, switch to a static `ObjectTypeCellRef`.
 
+4. *TRY/FINALLY exceptional path — nested EH (2026-05-31).*  `TryFinStmt.CompileMSIR`
+   emitted the finally as a **cleanup-only** landingpad + `resume`.  A cleanup is
+   invisible to the Itanium **phase-1** handler search, so a `RAISE` in the body
+   found no handler and `std::terminate`d BEFORE the finally ran — bypassing any
+   enclosing `TRY/EXCEPT` in the same frame (the p0/p004 divergence).  Now modelled
+   exactly as the C backend does, `catch(...){finally; throw;}`: catch-all
+   landingpad (`isCleanup:=FALSE` → real handler), `__cxa_begin_catch`, run the
+   finally, then `__cxa_rethrow` as an **invoke unwinding to the enclosing try
+   context** (`MSIRBuilder.CurrentUnwindBlock` after `PopTryContext`); plain call
+   to the caller if outermost.  New `MSIRBuilder.CxaRethrow`.  Verified against the
+   C backend: nested TRY-FINALLY-in-TRY-EXCEPT with a raising body, and
+   RAISE-inside-FINALLY (h(2) handled internally while h(7) re-raises through),
+   both now match exactly; smoke 181/181.
+
+**Discovered while digging into p004 — NEXT finally bug: non-local control flow
+through FINALLY.**  A `RETURN`/`EXIT`/loop-`EXIT` that leaves a `TRY ... FINALLY`
+body does NOT run the finally in MSIR (`ExitStmt`/`ReturnStmt` branch straight to
+their target, skipping the finally), and in some contexts (p0/p004's "exit within
+a finally") the wrong control flow hangs (now reported as rc=124 by the harness's
+per-exe timeout rather than wedging it).  The fix needs a "pending action" model:
+EXIT/RETURN inside a try-finally must run the finally first, then perform the
+exit/return — the same way the exceptional path now runs the finally then
+rethrows.  This is the remaining blocker for p004 and any RETURN/EXIT-through-
+finally code (common).
+
 **Next:** the immediate blocker is no longer "extend up the stack" but **make
-MSIRObj m3core actually run**: turn on fatal verification, then fix the
-empty-block (TRY/CASE/loop) and icmp-width codegen bugs it exposes.  Only once a
-shipped MSIRObj m3core runs can libm3 → … → cm3 self-hosting proceed (libm3 also
-needs the `Capability__New` terminator-mid-block fix and the `FmtBuf`
+MSIRObj m3core actually run**: keep fixing the abandons fatal-verification
+exposes (start with the ≈99 unbound-variable-reference cases — likely one varMap
+gap), and the finally non-local-exit bug above.  Use
+`m3-sys/msir/test/run-msir-conformance.sh all` to measure runtime correctness.
+Only once a shipped MSIRObj m3core runs can libm3 → … → cm3 self-hosting proceed
+(libm3 also needs the `Capability__New` terminator-mid-block fix and the `FmtBuf`
 const-array / uncaught-emitter-exception / void-value fixes).  Watch for
 `MaxProcMap` overflow (§6).
 
