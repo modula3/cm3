@@ -332,7 +332,6 @@ PROCEDURE RegisterExternMSIR (t: T) =
       nm: TEXT;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
-    IF t.indirect THEN RETURN END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN END;
     m := MSIREmit.CurrentModule ();
@@ -353,13 +352,27 @@ PROCEDURE RegisterExternMSIR (t: T) =
         ownerName  := M3ID.ToText (Module.Name (NARROW (unit, Module.T)));
         binderName := ownerName & "_I3";
         byteOff    := t.offset DIV Target.Char.size;
-        (* Pass the actual MSIR type (not ptr(void)) so LookupVar returns a
-           correctly-typed value for traced references (gc_ref @T) rather than
-           a raw ptr that causes a type mismatch at every RETURN site. *)
-        MSIRBuilder.GlobalMapAddImport(t, m, binderName, byteOff, mt);
+        IF t.indirect THEN
+          (* Large (indirect) imported global, e.g. RTHeapRep.align: the owner's
+             interface struct holds a POINTER to separately-allocated storage at
+             t.offset.  Register with needsLoad so LookupVar* loads through it.
+             (Without this, indirect imported globals were dropped entirely,
+             producing "unbound variable reference".) *)
+          MSIRBuilder.GlobalMapAddImport(t, m, binderName, byteOff,
+                                         MSIR.TPtr(MSIR.TVoid()),
+                                         needsLoad := TRUE, dataType := mt);
+        ELSE
+          (* Pass the actual MSIR type (not ptr(void)) so LookupVar returns a
+             correctly-typed value for traced references (gc_ref @T) rather than
+             a raw ptr that causes a type mismatch at every RETURN site. *)
+          MSIRBuilder.GlobalMapAddImport(t, m, binderName, byteOff, mt);
+        END;
       END;
       RETURN;
     END;
+
+    (* C-external / re-exported indirect globals are not yet modelled here. *)
+    IF t.indirect THEN RETURN END;
 
     nm := Value.GlobalName(t, dots:=FALSE, with_module:=TRUE);
     (* Two different interfaces may declare the same <*EXTERNAL*> variable.

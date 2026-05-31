@@ -102,7 +102,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR v := MSIRBuilder.LookupVar (p.v);
   BEGIN
     IF v = NIL THEN
-      MSIRBuilder.Abandon ("unbound variable reference");
+      MSIRBuilder.Abandon ("unbound variable reference: " & Value.GlobalName (p.v));
       RETURN NIL;
     END;
     RETURN v;

@@ -374,7 +374,9 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
    (use TPtr(TVoid()) for traced GcRef types). *)
 PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
                               ownerBinder: TEXT;  varByteOff: INTEGER;
-                              varMSIRType: MSIR.T);
+                              varMSIRType: MSIR.T;
+                              needsLoad: BOOLEAN := FALSE;
+                              dataType: MSIR.T := NIL);
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T);
 PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
 

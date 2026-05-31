@@ -454,7 +454,23 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
           VAR addr := ImportChainAddr(globalMap[i].importBind, globalMap[i].varByteOff);
           VAR mt   := globalMap[i].varMSIRType;
           BEGIN
-            IF addr = NIL OR mt = NIL THEN RETURN NIL END;
+            IF addr = NIL THEN RETURN NIL END;
+            IF globalMap[i].needsLoad THEN
+              (* Large indirect imported global: the slot holds a ptr to the
+                 storage; load the ptr, then load the value through it. *)
+              VAR dataPtr := MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), addr);
+              BEGIN
+                IF globalMap[i].dataType # NIL THEN
+                  VAR typedPtr := MSIR.RetypeValue(dataPtr,
+                                    MSIR.TPtr(globalMap[i].dataType));
+                  BEGIN
+                    RETURN MSIR.BuildLoad(curBlock, "", globalMap[i].dataType, typedPtr);
+                  END;
+                END;
+                RETURN dataPtr;
+              END;
+            END;
+            IF mt = NIL THEN RETURN NIL END;
             RETURN MSIR.BuildLoad(curBlock, "", mt, addr);
           END;
         END;
@@ -506,6 +522,17 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
               mt   := globalMap[i].varMSIRType;
           BEGIN
             IF addr = NIL THEN RETURN NIL END;
+            IF globalMap[i].needsLoad THEN
+              (* Large indirect imported global: the import-chain slot holds a
+                 POINTER to the separately-allocated storage; load through it. *)
+              VAR dataPtr := MSIR.BuildLoad(curBlock, "", MSIR.TPtr(MSIR.TVoid()), addr);
+              BEGIN
+                IF globalMap[i].dataType # NIL THEN
+                  RETURN MSIR.RetypeValue(dataPtr, MSIR.TPtr(globalMap[i].dataType));
+                END;
+                RETURN dataPtr;
+              END;
+            END;
             IF mt # NIL THEN RETURN MSIR.RetypeValue(addr, MSIR.TPtr(mt)) END;
             RETURN addr;
           END;
@@ -1976,10 +2003,15 @@ PROCEDURE ImportChainAddr(binderName: TEXT;  varByteOff: INTEGER): MSIR.Value =
 
 PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
                               ownerBinder: TEXT;  varByteOff: INTEGER;
-                              varMSIRType: MSIR.T) =
+                              varMSIRType: MSIR.T;
+                              needsLoad: BOOLEAN := FALSE;
+                              dataType: MSIR.T := NIL) =
   (* Register an imported (non-external) M3 variable as an import-chain entry.
      At code-generation time, LookupVar/LookupVarAddr loads the import pointer
-     from @<curMod>_M3_imp.k and GEPs to varByteOff to reach the variable. *)
+     from @<curMod>_M3_imp.k and GEPs to varByteOff to reach the variable.
+     needsLoad = TRUE for a large (indirect) global, whose import-chain slot
+     holds a POINTER to separately-allocated storage; LookupVar* loads through
+     it, returning a Ptr(dataType). *)
   BEGIN
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN RETURN END;
@@ -1988,8 +2020,8 @@ PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
     (* No MSIR.ModuleAddGlobal call — import chain entries have no standalone global. *)
     globalMap[globalMapN].key         := v;
     globalMap[globalMapN].val         := NIL;
-    globalMap[globalMapN].needsLoad   := FALSE;
-    globalMap[globalMapN].dataType    := NIL;
+    globalMap[globalMapN].needsLoad   := needsLoad;
+    globalMap[globalMapN].dataType    := dataType;
     globalMap[globalMapN].importBind  := ownerBinder;
     globalMap[globalMapN].varByteOff  := varByteOff;
     globalMap[globalMapN].varMSIRType := varMSIRType;
