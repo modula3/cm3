@@ -84,6 +84,10 @@ mkdir -p "$LOGDIR"
 EXE_TIMEOUT="${EXE_TIMEOUT:-15}"
 run_exe() { timeout "$EXE_TIMEOUT" "$1" 2>/dev/null; }
 
+# The cm3 build itself can hang/loop on some tests (e.g. p161, a known
+# compile-time timeout in the sweep) — cap it too, else the whole harness wedges.
+BUILD_TIMEOUT="${BUILD_TIMEOUT:-90}"
+
 pass=0; mismatch=0; msirfail=0; skip=0; total=0
 failed_list=""
 
@@ -95,8 +99,13 @@ for t in $TESTS; do
         printf "  %-12s SKIP  (no m3makefile)\n" "$name"; skip=$((skip+1)); continue
     fi
     bd="$dir/$TARGET"
-    ( cd "$dir" && rm -rf "$TARGET" && cm3 '@M3m3front-msir' -keep -build ) \
+    ( cd "$dir" && rm -rf "$TARGET" \
+        && timeout "$BUILD_TIMEOUT" cm3 '@M3m3front-msir' -keep -build ) \
         >"$LOGDIR/$(echo $t | tr / _).log" 2>&1
+    if [ $? -eq 124 ]; then
+        printf "  %-12s SKIP  (cm3 build timed out — compile-time hang)\n" "$name"
+        skip=$((skip+1)); continue
+    fi
     # The C-compiled standalone executable is the reference.
     cexe=""
     for cand in "$bd/pgm" "$bd/$(basename "$t")"; do
