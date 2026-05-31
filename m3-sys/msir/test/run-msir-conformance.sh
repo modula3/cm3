@@ -79,6 +79,11 @@ fi
 LOGDIR="${TMPDIR:-/tmp}/msir-conformance"
 mkdir -p "$LOGDIR"
 
+# Run an executable with a wall-clock timeout so a miscompiled (hanging) MSIR
+# binary is reported (rc 124) rather than wedging the whole harness.
+EXE_TIMEOUT="${EXE_TIMEOUT:-15}"
+run_exe() { timeout "$EXE_TIMEOUT" "$1" 2>/dev/null; }
+
 pass=0; mismatch=0; msirfail=0; skip=0; total=0
 failed_list=""
 
@@ -101,7 +106,7 @@ for t in $TESTS; do
         printf "  %-12s SKIP  (no standalone executable — library/parse test?)\n" "$name"
         skip=$((skip+1)); continue
     fi
-    refout=$("$cexe" 2>/dev/null); refrc=$?
+    refout=$(run_exe "$cexe"); refrc=$?
 
     # Compile every emitted .ll to an object.
     objs=""; emitfail=0
@@ -126,7 +131,7 @@ for t in $TESTS; do
         msirfail=$((msirfail+1)); failed_list="$failed_list $name"; continue
     fi
 
-    msirout=$("$msirexe" 2>/dev/null); msirrc=$?
+    msirout=$(run_exe "$msirexe"); msirrc=$?
 
     if [ "$msirout" = "$refout" ] && [ "$msirrc" = "$refrc" ]; then
         printf "  %-12s PASS  (rc=%s)\n" "$name" "$msirrc"; pass=$((pass+1))
