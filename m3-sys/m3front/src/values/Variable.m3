@@ -274,6 +274,15 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     IF NOT t.global THEN RETURN END;
+    (* Never emit a definition for a global that has no allocated storage
+       (set by AllocGlobalVarSpace, which runs before DeclareGlobalsMSIR); such
+       a variable is owned elsewhere and is reached through the import chain.
+       NOTE: this does NOT disambiguate interface variables exported by several
+       modules — each exporter has t.allocated = TRUE and still emits its own
+       copy.  Cross-module interface-variable sharing (a single I_<intf> data
+       segment reached via the _I3 import chain, as the C backend does) is not
+       yet modelled in MSIR; that is the remaining self-hosting link blocker. *)
+    IF NOT t.allocated THEN RETURN END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN END;
     m := MSIREmit.CurrentModule ();

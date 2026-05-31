@@ -1070,7 +1070,11 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
           base := Value.Base (sv);
           TYPECASE base OF
           | Variable.T (v) =>
-              Variable.DeclareGlobalMSIR (v);
+              IF v.external THEN
+                Variable.RegisterExternMSIR (v);
+              ELSE
+                Variable.DeclareGlobalMSIR (v);
+              END;
           ELSE (* procedure, type, exception — skip *)
           END;
         END;

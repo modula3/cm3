@@ -206,6 +206,43 @@ cd m3-sys/m3tests && ~/cm3/bin/cm3 -DHTML
   objects).  Check with `nm ~/cm3/bin/cm3 | grep "_M3_info" | grep " d "`.
 - `MaxProcMap` overflow in large modules (see §6).
 
+**Build-order trap (2026-05-31):** `cm3` links the *shipped* `libm3front.a`,
+not the local `m3-sys/m3front/ARM64_DARWIN` build.  After editing m3front you
+must `cm3 -build && cm3 -ship` it *before* rebuilding cm3, or the new cm3
+silently links the old front-end.  A stale/inconsistent shipped libm3front.a
+makes the fresh cm3 SIGSEGV at startup in `M3Front.Initialize → Scanner.Push`
+(NIL deref on the indirect large-global pointer for `Scanner.stack`).  Existing
+binaries keep working only because their m3front is statically baked in.  If a
+freshly built cm3 crashes in Initialize, re-ship m3front from a clean tree and
+rebuild cm3 before suspecting a source bug.
+
+**Current blocker — interface variables exported by multiple modules
+(2026-05-31):** m3core now *compiles* fully in MSIRObj mode (every module
+lowers to `.o` via `llc`), but the **link fails** with duplicate definitions of
+interface variables, e.g. `_RTHeapRep__p0`, `_RTHeapRep__max_heap`,
+`_RTHeapRep__disableMotionCount`, `_RTHooks_I3`.  Root cause: RTHeapRep is
+exported by three modules (RTAllocator, RTCollector, RTHeapRep).  In the C
+backend an interface's variables live once in the interface data segment
+`I_RTHeapRep` (emitted in `RTHeapRep_i.o`); every module reads them through the
+`_I3` import chain (the `II_import` pointer).  MSIR has no I-segment/M-segment
+separation: each exporting module embeds its own copy of the variable as a
+field of its `<Module>_M3_info` struct and emits a public alias
+`@RTHeapRep__p0` into it — so the aliases clash at link, and even a `weak`
+shortcut would be wrong because `StructFieldRef` lowering GEPs into the *local*
+`_M3_info`, giving each module a private copy rather than one shared datum.
+
+  The correct fix is a real feature: interface compilations must emit their own
+  data segment (distinct name, e.g. `<Intf>_I3_info`, not `<Intf>_M3_info`),
+  define the interface variables there once, expose them via the `_I3` binder's
+  `II_import`, and route every module's exported/imported interface variables to
+  the import chain (`Variable.RegisterExternMSIR`'s `imported AND NOT external`
+  path).  The discriminator is the **External wrapper's** `imported` flag, not
+  the shared variable's — mirror `External.Declare` (Module.m3) which copies the
+  wrapper's `imported/exported/used` onto the base before declaring.  The
+  current `Variable.DeclareGlobalMSIR` guard `IF MSIR.ModuleIsInterface(m) THEN
+  RETURN` must be lifted (and the info-struct name disambiguated) so the
+  interface becomes the single owner.
+
 **Success criterion**: `cm3 -DHTML` in `m3-sys/m3tests` passes at least as many
 tests as the C-backend baseline (currently 286/288 — the 2 TIMEOUTs are not
 codegen failures).
