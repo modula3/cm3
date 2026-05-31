@@ -340,16 +340,30 @@ executable.  This genuinely executes MSIR code on the real (C) runtime.
    RAISE-inside-FINALLY (h(2) handled internally while h(7) re-raises through),
    both now match exactly; smoke 181/181.
 
-**Discovered while digging into p004 — NEXT finally bug: non-local control flow
-through FINALLY.**  A `RETURN`/`EXIT`/loop-`EXIT` that leaves a `TRY ... FINALLY`
-body does NOT run the finally in MSIR (`ExitStmt`/`ReturnStmt` branch straight to
-their target, skipping the finally), and in some contexts (p0/p004's "exit within
-a finally") the wrong control flow hangs (now reported as rc=124 by the harness's
-per-exe timeout rather than wedging it).  The fix needs a "pending action" model:
-EXIT/RETURN inside a try-finally must run the finally first, then perform the
-exit/return — the same way the exceptional path now runs the finally then
-rethrows.  This is the remaining blocker for p004 and any RETURN/EXIT-through-
-finally code (common).
+5. *EXIT through FINALLY (2026-05-31).*  An `EXIT` leaving a `TRY ... FINALLY`
+   body skipped the finally.  Added a unified cleanup-frame stack (loops +
+   finallys, in nesting order) in MSIRBuilder: `PushExitBlock` records a Loop
+   frame, `TryFinStmt` a Finally frame (i32 selector + shared body).  `ExitStmt`
+   calls `EmitExitMSIR`, which routes through each intervening finally (store
+   `Sel_Exit`, branch to its body; the epilogue re-runs `EmitExitMSIR` after the
+   finally to continue outward) and finally branches to the loop's exit block —
+   identical to the old fast path when no finally intervenes.  TryFinStmt's
+   selector widened i1→i32 with a 3-way epilogue dispatch (Exc→rethrow /
+   Exit→continue / else→merge).  The Exit arm is emitted only when an EXIT
+   actually routed through (`CurrentFinallyExitSeen`); emitting it
+   unconditionally made `EmitExitMSIR` abandon for a finally with no enclosing
+   loop, which corrupted the proc and broke the rethrow path (caught via smoke +
+   a nested-EH repro before committing).  Verified: EXIT-through-finally runs the
+   finally; nested-EH rethrow, raise-in-finally, smoke 181/181 unaffected.
+
+**Still open for full finally correctness:**
+- **RETURN through FINALLY** — not yet handled (needs return-value threading
+  through the finally chain; the EXIT machinery generalises to it via a
+  `Sel_Return` code + a per-proc pending-return-value slot).
+- **RAISE in a FINALLY that replaces the in-flight exception** — p0/p004's later
+  patterns (`TRY RAISE h(7) FINALLY RAISE e END`); the finally currently has
+  `__cxa_begin_catch`'d h(7) and then raises e without balancing the catch.
+  p004 still hangs (rc=124) on these, so it is not yet a PASS.
 
 **Next:** the immediate blocker is no longer "extend up the stack" but **make
 MSIRObj m3core actually run**: keep fixing the abandons fatal-verification
