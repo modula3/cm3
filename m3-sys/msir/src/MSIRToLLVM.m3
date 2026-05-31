@@ -3633,9 +3633,18 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     IF nImports > 0 THEN
       (* Define @<Mod>_I3 if: (a) this IS the interface unit, or
          (b) this is a standalone implementation with no separate interface.
-         Declare only when a separate _I3 unit exists and will define it. *)
+         Declare only when a separate _I3 unit exists and will define it.
+         A non-interface unit emits its own binder as `weak`: a MODULE Foo is
+         normally paired with a separately compiled INTERFACE Foo whose strong
+         definition must win, but RTHooks (excluded from the import chain in
+         MSIREmit.RegisterImport) leaves i3InImports = FALSE so the module would
+         otherwise emit a second strong definition and clash.  weak lets the
+         interface's strong definition override; a truly standalone module keeps
+         its own weak definition. *)
       IF isInterface OR NOT i3InImports THEN
-        Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+        VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
+          Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+        END;
         Wr.PutText(wr, "entry:\n");
         Wr.PutText(wr, "  ret ptr " & infoName & "\n");
         Wr.PutText(wr, "}\n");
@@ -3833,7 +3842,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
        a standalone implementation; declare it when a separate interface exists. *)
     IF nImports = 0 THEN
       IF isInterface OR NOT i3InImports THEN
-        Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+        VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
+          Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+        END;
         Wr.PutText(wr, "entry:\n");
         Wr.PutText(wr, "  ret ptr " & infoName & "\n");
         Wr.PutText(wr, "}\n");

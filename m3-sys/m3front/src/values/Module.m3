@@ -1070,10 +1070,29 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
           base := Value.Base (sv);
           TYPECASE base OF
           | Variable.T (v) =>
-              IF v.external THEN
-                Variable.RegisterExternMSIR (v);
-              ELSE
-                Variable.DeclareGlobalMSIR (v);
+              (* An exported interface variable is owned by the interface unit
+                 that declares it; every module that imports or re-exports the
+                 interface sees it through an External wrapper whose imported
+                 flag is TRUE.  Mirror External.Declare: apply the wrapper's
+                 view to the shared variable so a non-owner routes to the import
+                 chain (RegisterExternMSIR) rather than emitting a duplicate
+                 definition.  The owner (interface) defines it via the localScope
+                 walk above. *)
+              VAR savedImp := v.imported;
+                  savedExp := v.exported;
+                  savedUsed := v.used;
+              BEGIN
+                v.imported := sv.imported;
+                v.exported := sv.exported;
+                v.used     := sv.used;
+                IF v.external OR v.imported THEN
+                  Variable.RegisterExternMSIR (v);
+                ELSE
+                  Variable.DeclareGlobalMSIR (v);
+                END;
+                v.imported := savedImp;
+                v.exported := savedExp;
+                v.used     := savedUsed;
               END;
           ELSE (* procedure, type, exception — skip *)
           END;

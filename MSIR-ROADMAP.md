@@ -216,32 +216,38 @@ binaries keep working only because their m3front is statically baked in.  If a
 freshly built cm3 crashes in Initialize, re-ship m3front from a clean tree and
 rebuild cm3 before suspecting a source bug.
 
-**Current blocker — interface variables exported by multiple modules
-(2026-05-31):** m3core now *compiles* fully in MSIRObj mode (every module
-lowers to `.o` via `llc`), but the **link fails** with duplicate definitions of
-interface variables, e.g. `_RTHeapRep__p0`, `_RTHeapRep__max_heap`,
-`_RTHeapRep__disableMotionCount`, `_RTHooks_I3`.  Root cause: RTHeapRep is
-exported by three modules (RTAllocator, RTCollector, RTHeapRep).  In the C
-backend an interface's variables live once in the interface data segment
-`I_RTHeapRep` (emitted in `RTHeapRep_i.o`); every module reads them through the
-`_I3` import chain (the `II_import` pointer).  MSIR has no I-segment/M-segment
-separation: each exporting module embeds its own copy of the variable as a
-field of its `<Module>_M3_info` struct and emits a public alias
-`@RTHeapRep__p0` into it — so the aliases clash at link, and even a `weak`
-shortcut would be wrong because `StructFieldRef` lowering GEPs into the *local*
-`_M3_info`, giving each module a private copy rather than one shared datum.
+**m3core self-hosts (2026-05-31):** m3core now compiles, links, AND runs in
+MSIRObj mode.  A standalone program built in MSIRObj against the MSIRObj m3core
+(`FOR i := 1 TO 10 DO sum := sum+i`, RTIO output) runs correctly — exercising the
+runtime, GC init, and the module-init/import chain.  Two fixes got here:
 
-  The correct fix is a real feature: interface compilations must emit their own
-  data segment (distinct name, e.g. `<Intf>_I3_info`, not `<Intf>_M3_info`),
-  define the interface variables there once, expose them via the `_I3` binder's
-  `II_import`, and route every module's exported/imported interface variables to
-  the import chain (`Variable.RegisterExternMSIR`'s `imported AND NOT external`
-  path).  The discriminator is the **External wrapper's** `imported` flag, not
-  the shared variable's — mirror `External.Declare` (Module.m3) which copies the
-  wrapper's `imported/exported/used` onto the base before declaring.  The
-  current `Variable.DeclareGlobalMSIR` guard `IF MSIR.ModuleIsInterface(m) THEN
-  RETURN` must be lifted (and the info-struct name disambiguated) so the
-  interface becomes the single owner.
+1. *Interface-variable ownership.*  An interface variable has a single owner: the
+   interface unit that declares it.  It appears in the interface's localScope and
+   in every importing/re-exporting module's importScope.  The interface unit now
+   DEFINES the storage in its `@<Intf>_M3_info` at the front-end byte offset
+   (`t.offset`); the MSIR `ModuleAllocGlobal` layout coincides with `t.offset`
+   because both reserve the same `MI_nFields * Address.bytes` header (= `MI_SIZE`)
+   and lay out localScope globals in the same order with the same sizes/aligns —
+   so the import chain (which uses `t.offset`) addresses the right field.  Modules
+   route the variable to `RegisterExternMSIR`'s `imported AND NOT external` import
+   chain, discriminated by the **External wrapper's** `imported` flag (mirroring
+   `External.Declare`'s flag copy in `Module.DeclareGlobalsMSIR`).  The old
+   `IF MSIR.ModuleIsInterface(m) THEN RETURN` guard in
+   `Variable.DeclareGlobalMSIR` was lifted so the interface becomes the owner.
+   This removed all the `_RTHeapRep__p0`/`_max_heap`/… duplicate definitions.
+
+2. *Weak `_I3` binder.*  A `MODULE Foo` paired with a separate `INTERFACE Foo`
+   must not emit a second strong `@Foo_I3`.  The `i3InImports` heuristic fails for
+   `RTHooks` because `MSIREmit.RegisterImport` deliberately excludes `RTHooks_I3`
+   from the import chain, so `MODULE RTHooks` re-defined `@RTHooks_I3` and clashed
+   with the interface.  A non-interface unit now emits its own `@<Mod>_I3` as LLVM
+   `weak` (MSIRToLLVM.m3), so the interface's strong definition always wins and a
+   genuinely standalone module still keeps its own.
+
+**Next:** extend the MSIRObj build up the stack — libm3, then m3middle → m3linker
+→ m3front → m3quake → m3objfile → m3back → cm3 — shipping each MSIRObj package so
+the next layer links against it.  Watch for new MSIR abandons in larger compiler
+modules and `MaxProcMap` overflow (§6).
 
 **Success criterion**: `cm3 -DHTML` in `m3-sys/m3tests` passes at least as many
 tests as the C-backend baseline (currently 286/288 — the 2 TIMEOUTs are not

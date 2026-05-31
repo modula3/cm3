@@ -274,20 +274,22 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     IF NOT t.global THEN RETURN END;
-    (* Never emit a definition for a global that has no allocated storage
-       (set by AllocGlobalVarSpace, which runs before DeclareGlobalsMSIR); such
-       a variable is owned elsewhere and is reached through the import chain.
-       NOTE: this does NOT disambiguate interface variables exported by several
-       modules — each exporter has t.allocated = TRUE and still emits its own
-       copy.  Cross-module interface-variable sharing (a single I_<intf> data
-       segment reached via the _I3 import chain, as the C backend does) is not
-       yet modelled in MSIR; that is the remaining self-hosting link blocker. *)
+    (* Never emit a definition for a global with no allocated storage (set by
+       AllocGlobalVarSpace, which runs before DeclareGlobalsMSIR); such a
+       variable is owned elsewhere and reached through the import chain. *)
     IF NOT t.allocated THEN RETURN END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN END;
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
-    IF MSIR.ModuleIsInterface(m) THEN RETURN END;
+    (* The owner of an interface variable is the interface unit that declares
+       it: the variable appears in the interface's localScope (here) and in
+       every importing/re-exporting module's importScope (where DeclareGlobalsMSIR
+       routes it to the import chain instead).  So the interface unit DEFINES the
+       storage in its @<Intf>_M3_info struct — at the same byte offset the front
+       end assigned (t.offset), which the import chain uses — and modules reach it
+       via the _I3 binder's II_import.  This mirrors the C backend's I_<intf> data
+       segment.  Hence we no longer skip interface units here. *)
     infoName  := MSIR.ModuleName(m) & "_M3_info";
     IF t.indirect THEN
       (* Large global (size > Max_zero_global): the module info struct holds
