@@ -439,20 +439,26 @@ PROCEDURE CompileMSIR (p: P) =
     merge:     MSIR.Block;
     enclosing: MSIR.Block;
     selector:  MSIR.Value;
+    actSlot:   MSIR.Value;
     lpVal:     MSIR.Value;
     excHeader: MSIR.Value;
+    excObjPtr: MSIR.Value;
+    actPtr:    MSIR.Value;
     selV:      MSIR.Value;
     i32:       MSIR.T;
+    ptrT:      MSIR.T;
     exitSeen:  BOOLEAN;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
-    i32 := MSIR.TI(32);
+    i32  := MSIR.TI(32);
+    ptrT := MSIR.TPtr(MSIR.TVoid());
 
-    (* Alloca goes in the current (pre-try) block so it lands in the entry. *)
+    (* Allocas go in the current (pre-try) block so they land in the entry. *)
     selector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", i32);
     MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
                     MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
+    actSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
 
     lpad    := MSIRBuilder.NewBlock("fin.lpad");
     finBody := MSIRBuilder.NewBlock("fin.body");
@@ -476,11 +482,21 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
 
-    (* Exceptional path: catch-all, claim the exception, set Sel_Exc, run finally. *)
+    (* Exceptional path: catch-all (so phase 1 finds a handler), but do NOT
+       __cxa_begin_catch.  We only PEEK at the exception object to recover the
+       M3 RaiseActivation (separately heap-allocated, so it survives), save it,
+       set Sel_Exc, and run the finally.  Re-raising later via RTHooks.ResumeRaise
+       is a FRESH throw — so a finally that itself raises a new exception leaves
+       no half-claimed C++ exception dangling (which otherwise hangs the unwinder
+       when the new exception passes through an intermediate non-matching
+       handler, e.g. p0/p004).  Mirrors the C backend, which likewise re-raises
+       via ResumeRaiseEx rather than a C++ rethrow. *)
     lpVal     := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
     excHeader := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
-    EVAL MSIR.BuildCall(lpad, "", MSIRBuilder.CxaBeginCatch(),
-                        ARRAY OF MSIR.Value{excHeader});
+    excObjPtr := MSIR.BuildCall(lpad, "", MSIRBuilder.CxaGetExceptionPtr(),
+                                ARRAY OF MSIR.Value{excHeader});
+    actPtr    := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr); (* _M3Exc.act *)
+    MSIR.BuildStore(lpad, actPtr, actSlot);
     MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
@@ -521,18 +537,23 @@ PROCEDURE CompileMSIR (p: P) =
       END;
     END;
 
-    (* Rethrow the claimed exception to the enclosing handler (or the caller). *)
+    (* Re-raise the saved activation (a fresh throw via RTHooks.ResumeRaise) to
+       the enclosing handler — or to the caller if outermost. *)
     MSIRBuilder.SetCurrentBlock(rethrow);
-    IF enclosing # NIL THEN
-      rcont := MSIRBuilder.NewBlock("fin.rethrow.cont");
-      EVAL MSIR.BuildInvoke(rethrow, "", MSIRBuilder.CxaRethrow(),
-                            ARRAY OF MSIR.Value{}, rcont, enclosing);
-      MSIRBuilder.SetCurrentBlock(rcont);
-      MSIR.BuildUnreachable(rcont);
-    ELSE
-      EVAL MSIR.BuildCall(rethrow, "", MSIRBuilder.CxaRethrow(),
-                          ARRAY OF MSIR.Value{});
-      MSIR.BuildUnreachable(rethrow);
+    VAR
+      resumeHook := MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx);
+      actV       := MSIR.BuildLoad(rethrow, "", ptrT, actSlot);
+    BEGIN
+      IF enclosing # NIL THEN
+        rcont := MSIRBuilder.NewBlock("fin.rethrow.cont");
+        EVAL MSIR.BuildInvoke(rethrow, "", resumeHook,
+                              ARRAY OF MSIR.Value{actV}, rcont, enclosing);
+        MSIRBuilder.SetCurrentBlock(rcont);
+        MSIR.BuildUnreachable(rcont);
+      ELSE
+        EVAL MSIR.BuildCall(rethrow, "", resumeHook, ARRAY OF MSIR.Value{actV});
+        MSIR.BuildUnreachable(rethrow);
+      END;
     END;
 
     MSIRBuilder.SetCurrentBlock(merge);

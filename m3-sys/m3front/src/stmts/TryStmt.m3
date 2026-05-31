@@ -633,6 +633,7 @@ PROCEDURE CompileMSIR (p: P) =
     uid:        MSIR.Value;
     uidConst:   MSIR.Value;
     cmp:        MSIR.Value;
+    enclosing:  MSIR.Block;
     ptrT:       MSIR.T;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
@@ -651,6 +652,10 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.PushTryContext(lpad);
     Stmt.CompileMSIR(p.body);
     MSIRBuilder.PopTryContext();
+    (* After the pop, the current unwind block is the ENCLOSING handler (NIL if
+       this TRY is outermost in the procedure).  The no-match path re-raises to
+       it. *)
+    enclosing := MSIRBuilder.CurrentUnwindBlock();
 
     (* Normal fall-through → merge *)
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
@@ -783,8 +788,24 @@ PROCEDURE CompileMSIR (p: P) =
         MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
       END;
     ELSE
-      (* No ownership acquired on the no-match path — just resume. *)
-      MSIR.BuildResume(checkBlk, lpVal);
+      (* No handler matched.  If there is an ENCLOSING handler in this same
+         procedure, re-raise the activation to it via a fresh RTHooks.ResumeRaise
+         throw (an invoke unwinding to the enclosing landing pad) — a plain
+         `resume` would continue unwinding straight to the CALLER, bypassing the
+         enclosing TRY/EXCEPT in this frame (the p0/p004 nested-handler hang).
+         No ownership was acquired here, so no end_catch.  When outermost, resume
+         correctly propagates to the caller. *)
+      IF enclosing # NIL THEN
+        VAR cont := MSIRBuilder.NewBlock("exc.reraise.cont"); BEGIN
+          EVAL MSIR.BuildInvoke(checkBlk, "",
+                 MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx),
+                 ARRAY OF MSIR.Value{actPtr}, cont, enclosing);
+          MSIRBuilder.SetCurrentBlock(cont);
+          MSIR.BuildUnreachable(cont);
+        END;
+      ELSE
+        MSIR.BuildResume(checkBlk, lpVal);
+      END;
     END;
     END; (* VAR getPtr, beginCatch, endCatch, excHeader *)
 
