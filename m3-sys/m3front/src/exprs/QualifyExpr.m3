@@ -1049,6 +1049,20 @@ PROCEDURE MethodSlotBase (e: Expr.T): INTEGER =
     END;
   END MethodSlotBase;
 
+PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN =
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN FALSE;
+    | P(p) => Resolve (p);
+              IF p.class = Class.objTypeMethod THEN
+                objType := p.objType;  holder := p.holder;
+                RETURN TRUE;
+              END;
+              RETURN FALSE;
+    ELSE RETURN FALSE;
+    END;
+  END ObjTypeMethod;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR fieldInfo: Field.Info;  fieldType: MSIR.T;  addr: MSIR.Value;
       folded: Expr.T;

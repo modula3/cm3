@@ -216,10 +216,28 @@ binaries keep working only because their m3front is statically baked in.  If a
 freshly built cm3 crashes in Initialize, re-ship m3front from a clean tree and
 rebuild cm3 before suspecting a source bug.
 
-**m3core self-hosts (2026-05-31):** m3core now compiles, links, AND runs in
-MSIRObj mode.  A standalone program built in MSIRObj against the MSIRObj m3core
-(`FOR i := 1 TO 10 DO sum := sum+i`, RTIO output) runs correctly — exercising the
-runtime, GC init, and the module-init/import chain.  Two fixes got here:
+**CORRECTION (2026-05-31): MSIRObj m3core compiles+links but does NOT run yet.**
+The earlier "m3core self-hosts" claim was wrong.  `cm3 -build` of m3core in
+MSIRObj "succeeds" (archives `libm3core.a`) but `msir-verify` errors are
+**non-fatal warnings** and `llc` tolerates/keeps stale `.o`, so broken modules
+are silently archived.  The milestone `hello` test linked the *C-mode* m3core
+dylib (m3core was built but not shipped at that point), so MSIRObj m3core was
+never actually executed.  When MSIRObj m3core IS shipped and run, any dynamically
+linked program (and a freshly built cm3, which statically embeds m3core) crashes
+— e.g. `hello` SIGSEGVs in `RTLinker__InitRuntime`.  Recovery: rebuild+ship
+C-mode m3core and rebuild cm3 against it (a backup cm3 that statically embeds a
+good m3core is needed to bootstrap out, since the broken one crashes on -build).
+
+Building m3core in MSIRObj surfaces **many masked codegen bugs**, all reported by
+`msir-verify` but currently ignored: empty blocks in TRY / CASE / loop constructs
+(`RuntimeError__Self`, `RTHeapMap__Walk`, `RTCollector__GrowHeap`, …) and `icmp
+operand type mismatch` (`RTHeapStats__Scan*`).  **Action items:** (a) make
+`msir-verify` failures FATAL in MSIRObj mode (and/or fail the build on `llc`
+verifier errors) so broken modules can't be silently shipped; (b) fix the
+empty-block control-flow emission (likely a shared root cause across TRY/CASE/
+loop — blocks left unterminated/unpopulated) and the icmp width mismatch.
+
+**Two fixes already landed toward this:**
 
 1. *Interface-variable ownership.*  An interface variable has a single owner: the
    interface unit that declares it.  It appears in the interface's localScope and
@@ -244,10 +262,28 @@ runtime, GC init, and the module-init/import chain.  Two fixes got here:
    `weak` (MSIRToLLVM.m3), so the interface's strong definition always wins and a
    genuinely standalone module still keeps its own.
 
-**Next:** extend the MSIRObj build up the stack — libm3, then m3middle → m3linker
-→ m3front → m3quake → m3objfile → m3back → cm3 — shipping each MSIRObj package so
-the next layer links against it.  Watch for new MSIR abandons in larger compiler
-modules and `MaxProcMap` overflow (§6).
+3. *objTypeMethod static supercall (2026-05-31).*  `T.m(obj, …)` (a method named
+   through its type, not an instance — a supercall to T's binding of `m`) is now
+   lowered by `UserProc.CompileMSIR`: when `QualifyExpr.LhsExpr = NIL` it loads
+   the proc from T's typecell `OTC_defaultMethods` table (`TypeLinkValueForObject`
+   + `M3RT.OTC_defaultMethods`/`Char.size` + method byte offset) and emits an
+   indirect call (`EmitClosureCall`), the receiver being the first explicit
+   actual.  New accessor `QualifyExpr.ObjTypeMethod`.  This clears the
+   `BuiltinSpecials2` (`Special.write`) abandon AND the m3core
+   `FloatMode`/`RealFloat`/`LongFloat` empty-block abandons.  Verified: smoke
+   181/181; correct IR (loads typecell, OTC table, proc; indirect call).  KNOWN
+   RISK (unvalidated, since MSIRObj m3core doesn't run): `TypeLinkValueForObject`
+   resolves at RTLinker link time, so a supercall reached *before* the owner's
+   TypeLink is resolved (very early init) would read an unresolved cell — if such
+   a case appears, switch to a static `ObjectTypeCellRef`.
+
+**Next:** the immediate blocker is no longer "extend up the stack" but **make
+MSIRObj m3core actually run**: turn on fatal verification, then fix the
+empty-block (TRY/CASE/loop) and icmp-width codegen bugs it exposes.  Only once a
+shipped MSIRObj m3core runs can libm3 → … → cm3 self-hosting proceed (libm3 also
+needs the `Capability__New` terminator-mid-block fix and the `FmtBuf`
+const-array / uncaught-emitter-exception / void-value fixes).  Watch for
+`MaxProcMap` overflow (§6).
 
 **libm3 blocker — `objTypeMethod` supercall (2026-05-31):** building libm3 in
 MSIRObj stops at `BuiltinSpecials2.m3` with `msir-abandon: method call: cannot

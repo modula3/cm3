@@ -12,6 +12,7 @@ IMPORT M3ID, CG, Type, Expr, ExprRep, ProcType, Formal;
 IMPORT Procedure, NamedExpr, Variable, QualifyExpr, Value;
 IMPORT CallExpr, ProcExpr, Marker, ErrType;
 IMPORT MSIR, MSIRBuilder, MSIRType, Method, Target, CaptureAnalysis;
+IMPORT M3RT, ObjectType;
 
 (* Externally dispatched-to, using a field of Methods: *)
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
@@ -305,11 +306,56 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
         IF QualifyExpr.Split(p.proc, methodVal) AND
            Value.ClassOf(methodVal) = Value.Class.Method THEN
           objExpr := QualifyExpr.LhsExpr(p.proc);
-          IF objExpr = NIL THEN
-            MSIRBuilder.Abandon("method call: cannot get receiver");
-            RETURN NIL;
-          END;
           EVAL Method.Split(methodVal, methodInfo);
+          IF objExpr = NIL THEN
+            (* T.m(self, ...): a static supercall naming the method through its
+               type, not an instance.  T's binding of m lives in T's typecell
+               OTC_defaultMethods table; load it and call indirectly, with the
+               receiver passed as the first explicit actual.  Mirrors the C path
+               QualifyExpr.Compile (Class.objTypeMethod). *)
+            VAR otObjType, otHolder: Type.T; BEGIN
+              IF NOT QualifyExpr.ObjTypeMethod(p.proc, otObjType, otHolder) THEN
+                MSIRBuilder.Abandon("method call: cannot get receiver");
+                RETURN NIL;
+              END;
+              VAR objOff := ObjectType.MethodOffset(otHolder); BEGIN
+                IF objOff < 0 THEN
+                  MSIRBuilder.Abandon(
+                    "static method call: runtime method offset (opaque holder)");
+                  RETURN NIL;
+                END;
+                VAR
+                  b     := MSIRBuilder.CurrentBlock();
+                  ptrT  := MSIR.TPtr(MSIR.TVoid());
+                  tc    := MSIRBuilder.TypeLinkValueForObject(otObjType);
+                  dmOff := M3RT.OTC_defaultMethods DIV Target.Char.size;
+                  pOff  := (methodInfo.offset + objOff) DIV Target.Char.size;
+                  rtype := MSIRType.TranslateResult(ProcType.Result(procType));
+                  dmTbl, fn: MSIR.Value;
+                  callArgs : REF ARRAY OF MSIR.Value;
+                BEGIN
+                  IF tc = NIL THEN RETURN NIL END;
+                  (* table = *(typecell + OTC_defaultMethods) *)
+                  dmTbl := MSIR.BuildLoad(b, "", ptrT,
+                             MSIR.BuildPtrAdd(b, "", tc, dmOff));
+                  (* proc = *(table + method byte offset) *)
+                  fn := MSIR.BuildLoad(b, "", ptrT,
+                          MSIR.BuildPtrAdd(b, "", dmTbl, pOff));
+                  n := NUMBER(p.args^);
+                  callArgs := NEW(REF ARRAY OF MSIR.Value, n);
+                  VAR fv := ProcType.Formals(procType); BEGIN
+                    FOR i := 0 TO n - 1 DO
+                      <* ASSERT fv # NIL *>
+                      callArgs[i] := Formal.EmitArgMSIR(fv, p.args[i]);
+                      fv := fv.next;
+                      IF callArgs[i] = NIL THEN RETURN NIL END;
+                    END;
+                  END;
+                  RETURN MSIRBuilder.EmitClosureCall("", fn, rtype, callArgs^);
+                END;
+              END;
+            END;
+          END;
           VAR mBase := QualifyExpr.MethodSlotBase(p.proc); BEGIN
             IF mBase < 0 THEN
               MSIRBuilder.Abandon("method call: vtable base offset unknown (opaque type)");

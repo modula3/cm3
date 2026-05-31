@@ -32,6 +32,12 @@ PROCEDURE LhsExpr (e: Expr.T): Expr.T;
    absolute vtable slot index: (MethodSlotBase + method.offset) / ptr_size. *)
 PROCEDURE MethodSlotBase (e: Expr.T): INTEGER;
 
+(* If e is a type-qualified method reference T.m (class=objTypeMethod), return
+   TRUE and set objType := T and holder := the type that introduces m.  Used by
+   the MSIR path to emit a static supercall: load m's proc from T's typecell
+   OTC_defaultMethods table and call it indirectly.  Returns FALSE otherwise. *)
+PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN;
+
 (* If e is a QualifyExpr whose field is sub-byte, emit a read-modify-write
    bit-insertion of rhs and return TRUE.  Otherwise return FALSE immediately. *)
 PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;
