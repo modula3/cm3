@@ -2,7 +2,7 @@ MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError, Word;
 IMPORT TextExpr, M3String, M3WString;
-IMPORT RunTyme;
+IMPORT RunTyme, Error, Fmt;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -158,6 +158,16 @@ PROCEDURE EndUnit() =
     IF errs # NIL THEN
       FOR i := 0 TO LAST(errs^) DO
         Wr.PutText(Stdio.stderr, "msir-verify: " & errs[i] & "\n");
+      END;
+      (* In MSIRObj/MSIRAsm mode the MSIR lowering IS the object code, so a
+         verifier failure means the emitted .ll is malformed — fail the build
+         rather than silently shipping broken modules.  In parallel emission
+         (@M3m3front-msir, backend = C) the C output is authoritative, so verify
+         errors stay informational. *)
+      IF Target.BackendMode IN Target.BackendMSIRSet THEN
+        Error.Msg ("MSIR verification failed for " & MSIR.ModuleName(curModule)
+                   & " (" & Fmt.Int(NUMBER(errs^)) & " error(s); first: "
+                   & errs[0] & ")");
       END;
     END;
     IF llOutPath # NIL THEN

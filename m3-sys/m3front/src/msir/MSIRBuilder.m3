@@ -2,6 +2,7 @@ MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
+IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
 IMPORT Expr, ArrayExpr, ArrayType, RecordExpr;
 IMPORT PackedType, TInt;
@@ -650,6 +651,15 @@ PROCEDURE Abandon(reason: TEXT) =
         ELSE pname := "<no-proc>"
       END;
       MSIREmit.NoteSkipped(pname, "msir-abandon: " & reason);
+      (* In MSIRObj/MSIRAsm mode the MSIR lowering IS the object code, so an
+         abandon mid-procedure leaves truncated/malformed IR (its symptom is the
+         verifier's "empty block").  There is no C fallback, so fail the build
+         with the root reason rather than silently emitting a broken module.
+         In parallel emission (@M3m3front-msir, backend = C) the C output is
+         authoritative, so abandons stay informational. *)
+      IF Target.BackendMode IN Target.BackendMSIRSet THEN
+        Error.Msg ("MSIR cannot compile " & pname & ": " & reason);
+      END;
       abandoned := TRUE;
     END;
   END Abandon;

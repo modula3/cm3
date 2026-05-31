@@ -228,14 +228,42 @@ linked program (and a freshly built cm3, which statically embeds m3core) crashes
 C-mode m3core and rebuild cm3 against it (a backup cm3 that statically embeds a
 good m3core is needed to bootstrap out, since the broken one crashes on -build).
 
-Building m3core in MSIRObj surfaces **many masked codegen bugs**, all reported by
-`msir-verify` but currently ignored: empty blocks in TRY / CASE / loop constructs
-(`RuntimeError__Self`, `RTHeapMap__Walk`, `RTCollector__GrowHeap`, …) and `icmp
-operand type mismatch` (`RTHeapStats__Scan*`).  **Action items:** (a) make
-`msir-verify` failures FATAL in MSIRObj mode (and/or fail the build on `llc`
-verifier errors) so broken modules can't be silently shipped; (b) fix the
-empty-block control-flow emission (likely a shared root cause across TRY/CASE/
-loop — blocks left unterminated/unpopulated) and the icmp width mismatch.
+**Verification is now FATAL (2026-05-31).**  `MSIREmit.EndUnit` calls `Error.Msg`
+on any `msir-verify` failure, and `MSIRBuilder.Abandon` calls `Error.Msg` on any
+abandon — BOTH only when `Target.BackendMode IN Target.BackendMSIRSet`, so parallel
+`@M3m3front-msir` (backend = C) stays informational.  MSIRObj m3core now fails the
+build loudly with the root cause pinned to a source line, e.g.
+`RuntimeError.m3:16: MSIR cannot compile RuntimeError__Self: builtin has no MSIR
+handler`, instead of silently archiving a broken `libm3core.a`.
+
+**The "empty block" bug was a misdiagnosis — it is NOT a control-flow tracking
+bug.**  Every empty-block proc (all 13) also has an abandon: empty-block ⟺
+abandon.  An abandon mid-procedure in MSIRObj mode (no C fallback) truncates
+emission, leaving the in-progress block empty and everything after it dropped —
+the verifier then reports "empty block".  Fixing the symptom is now automatic
+(abandons fail the build); the real work is implementing the **unimplemented
+constructs** the abandons name.  Distinct categories across an m3core
+`@M3m3front-msir` sweep, by frequency:
+
+| count | abandon reason | what's needed |
+|------:|----------------|---------------|
+| 703 | `ConstArray: element has non-constant value` | non-constant global array initializers |
+| 327 | `builtin has no MSIR handler` | builtins with no `methods.compileMSIR` (DISPOSE, Compiler.ThisException, …) |
+| 147 | `method call: vtable base offset unknown (opaque type)` | virtual dispatch through an opaque supertype |
+| 127 | `uncaught exception in procedure body` | emitter bug (it throws) — needs a repro + fix |
+| 104 | `record expr: expected struct type` | record-constructor lowering cases |
+|  67 | `packed/sub-word array subscript` | packed-element array indexing |
+|  60 | `no lvalue MSIR for this builtin` | builtin lvalues |
+|  51/48 | `(named) lvalue: unbound variable reference` | a var not registered in the varMap at use |
+|  44 | `named lvalue is not a Variable or CONST array` | |
+|  31 | `DEC: cannot get lvalue` | DEC/INC lvalue forms |
+|  23 | `WITH designator: cannot get lvalue` | WITH-bound designators as lvalues |
+|  17 | `non-integer MOD` | float MOD |
+|  12 | `method call: cannot get receiver` | (mostly cleared by objTypeMethod; remainder are other LhsExpr=NIL cases) |
+
+Each is its own feature; tackle highest-frequency first.  `unbound variable
+reference` (≈99 combined) is likely a single systemic varMap-registration gap and
+a high-value early target.
 
 **Two fixes already landed toward this:**
 
