@@ -418,70 +418,107 @@ PROCEDURE CompileMSIR (p: P) =
          the finally ran (and bypassing any enclosing TRY/EXCEPT in this frame).
          A catch-all is a real handler, so phase 1 stops here.
        - On the exceptional path we claim the exception (__cxa_begin_catch), set
-         excFlag, run the finally, then __cxa_rethrow to re-raise it.  The
-         rethrow is an INVOKE unwinding to the ENCLOSING try context's landing
-         pad (so a nested TRY/EXCEPT in the same frame catches it); with no
-         enclosing handler it is a plain call that propagates to the caller.
-       - On the normal path excFlag stays 0 and control falls to the merge. *)
+         the selector to Sel_Exc, run the finally, then __cxa_rethrow to re-raise
+         it.  The rethrow is an INVOKE unwinding to the ENCLOSING try context's
+         landing pad (so a nested TRY/EXCEPT in the same frame catches it); with
+         no enclosing handler it is a plain call that propagates to the caller.
+       - A non-local EXIT in the body branches here too (selector = Sel_Exit, via
+         MSIRBuilder.EmitExitMSIR routing through the registered Finally cleanup
+         frame); after the finally runs, the epilogue continues the EXIT outward.
+         That arm is emitted ONLY when an EXIT actually routed through this
+         finally (CurrentFinallyExitSeen) — otherwise there is no loop to
+         continue to and EmitExitMSIR would (wrongly) abandon.
+       - On the normal path the selector stays Sel_Normal → merge. *)
   VAR
     lpad:      MSIR.Block;
     finBody:   MSIR.Block;
     rethrow:   MSIR.Block;
+    chkExit:   MSIR.Block;
+    exitCont:  MSIR.Block;
     rcont:     MSIR.Block;
     merge:     MSIR.Block;
     enclosing: MSIR.Block;
-    excFlag:   MSIR.Value;
+    selector:  MSIR.Value;
     lpVal:     MSIR.Value;
     excHeader: MSIR.Value;
-    excFlagV:  MSIR.Value;
-    zero, one: MSIR.Value;
+    selV:      MSIR.Value;
+    i32:       MSIR.T;
+    exitSeen:  BOOLEAN;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
-    zero := MSIR.ConstInt(MSIR.TI1(), 0);
-    one  := MSIR.ConstInt(MSIR.TI1(), 1);
+    i32 := MSIR.TI(32);
 
     (* Alloca goes in the current (pre-try) block so it lands in the entry. *)
-    excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());
-    MSIR.BuildStore(MSIRBuilder.CurrentBlock(), zero, excFlag);
+    selector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", i32);
+    MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
+                    MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
 
     lpad    := MSIRBuilder.NewBlock("fin.lpad");
     finBody := MSIRBuilder.NewBlock("fin.body");
     rethrow := MSIRBuilder.NewBlock("fin.rethrow");
     merge   := MSIRBuilder.NewBlock("fin.done");
 
-    (* Compile body with the finally landing pad as unwind target. *)
+    (* Compile body with the finally landing pad as unwind target AND a Finally
+       cleanup frame so a non-local EXIT in the body runs the finally first. *)
     MSIRBuilder.PushTryContext(lpad);
+    MSIRBuilder.PushFinallyCleanup(finBody, selector);
     Stmt.CompileMSIR(p.body);
+    exitSeen := MSIRBuilder.CurrentFinallyExitSeen();
+    MSIRBuilder.PopFinallyCleanup();
     MSIRBuilder.PopTryContext();
     (* After Pop, the current unwind block is the ENCLOSING try context (NIL if
        this finally is outermost in the procedure). *)
     enclosing := MSIRBuilder.CurrentUnwindBlock();
 
-    (* Normal fall-through → finBody (excFlag stays 0). *)
+    (* Normal fall-through → finBody (selector stays Sel_Normal). *)
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
 
-    (* Exceptional path: catch-all, claim the exception, set flag, run finally. *)
+    (* Exceptional path: catch-all, claim the exception, set Sel_Exc, run finally. *)
     lpVal     := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
     excHeader := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
     EVAL MSIR.BuildCall(lpad, "", MSIRBuilder.CxaBeginCatch(),
                         ARRAY OF MSIR.Value{excHeader});
-    MSIR.BuildStore(lpad, one, excFlag);
+    MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
-    (* Finally body (shared by both paths). *)
+    (* Finally body (shared by all entry paths). *)
     MSIRBuilder.SetCurrentBlock(finBody);
     Stmt.CompileMSIR(p.finally);
 
-    (* After finally: rethrow if exceptional, else continue to merge. *)
+    (* After finally, dispatch on the selector: Sel_Exc → rethrow; Sel_Exit →
+       continue the EXIT (only if an EXIT routed through here); else → merge. *)
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      excFlagV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "",
-                                 MSIR.TI1(), excFlag);
-      MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), excFlagV,
-                       rethrow, ARRAY OF MSIR.Value{},
-                       merge, ARRAY OF MSIR.Value{});
+      selV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", i32, selector);
+      IF exitSeen THEN
+        chkExit  := MSIRBuilder.NewBlock("fin.chkexit");
+        exitCont := MSIRBuilder.NewBlock("fin.exitcont");
+        MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
+                         MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
+                           MSIR.CmpPred.Eq, selV,
+                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc)),
+                         rethrow, ARRAY OF MSIR.Value{},
+                         chkExit, ARRAY OF MSIR.Value{});
+        MSIRBuilder.SetCurrentBlock(chkExit);
+        MSIR.BuildCondBr(chkExit,
+                         MSIR.BuildICmp(chkExit, "", MSIR.CmpPred.Eq, selV,
+                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exit)),
+                         exitCont, ARRAY OF MSIR.Value{},
+                         merge,    ARRAY OF MSIR.Value{});
+        (* This finally's frame is already popped, so EmitExitMSIR targets the
+           next outer finally or the loop exit. *)
+        MSIRBuilder.SetCurrentBlock(exitCont);
+        MSIRBuilder.EmitExitMSIR();
+      ELSE
+        MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
+                         MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
+                           MSIR.CmpPred.Eq, selV,
+                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc)),
+                         rethrow, ARRAY OF MSIR.Value{},
+                         merge,   ARRAY OF MSIR.Value{});
+      END;
     END;
 
     (* Rethrow the claimed exception to the enclosing handler (or the caller). *)

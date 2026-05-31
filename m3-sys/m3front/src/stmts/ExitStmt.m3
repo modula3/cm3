@@ -48,15 +48,12 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (<*UNUSED*> p: P) =
-  VAR exitBlock: MSIR.Block;  deadBlock: MSIR.Block;
+  VAR deadBlock: MSIR.Block;
   BEGIN
-    exitBlock := MSIRBuilder.CurrentExitBlock ();
-    IF exitBlock = NIL THEN
-      MSIRBuilder.Abandon ("EXIT not inside a WHILE in MSIR v0");
-      RETURN;
-    END;
-    MSIR.BuildBr (MSIRBuilder.CurrentBlock (), exitBlock,
-                  ARRAY OF MSIR.Value{});
+    (* Branch to the innermost loop's exit block, running every intervening
+       TRY/FINALLY first.  EmitExitMSIR reduces to a plain `br exitBlock` when no
+       finally lies between this EXIT and its loop. *)
+    MSIRBuilder.EmitExitMSIR ();
     (* Instructions after EXIT are dead; switch to a fresh block. *)
     deadBlock := MSIRBuilder.NewBlock ("exit.dead");
     MSIRBuilder.SetCurrentBlock (deadBlock);

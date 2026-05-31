@@ -112,6 +112,28 @@ PROCEDURE PushExitBlock(b: MSIR.Block);
 PROCEDURE PopExitBlock();
 PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
 
+(* TRY/FINALLY selector codes (stored in the per-finally i32 selector alloca):
+   why the finally body was entered, so its epilogue can dispatch. *)
+CONST Sel_Normal = 0;  Sel_Exc = 1;  Sel_Exit = 2;
+
+(* TRY/FINALLY registers a Finally cleanup frame around its body so a non-local
+   EXIT in the body runs the finally first.  finBody is the shared finally-body
+   entry; selector is an i32 alloca the EXIT stores Sel_Exit into.  Push around
+   the body only (pop before compiling the finally itself). *)
+PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value);
+PROCEDURE PopFinallyCleanup();
+
+(* Emit an EXIT: branch to the innermost loop's exit block, running every
+   intervening finally first.  Used by ExitStmt and by a finally epilogue
+   continuing an EXIT that passed through it. *)
+PROCEDURE EmitExitMSIR();
+
+(* TRUE if an EXIT routed through the innermost (current) finally cleanup frame.
+   TryFinStmt calls this — while its Finally frame is still on top — to decide
+   whether to emit the Sel_Exit dispatch arm in the finally epilogue.  Avoids an
+   EmitExitMSIR with no loop target for finallys that contain no through-EXIT. *)
+PROCEDURE CurrentFinallyExitSeen(): BOOLEAN;
+
 (*-------------------------------------------------------------- Proc registry *)
 
 (* Register a procedure value with its MSIR.Proc so call sites can find it.

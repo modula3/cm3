@@ -13,9 +13,12 @@ CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives head
 CONST MaxExitStack = 16;
 CONST MaxTryDepth  = 16;
 CONST MaxCatchDepth = 16;
+CONST MaxCleanup   = 64;   (* unified loop/finally cleanup-frame stack *)
 CONST MaxProcMap   = 2048;
 CONST MaxShimMap   = 256;
 CONST MaxGlobalMap  = 256;
+(* TRY/FINALLY selector codes Sel_Normal/Sel_Exc/Sel_Exit are exported from the
+   MSIRBuilder interface and visible here without redeclaration. *)
 CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
@@ -24,6 +27,17 @@ TYPE VarEntry = RECORD
   key:      Variable.T;
   val:      MSIR.Value;
   elemType: MSIR.T;       (* NIL => formal; non-NIL => local alloca ptr *)
+END;
+
+(* One frame of the unified loop/finally cleanup stack. *)
+TYPE CleanupKind = {Loop, Finally};
+TYPE CleanupFrame = RECORD
+  kind:      CleanupKind;
+  exitBlock: MSIR.Block := NIL;   (* Loop: branch target for EXIT *)
+  finBody:   MSIR.Block := NIL;   (* Finally: shared finally-body entry *)
+  selector:  MSIR.Value := NIL;   (* Finally: i32 alloca holding a Sel_* code *)
+  exitSeen:  BOOLEAN := FALSE;     (* Finally: an EXIT routed through it (so its
+                                      epilogue must emit the Sel_Exit arm) *)
 END;
 
 (* Saved state for one level of proc context (for nested proc compilation). *)
@@ -40,6 +54,7 @@ TYPE ProcContext = RECORD
   exitDepth:     INTEGER;
   tryDepth:      INTEGER;
   catchDepth:    INTEGER;
+  cleanupDepth:  INTEGER;
 END;
 
 TYPE ProcEntry   = RECORD
@@ -81,6 +96,13 @@ VAR
 
   catchStack: ARRAY [0..MaxCatchDepth-1] OF MSIR.Proc;  (* endCatch procs *)
   catchDepth: INTEGER := 0;
+
+  (* Unified cleanup-frame stack in nesting order — loops and finallys
+     interleaved — so a non-local EXIT can run every intervening finally before
+     branching to its target loop's exit block.  Loop frames are pushed by
+     PushExitBlock; Finally frames by PushFinallyCleanup. *)
+  cleanupStack: ARRAY [0..MaxCleanup-1] OF CleanupFrame;
+  cleanupDepth: INTEGER := 0;
 
   procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
   procMapN: INTEGER := 0;
@@ -135,6 +157,7 @@ PROCEDURE PopBeginContext() =
       exitDepth        := ctx.exitDepth;
       tryDepth         := ctx.tryDepth;
       catchDepth       := ctx.catchDepth;
+      cleanupDepth     := ctx.cleanupDepth;
       FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
     END;
   END PopBeginContext;
@@ -177,6 +200,7 @@ PROCEDURE BeginProc(name: TEXT;
         ctx.exitDepth  := exitDepth;
         ctx.tryDepth   := tryDepth;
         ctx.catchDepth := catchDepth;
+        ctx.cleanupDepth := cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
@@ -190,6 +214,7 @@ PROCEDURE BeginProc(name: TEXT;
     exitDepth      := 0;
     tryDepth       := 0;
     catchDepth     := 0;
+    cleanupDepth   := 0;
     blockSeq       := 0;
     curResultPtr   := NIL;
     curResultType  := NIL;
@@ -625,6 +650,7 @@ PROCEDURE EndProc() =
         exitDepth        := ctx.exitDepth;
         tryDepth         := ctx.tryDepth;
         catchDepth       := ctx.catchDepth;
+      cleanupDepth     := ctx.cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
       END;
     ELSE
@@ -734,12 +760,82 @@ PROCEDURE PushExitBlock(b: MSIR.Block) =
     ELSE
       Abandon("exit block stack overflow");
     END;
+    (* Also record a Loop frame on the unified cleanup stack so a non-local
+       EXIT runs intervening finallys before reaching this loop's exit. *)
+    IF cleanupDepth < MaxCleanup THEN
+      cleanupStack[cleanupDepth] :=
+        CleanupFrame{kind := CleanupKind.Loop, exitBlock := b};
+      INC(cleanupDepth);
+    END;
   END PushExitBlock;
 
 PROCEDURE PopExitBlock() =
   BEGIN
     IF exitDepth > 0 THEN DEC(exitDepth) END;
+    (* Pop the matching Loop frame (any finallys inside this loop were already
+       popped, so the top of the cleanup stack is this loop's frame). *)
+    IF cleanupDepth > 0 AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Loop
+      THEN DEC(cleanupDepth)
+    END;
   END PopExitBlock;
+
+PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value) =
+  BEGIN
+    IF cleanupDepth < MaxCleanup THEN
+      cleanupStack[cleanupDepth] := CleanupFrame{kind := CleanupKind.Finally,
+                                                 finBody := finBody,
+                                                 selector := selector};
+      INC(cleanupDepth);
+    ELSE
+      Abandon("cleanup stack overflow");
+    END;
+  END PushFinallyCleanup;
+
+PROCEDURE PopFinallyCleanup() =
+  BEGIN
+    IF cleanupDepth > 0
+       AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally
+      THEN DEC(cleanupDepth)
+    END;
+  END PopFinallyCleanup;
+
+(* Emit the control transfer for an EXIT: branch to the innermost cleanup frame.
+   A Loop frame → branch straight to its exit block (identical to a plain EXIT).
+   A Finally frame → store Sel_Exit into its selector and branch to its body;
+   the finally's epilogue, after running the finally, calls EmitExitMSIR again
+   (its own frame now popped) to continue out to the next finally or the loop. *)
+PROCEDURE EmitExitMSIR() =
+  BEGIN
+    IF cleanupDepth = 0 THEN
+      Abandon("EXIT not inside a loop in MSIR");
+      RETURN;
+    END;
+    IF cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally THEN
+      (* Route the EXIT through this finally: record that its epilogue must emit
+         the Sel_Exit arm, store the selector, and branch to the finally body. *)
+      cleanupStack[cleanupDepth-1].exitSeen := TRUE;
+      MSIR.BuildStore(CurrentBlock(),
+                      MSIR.ConstInt(MSIR.TI(32), Sel_Exit),
+                      cleanupStack[cleanupDepth-1].selector);
+      MSIR.BuildBr(CurrentBlock(), cleanupStack[cleanupDepth-1].finBody,
+                   ARRAY OF MSIR.Value{});
+    ELSE
+      MSIR.BuildBr(CurrentBlock(), cleanupStack[cleanupDepth-1].exitBlock,
+                   ARRAY OF MSIR.Value{});
+    END;
+  END EmitExitMSIR;
+
+(* Whether an EXIT routed through the innermost (current) finally cleanup frame.
+   Called by TryFinStmt — while its Finally frame is still on top — to decide
+   whether the finally epilogue needs the Sel_Exit dispatch arm. *)
+PROCEDURE CurrentFinallyExitSeen(): BOOLEAN =
+  BEGIN
+    IF cleanupDepth > 0
+       AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally
+      THEN RETURN cleanupStack[cleanupDepth-1].exitSeen
+      ELSE RETURN FALSE
+    END;
+  END CurrentFinallyExitSeen;
 
 PROCEDURE CurrentExitBlock(): MSIR.Block =
   BEGIN
@@ -911,6 +1007,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         ctx.exitDepth  := exitDepth;
         ctx.tryDepth   := tryDepth;
         ctx.catchDepth := catchDepth;
+        ctx.cleanupDepth := cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
@@ -921,6 +1018,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
     exitDepth      := 0;
     tryDepth       := 0;
     catchDepth     := 0;
+    cleanupDepth   := 0;
     blockSeq       := 0;
     curResultPtr   := NIL;
     curResultType  := NIL;
@@ -995,6 +1093,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         exitDepth        := ctx.exitDepth;
         tryDepth         := ctx.tryDepth;
         catchDepth       := ctx.catchDepth;
+      cleanupDepth     := ctx.cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
       END;
     ELSE
