@@ -1023,6 +1023,16 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF NOT p.mapped THEN EVAL BuildMap (p, p) END;
     minOrd := p.minI;
 
+    (* A set constructor with a statically out-of-range element is a checked
+       runtime error (CT-warned).  The CG path raises it via CheckUseFailure ->
+       CG.Abort; emit the MSIR analogue here — an unconditional ReportFault.
+       Execution falls through to build the (now unreachable) set value so the
+       expression still yields a type-correct result. *)
+    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
+      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                   ORD (p.RTErrorCode));
+    END;
+
     IF info.size <= Target.Word.size THEN
       (* Single-word set: iterate constant tree nodes to accumulate a LONGINT mask.
          The left/right tables (precomputed in Init) give word masks for each bit range. *)
