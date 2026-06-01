@@ -3642,28 +3642,26 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
        referenced without a preceding declare (which would conflict).
        All other binders are external and need explicit declare statements. *)
     IF nImports > 0 THEN
-      (* Define @<Mod>_I3 if: (a) this IS the interface unit, or
-         (b) this is a standalone implementation with no separate interface.
-         Declare only when a separate _I3 unit exists and will define it.
-         A non-interface unit emits its own binder as `weak`: a MODULE Foo is
-         normally paired with a separately compiled INTERFACE Foo whose strong
-         definition must win, but RTHooks (excluded from the import chain in
-         MSIREmit.RegisterImport) leaves i3InImports = FALSE so the module would
-         otherwise emit a second strong definition and clash.  weak lets the
-         interface's strong definition override; a truly standalone module keeps
-         its own weak definition. *)
-      IF isInterface OR NOT i3InImports THEN
-        VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
-          Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
-        END;
-        Wr.PutText(wr, "entry:\n");
-        Wr.PutText(wr, "  ret ptr " & infoName & "\n");
-        Wr.PutText(wr, "}\n");
-      ELSIF NOT NameInExterns(externs, modName & "_I3") THEN
-        (* LLVM 22+ rejects duplicate declares: skip if CollectExterns already
-           emitted this binder as a declare at the top of the file. *)
-        Wr.PutText(wr, "\ndeclare ptr @" & modName & "_I3(" & ip_t & ")\n");
+      (* Emit @<Mod>_I3, the module's own interface binder.
+         - An interface unit emits a STRONG definition.
+         - A non-interface unit ALWAYS emits a WEAK definition.  A MODULE Foo
+           that implements INTERFACE Foo lists Foo_I3 in its own import chain
+           (i3InImports = TRUE); when the interface and implementation are
+           compiled/linked as a single unit (no separate INTERFACE Foo object),
+           nobody else defines Foo_I3, so the implementation must.  Emitting it
+           `weak` is always safe: if a separately compiled INTERFACE Foo IS
+           linked, its strong definition overrides this weak fallback; otherwise
+           this weak definition provides the binder.  (Previously a non-interface
+           unit with i3InImports = TRUE only DECLARED the binder, leaving it
+           undefined at link time — the dominant MSIR-FAIL "missing _I3" cause.)
+         LLVM accepts the weak define even when CollectExterns already emitted a
+         top-of-file `declare` for the same symbol (a define satisfies it). *)
+      VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
+        Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
       END;
+      Wr.PutText(wr, "entry:\n");
+      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+      Wr.PutText(wr, "}\n");
 
       Wr.PutText(wr, "\n; RT0.ImportInfo chain for " & modName & "\n");
       (* Declare external binders (skip modName_I3 and any already declared by
