@@ -1235,6 +1235,45 @@ PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL) =
   END RedepthArray;
 
 (*EXPORTED*)
+(* Widen/narrow a by-value scalar-integer actual to the formal parameter's
+   declared MSIR type, mirroring what CG.Pop_param(formalCGType) does on the C
+   backend.  Without this, a sub-word actual (e.g. an Int8 function result, i8)
+   is passed raw to a wider formal (e.g. INTEGER, i64) with no extension, so the
+   callee reads unextended high bits — a signed -1 prints as 4294967295.
+   No-op for non-integer or equal-width values.  Sign- vs zero-extend per the
+   actual's declared signedness (negative lower bound => signed), matching
+   ReturnStmt's subrange-widening logic.  The target type is exactly
+   MSIRType.Translate(info.type), the same type MSIRBuilder.BeginProc declares
+   the parameter with, so MSIR-compiled and external callees agree. *)
+PROCEDURE CoerceScalarArgMSIR (form: T;  actual: Expr.T;
+                               v: MSIR.Value): MSIR.Value =
+  VAR
+    info       : Info;
+    formT, srcT: MSIR.T;
+    blk        := MSIRBuilder.CurrentBlock ();
+    srcW, dstW : INTEGER;
+    lo, hi     : Target.Int;
+  BEGIN
+    IF v = NIL THEN RETURN v END;
+    Split (form, info);
+    formT := MSIRType.Translate (info.type);
+    IF formT = NIL THEN RETURN v END;
+    srcT := MSIR.ValueType (v);
+    IF MSIR.Kind (srcT)  < MSIR.TypeKind.I1 OR MSIR.Kind (srcT)  > MSIR.TypeKind.W64
+    OR MSIR.Kind (formT) < MSIR.TypeKind.I1 OR MSIR.Kind (formT) > MSIR.TypeKind.W64
+      THEN RETURN v;
+    END;
+    srcW := MSIR.BitWidth (srcT);
+    dstW := MSIR.BitWidth (formT);
+    IF srcW <= 0 OR dstW <= 0 OR srcW = dstW THEN RETURN v END;
+    IF srcW > dstW THEN RETURN MSIR.BuildTrunc (blk, "", v, formT) END;
+    IF Type.GetBounds (Type.StripPacked (Expr.TypeOf (actual)), lo, hi)
+       AND TInt.LT (lo, TInt.Zero)
+      THEN RETURN MSIR.BuildSExt (blk, "", v, formT);
+      ELSE RETURN MSIR.BuildZExt (blk, "", v, formT);
+    END;
+  END CoerceScalarArgMSIR;
+
 PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
   VAR form: T := formalValue;
   BEGIN
@@ -1258,10 +1297,10 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
             ELSE RETURN Expr.LValueMSIR (actual);
           END;
       ELSE
-        RETURN Expr.CompileMSIR (actual);
+        RETURN CoerceScalarArgMSIR (form, actual, Expr.CompileMSIR (actual));
       END;
     END;
-    RETURN Expr.CompileMSIR (actual);
+    RETURN CoerceScalarArgMSIR (form, actual, Expr.CompileMSIR (actual));
   END EmitArgMSIR;
 
 PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =

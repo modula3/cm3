@@ -114,12 +114,34 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
 
 PROCEDURE ValMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
-    v       := Expr.CompileMSIR (ce.args[0]);
-    resultT := MSIRType.Translate (Expr.TypeOf (ce));
+    v          := Expr.CompileMSIR (ce.args[0]);
+    resultT    := MSIRType.Translate (Expr.TypeOf (ce));
+    blk        := MSIRBuilder.CurrentBlock ();
+    srcT       : MSIR.T;
+    srcW, dstW : INTEGER;
+    lo, hi     : Target.Int;
   BEGIN
     IF v = NIL OR resultT = NIL THEN RETURN NIL END;
     IF MSIR.Equal (MSIR.ValueType (v), resultT) THEN RETURN v END;
-    RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", v, resultT);
+    srcT := MSIR.ValueType (v);
+    (* Integer VAL conversion preserves the ordinal value: choose sign- vs
+       zero-extension by the SOURCE type's signedness.  BuildConvert defaults
+       int widening to sext, which is wrong for an unsigned source —
+       VAL(unsignedByte 254, LONGINT) must zero-extend to 254, not sext to -2. *)
+    IF MSIR.Kind (srcT)    >= MSIR.TypeKind.I1 AND MSIR.Kind (srcT)    <= MSIR.TypeKind.W64
+    AND MSIR.Kind (resultT) >= MSIR.TypeKind.I1 AND MSIR.Kind (resultT) <= MSIR.TypeKind.W64 THEN
+      srcW := MSIR.BitWidth (srcT);
+      dstW := MSIR.BitWidth (resultT);
+      IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+        IF srcW > dstW THEN RETURN MSIR.BuildTrunc (blk, "", v, resultT) END;
+        IF Type.GetBounds (Type.StripPacked (Expr.TypeOf (ce.args[0])), lo, hi)
+           AND TInt.LT (lo, TInt.Zero)
+          THEN RETURN MSIR.BuildSExt (blk, "", v, resultT);
+          ELSE RETURN MSIR.BuildZExt (blk, "", v, resultT);
+        END;
+      END;
+    END;
+    RETURN MSIR.BuildConvert (blk, "", v, resultT);
   END ValMSIR;
 
 PROCEDURE Initialize () =
