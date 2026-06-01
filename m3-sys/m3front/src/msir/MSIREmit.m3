@@ -177,8 +177,18 @@ PROCEDURE EndUnit() =
     END;
     TRY
       wr := FileWr.Open(path);
+      (* forRuntime selects runtime-owned TypeLink resolution (no harness ctor:
+         the linked CM3 runtime's RTLinker.ResolveTypeLinks walks the defn chain
+         and registers TypeCells).  True for MSIRObj/MSIRAsm self-hosting.  In
+         parallel @M3m3front-msir emission (backend = C) the default is FALSE
+         (a runtime-less standalone harness, e.g. the LLVM smoke test, needs the
+         MSIR_InitTypeLinks ctor to populate TypeCells).  '@M3m3front-msir-forruntime'
+         forces it TRUE so a parallel-mode .ll can be linked against the REAL
+         runtime (the conformance harness) without the harness ctor clobbering
+         the defn next-pointers the runtime walks. *)
       MSIRToLLVM.Module(wr, curModule,
-        forRuntime := Target.BackendMode IN Target.BackendMSIRSet);
+        forRuntime := (Target.BackendMode IN Target.BackendMSIRSet)
+                   OR RTParams.IsPresent("m3front-msir-forruntime"));
       Wr.Close(wr);
     EXCEPT
       OSError.E => (* best-effort *)

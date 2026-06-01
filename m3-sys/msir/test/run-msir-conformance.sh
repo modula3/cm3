@@ -100,7 +100,7 @@ for t in $TESTS; do
     fi
     bd="$dir/$TARGET"
     ( cd "$dir" && rm -rf "$TARGET" \
-        && timeout "$BUILD_TIMEOUT" cm3 '@M3m3front-msir' -keep -build ) \
+        && timeout "$BUILD_TIMEOUT" cm3 '@M3m3front-msir' '@M3m3front-msir-forruntime' -keep -build ) \
         >"$LOGDIR/$(echo $t | tr / _).log" 2>&1
     if [ $? -eq 124 ]; then
         printf "  %-12s SKIP  (cm3 build timed out — compile-time hang)\n" "$name"
