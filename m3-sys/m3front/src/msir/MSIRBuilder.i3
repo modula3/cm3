@@ -143,6 +143,13 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
 (* Register v → p in the proc map.  caps is the capture list from
    CaptureAnalysis.GetCaptures; NIL for non-nested procs. *)
 
+PROCEDURE RegisterCaptures(v: Value.T;
+                           caps: REF ARRAY OF CaptureAnalysis.Capture);
+(* Pre-register a nested proc's capture list ahead of compiling any body, so a
+   sibling that calls it (compiled first) passes the correct capture args.
+   GetProcCaptures falls back to this when the proc is not yet in the proc map.
+   Used by Procedure.GenBodyMSIR's capture pre-pass. *)
+
 PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture;
 (* Return the capture list stored by RegisterProc for v; NIL if not nested
    or not yet registered.  Used by EmitNestedCall and call sites to build
@@ -156,6 +163,12 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc;
 (* TRUE if v is already registered in the proc map.
    Used to skip re-emitting MSIR for nested procs compiled inline via GenBodyMSIR. *)
 PROCEDURE ProcMapContains(v: Value.T): BOOLEAN;
+
+(* TRUE only if v is registered AND its MSIR proc already has a compiled body
+   (>= 1 block).  A bodyless forward stub returns FALSE so GenBodyMSIR fills it
+   in rather than skipping (used with capture pre-registration to compile a
+   nested proc forward-referenced by an earlier-compiled sibling). *)
+PROCEDURE ProcMapHasBody(v: Value.T): BOOLEAN;
 
 (*------------------------------------------------------ Exception handling *)
 

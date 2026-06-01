@@ -174,6 +174,11 @@ PROCEDURE NewProc(name: TEXT;
                   READONLY params: ARRAY OF Param;
                   result: T): Proc;
 
+(* Replace p's parameter list and rebuild its param Values.  Used when a
+   bodyless forward stub (built from source formals only) is reused as the real
+   definition that also has lambda-lifted capture params. *)
+PROCEDURE ProcSetParams(p: Proc;  READONLY params: ARRAY OF Param);
+
 (*------------------------------------------------- procedure attributes *)
 
 TYPE CallingConvention = {M3, C, WinAPI};

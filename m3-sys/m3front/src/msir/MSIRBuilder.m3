@@ -107,6 +107,16 @@ VAR
   procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
   procMapN: INTEGER := 0;
 
+  (* Pre-registered captures for nested procs, populated BEFORE any sibling
+     body is compiled (Procedure.GenBodyMSIR pass 1), so a call to a not-yet-
+     compiled sibling finds the correct capture signature.  GetProcCaptures
+     falls back here when procMap has no (or NIL) caps for a proc. *)
+  captureMap:  ARRAY [0..MaxProcMap-1] OF RECORD
+                 key:  Value.T;
+                 caps: REF ARRAY OF CaptureAnalysis.Capture;
+               END;
+  captureMapN: INTEGER := 0;
+
 TYPE ShimEntry = RECORD key: Value.T; val: MSIR.Proc END;
 VAR
   shimMap:  ARRAY [0..MaxShimMap-1] OF ShimEntry;
@@ -329,6 +339,13 @@ PROCEDURE BeginProc(name: TEXT;
       END;
       IF reuseProc # NIL THEN
         curProc := reuseProc;
+        (* The stub was built by LookupOrCreateProc from the source formals only
+           (nHidden + nFormals); the real definition also has lambda-lifted
+           capture params.  Widen the reused stub's param list to the full set
+           so the capture/formal bindings below (ProcParam by index) are in
+           range and the definition's signature matches the call site (whose
+           capture args came from the pre-registered capture list). *)
+        MSIR.ProcSetParams(curProc, params^);
       ELSE
         (* Ensure unique LLVM function name; multiple Modula-3 procs of the
            same name at the same nesting level would produce an "invalid
@@ -1703,10 +1720,33 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
 PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture =
   BEGIN
     FOR i := 0 TO procMapN - 1 DO
-      IF procMap[i].key = v THEN RETURN procMap[i].caps END;
+      IF procMap[i].key = v AND procMap[i].caps # NIL THEN
+        RETURN procMap[i].caps;
+      END;
+    END;
+    (* Fall back to the pre-registered captures (pass 1): the proc may be a
+       not-yet-compiled sibling whose procMap entry is absent or caps-NIL. *)
+    FOR i := 0 TO captureMapN - 1 DO
+      IF captureMap[i].key = v THEN RETURN captureMap[i].caps END;
     END;
     RETURN NIL;
   END GetProcCaptures;
+
+PROCEDURE RegisterCaptures(v: Value.T;
+                           caps: REF ARRAY OF CaptureAnalysis.Capture) =
+  (* Record a nested proc's capture list ahead of body compilation so sibling
+     call sites can pass the right capture args even when the callee's body has
+     not been compiled yet.  Idempotent: updates an existing entry. *)
+  BEGIN
+    IF v = NIL THEN RETURN END;
+    FOR i := 0 TO captureMapN - 1 DO
+      IF captureMap[i].key = v THEN  captureMap[i].caps := caps;  RETURN  END;
+    END;
+    IF captureMapN >= MaxProcMap THEN RETURN END;
+    captureMap[captureMapN].key  := v;
+    captureMap[captureMapN].caps := caps;
+    INC(captureMapN);
+  END RegisterCaptures;
 
 PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
   BEGIN
@@ -1715,6 +1755,20 @@ PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
     END;
     RETURN FALSE;
   END ProcMapContains;
+
+PROCEDURE ProcMapHasBody(v: Value.T): BOOLEAN =
+(* TRUE only if v's MSIR proc already has a compiled body (>= 1 block).  A
+   bodyless forward stub (created when v is CALLED before its body is compiled,
+   e.g. a nested proc called by an earlier-compiled sibling) returns FALSE, so
+   GenBodyMSIR proceeds to fill the stub in (BeginProc reuses it). *)
+  BEGIN
+    FOR i := 0 TO procMapN - 1 DO
+      IF procMap[i].key = v THEN
+        RETURN MSIR.ProcBlockCount(procMap[i].val) > 0;
+      END;
+    END;
+    RETURN FALSE;
+  END ProcMapHasBody;
 
 PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
   VAR

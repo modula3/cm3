@@ -637,10 +637,30 @@ PROCEDURE FilterOwnScope (p: T;  ca: CaptureAnalysis.T) =
 (* Compile only the MSIR part of a nested proc's body, inline within the
    enclosing proc's MSIR context.  Called from LangInit when inline_nested_procs
    is FALSE so the CG path defers compilation but MSIR must do it now. *)
-(* Scope.ForEachValue visitor: compile the MSIR body of a nested procedure
-   declared in an enclosing proc's scope.  Non-procedure values (formals) and
-   bodyless procs (external/imported) are skipped.  GenBodyMSIR's own
-   ProcMapContains guard prevents recompiling an already-emitted body. *)
+(* Scope.ForEachValue visitor (pass 1): pre-register a nested procedure's
+   capture list BEFORE any sibling body is compiled, so a call to a not-yet-
+   compiled sibling passes the right capture args.  Pure analysis — no MSIR
+   emission.  Mirrors the capture computation at the head of GenBodyMSIR. *)
+PROCEDURE PreRegisterNestedCaptures (v: Value.T) =
+  BEGIN
+    TYPECASE v OF
+    | T (p) =>
+        IF p.body # NIL THEN
+          VAR ca := CaptureAnalysis.New ();
+          BEGIN
+            Stmt.Capture (p.block, ca);
+            FilterOwnScope (p, ca);
+            MSIRBuilder.RegisterCaptures (p, CaptureAnalysis.GetCaptures (ca));
+          END;
+        END;
+    ELSE (* not a procedure *)
+    END;
+  END PreRegisterNestedCaptures;
+
+(* Scope.ForEachValue visitor (pass 2): compile the MSIR body of a nested
+   procedure declared in an enclosing proc's scope.  Non-procedure values
+   (formals) and bodyless procs (external/imported) are skipped.  GenBodyMSIR's
+   own ProcMapContains guard prevents recompiling an already-emitted body. *)
 PROCEDURE CompileNestedBodyMSIR (v: Value.T) =
   BEGIN
     TYPECASE v OF
@@ -657,7 +677,12 @@ PROCEDURE GenBodyMSIR (p: T) =
        LangInit triggers GenBodyMSIR twice for each nested proc.  The second
        call would corrupt procMap with wrong captures (including variables
        accessible as formals/locals in the current proc). *)
-    IF MSIRBuilder.ProcMapContains (p) THEN RETURN END;
+    (* Skip only if p's body is ALREADY compiled (>= 1 block).  A bodyless
+       forward stub (p called by an earlier-compiled sibling) must NOT be
+       skipped — BeginProc reuses the stub and fills it in.  Capture
+       pre-registration (PreRegisterNestedCaptures) ensures the sibling's call
+       passed the matching capture args, so the reused stub's signature aligns. *)
+    IF MSIRBuilder.ProcMapHasBody (p) THEN RETURN END;
     (* Scan the nested proc body to collect up-level variable captures, then
        remove p's own formals/locals whose up_level flag was set by nested procs
        referencing them — they live in p's own frame and are not captures of p. *)
@@ -682,7 +707,11 @@ PROCEDURE GenBodyMSIR (p: T) =
        called but never defined — an MSIR-FAIL "missing nested-proc symbol".
        Compile p's nested procs by calling GenBodyMSIR DIRECTLY (not via
        Value.LangInit): LangInit's CG.Note_procedure_origin would fire a second
-       time for the parallel C backend, corrupting its nested-proc state. *)
+       time for the parallel C backend, corrupting its nested-proc state.
+       Two passes: pass 1 pre-registers every nested proc's captures so a
+       sibling compiled before its callee still passes the right capture args
+       (mutual/forward references among siblings); pass 2 compiles the bodies. *)
+    Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
     Scope.ForEachValue (p.syms, CompileNestedBodyMSIR);
     TRY
       Stmt.CompileMSIR (p.block);

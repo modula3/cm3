@@ -770,6 +770,32 @@ PROCEDURE NewProc(name: TEXT;
     RETURN p;
   END NewProc;
 
+PROCEDURE ProcSetParams(p: Proc;  READONLY params: ARRAY OF Param) =
+(* Replace p's parameter list (and rebuild its param Values).  Used when a
+   bodyless forward stub — created by a call site that knew only the source
+   formals — is reused as the real definition, which also has lambda-lifted
+   capture params: the stub's narrower param list must be widened to match. *)
+  VAR
+    n  := NUMBER(params);
+    ps := NEW(REF ARRAY OF Param, n);
+    vs := NEW(REF ARRAY OF Value, n);
+  BEGIN
+    FOR i := 0 TO n - 1 DO
+      ps[i] := params[i];
+      VAR v := NEW(Value);
+      BEGIN
+        v.type     := params[i].type;
+        v.name     := params[i].name;
+        v.vKind    := ValueKind.Param;
+        v.proc     := p;
+        v.paramIdx := i;
+        vs[i] := v;
+      END;
+    END;
+    p.params      := ps;
+    p.paramValues := vs;
+  END ProcSetParams;
+
 PROCEDURE ProcName(p: Proc): TEXT = BEGIN RETURN p.name END ProcName;
 PROCEDURE ProcParamCount(p: Proc): INTEGER =
   BEGIN
