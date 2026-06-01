@@ -637,6 +637,18 @@ PROCEDURE FilterOwnScope (p: T;  ca: CaptureAnalysis.T) =
 (* Compile only the MSIR part of a nested proc's body, inline within the
    enclosing proc's MSIR context.  Called from LangInit when inline_nested_procs
    is FALSE so the CG path defers compilation but MSIR must do it now. *)
+(* Scope.ForEachValue visitor: compile the MSIR body of a nested procedure
+   declared in an enclosing proc's scope.  Non-procedure values (formals) and
+   bodyless procs (external/imported) are skipped.  GenBodyMSIR's own
+   ProcMapContains guard prevents recompiling an already-emitted body. *)
+PROCEDURE CompileNestedBodyMSIR (v: Value.T) =
+  BEGIN
+    TYPECASE v OF
+    | T (p) => IF p.body # NIL THEN GenBodyMSIR (p) END;
+    ELSE (* not a procedure *)
+    END;
+  END CompileNestedBodyMSIR;
+
 PROCEDURE GenBodyMSIR (p: T) =
   VAR ca := CaptureAnalysis.New ();
   BEGIN
@@ -662,6 +674,16 @@ PROCEDURE GenBodyMSIR (p: T) =
               captures := ca) THEN RETURN END;
     MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
                                CaptureAnalysis.GetCaptures (ca));
+    (* Compile p's OWN nested procedures inline first.  Nested procs live in
+       p.syms (the procedure scope), not p.block's scope; for a top-level proc
+       GenBody unfolds them via Scope.InitValues -> LangInit -> GenBodyMSIR.
+       GenBodyMSIR (reached only for already-nested procs) previously did NOT
+       process p.syms, so a doubly-nested proc (R in Q in P) was declared and
+       called but never defined — an MSIR-FAIL "missing nested-proc symbol".
+       Compile p's nested procs by calling GenBodyMSIR DIRECTLY (not via
+       Value.LangInit): LangInit's CG.Note_procedure_origin would fire a second
+       time for the parallel C backend, corrupting its nested-proc state. *)
+    Scope.ForEachValue (p.syms, CompileNestedBodyMSIR);
     TRY
       Stmt.CompileMSIR (p.block);
     EXCEPT ELSE

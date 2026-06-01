@@ -45,6 +45,15 @@ PROCEDURE Enter      (t: T);
 PROCEDURE InitValues (t: T);
 PROCEDURE Exit       (t: T);
 
+TYPE ValueVisitor = PROCEDURE (v: Value.T);
+
+PROCEDURE ForEachValue (t: T;  visit: ValueVisitor);
+(* Call visit(v) for each value declared directly in scope t, in declaration
+   order.  Used by the MSIR nested-proc inline path (Procedure.GenBodyMSIR) to
+   reach a procedure's OWN nested procedures and compile their MSIR bodies
+   directly (GenBodyMSIR) — bypassing Value.LangInit, whose
+   CG.Note_procedure_origin side effect would corrupt the parallel C backend. *)
+
 PROCEDURE ModuleName (v: Value.T): M3ID.T;
 PROCEDURE ToUnit     (v: Value.T): M3.Value (* == Module.T *);
 

@@ -271,6 +271,14 @@ PROCEDURE InitValues (t: T) =
     Tracer.EmitPending ();
   END InitValues;
 
+PROCEDURE ForEachValue (t: T;  visit: ValueVisitor) =
+  VAR v: Value.T;
+  BEGIN
+    IF t = NIL THEN RETURN END;
+    v := t.head;
+    WHILE v # NIL DO  visit (v);  v := v.next;  END;
+  END ForEachValue;
+
 PROCEDURE Exit (t: T) =
   BEGIN
     IF (t.nested) THEN CG.End_block () END;
