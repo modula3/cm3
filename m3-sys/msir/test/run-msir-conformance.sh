@@ -132,9 +132,20 @@ for t in $TESTS; do
         msirfail=$((msirfail+1)); failed_list="$failed_list $name"; continue
     fi
 
-    # Link _m3main.o + MSIR objects + C runtime archives.
+    # Collect the test's OWN C-source objects (e.g. dump.c -> dump.o providing
+    # <*EXTERNAL*> procedures the M3 code calls).  These are pure C, not M3, so
+    # they are linked as-is alongside the MSIR objects — the C reference build
+    # uses them too.  Match each <base>.c in the test dir to ARM64_DARWIN/<base>.o.
+    cobjs=""
+    for csrc in "$dir"/*.c; do
+        [ -f "$csrc" ] || continue
+        cbase=$(basename "$csrc" .c)
+        [ -f "$bd/$cbase.o" ] && cobjs="$cobjs $bd/$cbase.o"
+    done
+
+    # Link _m3main.o + MSIR objects + test C objects + C runtime archives.
     msirexe="$bd/pgm-msir"
-    if ! "$CLANG" "$bd/_m3main.o" $objs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
+    if ! "$CLANG" "$bd/_m3main.o" $objs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
             >>"$LOGDIR/$(echo $t | tr / _).log" 2>&1; then
         printf "  %-12s MSIR-FAIL  (link failed — missing symbols / extra libs needed)\n" "$name"
         msirfail=$((msirfail+1)); failed_list="$failed_list $name"; continue
