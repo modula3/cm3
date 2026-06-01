@@ -12,6 +12,7 @@ IMPORT CG, Expr, Token, Scanner, Stmt, StmtRep, Error;
 IMPORT Host, EnumExpr, Type, Bool, Target, TInt, ErrType;
 IMPORT Textt, Procedure, NarrowExpr, Module, AssignStmt, RunTyme;
 IMPORT TextExpr, M3String, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -153,9 +154,28 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
 
-PROCEDURE CompileMSIRStmt (<*UNUSED*> p: P) =
+PROCEDURE CompileMSIRStmt (p: P) =
+(* MSIR analogue of Compile: raise RuntimeError.AssertFailed (via ReportFault)
+   when the condition is false.  Mirrors the CG path's Crash for the no-message
+   case (CG.Abort(AssertFailed)); a custom assert message is not yet attached
+   (ReportFault produces the default "<*ASSERT*> failed." text). *)
+  VAR v: Expr.T;  i: Target.Int;  u: Type.T;  cond, faultCond: MSIR.Value;
   BEGIN
-    (* ASSERT pragmas are silently omitted in MSIR; only the fall-through outcome matters. *)
+    IF NOT Host.doAsserts OR NOT MSIRBuilder.InProc () THEN RETURN END;
+    v := Expr.ConstValue (p.cond);
+    IF v = NIL THEN
+      cond := Expr.CompileMSIR (p.cond);
+      IF cond = NIL THEN RETURN END;
+      (* fault when the condition is false: icmp eq cond, 0 *)
+      faultCond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Eq,
+                     cond, MSIR.ConstInt (MSIR.ValueType (cond), 0));
+      MSIRBuilder.EmitReportFault (faultCond, ORD (CG.RuntimeError.AssertFailed));
+    ELSIF EnumExpr.Split (v, i, u) AND TInt.EQ (i, TInt.Zero) THEN
+      (* ASSERT(FALSE): unconditional fault. *)
+      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                   ORD (CG.RuntimeError.AssertFailed));
+    END;
+    (* ASSERT(TRUE): nothing to emit. *)
   END CompileMSIRStmt;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
