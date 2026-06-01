@@ -12,6 +12,17 @@ VAR
   curModule:  MSIR.Module := NIL;
   llOutPath:  TEXT        := NIL;
 
+  (* Names of units emitted as a MODULE (non-interface) in this compilation.
+     A MODULE and its same-named INTERFACE both default their .ll filename to
+     <ModuleName>.ll; the module's emission (body + <Mod>_M3 binder + info) is
+     authoritative.  When an EXPORTS clause forces the interface to be
+     RE-compiled after the module (e.g. MODULE A EXPORTS Main with INTERFACE A),
+     its later interface-only emission would clobber the module's .ll and drop
+     <Mod>_M3 — an MSIR-FAIL link error.  Skip writing a redundant interface
+     .ll once its module has been emitted. *)
+  emittedModuleNames: REF ARRAY OF TEXT := NIL;
+  nEmittedModules:    INTEGER := 0;
+
 PROCEDURE SetLLOutPath(path: TEXT) =
   BEGIN
     llOutPath := path;
@@ -175,6 +186,16 @@ PROCEDURE EndUnit() =
     ELSE
       path := MSIR.ModuleName(curModule) & ".ll";
     END;
+    (* Skip a redundant INTERFACE emission whose same-named MODULE was already
+       emitted to the same default path: the module's .ll is authoritative
+       (it has the body and <Mod>_M3 binder), and an interface recompile
+       triggered by EXPORTS must not clobber it.  Only applies to the default
+       <ModuleName>.ll path (llOutPath = NIL). *)
+    IF llOutPath = NIL
+       AND MSIR.ModuleIsInterface(curModule)
+       AND ModuleAlreadyEmitted(MSIR.ModuleName(curModule)) THEN
+      curModule := NIL;  llOutPath := NIL;  RETURN;
+    END;
     TRY
       wr := FileWr.Open(path);
       (* forRuntime selects runtime-owned TypeLink resolution (no harness ctor:
@@ -190,6 +211,11 @@ PROCEDURE EndUnit() =
         forRuntime := (Target.BackendMode IN Target.BackendMSIRSet)
                    OR RTParams.IsPresent("m3front-msir-forruntime"));
       Wr.Close(wr);
+      (* Record a successfully-written MODULE so a later same-named interface
+         recompile (EXPORTS) won't clobber it. *)
+      IF llOutPath = NIL AND NOT MSIR.ModuleIsInterface(curModule) THEN
+        RecordEmittedModule(MSIR.ModuleName(curModule));
+      END;
     EXCEPT
       OSError.E => (* best-effort *)
     ELSE
@@ -201,6 +227,30 @@ PROCEDURE EndUnit() =
     curModule  := NIL;
     llOutPath  := NIL;
   END EndUnit;
+
+PROCEDURE ModuleAlreadyEmitted(name: TEXT): BOOLEAN =
+  BEGIN
+    FOR i := 0 TO nEmittedModules - 1 DO
+      IF Text.Equal(emittedModuleNames[i], name) THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END ModuleAlreadyEmitted;
+
+PROCEDURE RecordEmittedModule(name: TEXT) =
+  BEGIN
+    IF ModuleAlreadyEmitted(name) THEN RETURN END;
+    IF emittedModuleNames = NIL THEN
+      emittedModuleNames := NEW(REF ARRAY OF TEXT, 64);
+    ELSIF nEmittedModules >= NUMBER(emittedModuleNames^) THEN
+      VAR bigger := NEW(REF ARRAY OF TEXT, 2 * NUMBER(emittedModuleNames^));
+      BEGIN
+        FOR i := 0 TO nEmittedModules - 1 DO bigger[i] := emittedModuleNames[i] END;
+        emittedModuleNames := bigger;
+      END;
+    END;
+    emittedModuleNames[nEmittedModules] := name;
+    INC(nEmittedModules);
+  END RecordEmittedModule;
 
 BEGIN
 END MSIREmit.
