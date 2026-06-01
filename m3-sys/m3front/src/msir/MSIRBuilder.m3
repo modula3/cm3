@@ -1340,6 +1340,36 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     RETURN result;
   END EmitCallIndirect;
 
+PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
+  VAR
+    reportProc := HookProc(RunTyme.Hook.Abort);  (* RTHooks__ReportFault *)
+    faultBlk, contBlk: MSIR.Block;
+    f: TEXT;  line: INTEGER;
+    ptrT  := MSIR.TPtr(MSIR.TVoid());
+    args  : ARRAY [0..1] OF MSIR.Value;
+  BEGIN
+    IF NOT InProc() OR faultCond = NIL THEN RETURN END;
+    IF reportProc = NIL THEN
+      Abandon("check: RTHooks__ReportFault hook unavailable");  RETURN;
+    END;
+    Scanner.Here(f, line);
+    faultBlk := NewBlock("check.fault");
+    contBlk  := NewBlock("check.cont");
+    MSIR.BuildCondBr(CurrentBlock(), faultCond,
+                     faultBlk, ARRAY OF MSIR.Value{},
+                     contBlk,  ARRAY OF MSIR.Value{});
+    curBlock := faultBlk;
+    (* info = line*32 + ORD(code); module = &@<curMod>_M3_info (offset 0). *)
+    args[0] := MSIR.StructFieldRef(
+                 MSIR.ModuleName(MSIREmit.CurrentModule()) & "_M3_info", 0, ptrT);
+    args[1] := MSIR.ConstInt(MSIR.TI(Target.Integer.size), line * 32 + errCode);
+    EVAL EmitCall("", reportProc, args);
+    IF NOT CurrentBlockTerminated() THEN
+      MSIR.BuildUnreachable(CurrentBlock());
+    END;
+    curBlock := contBlk;
+  END EmitReportFault;
+
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;  resultSlot: MSIR.Value;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =

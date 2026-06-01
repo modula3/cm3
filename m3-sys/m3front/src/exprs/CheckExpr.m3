@@ -10,7 +10,7 @@ MODULE CheckExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, IntegerExpr, EnumExpr, Host;
 IMPORT Target, TInt, Error, LInt;
-IMPORT MSIR, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   Class = { cLOWER, cUPPER, cBOTH };
@@ -204,10 +204,71 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
 
 (* MSIR: forward through the range-check wrapper. The runtime check
    itself (range_check op) can be added in a later refinement. *)
-PROCEDURE CompileMSIR (p: P): MSIR.Value =
+(* Shared MSIR range-check emitter.  Emits a ReportFault guard for the lower
+   and/or upper bound of an already-compiled integer value v of expr e.  Picks
+   signed vs unsigned comparison from e's declared type signedness; advances the
+   current block per EmitReportFault (so CurrentBlock is re-read each time). *)
+PROCEDURE DoCheckMSIR (v: MSIR.Value;  e: Expr.T;
+                       READONLY min, max: Target.Int;
+                       doLo, doHi: BOOLEAN;  err: CG.RuntimeError) =
+  VAR
+    vt  := MSIR.ValueType (v);
+    lo, hi: Target.Int;
+    bI  : INTEGER;
+    ltPred, gtPred: MSIR.CmpPred;
+    cmp : MSIR.Value;
   BEGIN
-    RETURN Expr.CompileMSIR (p.expr);
+    IF Type.GetBounds (Type.StripPacked (Expr.TypeOf (e)), lo, hi)
+       AND NOT TInt.LT (lo, TInt.Zero) THEN
+      ltPred := MSIR.CmpPred.Ult;  gtPred := MSIR.CmpPred.Ugt;
+    ELSE
+      ltPred := MSIR.CmpPred.Slt;  gtPred := MSIR.CmpPred.Sgt;
+    END;
+    IF doLo AND TInt.ToInt (min, bI) THEN
+      cmp := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", ltPred,
+                             v, MSIR.ConstInt (vt, bI));        (* v < min *)
+      MSIRBuilder.EmitReportFault (cmp, ORD (err));
+    END;
+    IF doHi AND TInt.ToInt (max, bI) THEN
+      cmp := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", gtPred,
+                             v, MSIR.ConstInt (vt, bI));        (* v > max *)
+      MSIRBuilder.EmitReportFault (cmp, ORD (err));
+    END;
+  END DoCheckMSIR;
+
+PROCEDURE Checkable (v: MSIR.Value): BOOLEAN =
+(* v is an integer-kind value inside a proc, so a ReportFault guard applies. *)
+  BEGIN
+    IF v = NIL OR NOT MSIRBuilder.InProc () THEN RETURN FALSE END;
+    RETURN MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.I1
+       AND MSIR.Kind (MSIR.ValueType (v)) <= MSIR.TypeKind.W64;
+  END Checkable;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR v := Expr.CompileMSIR (p.expr);
+  BEGIN
+    IF NOT Checkable (v) THEN RETURN v END;
+    DoCheckMSIR (v, p.expr, p.min, p.max,
+                 doLo := (p.class = Class.cLOWER OR p.class = Class.cBOTH),
+                 doHi := (p.class = Class.cUPPER OR p.class = Class.cBOTH),
+                 err  := p.err);
+    RETURN v;
   END CompileMSIR;
+
+PROCEDURE EmitChecksMSIR (v: MSIR.Value;  e: Expr.T;
+                          READONLY min, max: Target.Int;
+                          err: CG.RuntimeError): MSIR.Value =
+  VAR minE, maxE: Target.Int;  doLo, doHi: BOOLEAN;
+  BEGIN
+    IF NOT Host.doRangeChk OR NOT Checkable (v) THEN RETURN v END;
+    Expr.GetBounds (e, minE, maxE);
+    doLo := TInt.LT (minE, min);   (* e's range can fall below min *)
+    doHi := TInt.LT (max, maxE);   (* e's range can rise above max *)
+    IF doLo OR doHi THEN
+      DoCheckMSIR (v, e, min, max, doLo, doHi, err);
+    END;
+    RETURN v;
+  END EmitChecksMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

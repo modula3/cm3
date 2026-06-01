@@ -8,7 +8,7 @@
 INTERFACE CheckExpr;
 (* Range checks for ordinal types. *)
 
-IMPORT Expr, Target, CG;
+IMPORT Expr, Target, CG, MSIR;
 
 (* Check pass: *)
 
@@ -34,5 +34,14 @@ PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
    Does emit warnings on statically detectable RT failures.
    Does not simplify generated code to unconditional aborts
    on statically detectable failures. *)
+
+PROCEDURE EmitChecksMSIR (v: MSIR.Value;  e: Expr.T;
+                          READONLY min, max: Target.Int;
+                          err: CG.RuntimeError): MSIR.Value;
+(* MSIR analogue of EmitChecks operating on an ALREADY-compiled value 'v'
+   (the MSIR result of expression 'e'): emits ReportFault range guards so v is
+   contained in [min..max], with the same bound-elision as EmitChecks (only the
+   bounds that 'e's static range can violate, gated by Host.doRangeChk).
+   Returns v unchanged.  No-op for non-integer values or outside a proc. *)
 
 END CheckExpr.

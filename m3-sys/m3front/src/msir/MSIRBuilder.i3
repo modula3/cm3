@@ -178,6 +178,15 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
 PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
                             READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
+(* Emit a runtime-fault guard.  When faultCond (an i1 value) is TRUE, branches
+   to a fault block that calls RTHooks__ReportFault(@<curMod>_M3_info,
+   line*32 + errCode) — which never returns — and continues in a fresh block
+   otherwise.  errCode is ORD of an M3CG.RuntimeError / RuntimeError.T (< 32).
+   Mirrors the C backend's <module>_CRASH(info) wrapper.  No-op outside a proc
+   or if faultCond is NIL.  The ReportFault call routes through EmitCall, so it
+   correctly invokes to the enclosing TRY's unwind block when inside one. *)
+PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER);
+
 (* Like EmitCall but prepends the capture arguments for a lambda-lifted nested
    proc.  calleeVal is the Value.T for the nested proc (used to look up the
    capture list registered by RegisterProc).  For each capture, passes

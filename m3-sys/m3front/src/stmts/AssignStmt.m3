@@ -876,6 +876,17 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
+    (* Range-check a scalar ordinal assignment — the MSIR analogue of the CG
+       path's CheckExpr.EmitChecks in Emit.  EmitChecksMSIR only fires for an
+       integer rhs whose static range can violate the lhs ordinal bounds, and
+       advances the current block (the store below re-reads CurrentBlock). *)
+    VAR lmin, lmax: Target.Int;
+    BEGIN
+      IF Type.GetBounds (Expr.TypeOf (p.lhs), lmin, lmax) THEN
+        EVAL CheckExpr.EmitChecksMSIR (rhsVal, p.rhs, lmin, lmax,
+                                       CG.RuntimeError.ValueOutOfRange);
+      END;
+    END;
     (* Coerce nil constant to match the slot's element type for untraced pointer stores.
        NIL compiles as gc_ref void but untraced pointer slots have type ptr T. *)
     IF MSIR.GetValueKind (rhsVal) = MSIR.ValueKind.ConstNil THEN
