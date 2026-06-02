@@ -1361,7 +1361,10 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           END;
           eltMsirT    := msirInner;
           eltPackBits := OpenArrayType.EltPack (formType);
-          IF totalElts < 1 THEN totalElts := 1 END;
+          (* Do NOT clamp totalElts up to 1: an empty constructor (totalElts=0)
+             must copy 0 bytes and report dope length 0, not over-read a garbage
+             element.  The copy alloca below is always >= 1 element regardless. *)
+          IF totalElts < 0 THEN totalElts := 0 END;
           totalBytes  := totalElts * (eltPackBits DIV Target.Char.size);
           b     := MSIRBuilder.CurrentBlock ();
           copyA := MSIR.BuildAlloca (b, "", eltMsirT);

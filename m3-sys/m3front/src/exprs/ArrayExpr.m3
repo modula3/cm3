@@ -2428,7 +2428,11 @@ BEGIN
     END;
     IF eltPack > 0 AND eltPack < Target.Byte THEN RETURN NIL END;
   END;
-  IF nElts <= 0 THEN nElts := 1 END;  (* alloca needs at least 1 element *)
+  IF nElts < 0 THEN nElts := 0 END;
+  (* Keep nElts = 0 for an empty constructor (ARRAY OF T {}): LLVM accepts a
+     zero-length array alloca, and the [0 x T] type must be preserved so a
+     consumer (e.g. a VALUE open-array arg) reads FixedArrayLen = 0 — clamping
+     to 1 gave NUMBER() = 1 with a garbage element. *)
   arrT := MSIRBuilder.TFixedArrayI (nElts, eltT);
   b := MSIRBuilder.CurrentBlock ();
   alloca := MSIR.BuildAlloca (b, "", arrT);
