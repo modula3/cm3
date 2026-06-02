@@ -1039,6 +1039,16 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
     RETURN off;
   END ModuleAllocGlobal;
 
+PROCEDURE ModuleNoteGlobal(m: Module;  endByteOff: INTEGER) =
+(* Record that a user global extends to endByteOff (= byteOffset + byteSize) in
+   the module struct, growing the struct to contain it.  Used when globals are
+   placed at the front-end's canonical Variable offset (so cross-module
+   importers, which read at that offset, agree) rather than MSIR's dense
+   ModuleAllocGlobal packing. *)
+  BEGIN
+    IF endByteOff > m.nextGlobalOff THEN m.nextGlobalOff := endByteOff END;
+  END ModuleNoteGlobal;
+
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
   BEGIN
     IF m.nextGlobalOff = 0 THEN

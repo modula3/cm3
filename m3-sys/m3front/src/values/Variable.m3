@@ -298,7 +298,8 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
          Store mt as dataType so LookupVarAddr can return a typed pointer. *)
       byteSize  := Target.Address.bytes;
       byteAlign := Target.Address.align DIV Target.Char.size;
-      byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
+      byteOff   := t.offset DIV Target.Char.size;
+      MSIR.ModuleNoteGlobal(m, byteOff + byteSize);
       g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                           MSIR.TPtr(MSIR.TVoid()), isTraced := FALSE);
       MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff,
@@ -314,7 +315,16 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
     byteSize  := t.size DIV Target.Char.size;
     byteAlign := MAX(1, t.align DIV Target.Char.size);
     IF byteSize <= 0 THEN byteSize := Target.Address.bytes END;
-    byteOff   := MSIR.ModuleAllocGlobal(m, byteSize, byteAlign);
+    (* Place the global at the front-end's canonical byte offset (t.offset), the
+       SAME offset importing modules use to read it (RegisterExternMSIR below).
+       MSIR's own dense ModuleAllocGlobal packing disagreed with t.offset
+       whenever the front-end reserved extra module-record space, so a global
+       written here landed at a different offset than an importer read it from
+       (p289: imported interface VAR read as 0).  ModuleNoteGlobal grows the
+       struct to contain it; the emitter reserves [MI_SIZE..max) as an opaque
+       byte blob accessed by offset. *)
+    byteOff   := t.offset DIV Target.Char.size;
+    MSIR.ModuleNoteGlobal(m, byteOff + byteSize);
     g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                         eltType, isTraced);
     (* Attach struct field info and update refValue to a StructFieldRef. *)

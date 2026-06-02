@@ -451,6 +451,10 @@ CONST MI_nFields = 13;
    User globals follow the standard MI_nFields * Address.bytes header. *)
 PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
                              byteAlign: INTEGER): INTEGER;
+(* Record that a user global extends to endByteOff in the module struct (used
+   when placing globals at the front-end's canonical Variable offset rather than
+   MSIR's dense packing, so cross-module importers agree). *)
+PROCEDURE ModuleNoteGlobal(m: Module;  endByteOff: INTEGER);
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER;
 (* Total byte size of the module struct = MI_SIZE + embedded user globals. *)
 PROCEDURE ModuleGlobalCount(m: Module): INTEGER;

@@ -3756,17 +3756,17 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
         ELSE Wr.PutText(wr, "ptr");
       END;
     END;
-    (* Append user global fields to the struct type. *)
-    FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
-      VAR g := MSIR.ModuleGlobal(m, i);
-      BEGIN
-        IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
-          Wr.PutText(wr, ", ");
-          IF MSIR.GlobalIsTraced(g)
-            THEN Wr.PutText(wr, "ptr");  (* traced ref: always ptr *)
-            ELSE LLType(wr, MSIR.GlobalType(g));
-          END;
-        END;
+    (* Append the user-global region as one opaque byte blob.  Globals are
+       accessed by byte offset (StructFieldRef -> getelementptr i8) and via
+       byte-offset aliases, never by struct-field index, so the region need not
+       be individually typed — and a blob sized from the front-end's canonical
+       offsets reproduces any reserved gap between the MI header and the first
+       global (p289: a 40-byte gap meant importers read at +144 while a dense
+       layout stored at +104). *)
+    VAR embBytes := MSIR.ModuleGlobalStructSize(m) - miBytes;
+    BEGIN
+      IF embBytes > 0 THEN
+        Wr.PutText(wr, ", [" & Fmt.Int(embBytes) & " x i8]");
       END;
     END;
     Wr.PutText(wr, " }\n");
@@ -3823,48 +3823,21 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
       END;
       IF k < nFields - 1
         THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
-        ELSE (* Last standard field — comma only if user globals follow. *)
-             VAR hasEmbedded := FALSE;
-             BEGIN
-               FOR gi := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
-                 VAR g := MSIR.ModuleGlobal(m, gi);
-                 BEGIN
-                   IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
-                     hasEmbedded := TRUE;
-                   END;
-                 END;
-               END;
-               IF hasEmbedded
-                 THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
-                 ELSE Wr.PutText(wr, "  " & fieldType & " " & fieldVal);
-               END;
+        ELSE (* Last standard field — comma only if the user-global blob follows. *)
+             IF MSIR.ModuleGlobalStructSize(m) - miBytes > 0
+               THEN Wr.PutText(wr, "  " & fieldType & " " & fieldVal & ",");
+               ELSE Wr.PutText(wr, "  " & fieldType & " " & fieldVal);
              END;
       END;
       Wr.PutText(wr, "  ; " & fieldName & " (+" & Fmt.Int(k * ap) & ")\n");
     END;
-    (* Append zero initializers for struct-embedded user globals. *)
-    VAR embGlobs: RefSeq.T := NEW(RefSeq.T).init();
+    (* Zero-initialize the user-global blob as a single byte region.  Runtime
+       module init bodies store the actual values via byte-offset GEPs. *)
+    VAR embBytes := MSIR.ModuleGlobalStructSize(m) - miBytes;
     BEGIN
-      FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
-        VAR g := MSIR.ModuleGlobal(m, i);
-        BEGIN
-          IF MSIR.GlobalByteOffset(g) >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
-            embGlobs.addhi(g);
-          END;
-        END;
-      END;
-      FOR i := 0 TO embGlobs.size() - 1 DO
-        VAR g: MSIR.Global := embGlobs.get(i);
-        BEGIN
-          IF MSIR.GlobalIsTraced(g)
-            THEN Wr.PutText(wr, "  ptr null");
-            ELSE Wr.PutText(wr, "  "); LLType(wr, MSIR.GlobalType(g));
-                 Wr.PutText(wr, " zeroinitializer");
-          END;
-          IF i < embGlobs.size() - 1 THEN Wr.PutText(wr, ",") END;
-          Wr.PutText(wr, "  ; " & MSIR.GlobalName(g)
-                         & " (+" & Fmt.Int(MSIR.GlobalByteOffset(g)) & ")\n");
-        END;
+      IF embBytes > 0 THEN
+        Wr.PutText(wr, "  [" & Fmt.Int(embBytes) & " x i8] zeroinitializer"
+                       & "  ; user globals (" & Fmt.Int(embBytes) & " bytes)\n");
       END;
     END;
     Wr.PutText(wr, "}\n");
