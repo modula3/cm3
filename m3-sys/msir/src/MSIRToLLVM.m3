@@ -290,13 +290,34 @@ PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
         exp32 := Word.And(Word.Shift(b32, -23), 16_FF);
         mant32 := Word.And(b32, 16_7FFFFF);
         IF exp32 = 16_FF THEN
-          exp64 := 16_7FF;          (* infinity or NaN *)
+          exp64  := 16_7FF;                    (* infinity or NaN *)
+          mant64 := Word.Shift(mant32, 29);
         ELSIF exp32 = 0 THEN
-          exp64 := 0;               (* ±0 or denormal *)
+          IF mant32 = 0 THEN
+            exp64 := 0;  mant64 := 0;          (* ±0 *)
+          ELSE
+            (* Subnormal float -> NORMAL double: double's exponent range covers
+               it, so it is NOT a subnormal double.  Normalize: find the leading
+               1 of the 23-bit mantissa (bit h), derive the double exponent from
+               its position, and place the trailing fraction at the top of the
+               52-bit double mantissa field.  (The old code kept exp64=0 and just
+               shifted the mantissa, emitting a subnormal double with the wrong
+               value — e.g. 2^-149 became 0x..20000000 instead of
+               0x36A0000000000000.) *)
+            VAR h := 22;
+            BEGIN
+              WHILE h > 0 AND Word.And(mant32, Word.Shift(1, h)) = 0 DO
+                h := h - 1;
+              END;
+              exp64  := h + 874;                (* (h - 149) + 1023 *)
+              mant64 := Word.Shift(Word.And(mant32, Word.Shift(1, h) - 1),
+                                   52 - h);
+            END;
+          END;
         ELSE
-          exp64 := exp32 + 896;     (* rebias: 1023 - 127 *)
+          exp64  := exp32 + 896;                (* rebias: 1023 - 127 *)
+          mant64 := Word.Shift(mant32, 29);     (* float 23 mant bits; double 52 *)
         END;
-        mant64 := Word.Shift(mant32, 29);   (* float has 23 mant bits; double 52 *)
         bits64 := Word.Or(Word.Or(
                     Word.Shift(sign, 63),
                     Word.Shift(exp64, 52)),
