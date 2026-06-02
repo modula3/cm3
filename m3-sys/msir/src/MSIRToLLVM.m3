@@ -3639,7 +3639,17 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
   BEGIN
     IF isInterface THEN
       binderName := modName & "_I3";
-      (* Interfaces have no compiled _M3 body proc — bodyExists stays FALSE. *)
+      bodyName   := "@" & modName & "__" & modName & "_I3";
+      (* An interface with VAR initializers (e.g. INTERFACE Remote with
+         VAR VarVal := Arr{...}) compiles an init body proc named <Mod>_I3
+         (LLVM symbol <Mod>__<Mod>_I3).  The binder must run it on mode # 0,
+         exactly as the _M3 binder runs <Mod>__<Mod>_M3 — otherwise the
+         interface globals stay zero-initialized and importers read 0. *)
+      FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+        IF Text.Equal(MSIR.ProcName(MSIR.ModuleProc(m, i)), modName & "_I3") THEN
+          bodyExists := TRUE;
+        END;
+      END;
     ELSE
       (* Check whether the implementation body proc was compiled (not abandoned). *)
       FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
@@ -3680,7 +3690,19 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
       VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
         Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
       END;
-      Wr.PutText(wr, "entry:\n");
+      (* For an interface with an init body, run it on mode # 0 (mirrors the
+         _M3 binder), so VAR initializers in the interface execute. *)
+      IF isInterface AND bodyExists THEN
+        Wr.PutText(wr, "entry:\n");
+        Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
+        Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
+        Wr.PutText(wr, "run:\n");
+        Wr.PutText(wr, "  call void " & bodyName & "()\n");
+        Wr.PutText(wr, "  br label %done\n");
+        Wr.PutText(wr, "done:\n");
+      ELSE
+        Wr.PutText(wr, "entry:\n");
+      END;
       Wr.PutText(wr, "  ret ptr " & infoName & "\n");
       Wr.PutText(wr, "}\n");
 
@@ -3875,7 +3897,19 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
         VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
           Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
         END;
-        Wr.PutText(wr, "entry:\n");
+        (* Run the interface init body on mode # 0 (mirrors the _M3 binder), so
+           an import-less interface's VAR initializers still execute. *)
+        IF isInterface AND bodyExists THEN
+          Wr.PutText(wr, "entry:\n");
+          Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
+          Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
+          Wr.PutText(wr, "run:\n");
+          Wr.PutText(wr, "  call void " & bodyName & "()\n");
+          Wr.PutText(wr, "  br label %done\n");
+          Wr.PutText(wr, "done:\n");
+        ELSE
+          Wr.PutText(wr, "entry:\n");
+        END;
         Wr.PutText(wr, "  ret ptr " & infoName & "\n");
         Wr.PutText(wr, "}\n");
       ELSE
