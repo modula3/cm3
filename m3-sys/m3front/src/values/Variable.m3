@@ -1166,7 +1166,13 @@ PROCEDURE UserInit (t: T) =
         ELSE
           (* Expr.CheckUseFailure will have generated an unconditional RT error. *)
         END;
-        (* MSIR: memcpy from the initializer lvalue to the local alloca *)
+        (* MSIR: memcpy from the initializer lvalue to the local alloca.  Some
+           value-typed const initializers (notably multi-word SETs) have no
+           lvalue — fall back to compiling the value and storing it.  This also
+           routes a const initializer carrying an RTErrorCode (e.g. an
+           out-of-range SET element folded to a constant) through CompileMSIR,
+           which emits the unconditional runtime fault the CG path raises via
+           CheckUseFailure. *)
         IF NOT t.global AND MSIRBuilder.InProc () THEN
           VAR lval      := Expr.LValueMSIR (t.initExpr);
               addr      := MSIRBuilder.LookupVarAddr (t);
@@ -1174,6 +1180,28 @@ PROCEDURE UserInit (t: T) =
           BEGIN
             IF lval # NIL AND addr # NIL AND byteCount > 0 THEN
               MSIRBuilder.EmitMemcpy (addr, lval, byteCount);
+            ELSIF lval = NIL AND addr # NIL THEN
+              VAR initVal := Expr.CompileMSIR (t.initExpr);
+              BEGIN
+                IF initVal # NIL
+                   AND MSIR.Kind (MSIR.ValueType (addr)) # MSIR.TypeKind.GcSlot
+                   AND NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type)
+                THEN
+                  VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
+                      blk   := MSIRBuilder.CurrentBlock ();
+                      srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
+                      dstW  := MSIR.BitWidth (slotT);
+                  BEGIN
+                    IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                      IF srcW > dstW
+                        THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
+                        ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
+                      END;
+                    END;
+                    MSIR.BuildStore (blk, initVal, addr);
+                  END;
+                END;
+              END;
             END;
           END;
         END;

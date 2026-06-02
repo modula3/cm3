@@ -1126,6 +1126,22 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           ELSIF MSIR.BitWidth (MSIR.ValueType (elt)) > info.size THEN
             elt := MSIR.BuildTrunc (blk, "", elt, ti);
           END;
+          (* A runtime element must lie in the set's domain [minI..maxI];
+             otherwise it is a checked ValueOutOfRange error (the C backend
+             checks this — e.g. BigSet{0, LAST(BigRng)+1}, where the element is
+             a computed value not folded at compile time). *)
+          VAR loF := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Slt, elt,
+                       MSIR.ConstInt (ti, p.minI));
+          BEGIN
+            MSIRBuilder.EmitReportFault (loF, ORD (CG.RuntimeError.ValueOutOfRange));
+          END;
+          blk := MSIRBuilder.CurrentBlock ();
+          VAR hiF := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt, elt,
+                       MSIR.ConstInt (ti, p.maxI));
+          BEGIN
+            MSIRBuilder.EmitReportFault (hiF, ORD (CG.RuntimeError.ValueOutOfRange));
+          END;
+          blk := MSIRBuilder.CurrentBlock ();
           IF minOrd # 0 THEN
             elt := MSIR.BuildISub (blk, "", elt,
                                    MSIR.ConstInt (ti, minOrd));
