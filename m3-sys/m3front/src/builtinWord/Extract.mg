@@ -115,7 +115,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   (* Extract(x, i, n): (x >> i) & ((1 << n) - 1)
-     Mask computed as lshr(allones, W - n) to handle n = 0 safely (gives 0).
+     Mask computed as lshr(allones, W - n); for n = 0 the shift amount is W,
+     which is POISON in LLVM (not 0), so a select forces mask = 0 there.
      All operands are coerced to the canonical word type wt so that LLVM shift
      operands have consistent types and shift amounts stay < W. *)
   VAR
@@ -148,6 +149,12 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     wConst  := MSIR.ConstInt (wt, W);
     wMinusN := MSIR.BuildISub  (b, "", wConst, n);
     mask    := MSIR.BuildILShr (b, "", ones, wMinusN);
+    (* lshr by W (the n = 0 case) is POISON in LLVM, not 0; force mask = 0 so
+       Extract(x, i, 0) = 0. *)
+    mask    := MSIR.BuildSelect (b, "",
+                 MSIR.BuildICmp (b, "", MSIR.CmpPred.Eq, n,
+                                 MSIR.ConstInt (wt, 0)),
+                 MSIR.ConstInt (wt, 0), mask);
     shifted := MSIR.BuildILShr (b, "", x, i);
     RETURN MSIR.BuildIAnd (b, "", shifted, mask);
   END CompileMSIR;

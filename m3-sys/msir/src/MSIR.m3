@@ -1753,14 +1753,28 @@ PROCEDURE BuildCall(b: Block; name: TEXT; callee: Proc;
 (*-------------------------------------------------- Object / RTTI builders *)
 
 PROCEDURE BuildAlloca(b: Block;  name: TEXT;  type: T): Value =
-  VAR i := NEW(Insn);
+  VAR i := NEW(Insn);  entry := b;
   BEGIN
     IF b = NIL THEN RETURN NIL END;
     i.op := Op.Alloca;
     i.targetType := type;
     i.extractIdx := 1;   (* count = 1 initially *)
-    i.result := makeResult(b, TPtr(type), name, i);
-    addInsn(b, i);
+    (* Hoist the alloca to the entry block.  A fixed-size alloca depends only on
+       its type, so it is safe to define once at function entry — and necessary:
+       an alloca left in a loop body reserves fresh stack on EVERY iteration
+       (LLVM does not reclaim it until the function returns), overflowing the
+       stack in long-running loops (p227: a ~4M-iteration loop with per-body
+       temps SIGSEGV'd).  Stores/loads through the pointer stay in place; only
+       the stack reservation moves.  Prepend so it precedes the entry block's
+       terminator. *)
+    IF b.proc # NIL AND b.proc.items.size() > 0
+       AND ISTYPE(b.proc.items.get(0), Block) THEN
+      entry := NARROW(b.proc.items.get(0), Block);
+    END;
+    i.result := makeResult(entry, TPtr(type), name, i);
+    i.srcLine := currentSrcLine;
+    i.block := entry;
+    entry.insns.addlo(i);
     RETURN i.result;
   END BuildAlloca;
 

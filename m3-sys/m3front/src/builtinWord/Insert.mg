@@ -143,6 +143,13 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     wConst      := MSIR.ConstInt (wt, W);
     wMinusN     := MSIR.BuildISub  (b, "", wConst, n);
     mask        := MSIR.BuildILShr (b, "", ones, wMinusN);
+    (* lshr by W (the n = 0 case) yields a POISON value in LLVM, not 0, so the
+       mask would be garbage and Insert(x, y, i, 0) would corrupt x instead of
+       returning it unchanged (p227).  Force mask = 0 when n = 0. *)
+    mask        := MSIR.BuildSelect (b, "",
+                     MSIR.BuildICmp (b, "", MSIR.CmpPred.Eq, n,
+                                     MSIR.ConstInt (wt, 0)),
+                     MSIR.ConstInt (wt, 0), mask);
     shiftedMask := MSIR.BuildIShl  (b, "", mask, i);
     invMask     := MSIR.BuildIXor  (b, "", shiftedMask, ones);
     xCleared    := MSIR.BuildIAnd  (b, "", x, invMask);
