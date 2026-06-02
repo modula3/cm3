@@ -162,10 +162,15 @@ PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
   VAR zz: ARRAY [0..45] OF CHAR;  len: INTEGER;
   BEGIN
     <*ASSERT f.exponent = 0*>
+    (* Emit enough significant digits for the C compiler to re-parse the exact
+       binary value: a 64-bit LONGREAL needs 17 (DBL_DECIMAL_DIG).  The old 13
+       truncated the literal, so C parsed a rounded, different double — a
+       C-backend float-literal precision bug that MSIR's exact-hex emission does
+       not share (p040).  REAL keeps 13 (> FLT_DECIMAL_DIG = 9, round-trips). *)
     IF f.pre = Precision.Short THEN
       len := Convert.FromFloat (zz, FLOAT(f.fraction, REAL), 13, Convert.Style.Sci);
     ELSIF f.pre = Precision.Long THEN
-      len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
+      len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 17, Convert.Style.Sci);
     ELSE
       len := Convert.FromExtended (zz, f.fraction, 36, Convert.Style.Sci);
     END;
