@@ -308,15 +308,14 @@ PROCEDURE BeginProc(name: TEXT;
           | Formal.Mode.mVAR      => params[i + pBase].mode := MSIR.ParamMode.Var;
                                      params[i + pBase].type := MSIR.TPtr(pt);
           | Formal.Mode.mREADONLY =>
+              (* READONLY formals are passed BY REFERENCE (the formal's
+                 indirect=TRUE; the C backend does the same).  Declare every
+                 READONLY param as a pointer — not just aggregates — so a scalar
+                 READONLY designator aliases its actual (p031).  The caller
+                 (Formal.EmitArgMSIR/ReadonlyArgAddrMSIR) passes an address, and
+                 BindFormalMSIR binds it by-ref (loads through the pointer). *)
               params[i + pBase].mode := MSIR.ParamMode.Readonly;
-              CASE MSIR.Kind(pt) OF
-              | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
-                MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
-                MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
-                  params[i + pBase].type := MSIR.TPtr(pt);
-              ELSE
-                  params[i + pBase].type := pt;
-              END;
+              params[i + pBase].type := MSIR.TPtr(pt);
           END;
         END;
         f := f.next;

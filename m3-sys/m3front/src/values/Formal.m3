@@ -1274,6 +1274,36 @@ PROCEDURE CoerceScalarArgMSIR (form: T;  actual: Expr.T;
     END;
   END CoerceScalarArgMSIR;
 
+PROCEDURE ReadonlyArgAddrMSIR (form: T;  actual: Expr.T): MSIR.Value =
+(* Pass a scalar/ordinal/small-set READONLY formal BY REFERENCE (the formal's
+   indirect=TRUE; the C backend does this too).  A designator of the SAME type
+   passes its own lvalue, so it aliases a VAR formal bound to the same actual
+   (p031: PT1RO(LVT1A, LVT1A) — Form must see Alias's write).  Otherwise the
+   value is spilled to a temp whose address is passed (no aliasing expected). *)
+  VAR
+    v, slot : MSIR.Value;
+    info    : Info;
+    formT   : MSIR.T;
+    b       : MSIR.Block;
+  BEGIN
+    IF Expr.IsDesignator (actual)
+       AND Type.IsEqual (TypeOf (form), Expr.TypeOf (actual), NIL) THEN
+      VAR lv := Expr.LValueMSIR (actual);
+      BEGIN  IF lv # NIL THEN RETURN lv END;  END;
+    END;
+    (* Non-designator / different type: spill the (coerced) value to a temp. *)
+    v := Expr.CompileMSIR (actual);
+    IF v = NIL THEN RETURN NIL END;
+    v := CoerceScalarArgMSIR (form, actual, v);
+    Split (form, info);
+    formT := MSIRType.Translate (info.type);
+    IF formT = NIL THEN formT := MSIR.ValueType (v) END;
+    b    := MSIRBuilder.CurrentBlock ();
+    slot := MSIR.BuildAlloca (b, "", formT);
+    MSIR.BuildStore (b, v, slot);
+    RETURN slot;
+  END ReadonlyArgAddrMSIR;
+
 PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
   VAR form: T := formalValue;
   BEGIN
@@ -1288,16 +1318,21 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
       RETURN GenOpenArgMSIR (form, actual);
     END;
     IF form.mode = Mode.mREADONLY THEN
+      (* All READONLY formals pass BY REFERENCE (indirect=TRUE), matching the C
+         backend and BeginProc (which declares every READONLY param as a
+         pointer).  Aggregates/large sets use their lvalue directly; scalars,
+         ordinals and small sets go through ReadonlyArgAddrMSIR (alias a same-
+         type designator, else spill to a temp). *)
       CASE form.kind OF
       | Type.Class.Record, Type.Class.Array, Type.Class.Object =>
           RETURN Expr.LValueMSIR (actual);
       | Type.Class.Set =>
           IF SetType.IsSmallSet (form.repType)
-            THEN RETURN Expr.CompileMSIR (actual);
+            THEN RETURN ReadonlyArgAddrMSIR (form, actual);
             ELSE RETURN Expr.LValueMSIR (actual);
           END;
       ELSE
-        RETURN CoerceScalarArgMSIR (form, actual, Expr.CompileMSIR (actual));
+        RETURN ReadonlyArgAddrMSIR (form, actual);
       END;
     END;
     RETURN CoerceScalarArgMSIR (form, actual, Expr.CompileMSIR (actual));
