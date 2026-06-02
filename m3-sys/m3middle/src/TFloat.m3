@@ -165,7 +165,7 @@ PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
     IF f.pre = Precision.Short THEN
       len := Convert.FromFloat (zz, FLOAT(f.fraction, REAL), 13, Convert.Style.Sci);
     ELSIF f.pre = Precision.Long THEN
-      len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 13, Convert.Style.Sci);
+      len := Convert.FromLongFloat (zz, FLOAT(f.fraction, LONGREAL), 17, Convert.Style.Sci);
     ELSE
       len := Convert.FromExtended (zz, f.fraction, 36, Convert.Style.Sci);
     END;
