@@ -2418,10 +2418,11 @@ BEGIN
   BEGIN
     IF eltBits < 0 THEN
       VAR k := MSIR.Kind (eltT); BEGIN
-        IF k = MSIR.TypeKind.OpenArray OR k = MSIR.TypeKind.FixedArray THEN
-          RETURN NIL;
+        IF k = MSIR.TypeKind.OpenArray THEN
+          RETURN NIL;  (* cannot build open-array elements inline *)
         END;
-        (* Ptr/GcRef/GcSlot: keep eltT as-is; no integer override. *)
+        (* FixedArray elements (array-of-arrays): built below by memcpy'ing each
+           element's array into its slot.  Ptr/GcRef/GcSlot: keep eltT as-is. *)
       END;
     ELSIF eltPack > 0 AND eltPack # eltBits THEN
       eltT := MSIR.TI (eltPack);
@@ -2437,30 +2438,57 @@ BEGIN
   b := MSIRBuilder.CurrentBlock ();
   alloca := MSIR.BuildAlloca (b, "", arrT);
   intT := MSIR.TI (Target.Integer.size);
-  FOR i := 0 TO p.eltCt - 1 DO
-    IF p.args = NIL OR i > LAST (p.args^) THEN
-      elemVal := MSIR.ConstZero (eltT);
-      IF elemVal = NIL THEN RETURN NIL END;
-    ELSE
-      elemVal := Expr.CompileMSIR (p.args^[i]);
-      IF elemVal = NIL THEN RETURN NIL END;
-      (* Truncate/ZExt element value to match packed element width. *)
-      b := MSIRBuilder.CurrentBlock ();
-      VAR srcBits := MSIR.BitWidth (MSIR.ValueType (elemVal));
-          dstBits := MSIR.BitWidth (eltT);
+  (* Array-of-arrays: each element is itself an array, copied by memcpy rather
+     than a scalar store.  Compute the inner element byte size from the M3
+     element type. *)
+  VAR isArrayElt := MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray;
+      eltBytes   := 0;
+  BEGIN
+    IF isArrayElt THEN
+      VAR info: Type.Info;
       BEGIN
-        IF srcBits > 0 AND dstBits > 0 AND srcBits # dstBits THEN
-          IF srcBits > dstBits
-            THEN elemVal := MSIR.BuildTrunc (b, "", elemVal, eltT);
-            ELSE elemVal := MSIR.BuildZExt  (b, "", elemVal, eltT);
-          END;
-        END;
+        EVAL Type.CheckInfo (innerT, info);
+        eltBytes := info.size DIV Target.Char.size;
       END;
     END;
-    b := MSIRBuilder.CurrentBlock ();
-    elemAddr := MSIR.BuildArrayElemAddr (b, "", alloca,
-                  MSIR.ConstInt (intT, i));
-    MSIR.BuildStore (b, elemVal, elemAddr);
+    FOR i := 0 TO p.eltCt - 1 DO
+      b        := MSIRBuilder.CurrentBlock ();
+      elemAddr := MSIR.BuildArrayElemAddr (b, "", alloca,
+                    MSIR.ConstInt (intT, i));
+      IF isArrayElt THEN
+        (* Copy the element array into its slot.  The element expression (a
+           named constant array, a variable, or a nested constructor) has an
+           lvalue; memcpy from it.  '..' repeat reuses the last explicit arg. *)
+        IF p.args = NIL OR eltBytes <= 0 THEN RETURN NIL END;
+        VAR src := Expr.LValueMSIR (p.args^[MIN (i, LAST (p.args^))]);
+        BEGIN
+          IF src = NIL THEN RETURN NIL END;
+          MSIRBuilder.EmitMemcpy (elemAddr, src, eltBytes);
+        END;
+      ELSE
+        IF p.args = NIL OR i > LAST (p.args^) THEN
+          elemVal := MSIR.ConstZero (eltT);
+          IF elemVal = NIL THEN RETURN NIL END;
+        ELSE
+          elemVal := Expr.CompileMSIR (p.args^[i]);
+          IF elemVal = NIL THEN RETURN NIL END;
+          (* Truncate/ZExt element value to match packed element width. *)
+          b := MSIRBuilder.CurrentBlock ();
+          VAR srcBits := MSIR.BitWidth (MSIR.ValueType (elemVal));
+              dstBits := MSIR.BitWidth (eltT);
+          BEGIN
+            IF srcBits > 0 AND dstBits > 0 AND srcBits # dstBits THEN
+              IF srcBits > dstBits
+                THEN elemVal := MSIR.BuildTrunc (b, "", elemVal, eltT);
+                ELSE elemVal := MSIR.BuildZExt  (b, "", elemVal, eltT);
+              END;
+            END;
+          END;
+        END;
+        b := MSIRBuilder.CurrentBlock ();
+        MSIR.BuildStore (b, elemVal, elemAddr);
+      END;
+    END;
   END;
   RETURN alloca;
 END LValueMSIR_MSIR;
