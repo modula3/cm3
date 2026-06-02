@@ -2385,6 +2385,14 @@ VAR
   intT     : MSIR.T;
   baseType : Type.T;
 BEGIN
+  (* An array constructor with a statically out-of-range element is a checked
+     runtime error (CT-warned), raised by the CG path via CheckUseFailure ->
+     CG.Abort.  Emit the MSIR analogue (unconditional ReportFault); execution
+     falls through to build the now-unreachable array.  Mirrors SetExpr. *)
+  IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
+    MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                 ORD (p.RTErrorCode));
+  END;
   nElts := p.eltCt;
   IF nElts < 0 THEN
     MSIRBuilder.Abandon ("ArrayExpr: element count not computed");

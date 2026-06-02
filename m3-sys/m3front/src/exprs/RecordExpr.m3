@@ -616,6 +616,15 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
     dstBits  : INTEGER;
     srcBits  : INTEGER;
   BEGIN
+    (* A record constructor with a statically out-of-range field value is a
+       checked runtime error (CT-warned), raised by the CG path via
+       CheckUseFailure -> CG.Abort.  Emit the MSIR analogue (unconditional
+       ReportFault); fall through to build the now-unreachable record so the
+       expression still yields a type-correct value.  Mirrors SetExpr. *)
+    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
+      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                   ORD (p.RTErrorCode));
+    END;
     msirT := MSIRType.Translate (p.tipe);
     IF msirT = NIL THEN
       MSIRBuilder.Abandon ("record expr: type not translatable in MSIR");
