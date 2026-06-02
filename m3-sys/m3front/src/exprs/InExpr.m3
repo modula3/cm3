@@ -224,11 +224,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
                                  MSIR.ConstInt (wt, minOrd));
         END;
 
-        (* Clamp shift count to [0, wBW-1] so lshr is always defined.
-           Out-of-range adj maps to an in-range shift count, but the inRange
-           guard below ensures the final result is still correct. *)
-        VAR adjMasked := MSIR.BuildIAnd (blk, "", adj,
-                           MSIR.ConstInt (wt, wBW - 1));
+        (* Clamp the shift count so lshr is always defined (a shift amount
+           >= the bit width is poison in LLVM).  A bitmask (adj AND wBW-1)
+           only works when wBW is a power of two; multi-word sets have
+           non-power-of-two widths (e.g. SET OF [0..191] is i192), where
+           masking would corrupt valid shift amounts (98 AND 191 = 34).  Use a
+           select: an out-of-range adj (unsigned compare, so negative adj maps
+           to a huge value too) shifts by 0, and for those the inRange guard
+           below zeroes the membership result. *)
+        VAR isValid   := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ult, adj,
+                           MSIR.ConstInt (wt, wBW));
+            adjMasked := MSIR.BuildSelect (blk, "", isValid, adj,
+                           MSIR.ConstZero (wt));
         BEGIN
           shifted := MSIR.BuildILShr (blk, "", setVal, adjMasked);
           bit     := MSIR.BuildIAnd  (blk, "", shifted, MSIR.ConstInt (wt, 1));

@@ -1327,10 +1327,14 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
       | Type.Class.Record, Type.Class.Array, Type.Class.Object =>
           RETURN Expr.LValueMSIR (actual);
       | Type.Class.Set =>
-          IF SetType.IsSmallSet (form.repType)
-            THEN RETURN ReadonlyArgAddrMSIR (form, actual);
-            ELSE RETURN Expr.LValueMSIR (actual);
-          END;
+          (* Both small and multi-word sets go through ReadonlyArgAddrMSIR: a
+             same-type designator passes its own lvalue (aliasing preserved),
+             and any other actual — notably an anonymous SET constructor used
+             as a default value, which has no lvalue (SetExpr has no
+             compileLValueMSIR) — is spilled to a temp.  Previously big sets
+             called Expr.LValueMSIR directly, so a constructor default returned
+             NIL and the whole call was silently dropped (p287: Def.ASs()). *)
+          RETURN ReadonlyArgAddrMSIR (form, actual);
       ELSE
         RETURN ReadonlyArgAddrMSIR (form, actual);
       END;
