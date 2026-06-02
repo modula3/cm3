@@ -12,6 +12,7 @@ MODULE RecordType;
 IMPORT M3, M3ID, CG, Type, TypeRep, Scope, Expr, Value, Token;
 IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
 IMPORT Word, AssignStmt, M3Buf;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 VAR MaxBitSize := LAST (INTEGER);
@@ -421,6 +422,91 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     END;
     CG.Free (ptr);
   END GenInit;
+
+PROCEDURE InitFieldDefaultMSIR (addr: MSIR.Value;  dfault: Expr.T;
+                                size: INTEGER) =
+(* Emit the default value of one record field into its (already typed) slot
+   address.  Aggregate defaults (array/record constants) have an lvalue and are
+   memcpy'd; set and scalar defaults have none — compile the value and store it
+   (the same dispatch Variable.m3 uses for variable initializers). *)
+  VAR byteCount := size DIV Target.Byte;
+  BEGIN
+    VAR lv := Expr.LValueMSIR (dfault);
+    BEGIN
+      IF lv # NIL AND byteCount > 0 THEN
+        MSIRBuilder.EmitMemcpy (addr, lv, byteCount);
+        RETURN;
+      END;
+    END;
+    VAR v := Expr.CompileMSIR (dfault);
+    BEGIN
+      IF v = NIL THEN RETURN END;
+      VAR b     := MSIRBuilder.CurrentBlock ();
+          eltT  := MSIR.EltType (MSIR.ValueType (addr));
+          srcW  := MSIR.BitWidth (MSIR.ValueType (v));
+          dstW  := MSIR.BitWidth (eltT);
+      BEGIN
+        IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+          IF srcW > dstW
+            THEN v := MSIR.BuildTrunc (b, "", v, eltT);
+            ELSE v := MSIR.BuildZExt  (b, "", v, eltT);
+          END;
+        END;
+        MSIR.BuildStore (b, v, addr);
+      END;
+    END;
+  END InitFieldDefaultMSIR;
+
+(* EXPORTED *)
+PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value) =
+(* MSIR analogue of GenInit: initialize a record variable's fields to their
+   declared defaults.  Called from Variable.LangInit/ForceInit alongside the CG
+   Type.InitValue, since GenInit emits nothing for MSIR.  Fields without a
+   default that are themselves records are recursed into; scalar fields without
+   a default are zeroed (a proc-local alloca is not pre-zeroed; a global already
+   is, so a redundant zero store is harmless). *)
+  VAR p := Reduce (t);
+  BEGIN
+    IF p = NIL OR baseAddr = NIL THEN RETURN END;
+    VAR field : Field.Info;
+        v     := Scope.ToList (p.fields);
+    BEGIN
+      WHILE v # NIL DO
+        Field.Split (v, field);
+        IF field.offset MOD Target.Byte = 0 THEN
+          VAR byteOff := field.offset DIV 8;
+              b       := MSIRBuilder.CurrentBlock ();
+              ft      := MSIRType.Translate (field.type);
+              fInfo   : Type.Info;
+              fslot   : MSIR.Value;
+          BEGIN
+            EVAL Type.CheckInfo (field.type, fInfo);
+            fslot := MSIRBuilder.BuildPtrByteOff (b, "", baseAddr, byteOff);
+            IF ft # NIL THEN
+              (* When real storage width differs from the natural MSIR type
+                 (e.g. [0..255] is i8 but Translate gives i64), use TI(size). *)
+              IF fInfo.size > 0 AND MSIR.BitWidth (ft) > 0
+                 AND fInfo.size # MSIR.BitWidth (ft) THEN
+                ft := MSIR.TI (fInfo.size);
+              END;
+              fslot := MSIR.RetypeValue (fslot, MSIR.TPtr (ft));
+            END;
+            IF field.dfault # NIL THEN
+              InitFieldDefaultMSIR (fslot, field.dfault, fInfo.size);
+            ELSIF Reduce (field.type) # NIL THEN
+              GenInitMSIR (field.type, fslot);
+            ELSIF ft # NIL THEN
+              VAR z := MSIR.ConstZero (ft);
+              BEGIN
+                IF z # NIL THEN MSIR.BuildStore (b, z, fslot) END;
+              END;
+            END;
+          END;
+        END;
+        v := v.next;
+      END;
+    END;
+  END GenInitMSIR;
 
 PROCEDURE GenMap (p: P;  offset: INTEGER;  <*UNUSED*> size: INTEGER;
                   refs_only: BOOLEAN) =

@@ -15,7 +15,7 @@ IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
 IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
-IMPORT Type, OpenArrayType, ErrType, TipeMap;
+IMPORT Type, OpenArrayType, ErrType, TipeMap, RecordType;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
 IMPORT Text;
 FROM Scanner IMPORT GetToken, Match, cur;
@@ -1034,6 +1034,11 @@ PROCEDURE LangInit (t: T) =
         CG.Gen_location (t.origin);
         LoadLValue (t);
         Type.InitValue (t.type, FALSE);
+        (* MSIR: GenInit (Type.InitValue) is CG-only.  Emit the record
+           field-default initialization in MSIR too (p288). *)
+        IF MSIRBuilder.InProc () THEN
+          RecordType.GenInitMSIR (t.type, MSIRBuilder.LookupVarAddr (t));
+        END;
       END;
       IF (t.trace # NIL) AND (NOT t.imported) THEN
         IF (t.initExpr = NIL) OR (t.initDone) THEN
@@ -1051,6 +1056,9 @@ PROCEDURE ForceInit (t: T) =
     CG.Gen_location (t.origin);
     LoadLValue (t);
     Type.InitValue (t.type, FALSE);
+    IF MSIRBuilder.InProc () THEN
+      RecordType.GenInitMSIR (t.type, MSIRBuilder.LookupVarAddr (t));
+    END;
   END ForceInit;
 
 (* EXPORTED *)

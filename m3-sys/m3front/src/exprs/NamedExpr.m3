@@ -269,13 +269,35 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           RETURN addr;
         END;
     ELSE
-      (* CONST ARRAY OF T — materialise as a private constant LLVM global. *)
       IF Value.ClassOf (p.value) = Value.Class.Expr THEN
         VAR constExpr := Value.ToExpr (p.value);
         BEGIN
-          IF constExpr # NIL
-             AND ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
-            RETURN MSIRBuilder.MaterializeConstArray (p.value, constExpr);
+          IF constExpr # NIL THEN
+            (* CONST ARRAY OF T — materialise as a private constant global. *)
+            IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
+              RETURN MSIRBuilder.MaterializeConstArray (p.value, constExpr);
+            END;
+            (* Other named constants (record, set, scalar) referenced where an
+               lvalue is needed (e.g. an aggregate passed by reference, or a
+               record-field default): use the constructor's own lvalue when it
+               has one (RecordExpr does), otherwise compile the value and spill
+               it to a temp.  Returning a real address here — rather than
+               abandoning — keeps the enclosing procedure intact. *)
+            VAR lv := Expr.LValueMSIR (constExpr);
+            BEGIN
+              IF lv # NIL THEN RETURN lv END;
+            END;
+            VAR v := Expr.CompileMSIR (constExpr);
+            BEGIN
+              IF v # NIL THEN
+                VAR b    := MSIRBuilder.CurrentBlock ();
+                    slot := MSIR.BuildAlloca (b, "", MSIR.ValueType (v));
+                BEGIN
+                  MSIR.BuildStore (b, v, slot);
+                  RETURN slot;
+                END;
+              END;
+            END;
           END;
         END;
       END;
