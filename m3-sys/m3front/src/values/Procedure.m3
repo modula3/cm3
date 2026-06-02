@@ -688,11 +688,16 @@ PROCEDURE GenBodyMSIR (p: T) =
        referencing them — they live in p's own frame and are not captures of p. *)
     Stmt.Capture (p.block, ca);
     FilterOwnScope (p, ca);
-    (* Use the short name: BeginProc is always entered in a nested context here
-       (called from LangInit when InProc() is TRUE) and will prefix the outer
-       proc's name to produce a unique qualified symbol. *)
+    (* Use the canonical Value.GlobalName — the SAME name the call site uses via
+       MSIRBuilder.LookupOrCreateProc (Value.GlobalName(v, dots:=FALSE)).  It is
+       already fully qualified (module + enclosing procs + a scope number that
+       disambiguates shadowed same-named siblings), so the definition and every
+       call agree by construction.  The old code passed the short name and let
+       BeginProc reconstruct a parent-prefixed name, which omitted the scope
+       number and so diverged from the call site for shadowed nested procs (e.g.
+       p035's repeated `bar`/`foo` in `coco`) — an MSIR-FAIL undefined symbol. *)
     IF NOT MSIRBuilder.BeginProc (
-              M3ID.ToText (p.name),
+              Value.GlobalName (p, dots := FALSE),
               ProcType.Formals (p.signature),
               p.syms, ProcType.Result (p.signature),
               isExternal := TRUE,

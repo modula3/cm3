@@ -214,10 +214,12 @@ PROCEDURE BeginProc(name: TEXT;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
-      (* Prefix nested proc name with parent's fully-qualified name using "__"
-         (the M3 ABI separator) so the LLVM symbol matches the C backend. *)
-      name := MSIR.ProcName(procContextStack[procContextDepth - 1].proc)
-              & "__" & name;
+      (* The caller (Procedure.GenBodyMSIR) now passes the canonical
+         Value.GlobalName — already fully qualified (module + enclosing procs +
+         a scope number for shadowed siblings), matching the call site's
+         LookupOrCreateProc name.  So no parent-prefix reconstruction here; doing
+         it would double-qualify and (for shadowed procs) still diverge from the
+         call site. *)
     END;
     abandoned      := FALSE;
     varMapN        := 0;
