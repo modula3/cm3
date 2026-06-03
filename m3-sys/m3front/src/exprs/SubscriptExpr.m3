@@ -517,7 +517,10 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     idxVal := Expr.CompileMSIR (p.biased_b);
     IF idxVal = NIL THEN RETURN NIL END;
     (* GEP indices are sign-extended by LLVM; narrow types (e.g. i1 for
-       BOOLEAN) must be zero-extended to i64 before use as an array index. *)
+       BOOLEAN) must be zero-extended to i64 before use as an array index.
+       Use ZExt here since subscript indices represent non-negative array
+       positions; the signed-arithmetic widening fix is in AddExpr/MultiplyExpr
+       where the index EXPRESSION is computed. *)
     VAR idxBits := MSIR.BitWidth (MSIR.ValueType (idxVal));
         intBits := Target.Integer.size;
     BEGIN

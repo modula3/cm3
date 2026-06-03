@@ -165,12 +165,31 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     END;
   END Compile;
 
-PROCEDURE CoerceToMSIR(blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T): MSIR.Value =
+PROCEDURE CoerceToMSIR(blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T;
+                        expr: Expr.T := NIL): MSIR.Value =
+  (* Widen or truncate v to match type rt.  For widening, use SExt when the
+     source expression has a negative lower bound (signed subrange like [-20..20]
+     stored as i8: p028) and ZExt otherwise (CHAR [0..255], [0..N]).
+     Note: Word.T = INTEGER at word size so no widening occurs (vb = rb = 64). *)
   VAR vb := MSIR.BitWidth(MSIR.ValueType(v));
       rb := MSIR.BitWidth(rt);
   BEGIN
     IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
-    IF vb < rb THEN RETURN MSIR.BuildZExt(blk, "", v, rt) END;
+    IF vb < rb THEN
+      VAR lo, hi: Target.Int;  signed: BOOLEAN;
+      BEGIN
+        IF expr # NIL AND Type.GetBounds(Expr.TypeOf(expr), lo, hi) THEN
+          signed := TInt.LT(lo, TInt.Zero);
+        ELSE
+          signed := MSIR.Kind(MSIR.ValueType(v)) >= MSIR.TypeKind.I1 AND
+                    MSIR.Kind(MSIR.ValueType(v)) <= MSIR.TypeKind.I64;
+        END;
+        IF signed
+          THEN RETURN MSIR.BuildSExt(blk, "", v, rt);
+          ELSE RETURN MSIR.BuildZExt(blk, "", v, rt);
+        END;
+      END;
+    END;
     RETURN MSIR.BuildTrunc(blk, "", v, rt);
   END CoerceToMSIR;
 
@@ -186,8 +205,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     | Class.cINT, Class.cLINT =>
         rt := MSIRType.Translate(p.type);
         IF rt = NIL THEN rt := MSIR.ValueType(a) END;
-        a := CoerceToMSIR(blk, a, rt);
-        b := CoerceToMSIR(blk, b, rt);
+        a := CoerceToMSIR(blk, a, rt, p.a);
+        b := CoerceToMSIR(blk, b, rt, p.b);
         RETURN MSIR.BuildIAdd (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFAdd (blk, "", a, b);

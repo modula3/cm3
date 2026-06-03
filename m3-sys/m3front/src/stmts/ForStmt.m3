@@ -435,6 +435,16 @@ PROCEDURE CompileMSIR (p: P) =
   BEGIN
     Variable.Split (loopVar, varType, varGlobal, varIndir, varLhs);
     msirType := MSIRType.Translate (varType);
+    (* M3 semantics: all arithmetic on subword types is done at INTEGER (word)
+       size — the narrow storage type is only the memory representation.
+       Always widen the loop variable MSIR type to at least Target.Integer.size
+       so that increment never wraps (e.g. CHAR [0..255] as i8: 255+1 → 0,
+       causing an infinite loop) and comparisons work with the actual values
+       rather than the sign-confused storage representation (i8(255) = -1). *)
+    IF msirType # NIL AND
+       MSIR.BitWidth(msirType) < Target.Integer.size THEN
+      msirType := MSIR.TI(Target.Integer.size);
+    END;
     IF msirType = NIL THEN
       MSIRBuilder.Abandon ("FOR variable type not supported in MSIR");
       RETURN;

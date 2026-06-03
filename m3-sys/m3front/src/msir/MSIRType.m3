@@ -70,6 +70,13 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
     base := Type.Base(t);  (* strips Named, Packed, Subrange layers *)
 
     (* Integer-like builtins — use the original type's size so that narrow
+       subranges of INTEGER (e.g. Ctypes.int = 32 bits) get TI(32) not TI(64).
+       For non-negative subranges (CARDINAL, [0..N], CHAR, Word-family), emit
+       TW (unsigned word) so that CoerceToMSIR can distinguish signed widening
+       (SExt) from unsigned widening (ZExt) purely from the MSIR kind, without
+       needing M3 type bounds at widening time.  M3 subranges with lo ≥ 0 are
+       semantically unsigned even when stored in a signed INTEGER representation. *)
+    (* Integer-like builtins — use the original type's size so that narrow
        subranges of INTEGER (e.g. Ctypes.int = 32 bits) get TI(32) not TI(64). *)
     IF base = Int.T THEN
       VAR sz := Target.Integer.size;

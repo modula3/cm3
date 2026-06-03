@@ -8,7 +8,7 @@
 
 MODULE MultiplyExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, EReel, Target;
+IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, EReel, Target, TInt;
 IMPORT SetExpr, IntegerExpr, ReelExpr, LReel, SetType, ErrType;
 IMPORT MSIR, MSIRBuilder, MSIRType;
 
@@ -151,12 +151,27 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     END;
   END Compile;
 
-PROCEDURE CoerceToMSIR (blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T): MSIR.Value =
+PROCEDURE CoerceToMSIR (blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T;
+                         expr: Expr.T := NIL): MSIR.Value =
   VAR vb := MSIR.BitWidth (MSIR.ValueType (v));
       rb := MSIR.BitWidth (rt);
   BEGIN
     IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
-    IF vb < rb THEN RETURN MSIR.BuildZExt (blk, "", v, rt) END;
+    IF vb < rb THEN
+      VAR lo, hi: Target.Int;  signed: BOOLEAN;
+      BEGIN
+        IF expr # NIL AND Type.GetBounds(Expr.TypeOf(expr), lo, hi) THEN
+          signed := TInt.LT(lo, TInt.Zero);
+        ELSE
+          signed := MSIR.Kind(MSIR.ValueType(v)) >= MSIR.TypeKind.I1 AND
+                    MSIR.Kind(MSIR.ValueType(v)) <= MSIR.TypeKind.I64;
+        END;
+        IF signed
+          THEN RETURN MSIR.BuildSExt(blk, "", v, rt);
+          ELSE RETURN MSIR.BuildZExt(blk, "", v, rt);
+        END;
+      END;
+    END;
     RETURN MSIR.BuildTrunc (blk, "", v, rt);
   END CoerceToMSIR;
 
@@ -171,8 +186,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         VAR rt := MSIRType.Translate (p.type);
         BEGIN
           IF rt = NIL THEN rt := MSIR.ValueType (a) END;
-          a := CoerceToMSIR (blk, a, rt);
-          b := CoerceToMSIR (blk, b, rt);
+          a := CoerceToMSIR (blk, a, rt, p.a);
+          b := CoerceToMSIR (blk, b, rt, p.b);
           RETURN MSIR.BuildIMul (blk, "", a, b);
         END;
     | cREAL, cLONG, cEXTND =>
