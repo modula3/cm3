@@ -484,6 +484,13 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
           refVal := CallAllocHook (t, PHook [t_info.isTraced],
                                    MSIRBuilder.TypeLinkValueForRef (t));
           IF refVal = NIL THEN RETURN NIL END;
+          (* Apply the record type's field defaults inline (the runtime's initProc
+             mechanism; in MSIR we emit it at the call site instead of via TC_initProc
+             because generating the initProc suffers from a pre-existing crash in
+             EndProc during interface compilation).  GenInitMSIR only stores fields
+             that have non-zero defaults; the heap allocation is already zero-init.
+             This runs BEFORE keyword args so that explicit keyword overrides win. *)
+          RecordType.GenInitMSIR (r, refVal);
           (* Keyword-arg field initialization (initializing := TRUE, no GC barrier). *)
           FOR i := 1 TO LAST (ce.args^) DO
             EVAL KeywordExpr.Split (ce.args[i], key, value);

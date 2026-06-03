@@ -62,6 +62,7 @@ REVEAL
         initDone    : M3.Flag   := FALSE;
         initZero    : M3.Flag   := FALSE; (* Initial value is all binary zeros. *)
         initPending : M3.Flag   := FALSE; (* Initialization is postponed. *)
+        msirInitDone: M3.Flag   := FALSE; (* MSIR init has been emitted. *)
         initStatic  : M3.Flag   := FALSE; (* Needs RT initialization to a value
                                              from the static constant area. *)
         allocated     : M3.Flag := FALSE;
@@ -1072,6 +1073,58 @@ PROCEDURE ForceInit (t: T) =
   END ForceInit;
 
 (* EXPORTED *)
+PROCEDURE ForceInitMSIR (t: T) =
+(* Emit only the MSIR part of the initialization for t, if it has not been
+   emitted yet.  Uses a separate msirInitDone flag (NOT initPending) because
+   the CG path's ForceInit clears initPending BEFORE the MSIR path runs, so
+   a check on initPending would always see FALSE. *)
+  BEGIN
+    IF t.msirInitDone THEN RETURN END;
+    (* Only force-init global variables (module-level VARs with initExpr that
+       depend on other module VARs initialized later).  Local variables and
+       uplevel-captured vars are initialized by their own VAR binding in the
+       proc body — forcing them here would reset them to their initial value
+       every time they are read (e.g., a nested-proc capture resets a loop
+       accumulator on each call). *)
+    IF NOT t.global THEN RETURN END;
+    IF t.initExpr = NIL THEN RETURN END;
+    IF NOT MSIRBuilder.InProc () THEN RETURN END;
+    (* Prevent recursion: mark done before emitting (in case initExpr references t). *)
+    t.msirInitDone := TRUE;
+    (* Compile the init expression and store it.  For dependency-forced init
+       (called from NamedExpr.CompileMSIR when a variable references another
+       variable that hasn't been initialized yet), initDone might already be
+       TRUE (e.g., set by AllocGlobalVarSpace for struct-const inits) while the
+       MSIR store still needs to be emitted.  So we check msirInitDone (which
+       we just set) rather than initDone. *)
+    IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
+      VAR initVal := Expr.CompileMSIR (t.initExpr);
+          addr    := MSIRBuilder.LookupVarAddr (t);
+      BEGIN
+        IF initVal # NIL AND addr # NIL THEN
+          IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+            MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
+          ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
+            VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
+                blk   := MSIRBuilder.CurrentBlock ();
+                srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
+                dstW  := MSIR.BitWidth (slotT);
+            BEGIN
+              IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                IF srcW > dstW
+                  THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
+                  ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
+                END;
+              END;
+              MSIR.BuildStore (blk, initVal, addr);
+            END;
+          END;
+        END;
+      END;
+    END;
+  END ForceInitMSIR;
+
+(* EXPORTED *)
 PROCEDURE CopyOpenArray (arrayType: Type.T;  refType: Type.T) =
 (* PRE: Pointer to array dope is on TOS. *)
 (* Generate code to heap-allocate the copy. *)
@@ -1256,7 +1309,8 @@ PROCEDURE UserInit (t: T) =
           END;
         END;
       END;
-      t.initDone := TRUE;
+      t.initDone    := TRUE;
+      t.msirInitDone := TRUE;  (* ForceInitMSIR must not re-emit this init *)
       Tracer.Schedule (t.trace);
     END;
     (* MSIR: globals with simple constant initializers are statically initialized
