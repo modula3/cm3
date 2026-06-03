@@ -795,6 +795,23 @@ PROCEDURE SetCurrentBlock(b: MSIR.Block) =
     curBlock := b;
   END SetCurrentBlock;
 
+PROCEDURE BeginHelperProc(p: MSIR.Proc;  entry: MSIR.Block) =
+  (* Caller must save/restore the previous context manually using
+     CurrentProc(), CurrentBlock(), and IsAbandoned() before calling this,
+     or use the SavedContext type.  BeginHelperProc saves nothing itself. *)
+  BEGIN
+    curProc   := p;
+    curBlock  := entry;
+    abandoned := FALSE;
+  END BeginHelperProc;
+
+PROCEDURE EndHelperProc() =
+  BEGIN
+    curProc   := NIL;
+    curBlock  := NIL;
+    abandoned := FALSE;
+  END EndHelperProc;
+
 PROCEDURE CurrentBlockTerminated(): BOOLEAN =
   BEGIN
     RETURN MSIR.BlockIsTerminated(curBlock);

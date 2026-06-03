@@ -1093,6 +1093,7 @@ PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
 REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   name          : TEXT;
   userName      : TEXT := NIL;  (* OBJ: user-visible name for TC_name field *)
+  initProcName  : TEXT := NIL;  (* OBJ: field-default init proc LLVM symbol *)
   uid           : INTEGER;
   fp            : ARRAY [0..7] OF [0..255];  (* Fingerprint2.T bytes, little-endian *)
   isTraced      : BOOLEAN;
@@ -1151,8 +1152,10 @@ PROCEDURE TypeDescSize       (d: TypeDesc): INTEGER = BEGIN RETURN d.dataSize   
 PROCEDURE TypeDescAlign      (d: TypeDesc): INTEGER = BEGIN RETURN d.dataAlignment END TypeDescAlign;
 PROCEDURE TypeDescParentUID  (d: TypeDesc): INTEGER = BEGIN RETURN d.parentUID     END TypeDescParentUID;
 PROCEDURE TypeDescDataOffset (d: TypeDesc): INTEGER = BEGIN RETURN d.dataOffset    END TypeDescDataOffset;
-PROCEDURE SetTypeDescUserName(d: TypeDesc; name: TEXT) = BEGIN d.userName := name  END SetTypeDescUserName;
-PROCEDURE TypeDescUserName   (d: TypeDesc): TEXT    = BEGIN RETURN d.userName      END TypeDescUserName;
+PROCEDURE SetTypeDescUserName(d: TypeDesc; name: TEXT) = BEGIN d.userName := name      END SetTypeDescUserName;
+PROCEDURE TypeDescUserName   (d: TypeDesc): TEXT    = BEGIN RETURN d.userName          END TypeDescUserName;
+PROCEDURE SetTypeDescInitProc (d: TypeDesc; procName: TEXT) = BEGIN d.initProcName := procName   END SetTypeDescInitProc;
+PROCEDURE TypeDescInitProcName(d: TypeDesc): TEXT            = BEGIN RETURN d.initProcName        END TypeDescInitProcName;
 PROCEDURE TypeDescMethodBytes(d: TypeDesc): INTEGER =
   BEGIN
     IF d.methodBytes >= 0 THEN RETURN d.methodBytes END;

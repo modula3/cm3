@@ -3305,7 +3305,21 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
           ELSE tcVals[TC_gc_map] := "null";
         END;
         tcVals[TC_type_desc]  := "null";
-        tcVals[TC_initProc]   := "null";
+        (* Set TC_initProc to the object's field-default init procedure if one
+           was registered (for OBJECT types with non-zero field defaults). *)
+        IF isObj THEN
+          VAR ipName := MSIR.TypeDescInitProcName(d);
+          BEGIN
+            IF ipName # NIL THEN
+              (* Declare the init proc — emitted as a define in the same module. *)
+              tcVals[TC_initProc] := "@" & ipName;
+            ELSE
+              tcVals[TC_initProc] := "null";
+            END;
+          END;
+        ELSE
+          tcVals[TC_initProc]   := "null";
+        END;
         tcVals[TC_brand_ptr]  := "null";
         IF nameSym # NIL
           THEN tcVals[TC_name] := nameSym;

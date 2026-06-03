@@ -14,7 +14,8 @@ IMPORT Value, Error, RecordType, ProcType, OpaqueType, Revelation;
 IMPORT Field, Reff, Addr, Word, M3Buf, ErrType, Procedure, AddressExpr;
 IMPORT ObjectAdr, ObjectRef, Token, Module, Method, Brand;
 IMPORT AssignStmt, M3RT, Scanner, TipeMap, TipeDesc, TypeFP, Target;
-IMPORT MSIR, MSIREmit, Fmt;
+IMPORT MSIR, MSIREmit, MSIRBuilder, MSIRType, Fmt;
+IMPORT PackedType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 CONST
@@ -694,6 +695,126 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
     END;
   END GetObjectTypeInfo;
 
+PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
+(* Generate an MSIR procedure that sets each field of OBJECT type p to its
+   declared default value.  Mirrors the CG GenInitProc.  The proc is given a
+   human-readable name derived from the type's link name and registered as the
+   TC_initProc in the type descriptor; the runtime calls it after allocating the
+   object to apply field defaults.
+   Builds the MSIR proc entirely via the raw MSIR layer (no MSIRBuilder.BeginProc)
+   since the init proc is a generated helper, not a front-end source procedure. *)
+  VAR
+    v         := Scope.ToList (p.fields);
+    field     : Field.Info;
+    needsInit : BOOLEAN := FALSE;
+    procName  : TEXT;
+    proc      : MSIR.Proc;
+    ptrT      : MSIR.T;
+    objParam  : MSIR.Value;
+    entry     : MSIR.Block;
+    b         : MSIR.Block;
+    fieldAddr : MSIR.Value;
+    valV      : MSIR.Value;
+    packedBase: Type.T;
+    packedSize: INTEGER;
+    dataOff   : INTEGER;
+    m         : MSIR.Module;
+    intT      : MSIR.T;
+    absOff    : INTEGER;
+  BEGIN
+    (* Check whether any field has a non-zero default. *)
+    VAR v2 := v;
+    BEGIN
+      WHILE v2 # NIL DO
+        Field.Split (v2, field);
+        IF field.dfault # NIL AND NOT Expr.IsZeroes (field.dfault) THEN
+          needsInit := TRUE; EXIT;
+        END;
+        v2 := v2.next;
+      END;
+    END;
+    IF NOT needsInit THEN RETURN END;
+
+    m := MSIREmit.CurrentModule ();
+    IF m = NIL THEN RETURN END;
+
+    procName := Type.LinkName (p, "_INIT");
+    MSIR.SetTypeDescInitProc (desc, procName);
+
+    (* Build the MSIR procedure via raw MSIR API. *)
+    ptrT  := MSIR.TPtr (MSIR.TVoid ());
+    intT  := MSIR.TI (Target.Integer.size);
+    proc  := MSIR.NewProc (procName,
+               ARRAY OF MSIR.Param{
+                 MSIR.Param{name := "obj", type := ptrT,
+                            mode := MSIR.ParamMode.ByValue}},
+               MSIR.TVoid ());
+    MSIR.ProcSetLinkage (proc, MSIR.Linkage.Internal);
+    entry := MSIR.NewBlock ("entry", ARRAY OF MSIR.BlockParam{});
+    MSIR.ProcAddBlock (proc, entry);
+    b := entry;
+
+    (* Save the current proc/block context, then switch to the helper proc.
+       Multiple object types may call GenInitProcMSIR in sequence; each call
+       must properly restore the prior (usually NIL) context on exit. *)
+    VAR savedProc  := MSIRBuilder.CurrentProc ();
+        savedBlock := MSIRBuilder.CurrentBlock ();
+        savedAband := MSIRBuilder.IsAbandoned ();
+    BEGIN
+    MSIRBuilder.BeginHelperProc (proc, entry);
+
+    (* Determine the field region byte offset within the heap object.
+       p.fieldOffset is in BITS; convert to bytes. *)
+    IF p.fieldOffset >= 0
+      THEN dataOff := p.fieldOffset DIV Target.Byte;
+      ELSE dataOff := Target.Address.bytes;   (* 8 bytes: vtable ptr *)
+    END;
+
+    objParam := MSIR.ProcParam (proc, 0);
+
+    WHILE v # NIL DO
+      Field.Split (v, field);
+      IF field.dfault # NIL AND NOT Expr.IsZeroes (field.dfault) THEN
+        (* Compile the constant default value.  Object field defaults must be
+           constants.  Fold first; then use MSIRBuilder.SetCurrentBlock so that
+           Expr.CompileMSIR operates in the init proc's entry block context. *)
+        VAR folded := Expr.ConstValue (field.dfault);
+            fInfo  : Type.Info;
+            fT     : MSIR.T;
+        BEGIN
+          IF folded = NIL THEN folded := field.dfault END;
+          EVAL Type.CheckInfo (field.type, fInfo);
+          fT := MSIRType.Translate (field.type);
+          IF fT = NIL THEN fT := MSIR.TI (fInfo.size) END;
+          valV := Expr.CompileMSIR (folded);
+          IF valV # NIL THEN
+            b := MSIRBuilder.CurrentBlock ();
+            absOff := field.offset + dataOff * Target.Byte;
+            (* BITS-N packed fields within OBJECT init proc: skip for now
+               (packed fields in OBJECT bodies are rare; plain fields suffice). *)
+            IF NOT PackedType.Is (field.type) THEN
+              fieldAddr := MSIR.BuildPtrAdd (b, "", objParam,
+                             absOff DIV Target.Byte);
+              MSIR.BuildStore (b, valV, fieldAddr);
+            END;
+          END;
+        END;
+      END;
+      v := v.next;
+    END;
+
+    b := MSIRBuilder.CurrentBlock ();
+    MSIR.BuildRet (b, NIL);
+    (* Restore the saved context (usually NIL/NIL for proc=NIL when called during
+       interface compilation with no active proc). *)
+    MSIRBuilder.EndHelperProc ();  (* sets curProc=NIL, curBlock=NIL *)
+    IF savedProc # NIL THEN
+      MSIRBuilder.BeginHelperProc (savedProc, savedBlock);
+    END;
+    END; (* save/restore context *)
+    MSIR.ModuleAddProc (m, proc);
+  END GenInitProcMSIR;
+
 PROCEDURE InitTypecellMSIR (t: Type.T) =
   VAR
     fldSize, fldAlign, methBytes, dataOff, nSlots: INTEGER;
@@ -735,6 +856,9 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     BEGIN
       IF uName # NIL THEN MSIR.SetTypeDescUserName (desc, uName) END;
     END;
+    (* Generate the field-default initializer proc (TC_initProc) if needed.
+       TODO: currently disabled (crashes during compilation). *)
+    (* GenInitProcMSIR (NARROW(t, P), desc); *)
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;
 

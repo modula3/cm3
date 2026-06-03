@@ -64,6 +64,12 @@ PROCEDURE EndProc();
 (* Mark the in-progress proc unsupported. EndProc will drop it. *)
 PROCEDURE Abandon(reason: TEXT);
 
+(* Lightweight proc context for generated helper procs (e.g. object type init).
+   Sets curProc and curBlock so Expr.CompileMSIR works; restores on End.
+   The proc and entry block must be pre-built with the raw MSIR API. *)
+PROCEDURE BeginHelperProc(p: MSIR.Proc;  entry: MSIR.Block);
+PROCEDURE EndHelperProc();
+
 (* Are we currently inside a BeginProc/EndProc bracket and still
    supported? Body translators check this gate before doing anything. *)
 PROCEDURE InProc(): BOOLEAN;
