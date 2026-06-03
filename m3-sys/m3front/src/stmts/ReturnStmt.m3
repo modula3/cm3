@@ -152,6 +152,16 @@ PROCEDURE CompileMSIR (p: P) =
       EVAL MSIR.BuildCall (MSIRBuilder.CurrentBlock (), "", endCatch,
                            ARRAY OF MSIR.Value {});
     END;
+    (* Route the RETURN through any enclosing TRY/FINALLY cleanup frame.
+       A RETURN inside a TRY body must execute the FINALLY before leaving.
+       EmitReturnThroughFinally stores v into the frame's retSlot, sets
+       selector = Sel_Return, branches to finBody, and returns TRUE.
+       When it returns FALSE there is no enclosing finally and we emit a
+       plain ret.  (p020: QQ's RETURN j+10 must pass through FINALLY
+       j := 4; RETURN j+1, which overrides the return value to 5.) *)
+    IF MSIRBuilder.EmitReturnThroughFinally (v) THEN
+      RETURN;
+    END;
     VAR resultPtr := MSIRBuilder.CurrentResultPtr ();  blk := MSIRBuilder.CurrentBlock ();
     BEGIN
       IF resultPtr # NIL AND v # NIL THEN

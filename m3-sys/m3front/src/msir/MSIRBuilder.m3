@@ -32,12 +32,15 @@ END;
 (* One frame of the unified loop/finally cleanup stack. *)
 TYPE CleanupKind = {Loop, Finally};
 TYPE CleanupFrame = RECORD
-  kind:      CleanupKind;
-  exitBlock: MSIR.Block := NIL;   (* Loop: branch target for EXIT *)
-  finBody:   MSIR.Block := NIL;   (* Finally: shared finally-body entry *)
-  selector:  MSIR.Value := NIL;   (* Finally: i32 alloca holding a Sel_* code *)
-  exitSeen:  BOOLEAN := FALSE;     (* Finally: an EXIT routed through it (so its
-                                      epilogue must emit the Sel_Exit arm) *)
+  kind:       CleanupKind;
+  exitBlock:  MSIR.Block := NIL;   (* Loop: branch target for EXIT *)
+  finBody:    MSIR.Block := NIL;   (* Finally: shared finally-body entry *)
+  selector:   MSIR.Value := NIL;   (* Finally: i32 alloca holding a Sel_* code *)
+  retSlot:    MSIR.Value := NIL;   (* Finally: alloca holding a pending RETURN value
+                                      (NIL for void-result procs); set by EmitReturnMSIR
+                                      when a RETURN appears in the TRY body *)
+  exitSeen:   BOOLEAN := FALSE;    (* Finally: an EXIT routed through it *)
+  returnSeen: BOOLEAN := FALSE;    (* Finally: a RETURN routed through it *)
 END;
 
 (* Saved state for one level of proc context (for nested proc compilation). *)
@@ -824,12 +827,14 @@ PROCEDURE PopExitBlock() =
     END;
   END PopExitBlock;
 
-PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value) =
+PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value;
+                              retSlot: MSIR.Value := NIL) =
   BEGIN
     IF cleanupDepth < MaxCleanup THEN
-      cleanupStack[cleanupDepth] := CleanupFrame{kind := CleanupKind.Finally,
-                                                 finBody := finBody,
-                                                 selector := selector};
+      cleanupStack[cleanupDepth] := CleanupFrame{kind    := CleanupKind.Finally,
+                                                 finBody  := finBody,
+                                                 selector := selector,
+                                                 retSlot  := retSlot};
       INC(cleanupDepth);
     ELSE
       Abandon("cleanup stack overflow");
@@ -843,6 +848,39 @@ PROCEDURE PopFinallyCleanup() =
       THEN DEC(cleanupDepth)
     END;
   END PopFinallyCleanup;
+
+PROCEDURE EmitReturnThroughFinally(v: MSIR.Value): BOOLEAN =
+(* Route a RETURN from inside a TRY body through every enclosing Finally cleanup
+   frame.  For each Finally frame: store v into its retSlot (if any), set its
+   selector to Sel_Return, and branch to its finBody.  Returns TRUE if at least
+   one Finally frame was crossed (caller must NOT emit a plain BuildRet).
+   If no Finally frame is active, returns FALSE. *)
+  BEGIN
+    IF cleanupDepth = 0 THEN RETURN FALSE END;
+    IF cleanupStack[cleanupDepth-1].kind # CleanupKind.Finally THEN
+      RETURN FALSE;
+    END;
+    WITH frame = cleanupStack[cleanupDepth-1] DO
+      IF v # NIL AND frame.retSlot # NIL THEN
+        MSIR.BuildStore(CurrentBlock(), v, frame.retSlot);
+      END;
+      MSIR.BuildStore(CurrentBlock(),
+                      MSIR.ConstInt(MSIR.TI(32), Sel_Return),
+                      frame.selector);
+      frame.returnSeen := TRUE;
+      MSIR.BuildBr(CurrentBlock(), frame.finBody, ARRAY OF MSIR.Value{});
+    END;
+    RETURN TRUE;
+  END EmitReturnThroughFinally;
+
+PROCEDURE CurrentFinallyReturnSeen(): BOOLEAN =
+  BEGIN
+    IF cleanupDepth > 0
+       AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally
+      THEN RETURN cleanupStack[cleanupDepth-1].returnSeen
+      ELSE RETURN FALSE
+    END;
+  END CurrentFinallyReturnSeen;
 
 (* Emit the control transfer for an EXIT: branch to the innermost cleanup frame.
    A Loop frame → branch straight to its exit block (identical to a plain EXIT).

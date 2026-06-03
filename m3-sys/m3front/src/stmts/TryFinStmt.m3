@@ -430,24 +430,29 @@ PROCEDURE CompileMSIR (p: P) =
          continue to and EmitExitMSIR would (wrongly) abandon.
        - On the normal path the selector stays Sel_Normal → merge. *)
   VAR
-    lpad:      MSIR.Block;
-    finBody:   MSIR.Block;
-    rethrow:   MSIR.Block;
-    chkExit:   MSIR.Block;
-    exitCont:  MSIR.Block;
-    rcont:     MSIR.Block;
-    merge:     MSIR.Block;
-    enclosing: MSIR.Block;
-    selector:  MSIR.Value;
-    actSlot:   MSIR.Value;
-    lpVal:     MSIR.Value;
-    excHeader: MSIR.Value;
-    excObjPtr: MSIR.Value;
-    actPtr:    MSIR.Value;
-    selV:      MSIR.Value;
-    i32:       MSIR.T;
-    ptrT:      MSIR.T;
-    exitSeen:  BOOLEAN;
+    lpad:        MSIR.Block;
+    finBody:     MSIR.Block;
+    rethrow:     MSIR.Block;
+    chkExit:     MSIR.Block;
+    exitCont:    MSIR.Block;
+    chkReturn:   MSIR.Block;
+    rcont:       MSIR.Block;
+    merge:       MSIR.Block;
+    enclosing:   MSIR.Block;
+    selector:    MSIR.Value;
+    actSlot:     MSIR.Value;
+    retSlot:     MSIR.Value;
+    lpVal:       MSIR.Value;
+    excHeader:   MSIR.Value;
+    excObjPtr:   MSIR.Value;
+    actPtr:      MSIR.Value;
+    selV:        MSIR.Value;
+    retV:        MSIR.Value;
+    i32:         MSIR.T;
+    ptrT:        MSIR.T;
+    retT:        MSIR.T;
+    exitSeen:    BOOLEAN;
+    returnSeen:  BOOLEAN;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
@@ -460,17 +465,29 @@ PROCEDURE CompileMSIR (p: P) =
                     MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
     actSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
 
+    (* Allocate a retSlot for a pending RETURN value if this proc returns a
+       value.  When a RETURN in the TRY body routes through this finally,
+       ReturnStmt stores the value here; the epilogue loads and returns it. *)
+    retT    := MSIRBuilder.CurrentResultType();
+    IF retT = NIL THEN retT := MSIR.ProcResultType(MSIRBuilder.CurrentProc()) END;
+    IF retT # NIL AND MSIR.Kind(retT) # MSIR.TypeKind.Void THEN
+      retSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", retT);
+    ELSE
+      retSlot := NIL;
+    END;
+
     lpad    := MSIRBuilder.NewBlock("fin.lpad");
     finBody := MSIRBuilder.NewBlock("fin.body");
     rethrow := MSIRBuilder.NewBlock("fin.rethrow");
     merge   := MSIRBuilder.NewBlock("fin.done");
 
     (* Compile body with the finally landing pad as unwind target AND a Finally
-       cleanup frame so a non-local EXIT in the body runs the finally first. *)
+       cleanup frame so a non-local EXIT/RETURN in the body runs the finally first. *)
     MSIRBuilder.PushTryContext(lpad);
-    MSIRBuilder.PushFinallyCleanup(finBody, selector);
+    MSIRBuilder.PushFinallyCleanup(finBody, selector, retSlot);
     Stmt.CompileMSIR(p.body);
-    exitSeen := MSIRBuilder.CurrentFinallyExitSeen();
+    exitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
+    returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
     MSIRBuilder.PopFinallyCleanup();
     MSIRBuilder.PopTryContext();
     (* After Pop, the current unwind block is the ENCLOSING try context (NIL if
@@ -508,32 +525,52 @@ PROCEDURE CompileMSIR (p: P) =
        continue the EXIT (only if an EXIT routed through here); else → merge. *)
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       selV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", i32, selector);
+      (* Chain of selector checks: Sel_Exc → rethrow; Sel_Exit → continue EXIT
+         (only if seen); Sel_Return → emit ret with saved value (only if seen);
+         else → merge (normal fall-through). *)
+      VAR notExc := MSIRBuilder.NewBlock("fin.notexc");
+      BEGIN
+        MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
+                         MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
+                           MSIR.CmpPred.Eq, selV,
+                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc)),
+                         rethrow, ARRAY OF MSIR.Value{},
+                         notExc,  ARRAY OF MSIR.Value{});
+        MSIRBuilder.SetCurrentBlock(notExc);
+      END;
       IF exitSeen THEN
         chkExit  := MSIRBuilder.NewBlock("fin.chkexit");
         exitCont := MSIRBuilder.NewBlock("fin.exitcont");
         MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
                          MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
                            MSIR.CmpPred.Eq, selV,
-                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc)),
-                         rethrow, ARRAY OF MSIR.Value{},
-                         chkExit, ARRAY OF MSIR.Value{});
-        MSIRBuilder.SetCurrentBlock(chkExit);
-        MSIR.BuildCondBr(chkExit,
-                         MSIR.BuildICmp(chkExit, "", MSIR.CmpPred.Eq, selV,
                            MSIR.ConstInt(i32, MSIRBuilder.Sel_Exit)),
                          exitCont, ARRAY OF MSIR.Value{},
-                         merge,    ARRAY OF MSIR.Value{});
+                         chkExit,  ARRAY OF MSIR.Value{});
         (* This finally's frame is already popped, so EmitExitMSIR targets the
            next outer finally or the loop exit. *)
         MSIRBuilder.SetCurrentBlock(exitCont);
         MSIRBuilder.EmitExitMSIR();
-      ELSE
+        MSIRBuilder.SetCurrentBlock(chkExit);
+      END;
+      IF returnSeen THEN
+        chkReturn := MSIRBuilder.NewBlock("fin.chkreturn");
         MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
                          MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
                            MSIR.CmpPred.Eq, selV,
-                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc)),
-                         rethrow, ARRAY OF MSIR.Value{},
-                         merge,   ARRAY OF MSIR.Value{});
+                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Return)),
+                         chkReturn, ARRAY OF MSIR.Value{},
+                         merge,     ARRAY OF MSIR.Value{});
+        MSIRBuilder.SetCurrentBlock(chkReturn);
+        (* Pending RETURN: load the saved value (if non-void) and emit ret. *)
+        IF retSlot # NIL AND retT # NIL THEN
+          retV := MSIR.BuildLoad(chkReturn, "", retT, retSlot);
+          MSIR.BuildRet(chkReturn, retV);
+        ELSE
+          MSIR.BuildRet(chkReturn, NIL);
+        END;
+      ELSE
+        MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
       END;
     END;
 

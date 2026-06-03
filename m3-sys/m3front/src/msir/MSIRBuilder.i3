@@ -114,14 +114,26 @@ PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
 
 (* TRY/FINALLY selector codes (stored in the per-finally i32 selector alloca):
    why the finally body was entered, so its epilogue can dispatch. *)
-CONST Sel_Normal = 0;  Sel_Exc = 1;  Sel_Exit = 2;
+CONST Sel_Normal = 0;  Sel_Exc = 1;  Sel_Exit = 2;  Sel_Return = 3;
 
 (* TRY/FINALLY registers a Finally cleanup frame around its body so a non-local
    EXIT in the body runs the finally first.  finBody is the shared finally-body
    entry; selector is an i32 alloca the EXIT stores Sel_Exit into.  Push around
-   the body only (pop before compiling the finally itself). *)
-PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value);
+   the body only (pop before compiling the finally itself).
+   retSlot (if non-NIL) is an i64/ptr alloca for a pending RETURN value. *)
+PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value;
+                              retSlot: MSIR.Value := NIL);
 PROCEDURE PopFinallyCleanup();
+
+(* Emit a RETURN from inside a TRY body:  store the return value (v) into the
+   innermost Finally frame's retSlot, set selector to Sel_Return, and branch
+   to the finally body.  Returns TRUE if the RETURN was routed through a finally;
+   caller must emit a plain BuildRet when this returns FALSE. *)
+PROCEDURE EmitReturnThroughFinally(v: MSIR.Value): BOOLEAN;
+
+(* Whether a RETURN routed through the innermost finally cleanup frame.
+   Analogous to CurrentFinallyExitSeen; called while the frame is still live. *)
+PROCEDURE CurrentFinallyReturnSeen(): BOOLEAN;
 
 (* Emit an EXIT: branch to the innermost loop's exit block, running every
    intervening finally first.  Used by ExitStmt and by a finally epilogue
