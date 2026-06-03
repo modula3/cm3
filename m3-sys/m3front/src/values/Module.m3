@@ -1085,9 +1085,14 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
                 v.imported := sv.imported;
                 v.exported := sv.exported;
                 v.used     := sv.used;
-                IF v.external OR v.imported THEN
+                IF v.external THEN
                   Variable.RegisterExternMSIR (v);
                 ELSE
+                  (* Non-external exportable variable: this module is exporting
+                     it (IsExportable=TRUE) and is the owner of the storage.
+                     Define it in this module's struct.  The interface's own .ll
+                     may be suppressed (ModuleAlreadyEmitted) so we cannot rely
+                     on the interface walk to define the storage (p189). *)
                   Variable.DeclareGlobalMSIR (v);
                 END;
                 v.imported := savedImp;

@@ -104,13 +104,11 @@ ntests=0; for t in $TESTS; do ntests=$((ntests+1)); done
 # so captured output stays clean.  The \r keeps it on the same line; the next
 # printf with \n will push it down and the subsequent \r will overwrite.
 show_progress() {
-    [ -t 1 ] || return   # stdout is not a terminal — skip
     printf "\r  [%d/%d]  pass=%-3d mismatch=%-3d fail=%-3d skip=%-3d  building: %s ...%-20s" \
-        "$total" "$ntests" "$pass" "$mismatch" "$msirfail" "$skip" "$1" ""
+        "$total" "$ntests" "$pass" "$mismatch" "$msirfail" "$skip" "$1" "" >&2
 }
 clear_progress() {
-    [ -t 1 ] || return
-    printf "\r%-80s\r" ""   # blank the progress line before final summary
+    printf "\r%-80s\r" "" >&2   # blank the progress line before final summary
 }
 
 for t in $TESTS; do
