@@ -77,23 +77,31 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
        needing M3 type bounds at widening time.  M3 subranges with lo ≥ 0 are
        semantically unsigned even when stored in a signed INTEGER representation. *)
     (* Integer-like builtins — use the original type's size so that narrow
-       subranges of INTEGER (e.g. Ctypes.int = 32 bits) get TI(32) not TI(64). *)
-    IF base = Int.T THEN
-      VAR sz := Target.Integer.size;
+       subranges of INTEGER (e.g. Ctypes.int = 32 bits) get TI(32) not TI(64).
+       Non-negative subranges (CARDINAL, [0..N]) use TW (unsigned word) so that
+       CoerceToMSIR can use ZExt (correct for unsigned) purely from the MSIR kind,
+       rather than needing to consult M3 type bounds at widening time.
+       Word.T = INTEGER at 64-bit → no widening needed (both are full word size). *)
+    IF base = Int.T OR base = LInt.T THEN
+      VAR sz : INTEGER;
+          lo, hi: Target.Int;
       BEGIN
+        IF base = Int.T THEN sz := Target.Integer.size ELSE sz := Target.Longint.size END;
         IF origInfo.size > 0 THEN sz := origInfo.size END;
+        IF (t # base)           (* it's a subrange, not the raw INTEGER type *)
+           AND Type.GetBounds(t, lo, hi)
+           AND TInt.LE(TInt.Zero, lo) THEN
+          (* Non-negative subrange → unsigned word type (mirrors CG Word8/Word16/...) *)
+          IF sz <= 8    THEN RETURN MSIR.TW(8)  END;
+          IF sz <= 16   THEN RETURN MSIR.TW(16) END;
+          IF sz <= 32   THEN RETURN MSIR.TW(32) END;
+          RETURN MSIR.TW(64);
+        END;
         RETURN MSIR.TI(sz);
       END;
     END;
-    IF base = LInt.T THEN
-      VAR sz := Target.Longint.size;
-      BEGIN
-        IF origInfo.size > 0 THEN sz := origInfo.size END;
-        RETURN MSIR.TI(sz);
-      END;
-    END;
-    IF base = Bool.T  THEN RETURN MSIR.TI1() END;
-    IF base = Charr.T THEN RETURN MSIR.TI(Target.Char.size) END;
+    IF base = Bool.T  THEN RETURN MSIR.TI1() END;  (* BOOLEAN: I1, not W1 — no W1 kind exists *)
+    IF base = Charr.T THEN RETURN MSIR.TW(Target.Char.size) END; (* CHAR unsigned *)
     IF base = WCharr.T THEN
       (* WIDECHAR size from CheckInfo since Target has no WChar constant *)
       EVAL Type.CheckInfo(base, info);

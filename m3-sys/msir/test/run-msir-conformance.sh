@@ -96,10 +96,28 @@ BUILD_TIMEOUT="${BUILD_TIMEOUT:-90}"
 pass=0; mismatch=0; msirfail=0; skip=0; total=0
 failed_list=""
 
+# Count total tests up front so the progress bar can show [N/Total].
+ntests=0; for t in $TESTS; do ntests=$((ntests+1)); done
+
+# show_progress: print a \r-terminated progress line to stdout while the next
+# test is building.  Only emitted when stdout is a terminal (not when piped),
+# so captured output stays clean.  The \r keeps it on the same line; the next
+# printf with \n will push it down and the subsequent \r will overwrite.
+show_progress() {
+    [ -t 1 ] || return   # stdout is not a terminal — skip
+    printf "\r  [%d/%d]  pass=%-3d mismatch=%-3d fail=%-3d skip=%-3d  building: %s ...%-20s" \
+        "$total" "$ntests" "$pass" "$mismatch" "$msirfail" "$skip" "$1" ""
+}
+clear_progress() {
+    [ -t 1 ] || return
+    printf "\r%-80s\r" ""   # blank the progress line before final summary
+}
+
 for t in $TESTS; do
     total=$((total + 1))
     dir="$TESTS_ROOT/$t"
     name="$t"
+    show_progress "$name"
     if [ ! -f "$dir/m3makefile" ]; then
         printf "  %-12s SKIP  (no m3makefile)\n" "$name"; skip=$((skip+1)); continue
     fi
@@ -189,6 +207,7 @@ for t in $TESTS; do
     fi
 done
 
+clear_progress
 echo ""
 echo "=== MSIR conformance: $pass/$total PASS, $mismatch MISMATCH, $msirfail MSIR-FAIL, $skip SKIP ==="
 [ -n "$failed_list" ] && echo "failed:$failed_list"

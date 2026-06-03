@@ -194,7 +194,22 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
   BEGIN
     IF a = b THEN RETURN TRUE END;
     IF a = NIL OR b = NIL THEN RETURN FALSE END;
-    IF a.kind # b.kind THEN RETURN FALSE END;
+    IF a.kind # b.kind THEN
+      (* I-kind and W-kind of the same bit-width lower to the same LLVM iN type.
+         Treat them as equal so that mixed signed/unsigned usage of the same
+         storage width (e.g. CHAR=W8 value returned from a proc declared before
+         CHAR→TW8, or passed to a formal typed with TI8) does not cause spurious
+         type mismatches.  The signedness is only relevant for SExt vs ZExt in
+         CoerceToMSIR; at the LLVM IR level iN is iN regardless of sign. *)
+      IF BitWidth(a) > 0 AND BitWidth(a) = BitWidth(b) AND
+         ((a.kind >= TypeKind.I1  AND a.kind <= TypeKind.I64 AND
+           b.kind >= TypeKind.W8  AND b.kind <= TypeKind.W64) OR
+          (a.kind >= TypeKind.W8  AND a.kind <= TypeKind.W64 AND
+           b.kind >= TypeKind.I1  AND b.kind <= TypeKind.I64)) THEN
+        RETURN TRUE;
+      END;
+      RETURN FALSE;
+    END;
     CASE a.kind OF
     | TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot =>
         RETURN Equal(a.elt, b.elt);

@@ -625,6 +625,16 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
       Abandon("unsupported local variable type");
       RETURN FALSE;
     END;
+    (* M3 arithmetic is always at INTEGER (word) size — subword scalars are
+       widened to word size for computation.  Use i64 (TARGET.Integer.size) for
+       the alloca slot of any narrow scalar so that stores/loads agree with the
+       widened type used in arithmetic.  Wider types (records, arrays, sets,
+       float, ptr) keep their natural MSIR type. *)
+    IF (MSIR.Kind(mt) >= MSIR.TypeKind.I1  AND MSIR.Kind(mt) <= MSIR.TypeKind.I64 OR
+        MSIR.Kind(mt) >= MSIR.TypeKind.W8  AND MSIR.Kind(mt) <= MSIR.TypeKind.W64) AND
+       MSIR.BitWidth(mt) < Target.Integer.size THEN
+      mt := MSIR.TI(Target.Integer.size);
+    END;
     allocaVal := MSIR.BuildAlloca(
                    curBlock,
                    UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE) & ".slot"),
