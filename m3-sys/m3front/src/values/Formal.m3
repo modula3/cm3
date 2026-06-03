@@ -1339,7 +1339,34 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
         RETURN ReadonlyArgAddrMSIR (form, actual);
       END;
     END;
-    RETURN CoerceScalarArgMSIR (form, actual, Expr.CompileMSIR (actual));
+    (* VALUE formal: compile the actual and coerce.  Special case: an open-array
+       actual passed for a fixed-array VALUE formal (e.g. REF ARRAY OF Byte
+       dereferenced → open array, passed to Block8-typed formal).  CompileMSIR
+       returns the dope fat pointer {data_ptr, count}; we must extract the data
+       pointer and load the fixed-array bytes from it (p292). *)
+    VAR actVal := Expr.CompileMSIR (actual);
+    BEGIN
+      IF actVal # NIL
+         AND MSIR.Kind (MSIR.ValueType (actVal)) = MSIR.TypeKind.OpenArray THEN
+        VAR formInfo : Info;
+            formT    : MSIR.T;
+        BEGIN
+          Split (form, formInfo);
+          formT := MSIRType.Translate (formInfo.type);
+          IF formT # NIL AND MSIR.Kind (formT) = MSIR.TypeKind.FixedArray THEN
+            VAR blk2 := MSIRBuilder.CurrentBlock ();
+                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
+                dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", actVal,
+                          ARRAY OF MSIR.Value {zero});
+                tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (formT));
+            BEGIN
+              RETURN MSIR.BuildLoad (blk2, "", formT, tPtr);
+            END;
+          END;
+        END;
+      END;
+      RETURN CoerceScalarArgMSIR (form, actual, actVal);
+    END;
   END EmitArgMSIR;
 
 PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
