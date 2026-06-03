@@ -14,7 +14,7 @@ IMPORT RefType, ObjectType, OpaqueType, KeywordExpr, Value;
 IMPORT Field, Method, Int, ProcType, AssignStmt, OpenArrayType;
 IMPORT Scope, RecordType, TypeExpr, Null, Revelation, Target;
 IMPORT ArrayExpr, M3ID, M3RT, RunTyme, ErrType;
-IMPORT MSIR, MSIRType, MSIRBuilder;
+IMPORT MSIR, MSIRType, MSIRBuilder, PackedType;
 
 VAR Z: CallExpr.MethodList;
 
@@ -498,8 +498,24 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
             valV := Expr.CompileMSIR (value);
             IF valV = NIL THEN RETURN NIL END;
             b := MSIRBuilder.CurrentBlock ();
-            fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", refVal, byteOff);
-            MSIR.BuildStore (b, valV, fieldAddr);
+            VAR packedBase : Type.T;  packedSize : INTEGER;
+                isPacked := PackedType.Is (fieldInfo.type);
+            BEGIN
+              IF isPacked THEN
+                (* BITS-N field: must use InsertBitField to place the value at
+                   the correct bit position within the record storage (both for
+                   sub-byte-aligned fields and for narrower-than-byte fields).
+                   A direct store would ignore bitInByte and overwrite adjacent
+                   bits with the high bytes of the integer value (p178). *)
+                PackedType.Split (fieldInfo.type, packedSize, packedBase);
+                fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", refVal, 0);
+                MSIRBuilder.InsertBitField (fieldAddr, fieldInfo.offset,
+                                            packedSize, valV);
+              ELSE
+                fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", refVal, byteOff);
+                MSIR.BuildStore (b, valV, fieldAddr);
+              END;
+            END;
           END;
           RETURN refVal;
         END;
@@ -591,14 +607,55 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", res, mt);
   END GenOpenArrayMSIR;
 
-PROCEDURE GenObjectMSIR (t: Type.T;  <*UNUSED*> ce: CallExpr.T): MSIR.Value =
+PROCEDURE GenObjectMSIR (t: Type.T;  ce: CallExpr.T): MSIR.Value =
   CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedObj,
                                                 RunTyme.Hook.NewTracedObj };
-  VAR t_info: Type.Info;
+  VAR t_info    : Type.Info;
+      key       : M3ID.T;
+      value     : Expr.T;
+      v         : Value.T;
+      visible   : Type.T;
+      fieldInfo : Field.Info;
+      obj_offset, obj_align: INTEGER;
+      objVal    : MSIR.Value;
+      valV      : MSIR.Value;
+      b         : MSIR.Block;
+      fieldAddr : MSIR.Value;
+      fieldBitOff : INTEGER;
+      packedBase : Type.T;  packedSize : INTEGER;
   BEGIN
     t := Type.CheckInfo (t, t_info);
-    RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                          MSIRBuilder.TypeLinkValueForObject (t));
+    objVal := CallAllocHook (t, PHook [t_info.isTraced],
+                             MSIRBuilder.TypeLinkValueForObject (t));
+    IF objVal = NIL THEN RETURN NIL END;
+    FOR i := 1 TO LAST (ce.args^) DO
+      IF ce.args[i] # NIL THEN
+        IF KeywordExpr.Split (ce.args[i], key, value)
+           AND ObjectType.LookUp (t, key, v, visible) THEN
+          Field.Split (v, fieldInfo);
+          ObjectType.GetFieldsOffsetAndAlign (visible, obj_offset, obj_align);
+          IF obj_offset >= 0 THEN
+            fieldBitOff := fieldInfo.offset + obj_offset;
+          ELSE
+            (* Runtime object offset — abandon and fall back to zero offset
+               (conservative; will be wrong for dynamic inheritance). *)
+            fieldBitOff := fieldInfo.offset;
+          END;
+          valV := Expr.CompileMSIR (value);
+          IF valV = NIL THEN RETURN NIL END;
+          b := MSIRBuilder.CurrentBlock ();
+          IF PackedType.Is (fieldInfo.type) THEN
+            PackedType.Split (fieldInfo.type, packedSize, packedBase);
+            fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", objVal, 0);
+            MSIRBuilder.InsertBitField (fieldAddr, fieldBitOff, packedSize, valV);
+          ELSE
+            fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", objVal, fieldBitOff DIV 8);
+            MSIR.BuildStore (b, valV, fieldAddr);
+          END;
+        END;
+      END;
+    END;
+    RETURN objVal;
   END GenObjectMSIR;
 
 PROCEDURE GenOpaqueMSIR (t: Type.T;  ce: CallExpr.T): MSIR.Value =

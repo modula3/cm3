@@ -2276,8 +2276,8 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     IF bitInByte + bitWidth <= 8 THEN
       word     := b0;
       wordBits := 8;
-    ELSE
-      (* Field spans two bytes: stitch b0 | (b1 << 8) as i16 *)
+    ELSIF bitInByte + bitWidth <= 16 THEN
+      (* Field spans exactly two bytes: stitch b0 | (b1 << 8) as i16 *)
       VAR p1  := MSIR.BuildPtrAdd (b, "", base, byteStart + 1);
           b1  := MSIR.BuildLoad (b, "", MSIR.TI (8), p1);
           b0w := MSIR.BuildZExt (b, "", b0, MSIR.TI (16));
@@ -2287,6 +2287,45 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
                     MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (MSIR.TI (16), 8)));
       END;
       wordBits := 16;
+    ELSIF bitInByte + bitWidth <= 24 THEN
+      (* Field spans three bytes: stitch b0 | (b1<<8) | (b2<<16) as i32 *)
+      VAR p1  := MSIR.BuildPtrAdd (b, "", base, byteStart + 1);
+          p2  := MSIR.BuildPtrAdd (b, "", base, byteStart + 2);
+          b1  := MSIR.BuildLoad (b, "", MSIR.TI (8), p1);
+          b2  := MSIR.BuildLoad (b, "", MSIR.TI (8), p2);
+          i32 := MSIR.TI (32);
+          b0w := MSIR.BuildZExt (b, "", b0, i32);
+          b1w := MSIR.BuildZExt (b, "", b1, i32);
+          b2w := MSIR.BuildZExt (b, "", b2, i32);
+      BEGIN
+        word := MSIR.BuildIOr (b, "",
+                  MSIR.BuildIOr (b, "", b0w,
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (i32, 8))),
+                  MSIR.BuildIShl (b, "", b2w, MSIR.ConstInt (i32, 16)));
+      END;
+      wordBits := 32;
+    ELSE
+      (* Field spans four bytes: stitch four bytes as i32 *)
+      VAR p1  := MSIR.BuildPtrAdd (b, "", base, byteStart + 1);
+          p2  := MSIR.BuildPtrAdd (b, "", base, byteStart + 2);
+          p3  := MSIR.BuildPtrAdd (b, "", base, byteStart + 3);
+          b1  := MSIR.BuildLoad (b, "", MSIR.TI (8), p1);
+          b2  := MSIR.BuildLoad (b, "", MSIR.TI (8), p2);
+          b3  := MSIR.BuildLoad (b, "", MSIR.TI (8), p3);
+          i32 := MSIR.TI (32);
+          b0w := MSIR.BuildZExt (b, "", b0, i32);
+          b1w := MSIR.BuildZExt (b, "", b1, i32);
+          b2w := MSIR.BuildZExt (b, "", b2, i32);
+          b3w := MSIR.BuildZExt (b, "", b3, i32);
+      BEGIN
+        word := MSIR.BuildIOr (b, "",
+                  MSIR.BuildIOr (b, "", b0w,
+                    MSIR.BuildIShl (b, "", b1w, MSIR.ConstInt (i32, 8))),
+                  MSIR.BuildIOr (b, "",
+                    MSIR.BuildIShl (b, "", b2w, MSIR.ConstInt (i32, 16)),
+                    MSIR.BuildIShl (b, "", b3w, MSIR.ConstInt (i32, 24))));
+      END;
+      wordBits := 32;
     END;
     VAR
       wordT    := MSIR.TI (wordBits);
