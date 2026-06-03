@@ -200,9 +200,11 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
 
 PROCEDURE CompileMSIR (p: P) =
   (* LOCK mu DO body END  ≡  mu.acquire(); TRY body FINALLY mu.release() END
-     MUTEX vtable slot = M3RT.MUTEX_acquire|release (byte offset) / bytes-per-addr
-     M3RT.MUTEX_acquire = 0 * AP → slot 0
-     M3RT.MUTEX_release = 1 * AP → slot 1  where AP = Target.Address.bytes *)
+     M3RT.MUTEX_acquire and MUTEX_release are BIT offsets (AP = Target.Address.pack
+     = 64 on 64-bit).  EmitMethodCall takes a pointer-count index (midx), so
+     divide by AP (bits per pointer slot), not by bytes-per-addr.
+     M3RT.MUTEX_acquire = 0 * AP → midx 0
+     M3RT.MUTEX_release = 1 * AP → midx 1 *)
   VAR
     mu:        MSIR.Value;
     lpad:      MSIR.Block;
@@ -226,7 +228,7 @@ PROCEDURE CompileMSIR (p: P) =
     (* Acquire the mutex: mu.acquire() — vtable slot M3RT.MUTEX_acquire / AP. *)
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
-           M3RT.MUTEX_acquire DIV Target.Address.bytes,
+           M3RT.MUTEX_acquire DIV Target.Address.pack,
            MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
@@ -265,7 +267,7 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.SetCurrentBlock(finBody);
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
-           M3RT.MUTEX_release DIV Target.Address.bytes,
+           M3RT.MUTEX_release DIV Target.Address.pack,
            MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
