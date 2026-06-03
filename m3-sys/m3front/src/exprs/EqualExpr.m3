@@ -917,35 +917,89 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
           blk := MSIRBuilder.CurrentBlock ();
 
-          (* Shape check: AND of (sizeA[dim] = sizeB[dim]) for each dim *)
-          shapeOk := NIL;
-          FOR dim := 0 TO openRank - 1 DO
-            VAR sa := MSIR.BuildOpenArraySize (blk, "", lv, dim);
-                sb := MSIR.BuildOpenArraySize (blk, "", rv, dim);
-                eq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, sa, sb);
-            BEGIN
-              IF shapeOk = NIL
-                THEN shapeOk := eq;
-                ELSE shapeOk := MSIR.BuildIAnd (blk, "", shapeOk, eq);
+          (* One side may be a fixed array (e.g. ARRAY [0..7] OF Byte) even when
+             the comparison type is OpenArray (e.g. comparing REF ARRAY OF Byte^
+             to a fixed array).  For fixed-array values the MSIR representation
+             is a pointer to storage (FixedArray kind), not a fat pointer.  Detect
+             that case and use the statically-known element count instead of
+             BuildOpenArraySize/BuildOpenArrayElemAddr, which assert on non-OA values. *)
+          VAR
+            lvIsOA := (MSIR.Kind (MSIR.ValueType (lv)) = MSIR.TypeKind.OpenArray);
+            rvIsOA := (MSIR.Kind (MSIR.ValueType (rv)) = MSIR.TypeKind.OpenArray);
+            tbType : Type.T;  tbInfo : Type.Info;  tbElts : INTEGER;
+          BEGIN
+            IF NOT rvIsOA THEN
+              (* Derive static element count for the fixed-array side. *)
+              tbType := Type.Base (Expr.TypeOf (p.b));
+              EVAL Type.CheckInfo (tbType, tbInfo);
+              tbElts := tbInfo.size DIV (elemBytes * Target.Byte);
+            END;
+
+            (* Shape check: AND of (sizeA[dim] = sizeB[dim]) for each dim *)
+            shapeOk := NIL;
+            FOR dim := 0 TO openRank - 1 DO
+              VAR sa : MSIR.Value; sb : MSIR.Value;
+              BEGIN
+                IF lvIsOA
+                  THEN sa := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+                  ELSE sa := MSIR.ConstInt (MSIR.TI (Target.Integer.size), tbElts);
+                END;
+                IF rvIsOA
+                  THEN sb := MSIR.BuildOpenArraySize (blk, "", rv, dim);
+                  ELSE sb := MSIR.ConstInt (MSIR.TI (Target.Integer.size), tbElts);
+                END;
+                VAR eq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, sa, sb);
+                BEGIN
+                  IF shapeOk = NIL
+                    THEN shapeOk := eq;
+                    ELSE shapeOk := MSIR.BuildIAnd (blk, "", shapeOk, eq);
+                  END;
+                END;
               END;
             END;
-          END;
 
-          (* Total element count = product of all dimension sizes *)
-          total := MSIR.BuildOpenArraySize (blk, "", lv, 0);
-          FOR dim := 1 TO openRank - 1 DO
-            VAR sd := MSIR.BuildOpenArraySize (blk, "", lv, dim);
-            BEGIN
-              total := MSIR.BuildIMul (blk, "", total, sd);
+            (* Total element count = product of all dimension sizes *)
+            IF lvIsOA THEN
+              total := MSIR.BuildOpenArraySize (blk, "", lv, 0);
+              FOR dim := 1 TO openRank - 1 DO
+                VAR sd := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+                BEGIN
+                  total := MSIR.BuildIMul (blk, "", total, sd);
+                END;
+              END;
+            ELSE
+              total := MSIR.ConstInt (MSIR.TI (Target.Integer.size), tbElts);
+            END;
+
+            (* Data pointers: address of flat element[0] *)
+            zeros := NEW (REF ARRAY OF MSIR.Value, openRank);
+            zero  := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
+            FOR k := 0 TO openRank - 1 DO zeros[k] := zero END;
+            (* For open-array values use the element-address extractor.  For
+               fixed-array values the MSIR value is the aggregate itself (not a
+               pointer); use the lvalue (slot address) instead — retype it to
+               ptr(elt) so the byte-step GEP in the element loop works. *)
+            IF lvIsOA THEN
+              pA := MSIR.BuildOpenArrayElemAddr (blk, "", lv, zeros^);
+            ELSE
+              pA := Expr.LValueMSIR (p.a);
+              IF pA = NIL THEN
+                MSIRBuilder.Abandon ("open-array equality: fixed-array lhs has no lvalue");
+                RETURN NIL;
+              END;
+              pA := MSIR.RetypeValue (pA, MSIR.TPtr (eltMsir));
+            END;
+            IF rvIsOA THEN
+              pB := MSIR.BuildOpenArrayElemAddr (blk, "", rv, zeros^);
+            ELSE
+              pB := Expr.LValueMSIR (p.b);
+              IF pB = NIL THEN
+                MSIRBuilder.Abandon ("open-array equality: fixed-array rhs has no lvalue");
+                RETURN NIL;
+              END;
+              pB := MSIR.RetypeValue (pB, MSIR.TPtr (eltMsir));
             END;
           END;
-
-          (* Data pointers: address of flat element[0] *)
-          zeros := NEW (REF ARRAY OF MSIR.Value, openRank);
-          zero  := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
-          FOR k := 0 TO openRank - 1 DO zeros[k] := zero END;
-          pA := MSIR.BuildOpenArrayElemAddr (blk, "", lv, zeros^);
-          pB := MSIR.BuildOpenArrayElemAddr (blk, "", rv, zeros^);
 
           idxSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI (Target.Integer.size));
           resSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI1 ());
