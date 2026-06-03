@@ -921,19 +921,22 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     (* Handle array-type copies.  Same-type FixedArray falls through to
        BuildStore below (load+store is valid LLVM IR for value-typed arrays).
-       The specific case handled here: FixedArray destination, rank-1 OpenArray
-       source — extract the data pointer from the dope vector, retype to
-       ptr([N]T), load the fixed-array value, and store it. *)
+       OpenArray ← OpenArray (same or different types) CANNOT fall through —
+       that copies the fat-pointer descriptor (data ptr + sizes), not the element
+       data (p056: SUBARRAY(x,0,i) := SUBARRAY(y,0,j) copied the dope, x unchanged).
+       Trigger the array-copy dispatcher whenever either side involves an OpenArray,
+       OR when both are FixedArray of different MSIR types. *)
     BEGIN
-      VAR slotT := MSIR.ValueType (lhsPtr);
-          eltT  := MSIR.EltType (slotT);
-          rhsT  := MSIR.ValueType (rhsVal);
+      VAR slotT   := MSIR.ValueType (lhsPtr);
+          eltT    := MSIR.EltType (slotT);
+          rhsT    := MSIR.ValueType (rhsVal);
+          eltIsOA := MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray;
+          rhsIsOA := MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray;
+          eltIsFA := MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray;
+          rhsIsFA := MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray;
       BEGIN
-        IF NOT MSIR.Equal (eltT, rhsT) AND
-           (MSIR.Kind (eltT)  = MSIR.TypeKind.FixedArray OR
-            MSIR.Kind (eltT)  = MSIR.TypeKind.OpenArray  OR
-            MSIR.Kind (rhsT)  = MSIR.TypeKind.FixedArray OR
-            MSIR.Kind (rhsT)  = MSIR.TypeKind.OpenArray) THEN
+        IF eltIsOA OR rhsIsOA OR
+           (NOT MSIR.Equal (eltT, rhsT) AND (eltIsFA OR rhsIsFA)) THEN
           IF MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray AND
              MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray  AND
              MSIR.OpenArrayRank (rhsT) = 1               AND
