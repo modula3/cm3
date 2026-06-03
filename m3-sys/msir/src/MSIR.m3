@@ -933,12 +933,13 @@ END;
 
 
 REVEAL Global = BRANDED "MSIR.Global" REF RECORD
-  name:       TEXT;
-  type:       T;
-  isTraced:   BOOLEAN;
-  isExternal: BOOLEAN  := FALSE;
-  byteOffset: INTEGER  := -1;   (* -1 = standalone global; >=0 = offset in @Mod_M3_info *)
-  refValue:   Value    := NIL;
+  name:         TEXT;
+  type:         T;
+  isTraced:     BOOLEAN;
+  isExternal:   BOOLEAN  := FALSE;
+  byteOffset:   INTEGER  := -1;   (* -1 = standalone global; >=0 = offset in @Mod_M3_info *)
+  refValue:     Value    := NIL;
+  backingBytes: INTEGER  := 0;    (* >0: emit as [N x i8] zeroinitializer backing storage *)
 END;
 
 PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
@@ -969,7 +970,21 @@ PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN = BEGIN RETURN g.isExternal  
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER = BEGIN RETURN g.byteOffset END GlobalByteOffset;
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value) =
   BEGIN g.byteOffset := byteOff; g.refValue := ref END GlobalSetStructField;
-PROCEDURE GlobalValue(g: Global): Value         = BEGIN RETURN g.refValue   END GlobalValue;
+PROCEDURE GlobalValue(g: Global): Value         = BEGIN RETURN g.refValue       END GlobalValue;
+PROCEDURE GlobalSetBackingBytes(g: Global; n: INTEGER) = BEGIN g.backingBytes := n END GlobalSetBackingBytes;
+PROCEDURE GlobalBackingBytes   (g: Global): INTEGER    = BEGIN RETURN g.backingBytes END GlobalBackingBytes;
+PROCEDURE GlobalAddrValue      (g: Global): Value =
+  (* Return a ptr-typed Value whose LLVM lowering is @GlobalName.  Uses the
+     StructFieldRef kind with byteOffset=0, which MSIRToLLVM lowers as
+     getelementptr i8, ptr @Name, i64 0 — equivalent to @Name as a ptr. *)
+  VAR v := NEW(Value);
+  BEGIN
+    v.type      := TPtr(TVoid());
+    v.vKind     := ValueKind.StructFieldRef;
+    v.name      := "@" & g.name;   (* the info-global name: "@Name" *)
+    v.structOff := 0;
+    RETURN v;
+  END GlobalAddrValue;
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global) =
   BEGIN

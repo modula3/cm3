@@ -398,6 +398,12 @@ PROCEDURE UniqueLocalName(rawName: TEXT): TEXT;
 
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
 
+(* For a large indirect global variable (t.indirect = TRUE), emit the backing
+   zero-initialized storage as a named module-level global, and emit a runtime
+   store of its address into the pointer slot in @Mod_M3_info.  Mirrors the CG
+   path's CG.Declare_global + CG.Init_var for bss_var indirect globals. *)
+PROCEDURE EmitIndirectGlobalInit(v: Variable.T);
+
 (* Like GlobalMapAdd but for globals embedded in the @Mod_M3_info struct.
    Sets the global's byteOffset and refValue to a StructFieldRef GEP. *)
 PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;

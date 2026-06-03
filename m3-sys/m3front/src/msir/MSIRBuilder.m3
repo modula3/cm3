@@ -2241,6 +2241,11 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
     INC(globalMapN);
   END GlobalMapAddStruct;
 
+PROCEDURE EmitIndirectGlobalInit(<*UNUSED*> v: Variable.T) =
+(* No-op: indirect global backing storage is now created in DeclareGlobalMSIR. *)
+  BEGIN
+  END EmitIndirectGlobalInit;
+
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T) =
   BEGIN
     IF varMapN >= MaxVarMap THEN

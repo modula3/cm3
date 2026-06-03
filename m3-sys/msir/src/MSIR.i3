@@ -437,6 +437,9 @@ PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value);
 PROCEDURE GlobalValue(g: Global): Value;
+PROCEDURE GlobalSetBackingBytes(g: Global;  n: INTEGER); (* indirect: set [n x i8] backing size *)
+PROCEDURE GlobalBackingBytes   (g: Global): INTEGER;     (* 0 if not a backing-storage global *)
+PROCEDURE GlobalAddrValue      (g: Global): Value;       (* @Name as a ptr constant *)
                                              (* an addressable Value:
                                                 gc_slot type if traced,
                                                 ptr type otherwise *)

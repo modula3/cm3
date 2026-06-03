@@ -2783,13 +2783,20 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
     ELSE
       Wr.PutText(wr, MSIR.GlobalName(g));
       Wr.PutText(wr, " = global ");
-      IF MSIR.GlobalIsTraced(g) THEN
-        Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
-      ELSIF t = NIL OR MSIR.Kind(t) = MSIR.TypeKind.Void THEN
-        Wr.PutText(wr, "ptr null");  (* void-typed untraced slot — treat as ptr *)
-      ELSE
-        LLType(wr, t);
-        Wr.PutText(wr, " zeroinitializer");
+      VAR nb := MSIR.GlobalBackingBytes(g);
+      BEGIN
+        IF nb > 0 THEN
+          (* Indirect-global backing storage: emit as a byte array of the
+             declared size (zero-initialized, matching the CG's BSS bss_var). *)
+          Wr.PutText(wr, "[" & Fmt.Int(nb) & " x i8] zeroinitializer");
+        ELSIF MSIR.GlobalIsTraced(g) THEN
+          Wr.PutText(wr, "ptr null");  (* traced ref slot starts as null ptr *)
+        ELSIF t = NIL OR MSIR.Kind(t) = MSIR.TypeKind.Void THEN
+          Wr.PutText(wr, "ptr null");  (* void-typed untraced slot — treat as ptr *)
+        ELSE
+          LLType(wr, t);
+          Wr.PutText(wr, " zeroinitializer");
+        END;
       END;
     END;
     Wr.PutText(wr, "\n");

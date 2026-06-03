@@ -293,19 +293,33 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
        segment.  Hence we no longer skip interface units here. *)
     infoName  := MSIR.ModuleName(m) & "_M3_info";
     IF t.indirect THEN
-      (* Large global (size > Max_zero_global): the module info struct holds
-         a pointer to separately-allocated storage.  Register as a pointer
-         slot and flag that LookupVarAddr must load through it.
-         Store mt as dataType so LookupVarAddr can return a typed pointer. *)
-      byteSize  := Target.Address.bytes;
-      byteAlign := Target.Address.align DIV Target.Char.size;
-      byteOff   := t.offset DIV Target.Char.size;
-      MSIR.ModuleNoteGlobal(m, byteOff + byteSize);
+      (* Large global (size > Max_zero_global): in the C backend the module
+         struct holds a pointer to a separately-allocated BSS buffer.  In MSIR
+         we skip the pointer indirection entirely: emit the backing storage as a
+         standalone zero-initialized global and register it directly so that
+         LookupVar/LookupVarAddr return its address without any runtime load.
+         This avoids the runtime pointer init and matches the real ABI since
+         MSIR only accesses the data via LookupVar, never via the module struct.
+         DeclareGlobalMSIR is called twice (AllocGlobalVarSpace + DeclareGlobalsMSIR);
+         skip the second call if the variable is already in the global map. *)
+      IF MSIRBuilder.LookupVarAddr (t) # NIL THEN RETURN END;
+      byteSize  := t.size DIV Target.Char.size;
+      byteAlign := MAX(1, t.align DIV Target.Char.size);
+      IF byteSize <= 0 THEN byteSize := Target.Address.bytes END;
       g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
-                          MSIR.TPtr(MSIR.TVoid()), isTraced := FALSE);
-      MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff,
-                                     MSIR.TPtr(MSIR.TPtr(MSIR.TVoid())),
-                                     needsLoad := TRUE, dataType := mt);
+                          mt, isTraced := FALSE);
+      MSIR.GlobalSetBackingBytes(g, byteSize);
+      (* Set refValue so LookupVarAddr returns the global's address typed as
+         ptr(mt) so that SubscriptExpr can GEP into the backing storage.
+         Use byteOffset=-1 to mark it as standalone (not struct-embedded). *)
+      VAR addrVal := MSIR.GlobalAddrValue(g);
+      BEGIN
+        (* Retype the ptr(void) addr to ptr(mt) for correct subscript GEP. *)
+        addrVal := MSIR.RetypeValue(addrVal, MSIR.TPtr(mt));
+        MSIR.GlobalSetStructField(g, -1, addrVal);
+      END;
+      MSIR.ModuleAddGlobal(m, g);
+      MSIRBuilder.GlobalMapAdd(t, g, m);
       RETURN;
     END;
     isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
@@ -1073,6 +1087,9 @@ PROCEDURE ForceInit (t: T) =
   END ForceInit;
 
 (* EXPORTED *)
+PROCEDURE BitSize (t: T): INTEGER =
+  BEGIN RETURN t.size END BitSize;
+
 PROCEDURE ForceInitMSIR (t: T) =
 (* Emit only the MSIR part of the initialization for t, if it has not been
    emitted yet.  Uses a separate msirInitDone flag (NOT initPending) because
