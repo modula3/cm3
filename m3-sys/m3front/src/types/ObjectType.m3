@@ -738,7 +738,9 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
 
-    procName := Type.LinkName (p, "_INIT");
+    (* Include the module name so LLSymbol (which adds ModName__ for unqualified
+       names) doesn't double-prefix it.  ContainsDunder detects the __ and skips. *)
+    procName := MSIR.ModuleName (m) & "__" & Type.LinkName (p, "_INIT");
     MSIR.SetTypeDescInitProc (desc, procName);
 
     (* Build the MSIR procedure via raw MSIR API. *)
@@ -856,9 +858,8 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     BEGIN
       IF uName # NIL THEN MSIR.SetTypeDescUserName (desc, uName) END;
     END;
-    (* Generate the field-default initializer proc (TC_initProc) if needed.
-       TODO: currently disabled (crashes during compilation). *)
-    (* GenInitProcMSIR (NARROW(t, P), desc); *)
+    (* Generate the field-default initializer proc (TC_initProc) if needed. *)
+    GenInitProcMSIR (NARROW(t, P), desc);
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;
 
