@@ -26,8 +26,9 @@ CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 TYPE VarEntry = RECORD
   key:         Variable.T;
   val:         MSIR.Value;
-  storageType: MSIR.T;    (* MType: narrow memory type; NIL => by-value formal *)
-  wideType:    MSIR.T;    (* ZType: computation type; = TI64 for narrow ordinals *)
+  storageType: MSIR.T;     (* MType: narrow memory type; NIL => by-value formal *)
+  wideType:    MSIR.T;     (* ZType: computation type; = TI64 for narrow ordinals *)
+  signedWiden: BOOLEAN;    (* TRUE → SExt on widen; FALSE → ZExt (lo >= 0 or BOOLEAN) *)
 END;
 
 (* One frame of the unified loop/finally cleanup stack. *)
@@ -415,9 +416,11 @@ PROCEDURE BeginProc(name: TEXT;
               IF NOT caps[i].written AND IsScalarType(mt) THEN
                 varMap[varMapN].storageType := NIL;  (* by-value: return param directly *)
                 varMap[varMapN].wideType    := NIL;
+                varMap[varMapN].signedWiden := FALSE;
               ELSE
                 varMap[varMapN].storageType := mt;   (* ptr: load through it *)
                 varMap[varMapN].wideType    := mt;
+                varMap[varMapN].signedWiden := FALSE;
               END;
               INC(varMapN);
             END;
@@ -470,14 +473,9 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
           VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
           BEGIN
             IF NOT MSIR.Equal(varMap[i].storageType, varMap[i].wideType) THEN
-              (* W-kind: unsigned (ZExt).  I-kind ≥ I8: signed (SExt).
-                 I1 (BOOLEAN): unsigned — values are 0 and 1, SExt would give -1
-                 for TRUE.  ZExt gives the correct 0 or 1 at word size. *)
-              IF MSIR.Kind(varMap[i].storageType) = MSIR.TypeKind.I1 OR
-                 (MSIR.Kind(varMap[i].storageType) >= MSIR.TypeKind.W8 AND
-                  MSIR.Kind(varMap[i].storageType) <= MSIR.TypeKind.W64)
-                THEN RETURN MSIR.BuildZExt(curBlock, "", loaded, varMap[i].wideType)
-                ELSE RETURN MSIR.BuildSExt(curBlock, "", loaded, varMap[i].wideType)
+              IF varMap[i].signedWiden
+                THEN RETURN MSIR.BuildSExt(curBlock, "", loaded, varMap[i].wideType)
+                ELSE RETURN MSIR.BuildZExt(curBlock, "", loaded, varMap[i].wideType)
               END;
             END;
             RETURN loaded;
@@ -642,17 +640,29 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
       Abandon("unsupported local variable type");
       RETURN FALSE;
     END;
-    (* Alloca uses the narrow storage type (MType). VarMapAdd computes the
-       wide computation type (ZType) for LookupVar to extend on load. *)
-    allocaVal := MSIR.BuildAlloca(
-                   curBlock,
-                   UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE) & ".slot"),
-                   mt);
-    IF varMapN >= MaxVarMap THEN
-      Abandon("too many variables in proc");
-      RETURN FALSE;
+    (* AddLocal is used for FOR loop counters and exception handler vars.
+       These need a WIDE alloca so the counter can temporarily exceed the
+       type's range for termination detection (e.g. CHAR[0..255] needs
+       to reach 256 before the loop exits — i8 wraps to 0 and loops forever).
+       Regular proc locals use Variable.AddLocalMSIR which correctly uses
+       the narrow storage type.  Pass allocType (wide) as storageType so
+       LookupVar loads the wide type directly without extension. *)
+    VAR allocType := mt;
+    BEGIN
+      IF Type.IsOrdinal(type) AND
+         MSIR.BitWidth(mt) > 0 AND MSIR.BitWidth(mt) < Target.Integer.size THEN
+        allocType := MSIR.TI(Target.Integer.size);
+      END;
+      allocaVal := MSIR.BuildAlloca(
+                     curBlock,
+                     UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE) & ".slot"),
+                     allocType);
+      IF varMapN >= MaxVarMap THEN
+        Abandon("too many variables in proc");
+        RETURN FALSE;
+      END;
+      VarMapAdd(v, allocaVal, allocType);  (* wide storageType = wideType; no extension *)
     END;
-    VarMapAdd(v, allocaVal, mt);
     RETURN TRUE;
   END AddLocal;
 
@@ -667,6 +677,7 @@ PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
     varMap[varMapN].val         := addr;
     varMap[varMapN].storageType := elemType;
     varMap[varMapN].wideType    := elemType;  (* WITH aliases keep natural type *)
+    varMap[varMapN].signedWiden := FALSE;
     INC(varMapN);
   END BindVarAddr;
 
@@ -2344,10 +2355,11 @@ PROCEDURE EmitIndirectGlobalInit(<*UNUSED*> v: Variable.T) =
 
 PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
   (* Register a local variable in the varMap.  storageType is the narrow MType
-     (actual memory layout).  wideType (ZType) is computed here: for ordinal
-     types narrower than word size (excluding BOOLEAN), wideType = TI64 so that
-     LookupVar automatically widens on load (Load_indirect discipline). *)
-  VAR wideType := storageType;
+     (actual memory layout).  wideType (ZType) and signedWiden are computed
+     here from the M3 type: ordinals narrower than word size get TI64; sign
+     is determined by whether the M3 type's lower bound is negative. *)
+  VAR wideType    := storageType;
+      signedWiden := FALSE;
   BEGIN
     IF varMapN >= MaxVarMap THEN
       Abandon("VarMapAdd: overflow — increase MaxVarMap");
@@ -2356,12 +2368,14 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
     IF storageType # NIL AND MSIR.BitWidth(storageType) > 0 AND
        MSIR.BitWidth(storageType) < Target.Integer.size THEN
       VAR vType: Type.T;  vg, vi, vlhs: BOOLEAN;
+          lo, hi: Target.Int;
       BEGIN
         Variable.Split(v, vType, vg, vi, vlhs);
-        (* All ordinals widen to word size — including BOOLEAN (I1 → TI64 via
-           ZExt; BuildCondBr auto-truncates back to i1 for branch operands). *)
         IF Type.IsOrdinal(vType) THEN
           wideType := MSIR.TI(Target.Integer.size);
+          (* SExt if lower bound is negative (signed subrange), ZExt otherwise.
+             BOOLEAN: lo=0 → ZExt ✓.  Short=[-30..-12]: lo<0 → SExt ✓. *)
+          signedWiden := Type.GetBounds(vType, lo, hi) AND TInt.LT(lo, TInt.Zero);
         END;
       END;
     END;
@@ -2369,6 +2383,7 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
     varMap[varMapN].val         := val;
     varMap[varMapN].storageType := storageType;
     varMap[varMapN].wideType    := wideType;
+    varMap[varMapN].signedWiden := signedWiden;
     INC(varMapN);
   END VarMapAdd;
 
