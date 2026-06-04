@@ -1737,12 +1737,18 @@ PROCEDURE BuildBr(b: Block; target: Block;
 PROCEDURE BuildCondBr(b: Block; cond: Value;
                       ifTrue: Block;   READONLY trueArgs:  ARRAY OF Value;
                       ifFalse: Block;  READONLY falseArgs: ARRAY OF Value) =
+  (* LLVM requires i1 for `br i1`. Auto-truncate any wider integer (e.g. i64
+     from a widened BOOLEAN variable) to i1 before emitting the branch. *)
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 1);
+    condI1 := cond;
   BEGIN
+    IF Kind(ValueType(cond)) # TypeKind.I1 THEN
+      condI1 := BuildTrunc(b, "", cond, TI1());
+    END;
     i.op := Op.CondBr;
-    ops[0] := cond;
+    ops[0] := condI1;
     i.operands := ops;
     i.br0Tgt  := ifTrue;
     i.br0Args := copyArgs(trueArgs);

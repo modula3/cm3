@@ -1,7 +1,7 @@
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
-IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text, Bool;
+IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
 IMPORT Expr, ArrayExpr, ArrayType, OpenArrayType, RecordExpr;
@@ -470,8 +470,12 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
           VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
           BEGIN
             IF NOT MSIR.Equal(varMap[i].storageType, varMap[i].wideType) THEN
-              IF MSIR.Kind(varMap[i].storageType) >= MSIR.TypeKind.W8 AND
-                 MSIR.Kind(varMap[i].storageType) <= MSIR.TypeKind.W64
+              (* W-kind: unsigned (ZExt).  I-kind ≥ I8: signed (SExt).
+                 I1 (BOOLEAN): unsigned — values are 0 and 1, SExt would give -1
+                 for TRUE.  ZExt gives the correct 0 or 1 at word size. *)
+              IF MSIR.Kind(varMap[i].storageType) = MSIR.TypeKind.I1 OR
+                 (MSIR.Kind(varMap[i].storageType) >= MSIR.TypeKind.W8 AND
+                  MSIR.Kind(varMap[i].storageType) <= MSIR.TypeKind.W64)
                 THEN RETURN MSIR.BuildZExt(curBlock, "", loaded, varMap[i].wideType)
                 ELSE RETURN MSIR.BuildSExt(curBlock, "", loaded, varMap[i].wideType)
               END;
@@ -2354,7 +2358,9 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
       VAR vType: Type.T;  vg, vi, vlhs: BOOLEAN;
       BEGIN
         Variable.Split(v, vType, vg, vi, vlhs);
-        IF Type.IsOrdinal(vType) AND Type.Base(vType) # Bool.T THEN
+        (* All ordinals widen to word size — including BOOLEAN (I1 → TI64 via
+           ZExt; BuildCondBr auto-truncates back to i1 for branch operands). *)
+        IF Type.IsOrdinal(vType) THEN
           wideType := MSIR.TI(Target.Integer.size);
         END;
       END;
