@@ -13,7 +13,7 @@ MODULE Variable;
 IMPORT M3, M3ID, CG, Value, ValueRep, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
 IMPORT Target, TInt, Token, Ident, Module, CallExpr;
-IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
+IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, Bool;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap, RecordType;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
@@ -443,9 +443,11 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
        - Non-ordinal types (SET, RECORD, ARRAY, etc.): only ordinal types
          (integers, subranges, enums) have M3 word-size arithmetic semantics.
          SET types in particular use the set's natural bit-width for all
-         bit operations; widening would cause type mismatches (p274). *)
+         bit operations; widening would cause type mismatches (p274).
+       - BOOLEAN: checked by explicit type identity — widening i1 to i64
+         breaks `br i1` branch instructions (p031, p287, p288). *)
     IF Type.IsOrdinal (t.type) AND
-       MSIR.Kind (mt) >= MSIR.TypeKind.I8 AND  (* I8 lower bound excludes BOOLEAN (I1) *)
+       Type.Base (t.type) # Bool.T AND
        MSIR.BitWidth (mt) < Target.Integer.size THEN
       mt := MSIR.TI (Target.Integer.size);
     END;
@@ -1063,7 +1065,7 @@ PROCEDURE GenScalarInitMSIR (t: T) =
     (* Use the same widening as AddLocalMSIR so the ConstInt matches the
        alloca's actual element type (i64 for sub-word ordinal scalars). *)
     IF Type.IsOrdinal (t.type) AND
-       MSIR.Kind (mt) >= MSIR.TypeKind.I8 AND  (* I8 lower bound excludes BOOLEAN (I1) *)
+       Type.Base (t.type) # Bool.T AND
        MSIR.BitWidth (mt) < Target.Integer.size THEN
       mt := MSIR.TI (Target.Integer.size);
     END;
