@@ -239,7 +239,22 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       CASE Value.ClassOf (p.value) OF
       | Value.Class.Expr =>
           constExpr := Value.ToExpr (p.value);
-          IF constExpr # NIL THEN RETURN Expr.CompileMSIR (constExpr) END;
+          IF constExpr # NIL THEN
+            (* For CONST arrays, try LValueMSIR (→ MaterializeConstArray) first so
+               open-typed nested array constants (b = ARRAY OF ARRAY OF INTEGER {c,...})
+               produce const globals rather than abandoning.  p081. *)
+            IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
+              VAR lv := LValueMSIR (p);
+              BEGIN
+                IF lv # NIL THEN
+                  RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "",
+                                        MSIR.EltType (MSIR.ValueType (lv)), lv);
+                END;
+              END;
+              IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
+            END;
+            RETURN Expr.CompileMSIR (constExpr);
+          END;
       | Value.Class.Procedure =>
           folded := Fold (p);
           IF folded # NIL THEN RETURN Expr.CompileMSIR (folded) END;

@@ -4,7 +4,7 @@ IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
-IMPORT Expr, ArrayExpr, ArrayType, RecordExpr;
+IMPORT Expr, ArrayExpr, ArrayType, OpenArrayType, RecordExpr;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
 IMPORT RefType;
@@ -2012,19 +2012,44 @@ PROCEDURE TFixedArrayI(len: INTEGER;  elt: MSIR.T): MSIR.T =
 PROCEDURE MaterializeConstElt(elt: Expr.T; eltMsir: MSIR.T): MSIR.Value =
   VAR ae: ArrayExpr.T;  cv, v: MSIR.Value;
   BEGIN
+    (* Resolve named CONST references (NamedExpr wrapping an ArrayExpr) so that
+       nested arrays like b = {c, c, ...} where c is a CONST are inlined as
+       ConstAggArray values rather than triggering an abandon (p081). *)
+    VAR folded := Expr.ConstValue(elt);
+    BEGIN
+      IF folded # NIL AND folded # elt THEN elt := folded END;
+    END;
     ae := ArrayExpr.ArrayConstrExpr(elt);
     IF ae # NIL
-       AND MSIR.Kind(eltMsir) = MSIR.TypeKind.FixedArray
        AND NOT ArrayType.EltsAreBitAddressed(Expr.TypeOf(elt)) THEN
-      (* Recurse into a nested array constructor only when the declared element
-         type is a genuine, naturally-aligned fixed array:
-         - non-FixedArray MSIR kinds (e.g. an open array 'ARRAY OF T', which
-           translates to a '{ptr,len}' dope struct) must not be rendered as an
-           inline '[...]' literal — those need a separate data global + dope and
-           are left to the abandon/fallback path; and
-         - a bit-addressed/packed nested array's byte-packed MSIR type does not
-           correspond element-for-element to its logical constructor elements. *)
-      RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), eltMsir);
+      IF MSIR.Kind(eltMsir) = MSIR.TypeKind.FixedArray THEN
+        (* Recurse into a nested array constructor only when the declared element
+           type is a genuine, naturally-aligned fixed array. *)
+        RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), eltMsir);
+      ELSIF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray THEN
+        (* Element declared as open array (e.g. CONST b = ARRAY OF ARRAY OF INTEGER {c,...}).
+           Compute concrete eltMsir = TFixedArray(nElts, inner_elt_type) from the element
+           count and element type of the inner array constructor.  p081. *)
+        VAR innerIdxT, innerEltT: Type.T;
+            innerEltMsir: MSIR.T;
+            nInner: INTEGER;
+        BEGIN
+          IF ArrayType.Split(Expr.TypeOf(elt), innerIdxT, innerEltT) THEN
+            (* count: use index range or number of explicit elements *)
+            IF innerIdxT = NIL OR NOT TInt.ToInt(Type.Number(innerIdxT), nInner)
+               OR nInner <= 0 THEN
+              nInner := ArrayExpr.EltCount(ae);
+            END;
+            innerEltMsir := MSIRType.Translate(innerEltT);
+            IF innerEltMsir # NIL AND nInner > 0 THEN
+              VAR concreteArrT := MSIR.TFixedArray(nInner, innerEltMsir);
+              BEGIN
+                RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), concreteArrT);
+              END;
+            END;
+          END;
+        END;
+      END;
     END;
     IF RecordExpr.TryCompileConstMSIR(elt, cv) THEN RETURN cv END;
     v := Expr.CompileMSIR(elt);
@@ -2112,7 +2137,19 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
       IF NOT ArrayType.Split(Expr.TypeOf(constExpr), indexT, eltT) THEN
         Abandon("ConstArray: not an array type");  RETURN NIL;
       END;
-      IF NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
+      (* When split yields an open-array eltT (e.g., CONST b = ARRAY OF ARRAY OF INTEGER {c,...}
+         gives eltT = ARRAY OF INTEGER), use the concrete element type from the
+         first explicit element's TypeOf instead (ARRAY [0..1] OF INTEGER).  p081. *)
+      IF eltT # NIL AND OpenArrayType.Is(eltT) AND nExplicit > 0 THEN
+        VAR concreteElt := Expr.TypeOf(ArrayExpr.Elt(ae, 0));
+        BEGIN
+          IF concreteElt # NIL AND NOT OpenArrayType.Is(concreteElt) THEN
+            eltT := concreteElt;
+          END;
+        END;
+      END;
+      (* When the index range is open/nil, use nExplicit for the count. *)
+      IF indexT = NIL OR NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
         nTotal := nExplicit;
       END;
       n := nTotal;
@@ -2129,6 +2166,19 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
       BEGIN
         elts[i] := MaterializeConstElt(ArrayExpr.Elt(ae, eltIdx), eltMsir);
         IF elts[i] = NIL THEN RETURN NIL END;
+      END;
+    END;
+    (* If eltMsir is OpenArray but the actual built elements have a concrete type
+       (ConstAggArray with FixedArray), use the concrete element type for the outer
+       array.  This happens when CONST b = ARRAY OF ARRAY OF INTEGER {c,...} where
+       element type is open but elements compile as fixed-size arrays. p081. *)
+    IF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray
+       AND n > 0 AND elts[0] # NIL THEN
+      VAR concreteT := MSIR.ValueType(elts[0]);
+      BEGIN
+        IF MSIR.Kind(concreteT) = MSIR.TypeKind.FixedArray THEN
+          eltMsir := concreteT;
+        END;
       END;
     END;
     m    := MSIREmit.CurrentModule();
