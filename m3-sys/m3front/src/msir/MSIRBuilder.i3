@@ -402,6 +402,16 @@ PROCEDURE BeginModule();
    Must only be called inside a BeginProc/EndProc bracket. *)
 PROCEDURE UniqueLocalName(rawName: TEXT): TEXT;
 
+(* Like NewBlock but creates the block with a single block parameter.
+   Returns the block; the parameter value is retrievable via
+   MSIR.BlockParamValue(blk, 0). *)
+PROCEDURE NewBlockWithParam(label: TEXT;  paramName: TEXT;  paramType: MSIR.T): MSIR.Block;
+
+(* Register a loop-variable as a block-parameter SSA value (no alloca).
+   LookupVar(v) returns paramVal directly; LookupVarAddr abandons (loop
+   variables are read-only and non-addressable). *)
+PROCEDURE RegisterLoopVar(v: Variable.T;  paramVal: MSIR.Value);
+
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
 
 (* For a large indirect global variable (t.indirect = TRUE), emit the backing

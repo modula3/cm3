@@ -441,7 +441,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
        the outer proc. *)
     allocType := mt;
     IF Type.IsOrdinal (t.type) AND
-       MSIR.BitWidth (mt) > 0 AND MSIR.BitWidth (mt) < Target.Integer.size THEN
+       MSIR.Kind (mt) # MSIR.TypeKind.Enum THEN
       allocType := MSIR.TI (Target.Integer.size);
     END;
     slotAddr := MSIR.BuildAlloca(b,
@@ -1052,9 +1052,8 @@ PROCEDURE GenScalarInitMSIR (t: T) =
       addr := MSIRBuilder.LookupVarAddr (t);
   BEGIN
     IF mt = NIL OR addr = NIL THEN RETURN END;
-    (* Alloca is wide (TI64 for ordinals); use wide type for the init constant. *)
     IF Type.IsOrdinal (t.type) AND
-       MSIR.BitWidth (mt) > 0 AND MSIR.BitWidth (mt) < Target.Integer.size THEN
+       MSIR.Kind (mt) # MSIR.TypeKind.Enum THEN
       mt := MSIR.TI (Target.Integer.size);
     END;
     IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;

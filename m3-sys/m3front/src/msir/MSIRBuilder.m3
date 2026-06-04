@@ -620,12 +620,31 @@ PROCEDURE UniqueLocalName(rawName: TEXT): TEXT =
   END UniqueLocalName;
 
 PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
-  (* Delegate to Variable.AddLocalMSIR which now uses the wide alloca type
-     (TI64 for ordinals), making this the single canonical registration path
-     for all scalar locals — whether from BeginProc, ForStmt, or TryStmt. *)
+  (* Delegate to Variable.AddLocalMSIR — the single canonical registration
+     path for all scalar locals. *)
   BEGIN
     RETURN Variable.AddLocalMSIR(v, curBlock);
   END AddLocal;
+
+PROCEDURE RegisterLoopVar(v: Variable.T;  paramVal: MSIR.Value) =
+  (* Register a FOR loop variable as an SSA block-parameter value.
+     No alloca needed: the loop variable is read-only (M3 spec forbids
+     assignments to it in the body) and not addressable.
+     VarMapAdd with storageType = NIL causes LookupVar to return paramVal
+     directly, as for by-value formal parameters. *)
+  BEGIN
+    IF VarMapContains(v) THEN RETURN END;
+    IF varMapN >= MaxVarMap THEN
+      Abandon("RegisterLoopVar: overflow — increase MaxVarMap");
+      RETURN;
+    END;
+    varMap[varMapN].key         := v;
+    varMap[varMapN].val         := paramVal;
+    varMap[varMapN].storageType := NIL;   (* return paramVal directly *)
+    varMap[varMapN].wideType    := NIL;
+    varMap[varMapN].signedWiden := FALSE;
+    INC(varMapN);
+  END RegisterLoopVar;
 
 PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
   (* WITH designator: addr is already a pointer to the target; no alloca widening. *)
@@ -779,6 +798,18 @@ PROCEDURE NewBlock(label: TEXT): MSIR.Block =
     MSIR.ProcAddBlock(curProc, b);
     RETURN b;
   END NewBlock;
+
+PROCEDURE NewBlockWithParam(label: TEXT;  paramName: TEXT;  paramType: MSIR.T): MSIR.Block =
+  VAR b: MSIR.Block;  uniq: TEXT;
+  BEGIN
+    INC(blockSeq);
+    uniq := label & "." & Fmt.Int(blockSeq);
+    b := MSIR.NewBlock(uniq,
+           ARRAY OF MSIR.BlockParam{MSIR.BlockParam{name := paramName,
+                                                     type := paramType}});
+    MSIR.ProcAddBlock(curProc, b);
+    RETURN b;
+  END NewBlockWithParam;
 
 PROCEDURE SetCurrentBlock(b: MSIR.Block) =
   BEGIN
@@ -2326,13 +2357,17 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
       Abandon("VarMapAdd: overflow — increase MaxVarMap");
       RETURN;
     END;
-    IF storageType # NIL AND MSIR.BitWidth(storageType) > 0 AND
-       MSIR.BitWidth(storageType) < Target.Integer.size THEN
+    IF storageType # NIL THEN
       VAR vType: Type.T;  vg, vi, vlhs: BOOLEAN;
           lo, hi: Target.Int;
       BEGIN
         Variable.Split(v, vType, vg, vi, vlhs);
-        IF Type.IsOrdinal(vType) THEN
+        (* Widen integer-kind ordinals (integer subranges, CHAR, BOOLEAN) to
+           word size.  Enum types translate to TypeKind.Enum which is already
+           handled specially in LLVM; widening them to TI64 breaks exception
+           value binding (TryStmt stores TEnum values to wider allocas). *)
+        IF Type.IsOrdinal(vType) AND
+           MSIR.Kind(storageType) # MSIR.TypeKind.Enum THEN
           wideType := MSIR.TI(Target.Integer.size);
           (* SExt if lower bound is negative (signed subrange), ZExt otherwise.
              BOOLEAN: lo=0 → ZExt ✓.  Short=[-30..-12]: lo<0 → SExt ✓. *)

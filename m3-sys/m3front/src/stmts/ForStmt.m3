@@ -420,7 +420,7 @@ PROCEDURE CompileMSIR (p: P) =
     stepLoaded: MSIR.Value;
     varAddr:    MSIR.Value;
     cur:        MSIR.Value;
-    next:        MSIR.Value;
+    next:       MSIR.Value;
     cond:       MSIR.Value;
     pred:       MSIR.CmpPred;
     headerBlk:  MSIR.Block;
@@ -431,7 +431,6 @@ PROCEDURE CompileMSIR (p: P) =
     isConst:    BOOLEAN;
     alwaysPos:  BOOLEAN;
     alwaysNeg:  BOOLEAN;
-    zz:         Scope.T;
   BEGIN
     Variable.Split (loopVar, varType, varGlobal, varIndir, varLhs);
     msirType := MSIRType.Translate (varType);
@@ -469,18 +468,15 @@ PROCEDURE CompileMSIR (p: P) =
       alwaysNeg := TInt.LT (step_max, TInt.Zero);
     END;
 
-    (* Register the loop variable as a local so it gets a narrow alloca.
-       varAddr = ptr(storageType); reads go through LookupVar (widens to ZType);
-       writes must truncate back from ZType to storageType. *)
-    zz := Scope.Push (p.scope);
-    EVAL MSIRBuilder.AddLocal (loopVar);
+    (* Register the loop variable; AddLocalMSIR uses a wide alloca (TI64)
+       so the counter can exceed the type's range without wrapping. *)
+    EVAL Variable.AddLocalMSIR (loopVar, MSIRBuilder.CurrentBlock ());
     varAddr := MSIRBuilder.LookupVarAddr (loopVar);
-    Scope.Pop (zz);
     IF varAddr = NIL THEN
       MSIRBuilder.Abandon ("FOR variable not mapped in MSIR");
       RETURN;
     END;
-    (* Compile initial value; widen to msirType if needed; store to wide alloca. *)
+    (* Compile initial value; widen to msirType if needed; store to alloca. *)
     fromVal := Expr.CompileMSIR (p.from);
     IF fromVal = NIL THEN RETURN END;
     VAR fromW := MSIR.BitWidth (MSIR.ValueType (fromVal));
@@ -533,7 +529,7 @@ PROCEDURE CompileMSIR (p: P) =
     IF alwaysPos OR alwaysNeg THEN
       (* Direction known statically: single comparison in the header. *)
       MSIRBuilder.SetCurrentBlock (headerBlk);
-      cur      := MSIRBuilder.LookupVar (loopVar);  (* loads + widens to msirType *)
+      cur      := MSIRBuilder.LookupVar (loopVar);
       limitVal := MSIR.BuildLoad (headerBlk, "", msirType, limitSlot);
       IF alwaysPos
         THEN pred := MSIR.CmpPred.Sle;
@@ -583,9 +579,7 @@ PROCEDURE CompileMSIR (p: P) =
     Stmt.CompileMSIR (p.body);
     MSIRBuilder.PopExitBlock ();
 
-    (* Increment and loop back if body didn't terminate.
-       AddLocal uses a wide alloca (msirType = TI64) so the counter can go past
-       the type's range; no truncation needed before storing. *)
+    (* Increment: load, add step, store back to alloca, branch to header. *)
     IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
       cur := MSIRBuilder.LookupVar (loopVar);
       IF isConst THEN
