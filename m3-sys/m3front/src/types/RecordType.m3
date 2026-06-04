@@ -11,7 +11,7 @@ MODULE RecordType;
 
 IMPORT M3, M3ID, CG, Type, TypeRep, Scope, Expr, Value, Token;
 IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
-IMPORT Word, AssignStmt, M3Buf, TInt;
+IMPORT Word, AssignStmt, M3Buf, TInt, ArrayType;
 IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -458,16 +458,77 @@ PROCEDURE InitFieldDefaultMSIR (addr: MSIR.Value;  dfault: Expr.T;
   END InitFieldDefaultMSIR;
 
 (* EXPORTED *)
+PROCEDURE GenInitArrayMSIR (t: Type.T;  baseAddr: MSIR.Value) =
+(* Emit element-wise init for a fixed-array type whose elements have non-zero
+   language-defined initial values.  Supports:
+   - ARRAY OF scalar-subrange: store min value to each element
+   - ARRAY OF Record: recurse via GenInitMSIR per element
+   - ARRAY OF ARRAY: recurse per element *)
+  VAR indexT, eltT: Type.T;  nElts: INTEGER;  lo, hi, elo, ehi: Target.Int;
+      loI, hiI, eloI: INTEGER;
+      eltMsirT: MSIR.T;
+      b: MSIR.Block;  intT := MSIR.TI (Target.Integer.size);
+  BEGIN
+    IF NOT ArrayType.Split (t, indexT, eltT) THEN RETURN END;
+    IF NOT Type.GetBounds (indexT, lo, hi) THEN RETURN END;
+    IF NOT TInt.ToInt (lo, loI) THEN RETURN END;
+    IF NOT TInt.ToInt (hi, hiI) THEN RETURN END;
+    nElts := hiI - loI + 1;
+    IF nElts <= 0 THEN RETURN END;
+    eltMsirT := MSIRType.Translate (eltT);
+    IF eltMsirT = NIL THEN RETURN END;
+    (* Scalar subrange element with non-zero bounds: store constant to each slot. *)
+    IF Type.GetBounds (eltT, elo, ehi)
+       AND (TInt.LT (TInt.Zero, elo) OR TInt.LT (ehi, TInt.Zero))
+       AND TInt.ToInt (elo, eloI) THEN
+      VAR initVal := MSIR.ConstInt (eltMsirT, eloI);
+      BEGIN
+        IF initVal = NIL THEN RETURN END;
+        b := MSIRBuilder.CurrentBlock ();
+        FOR i := 0 TO nElts - 1 DO
+          VAR elemAddr := MSIR.BuildArrayElemAddr (b, "", baseAddr,
+                            MSIR.ConstInt (intT, i));
+          BEGIN
+            b := MSIRBuilder.CurrentBlock ();
+            MSIR.BuildStore (b, initVal, elemAddr);
+          END;
+        END;
+      END;
+      RETURN;
+    END;
+    (* Record or nested array elements: recurse. *)
+    IF Type.InitCost (eltT, FALSE) > 0 THEN
+      b := MSIRBuilder.CurrentBlock ();
+      FOR i := 0 TO nElts - 1 DO
+        VAR elemAddr := MSIR.BuildArrayElemAddr (b, "", baseAddr,
+                          MSIR.ConstInt (intT, i));
+        BEGIN
+          b := MSIRBuilder.CurrentBlock ();
+          GenInitMSIR (eltT, elemAddr);
+        END;
+      END;
+    END;
+  END GenInitArrayMSIR;
+
 PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value) =
 (* MSIR analogue of GenInit: initialize a record variable's fields to their
    declared defaults.  Called from Variable.LangInit/ForceInit alongside the CG
    Type.InitValue, since GenInit emits nothing for MSIR.  Fields without a
    default that are themselves records are recursed into; scalar fields without
    a default are zeroed (a proc-local alloca is not pre-zeroed; a global already
-   is, so a redundant zero store is harmless). *)
+   is, so a redundant zero store is harmless).  Also handles array-of-records
+   and array-of-subranges when elements need non-zero init (p143). *)
   VAR p := Reduce (t);
+      indexT, eltT: Type.T;
   BEGIN
-    IF p = NIL OR baseAddr = NIL THEN RETURN END;
+    IF baseAddr = NIL THEN RETURN END;
+    (* Handle array types whose elements need non-zero initialization. *)
+    IF p = NIL AND ArrayType.Split (t, indexT, eltT)
+       AND Type.InitCost (t, FALSE) > 0 THEN
+      GenInitArrayMSIR (t, baseAddr);
+      RETURN;
+    END;
+    IF p = NIL THEN RETURN END;
     VAR field : Field.Info;
         v     := Scope.ToList (p.fields);
     BEGIN
@@ -495,6 +556,11 @@ PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value) =
               InitFieldDefaultMSIR (fslot, field.dfault, fInfo.size);
             ELSIF Reduce (field.type) # NIL THEN
               GenInitMSIR (field.type, fslot);
+            ELSIF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.FixedArray
+                  AND Type.InitCost (field.type, FALSE) > 0 THEN
+              (* Fixed-array field whose elements need non-zero init
+                 (e.g. ShortArray = ARRAY [-30..-12] OF Short: p143). *)
+              GenInitArrayMSIR (field.type, fslot);
             ELSIF ft # NIL THEN
               (* For subranges with lo > 0 or hi < 0, use minimum value
                  (matches SubrangeType.GenInit; p143). *)
