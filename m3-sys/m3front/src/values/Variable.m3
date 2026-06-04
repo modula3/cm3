@@ -424,23 +424,31 @@ PROCEDURE RegisterExternMSIR (t: T) =
   END RegisterExternMSIR;
 
 PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
-  VAR mt: MSIR.T;  slotAddr: MSIR.Value;
+  VAR mt: MSIR.T;  slotAddr: MSIR.Value;  allocType: MSIR.T;
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
     IF t.indirect THEN RETURN FALSE END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
-    (* Alloca uses the narrow MType.  VarMapAdd computes the ZType (wideType)
-       for ordinal scalars; LookupVar extends on load (Load_indirect). *)
-    (* With lambda-lifting, up-level variables are ordinary stack allocas in
-       the outer proc.  Their addresses are passed directly as capture params
-       to inner procs, so no special frame-struct handling is needed here. *)
+    (* Use the wide ZType for the alloca: ordinal scalars narrower than word
+       size use TI64 so that loop counters can exceed the type's range without
+       wrapping (CHAR[0..255] must reach 256; i8 wraps to 0 → infinite loop).
+       VarMapAdd receives the same wide type as storageType, so LookupVar
+       loads TI64 directly with no extension.  Values are always in range for
+       regular locals; counters briefly exceed range but the alloca holds them.
+       With lambda-lifting, up-level variables are ordinary stack allocas in
+       the outer proc. *)
+    allocType := mt;
+    IF Type.IsOrdinal (t.type) AND
+       MSIR.BitWidth (mt) > 0 AND MSIR.BitWidth (mt) < Target.Integer.size THEN
+      allocType := MSIR.TI (Target.Integer.size);
+    END;
     slotAddr := MSIR.BuildAlloca(b,
                   MSIRBuilder.UniqueLocalName(
-                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), mt);
+                    Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), allocType);
     IF slotAddr = NIL THEN RETURN FALSE END;
-    MSIRBuilder.VarMapAdd (t, slotAddr, mt);
+    MSIRBuilder.VarMapAdd (t, slotAddr, allocType);
     (* Emit language-default init alongside CG's Type.InitValue in LangInit.
        For subranges with lo > 0 or hi < 0 (zero not in range), init to lo
        rather than zero — matches SubrangeType.GenInit (p143). *)
@@ -1044,7 +1052,11 @@ PROCEDURE GenScalarInitMSIR (t: T) =
       addr := MSIRBuilder.LookupVarAddr (t);
   BEGIN
     IF mt = NIL OR addr = NIL THEN RETURN END;
-    (* Init uses the narrow MType — alloca is narrow; LookupVar widens on read. *)
+    (* Alloca is wide (TI64 for ordinals); use wide type for the init constant. *)
+    IF Type.IsOrdinal (t.type) AND
+       MSIR.BitWidth (mt) > 0 AND MSIR.BitWidth (mt) < Target.Integer.size THEN
+      mt := MSIR.TI (Target.Integer.size);
+    END;
     IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;
     IF NOT (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero)) THEN RETURN END;
     IF NOT TInt.ToInt (lo, loI) THEN RETURN END;

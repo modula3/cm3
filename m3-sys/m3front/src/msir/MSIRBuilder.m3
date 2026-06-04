@@ -620,50 +620,11 @@ PROCEDURE UniqueLocalName(rawName: TEXT): TEXT =
   END UniqueLocalName;
 
 PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
-  VAR
-    type:                  Type.T;
-    global, indirect, lhs: BOOLEAN;
-    mt:                    MSIR.T;
-    allocaVal:             MSIR.Value;
+  (* Delegate to Variable.AddLocalMSIR which now uses the wide alloca type
+     (TI64 for ordinals), making this the single canonical registration path
+     for all scalar locals — whether from BeginProc, ForStmt, or TryStmt. *)
   BEGIN
-    (* Idempotent: skip if already registered (e.g. by BeginProc for p.syms). *)
-    FOR i := 0 TO varMapN - 1 DO
-      IF varMap[i].key = v THEN RETURN TRUE END;
-    END;
-    Variable.Split(v, type, global, indirect, lhs);
-    IF indirect THEN
-      Abandon("VAR-mode variable not supported in MSIR v0");
-      RETURN FALSE;
-    END;
-    mt := MSIRType.Translate(type);
-    IF mt = NIL THEN
-      Abandon("unsupported local variable type");
-      RETURN FALSE;
-    END;
-    (* AddLocal is used for FOR loop counters and exception handler vars.
-       These need a WIDE alloca so the counter can temporarily exceed the
-       type's range for termination detection (e.g. CHAR[0..255] needs
-       to reach 256 before the loop exits — i8 wraps to 0 and loops forever).
-       Regular proc locals use Variable.AddLocalMSIR which correctly uses
-       the narrow storage type.  Pass allocType (wide) as storageType so
-       LookupVar loads the wide type directly without extension. *)
-    VAR allocType := mt;
-    BEGIN
-      IF Type.IsOrdinal(type) AND
-         MSIR.BitWidth(mt) > 0 AND MSIR.BitWidth(mt) < Target.Integer.size THEN
-        allocType := MSIR.TI(Target.Integer.size);
-      END;
-      allocaVal := MSIR.BuildAlloca(
-                     curBlock,
-                     UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE) & ".slot"),
-                     allocType);
-      IF varMapN >= MaxVarMap THEN
-        Abandon("too many variables in proc");
-        RETURN FALSE;
-      END;
-      VarMapAdd(v, allocaVal, allocType);  (* wide storageType = wideType; no extension *)
-    END;
-    RETURN TRUE;
+    RETURN Variable.AddLocalMSIR(v, curBlock);
   END AddLocal;
 
 PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
