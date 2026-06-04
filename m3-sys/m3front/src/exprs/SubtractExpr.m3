@@ -196,19 +196,7 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CoerceToMSIR (blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T): MSIR.Value =
-  VAR vb := MSIR.BitWidth (MSIR.ValueType (v));
-      rb := MSIR.BitWidth (rt);
-  BEGIN
-    IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
-    IF vb < rb THEN
-      IF MSIR.Kind(MSIR.ValueType(v)) >= MSIR.TypeKind.I1 AND
-         MSIR.Kind(MSIR.ValueType(v)) <= MSIR.TypeKind.I64
-        THEN RETURN MSIR.BuildSExt(blk, "", v, rt);
-        ELSE RETURN MSIR.BuildZExt(blk, "", v, rt);
-      END;
-    END;
-    RETURN MSIR.BuildTrunc (blk, "", v, rt);
-  END CoerceToMSIR;
+  BEGIN RETURN MSIRBuilder.CoerceToMSIR (blk, v, rt) END CoerceToMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;  blk: MSIR.Block;

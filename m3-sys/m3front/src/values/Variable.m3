@@ -431,6 +431,17 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
     IF t.indirect THEN RETURN FALSE END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
+    (* M3 arithmetic is always at INTEGER (word) size — subword scalars are
+       widened to word size for computation.  Use i64 for the alloca slot of
+       any narrow scalar so that stores/loads agree with the widened type used
+       in arithmetic (mirrors MSIRBuilder.AddLocal; ForStmt widening is
+       now redundant but harmless).  Wider types (records, arrays, float,
+       ptr) keep their natural MSIR type. *)
+    IF (MSIR.Kind (mt) >= MSIR.TypeKind.I1  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
+        MSIR.Kind (mt) >= MSIR.TypeKind.W8  AND MSIR.Kind (mt) <= MSIR.TypeKind.W64) AND
+       MSIR.BitWidth (mt) < Target.Integer.size THEN
+      mt := MSIR.TI (Target.Integer.size);
+    END;
     (* With lambda-lifting, up-level variables are ordinary stack allocas in
        the outer proc.  Their addresses are passed directly as capture params
        to inner procs, so no special frame-struct handling is needed here. *)
@@ -1042,6 +1053,13 @@ PROCEDURE GenScalarInitMSIR (t: T) =
       addr := MSIRBuilder.LookupVarAddr (t);
   BEGIN
     IF mt = NIL OR addr = NIL THEN RETURN END;
+    (* Use the same widening as AddLocalMSIR so the ConstInt matches the
+       alloca's actual element type (i64 for sub-word scalars). *)
+    IF (MSIR.Kind (mt) >= MSIR.TypeKind.I1  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
+        MSIR.Kind (mt) >= MSIR.TypeKind.W8  AND MSIR.Kind (mt) <= MSIR.TypeKind.W64) AND
+       MSIR.BitWidth (mt) < Target.Integer.size THEN
+      mt := MSIR.TI (Target.Integer.size);
+    END;
     IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;
     IF NOT (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero)) THEN RETURN END;
     IF NOT TInt.ToInt (lo, loI) THEN RETURN END;

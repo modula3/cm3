@@ -378,6 +378,12 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 PROCEDURE OpenArrayToFixedStore(lhsPtr, rhsVal: MSIR.Value;
                                 lhsType: Type.T): BOOLEAN;
 
+(* Sign-aware integer extension/truncation used by arithmetic operators.
+   Widens v from its current bit-width to rt's bit-width (SExt for I-kind
+   signed types, ZExt for W-kind unsigned types) or truncates if narrower.
+   Returns v unchanged if bit-widths are identical or either is unknown. *)
+PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value;
+
 (* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
 PROCEDURE ConstInt       (t: MSIR.T;  READONLY v: Target.Int): MSIR.Value;
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;

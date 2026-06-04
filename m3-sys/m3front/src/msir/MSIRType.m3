@@ -386,7 +386,13 @@ PROCEDURE TranslateOpenArray(t: Type.T): MSIR.T =
 PROCEDURE ByteArrayFallback(t: Type.T): MSIR.T =
   (* Return [N x i8] for a type whose contents can't be directly represented.
      Used for packed arrays/records so variables enter the varMap even when
-     element-level access will emit a more-specific abandon. *)
+     element-level access will emit a more-specific abandon.
+     INVARIANT: callers detect ByteArrayFallback outputs by checking
+     ArrayType.EltsAreBitAddressed on the M3 source type, NOT by inspecting
+     the MSIR element kind (I8), because ARRAY OF BYTE-SIZED-T also produces
+     [N x i8] naturally (e.g. ARRAY OF CHAR → [N x w8], ARRAY OF BYTE → [N x i8]
+     after eltPack override in TranslateFixedArray).  The M3 predicate is the
+     only reliable discriminant.  See SubscriptExpr.LValueMSIR for usage. *)
   VAR tinfo: Type.Info;  nb: INTEGER;
   BEGIN
     EVAL Type.CheckInfo(t, tinfo);

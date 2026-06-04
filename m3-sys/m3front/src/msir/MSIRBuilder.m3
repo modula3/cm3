@@ -1988,6 +1988,26 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
     RETURN TRUE;
   END OpenArrayToFixedStore;
 
+PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value =
+  (* Sign-aware widening/truncation for arithmetic operators.
+     SExt for I-kind (signed: I8, I16, I32, I64 — signed subranges like [-20..20]).
+     ZExt for W-kind (unsigned: W8, W16, W32, W64 — CHAR, [0..N], CARDINAL).
+     MSIRType.Translate encodes signedness: non-negative subranges → TW,
+     signed subranges → TI.  No coercion needed when bit-widths match. *)
+  VAR vb := MSIR.BitWidth (MSIR.ValueType (v));
+      rb := MSIR.BitWidth (rt);
+  BEGIN
+    IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
+    IF vb < rb THEN
+      IF MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.I1 AND
+         MSIR.Kind (MSIR.ValueType (v)) <= MSIR.TypeKind.I64
+        THEN RETURN MSIR.BuildSExt (blk, "", v, rt);
+        ELSE RETURN MSIR.BuildZExt (blk, "", v, rt);
+      END;
+    END;
+    RETURN MSIR.BuildTrunc (blk, "", v, rt);
+  END CoerceToMSIR;
+
 PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
   VAR x: INTEGER;
   BEGIN
@@ -2108,6 +2128,14 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
     RETURN MSIR.ConstAggArray(arrMsir, elts^);
   END BuildConstAggArray;
 
+(* NOTE on open-array type propagation: CONST b = ARRAY OF ARRAY OF T {c,...}
+   declares b with an open type (ARRAY OF ARRAY OF T), so Constant.Check stores
+   valExpr.tipe as the open type.  ArrayType.Split on this open type yields
+   eltT = ARRAY OF T (also open), causing eltMsir = OpenArray instead of FixedArray.
+   Workarounds are applied below (use concrete element type from Elt(ae,0), and
+   override eltMsir post-build from the actual element MSIR type).
+   Root fix would be in Constant.Check to store the concrete inferred type — deferred
+   because it touches front-end type inference and the workaround is correct. *)
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR
     ae:       ArrayExpr.T;

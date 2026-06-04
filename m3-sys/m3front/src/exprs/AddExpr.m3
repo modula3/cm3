@@ -167,24 +167,7 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
 
 PROCEDURE CoerceToMSIR(blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T;
                         <*UNUSED*> expr: Expr.T := NIL): MSIR.Value =
-  (* Widen or truncate v to match type rt.  For widening, use SExt for I-kind
-     (signed: I8, I16, I32, I64 — signed subranges like [-20..20]) and ZExt
-     for W-kind (unsigned: W8, W16, W32, W64 — CHAR, [0..N], CARDINAL).
-     MSIRType.Translate encodes signedness: non-negative subranges → TW,
-     signed subranges → TI.  Word.T = INTEGER = TI64: no widening (same size). *)
-  VAR vb := MSIR.BitWidth(MSIR.ValueType(v));
-      rb := MSIR.BitWidth(rt);
-  BEGIN
-    IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
-    IF vb < rb THEN
-      IF MSIR.Kind(MSIR.ValueType(v)) >= MSIR.TypeKind.I1 AND
-         MSIR.Kind(MSIR.ValueType(v)) <= MSIR.TypeKind.I64
-        THEN RETURN MSIR.BuildSExt(blk, "", v, rt);
-        ELSE RETURN MSIR.BuildZExt(blk, "", v, rt);
-      END;
-    END;
-    RETURN MSIR.BuildTrunc(blk, "", v, rt);
-  END CoerceToMSIR;
+  BEGIN RETURN MSIRBuilder.CoerceToMSIR (blk, v, rt) END CoerceToMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;
