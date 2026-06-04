@@ -445,8 +445,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
          SET types in particular use the set's natural bit-width for all
          bit operations; widening would cause type mismatches (p274). *)
     IF Type.IsOrdinal (t.type) AND
-       (MSIR.Kind (mt) >= MSIR.TypeKind.I8  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
-        MSIR.Kind (mt) >= MSIR.TypeKind.W8  AND MSIR.Kind (mt) <= MSIR.TypeKind.W64) AND
+       MSIR.Kind (mt) >= MSIR.TypeKind.I8 AND  (* I8 lower bound excludes BOOLEAN (I1) *)
        MSIR.BitWidth (mt) < Target.Integer.size THEN
       mt := MSIR.TI (Target.Integer.size);
     END;
@@ -1064,8 +1063,7 @@ PROCEDURE GenScalarInitMSIR (t: T) =
     (* Use the same widening as AddLocalMSIR so the ConstInt matches the
        alloca's actual element type (i64 for sub-word ordinal scalars). *)
     IF Type.IsOrdinal (t.type) AND
-       (MSIR.Kind (mt) >= MSIR.TypeKind.I8  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
-        MSIR.Kind (mt) >= MSIR.TypeKind.W8  AND MSIR.Kind (mt) <= MSIR.TypeKind.W64) AND
+       MSIR.Kind (mt) >= MSIR.TypeKind.I8 AND  (* I8 lower bound excludes BOOLEAN (I1) *)
        MSIR.BitWidth (mt) < Target.Integer.size THEN
       mt := MSIR.TI (Target.Integer.size);
     END;
