@@ -1,7 +1,7 @@
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit;
-IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
+IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text, Bool;
 IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
 IMPORT Expr, ArrayExpr, ArrayType, OpenArrayType, RecordExpr;
@@ -24,9 +24,10 @@ CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 (* Each formal maps to a Param SSA value (elemType = NIL).
    Each local maps to an alloca ptr (elemType = the allocated type). *)
 TYPE VarEntry = RECORD
-  key:      Variable.T;
-  val:      MSIR.Value;
-  elemType: MSIR.T;       (* NIL => formal; non-NIL => local alloca ptr *)
+  key:         Variable.T;
+  val:         MSIR.Value;
+  storageType: MSIR.T;    (* MType: narrow memory type; NIL => by-value formal *)
+  wideType:    MSIR.T;    (* ZType: computation type; = TI64 for narrow ordinals *)
 END;
 
 (* One frame of the unified loop/finally cleanup stack. *)
@@ -412,9 +413,11 @@ PROCEDURE BeginProc(name: TEXT;
               varMap[varMapN].key := v;
               varMap[varMapN].val := MSIR.ProcParam(curProc, nHidden + i);
               IF NOT caps[i].written AND IsScalarType(mt) THEN
-                varMap[varMapN].elemType := NIL;  (* value: return param directly *)
+                varMap[varMapN].storageType := NIL;  (* by-value: return param directly *)
+                varMap[varMapN].wideType    := NIL;
               ELSE
-                varMap[varMapN].elemType := mt;   (* ptr: load through it *)
+                varMap[varMapN].storageType := mt;   (* ptr: load through it *)
+                varMap[varMapN].wideType    := mt;
               END;
               INC(varMapN);
             END;
@@ -460,11 +463,21 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
   BEGIN
     FOR i := 0 TO varMapN - 1 DO
       IF varMap[i].key = v THEN
-        IF varMap[i].elemType = NIL THEN
-          RETURN varMap[i].val;   (* formal: return param value directly *)
+        IF varMap[i].storageType = NIL THEN
+          RETURN varMap[i].val;   (* by-value formal: return param directly *)
         ELSE
-          (* local: emit a load from the alloca ptr *)
-          RETURN MSIR.BuildLoad(curBlock, "", varMap[i].elemType, varMap[i].val);
+          (* Local alloca: load as storageType (MType), widen to wideType (ZType). *)
+          VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
+          BEGIN
+            IF NOT MSIR.Equal(varMap[i].storageType, varMap[i].wideType) THEN
+              IF MSIR.Kind(varMap[i].storageType) >= MSIR.TypeKind.W8 AND
+                 MSIR.Kind(varMap[i].storageType) <= MSIR.TypeKind.W64
+                THEN RETURN MSIR.BuildZExt(curBlock, "", loaded, varMap[i].wideType)
+                ELSE RETURN MSIR.BuildSExt(curBlock, "", loaded, varMap[i].wideType)
+              END;
+            END;
+            RETURN loaded;
+          END;
         END;
       END;
     END;
@@ -526,11 +539,11 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
   BEGIN
     FOR i := 0 TO varMapN - 1 DO
       IF varMap[i].key = v THEN
-        IF varMap[i].elemType = NIL THEN
+        IF varMap[i].storageType = NIL THEN
           Abandon("cannot store to by-value formal in MSIR v0");
           RETURN NIL;
         END;
-        RETURN varMap[i].val;   (* alloca ptr *)
+        RETURN varMap[i].val;   (* alloca ptr (typed as ptr(storageType)) *)
       END;
     END;
     FOR i := 0 TO globalMapN - 1 DO
@@ -625,16 +638,8 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
       Abandon("unsupported local variable type");
       RETURN FALSE;
     END;
-    (* M3 arithmetic is always at INTEGER (word) size — subword scalars are
-       widened to word size for computation.  Use i64 (TARGET.Integer.size) for
-       the alloca slot of any narrow scalar so that stores/loads agree with the
-       widened type used in arithmetic.  Wider types (records, arrays, sets,
-       float, ptr) keep their natural MSIR type. *)
-    IF (MSIR.Kind(mt) >= MSIR.TypeKind.I1  AND MSIR.Kind(mt) <= MSIR.TypeKind.I64 OR
-        MSIR.Kind(mt) >= MSIR.TypeKind.W8  AND MSIR.Kind(mt) <= MSIR.TypeKind.W64) AND
-       MSIR.BitWidth(mt) < Target.Integer.size THEN
-      mt := MSIR.TI(Target.Integer.size);
-    END;
+    (* Alloca uses the narrow storage type (MType). VarMapAdd computes the
+       wide computation type (ZType) for LookupVar to extend on load. *)
     allocaVal := MSIR.BuildAlloca(
                    curBlock,
                    UniqueLocalName(Value.GlobalName(v, dots := FALSE, with_module := FALSE) & ".slot"),
@@ -643,22 +648,21 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
       Abandon("too many variables in proc");
       RETURN FALSE;
     END;
-    varMap[varMapN].key      := v;
-    varMap[varMapN].val      := allocaVal;
-    varMap[varMapN].elemType := mt;
-    INC(varMapN);
+    VarMapAdd(v, allocaVal, mt);
     RETURN TRUE;
   END AddLocal;
 
 PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
+  (* WITH designator: addr is already a pointer to the target; no alloca widening. *)
   BEGIN
     IF varMapN >= MaxVarMap THEN
       Abandon("too many variables in proc");
       RETURN;
     END;
-    varMap[varMapN].key      := v;
-    varMap[varMapN].val      := addr;
-    varMap[varMapN].elemType := elemType;
+    varMap[varMapN].key         := v;
+    varMap[varMapN].val         := addr;
+    varMap[varMapN].storageType := elemType;
+    varMap[varMapN].wideType    := elemType;  (* WITH aliases keep natural type *)
     INC(varMapN);
   END BindVarAddr;
 
@@ -2334,15 +2338,31 @@ PROCEDURE EmitIndirectGlobalInit(<*UNUSED*> v: Variable.T) =
   BEGIN
   END EmitIndirectGlobalInit;
 
-PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  elt: MSIR.T) =
+PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
+  (* Register a local variable in the varMap.  storageType is the narrow MType
+     (actual memory layout).  wideType (ZType) is computed here: for ordinal
+     types narrower than word size (excluding BOOLEAN), wideType = TI64 so that
+     LookupVar automatically widens on load (Load_indirect discipline). *)
+  VAR wideType := storageType;
   BEGIN
     IF varMapN >= MaxVarMap THEN
       Abandon("VarMapAdd: overflow — increase MaxVarMap");
       RETURN;
     END;
-    varMap[varMapN].key      := v;
-    varMap[varMapN].val      := val;
-    varMap[varMapN].elemType := elt;
+    IF storageType # NIL AND MSIR.BitWidth(storageType) > 0 AND
+       MSIR.BitWidth(storageType) < Target.Integer.size THEN
+      VAR vType: Type.T;  vg, vi, vlhs: BOOLEAN;
+      BEGIN
+        Variable.Split(v, vType, vg, vi, vlhs);
+        IF Type.IsOrdinal(vType) AND Type.Base(vType) # Bool.T THEN
+          wideType := MSIR.TI(Target.Integer.size);
+        END;
+      END;
+    END;
+    varMap[varMapN].key         := v;
+    varMap[varMapN].val         := val;
+    varMap[varMapN].storageType := storageType;
+    varMap[varMapN].wideType    := wideType;
     INC(varMapN);
   END VarMapAdd;
 

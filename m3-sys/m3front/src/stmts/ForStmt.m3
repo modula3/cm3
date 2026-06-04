@@ -418,9 +418,10 @@ PROCEDURE CompileMSIR (p: P) =
     stepSlot:   MSIR.Value;
     stepDyn:    MSIR.Value;
     stepLoaded: MSIR.Value;
-    varAddr:    MSIR.Value;
-    cur:        MSIR.Value;
-    next:       MSIR.Value;
+    varAddr:     MSIR.Value;
+    storageType: MSIR.T;    (* MType: narrow alloca element type *)
+    cur:         MSIR.Value;
+    next:        MSIR.Value;
     cond:       MSIR.Value;
     pred:       MSIR.CmpPred;
     headerBlk:  MSIR.Block;
@@ -469,7 +470,9 @@ PROCEDURE CompileMSIR (p: P) =
       alwaysNeg := TInt.LT (step_max, TInt.Zero);
     END;
 
-    (* Register the loop variable as a local so it gets an alloca. *)
+    (* Register the loop variable as a local so it gets a narrow alloca.
+       varAddr = ptr(storageType); reads go through LookupVar (widens to ZType);
+       writes must truncate back from ZType to storageType. *)
     zz := Scope.Push (p.scope);
     EVAL MSIRBuilder.AddLocal (loopVar);
     varAddr := MSIRBuilder.LookupVarAddr (loopVar);
@@ -478,8 +481,10 @@ PROCEDURE CompileMSIR (p: P) =
       MSIRBuilder.Abandon ("FOR variable not mapped in MSIR");
       RETURN;
     END;
+    (* storageType is the narrow MType derived from the alloca's element type. *)
+    storageType := MSIR.EltType (MSIR.ValueType (varAddr));
 
-    (* Compile and store the initial value, widening compact subrange → INTEGER. *)
+    (* Compile initial value; widen if needed; truncate to storageType; store. *)
     fromVal := Expr.CompileMSIR (p.from);
     IF fromVal = NIL THEN RETURN END;
     VAR fromW := MSIR.BitWidth (MSIR.ValueType (fromVal));
@@ -492,6 +497,9 @@ PROCEDURE CompileMSIR (p: P) =
           ELSE fromVal := MSIR.BuildSExt (MSIRBuilder.CurrentBlock (), "", fromVal, msirType)
         END;
       END;
+    END;
+    IF NOT MSIR.Equal (storageType, msirType) THEN
+      fromVal := MSIR.BuildTrunc (MSIRBuilder.CurrentBlock (), "", fromVal, storageType);
     END;
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), fromVal, varAddr);
 
@@ -532,7 +540,7 @@ PROCEDURE CompileMSIR (p: P) =
     IF alwaysPos OR alwaysNeg THEN
       (* Direction known statically: single comparison in the header. *)
       MSIRBuilder.SetCurrentBlock (headerBlk);
-      cur      := MSIR.BuildLoad (headerBlk, "", msirType, varAddr);
+      cur      := MSIRBuilder.LookupVar (loopVar);  (* loads + widens to msirType *)
       limitVal := MSIR.BuildLoad (headerBlk, "", msirType, limitSlot);
       IF alwaysPos
         THEN pred := MSIR.CmpPred.Sle;
@@ -556,7 +564,7 @@ PROCEDURE CompileMSIR (p: P) =
 
       (* Positive branch: idx <= limit → body. *)
       MSIRBuilder.SetCurrentBlock (posHdrBlk);
-      cur      := MSIR.BuildLoad (posHdrBlk, "", msirType, varAddr);
+      cur      := MSIRBuilder.LookupVar (loopVar);
       limitVal := MSIR.BuildLoad (posHdrBlk, "", msirType, limitSlot);
       cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sle,
                               cur, limitVal);
@@ -566,7 +574,7 @@ PROCEDURE CompileMSIR (p: P) =
 
       (* Negative branch: idx >= limit → body. *)
       MSIRBuilder.SetCurrentBlock (negHdrBlk);
-      cur      := MSIR.BuildLoad (negHdrBlk, "", msirType, varAddr);
+      cur      := MSIRBuilder.LookupVar (loopVar);
       limitVal := MSIR.BuildLoad (negHdrBlk, "", msirType, limitSlot);
       cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sge,
                               cur, limitVal);
@@ -582,16 +590,24 @@ PROCEDURE CompileMSIR (p: P) =
     Stmt.CompileMSIR (p.body);
     MSIRBuilder.PopExitBlock ();
 
-    (* Increment and loop back if body didn't terminate. *)
+    (* Increment and loop back if body didn't terminate.
+       Read via LookupVar (returns ZType/msirType); add step; truncate to
+       storageType before writing back to the narrow alloca. *)
     IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
-      cur := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, varAddr);
+      cur := MSIRBuilder.LookupVar (loopVar);
       IF isConst THEN
         next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepConst);
       ELSE
         stepLoaded := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, stepSlot);
         next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepLoaded);
       END;
-      MSIR.BuildStore (MSIRBuilder.CurrentBlock (), next, varAddr);
+      VAR storeVal := next;
+      BEGIN
+        IF NOT MSIR.Equal (storageType, msirType) THEN
+          storeVal := MSIR.BuildTrunc (MSIRBuilder.CurrentBlock (), "", next, storageType);
+        END;
+        MSIR.BuildStore (MSIRBuilder.CurrentBlock (), storeVal, varAddr);
+      END;
       MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk, ARRAY OF MSIR.Value{});
     END;
 

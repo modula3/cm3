@@ -13,7 +13,7 @@ MODULE Variable;
 IMPORT M3, M3ID, CG, Value, ValueRep, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
 IMPORT Target, TInt, Token, Ident, Module, CallExpr;
-IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, Bool;
+IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap, RecordType;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
@@ -431,26 +431,8 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
     IF t.indirect THEN RETURN FALSE END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
-    (* M3 arithmetic is always at INTEGER (word) size — subword scalars are
-       widened to word size for computation.  Use i64 for the alloca slot of
-       any narrow scalar so that stores/loads agree with the widened type used
-       in arithmetic (mirrors MSIRBuilder.AddLocal; ForStmt widening is
-       now redundant but harmless).  Wider types (records, arrays, float,
-       ptr) keep their natural MSIR type.
-       Exclusions from widening:
-       - I1 (BOOLEAN): branch instructions require i1 operands; widening to
-         i64 breaks `br i1 %v` (LLVM validation error, p031).
-       - Non-ordinal types (SET, RECORD, ARRAY, etc.): only ordinal types
-         (integers, subranges, enums) have M3 word-size arithmetic semantics.
-         SET types in particular use the set's natural bit-width for all
-         bit operations; widening would cause type mismatches (p274).
-       - BOOLEAN: checked by explicit type identity — widening i1 to i64
-         breaks `br i1` branch instructions (p031, p287, p288). *)
-    IF Type.IsOrdinal (t.type) AND
-       Type.Base (t.type) # Bool.T AND
-       MSIR.BitWidth (mt) < Target.Integer.size THEN
-      mt := MSIR.TI (Target.Integer.size);
-    END;
+    (* Alloca uses the narrow MType.  VarMapAdd computes the ZType (wideType)
+       for ordinal scalars; LookupVar extends on load (Load_indirect). *)
     (* With lambda-lifting, up-level variables are ordinary stack allocas in
        the outer proc.  Their addresses are passed directly as capture params
        to inner procs, so no special frame-struct handling is needed here. *)
@@ -1062,13 +1044,7 @@ PROCEDURE GenScalarInitMSIR (t: T) =
       addr := MSIRBuilder.LookupVarAddr (t);
   BEGIN
     IF mt = NIL OR addr = NIL THEN RETURN END;
-    (* Use the same widening as AddLocalMSIR so the ConstInt matches the
-       alloca's actual element type (i64 for sub-word ordinal scalars). *)
-    IF Type.IsOrdinal (t.type) AND
-       Type.Base (t.type) # Bool.T AND
-       MSIR.BitWidth (mt) < Target.Integer.size THEN
-      mt := MSIR.TI (Target.Integer.size);
-    END;
+    (* Init uses the narrow MType — alloca is narrow; LookupVar widens on read. *)
     IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;
     IF NOT (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero)) THEN RETURN END;
     IF NOT TInt.ToInt (lo, loI) THEN RETURN END;
