@@ -436,8 +436,16 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
        any narrow scalar so that stores/loads agree with the widened type used
        in arithmetic (mirrors MSIRBuilder.AddLocal; ForStmt widening is
        now redundant but harmless).  Wider types (records, arrays, float,
-       ptr) keep their natural MSIR type. *)
-    IF (MSIR.Kind (mt) >= MSIR.TypeKind.I1  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
+       ptr) keep their natural MSIR type.
+       Exclusions from widening:
+       - I1 (BOOLEAN): branch instructions require i1 operands; widening to
+         i64 breaks `br i1 %v` (LLVM validation error, p031).
+       - Non-ordinal types (SET, RECORD, ARRAY, etc.): only ordinal types
+         (integers, subranges, enums) have M3 word-size arithmetic semantics.
+         SET types in particular use the set's natural bit-width for all
+         bit operations; widening would cause type mismatches (p274). *)
+    IF Type.IsOrdinal (t.type) AND
+       (MSIR.Kind (mt) >= MSIR.TypeKind.I8  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
         MSIR.Kind (mt) >= MSIR.TypeKind.W8  AND MSIR.Kind (mt) <= MSIR.TypeKind.W64) AND
        MSIR.BitWidth (mt) < Target.Integer.size THEN
       mt := MSIR.TI (Target.Integer.size);
@@ -1054,8 +1062,9 @@ PROCEDURE GenScalarInitMSIR (t: T) =
   BEGIN
     IF mt = NIL OR addr = NIL THEN RETURN END;
     (* Use the same widening as AddLocalMSIR so the ConstInt matches the
-       alloca's actual element type (i64 for sub-word scalars). *)
-    IF (MSIR.Kind (mt) >= MSIR.TypeKind.I1  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
+       alloca's actual element type (i64 for sub-word ordinal scalars). *)
+    IF Type.IsOrdinal (t.type) AND
+       (MSIR.Kind (mt) >= MSIR.TypeKind.I8  AND MSIR.Kind (mt) <= MSIR.TypeKind.I64 OR
         MSIR.Kind (mt) >= MSIR.TypeKind.W8  AND MSIR.Kind (mt) <= MSIR.TypeKind.W64) AND
        MSIR.BitWidth (mt) < Target.Integer.size THEN
       mt := MSIR.TI (Target.Integer.size);
