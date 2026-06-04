@@ -1122,6 +1122,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             END;
           END;
           blk := MSIRBuilder.CurrentBlock ();
+          (* When one side is a dereferenced REF ARRAY (gc_ref<OpenArray>), the
+             address points to the heap dope {data_ptr, size}, not the element data.
+             Extract the data pointer by loading the first field of the dope (p034). *)
+          IF MSIR.Kind (MSIR.ValueType (addrA)) = MSIR.TypeKind.GcRef AND
+             MSIR.Kind (MSIR.EltType (MSIR.ValueType (addrA))) = MSIR.TypeKind.OpenArray THEN
+            addrA := MSIR.BuildLoad (blk, "", MSIR.TPtr (MSIR.TVoid ()), addrA);
+          END;
+          IF MSIR.Kind (MSIR.ValueType (addrB)) = MSIR.TypeKind.GcRef AND
+             MSIR.Kind (MSIR.EltType (MSIR.ValueType (addrB))) = MSIR.TypeKind.OpenArray THEN
+            addrB := MSIR.BuildLoad (blk, "", MSIR.TPtr (MSIR.TVoid ()), addrB);
+          END;
+          blk := MSIRBuilder.CurrentBlock ();
           idxSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI (Target.Integer.size));
           resSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI1 ());
           loopHdrBlk := MSIRBuilder.NewBlock ("rec.eq.hdr");
