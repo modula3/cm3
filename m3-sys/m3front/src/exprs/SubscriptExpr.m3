@@ -632,11 +632,15 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       ELSE
         arrayT := arrT;
       END;
-      (* ByteArrayFallback [N x i1]: packed-element array with no element lvalue.
-         CompileMSIR handles reads via dynamic bit extraction. *)
-      IF MSIR.Kind (arrayT) = MSIR.TypeKind.FixedArray AND
-         MSIR.Kind (MSIR.FixedArrayElt (arrayT)) = MSIR.TypeKind.I1 THEN
-        RETURN NIL;
+      (* ByteArrayFallback: packed array with sub-byte elements (no element lvalue).
+         Detect via EltsAreBitAddressed on the M3 type, NOT the MSIR element type,
+         since ARRAY OF BOOLEAN also produces [N x i8] after the eltPack override. *)
+      VAR baseM3 := Type.Base (Expr.TypeOf (p.a));  iT, eT: Type.T;
+      BEGIN
+        IF ArrayType.Split (baseM3, iT, eT)
+           AND ArrayType.EltsAreBitAddressed (baseM3) THEN
+          RETURN NIL;
+        END;
       END;
       IF MSIR.Kind(arrayT) # MSIR.TypeKind.FixedArray THEN
         MSIRBuilder.Abandon ("packed/sub-word array subscript not yet supported in MSIR");

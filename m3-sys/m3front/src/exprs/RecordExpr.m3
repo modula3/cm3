@@ -634,8 +634,8 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
     slot := MSIR.BuildAlloca (b, "", msirT);
 
     IF MSIR.Kind (msirT) = MSIR.TypeKind.FixedArray
-       AND MSIR.Kind (MSIR.FixedArrayElt (msirT)) = MSIR.TypeKind.I1 THEN
-      (* Packed record represented as [N x i1] (ByteArrayFallback).
+       AND MSIR.Kind (MSIR.FixedArrayElt (msirT)) = MSIR.TypeKind.I8 THEN
+      (* Packed record represented as [N x i8] (ByteArrayFallback).
          Zero-fill then insert each field using byte-level or sub-byte ops. *)
       VAR nBytes := VAL (MSIR.FixedArrayLen (msirT), INTEGER);
       BEGIN
@@ -652,8 +652,8 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
               b := MSIRBuilder.CurrentBlock ();
               IF ft # NIL
                  AND MSIR.Kind (ft) = MSIR.TypeKind.FixedArray
-                 AND MSIR.Kind (MSIR.FixedArrayElt (ft)) = MSIR.TypeKind.I1 THEN
-                (* Field is itself a [N x i1] aggregate (nested packed record or
+                 AND MSIR.Kind (MSIR.FixedArrayElt (ft)) = MSIR.TypeKind.I8 THEN
+                (* Field is itself a [N x i8] aggregate (nested packed record or
                    packed array).  Copy its bytes into the outer byte array. *)
                 VAR srcPtr  := Expr.LValueMSIR (info.expr);
                     srcBytes := (fti.size + 7) DIV 8;

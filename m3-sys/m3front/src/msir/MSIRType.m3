@@ -392,7 +392,7 @@ PROCEDURE ByteArrayFallback(t: Type.T): MSIR.T =
     EVAL Type.CheckInfo(t, tinfo);
     nb := (tinfo.size + Target.Byte - 1) DIV Target.Byte;
     IF nb <= 0 THEN RETURN NIL END;
-    RETURN MSIR.TFixedArray(nb, MSIR.TI1());
+    RETURN MSIR.TFixedArray(nb, MSIR.TI(Target.Byte));
   END ByteArrayFallback;
 
 PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
