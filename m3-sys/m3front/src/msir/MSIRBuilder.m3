@@ -2362,12 +2362,10 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
           lo, hi: Target.Int;
       BEGIN
         Variable.Split(v, vType, vg, vi, vlhs);
-        (* Widen integer-kind ordinals (integer subranges, CHAR, BOOLEAN) to
-           word size.  Enum types translate to TypeKind.Enum which is already
-           handled specially in LLVM; widening them to TI64 breaks exception
-           value binding (TryStmt stores TEnum values to wider allocas). *)
-        IF Type.IsOrdinal(vType) AND
-           MSIR.Kind(storageType) # MSIR.TypeKind.Enum THEN
+        (* Widen all ordinal types to word size — including Enums.
+           TryStmt's exception value binding uses CoerceToMSIR to ZExt
+           the TEnum value to the wide alloca, so ORD(n) works correctly. *)
+        IF Type.IsOrdinal(vType) THEN
           wideType := MSIR.TI(Target.Integer.size);
           (* SExt if lower bound is negative (signed subrange), ZExt otherwise.
              BOOLEAN: lo=0 → ZExt ✓.  Short=[-30..-12]: lo<0 → SExt ✓. *)

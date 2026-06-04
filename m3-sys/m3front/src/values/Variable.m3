@@ -440,8 +440,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
        With lambda-lifting, up-level variables are ordinary stack allocas in
        the outer proc. *)
     allocType := mt;
-    IF Type.IsOrdinal (t.type) AND
-       MSIR.Kind (mt) # MSIR.TypeKind.Enum THEN
+    IF Type.IsOrdinal (t.type) THEN
       allocType := MSIR.TI (Target.Integer.size);
     END;
     slotAddr := MSIR.BuildAlloca(b,
@@ -1052,8 +1051,7 @@ PROCEDURE GenScalarInitMSIR (t: T) =
       addr := MSIRBuilder.LookupVarAddr (t);
   BEGIN
     IF mt = NIL OR addr = NIL THEN RETURN END;
-    IF Type.IsOrdinal (t.type) AND
-       MSIR.Kind (mt) # MSIR.TypeKind.Enum THEN
+    IF Type.IsOrdinal (t.type) THEN
       mt := MSIR.TI (Target.Integer.size);
     END;
     IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;

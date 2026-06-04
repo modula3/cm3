@@ -748,9 +748,15 @@ PROCEDURE CompileMSIR (p: P) =
                 MSIR.BuildStore(hBody, argLoaded, varAddr);
               END;
             ELSE
-              (* Small arg: argRaw is the value bit-cast from ADDRESS. *)
-              VAR argVal := MSIR.BuildConvert(hBody, "", argRaw, mt);
+              (* Small arg: argRaw is the value bit-cast from ADDRESS.
+                 Widen to the alloca's element type (TI64 for ordinals) via
+                 CoerceToMSIR so ORD(n) reads the correct value (p119). *)
+              VAR argVal   := MSIR.BuildConvert(hBody, "", argRaw, mt);
+                  slotEltT := MSIR.EltType(MSIR.ValueType(varAddr));
               BEGIN
+                IF NOT MSIR.Equal(MSIR.ValueType(argVal), slotEltT) THEN
+                  argVal := MSIRBuilder.CoerceToMSIR(hBody, argVal, slotEltT);
+                END;
                 MSIR.BuildStore(hBody, argVal, varAddr);
               END;
             END;
