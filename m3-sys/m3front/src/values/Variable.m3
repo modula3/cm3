@@ -424,7 +424,7 @@ PROCEDURE RegisterExternMSIR (t: T) =
   END RegisterExternMSIR;
 
 PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
-  VAR mt: MSIR.T;  slotAddr: MSIR.Value;  zero: MSIR.Value;
+  VAR mt: MSIR.T;  slotAddr: MSIR.Value;
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
@@ -439,10 +439,24 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
                     Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), mt);
     IF slotAddr = NIL THEN RETURN FALSE END;
     MSIRBuilder.VarMapAdd (t, slotAddr, mt);
-    (* Emit language-default zero-init alongside CG's Type.InitValue in LangInit *)
+    (* Emit language-default init alongside CG's Type.InitValue in LangInit.
+       For subranges with lo > 0 or hi < 0 (zero not in range), init to lo
+       rather than zero — matches SubrangeType.GenInit (p143). *)
     IF Type.InitCost (t.type, FALSE) > 0 THEN
-      zero := MSIR.ConstZero (mt);
-      IF zero # NIL THEN MSIR.BuildStore (b, zero, slotAddr) END;
+      VAR initVal: MSIR.Value := NIL;  lo, hi: Target.Int;
+      BEGIN
+        IF Type.GetBounds (t.type, lo, hi)
+           AND (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero)) THEN
+          VAR loI: INTEGER;
+          BEGIN
+            IF TInt.ToInt (lo, loI) THEN
+              initVal := MSIR.ConstInt (mt, loI);
+            END;
+          END;
+        END;
+        IF initVal = NIL THEN initVal := MSIR.ConstZero (mt) END;
+        IF initVal # NIL THEN MSIR.BuildStore (b, initVal, slotAddr) END;
+      END;
     END;
     RETURN TRUE;
   END AddLocalMSIR;
@@ -1016,6 +1030,28 @@ PROCEDURE NeedInit (t: T): BOOLEAN =
   END NeedInit;
   
 (* Externally dispatched-to *)
+PROCEDURE GenScalarInitMSIR (t: T) =
+(* Emit MSIR initialization for scalar subrange variables where the language-
+   defined init value is NOT zero (e.g. BITS 8 FOR [-30..-12] → init to -30).
+   Mirrors SubrangeType.GenInit.  Only emits if InitCost > 0 and the type is a
+   scalar subrange with lo > 0 or hi < 0 (zero not in range).  Called from
+   LangInit alongside RecordType.GenInitMSIR so both record fields and scalars
+   get their correct initial values (p143). *)
+  VAR lo, hi: Target.Int;  loI: INTEGER;
+      mt  := MSIRType.Translate (t.type);
+      addr := MSIRBuilder.LookupVarAddr (t);
+  BEGIN
+    IF mt = NIL OR addr = NIL THEN RETURN END;
+    IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;
+    IF NOT (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero)) THEN RETURN END;
+    IF NOT TInt.ToInt (lo, loI) THEN RETURN END;
+    VAR initVal := MSIR.ConstInt (mt, loI);
+        b       := MSIRBuilder.CurrentBlock ();
+    BEGIN
+      IF initVal # NIL THEN MSIR.BuildStore (b, initVal, addr) END;
+    END;
+  END GenScalarInitMSIR;
+
 PROCEDURE LangInit (t: T) =
   VAR refType: Type.T;
   BEGIN
@@ -1059,9 +1095,10 @@ PROCEDURE LangInit (t: T) =
         CG.Gen_location (t.origin);
         LoadLValue (t);
         Type.InitValue (t.type, FALSE);
-        (* MSIR: GenInit (Type.InitValue) is CG-only.  Emit the record
-           field-default initialization in MSIR too (p288). *)
+        (* MSIR: GenInit (Type.InitValue) is CG-only.  Emit equivalent MSIR
+           for records (field defaults) and scalar subranges (p143, p288). *)
         IF MSIRBuilder.InProc () THEN
+          GenScalarInitMSIR (t);
           RecordType.GenInitMSIR (t.type, MSIRBuilder.LookupVarAddr (t));
         END;
       END;

@@ -13,7 +13,7 @@ IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 IMPORT Jmpbufs;
-IMPORT MSIREmit, MSIRBuilder;
+IMPORT MSIREmit, MSIRBuilder, Text;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -1088,12 +1088,32 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
                 IF v.external THEN
                   Variable.RegisterExternMSIR (v);
                 ELSE
-                  (* Non-external exportable variable: this module is exporting
-                     it (IsExportable=TRUE) and is the owner of the storage.
-                     Define it in this module's struct.  The interface's own .ll
-                     may be suppressed (ModuleAlreadyEmitted) so we cannot rely
-                     on the interface walk to define the storage (p189). *)
-                  Variable.DeclareGlobalMSIR (v);
+                  (* Non-external exportable variable.  If the interface's .ll
+                     was already emitted separately (e.g. MODULE A EXPORTS AF
+                     where AF.i3 → AF.ll exists), the interface owns the storage
+                     and A accesses it via the import chain (p080).
+                     If the interface's .ll was suppressed (MODULE Z EXPORTS Z,
+                     same-name scenario where Z.m3 overwrites Z.i3's .ll), then
+                     this module must define the storage directly (p189). *)
+                  VAR iUnit := Scope.ToUnit (v);
+                      iName : TEXT := NIL;
+                  BEGIN
+                    TYPECASE iUnit OF
+                    | T(iMod) => iName := M3ID.ToText(iMod.name);
+                    ELSE
+                    END;
+                    IF iName # NIL
+                       AND NOT Text.Equal (iName, M3ID.ToText (t.name)) THEN
+                      (* Interface and module have different names: interface's
+                         .ll is emitted separately and owns the storage.  Access
+                         via the import chain (p080: MODULE A EXPORTS AF). *)
+                      Variable.RegisterExternMSIR (v);
+                    ELSE
+                      (* Same-name scenario: MODULE Z EXPORTS Z.  The module .ll
+                         overwrites the interface .ll; define storage here (p189). *)
+                      Variable.DeclareGlobalMSIR (v);
+                    END;
+                  END;
                 END;
                 v.imported := savedImp;
                 v.exported := savedExp;

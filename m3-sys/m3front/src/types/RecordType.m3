@@ -11,7 +11,7 @@ MODULE RecordType;
 
 IMPORT M3, M3ID, CG, Type, TypeRep, Scope, Expr, Value, Token;
 IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
-IMPORT Word, AssignStmt, M3Buf;
+IMPORT Word, AssignStmt, M3Buf, TInt;
 IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -496,9 +496,17 @@ PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value) =
             ELSIF Reduce (field.type) # NIL THEN
               GenInitMSIR (field.type, fslot);
             ELSIF ft # NIL THEN
-              VAR z := MSIR.ConstZero (ft);
+              (* For subranges with lo > 0 or hi < 0, use minimum value
+                 (matches SubrangeType.GenInit; p143). *)
+              VAR initVal: MSIR.Value := NIL;  lo, hi: Target.Int;  loI: INTEGER;
               BEGIN
-                IF z # NIL THEN MSIR.BuildStore (b, z, fslot) END;
+                IF Type.GetBounds (field.type, lo, hi)
+                   AND (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero))
+                   AND TInt.ToInt (lo, loI) THEN
+                  initVal := MSIR.ConstInt (ft, loI);
+                END;
+                IF initVal = NIL THEN initVal := MSIR.ConstZero (ft) END;
+                IF initVal # NIL THEN MSIR.BuildStore (b, initVal, fslot) END;
               END;
             END;
           END;

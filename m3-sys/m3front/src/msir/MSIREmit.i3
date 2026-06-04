@@ -46,4 +46,10 @@ PROCEDURE SetLLOutPath(path: TEXT);
    No-op if not enabled. *)
 PROCEDURE EndUnit();
 
+(* Return TRUE if a MODULE (non-interface) with this name has already been
+   emitted to a .ll file this run.  Used by DeclareGlobalsMSIR to decide
+   whether an exported interface variable should be owned by the
+   implementation module or accessed via the import chain. *)
+PROCEDURE ModuleEmitted(name: TEXT): BOOLEAN;
+
 END MSIREmit.

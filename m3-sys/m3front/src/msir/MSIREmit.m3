@@ -228,6 +228,9 @@ PROCEDURE EndUnit() =
     llOutPath  := NIL;
   END EndUnit;
 
+PROCEDURE ModuleEmitted(name: TEXT): BOOLEAN =
+  BEGIN RETURN ModuleAlreadyEmitted(name) END ModuleEmitted;
+
 PROCEDURE ModuleAlreadyEmitted(name: TEXT): BOOLEAN =
   BEGIN
     FOR i := 0 TO nEmittedModules - 1 DO
