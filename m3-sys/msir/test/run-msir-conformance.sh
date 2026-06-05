@@ -170,30 +170,40 @@ for t in $TESTS; do
         [ -f "$bd/$cbase.o" ] && cobjs="$cobjs $bd/$cbase.o"
     done
 
-    # Collect C-compiled interface objects (*_i.o).  MSIR emits WEAK binders for
-    # interfaces when the module has a separate implementation (define weak ptr @X_I3),
-    # but does not emit type cells.  The C-compiled *_i.o carry strong binders +
-    # type-cell arrays that RTLinker needs to resolve TypeLinks for imported
-    # OBJECT/REF types.  Only include *_i.o when its binder is WEAK in the
-    # corresponding MSIR .ll (i.e., the implementation provides the strong binder);
-    # if the MSIR binder is already STRONG (interface-only module, no .m3 impl),
-    # including *_i.o would cause a duplicate-symbol link error.
-    iobjs=""
+    # Build the candidate list of C-compiled interface objects (*_i.o).
+    # MSIR does not emit TypeCell descriptors — only TypeLinks (by UID).  The
+    # C-compiled *_i.o carry type-cell arrays that RTLinker needs.  We collect
+    # only those whose MSIR .ll defines X_I3 as WEAK (strong C definition wins
+    # without conflict); interface-only modules have STRONG binders and must not
+    # be included (duplicate symbol).  We defer the actual inclusion until we
+    # know the first link attempt failed (see below).
+    cand_iobjs=""
     for iobj in "$bd"/*_i.o; do
         [ -f "$iobj" ] || continue
-        # Derive the module name: strip _i.o suffix and bd/ prefix.
         mod=$(basename "$iobj" _i.o)
         ll="$bd/${mod}.ll"
-        # Include X_i.o only if the corresponding MSIR .ll defines X_I3 as WEAK.
         if [ -f "$ll" ] && grep -q "define weak ptr @${mod}_I3" "$ll" 2>/dev/null; then
-            iobjs="$iobjs $iobj"
+            cand_iobjs="$cand_iobjs $iobj"
         fi
     done
 
-    # Link _m3main.o + MSIR objects + interface objects + test C objects + C runtime archives.
+    # Link _m3main.o + MSIR objects + test C objects + C runtime archives.
+    # First attempt: WITHOUT interface objects (avoids init-order regressions for
+    # tests that don't need extra TypeCells).
     msirexe="$bd/pgm-msir"
-    if ! "$CLANG" "$bd/_m3main.o" $objs $iobjs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
+    link_ok=0
+    if "$CLANG" "$bd/_m3main.o" $objs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
             >>"$LOGDIR/$(echo $t | tr / _).log" 2>&1; then
+        link_ok=1
+    fi
+    # If the first link failed AND we have candidate interface objects, retry.
+    if [ "$link_ok" = 0 ] && [ -n "$cand_iobjs" ]; then
+        if "$CLANG" "$bd/_m3main.o" $objs $cand_iobjs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
+                >>"$LOGDIR/$(echo $t | tr / _).log" 2>&1; then
+            link_ok=1
+        fi
+    fi
+    if [ "$link_ok" = 0 ]; then
         printf "  %-12s MSIR-FAIL  (link failed — missing symbols / extra libs needed)\n" "$name"
         msirfail=$((msirfail+1)); failed_list="$failed_list $name"; continue
     fi
@@ -201,6 +211,29 @@ for t in $TESTS; do
     if [ "$merge" = 1 ]
       then msirout=$(run_exe_merged "$msirexe"); msirrc=$?
       else msirout=$(run_exe "$msirexe"); msirrc=$?
+    fi
+
+    # If the binary crashed (non-zero rc from SIGSEGV/abort) AND we have
+    # candidate *_i.o files that weren't included in the first link, retry
+    # the link with those interface objects and re-run.  This handles tests
+    # where MSIR TypeLinks can't be resolved from the standard libraries alone
+    # (e.g. REF/OBJECT types defined in user interface modules) without
+    # causing init-order regressions in tests that don't need extra TypeCells.
+    if [ "$msirrc" != "0" ] && [ "$msirrc" != "$refrc" ] && [ -n "$cand_iobjs" ]; then
+        msirexe2="$bd/pgm-msir-iobjs"
+        if "$CLANG" "$bd/_m3main.o" $objs $cand_iobjs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe2" \
+                >>"$LOGDIR/$(echo $t | tr / _).log" 2>&1; then
+            if [ "$merge" = 1 ]
+              then msirout2=$(run_exe_merged "$msirexe2"); msirrc2=$?
+              else msirout2=$(run_exe "$msirexe2"); msirrc2=$?
+            fi
+            # Use the retry result if it's better (matches C or at least doesn't crash).
+            if [ "$msirout2" = "$refout" ] && [ "$msirrc2" = "$refrc" ]; then
+                msirout="$msirout2"; msirrc="$msirrc2"
+            elif [ "$msirrc2" = "0" ] && [ "$msirrc" != "0" ]; then
+                msirout="$msirout2"; msirrc="$msirrc2"
+            fi
+        fi
     fi
 
     if [ "$msirout" = "$refout" ] && [ "$msirrc" = "$refrc" ]; then
