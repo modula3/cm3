@@ -351,6 +351,7 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
                                containerBits: INTEGER := 0;  (* total bits; 0 = power-of-2 only *)
                                idx: MSIR.Value;  rawEltType: Type.T): MSIR.Value;
 PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
+                               containerBits: INTEGER := 0;
                                idx: MSIR.Value;  rhs: MSIR.Value);
 
 (*------------------------------------------------------------- Module globals *)

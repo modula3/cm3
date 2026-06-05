@@ -711,10 +711,12 @@ PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
         IF p.lhsOpenDepth # 0 THEN RETURN FALSE END;
         IF NOT ArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN FALSE END;
         VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
+            info: Type.Info;
         BEGIN
           arrBase := GetPackedElemBase (p, idxVal, eltPack);
           IF arrBase = NIL THEN RETURN FALSE END;
-          MSIRBuilder.InsertBitFieldDyn (arrBase, eltPack, idxVal, rhs);
+          EVAL Type.CheckInfo (p.taBase, info);
+          MSIRBuilder.InsertBitFieldDyn (arrBase, eltPack, info.size, idxVal, rhs);
           RETURN TRUE;
         END;
     ELSE RETURN FALSE;

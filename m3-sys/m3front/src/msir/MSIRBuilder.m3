@@ -2770,12 +2770,48 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
   END ExtractBitFieldDyn;
 
 PROCEDURE InsertBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
+                              containerBits: INTEGER := 0;
                               idx: MSIR.Value;  rhs: MSIR.Value) =
   VAR b    := curBlock;
       intT := MSIR.TI (Target.Integer.size);
       i8T  := MSIR.TI (8);
   BEGIN
-    IF 8 MOD eltPack # 0 THEN RETURN END;  (* non-power-of-2 eltPack: not yet supported *)
+    IF 8 MOD eltPack # 0 THEN
+      (* Non-power-of-2 eltPack: byte-level read-modify-write matching C backend.
+         The C backend writes exactly one byte per element store, even when the
+         element spans a byte boundary; this replicates that behaviour so that
+         MSIR results match the C reference on split-byte elements. *)
+      VAR idxW     := idx;
+          maskVal  : INTEGER := 1;
+      BEGIN
+        IF MSIR.BitWidth (MSIR.ValueType (idx)) # Target.Integer.size THEN
+          idxW := MSIR.BuildZExt (b, "", idx, intT);
+        END;
+        FOR i := 1 TO eltPack DO maskVal := maskVal * 2 END;
+        maskVal := maskVal - 1;   (* (1 << eltPack) - 1 *)
+        VAR bitOff     := MSIR.BuildIMul (b, "", idxW,
+                              MSIR.ConstInt (intT, eltPack));
+            byteOff    := MSIR.BuildILShr (b, "", bitOff,
+                              MSIR.ConstInt (intT, 3));
+            bytePtr    := MSIR.BuildGepByte (b, "", base, byteOff);
+            b0         := MSIR.BuildLoad (b, "", i8T, bytePtr);
+            bitInByteW := MSIR.BuildIAnd (b, "", bitOff,
+                              MSIR.ConstInt (intT, 7));
+            bitInByte8 := MSIR.BuildTrunc (b, "", bitInByteW, i8T);
+            mask8      := MSIR.ConstInt (i8T, maskVal);
+            shiftedMask:= MSIR.BuildIShl  (b, "", mask8, bitInByte8);
+            notMask8   := MSIR.BuildIXor  (b, "", shiftedMask,
+                               MSIR.ConstInt (i8T, 255));
+            val8       := MSIR.BuildTrunc (b, "", rhs, i8T);
+            positioned := MSIR.BuildIShl  (b, "", val8, bitInByte8);
+            cleared    := MSIR.BuildIAnd  (b, "", b0, notMask8);
+            merged     := MSIR.BuildIOr   (b, "", cleared, positioned);
+        BEGIN
+          MSIR.BuildStore (b, merged, bytePtr);
+        END;
+      END;
+      RETURN;
+    END;
     VAR idxW := idx;
     BEGIN
       IF MSIR.BitWidth (MSIR.ValueType (idx)) # Target.Integer.size THEN
