@@ -442,6 +442,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
     allocType := mt;
     IF Type.IsOrdinal (t.type) THEN
       allocType := MSIR.TI (Target.Integer.size);
+      mt := allocType;  (* keep mt in sync — init code uses mt for ConstInt/ConstZero *)
     END;
     slotAddr := MSIR.BuildAlloca(b,
                   MSIRBuilder.UniqueLocalName(

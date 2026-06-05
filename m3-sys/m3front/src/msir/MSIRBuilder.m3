@@ -2635,12 +2635,74 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
   END InsertBitField;
 
 PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
+                               containerBits: INTEGER;
                                idx: MSIR.Value;  rawEltType: Type.T): MSIR.Value =
   VAR b    := curBlock;
       intT := MSIR.TI (Target.Integer.size);
       i8T  := MSIR.TI (8);
   BEGIN
-    IF 8 MOD eltPack # 0 THEN RETURN NIL END;  (* non-power-of-2 eltPack: not yet supported *)
+    IF 8 MOD eltPack # 0 THEN
+      (* Non-power-of-2 eltPack (e.g. 6-bit SixBit in 16-bit TwelveBit array).
+         Load the entire container as a wide integer, shift, and mask.
+         BitOffset(i) = i * eltPack.  containerBits must be a multiple of 8
+         and ≤ 64.  Returns NIL if containerBits is unknown or too large. *)
+      IF containerBits <= 0 OR containerBits MOD 8 # 0 OR containerBits > 64 THEN
+        RETURN NIL;
+      END;
+      VAR wideT    := MSIR.TI (containerBits);
+          loaded   := MSIR.BuildLoad (b, "", wideT, base);
+          idxW     := idx;
+          maskV    : INTEGER := 1;
+          idxBitsW := MSIR.BitWidth (MSIR.ValueType (idx));
+      BEGIN
+        IF idxBitsW # containerBits THEN
+          IF idxBitsW > containerBits
+            THEN idxW := MSIR.BuildTrunc (b, "", idx, wideT)  (* e.g. i64→i32 *)
+            ELSE idxW := MSIR.BuildZExt  (b, "", idx, wideT)  (* e.g. i8→i32  *)
+          END;
+        END;
+        (* shift = idx * eltPack *)
+        VAR shift := MSIR.BuildIMul (b, "", idxW,
+                       MSIR.ConstInt (wideT, eltPack));
+            shiftedW := MSIR.BuildILShr (b, "", loaded, shift);
+        BEGIN
+          FOR i := 1 TO eltPack DO maskV := maskV * 2 END;
+          maskV := maskV - 1;
+          VAR extracted := MSIR.BuildIAnd (b, "", shiftedW,
+                             MSIR.ConstInt (wideT, maskV));
+          BEGIN
+            (* Widen/narrow to natural element type *)
+            VAR packedBase: Type.T;  packedSize: INTEGER;
+                naturalT: MSIR.T;  lo, hi: Target.Int;  doSExt: BOOLEAN;
+                dstBits: INTEGER;
+            BEGIN
+              PackedType.Split (rawEltType, packedSize, packedBase);
+              naturalT := MSIRType.Translate (packedBase);
+              IF naturalT = NIL THEN naturalT := intT END;
+              doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
+              dstBits := MSIR.BitWidth (naturalT);
+              VAR inNat: MSIR.Value;
+              BEGIN
+                IF containerBits > dstBits
+                  THEN inNat := MSIR.BuildTrunc (b, "", extracted, naturalT)
+                ELSIF containerBits < dstBits
+                  THEN inNat := MSIR.BuildZExt  (b, "", extracted, naturalT)
+                ELSE  inNat := extracted
+                END;
+                IF doSExt AND dstBits > eltPack THEN
+                  VAR shift2 := MSIR.ConstInt (naturalT, dstBits - eltPack);
+                  BEGIN
+                    RETURN MSIR.BuildIAShr (b, "",
+                             MSIR.BuildIShl (b, "", inNat, shift2), shift2);
+                  END;
+                END;
+                RETURN inNat;
+              END;
+            END;
+          END;
+        END;
+      END;
+    END;
     VAR idxW := idx;
     BEGIN
       IF MSIR.BitWidth (MSIR.ValueType (idx)) # Target.Integer.size THEN

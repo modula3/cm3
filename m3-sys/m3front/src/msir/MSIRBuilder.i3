@@ -348,6 +348,7 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
    eltPack must divide 8 (i.e. eltPack ∈ {1,2,4}); otherwise Abandon is called.
    idx is the element index (biased to 0); base points to the ByteArrayFallback. *)
 PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
+                               containerBits: INTEGER := 0;  (* total bits; 0 = power-of-2 only *)
                                idx: MSIR.Value;  rawEltType: Type.T): MSIR.Value;
 PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
                                idx: MSIR.Value;  rhs: MSIR.Value);

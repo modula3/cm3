@@ -693,10 +693,14 @@ PROCEDURE GetPackedElemBase (p: P;  VAR idxVal: MSIR.Value;
 PROCEDURE CompilePackedElemMSIR (p: P): MSIR.Value =
 (* Read a sub-byte element from a ByteArrayFallback packed array. *)
   VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
+      info: Type.Info;
   BEGIN
     arrBase := GetPackedElemBase (p, idxVal, eltPack);
     IF arrBase = NIL THEN RETURN NIL END;
-    RETURN MSIRBuilder.ExtractBitFieldDyn (arrBase, eltPack, idxVal, p.type);
+    (* Pass the container size so ExtractBitFieldDyn can handle non-power-of-2
+       eltPack (e.g. BITS 16 FOR ARRAY[0..1] OF SixBit where eltPack=6). *)
+    EVAL Type.CheckInfo (p.taBase, info);
+    RETURN MSIRBuilder.ExtractBitFieldDyn (arrBase, eltPack, info.size, idxVal, p.type);
   END CompilePackedElemMSIR;
 
 PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =

@@ -2435,7 +2435,34 @@ BEGIN
     ELSIF eltPack > 0 AND eltPack # eltBits THEN
       eltT := MSIR.TI (eltPack);
     END;
-    IF eltPack > 0 AND eltPack < Target.Byte THEN RETURN NIL END;
+    IF eltPack > 0 AND eltPack < Target.Byte THEN
+      (* Sub-byte elements: build using InsertBitField on a ByteArrayFallback.
+         The alloca is [N x i8] where N = ceiling(nElts * eltPack / 8). *)
+      IF p.args = NIL OR nElts <= 0 THEN RETURN NIL END;
+      VAR curB   := MSIRBuilder.CurrentBlock ();  (* must fetch before use *)
+          totalBits := nElts * eltPack;
+          nBytes    := (totalBits + Target.Byte - 1) DIV Target.Byte;
+          baT       := MSIR.TFixedArray (nBytes, MSIR.TI (Target.Byte));
+          bAlloca   := MSIR.BuildAlloca (curB, "", baT);
+      BEGIN
+        (* Zero the alloca first. *)
+        FOR j := 0 TO nBytes - 1 DO
+          curB := MSIRBuilder.CurrentBlock ();
+          MSIR.BuildStore (curB, MSIR.ConstInt (MSIR.TI (Target.Byte), 0),
+                           MSIRBuilder.BuildPtrByteOff (curB, "", bAlloca, j));
+        END;
+        (* Insert each element at its bit offset. *)
+        FOR i := 0 TO nElts - 1 DO
+          VAR eltIdx := MIN (i, LAST (p.args^));
+              ev     := Expr.CompileMSIR (p.args^[eltIdx]);
+          BEGIN
+            IF ev = NIL THEN RETURN NIL END;
+            MSIRBuilder.InsertBitField (bAlloca, i * eltPack, eltPack, ev);
+          END;
+        END;
+        RETURN bAlloca;
+      END;
+    END;
   END;
   IF nElts < 0 THEN nElts := 0 END;
   (* Keep nElts = 0 for an empty constructor (ARRAY OF T {}): LLVM accepts a
