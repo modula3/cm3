@@ -170,9 +170,29 @@ for t in $TESTS; do
         [ -f "$bd/$cbase.o" ] && cobjs="$cobjs $bd/$cbase.o"
     done
 
-    # Link _m3main.o + MSIR objects + test C objects + C runtime archives.
+    # Collect C-compiled interface objects (*_i.o).  MSIR emits WEAK binders for
+    # interfaces when the module has a separate implementation (define weak ptr @X_I3),
+    # but does not emit type cells.  The C-compiled *_i.o carry strong binders +
+    # type-cell arrays that RTLinker needs to resolve TypeLinks for imported
+    # OBJECT/REF types.  Only include *_i.o when its binder is WEAK in the
+    # corresponding MSIR .ll (i.e., the implementation provides the strong binder);
+    # if the MSIR binder is already STRONG (interface-only module, no .m3 impl),
+    # including *_i.o would cause a duplicate-symbol link error.
+    iobjs=""
+    for iobj in "$bd"/*_i.o; do
+        [ -f "$iobj" ] || continue
+        # Derive the module name: strip _i.o suffix and bd/ prefix.
+        mod=$(basename "$iobj" _i.o)
+        ll="$bd/${mod}.ll"
+        # Include X_i.o only if the corresponding MSIR .ll defines X_I3 as WEAK.
+        if [ -f "$ll" ] && grep -q "define weak ptr @${mod}_I3" "$ll" 2>/dev/null; then
+            iobjs="$iobjs $iobj"
+        fi
+    done
+
+    # Link _m3main.o + MSIR objects + interface objects + test C objects + C runtime archives.
     msirexe="$bd/pgm-msir"
-    if ! "$CLANG" "$bd/_m3main.o" $objs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
+    if ! "$CLANG" "$bd/_m3main.o" $objs $iobjs $cobjs $TEST_OBJS "$LIBM3" "$LIBM3CORE" -lc++ -o "$msirexe" \
             >>"$LOGDIR/$(echo $t | tr / _).log" 2>&1; then
         printf "  %-12s MSIR-FAIL  (link failed — missing symbols / extra libs needed)\n" "$name"
         msirfail=$((msirfail+1)); failed_list="$failed_list $name"; continue
