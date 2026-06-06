@@ -1140,6 +1140,58 @@ PROCEDURE ForceInit (t: T) =
 PROCEDURE BitSize (t: T): INTEGER =
   BEGIN RETURN t.size END BitSize;
 
+PROCEDURE InitMSIR (tv: Value.T) =
+(* MSIR-only LangInit + UserInit for local variables in a proc's syms scope.
+   Called from Procedure.GenBodyMSIR to set up allocas and initializers for
+   VAR declarations when the CG's Scope.InitValues runs too late (with
+   InProc=FALSE because msirSkip=TRUE in GenBody).
+   Skips non-Variable.T values (procs, formals with CG side-effects) and
+   variables that were already initialized (VarMapContains, msirInitDone). *)
+  BEGIN
+    TYPECASE tv OF
+    | T (t) =>
+        IF NOT MSIRBuilder.InProc () THEN RETURN END;
+        IF t.indirect OR t.global OR t.imported THEN RETURN END;
+        IF t.formal # NIL THEN RETURN END;  (* formals already bound by BeginProc *)
+        IF MSIRBuilder.VarMapContains (t) THEN
+          (* Already registered (e.g., re-entry or CG GenBody ran first with InProc=TRUE).
+             Still emit initializer if not yet done. *)
+        ELSE
+          (* Create the alloca and zero-init. *)
+          IF NOT AddLocalMSIR (t, MSIRBuilder.CurrentBlock ()) THEN RETURN END;
+        END;
+        IF t.msirInitDone THEN RETURN END;
+        (* Emit the user-specified initializer if any. *)
+        IF (t.initExpr # NIL) AND NOT t.initZero AND NOT t.initAllocated THEN
+          VAR initVal := Expr.CompileMSIR (t.initExpr);
+              addr    := MSIRBuilder.LookupVarAddr (t);
+          BEGIN
+            IF initVal # NIL AND addr # NIL THEN
+              IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+                MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
+              ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
+                VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
+                    blk   := MSIRBuilder.CurrentBlock ();
+                    srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
+                    dstW  := MSIR.BitWidth (slotT);
+                BEGIN
+                  IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                    IF srcW > dstW
+                      THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
+                      ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
+                    END;
+                  END;
+                  MSIR.BuildStore (blk, initVal, addr);
+                END;
+              END;
+            END;
+          END;
+          t.msirInitDone := TRUE;
+        END;
+    ELSE (* Not a Variable.T; skip *)
+    END;
+  END InitMSIR;
+
 PROCEDURE ForceInitMSIR (t: T) =
 (* Emit only the MSIR part of the initialization for t, if it has not been
    emitted yet.  Uses a separate msirInitDone flag (NOT initPending) because
@@ -1374,11 +1426,47 @@ PROCEDURE UserInit (t: T) =
               END;
             END;
           END;
+          t.msirInitDone := TRUE;  (* MSIR init done; ForceInitMSIR must not re-emit *)
+        END;
+        (* If InProc() was FALSE (CG compiled this before MSIR proc context),
+           leave msirInitDone FALSE so the fallback below can emit the MSIR init. *)
+      END;
+      t.initDone := TRUE;
+      Tracer.Schedule (t.trace);
+    END;
+    (* MSIR: non-global locals whose ELSE-branch CG UserInit ran with InProc=FALSE
+       (the CG's ProcBody.EmitAll fires before GenBodyMSIR sets up the MSIR proc
+       context) leave msirInitDone=FALSE.  When GenBodyMSIR/BlockStmt.CompileMSIR
+       calls UserInit again, initDone=TRUE skips the block above, but InProc is now
+       TRUE.  This fallback emits the deferred MSIR init for those locals. *)
+    IF FALSE AND NOT t.global AND NOT t.imported AND NOT t.indirect AND (t.formal = NIL)
+       AND t.initDone AND NOT t.msirInitDone AND (t.initExpr # NIL)
+       AND NOT t.initZero AND NOT t.initAllocated
+       AND MSIRBuilder.InProc () THEN
+      VAR initVal := Expr.CompileMSIR (t.initExpr);
+          addr    := MSIRBuilder.LookupVarAddr (t);
+      BEGIN
+        IF initVal # NIL AND addr # NIL THEN
+          IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+            MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
+          ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
+            VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
+                blk   := MSIRBuilder.CurrentBlock ();
+                srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
+                dstW  := MSIR.BitWidth (slotT);
+            BEGIN
+              IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                IF srcW > dstW
+                  THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
+                  ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
+                END;
+              END;
+              MSIR.BuildStore (blk, initVal, addr);
+            END;
+          END;
         END;
       END;
-      t.initDone    := TRUE;
-      t.msirInitDone := TRUE;  (* ForceInitMSIR must not re-emit this init *)
-      Tracer.Schedule (t.trace);
+      t.msirInitDone := TRUE;
     END;
     (* MSIR: globals with simple constant initializers are statically initialized
        by ConstInit (CG), setting initDone=TRUE before UserInit runs.  The MSIR

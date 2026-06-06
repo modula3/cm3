@@ -718,6 +718,12 @@ PROCEDURE GenBodyMSIR (p: T) =
        (mutual/forward references among siblings); pass 2 compiles the bodies. *)
     Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
     Scope.ForEachValue (p.syms, CompileNestedBodyMSIR);
+    (* Initialize local variables (VAR declarations in p.syms).
+       The CG path handles this via GenBody → Scope.InitValues(p.syms).
+       In the MSIR inline path the CG's GenBody runs later (msirSkip=TRUE,
+       InProc=FALSE), so MSIR allocas and initializers are never emitted.
+       We call Variable.InitMSIR for each local var NOW with InProc=TRUE. *)
+    Scope.ForEachValue (p.syms, Variable.InitMSIR);
     TRY
       Stmt.CompileMSIR (p.block);
     EXCEPT ELSE
