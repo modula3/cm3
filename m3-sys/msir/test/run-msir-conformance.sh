@@ -183,6 +183,12 @@ for t in $TESTS; do
         mod=$(basename "$iobj" _i.o)
         ll="$bd/${mod}.ll"
         if [ -f "$ll" ] && grep -q "define weak ptr @${mod}_I3" "$ll" 2>/dev/null; then
+            # Skip *_i.o for modules that embed user globals in their M3_info struct.
+            # C_i.o provides a smaller module-info struct (no user globals), so using
+            # it would make imported-variable offsets into M3_info wrong (p145 crash).
+            if grep -q "user globals" "$ll" 2>/dev/null; then
+                continue
+            fi
             cand_iobjs="$cand_iobjs $iobj"
         fi
     done

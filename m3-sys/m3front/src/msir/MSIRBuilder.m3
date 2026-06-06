@@ -1639,6 +1639,16 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
     desc: MSIR.TypeDesc;
   BEGIN
     IF m = NIL THEN RETURN NIL END;
+    (* If this type's UID is the LHS (opaque side) of any revelation,
+       don't create a TypeDesc — RTLinker maps the opaque uid to the
+       revealed TypeCell via full_rev, so having a TypeDesc for the opaque
+       uid would cause OpaqueTypeRedefined. *)
+    FOR i := 0 TO MSIR.ModuleRevelationCount(m) - 1 DO
+      VAR r := MSIR.ModuleRevelation(m, i);
+      BEGIN
+        IF MSIR.RevelationLhsUID(r) = uid THEN RETURN NIL END;
+      END;
+    END;
     FOR i := 0 TO MSIR.ModuleTypeDescCount(m) - 1 DO
       desc := MSIR.ModuleTypeDesc(m, i);
       IF MSIR.TypeDescUID(desc) = uid

@@ -2706,9 +2706,9 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, " @");
     Wr.PutText(wr, LLSymbol(p));
     EmitParamList(wr, p);
-    IF HasInvoke(p) THEN
-      Wr.PutText(wr, " personality ptr @__gxx_personality_v0");
-    END;
+    (* Always emit personality so C++ exceptions can propagate through MSIR
+       frames without triggering terminate() in nounwind functions. *)
+    Wr.PutText(wr, " personality ptr @__gxx_personality_v0");
     VAR dbgIdx := GetProcMetaIdx(p); BEGIN
       IF dbgIdx >= 0 THEN
         Wr.PutText(wr, " !dbg !" & Fmt.Int(dbgIdx));
@@ -3196,10 +3196,16 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
 
         (* OTC extension — sets nameSym and emits ancillary globals *)
         IF isObj THEN
+          CONST
+            (* OTC_defaultMethods byte offset in the ObjectTypecell struct.
+               Derived from M3RT.m3: OTC_defaultMethods = TC_SIZE + 5*IP + AP = 96+40+8=...
+               Actual = 136 bytes (TC_SIZE=96, OTC extras: parentID+linkProc+3*INTEGER = 40). *)
+            OTC_defaultMethods_BYTES = 136;
           VAR
             uName    := MSIR.TypeDescUserName(d);
             nMethods := MSIR.TypeDescMethodCount(d);
             dmv      : TEXT := "null";
+            lpv      : TEXT := "null";  (* linkProc value *)
           BEGIN
             IF uName # NIL THEN
               nameSym := "@" & nm & ".tc_name";
@@ -3208,37 +3214,93 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                 & uName & "\\00\"\n");
             END;
             IF nMethods > 0 THEN
-              dmv := "@" & nm & ".methods";
-              (* Declare external method procs so LLVM can resolve their addresses.
-                 Use declaredMethods to deduplicate across type descriptors (the same
-                 default method, e.g. ExprRep__NoType, may appear in multiple OTCs). *)
-              FOR j := 0 TO nMethods - 1 DO
-                VAR mname := MSIR.TypeDescMethod(d, j);
-                    alreadyDeclared := FALSE;
-                BEGIN
-                  FOR di := 0 TO declaredMethods.size() - 1 DO
-                    IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
-                      alreadyDeclared := TRUE; EXIT
+              (* Detect whether any slot is NIL (= inherited slot unknown at
+                 compile time).  If so, use linkProc mode: RTLinker allocates
+                 the vtable, copies parent methods, then calls linkProc to fill
+                 in our own slots.  If all slots are non-NIL (full vtable
+                 known), use the original defaultMethods mode. *)
+              VAR hasNil := FALSE;
+              BEGIN
+                FOR j := 0 TO nMethods - 1 DO
+                  IF MSIR.TypeDescMethod(d, j) = NIL THEN hasNil := TRUE END;
+                END;
+                IF hasNil THEN
+                  (* linkProc mode: emit declarations first (module level), then function. *)
+                  VAR lpName := nm & ".linkproc";
+                  BEGIN
+                    lpv := "@" & lpName;
+                    (* Pass 1: emit external declares for own methods (module level) *)
+                    FOR j := 0 TO nMethods - 1 DO
+                      VAR mname := MSIR.TypeDescMethod(d, j);
+                          alreadyDeclared := FALSE;
+                      BEGIN
+                        IF mname # NIL THEN
+                          FOR di := 0 TO declaredMethods.size() - 1 DO
+                            IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
+                              alreadyDeclared := TRUE; EXIT
+                            END;
+                          END;
+                          IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
+                            Wr.PutText(wr, "declare void @" & mname & "()\n");
+                            declaredMethods.addhi(mname);
+                          END;
+                        END;
+                      END;
+                    END;
+                    (* Pass 2: emit the linkProc function body *)
+                    Wr.PutText(wr, "define internal void @" & lpName
+                                   & "(ptr %tp) personality ptr @__gxx_personality_v0 {\n");
+                    Wr.PutText(wr, "entry:\n");
+                    Wr.PutText(wr, "  %dm.ptr = getelementptr inbounds i8, ptr %tp, i64 "
+                                   & Fmt.Int(OTC_defaultMethods_BYTES) & "\n");
+                    Wr.PutText(wr, "  %dm = load ptr, ptr %dm.ptr\n");
+                    FOR j := 0 TO nMethods - 1 DO
+                      VAR mname := MSIR.TypeDescMethod(d, j);
+                      BEGIN
+                        IF mname # NIL THEN
+                          Wr.PutText(wr, "  %slot." & Fmt.Int(j)
+                                         & " = getelementptr ptr, ptr %dm, i64 "
+                                         & Fmt.Int(j) & "\n");
+                          Wr.PutText(wr, "  store ptr @" & mname & ", ptr %slot."
+                                         & Fmt.Int(j) & "\n");
+                        END;
+                      END;
+                    END;
+                    Wr.PutText(wr, "  ret void\n}\n");
+                  END;
+                  (* defaultMethods stays null; RTLinker allocates and fills via linkProc. *)
+                ELSE
+                  (* Full vtable known: emit as constant defaultMethods. *)
+                  dmv := "@" & nm & ".methods";
+                  FOR j := 0 TO nMethods - 1 DO
+                    VAR mname := MSIR.TypeDescMethod(d, j);
+                        alreadyDeclared := FALSE;
+                    BEGIN
+                      FOR di := 0 TO declaredMethods.size() - 1 DO
+                        IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
+                          alreadyDeclared := TRUE; EXIT
+                        END;
+                      END;
+                      IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
+                        Wr.PutText(wr, "declare void @" & mname & "()\n");
+                        declaredMethods.addhi(mname);
+                      END;
                     END;
                   END;
-                  IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
-                    Wr.PutText(wr, "declare void @" & mname & "()\n");
-                    declaredMethods.addhi(mname);
+                  Wr.PutText(wr, "@" & nm & ".methods = internal constant ["
+                    & Fmt.Int(nMethods) & " x ptr] [");
+                  FOR j := 0 TO nMethods - 1 DO
+                    IF j > 0 THEN Wr.PutText(wr, ", ") END;
+                    Wr.PutText(wr, "ptr @" & MSIR.TypeDescMethod(d, j));
                   END;
+                  Wr.PutText(wr, "]\n");
                 END;
               END;
-              Wr.PutText(wr, "@" & nm & ".methods = internal constant ["
-                & Fmt.Int(nMethods) & " x ptr] [");
-              FOR j := 0 TO nMethods - 1 DO
-                IF j > 0 THEN Wr.PutText(wr, ", ") END;
-                Wr.PutText(wr, "ptr @" & MSIR.TypeDescMethod(d, j));
-              END;
-              Wr.PutText(wr, "]\n");
             END;
             extVals[OTCe_parentID]       := Fmt.Int(MSIR.TypeDescParentUID(d));
-            extVals[OTCe_linkProc]       := "null";
-            extVals[OTCe_dataOffset]     := "0";
-            extVals[OTCe_methodOffset]   := "0";
+            extVals[OTCe_linkProc]       := lpv;
+            extVals[OTCe_dataOffset]     := "0";  (* sentinel: RTLinker fills in from parent *)
+            extVals[OTCe_methodOffset]   := "0";  (* sentinel: RTLinker fills in from parent *)
             extVals[OTCe_methodSize]     := Fmt.Int(MSIR.TypeDescMethodBytes(d));
             extVals[OTCe_defaultMethods] := dmv;
             extVals[OTCe_parent]         := "null";
@@ -3886,7 +3948,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     IF nImports = 0 THEN
       IF isInterface OR NOT i3InImports THEN
         VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
-          Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+          Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t
+                         & " %mode) personality ptr @__gxx_personality_v0 {\n");
         END;
         (* Run the interface init body on mode # 0 (mirrors the _M3 binder), so
            an import-less interface's VAR initializers still execute. *)
@@ -3913,7 +3976,8 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
        and @<Mod>_M3 is only declared (external — provided by the implementation),
        so we skip defining the binder here to avoid a redefinition error. *)
     IF NOT isInterface THEN
-      Wr.PutText(wr, "\ndefine ptr @" & binderName & "(" & ip_t & " %mode) {\n");
+      Wr.PutText(wr, "\ndefine ptr @" & binderName & "(" & ip_t
+                     & " %mode) personality ptr @__gxx_personality_v0 {\n");
       IF bodyExists THEN
         Wr.PutText(wr, "entry:\n");
         Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
@@ -3934,10 +3998,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
 
 PROCEDURE ModuleHasEH(m: MSIR.Module): BOOLEAN =
   BEGIN
-    FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
-      IF HasInvoke(MSIR.ModuleProc(m, i)) THEN RETURN TRUE END;
-    END;
-    RETURN FALSE;
+    (* Always emit EH preamble since every function now gets personality for
+       exception propagation. Check for procs to avoid empty modules. *)
+    RETURN MSIR.ModuleProcCount(m) > 0;
   END ModuleHasEH;
 
 PROCEDURE ProcHasGcOp(p: MSIR.Proc): BOOLEAN =

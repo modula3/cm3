@@ -482,7 +482,10 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
           b        : MSIR.Block;
         BEGIN
           refVal := CallAllocHook (t, PHook [t_info.isTraced],
-                                   MSIRBuilder.TypeLinkValueForRef (t));
+                                   MSIRBuilder.TypeDescValueForRef (t,
+                                     r_info.size DIV Target.Byte,
+                                     r_info.alignment DIV Target.Byte,
+                                     t_info.isTraced));
           IF refVal = NIL THEN RETURN NIL END;
           (* Apply the record type's field defaults inline (the runtime's initProc
              mechanism; in MSIR we emit it at the call site instead of via TC_initProc
@@ -528,7 +531,10 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
         END;
     ELSE
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                              MSIRBuilder.TypeLinkValueForRef (t));
+                              MSIRBuilder.TypeDescValueForRef (t,
+                                r_info.size DIV Target.Byte,
+                                r_info.alignment DIV Target.Byte,
+                                t_info.isTraced));
     END;
   END GenRefMSIR;
 

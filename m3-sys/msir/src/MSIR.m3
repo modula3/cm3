@@ -1132,6 +1132,7 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   dataAlignment : INTEGER;  (* bits *)
   parentUID     : INTEGER;  (* OBJ: parent fingerprint *)
   dataOffset    : INTEGER;  (* OBJ: field region byte offset *)
+  methodOffset  : INTEGER;  (* OBJ: vtable byte offset where own methods start *)
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
   nDimensions   : INTEGER := 0;  (* Array: open array rank *)
@@ -1181,7 +1182,9 @@ PROCEDURE TypeDescKind       (d: TypeDesc): INTEGER = BEGIN RETURN d.kind       
 PROCEDURE TypeDescSize       (d: TypeDesc): INTEGER = BEGIN RETURN d.dataSize      END TypeDescSize;
 PROCEDURE TypeDescAlign      (d: TypeDesc): INTEGER = BEGIN RETURN d.dataAlignment END TypeDescAlign;
 PROCEDURE TypeDescParentUID  (d: TypeDesc): INTEGER = BEGIN RETURN d.parentUID     END TypeDescParentUID;
-PROCEDURE TypeDescDataOffset (d: TypeDesc): INTEGER = BEGIN RETURN d.dataOffset    END TypeDescDataOffset;
+PROCEDURE TypeDescDataOffset    (d: TypeDesc): INTEGER = BEGIN RETURN d.dataOffset    END TypeDescDataOffset;
+PROCEDURE TypeDescMethodOffset  (d: TypeDesc): INTEGER = BEGIN RETURN d.methodOffset  END TypeDescMethodOffset;
+PROCEDURE SetTypeDescMethodOffset(d: TypeDesc; mo: INTEGER) = BEGIN d.methodOffset := mo END SetTypeDescMethodOffset;
 PROCEDURE SetTypeDescUserName(d: TypeDesc; name: TEXT) = BEGIN d.userName := name      END SetTypeDescUserName;
 PROCEDURE TypeDescUserName   (d: TypeDesc): TEXT    = BEGIN RETURN d.userName          END TypeDescUserName;
 PROCEDURE SetTypeDescInitProc (d: TypeDesc; procName: TEXT) = BEGIN d.initProcName := procName   END SetTypeDescInitProc;

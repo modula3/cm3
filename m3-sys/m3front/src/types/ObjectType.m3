@@ -693,6 +693,64 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
       names  := NIL;
       nSlots := 0;
     END;
+    (* Fallback: full vtable unknown (inherited slots missing), but p may still
+       have own methods with known defaults.  Emit a full-sized table (nFull
+       entries) with NIL for inherited slots and actual proc ptrs for own slots.
+       RTLinker will:
+         1. See defaultMethods != NIL → skip allocation.
+         2. Copy parent's defaultMethods over slots 0..mBase/sizeof-1 (filling
+            in the inherited methods correctly).
+         3. Fill any remaining NIL slots with UndefinedMethod.
+       Our own methods (at slots mBase/sizeof..nFull-1) survive the parent copy
+       because the copy only covers the parent's method region. *)
+    IF NOT vtableKnown AND mBase >= 0 THEN
+      VAR
+        v      : Value.T := Scope.ToList (p.methods);
+        method : Method.Info;
+        expr   : Expr.T;
+        proc   : Value.T;
+        nLocal : INTEGER := p.methodSize DIV Target.Address.size;
+        nFull  : INTEGER := (mBase + p.methodSize) DIV Target.Address.size;
+        full   : REF ARRAY OF TEXT;
+        mSlot  : INTEGER;  (* slot index within full vtable *)
+        anySet : BOOLEAN := FALSE;
+        tVis   : Type.T;
+      BEGIN
+        IF nLocal > 0 AND nFull > 0 THEN
+          full := NEW (REF ARRAY OF TEXT, nFull);  (* starts all NIL *)
+          WHILE v # NIL DO
+            Method.SplitX (v, method);
+            VAR top: Value.T; mVisBase: INTEGER;
+            BEGIN
+              IF LookUp (p, method.name, top, tVis) AND tVis # NIL THEN
+                mVisBase := MethodOffset (tVis);
+                IF mVisBase < 0 THEN mVisBase := mBase END;
+                mSlot := (mVisBase + method.offset) DIV Target.Address.size;
+                IF mSlot >= 0 AND mSlot < nFull THEN
+                  expr := Expr.ConstValue (method.dfault);
+                  IF (expr # NIL) AND UserProc.IsProcedureLiteral (expr, proc)
+                     AND proc # NIL THEN
+                    VAR nm := Value.GlobalName (proc, dots := FALSE,
+                                                with_module := TRUE);
+                    BEGIN
+                      IF nm # NIL THEN
+                        full[mSlot] := nm;  anySet := TRUE;
+                      END;
+                    END;
+                  END;
+                END;
+              END;
+            END;
+            v := v.next;
+          END;
+          IF anySet THEN
+            names       := full;
+            nSlots      := nFull;
+            vtableKnown := TRUE;
+          END;
+        END;
+      END;
+    END;
   END GetObjectTypeInfo;
 
 PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
@@ -827,6 +885,7 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     uid         : INTEGER;
     m           : MSIR.Module;
     desc        : MSIR.TypeDesc;
+    methOff     : INTEGER := 0;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     m := MSIREmit.CurrentModule ();
@@ -837,6 +896,10 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
                        nSlots, names, vtableKnown);
     fldAlign := fldAlign DIV Target.Byte;
     IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
+    (* methodOffset = byte position in vtable where this type's own methods start *)
+    methOff := MethodOffset (t);
+    IF methOff < 0 THEN methOff := 0 END;
+    methOff := methOff DIV Target.Byte;
     IF vtableKnown AND names # NIL THEN
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
@@ -858,6 +921,7 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     BEGIN
       IF uName # NIL THEN MSIR.SetTypeDescUserName (desc, uName) END;
     END;
+    MSIR.SetTypeDescMethodOffset (desc, methOff);
     (* Generate the field-default initializer proc (TC_initProc) if needed. *)
     GenInitProcMSIR (NARROW(t, P), desc);
     MSIR.ModuleAddTypeDesc (m, desc);
