@@ -3278,20 +3278,17 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
              This correctly traces REF ARRAY OF REFANY and similar types.
              More complex element layouts are left with gc_map=null for now. *)
         IF MSIR.TypeDescTraced(d) THEN
-          IF knd = TK_Ref AND MSIR.TypeDescSize(d) > 0 THEN
-            VAR nSlots := MSIR.TypeDescSize(d) DIV Target.AddressBytes();
-            BEGIN
-              IF nSlots > 0 THEN
-                gcMapName := nm & "_gc_map";
-                Wr.PutText(wr, "@" & gcMapName & " = internal constant ["
-                               & Fmt.Int(nSlots + 1) & " x i8] [");
-                FOR s := 0 TO nSlots - 1 DO
-                  IF s > 0 THEN Wr.PutText(wr, ", ") END;
-                  Wr.PutText(wr, "i8 4");  (* RTMapOp.T.Ref = 4 *)
-                END;
-                Wr.PutText(wr, ", i8 0]\n");  (* RTMapOp.T.Stop = 0 *)
-              END;
-            END;
+          IF knd = TK_Ref THEN
+            (* For TK_Ref we don't emit a gc_map.  The conservative
+               one-Ref-per-slot map was wrong: it made the GC chase integer
+               values in e.g. REF ARRAY OF INTEGER as if they were pointers
+               (SIGSEGV at collection time).  A null gc_map is correct for
+               referents with no internal traced pointers; for referents WITH
+               internal pointers the GC will skip tracing them (possible
+               retention but no crash).  We accept this trade-off until a
+               proper structural gc_map is generated.  isTraced=1 is still set
+               so the GC tracks the REF container itself. *)
+            (* gcMapName stays NIL → tc_gc_map = "null" below *)
           ELSIF knd = TK_Array THEN
             VAR nDims := MSIR.TypeDescNDimensions(d);
                 eltSz := MSIR.TypeDescElementSize(d);
