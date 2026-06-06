@@ -1298,16 +1298,17 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
         END;
       END;
     ELSE
-      (* No captures (or captures not accessible in current scope): return the
-         shim pointer directly as the procedure value.  For non-capturing procs
-         this is always correct.  For capturing procs where the captured vars
-         are not in the current scope (e.g., referencing a sibling nested proc
-         from a peer procedure), this falls back to shim-only comparison — the
-         caller in the enclosing scope builds a full closure, but the callee's
-         icmp compares shims.  To handle the mixed case (caller passes closure,
-         callee compares shim), the comparison in EqualExpr checks the closure
-         tag and extracts the shim when the right side is a closure struct. *)
-      RETURN MSIR.ConstProcRef(shim);
+      (* No captures (or captures not accessible in current scope): build a
+         closure struct with a null (NIL ptr) env.  This ensures:
+           - EmitClosureCall reads CL_marker=-1 → takes the closure path →
+             calls shim(null_env, formals); the shim for non-capturing procs
+             ignores env and calls lambda(formals). ✓
+           - EqualExpr normalises both sides via the CL_marker check, extracting
+             the shim pointer → icmp eq @shim, @shim → TRUE. ✓
+         Using a plain alloca for the dummy env (as before) would cause each
+         reference to create a new struct at a different address so icmp eq
+         on the addresses would always be FALSE — hence we must normalise. *)
+      envAlloca := MSIR.ConstNil(ptrT);
     END;
 
     (* Allocate closure struct as [clSize x i8]. *)

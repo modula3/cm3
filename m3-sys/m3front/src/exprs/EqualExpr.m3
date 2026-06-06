@@ -1264,6 +1264,17 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
               END;
             END;
             blk := MSIRBuilder.CurrentBlock ();
+            (* Ensure both sides have the same type for icmp.  A ConstProc may
+               have a proc-specific function-pointer type while the normalized
+               side is ptr void.  Retype both to ptr void before comparing. *)
+            IF NOT MSIR.Equal (MSIR.ValueType (lv), MSIR.ValueType (rv)) THEN
+              IF MSIR.Kind (MSIR.ValueType (lv)) # MSIR.TypeKind.Void THEN
+                lv := MSIR.RetypeValue (lv, ptrT);
+              END;
+              IF MSIR.Kind (MSIR.ValueType (rv)) # MSIR.TypeKind.Void THEN
+                rv := MSIR.RetypeValue (rv, ptrT);
+              END;
+            END;
             RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
           END;
         END;
