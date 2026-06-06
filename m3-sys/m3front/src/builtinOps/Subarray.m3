@@ -514,10 +514,12 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
       lenVal := MSIR.BuildZExt (blk, "", lenVal, intT);
     END;
 
-    IF src_depth = 0 THEN
+    IF src_depth = 0 OR Expr.ConstValue (base) # NIL THEN
+      (* Fixed array, or CONST open array: lvalue IS the raw data pointer. *)
       basePtr := Expr.LValueMSIR (base);
       IF basePtr = NIL THEN RETURN NIL END;
     ELSE
+      (* Open-array variable: lvalue points to a dope {data_ptr, dim0, ...}. *)
       dopeAddr := Expr.LValueMSIR (base);
       IF dopeAddr = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();
