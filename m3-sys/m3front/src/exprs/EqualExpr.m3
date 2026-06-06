@@ -14,7 +14,7 @@ IMPORT IntegerExpr, ReelExpr, EnumExpr, AddressExpr, UserProc;
 IMPORT ProcExpr, ProcType, TextExpr, Error, M3WString;
 IMPORT RecordType, ArrayType, Field, Value, M3String, Textt;
 IMPORT NamedExpr, QualifyExpr, OpenArrayType, Target, TInt;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, M3RT;
 
 CONST
   Max_unroll = 4; (* max # of iterations in an unrolled loop *)
@@ -1200,6 +1200,73 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       CASE p.op OF
       | Op.EQ => pred := MSIR.CmpPred.Eq;
       | Op.NE => pred := MSIR.CmpPred.Ne;
+      END;
+      (* For procedure equality involving nested procedure values: normalize both
+         sides to their "shim pointer" representation.  Nested procs may appear
+         either as direct ConstProc refs (shim pointer, for non/peer-capturing
+         procs compiled without access to captures) or as runtime closure structs
+         {CL_marker=-1, shim, env} (when captures ARE accessible).  The tag check
+         (load word-0, compare with -1) detects closures and extracts their shim.
+         We apply this normalization when:
+           (a) at least one side is a ConstProc (direct shim ref), OR
+           (b) both sides are non-NIL non-ConstProc values of procedure type —
+               i.e., both may be runtime closure structs for the same proc.
+         We skip normalization when either side is ConstNil (nil proc check). *)
+      IF (MSIR.GetValueKind (lv) = MSIR.ValueKind.ConstProc OR
+          MSIR.GetValueKind (rv) = MSIR.ValueKind.ConstProc) OR
+         (MSIR.GetValueKind (lv) # MSIR.ValueKind.ConstNil AND
+          MSIR.GetValueKind (rv) # MSIR.ValueKind.ConstNil AND
+          MSIR.GetValueKind (lv) # MSIR.ValueKind.ConstProc AND
+          MSIR.GetValueKind (rv) # MSIR.ValueKind.ConstProc) THEN
+        VAR intT    := MSIR.TI (Target.Integer.size);
+            ptrT    := MSIR.TPtr (MSIR.TVoid ());
+            IPb     := Target.Integer.bytes;
+            markerV := MSIR.ConstInt (intT, M3RT.CL_marker_value);
+        BEGIN
+          blk := MSIRBuilder.CurrentBlock ();
+          VAR nilV := MSIR.ConstNil (ptrT);
+              (* Safe dummy: a small alloca that will never contain CL_marker.
+                 When lv/rv is nil, we use this as the safe load address so
+                 the tag read won't SIGSEGV, and the tag value won't be -1
+                 (the alloca is zero-initialized, so tag = 0 ≠ -1). *)
+              dummyAlloca := MSIR.BuildAlloca (blk, "", intT);
+          BEGIN
+            MSIR.BuildStore (blk, MSIR.ConstInt (intT, 0), dummyAlloca);
+            IF MSIR.GetValueKind (lv) # MSIR.ValueKind.ConstProc THEN
+              VAR isNilL := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, lv, nilV);
+                  (* If lv is nil, use dummyAlloca as safe base; else use lv *)
+                  safeL  := MSIR.BuildSelect (blk, "", isNilL, dummyAlloca, lv);
+                  tagL   := MSIR.BuildLoad (blk, "", intT,
+                              MSIR.BuildGepByte (blk, "", safeL, MSIR.ConstInt (intT, 0)));
+                  (* Closure iff tag == -1 AND lv is non-nil *)
+                  tagEqL := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, tagL, markerV);
+                  isClL  := MSIR.BuildIAnd (blk, "", tagEqL,
+                              MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, lv, nilV));
+                  shimL  := MSIR.BuildLoad (blk, "", ptrT,
+                              MSIR.BuildGepByte (blk, "", safeL, MSIR.ConstInt (intT, IPb)));
+              BEGIN
+                lv := MSIR.BuildSelect (blk, "", isClL, shimL, lv);
+              END;
+            END;
+            blk := MSIRBuilder.CurrentBlock ();
+            IF MSIR.GetValueKind (rv) # MSIR.ValueKind.ConstProc THEN
+              VAR isNilR := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, rv, nilV);
+                  safeR  := MSIR.BuildSelect (blk, "", isNilR, dummyAlloca, rv);
+                  tagR   := MSIR.BuildLoad (blk, "", intT,
+                              MSIR.BuildGepByte (blk, "", safeR, MSIR.ConstInt (intT, 0)));
+                  tagEqR := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, tagR, markerV);
+                  isClR  := MSIR.BuildIAnd (blk, "", tagEqR,
+                              MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, rv, nilV));
+                  shimR  := MSIR.BuildLoad (blk, "", ptrT,
+                              MSIR.BuildGepByte (blk, "", safeR, MSIR.ConstInt (intT, IPb)));
+              BEGIN
+                rv := MSIR.BuildSelect (blk, "", isClR, shimR, rv);
+              END;
+            END;
+            blk := MSIRBuilder.CurrentBlock ();
+            RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
+          END;
+        END;
       END;
       RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
     ELSIF p.kind # Kind.SimpleScalar THEN

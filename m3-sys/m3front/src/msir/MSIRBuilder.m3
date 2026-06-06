@@ -1298,8 +1298,16 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
         END;
       END;
     ELSE
-      (* No captures: allocate a 1-byte dummy so envAlloca is a valid ptr. *)
-      envAlloca := MSIR.BuildAlloca(b, "", MSIR.TI(8));
+      (* No captures (or captures not accessible in current scope): return the
+         shim pointer directly as the procedure value.  For non-capturing procs
+         this is always correct.  For capturing procs where the captured vars
+         are not in the current scope (e.g., referencing a sibling nested proc
+         from a peer procedure), this falls back to shim-only comparison — the
+         caller in the enclosing scope builds a full closure, but the callee's
+         icmp compares shims.  To handle the mixed case (caller passes closure,
+         callee compares shim), the comparison in EqualExpr checks the closure
+         tag and extracts the shim when the right side is a closure struct. *)
+      RETURN MSIR.ConstProcRef(shim);
     END;
 
     (* Allocate closure struct as [clSize x i8]. *)
