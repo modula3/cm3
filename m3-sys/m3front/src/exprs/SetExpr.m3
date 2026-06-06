@@ -1111,8 +1111,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
               END;
             END;
             ones  := MSIR.ConstInt (ti, -1);
-            upper := MSIR.BuildILShr (blk, "", ones,
-                       MSIR.BuildISub (blk, "", MSIR.ConstInt (ti, info.size - 1), hiV));
+            (* Upper mask: for single-word sets use arithmetic shift right so
+               that the sign bit is propagated and the high bits stay 1,
+               matching the C backend's Setrange behaviour.  For multi-word
+               sets use logical shift right so that zeros are shifted in and
+               the extra bits above the set size stay clear. *)
+            IF info.size <= Target.Word.size THEN
+              upper := MSIR.BuildIAShr (blk, "", ones,
+                         MSIR.BuildISub (blk, "", MSIR.ConstInt (ti, info.size - 1), hiV));
+            ELSE
+              upper := MSIR.BuildILShr (blk, "", ones,
+                         MSIR.BuildISub (blk, "", MSIR.ConstInt (ti, info.size - 1), hiV));
+            END;
             lower := MSIR.BuildIShl (blk, "", ones, loV);
             rng   := MSIR.BuildIAnd (blk, "", upper, lower);
             result := MSIR.BuildIOr (blk, "", result, rng);
