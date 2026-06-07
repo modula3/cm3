@@ -855,6 +855,19 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero `msir-verify` errors.
   - Zero genuine abandons.
 
+**LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-07):
+**253/288 PASS, 6 MISMATCH, 29 SKIP**.
+
+Remaining 6 MISMATCH:
+
+| Test | Root cause |
+|------|-----------|
+| p012 | Nested-proc sibling call: P0_0 calling Dump0 omits the 6 capture args |
+| p122 | RETURN in TRY/EXCEPT inside FINALLY: C backend uses `Return_exception` pseudo-value caught by `EXCEPT ELSE`; MSIR has no equivalent |
+| p140 | 1 residual error: RAISE inside FINALLY caught by inner EXCEPT then outer exception continues; `catch` lpad without `__cxa_begin_catch` breaks the C++ ABI for this nested pattern |
+| p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable) |
+| p253 | Heap addresses differ between runs (ASLR) |
+
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
 control flow, records, fixed/open arrays, enums, SETs (all widths), globals,
@@ -868,7 +881,8 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 ### Known Limitations
 
 All p0/p1/p2 test-suite procedures now compile without abandons.  The
-remaining minor gaps are listed below; they do not affect any test in the suite.
+remaining minor gaps are listed below; they do not affect any conformance test
+unless otherwise noted.
 
 - **VALUE open-array formals, partial depth coercion** (`actDepth <
   formDepth`): rare; abandons gracefully.
@@ -1038,6 +1052,41 @@ to support `MSIREmit.EndUnit` text-literal registration.
 **Module globals (var_map/gc_map)**: embedded as trailing fields of
 `@Mod_M3_info` (after 104-byte `RT0.ModuleInfo` header).  gc_map TipeMap
 encodes `Ref` ops for traced fields; LLVM aliases preserve mangled names.
+
+**LOCK exception re-raise**: The LOCK cleanup must use
+`invoke RTHooks__ResumeRaise(actPtr) unwind enclosing` — NOT the LLVM `resume`
+instruction — to re-propagate the caught exception to the enclosing handler.
+
+LLVM's `resume` propagates the exception only when executed within an
+instruction's exception-table scope (i.e., reachable via an `invoke`'s `unwind`
+edge).  Blocks that are reachable only via normal control flow (e.g., a block
+following `dispatch.cont.X`) are NOT in any handler's scope: `resume` there
+propagates to the function's CALLER instead of the enclosing TRY.
+
+Pattern (mirrors `TryFinStmt.CompileMSIR`):
+1. Use `isCleanup := FALSE` (catch-all lpad, not cleanup).
+2. Extract actPtr via `__cxa_get_exception_ptr` (do NOT call `__cxa_begin_catch`).
+3. In resumeBlk: `invoke RTHooks__ResumeRaise(actPtr) to rcont unwind enclosing`
+   where `enclosing = CurrentUnwindBlock()` captured AFTER `PopTryContext()`.
+4. If `enclosing = NIL` (no outer try): plain call + unreachable.
+
+**Open←Open bulk copy for multi-depth open arrays**: `AssignStmt.CompileMSIR`
+computes `totalElts * EltPack(rhs) / 8` bytes to memcpy.  When the rhs M3 type
+has more open dimensions than the MSIR rank (e.g. `ARRAY OF ARRAY OF T`, rank-1
+in MSIR but depth-2 in M3), the extra dimensions are absent from the MSIR dope
+value.  Load them directly from the raw rhs dope pointer (available via
+`Expr.LValueMSIR(rhs)`) at byte offset `apB + k * ipB` for dimension index `k`.
+Also use `EltPack(TypeOf(rhs))` (not `lhs`) — the rhs element pack correctly
+accounts for any fixed inner dims in the rhs type (e.g. `ARRAY OF ARRAY[0..9] OF T`
+has `EltPack = sizeof(T)*10`), while the lhs pack may use a different element structure.
+
+**Aggregate exception arguments**: for exceptions with `ArgByReference = TRUE`
+(argument larger than a pointer or a structured type), the argument must be
+heap-allocated before calling `RTHooks__Raise`.  A stack alloca becomes a
+dangling pointer after C++ exception unwinding destroys the raise frame.
+In `RaiseStmt.CompileMSIR`: allocate via `RTHooks__NewTracedRef(typeCell)`,
+memcpy the arg, pass the heap pointer.  `typeCell` = `TypeDescValueForRef`
+of `REF argType` (= `t.refTipe` in the CG backend's `Exceptionz.DeclareRaiseProc`).
 
 ### Cosmetic Issues
 
