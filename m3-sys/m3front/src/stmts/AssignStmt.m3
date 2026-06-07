@@ -983,15 +983,20 @@ PROCEDURE CompileMSIR (p: P) =
             END;
           ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray AND
                 MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray THEN
-            (* Open ← Open (different ranks): dynamic memcpy of element data.
+            (* Open ← Open: dynamic memcpy of element data.
                Load both dopes as open-array values, then use BuildOpenArrayElemAddr
-               to get each data pointer (element [0,...] addr = start of data block). *)
-            VAR blk2     := MSIRBuilder.CurrentBlock ();
-                intT     := MSIR.TI (Target.Integer.size);
-                lhsRank  := MSIR.OpenArrayRank (eltT);
-                rhsRank  := MSIR.OpenArrayRank (rhsT);
-                lhsZeros := NEW (REF ARRAY OF MSIR.Value, lhsRank);
-                rhsZeros := NEW (REF ARRAY OF MSIR.Value, rhsRank);
+               to get each data pointer (element [0,...] addr = start of data block).
+               MSIR rank may be < M3 open depth (e.g. ARRAY OF ARRAY OF T has rank-1
+               MSIR dope but open depth 2).  For those extra dimensions, load directly
+               from the raw rhs dope pointer (which the heap allocator stores at the
+               same offsets as a rank-N dope: { ptr, dim0, dim1, ... }). *)
+            VAR blk2         := MSIRBuilder.CurrentBlock ();
+                intT         := MSIR.TI (Target.Integer.size);
+                lhsRank      := MSIR.OpenArrayRank (eltT);
+                rhsRank      := MSIR.OpenArrayRank (rhsT);
+                rhsM3Depth   := OpenArrayType.OpenDepth (Expr.TypeOf (p.rhs));
+                lhsZeros     := NEW (REF ARRAY OF MSIR.Value, lhsRank);
+                rhsZeros     := NEW (REF ARRAY OF MSIR.Value, rhsRank);
             BEGIN
               FOR k := 0 TO lhsRank - 1 DO lhsZeros[k] := MSIR.ConstInt (intT, 0) END;
               FOR k := 0 TO rhsRank - 1 DO rhsZeros[k] := MSIR.ConstInt (intT, 0) END;
@@ -1004,9 +1009,33 @@ PROCEDURE CompileMSIR (p: P) =
                   totalElts := MSIR.BuildIMul (blk2, "", totalElts,
                                  MSIR.BuildOpenArraySize (blk2, "", rhsVal, k));
                 END;
+                (* Extra open dims (rhs M3 depth > MSIR rank): the heap dope stores
+                   all dims at { ptr, dim0, dim1, ... }.  Load extras from the
+                   raw rhs dope pointer (offset apB + k * ipB for dim_k). *)
+                IF rhsM3Depth > rhsRank THEN
+                  VAR rhsDopePtr := Expr.LValueMSIR (p.rhs);
+                      apB        := Target.Address.size DIV Target.Byte;
+                      ipB        := Target.Integer.size DIV Target.Byte;
+                  BEGIN
+                    IF rhsDopePtr # NIL THEN
+                      FOR k := rhsRank TO rhsM3Depth - 1 DO
+                        VAR dimK := MSIR.BuildLoad (blk2, "", intT,
+                                      MSIRBuilder.BuildPtrByteOff (blk2, "", rhsDopePtr,
+                                                                    apB + k * ipB));
+                        BEGIN
+                          blk2 := MSIRBuilder.CurrentBlock ();
+                          totalElts := MSIR.BuildIMul (blk2, "", totalElts, dimK);
+                        END;
+                      END;
+                    END;
+                  END;
+                END;
+                (* EltPack from RHS type: accounts for fixed inner dims in the rhs
+                   element size.  e.g. ARRAY OF ARRAY[0..9] OF T: EltPack = sizeof(T)*10.
+                   Extra open dims (counted above) are NOT in EltPack — no double-count. *)
                 VAR totalBytes := MSIR.BuildIMul (blk2, "", totalElts,
                                     MSIR.ConstInt (intT,
-                                      OpenArrayType.EltPack (Expr.TypeOf (p.lhs))
+                                      OpenArrayType.EltPack (Expr.TypeOf (p.rhs))
                                         DIV Target.Char.size));
                 BEGIN
                   MSIRBuilder.EmitMemcpyDyn (dstDataPtr, srcDataPtr, totalBytes);
