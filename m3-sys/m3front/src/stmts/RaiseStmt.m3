@@ -11,6 +11,7 @@ MODULE RaiseStmt;
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
 IMPORT MSIR, MSIRBuilder, RunTyme, CaptureAnalysis;
+IMPORT Target, RefType;
 FROM M3 IMPORT QID;
 
 TYPE
@@ -135,24 +136,70 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Argument: compile if present, else NIL. *)
     IF p.arg # NIL THEN
-      argVal := Expr.CompileMSIR(p.arg);
-      IF argVal = NIL THEN RETURN END;
-      (* Cast to ptr void for RTHooks__Raise's arg parameter.
-         Scalar/pointer args: inttoptr-style convert.
-         Aggregate args (struct, array): spill to stack, pass address. *)
-      VAR argT := MSIR.ValueType(argVal); b := MSIRBuilder.CurrentBlock();
+      VAR argType  := Exceptionz.ArgType(p.except);
+          argInfo  : Type.Info;
       BEGIN
-        CASE MSIR.Kind(argT) OF
-        | MSIR.TypeKind.Struct, MSIR.TypeKind.FixedArray,
-          MSIR.TypeKind.Object, MSIR.TypeKind.IWide =>
-            (* Aggregate or wide-integer arg: spill to stack, pass address. *)
-            VAR slot := MSIR.BuildAlloca(b, "", argT);
-            BEGIN
-              MSIR.BuildStore(b, argVal, slot);
-              argVal := MSIR.BuildConvert(b, "", slot, ptrT);
+        EVAL Type.CheckInfo(argType, argInfo);
+        IF Exceptionz.ArgByReference(argType) THEN
+          (* Aggregate argument (array/struct/large value): must be heap-allocated
+             so the pointer remains valid after the stack frame is unwound by C++.
+             RTExStack.Raise copies the activation record by value but NOT the
+             argument data; a stack alloca becomes a dangling pointer after RAISE.
+             Use NEW(REF argType) → copy → pass heap pointer. *)
+          VAR refT     := RefType.New(Type.StripPacked(argType), TRUE, NIL);
+              b        := MSIRBuilder.CurrentBlock();
+              allocHk  := MSIRBuilder.HookProc(RunTyme.Hook.NewTracedRef);
+              nBytes   := argInfo.size DIV Target.Byte;
+              argAddr  : MSIR.Value;
+              typeCell : MSIR.Value;
+              heapPtr  : MSIR.Value;
+          BEGIN
+            refT     := Type.Check(refT);
+            typeCell := MSIRBuilder.TypeDescValueForRef(refT, nBytes,
+                          argInfo.alignment DIV Target.Byte,
+                          TRUE (*isTraced*));
+            IF typeCell = NIL OR allocHk = NIL THEN
+              MSIRBuilder.Abandon("raise: cannot heap-alloc aggregate arg");
+              RETURN;
             END;
+            (* Use LValue of arg to get its address; fall back to value+spill. *)
+            argAddr := Expr.LValueMSIR(p.arg);
+            IF argAddr = NIL THEN
+              argVal := Expr.CompileMSIR(p.arg);
+              IF argVal = NIL THEN RETURN END;
+              b := MSIRBuilder.CurrentBlock();
+              VAR slot := MSIR.BuildAlloca(b, "", MSIR.ValueType(argVal)); BEGIN
+                MSIR.BuildStore(b, argVal, slot);
+                argAddr := slot;
+              END;
+            END;
+            b := MSIRBuilder.CurrentBlock();
+            heapPtr := MSIR.BuildCall(b, "", allocHk,
+                         ARRAY OF MSIR.Value{typeCell});
+            b := MSIRBuilder.CurrentBlock();
+            MSIRBuilder.EmitMemcpy(MSIR.BuildConvert(b, "", heapPtr, ptrT),
+                                   MSIR.BuildConvert(b, "", argAddr, ptrT),
+                                   nBytes);
+            b := MSIRBuilder.CurrentBlock();
+            argVal := MSIR.BuildConvert(b, "", heapPtr, ptrT);
+          END;
         ELSE
-          argVal := MSIR.BuildConvert(b, "", argVal, ptrT);
+          argVal := Expr.CompileMSIR(p.arg);
+          IF argVal = NIL THEN RETURN END;
+          VAR argT := MSIR.ValueType(argVal); b := MSIRBuilder.CurrentBlock();
+          BEGIN
+            CASE MSIR.Kind(argT) OF
+            | MSIR.TypeKind.IWide =>
+                (* Wide integer: spill to stack, pass address. *)
+                VAR slot := MSIR.BuildAlloca(b, "", argT);
+                BEGIN
+                  MSIR.BuildStore(b, argVal, slot);
+                  argVal := MSIR.BuildConvert(b, "", slot, ptrT);
+                END;
+            ELSE
+              argVal := MSIR.BuildConvert(b, "", argVal, ptrT);
+            END;
+          END;
         END;
       END;
     ELSE
