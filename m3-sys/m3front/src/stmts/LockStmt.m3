@@ -212,16 +212,16 @@ PROCEDURE CompileMSIR (p: P) =
     resumeBlk:   MSIR.Block;
     retBlk:      MSIR.Block;
     merge:       MSIR.Block;
-    lpSlot:      MSIR.Value;
     selector:    MSIR.Value;
     retSlot:     MSIR.Value;
     lpVal:       MSIR.Value;
     selV:        MSIR.Value;
-    lpLoaded:    MSIR.Value;
-    lpType:      MSIR.T;
     retT:        MSIR.T;
     retV:        MSIR.Value;
     i32:         MSIR.T;
+    ptrT:        MSIR.T;
+    actSlot:     MSIR.Value;
+    enclosing:   MSIR.Block;
     returnSeen:  BOOLEAN;
     exitSeen:    BOOLEAN;
   BEGIN
@@ -242,10 +242,10 @@ PROCEDURE CompileMSIR (p: P) =
        Use PushFinallyCleanup so a RETURN inside the body routes through the
        LOCK's mutex release before returning.  This fixes the case where a
        RETURN inside a LOCK inside a LOOP doesn't release the mutex. *)
-    lpType := MSIR.TLandingPad();
-    i32    := MSIR.TI(32);
+    i32  := MSIR.TI(32);
+    ptrT := MSIR.TPtr(MSIR.TVoid());
 
-    lpSlot   := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
+    actSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
     selector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", i32);
     MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
                     MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
@@ -273,14 +273,26 @@ PROCEDURE CompileMSIR (p: P) =
     returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
     MSIRBuilder.PopFinallyCleanup();
     MSIRBuilder.PopTryContext();
+    (* After Pop, CurrentUnwindBlock() is the ENCLOSING try context. *)
+    enclosing := MSIRBuilder.CurrentUnwindBlock();
 
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
 
-    (* Landing pad: save lp value, set selector = Sel_Exc. *)
-    lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := TRUE);
-    MSIR.BuildStore(lpad, lpVal, lpSlot);
+    (* Landing pad: catch-all (non-cleanup) so phase 1 finds a handler.
+       Extract the M3 activation ptr via __cxa_get_exception_ptr (mirrors
+       TryFinStmt).  We do NOT call __cxa_begin_catch — the re-raise uses
+       a fresh RTHooks__ResumeRaise throw rather than C++ rethrow, so the
+       exception is never "activated" in the C++ ABI sense. *)
+    lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
+    VAR excHdr  := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
+        excObj  := MSIR.BuildCall(lpad, "", MSIRBuilder.CxaGetExceptionPtr(),
+                                  ARRAY OF MSIR.Value{excHdr});
+        actPtr  := MSIR.BuildLoad(lpad, "", ptrT, excObj);
+    BEGIN
+      MSIR.BuildStore(lpad, actPtr, actSlot);
+    END;
     MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
@@ -344,10 +356,26 @@ PROCEDURE CompileMSIR (p: P) =
       END;
     END;
 
-    (* Resume: reload saved landing pad and resume unwinding. *)
+    (* Resume: re-raise the original exception via RTHooks__ResumeRaise.
+       A fresh throw (not C++ rethrow) is used — same as TryFinStmt — so
+       if there's an enclosing try context, the invoke routes to it; if
+       not, the exception propagates to the caller. *)
     MSIRBuilder.SetCurrentBlock(resumeBlk);
-    lpLoaded := MSIR.BuildLoad(resumeBlk, "", lpType, lpSlot);
-    MSIR.BuildResume(resumeBlk, lpLoaded);
+    VAR resumeHook := MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx);
+        actV       := MSIR.BuildLoad(resumeBlk, "", ptrT, actSlot);
+        rcont      : MSIR.Block;
+    BEGIN
+      IF enclosing # NIL THEN
+        rcont := MSIRBuilder.NewBlock("lock.resume.cont");
+        EVAL MSIR.BuildInvoke(resumeBlk, "", resumeHook,
+                              ARRAY OF MSIR.Value{actV}, rcont, enclosing);
+        MSIRBuilder.SetCurrentBlock(rcont);
+        MSIR.BuildUnreachable(rcont);
+      ELSE
+        EVAL MSIR.BuildCall(resumeBlk, "", resumeHook, ARRAY OF MSIR.Value{actV});
+        MSIR.BuildUnreachable(resumeBlk);
+      END;
+    END;
 
     (* Return: load saved return value and emit ret (possibly through outer cleanup). *)
     IF returnSeen THEN
