@@ -425,6 +425,7 @@ PROCEDURE RegisterExternMSIR (t: T) =
 
 PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
   VAR mt: MSIR.T;  slotAddr: MSIR.Value;  allocType: MSIR.T;
+      typeInfoForZero : Type.Info;
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
@@ -449,12 +450,16 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
                     Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), allocType);
     IF slotAddr = NIL THEN RETURN FALSE END;
     MSIRBuilder.VarMapAdd (t, slotAddr, allocType);
-    (* Zero-initialize structured (non-scalar) allocas so that padding bytes
+    (* Zero-initialize non-solid structured allocas so that padding bytes
        (e.g. after a CHAR field in a RECORD, or in ARRAY elements of records)
        don't contain garbage that breaks byte-wise equality comparisons.
+       A type is "solid" if every bit in its storage is meaningful (no gaps).
+       Non-solid types have holes that need zeroing; solid types don't.
        Scalar allocas are already init'd via Type.InitCost below. *)
-    IF MSIR.Kind (allocType) = MSIR.TypeKind.Struct
-       OR MSIR.Kind (allocType) = MSIR.TypeKind.FixedArray THEN
+    EVAL Type.CheckInfo (t.type, typeInfoForZero);
+    IF (MSIR.Kind (allocType) = MSIR.TypeKind.Struct
+        OR MSIR.Kind (allocType) = MSIR.TypeKind.FixedArray)
+       AND NOT typeInfoForZero.isSolid THEN
       VAR sizeBytes := t.size DIV Target.Char.size;
           wordBytes := Target.Integer.size DIV Target.Byte;
           intT      := MSIR.TI (Target.Integer.size);
