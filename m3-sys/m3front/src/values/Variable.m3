@@ -449,6 +449,37 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
                     Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), allocType);
     IF slotAddr = NIL THEN RETURN FALSE END;
     MSIRBuilder.VarMapAdd (t, slotAddr, allocType);
+    (* Zero-initialize structured (non-scalar) allocas so that padding bytes
+       (e.g. after a CHAR field in a RECORD, or in ARRAY elements of records)
+       don't contain garbage that breaks byte-wise equality comparisons.
+       Scalar allocas are already init'd via Type.InitCost below. *)
+    IF MSIR.Kind (allocType) = MSIR.TypeKind.Struct
+       OR MSIR.Kind (allocType) = MSIR.TypeKind.FixedArray THEN
+      VAR sizeBytes := t.size DIV Target.Char.size;
+          wordBytes := Target.Integer.size DIV Target.Byte;
+          intT      := MSIR.TI (Target.Integer.size);
+          zero      := MSIR.ConstInt (intT, 0);
+          off       := 0;
+      BEGIN
+        WHILE off + wordBytes <= sizeBytes DO
+          MSIR.BuildStore (b, zero,
+            MSIRBuilder.BuildPtrByteOff (b, "", slotAddr, off));
+          INC (off, wordBytes);
+        END;
+        (* Handle trailing partial word if struct size not a multiple of wordBytes *)
+        IF off < sizeBytes THEN
+          VAR byteT := MSIR.TW (Target.Byte);
+              zero8 := MSIR.ConstInt (byteT, 0);
+          BEGIN
+            WHILE off < sizeBytes DO
+              MSIR.BuildStore (b, zero8,
+                MSIRBuilder.BuildPtrByteOff (b, "", slotAddr, off));
+              INC (off, 1);
+            END;
+          END;
+        END;
+      END;
+    END;
     (* Emit language-default init alongside CG's Type.InitValue in LangInit.
        For subranges with lo > 0 or hi < 0 (zero not in range), init to lo
        rather than zero — matches SubrangeType.GenInit (p143). *)
