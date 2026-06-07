@@ -562,12 +562,15 @@ PROCEDURE CompileMSIR (p: P) =
                          chkReturn, ARRAY OF MSIR.Value{},
                          merge,     ARRAY OF MSIR.Value{});
         MSIRBuilder.SetCurrentBlock(chkReturn);
-        (* Pending RETURN: load the saved value (if non-void) and emit ret. *)
+        (* Pending RETURN: load the saved value, route through any enclosing
+           LOCK cleanup (mutex release) before actually returning. *)
         IF retSlot # NIL AND retT # NIL THEN
           retV := MSIR.BuildLoad(chkReturn, "", retT, retSlot);
-          MSIR.BuildRet(chkReturn, retV);
         ELSE
-          MSIR.BuildRet(chkReturn, NIL);
+          retV := NIL;
+        END;
+        IF NOT MSIRBuilder.EmitReturnThroughFinally(retV) THEN
+          MSIR.BuildRet(chkReturn, retV);
         END;
       ELSE
         MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});

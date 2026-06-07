@@ -206,18 +206,23 @@ PROCEDURE CompileMSIR (p: P) =
      M3RT.MUTEX_acquire = 0 * AP → midx 0
      M3RT.MUTEX_release = 1 * AP → midx 1 *)
   VAR
-    mu:        MSIR.Value;
-    lpad:      MSIR.Block;
-    finBody:   MSIR.Block;
-    resumeBlk: MSIR.Block;
-    merge:     MSIR.Block;
-    lpSlot:    MSIR.Value;
-    excFlag:   MSIR.Value;
-    lpVal:     MSIR.Value;
-    excFlagV:  MSIR.Value;
-    lpLoaded:  MSIR.Value;
-    lpType:    MSIR.T;
-    zero, one: MSIR.Value;
+    mu:          MSIR.Value;
+    lpad:        MSIR.Block;
+    finBody:     MSIR.Block;
+    resumeBlk:   MSIR.Block;
+    retBlk:      MSIR.Block;
+    merge:       MSIR.Block;
+    lpSlot:      MSIR.Value;
+    selector:    MSIR.Value;
+    retSlot:     MSIR.Value;
+    lpVal:       MSIR.Value;
+    selV:        MSIR.Value;
+    lpLoaded:    MSIR.Value;
+    lpType:      MSIR.T;
+    retT:        MSIR.T;
+    retV:        MSIR.Value;
+    i32:         MSIR.T;
+    returnSeen:  BOOLEAN;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
@@ -232,38 +237,52 @@ PROCEDURE CompileMSIR (p: P) =
            MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
-    (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR. *)
+    (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR.
+       Use PushFinallyCleanup so a RETURN inside the body routes through the
+       LOCK's mutex release before returning.  This fixes the case where a
+       RETURN inside a LOCK inside a LOOP doesn't release the mutex. *)
     lpType := MSIR.TLandingPad();
-    zero   := MSIR.ConstInt(MSIR.TI1(), 0);
-    one    := MSIR.ConstInt(MSIR.TI1(), 1);
+    i32    := MSIR.TI(32);
 
-    lpSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
-    excFlag := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TI1());
-    MSIR.BuildStore(MSIRBuilder.CurrentBlock(), zero, excFlag);
+    lpSlot   := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", lpType);
+    selector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", i32);
+    MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
+                    MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
+
+    (* retSlot for RETURN value threading through the mutex release. *)
+    retT := MSIRBuilder.CurrentResultType();
+    IF retT = NIL THEN retT := MSIR.ProcResultType(MSIRBuilder.CurrentProc()) END;
+    IF retT # NIL AND MSIR.Kind(retT) # MSIR.TypeKind.Void THEN
+      retSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", retT);
+    ELSE
+      retSlot := NIL;
+    END;
 
     lpad      := MSIRBuilder.NewBlock("lock.lpad");
     finBody   := MSIRBuilder.NewBlock("lock.fin");
     resumeBlk := MSIRBuilder.NewBlock("lock.resume");
+    retBlk    := MSIRBuilder.NewBlock("lock.ret");
     merge     := MSIRBuilder.NewBlock("lock.done");
 
-    (* Body inside TRY (lpad = cleanup unwind target). *)
+    (* Body: push try context AND finally cleanup so EXIT/RETURN routes through. *)
     MSIRBuilder.PushTryContext(lpad);
+    MSIRBuilder.PushFinallyCleanup(finBody, selector, retSlot);
     Stmt.CompileMSIR(p.body);
+    returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
+    MSIRBuilder.PopFinallyCleanup();
     MSIRBuilder.PopTryContext();
 
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
 
-    (* Landing pad: save lp value, set exceptional flag. *)
+    (* Landing pad: save lp value, set selector = Sel_Exc. *)
     lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := TRUE);
     MSIR.BuildStore(lpad, lpVal, lpSlot);
-    MSIR.BuildStore(lpad, one, excFlag);
+    MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
-    (* Finally body: release the mutex — vtable slot M3RT.MUTEX_release / AP.
-       Release is called outside our own lpad (already popped), so if it throws
-       the exception propagates to any enclosing TRY rather than looping back. *)
+    (* Finally body: release the mutex — vtable slot M3RT.MUTEX_release / AP. *)
     MSIRBuilder.SetCurrentBlock(finBody);
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
@@ -272,17 +291,53 @@ PROCEDURE CompileMSIR (p: P) =
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      excFlagV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "",
-                                 MSIR.TI1(), excFlag);
-      MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), excFlagV,
-                       resumeBlk, ARRAY OF MSIR.Value{},
-                       merge,     ARRAY OF MSIR.Value{});
+      VAR notExcBlk : MSIR.Block;
+      BEGIN
+        selV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", i32, selector);
+        (* Sel_Exc → resume; others handled below. *)
+        VAR isExc := MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
+                       MSIR.CmpPred.Eq, selV,
+                       MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc));
+        BEGIN
+          notExcBlk := MSIRBuilder.NewBlock("lock.fin.notexc");
+          MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), isExc,
+                           resumeBlk, ARRAY OF MSIR.Value{},
+                           notExcBlk, ARRAY OF MSIR.Value{});
+        END;
+        MSIRBuilder.SetCurrentBlock(notExcBlk);
+        IF returnSeen THEN
+          (* Sel_Return → retBlk; otherwise → merge *)
+          VAR isRet := MSIR.BuildICmp(notExcBlk, "",
+                         MSIR.CmpPred.Eq, selV,
+                         MSIR.ConstInt(i32, MSIRBuilder.Sel_Return));
+          BEGIN
+            MSIR.BuildCondBr(notExcBlk, isRet,
+                             retBlk, ARRAY OF MSIR.Value{},
+                             merge,  ARRAY OF MSIR.Value{});
+          END;
+        ELSE
+          MSIR.BuildBr(notExcBlk, merge, ARRAY OF MSIR.Value{});
+        END;
+      END;
     END;
 
     (* Resume: reload saved landing pad and resume unwinding. *)
     MSIRBuilder.SetCurrentBlock(resumeBlk);
     lpLoaded := MSIR.BuildLoad(resumeBlk, "", lpType, lpSlot);
     MSIR.BuildResume(resumeBlk, lpLoaded);
+
+    (* Return: load saved return value and emit ret (possibly through outer cleanup). *)
+    IF returnSeen THEN
+      MSIRBuilder.SetCurrentBlock(retBlk);
+      IF retSlot # NIL AND retT # NIL THEN
+        retV := MSIR.BuildLoad(retBlk, "", retT, retSlot);
+      ELSE
+        retV := NIL;
+      END;
+      IF NOT MSIRBuilder.EmitReturnThroughFinally(retV) THEN
+        MSIR.BuildRet(retBlk, retV);
+      END;
+    END;
 
     MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;
