@@ -223,6 +223,7 @@ PROCEDURE CompileMSIR (p: P) =
     retV:        MSIR.Value;
     i32:         MSIR.T;
     returnSeen:  BOOLEAN;
+    exitSeen:    BOOLEAN;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
@@ -268,6 +269,7 @@ PROCEDURE CompileMSIR (p: P) =
     MSIRBuilder.PushTryContext(lpad);
     MSIRBuilder.PushFinallyCleanup(finBody, selector, retSlot);
     Stmt.CompileMSIR(p.body);
+    exitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
     returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
     MSIRBuilder.PopFinallyCleanup();
     MSIRBuilder.PopTryContext();
@@ -305,18 +307,39 @@ PROCEDURE CompileMSIR (p: P) =
                            notExcBlk, ARRAY OF MSIR.Value{});
         END;
         MSIRBuilder.SetCurrentBlock(notExcBlk);
+        (* Dispatch on selector value for non-exception cases *)
         IF returnSeen THEN
-          (* Sel_Return → retBlk; otherwise → merge *)
-          VAR isRet := MSIR.BuildICmp(notExcBlk, "",
-                         MSIR.CmpPred.Eq, selV,
-                         MSIR.ConstInt(i32, MSIRBuilder.Sel_Return));
+          (* Sel_Return (3) → retBlk; other → next *)
+          VAR nextBlk := MSIRBuilder.NewBlock("lock.notret");
+              isRet := MSIR.BuildICmp(notExcBlk, "",
+                          MSIR.CmpPred.Eq, selV,
+                          MSIR.ConstInt(i32, MSIRBuilder.Sel_Return));
           BEGIN
             MSIR.BuildCondBr(notExcBlk, isRet,
                              retBlk, ARRAY OF MSIR.Value{},
-                             merge,  ARRAY OF MSIR.Value{});
+                             nextBlk, ARRAY OF MSIR.Value{});
+            MSIRBuilder.SetCurrentBlock(nextBlk);
+          END;
+        END;
+        IF exitSeen THEN
+          (* Sel_Exit (2) → emit exit; otherwise → merge *)
+          VAR exitBlk := MSIRBuilder.NewBlock("lock.doexit");
+              curBlk  := MSIRBuilder.CurrentBlock();
+              isExit  := MSIR.BuildICmp(curBlk, "",
+                            MSIR.CmpPred.Eq, selV,
+                            MSIR.ConstInt(i32, MSIRBuilder.Sel_Exit));
+          BEGIN
+            MSIR.BuildCondBr(curBlk, isExit,
+                             exitBlk, ARRAY OF MSIR.Value{},
+                             merge,   ARRAY OF MSIR.Value{});
+            MSIRBuilder.SetCurrentBlock(exitBlk);
+            (* Propagate the EXIT through any enclosing finally/loops. *)
+            MSIRBuilder.EmitExitMSIR();
           END;
         ELSE
-          MSIR.BuildBr(notExcBlk, merge, ARRAY OF MSIR.Value{});
+          IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+            MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
+          END;
         END;
       END;
     END;
