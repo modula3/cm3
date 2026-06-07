@@ -512,6 +512,7 @@ PROCEDURE NoteWrites (p: P) =
 PROCEDURE LValueMSIR (p: P): MSIR.Value =
   VAR blk: MSIR.Block;
       arrAddr, idxVal, oa: MSIR.Value;
+      oaBase_outer : MSIR.Value := NIL;  (* heap ptr for OA, for depth-2 fix *)
       heapBase := FALSE;
   BEGIN
     idxVal := Expr.CompileMSIR (p.biased_b);
@@ -542,6 +543,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           preAbandOA := MSIRBuilder.IsAbandoned ();
       BEGIN
         oaBase := Expr.LValueMSIR (p.a);
+        oaBase_outer := oaBase;  (* save for depth-2+ fix *)
         IF oaBase # NIL THEN
           VAR oaBaseT := MSIR.ValueType (oaBase);
           BEGIN
@@ -572,6 +574,71 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           MSIR.BuildStore (blk, oa, tmp);
           blk := MSIRBuilder.CurrentBlock ();
           RETURN MSIR.BuildArrayElemAddr (blk, "", tmp, idxVal);
+        END;
+      END;
+      (* For multi-depth open arrays (M3 depth > MSIR rank), the standard
+         BuildOpenArrayElemAddr uses wrong stride (sizeof(inner-dope) instead of
+         dim1 * sizeof(elt)).  When we have the heap pointer (oaBase), build a
+         correct virtual sub-dope for the subscripted row using heap-loaded dims. *)
+      VAR msirRank := MSIR.OpenArrayRank (MSIR.ValueType (oa));
+      BEGIN
+        IF msirRank < p.lhsOpenDepth AND oaBase_outer # NIL THEN
+          VAR intT     := MSIR.TI (Target.Integer.size);
+              ptrT     := MSIR.TPtr (MSIR.TVoid ());
+              apB      := Target.Address.size DIV Target.Byte;
+              intB     := Target.Integer.size DIV Target.Byte;
+              m3EltT   := OpenArrayType.NonopenEltType (p.taBase);
+              eltMsirT := MSIRType.Translate (m3EltT);
+              eltInfo  : Type.Info;
+              elemBytes : INTEGER;
+          BEGIN
+            EVAL Type.CheckInfo (m3EltT, eltInfo);
+            elemBytes := eltInfo.size DIV Target.Byte;
+            IF elemBytes > 0 AND eltMsirT # NIL THEN
+              (* Load data_ptr from dope field 0. *)
+              VAR data_ptr := MSIR.BuildLoad (blk, "", ptrT,
+                                MSIRBuilder.BuildPtrByteOff (blk, "", oaBase_outer, 0));
+                  stride   : MSIR.Value := MSIR.ConstInt (intT, elemBytes);
+              BEGIN
+                blk := MSIRBuilder.CurrentBlock ();
+                (* Multiply stride by each extra dimension (dims 1..lhsOpenDepth-1). *)
+                FOR k := 1 TO p.lhsOpenDepth - 1 DO
+                  VAR dimK := MSIR.BuildLoad (blk, "", intT,
+                                MSIRBuilder.BuildPtrByteOff (blk, "", oaBase_outer,
+                                                             apB + k * intB));
+                  BEGIN
+                    blk := MSIRBuilder.CurrentBlock ();
+                    stride := MSIR.BuildIMul (blk, "", stride, dimK);
+                  END;
+                END;
+                blk := MSIRBuilder.CurrentBlock ();
+                (* row_ptr = data_ptr + idxVal * stride *)
+                VAR row_off := MSIR.BuildIMul (blk, "", idxVal, stride);
+                    row_ptr := MSIR.BuildGepByte (blk, "", data_ptr, row_off);
+                    resultDepth := p.lhsOpenDepth - 1;
+                    dopeT := MSIR.TOpenArray (resultDepth, eltMsirT);
+                    dopeA := MSIR.BuildAlloca (blk, "", dopeT);
+                BEGIN
+                  blk := MSIRBuilder.CurrentBlock ();
+                  MSIR.BuildStore (blk, row_ptr,
+                    MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
+                  (* Copy inner dimension sizes dim[1..resultDepth] into new dope. *)
+                  FOR k := 1 TO resultDepth DO
+                    VAR dimK := MSIR.BuildLoad (blk, "", intT,
+                                  MSIRBuilder.BuildPtrByteOff (blk, "", oaBase_outer,
+                                                               apB + k * intB));
+                    BEGIN
+                      blk := MSIRBuilder.CurrentBlock ();
+                      MSIR.BuildStore (blk, dimK,
+                        MSIRBuilder.BuildPtrByteOff (blk, "", dopeA,
+                                                     apB + (k - 1) * intB));
+                    END;
+                  END;
+                  RETURN dopeA;
+                END;
+              END;
+            END;
+          END;
         END;
       END;
       VAR slot := MSIR.BuildOpenArrayElemAddr (blk, "", oa,

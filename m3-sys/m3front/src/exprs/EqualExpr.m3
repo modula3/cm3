@@ -922,32 +922,124 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
              to a fixed array).  For fixed-array values the MSIR representation
              is a pointer to storage (FixedArray kind), not a fat pointer.  Detect
              that case and use the statically-known element count instead of
-             BuildOpenArraySize/BuildOpenArrayElemAddr, which assert on non-OA values. *)
+             BuildOpenArraySize/BuildOpenArrayElemAddr, which assert on non-OA values.
+             For multi-depth open arrays (openRank > MSIR OA rank), use the heap
+             pointer to load extra dimension sizes directly from the dope. *)
           VAR
             lvIsOA := (MSIR.Kind (MSIR.ValueType (lv)) = MSIR.TypeKind.OpenArray);
             rvIsOA := (MSIR.Kind (MSIR.ValueType (rv)) = MSIR.TypeKind.OpenArray);
             tbType : Type.T;  tbInfo : Type.Info;  tbElts : INTEGER;
+            (* Per-dim static extents for fixed side *)
+            tbDimExtents : REF ARRAY OF INTEGER := NIL;
+            (* Heap pointer for each OA side (for extra dims beyond MSIR rank) *)
+            heapLV : MSIR.Value := NIL;
+            heapRV : MSIR.Value := NIL;
+            lvMsirRank : INTEGER := 0;
+            rvMsirRank : INTEGER := 0;
+            intT  := MSIR.TI (Target.Integer.size);
+            ptrT  := MSIR.TPtr (MSIR.TVoid ());
+            apB   := Target.Address.size DIV Target.Byte;
+            intB  := Target.Integer.size DIV Target.Byte;
           BEGIN
+            IF lvIsOA THEN
+              lvMsirRank := MSIR.OpenArrayRank (MSIR.ValueType (lv));
+            END;
+            IF rvIsOA THEN
+              rvMsirRank := MSIR.OpenArrayRank (MSIR.ValueType (rv));
+            END;
+
+            (* For OA sides with extra dims beyond MSIR rank, get the heap pointer
+               so we can load dims directly from the dope. *)
+            IF lvIsOA AND lvMsirRank < openRank THEN
+              heapLV := Expr.LValueMSIR (p.a);
+              blk := MSIRBuilder.CurrentBlock ();  (* refresh after LValueMSIR *)
+            END;
+            IF rvIsOA AND rvMsirRank < openRank THEN
+              heapRV := Expr.LValueMSIR (p.b);
+              blk := MSIRBuilder.CurrentBlock ();  (* refresh after LValueMSIR *)
+            END;
+
+            IF NOT lvIsOA THEN
+              (* Derive static per-dim extents from the fixed array type. *)
+              tbType := Type.Base (Expr.TypeOf (p.a));
+              EVAL Type.CheckInfo (tbType, tbInfo);
+              tbElts := tbInfo.size DIV (elemBytes * Target.Byte);
+              tbDimExtents := NEW (REF ARRAY OF INTEGER, openRank);
+              VAR curr := tbType;
+              BEGIN
+                FOR d := 0 TO openRank - 1 DO
+                  VAR idxT, eltT2: Type.T; nTi: Target.Int; ni: INTEGER;
+                  BEGIN
+                    IF ArrayType.Split (curr, idxT, eltT2) THEN
+                      nTi := Type.Number (idxT);
+                      IF TInt.ToInt (nTi, ni)
+                        THEN tbDimExtents[d] := ni;
+                        ELSE tbDimExtents[d] := 1;
+                      END;
+                      curr := eltT2;
+                    ELSE
+                      tbDimExtents[d] := 1;
+                    END;
+                  END;
+                END;
+              END;
+            END;
             IF NOT rvIsOA THEN
-              (* Derive static element count for the fixed-array side. *)
               tbType := Type.Base (Expr.TypeOf (p.b));
               EVAL Type.CheckInfo (tbType, tbInfo);
               tbElts := tbInfo.size DIV (elemBytes * Target.Byte);
+              IF tbDimExtents = NIL THEN
+                tbDimExtents := NEW (REF ARRAY OF INTEGER, openRank);
+                VAR curr := tbType;
+                BEGIN
+                  FOR d := 0 TO openRank - 1 DO
+                    VAR idxT, eltT2: Type.T; nTi: Target.Int; ni: INTEGER;
+                    BEGIN
+                      IF ArrayType.Split (curr, idxT, eltT2) THEN
+                        nTi := Type.Number (idxT);
+                        IF TInt.ToInt (nTi, ni)
+                          THEN tbDimExtents[d] := ni;
+                          ELSE tbDimExtents[d] := 1;
+                        END;
+                        curr := eltT2;
+                      ELSE
+                        tbDimExtents[d] := 1;
+                      END;
+                    END;
+                  END;
+                END;
+              END;
             END;
+
+            (* Helper: get dim 'd' size from an OA value. When d < msirRank,
+               use BuildOpenArraySize; otherwise load directly from the dope. *)
 
             (* Shape check: AND of (sizeA[dim] = sizeB[dim]) for each dim *)
             shapeOk := NIL;
             FOR dim := 0 TO openRank - 1 DO
-              VAR sa : MSIR.Value; sb : MSIR.Value;
+              VAR sa, sb : MSIR.Value;
               BEGIN
-                IF lvIsOA
-                  THEN sa := MSIR.BuildOpenArraySize (blk, "", lv, dim);
-                  ELSE sa := MSIR.ConstInt (MSIR.TI (Target.Integer.size), tbElts);
+                IF lvIsOA THEN
+                  IF dim < lvMsirRank
+                    THEN sa := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+                    ELSE sa := MSIR.BuildLoad (blk, "", intT,
+                                  MSIRBuilder.BuildPtrByteOff (blk, "", heapLV,
+                                                                apB + dim * intB));
+                  END;
+                ELSE
+                  sa := MSIR.ConstInt (intT, tbDimExtents[dim]);
                 END;
-                IF rvIsOA
-                  THEN sb := MSIR.BuildOpenArraySize (blk, "", rv, dim);
-                  ELSE sb := MSIR.ConstInt (MSIR.TI (Target.Integer.size), tbElts);
+                IF rvIsOA THEN
+                  IF dim < rvMsirRank
+                    THEN sb := MSIR.BuildOpenArraySize (blk, "", rv, dim);
+                    ELSE sb := MSIR.BuildLoad (blk, "", intT,
+                                  MSIRBuilder.BuildPtrByteOff (blk, "", heapRV,
+                                                                apB + dim * intB));
+                  END;
+                ELSE
+                  sb := MSIR.ConstInt (intT, tbDimExtents[dim]);
                 END;
+                blk := MSIRBuilder.CurrentBlock ();
                 VAR eq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, sa, sb);
                 BEGIN
                   IF shapeOk = NIL
@@ -960,25 +1052,55 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
 
             (* Total element count = product of all dimension sizes *)
             IF lvIsOA THEN
-              total := MSIR.BuildOpenArraySize (blk, "", lv, 0);
+              IF 0 < lvMsirRank
+                THEN total := MSIR.BuildOpenArraySize (blk, "", lv, 0);
+                ELSE total := MSIR.BuildLoad (blk, "", intT,
+                                MSIRBuilder.BuildPtrByteOff (blk, "", heapLV, apB));
+              END;
               FOR dim := 1 TO openRank - 1 DO
-                VAR sd := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+                VAR sd : MSIR.Value;
                 BEGIN
+                  IF dim < lvMsirRank
+                    THEN sd := MSIR.BuildOpenArraySize (blk, "", lv, dim);
+                    ELSE sd := MSIR.BuildLoad (blk, "", intT,
+                                  MSIRBuilder.BuildPtrByteOff (blk, "", heapLV,
+                                                                apB + dim * intB));
+                  END;
+                  blk := MSIRBuilder.CurrentBlock ();
+                  total := MSIR.BuildIMul (blk, "", total, sd);
+                END;
+              END;
+            ELSIF rvIsOA THEN
+              IF 0 < rvMsirRank
+                THEN total := MSIR.BuildOpenArraySize (blk, "", rv, 0);
+                ELSE total := MSIR.BuildLoad (blk, "", intT,
+                                MSIRBuilder.BuildPtrByteOff (blk, "", heapRV, apB));
+              END;
+              FOR dim := 1 TO openRank - 1 DO
+                VAR sd : MSIR.Value;
+                BEGIN
+                  IF dim < rvMsirRank
+                    THEN sd := MSIR.BuildOpenArraySize (blk, "", rv, dim);
+                    ELSE sd := MSIR.BuildLoad (blk, "", intT,
+                                  MSIRBuilder.BuildPtrByteOff (blk, "", heapRV,
+                                                                apB + dim * intB));
+                  END;
+                  blk := MSIRBuilder.CurrentBlock ();
                   total := MSIR.BuildIMul (blk, "", total, sd);
                 END;
               END;
             ELSE
-              total := MSIR.ConstInt (MSIR.TI (Target.Integer.size), tbElts);
+              total := MSIR.ConstInt (intT, tbElts);
             END;
+            blk := MSIRBuilder.CurrentBlock ();
 
-            (* Data pointers: address of flat element[0] *)
-            zeros := NEW (REF ARRAY OF MSIR.Value, openRank);
-            zero  := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
-            FOR k := 0 TO openRank - 1 DO zeros[k] := zero END;
-            (* For open-array values use the element-address extractor.  For
-               fixed-array values the MSIR value is the aggregate itself (not a
-               pointer); use the lvalue (slot address) instead — retype it to
-               ptr(elt) so the byte-step GEP in the element loop works. *)
+            (* Data pointers: address of flat element[0].
+               For OA: use element-address extractor with single zero (works for
+               any depth since it always gives ptr+0 = data_ptr).
+               For fixed: use the lvalue (slot address), retyped to ptr(elt). *)
+            zero  := MSIR.ConstInt (intT, 0);
+            zeros := NEW (REF ARRAY OF MSIR.Value, 1);
+            zeros[0] := zero;
             IF lvIsOA THEN
               pA := MSIR.BuildOpenArrayElemAddr (blk, "", lv, zeros^);
             ELSE
