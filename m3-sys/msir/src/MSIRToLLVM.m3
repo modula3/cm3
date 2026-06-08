@@ -468,11 +468,13 @@ PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
 
    Header layout (RT0.RefHeader = Target.AddressBytes() before object ptr):
      bit RH_gray_offset = gray bit (mask = 1 << RH_gray_offset) *)
-PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
+PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT;  locIdx: INTEGER := -1) =
   VAR
-    n  : TEXT;
-    ap := "i" & Fmt.Int(Target.AddressSize());
+    n   : TEXT;
+    ap  := "i" & Fmt.Int(Target.AddressSize());
+    dbg := "";
   BEGIN
+    IF dbgEnabled AND locIdx >= 0 THEN dbg := ", !dbg !" & Fmt.Int(locIdx) END;
     INC(auxN);
     n := Fmt.Int(auxN);
     (* nil check *)
@@ -505,7 +507,7 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
     Wr.PutText(wr, "  call void @"
                    & LLHookName(MSIR.ModuleGCLoadBarrier(curEmitModule),
                                  "RTHooks__CheckLoadTracedRef")
-                   & "(ptr " & refName & ")\n");
+                   & "(ptr " & refName & ")" & dbg & "\n");
     Wr.PutText(wr, "  br label %gc.skip." & n & "\n");
     (* barrier exit — subsequent insns continue here *)
     Wr.PutText(wr, "gc.skip." & n & ":\n");
@@ -530,11 +532,13 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT) =
      bits 1-20:            typecode   (RH_typecode_offset, RH_typecode_size)
      bit RH_dirty_offset:  dirty
      bit RH_gray_offset:   gray *)
-PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
+PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT;  locIdx: INTEGER := -1) =
   VAR
-    n  : TEXT;
-    ap := "i" & Fmt.Int(Target.AddressSize());
+    n   : TEXT;
+    ap  := "i" & Fmt.Int(Target.AddressSize());
+    dbg := "";
   BEGIN
+    IF dbgEnabled AND locIdx >= 0 THEN dbg := ", !dbg !" & Fmt.Int(locIdx) END;
     INC(auxN);
     n := Fmt.Int(auxN);
     (* Read object header; skip barrier if already dirty. *)
@@ -554,7 +558,7 @@ PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT) =
     Wr.PutText(wr, "  call void @"
                    & LLHookName(MSIR.ModuleGCStoreBarrier(curEmitModule),
                                  "RTHooks__CheckStoreTraced")
-                   & "(ptr " & containerName & ")\n");
+                   & "(ptr " & containerName & ")" & dbg & "\n");
     Wr.PutText(wr, "  br label %gc.wskip." & n & "\n");
     (* Store follows immediately after gc.wskip.N: label. *)
     Wr.PutText(wr, "gc.wskip." & n & ":\n");
@@ -797,7 +801,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = load ptr, ptr ");
         LLOpVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, "\n");
-        EmitGcReadBarrier(wr, MSIR.ValueName(res));
+        EmitGcReadBarrier(wr, MSIR.ValueName(res), locIdx);
 
     | MSIR.Op.Store =>
         Wr.PutText(wr, "  store ");
@@ -812,7 +816,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
            write barrier before the store.  Module-global stores (no container)
            skip the barrier — they are GC roots tracked via module descriptor. *)
         IF nOps = 3 THEN
-          EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)));
+          EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)), locIdx);
         END;
         Wr.PutText(wr, "  store ");
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
@@ -887,7 +891,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, " " & MemOrderStr(MSIR.InsnMemOrder(i)));
           Wr.PutText(wr, ", align " & Fmt.Int(align) & "\n");
           IF MSIR.Kind(elemT) = MSIR.TypeKind.GcRef THEN
-            EmitGcReadBarrier(wr, MSIR.ValueName(res));
+            EmitGcReadBarrier(wr, MSIR.ValueName(res), locIdx);
           END;
         END;
 
@@ -899,7 +903,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           align := AtomicAlign(elemT);
         BEGIN
           IF nOps = 3 THEN
-            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)));
+            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)), locIdx);
           END;
           Wr.PutText(wr, "  store atomic ");
           LLTypedVal(wr, val);
@@ -916,7 +920,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           elemT  := MSIR.InsnTargetType(i);
         BEGIN
           IF nOps = 3 THEN
-            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)));
+            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 2)), locIdx);
           END;
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = atomicrmw ");
           Wr.PutText(wr, AtomicRMWOpStr(MSIR.InsnAtomicOp(i)) & " ptr ");
@@ -925,7 +929,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           LLTypedVal(wr, val);
           Wr.PutText(wr, " " & MemOrderStr(MSIR.InsnMemOrder(i)) & "\n");
           IF MSIR.Kind(elemT) = MSIR.TypeKind.GcRef THEN
-            EmitGcReadBarrier(wr, MSIR.ValueName(res));
+            EmitGcReadBarrier(wr, MSIR.ValueName(res), locIdx);
           END;
         END;
 
@@ -941,7 +945,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           failOrd := MemOrderStr(MSIR.InsnMemOrder2(i));
         BEGIN
           IF nOps = 4 THEN
-            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 3)));
+            EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 3)), locIdx);
           END;
           (* Load expected value from expected_ptr *)
           Wr.PutText(wr, "  " & rn & ".exp = load ");
@@ -972,7 +976,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           LLOpVal(wr, expPtr);
           Wr.PutText(wr, ", align " & Fmt.Int(align) & "\n");
           IF MSIR.Kind(elemT) = MSIR.TypeKind.GcRef THEN
-            EmitGcReadBarrier(wr, rn & ".old");
+            EmitGcReadBarrier(wr, rn & ".old", locIdx);
           END;
         END;
 
@@ -1521,11 +1525,14 @@ PROCEDURE MaybeAddExtern(m: MSIR.Module;  externs: RefSeq.T;  p: MSIR.Proc) =
   (* LLVM 22+ disallows 'declare' + 'define' for the same symbol in one module.
      Use LLSymbol comparison (not raw ProcName) because a forward-reference stub
      may carry the fully-qualified name (e.g. "RTAllocator__GetTraced") while the
-     module proc has the short name ("GetTraced"); raw name comparison misses this. *)
+     module proc has the short name ("GetTraced"); raw name comparison misses this.
+     Also skip the module's own _I3 binder: EmitModuleInfo always define[weak]s it,
+     so a preceding 'declare' would be an LLVM 22 redefinition error. *)
   VAR sym: TEXT;
   BEGIN
     IF p = NIL OR MSIR.ProcName(p) = NIL OR IsModuleProc(m, p) OR ProcSeen(externs, p) THEN RETURN END;
     sym := LLSymbol(p);
+    IF Text.Equal(sym, MSIR.ModuleName(m) & "_I3") THEN RETURN END;
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       IF Text.Equal(LLSymbol(MSIR.ModuleProc(m, i)), sym) THEN RETURN END;
     END;
@@ -3837,8 +3844,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
            this weak definition provides the binder.  (Previously a non-interface
            unit with i3InImports = TRUE only DECLARED the binder, leaving it
            undefined at link time — the dominant MSIR-FAIL "missing _I3" cause.)
-         LLVM accepts the weak define even when CollectExterns already emitted a
-         top-of-file `declare` for the same symbol (a define satisfies it). *)
+         MaybeAddExtern skips the module's own _I3 so CollectExterns never
+         emits a `declare` for it — LLVM 22 rejects declare+define for the same
+         symbol in one module. *)
       VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
         Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
       END;
