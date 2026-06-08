@@ -358,7 +358,15 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.ConstFloat =>
         EmitFloatDecimal(wr, v);
     | MSIR.ValueKind.ConstNil =>
-        Wr.PutText(wr, "null");
+        (* Aggregate types (FixedArray, Struct): emit "zeroinitializer" so that
+           `store [N x T] zeroinitializer, ptr %alloca` works correctly.
+           Pointer/ref types: emit "null" (the standard LLVM representation). *)
+        IF MSIR.Kind(MSIR.ValueType(v)) = MSIR.TypeKind.FixedArray
+           OR MSIR.Kind(MSIR.ValueType(v)) = MSIR.TypeKind.Struct THEN
+          Wr.PutText(wr, "zeroinitializer");
+        ELSE
+          Wr.PutText(wr, "null");
+        END;
     | MSIR.ValueKind.ConstProc =>
         Wr.PutText(wr, "@");
         Wr.PutText(wr, LLSymbol(MSIR.GetConstProc(v)));

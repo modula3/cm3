@@ -466,6 +466,9 @@ PROCEDURE ConstZero(t: T): Value =
       TypeKind.GcSlot                   => RETURN ConstNil(t);
     | TypeKind.F32                       => RETURN ConstFloat(t, TFloat.ZeroR);
     | TypeKind.F64                       => RETURN ConstFloat(t, TFloat.ZeroL);
+    | TypeKind.FixedArray,
+      TypeKind.Struct                    => RETURN ConstNil(t);
+      (* Emitter outputs "zeroinitializer" for ConstNil with aggregate types. *)
     ELSE                                   RETURN NIL;
     END;
   END ConstZero;

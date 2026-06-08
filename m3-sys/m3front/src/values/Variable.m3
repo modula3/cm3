@@ -487,7 +487,23 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
     END;
     (* Emit language-default init alongside CG's Type.InitValue in LangInit.
        For subranges with lo > 0 or hi < 0 (zero not in range), init to lo
-       rather than zero — matches SubrangeType.GenInit (p143). *)
+       rather than zero — matches SubrangeType.GenInit (p143).
+       For solid FixedArray/Struct allocas whose default value is all-zero
+       (InitCost=0): emit a zeroinitializer store anyway, because LLVM `alloca`
+       does NOT zero-initialize by default (unlike C's stack variables in
+       optimized builds or heap allocations).  Without this, VAR x := ARRAY OF T
+       { FALSE, .. } leaves x[3..N] as stack garbage, causing spurious TRUE when
+       checked as BOOLEAN (p140/P26).  The non-solid path above already handles
+       the padding-has-garbage case; this handles the content-is-garbage case. *)
+    IF (MSIR.Kind (allocType) = MSIR.TypeKind.FixedArray
+        OR MSIR.Kind (allocType) = MSIR.TypeKind.Struct)
+       AND typeInfoForZero.isSolid
+       AND Type.InitCost (t.type, FALSE) = 0 THEN
+      VAR zeroVal := MSIR.ConstZero (allocType);
+      BEGIN
+        IF zeroVal # NIL THEN MSIR.BuildStore (b, zeroVal, slotAddr) END;
+      END;
+    END;
     IF Type.InitCost (t.type, FALSE) > 0 THEN
       VAR initVal: MSIR.Value := NIL;  lo, hi: Target.Int;
       BEGIN
@@ -1197,7 +1213,36 @@ PROCEDURE InitMSIR (tv: Value.T) =
           IF NOT AddLocalMSIR (t, MSIRBuilder.CurrentBlock ()) THEN RETURN END;
         END;
         IF t.msirInitDone THEN RETURN END;
-        (* Emit the user-specified initializer if any. *)
+        (* Emit the user-specified initializer if any.
+           When t.initZero=TRUE (e.g. VAR x := ARRAY OF T { zero_val, .. }),
+           the initializer is all-zeros.  For scalar types, the AddLocalMSIR
+           zero-init path already handles this.  For FixedArray/Struct, the
+           alloca is NOT zero-initialized by default — we must emit a
+           zeroinitializer store explicitly so x[3..N] aren't stack garbage.
+           Example: VAR x := ARRAY [0..10] OF BOOLEAN { FALSE, .. }  leaves
+           x[3..10] uninitialized without this fix (p140/P26). *)
+        IF (t.initExpr # NIL) AND t.initZero AND NOT t.initAllocated THEN
+          VAR addr := MSIRBuilder.LookupVarAddr (t);
+              mt   : MSIR.T;
+              info : Type.Info;
+          BEGIN
+            IF addr # NIL THEN
+              mt := MSIR.EltType (MSIR.ValueType (addr));
+              EVAL Type.CheckInfo (t.type, info);
+              IF mt # NIL
+                 AND (MSIR.Kind (mt) = MSIR.TypeKind.FixedArray
+                      OR MSIR.Kind (mt) = MSIR.TypeKind.Struct)
+                 AND info.isSolid THEN
+                VAR zeroVal := MSIR.ConstZero (mt);
+                    blk     := MSIRBuilder.CurrentBlock ();
+                BEGIN
+                  IF zeroVal # NIL THEN MSIR.BuildStore (blk, zeroVal, addr) END;
+                END;
+              END;
+            END;
+          END;
+          t.msirInitDone := TRUE;
+        END;
         IF (t.initExpr # NIL) AND NOT t.initZero AND NOT t.initAllocated THEN
           VAR initVal := Expr.CompileMSIR (t.initExpr);
               addr    := MSIRBuilder.LookupVarAddr (t);
