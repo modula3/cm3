@@ -856,15 +856,14 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero genuine abandons.
 
 **LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-08):
-**255/288 PASS, 4 MISMATCH, 29 SKIP**.
+**256/288 PASS, 3 MISMATCH, 29 SKIP**.
 
-Remaining 4 MISMATCH:
+Remaining 3 MISMATCH:
 
 | Test | Root cause |
 |------|-----------|
-| p140 | 1 residual error in P26: RAISE inside FINALLY caught by inner EXCEPT; outer exception re-raise (via `fin.rethrow.5 → RTHooks__ResumeRaise → lpad.1`) somehow leads to `fin.done.6` setting x[9]=TRUE.  Despite `fin.lpad.3` now doing proper `begin_catch`/`end_catch` (matching the C backend's implicit behaviour), the selector check `%t5 == 1` must be returning FALSE at `try.merge.10`.  Root cause unknown — may be a libc++ ABI edge case with nested exception throws inside a FINALLY context. |
-| p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable) |
-| p253 | Heap addresses differ between runs (ASLR) |
+| p140 | 1 residual error in P26: RAISE inside FINALLY caught by inner EXCEPT; selector check `%t5 == 1` somehow returns FALSE at `try.merge.10`.  Root cause unknown despite thorough analysis — may be a libc++ ABI edge case with `begin_catch`/`end_catch` and nested exception contexts. |
+| p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable — different stack frame layouts between CG and MSIR) |
 
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
@@ -1050,6 +1049,36 @@ to support `MSIREmit.EndUnit` text-literal registration.
 **Module globals (var_map/gc_map)**: embedded as trailing fields of
 `@Mod_M3_info` (after 104-byte `RT0.ModuleInfo` header).  gc_map TipeMap
 encodes `Ref` ops for traced fields; LLVM aliases preserve mangled names.
+
+**Multi-module opaque-supertype types**: When MODULE overwrites INTERFACE's .ll,
+two records registered during interface compilation are LOST:
+
+1. **TypeCell** (`type_cells`): the interface's `full_cells` (via `visible_cells` dedup)
+   is skipped for the module by `SetGlobals`.  Fix: `Type.GenCellsMSIR()` walks
+   `cur.module_types` directly, bypassing `visible_cells`; called from
+   `DeclareGlobalsMSIR` for non-interface modules.
+
+2. **Full revelation** (`full_rev`): inherited revelations (l.local=FALSE) are not
+   emitted for the module.  Fix: `Revelation.AddInheritedMSIR(s)` iterates `s`
+   and calls `MSIRBuilder.AddRevelation` + `ObjectType.InitTypecellMSIR` for each
+   inherited full revelation; called from `DeclareGlobalsMSIR`.
+
+When an OBJECT type extends an **opaque supertype** (mBase < 0 — static method base
+offset unknown):
+
+3. **UndefinedMethod at runtime**: `GetObjectTypeInfo` returned early, leaving no
+   method names in the TypeDesc → no linkProc → vtable slots left as `UndefinedMethod`.
+   Fix: collect own methods at LOCAL indices (0..nLocal-1), set `TypeDesc.dynamicMethOff`,
+   emit a dynamic linkProc that reads `OTC_methodOffset` at runtime (set by RTLinker
+   from parent's methodSize) and stores each own method at `dm[OTC_methodOffset/AP + j]`.
+
+4. **Field init proc wrong offsets**: `GenInitProcMSIR` used a static fallback
+   `dataOff = 8` when `fieldOffset < 0`.  Fix: read `OTC_dataOffset` from the TypeCell
+   at runtime (gep %tp + 112, load i64) and use it as the base for field stores.
+
+5. **Dynamic vtable dispatch** (method calls via `QualifyExpr.MethodSlotBase < 0`):
+   instead of abandoning, load the holder TypeCell, read `OTC_methodOffset` at runtime,
+   compute absolute slot, call indirectly via `EmitCallIndirect`.
 
 **Sibling nested-proc calls — transitive captures**: When a nested proc P0_0
 calls a sibling proc Dump0, Dump0 may need outer-scope variables (e.g.
