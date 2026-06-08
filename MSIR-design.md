@@ -864,6 +864,45 @@ Remaining 2 MISMATCH:
 |------|-----------|
 | p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable — different stack frame layouts between CG and MSIR) |
 
+27 SKIP — all blocked by the CG reference binary failing to build (the harness
+requires a working CG executable to compare against; without one, there is
+nothing to compare, regardless of what MSIR produces).  They fall into four
+categories:
+
+**Compile-time hangs (3):** p161, p224, p267.  The cm3 front-end loops
+indefinitely on these inputs; the harness times out and skips.  Unfixable
+without front-end changes unrelated to MSIR.
+
+**M3C assertion failures (8):** the C backend aborts when generating code for
+these modules, so no CG binary is ever produced.
+
+| Test | Root cause in M3C.m3 |
+|------|---------------------|
+| p053, p160 | `SET OF` type > 64 bits; `typedef WORD_T* SET` is gated on set-operation opcodes being present, but these modules only use set-constant initializers, so the typedef is never emitted — clang rejects the generated `.cpp`. |
+| p109, p232, p269 | Other M3C assertion failures: integer-type assertion (`m3_eq` macro instantiation), C++ parse error in generated code, and a code-gen abort on a specific expression pattern. |
+| p248 | `BITS 4 FOR {enum}` hits `bit_size = 8 OR 16 OR 32` assertion in `declare_enum`; 4-bit packed enums are not supported by M3C. |
+| p268, p280 | `TIntLiteral` assertion for out-of-range or negative-UINT64 constant values.  p268 intentionally uses record fields initialised with values outside the field's subrange (to test that a runtime error is raised); M3C asserts rather than emitting the constant. |
+
+**Infrastructure — no standalone binary by design (13):**
+
+| Tests | Reason |
+|-------|--------|
+| p068 | Calls `<*EXTERNAL "_RTHeap__Print"*>` — a CM3 internal function removed from the runtime long ago.  Linker error. |
+| p135, p147 | SAFE-module restrictions: the compiler rejects the program at compile time.  No binary produced. |
+| p152, p153, p154 | Use C-level `scanf`-family externals not present in the standard runtime libraries. |
+| p201 | Exercises a mutually-recursive type definition that the front-end rejects; no binary. |
+| p204 | TCP networking test requiring a live network; cannot be built in an isolated harness invocation. |
+| p220–p223 | Parse-only tests: the m3makefile contains no `program()` directive, so no executable is linked. |
+| p226 | Prints the compiler version string; the output is build-specific and cannot be golden-file compared across compiler versions. |
+
+**`build_standalone()` MxConfig failures (3):** p240, p270, p277.  These
+m3makefiles call `build_standalone()`, which directs the M3 static linker to
+resolve all package paths at build time.  In the harness environment
+`MxConfig__FindConfig` raises `OSError` (cannot locate the required cm3 config
+file).  The same packages build without error under a plain `cm3 -build`
+invocation with the correct working directory; something about the harness PATH
+or CWD breaks the config search.
+
 The authoritative feature checklist (emission and lowering, item by item)
 is in `MSIR-ROADMAP.md §What's Working`.  Summary of coverage: arithmetic,
 control flow, records, fixed/open arrays, enums, SETs (all widths), globals,
