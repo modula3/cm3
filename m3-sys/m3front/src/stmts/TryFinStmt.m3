@@ -499,21 +499,30 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
     END;
 
-    (* Exceptional path: catch-all (so phase 1 finds a handler), but do NOT
-       __cxa_begin_catch.  We only PEEK at the exception object to recover the
-       M3 RaiseActivation (separately heap-allocated, so it survives), save it,
-       set Sel_Exc, and run the finally.  Re-raising later via RTHooks.ResumeRaise
-       is a FRESH throw — so a finally that itself raises a new exception leaves
-       no half-claimed C++ exception dangling (which otherwise hangs the unwinder
-       when the new exception passes through an intermediate non-matching
-       handler, e.g. p0/p004).  Mirrors the C backend, which likewise re-raises
-       via ResumeRaiseEx rather than a C++ rethrow. *)
+    (* Exceptional path: catch the M3 exception, save its act pointer (which
+       lives on the M3 heap and is NOT freed by end_catch), then immediately
+       begin_catch + end_catch to release the C++ exception object.  The FINALLY
+       body then runs completely OUTSIDE any exception context — matching what the
+       C backend generates: `catch(_M3Exc& e){ _m3_caught=e.act; goto fin; }`.
+       Exiting the C++ catch block implicitly calls __cxa_end_catch, so when the
+       FINALLY body raises a NEW exception (e.g. TRY RAISE E EXCEPT E END inside
+       FINALLY), there is no outer exception "owned" that could interact with the
+       inner __cxa_begin_catch / __cxa_end_catch pair.
+       Re-raising later via RTHooks.ResumeRaise is a FRESH throw that propagates
+       to the enclosing handler — same as the C backend's ResumeRaiseEx call. *)
     lpVal     := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
     excHeader := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
     excObjPtr := MSIR.BuildCall(lpad, "", MSIRBuilder.CxaGetExceptionPtr(),
                                 ARRAY OF MSIR.Value{excHeader});
     actPtr    := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr); (* _M3Exc.act *)
     MSIR.BuildStore(lpad, actPtr, actSlot);
+    (* Own then immediately release the C++ exception object.  After end_catch
+       the act pointer is still valid (M3 heap), but the _M3Exc wrapper is freed.
+       The FINALLY body sees no active C++ exception. *)
+    EVAL MSIR.BuildCall(lpad, "", MSIRBuilder.CxaBeginCatch(),
+                        ARRAY OF MSIR.Value{excHeader});
+    EVAL MSIR.BuildCall(lpad, "", MSIRBuilder.CxaEndCatch(),
+                        ARRAY OF MSIR.Value{});
     MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
     MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
 
