@@ -862,7 +862,7 @@ Remaining 4 MISMATCH:
 
 | Test | Root cause |
 |------|-----------|
-| p140 | 1 residual error in P26: RAISE inside FINALLY caught by inner EXCEPT; outer exception re-raise fails. `catch` lpad without `__cxa_begin_catch` — after inner `__cxa_end_catch` clears the inner exception, the selector check goes wrong (x[9]=TRUE instead of FALSE). |
+| p140 | 1 residual error in P26: RAISE inside FINALLY caught by inner EXCEPT; outer exception re-raise (via `fin.rethrow.5 → RTHooks__ResumeRaise → lpad.1`) somehow leads to `fin.done.6` setting x[9]=TRUE.  Despite `fin.lpad.3` now doing proper `begin_catch`/`end_catch` (matching the C backend's implicit behaviour), the selector check `%t5 == 1` must be returning FALSE at `try.merge.10`.  Root cause unknown — may be a libc++ ABI edge case with nested exception throws inside a FINALLY context. |
 | p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable) |
 | p253 | Heap addresses differ between runs (ASLR) |
 
