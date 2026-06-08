@@ -856,14 +856,13 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero genuine abandons.
 
 **LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-08):
-**254/288 PASS, 5 MISMATCH, 29 SKIP**.
+**255/288 PASS, 4 MISMATCH, 29 SKIP**.
 
-Remaining 5 MISMATCH:
+Remaining 4 MISMATCH:
 
 | Test | Root cause |
 |------|-----------|
-| p122 | RETURN in TRY/EXCEPT inside FINALLY: C backend uses `Return_exception` pseudo-value caught by `EXCEPT ELSE`; MSIR has no equivalent |
-| p140 | 1 residual error: RAISE inside FINALLY caught by inner EXCEPT then outer exception continues; `catch` lpad without `__cxa_begin_catch` breaks the C++ ABI for this nested pattern |
+| p140 | 1 residual error in P26: RAISE inside FINALLY caught by inner EXCEPT; outer exception re-raise fails. `catch` lpad without `__cxa_begin_catch` — after inner `__cxa_end_catch` clears the inner exception, the selector check goes wrong (x[9]=TRUE instead of FALSE). |
 | p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable) |
 | p253 | Heap addresses differ between runs (ASLR) |
 
@@ -1077,6 +1076,25 @@ Three coordinated changes needed (all in `Procedure.m3` / `NamedExpr.m3` /
 
 Rule: **only non-global (`t.global = FALSE`) stack locals of outer proc scopes**
 need to be lambda-lifted through sibling call chains.
+
+**EXCEPT ELSE + RETURN/EXIT interception**: In CM3 semantics, `EXCEPT ELSE`
+catches all exits from the TRY body including RETURN (the C backend stores a
+`Return_exception` sentinel in `info.exception`; EXCEPT ELSE detects and swallows
+it).  MSIR has no sentinel mechanism: RETURN inside `TRY ... EXCEPT ELSE` would
+compile to a direct `ret`, bypassing the handler.
+
+Fix (in `TryStmt.CompileMSIR` when `p.hasElse AND p.handles = NIL`):
+1. Allocate `innerSelector` (i32) and `innerRetSlot` (procResultType if non-void).
+2. `PushFinallyCleanup(elseDispatch, innerSelector, innerRetSlot)` BEFORE body —
+   intercepts RETURN/EXIT exactly as TryFinStmt intercepts them for FINALLY.
+3. `PushTryContext(lpad)` for exceptions.
+4. The lpad saves the activation ptr, sets `innerSelector = Sel_Exc`, calls
+   `__cxa_begin_catch` (owns the exception), then branches to `elseDispatch`.
+5. `elseDispatch` compiles the ELSE body, then checks `innerSelector`:
+   - `Sel_Exc`: `__cxa_end_catch` (releases owned exception), br merge.
+   - Anything else (Sel_Return, Sel_Exit, Sel_Normal): br merge (suppressed).
+6. `merge`: execution continues — the ENCLOSING FINALLY's `selector` / `retSlot`
+   are untouched, so a pending RETURN 1 from the outer FINALLY still fires.
 
 **LOCK exception re-raise**: The LOCK cleanup must use
 `invoke RTHooks__ResumeRaise(actPtr) unwind enclosing` — NOT the LLVM `resume`
