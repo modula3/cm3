@@ -542,6 +542,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           IF Expr.IsDesignator (p.expr) THEN
             VAR addr := Expr.LValueMSIR (p.expr); BEGIN
               IF addr = NIL THEN RETURN NIL END;
+              blk := MSIRBuilder.CurrentBlock ();  (* re-fetch after potential invoke *)
               VAR typedAddr := MSIR.RetypeValue (addr, MSIR.TPtr (dstT)); BEGIN
                 RETURN MSIR.BuildLoad (blk, "", dstT, typedAddr);
               END;
@@ -549,6 +550,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           ELSE
             VAR v := Expr.CompileMSIR (p.expr); BEGIN
               IF v = NIL THEN RETURN NIL END;
+              (* Re-fetch current block: an invoke inside p.expr may have moved us
+                 to a new basic block; blk from before CompileMSIR is stale. *)
+              blk := MSIRBuilder.CurrentBlock ();
               VAR srcT := MSIR.ValueType (v);
                   slot := MSIR.BuildAlloca (blk, "", srcT);
               BEGIN
