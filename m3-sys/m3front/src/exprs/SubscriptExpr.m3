@@ -551,9 +551,17 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
               heapBase := TRUE;
               MSIRBuilder.SetPendingContainer (oaBase);
             END;
-            (* Load the dope vector through the pointer (ptr or gc_ref). *)
+            (* Load the dope vector through the pointer (ptr or gc_ref).
+               When oaBase came from a capture param (TPtr(TVoid())), EltType
+               yields TVoid — use the known open-array type from p.taBase instead. *)
             blk := MSIRBuilder.CurrentBlock ();
-            oa  := MSIR.BuildLoad (blk, "", MSIR.EltType (oaBaseT), oaBase);
+            VAR eltT := MSIR.EltType (oaBaseT);
+            BEGIN
+              IF MSIR.Kind(eltT) = MSIR.TypeKind.Void THEN
+                eltT := MSIRType.Translate(p.taBase);
+              END;
+              oa := MSIR.BuildLoad (blk, "", eltT, oaBase);
+            END;
           END;
         ELSE
           (* LValueMSIR failed — fall back: CompileMSIR returns the dope VALUE. *)

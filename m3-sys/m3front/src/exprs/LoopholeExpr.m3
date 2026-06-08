@@ -562,7 +562,23 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         ELSE
           VAR v := Expr.CompileMSIR (p.expr); BEGIN
             IF v = NIL THEN RETURN NIL END;
-            RETURN MSIR.RetypeValue (v, dstT);
+            (* RetypeValue is only valid when the LLVM IR type is unchanged.
+               If LookupVar widened the value (e.g. i8→i64), RetypeValue would
+               mislabel the i64 SSA name with the narrow type → LLVM error.
+               Apply Trunc/ZExt first when bit widths differ. *)
+            blk := MSIRBuilder.CurrentBlock ();
+            VAR srcT := MSIR.ValueType (v);
+                srcW := MSIR.BitWidth (srcT);
+                dstW := MSIR.BitWidth (dstT);
+            BEGIN
+              IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
+                IF srcW > dstW
+                  THEN RETURN MSIR.BuildTrunc (blk, "", v, dstT)
+                  ELSE RETURN MSIR.BuildZExt  (blk, "", v, dstT)
+                END;
+              END;
+              RETURN MSIR.RetypeValue (v, dstT);
+            END;
           END;
         END;
     | Kind.D_to_V =>
