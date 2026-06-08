@@ -855,14 +855,13 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero `msir-verify` errors.
   - Zero genuine abandons.
 
-**LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-07):
-**253/288 PASS, 6 MISMATCH, 29 SKIP**.
+**LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-08):
+**254/288 PASS, 5 MISMATCH, 29 SKIP**.
 
-Remaining 6 MISMATCH:
+Remaining 5 MISMATCH:
 
 | Test | Root cause |
 |------|-----------|
-| p012 | Nested-proc sibling call: P0_0 calling Dump0 omits the 6 capture args |
 | p122 | RETURN in TRY/EXCEPT inside FINALLY: C backend uses `Return_exception` pseudo-value caught by `EXCEPT ELSE`; MSIR has no equivalent |
 | p140 | 1 residual error: RAISE inside FINALLY caught by inner EXCEPT then outer exception continues; `catch` lpad without `__cxa_begin_catch` breaks the C++ ABI for this nested pattern |
 | p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable) |
@@ -1052,6 +1051,32 @@ to support `MSIREmit.EndUnit` text-literal registration.
 **Module globals (var_map/gc_map)**: embedded as trailing fields of
 `@Mod_M3_info` (after 104-byte `RT0.ModuleInfo` header).  gc_map TipeMap
 encodes `Ref` ops for traced fields; LLVM aliases preserve mangled names.
+
+**Sibling nested-proc calls — transitive captures**: When a nested proc P0_0
+calls a sibling proc Dump0, Dump0 may need outer-scope variables (e.g.
+P0's `LVisitNo`) that P0_0 does not directly access.  Lambda-lifting requires
+these to be threaded through P0_0's capture parameter list.
+
+Three coordinated changes needed (all in `Procedure.m3` / `NamedExpr.m3` /
+`UserProc.m3`):
+
+1. **Two-round `PreRegisterNestedCaptures`** — run the capture pre-registration
+   pass twice before `Scope.InitValues` (in `GenBody`) and before
+   `CompileNestedBodyMSIR` (in `GenBodyMSIR`).  Round 1 builds direct
+   captures; round 2 adds transitive sibling captures using round-1 `captureMap`
+   data (otherwise Dump0's caps are not yet known when P0_0's round-1 runs).
+
+2. **Skip module globals in `NoteCapture`** (`NamedExpr.NoteCapture` ELSE branch):
+   filter out variables with `t.global = TRUE` when propagating a callee's
+   captures.  Module globals are always accessible via `LookupVar`/`LookupVarAddr`
+   through `globalMap` without lambda-lifting; adding them as value captures
+   shadows `globalMap` lookups and breaks `LookupVarAddr` for VAR-param callers.
+
+3. **Also filter globals in `UserProc.Capture`**: the same rule applies when
+   explicitly adding sibling captures for nested calls.
+
+Rule: **only non-global (`t.global = FALSE`) stack locals of outer proc scopes**
+need to be lambda-lifted through sibling call chains.
 
 **LOCK exception re-raise**: The LOCK cleanup must use
 `invoke RTHooks__ResumeRaise(actPtr) unwind enclosing` — NOT the LLVM `resume`
