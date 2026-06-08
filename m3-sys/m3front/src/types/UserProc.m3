@@ -358,8 +358,98 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
           END;
           VAR mBase := QualifyExpr.MethodSlotBase(p.proc); BEGIN
             IF mBase < 0 THEN
-              MSIRBuilder.Abandon("method call: vtable base offset unknown (opaque type)");
-              RETURN NIL;
+              (* Opaque supertype: static method offset not known.  Mirrors the
+                 CG backend: Type.LoadInfo(holder, OTC_methodOffset) + Index_bytes.
+                 Load the methodOffset field from the holder's TypeCell at runtime,
+                 add methodInfo.offset (byte offset within this type's own methods),
+                 then do a dynamic vtable dispatch using the computed byte offset.
+                 OTC_methodOffset = TC_SIZE + OTC_parentID(IP) + OTC_linkProc(AP)
+                                  + OTC_dataOffset(IP) = TC_SIZE + 2*IP + AP. *)
+              VAR
+                ptrT   := MSIR.TPtr(MSIR.TVoid());
+                intT   := MSIR.TI(Target.Integer.size);
+                b2     := MSIRBuilder.CurrentBlock();
+                (* holder TypeCell via the TypeLink for the holder type *)
+                holderType   : Type.T;
+                tc          : MSIR.Value;
+                otcMethOff  : INTEGER;
+                dynBaseVal  : MSIR.Value;
+                totalByteOff: MSIR.Value;
+                suite, slotPtr, fn: MSIR.Value;
+                nExtra      : INTEGER;
+                largeResT   : MSIR.T;
+                largeResSlot: MSIR.Value := NIL;
+                isLargeR    := ProcType.LargeResult(ProcType.Result(procType));
+                rtype2      : MSIR.T;
+                allArgs2    : REF ARRAY OF MSIR.Value;
+                procResult2 := ProcType.Result(procType);
+              BEGIN
+                holderType := QualifyExpr.MethodHolder(p.proc);
+                IF holderType = NIL THEN
+                  MSIRBuilder.Abandon("method call: cannot get holder type for opaque dispatch");
+                  RETURN NIL;
+                END;
+                objVal := Expr.CompileMSIR(objExpr);
+                IF objVal = NIL THEN RETURN NIL END;
+                n := NUMBER(p.args^);
+                dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
+                VAR fv := ProcType.Formals(procType); BEGIN
+                  FOR i := 0 TO n - 1 DO
+                    <* ASSERT fv # NIL *>
+                    dispArgs[i] := Formal.EmitArgMSIR(fv, p.args[i]);
+                    fv := fv.next;
+                    IF dispArgs[i] = NIL THEN RETURN NIL END;
+                  END;
+                END;
+                b2 := MSIRBuilder.CurrentBlock();
+                tc := MSIRBuilder.TypeLinkValueForObject(holderType);
+                IF tc = NIL THEN
+                  MSIRBuilder.Abandon("method call: no TypeLink for opaque holder");
+                  RETURN NIL;
+                END;
+                (* OTC_methodOffset byte position within the ObjectTypeCell.
+                   OTC = TC_SIZE + OTC_parentID(IP) + OTC_linkProc(AP)
+                        + OTC_dataOffset(IP) *)
+                otcMethOff := M3RT.OTC_methodOffset DIV Target.Char.size;
+                dynBaseVal  := MSIR.BuildLoad(b2, "", intT,
+                                 MSIRBuilder.BuildPtrByteOff(b2, "", tc, otcMethOff));
+                b2 := MSIRBuilder.CurrentBlock();
+                totalByteOff := MSIR.BuildIAdd(b2, "", dynBaseVal,
+                                  MSIR.ConstInt(intT, methodInfo.offset));
+                b2 := MSIRBuilder.CurrentBlock();
+                (* Load vtable pointer from object (first word). *)
+                suite := MSIR.BuildLoad(b2, "", ptrT,
+                           MSIR.BuildConvert(b2, "", objVal, MSIR.TPtr(ptrT)));
+                b2 := MSIRBuilder.CurrentBlock();
+                (* GEP into vtable by dynamic byte offset. *)
+                slotPtr := MSIR.BuildGepByte(b2, "", suite, totalByteOff);
+                b2 := MSIRBuilder.CurrentBlock();
+                fn := MSIR.BuildLoad(b2, "", ptrT, slotPtr);
+                b2 := MSIRBuilder.CurrentBlock();
+                (* Build call args: [resultSlot?, obj, explicit args] *)
+                IF isLargeR THEN
+                  largeResT    := MSIRType.Translate(procResult2);
+                  largeResSlot := MSIR.BuildAlloca(b2, "", largeResT);
+                END;
+                rtype2 := MSIRType.TranslateResult(procResult2);
+                nExtra := 1 + ORD(isLargeR);
+                allArgs2 := NEW(REF ARRAY OF MSIR.Value, nExtra + n);
+                IF isLargeR THEN
+                  allArgs2[0] := largeResSlot;
+                  allArgs2[1] := objVal;
+                ELSE
+                  allArgs2[0] := objVal;
+                END;
+                FOR k := 0 TO n - 1 DO allArgs2[nExtra + k] := dispArgs[k] END;
+                (* Direct indirect call through the vtable function pointer —
+                   NOT closure dispatch (vtable holds direct proc ptrs). *)
+                VAR callRes := MSIRBuilder.EmitCallIndirect("", fn, rtype2, allArgs2^); BEGIN
+                  IF isLargeR THEN
+                    RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", largeResT, largeResSlot);
+                  END;
+                  RETURN callRes;
+                END;
+              END;
             END;
             midx := (mBase + methodInfo.offset) DIV Target.Address.size;
           END;

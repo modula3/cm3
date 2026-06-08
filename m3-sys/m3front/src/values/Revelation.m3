@@ -544,6 +544,34 @@ PROCEDURE Declare (s: Set;  VAR full_info, partial_info: INTEGER) =
     END;
   END Declare;
 
+PROCEDURE AddInheritedMSIR (s: Set) =
+  (* For non-interface modules: add inherited full revelations and their
+     concrete TypeCells to the current MSIR module.  The interface .ll is
+     overwritten by the module .ll, so revelation mappings (lhs→rhs opaque
+     type to concrete type) and the concrete TypeCell must re-appear in the
+     module's output for RTLinker.NoteFullRevelation + DeclareModuleTypes. *)
+  VAR l: List;  iter: Iterator;
+      info: Type.Info;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN END;
+    InitIterator (s, iter);
+    WHILE Iterate (iter) DO
+      l := iter.cur;
+      IF (NOT l.local) AND l.ident.equal THEN
+        (* Add the lhs→rhs revelation mapping. *)
+        MSIRBuilder.AddRevelation(Type.GlobalUID(l.ident.lhs),
+                                  Type.GlobalUID(l.ident.rhs));
+        (* Also register the concrete (rhs) TypeCell if it's an Object/Ref. *)
+        EVAL Type.CheckInfo(l.ident.rhs, info);
+        IF info.class = Type.Class.Ref THEN
+          RefType.InitTypecellMSIR(l.ident.rhs);
+        ELSIF info.class = Type.Class.Object THEN
+          ObjectType.InitTypecellMSIR(l.ident.rhs);
+        END;
+      END;
+    END;
+  END AddInheritedMSIR;
+
 PROCEDURE GenList (s: Set;  cnt: INTEGER;  eq: BOOLEAN): INTEGER =
   VAR
     base := Module.Allocate (cnt * M3RT.RV_SIZE + Target.Integer.size,

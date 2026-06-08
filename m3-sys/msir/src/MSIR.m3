@@ -1135,6 +1135,7 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   methodOffset  : INTEGER;  (* OBJ: vtable byte offset where own methods start *)
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
+  dynamicMethOff: BOOLEAN  := FALSE;  (* OBJ: method names at LOCAL indices; linkProc reads OTC_methodOffset at runtime *)
   nDimensions   : INTEGER := 0;  (* Array: open array rank *)
   elementSize   : INTEGER := 0;  (* Array: element byte size *)
   ptrVal        : Value := NIL;
@@ -1202,6 +1203,11 @@ PROCEDURE TypeDescMethodCount(d: TypeDesc): INTEGER =
   END TypeDescMethodCount;
 PROCEDURE TypeDescMethod(d: TypeDesc; i: INTEGER): TEXT =
   BEGIN RETURN d.methods[i] END TypeDescMethod;
+
+PROCEDURE TypeDescDynamicMethOff(d: TypeDesc): BOOLEAN =
+  BEGIN RETURN d.dynamicMethOff END TypeDescDynamicMethOff;
+PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN) =
+  BEGIN d.dynamicMethOff := b END SetTypeDescDynamicMethOff;
 
 PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER) =
   BEGIN d.nDimensions := nDimensions;  d.elementSize := elementSize END TypeDescSetArrayInfo;

@@ -38,6 +38,12 @@ PROCEDURE MethodSlotBase (e: Expr.T): INTEGER;
    OTC_defaultMethods table and call it indirectly.  Returns FALSE otherwise. *)
 PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN;
 
+(* Return the holder type of a method reference (the object type that declares
+   the method — p.holder in QualifyExpr's private P type).  NIL if not a
+   method or not resolved.  Used for dynamic vtable dispatch when the holder's
+   methodOffset is not statically known (opaque supertype). *)
+PROCEDURE MethodHolder (e: Expr.T): Type.T;
+
 (* If e is a QualifyExpr whose field is sub-byte, emit a read-modify-write
    bit-insertion of rhs and return TRUE.  Otherwise return FALSE immediately. *)
 PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;

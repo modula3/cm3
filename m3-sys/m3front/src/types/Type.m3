@@ -15,7 +15,8 @@ IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, RTParams, MSIREmit;
+IMPORT MSIR;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -819,6 +820,52 @@ PROCEDURE LinkName (t: T;  tag: TEXT): TEXT =
   END LinkName;
 
 (*EXPORTED*)
+PROCEDURE GenCellsMSIR () =
+  (* Walk cur.module_types directly (bypassing visible_cells dedup) and call
+     InitTypecellMSIR for every OBJECT/REF type declared in this module that
+     does NOT yet have a TypeDesc registered.  This ensures the TypeDesc
+     appears in the module .ll even when the interface compilation phase
+     already registered the type (visible_cells dedup then skips AddCell for
+     the module, leaving full_cells empty and GenCells unable to emit it).
+     Only fires when full_cells is empty (module was skipped by dedup); the
+     GenCells() call later handles the normal case. *)
+  VAR t    : T;
+      u    : T;
+      info : Info;
+      m    : MSIR.Module;
+      uid  : INTEGER;
+      found: BOOLEAN;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN END;
+    IF cur.full_cells # NIL THEN RETURN END; (* GenCells handles it *)
+    m := MSIREmit.CurrentModule();
+    IF m = NIL THEN RETURN END;
+    Reorder();
+    t := cur.module_types;
+    WHILE t # NIL DO
+      u := Check(t);
+      EVAL CheckInfo(u, info);
+      IF info.class = Class.Ref OR info.class = Class.Object THEN
+        uid := GlobalUID(u);
+        (* Check if a TypeDesc for this uid is already registered. *)
+        found := FALSE;
+        FOR i := 0 TO MSIR.ModuleTypeDescCount(m) - 1 DO
+          IF MSIR.TypeDescUID(MSIR.ModuleTypeDesc(m, i)) = uid THEN
+            found := TRUE; EXIT;
+          END;
+        END;
+        IF NOT found THEN
+          IF info.class = Class.Ref THEN
+            RefType.InitTypecellMSIR(u);
+          ELSE
+            ObjectType.InitTypecellMSIR(u);
+          END;
+        END;
+      END;
+      t := t.next;
+    END;
+  END GenCellsMSIR;
+
 PROCEDURE GenCells (): INTEGER =
   VAR cell := cur.full_cells;  prev := 0;
   BEGIN

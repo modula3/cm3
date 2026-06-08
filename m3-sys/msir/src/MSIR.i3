@@ -349,6 +349,8 @@ PROCEDURE SetTypeDescInitProc (d: TypeDesc; procName: TEXT); (* OBJ: field-defau
 PROCEDURE TypeDescInitProcName(d: TypeDesc): TEXT;           (* NIL if none *)
 PROCEDURE TypeDescUserName    (d: TypeDesc): TEXT;       (* OBJ: user-visible name or NIL *)
 PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
+PROCEDURE TypeDescDynamicMethOff(d: TypeDesc): BOOLEAN;
+PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN);
 PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescMethod      (d: TypeDesc;  i: INTEGER): TEXT;
 (* Array TypeCell extensions (kind = ORD(M3RT.TypeKind.Array)). *)

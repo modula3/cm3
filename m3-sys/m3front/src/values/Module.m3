@@ -934,6 +934,7 @@ PROCEDURE Compile (t: T) =
       Host.env.note_unit (t.name, t.interface);
       DeclareGlobalData (t);
       DeclareGlobalsMSIR (t);
+      Type.GenCellsMSIR ();
       IF (t.body # NIL) THEN EmitDecl (t.body); END;
       Type.CompileAll ();
       IF (t.interface)
@@ -1124,6 +1125,15 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
         END;
         sv := sv.next;
       END;
+    END;
+    (* MSIR non-interface: add inherited full revelations to the MSIR module.
+       When a module implements an interface (same name), the module .ll
+       overwrites the interface .ll.  Full revelations declared in the
+       interface (l.local=TRUE for the interface, l.local=FALSE inherited here)
+       must also appear in the module's full_rev for RTLinker.NoteFullRevelation
+       to successfully map the opaque type to its concrete TypeCell. *)
+    IF NOT t.interface THEN
+      Revelation.AddInheritedMSIR (t.revelations);
     END;
   END DeclareGlobalsMSIR;
 

@@ -1049,6 +1049,18 @@ PROCEDURE MethodSlotBase (e: Expr.T): INTEGER =
     END;
   END MethodSlotBase;
 
+PROCEDURE MethodHolder (e: Expr.T): Type.T =
+  BEGIN
+    TYPECASE e OF
+    | P(p) => Resolve (p);
+              IF p.class = Class.objMethod OR p.class = Class.objTypeMethod THEN
+                RETURN p.holder;
+              END;
+    ELSE
+    END;
+    RETURN NIL;
+  END MethodHolder;
+
 PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN =
   BEGIN
     TYPECASE e OF

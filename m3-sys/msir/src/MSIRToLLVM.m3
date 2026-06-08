@@ -1,7 +1,7 @@
 MODULE MSIRToLLVM;
 
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT Target, TFloat;
+IMPORT Target, TFloat, M3RT;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (* RT0.RefHeaderBits bit-field offsets — derived from the BITS declarations:
@@ -3213,7 +3213,71 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                 & Fmt.Int(Text.Length(uName) + 1) & " x i8] c\""
                 & uName & "\\00\"\n");
             END;
-            IF nMethods > 0 THEN
+            IF nMethods > 0 AND MSIR.TypeDescDynamicMethOff(d) THEN
+              (* Dynamic linkProc mode: method names at LOCAL indices (0..nLocal-1),
+                 supertype method count unknown at compile time.  Emit a linkProc
+                 that reads OTC_methodOffset from the TypeCell at runtime (set by
+                 RTLinker from the parent's methodSize) and stores each own method
+                 at the absolute slot = OTC_methodOffset/sizeof_ptr + localIndex. *)
+              VAR lpName := nm & ".linkproc";
+                  AP := Target.Address.bytes;
+              BEGIN
+                lpv := "@" & lpName;
+                FOR j := 0 TO nMethods - 1 DO
+                  VAR mname := MSIR.TypeDescMethod(d, j);
+                      alreadyDeclared := FALSE;
+                  BEGIN
+                    IF mname # NIL THEN
+                      FOR di := 0 TO declaredMethods.size() - 1 DO
+                        IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
+                          alreadyDeclared := TRUE; EXIT
+                        END;
+                      END;
+                      IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
+                        Wr.PutText(wr, "declare void @" & mname & "()\n");
+                        declaredMethods.addhi(mname);
+                      END;
+                    END;
+                  END;
+                END;
+                Wr.PutText(wr, "define internal void @" & lpName
+                               & "(ptr %tp) personality ptr @__gxx_personality_v0 {\n");
+                Wr.PutText(wr, "entry:\n");
+                (* Read OTC_defaultMethods from the TypeCell *)
+                Wr.PutText(wr, "  %dm.ptr = getelementptr inbounds i8, ptr %tp, i64 "
+                               & Fmt.Int(OTC_defaultMethods_BYTES) & "\n");
+                Wr.PutText(wr, "  %dm = load ptr, ptr %dm.ptr\n");
+                (* Read OTC_methodOffset from the TypeCell (set by RTLinker) *)
+                Wr.PutText(wr, "  %methoff.ptr = getelementptr inbounds i8, ptr %tp, i64 "
+                               & Fmt.Int(M3RT.OTC_methodOffset DIV Target.Char.size) & "\n");
+                Wr.PutText(wr, "  %methoff = load i64, ptr %methoff.ptr\n");
+                FOR j := 0 TO nMethods - 1 DO
+                  VAR mname := MSIR.TypeDescMethod(d, j);
+                  BEGIN
+                    IF mname # NIL THEN
+                      (* absolute slot = methoff / AP + j *)
+                      Wr.PutText(wr, "  %slot.abs." & Fmt.Int(j)
+                                     & " = sdiv i64 %methoff, " & Fmt.Int(AP) & "\n");
+                      IF j > 0 THEN
+                        Wr.PutText(wr, "  %slot.off." & Fmt.Int(j)
+                                       & " = add i64 %slot.abs." & Fmt.Int(j)
+                                       & ", " & Fmt.Int(j) & "\n");
+                        Wr.PutText(wr, "  %slot." & Fmt.Int(j)
+                                       & " = getelementptr ptr, ptr %dm, i64 %slot.off."
+                                       & Fmt.Int(j) & "\n");
+                      ELSE
+                        Wr.PutText(wr, "  %slot." & Fmt.Int(j)
+                                       & " = getelementptr ptr, ptr %dm, i64 %slot.abs."
+                                       & Fmt.Int(j) & "\n");
+                      END;
+                      Wr.PutText(wr, "  store ptr @" & mname & ", ptr %slot."
+                                     & Fmt.Int(j) & "\n");
+                    END;
+                  END;
+                END;
+                Wr.PutText(wr, "  ret void\n}\n");
+              END;
+            ELSIF nMethods > 0 THEN
               (* Detect whether any slot is NIL (= inherited slot unknown at
                  compile time).  If so, use linkProc mode: RTLinker allocates
                  the vtable, copies parent methods, then calls linkProc to fill

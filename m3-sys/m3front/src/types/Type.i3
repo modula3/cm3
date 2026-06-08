@@ -183,6 +183,13 @@ PROCEDURE GenCells (): INTEGER;
 (* generate the current module's linked list of typecells
    and return its offset in the module global data. *)
 
+PROCEDURE GenCellsMSIR ();
+(* MSIR-only: register MSIR TypeDescs for all OBJECT/REF types declared
+   in this module, bypassing the visible_cells dedup used by GenCells.
+   Called from DeclareGlobalsMSIR so TypeDescs appear in the module .ll
+   even when the interface phase already registered the same types
+   (preventing the visible_cells check from skipping them in full_cells). *)
+
 PROCEDURE GenCellPtrs (): INTEGER;
 (* generate the current module's linked list of pointers to typecells
    and return its offset in the module global data. *)

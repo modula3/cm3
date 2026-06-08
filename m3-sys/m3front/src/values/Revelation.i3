@@ -40,4 +40,11 @@ PROCEDURE LookUpAll (key: Type.T;  VAR(*OUT*) x: TypeSet);
 
 PROCEDURE Reuse (s: Set);
 
+(* MSIR-only: add all inherited (l.local=FALSE) full revelations from s to
+   the current MSIR module via MSIRBuilder.AddRevelation.  Called from
+   DeclareGlobalsMSIR for non-interface modules so that full_rev records
+   appear in the module .ll (which overwrites the interface .ll, losing
+   revelations registered in the interface compilation phase). *)
+PROCEDURE AddInheritedMSIR (s: Set);
+
 END Revelation.

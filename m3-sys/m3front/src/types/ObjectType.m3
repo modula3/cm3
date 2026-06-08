@@ -824,10 +824,34 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
     MSIRBuilder.BeginHelperProc (proc, entry);
 
     (* Determine the field region byte offset within the heap object.
-       p.fieldOffset is in BITS; convert to bytes. *)
-    IF p.fieldOffset >= 0
-      THEN dataOff := p.fieldOffset DIV Target.Byte;
-      ELSE dataOff := Target.Address.bytes;   (* 8 bytes: vtable ptr *)
+       p.fieldOffset is in BITS; convert to bytes.
+       When fieldOffset < 0 (opaque supertype — static offset unknown), load
+       OTC_dataOffset from the TypeCell at runtime so field stores hit the
+       correct byte position (which RTLinker has computed from the parent's
+       dataSize and stored in the TypeCell before any object is allocated). *)
+    VAR dynDataOff: MSIR.Value := NIL;
+    BEGIN
+    IF p.fieldOffset >= 0 THEN
+      dataOff := p.fieldOffset DIV Target.Byte;
+    ELSE
+      (* Dynamic: load OTC_dataOffset from the module's TypeCell.
+         OTC_dataOffset byte offset within TypeCell = M3RT.OTC_dataOffset / Char. *)
+      VAR ptrT2   := MSIR.TPtr (MSIR.TVoid ());
+          intT2   := MSIR.TI (Target.Integer.size);
+          uid2    := MSIR.TypeDescUID (desc);
+          tcRef   := MSIR.TypeCellRef ("tl_obj_" & Fmt.Int (uid2));
+          tcPtr   : MSIR.Value;
+          offPtr  : MSIR.Value;
+          otcOff  := M3RT.OTC_dataOffset DIV Target.Char.size;
+      BEGIN
+        tcPtr  := MSIR.BuildLoad (b, "", ptrT2, tcRef);
+        b := MSIRBuilder.CurrentBlock ();
+        offPtr := MSIR.BuildPtrAdd (b, "", tcPtr, otcOff);
+        b := MSIRBuilder.CurrentBlock ();
+        dynDataOff := MSIR.BuildLoad (b, "", intT2, offPtr);
+        b := MSIRBuilder.CurrentBlock ();
+      END;
+      dataOff := 0;  (* base offset; dynDataOff carries the real value *)
     END;
 
     objParam := MSIR.ProcParam (proc, 0);
@@ -853,9 +877,26 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
             (* BITS-N packed fields within OBJECT init proc: skip for now
                (packed fields in OBJECT bodies are rare; plain fields suffice). *)
             IF NOT PackedType.Is (field.type) THEN
-              fieldAddr := MSIR.BuildPtrAdd (b, "", objParam,
-                             absOff DIV Target.Byte);
-              MSIR.BuildStore (b, valV, fieldAddr);
+              IF dynDataOff # NIL THEN
+                (* Dynamic dataOffset: compute field addr as obj + OTC_dataOffset
+                   + field's own byte offset within T's field region. *)
+                VAR intT3     := MSIR.TI (Target.Integer.size);
+                    ownOff    := field.offset DIV Target.Byte;
+                    totalOff  : MSIR.Value;
+                    ownOffVal := MSIR.ConstInt (intT3, ownOff);
+                BEGIN
+                  b := MSIRBuilder.CurrentBlock ();
+                  totalOff := MSIR.BuildIAdd (b, "", dynDataOff, ownOffVal);
+                  b := MSIRBuilder.CurrentBlock ();
+                  fieldAddr := MSIR.BuildGepByte (b, "", objParam, totalOff);
+                  b := MSIRBuilder.CurrentBlock ();
+                  MSIR.BuildStore (b, valV, fieldAddr);
+                END;
+              ELSE
+                fieldAddr := MSIR.BuildPtrAdd (b, "", objParam,
+                               absOff DIV Target.Byte);
+                MSIR.BuildStore (b, valV, fieldAddr);
+              END;
             END;
           END;
         END;
@@ -872,6 +913,7 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
       MSIRBuilder.BeginHelperProc (savedProc, savedBlock);
     END;
     END; (* save/restore context *)
+    END; (* dynDataOff *)
     MSIR.ModuleAddProc (m, proc);
   END GenInitProcMSIR;
 
@@ -905,6 +947,29 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
                                 parUID, dataOff, names^, methBytes);
+    ELSIF NOT vtableKnown AND MethodOffset(t) < 0 THEN
+      (* Opaque supertype: static method offset unknown.  Collect own methods at
+         LOCAL indices (0..nLocal-1).  The MSIR emitter generates a dynamic
+         linkProc that reads OTC_methodOffset at runtime (set by RTLinker from
+         the parent's methodSize) and stores each own method at the correct
+         absolute vtable slot.  This fixes UndefinedMethod crashes for types
+         that extend an opaque supertype defined in another module. *)
+      VAR p := NARROW(t, P);
+          ownNames := NEW(REF ARRAY OF TEXT, p.methodSize DIV Target.Address.size);
+      BEGIN
+        IF FillOwnMethodNames(p, ownNames^) AND NUMBER(ownNames^) > 0 THEN
+          desc := MSIR.NewTypeDesc("tc_obj_" & Fmt.Int(uid), uid,
+                                   info.isTraced, ORD(M3RT.TypeKind.Obj),
+                                   fldSize, fldAlign,
+                                   parUID, dataOff, ownNames^, methBytes);
+          MSIR.SetTypeDescDynamicMethOff(desc, TRUE);
+        ELSE
+          desc := MSIR.NewTypeDesc("tc_obj_" & Fmt.Int(uid), uid,
+                                   info.isTraced, ORD(M3RT.TypeKind.Obj),
+                                   fldSize, fldAlign,
+                                   parUID, dataOff, ARRAY OF TEXT{}, methBytes);
+        END;
+      END;
     ELSE
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
@@ -926,6 +991,35 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     GenInitProcMSIR (NARROW(t, P), desc);
     MSIR.ModuleAddTypeDesc (m, desc);
   END InitTypecellMSIR;
+
+PROCEDURE FillOwnMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
+  (* Fill m[0..nLocal-1] with THIS type's OWN method proc names at LOCAL
+     indices (relative to this type's own method region, not the full vtable).
+     Used when the static method offset (mBase) is unknown (opaque supertype);
+     the dynamic linkProc reads OTC_methodOffset at runtime to place them. *)
+  VAR v := Scope.ToList (p.methods);
+      method: Method.Info;
+      expr  : Expr.T;
+      proc  : Value.T;
+      nLocal := NUMBER(m);
+      localIdx: INTEGER := 0;
+  BEGIN
+    FOR i := 0 TO nLocal - 1 DO m[i] := NIL END;
+    WHILE v # NIL DO
+      Method.SplitX(v, method);
+      IF localIdx < nLocal THEN
+        expr := Expr.ConstValue(method.dfault);
+        IF expr # NIL AND UserProc.IsProcedureLiteral(expr, proc) AND proc # NIL THEN
+          VAR nm := Value.GlobalName(proc, dots := FALSE, with_module := TRUE); BEGIN
+            IF nm # NIL THEN m[localIdx] := nm END;
+          END;
+        END;
+      END;
+      INC(localIdx);
+      v := v.next;
+    END;
+    RETURN TRUE;
+  END FillOwnMethodNames;
 
 PROCEDURE FillMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
   VAR
