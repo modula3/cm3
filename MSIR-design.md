@@ -856,7 +856,7 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero genuine abandons.
 
 **LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-08):
-**257/288 PASS, 2 MISMATCH, 29 SKIP**.
+**259/288 PASS, 2 MISMATCH, 27 SKIP**.
 
 Remaining 2 MISMATCH:
 
@@ -873,6 +873,23 @@ TYPECASE/NARROW/ISTYPE, nested procedures (lambda-lifted), TEXT,
 SUBARRAY, ADR/LOOPHOLE/ADDRESS, float conversions, procedure values,
 BITS-N-FOR-T packed fields (ByteArrayFallback), compact subrange arrays,
 struct-by-value return, opaque types, SET arithmetic, LOCK.
+
+### LLVM Validation Status (2026-06-08)
+
+m3core: **174/174 .ll files pass `llvm-as`** (zero errors).
+libm3: **171/171 .ll files pass `llvm-as`** (zero errors).
+
+Fixes landed to reach this state:
+- RTLinker.ll `declare`+`define` conflict: `MaybeAddExtern` now skips `modName_I3`
+  since `EmitModuleInfo` always `define[weak]`s it (LLVM 22 rejects declare+define).
+- RTCollector.ll missing `!dbg` on GC barrier calls: `EmitGcReadBarrier`/
+  `EmitGcWriteBarrier` now accept `locIdx` and emit `!dbg` when debug info is enabled.
+- PickleStubs.ll type mismatch: `LoopholeExpr.Noop` now calls `BuildTrunc`/`BuildZExt`
+  when LookupVar-widened value has different width than LOOPHOLE destination type.
+- FmtBuf.ll `load void`: `SubscriptExpr.LValueMSIR` falls back to
+  `MSIRType.Translate(p.taBase)` when `EltType` of a capture-param pointer is Void.
+- Capability.ll dominance violation: `LoopholeExpr.Noop` struct path re-fetches
+  `CurrentBlock()` after `CompileMSIR`/`LValueMSIR` (invoke may advance the block).
 
 ### Known Limitations
 
