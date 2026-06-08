@@ -619,22 +619,32 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
 
 PROCEDURE CompileMSIR (p: P) =
   VAR
-    h:          Handler;
-    e:          Except;
-    lpad:       MSIR.Block;
-    merge:      MSIR.Block;
-    hBody:      MSIR.Block;
-    checkBlk:   MSIR.Block;
-    nextBlk:    MSIR.Block;
-    lpVal:      MSIR.Value;
-    excObjPtr:  MSIR.Value;
-    actPtr:     MSIR.Value;
-    excDescPtr: MSIR.Value;
-    uid:        MSIR.Value;
-    uidConst:   MSIR.Value;
-    cmp:        MSIR.Value;
-    enclosing:  MSIR.Block;
-    ptrT:       MSIR.T;
+    h:             Handler;
+    e:             Except;
+    lpad:          MSIR.Block;
+    merge:         MSIR.Block;
+    hBody:         MSIR.Block;
+    checkBlk:      MSIR.Block;
+    nextBlk:       MSIR.Block;
+    lpVal:         MSIR.Value;
+    excObjPtr:     MSIR.Value;
+    actPtr:        MSIR.Value;
+    excDescPtr:    MSIR.Value;
+    uid:           MSIR.Value;
+    uidConst:      MSIR.Value;
+    cmp:           MSIR.Value;
+    enclosing:     MSIR.Block;
+    ptrT:          MSIR.T;
+    (* EXCEPT ELSE with RETURN/EXIT interception via PushFinallyCleanup *)
+    elseDispatch   : MSIR.Block := NIL;
+    innerSelector  : MSIR.Value := NIL;
+    innerRetSlot   : MSIR.Value := NIL;
+    actSlot        : MSIR.Value := NIL;
+    elseReturnSeen : BOOLEAN    := FALSE;
+    elseExitSeen   : BOOLEAN    := FALSE;
+    innerRetT      : MSIR.T     := NIL;
+    innerI32       : MSIR.T     := NIL;
+    useElseCleanup : BOOLEAN    := FALSE;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
@@ -648,9 +658,47 @@ PROCEDURE CompileMSIR (p: P) =
     lpad  := MSIRBuilder.NewBlock("lpad");
     merge := MSIRBuilder.NewBlock("try.merge");
 
+    (* For TRY...EXCEPT ELSE (no specific handlers): intercept RETURN and EXIT
+       via PushFinallyCleanup so they route through the ELSE body and are
+       suppressed — matching the C backend's Return_exception mechanism.
+       In CM3 semantics, EXCEPT ELSE catches ALL "exceptional" exits from the body
+       including RETURN (the C backend stores Return_exception in info.exception;
+       EXCEPT ELSE recognises and swallows it).  MSIR replaces that mechanism
+       with PushFinallyCleanup: when RETURN/EXIT fires in the body, it goes to
+       elseDispatch (the else body) rather than propagating outward.  After the
+       else body runs, RETURN and EXIT are silently dropped (br merge), leaving
+       the enclosing FINALLY context (selector, retSlot) unmodified. *)
+    innerI32       := MSIR.TI(32);
+    useElseCleanup := p.hasElse AND (p.handles = NIL);
+    IF useElseCleanup THEN
+      innerSelector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", innerI32);
+      MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
+                      MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Normal),
+                      innerSelector);
+      innerRetT := MSIRBuilder.CurrentResultType();
+      IF innerRetT = NIL THEN
+        innerRetT := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
+      END;
+      IF innerRetT # NIL AND MSIR.Kind(innerRetT) # MSIR.TypeKind.Void THEN
+        innerRetSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", innerRetT);
+      ELSE
+        innerRetSlot := NIL;
+      END;
+      actSlot     := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
+      elseDispatch := MSIRBuilder.NewBlock("else.dispatch");
+    END;
+
     (* Compile body; calls inside it become invoke with lpad as unwind target. *)
     MSIRBuilder.PushTryContext(lpad);
+    IF useElseCleanup THEN
+      MSIRBuilder.PushFinallyCleanup(elseDispatch, innerSelector, innerRetSlot);
+    END;
     Stmt.CompileMSIR(p.body);
+    IF useElseCleanup THEN
+      elseReturnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
+      elseExitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
+      MSIRBuilder.PopFinallyCleanup();
+    END;
     MSIRBuilder.PopTryContext();
     (* After the pop, the current unwind block is the ENCLOSING handler (NIL if
        this TRY is outermost in the procedure).  The no-match path re-raises to
@@ -691,6 +739,20 @@ PROCEDURE CompileMSIR (p: P) =
     actPtr     := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr);
     excDescPtr := MSIR.BuildLoad(lpad, "", ptrT, actPtr);
     uid        := MSIR.BuildLoad(lpad, "", MSIR.TI(64), excDescPtr);
+
+    IF useElseCleanup THEN
+      (* Pure EXCEPT ELSE: claim ownership via begin_catch, save actPtr so
+         elseDispatch can end_catch after the ELSE body, set selector=Sel_Exc,
+         and branch to the unified else dispatch block.  PushFinallyCleanup
+         routes RETURN/EXIT there too; they arrive with selector != Sel_Exc
+         so no end_catch is emitted for them. *)
+      MSIR.BuildStore(lpad, actPtr, actSlot);
+      MSIR.BuildStore(lpad, MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Exc),
+                      innerSelector);
+      EVAL MSIR.BuildCall(lpad, "", beginCatch,
+                           ARRAY OF MSIR.Value{excHeader});
+      MSIR.BuildBr(lpad, elseDispatch, ARRAY OF MSIR.Value{});
+    END;
 
     (* Emit a chain of UID comparisons, one per (handler, exception) pair. *)
     checkBlk := lpad;
@@ -778,7 +840,10 @@ PROCEDURE CompileMSIR (p: P) =
     END;
 
     MSIRBuilder.SetCurrentBlock(checkBlk);
-    IF p.hasElse THEN
+    IF useElseCleanup THEN
+      (* elseDispatch already terminates lpad via br; checkBlk=lpad is terminated.
+         elseDispatch is emitted below, after the no-match re-raise stub. *)
+    ELSIF p.hasElse THEN
       (* The catch clause matched, so we must claim ownership via begin_catch /
          end_catch exactly as for specific handlers.  Omitting begin_catch leaves
          the C++ EH state machine with an unclaimed exception, which corrupts
@@ -814,6 +879,41 @@ PROCEDURE CompileMSIR (p: P) =
       END;
     END;
     END; (* VAR getPtr, beginCatch, endCatch, excHeader *)
+
+    IF useElseCleanup THEN
+      (* elseDispatch: unified entry point for exceptions (Sel_Exc) and
+         RETURN/EXIT (Sel_Return/Sel_Exit) intercepted by PushFinallyCleanup.
+         Run the EXCEPT ELSE body, then:
+           Sel_Exc  → end_catch (release the caught exception), br merge
+           anything → br merge (RETURN/EXIT silently suppressed)
+         In both cases execution continues normally after the TRY/EXCEPT. *)
+      MSIRBuilder.SetCurrentBlock(elseDispatch);
+      (* Register catch-end proc so ReturnStmt inside elseBody emits end_catch
+         before ret; but elseBody typically falls through, so it's a no-op here.
+         We don't PushCatchContext because the end_catch is conditional
+         (only for Sel_Exc), so we emit it explicitly below. *)
+      Stmt.CompileMSIR(p.elseBody);
+      IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+        VAR blk := MSIRBuilder.CurrentBlock();
+            selV := MSIR.BuildLoad(blk, "", innerI32, innerSelector);
+            isExc := MSIR.BuildICmp(blk, "", MSIR.CmpPred.Eq,
+                                    selV,
+                                    MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Exc));
+            endCatchBlk := MSIRBuilder.NewBlock("else.endcatch");
+            skipEndBlk  := MSIRBuilder.NewBlock("else.skip.endcatch");
+        BEGIN
+          MSIR.BuildCondBr(blk, isExc,
+                           endCatchBlk, ARRAY OF MSIR.Value{},
+                           skipEndBlk,  ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock(endCatchBlk);
+          EVAL MSIR.BuildCall(endCatchBlk, "", MSIRBuilder.CxaEndCatch(),
+                               ARRAY OF MSIR.Value{});
+          MSIR.BuildBr(endCatchBlk, merge, ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock(skipEndBlk);
+          MSIR.BuildBr(skipEndBlk, merge, ARRAY OF MSIR.Value{});
+        END;
+      END;
+    END;
 
     MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;
