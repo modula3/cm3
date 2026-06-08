@@ -434,12 +434,24 @@ PROCEDURE NoteCapture (p: P;  ca: CaptureAnalysis.T;  written: BOOLEAN) =
     | Variable.T(v) =>
         IF Variable.IsUpLevel (v) THEN CaptureAnalysis.Note (ca, v, written) END;
     ELSE
-        (* Nested proc used as a value: propagate its captures transitively so
-           BuildClosureValue can find them in the enclosing proc's varMap. *)
+        (* Nested proc used as a value or called as a sibling: propagate its
+           captures transitively so BuildClosureValue / EmitNestedCall can find
+           them in the enclosing proc's varMap.
+           Skip module-scope globals (t.global=TRUE): those are always accessible
+           through LookupVar/LookupVarAddr via globalMap without lambda-lifting.
+           Adding them as value captures would shadow globalMap lookups and break
+           LookupVarAddr for callers that need write addresses (VAR params). *)
         VAR procCaps := MSIRBuilder.GetProcCaptures (p.value); BEGIN
           IF procCaps # NIL THEN
             FOR k := 0 TO NUMBER (procCaps^) - 1 DO
-              CaptureAnalysis.Note (ca, procCaps[k].var, procCaps[k].written)
+              VAR sv := procCaps[k].var;
+                  svT: Type.T;  svG, svI, svL: BOOLEAN;
+              BEGIN
+                Variable.Split (sv, svT, svG, svI, svL);
+                IF NOT svG THEN
+                  CaptureAnalysis.Note (ca, sv, procCaps[k].written)
+                END
+              END
             END
           END
         END

@@ -629,6 +629,36 @@ PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
         Expr.Capture(ce.args[i], ca);
       END;
     END;
+    (* Transitively add sibling nested-proc captures so the caller can forward
+       outer-scope vars the callee needs.  Example: P0_0 calls Dump0 which needs
+       P0.LVisitNo; adding Dump0's captures to P0_0's set ensures P0 passes
+       LVisitNo to P0_0 (via an extra capture param) and P0_0 forwards it to Dump0.
+       Uses captureMap data built by the first PreRegisterNestedCaptures round;
+       fires on the second round where that data is already available.
+       IMPORTANT: skip module-scope globals (v.global = TRUE).  Those are always
+       accessible via LookupVar/LookupVarAddr through globalMap without lambda-lifting.
+       Adding them as value captures would shadow the globalMap lookup and break
+       LookupVarAddr for callers that need the write address (e.g. VAR params). *)
+    VAR calleeV: Value.T;
+    BEGIN
+      IF IsProcedureLiteral(ce.proc, calleeV) AND Procedure.IsNested(calleeV) THEN
+        VAR siblCaps := MSIRBuilder.GetProcCaptures(calleeV);
+        BEGIN
+          IF siblCaps # NIL THEN
+            FOR i := 0 TO NUMBER(siblCaps^) - 1 DO
+              VAR sv := siblCaps[i].var;
+                  svType: Type.T;  svGlobal, svIndirect, svTraced: BOOLEAN;
+              BEGIN
+                Variable.Split(sv, svType, svGlobal, svIndirect, svTraced);
+                IF NOT svGlobal THEN
+                  CaptureAnalysis.Note(ca, sv, siblCaps[i].written);
+                END;
+              END;
+            END;
+          END;
+        END;
+      END;
+    END;
   END Capture;
 
 PROCEDURE Initialize () =

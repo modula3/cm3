@@ -713,10 +713,14 @@ PROCEDURE GenBodyMSIR (p: T) =
        Compile p's nested procs by calling GenBodyMSIR DIRECTLY (not via
        Value.LangInit): LangInit's CG.Note_procedure_origin would fire a second
        time for the parallel C backend, corrupting its nested-proc state.
-       Two passes: pass 1 pre-registers every nested proc's captures so a
+       Three passes: pass 1 pre-registers every nested proc's captures so a
        sibling compiled before its callee still passes the right capture args
-       (mutual/forward references among siblings); pass 2 compiles the bodies. *)
-    Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
+       (mutual/forward references among siblings); pass 2 adds TRANSITIVE captures
+       for sibling calls (e.g. P0_0 calling Dump0 which needs P0.LVisitNo —
+       UserProc.Capture adds Dump0's captures to P0_0's set on this second round,
+       now that round 1 has populated captureMap); pass 3 compiles the bodies. *)
+    Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);  (* round 1: direct *)
+    Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);  (* round 2: transitive *)
     Scope.ForEachValue (p.syms, CompileNestedBodyMSIR);
     (* Initialize local variables (VAR declarations in p.syms).
        The CG path handles this via GenBody → Scope.InitValues(p.syms).
@@ -837,6 +841,16 @@ PROCEDURE GenBody (p: T) =
     END;
     Scope.Enter (p.syms);
 
+    (* Pre-register nested proc captures in two rounds so sibling calls work.
+       Round 1 builds direct captures; round 2 adds transitive captures needed
+       when one sibling calls another (e.g. P0_0 calling Dump0 needing P0.LVisitNo).
+       UserProc.Capture adds the callee's captures to the caller's set on round 2
+       now that round 1 has populated captureMap.  Must run before Scope.InitValues
+       which triggers LangInit → GenBodyMSIR for each nested proc. *)
+    IF MSIRBuilder.InProc () THEN
+      Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
+      Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
+    END;
     (* CG path: skip when cg_proc=NIL (M3CG_DoNothing / MSIRObj mode) *)
     IF p.cg_proc # NIL THEN
       Marker.PushProcedure (tresult, p.result, cconv);
