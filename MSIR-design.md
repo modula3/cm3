@@ -878,6 +878,7 @@ struct-by-value return, opaque types, SET arithmetic, LOCK.
 
 m3core: **174/174 .ll files pass `llvm-as`** (zero errors).
 libm3: **171/171 .ll files pass `llvm-as`** (zero errors).
+m3middle: **26/26 .ll files pass `llvm-as`** (zero errors).
 
 Fixes landed to reach this state:
 - RTLinker.ll `declare`+`define` conflict: `MaybeAddExtern` now skips `modName_I3`
@@ -890,6 +891,10 @@ Fixes landed to reach this state:
   `MSIRType.Translate(p.taBase)` when `EltType` of a capture-param pointer is Void.
 - Capability.ll dominance violation: `LoopholeExpr.Noop` struct path re-fetches
   `CurrentBlock()` after `CompileMSIR`/`LValueMSIR` (invoke may advance the block).
+- m3middle M3CG_Check.ll `[N x i1]` vs `[N x i8]` mismatch: `BuildConstAggArray`
+  now uses `MSIR.FixedArrayElt(arrMsir)` instead of re-translating `eltT`, so
+  BOOLEAN elements in ByteArrayFallback arrays are widened to `i8` via `ConstInt`
+  coercion.
 
 ### Known Limitations
 
