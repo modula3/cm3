@@ -83,6 +83,13 @@ mkdir -p "$LOGDIR"
 # binary is reported (rc 124) rather than wedging the whole harness.
 EXE_TIMEOUT="${EXE_TIMEOUT:-15}"
 run_exe() { timeout "$EXE_TIMEOUT" "$1" 2>/dev/null; }
+# Tests that print raw heap/stack addresses use normalize_addr_output to strip
+# ASLR-dependent 0xHHH... addresses before comparison.  Only the values and
+# region classifications (heap/text/data/rdata) are compared.
+NORMALIZE_ADDR_TESTS="p2/p253"
+normalize_addr_output() {
+  sed 's/0x[0-9a-fA-F][0-9a-fA-F]*/0xADDR/g'
+}
 # Some tests set MERGE_STDOUT_STDERR in their m3makefile because their output
 # (e.g. RTIO, which writes to stderr) is meant to be compared as a single
 # merged stream.  For those, capture stdout+stderr together so the comparison
@@ -242,7 +249,18 @@ for t in $TESTS; do
         fi
     fi
 
-    if [ "$msirout" = "$refout" ] && [ "$msirrc" = "$refrc" ]; then
+    # For tests that print heap addresses (ASLR-dependent), normalize before comparing.
+    needs_normalize=0
+    for nt in $NORMALIZE_ADDR_TESTS; do
+        if [ "$t" = "$nt" ]; then needs_normalize=1; break; fi
+    done
+    if [ "$needs_normalize" = "1" ]; then
+        msirout_cmp=$(echo "$msirout" | normalize_addr_output)
+        refout_cmp=$(echo "$refout" | normalize_addr_output)
+    else
+        msirout_cmp="$msirout"; refout_cmp="$refout"
+    fi
+    if [ "$msirout_cmp" = "$refout_cmp" ] && [ "$msirrc" = "$refrc" ]; then
         printf "  %-12s PASS  (rc=%s)\n" "$name" "$msirrc"; pass=$((pass+1))
     elif [ -f "$dir/stdout.pgm" ] && [ "$msirrc" = "0" ] && [ "$refrc" != "0" ] \
          && [ "$msirout" = "$(cat "$dir/stdout.pgm")" ]; then
