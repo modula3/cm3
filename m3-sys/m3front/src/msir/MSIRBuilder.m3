@@ -2138,7 +2138,15 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
     IF NOT ArrayType.Split(arrType, indexT, eltT) THEN
       Abandon("ConstArray: nested element is not an array type");  RETURN NIL;
     END;
-    eltMsir := MSIRType.Translate(eltT);
+    (* Use the outer array's declared MSIR element type (which incorporates
+       EltPack overrides for BOOLEAN/subrange) rather than re-translating eltT
+       from scratch.  Without this, BOOLEAN elements in [N x i8] arrays emit
+       as i1 constants — causing an LLVM type mismatch. *)
+    IF MSIR.Kind(arrMsir) = MSIR.TypeKind.FixedArray THEN
+      eltMsir := MSIR.FixedArrayElt(arrMsir);
+    ELSE
+      eltMsir := MSIRType.Translate(eltT);
+    END;
     IF eltMsir = NIL THEN
       Abandon("ConstArray: nested element has unsupported element type");
       RETURN NIL;
