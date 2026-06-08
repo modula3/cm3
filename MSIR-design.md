@@ -856,13 +856,12 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero genuine abandons.
 
 **LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-08):
-**256/288 PASS, 3 MISMATCH, 29 SKIP**.
+**257/288 PASS, 2 MISMATCH, 29 SKIP**.
 
-Remaining 3 MISMATCH:
+Remaining 2 MISMATCH:
 
 | Test | Root cause |
 |------|-----------|
-| p140 | 1 residual error in P26: RAISE inside FINALLY caught by inner EXCEPT; selector check `%t5 == 1` somehow returns FALSE at `try.merge.10`.  Root cause unknown despite thorough analysis — may be a libc++ ABI edge case with `begin_catch`/`end_catch` and nested exception contexts. |
 | p251, p259 | UNSAFE stack-height measurement (implementation-specific, unfixable — different stack frame layouts between CG and MSIR) |
 
 The authoritative feature checklist (emission and lowering, item by item)
@@ -1105,6 +1104,27 @@ Three coordinated changes needed (all in `Procedure.m3` / `NamedExpr.m3` /
 
 Rule: **only non-global (`t.global = FALSE`) stack locals of outer proc scopes**
 need to be lambda-lifted through sibling call chains.
+
+**Zero-initialization of solid FixedArray/Struct locals**: `MSIR.ConstZero`
+returned NIL for `FixedArray`/`Struct` types (ELSE branch).  When
+`Variable.UserInit` tried to zero-initialize `VAR x := ARRAY [N] OF T { 0, .. }`,
+it called `ConstZero(TFixedArray(...))` → NIL → store silently skipped.
+The alloca started with stack garbage.
+
+Fixes:
+- `MSIR.ConstZero`: handle `TypeKind.FixedArray` and `Struct` by returning
+  `ConstNil(t)` (the emitter outputs `zeroinitializer` for these types).
+- `MSIRToLLVM.LLValStr` (`ConstNil` case): emit `"zeroinitializer"` for
+  `FixedArray`/`Struct` types; keep `"null"` for pointer/ref types.
+- `Variable.AddLocalMSIR`: also emit an explicit zero-store for solid
+  arrays/structs when `InitCost=0` (belt-and-suspenders for block-level vars).
+
+This fixed p140/P26 where `VAR x := ARRAY [0..10] OF BOOLEAN { FALSE, .. }`
+left x[3..10] as uninitialized stack garbage.  The root cause was found via
+lldb watchpoints: the watchpoint on x[9] fired during C++ exception-runtime
+stack unwinding (which wrote registers to the stack), leaving a non-zero
+value that survived into the next procedure's stack frame.  The EH control
+flow was always correct — the bug was purely in array zero-initialization.
 
 **EXCEPT ELSE + RETURN/EXIT interception**: In CM3 semantics, `EXCEPT ELSE`
 catches all exits from the TRY body including RETURN (the C backend stores a
