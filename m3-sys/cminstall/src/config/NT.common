@@ -360,6 +360,9 @@ SYSTEM_LIBS_MS =
         LibIn("advapi32"),
         LibIn("kernel32"),
     ],
+
+    "FLEX-BISON" : [LibIn("fl")],
+
     "ODBC" : [LibIn("odbc32")],
     "OPENGL" : [LibIn("opengl32"), LibIn("glu32")],
     "TCP" : [ ],
@@ -506,6 +509,10 @@ end
 
 if equal(OS_TYPE, "POSIX")
     SYSTEM_LIBORDER += ["Z", "FLEX-BISON"]
+end
+
+if equal(OS_TYPE, "WIN32")
+    SYSTEM_LIBORDER += ["FLEX-BISON"]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
