@@ -6,9 +6,12 @@
 extern "C" {
 #endif
 
+#ifndef M3_BOOL_H_INCLUDED
+#define M3_BOOL_H_INCLUDED
 typedef int BOOL;
 #define FALSE 0
 #define TRUE 1
+#endif
 
 TEXT
 __cdecl
