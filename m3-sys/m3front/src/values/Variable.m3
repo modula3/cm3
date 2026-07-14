@@ -543,13 +543,36 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
           MSIRBuilder.VarMapAdd (t, paramVal, MSIR.EltType(mt));
         ELSE
           (* VALUE, or READONLY scalar/proc-ref: spill to alloca so ADR works
-             and the body can assign (VALUE) or take address (READONLY). *)
-          VAR slot := MSIR.BuildAlloca(b,
-                        Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot",
-                        mt);
+             and the body can assign (VALUE) or take address (READONLY).
+             Widen ordinal formals to Target.Integer.size so that sub-word
+             scalars (CHAR, BOOLEAN, subranges) use the same wide alloca as
+             AddLocalMSIR, keeping LookupVar loads consistent. *)
+          VAR allocType := mt;
+              storeVal  := paramVal;
           BEGIN
-            MSIR.BuildStore(b, paramVal, slot);
-            MSIRBuilder.VarMapAdd(t, slot, mt);
+            IF Type.IsOrdinal (t.type) THEN
+              allocType := MSIR.TI (Target.Integer.size);
+              (* BOOLEAN has MSIR type TI1 (no W1 kind), so CoerceToMSIR would
+                 use SExt and turn TRUE (i1=1) into -1.  Instead, derive the
+                 extension direction from the M3 type bounds: non-negative lo
+                 (BOOLEAN, CARDINAL, [0..N]) → ZExt; negative lo → SExt. *)
+              VAR lo, hi: Target.Int;
+                  hasBounds := Type.GetBounds (t.type, lo, hi);
+              BEGIN
+                IF hasBounds AND TInt.LT (lo, TInt.Zero) THEN
+                  storeVal := MSIR.BuildSExt (b, "", paramVal, allocType);
+                ELSE
+                  storeVal := MSIR.BuildZExt (b, "", paramVal, allocType);
+                END;
+              END;
+            END;
+            VAR slot := MSIR.BuildAlloca (b,
+                          Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot",
+                          allocType);
+            BEGIN
+              MSIR.BuildStore (b, storeVal, slot);
+              MSIRBuilder.VarMapAdd (t, slot, allocType);
+            END;
           END;
         END;
         RETURN;

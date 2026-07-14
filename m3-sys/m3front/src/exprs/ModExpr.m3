@@ -216,9 +216,6 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
     END;
   END GetBounds;
 
-PROCEDURE CoerceToMSIR (blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T): MSIR.Value =
-  BEGIN RETURN MSIRBuilder.CoerceToMSIR (blk, v, rt) END CoerceToMSIR;
-
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;  blk: MSIR.Block;
   BEGIN
@@ -232,8 +229,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     VAR rt := MSIRType.Translate (p.type);
     BEGIN
       IF rt = NIL THEN rt := MSIR.ValueType (a) END;
-      a := CoerceToMSIR (blk, a, rt);
-      b := CoerceToMSIR (blk, b, rt);
+      a := MSIRBuilder.CoerceToMSIR (blk, a, rt);
+      b := MSIRBuilder.CoerceToMSIR (blk, b, rt);
       RETURN MSIR.BuildIMod (blk, "", a, b);
     END;
   END CompileMSIR;

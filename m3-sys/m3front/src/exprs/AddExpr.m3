@@ -165,10 +165,6 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     END;
   END Compile;
 
-PROCEDURE CoerceToMSIR(blk: MSIR.Block; v: MSIR.Value; rt: MSIR.T;
-                        <*UNUSED*> expr: Expr.T := NIL): MSIR.Value =
-  BEGIN RETURN MSIRBuilder.CoerceToMSIR (blk, v, rt) END CoerceToMSIR;
-
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;
       blk := MSIRBuilder.CurrentBlock ();
@@ -181,8 +177,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     | Class.cINT, Class.cLINT =>
         rt := MSIRType.Translate(p.type);
         IF rt = NIL THEN rt := MSIR.ValueType(a) END;
-        a := CoerceToMSIR(blk, a, rt, p.a);
-        b := CoerceToMSIR(blk, b, rt, p.b);
+        a := MSIRBuilder.CoerceToMSIR(blk, a, rt);
+        b := MSIRBuilder.CoerceToMSIR(blk, b, rt);
         RETURN MSIR.BuildIAdd (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFAdd (blk, "", a, b);
