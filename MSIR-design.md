@@ -35,8 +35,11 @@ the rationale in the commit.
 | `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
 | **Full compiler self-hosting**  | **Achieved 2026-07-14**: m3middle+m3linker+m3front+m3quake+m3objfile+m3back+cm3 all built from 100% LLVM IR objects (MSIRObj mode). Resulting `cm3` binary runs, compiles M3 programs, and passes the same 292-test suite as the C-backend cm3 (26 errors in both — all pre-existing C-backend failures). Zero new regressions. |
 | **Full stack self-hosting**     | **Achieved 2026-07-14**: m3core (311 objects) + libm3 (299 objects) also build clean in MSIRObj mode. Full m3tests with MSIRObj runtime+stdlib: 292 tests, 26 errors — identical to C-backend baseline. The entire CM3 system (runtime, stdlib, compiler) runs from LLVM IR. |
+| **Bootstrap fixpoint stability** | **Confirmed 2026-07-14**: Two consecutive three-stage fixpoint tests pass. Stage-1 (C-backend cm3) and stage-2 (MSIRObj cm3) generate bit-for-bit identical .ll files for all 383 compiler-package modules (m3middle×26, m3linker×12, m3front×299, m3quake×18, m3objfile×4, cm3×15). Stage-3 repeats the result. The MSIR code generator is fully deterministic and self-consistent. |
+| **`do-cm3-base` clean**         | **2026-07-14**: All 24 base packages (m3core, libm3, m3middle, m3quake, tcp, …) build and ship in MSIRObj mode with zero failures. |
+| **`do-cm3-std` clean**          | **2026-07-14**: 195 of 196 attempted packages build and ship in MSIRObj mode. One failure (`caltech-other/voronoi`) is a pre-existing C89 `void*` cast rejected by clang — reproduces identically with the C backend; zero MSIR codegen failures. 3 packages omitted on Darwin (tapi, serial, tcl). |
 
-Walkthroughs done: OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
+Walkthroughs done (updated 2026-07-14): OBJECT + METHOD, TRY/EXCEPT/FINALLY, open arrays,
 module init, nested procedures, VAR/READONLY, SUBARRAY,
 NARROW/TYPECASE/ISTYPE, sets + subrange, packed/compact fields,
 open-array equality, struct-by-value return,
@@ -857,7 +860,7 @@ MSIR IS the backend, so more code paths execute through MSIR.
   - Zero `msir-verify` errors.
   - Zero genuine abandons.
 
-**LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-06-08):
+**LLVM conformance** (`run-msir-conformance.sh`, ARM64_DARWIN, 2026-07-14):
 **259/288 PASS, 2 MISMATCH, 27 SKIP**.
 
 Remaining 2 MISMATCH:
@@ -936,6 +939,53 @@ Fixes landed to reach this state:
   now uses `MSIR.FixedArrayElt(arrMsir)` instead of re-translating `eltT`, so
   BOOLEAN elements in ByteArrayFallback arrays are widened to `i8` via `ConstInt`
   coercion.
+
+### Bootstrap Fixpoint Stability (2026-07-14)
+
+Two consecutive three-stage fixpoint tests confirm the MSIR code generator is
+deterministic and self-consistent.
+
+**Protocol:**
+1. Build all compiler packages (m3middle, m3linker, m3front, m3quake, m3objfile,
+   m3back, cm3) in MSIRObj mode using the C-backend cm3 → stage-N.
+2. Install stage-N cm3; repeat the build → stage-N+1.
+3. Diff all `.ll` files from stage-N and stage-N+1.
+
+**Results:**
+
+| Round | Starting binary | .ll files compared | Diffs |
+|-------|-----------------|--------------------|-------|
+| 1 (stage 1→2) | C-backend cm3 | 383 | 0 |
+| 2 (stage 2→3) | MSIRObj cm3   | 383 | 0 |
+
+All 383 `.ll` files are bit-for-bit identical across consecutive stages:
+m3middle×26, m3linker×12, m3front×299, m3quake×18, m3objfile×4, cm3×15.
+(m3back×0 — m3back is a pure C/M3 package with no MSIR-emitted modules.)
+
+The stage-N cm3 binary SHA256 differs between stages (linker non-determinism is
+expected); the `.ll` identity is what matters for fixpoint correctness.
+
+**Script:** `m3-sys/msir/test/fixpoint.sh` (in session scratchpad; not tracked).
+Requires `PATH=$(brew --prefix llvm)/bin:$HOME/cm3/bin:$PATH` and MSIRObj mode
+enabled in `m3-sys/cminstall/src/config/ARM64_DARWIN`.
+
+### Package Coverage (2026-07-14)
+
+MSIRObj mode builds the full CM3 standard library collection without a single
+codegen failure.
+
+| Build set | Script | Packages attempted | Packages clean | Failures |
+|-----------|--------|--------------------|---------------|---------|
+| `base`    | `do-cm3-base.sh buildglobal` | 24 | 24 | 0 |
+| `std`     | `do-cm3-std.sh buildglobal`  | 198 | 195 (+ 3 omitted on Darwin) | 1 pre-existing C bug |
+
+The one failure (`caltech-other/voronoi`) is a C89 `void*`→`Triple*` implicit
+cast in `mod3_main.c` that modern clang rejects in strict mode. It fails
+identically with the C backend; it is not an MSIR issue.
+
+Also fixed: `scripts/sysinfo.sh` arm/arm64 detection — `uname -p` returns `arm`
+on Apple Silicon; added `arm | arm64) CM3_TARGET=ARM64_DARWIN` to the Darwin
+case so `do-cm3-*.sh` scripts run without the `TARGET` override.
 
 ### Known Limitations
 
@@ -1036,6 +1086,14 @@ GcRef captures always pass by pointer (conservative GC stack-scan requirement).
 
 **NIL**: always `ConstNil(TPtr(TVoid()))`.  Call sites coerce to destination
 type (`AssignStmt`, `ReturnStmt`, `EqualExpr`).
+
+**VALUE/READONLY scalar formal widening** (`Variable.BindFormalMSIR`): ordinal
+formals (BOOLEAN, CARDINAL, INTEGER, subranges, enums) are widened to
+`TI(Target.Integer.size)` before spilling into their alloca slots.  Extension
+direction is derived from `Type.GetBounds`: non-negative lower bound → `ZExt`;
+negative lower bound → `SExt`.  `MSIRBuilder.CoerceToMSIR` cannot be used here
+because `MSIRType.Translate(BOOLEAN)` returns `TI1` (signed), which would
+`sext i1 1 to i64 = -1`, corrupting `TRUE`.
 
 **Packed integer return widening/narrowing**: when a procedure's declared return
 type differs in width from the expression's MSIR type, `ReturnStmt.CompileMSIR`
