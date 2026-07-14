@@ -238,6 +238,8 @@ if [ "x$CM3_TARGET" = "x" ] ; then
             #CM3_TARGET=PPC64_DARWIN
           fi
           rm -rf ./m3ppc64;;
+        arm | arm64)
+          CM3_TARGET=ARM64_DARWIN;;
         i386)
           if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
             CM3_TARGET=AMD64_DARWIN
