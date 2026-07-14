@@ -86,9 +86,12 @@ run_exe() { timeout "$EXE_TIMEOUT" "$1" 2>/dev/null; }
 # Tests that print raw heap/stack addresses use normalize_addr_output to strip
 # ASLR-dependent 0xHHH... addresses before comparison.  Only the values and
 # region classifications (heap/text/data/rdata) are compared.
-NORMALIZE_ADDR_TESTS="p2/p253"
+NORMALIZE_ADDR_TESTS="p2/p253 p2/p235"
 normalize_addr_output() {
-  sed 's/0x[0-9a-fA-F][0-9a-fA-F]*/0xADDR/g'
+  # Replace hex addresses (0x...) and Unix-style float timestamps (large-integer.digits)
+  sed 's/0x[0-9a-fA-F][0-9a-fA-F]*/0xADDR/g' \
+    | sed 's/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\.[0-9]*/TIMESTAMP/g' \
+    | sed 's/-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\.[0-9]*/TIMESTAMP/g'
 }
 # Some tests set MERGE_STDOUT_STDERR in their m3makefile because their output
 # (e.g. RTIO, which writes to stderr) is meant to be compared as a single
@@ -135,10 +138,22 @@ for t in $TESTS; do
         skip=$((skip+1)); continue
     fi
     # The C-compiled standalone executable is the reference.
+    # Also scan for any executable in $bd whose name matches the program() declaration.
     cexe=""
     for cand in "$bd/pgm" "$bd/$(basename "$t")"; do
         [ -x "$cand" ] && { cexe="$cand"; break; }
     done
+    # Fallback: look for any executable in $bd (handles program("a") etc.)
+    if [ -z "$cexe" ]; then
+        for cand in "$bd"/*; do
+            if [ -x "$cand" ] && [ -f "$cand" ] \
+               && [[ "$(basename "$cand")" != *.* ]] \
+               && [[ "$(basename "$cand")" != _m3main* ]] \
+               && [[ "$(basename "$cand")" != pgm-msir* ]]; then
+                cexe="$cand"; break
+            fi
+        done
+    fi
     if [ -z "$cexe" ]; then
         printf "  %-12s SKIP  (no standalone executable — library/parse test?)\n" "$name"
         skip=$((skip+1)); continue
