@@ -252,9 +252,13 @@ PROCEDURE CxaGetExceptionPtr (): MSIR.Proc;
 (* Catch-handler context stack.  Push before compiling a handler body so that
    ReturnStmt.CompileMSIR can emit __cxa_end_catch before any ret inside the
    handler.  Pop after the handler body is compiled. *)
-PROCEDURE PushCatchContext (endCatch: MSIR.Proc);
+PROCEDURE PushCatchContext (endCatch: MSIR.Proc;  actPtr: MSIR.Value := NIL);
 PROCEDURE PopCatchContext  ();
 PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
+(* Activation pointer (a void pointer) of the exception being handled at the
+   current catch depth; NIL when not in a handler.  Used by
+   Compiler.ThisException. *)
+PROCEDURE CurrentCatchActPtr (): MSIR.Value;
 
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;  resultSlot: MSIR.Value;

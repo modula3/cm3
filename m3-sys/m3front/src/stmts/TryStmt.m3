@@ -827,7 +827,7 @@ PROCEDURE CompileMSIR (p: P) =
       END;
 
       IF h.scope # NIL THEN Variable.ScheduleTrace(h.var) END;
-      MSIRBuilder.PushCatchContext(endCatch);
+      MSIRBuilder.PushCatchContext(endCatch, actPtr);
       Stmt.CompileMSIR(h.body);
       MSIRBuilder.PopCatchContext();
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
@@ -850,7 +850,7 @@ PROCEDURE CompileMSIR (p: P) =
          subsequent EH and typically causes std::terminate. *)
       EVAL MSIR.BuildCall(checkBlk, "", beginCatch,
                            ARRAY OF MSIR.Value{excHeader});
-      MSIRBuilder.PushCatchContext(endCatch);
+      MSIRBuilder.PushCatchContext(endCatch, actPtr);
       Stmt.CompileMSIR(p.elseBody);
       MSIRBuilder.PopCatchContext();
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN

@@ -100,6 +100,9 @@ VAR
   tryDepth:  INTEGER := 0;
 
   catchStack: ARRAY [0..MaxCatchDepth-1] OF MSIR.Proc;  (* endCatch procs *)
+  (* Activation pointer (RT0.ActivationPtr as a void pointer) of the exception
+     being handled at each catch depth; retrieved by Compiler.ThisException. *)
+  catchActStack: ARRAY [0..MaxCatchDepth-1] OF MSIR.Value;
   catchDepth: INTEGER := 0;
 
   (* Unified cleanup-frame stack in nesting order — loops and finallys
@@ -1616,10 +1619,11 @@ PROCEDURE CxaGetExceptionPtr(): MSIR.Proc =
     RETURN CxaStub("__cxa_get_exception_ptr", params, MSIR.TPtr(MSIR.TVoid()));
   END CxaGetExceptionPtr;
 
-PROCEDURE PushCatchContext(endCatch: MSIR.Proc) =
+PROCEDURE PushCatchContext(endCatch: MSIR.Proc;  actPtr: MSIR.Value := NIL) =
   BEGIN
     IF catchDepth < MaxCatchDepth THEN
       catchStack[catchDepth] := endCatch;
+      catchActStack[catchDepth] := actPtr;
       INC(catchDepth);
     ELSE
       Abandon("catch context stack overflow");
@@ -1636,6 +1640,12 @@ PROCEDURE CurrentCatchEndProc(): MSIR.Proc =
     IF catchDepth = 0 THEN RETURN NIL END;
     RETURN catchStack[catchDepth - 1];
   END CurrentCatchEndProc;
+
+PROCEDURE CurrentCatchActPtr(): MSIR.Value =
+  BEGIN
+    IF catchDepth = 0 THEN RETURN NIL END;
+    RETURN catchActStack[catchDepth - 1];
+  END CurrentCatchActPtr;
 
 PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
                                dataAlignment: INTEGER;

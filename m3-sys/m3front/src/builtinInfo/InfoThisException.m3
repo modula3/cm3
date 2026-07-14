@@ -5,6 +5,7 @@ MODULE InfoThisException;
 
 IMPORT CallExpr, Expr, ExprRep, Procedure, ProcType, Addr;
 IMPORT Formal, Value, TryStmt, Error;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -22,6 +23,19 @@ PROCEDURE Compile (<*UNUSED*> ce: CallExpr.T) =
   BEGIN
     TryStmt.LoadInfoPtr ();
   END Compile;
+
+PROCEDURE CompileMSIR (<*UNUSED*> ce: CallExpr.T): MSIR.Value =
+  (* Return the activation pointer (RT0.ActivationPtr as ADDRESS) of the
+     exception being handled in the enclosing TRY handler.  TryStmt pushes it
+     onto the catch-context stack when it enters each handler body. *)
+  VAR act := MSIRBuilder.CurrentCatchActPtr ();
+  BEGIN
+    IF act = NIL THEN
+      MSIRBuilder.Abandon ("Compiler.ThisException: no handler activation");
+      RETURN NIL;
+    END;
+    RETURN act;
+  END CompileMSIR;
 
 PROCEDURE Initialize () =
   VAR t0 := ProcType.New (Addr.T);
@@ -41,6 +55,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("ThisException", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;

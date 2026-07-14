@@ -219,10 +219,6 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;  blk: MSIR.Block;
   BEGIN
-    IF (p.class # Class.cINT) AND (p.class # Class.cLINT) THEN
-      MSIRBuilder.Abandon ("non-integer MOD");
-      RETURN NIL;
-    END;
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
@@ -231,7 +227,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       IF rt = NIL THEN rt := MSIR.ValueType (a) END;
       a := MSIRBuilder.CoerceToMSIR (blk, a, rt);
       b := MSIRBuilder.CoerceToMSIR (blk, b, rt);
-      RETURN MSIR.BuildIMod (blk, "", a, b);
+      IF (p.class = Class.cINT) OR (p.class = Class.cLINT) THEN
+        RETURN MSIR.BuildIMod (blk, "", a, b);
+      ELSE
+        (* Floating point: x MOD y == x - y * FLOOR (x / y)  — matches the CG
+           path (Compile) and gives M3 MOD semantics (result has sign of y). *)
+        VAR q  := MSIR.BuildFDiv (blk, "", a, b);
+            fl := MSIR.BuildFPFloor (blk, "", q);
+            pr := MSIR.BuildFMul (blk, "", b, fl);
+        BEGIN
+          RETURN MSIR.BuildFSub (blk, "", a, pr);
+        END;
+      END;
     END;
   END CompileMSIR;
 
