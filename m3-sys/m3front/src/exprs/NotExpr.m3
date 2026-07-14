@@ -93,14 +93,17 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
-  VAR v: MSIR.Value;
+  VAR v: MSIR.Value;  wideT: MSIR.T;
   BEGIN
     v := Expr.CompileMSIR (p.a);
     IF v = NIL THEN RETURN NIL END;
-    (* NOT x: emit icmp eq x, 0  (false == 0 in i1) *)
-    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
-                            MSIR.CmpPred.Eq, v,
-                            MSIR.ConstInt (MSIR.TI1 (), 0));
+    (* NOT x: XOR with 1 at computation width (i64). *)
+    wideT := MSIR.TI (Target.Integer.size);
+    IF NOT MSIR.Equal (MSIR.ValueType (v), wideT) THEN
+      v := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", v, wideT);
+    END;
+    RETURN MSIR.BuildIXor (MSIRBuilder.CurrentBlock (), "",
+                            v, MSIR.ConstInt (wideT, 1));
   END CompileMSIR;
 
 BEGIN

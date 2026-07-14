@@ -137,6 +137,24 @@ PROCEDURE CompileMSIR (p: P) =
             (* INTEGER (i64) returned into a packed subrange result (e.g. [-1..+1] → i8).
                Truncate to the narrower type. *)
             v := MSIR.BuildTrunc (MSIRBuilder.CurrentBlock (), "", v, resultT);
+          ELSIF MSIR.Kind (MSIR.ValueType (v)) = MSIR.TypeKind.Enum AND
+                MSIR.Kind (resultT) >= MSIR.TypeKind.I1 AND
+                MSIR.Kind (resultT) <= MSIR.TypeKind.W64 THEN
+            (* Enum value (e.g. ST.Missing, VAL(x, RuntimeError)) returned from
+               an i64-result proc (TranslateResult returns i64 for ordinals).
+               TEnum is emitted as iN in LLVM IR, so ZExt/Trunc is valid. *)
+            VAR blk := MSIRBuilder.CurrentBlock ();
+                srcW := MSIR.BitWidth (MSIR.ValueType (v));
+                dstW := MSIR.BitWidth (resultT);
+            BEGIN
+              IF srcW < dstW THEN
+                v := MSIR.BuildZExt (blk, "", v, resultT);
+              ELSIF srcW > dstW THEN
+                v := MSIR.BuildTrunc (blk, "", v, resultT);
+              ELSE
+                v := MSIR.RetypeValue (v, resultT);
+              END;
+            END;
           ELSE
             (* Unhandled type mismatch.  Array-copy with memcpy is not yet
                implemented for all cases (e.g. multi-rank open arrays). *)

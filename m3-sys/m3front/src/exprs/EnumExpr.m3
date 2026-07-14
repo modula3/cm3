@@ -118,7 +118,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("enum literal out of INTEGER range");
       RETURN NIL;
     END;
-    t := MSIRType.Translate (p.type);
+    IF Type.IsOrdinal (p.type) THEN
+      (* Ordinal literals use the computation (ZType) width — i64 — matching
+         what variable loads return for BOOLEAN, CHAR, and other narrow enums. *)
+      t := MSIR.TI (Target.Integer.size);
+    ELSE
+      t := MSIRType.Translate (p.type);
+    END;
     IF t = NIL THEN
       MSIRBuilder.Abandon ("unsupported enum literal type");
       RETURN NIL;

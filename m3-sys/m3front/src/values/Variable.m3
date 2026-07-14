@@ -1428,16 +1428,20 @@ PROCEDURE UserInit (t: T) =
         t.initPending := FALSE;
         LoadLValue (t);
         Type.Zero (t.type);
-        (* MSIR: store zero constant *)
+        (* MSIR: store zero constant using the actual alloca type (i64 for ordinals,
+           not MSIRType.Translate which returns i1 for BOOLEAN). *)
         IF NOT t.global AND MSIRBuilder.InProc () THEN
-          VAR addr := MSIRBuilder.LookupVarAddr (t);
-              mt   := MSIRType.Translate (t.type);
-              zero : MSIR.Value;
+          VAR addr  := MSIRBuilder.LookupVarAddr (t);
+              slotT : MSIR.T;
+              zero  : MSIR.Value;
           BEGIN
-            IF addr # NIL AND mt # NIL THEN
-              zero := MSIR.ConstZero (mt);
-              IF zero # NIL THEN
-                MSIR.BuildStore (MSIRBuilder.CurrentBlock (), zero, addr);
+            IF addr # NIL THEN
+              slotT := MSIR.EltType (MSIR.ValueType (addr));
+              IF slotT # NIL THEN
+                zero := MSIR.ConstZero (slotT);
+                IF zero # NIL THEN
+                  MSIR.BuildStore (MSIRBuilder.CurrentBlock (), zero, addr);
+                END;
               END;
             END;
           END;

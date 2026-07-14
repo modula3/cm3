@@ -127,7 +127,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     mergeBlock:   MSIR.Block;
     boolT:        MSIR.T;
   BEGIN
-    boolT    := MSIR.TI1 ();
+    boolT    := MSIR.TI (Target.Integer.size);
     slot     := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", boolT);
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), MSIR.ConstInt(boolT, 1), slot);
     condA    := Expr.CompileMSIR (p.a);
@@ -140,10 +140,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     MSIRBuilder.SetCurrentBlock (rhsBlock);
     condB := Expr.CompileMSIR (p.b);
     IF condB = NIL THEN RETURN NIL END;
+    IF NOT MSIR.Equal (MSIR.ValueType (condB), boolT) THEN
+      condB := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", condB, boolT);
+    END;
     MSIR.BuildStore (MSIRBuilder.CurrentBlock (), condB, slot);
     MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock, ARRAY OF MSIR.Value{});
     MSIRBuilder.SetCurrentBlock (mergeBlock);
-    RETURN MSIR.BuildLoad (mergeBlock, "", boolT, slot);
+    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", boolT, slot);
   END CompileMSIR;
 
 BEGIN

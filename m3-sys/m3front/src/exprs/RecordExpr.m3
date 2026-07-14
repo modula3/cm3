@@ -14,7 +14,7 @@ IMPORT M3, M3ID, CG, Error, Type, RecordType, Module, Target;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
 IMPORT MSIR, MSIRBuilder, MSIRType;
-IMPORT IntegerExpr, EnumExpr, TextExpr, TInt;
+IMPORT IntegerExpr, EnumExpr, TextExpr, ProcExpr, TInt;
 
 TYPE
   Info = RECORD
@@ -803,6 +803,18 @@ PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
       cv := Expr.CompileMSIR(folded);
       IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstTextLit THEN
         RETURN cv;
+      END;
+    END;
+    (* Procedure reference — analogous to ProcExpr.GenLiteral → CG.Init_proc.
+       CompileMSIR on a non-nested ProcExpr emits no IR instructions; it just
+       looks up / creates the MSIR proc and returns a ConstProc value. *)
+    VAR proc: Value.T;
+    BEGIN
+      IF ProcExpr.Split(folded, proc) THEN
+        cv := Expr.CompileMSIR(folded);
+        IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstProc THEN
+          RETURN cv;
+        END;
       END;
     END;
     RETURN NIL;

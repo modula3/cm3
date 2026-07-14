@@ -273,7 +273,8 @@ PROCEDURE BeginProc(name: TEXT;
       END;
       (* Lambda-lifted capture params.
          Read-only scalar captures pass by value (Integer, Float, Ptr).
-         Written or aggregate captures pass by opaque ptr. *)
+         Written or aggregate captures pass a typed ptr so callers can do
+         typed GEP/subscript without needing a fallback retype heuristic. *)
       FOR i := 0 TO nCaptures - 1 DO
         VAR v:  Variable.T := caps[i].var;
             vt: Type.T;  vg, vi, vlhs: BOOLEAN;
@@ -284,9 +285,11 @@ PROCEDURE BeginProc(name: TEXT;
           params[nHidden + i].name := "__cap_" & Fmt.Int(i);
           params[nHidden + i].mode := MSIR.ParamMode.ByValue;
           IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
-            params[nHidden + i].type := mt;          (* pass the value directly *)
+            params[nHidden + i].type := mt;           (* pass by value *)
+          ELSIF mt # NIL THEN
+            params[nHidden + i].type := MSIR.TPtr(mt); (* typed ptr to storage *)
           ELSE
-            params[nHidden + i].type := MSIR.TPtr(MSIR.TVoid());  (* pass ptr *)
+            params[nHidden + i].type := MSIR.TPtr(MSIR.TVoid()); (* unknown type *)
           END;
         END;
       END;
@@ -469,7 +472,12 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
         IF varMap[i].storageType = NIL THEN
           RETURN varMap[i].val;   (* by-value formal: return param directly *)
         ELSE
-          (* Local alloca: load as storageType (MType), widen to wideType (ZType). *)
+          (* Local alloca: load as storageType (MType), widen to wideType (ZType).
+             WITH aliases bound to a heap GcSlot (e.g. REF ARRAY element) need
+             gc.load (read barrier), not a plain load. *)
+          IF MSIR.Kind(MSIR.ValueType(varMap[i].val)) = MSIR.TypeKind.GcSlot THEN
+            RETURN MSIR.BuildGcLoad(curBlock, "", varMap[i].val);
+          END;
           VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
           BEGIN
             IF NOT MSIR.Equal(varMap[i].storageType, varMap[i].wideType) THEN

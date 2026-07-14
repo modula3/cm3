@@ -460,6 +460,12 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
 PROCEDURE TranslateResult(t: Type.T): MSIR.T =
   BEGIN
     IF t = NIL THEN RETURN MSIR.TVoid() END;
+    (* Ordinal result types (BOOLEAN, CHAR, enumerations, subranges) use the
+       computation width i64, matching loads, alloca slots, and formal params.
+       Without this, an enum proc like Stack_Get: ST = {...} would have result
+       type TEnum (kind Enum > W64) and ReturnStmt's i64→narrow coercions
+       wouldn't fire — triggering "return type mismatch not yet supported". *)
+    IF Type.IsOrdinal(t) THEN RETURN MSIR.TI(Target.Integer.size) END;
     RETURN Translate(t);
   END TranslateResult;
 

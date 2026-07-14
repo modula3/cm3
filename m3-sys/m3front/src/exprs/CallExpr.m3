@@ -482,7 +482,9 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
 PROCEDURE LValueMSIR_CE (p: T): MSIR.Value =
   BEGIN
     IF p.methods = NIL OR p.methods.lvalueMSIR = NIL THEN
-      MSIRBuilder.Abandon ("no lvalue MSIR for this builtin");
+      (* Builtin has no lvalue — return NIL so callers that try lvalue first
+         (e.g. InitFieldDefaultMSIR, ReadonlyArgAddrMSIR) fall through to
+         CompileMSIR.  Abandon here would poison the whole procedure. *)
       RETURN NIL;
     END;
     RETURN p.methods.lvalueMSIR (p);

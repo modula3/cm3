@@ -575,6 +575,7 @@ PROCEDURE CompileMSIR (p: P) =
 
     selVal := Expr.CompileMSIR (p.expr);
     IF selVal = NIL THEN RETURN END;
+    selType := MSIR.ValueType (selVal);  (* use actual computation type, not storage type *)
 
     bodyBlks := NEW (REF ARRAY OF MSIR.Block, p.nCases);
     FOR i := 0 TO p.nCases - 1 DO

@@ -136,6 +136,14 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       MSIRBuilder.Abandon ("DEC: unsupported variable type");
       RETURN NIL;
     END;
+    (* AddLocalMSIR widens ordinal allocas to i64 so loop counters don't wrap.
+       Use the actual alloca element type for load/store to match. *)
+    VAR addrT := MSIR.ValueType (addr);
+    BEGIN
+      IF MSIR.Kind (addrT) = MSIR.TypeKind.Ptr THEN
+        mt := MSIR.EltType (addrT);
+      END;
+    END;
     old := MSIR.BuildLoad (blk, "", mt, addr);
     IF NUMBER (ce.args^) > 1 THEN
       delta := Expr.CompileMSIR (ce.args[1]);
