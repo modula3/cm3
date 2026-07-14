@@ -10,6 +10,7 @@ MODULE Dispose;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, RunTyme;
 IMPORT Addr, Reff, Module, Error, ObjectRef, ObjectAdr, Target;
+IMPORT MSIR, MSIRBuilder;
 
 VAR Z: CallExpr.MethodList;
 
@@ -65,6 +66,45 @@ PROCEDURE Compile (<*UNUSED*> ce: CallExpr.T) =
     (* all the work was done by Prep *)
   END Compile;
 
+PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  (* Mirrors Prep: for a traced ref, store NIL into the reference; for an
+     untraced ref/object, call the DisposeRef/DisposeObj runtime hook with the
+     ADDRESS of the reference variable (the hook frees the block and nils it). *)
+  CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.DisposeRef,
+                                                RunTyme.Hook.DisposeObj };
+  VAR
+    e    := ce.args[0];
+    t    := Type.Base (Expr.TypeOf (e));
+    info : Type.Info;
+    addr : MSIR.Value;
+    proc : MSIR.Proc;
+    b    : MSIR.Block;
+  BEGIN
+    IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
+    t := Type.CheckInfo (t, info);
+    (* Address of the reference variable (pointer to the ref/adr slot). *)
+    addr := Expr.LValueMSIR (e);
+    IF addr = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
+    IF info.isTraced THEN
+      (* Set the reference to NIL.  Storing NIL never needs a write barrier. *)
+      IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+        MSIR.BuildGcStore (b, addr,
+                           MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ())), NIL);
+      ELSE
+        MSIR.BuildStore (b, MSIR.ConstNil (MSIR.TPtr (MSIR.TVoid ())), addr);
+      END;
+    ELSE
+      proc := MSIRBuilder.HookProc (PHook [Type.IsSubtype (t, ObjectAdr.T)]);
+      IF proc = NIL THEN
+        MSIRBuilder.Abandon ("DISPOSE: hook not available");  RETURN NIL;
+      END;
+      EVAL MSIRBuilder.EmitCall ("", proc, ARRAY OF MSIR.Value{addr});
+    END;
+    Expr.NoteWrite (e);
+    RETURN NIL;
+  END CompileMSIR;
+
 PROCEDURE Initialize () =
   BEGIN
     Z := CallExpr.NewMethodList (1, 1, FALSE, FALSE, TRUE, NIL,
@@ -82,6 +122,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
+    CallExpr.SetMethodMSIR (Z, CompileMSIR);
     Procedure.DefinePredefined ("DISPOSE", Z, TRUE);
   END Initialize;
 

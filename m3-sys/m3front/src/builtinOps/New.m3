@@ -434,7 +434,18 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       MSIRBuilder.Abandon ("NEW: cannot determine type");  RETURN NIL;
     END;
     t := Type.StripPacked (t);
-    IF    RefType.Split    (t, r) THEN RETURN GenRefMSIR    (t, Type.StripPacked (r), ce);
+    IF    RefType.Split    (t, r) THEN
+      (* RefType.Split succeeds for a locally-revealed opaque REF, reducing
+         through the revelation to find the referent, but it leaves `t` as the
+         opaque type.  Passing the opaque type to GenRefMSIR reaches
+         TypeDescValueForRef with the opaque UID, which deliberately returns NIL
+         for any UID that is a revelation LHS in this module (RTLinker maps the
+         opaque uid to the revealed TypeCell).  That would silently drop the
+         allocation (empty NewSet => `unreachable` => SIGTRAP at startup).
+         Use the concrete (reduced) REF type so the allocator hook gets a real
+         TypeDesc keyed by the concrete RHS uid.  For a non-opaque ref this is
+         `t` itself, so there is no change for the common case. *)
+      RETURN GenRefMSIR (RefType.ReduceToRef (t), Type.StripPacked (r), ce);
     ELSIF ObjectType.Is    (t)    THEN RETURN GenObjectMSIR (t, ce);
     ELSIF OpaqueType.Is    (t)    THEN RETURN GenOpaqueMSIR (t, ce);
     ELSE  MSIRBuilder.Abandon ("NEW: not a reference type");  RETURN NIL;

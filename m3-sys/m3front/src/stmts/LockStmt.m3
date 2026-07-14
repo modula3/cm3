@@ -262,7 +262,11 @@ PROCEDURE CompileMSIR (p: P) =
     lpad      := MSIRBuilder.NewBlock("lock.lpad");
     finBody   := MSIRBuilder.NewBlock("lock.fin");
     resumeBlk := MSIRBuilder.NewBlock("lock.resume");
-    retBlk    := MSIRBuilder.NewBlock("lock.ret");
+    (* retBlk (lock.ret) is created lazily below, only when the body contains
+       a RETURN routed through this LOCK's finally (returnSeen).  Creating it
+       unconditionally left an orphan empty block for the common no-RETURN case
+       (verifier: "lock.ret.N: empty block"), which is fatal in MSIRObj mode. *)
+    retBlk    := NIL;
     merge     := MSIRBuilder.NewBlock("lock.done");
 
     (* Body: push try context AND finally cleanup so EXIT/RETURN routes through. *)
@@ -271,6 +275,7 @@ PROCEDURE CompileMSIR (p: P) =
     Stmt.CompileMSIR(p.body);
     exitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
     returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
+    IF returnSeen THEN retBlk := MSIRBuilder.NewBlock("lock.ret"); END;
     MSIRBuilder.PopFinallyCleanup();
     MSIRBuilder.PopTryContext();
     (* After Pop, CurrentUnwindBlock() is the ENCLOSING try context. *)
