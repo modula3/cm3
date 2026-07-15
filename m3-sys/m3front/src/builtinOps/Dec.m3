@@ -10,7 +10,7 @@ MODULE Dec;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, Int, LInt, Module;
 IMPORT M3ID, Addr, Target, TInt, IntegerExpr, Host, NamedExpr, MSIR, MSIRBuilder, MSIRType;
-IMPORT CaptureAnalysis;
+IMPORT CaptureAnalysis, QualifyExpr, SubscriptExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -128,6 +128,33 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   BEGIN
     IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
     IF addr = NIL THEN
+      (* Packed sub-byte field/element: no lvalue.  Read-modify-write via
+         ExtractBitField (Expr.CompileMSIR read) and InsertBitField (SubByte
+         store), mirroring AssignStmt.CompileMSIR's sub-byte path.  Fixes DEC(x.f)
+         where f is a BITS-N field — e.g. RealFloat/LongFloat.NextAfter's DEC on
+         the IEEE exponent bitfield. *)
+      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
+      old := Expr.CompileMSIR (lhsExpr);
+      IF old = NIL THEN
+        MSIRBuilder.Abandon ("DEC: cannot get lvalue in MSIR");  RETURN NIL;
+      END;
+      blk := MSIRBuilder.CurrentBlock ();
+      VAR oldT := MSIR.ValueType (old);
+      BEGIN
+        IF NUMBER (ce.args^) > 1 THEN
+          delta := Expr.CompileMSIR (ce.args[1]);
+          IF delta = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          delta := MSIRBuilder.CoerceToMSIR (blk, delta, oldT);
+        ELSE
+          delta := MSIR.ConstInt (oldT, 1);
+        END;
+        updated := MSIR.BuildISub (blk, "", old, delta);
+      END;
+      IF QualifyExpr.SubByteStoreMSIR (lhsExpr, updated)
+         OR SubscriptExpr.SubByteStoreElemMSIR (lhsExpr, updated) THEN
+        Expr.NoteWrite (lhsExpr);  RETURN NIL;
+      END;
       MSIRBuilder.Abandon ("DEC: cannot get lvalue in MSIR");
       RETURN NIL;
     END;

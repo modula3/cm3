@@ -10,7 +10,7 @@ MODULE Inc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Dec, Target, TInt;
 IMPORT IntegerExpr, Host, Int, LInt, MSIR, MSIRBuilder, MSIRType;
-IMPORT CaptureAnalysis;
+IMPORT CaptureAnalysis, QualifyExpr, SubscriptExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -95,6 +95,31 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   BEGIN
     IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
     IF addr = NIL THEN
+      (* Packed sub-byte field/element: no lvalue.  Read-modify-write via
+         ExtractBitField (Expr.CompileMSIR read) and InsertBitField (SubByte
+         store), mirroring AssignStmt.CompileMSIR's sub-byte path. *)
+      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
+      old := Expr.CompileMSIR (lhsExpr);
+      IF old = NIL THEN
+        MSIRBuilder.Abandon ("INC: cannot get lvalue in MSIR");  RETURN NIL;
+      END;
+      blk := MSIRBuilder.CurrentBlock ();
+      VAR oldT := MSIR.ValueType (old);
+      BEGIN
+        IF NUMBER (ce.args^) > 1 THEN
+          delta := Expr.CompileMSIR (ce.args[1]);
+          IF delta = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          delta := MSIRBuilder.CoerceToMSIR (blk, delta, oldT);
+        ELSE
+          delta := MSIR.ConstInt (oldT, 1);
+        END;
+        updated := MSIR.BuildIAdd (blk, "", old, delta);
+      END;
+      IF QualifyExpr.SubByteStoreMSIR (lhsExpr, updated)
+         OR SubscriptExpr.SubByteStoreElemMSIR (lhsExpr, updated) THEN
+        Expr.NoteWrite (lhsExpr);  RETURN NIL;
+      END;
       MSIRBuilder.Abandon ("INC: cannot get lvalue in MSIR");
       RETURN NIL;
     END;
