@@ -3503,11 +3503,17 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN) =
     isIface  := MSIR.ModuleIsInterface(m);
     initName := "MSIR_InitTypeLinks_" & MSIR.ModuleName(m) & "_M3";
   BEGIN
-    IF isIface THEN RETURN END;   (* interface units carry no init function *)
-
     IF forRuntime THEN
       (* In runtime mode (MSIRObj), the CM3 runtime handles TypeLink traversal and
-         TypeCell registration.  Just emit the TypeLink globals; no ctors needed. *)
+         TypeCell registration.  Just emit the TypeLink globals; no ctors needed.
+         Emit these for interface units too: an interface that declares an object
+         type emits its TypeCell (@tc_obj) and its module-info references the
+         paired TypeLink (@tl_obj) in type_cell_ptrs, and a field-default INIT
+         proc loads @tl_obj to reach the runtime dataOffset.  Skipping typelinks
+         for interfaces (the old `IF isIface THEN RETURN` at the top) left
+         @tl_obj_<uid> undefined at llc time (RdClass/WrClass in libm3).  The
+         interface/impl carry the SAME typelinks as `internal` globals — no link
+         conflict.  Only the standalone-mode init ctor is interface-specific. *)
       IF nLinks > 0 THEN
         Wr.PutText(wr, "\n; TypeLink globals (MI_type_cell_ptrs chain)\n");
         EmitRTStructType(wr, "TypeLink_t", TLKinds);
@@ -3534,7 +3540,11 @@ PROCEDURE EmitTypeLinks(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN) =
       RETURN;
     END;
 
-    (* Standalone harness mode: emit TypeLinks + MSIR_InitTypeLinks ctor. *)
+    (* Standalone harness mode: emit TypeLinks + MSIR_InitTypeLinks ctor.
+       Interface units carry no init ctor (the implementation unit owns
+       TypeDesc registration), so skip the standalone path for them. *)
+    IF isIface THEN RETURN END;
+
     IF nLinks = 0 THEN
       (* No-op init — registered via ctors so link-time symbol is unique. *)
       Wr.PutText(wr, "\ndefine void @" & initName & "() {\n");

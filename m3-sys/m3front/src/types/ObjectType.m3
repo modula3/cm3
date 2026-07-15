@@ -835,16 +835,19 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
       dataOff := p.fieldOffset DIV Target.Byte;
     ELSE
       (* Dynamic: load OTC_dataOffset from the module's TypeCell.
-         OTC_dataOffset byte offset within TypeCell = M3RT.OTC_dataOffset / Char. *)
-      VAR ptrT2   := MSIR.TPtr (MSIR.TVoid ());
-          intT2   := MSIR.TI (Target.Integer.size);
-          uid2    := MSIR.TypeDescUID (desc);
-          tcRef   := MSIR.TypeCellRef ("tl_obj_" & Fmt.Int (uid2));
+         OTC_dataOffset byte offset within TypeCell = M3RT.OTC_dataOffset / Char.
+         Use TypeLinkValueForObject (NOT a bare TypeCellRef): it both REGISTERS
+         the tl_obj_<uid> TypeLink with the module — so EmitTypeLinks emits its
+         global — AND returns the loaded TypeCell pointer.  A bare TypeCellRef
+         referenced @tl_obj_<uid> without registering it, leaving the symbol
+         undefined at llc time (interface unit field-default init procs, e.g.
+         RdClass/WrClass in libm3). *)
+      VAR intT2   := MSIR.TI (Target.Integer.size);
           tcPtr   : MSIR.Value;
           offPtr  : MSIR.Value;
           otcOff  := M3RT.OTC_dataOffset DIV Target.Char.size;
       BEGIN
-        tcPtr  := MSIR.BuildLoad (b, "", ptrT2, tcRef);
+        tcPtr  := MSIRBuilder.TypeLinkValueForObject (p);
         b := MSIRBuilder.CurrentBlock ();
         offPtr := MSIR.BuildPtrAdd (b, "", tcPtr, otcOff);
         b := MSIRBuilder.CurrentBlock ();
