@@ -715,7 +715,26 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     | Kind.Noop,
       Kind.D_to_S, Kind.S_to_S,
       Kind.D_to_V, Kind.S_to_V, Kind.V_to_V =>
-        RETURN Expr.LValueMSIR (p.expr);
+        (* LOOPHOLE(e, T) as an lvalue has type T, so the address it yields must
+           have pointee type T — e.g. subscripting LOOPHOLE(t, ARRAY OF Int32)
+           must see [N x i32], not t's own storage type ([M x i8] when t is a
+           packed byte array).  The source lvalue is typed for e, so retype it
+           to ptr(T).  CompileMSIR already does this on the load path (D_to_S /
+           S_to_S); LValueMSIR must match or packed/reinterpreted subscripts
+           abandon in SubscriptExpr.  For a scalar T where the source pointee
+           already matches, RetypeValue is a harmless relabel.  Only pointer
+           addresses are retyped; a GcSlot source keeps its slot (a loophole
+           preserving ref-ness). *)
+        VAR addr := Expr.LValueMSIR (p.expr);
+            dstT := MSIRType.Translate (p.tipe);
+        BEGIN
+          IF addr = NIL THEN RETURN NIL END;
+          IF dstT # NIL
+             AND MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.Ptr THEN
+            RETURN MSIR.RetypeValue (addr, MSIR.TPtr (dstT));
+          END;
+          RETURN addr;
+        END;
     | Kind.D_to_A, Kind.S_to_A, Kind.V_to_A =>
         (* Build an open-array dope vector on the MSIR stack:
            { elemPtr, count } where count = src_size / elt_size. *)
