@@ -191,16 +191,31 @@ PROCEDURE CompileMSIR (p: P) =
     | Kind.designator =>
         addr := Expr.LValueMSIR (p.expr);
         IF addr = NIL THEN
-          MSIRBuilder.Abandon ("WITH designator: cannot get lvalue in MSIR");
-          RETURN;
+          (* The designator has no lvalue — e.g. it is a packed sub-byte field
+             (QualifyExpr/SubscriptExpr.LValueMSIR return NIL for bit-addressed
+             designators, reads go through ExtractBitField).  Bind the alias to
+             a read-only copy of the value rather than abandoning the whole proc.
+             Writing through such an alias is not supported (rare); the common
+             read-only case works.  Fixes RTCollector.RebuildFreelist's
+             `WITH space = page.desc.space` where space is a packed field. *)
+          IF MSIRBuilder.IsAbandoned () THEN RETURN END;
+          val := Expr.CompileMSIR (p.expr);
+          IF val = NIL THEN RETURN END;
+          IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock ()) THEN
+            RETURN
+          END;
+          addr := MSIRBuilder.LookupVarAddr (p.var);
+          IF addr = NIL THEN RETURN END;
+          MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
+        ELSE
+          Variable.Split (p.var, t, global, indirect, lhs);
+          mt := MSIRType.Translate (t);
+          IF mt = NIL THEN
+            MSIRBuilder.Abandon ("WITH designator: unsupported type");
+            RETURN;
+          END;
+          MSIRBuilder.BindVarAddr (p.var, addr, mt);
         END;
-        Variable.Split (p.var, t, global, indirect, lhs);
-        mt := MSIRType.Translate (t);
-        IF mt = NIL THEN
-          MSIRBuilder.Abandon ("WITH designator: unsupported type");
-          RETURN;
-        END;
-        MSIRBuilder.BindVarAddr (p.var, addr, mt);
 
     | Kind.openarray =>
         (* Bind the alias variable to the lvalue address (dope vector pointer).
