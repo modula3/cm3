@@ -203,13 +203,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     blk := MSIRBuilder.CurrentBlock ();
     CASE p.class OF
     | Class.cINT, Class.cLINT, Class.cENUM =>
-        VAR rt := MSIRType.Translate (p.type);
-        BEGIN
-          IF rt = NIL THEN rt := MSIR.ValueType (a) END;
-          a := MSIRBuilder.CoerceToMSIR (blk, a, rt);
-          b := MSIRBuilder.CoerceToMSIR (blk, b, rt);
-          RETURN MSIR.BuildISub (blk, "", a, b);
-        END;
+        (* Operands are ZType (machine width); no width reconciliation needed. *)
+        RETURN MSIR.BuildISub (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFSub (blk, "", a, b);
     | Class.cSET =>

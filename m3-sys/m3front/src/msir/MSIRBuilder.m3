@@ -2570,7 +2570,10 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
         doSExt     : BOOLEAN;
       BEGIN
         PackedType.Split (rawFieldType, packedSize, packedBase);
-        naturalT := MSIRType.Translate (packedBase);
+        (* Widen the extracted bitfield to the ZType (machine width) so a
+           bitfield read is a uniform-width value like every other ordinal read
+           (e.g. RealFloat.Logb's `LOOPHOLE(x,Rep.T).exponent - 127`). *)
+        naturalT := MSIRType.ComputeType (packedBase);
         IF naturalT = NIL THEN naturalT := MSIR.TI (Target.Integer.size) END;
         doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
         VAR srcBits := wordBits;
@@ -2758,7 +2761,7 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
                 dstBits: INTEGER;
             BEGIN
               PackedType.Split (rawEltType, packedSize, packedBase);
-              naturalT := MSIRType.Translate (packedBase);
+              naturalT := MSIRType.ComputeType (packedBase);  (* ZType: widen packed elt read to machine width *)
               IF naturalT = NIL THEN naturalT := intT END;
               doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
               dstBits := MSIR.BitWidth (naturalT);
@@ -2821,7 +2824,7 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
             doSExt     : BOOLEAN;
           BEGIN
             PackedType.Split (rawEltType, packedSize, packedBase);
-            naturalT := MSIRType.Translate (packedBase);
+            naturalT := MSIRType.ComputeType (packedBase);  (* ZType: widen packed elt read to machine width *)
             IF naturalT = NIL THEN naturalT := MSIR.TI (Target.Integer.size) END;
             doSExt := Type.GetBounds (packedBase, lo, hi) AND TInt.LT (lo, TInt.Zero);
             VAR srcBits8 := 8;  (* extracted is always i8 here *)

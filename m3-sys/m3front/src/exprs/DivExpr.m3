@@ -165,13 +165,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
-    VAR rt := MSIRType.Translate (p.type);
-    BEGIN
-      IF rt = NIL THEN rt := MSIR.ValueType (a) END;
-      a := MSIRBuilder.CoerceToMSIR (blk, a, rt);
-      b := MSIRBuilder.CoerceToMSIR (blk, b, rt);
-      RETURN MSIR.BuildIDiv (blk, "", a, b);
-    END;
+    (* Operands are ZType (machine width); no width reconciliation needed. *)
+    RETURN MSIR.BuildIDiv (blk, "", a, b);
   END CompileMSIR;
 
 BEGIN

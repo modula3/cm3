@@ -168,17 +168,13 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR a, b: MSIR.Value;
       blk := MSIRBuilder.CurrentBlock ();
-      rt  : MSIR.T;
   BEGIN
     a := Expr.CompileMSIR (p.a);  IF a = NIL THEN RETURN NIL END;
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
     CASE p.class OF
     | Class.cINT, Class.cLINT =>
-        rt := MSIRType.Translate(p.type);
-        IF rt = NIL THEN rt := MSIR.ValueType(a) END;
-        a := MSIRBuilder.CoerceToMSIR(blk, a, rt);
-        b := MSIRBuilder.CoerceToMSIR(blk, b, rt);
+        (* Operands are ZType (machine width); no width reconciliation needed. *)
         RETURN MSIR.BuildIAdd (blk, "", a, b);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFAdd (blk, "", a, b);
