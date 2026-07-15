@@ -825,6 +825,11 @@ PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
       cv := MSIRBuilder.BuildConstAggArrayExpr(folded, Expr.TypeOf(fieldExpr), ft);
       IF cv # NIL THEN RETURN cv END;
     END;
+    (* Nested record-constant field (e.g. RT0.ObjectTypecell.common : Typecell) —
+       recurse so the enclosing record is a genuine compile-time constant. *)
+    IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.Struct THEN
+      IF TryCompileConstMSIR(fieldExpr, cv) AND cv # NIL THEN RETURN cv END;
+    END;
     RETURN NIL;
   END TryConstFieldMSIR;
 
