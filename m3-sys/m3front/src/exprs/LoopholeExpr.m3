@@ -603,8 +603,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
                OR srcK = MSIR.TypeKind.Struct
                OR srcK = MSIR.TypeKind.FixedArray
                OR srcK = MSIR.TypeKind.OpenArray THEN
-              (* Non-scalar source: load dstT directly. *)
-              RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+              (* Non-scalar source: reinterpret the memory as dstT.  Retype the
+                 pointer to ptr(dstT) so the load's pointee type matches its
+                 result type (else the MSIR verifier flags "load result type
+                 does not match pointer element type").  e.g. RealFloat.NextAfter
+                 RETURN LOOPHOLE(xx, REAL) where xx is the IEEE bitfield record. *)
+              RETURN MSIR.BuildLoad (blk, "", dstT,
+                                     MSIR.RetypeValue (addr, MSIR.TPtr (dstT)));
             END;
             VAR v := MSIR.BuildLoad (blk, "", srcT, addr); BEGIN
               IF MSIR.Equal (srcT, dstT) THEN RETURN v END;
@@ -620,7 +625,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         IF Expr.IsDesignator (p.expr) THEN
           VAR addr := Expr.LValueMSIR (p.expr); BEGIN
             IF addr = NIL THEN RETURN NIL END;
-            RETURN MSIR.BuildLoad (blk, "", dstT, addr);
+            (* Retype addr to ptr(dstT) so the load's pointee type matches
+               its result type (memory reinterpretation). *)
+            RETURN MSIR.BuildLoad (blk, "", dstT,
+                                   MSIR.RetypeValue (addr, MSIR.TPtr (dstT)));
           END;
         ELSE
           VAR v := Expr.CompileMSIR (p.expr); BEGIN
