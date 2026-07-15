@@ -604,6 +604,42 @@ PROCEDURE LangInit (t: T) =
     END;
   END LangInit;
 
+PROCEDURE CaptureOwnScopeInits (p: T;  ca: CaptureAnalysis.T) =
+  (* Walk the initializer expressions of p's own formals/locals so that an
+     up-level variable referenced ONLY inside such an initializer is still
+     discovered as a capture.  The classic case is a nested compare/emit proc
+     whose only use of an enclosing VAR is in binding its own locals, e.g.
+     M3Build.CmpUnit's `VAR a := srcs[ax]` (srcs belongs to the enclosing
+     DoGenTFile) — Stmt.Capture over the body statements never sees srcs
+     because the body references only a/b.  Note records the OUTER variables
+     these initializers read; FilterOwnScope (called next) then strips p's own
+     locals/formals, leaving the genuine captures.  A proc body is parsed with
+     BlockStmt.Parse(FALSE) so its locals live in p.syms, not p.block's scope —
+     hence walking p.syms here rather than relying on BlockStmt.Capture. *)
+  VAR sv    : Value.T;
+      bscope: Scope.T;
+  BEGIN
+    sv := Scope.ToList (p.syms);
+    WHILE sv # NIL DO
+      TYPECASE sv OF
+      | Variable.T (v) => Expr.Capture (Variable.InitExpr (v), ca);
+      ELSE
+      END;
+      sv := sv.next;
+    END;
+    bscope := BlockStmt.GetScope (p.block);
+    IF bscope # NIL THEN
+      sv := Scope.ToList (bscope);
+      WHILE sv # NIL DO
+        TYPECASE sv OF
+        | Variable.T (v) => Expr.Capture (Variable.InitExpr (v), ca);
+        ELSE
+        END;
+        sv := sv.next;
+      END;
+    END;
+  END CaptureOwnScopeInits;
+
 PROCEDURE FilterOwnScope (p: T;  ca: CaptureAnalysis.T) =
   (* Remove from ca any variables that are p's own formals or block-level
      locals.  A nested proc can set up_level=TRUE on p's own formals/locals
@@ -649,6 +685,7 @@ PROCEDURE PreRegisterNestedCaptures (v: Value.T) =
           VAR ca := CaptureAnalysis.New ();
           BEGIN
             Stmt.Capture (p.block, ca);
+            CaptureOwnScopeInits (p, ca);
             FilterOwnScope (p, ca);
             MSIRBuilder.RegisterCaptures (p, CaptureAnalysis.GetCaptures (ca));
           END;
@@ -687,6 +724,7 @@ PROCEDURE GenBodyMSIR (p: T) =
        remove p's own formals/locals whose up_level flag was set by nested procs
        referencing them — they live in p's own frame and are not captures of p. *)
     Stmt.Capture (p.block, ca);
+    CaptureOwnScopeInits (p, ca);
     FilterOwnScope (p, ca);
     (* Use the canonical Value.GlobalName — the SAME name the call site uses via
        MSIRBuilder.LookupOrCreateProc (Value.GlobalName(v, dots:=FALSE)).  It is

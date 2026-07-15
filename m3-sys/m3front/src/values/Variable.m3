@@ -267,6 +267,12 @@ PROCEDURE IsUpLevel (t: T): BOOLEAN =
     RETURN (t # NIL) AND t.up_level;
   END IsUpLevel;
 
+PROCEDURE InitExpr (t: T): M3.Expr =
+  BEGIN
+    IF t = NIL THEN RETURN NIL END;
+    RETURN t.initExpr;
+  END InitExpr;
+
 PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
   VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
       m : MSIR.Module;  g: MSIR.Global;

@@ -8,7 +8,7 @@
 
 INTERFACE Variable;
 
-IMPORT M3ID, Type, Value,  Scope, Decl, Target, CG, Tracer, MSIR;
+IMPORT M3, M3ID, Type, Value,  Scope, Decl, Target, CG, Tracer, MSIR;
 
 TYPE
   T <: Value.T;
@@ -28,6 +28,12 @@ PROCEDURE Split (t: T;  VAR type: Type.T;
 
 PROCEDURE IsFormal   (t: T): BOOLEAN;
 PROCEDURE IsUpLevel  (t: T): BOOLEAN;  (* accessed from a nested procedure *)
+
+PROCEDURE InitExpr   (t: T): M3.Expr;  (* t's initializer expression, or NIL.
+   (M3.Expr == Expr.T; named via M3 to avoid a Variable->Expr->CaptureAnalysis
+   ->Variable interface import cycle.)  Used by the MSIR capture-analysis pass
+   so an up-level variable referenced ONLY in a nested proc's local-variable
+   initializer (never in a body statement) is still discovered as a capture. *)
 
 (* MSIR declarations — called from DeclareGlobalsMSIR and BeginProc. *)
 PROCEDURE DeclareGlobalMSIR  (t: T;  weak: BOOLEAN := FALSE);

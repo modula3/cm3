@@ -9,7 +9,7 @@
 MODULE BlockStmt;
 
 IMPORT M3ID, Scope, Token, Stmt, StmtRep, Scanner, Decl, ESet, Tracer;
-IMPORT CaptureAnalysis;
+IMPORT CaptureAnalysis, Variable, Value, Expr;
 FROM Scanner IMPORT Match, cur;
 
 TYPE
@@ -157,7 +157,26 @@ PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Stmt.CheckState) =
   END CheckTrace;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
+  VAR v: Value.T;
   BEGIN
+    (* Walk this block's local-variable initializers so an up-level variable
+       referenced ONLY inside an initializer (e.g. `VAR a := srcs[i]`, where
+       srcs belongs to an enclosing proc) is discovered as a capture.  The
+       body statements alone miss these — the classic case is a nested compare
+       or emit proc whose only use of an outer VAR is in binding its own locals
+       (M3Build.CmpUnit/Emit).  FilterOwnScope later removes this block's own
+       locals from the capture set; the outer vars their initializers read
+       survive. *)
+    IF p.scope # NIL THEN
+      v := Scope.ToList (p.scope);
+      WHILE v # NIL DO
+        TYPECASE v OF
+        | Variable.T (var) => Expr.Capture (Variable.InitExpr (var), ca);
+        ELSE
+        END;
+        v := v.next;
+      END;
+    END;
     Stmt.Capture (p.body, ca);
   END Capture;
 
