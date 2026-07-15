@@ -212,7 +212,18 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("unsupported deref target type");
       RETURN NIL;
     END;
-    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
+    (* Load at the referent's MType (storage width), then widen to its ZType
+       (machine/computation width) so the produced value is uniform machine
+       width — matching local/formal reads.  For a non-ordinal, ComputeType =
+       Translate, so this is a no-op. *)
+    VAR v  := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty, addr);
+        zt := MSIRType.ComputeType (p.type);
+    BEGIN
+      IF zt # NIL AND NOT MSIR.Equal (zt, ty) THEN
+        v := MSIRBuilder.CoerceToMSIR (MSIRBuilder.CurrentBlock (), v, zt);
+      END;
+      RETURN v;
+    END;
   END CompileMSIR;
 
 PROCEDURE CaptureLV (p: P;  ca: CaptureAnalysis.T) =

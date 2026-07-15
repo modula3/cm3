@@ -87,7 +87,9 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR t: MSIR.T;
   BEGIN
-    t := MSIRType.Translate (p.type);
+    (* Ordinal literals use the ZType (machine/computation width, i64) so they
+       match the width of ordinal values read from memory — no per-op coercion. *)
+    t := MSIRType.ComputeType (p.type);
     IF t = NIL THEN
       MSIRBuilder.Abandon ("unsupported integer literal type");
       RETURN NIL;

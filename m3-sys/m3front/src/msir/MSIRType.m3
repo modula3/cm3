@@ -457,6 +457,15 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     END;
   END TranslateFixedArray;
 
+PROCEDURE ComputeType(t: Type.T): MSIR.T =
+  (* ZType: machine INTEGER width for any ordinal (BOOLEAN, CHAR, WIDECHAR,
+     enumerations, subranges); Translate(t) otherwise.  See MSIRType.i3. *)
+  BEGIN
+    IF t = NIL THEN RETURN NIL END;
+    IF Type.IsOrdinal(t) THEN RETURN MSIR.TI(Target.Integer.size) END;
+    RETURN Translate(t);
+  END ComputeType;
+
 PROCEDURE TranslateResult(t: Type.T): MSIR.T =
   BEGIN
     IF t = NIL THEN RETURN MSIR.TVoid() END;

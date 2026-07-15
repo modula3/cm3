@@ -823,7 +823,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF MSIR.Kind (addrType) = MSIR.TypeKind.GcSlot THEN
       RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
     END;
-    ty := MSIRType.Translate (p.type);
+    (* ZType (machine width) so an ordinal element read is uniform width; the
+       load below reads storage width (addrEltT) and widens to ty. *)
+    ty := MSIRType.ComputeType (p.type);
     IF ty = NIL THEN
       MSIRBuilder.Abandon ("unsupported subscript element type");
       RETURN NIL;

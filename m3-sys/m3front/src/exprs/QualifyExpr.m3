@@ -1007,28 +1007,18 @@ PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
                           rawFieldType: Type.T): MSIR.Value =
   VAR blk      := MSIRBuilder.CurrentBlock ();
       addrEltT := MSIR.EltType (MSIR.ValueType (addr));
-      addrBits := MSIR.BitWidth (addrEltT);
-      tyBits   := MSIR.BitWidth (naturalT);
+      (* Produce the field's ZType (machine width) so an ordinal field read is a
+         uniform-width value (e.g. a BOOLEAN/CHAR/enum field yields i64, not i1/
+         i8).  Load at the field's MType (storage width = addrEltT, matching the
+         pointer element type) then CoerceToMSIR widens/truncates to the ZType,
+         choosing SExt vs ZExt from the storage type's kind (TI vs TW). *)
+      zt       := MSIRType.ComputeType (rawFieldType);
   BEGIN
-    IF addrBits > 0 AND tyBits > 0 AND addrBits # tyBits THEN
-      VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
-      BEGIN
-        IF addrBits < tyBits THEN
-          VAR lo, hi : Target.Int;
-              doSExt := Type.GetBounds (Type.StripPacked (rawFieldType), lo, hi)
-                          AND TInt.LT (lo, TInt.Zero);
-          BEGIN
-            IF doSExt
-              THEN RETURN MSIR.BuildSExt (blk, "", loaded, naturalT);
-              ELSE RETURN MSIR.BuildZExt (blk, "", loaded, naturalT);
-            END;
-          END;
-        ELSE
-          RETURN MSIR.BuildTrunc (blk, "", loaded, naturalT);
-        END;
-      END;
+    IF zt = NIL THEN zt := naturalT END;
+    VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
+    BEGIN
+      RETURN MSIRBuilder.CoerceToMSIR (blk, loaded, zt);
     END;
-    RETURN MSIR.BuildLoad (blk, "", naturalT, addr);
   END LoadFieldValue;
 
 PROCEDURE LhsExpr (e: Expr.T): Expr.T =

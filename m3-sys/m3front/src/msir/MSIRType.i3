@@ -16,6 +16,15 @@ PROCEDURE Translate(t: Type.T): MSIR.T;
 PROCEDURE TranslateResult(t: Type.T): MSIR.T;
 (* Like Translate, but maps NIL (no result) to MSIR.TVoid(). *)
 
+PROCEDURE ComputeType(t: Type.T): MSIR.T;
+(* The ZType (computation width) of t: the width at which values of t live in
+   registers, as opposed to Translate's MType (memory/storage width).  For any
+   ordinal this is the machine INTEGER width (i64), matching the CG stack model
+   where ordinals are computed at machine width and only trimmed in memory.
+   For non-ordinals it equals Translate(t).  Used so that every ordinal VALUE
+   produced by a memory read (deref/field/subscript/global) or literal is
+   uniform machine width, eliminating per-operation operand-width coercions. *)
+
 PROCEDURE Reset();
 (* Clear the per-module type-translation cache.  Must be called at the
    start of each module so stale MSIR.T pointers from a prior module
