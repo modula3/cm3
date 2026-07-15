@@ -201,7 +201,8 @@ PROCEDURE CompileMSIR (p: P) =
           IF MSIRBuilder.IsAbandoned () THEN RETURN END;
           val := Expr.CompileMSIR (p.expr);
           IF val = NIL THEN RETURN END;
-          IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock ()) THEN
+          IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock (),
+                                        force := TRUE) THEN
             RETURN
           END;
           addr := MSIRBuilder.LookupVarAddr (p.var);

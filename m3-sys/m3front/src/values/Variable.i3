@@ -41,7 +41,10 @@ PROCEDURE DeclareGlobalMSIR  (t: T;  weak: BOOLEAN := FALSE);
    re-defines an interface-exported variable (the interface unit's strong def
    wins at link).  Module-private globals use the default (strong). *)
 PROCEDURE RegisterExternMSIR (t: T);
-PROCEDURE AddLocalMSIR       (t: T;  b: MSIR.Block): BOOLEAN;
+(* force=TRUE turns an indirect-flagged var (e.g. a WITH designator alias in the
+   no-lvalue/bitfield path) into a by-value local: it skips the indirect reject
+   and clears t.indirect so later reads treat the slot as a value. *)
+PROCEDURE AddLocalMSIR       (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN;
 PROCEDURE BindFormalMSIR     (t: T;  p: MSIR.Proc;  b: MSIR.Block);
 (* If t.initPending is TRUE, force the MSIR initialization of t now.  Used by
    NamedExpr.CompileMSIR to respect initialization order (p026: f := j before

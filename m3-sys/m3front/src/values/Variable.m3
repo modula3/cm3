@@ -384,6 +384,18 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
         IF RecordExpr.TryCompileConstMSIR (t.initExpr, cv) AND cv # NIL THEN
           (* whole-record constant (e.g. RTType's InfoMap tables) *)
           MSIR.ModuleAddGlobalInit (m, byteOff, cv);
+          (* In MSIRObj-authoritative mode the early global constructor now owns
+             this initialization (it runs before RTLinker, exactly like the C
+             backend's static data segment).  Mark it done so UserInit does NOT
+             also emit a runtime assignment in the module body — that assignment
+             would re-run AFTER RTLinker's FixTypes and wipe tables the runtime
+             already populated (e.g. RTType's `types` InfoMap: cnt 131 -> 0).
+             Only in authoritative mode: in the C-authoritative diagnostic path
+             ConstInit's GenLiteral still owns the real static init. *)
+          IF Target.BackendMode IN Target.BackendMSIRSet THEN
+            t.initDone := TRUE;
+            t.msirInitDone := TRUE;
+          END;
         ELSE
           (* scalar ordinal constant with a non-zero value (e.g. RTType's
              n_info := InfoChunk).  Store it at MType (memory) width so the
@@ -393,6 +405,10 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
              AND IntegerExpr.Split (folded, ti, tt)
              AND TInt.ToInt (ti, iv) AND iv # 0 THEN
             MSIR.ModuleAddGlobalInit (m, byteOff, MSIR.ConstInt (mt, iv));
+            IF Target.BackendMode IN Target.BackendMSIRSet THEN
+              t.initDone := TRUE;
+              t.msirInitDone := TRUE;
+            END;
           END;
         END;
       END;
@@ -470,13 +486,20 @@ PROCEDURE RegisterExternMSIR (t: T) =
     MSIRBuilder.GlobalMapAdd(t, g, m);
   END RegisterExternMSIR;
 
-PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block): BOOLEAN =
+PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN =
   VAR mt: MSIR.T;  slotAddr: MSIR.Value;  allocType: MSIR.T;
       typeInfoForZero : Type.Info;
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
-    IF t.indirect THEN RETURN FALSE END;
+    IF t.indirect THEN
+      (* An indirect designator alias (WITH x = <bitfield>) cannot be held by
+         reference — the source has no lvalue.  force=TRUE turns it into a plain
+         by-value local: the caller stores the extracted rvalue into the slot,
+         and reads go through LookupVar as an ordinary value. *)
+      IF NOT force THEN RETURN FALSE END;
+      t.indirect := FALSE;
+    END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
     (* Use the wide ZType for the alloca: ordinal scalars narrower than word
@@ -1626,9 +1649,15 @@ PROCEDURE UserInit (t: T) =
     (* MSIR: globals with simple constant initializers are statically initialized
        by ConstInit (CG), setting initDone=TRUE before UserInit runs.  The MSIR
        _M3_info struct is always zero-initialized, so we must still emit a
-       runtime store in the module init proc for those globals. *)
+       runtime store in the module init proc for those globals.
+       EXCEPTION: when DeclareGlobalMSIR already recorded an early global
+       constructor (@MSIR_InitGlobals) for this const initializer, it set
+       msirInitDone=TRUE.  That ctor runs BEFORE RTLinker, so re-emitting the
+       store here — in the module init proc, which runs AFTER RTLinker.FixTypes —
+       would clobber tables the runtime already populated (RTType's `types`
+       InfoMap: cnt 131 -> 0 -> MissingType crash).  Skip when the ctor owns it. *)
     IF t.global AND t.initDone AND (t.initExpr # NIL) AND (NOT t.imported)
-       AND (NOT t.initStatic) AND (NOT t.initZero)
+       AND (NOT t.initStatic) AND (NOT t.initZero) AND (NOT t.msirInitDone)
        AND MSIRBuilder.InProc () THEN
       IF Expr.ConstValue (t.initExpr) # NIL THEN
         VAR initVal := Expr.CompileMSIR (t.initExpr);
