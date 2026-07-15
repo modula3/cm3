@@ -468,6 +468,27 @@ PROCEDURE BeginProc(name: TEXT;
   END BeginProc;
 
 PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
+  (* Centralized ordinal-read widening: every variable VALUE read — local,
+     global, formal, WITH-alias, captured, via VarExpr OR NamedExpr OR a
+     qualified reference — returns the ZType (machine width).  Local allocas
+     already widen internally; globals/captured-by-value return narrow MType, so
+     widen here.  This is the single choke point that lets binops assume uniform
+     machine-width operands (no per-op coercion band-aids). *)
+  VAR res := LookupVarRaw(v);
+      t   := Value.TypeOf(v);
+      zt  : MSIR.T;
+  BEGIN
+    IF res = NIL OR t = NIL THEN RETURN res END;
+    zt := MSIRType.ComputeType(t);
+    IF zt # NIL AND MSIR.BitWidth(zt) > 0
+       AND MSIR.BitWidth(MSIR.ValueType(res)) > 0
+       AND NOT MSIR.Equal(zt, MSIR.ValueType(res)) THEN
+      res := CoerceToMSIR(CurrentBlock(), res, zt);
+    END;
+    RETURN res;
+  END LookupVar;
+
+PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
   VAR gv: MSIR.Value;  gt: MSIR.T;
   BEGIN
     FOR i := 0 TO varMapN - 1 DO
@@ -546,7 +567,7 @@ PROCEDURE LookupVar(v: Variable.T): MSIR.Value =
       END;
     END;
     RETURN NIL;
-  END LookupVar;
+  END LookupVarRaw;
 
 PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
   BEGIN
