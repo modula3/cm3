@@ -141,8 +141,12 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       delta := Expr.CompileMSIR (ce.args[1]);
       IF delta = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();  (* delta may have emitted an invoke *)
-      (* Widen delta to match destination type (e.g. IByte arg to INTEGER INC) *)
-      IF MSIR.Kind (mt) # MSIR.TypeKind.Ptr THEN
+      IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
+        (* ADDRESS arithmetic: widen the byte-count delta to Integer width so
+           GepByte gets a full i64 offset (e.g. INC(adr, aByte) delta is i8). *)
+        delta := MSIRBuilder.CoerceToMSIR (blk, delta, MSIR.TI (Target.Integer.size));
+      ELSE
+        (* Widen delta to match destination type (e.g. IByte arg to INTEGER INC) *)
         VAR mtBits := MSIR.BitWidth (mt);
             dBits  := MSIR.BitWidth (MSIR.ValueType (delta));
         BEGIN
