@@ -37,10 +37,30 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
   END PrepBR;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
-  VAR x := Expr.CompileMSIR (ce.args[0]);  y := Expr.CompileMSIR (ce.args[1]);
+  VAR
+    x  := Expr.CompileMSIR (ce.args[0]);
+    y  := Expr.CompileMSIR (ce.args[1]);
+    b  := MSIRBuilder.CurrentBlock ();
+    W  := Word_types[rep].size;
+    wt := MSIR.TI (W);
+    xb, yb: INTEGER;
   BEGIN
     IF x = NIL OR y = NIL THEN RETURN NIL END;
-    RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Ule, x, y);
+    (* Coerce both operands to the Word width so the icmp operands have the
+       same type: a narrow value (e.g. a UInt32 read) compared with an INTEGER
+       literal would otherwise mix i32 and i64.  Mirrors the arithmetic Word
+       builtins (Plus.mg). *)
+    xb := MSIR.BitWidth (MSIR.ValueType (x));
+    yb := MSIR.BitWidth (MSIR.ValueType (y));
+    IF xb > 0 AND xb # W THEN
+      IF xb > W THEN x := MSIR.BuildTrunc (b, "", x, wt)
+      ELSE            x := MSIR.BuildZExt  (b, "", x, wt) END;
+    END;
+    IF yb > 0 AND yb # W THEN
+      IF yb > W THEN y := MSIR.BuildTrunc (b, "", y, wt)
+      ELSE            y := MSIR.BuildZExt  (b, "", y, wt) END;
+    END;
+    RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Ule, x, y);
   END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

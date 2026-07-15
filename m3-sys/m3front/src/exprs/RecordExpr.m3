@@ -817,6 +817,14 @@ PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
         END;
       END;
     END;
+    (* Array-constructor field — e.g. Fingerprint.T{ARRAY OF BITS 8 {...}}.
+       Build an inline ConstAggArray so the enclosing record is a genuine
+       compile-time constant (otherwise CompileMSIR returns a runtime InsnResult
+       and the const-array/global emission abandons). *)
+    IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.FixedArray THEN
+      cv := MSIRBuilder.BuildConstAggArrayExpr(folded, Expr.TypeOf(fieldExpr), ft);
+      IF cv # NIL THEN RETURN cv END;
+    END;
     RETURN NIL;
   END TryConstFieldMSIR;
 

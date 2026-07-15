@@ -367,6 +367,12 @@ PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
    for a subscript expression.  Abandons and returns NIL on unsupported types. *)
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value;
 
+(* Build an inline ConstAggArray value from an array-constructor expression of
+   Modula-3 type arrType (translated MSIR type arrMsir).  For a const record
+   field whose value is an array constructor.  NIL if not a constructor. *)
+PROCEDURE BuildConstAggArrayExpr(constExpr: Expr.T;  arrType: Type.T;
+                                 arrMsir: MSIR.T): MSIR.Value;
+
 (* Emit a memcpy(dst, src, byteCount) call in the current block.
    Uses the C library memcpy; the result ptr is discarded.
    No-op when not inside a proc or already abandoned. *)

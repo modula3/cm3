@@ -2184,6 +2184,18 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
     RETURN MSIR.ConstAggArray(arrMsir, elts^);
   END BuildConstAggArray;
 
+PROCEDURE BuildConstAggArrayExpr(constExpr: Expr.T;  arrType: Type.T;
+                                 arrMsir: MSIR.T): MSIR.Value =
+  (* Exported wrapper: build a ConstAggArray from an array-constructor
+     expression (used by RecordExpr for a const record field whose value is an
+     array constructor, e.g. Fingerprint.T{ARRAY OF BITS 8 {...}}).  Returns
+     NIL if constExpr is not an array constructor. *)
+  VAR ae := ArrayExpr.ArrayConstrExpr(constExpr);
+  BEGIN
+    IF ae = NIL THEN RETURN NIL END;
+    RETURN BuildConstAggArray(ae, arrType, arrMsir);
+  END BuildConstAggArrayExpr;
+
 (* NOTE on open-array type propagation: CONST b = ARRAY OF ARRAY OF T {c,...}
    declares b with an open type (ARRAY OF ARRAY OF T), so Constant.Check stores
    valExpr.tipe as the open type.  ArrayType.Split on this open type yields
