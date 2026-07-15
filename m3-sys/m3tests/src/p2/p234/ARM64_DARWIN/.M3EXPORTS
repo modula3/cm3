@@ -1,0 +1,8 @@
+% exports of p234
+_define_pgm("pgm")
+override("m3tests", "/Users/hosking/git/cm3/m3-sys/m3tests/src/p2/p234/../../../..")
+import_version("libm3", "ARM64_DARWIN")
+import_version("m3core", "ARM64_DARWIN")
+import_version("m3tests", "ARM64_DARWIN")
+_map_add_module("Main.m3", "p234", ".", "hidden")
+import_sys_lib("UNWIND")

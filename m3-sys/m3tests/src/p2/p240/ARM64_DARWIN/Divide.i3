@@ -1,0 +1,2 @@
+INTERFACE Divide;
+END Divide.

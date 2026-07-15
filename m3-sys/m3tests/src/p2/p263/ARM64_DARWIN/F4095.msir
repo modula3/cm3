@@ -1,0 +1,17 @@
+module F4095
+
+proc F4095__F1(a.t: gc_ref void) -> word8
+entry:
+  %_result.slot = alloca i64
+  %t.slot = alloca gc_ref void
+  store a.t, %t.slot
+  %t1 = load gc_ref void, %t.slot
+  %t2 = ptr.add %t1, 0
+  %t3 = array.elem_addr %t2, 0
+  %t4 = load word8, %t3
+  ret %t4
+
+proc F4095_M3() -> void
+entry:
+  ret
+

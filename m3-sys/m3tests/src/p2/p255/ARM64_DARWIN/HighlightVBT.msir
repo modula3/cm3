@@ -1,0 +1,27 @@
+module HighlightVBT
+
+global HighlightVBT__HighlightVBT_var_a : i64
+global HighlightVBT__HighlightVBT_var_b : i64
+
+proc HighlightVBT__Be(a.v: gc_ref @HighlightVBT_T, a.paintOpValue: @PaintOp_T, readonly a.paintOpReadOnly: @PaintOp_T, a.pixmapValue: @Pixmap_T, readonly a.pixmapReadOnly: @Pixmap_T, a.recordValue: @Point_T, readonly a.recordReadOnly: @Point_T, a.fixedArrayValue: [1]i64, readonly a.fixedArrayReadOnly: [1]i64, a.openArrayValue: ptr openarray<1> i64, readonly a.openArrayReadOnly: openarray<1> i64, a.bigSetValue: i1088, readonly a.bigSetReadOnly: i1088, a.smallSetValue: i16, readonly a.smallSetReadOnly: i16) -> void
+entry:
+  %smallSetValue.slot = alloca i16
+  %bigSetValue.slot = alloca i1088
+  %fixedArrayValue.slot = alloca [1]i64
+  %recordValue.slot = alloca @Point_T
+  %pixmapValue.slot = alloca @Pixmap_T
+  %paintOpValue.slot = alloca @PaintOp_T
+  %v.slot = alloca gc_ref @HighlightVBT_T
+  store a.v, %v.slot
+  store a.paintOpValue, %paintOpValue.slot
+  store a.pixmapValue, %pixmapValue.slot
+  store a.recordValue, %recordValue.slot
+  store a.fixedArrayValue, %fixedArrayValue.slot
+  store a.bigSetValue, %bigSetValue.slot
+  store a.smallSetValue, %smallSetValue.slot
+  ret
+
+proc HighlightVBT_M3() -> void
+entry:
+  ret
+

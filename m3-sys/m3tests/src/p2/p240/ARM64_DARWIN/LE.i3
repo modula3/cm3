@@ -1,0 +1,2 @@
+INTERFACE LE;
+END LE.

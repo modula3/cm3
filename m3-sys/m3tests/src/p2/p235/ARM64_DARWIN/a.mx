@@ -1,0 +1,95 @@
+M3 v4.2
+N0 Main
+
+M0 1 4 0 0 0 0 18 0 0 26 0 0
+A0
+N1 Time
+B1
+N2 RTIO
+B2
+N3 Date
+B3
+N4 RTHooks
+B4
+N5 PutText
+V0 2 5 3b316e9d21ea79b8
+i0
+N6 TextLitInfo
+V1 4 6 fdc7f49fa7f061c3
+i1
+N7 TextLitGetChar
+V2 4 7 bf853738ef95b58f
+i2
+N8 TextLitGetWideChar
+V3 4 8 6b44a8081c4ee8f1
+i3
+N9 TextLitGetChars
+V4 4 9 e51aa8c54a895201
+i4
+N10 TextLitGetWideChars
+V5 4 10 face384698a06a95
+i5
+N11 Flush
+V6 2 11 b949f19acc02726d
+i6
+N12 PutAddr
+V7 2 12 54028a107bb5a6b9
+i7
+N13 PutInt
+V8 2 13 cd57f548356752af
+i8
+N14 Now
+V9 1 14 0dfd00a64c25011e
+i9
+N15 PutF
+V10 2 15 49e5820fd2c0ae3b
+i10
+N16 Local
+V11 3 16 efb40690f522fe9e
+i11
+N17 CheckLoadTracedRef
+V12 4 17 33cac043de87135c
+i12
+N18 FromTime
+V13 3 18 44d9036169f09dcd
+i13
+N19 UTC
+V14 3 19 bcf94a278cda7d77
+i14
+N20 T
+V15 3 20 bbbb3de5a6ea4518
+i15
+N21 CheckStoreTraced
+V16 4 21 8ffa5ad840254ad5
+i16
+N22 ScanTypecase
+V17 4 22 6c0355050f2d5a7c
+i17
+t0a33463a
+t2da6581c
+t2fa7581d
+t25a0581d
+t2ca3581d
+t2a65ec03
+t32721a2d
+t7b78c34f
+tabbeb60b
+t6d871b27
+tb750d684
+t38df5df5
+tb964357b
+t9132dde7
+t89cd34bd
+tc9e236c8
+ta19bdc21
+t966fe87f
+ta61f1411
+t27b0f303
+te4e28466
+tddde6ccc
+t188952bf
+t37e50548
+td83aaf93
+t9b134ca4
+Q188952bf 1c1c45e6
+Q6d871b27 50f86574

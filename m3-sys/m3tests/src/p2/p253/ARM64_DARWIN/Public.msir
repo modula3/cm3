@@ -1,0 +1,45 @@
+module Public
+
+proc Public__Public_M3_tb3d028bc_INIT(obj: ptr void) -> void
+  linkage internal
+entry:
+  %t1 = load ptr void, @tl_obj_-1278203716
+  %t2 = ptr.add %t1, 112
+  %t3 = load i64, %t2
+  %t4 = iadd %t3, 0
+  %t5 = gep.byte obj, %t4
+  store i64 1, %t5
+  %t6 = iadd %t3, 8
+  %t7 = gep.byte obj, %t6
+  store i64 3, %t7
+  ret
+
+proc Public__F1(a.a: gc_ref void) -> void
+entry:
+  %a.slot = alloca gc_ref void
+  store a.a, %a.slot
+  %t1 = call M3toC__FlatTtoS("Public.F1.a") -> ptr void
+  %t2 = load gc_ref void, %a.slot
+  call put_adr(%t1, %t2)
+  %t3 = call M3toC__FlatTtoS("Public.F1.a.a") -> ptr void
+  %t4 = load gc_ref void, %a.slot
+  %t5 = load ptr void, @tl_obj_-1278203716
+  %t6 = ptr.add %t5, 112
+  %t7 = load i64, %t6
+  %t8 = gep.byte %t4, %t7
+  %t9 = ptr.add %t8, 0
+  call put_adr(%t3, %t9)
+  %t10 = call M3toC__FlatTtoS("Public.F1.a.c") -> ptr void
+  %t11 = load gc_ref void, %a.slot
+  %t12 = load ptr void, @tl_obj_-1278203716
+  %t13 = ptr.add %t12, 112
+  %t14 = load i64, %t13
+  %t15 = gep.byte %t11, %t14
+  %t16 = ptr.add %t15, 8
+  call put_adr(%t10, %t16)
+  ret
+
+proc Public_M3() -> void
+entry:
+  ret
+

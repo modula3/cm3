@@ -1,0 +1,660 @@
+module Main
+
+global Main__atomicBooleanA : @T
+global Main__atomicCharA : @T
+global Main__atomicIntegerA : @T
+global Main__atomicLongintA : @T
+global Main__atomicRefanyA : @T
+global Main__atomicWidecharA : @T
+global Main__atomicAddressA : @T
+global Main__integerB : i64
+global Main__integerC : i64
+global Main__booleanB : i1
+global Main__booleanC : i1
+global Main__charB : word8
+global Main__charC : word8
+global Main__longintB : i64
+global Main__longintC : i64
+global Main__refanyB : gc_slot void
+global Main__refanyC : gc_slot void
+global Main__widecharB : i16
+global Main__widecharC : i16
+global Main__addressB : ptr void
+global Main__addressC : ptr void
+global Main__bool : i1
+
+proc Main__Test_AtomicBoolean_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicBoolean_CompareSwap() -> void
+entry:
+  %t1 = load i1, @Main_M3_info+169
+  %t2 = zext %t1 to i8
+  %t3 = atomic.cmpxchg @Main_M3_info+104, @Main_M3_info+168, %t2
+  store %t3, @Main_M3_info+232
+  ret
+
+proc Main__Test_AtomicBoolean_FetchAnd() -> void
+entry:
+  %t1 = load i1, @Main_M3_info+168
+  %t2 = zext %t1 to i8
+  %t3 = atomic.rmw @Main_M3_info+104, %t2
+  %t4 = trunc %t3 to i1
+  store %t4, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean_FetchDec() -> void
+entry:
+  %t1 = trunc 1 to i8
+  %t2 = atomic.rmw @Main_M3_info+104, %t1
+  %t3 = trunc %t2 to i1
+  store %t3, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean_FetchInc() -> void
+entry:
+  %t1 = trunc 1 to i8
+  %t2 = atomic.rmw @Main_M3_info+104, %t1
+  %t3 = trunc %t2 to i1
+  store %t3, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean_FetchOr() -> void
+entry:
+  %t1 = load i1, @Main_M3_info+168
+  %t2 = zext %t1 to i8
+  %t3 = atomic.rmw @Main_M3_info+104, %t2
+  %t4 = trunc %t3 to i1
+  store %t4, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean_FetchXor() -> void
+entry:
+  %t1 = load i1, @Main_M3_info+168
+  %t2 = zext %t1 to i8
+  %t3 = atomic.rmw @Main_M3_info+104, %t2
+  %t4 = trunc %t3 to i1
+  store %t4, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicBoolean_LoadStore() -> void
+entry:
+  %t1 = atomic.load @Main_M3_info+104
+  %t2 = trunc %t1 to i1
+  store %t2, @Main_M3_info+168
+  %t3 = zext 0 to i8
+  atomic.store %t3, @Main_M3_info+104
+  %t4 = atomic.load @Main_M3_info+104
+  %t5 = trunc %t4 to i1
+  store %t5, @Main_M3_info+168
+  %t6 = zext 1 to i8
+  atomic.store %t6, @Main_M3_info+104
+  %t7 = atomic.load @Main_M3_info+104
+  %t8 = trunc %t7 to i1
+  store %t8, @Main_M3_info+169
+  %t9 = atomic.load @Main_M3_info+104
+  %t10 = trunc %t9 to i1
+  store %t10, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean_Swap() -> void
+entry:
+  %t1 = load i1, @Main_M3_info+168
+  %t2 = zext %t1 to i8
+  %t3 = atomic.rmw @Main_M3_info+104, %t2
+  %t4 = trunc %t3 to i1
+  store %t4, @Main_M3_info+169
+  ret
+
+proc Main__Test_AtomicBoolean() -> void
+entry:
+  call Main__Test_AtomicBoolean_Fence()
+  call Main__Test_AtomicBoolean_CompareSwap()
+  call Main__Test_AtomicBoolean_FetchAnd()
+  call Main__Test_AtomicBoolean_FetchDec()
+  call Main__Test_AtomicBoolean_FetchInc()
+  call Main__Test_AtomicBoolean_FetchOr()
+  call Main__Test_AtomicBoolean_FetchXor()
+  %t1 = call Main__Test_AtomicBoolean_IsLockFree() -> i1
+  call Main__Test_AtomicBoolean_LoadStore()
+  call Main__Test_AtomicBoolean_Swap()
+  ret
+
+proc Main__Test_AtomicChar_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicChar_CompareSwap() -> void
+entry:
+  %t1 = load word8, @Main_M3_info+171
+  %t2 = atomic.cmpxchg @Main_M3_info+105, @Main_M3_info+170, %t1
+  store %t2, @Main_M3_info+232
+  ret
+
+proc Main__Test_AtomicChar_FetchAnd() -> void
+entry:
+  %t1 = load word8, @Main_M3_info+170
+  %t2 = atomic.rmw @Main_M3_info+105, %t1
+  store %t2, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar_FetchDec() -> void
+entry:
+  %t1 = trunc 1 to word8
+  %t2 = atomic.rmw @Main_M3_info+105, %t1
+  store %t2, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar_FetchInc() -> void
+entry:
+  %t1 = trunc 1 to word8
+  %t2 = atomic.rmw @Main_M3_info+105, %t1
+  store %t2, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar_FetchOr() -> void
+entry:
+  %t1 = load word8, @Main_M3_info+170
+  %t2 = atomic.rmw @Main_M3_info+105, %t1
+  store %t2, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar_FetchXor() -> void
+entry:
+  %t1 = load word8, @Main_M3_info+170
+  %t2 = atomic.rmw @Main_M3_info+105, %t1
+  store %t2, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicChar_LoadStore() -> void
+entry:
+  %t1 = atomic.load @Main_M3_info+105
+  store %t1, @Main_M3_info+170
+  atomic.store 6, @Main_M3_info+105
+  %t2 = atomic.load @Main_M3_info+105
+  store %t2, @Main_M3_info+170
+  atomic.store 6, @Main_M3_info+105
+  %t3 = atomic.load @Main_M3_info+105
+  store %t3, @Main_M3_info+171
+  %t4 = atomic.load @Main_M3_info+105
+  store %t4, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar_Swap() -> void
+entry:
+  %t1 = load word8, @Main_M3_info+170
+  %t2 = atomic.rmw @Main_M3_info+105, %t1
+  store %t2, @Main_M3_info+171
+  ret
+
+proc Main__Test_AtomicChar() -> void
+entry:
+  call Main__Test_AtomicChar_Fence()
+  call Main__Test_AtomicChar_CompareSwap()
+  call Main__Test_AtomicChar_FetchAnd()
+  call Main__Test_AtomicChar_FetchDec()
+  call Main__Test_AtomicChar_FetchInc()
+  call Main__Test_AtomicChar_FetchOr()
+  call Main__Test_AtomicChar_FetchXor()
+  %t1 = call Main__Test_AtomicChar_IsLockFree() -> i1
+  call Main__Test_AtomicChar_LoadStore()
+  call Main__Test_AtomicChar_Swap()
+  ret
+
+proc Main__Test_AtomicWidechar_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicWidechar_CompareSwap() -> void
+entry:
+  %t1 = load i16, @Main_M3_info+210
+  %t2 = atomic.cmpxchg @Main_M3_info+136, @Main_M3_info+208, %t1
+  store %t2, @Main_M3_info+232
+  ret
+
+proc Main__Test_AtomicWidechar_FetchAnd() -> void
+entry:
+  %t1 = load i16, @Main_M3_info+208
+  %t2 = atomic.rmw @Main_M3_info+136, %t1
+  store %t2, @Main_M3_info+210
+  ret
+
+proc Main__Test_AtomicWidechar_FetchDec() -> void
+entry:
+  %t1 = trunc 1 to i16
+  %t2 = atomic.rmw @Main_M3_info+136, %t1
+  store %t2, @Main_M3_info+210
+  ret
+
+proc Main__Test_AtomicWidechar_FetchInc() -> void
+entry:
+  %t1 = trunc 1 to i16
+  %t2 = atomic.rmw @Main_M3_info+136, %t1
+  store %t2, @Main_M3_info+210
+  ret
+
+proc Main__Test_AtomicWidechar_FetchOr() -> void
+entry:
+  %t1 = load i16, @Main_M3_info+208
+  %t2 = atomic.rmw @Main_M3_info+136, %t1
+  store %t2, @Main_M3_info+210
+  ret
+
+proc Main__Test_AtomicWidechar_FetchXor() -> void
+entry:
+  %t1 = load i16, @Main_M3_info+208
+  %t2 = atomic.rmw @Main_M3_info+136, %t1
+  store %t2, @Main_M3_info+210
+  ret
+
+proc Main__Test_AtomicWidechar_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicWidechar_LoadStore() -> void
+entry:
+  %integerC.slot = alloca i64
+  %t1 = atomic.load @Main_M3_info+136
+  store %t1, @Main_M3_info+208
+  atomic.store 6, @Main_M3_info+136
+  %t2 = atomic.load @Main_M3_info+136
+  store %t2, @Main_M3_info+208
+  atomic.store 6, @Main_M3_info+136
+  %t3 = atomic.load @Main_M3_info+136
+  %t4 = zext %t3 to i64
+  store %t4, %integerC.slot
+  %t5 = atomic.load @Main_M3_info+136
+  %t6 = zext %t5 to i64
+  store %t6, %integerC.slot
+  ret
+
+proc Main__Test_AtomicWidechar_Swap() -> void
+entry:
+  %t1 = load i16, @Main_M3_info+208
+  %t2 = atomic.rmw @Main_M3_info+136, %t1
+  store %t2, @Main_M3_info+210
+  ret
+
+proc Main__Test_AtomicWidechar() -> void
+entry:
+  call Main__Test_AtomicWidechar_Fence()
+  call Main__Test_AtomicWidechar_CompareSwap()
+  call Main__Test_AtomicWidechar_FetchAnd()
+  call Main__Test_AtomicWidechar_FetchDec()
+  call Main__Test_AtomicWidechar_FetchInc()
+  call Main__Test_AtomicWidechar_FetchOr()
+  call Main__Test_AtomicWidechar_FetchXor()
+  %t1 = call Main__Test_AtomicWidechar_IsLockFree() -> i1
+  call Main__Test_AtomicWidechar_LoadStore()
+  call Main__Test_AtomicWidechar_Swap()
+  ret
+
+proc Main__Test_AtomicRefany_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicRefany_CompareSwap() -> void
+entry:
+  %t1 = gc.load @Main_M3_info+200
+  %t2 = atomic.cmpxchg @Main_M3_info+128, @Main_M3_info+192, %t1
+  store %t2, @Main_M3_info+232
+  ret
+
+proc Main__Test_AtomicRefany_FetchAnd() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicRefany_FetchDec() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicRefany_FetchInc() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicRefany_FetchOr() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicRefany_FetchXor() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicRefany_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicRefany_LoadStore() -> void
+entry:
+  %xxx.slot = alloca gc_ref i64
+  %refanyC.slot = alloca gc_ref void
+  store nil, %refanyC.slot
+  store nil, %xxx.slot
+  %t1 = call RTHooks__AllocateTracedRef(@tc_ref_1355119930) -> gc_ref void
+  %t2 = convert %t1 to gc_ref i64
+  store %t2, %xxx.slot
+  %t3 = load gc_ref i64, %xxx.slot
+  store i64 23, %t3
+  %t4 = atomic.load @Main_M3_info+128
+  gc.store %t4, @Main_M3_info+192
+  %t5 = load gc_ref i64, %xxx.slot
+  atomic.store %t5, @Main_M3_info+128
+  %t6 = atomic.load @Main_M3_info+128
+  gc.store %t6, @Main_M3_info+192
+  %t7 = load gc_ref i64, %xxx.slot
+  atomic.store %t7, @Main_M3_info+128
+  %t8 = atomic.load @Main_M3_info+128
+  store %t8, %refanyC.slot
+  %t9 = atomic.load @Main_M3_info+128
+  store %t9, %refanyC.slot
+  ret
+
+proc Main__Test_AtomicRefany_Swap() -> void
+entry:
+  %t1 = gc.load @Main_M3_info+192
+  %t2 = atomic.rmw @Main_M3_info+128, %t1
+  gc.store %t2, @Main_M3_info+200
+  ret
+
+proc Main__Test_AtomicRefany() -> void
+entry:
+  call Main__Test_AtomicRefany_Fence()
+  call Main__Test_AtomicRefany_CompareSwap()
+  call Main__Test_AtomicRefany_FetchAnd()
+  call Main__Test_AtomicRefany_FetchDec()
+  call Main__Test_AtomicRefany_FetchInc()
+  call Main__Test_AtomicRefany_FetchOr()
+  call Main__Test_AtomicRefany_FetchXor()
+  %t1 = call Main__Test_AtomicRefany_IsLockFree() -> i1
+  call Main__Test_AtomicRefany_LoadStore()
+  call Main__Test_AtomicRefany_Swap()
+  ret
+
+proc Main__Test_AtomicAddress_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicAddress_CompareSwap() -> void
+entry:
+  %t1 = load ptr void, @Main_M3_info+224
+  %t2 = atomic.cmpxchg @Main_M3_info+144, @Main_M3_info+216, %t1
+  store %t2, @Main_M3_info+232
+  ret
+
+proc Main__Test_AtomicAddress_FetchAnd() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicAddress_FetchDec() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicAddress_FetchInc() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicAddress_FetchOr() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicAddress_FetchXor() -> void
+entry:
+  ret
+
+proc Main__Test_AtomicAddress_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicAddress_LoadStore() -> void
+entry:
+  %addressC.slot = alloca ptr void
+  store nil, %addressC.slot
+  %t1 = atomic.load @Main_M3_info+144
+  store %t1, @Main_M3_info+216
+  %t2 = iadd 1, 2
+  %t3 = iadd %t2, 3
+  %t4 = convert %t3 to ptr void
+  atomic.store %t4, @Main_M3_info+144
+  %t5 = atomic.load @Main_M3_info+144
+  store %t5, @Main_M3_info+216
+  %t6 = iadd 1, 2
+  %t7 = iadd %t6, 3
+  %t8 = convert %t7 to ptr void
+  atomic.store %t8, @Main_M3_info+144
+  %t9 = atomic.load @Main_M3_info+144
+  store %t9, %addressC.slot
+  %t10 = atomic.load @Main_M3_info+144
+  store %t10, %addressC.slot
+  ret
+
+proc Main__Test_AtomicAddress_Swap() -> void
+entry:
+  %t1 = load ptr void, @Main_M3_info+216
+  %t2 = atomic.rmw @Main_M3_info+144, %t1
+  store %t2, @Main_M3_info+224
+  ret
+
+proc Main__Test_AtomicAddress() -> void
+entry:
+  call Main__Test_AtomicAddress_Fence()
+  call Main__Test_AtomicAddress_CompareSwap()
+  call Main__Test_AtomicAddress_FetchAnd()
+  call Main__Test_AtomicAddress_FetchDec()
+  call Main__Test_AtomicAddress_FetchInc()
+  call Main__Test_AtomicAddress_FetchOr()
+  call Main__Test_AtomicAddress_FetchXor()
+  %t1 = call Main__Test_AtomicAddress_IsLockFree() -> i1
+  call Main__Test_AtomicAddress_LoadStore()
+  call Main__Test_AtomicAddress_Swap()
+  ret
+
+proc Main__Test_AtomicInteger_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicInteger_CompareSwap() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+160
+  %t2 = atomic.cmpxchg @Main_M3_info+112, @Main_M3_info+152, %t1
+  store %t2, @Main_M3_info+232
+  %t3 = load i64, @Main_M3_info+152
+  %t4 = atomic.rmw @Main_M3_info+112, %t3
+  store %t4, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger_FetchAnd() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+152
+  %t2 = atomic.rmw @Main_M3_info+112, %t1
+  store %t2, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger_FetchDec() -> void
+entry:
+  %t1 = atomic.rmw @Main_M3_info+112, 1
+  store %t1, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger_FetchInc() -> void
+entry:
+  %t1 = atomic.rmw @Main_M3_info+112, 1
+  store %t1, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger_FetchOr() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+152
+  %t2 = atomic.rmw @Main_M3_info+112, %t1
+  store %t2, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger_FetchXor() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+152
+  %t2 = atomic.rmw @Main_M3_info+112, %t1
+  store %t2, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicInteger_LoadStore() -> void
+entry:
+  %integerC.slot = alloca i64
+  %t1 = atomic.load @Main_M3_info+112
+  store %t1, @Main_M3_info+152
+  atomic.store 6, @Main_M3_info+112
+  %t2 = atomic.load @Main_M3_info+112
+  store %t2, @Main_M3_info+152
+  atomic.store 10, @Main_M3_info+112
+  %t3 = atomic.load @Main_M3_info+112
+  store %t3, %integerC.slot
+  %t4 = atomic.load @Main_M3_info+112
+  store %t4, %integerC.slot
+  ret
+
+proc Main__Test_AtomicInteger_Swap() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+152
+  %t2 = atomic.rmw @Main_M3_info+112, %t1
+  store %t2, @Main_M3_info+160
+  ret
+
+proc Main__Test_AtomicInteger() -> void
+entry:
+  call Main__Test_AtomicInteger_Fence()
+  call Main__Test_AtomicInteger_CompareSwap()
+  call Main__Test_AtomicInteger_FetchAnd()
+  call Main__Test_AtomicInteger_FetchDec()
+  call Main__Test_AtomicInteger_FetchInc()
+  call Main__Test_AtomicInteger_FetchOr()
+  call Main__Test_AtomicInteger_FetchXor()
+  %t1 = call Main__Test_AtomicInteger_IsLockFree() -> i1
+  call Main__Test_AtomicInteger_LoadStore()
+  call Main__Test_AtomicInteger_Swap()
+  ret
+
+proc Main__Test_AtomicLongint_Fence() -> void
+entry:
+  atomic.fence
+  ret
+
+proc Main__Test_AtomicLongint_CompareSwap() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+184
+  %t2 = atomic.cmpxchg @Main_M3_info+120, @Main_M3_info+176, %t1
+  store %t2, @Main_M3_info+232
+  ret
+
+proc Main__Test_AtomicLongint_FetchAnd() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+176
+  %t2 = atomic.rmw @Main_M3_info+120, %t1
+  store %t2, @Main_M3_info+184
+  ret
+
+proc Main__Test_AtomicLongint_FetchDec() -> void
+entry:
+  %t1 = atomic.rmw @Main_M3_info+120, 1
+  store %t1, @Main_M3_info+176
+  ret
+
+proc Main__Test_AtomicLongint_FetchInc() -> void
+entry:
+  %t1 = atomic.rmw @Main_M3_info+120, 1
+  store %t1, @Main_M3_info+176
+  ret
+
+proc Main__Test_AtomicLongint_FetchOr() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+176
+  %t2 = atomic.rmw @Main_M3_info+120, %t1
+  store %t2, @Main_M3_info+184
+  ret
+
+proc Main__Test_AtomicLongint_FetchXor() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+176
+  %t2 = atomic.rmw @Main_M3_info+120, %t1
+  store %t2, @Main_M3_info+184
+  ret
+
+proc Main__Test_AtomicLongint_IsLockFree() -> i1
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 1
+
+proc Main__Test_AtomicLongint_Load() -> void
+entry:
+  %t1 = atomic.load @Main_M3_info+120
+  store %t1, @Main_M3_info+176
+  ret
+
+proc Main__Test_AtomicLongint_Store() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+176
+  atomic.store %t1, @Main_M3_info+120
+  ret
+
+proc Main__Test_AtomicLongint_Swap() -> void
+entry:
+  %t1 = load i64, @Main_M3_info+176
+  %t2 = atomic.rmw @Main_M3_info+120, %t1
+  store %t2, @Main_M3_info+184
+  ret
+
+proc Main__Test_AtomicLongint() -> void
+entry:
+  call Main__Test_AtomicLongint_Fence()
+  call Main__Test_AtomicLongint_CompareSwap()
+  call Main__Test_AtomicLongint_FetchAnd()
+  call Main__Test_AtomicLongint_FetchDec()
+  call Main__Test_AtomicLongint_FetchInc()
+  call Main__Test_AtomicLongint_FetchOr()
+  call Main__Test_AtomicLongint_FetchXor()
+  %t1 = call Main__Test_AtomicLongint_IsLockFree() -> i1
+  call Main__Test_AtomicLongint_Load()
+  call Main__Test_AtomicLongint_Store()
+  call Main__Test_AtomicLongint_Swap()
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__Test_AtomicBoolean()
+  call Main__Test_AtomicChar()
+  call Main__Test_AtomicWidechar()
+  call Main__Test_AtomicLongint()
+  call Main__Test_AtomicInteger()
+  call Main__Test_AtomicAddress()
+  call Main__Test_AtomicRefany()
+  ret
+

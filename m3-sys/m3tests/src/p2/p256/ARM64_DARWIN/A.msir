@@ -1,0 +1,24 @@
+module A
+
+proc A__Unused() -> void
+entry:
+  ret
+
+proc A__Used() -> void
+entry:
+  ret
+
+proc A__Exported1() -> void
+entry:
+  call A__Used()
+  ret
+
+proc A__Exported2() -> void
+entry:
+  call A__Used()
+  ret
+
+proc A_M3() -> void
+entry:
+  ret
+

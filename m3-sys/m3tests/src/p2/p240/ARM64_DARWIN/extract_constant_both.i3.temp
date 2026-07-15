@@ -1,0 +1,2 @@
+INTERFACE extract_constant_both;
+END extract_constant_both.

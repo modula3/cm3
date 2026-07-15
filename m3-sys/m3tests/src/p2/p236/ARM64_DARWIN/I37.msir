@@ -1,0 +1,6 @@
+module I37
+
+proc I37_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,6 @@
+module I32
+
+proc I32_I3() -> void
+entry:
+  ret
+

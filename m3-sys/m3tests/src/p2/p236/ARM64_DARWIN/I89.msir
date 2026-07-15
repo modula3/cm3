@@ -1,0 +1,6 @@
+module I89
+
+proc I89_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,13 @@
+% exports of p253
+_define_pgm("pgm")
+override("m3tests", "/Users/hosking/git/cm3/m3-sys/m3tests/src/p2/p253/../../../..")
+import_version("libm3", "ARM64_DARWIN")
+import_version("m3core", "ARM64_DARWIN")
+import_version("m3tests", "ARM64_DARWIN")
+_map_add_interface("Private.i3", "p253", ".", "hidden")
+_map_add_module("Private.m3", "p253", ".", "hidden")
+_map_add_interface("Public.i3", "p253", ".", "hidden")
+_map_add_module("Public.m3", "p253", ".", "hidden")
+_map_add_c("c.c", "p253", ".", "hidden")
+_map_add_module("Main.m3", "p253", ".", "hidden")
+import_sys_lib("UNWIND")

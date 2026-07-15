@@ -1,0 +1,6 @@
+module I100
+
+proc I100_I3() -> void
+entry:
+  ret
+

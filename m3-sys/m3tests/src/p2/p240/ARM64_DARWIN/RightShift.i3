@@ -1,0 +1,2 @@
+INTERFACE RightShift;
+END RightShift.

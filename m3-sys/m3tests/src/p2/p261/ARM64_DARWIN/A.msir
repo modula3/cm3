@@ -1,0 +1,6 @@
+module A
+
+proc A_M3() -> void
+entry:
+  ret
+

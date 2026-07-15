@@ -148,6 +148,17 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  (* IN yields a BOOLEAN — widen the i1 membership result to ZType (i64). *)
+  VAR r := CompileMSIRRaw (p);
+  BEGIN
+    IF r # NIL AND MSIR.Kind (MSIR.ValueType (r)) = MSIR.TypeKind.I1 THEN
+      r := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", r,
+                           MSIR.TI (Target.Integer.size));
+    END;
+    RETURN r;
+  END CompileMSIR;
+
+PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
   VAR
     set, range              : Type.T;
     b                       : BOOLEAN;
@@ -256,7 +267,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         END;
       END;
     END;
-  END CompileMSIR;
+  END CompileMSIRRaw;
 
 PROCEDURE Fold (p: P): Expr.T =
   VAR e1, e2, e3: Expr.T;

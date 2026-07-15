@@ -1,0 +1,6 @@
+module I94
+
+proc I94_I3() -> void
+entry:
+  ret
+

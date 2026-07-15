@@ -1,0 +1,33 @@
+module Main
+
+proc Main__F2(_result_ptr: ptr void) -> void
+entry:
+  %t1 = alloca [1]i64
+  %t2 = array.elem_addr %t1, 0
+  store i64 123, %t2
+  %t3 = load [1]i64, %t1
+  store %t3, _result_ptr
+  ret
+
+proc Main__F1(_result_ptr: ptr void) -> void
+entry:
+  %t3 = alloca [1]i64
+  %t1 = alloca [1][1]i64
+  %t2 = array.elem_addr %t1, 0
+  call Main__F2(%t3)
+  %t4 = call memcpy(%t2, %t3, 8) -> ptr void
+  %t5 = load [1][1]i64, %t1
+  store %t5, _result_ptr
+  ret
+
+proc Main_M3() -> void
+entry:
+  %t1 = alloca [1][1]i64
+  call Main__F1(%t1)
+  %t2 = array.elem_addr %t1, 0
+  %t3 = array.elem_addr %t2, 0
+  %t4 = load i64, %t3
+  call RTIO__PutInt(%t4, 5)
+  call RTIO__Flush()
+  ret
+

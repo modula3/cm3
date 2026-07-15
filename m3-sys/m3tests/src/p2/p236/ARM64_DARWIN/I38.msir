@@ -1,0 +1,6 @@
+module I38
+
+proc I38_I3() -> void
+entry:
+  ret
+

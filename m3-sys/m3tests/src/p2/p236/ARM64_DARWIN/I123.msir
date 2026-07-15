@@ -1,0 +1,6 @@
+module I123
+
+proc I123_I3() -> void
+entry:
+  ret
+

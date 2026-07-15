@@ -1,0 +1,5 @@
+% exports of p235
+_define_pgm("a")
+import_version("m3core", "ARM64_DARWIN")
+_map_add_module("Main.m3", "p235", ".", "hidden")
+import_sys_lib("UNWIND")

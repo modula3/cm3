@@ -1,0 +1,6 @@
+module I128
+
+proc I128_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,50 @@
+module Private
+
+proc Private__Private_M3_te6e69551_INIT(obj: ptr void) -> void
+  linkage internal
+entry:
+  %t1 = ptr.add obj, 8
+  store i64 2, %t1
+  ret
+
+proc Private__F2(a.a: gc_ref @Private) -> void
+entry:
+  %a.slot = alloca gc_ref @Private
+  store a.a, %a.slot
+  %t1 = call M3toC__FlatTtoS("Private.F2:a") -> ptr void
+  %t2 = load gc_ref @Private, %a.slot
+  %t3 = load ptr void, @tl_obj_-1278203716
+  %narrow.chk.0 = call RTHooks__CheckIsType(%t2, %t3) -> i64
+  %narrow.cond.0 = icmp ne %narrow.chk.0, 0
+  cond_br %narrow.cond.0, narrow.ok.0.1, narrow.fail.0.2
+narrow.ok.0.1:
+  call put_adr(%t1, %t2)
+  %t4 = call M3toC__FlatTtoS("Private.F2:a.a") -> ptr void
+  %t5 = load gc_ref @Private, %a.slot
+  %t6 = load ptr void, @tl_obj_-1278203716
+  %narrow.chk.1 = call RTHooks__CheckIsType(%t5, %t6) -> i64
+  %narrow.cond.1 = icmp ne %narrow.chk.1, 0
+  cond_br %narrow.cond.1, narrow.ok.1.3, narrow.fail.1.4
+narrow.fail.0.2:
+  call RTHooks__ReportFault(nil, 5)
+  unreachable
+narrow.ok.1.3:
+  %t7 = load ptr void, @tl_obj_-1278203716
+  %t8 = ptr.add %t7, 112
+  %t9 = load i64, %t8
+  %t10 = gep.byte %t5, %t9
+  %t11 = ptr.add %t10, 0
+  call put_adr(%t4, %t11)
+  %t12 = call M3toC__FlatTtoS("Private.F2:a.b") -> ptr void
+  %t13 = load gc_ref @Private, %a.slot
+  %t14 = ptr.add %t13, 8
+  call put_adr(%t12, %t14)
+  ret
+narrow.fail.1.4:
+  call RTHooks__ReportFault(nil, 5)
+  unreachable
+
+proc Private_M3() -> void
+entry:
+  ret
+

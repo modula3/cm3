@@ -1,0 +1,6 @@
+module I86
+
+proc I86_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,228 @@
+module Main
+
+global Main__x : gc_slot void
+global Main__y : gc_slot void
+global Main__z : gc_slot void
+global Main__zz : gc_slot void
+global Main__a : i64
+global Main__b : i64
+
+proc Main__Sieve(var a.s: i1000000) -> void
+entry:
+  %t14 = alloca i64
+  %i.slot.1 = alloca i64
+  %t.slot = alloca gc_ref void
+  %j.slot = alloca i64
+  %i.slot = alloca i64
+  store nil, %t.slot
+  %t1 = call RTHooks__AllocateTracedRef(@tc_ref_-790884030) -> gc_ref void
+  %t2 = convert %t1 to gc_ref void
+  store %t2, %t.slot
+  store i64 1, %i.slot
+  store i64 1000000, %j.slot
+  %t3 = load i64, %i.slot
+  %t4 = load i64, %j.slot
+  %t5 = zext %t3 to i1000000
+  %t6 = zext %t4 to i1000000
+  %t7 = isub %t5, 1
+  %t8 = isub %t6, 1
+  %t9 = isub 999999, %t8
+  %t10 = ilshr -1, %t9
+  %t11 = ishl -1, %t7
+  %t12 = iand %t10, %t11
+  %t13 = ior 0, %t12
+  store %t13, a.s
+  store i64 1, %i.slot.1
+  store i64 1000000, %t14
+  br for.header.1
+for.header.1:
+  %t15 = load i64, %i.slot.1
+  %t16 = load i64, %t14
+  %t17 = icmp sle %t15, %t16
+  cond_br %t17, for.body.2, for.exit.3
+for.body.2:
+  %t18 = load i64, %i.slot.1
+  store %t18, %j.slot
+  br while.header.4
+for.exit.3:
+  ret
+while.header.4:
+  %t19 = load i64, %j.slot
+  %t20 = icmp sle %t19, 1000000
+  cond_br %t20, while.body.5, while.exit.6
+while.body.5:
+  %t21 = load gc_ref void, %t.slot
+  store i1000000 0, %t21
+  %t22 = load gc_ref void, %t.slot
+  %t23 = load gc_ref void, %t.slot
+  %t24 = load i1000000, %t23
+  %t25 = load i64, %j.slot
+  %t26 = zext %t25 to i1000000
+  %t27 = icmp slt %t26, 1
+  cond_br %t27, check.fault.7, check.cont.8
+while.exit.6:
+  %t40 = load i64, %i.slot.1
+  %t41 = iadd %t40, 1
+  store %t41, %i.slot.1
+  br for.header.1
+check.fault.7:
+  call RTHooks__ReportFault(@Main_M3_info+0, 1057)
+  unreachable
+check.cont.8:
+  %t28 = icmp sgt %t26, 1000000
+  cond_br %t28, check.fault.9, check.cont.10
+check.fault.9:
+  call RTHooks__ReportFault(@Main_M3_info+0, 1057)
+  unreachable
+check.cont.10:
+  %t29 = isub %t26, 1
+  %t30 = ishl 1, %t29
+  %t31 = ior 0, %t30
+  %t32 = ior %t24, %t31
+  store %t32, %t22
+  %t33 = load i1000000, a.s
+  %t34 = load gc_ref void, %t.slot
+  %t35 = load i1000000, %t34
+  %t36 = ixor %t33, %t35
+  store %t36, a.s
+  %t37 = load i64, %j.slot
+  %t38 = load i64, %i.slot.1
+  %t39 = iadd %t37, %t38
+  store %t39, %j.slot
+  br while.header.4
+
+proc Main__Squares(var a.t: i1000000) -> void
+entry:
+  %i.slot = alloca i64
+  store i64 1, %i.slot
+  store i64 1, %i.slot
+  store i1000000 0, a.t
+  store i64 1, %i.slot
+  br while.header.1
+while.header.1:
+  %t1 = load i64, %i.slot
+  %t2 = load i64, %i.slot
+  %t3 = imul %t1, %t2
+  %t4 = icmp sle %t3, 1000000
+  cond_br %t4, while.body.2, while.exit.3
+while.body.2:
+  %t5 = load i1000000, a.t
+  %t6 = load i64, %i.slot
+  %t7 = load i64, %i.slot
+  %t8 = imul %t6, %t7
+  %t9 = zext %t8 to i1000000
+  %t10 = icmp slt %t9, 1
+  cond_br %t10, check.fault.4, check.cont.5
+while.exit.3:
+  ret
+check.fault.4:
+  call RTHooks__ReportFault(@Main_M3_info+0, 1505)
+  unreachable
+check.cont.5:
+  %t11 = icmp sgt %t9, 1000000
+  cond_br %t11, check.fault.6, check.cont.7
+check.fault.6:
+  call RTHooks__ReportFault(@Main_M3_info+0, 1505)
+  unreachable
+check.cont.7:
+  %t12 = isub %t9, 1
+  %t13 = ishl 1, %t12
+  %t14 = ior 0, %t13
+  %t15 = ior %t5, %t14
+  store %t15, a.t
+  %t16 = load word32, %i.slot
+  %t17 = iadd %t16, 1
+  store %t17, %i.slot
+  br while.header.1
+
+proc Main_M3() -> void
+entry:
+  %t1 = call RTHooks__AllocateTracedRef(@tc_ref_-790884030) -> gc_ref void
+  %t2 = convert %t1 to gc_ref void
+  gc.store %t2, @Main_M3_info+200
+  %t3 = gc.load @Main_M3_info+200
+  call Main__Sieve(%t3)
+  %t4 = gc.load @Main_M3_info+200
+  %t5 = load i1000000, %t4
+  %t6 = sext 10 to i1000000
+  %t7 = isub %t6, 1
+  %t8 = icmp ult %t7, 1000000
+  %t9 = select %t8, %t7, 0
+  %t10 = ilshr %t5, %t9
+  %t11 = iand %t10, 1
+  %t12 = icmp ne %t11, 0
+  call Test__check(%t12)
+  %t13 = gc.load @Main_M3_info+200
+  %t14 = load i1000000, %t13
+  %t15 = sext 100 to i1000000
+  %t16 = isub %t15, 1
+  %t17 = icmp ult %t16, 1000000
+  %t18 = select %t17, %t16, 0
+  %t19 = ilshr %t14, %t18
+  %t20 = iand %t19, 1
+  %t21 = icmp ne %t20, 0
+  %t22 = icmp eq %t21, 0
+  call Test__check(%t22)
+  %t23 = call RTHooks__AllocateTracedRef(@tc_ref_-790884030) -> gc_ref void
+  %t24 = convert %t23 to gc_ref void
+  gc.store %t24, @Main_M3_info+208
+  %t25 = gc.load @Main_M3_info+208
+  call Main__Squares(%t25)
+  %t26 = gc.load @Main_M3_info+208
+  %t27 = load i1000000, %t26
+  %t28 = sext 10 to i1000000
+  %t29 = isub %t28, 1
+  %t30 = icmp ult %t29, 1000000
+  %t31 = select %t30, %t29, 0
+  %t32 = ilshr %t27, %t31
+  %t33 = iand %t32, 1
+  %t34 = icmp ne %t33, 0
+  %t35 = icmp eq %t34, 0
+  call Test__check(%t35)
+  %t36 = gc.load @Main_M3_info+208
+  %t37 = load i1000000, %t36
+  %t38 = sext 100 to i1000000
+  %t39 = isub %t38, 1
+  %t40 = icmp ult %t39, 1000000
+  %t41 = select %t40, %t39, 0
+  %t42 = ilshr %t37, %t41
+  %t43 = iand %t42, 1
+  %t44 = icmp ne %t43, 0
+  call Test__check(%t44)
+  %t45 = call RTHooks__AllocateTracedRef(@tc_ref_-790884030) -> gc_ref void
+  %t46 = convert %t45 to gc_ref void
+  gc.store %t46, @Main_M3_info+216
+  store i64 1, @Main_M3_info+232
+  store i64 1000000, @Main_M3_info+240
+  %t47 = gc.load @Main_M3_info+216
+  %t48 = load i64, @Main_M3_info+232
+  %t49 = load i64, @Main_M3_info+240
+  %t50 = zext %t48 to i1000000
+  %t51 = zext %t49 to i1000000
+  %t52 = isub %t50, 1
+  %t53 = isub %t51, 1
+  %t54 = isub 999999, %t53
+  %t55 = ilshr -1, %t54
+  %t56 = ishl -1, %t52
+  %t57 = iand %t55, %t56
+  %t58 = ior 0, %t57
+  store %t58, %t47
+  %t59 = gc.load @Main_M3_info+200
+  %t60 = load i1000000, %t59
+  %t61 = gc.load @Main_M3_info+208
+  %t62 = load i1000000, %t61
+  %t63 = iand %t60, %t62
+  %t64 = icmp eq %t63, 0
+  call Test__check(%t64)
+  %t65 = gc.load @Main_M3_info+200
+  %t66 = load i1000000, %t65
+  %t67 = gc.load @Main_M3_info+208
+  %t68 = load i1000000, %t67
+  %t69 = ior %t66, %t68
+  %t70 = gc.load @Main_M3_info+216
+  %t71 = load i1000000, %t70
+  %t72 = icmp eq %t69, %t71
+  call Test__check(%t72)
+  call Test__done()
+  ret
+

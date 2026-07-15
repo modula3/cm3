@@ -1,0 +1,2 @@
+INTERFACE Plus;
+END Plus.

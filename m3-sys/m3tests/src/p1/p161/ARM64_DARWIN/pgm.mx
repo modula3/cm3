@@ -1,0 +1,36 @@
+M3 v4.2
+N0 Main
+
+M0 1 2 0 0 0 0 7 0 0 6 0 0
+A0
+N1 Test
+B1
+N2 RTHooks
+B2
+N3 AllocateTracedRef
+V0 2 3 29ea9480867f065a
+i0
+N4 ReportFault
+V1 2 4 e0ad157f9f695006
+i1
+N5 CheckLoadTracedRef
+V2 2 5 33cac043de87135c
+i2
+N6 check
+V3 1 6 69a26864d0a6aa92
+i3
+N7 done
+V4 1 7 70241db7fe4ccb70
+i4
+N8 CheckStoreTraced
+V5 2 8 8ffa5ad840254ad5
+i5
+N9 ScanTypecase
+V6 2 9 6c0355050f2d5a7c
+i6
+t7cfe252f
+ta4bb9882
+t37e50548
+t68977b0d
+t7b78c34f
+t9b134ca4

@@ -1,0 +1,6 @@
+module I22
+
+proc I22_I3() -> void
+entry:
+  ret
+

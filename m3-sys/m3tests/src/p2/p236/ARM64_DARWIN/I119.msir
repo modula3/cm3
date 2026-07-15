@@ -1,0 +1,6 @@
+module I119
+
+proc I119_I3() -> void
+entry:
+  ret
+

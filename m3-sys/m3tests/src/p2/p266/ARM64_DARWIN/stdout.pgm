@@ -1,0 +1,38 @@
+Thread 1 Entering Acquire of TestMutex.
+Thread 1 Acquired TestMutex.
+Thread 1 Entering Wait on TestCond.
+Thread 1 Waiting.
+Thread 2 Entering Acquire of TestMutex.
+Thread 2 Acquired TestMutex.
+Thread 2 Entering Wait on TestCond.
+Thread 2 Waiting.
+Thread 3 Entering Acquire of TestMutex.
+Thread 3 Acquired TestMutex.
+Thread 3 Entering Signal on TestCond
+Thread 3 TestCond Signalled 
+Thread 3 Entering release of TestMutex.
+Thread 3 Released TestMutex.
+Thread 1 Was Signalled in TestCond and reacquired TestMutex.
+Thread 1 Entering release of TestMutex.
+Thread 1 Released TestMutex.
+Thread 2 is asleep in Wait
+Thread 3 Entering Signal on TestCond
+Thread 3 TestCond Signalled 
+Thread 2 Was Signalled in TestCond and reacquired TestMutex.
+Thread 2 Entering release of TestMutex.
+Thread 2 Released TestMutex.
+Thread 4 Entering Acquire of TestMutex.
+Thread 4 Acquired TestMutex.
+Thread 4 Entering Wait on TestCond.
+Thread 4 Waiting.
+Thread 3 Entering Acquire of TestMutex.
+Thread 3 Acquired TestMutex.
+Thread 3 Entering Signal on TestCond
+Thread 3 TestCond Signalled 
+Thread 3 Entering release of TestMutex.
+Thread 3 Released TestMutex.
+Thread 4 Was Signalled in TestCond and reacquired TestMutex.
+Thread 4 is idle
+Thread 4 Entering release of TestMutex.
+Thread 4 Released TestMutex.
+SUCCESS: all as expected.

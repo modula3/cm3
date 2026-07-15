@@ -1,0 +1,6531 @@
+module Divide
+
+global Divide__vi8 : i8
+global Divide__vu64 : i64
+global Divide__vf64 : f64
+global Divide__vi32 : i32
+global Divide__vLC : word64
+global Divide__vu16 : word16
+global Divide__vI : i64
+global Divide__vi64 : i64
+global Divide__vf32 : f32
+global Divide__vi16 : i16
+global Divide__vC : word64
+global Divide__vu32 : word32
+global Divide__vu8 : word8
+global Divide__vL : i64
+global Divide__offset : word64
+global Divide__count : word64
+
+proc Divide__uDivide_var_i8_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i8_i8() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_param_i8_i8(a.a: i8, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i8_i8(a.a: i8, a.b: i8) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_var_i8_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i8_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i8_u64(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i8_u64(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i8_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i8_i32() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_param_i8_i32(a.a: i8, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i8_i32(a.a: i8, a.b: i32) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_var_i8_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i8_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i8_LC(a.a: i8, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i8_LC(a.a: i8, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i8_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i8_u16() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_param_i8_u16(a.a: i8, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i8_u16(a.a: i8, a.b: word16) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_var_i8_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_i8_I() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = sext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to i8
+  ret %t5
+
+proc Divide__uDivide_param_i8_I(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i8_I(a.a: i8, a.b: i64) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to i8
+  ret %t5
+
+proc Divide__uDivide_var_i8_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i8_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i8_i64(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i8_i64(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i8_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i8_i16() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_param_i8_i16(a.a: i8, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i8_i16(a.a: i8, a.b: i16) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_var_i8_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_i8_C() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = sext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to i8
+  ret %t5
+
+proc Divide__uDivide_param_i8_C(a.a: i8, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i8_C(a.a: i8, a.b: word64) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to i8
+  ret %t5
+
+proc Divide__uDivide_var_i8_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i8_u32() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_param_i8_u32(a.a: i8, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i8_u32(a.a: i8, a.b: word32) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_var_i8_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i8_u8() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_param_i8_u8(a.a: i8, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i8_u8(a.a: i8, a.b: word8) -> i8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i8
+  ret %t6
+
+proc Divide__uDivide_var_i8_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i8_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @Divide_M3_info+104
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i8_L(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i8_L(a.a: i8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_u64_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u64_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u64_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_u64_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_u64_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_u64_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u64_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_u64_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u64_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u64_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_u64_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_u64_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_u64_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u64_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_u64_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u64_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u64_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_u64_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_u64_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_u64_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u64_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_u64_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_u64_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_u64_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u64_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_u64_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u64_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u64_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_u64_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_u64_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_u64_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u64_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_u64_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u64_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u64_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_u64_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u64_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u64_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u64_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_u64_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+112
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_u64_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_u64_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_f64_f64() -> f64
+entry:
+  %_result.slot = alloca f64
+  %t1 = load f64, @Divide_M3_info+120
+  %t2 = load f64, @Divide_M3_info+120
+  %t3 = fdiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_f64_f64(a.a: f64, a.b: f64) -> f64
+entry:
+  %_result.slot = alloca f64
+  %b.slot = alloca f64
+  %a.slot = alloca f64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load f64, %a.slot
+  %t2 = load f64, %b.slot
+  %t3 = fdiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i32_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i32_i8() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_param_i32_i8(a.a: i32, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i32_i8(a.a: i32, a.b: i8) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_var_i32_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i32_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i32_u64(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i32_u64(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i32_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i32_i32() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_param_i32_i32(a.a: i32, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i32_i32(a.a: i32, a.b: i32) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_var_i32_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i32_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i32_LC(a.a: i32, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i32_LC(a.a: i32, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i32_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i32_u16() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_param_i32_u16(a.a: i32, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i32_u16(a.a: i32, a.b: word16) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_var_i32_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_i32_I() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = sext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to i32
+  ret %t5
+
+proc Divide__uDivide_param_i32_I(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i32_I(a.a: i32, a.b: i64) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to i32
+  ret %t5
+
+proc Divide__uDivide_var_i32_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i32_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i32_i64(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i32_i64(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i32_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i32_i16() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_param_i32_i16(a.a: i32, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i32_i16(a.a: i32, a.b: i16) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_var_i32_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_i32_C() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = sext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to i32
+  ret %t5
+
+proc Divide__uDivide_param_i32_C(a.a: i32, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i32_C(a.a: i32, a.b: word64) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to i32
+  ret %t5
+
+proc Divide__uDivide_var_i32_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i32_u32() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_param_i32_u32(a.a: i32, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i32_u32(a.a: i32, a.b: word32) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_var_i32_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i32_u8() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_param_i32_u8(a.a: i32, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i32_u8(a.a: i32, a.b: word8) -> i32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i32
+  ret %t6
+
+proc Divide__uDivide_var_i32_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i32_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @Divide_M3_info+128
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i32_L(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i32_L(a.a: i32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_LC_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_LC_i8(a.a: word64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_LC_i8(a.a: word64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_LC_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_LC_u64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_LC_u64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_LC_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_LC_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_LC_i32(a.a: word64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_LC_i32(a.a: word64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_LC_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_LC_LC(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_LC_LC(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_LC_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_LC_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_LC_u16(a.a: word64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_LC_u16(a.a: word64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_LC_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_LC_I(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_LC_I(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_LC_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_LC_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_LC_i64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_LC_i64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_LC_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_LC_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_LC_i16(a.a: word64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_LC_i16(a.a: word64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_LC_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_LC_C(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_LC_C(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_LC_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_LC_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_LC_u32(a.a: word64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_LC_u32(a.a: word64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_LC_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_LC_u8(a.a: word64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_LC_u8(a.a: word64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_LC_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_LC_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+136
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_LC_L(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_LC_L(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u16_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u16_i8() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_param_u16_i8(a.a: word16, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u16_i8(a.a: word16, a.b: i8) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_var_u16_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u16_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u16_u64(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u16_u64(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u16_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u16_i32() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_param_u16_i32(a.a: word16, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u16_i32(a.a: word16, a.b: i32) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_var_u16_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u16_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u16_LC(a.a: word16, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u16_LC(a.a: word16, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u16_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u16_u16() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_param_u16_u16(a.a: word16, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u16_u16(a.a: word16, a.b: word16) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_var_u16_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_u16_I() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to word16
+  ret %t5
+
+proc Divide__uDivide_param_u16_I(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u16_I(a.a: word16, a.b: i64) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to word16
+  ret %t5
+
+proc Divide__uDivide_var_u16_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u16_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u16_i64(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u16_i64(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u16_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u16_i16() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_param_u16_i16(a.a: word16, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u16_i16(a.a: word16, a.b: i16) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_var_u16_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_u16_C() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to word16
+  ret %t5
+
+proc Divide__uDivide_param_u16_C(a.a: word16, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u16_C(a.a: word16, a.b: word64) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to word16
+  ret %t5
+
+proc Divide__uDivide_var_u16_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u16_u32() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_param_u16_u32(a.a: word16, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u16_u32(a.a: word16, a.b: word32) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_var_u16_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u16_u8() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_param_u16_u8(a.a: word16, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u16_u8(a.a: word16, a.b: word8) -> word16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word16
+  ret %t6
+
+proc Divide__uDivide_var_u16_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u16_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @Divide_M3_info+144
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u16_L(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u16_L(a.a: word16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_I_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_I_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_I_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_I_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_I_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_I_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_I_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_I_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_I_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_I_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_I_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_I_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_I_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_I_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_I_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_I_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_I_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_I_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_I_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_I_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_I_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_I_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_I_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_I_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_I_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_I_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_I_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_I_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_I_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_I_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_I_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_I_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_I_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_I_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_I_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_I_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_I_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_I_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_I_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_I_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+152
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_I_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_I_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i64_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_i64_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i64_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i64_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i64_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_i64_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_i64_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_i64_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i64_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_i64_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i64_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i64_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i64_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_i64_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_i64_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_i64_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i64_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_i64_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i64_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i64_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i64_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_i64_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_i64_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_i64_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i64_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_i64_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_i64_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_i64_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i64_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_i64_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i64_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i64_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i64_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_i64_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_i64_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_i64_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i64_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_i64_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i64_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i64_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i64_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_i64_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i64_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i64_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i64_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_i64_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+160
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_i64_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_i64_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_f32_f32() -> f32
+entry:
+  %_result.slot = alloca f32
+  %t1 = load f32, @Divide_M3_info+168
+  %t2 = load f32, @Divide_M3_info+168
+  %t3 = fdiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_f32_f32(a.a: f32, a.b: f32) -> f32
+entry:
+  %_result.slot = alloca f32
+  %b.slot = alloca f32
+  %a.slot = alloca f32
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load f32, %a.slot
+  %t2 = load f32, %b.slot
+  %t3 = fdiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_i16_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i16_i8() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_param_i16_i8(a.a: i16, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i16_i8(a.a: i16, a.b: i8) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_var_i16_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i16_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i16_u64(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i16_u64(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i16_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i16_i32() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_param_i16_i32(a.a: i16, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i16_i32(a.a: i16, a.b: i32) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_var_i16_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i16_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i16_LC(a.a: i16, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i16_LC(a.a: i16, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i16_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i16_u16() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_param_i16_u16(a.a: i16, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i16_u16(a.a: i16, a.b: word16) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_var_i16_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_i16_I() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = sext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to i16
+  ret %t5
+
+proc Divide__uDivide_param_i16_I(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i16_I(a.a: i16, a.b: i64) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to i16
+  ret %t5
+
+proc Divide__uDivide_var_i16_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i16_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i16_i64(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i16_i64(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_i16_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i16_i16() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_param_i16_i16(a.a: i16, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i16_i16(a.a: i16, a.b: i16) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_var_i16_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_i16_C() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = sext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to i16
+  ret %t5
+
+proc Divide__uDivide_param_i16_C(a.a: i16, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i16_C(a.a: i16, a.b: word64) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to i16
+  ret %t5
+
+proc Divide__uDivide_var_i16_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i16_u32() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_param_i16_u32(a.a: i16, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i16_u32(a.a: i16, a.b: word32) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_var_i16_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_i16_u8() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = sext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_param_i16_u8(a.a: i16, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_i16_u8(a.a: i16, a.b: word8) -> i16
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to i16
+  ret %t6
+
+proc Divide__uDivide_var_i16_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_i16_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @Divide_M3_info+172
+  %t2 = sext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_i16_L(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_i16_L(a.a: i16, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_C_i8() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_C_i8(a.a: word64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_C_i8(a.a: word64, a.b: i8) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_C_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_C_u64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_C_u64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_C_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_C_i32() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_C_i32(a.a: word64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_C_i32(a.a: word64, a.b: i32) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_C_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_C_LC(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_C_LC(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_C_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_C_u16() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_C_u16(a.a: word64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_C_u16(a.a: word64, a.b: word16) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_C_I() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_C_I(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_C_I(a.a: word64, a.b: i64) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_C_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_C_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_C_i64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_C_i64(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_C_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_C_i16() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_C_i16(a.a: word64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_C_i16(a.a: word64, a.b: i16) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_C_C() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_C_C(a.a: word64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_C_C(a.a: word64, a.b: word64) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_C_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_C_u32() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_C_u32(a.a: word64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_C_u32(a.a: word64, a.b: word32) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_C_u8() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_C_u8(a.a: word64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_C_u8(a.a: word64, a.b: word8) -> word64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_C_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_C_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word64, @Divide_M3_info+176
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_C_L(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_C_L(a.a: word64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_u32_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u32_i8() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_param_u32_i8(a.a: word32, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u32_i8(a.a: word32, a.b: i8) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_var_u32_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u32_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u32_u64(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u32_u64(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u32_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u32_i32() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_param_u32_i32(a.a: word32, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u32_i32(a.a: word32, a.b: i32) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_var_u32_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u32_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u32_LC(a.a: word32, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u32_LC(a.a: word32, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u32_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u32_u16() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_param_u32_u16(a.a: word32, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u32_u16(a.a: word32, a.b: word16) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_var_u32_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_u32_I() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to word32
+  ret %t5
+
+proc Divide__uDivide_param_u32_I(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u32_I(a.a: word32, a.b: i64) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to word32
+  ret %t5
+
+proc Divide__uDivide_var_u32_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u32_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u32_i64(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u32_i64(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u32_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u32_i16() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_param_u32_i16(a.a: word32, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u32_i16(a.a: word32, a.b: i16) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_var_u32_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_u32_C() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to word32
+  ret %t5
+
+proc Divide__uDivide_param_u32_C(a.a: word32, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u32_C(a.a: word32, a.b: word64) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to word32
+  ret %t5
+
+proc Divide__uDivide_var_u32_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u32_u32() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_param_u32_u32(a.a: word32, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u32_u32(a.a: word32, a.b: word32) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_var_u32_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u32_u8() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_param_u32_u8(a.a: word32, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u32_u8(a.a: word32, a.b: word8) -> word32
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word32
+  ret %t6
+
+proc Divide__uDivide_var_u32_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u32_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @Divide_M3_info+184
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u32_L(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u32_L(a.a: word32, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u8_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u8_i8() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_param_u8_i8(a.a: word8, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u8_i8(a.a: word8, a.b: i8) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_var_u8_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u8_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+112
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u8_u64(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u8_u64(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u8_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u8_i32() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_param_u8_i32(a.a: word8, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u8_i32(a.a: word8, a.b: i32) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_var_u8_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u8_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load word64, @Divide_M3_info+136
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u8_LC(a.a: word8, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u8_LC(a.a: word8, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u8_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u8_u16() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_param_u8_u16(a.a: word8, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u8_u16(a.a: word8, a.b: word16) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_var_u8_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_u8_I() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = zext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to word8
+  ret %t5
+
+proc Divide__uDivide_param_u8_I(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u8_I(a.a: word8, a.b: i64) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to word8
+  ret %t5
+
+proc Divide__uDivide_var_u8_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u8_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+160
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u8_i64(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u8_i64(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_u8_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u8_i16() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = zext %t1 to i64
+  %t4 = sext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_param_u8_i16(a.a: word8, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u8_i16(a.a: word8, a.b: i16) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = sext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_var_u8_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = iudiv %t3, %t2
+  ret %t4
+
+proc Divide__Divide_var_u8_C() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = zext %t1 to i64
+  %t4 = idiv %t3, %t2
+  %t5 = trunc %t4 to word8
+  ret %t5
+
+proc Divide__uDivide_param_u8_C(a.a: word8, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u8_C(a.a: word8, a.b: word64) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  %t5 = trunc %t4 to word8
+  ret %t5
+
+proc Divide__uDivide_var_u8_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u8_u32() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_param_u8_u32(a.a: word8, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u8_u32(a.a: word8, a.b: word32) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_var_u8_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_var_u8_u8() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t1 to i64
+  %t4 = zext %t2 to i64
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_param_u8_u8(a.a: word8, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = iudiv %t3, %t4
+  ret %t5
+
+proc Divide__Divide_param_u8_u8(a.a: word8, a.b: word8) -> word8
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = idiv %t3, %t4
+  %t6 = trunc %t5 to word8
+  ret %t6
+
+proc Divide__uDivide_var_u8_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_var_u8_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @Divide_M3_info+188
+  %t2 = zext %t1 to i64
+  %t3 = load i64, @Divide_M3_info+192
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_param_u8_L(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_u8_L(a.a: word8, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store a.b, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_L_i8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i8, @Divide_M3_info+104
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_L_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_L_i8(a.a: i64, a.b: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_L_u64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+112
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_L_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_L_u64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_L_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_L_i32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i32, @Divide_M3_info+128
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_L_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_L_i32(a.a: i64, a.b: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_L_LC() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word64, @Divide_M3_info+136
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_L_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_L_LC(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_L_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_L_u16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word16, @Divide_M3_info+144
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_L_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_L_u16(a.a: i64, a.b: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_L_I() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+152
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_L_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_L_I(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_L_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_L_i64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+160
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_L_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_L_i64(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_L_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_L_i16() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i16, @Divide_M3_info+172
+  %t3 = sext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_L_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_L_i16(a.a: i64, a.b: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = sext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_L_C() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word64, @Divide_M3_info+176
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_L_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_L_C(a.a: i64, a.b: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_var_L_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_L_u32() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word32, @Divide_M3_info+184
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_L_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_L_u32(a.a: i64, a.b: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = iudiv %t1, %t3
+  ret %t4
+
+proc Divide__Divide_var_L_u8() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load word8, @Divide_M3_info+188
+  %t3 = zext %t2 to i64
+  %t4 = idiv %t1, %t3
+  ret %t4
+
+proc Divide__uDivide_param_L_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = iudiv %t2, %t3
+  ret %t4
+
+proc Divide__Divide_param_L_u8(a.a: i64, a.b: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = zext a.b to i64
+  store %t1, %b.slot
+  %t2 = load i64, %a.slot
+  %t3 = load i64, %b.slot
+  %t4 = idiv %t2, %t3
+  ret %t4
+
+proc Divide__uDivide_var_L_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_var_L_L() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @Divide_M3_info+192
+  %t2 = load i64, @Divide_M3_info+192
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide__uDivide_param_L_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = iudiv %t1, %t2
+  ret %t3
+
+proc Divide__Divide_param_L_L(a.a: i64, a.b: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %a.slot
+  %t2 = load i64, %b.slot
+  %t3 = idiv %t1, %t2
+  ret %t3
+
+proc Divide_M3() -> void
+entry:
+  %t1 = trunc 241 to i8
+  store %t1, @Divide_M3_info+104
+  store i64 242, @Divide_M3_info+112
+  store f64 2.43244000000000000D2, @Divide_M3_info+120
+  %t2 = trunc 245 to i32
+  store %t2, @Divide_M3_info+128
+  store i64 246, @Divide_M3_info+136
+  %t3 = trunc 247 to word16
+  store %t3, @Divide_M3_info+144
+  store i64 248, @Divide_M3_info+152
+  store i64 249, @Divide_M3_info+160
+  store f32 2.5025100708008E2, @Divide_M3_info+168
+  %t4 = trunc 252 to i16
+  store %t4, @Divide_M3_info+172
+  store i64 253, @Divide_M3_info+176
+  %t5 = trunc 254 to word32
+  store %t5, @Divide_M3_info+184
+  %t6 = trunc 255 to word8
+  store %t6, @Divide_M3_info+188
+  store i64 256, @Divide_M3_info+192
+  ret
+

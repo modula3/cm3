@@ -1,0 +1,6 @@
+module I53
+
+proc I53_I3() -> void
+entry:
+  ret
+

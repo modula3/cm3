@@ -1,0 +1,6 @@
+module I159
+
+proc I159_I3() -> void
+entry:
+  ret
+

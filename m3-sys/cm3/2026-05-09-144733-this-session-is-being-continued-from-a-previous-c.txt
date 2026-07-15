@@ -1,0 +1,690 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.137
+           Sonnet 4.6 · Claude Team
+  ▘▘ ▝▝    ~/git/cm3/m3-sys/cm3
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Read ../../../../tmp/msir-smoke/Main.m3 (100 lines)
+  ⎿  Read m3-sys/m3front/src/msir/MSIRType.i3 (20 lines)
+  ⎿  Read m3-sys/m3front/src/msir/MSIRType.m3 (99 lines)
+  ⎿  Referenced file MSIR-design.md
+  ⎿  Referenced file m3-sys/m3front/src/exprs/CallExpr.m3
+
+⏺ Let me read the key files needed to implement the lvalue architecture and
+  QualifyExpr.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Now let me read the MSIR interface and MSIRBuilder to understand what
+  field-access operations are available.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Now let me check how Expr.i3 exposes compileMSIR and the current
+  AssignStmt.m3.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Let me also check NamedExpr.m3 to see how it currently handles compileMSIR.
+
+  Searched for 4 patterns, read 2 files (ctrl+o to expand)
+
+⏺ Now let me see NamedExpr.m3 to understand the current MSIR implementation
+  there.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Let me check MSIRBuilder.m3 to understand how struct-typed formals are
+  currently handled.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Let me check ReturnStmt's MSIR handling quickly.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Let me check Expr.m3 imports to see what's already there.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Good. Now I have everything I need. Let me implement all the changes. I'll
+  start with the foundational ExprRep.i3 and Expr.m3/Expr.i3 changes, then the
+  per-expression overrides, then the builder fix.
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/ExprRep.i3)
+  ⎿  Added 2 lines
+      47      (* Emit MSIR for this expression. Returns NIL on unsupporte
+          d,
+      48         in which case MSIRBuilder.Abandon has been called and th
+          e
+      49         enclosing procedure will be dropped. *)
+      50 +    compileLValueMSIR (): MSIR.Value               := LValueMSI
+         +RDefault;                                                      
+      51 +    (* Emit MSIR address of this lvalue. Returns NIL on unsuppo
+         +rted. *)                                                       
+      52      exprAlign    (): Type.BitAlignT                := ExprAlign
+          Default;
+      53      staticLength (): Expr.lengthTyp                := StaticLen
+          gthDefault;
+      54      usesAssignProtocol (): BOOLEAN                 := UsesAssig
+          nProtocolDefault;
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/ExprRep.i3)
+  ⎿  Added 2 lines
+      86  PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
+      87  (* default: signals "not yet supported" by calling MSIRBuilder.
+          Abandon
+      88     and returning NIL. Subclasses override when they have a tran
+          slation. *)
+      89 +PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;          
+      90 +(* default lvalue: calls Abandon. Override in designator expres
+         +sions. *)                                                      
+      91  
+      92  (* Multi-use overrides for exprAlign:  *)
+      93  PROCEDURE ExprAlignDefault (e: M3.Expr): Type.BitAlignT;
+
+⏺ Now add LValueMSIRDefault and LValueMSIR to Expr.m3:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/Expr.m3)
+  ⎿  Added 12 lines
+      595      RETURN NIL;
+      596    END MSIRDefault;
+      597  
+      598 +PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T): MSIR.Value =   
+      599 +  BEGIN                                                       
+      600 +    MSIRBuilder.Abandon ("lvalue address unsupported for this 
+          +expression");                                                 
+      601 +    RETURN NIL;                                               
+      602 +  END LValueMSIRDefault;                                      
+      603 +                                                              
+      604  PROCEDURE CompileMSIR (t: T): MSIR.Value =
+      605    BEGIN
+      606      IF (t = NIL) THEN RETURN NIL END;
+      607      RETURN t.compileMSIR ();
+      608    END CompileMSIR;
+      609  
+      610 +PROCEDURE LValueMSIR (t: T): MSIR.Value =                     
+      611 +  BEGIN                                                       
+      612 +    IF (t = NIL) THEN RETURN NIL END;                         
+      613 +    RETURN t.compileLValueMSIR ();                            
+      614 +  END LValueMSIR;                                             
+      615 +                                                              
+      616  PROCEDURE EqCheckA (a: Ta;  e: T;  x: M3.EqAssumption): BOOLEA
+           N =
+      617    BEGIN
+      618      TYPECASE e OF
+⏺ Now add LValueMSIR to Expr.i3:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/Expr.i3)
+  ⎿  Added 2 lines
+      119  PROCEDURE CompileMSIR (t: T): MSIR.Value;
+      120  (* Emit MSIR for the expression and return its result Value.
+      121     NIL on unsupported (the enclosing proc will be dropped). *)
+      122 +PROCEDURE LValueMSIR (t: T): MSIR.Value;                      
+      123 +(* Return the MSIR address (pointer) for lvalue t. NIL on unsu
+          +pported. *)                                                   
+      124  (* Emit code to evaluate the expression onto the top of stack.
+            For some
+      125     types, this could be an address (arrays, records, bit sets)
+           .
+      126     StaticOnly means construct static data but do not evaluate.
+            *)
+
+⏺ Now add compileLValueMSIR override to NamedExpr.m3:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 2 lines, removed 1 line
+      45          genLiteral   := ExprRep.NoLiteral;
+      46          note_write   := NoteWrites;
+      47          checkUseFailure := CheckUseFailure;
+      48 -        compileMSIR  := CompileMSIR;                           
+      48 +        compileMSIR       := CompileMSIR;                      
+      49 +        compileLValueMSIR := LValueMSIR;                       
+      50        END;
+      51  
+      52  VAR cache := ARRAY [0..31] OF P { NIL, .. };
+
+⏺ Now add the LValueMSIR procedure to NamedExpr.m3 right after CompileMSIR:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 16 lines
+      232      END;
+      233    END CompileMSIR;
+      234  
+      235 +PROCEDURE LValueMSIR (p: P): MSIR.Value =                     
+      236 +  BEGIN                                                       
+      237 +    IF p.value = NIL THEN Resolve (p) END;                    
+      238 +    TYPECASE p.value OF                                       
+      239 +    | Variable.T(vv) =>                                       
+      240 +        VAR addr := MSIRBuilder.LookupVarAddr (vv);           
+      241 +        BEGIN                                                 
+      242 +          IF addr = NIL THEN RETURN NIL END;                  
+      243 +          RETURN addr;                                        
+      244 +        END;                                                  
+      245 +    ELSE                                                      
+      246 +      MSIRBuilder.Abandon ("named lvalue is not a Variable"); 
+      247 +      RETURN NIL;                                             
+      248 +    END;                                                      
+      249 +  END LValueMSIR;                                             
+      250 +                                                              
+      251  PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
+      252    BEGIN
+      253      IF (p.value = NIL) THEN Resolve (p) END;
+
+⏺ Now add MSIR support to QualifyExpr.m3. First add imports:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/QualifyExpr.m3)
+  ⎿  Added 1 line
+      13  IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType
+          ;
+      14  IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
+      15  IMPORT Method, Field, Target, M3RT, Host, RunTyme;
+      16 +IMPORT MSIR, MSIRBuilder, MSIRType;                            
+      17  
+      18  TYPE
+      19    Class = { importDecl    (* <importedInterface>.<anyId> *),
+
+⏺ Now add MSIR overrides to the P type's OVERRIDES:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/QualifyExpr.m3)
+  ⎿  Added 4 lines, removed 2 lines
+      62          genFPLiteral := ExprRep.NoFPLiteral;
+      63          prepLiteral  := ExprRep.NoPrepLiteral;
+      64          genLiteral   := ExprRep.NoLiteral;
+      65 -        note_write   := NoteWrites;                            
+      66 -        exprAlign    := QualifyExprAlign;                      
+      65 +        note_write        := NoteWrites;                       
+      66 +        exprAlign         := QualifyExprAlign;                 
+      67 +        compileMSIR       := CompileMSIR;                      
+      68 +        compileLValueMSIR := LValueMSIR;                       
+      69        END;
+      70  
+      71  PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
+
+⏺ Now add the two MSIR procedures to QualifyExpr.m3 before the BEGIN at the end:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/exprs/QualifyExpr.m3)
+  ⎿  Added 46 lines
+      793      END;
+      794    END NoteWrites;
+      795  
+      796 +PROCEDURE LValueMSIR (p: P): MSIR.Value =                     
+      797 +  VAR fieldInfo: Field.Info;  baseAddr: MSIR.Value;           
+      798 +  BEGIN                                                       
+      799 +    Resolve (p);                                              
+      800 +    CASE p.class OF                                           
+      801 +    | Class.recField =>                                       
+      802 +        baseAddr := Expr.LValueMSIR (p.lhsExpr);              
+      803 +        IF baseAddr = NIL THEN RETURN NIL END;                
+      804 +        Field.Split (p.rhsValue, fieldInfo);                  
+      805 +        RETURN MSIR.BuildFieldAddr (MSIRBuilder.CurrentBlock (
+          +), "",                                                        
+      806 +                                    baseAddr, M3ID.ToText (fie
+          +ldInfo.name));                                                
+      807 +    ELSE                                                      
+      808 +      MSIRBuilder.Abandon ("lvalue not supported for this qual
+          +ify class");                                                  
+      809 +      RETURN NIL;                                             
+      810 +    END;                                                      
+      811 +  END LValueMSIR;                                             
+      812 +                                                              
+      813 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      814 +  VAR fieldInfo: Field.Info;  fieldType: MSIR.T;  addr: MSIR.V
+          +alue;                                                         
+      815 +      folded: Expr.T;                                         
+      816 +  BEGIN                                                       
+      817 +    Resolve (p);                                              
+      818 +    CASE p.class OF                                           
+      819 +    | Class.recField =>                                       
+      820 +        addr := LValueMSIR (p);                               
+      821 +        IF addr = NIL THEN RETURN NIL END;                    
+      822 +        Field.Split (p.rhsValue, fieldInfo);                  
+      823 +        fieldType := MSIRType.Translate (fieldInfo.type);     
+      824 +        IF fieldType = NIL THEN                               
+      825 +          MSIRBuilder.Abandon ("unsupported record field type"
+          +);                                                            
+      826 +          RETURN NIL;                                         
+      827 +        END;                                                  
+      828 +        RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), ""
+          +, fieldType, addr);                                           
+      829 +    | Class.enumLit =>                                        
+      830 +        folded := Fold (p);                                   
+      831 +        IF folded = NIL THEN                                  
+      832 +          MSIRBuilder.Abandon ("enum literal fold failed");   
+      833 +          RETURN NIL;                                         
+      834 +        END;                                                  
+      835 +        RETURN Expr.CompileMSIR (folded);                     
+      836 +    ELSE                                                      
+      837 +      MSIRBuilder.Abandon ("unsupported qualify expression"); 
+      838 +      RETURN NIL;                                             
+      839 +    END;                                                      
+      840 +  END CompileMSIR;                                            
+      841 +                                                              
+      842  BEGIN
+      843  END QualifyExpr.
+
+⏺ Now update AssignStmt.CompileMSIR to use Expr.LValueMSIR:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/stmts/AssignStmt.m3)
+  ⎿  Added 4 lines, removed 16 lines
+      851  
+      852  PROCEDURE CompileMSIR (p: P) =
+      853    VAR
+      854 -    lhsName: M3ID.T;                                          
+      855 -    lhsObj:  Value.T;                                         
+      856 -    lhsPtr:  MSIR.Value;                                      
+      857 -    rhsVal:  MSIR.Value;                                      
+      854 +    lhsPtr: MSIR.Value;                                       
+      855 +    rhsVal: MSIR.Value;                                       
+      856    BEGIN
+      859 -    IF NOT NamedExpr.Split (p.lhs, lhsName, lhsObj) THEN      
+      860 -      MSIRBuilder.Abandon ("assignment LHS is not a named vari
+          -able");                                                       
+      861 -      RETURN;                                                 
+      862 -    END;                                                      
+      863 -    TYPECASE lhsObj OF                                        
+      864 -    | Variable.T (vv) =>                                      
+      865 -        lhsPtr := MSIRBuilder.LookupVarAddr (vv);             
+      866 -        IF lhsPtr = NIL THEN RETURN END;                      
+      867 -    ELSE                                                      
+      868 -      MSIRBuilder.Abandon ("assignment LHS is not a Variable")
+          -;                                                             
+      869 -      RETURN;                                                 
+      870 -    END;                                                      
+      857 +    lhsPtr := Expr.LValueMSIR (p.lhs);                        
+      858 +    IF lhsPtr = NIL THEN RETURN END;                          
+      859      rhsVal := Expr.CompileMSIR (p.rhs);
+      860      IF rhsVal = NIL THEN RETURN END;
+      861      MSIR.BuildStore (MSIRBuilder.CurrentBlock (), rhsVal, lhsP
+           tr);
+
+⏺ Now clean up unused imports in AssignStmt.m3 since we no longer use NamedExpr,
+   M3ID, Value from the CompileMSIR proc:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Good, those are still used elsewhere. Now fix MSIRBuilder.m3 so struct-typed
+  formals get an alloca+store (enabling LookupVarAddr to work for field access):
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 33 lines, removed 6 lines
+      81        END;
+      82  
+      83        (* Walk the proc scope: bind formals to Param values and 
+          locals to
+      84 -         alloca ptrs.  Formals and locals share the same scope 
+         -list. *)                                                       
+      84 +         alloca ptrs.  Formals and locals share the same scope 
+         +list.                                                          
+      85 +         Struct-typed formals are alloca+stored so that LookupV
+         +arAddr                                                         
+      86 +         works for field access. *)                            
+      87        VAR
+      88          v:    Value.T := Scope.ToList(syms);
+      89          vIdx: INTEGER := 0;
+     ...
+       92            TYPECASE v OF
+       93            | Variable.T(vv) =>
+       94                IF Variable.IsFormal(vv) THEN
+       93 -                IF varMapN < MaxVarMap THEN                   
+       94 -                  varMap[varMapN].key      := vv;             
+       95 -                  varMap[varMapN].val      := MSIR.ProcParam(c
+          -urProc, vIdx);                                                
+       96 -                  varMap[varMapN].elemType := NIL;            
+       97 -                  INC(varMapN);                               
+       95 +                VAR                                           
+       96 +                  paramVal := MSIR.ProcParam(curProc, vIdx);  
+       97 +                  varType:   Type.T;                          
+       98 +                  isGlobal, isIndirect, isLhs: BOOLEAN;       
+       99 +                  mt: MSIR.T;                                 
+      100 +                BEGIN                                         
+      101 +                  Variable.Split(vv, varType, isGlobal, isIndi
+          +rect, isLhs);                                                 
+      102 +                  mt := MSIRType.Translate(varType);          
+      103 +                  IF mt # NIL AND MSIR.Kind(mt) = MSIR.TypeKin
+          +d.Struct THEN                                                 
+      104 +                    (* struct by-value formal: alloca+store fo
+          +r field access *)                                             
+      105 +                    VAR allocaVal := MSIR.BuildAlloca(curBlock
+          +,                                                             
+      106 +                          Value.GlobalName(v, dots := FALSE, w
+          +ith_module := FALSE),                                         
+      107 +                          mt);                                
+      108 +                    BEGIN                                     
+      109 +                      MSIR.BuildStore(curBlock, paramVal, allo
+          +caVal);                                                       
+      110 +                      IF varMapN < MaxVarMap THEN             
+      111 +                        varMap[varMapN].key      := vv;       
+      112 +                        varMap[varMapN].val      := allocaVal;
+      113 +                        varMap[varMapN].elemType := mt;       
+      114 +                        INC(varMapN);                         
+      115 +                      END;                                    
+      116 +                    END;                                      
+      117 +                  ELSE                                        
+      118 +                    IF varMapN < MaxVarMap THEN               
+      119 +                      varMap[varMapN].key      := vv;         
+      120 +                      varMap[varMapN].val      := paramVal;   
+      121 +                      varMap[varMapN].elemType := NIL;        
+      122 +                      INC(varMapN);                           
+      123 +                    END;                                      
+      124 +                  END;                                        
+      125                  END;
+      126                  INC(vIdx);
+      127                ELSE
+
+⏺ Now build and test. First let me check what imports MSIRBuilder.m3 needs — we
+  use Variable.Split and MSIR.Kind:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Good, all imports are already present. Now let me build m3front and then the
+  compiler:
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -20)
+  ⎿  (eval):1: command not found: cm3
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cm3 -build 2>&1 | tail -30)
+  ⎿  stale imports -> compiling ExprParse.m3
+     stale imports -> compiling InExpr.m3
+     stale imports -> compiling IntegerExpr.m3
+     … +19 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+⏺ Bash(cd /Users/hosking/git/cm3 && export PATH=$HOME/cm3/bin:$PATH && cd
+      m3-sys/m3front && cm3 -build 2>&1 | grep -E "Error|error|Fatal|fatal" |
+      head -20)
+  ⎿  (No output)
+
+⏺ Clean build. Now build the compiler and install:
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd /Users/hosking/git/cm3/m3-sys/cm3
+      && cm3 -build 2>&1 | tail -5)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+⏺ Bash(cp /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3)
+  ⎿  Done
+
+⏺ Now run the smoke test:
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd /tmp/msir-smoke && cm3 -build
+      @M3m3front-msir 2>&1 | grep -v "^---\|^new \|^compil\|^linking\|^stale" |
+      head -30)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd /tmp/msir-smoke && cm3 -build
+      @M3m3front-msir 2>&1 | tail -20)
+  ⎿  --- building in ARM64_DARWIN ---
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH; cd /tmp/msir-smoke && cm3 -build
+      '@M3m3front-msir' 2>&1; echo "EXIT: $?")
+  ⎿  --- building in ARM64_DARWIN ---
+
+     EXIT: 0
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ The previously-working procs appear, but MakePoint/PointSum are still dropped.
+   Let me temporarily enable Abandon logging to see why:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 1 line
+      2  
+      3  IMPORT MSIR, MSIRType, MSIREmit;
+      4  IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType;
+      5 +IMPORT Stdio, Wr, Text;                                         
+      6  
+      7  CONST MaxVarMap   = 64;
+      8  CONST MaxExitStack = 16;
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 5 lines, removed 1 line
+      212      exitDepth := 0;
+      213    END EndProc;
+      214  
+      215 -PROCEDURE Abandon(<*UNUSED*> reason: TEXT) =                  
+      215 +PROCEDURE Abandon(reason: TEXT) =                             
+      216    BEGIN
+      217 +    IF NOT abandoned THEN                                     
+      218 +      Wr.PutText(Stdio.stderr, "MSIR Abandon: " & reason & "\n
+          +");                                                           
+      219 +      Wr.Flush(Stdio.stderr);                                 
+      220 +    END;                                                      
+      221      abandoned := TRUE;
+      222    END Abandon;
+      223  
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd
+      /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | grep -E
+      "Error|error|compil" | head -10)
+  ⎿  new source -> compiling MSIRBuilder.m3
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd /Users/hosking/git/cm3/m3-sys/cm3
+      && cm3 -build 2>&1 | tail -3 && cp ARM64_DARWIN/cm3 ~/cm3/bin/cm3)
+  ⎿  ignoring ../src/m3overrides
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH; cd /tmp/msir-smoke && cm3 -build
+      '@M3m3front-msir' 2>&1)
+  ⎿  --- building in ARM64_DARWIN ---
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH; (cd /tmp/msir-smoke && cm3 -build
+      '@M3m3front-msir') 2>&1)
+  ⎿  --- building in ARM64_DARWIN ---
+
+⏺ Bash(cd /tmp/msir-smoke && PATH=$HOME/cm3/bin:$PATH cm3 -build
+      '@M3m3front-msir' 2>/tmp/msir-stderr.txt; cat /tmp/msir-stderr.txt | head
+      -30)
+  ⎿  --- building in ARM64_DARWIN ---
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(PATH=$HOME/cm3/bin:$PATH; (cd /tmp/msir-smoke && cm3 -build
+      '@M3m3front-msir' 2>/tmp/abandon.txt); cat /tmp/abandon.txt)
+  ⎿  --- building in ARM64_DARWIN ---
+
+⏺ Bash(PATH=$HOME/cm3/bin:$PATH; (cd /tmp/msir-smoke && cm3 -build
+      '@M3m3front-msir' >>/tmp/cm3-out.txt 2>>/tmp/cm3-err.txt); echo "OUT:";
+      cat /tmp/cm3-out.txt; echo "…)
+  ⎿  OUT:
+     --- building in ARM64_DARWIN ---
+
+     ERR:
+
+⏺ The compiler runs as a subprocess — stderr from m3front gets swallowed. Let me
+   write abandon messages to a file instead:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 1 line, removed 1 line
+      2  
+      3  IMPORT MSIR, MSIRType, MSIREmit;
+      4  IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType;
+      5 -IMPORT Stdio, Wr, Text;                                         
+      5 +IMPORT FileWr, Wr, Text, OSError;                               
+      6  
+      7  CONST MaxVarMap   = 64;
+      8  CONST MaxExitStack = 16;
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 7 lines, removed 2 lines
+      215  PROCEDURE Abandon(reason: TEXT) =
+      216    BEGIN
+      217      IF NOT abandoned THEN
+      218 -      Wr.PutText(Stdio.stderr, "MSIR Abandon: " & reason & "\n
+          -");                                                           
+      219 -      Wr.Flush(Stdio.stderr);                                 
+      218 +      TRY                                                     
+      219 +        VAR wr := FileWr.OpenAppend("/tmp/msir-abandon.txt"); 
+      220 +        BEGIN                                                 
+      221 +          Wr.PutText(wr, "MSIR Abandon: " & reason & "\n");   
+      222 +          Wr.Close(wr);                                       
+      223 +        END;                                                  
+      224 +      EXCEPT OSError.E => END;                                
+      225      END;
+      226      abandoned := TRUE;
+      227    END Abandon;
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd
+      /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | grep -E
+      "Error|error|compil" | head -5)
+  ⎿  new source -> compiling MSIRBuilder.m3
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd /Users/hosking/git/cm3/m3-sys/cm3
+      && cm3 -build 2>&1 | tail -2 && cp ARM64_DARWIN/cm3 ~/cm3/bin/cm3)
+  ⎿  ignoring ../src/m3overrides
+
+⏺ Bash(rm -f /tmp/msir-abandon.txt; PATH=$HOME/cm3/bin:$PATH; (cd
+      /tmp/msir-smoke && cm3 -build '@M3m3front-msir'); cat
+      /tmp/msir-abandon.txt 2>/dev/null || echo "(no…)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     (no abandon log)
+
+⏺ Let me check if the build actually compiled MSIRBuilder successfully without
+  errors:
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd
+      /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && rm -f ARM64_DARWIN/MSIRBuilder.o
+      ARM64_DARWIN/MSIRBuilder*.o && cm3 -build 2>&1)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +10 lines (ctrl+o to expand)
+
+⏺ Let me look at MSIR.m3 BuildStore implementation to check if struct stores
+  work:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Let me add logging directly to BeginProc return paths to diagnose:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 12 lines
+      32    procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
+      33    procMapN: INTEGER := 0;
+      34  
+      35 +PROCEDURE LogMsg(msg: TEXT) =                                  
+      36 +  BEGIN                                                        
+      37 +    TRY                                                        
+      38 +      VAR wr := FileWr.OpenAppend("/tmp/msir-log.txt");        
+      39 +      BEGIN                                                    
+      40 +        Wr.PutText(wr, msg);                                   
+      41 +        Wr.Close(wr);                                          
+      42 +      END;                                                     
+      43 +    EXCEPT ELSE END;                                           
+      44 +  END LogMsg;                                                  
+      45 +                                                               
+      46  PROCEDURE BeginProc(name: M3ID.T;
+      47                      formals: Value.T;
+      48                      syms: Scope.T;
+     ...
+      55      resultT:  MSIR.T;
+      56    BEGIN
+      57      IF NOT MSIREmit.IsEnabled() THEN RETURN FALSE END;
+      58 +    LogMsg("BeginProc: " & M3ID.ToText(name) & "\n");          
+      59      <* ASSERT curProc = NIL *>
+      60      abandoned := FALSE;
+      61      varMapN   := 0;
+
+⏺ Also add a log at the RETURN FALSE point:
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 4 lines, removed 1 line
+      62      exitDepth := 0;
+      63  
+      64      resultT := MSIRType.TranslateResult(result);
+      65 -    IF resultT = NIL THEN RETURN FALSE END;                    
+      65 +    IF resultT = NIL THEN                                      
+      66 +      LogMsg("  -> result type unsupported, skipping\n");      
+      67 +      RETURN FALSE;                                            
+      68 +    END;                                                       
+      69  
+      70      f := formals;
+      71      WHILE f # NIL DO INC(nFormals); f := f.next END;
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(~/git/cm3/m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 4 lines, removed 1 line
+      77          Formal.Split(f, info);
+      78          VAR pt := MSIRType.Translate(info.type);
+      79          BEGIN
+      80 -          IF pt = NIL THEN RETURN FALSE END;                   
+      80 +          IF pt = NIL THEN                                     
+      81 +            LogMsg("  -> formal type unsupported, skipping\n");
+      82 +            RETURN FALSE;                                      
+      83 +          END;                                                 
+      84            params[i].name := M3ID.ToText(info.name);
+      85            params[i].type := pt;
+      86            CASE info.mode OF
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cm3 -build 2>&1 | grep -E
+      "Error|error|compil|warning" | head -10)
+  ⎿  new source -> compiling MSIRBuilder.m3
+     "../src/msir/MSIRBuilder.m3", line 239: warning: potentially unhandled
+      exceptions: Thread.Alerted, Wr.Failure
+     … +4 lines (ctrl+o to expand)
+
+⏺ Bash(export PATH=$HOME/cm3/bin:$PATH && cd /Users/hosking/git/cm3/m3-sys/cm3
+      && cm3 -build 2>&1 | tail -2 && cp ARM64_DARWIN/cm3 ~/cm3/bin/cm3)
+  ⎿  ignoring ../src/m3overrides
+
+⏺ Bash(rm -f /tmp/msir-log.txt /tmp/msir-abandon.txt; PATH=$HOME/cm3/bin:$PATH;
+      (cd /tmp/msir-smoke && cm3 -build '@M3m3front-msir'); echo "LOG:"; cat
+      /tmp/msir-log.tx…)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     LOG:
+     … +3 lines (ctrl+o to expand)
+
+⏺ The binary is up-to-date so cm3 skips recompilation — no m3front invocation. I
+   need to force a rebuild:
+
+⏺ Bash(rm -f /tmp/msir-smoke/ARM64_DARWIN/Main.o
+      /tmp/msir-smoke/ARM64_DARWIN/Main.msir /tmp/msir-log.txt
+      /tmp/msir-abandon.txt; PATH=$HOME/cm3/bin:$PATH; (cd /tmp/msi…)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     EXIT: 0
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(touch /tmp/msir-smoke/Main.m3; rm -f /tmp/msir-smoke/ARM64_DARWIN/Main.o
+      /tmp/msir-smoke/ARM64_DARWIN/*.msir /tmp/msir-log.txt;
+      PATH=$HOME/cm3/bin:$PATH; (cd /t…)  ⎿  (eval):1: no matches found: /tmp/msir-smoke/ARM64_DARWIN/*.msir
+     --- building in ARM64_DARWIN ---
+     … +5 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Let me look at the actual Procedure.m3 to see the current state of MSIR code:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Let me look at Variable.m3 to understand what Split returns for formals:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Let me check what MSIREmit.m3 looks like and add debug output there:
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+⏺ Let me try a different approach — use MSIREmit's existing writer
+  infrastructure directly to log:
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ I am going to exit and put cm3 in the PATH so we can shortcircuit this.       
+
+⏺ Good call. When you're back, the debugging session will be much smoother with
+  cm3 already on PATH.
+
+✻ Cogitated for 5s

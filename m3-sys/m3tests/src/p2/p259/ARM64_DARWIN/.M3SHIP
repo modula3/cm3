@@ -1,0 +1,6 @@
+make_dir("/Users/hosking/cm3/pkg/p259/ARM64_DARWIN")
+install_file(".M3EXPORTS", "/Users/hosking/cm3/pkg/p259/ARM64_DARWIN", "0644")
+install_file(".M3WEB", "/Users/hosking/cm3/pkg/p259/ARM64_DARWIN", "0644")
+make_dir("/Users/hosking/cm3/pkg/p259")
+install_file("../Main.m3", "/Users/hosking/cm3/pkg/p259", "0644")
+install_file("pgm", "/Users/hosking/cm3/pkg/p259/ARM64_DARWIN", "0644")

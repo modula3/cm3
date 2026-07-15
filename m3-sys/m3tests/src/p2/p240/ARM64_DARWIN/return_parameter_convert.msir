@@ -1,0 +1,1267 @@
+module return_parameter_convert
+
+global return_parameter_convert__vi8 : i8
+global return_parameter_convert__vu64 : i64
+global return_parameter_convert__vf64 : f64
+global return_parameter_convert__vi32 : i32
+global return_parameter_convert__vLC : word64
+global return_parameter_convert__vu16 : word16
+global return_parameter_convert__vI : i64
+global return_parameter_convert__vi64 : i64
+global return_parameter_convert__vf32 : f32
+global return_parameter_convert__vi16 : i16
+global return_parameter_convert__vC : word64
+global return_parameter_convert__vu32 : word32
+global return_parameter_convert__vu8 : word8
+global return_parameter_convert__vL : i64
+global return_parameter_convert__offset : word64
+global return_parameter_convert__count : word64
+
+proc return_parameter_convert__ret_u64_u64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_i8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_i32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_LC(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_u16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_I(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_i64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_C(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_i16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_u32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_u8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u64_L(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i8_u64(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_i8(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_i32(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_LC(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_u16(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_I(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_i64(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_C(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_i16(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_u32(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_u8(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i8_L(a.a: i8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_u64(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_i8(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_i32(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_LC(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_u16(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_I(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_i64(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_C(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_i16(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_u32(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_u8(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i32_L(a.a: i32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_LC_u64(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_i8(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_i32(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_LC(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_u16(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_I(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_i64(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_C(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_i16(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_u32(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_u8(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_LC_L(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_u16_u64(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_i8(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_i32(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_LC(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_u16(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_I(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_i64(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_C(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_i16(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_u32(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_u8(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u16_L(a.a: word16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_I_u64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_i8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_i32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_LC(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_u16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_I(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_i64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_C(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_i16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_u32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_u8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_I_L(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_u64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_i8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_i32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_LC(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_u16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_I(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_i64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_C(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_i16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_u32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_u8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i64_L(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_u64(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_i8(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_i32(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_LC(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_u16(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_I(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_i64(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_C(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_i16(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_u32(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_u8(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_C_L(a.a: word64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_i16_u64(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_i8(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_i32(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_LC(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_u16(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_I(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_i64(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_C(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_i16(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_u32(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_u8(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_i16_L(a.a: i16) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = sext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_u64(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_i8(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_i32(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_LC(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_u16(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_I(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_i64(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_C(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_i16(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_u32(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_u8(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u32_L(a.a: word32) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_u64(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_i8(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_i32(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_LC(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_u16(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_I(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_i64(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_C(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_i16(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_u32(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_u8(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_u8_L(a.a: word8) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = load i64, %a.slot
+  ret %t2
+
+proc return_parameter_convert__ret_L_u64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_i8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_i32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_LC(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_u16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_I(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_i64(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_C(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_i16(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_u32(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_u8(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert__ret_L_L(a.a: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  ret %t1
+
+proc return_parameter_convert_M3() -> void
+entry:
+  %t1 = trunc 113 to i8
+  store %t1, @return_parameter_convert_M3_info+104
+  store i64 114, @return_parameter_convert_M3_info+112
+  store f64 1.15116000000000000D2, @return_parameter_convert_M3_info+120
+  %t2 = trunc 117 to i32
+  store %t2, @return_parameter_convert_M3_info+128
+  store i64 118, @return_parameter_convert_M3_info+136
+  %t3 = trunc 119 to word16
+  store %t3, @return_parameter_convert_M3_info+144
+  store i64 120, @return_parameter_convert_M3_info+152
+  store i64 121, @return_parameter_convert_M3_info+160
+  store f32 1.2212300109863E2, @return_parameter_convert_M3_info+168
+  %t4 = trunc 124 to i16
+  store %t4, @return_parameter_convert_M3_info+172
+  store i64 125, @return_parameter_convert_M3_info+176
+  %t5 = trunc 126 to word32
+  store %t5, @return_parameter_convert_M3_info+184
+  %t6 = trunc 127 to word8
+  store %t6, @return_parameter_convert_M3_info+188
+  store i64 128, @return_parameter_convert_M3_info+192
+  ret
+

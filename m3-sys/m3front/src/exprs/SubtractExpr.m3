@@ -11,7 +11,7 @@ MODULE SubtractExpr;
 IMPORT CG, Expr, ExprRep, Type, Error, LInt, Int, Reel, EnumType;
 IMPORT SetType, Addr, Module, AddressExpr, Target, EnumExpr;
 IMPORT IntegerExpr, ReelExpr, SetExpr, LReel, EReel, TInt, ErrType;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET, cENUM };

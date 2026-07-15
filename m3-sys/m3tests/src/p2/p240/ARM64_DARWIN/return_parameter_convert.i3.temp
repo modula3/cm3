@@ -1,0 +1,2 @@
+INTERFACE return_parameter_convert;
+END return_parameter_convert.

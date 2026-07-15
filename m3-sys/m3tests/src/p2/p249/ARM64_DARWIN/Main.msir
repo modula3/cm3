@@ -1,0 +1,25 @@
+module Main
+
+proc Main__DumpMatching__DumpOne(__cap_0: ptr void, a.trade: @HFData_S) -> void
+entry:
+  %trade.slot = alloca @HFData_S
+  store a.trade, %trade.slot
+  %t1 = load gc_ref void, __cap_0
+  %t2 = ptr.add %trade.slot, 0
+  %t3 = load f64, %t2
+  %t4 = call Fmt__LongReal(%t3, 2, 16, 0) -> gc_ref void
+  call Wr__PutText(%t1, %t4)
+  ret
+
+proc Main__DumpMatching() -> void
+entry:
+  %wr.slot = alloca gc_ref void
+  store nil, %wr.slot
+  %t1 = call FileWr__Open("out") -> gc_ref void
+  store %t1, %wr.slot
+  ret
+
+proc Main_M3() -> void
+entry:
+  ret
+

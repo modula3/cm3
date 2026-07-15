@@ -10,7 +10,7 @@ MODULE MultiplyExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, EReel, Target;
 IMPORT SetExpr, IntegerExpr, ReelExpr, LReel, SetType, ErrType;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder;
 
 CONST
   cINT   = 0;

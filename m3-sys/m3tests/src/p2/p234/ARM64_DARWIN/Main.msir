@@ -1,0 +1,45 @@
+module Main
+
+global Main__g : [101]i64
+global Main__h : [101]i64
+
+proc Main__no_nonvolatile_registers() -> void
+entry:
+  ret
+
+proc Main__ebx(a.a: i64, a.b: i64) -> void
+entry:
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %b.slot
+  store %t1, %a.slot
+  ret
+
+proc Main__esi_edi() -> void
+entry:
+  %t1 = load [101]i64, @Main__h+0
+  store %t1, @Main__g+0
+  ret
+
+proc Main__esi_edi_ebx(a.a: i64, a.b: i64) -> void
+entry:
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store a.b, %b.slot
+  %t1 = load i64, %b.slot
+  store %t1, %a.slot
+  %t2 = load [101]i64, @Main__h+0
+  store %t2, @Main__g+0
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__no_nonvolatile_registers()
+  call Main__ebx(1, 2)
+  call Main__esi_edi()
+  call Main__esi_edi_ebx(1, 2)
+  ret
+

@@ -1,0 +1,6 @@
+module I96
+
+proc I96_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,6 @@
+module I66
+
+proc I66_I3() -> void
+entry:
+  ret
+

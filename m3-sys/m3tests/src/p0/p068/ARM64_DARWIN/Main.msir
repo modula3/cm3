@@ -1,0 +1,160 @@
+module Main
+
+global Main__t : gc_slot void
+global Main__u : gc_slot void
+global Main__v : gc_slot void
+global Main__to : gc_slot void
+global Main__uo : gc_slot void
+global Main__vo : gc_slot void
+global Main__te : gc_slot void
+global Main__ta : gc_slot void
+
+proc Main_M3() -> void
+entry:
+  %t49 = alloca i64
+  %i.slot = alloca i64
+  %t35 = alloca @__oa_shape
+  %t26 = alloca @__oa_shape
+  %t17 = alloca @__oa_shape
+  %t8 = alloca @__oa_shape
+  %t1 = call RTHooks__AllocateTracedRef(@tc_ref_-1467451074) -> gc_ref void
+  %t2 = convert %t1 to gc_ref void
+  gc.store %t2, @Main_M3_info+840
+  %t3 = call RTHooks__AllocateTracedRef(@tc_ref_-1758373035) -> gc_ref void
+  %t4 = convert %t3 to gc_ref void
+  gc.store %t4, @Main_M3_info+848
+  %t5 = call RTHooks__AllocateTracedRef(@tc_ref_-318626117) -> gc_ref void
+  %t6 = convert %t5 to gc_ref void
+  gc.store %t6, @Main_M3_info+856
+  %t7 = load ptr void, @tl_arr_43642924
+  %t9 = ptr.add %t8, 16
+  %t10 = ptr.add %t8, 0
+  store %t9, %t10
+  %t11 = ptr.add %t8, 8
+  store i64 1, %t11
+  %t12 = ptr.add %t8, 16
+  %t13 = convert 11 to i64
+  store %t13, %t12
+  %t14 = call RTHooks__AllocateOpenArray(%t7, %t8) -> gc_ref void
+  %t15 = convert %t14 to gc_ref void
+  gc.store %t15, @Main_M3_info+864
+  %t16 = load ptr void, @tl_arr_-797892043
+  %t18 = ptr.add %t17, 16
+  %t19 = ptr.add %t17, 0
+  store %t18, %t19
+  %t20 = ptr.add %t17, 8
+  store i64 1, %t20
+  %t21 = ptr.add %t17, 16
+  %t22 = convert 11 to i64
+  store %t22, %t21
+  %t23 = call RTHooks__AllocateOpenArray(%t16, %t17) -> gc_ref void
+  %t24 = convert %t23 to gc_ref void
+  gc.store %t24, @Main_M3_info+872
+  %t25 = load ptr void, @tl_arr_-1649389748
+  %t27 = ptr.add %t26, 16
+  %t28 = ptr.add %t26, 0
+  store %t27, %t28
+  %t29 = ptr.add %t26, 8
+  store i64 1, %t29
+  %t30 = ptr.add %t26, 16
+  %t31 = convert 11 to i64
+  store %t31, %t30
+  %t32 = call RTHooks__AllocateOpenArray(%t25, %t26) -> gc_ref void
+  %t33 = convert %t32 to gc_ref void
+  gc.store %t33, @Main_M3_info+880
+  store "Hello Eric", @Main_M3_info+888
+  %t34 = load ptr void, @tl_arr_839756992
+  %t36 = ptr.add %t35, 16
+  %t37 = ptr.add %t35, 0
+  store %t36, %t37
+  %t38 = ptr.add %t35, 8
+  store i64 1, %t38
+  %t39 = ptr.add %t35, 16
+  %t40 = convert 2 to i64
+  store %t40, %t39
+  %t41 = call RTHooks__AllocateOpenArray(%t34, %t35) -> gc_ref void
+  %t42 = convert %t41 to gc_ref void
+  gc.store %t42, @Main_M3_info+896
+  %t43 = gc.load @Main_M3_info+896
+  %t44 = load openarray<1> gc_ref void, %t43
+  %t45 = openarray.elem_addr %t44, 0
+  gc.store "hello", %t45 [container: %t43]
+  %t46 = gc.load @Main_M3_info+896
+  %t47 = load openarray<1> gc_ref void, %t46
+  %t48 = openarray.elem_addr %t47, 1
+  gc.store "eric", %t48 [container: %t46]
+  store i64 0, %i.slot
+  store i64 10, %t49
+  br for.header.1
+for.header.1:
+  %t50 = load i64, %i.slot
+  %t51 = load i64, %t49
+  %t52 = icmp sle %t50, %t51
+  cond_br %t52, for.body.2, for.exit.3
+for.body.2:
+  %t53 = load i64, %i.slot
+  %t54 = gc.load @Main_M3_info+840
+  %t55 = array.elem_addr %t54, %t53
+  %t56 = load i64, %i.slot
+  %t57 = isub 10, %t56
+  store %t57, %t55
+  %t58 = load i64, %i.slot
+  %t59 = gc.load @Main_M3_info+848
+  %t60 = array.elem_addr %t59, %t58
+  %t61 = load i64, %i.slot
+  %t62 = iadd 65, %t61
+  %t63 = trunc %t62 to word8
+  store %t63, %t60
+  %t64 = load i64, %i.slot
+  %t65 = gc.load @Main_M3_info+856
+  %t66 = array.elem_addr %t65, %t64
+  %t67 = load i64, %i.slot
+  %t68 = iadd 97, %t67
+  %t69 = trunc %t68 to word8
+  store %t69, %t66
+  %t70 = load i64, %i.slot
+  %t71 = gc.load @Main_M3_info+864
+  %t72 = load openarray<1> i64, %t71
+  %t73 = openarray.elem_addr %t72, %t70
+  %t74 = load i64, %i.slot
+  %t75 = isub 10, %t74
+  store %t75, %t73
+  %t76 = load i64, %i.slot
+  %t77 = gc.load @Main_M3_info+872
+  %t78 = load openarray<1> word8, %t77
+  %t79 = openarray.elem_addr %t78, %t76
+  %t80 = load i64, %i.slot
+  %t81 = iadd 65, %t80
+  %t82 = trunc %t81 to word8
+  store %t82, %t79
+  %t83 = load i64, %i.slot
+  %t84 = gc.load @Main_M3_info+880
+  %t85 = load openarray<1> word8, %t84
+  %t86 = openarray.elem_addr %t85, %t83
+  %t87 = load i64, %i.slot
+  %t88 = iadd 97, %t87
+  %t89 = trunc %t88 to word8
+  store %t89, %t86
+  %t90 = load i64, %i.slot
+  %t91 = iadd %t90, 1
+  store %t91, %i.slot
+  br for.header.1
+for.exit.3:
+  %t92 = gc.load @Main_M3_info+840
+  call _RTHeap__Print(%t92)
+  %t93 = gc.load @Main_M3_info+848
+  call _RTHeap__Print(%t93)
+  %t94 = gc.load @Main_M3_info+856
+  call _RTHeap__Print(%t94)
+  %t95 = gc.load @Main_M3_info+864
+  call _RTHeap__Print(%t95)
+  %t96 = gc.load @Main_M3_info+872
+  call _RTHeap__Print(%t96)
+  %t97 = gc.load @Main_M3_info+880
+  call _RTHeap__Print(%t97)
+  %t98 = gc.load @Main_M3_info+888
+  call _RTHeap__Print(%t98)
+  %t99 = gc.load @Main_M3_info+896
+  call _RTHeap__Print(%t99)
+  ret
+

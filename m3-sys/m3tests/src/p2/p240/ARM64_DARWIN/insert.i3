@@ -1,0 +1,2 @@
+INTERFACE insert;
+END insert.

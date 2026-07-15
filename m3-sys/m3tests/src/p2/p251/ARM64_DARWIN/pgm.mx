@@ -1,0 +1,85 @@
+M3 v4.2
+N0 Main
+
+M0 1 4 0 0 0 0 16 0 0 22 0 0
+A0
+N1 IO
+B1
+N2 Fmt
+B2
+N3 Compiler
+B3
+N4 RTHooks
+B4
+N5 Int
+V0 2 5 bb2b6ce9ab4d2f5d
+i0
+N6 Put
+V1 1 6 97adfd90d26b4605
+i1
+N7 PutInt
+V2 1 7 1f20323b2c024a4c
+i2
+N8 TextLitInfo
+V3 4 8 fdc7f49fa7f061c3
+i3
+N9 TextLitGetChar
+V4 4 9 bf853738ef95b58f
+i4
+N10 TextLitGetWideChar
+V5 4 10 6b44a8081c4ee8f1
+i5
+N11 TextLitGetChars
+V6 4 11 e51aa8c54a895201
+i6
+N12 TextLitGetWideChars
+V7 4 12 face384698a06a95
+i7
+N13 Concat
+V8 4 13 2bcdb700e948c590
+i8
+N14 Raise
+V9 4 14 543d89ab72cb48cc
+i9
+N15 ResumeRaise
+V10 4 15 8f4910e187280890
+i10
+N16 ReportFault
+V11 4 16 e0ad157f9f695006
+i11
+N17 ThisLine
+V12 3 17 67bc12bbb7101c38
+i12
+N18 CheckLoadTracedRef
+V13 4 18 33cac043de87135c
+i13
+N19 CheckStoreTraced
+V14 4 19 8ffa5ad840254ad5
+i14
+N20 ScanTypecase
+V15 4 20 6c0355050f2d5a7c
+i15
+t87825ea1
+t7b78c34f
+t2aa4581f
+tf2a35a9d
+t62761487
+t43604b73
+tb6592544
+t6d871b27
+tb750d684
+t38df5df5
+tb964357b
+t9132dde7
+t89cd34bd
+tc9e236c8
+ta19bdc21
+t966fe87f
+t97f166d3
+t656bdc20
+t477c5063
+ta4bb9882
+t37e50548
+t9b134ca4
+Q6d871b27 50f86574
+Q62761487 9d8fb489

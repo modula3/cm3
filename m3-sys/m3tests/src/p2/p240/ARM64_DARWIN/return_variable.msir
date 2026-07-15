@@ -1,0 +1,129 @@
+module return_variable
+
+global return_variable__vi8 : i8
+global return_variable__vu64 : i64
+global return_variable__vf64 : f64
+global return_variable__vi32 : i32
+global return_variable__vLC : word64
+global return_variable__vu16 : word16
+global return_variable__vI : i64
+global return_variable__vi64 : i64
+global return_variable__vf32 : f32
+global return_variable__vi16 : i16
+global return_variable__vC : word64
+global return_variable__vu32 : word32
+global return_variable__vu8 : word8
+global return_variable__vL : i64
+global return_variable__offset : word64
+global return_variable__count : word64
+
+proc return_variable__ret_vi8() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i8, @return_variable_M3_info+104
+  ret %t1
+
+proc return_variable__ret_vu64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @return_variable_M3_info+112
+  ret %t1
+
+proc return_variable__ret_vf64() -> f64
+entry:
+  %_result.slot = alloca f64
+  %t1 = load f64, @return_variable_M3_info+120
+  ret %t1
+
+proc return_variable__ret_vi32() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i32, @return_variable_M3_info+128
+  ret %t1
+
+proc return_variable__ret_vLC() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @return_variable_M3_info+136
+  ret %t1
+
+proc return_variable__ret_vu16() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word16, @return_variable_M3_info+144
+  ret %t1
+
+proc return_variable__ret_vI() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @return_variable_M3_info+152
+  ret %t1
+
+proc return_variable__ret_vi64() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @return_variable_M3_info+160
+  ret %t1
+
+proc return_variable__ret_vf32() -> f32
+entry:
+  %_result.slot = alloca f32
+  %t1 = load f32, @return_variable_M3_info+168
+  ret %t1
+
+proc return_variable__ret_vi16() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i16, @return_variable_M3_info+172
+  ret %t1
+
+proc return_variable__ret_vC() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  %t1 = load word64, @return_variable_M3_info+176
+  ret %t1
+
+proc return_variable__ret_vu32() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word32, @return_variable_M3_info+184
+  ret %t1
+
+proc return_variable__ret_vu8() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = load word8, @return_variable_M3_info+188
+  ret %t1
+
+proc return_variable__ret_vL() -> i64
+entry:
+  %_result.slot = alloca i64
+  %t1 = load i64, @return_variable_M3_info+192
+  ret %t1
+
+proc return_variable_M3() -> void
+entry:
+  %t1 = trunc 49 to i8
+  store %t1, @return_variable_M3_info+104
+  store i64 50, @return_variable_M3_info+112
+  store f64 5.15200000000000031D1, @return_variable_M3_info+120
+  %t2 = trunc 53 to i32
+  store %t2, @return_variable_M3_info+128
+  store i64 54, @return_variable_M3_info+136
+  %t3 = trunc 55 to word16
+  store %t3, @return_variable_M3_info+144
+  store i64 56, @return_variable_M3_info+152
+  store i64 57, @return_variable_M3_info+160
+  store f32 5.8590000152588E1, @return_variable_M3_info+168
+  %t4 = trunc 60 to i16
+  store %t4, @return_variable_M3_info+172
+  store i64 61, @return_variable_M3_info+176
+  %t5 = trunc 62 to word32
+  store %t5, @return_variable_M3_info+184
+  %t6 = trunc 63 to word8
+  store %t6, @return_variable_M3_info+188
+  store i64 64, @return_variable_M3_info+192
+  ret
+

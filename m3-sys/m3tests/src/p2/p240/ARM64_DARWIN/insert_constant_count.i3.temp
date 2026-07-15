@@ -1,0 +1,2 @@
+INTERFACE insert_constant_count;
+END insert_constant_count.

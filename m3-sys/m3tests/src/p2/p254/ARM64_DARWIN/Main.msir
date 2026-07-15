@@ -1,0 +1,386 @@
+module Main
+
+global Main__xparam_integer : i64
+global Main__xparam_integer_uplevel : i64
+global Main__xvar_param_integer : i64
+global Main__xvar_param_integer_uplevel : i64
+global Main__xreadonly_param_integer : i64
+global Main__xreadonly_param_integer_uplevel : i64
+global Main__xparam_record : @
+global Main__xparam_record_uplevel : @
+global Main__xvar_param_record : @
+global Main__xvar_param_record_uplevel : @
+global Main__xreadonly_param_record : @
+global Main__xreadonly_param_record_uplevel : @
+
+proc Main__A(a.a: i64) -> void
+entry:
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  %t1 = load i64, %a.slot
+  call RTIO__PutInt(%t1, 0)
+  call RTIO__PutText("\0a")
+  ret
+
+proc Main__F2(a.p: ptr void) -> void
+entry:
+  %p.slot = alloca ptr void
+  store a.p, %p.slot
+  %t1 = load ptr void, %p.slot
+  %t2 = load i64, %t1
+  %t3 = icmp eq %t2, -1
+  cond_br %t3, cl.closure.1, cl.direct.2
+cl.closure.1:
+  %t4 = ptr.add %t1, 8
+  %t5 = load ptr void, %t4
+  %t6 = ptr.add %t1, 16
+  %t7 = load ptr void, %t6
+  call.indirect %t5(%t7)
+  br cl.merge.3
+cl.direct.2:
+  call.indirect %t1()
+  br cl.merge.3
+cl.merge.3:
+  ret
+
+proc Main__Main__F1(__cap_0: ptr void, __cap_1: i64, __cap_2: ptr void, __cap_3: ptr void, __cap_4: ptr void, __cap_5: ptr void, __cap_6: ptr void, __cap_7: ptr void) -> void
+entry:
+  %t1 = load i64, __cap_0
+  %t2 = iadd 100, __cap_1
+  %t3 = iadd %t1, %t2
+  store %t3, __cap_0
+  %t4 = load i64, __cap_2
+  %t5 = iadd 200, __cap_1
+  %t6 = iadd %t4, %t5
+  store %t6, __cap_2
+  %t7 = ptr.add __cap_3, 0
+  %t8 = load i64, %t7
+  %t9 = ptr.add __cap_4, 0
+  %t10 = load i64, %t9
+  %t11 = iadd 300, %t10
+  %t12 = iadd %t8, %t11
+  store %t12, %t7
+  %t13 = ptr.add __cap_5, 0
+  %t14 = load i64, %t13
+  %t15 = ptr.add __cap_4, 0
+  %t16 = load i64, %t15
+  %t17 = iadd 400, %t16
+  %t18 = iadd %t14, %t17
+  store %t18, %t13
+  %t19 = load i64, __cap_6
+  %t20 = iadd %t19, 600
+  store %t20, __cap_6
+  %t21 = ptr.add __cap_7, 0
+  %t22 = load i64, %t21
+  %t23 = iadd %t22, 700
+  store %t23, %t21
+  ret
+
+proc Main__Main__F1__shim(__env: ptr void) -> void
+  linkage internal
+entry:
+  %t1 = ptr.add __env, 0
+  %t2 = load ptr void, %t1
+  %t3 = ptr.add __env, 8
+  %t4 = load ptr void, %t3
+  %t5 = load i64, %t4
+  %t6 = ptr.add __env, 16
+  %t7 = load ptr void, %t6
+  %t8 = ptr.add __env, 24
+  %t9 = load ptr void, %t8
+  %t10 = ptr.add __env, 32
+  %t11 = load ptr void, %t10
+  %t12 = ptr.add __env, 40
+  %t13 = load ptr void, %t12
+  %t14 = ptr.add __env, 48
+  %t15 = load ptr void, %t14
+  %t16 = ptr.add __env, 56
+  %t17 = load ptr void, %t16
+  call Main__Main__F1(%t2, %t5, %t7, %t9, %t11, %t13, %t15, %t17)
+  ret
+
+proc Main__Main(_result_ptr: ptr void, a.param_integer: i64, a.param_integer_uplevel: i64, var a.var_param_integer: i64, var a.var_param_integer_uplevel: i64, readonly a.readonly_param_integer: i64, readonly a.readonly_param_integer_uplevel: i64, a.param_record: @, a.param_record_uplevel: @, var a.var_param_record: @, var a.var_param_record_uplevel: @, readonly a.readonly_param_record: @, readonly a.readonly_param_record_uplevel: @) -> void
+entry:
+  %t98 = alloca @
+  %t87 = alloca @
+  %t65 = alloca [24]i8
+  %t56 = alloca i64
+  %t54 = alloca [8]ptr void
+  %local_record_uplevel.slot = alloca @
+  %local_record.slot = alloca @
+  %local_integer_uplevel.slot = alloca i64
+  %local_integer.slot = alloca i64
+  %param_record_uplevel.slot = alloca @
+  %param_record.slot = alloca @
+  %param_integer_uplevel.slot = alloca i64
+  %param_integer.slot = alloca i64
+  store a.param_integer, %param_integer.slot
+  store a.param_integer_uplevel, %param_integer_uplevel.slot
+  store a.param_record, %param_record.slot
+  store a.param_record_uplevel, %param_record_uplevel.slot
+  store nil, %local_record.slot
+  store nil, %local_record_uplevel.slot
+  %t1 = ptr.add %local_record.slot, 0
+  store i64 999, %t1
+  %t2 = ptr.add %local_record_uplevel.slot, 0
+  store i64 999, %t2
+  %t3 = load i64, %param_integer_uplevel.slot
+  %t4 = load i64, a.readonly_param_integer_uplevel
+  %t5 = iadd 1, %t4
+  %t6 = iadd %t3, %t5
+  store %t6, %param_integer_uplevel.slot
+  %t7 = load i64, a.var_param_integer_uplevel
+  %t8 = load i64, a.readonly_param_integer_uplevel
+  %t9 = iadd 2, %t8
+  %t10 = iadd %t7, %t9
+  store %t10, a.var_param_integer_uplevel
+  %t11 = ptr.add %param_record_uplevel.slot, 0
+  %t12 = load i64, %t11
+  %t13 = ptr.add a.readonly_param_record_uplevel, 0
+  %t14 = load i64, %t13
+  %t15 = iadd 3, %t14
+  %t16 = iadd %t12, %t15
+  store %t16, %t11
+  %t17 = ptr.add a.var_param_record_uplevel, 0
+  %t18 = load i64, %t17
+  %t19 = ptr.add a.readonly_param_record_uplevel, 0
+  %t20 = load i64, %t19
+  %t21 = iadd 4, %t20
+  %t22 = iadd %t18, %t21
+  store %t22, %t17
+  %t23 = load i64, %local_integer_uplevel.slot
+  %t24 = iadd %t23, 5
+  store %t24, %local_integer_uplevel.slot
+  %t25 = ptr.add %local_record_uplevel.slot, 0
+  %t26 = load i64, %t25
+  %t27 = iadd %t26, 6
+  store %t27, %t25
+  %t28 = load i64, %param_integer.slot
+  %t29 = load i64, a.readonly_param_integer
+  %t30 = iadd 7, %t29
+  %t31 = iadd %t28, %t30
+  store %t31, %param_integer.slot
+  %t32 = load i64, a.var_param_integer
+  %t33 = load i64, a.readonly_param_integer
+  %t34 = iadd 8, %t33
+  %t35 = iadd %t32, %t34
+  store %t35, a.var_param_integer
+  %t36 = ptr.add %param_record.slot, 0
+  %t37 = load i64, %t36
+  %t38 = ptr.add a.readonly_param_record, 0
+  %t39 = load i64, %t38
+  %t40 = iadd 9, %t39
+  %t41 = iadd %t37, %t40
+  store %t41, %t36
+  %t42 = ptr.add a.var_param_record, 0
+  %t43 = load i64, %t42
+  %t44 = ptr.add a.readonly_param_record, 0
+  %t45 = load i64, %t44
+  %t46 = iadd 10, %t45
+  %t47 = iadd %t43, %t46
+  store %t47, %t42
+  %t48 = load i64, %local_integer.slot
+  %t49 = iadd %t48, 11
+  store %t49, %local_integer.slot
+  %t50 = ptr.add %local_record.slot, 0
+  %t51 = load i64, %t50
+  %t52 = iadd %t51, 12
+  store %t52, %t50
+  %t53 = load i64, a.readonly_param_integer_uplevel
+  call Main__Main__F1(%param_integer_uplevel.slot, %t53, a.var_param_integer_uplevel, %param_record_uplevel.slot, a.readonly_param_record_uplevel, a.var_param_record_uplevel, %local_integer_uplevel.slot, %local_record_uplevel.slot)
+  %t55 = ptr.add %t54, 0
+  store %param_integer_uplevel.slot, %t55
+  %t57 = load i64, a.readonly_param_integer_uplevel
+  store %t57, %t56
+  %t58 = ptr.add %t54, 8
+  store %t56, %t58
+  %t59 = ptr.add %t54, 16
+  store a.var_param_integer_uplevel, %t59
+  %t60 = ptr.add %t54, 24
+  store %param_record_uplevel.slot, %t60
+  %t61 = ptr.add %t54, 32
+  store a.readonly_param_record_uplevel, %t61
+  %t62 = ptr.add %t54, 40
+  store a.var_param_record_uplevel, %t62
+  %t63 = ptr.add %t54, 48
+  store %local_integer_uplevel.slot, %t63
+  %t64 = ptr.add %t54, 56
+  store %local_record_uplevel.slot, %t64
+  %t66 = ptr.add %t65, 0
+  store i64 -1, %t66
+  %t67 = ptr.add %t65, 8
+  store ptr @Main__Main__F1__shim, %t67
+  %t68 = ptr.add %t65, 16
+  store %t54, %t68
+  call Main__F2(%t65)
+  %t69 = load i64, %param_integer.slot
+  call Main__A(%t69)
+  %t70 = load i64, %param_integer_uplevel.slot
+  call Main__A(%t70)
+  %t71 = load i64, a.var_param_integer
+  call Main__A(%t71)
+  %t72 = load i64, a.var_param_integer_uplevel
+  call Main__A(%t72)
+  %t73 = load i64, a.readonly_param_integer
+  call Main__A(%t73)
+  %t74 = load i64, a.readonly_param_integer_uplevel
+  call Main__A(%t74)
+  %t75 = ptr.add %param_record.slot, 0
+  %t76 = load i64, %t75
+  call Main__A(%t76)
+  %t77 = ptr.add %param_record_uplevel.slot, 0
+  %t78 = load i64, %t77
+  call Main__A(%t78)
+  %t79 = ptr.add a.var_param_record, 0
+  %t80 = load i64, %t79
+  call Main__A(%t80)
+  %t81 = ptr.add a.var_param_record_uplevel, 0
+  %t82 = load i64, %t81
+  call Main__A(%t82)
+  %t83 = ptr.add a.readonly_param_record, 0
+  %t84 = load i64, %t83
+  call Main__A(%t84)
+  %t85 = ptr.add a.readonly_param_record_uplevel, 0
+  %t86 = load i64, %t85
+  call Main__A(%t86)
+  cond_br 0, if.then.1, if.merge.2
+if.then.1:
+  %t88 = ptr.add %t87, 0
+  store i64 999, %t88
+  %t89 = load @, %t87
+  store %t89, _result_ptr
+  ret
+if.merge.2:
+  cond_br 0, if.then.3, if.merge.4
+if.then.3:
+  %t90 = load @, %param_record.slot
+  store %t90, _result_ptr
+  ret
+if.merge.4:
+  cond_br 0, if.then.5, if.merge.6
+if.then.5:
+  %t91 = load @, %param_record_uplevel.slot
+  store %t91, _result_ptr
+  ret
+if.merge.6:
+  cond_br 0, if.then.7, if.merge.8
+if.then.7:
+  %t92 = load @, a.var_param_record
+  store %t92, _result_ptr
+  ret
+if.merge.8:
+  cond_br 0, if.then.9, if.merge.10
+if.then.9:
+  %t93 = load @, a.var_param_record_uplevel
+  store %t93, _result_ptr
+  ret
+if.merge.10:
+  cond_br 0, if.then.11, if.merge.12
+if.then.11:
+  %t94 = load @, a.readonly_param_record
+  store %t94, _result_ptr
+  ret
+if.merge.12:
+  cond_br 0, if.then.13, if.merge.14
+if.then.13:
+  %t95 = load @, a.readonly_param_record_uplevel
+  store %t95, _result_ptr
+  ret
+if.merge.14:
+  cond_br 0, if.then.15, if.merge.16
+if.then.15:
+  %t96 = load @, %local_record_uplevel.slot
+  store %t96, _result_ptr
+  ret
+if.merge.16:
+  cond_br 0, if.then.17, if.merge.18
+if.then.17:
+  %t97 = load @, %local_record.slot
+  store %t97, _result_ptr
+  ret
+if.merge.18:
+  %t99 = ptr.add %t98, 0
+  store i64 999, %t99
+  %t100 = load @, %t98
+  store %t100, _result_ptr
+  ret
+
+proc Main_M3() -> void
+entry:
+  %t23 = alloca @
+  %t16 = alloca @
+  %t13 = alloca @
+  %t10 = alloca @
+  %t7 = alloca @
+  %t4 = alloca @
+  %t1 = alloca @
+  store i64 1000, @Main_M3_info+200
+  store i64 2000, @Main_M3_info+208
+  store i64 3000, @Main_M3_info+216
+  store i64 4000, @Main_M3_info+224
+  store i64 5000, @Main_M3_info+232
+  store i64 6000, @Main_M3_info+240
+  %t2 = ptr.add %t1, 0
+  store i64 7000, %t2
+  %t3 = load @, %t1
+  store %t3, @Main_M3_info+248
+  %t5 = ptr.add %t4, 0
+  store i64 8000, %t5
+  %t6 = load @, %t4
+  store %t6, @Main_M3_info+256
+  %t8 = ptr.add %t7, 0
+  store i64 9000, %t8
+  %t9 = load @, %t7
+  store %t9, @Main_M3_info+264
+  %t11 = ptr.add %t10, 0
+  store i64 10000, %t11
+  %t12 = load @, %t10
+  store %t12, @Main_M3_info+272
+  %t14 = ptr.add %t13, 0
+  store i64 11000, %t14
+  %t15 = load @, %t13
+  store %t15, @Main_M3_info+280
+  %t17 = ptr.add %t16, 0
+  store i64 12000, %t17
+  %t18 = load @, %t16
+  store %t18, @Main_M3_info+288
+  %t19 = load i64, @Main_M3_info+200
+  %t20 = load i64, @Main_M3_info+208
+  %t21 = load @, @Main_M3_info+248
+  %t22 = load @, @Main_M3_info+256
+  call Main__Main(%t23, %t19, %t20, @Main_M3_info+216, @Main_M3_info+224, @Main_M3_info+232, @Main_M3_info+240, %t21, %t22, @Main_M3_info+264, @Main_M3_info+272, @Main_M3_info+280, @Main_M3_info+288)
+  %t24 = load @, %t23
+  call RTIO__PutText("\0a")
+  %t25 = load i64, @Main_M3_info+200
+  call Main__A(%t25)
+  %t26 = load i64, @Main_M3_info+208
+  call Main__A(%t26)
+  %t27 = load i64, @Main_M3_info+216
+  call Main__A(%t27)
+  %t28 = load i64, @Main_M3_info+224
+  call Main__A(%t28)
+  %t29 = load i64, @Main_M3_info+232
+  call Main__A(%t29)
+  %t30 = load i64, @Main_M3_info+240
+  call Main__A(%t30)
+  %t31 = ptr.add @Main_M3_info+248, 0
+  %t32 = load i64, %t31
+  call Main__A(%t32)
+  %t33 = ptr.add @Main_M3_info+256, 0
+  %t34 = load i64, %t33
+  call Main__A(%t34)
+  %t35 = ptr.add @Main_M3_info+264, 0
+  %t36 = load i64, %t35
+  call Main__A(%t36)
+  %t37 = ptr.add @Main_M3_info+272, 0
+  %t38 = load i64, %t37
+  call Main__A(%t38)
+  %t39 = ptr.add @Main_M3_info+280, 0
+  %t40 = load i64, %t39
+  call Main__A(%t40)
+  %t41 = ptr.add @Main_M3_info+288, 0
+  %t42 = load i64, %t41
+  call Main__A(%t42)
+  call RTIO__Flush()
+  ret
+

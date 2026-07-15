@@ -1,0 +1,2 @@
+make_dir("/Users/hosking/cm3/pkg/p248/ARM64_DARWIN")
+install_file(".M3EXPORTS", "/Users/hosking/cm3/pkg/p248/ARM64_DARWIN", "0644")

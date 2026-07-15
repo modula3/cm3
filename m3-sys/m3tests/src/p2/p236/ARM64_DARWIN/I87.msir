@@ -1,0 +1,6 @@
+module I87
+
+proc I87_I3() -> void
+entry:
+  ret
+

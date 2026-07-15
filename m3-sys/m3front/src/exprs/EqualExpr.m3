@@ -838,6 +838,17 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  (* =/# yield a BOOLEAN — widen the i1 result to ZType (i64). *)
+  VAR r := CompileMSIRRaw (p);
+  BEGIN
+    IF r # NIL AND MSIR.Kind (MSIR.ValueType (r)) = MSIR.TypeKind.I1 THEN
+      r := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", r,
+                           MSIR.TI (Target.Integer.size));
+    END;
+    RETURN r;
+  END CompileMSIR;
+
+PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
   VAR
     lv, rv:  MSIR.Value;
     pred:    MSIR.CmpPred;
@@ -1507,27 +1518,17 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             NOT MSIR.Equal (MSIR.ValueType (rv), MSIR.ValueType (lv)) THEN
         rv := MSIR.RetypeValue (rv, MSIR.ValueType (lv));
       END;
-      (* Widen narrow integer operand to the wider type before comparison.
-         E.g. IByte subscript (i8) compared with INTEGER variable (i64). *)
-      BEGIN
-        VAR lvBits := MSIR.BitWidth (MSIR.ValueType (lv));
-            rvBits := MSIR.BitWidth (MSIR.ValueType (rv));
-        BEGIN
-          IF lvBits > 0 AND rvBits > 0 AND lvBits # rvBits THEN
-            IF lvBits < rvBits
-              THEN lv := MSIR.BuildZExt (blk, "", lv, MSIR.ValueType (rv))
-              ELSE rv := MSIR.BuildZExt (blk, "", rv, MSIR.ValueType (lv))
-            END;
-          END;
-        END;
-      END;
+      (* Operands are ZType (machine width) — comparison/IN/boolean results are
+         now widened to i64 by their CompileMSIR wrappers, so a BOOLEAN operand
+         is i64 like a BOOLEAN variable; no reconciliation needed (nil-constant
+         retype above handles pointer/ref equality). *)
       CASE p.op OF
       | Op.EQ => pred := MSIR.CmpPred.Eq;
       | Op.NE => pred := MSIR.CmpPred.Ne;
       END;
       RETURN MSIR.BuildICmp (blk, "", pred, lv, rv);
     END;
-  END CompileMSIR;
+  END CompileMSIRRaw;
 
 BEGIN
 END EqualExpr.

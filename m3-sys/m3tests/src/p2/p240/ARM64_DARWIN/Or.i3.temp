@@ -1,0 +1,2 @@
+INTERFACE Or;
+END Or.

@@ -10,7 +10,7 @@ MODULE DivExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, TInt, Target;
 IMPORT TargetMap;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Tab BRANDED "DivExpr.P" OBJECT

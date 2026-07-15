@@ -1,0 +1,12 @@
+module Main
+
+proc Main__Main() -> void
+entry:
+  call B__Exported()
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__Main()
+  ret
+

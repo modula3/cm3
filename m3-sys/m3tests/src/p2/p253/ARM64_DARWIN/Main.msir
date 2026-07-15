@@ -1,0 +1,39 @@
+module Main
+
+proc Main__Main_M3_te6e69551_INIT(obj: ptr void) -> void
+  linkage internal
+entry:
+  %t1 = ptr.add obj, 8
+  store i64 2, %t1
+  ret
+
+proc Main__Main() -> void
+entry:
+  %a.slot = alloca gc_ref void
+  store nil, %a.slot
+  %t1 = load ptr void, @tl_obj_-1278203716
+  %t2 = call RTHooks__AllocateTracedObj(%t1) -> gc_ref @ROOT
+  %t3 = convert %t2 to gc_ref void
+  store %t3, %a.slot
+  %t4 = load gc_ref void, %a.slot
+  %t5 = load ptr void, @tl_obj_-1278203716
+  %t6 = ptr.add %t5, 120
+  %t7 = load i64, %t6
+  %t8 = iadd %t7, 0
+  %t9 = convert %t4 to ptr ptr void
+  %t10 = load ptr void, %t9
+  %t11 = gep.byte %t10, %t8
+  %t12 = load ptr void, %t11
+  call.indirect %t12(%t4)
+  %t13 = load gc_ref void, %a.slot
+  %t14 = convert %t13 to ptr ptr void
+  %t15 = load ptr void, %t14
+  %t16 = load ptr void, %t15
+  call.indirect %t16(%t13)
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__Main()
+  ret
+

@@ -1,0 +1,2 @@
+INTERFACE Shift;
+END Shift.

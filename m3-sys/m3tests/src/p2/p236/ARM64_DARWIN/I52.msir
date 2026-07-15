@@ -1,0 +1,6 @@
+module I52
+
+proc I52_I3() -> void
+entry:
+  ret
+

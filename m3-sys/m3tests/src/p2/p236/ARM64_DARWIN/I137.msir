@@ -1,0 +1,6 @@
+module I137
+
+proc I137_I3() -> void
+entry:
+  ret
+

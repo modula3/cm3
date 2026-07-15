@@ -1,0 +1,1768 @@
+module Main
+
+proc Main__CardinalLT0_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = icmp slt %t1, 0
+  ret %t2
+
+proc Main__CardinalGE0_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = icmp sge %t1, 0
+  ret %t2
+
+proc Main__CardinalLTNeg1_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 1
+  %t3 = icmp slt %t1, %t2
+  ret %t3
+
+proc Main__CardinalLENeg1_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 1
+  %t3 = icmp sle %t1, %t2
+  ret %t3
+
+proc Main__CardinalGTNeg1_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 1
+  %t3 = icmp sgt %t1, %t2
+  ret %t3
+
+proc Main__CardinalGENeg1_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 1
+  %t3 = icmp sge %t1, %t2
+  ret %t3
+
+proc Main__CardinalNENeg1_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 1
+  %t3 = icmp ne %t1, %t2
+  ret %t3
+
+proc Main__CardinalEQNeg1_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 1
+  %t3 = icmp eq %t1, %t2
+  ret %t3
+
+proc Main__CardinalLTNeg2_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 2
+  %t3 = icmp slt %t1, %t2
+  ret %t3
+
+proc Main__CardinalLENeg2_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 2
+  %t3 = icmp sle %t1, %t2
+  ret %t3
+
+proc Main__CardinalGTNeg2_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 2
+  %t3 = icmp sgt %t1, %t2
+  ret %t3
+
+proc Main__CardinalGENeg2_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 2
+  %t3 = icmp sge %t1, %t2
+  ret %t3
+
+proc Main__CardinalNENeg2_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 2
+  %t3 = icmp ne %t1, %t2
+  ret %t3
+
+proc Main__CardinalEQNeg2_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = isub 0, 2
+  %t3 = icmp eq %t1, %t2
+  ret %t3
+
+proc Main__LongcardLT0_false(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = icmp slt %t1, 0
+  ret %t2
+
+proc Main__LongcardGE0_true(a.a: word64) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  %t2 = icmp sge %t1, 0
+  ret %t2
+
+proc Main__no_overlap_less_LT_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_LE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_GT_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_GE_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_EQ_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp eq %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_NE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp ne %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_less_LE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_less_GT_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_LT_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_LE_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_GT_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_GE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_EQ_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp eq %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_NE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp ne %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_greater_LT_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_greater_GE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_enum_LT_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_enum_LE_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_enum_GT_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_enum_GE_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_enum_EQ_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp eq %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_less_enum_NE_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp ne %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_less_enum_LE_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_less_enum_GT_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_enum_LT_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_enum_LE_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_enum_GT_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_enum_GE_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_enum_EQ_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp eq %t3, %t4
+  ret %t5
+
+proc Main__no_overlap_greater_enum_NE_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp ne %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_greater_enum_LT_false(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__minimum_overlap_greater_enum_GE_true(a.a: enum LowNumber, a.b: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__overlap_1_LT_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp slt %t3, %t4
+  ret %t5
+
+proc Main__overlap_1_LE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sle %t3, %t4
+  ret %t5
+
+proc Main__overlap_1_GT_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sgt %t3, %t4
+  ret %t5
+
+proc Main__overlap_1_GE_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp sge %t3, %t4
+  ret %t5
+
+proc Main__overlap_1_EQ_true(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp eq %t3, %t4
+  ret %t5
+
+proc Main__overlap_1_NE_false(a.a: word8, a.b: word8) -> i1
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  %t2 = zext a.b to i64
+  store %t2, %b.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %a.slot
+  %t4 = load i64, %b.slot
+  %t5 = icmp ne %t3, %t4
+  ret %t5
+
+proc Main__ord_enum_vs_negative_LT_false(a.a: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = isub 0, 1
+  %t4 = icmp slt %t2, %t3
+  ret %t4
+
+proc Main__ord_enum_vs_negative_LE_false(a.a: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = isub 0, 1
+  %t4 = icmp sle %t2, %t3
+  ret %t4
+
+proc Main__ord_enum_vs_negative_GT_true(a.a: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = isub 0, 1
+  %t4 = icmp sgt %t2, %t3
+  ret %t4
+
+proc Main__ord_enum_vs_negative_GE_true(a.a: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = isub 0, 1
+  %t4 = icmp sge %t2, %t3
+  ret %t4
+
+proc Main__ord_enum_vs_negative_EQ_false(a.a: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = isub 0, 1
+  %t4 = icmp eq %t2, %t3
+  ret %t4
+
+proc Main__ord_enum_vs_negative_NE_true(a.a: enum LowNumber) -> i1
+entry:
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  %t1 = zext a.a to i64
+  store %t1, %a.slot
+  store i64 0, %_result.slot
+  %t2 = load i64, %a.slot
+  %t3 = isub 0, 1
+  %t4 = icmp ne %t2, %t3
+  ret %t4
+
+proc Main__abs_vs_negative_LT_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, 1
+  %t7 = icmp slt %t5, %t6
+  ret %t7
+
+proc Main__abs_vs_negative_LE_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, 1
+  %t7 = icmp sle %t5, %t6
+  ret %t7
+
+proc Main__abs_vs_negative_GT_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, 1
+  %t7 = icmp sgt %t5, %t6
+  ret %t7
+
+proc Main__abs_vs_negative_GE_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, 1
+  %t7 = icmp sge %t5, %t6
+  ret %t7
+
+proc Main__abs_vs_negative_EQ_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, 1
+  %t7 = icmp eq %t5, %t6
+  ret %t7
+
+proc Main__abs_vs_negative_NE_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, 1
+  %t7 = icmp ne %t5, %t6
+  ret %t7
+
+proc Main__abs_vs_zero_LT_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = icmp slt %t5, 0
+  ret %t6
+
+proc Main__abs_vs_zero_GE_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = icmp sge %t5, 0
+  ret %t6
+
+proc Main__neg_abs_vs_zero_LE_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp sle %t6, 0
+  ret %t7
+
+proc Main__neg_abs_vs_zero_GT_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp sgt %t6, 0
+  ret %t7
+
+proc Main__neg_abs_vs_one_LT_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp slt %t6, 1
+  ret %t7
+
+proc Main__neg_abs_vs_one_LE_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp sle %t6, 1
+  ret %t7
+
+proc Main__neg_abs_vs_one_GT_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp sgt %t6, 1
+  ret %t7
+
+proc Main__neg_abs_vs_one_GE_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp sge %t6, 1
+  ret %t7
+
+proc Main__neg_abs_vs_one_EQ_false(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp eq %t6, 1
+  ret %t7
+
+proc Main__neg_abs_vs_one_NE_true(a.a: i64) -> i1
+entry:
+  %t2 = alloca i64
+  %_result.slot = alloca i64
+  %a.slot = alloca i64
+  store a.a, %a.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %a.slot
+  store %t1, %t2
+  %t3 = icmp slt %t1, 0
+  cond_br %t3, abs.neg.1, abs.merge.2
+abs.neg.1:
+  %t4 = isub 0, %t1
+  store %t4, %t2
+  br abs.merge.2
+abs.merge.2:
+  %t5 = load i64, %t2
+  %t6 = isub 0, %t5
+  %t7 = icmp ne %t6, 1
+  ret %t7
+
+proc Main_M3() -> void
+entry:
+  %t1 = call Main__CardinalLT0_false(0) -> i1
+  %t2 = icmp eq %t1, 0
+  %t3 = icmp eq %t2, 0
+  cond_br %t3, check.fault.1, check.cont.2
+check.fault.1:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5376)
+  unreachable
+check.cont.2:
+  %t4 = call Main__CardinalGE0_true(0) -> i1
+  %t5 = icmp eq %t4, 0
+  cond_br %t5, check.fault.3, check.cont.4
+check.fault.3:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5408)
+  unreachable
+check.cont.4:
+  %t6 = call Main__CardinalLTNeg1_false(0) -> i1
+  %t7 = icmp eq %t6, 0
+  %t8 = icmp eq %t7, 0
+  cond_br %t8, check.fault.5, check.cont.6
+check.fault.5:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5440)
+  unreachable
+check.cont.6:
+  %t9 = call Main__CardinalLENeg1_false(0) -> i1
+  %t10 = icmp eq %t9, 0
+  %t11 = icmp eq %t10, 0
+  cond_br %t11, check.fault.7, check.cont.8
+check.fault.7:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5472)
+  unreachable
+check.cont.8:
+  %t12 = call Main__CardinalGTNeg1_true(0) -> i1
+  %t13 = icmp eq %t12, 0
+  cond_br %t13, check.fault.9, check.cont.10
+check.fault.9:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5504)
+  unreachable
+check.cont.10:
+  %t14 = call Main__CardinalGENeg1_true(0) -> i1
+  %t15 = icmp eq %t14, 0
+  cond_br %t15, check.fault.11, check.cont.12
+check.fault.11:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5536)
+  unreachable
+check.cont.12:
+  %t16 = call Main__CardinalNENeg1_true(0) -> i1
+  %t17 = icmp eq %t16, 0
+  cond_br %t17, check.fault.13, check.cont.14
+check.fault.13:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5568)
+  unreachable
+check.cont.14:
+  %t18 = call Main__CardinalEQNeg1_false(0) -> i1
+  %t19 = icmp eq %t18, 0
+  %t20 = icmp eq %t19, 0
+  cond_br %t20, check.fault.15, check.cont.16
+check.fault.15:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5600)
+  unreachable
+check.cont.16:
+  %t21 = call Main__CardinalLTNeg2_false(0) -> i1
+  %t22 = icmp eq %t21, 0
+  %t23 = icmp eq %t22, 0
+  cond_br %t23, check.fault.17, check.cont.18
+check.fault.17:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5632)
+  unreachable
+check.cont.18:
+  %t24 = call Main__CardinalLENeg2_false(0) -> i1
+  %t25 = icmp eq %t24, 0
+  %t26 = icmp eq %t25, 0
+  cond_br %t26, check.fault.19, check.cont.20
+check.fault.19:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5664)
+  unreachable
+check.cont.20:
+  %t27 = call Main__CardinalGTNeg2_true(0) -> i1
+  %t28 = icmp eq %t27, 0
+  cond_br %t28, check.fault.21, check.cont.22
+check.fault.21:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5696)
+  unreachable
+check.cont.22:
+  %t29 = call Main__CardinalGENeg2_true(0) -> i1
+  %t30 = icmp eq %t29, 0
+  cond_br %t30, check.fault.23, check.cont.24
+check.fault.23:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5728)
+  unreachable
+check.cont.24:
+  %t31 = call Main__CardinalNENeg2_true(0) -> i1
+  %t32 = icmp eq %t31, 0
+  cond_br %t32, check.fault.25, check.cont.26
+check.fault.25:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5760)
+  unreachable
+check.cont.26:
+  %t33 = call Main__CardinalEQNeg2_false(0) -> i1
+  %t34 = icmp eq %t33, 0
+  %t35 = icmp eq %t34, 0
+  cond_br %t35, check.fault.27, check.cont.28
+check.fault.27:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5792)
+  unreachable
+check.cont.28:
+  %t36 = call Main__LongcardLT0_false(0) -> i1
+  %t37 = icmp eq %t36, 0
+  %t38 = icmp eq %t37, 0
+  cond_br %t38, check.fault.29, check.cont.30
+check.fault.29:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5824)
+  unreachable
+check.cont.30:
+  %t39 = call Main__LongcardGE0_true(0) -> i1
+  %t40 = icmp eq %t39, 0
+  cond_br %t40, check.fault.31, check.cont.32
+check.fault.31:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5856)
+  unreachable
+check.cont.32:
+  %t41 = trunc 0 to word8
+  %t42 = trunc 2 to word8
+  %t43 = call Main__no_overlap_less_LT_true(%t41, %t42) -> i1
+  %t44 = icmp eq %t43, 0
+  cond_br %t44, check.fault.33, check.cont.34
+check.fault.33:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5888)
+  unreachable
+check.cont.34:
+  %t45 = trunc 0 to word8
+  %t46 = trunc 2 to word8
+  %t47 = call Main__no_overlap_less_LE_true(%t45, %t46) -> i1
+  %t48 = icmp eq %t47, 0
+  cond_br %t48, check.fault.35, check.cont.36
+check.fault.35:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5920)
+  unreachable
+check.cont.36:
+  %t49 = trunc 0 to word8
+  %t50 = trunc 2 to word8
+  %t51 = call Main__no_overlap_less_GT_false(%t49, %t50) -> i1
+  %t52 = icmp eq %t51, 0
+  %t53 = icmp eq %t52, 0
+  cond_br %t53, check.fault.37, check.cont.38
+check.fault.37:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5952)
+  unreachable
+check.cont.38:
+  %t54 = trunc 0 to word8
+  %t55 = trunc 2 to word8
+  %t56 = call Main__no_overlap_less_GE_false(%t54, %t55) -> i1
+  %t57 = icmp eq %t56, 0
+  %t58 = icmp eq %t57, 0
+  cond_br %t58, check.fault.39, check.cont.40
+check.fault.39:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5984)
+  unreachable
+check.cont.40:
+  %t59 = trunc 0 to word8
+  %t60 = trunc 2 to word8
+  %t61 = call Main__no_overlap_less_EQ_false(%t59, %t60) -> i1
+  %t62 = icmp eq %t61, 0
+  %t63 = icmp eq %t62, 0
+  cond_br %t63, check.fault.41, check.cont.42
+check.fault.41:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6016)
+  unreachable
+check.cont.42:
+  %t64 = trunc 0 to word8
+  %t65 = trunc 2 to word8
+  %t66 = call Main__no_overlap_less_NE_true(%t64, %t65) -> i1
+  %t67 = icmp eq %t66, 0
+  cond_br %t67, check.fault.43, check.cont.44
+check.fault.43:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6048)
+  unreachable
+check.cont.44:
+  %t68 = trunc 0 to word8
+  %t69 = trunc 1 to word8
+  %t70 = call Main__minimum_overlap_less_LE_true(%t68, %t69) -> i1
+  %t71 = icmp eq %t70, 0
+  cond_br %t71, check.fault.45, check.cont.46
+check.fault.45:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6080)
+  unreachable
+check.cont.46:
+  %t72 = trunc 0 to word8
+  %t73 = trunc 1 to word8
+  %t74 = call Main__minimum_overlap_less_GT_false(%t72, %t73) -> i1
+  %t75 = icmp eq %t74, 0
+  %t76 = icmp eq %t75, 0
+  cond_br %t76, check.fault.47, check.cont.48
+check.fault.47:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6112)
+  unreachable
+check.cont.48:
+  %t77 = trunc 2 to word8
+  %t78 = trunc 0 to word8
+  %t79 = call Main__no_overlap_greater_LT_false(%t77, %t78) -> i1
+  %t80 = icmp eq %t79, 0
+  %t81 = icmp eq %t80, 0
+  cond_br %t81, check.fault.49, check.cont.50
+check.fault.49:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6144)
+  unreachable
+check.cont.50:
+  %t82 = trunc 2 to word8
+  %t83 = trunc 0 to word8
+  %t84 = call Main__no_overlap_greater_LE_false(%t82, %t83) -> i1
+  %t85 = icmp eq %t84, 0
+  %t86 = icmp eq %t85, 0
+  cond_br %t86, check.fault.51, check.cont.52
+check.fault.51:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6176)
+  unreachable
+check.cont.52:
+  %t87 = trunc 2 to word8
+  %t88 = trunc 0 to word8
+  %t89 = call Main__no_overlap_greater_GT_true(%t87, %t88) -> i1
+  %t90 = icmp eq %t89, 0
+  cond_br %t90, check.fault.53, check.cont.54
+check.fault.53:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6208)
+  unreachable
+check.cont.54:
+  %t91 = trunc 2 to word8
+  %t92 = trunc 0 to word8
+  %t93 = call Main__no_overlap_greater_GE_true(%t91, %t92) -> i1
+  %t94 = icmp eq %t93, 0
+  cond_br %t94, check.fault.55, check.cont.56
+check.fault.55:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6240)
+  unreachable
+check.cont.56:
+  %t95 = trunc 2 to word8
+  %t96 = trunc 0 to word8
+  %t97 = call Main__no_overlap_greater_EQ_false(%t95, %t96) -> i1
+  %t98 = icmp eq %t97, 0
+  %t99 = icmp eq %t98, 0
+  cond_br %t99, check.fault.57, check.cont.58
+check.fault.57:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6272)
+  unreachable
+check.cont.58:
+  %t100 = trunc 2 to word8
+  %t101 = trunc 0 to word8
+  %t102 = call Main__no_overlap_greater_NE_true(%t100, %t101) -> i1
+  %t103 = icmp eq %t102, 0
+  cond_br %t103, check.fault.59, check.cont.60
+check.fault.59:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6304)
+  unreachable
+check.cont.60:
+  %t104 = trunc 1 to word8
+  %t105 = trunc 0 to word8
+  %t106 = call Main__minimum_overlap_greater_LT_false(%t104, %t105) -> i1
+  %t107 = icmp eq %t106, 0
+  %t108 = icmp eq %t107, 0
+  cond_br %t108, check.fault.61, check.cont.62
+check.fault.61:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6336)
+  unreachable
+check.cont.62:
+  %t109 = trunc 1 to word8
+  %t110 = trunc 0 to word8
+  %t111 = call Main__minimum_overlap_greater_GE_true(%t109, %t110) -> i1
+  %t112 = icmp eq %t111, 0
+  cond_br %t112, check.fault.63, check.cont.64
+check.fault.63:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6368)
+  unreachable
+check.cont.64:
+  %t113 = call Main__no_overlap_less_enum_LT_true(0, 4) -> i1
+  %t114 = icmp eq %t113, 0
+  cond_br %t114, check.fault.65, check.cont.66
+check.fault.65:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6400)
+  unreachable
+check.cont.66:
+  %t115 = call Main__no_overlap_less_enum_LE_true(0, 4) -> i1
+  %t116 = icmp eq %t115, 0
+  cond_br %t116, check.fault.67, check.cont.68
+check.fault.67:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6432)
+  unreachable
+check.cont.68:
+  %t117 = call Main__no_overlap_less_enum_GT_false(0, 4) -> i1
+  %t118 = icmp eq %t117, 0
+  %t119 = icmp eq %t118, 0
+  cond_br %t119, check.fault.69, check.cont.70
+check.fault.69:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6464)
+  unreachable
+check.cont.70:
+  %t120 = call Main__no_overlap_less_enum_GE_false(0, 4) -> i1
+  %t121 = icmp eq %t120, 0
+  %t122 = icmp eq %t121, 0
+  cond_br %t122, check.fault.71, check.cont.72
+check.fault.71:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6496)
+  unreachable
+check.cont.72:
+  %t123 = call Main__no_overlap_less_enum_EQ_false(0, 4) -> i1
+  %t124 = icmp eq %t123, 0
+  %t125 = icmp eq %t124, 0
+  cond_br %t125, check.fault.73, check.cont.74
+check.fault.73:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6528)
+  unreachable
+check.cont.74:
+  %t126 = call Main__no_overlap_less_enum_NE_true(0, 4) -> i1
+  %t127 = icmp eq %t126, 0
+  cond_br %t127, check.fault.75, check.cont.76
+check.fault.75:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6560)
+  unreachable
+check.cont.76:
+  %t128 = call Main__minimum_overlap_less_enum_LE_true(0, 1) -> i1
+  %t129 = icmp eq %t128, 0
+  cond_br %t129, check.fault.77, check.cont.78
+check.fault.77:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6592)
+  unreachable
+check.cont.78:
+  %t130 = call Main__minimum_overlap_less_enum_GT_false(0, 1) -> i1
+  %t131 = icmp eq %t130, 0
+  %t132 = icmp eq %t131, 0
+  cond_br %t132, check.fault.79, check.cont.80
+check.fault.79:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6624)
+  unreachable
+check.cont.80:
+  %t133 = call Main__no_overlap_greater_enum_LT_false(4, 0) -> i1
+  %t134 = icmp eq %t133, 0
+  %t135 = icmp eq %t134, 0
+  cond_br %t135, check.fault.81, check.cont.82
+check.fault.81:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6656)
+  unreachable
+check.cont.82:
+  %t136 = call Main__no_overlap_greater_enum_LE_false(4, 0) -> i1
+  %t137 = icmp eq %t136, 0
+  %t138 = icmp eq %t137, 0
+  cond_br %t138, check.fault.83, check.cont.84
+check.fault.83:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6688)
+  unreachable
+check.cont.84:
+  %t139 = call Main__no_overlap_greater_enum_GT_true(4, 0) -> i1
+  %t140 = icmp eq %t139, 0
+  cond_br %t140, check.fault.85, check.cont.86
+check.fault.85:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6720)
+  unreachable
+check.cont.86:
+  %t141 = call Main__no_overlap_greater_enum_GE_true(4, 0) -> i1
+  %t142 = icmp eq %t141, 0
+  cond_br %t142, check.fault.87, check.cont.88
+check.fault.87:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6752)
+  unreachable
+check.cont.88:
+  %t143 = call Main__no_overlap_greater_enum_EQ_false(4, 0) -> i1
+  %t144 = icmp eq %t143, 0
+  %t145 = icmp eq %t144, 0
+  cond_br %t145, check.fault.89, check.cont.90
+check.fault.89:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6784)
+  unreachable
+check.cont.90:
+  %t146 = call Main__no_overlap_greater_enum_NE_true(4, 0) -> i1
+  %t147 = icmp eq %t146, 0
+  cond_br %t147, check.fault.91, check.cont.92
+check.fault.91:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6816)
+  unreachable
+check.cont.92:
+  %t148 = call Main__minimum_overlap_greater_enum_LT_false(1, 0) -> i1
+  %t149 = icmp eq %t148, 0
+  %t150 = icmp eq %t149, 0
+  cond_br %t150, check.fault.93, check.cont.94
+check.fault.93:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6848)
+  unreachable
+check.cont.94:
+  %t151 = call Main__minimum_overlap_greater_enum_GE_true(1, 0) -> i1
+  %t152 = icmp eq %t151, 0
+  cond_br %t152, check.fault.95, check.cont.96
+check.fault.95:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6880)
+  unreachable
+check.cont.96:
+  %t153 = trunc 0 to word8
+  %t154 = trunc 0 to word8
+  %t155 = call Main__overlap_1_LT_false(%t153, %t154) -> i1
+  %t156 = icmp eq %t155, 0
+  %t157 = icmp eq %t156, 0
+  cond_br %t157, check.fault.97, check.cont.98
+check.fault.97:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6912)
+  unreachable
+check.cont.98:
+  %t158 = trunc 0 to word8
+  %t159 = trunc 0 to word8
+  %t160 = call Main__overlap_1_LE_true(%t158, %t159) -> i1
+  %t161 = icmp eq %t160, 0
+  cond_br %t161, check.fault.99, check.cont.100
+check.fault.99:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6944)
+  unreachable
+check.cont.100:
+  %t162 = trunc 0 to word8
+  %t163 = trunc 0 to word8
+  %t164 = call Main__overlap_1_GT_false(%t162, %t163) -> i1
+  %t165 = icmp eq %t164, 0
+  %t166 = icmp eq %t165, 0
+  cond_br %t166, check.fault.101, check.cont.102
+check.fault.101:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6976)
+  unreachable
+check.cont.102:
+  %t167 = trunc 0 to word8
+  %t168 = trunc 0 to word8
+  %t169 = call Main__overlap_1_GE_true(%t167, %t168) -> i1
+  %t170 = icmp eq %t169, 0
+  cond_br %t170, check.fault.103, check.cont.104
+check.fault.103:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7008)
+  unreachable
+check.cont.104:
+  %t171 = trunc 0 to word8
+  %t172 = trunc 0 to word8
+  %t173 = call Main__overlap_1_EQ_true(%t171, %t172) -> i1
+  %t174 = icmp eq %t173, 0
+  cond_br %t174, check.fault.105, check.cont.106
+check.fault.105:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7040)
+  unreachable
+check.cont.106:
+  %t175 = trunc 0 to word8
+  %t176 = trunc 0 to word8
+  %t177 = call Main__overlap_1_NE_false(%t175, %t176) -> i1
+  %t178 = icmp eq %t177, 0
+  %t179 = icmp eq %t178, 0
+  cond_br %t179, check.fault.107, check.cont.108
+check.fault.107:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7072)
+  unreachable
+check.cont.108:
+  %t180 = call Main__ord_enum_vs_negative_LT_false(0) -> i1
+  %t181 = icmp eq %t180, 0
+  %t182 = icmp eq %t181, 0
+  cond_br %t182, check.fault.109, check.cont.110
+check.fault.109:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7104)
+  unreachable
+check.cont.110:
+  %t183 = call Main__ord_enum_vs_negative_LE_false(0) -> i1
+  %t184 = icmp eq %t183, 0
+  %t185 = icmp eq %t184, 0
+  cond_br %t185, check.fault.111, check.cont.112
+check.fault.111:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7136)
+  unreachable
+check.cont.112:
+  %t186 = call Main__ord_enum_vs_negative_GT_true(0) -> i1
+  %t187 = icmp eq %t186, 0
+  cond_br %t187, check.fault.113, check.cont.114
+check.fault.113:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7168)
+  unreachable
+check.cont.114:
+  %t188 = call Main__ord_enum_vs_negative_GE_true(0) -> i1
+  %t189 = icmp eq %t188, 0
+  cond_br %t189, check.fault.115, check.cont.116
+check.fault.115:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7200)
+  unreachable
+check.cont.116:
+  %t190 = call Main__ord_enum_vs_negative_EQ_false(0) -> i1
+  %t191 = icmp eq %t190, 0
+  %t192 = icmp eq %t191, 0
+  cond_br %t192, check.fault.117, check.cont.118
+check.fault.117:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7232)
+  unreachable
+check.cont.118:
+  %t193 = call Main__ord_enum_vs_negative_NE_true(0) -> i1
+  %t194 = icmp eq %t193, 0
+  cond_br %t194, check.fault.119, check.cont.120
+check.fault.119:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7264)
+  unreachable
+check.cont.120:
+  %t195 = call Main__abs_vs_negative_LT_false(0) -> i1
+  %t196 = icmp eq %t195, 0
+  %t197 = icmp eq %t196, 0
+  cond_br %t197, check.fault.121, check.cont.122
+check.fault.121:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7296)
+  unreachable
+check.cont.122:
+  %t198 = call Main__abs_vs_negative_LE_false(0) -> i1
+  %t199 = icmp eq %t198, 0
+  %t200 = icmp eq %t199, 0
+  cond_br %t200, check.fault.123, check.cont.124
+check.fault.123:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7328)
+  unreachable
+check.cont.124:
+  %t201 = call Main__abs_vs_negative_GT_true(0) -> i1
+  %t202 = icmp eq %t201, 0
+  cond_br %t202, check.fault.125, check.cont.126
+check.fault.125:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7360)
+  unreachable
+check.cont.126:
+  %t203 = call Main__abs_vs_negative_GE_true(0) -> i1
+  %t204 = icmp eq %t203, 0
+  cond_br %t204, check.fault.127, check.cont.128
+check.fault.127:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7392)
+  unreachable
+check.cont.128:
+  %t205 = call Main__abs_vs_negative_EQ_false(0) -> i1
+  %t206 = icmp eq %t205, 0
+  %t207 = icmp eq %t206, 0
+  cond_br %t207, check.fault.129, check.cont.130
+check.fault.129:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7424)
+  unreachable
+check.cont.130:
+  %t208 = call Main__abs_vs_negative_NE_true(0) -> i1
+  %t209 = icmp eq %t208, 0
+  cond_br %t209, check.fault.131, check.cont.132
+check.fault.131:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7456)
+  unreachable
+check.cont.132:
+  %t210 = call Main__abs_vs_zero_LT_false(0) -> i1
+  %t211 = icmp eq %t210, 0
+  %t212 = icmp eq %t211, 0
+  cond_br %t212, check.fault.133, check.cont.134
+check.fault.133:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7488)
+  unreachable
+check.cont.134:
+  %t213 = call Main__abs_vs_zero_GE_true(0) -> i1
+  %t214 = icmp eq %t213, 0
+  cond_br %t214, check.fault.135, check.cont.136
+check.fault.135:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7520)
+  unreachable
+check.cont.136:
+  %t215 = call Main__neg_abs_vs_zero_LE_true(0) -> i1
+  %t216 = icmp eq %t215, 0
+  cond_br %t216, check.fault.137, check.cont.138
+check.fault.137:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7552)
+  unreachable
+check.cont.138:
+  %t217 = call Main__neg_abs_vs_zero_GT_false(0) -> i1
+  %t218 = icmp eq %t217, 0
+  %t219 = icmp eq %t218, 0
+  cond_br %t219, check.fault.139, check.cont.140
+check.fault.139:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7584)
+  unreachable
+check.cont.140:
+  %t220 = call Main__neg_abs_vs_one_LT_true(0) -> i1
+  %t221 = icmp eq %t220, 0
+  cond_br %t221, check.fault.141, check.cont.142
+check.fault.141:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7616)
+  unreachable
+check.cont.142:
+  %t222 = call Main__neg_abs_vs_one_LE_true(0) -> i1
+  %t223 = icmp eq %t222, 0
+  cond_br %t223, check.fault.143, check.cont.144
+check.fault.143:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7648)
+  unreachable
+check.cont.144:
+  %t224 = call Main__neg_abs_vs_one_GT_false(0) -> i1
+  %t225 = icmp eq %t224, 0
+  %t226 = icmp eq %t225, 0
+  cond_br %t226, check.fault.145, check.cont.146
+check.fault.145:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7680)
+  unreachable
+check.cont.146:
+  %t227 = call Main__neg_abs_vs_one_GE_false(0) -> i1
+  %t228 = icmp eq %t227, 0
+  %t229 = icmp eq %t228, 0
+  cond_br %t229, check.fault.147, check.cont.148
+check.fault.147:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7712)
+  unreachable
+check.cont.148:
+  %t230 = call Main__neg_abs_vs_one_EQ_false(0) -> i1
+  %t231 = icmp eq %t230, 0
+  %t232 = icmp eq %t231, 0
+  cond_br %t232, check.fault.149, check.cont.150
+check.fault.149:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7744)
+  unreachable
+check.cont.150:
+  %t233 = call Main__neg_abs_vs_one_NE_true(0) -> i1
+  %t234 = icmp eq %t233, 0
+  cond_br %t234, check.fault.151, check.cont.152
+check.fault.151:
+  call RTHooks__ReportFault(@Main_M3_info+0, 7776)
+  unreachable
+check.cont.152:
+  ret
+

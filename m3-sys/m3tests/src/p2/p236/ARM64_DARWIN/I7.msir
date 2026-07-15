@@ -1,0 +1,6 @@
+module I7
+
+proc I7_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,6 @@
+module I25
+
+proc I25_I3() -> void
+entry:
+  ret
+

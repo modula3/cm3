@@ -1,0 +1,208 @@
+M3 v4.2
+N0 Main
+
+M0 1 2 0 0 0 0 8 0 0 15 0 0
+A0
+N1 HighlightVBT
+B1
+N2 RTHooks
+B2
+N3 AllocateTracedObj
+V0 2 3 04c256affc2e8451
+i0
+N4 ReportFault
+V1 2 4 e0ad157f9f695006
+i1
+N5 HighlightVBT_var_a
+V2 1 5 043c2b932d5c975e
+i2
+N6 HighlightVBT_var_b
+V3 1 6 86c42b6fecb08d41
+i3
+N7 HighlightVBT_T
+V4 1 7 0faca86602eb0dd0
+i4
+N8 CheckLoadTracedRef
+V5 2 8 33cac043de87135c
+i5
+N9 CheckStoreTraced
+V6 2 9 8ffa5ad840254ad5
+i6
+N10 ScanTypecase
+V7 2 10 6c0355050f2d5a7c
+i7
+t7b78c34f
+tf81917df
+t58c1d1d1
+te99b66b4
+tfcd63cae
+t5ccffb05
+t8a2831d7
+t4f238aae
+t4a3373b8
+t67a7b112
+t2ca4581d
+tddb62bb7
+ta4bb9882
+t37e50548
+t9b134ca4
+Qf81917df 341f663f
+
+M1 1 3 0 0 1 0 13 0 0 23 0 0
+A1
+N11 VBT
+B11
+B2
+B1
+D1
+i4
+N12 AllocateOpenArray
+V8 2 12 969bbff1aa993659
+i8
+N13 VBT_T
+V9 11 13 719571e807603397
+i9
+N14 SmallSet
+V10 11 14 e5719066ffe2ac06
+i10
+N15 BigSet
+V11 11 15 bd5c5bbc4aa5430f
+i11
+N16 FixedArray
+V12 11 16 cd2e3be4866426e2
+i12
+N17 OpenArray
+V13 11 17 48e64ee7e3b1820d
+i13
+N18 Pixmap_T
+V14 11 18 ff093c76a2cc8e05
+i14
+N19 PaintOp_T
+V15 11 19 246b89b62c795115
+i15
+N20 Point_T
+V16 11 20 7b4fc50e042a76c4
+i16
+i5
+i6
+i7
+tfcd63cae
+tc87182a6
+t5ccffb05
+t7f433ff9
+te99b66b4
+t0b0595be
+t8a2831d7
+t4f238aae
+tb628f43c
+tf400f3db
+t217fba22
+t4a3373b8
+t67a7b112
+t4797dfdb
+t2ca4581d
+tddb62bb7
+ted1cf615
+t87ece3f8
+t341f663f
+tf81917df
+t983b02e7
+t37e50548
+t9b134ca4
+Qf81917df 341f663f
+O2a7f2412 341f663f 0 8 0
+Of81917df 341f663f 0 8 0
+R1 f81917df 2a7f2412
+
+I1 1 2 0 0 0 0 4 3 0 21 1 0
+A1
+B11
+B2
+i9
+i5
+i6
+i7
+E4
+E2
+E3
+tfcd63cae
+tc87182a6
+t5ccffb05
+t7f433ff9
+te99b66b4
+t0b0595be
+t8a2831d7
+t4f238aae
+tb628f43c
+tf400f3db
+t217fba22
+t4a3373b8
+t67a7b112
+t4797dfdb
+t2ca4581d
+tddb62bb7
+ted1cf615
+t87ece3f8
+t341f663f
+t37e50548
+t9b134ca4
+Tf81917df
+Qf81917df 341f663f
+
+I11 1 1 0 0 0 0 3 15 0 4 17 0
+A11
+B2
+i5
+i6
+i7
+E9
+E10
+N21 SmallSet0
+V17 11 21 6376ad817c00491f
+E17
+E11
+N22 BigSet0
+V18 11 22 9b5af72a31a84b24
+E18
+E12
+N23 FixedArray0
+V19 11 23 efebb19a0e92da8d
+E19
+E13
+N24 OpenArray0
+V20 11 24 77ffaa17b3a31951
+E20
+E14
+N25 Pixmap_Gray
+V21 11 25 cf67103622e99760
+E21
+E15
+N26 PaintOp_Swap
+V22 11 26 0c3e97f9cd0338f3
+E22
+N27 PaintOp_TransparentSwap
+V23 11 27 57867ce94b8e7a12
+E23
+E16
+tf400f3db
+t217fba22
+t37e50548
+t9b134ca4
+Tfcd63cae
+Tc87182a6
+T5ccffb05
+T7f433ff9
+Te99b66b4
+T0b0595be
+T8a2831d7
+T4f238aae
+Tb628f43c
+T4a3373b8
+T67a7b112
+T4797dfdb
+T2ca4581d
+Tddb62bb7
+Ted1cf615
+T87ece3f8
+T341f663f
+O341f663f 9d8fb489 0 8 64

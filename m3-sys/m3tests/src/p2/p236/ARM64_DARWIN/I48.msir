@@ -1,0 +1,6 @@
+module I48
+
+proc I48_I3() -> void
+entry:
+  ret
+

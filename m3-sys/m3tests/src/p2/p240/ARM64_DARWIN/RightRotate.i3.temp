@@ -1,0 +1,2 @@
+INTERFACE RightRotate;
+END RightRotate.

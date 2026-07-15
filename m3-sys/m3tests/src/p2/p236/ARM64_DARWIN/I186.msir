@@ -1,0 +1,6 @@
+module I186
+
+proc I186_I3() -> void
+entry:
+  ret
+

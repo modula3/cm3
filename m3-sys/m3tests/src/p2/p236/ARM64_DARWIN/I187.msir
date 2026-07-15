@@ -1,0 +1,6 @@
+module I187
+
+proc I187_I3() -> void
+entry:
+  ret
+

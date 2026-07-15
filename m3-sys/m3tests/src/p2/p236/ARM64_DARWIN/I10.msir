@@ -1,0 +1,6 @@
+module I10
+
+proc I10_I3() -> void
+entry:
+  ret
+

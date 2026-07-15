@@ -1,0 +1,6 @@
+module I138
+
+proc I138_I3() -> void
+entry:
+  ret
+

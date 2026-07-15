@@ -1,0 +1,6 @@
+module I141
+
+proc I141_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,2 @@
+INTERFACE Times;
+END Times.

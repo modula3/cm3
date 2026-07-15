@@ -1,0 +1,83 @@
+module Main
+
+proc Main__F3() -> void
+entry:
+  %t1 = call RTHooks__AllocateTracedRef(@tc_ref_-1729626106) -> gc_ref void
+  %t2 = convert %t1 to gc_ref void
+  %t3 = ptr.add %t2, 0
+  store nil, %t3
+  %t4 = call F0__F1(%t2) -> word8
+  %t5 = call RTHooks__AllocateTracedRef(@tc_ref_-2066005942) -> gc_ref void
+  %t6 = convert %t5 to gc_ref void
+  %t7 = ptr.add %t6, 0
+  store nil, %t7
+  %t8 = call F1__F1(%t6) -> word8
+  %t9 = call RTHooks__AllocateTracedRef(@tc_ref_-2076233071) -> gc_ref void
+  %t10 = convert %t9 to gc_ref void
+  %t11 = ptr.add %t10, 0
+  store nil, %t11
+  %t12 = call F2__F1(%t10) -> word8
+  %t13 = call RTHooks__AllocateTracedRef(@tc_ref_1608408759) -> gc_ref void
+  %t14 = convert %t13 to gc_ref void
+  %t15 = ptr.add %t14, 0
+  store nil, %t15
+  %t16 = call F4094__F1(%t14) -> word8
+  %t17 = call RTHooks__AllocateTracedRef(@tc_ref_1139613435) -> gc_ref void
+  %t18 = convert %t17 to gc_ref void
+  %t19 = ptr.add %t18, 0
+  store nil, %t19
+  %t20 = call F4095__F1(%t18) -> word8
+  %t21 = call RTHooks__AllocateTracedRef(@tc_ref_1124690976) -> gc_ref void
+  %t22 = convert %t21 to gc_ref void
+  %t23 = ptr.add %t22, 0
+  store nil, %t23
+  %t24 = call F4096__F1(%t22) -> word8
+  %t25 = call RTHooks__AllocateTracedRef(@tc_ref_1597647980) -> gc_ref void
+  %t26 = convert %t25 to gc_ref void
+  %t27 = ptr.add %t26, 0
+  store nil, %t27
+  %t28 = call F4097__F1(%t26) -> word8
+  %t29 = call RTHooks__AllocateTracedRef(@tc_ref_-2098750297) -> gc_ref void
+  %t30 = convert %t29 to gc_ref void
+  %t31 = ptr.add %t30, 0
+  store nil, %t31
+  %t32 = call F4096x8m2__F1(%t30) -> word8
+  %t33 = call RTHooks__AllocateTracedRef(@tc_ref_-1630216981) -> gc_ref void
+  %t34 = convert %t33 to gc_ref void
+  %t35 = ptr.add %t34, 0
+  store nil, %t35
+  %t36 = call F4096x8m1__F1(%t34) -> word8
+  %t37 = call RTHooks__AllocateTracedRef(@tc_ref_-470639269) -> gc_ref void
+  %t38 = convert %t37 to gc_ref void
+  %t39 = ptr.add %t38, 0
+  store nil, %t39
+  %t40 = call F4096x8__F1(%t38) -> word8
+  %t41 = call RTHooks__AllocateTracedRef(@tc_ref_-4072169) -> gc_ref void
+  %t42 = convert %t41 to gc_ref void
+  %t43 = ptr.add %t42, 0
+  store nil, %t43
+  %t44 = call F4096x8p1__F1(%t42) -> word8
+  %t45 = call RTHooks__AllocateTracedRef(@tc_ref_-491926834) -> gc_ref void
+  %t46 = convert %t45 to gc_ref void
+  %t47 = ptr.add %t46, 0
+  store nil, %t47
+  %t48 = call F4096x8p2__F1(%t46) -> word8
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__F3()
+  %t1 = call RTParams__IsPresent("checked") -> i1
+  cond_br %t1, if.then.1, if.merge.2
+if.then.1:
+  %t2 = call F4096x8p2__F1(nil) -> word8
+  br if.merge.2
+if.merge.2:
+  %t3 = call RTParams__IsPresent("unchecked") -> i1
+  cond_br %t3, if.then.3, if.merge.4
+if.then.3:
+  %t4 = call F0__F1(nil) -> word8
+  br if.merge.4
+if.merge.4:
+  ret
+

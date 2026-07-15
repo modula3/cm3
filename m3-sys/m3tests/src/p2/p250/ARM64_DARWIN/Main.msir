@@ -1,0 +1,29 @@
+module Main
+
+proc Main__F1(a.x: i64) -> void
+entry:
+  %x.slot = alloca i64
+  store a.x, %x.slot
+  ret
+
+proc Main__F2() -> void
+entry:
+  %x.slot = alloca i64
+  store i64 0, %x.slot
+  ret
+
+proc Main__F3() -> void
+entry:
+  %x.slot = alloca i64
+  store i64 0, %x.slot
+  %t1 = load i64, %x.slot
+  call Main__F1(%t1)
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__F1(0)
+  call Main__F2()
+  call Main__F3()
+  ret
+

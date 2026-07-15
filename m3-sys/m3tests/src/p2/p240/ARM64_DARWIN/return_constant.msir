@@ -1,0 +1,121 @@
+module return_constant
+
+global return_constant__vi8 : i8
+global return_constant__vu64 : i64
+global return_constant__vf64 : f64
+global return_constant__vi32 : i32
+global return_constant__vLC : word64
+global return_constant__vu16 : word16
+global return_constant__vI : i64
+global return_constant__vi64 : i64
+global return_constant__vf32 : f32
+global return_constant__vi16 : i16
+global return_constant__vC : word64
+global return_constant__vu32 : word32
+global return_constant__vu8 : word8
+global return_constant__vL : i64
+global return_constant__offset : word64
+global return_constant__count : word64
+
+proc return_constant__ret_ki8() -> i8
+entry:
+  %_result.slot = alloca i64
+  %t1 = trunc 1 to i8
+  ret %t1
+
+proc return_constant__ret_ku64() -> i64
+entry:
+  %_result.slot = alloca i64
+  ret 2
+
+proc return_constant__ret_kf64() -> f64
+entry:
+  %_result.slot = alloca f64
+  ret 3.39999999999999991D0
+
+proc return_constant__ret_ki32() -> i32
+entry:
+  %_result.slot = alloca i64
+  %t1 = trunc 5 to i32
+  ret %t1
+
+proc return_constant__ret_kLC() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 6
+
+proc return_constant__ret_ku16() -> word16
+entry:
+  %_result.slot = alloca i64
+  %t1 = trunc 7 to word16
+  ret %t1
+
+proc return_constant__ret_kI() -> i64
+entry:
+  %_result.slot = alloca i64
+  ret 8
+
+proc return_constant__ret_ki64() -> i64
+entry:
+  %_result.slot = alloca i64
+  ret 9
+
+proc return_constant__ret_kf32() -> f32
+entry:
+  %_result.slot = alloca f32
+  ret 1.0109999656677E1
+
+proc return_constant__ret_ki16() -> i16
+entry:
+  %_result.slot = alloca i64
+  %t1 = trunc 12 to i16
+  ret %t1
+
+proc return_constant__ret_kC() -> word64
+entry:
+  %_result.slot = alloca i64
+  store i64 0, %_result.slot
+  ret 13
+
+proc return_constant__ret_ku32() -> word32
+entry:
+  %_result.slot = alloca i64
+  %t1 = trunc 14 to word32
+  ret %t1
+
+proc return_constant__ret_ku8() -> word8
+entry:
+  %_result.slot = alloca i64
+  %t1 = trunc 15 to word8
+  ret %t1
+
+proc return_constant__ret_kL() -> i64
+entry:
+  %_result.slot = alloca i64
+  ret 16
+
+proc return_constant_M3() -> void
+entry:
+  %t1 = trunc 17 to i8
+  store %t1, @return_constant_M3_info+104
+  store i64 18, @return_constant_M3_info+112
+  store f64 1.91999999999999993D1, @return_constant_M3_info+120
+  %t2 = trunc 21 to i32
+  store %t2, @return_constant_M3_info+128
+  store i64 22, @return_constant_M3_info+136
+  %t3 = trunc 23 to word16
+  store %t3, @return_constant_M3_info+144
+  store i64 24, @return_constant_M3_info+152
+  store i64 25, @return_constant_M3_info+160
+  store f32 2.6270000457764E1, @return_constant_M3_info+168
+  %t4 = trunc 28 to i16
+  store %t4, @return_constant_M3_info+172
+  store i64 29, @return_constant_M3_info+176
+  %t5 = trunc 30 to word32
+  store %t5, @return_constant_M3_info+184
+  %t6 = trunc 31 to word8
+  store %t6, @return_constant_M3_info+188
+  store i64 32, @return_constant_M3_info+192
+  ret
+

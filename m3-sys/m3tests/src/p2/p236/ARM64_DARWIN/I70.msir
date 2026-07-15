@@ -1,0 +1,6 @@
+module I70
+
+proc I70_I3() -> void
+entry:
+  ret
+

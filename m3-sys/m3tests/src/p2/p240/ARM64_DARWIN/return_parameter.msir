@@ -1,0 +1,169 @@
+module return_parameter
+
+global return_parameter__vi8 : i8
+global return_parameter__vu64 : i64
+global return_parameter__vf64 : f64
+global return_parameter__vi32 : i32
+global return_parameter__vLC : word64
+global return_parameter__vu16 : word16
+global return_parameter__vI : i64
+global return_parameter__vi64 : i64
+global return_parameter__vf32 : f32
+global return_parameter__vi16 : i16
+global return_parameter__vC : word64
+global return_parameter__vu32 : word32
+global return_parameter__vu8 : word8
+global return_parameter__vL : i64
+global return_parameter__offset : word64
+global return_parameter__count : word64
+
+proc return_parameter__ret_pi8(a.p: i8) -> i8
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  %t1 = sext a.p to i64
+  store %t1, %p.slot
+  %t2 = load i64, %p.slot
+  %t3 = trunc %t2 to i8
+  ret %t3
+
+proc return_parameter__ret_pu64(a.p: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  store a.p, %p.slot
+  %t1 = load i64, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pf64(a.p: f64) -> f64
+entry:
+  %_result.slot = alloca f64
+  %p.slot = alloca f64
+  store a.p, %p.slot
+  %t1 = load f64, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pi32(a.p: i32) -> i32
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  %t1 = sext a.p to i64
+  store %t1, %p.slot
+  %t2 = load i64, %p.slot
+  %t3 = trunc %t2 to i32
+  ret %t3
+
+proc return_parameter__ret_pLC(a.p: word64) -> word64
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  store a.p, %p.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pu16(a.p: word16) -> word16
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  %t1 = zext a.p to i64
+  store %t1, %p.slot
+  %t2 = load i64, %p.slot
+  %t3 = trunc %t2 to word16
+  ret %t3
+
+proc return_parameter__ret_pI(a.p: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  store a.p, %p.slot
+  %t1 = load i64, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pi64(a.p: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  store a.p, %p.slot
+  %t1 = load i64, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pf32(a.p: f32) -> f32
+entry:
+  %_result.slot = alloca f32
+  %p.slot = alloca f32
+  store a.p, %p.slot
+  %t1 = load f32, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pi16(a.p: i16) -> i16
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  %t1 = sext a.p to i64
+  store %t1, %p.slot
+  %t2 = load i64, %p.slot
+  %t3 = trunc %t2 to i16
+  ret %t3
+
+proc return_parameter__ret_pC(a.p: word64) -> word64
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  store a.p, %p.slot
+  store i64 0, %_result.slot
+  %t1 = load i64, %p.slot
+  ret %t1
+
+proc return_parameter__ret_pu32(a.p: word32) -> word32
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  %t1 = zext a.p to i64
+  store %t1, %p.slot
+  %t2 = load i64, %p.slot
+  %t3 = trunc %t2 to word32
+  ret %t3
+
+proc return_parameter__ret_pu8(a.p: word8) -> word8
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  %t1 = zext a.p to i64
+  store %t1, %p.slot
+  %t2 = load i64, %p.slot
+  %t3 = trunc %t2 to word8
+  ret %t3
+
+proc return_parameter__ret_pL(a.p: i64) -> i64
+entry:
+  %_result.slot = alloca i64
+  %p.slot = alloca i64
+  store a.p, %p.slot
+  %t1 = load i64, %p.slot
+  ret %t1
+
+proc return_parameter_M3() -> void
+entry:
+  %t1 = trunc 81 to i8
+  store %t1, @return_parameter_M3_info+104
+  store i64 82, @return_parameter_M3_info+112
+  store f64 8.38400000000000034D1, @return_parameter_M3_info+120
+  %t2 = trunc 85 to i32
+  store %t2, @return_parameter_M3_info+128
+  store i64 86, @return_parameter_M3_info+136
+  %t3 = trunc 87 to word16
+  store %t3, @return_parameter_M3_info+144
+  store i64 88, @return_parameter_M3_info+152
+  store i64 89, @return_parameter_M3_info+160
+  store f32 9.0910003662109E1, @return_parameter_M3_info+168
+  %t4 = trunc 92 to i16
+  store %t4, @return_parameter_M3_info+172
+  store i64 93, @return_parameter_M3_info+176
+  %t5 = trunc 94 to word32
+  store %t5, @return_parameter_M3_info+184
+  %t6 = trunc 95 to word8
+  store %t6, @return_parameter_M3_info+188
+  store i64 96, @return_parameter_M3_info+192
+  ret
+

@@ -1,0 +1,6 @@
+module I65
+
+proc I65_I3() -> void
+entry:
+  ret
+

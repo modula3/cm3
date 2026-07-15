@@ -1,0 +1,2 @@
+INTERFACE LeftRotate;
+END LeftRotate.

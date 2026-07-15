@@ -1,0 +1,6 @@
+module I16
+
+proc I16_I3() -> void
+entry:
+  ret
+

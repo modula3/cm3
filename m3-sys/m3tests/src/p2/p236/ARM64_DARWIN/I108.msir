@@ -1,0 +1,6 @@
+module I108
+
+proc I108_I3() -> void
+entry:
+  ret
+

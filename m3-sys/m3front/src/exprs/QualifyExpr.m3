@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
 IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
-IMPORT Method, Field, Target, TInt, M3RT, Host, RunTyme;
+IMPORT Method, Field, Target, M3RT, Host, RunTyme;
 IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE

@@ -1,0 +1,6 @@
+module I40
+
+proc I40_I3() -> void
+entry:
+  ret
+

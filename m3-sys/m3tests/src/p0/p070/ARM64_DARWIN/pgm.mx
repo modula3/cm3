@@ -1,0 +1,108 @@
+M3 v4.2
+N0 Main
+
+M0 1 8 0 0 0 0 19 0 0 28 0 0
+A0
+N1 Test
+B1
+N2 Fmt
+B2
+N3 Stdio
+B3
+N4 Wr
+B4
+N5 RTProcedureSRC
+B5
+N6 RTProcedure
+B6
+N7 Fingerprint
+B7
+N8 RTHooks
+B8
+N9 NumProcedures
+V0 5 9 fa3c9e13d5b17964
+i0
+N10 stderr
+V1 3 10 b68d7c2d361c230e
+i1
+N11 CheckLoadTracedRef
+V2 8 11 33cac043de87135c
+i2
+N12 Int
+V3 2 12 bb2b6ce9ab4d2f5d
+i3
+N13 Concat
+V4 8 13 2bcdb700e948c590
+i4
+N14 TextLitInfo
+V5 8 14 fdc7f49fa7f061c3
+i5
+N15 TextLitGetChar
+V6 8 15 bf853738ef95b58f
+i6
+N16 TextLitGetWideChar
+V7 8 16 6b44a8081c4ee8f1
+i7
+N17 TextLitGetChars
+V8 8 17 e51aa8c54a895201
+i8
+N18 TextLitGetWideChars
+V9 8 18 face384698a06a95
+i9
+N19 PutText
+V10 4 19 004d23e0fae46c51
+i10
+N20 ToFingerprint
+V11 6 20 feef7cc641c568fa
+i11
+N21 FromFingerprint
+V12 6 21 e79580dd5087eb56
+i12
+N22 checkB
+V13 1 22 d567063e3413026f
+i13
+N23 done
+V14 1 23 70241db7fe4ccb70
+i14
+N24 Proc
+V15 6 24 4585e50b41b7b9d2
+i15
+N25 T
+V16 7 25 f4279f43a897e7b0
+i16
+N26 CheckStoreTraced
+V17 8 26 8ffa5ad840254ad5
+i17
+N27 ScanTypecase
+V18 8 27 6c0355050f2d5a7c
+i18
+tadc6066d
+t7b78c34f
+t8d2831d7
+t0b5b30aa
+t0e3fc5cb
+t386903f9
+t26466202
+t5c4c299e
+t62761487
+t37e50548
+t2aa4581f
+tf2a35a9d
+t97f166d3
+t6d871b27
+tb750d684
+t38df5df5
+tb964357b
+t9132dde7
+t89cd34bd
+tc9e236c8
+ta19bdc21
+t966fe87f
+t1bee6e85
+tbf9a4697
+tcfb2a08f
+tc82056d3
+t8826887a
+t9b134ca4
+Q6d871b27 50f86574
+Q62761487 9d8fb489

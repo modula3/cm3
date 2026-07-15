@@ -1,0 +1,6 @@
+module I199
+
+proc I199_I3() -> void
+entry:
+  ret
+

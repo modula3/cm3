@@ -1,0 +1,6 @@
+module I97
+
+proc I97_I3() -> void
+entry:
+  ret
+

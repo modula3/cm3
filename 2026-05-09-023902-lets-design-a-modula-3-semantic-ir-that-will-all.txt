@@ -1,0 +1,480 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.133
+           Opus 4.7 · API Usage Billing
+  ▘▘ ▝▝    ~/git/cm3
+
+✻ Conversation compacted (ctrl+o for history)
+
+
+❯ /compact                                                                      
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Referenced file m3-sys/msir/src/MSIRVerifier.m3
+  ⎿  Referenced file m3-sys/msir/test/src/Main.m3
+  ⎿  Read m3-sys/msir/src/m3makefile (11 lines)
+  ⎿  Read m3-sys/msir/src/MSIRVerifier.i3 (20 lines)
+  ⎿  Referenced file m3-sys/msir/src/MSIRPrinter.m3
+
+❯ Consider the following and give me your thoughts: Bringing **opaque types**   
+  into MSIR should be done in a way that:                                       
+                                                                                
+  *   preserves Modula‑3’s abstraction and separate‑compilation guarantees,     
+  *   does **not** leak representation details prematurely,                     
+  *   still allows correct typing, `TYPECASE`, GC, and LLVM lowering, and       
+  *   composes cleanly with the unified `OBJECT / REFANY` lattice you already   
+  have.                                                                         
+                                                                                
+  The right way to think about opaque types in MSIR is:                         
+                                                                                
+  > **An opaque type is a type whose *identity* is known but whose *structure*  
+  is intentionally unavailable at a given compilation boundary.**               
+                                                                                
+  Below is a disciplined way to model that.                                     
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 1. What “opaque” means at the MSIR level                                   
+                                                                                
+  MSIR must distinguish **three orthogonal notions**:                           
+                                                                                
+  1.  **Type identity** – does this type exist and compare equal?               
+  2.  **Type hierarchy** – where does it sit in the subtype lattice?            
+  3.  **Type representation** – fields, methods, GC layout, etc.                
+                                                                                
+  An opaque type hides **(3)**, may restrict **(2)**, but never hides **(1)**.  
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 2. Core MSIR extension: Opaque Type Descriptors                            
+                                                                                
+  ### 2.1 Opaque object declaration                                             
+                                                                                
+  ```ebnf                                                                       
+  OpaqueObjectDecl ::=                                                          
+    'opaque' 'object' TypeID                                                    
+      [ ':' SuperTypeID ]                                                       
+      OpaqueAttrs                                                               
+  ```                                                                           
+                                                                                
+  Example:                                                                      
+                                                                                
+  ```text                                                                       
+  opaque object File : ROOT [sealed]                                            
+  ```                                                                           
+                                                                                
+  Semantics:                                                                    
+                                                                                
+  *   `File` is a valid member of the type lattice                              
+  *   Its layout, fields, and methods are *unavailable*                         
+  *   It can still be used via references                                       
+                                                                                
+  ***                                                                           
+                                                                                
+  ### 2.2 Opaque attributes                                                     
+                                                                                
+  ```ebnf                                                                       
+  OpaqueAttrs ::=                                                               
+    '[' OpaqueAttr { ',' OpaqueAttr } ']'                                       
+                                                                                
+  OpaqueAttr ::=                                                                
+      'sealed'                                                                  
+    | 'open'                                                                    
+    | 'nomethods'                                                               
+    | 'private-layout'                                                          
+  ```                                                                           
+                                                                                
+  Meaning:                                                                      
+                                                                                
+  | Attribute        | MSIR meaning                                |            
+  | ---------------- | ------------------------------------------- |            
+  | `sealed`         | No subtypes visible outside defining module |            
+  | `open`           | Subtypes may exist in other units           |            
+  | `nomethods`      | No method dispatch allowed                  |            
+  | `private-layout` | GC layout hidden but known to runtime       |            
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 3. Opaque type descriptors (RTTI‑level)                                    
+                                                                                
+  Opaque types still have descriptors — just *restricted ones*.                 
+                                                                                
+  ```ebnf                                                                       
+  TypeDescriptor ::=                                                            
+    'typeinfo' TypeID {                                                         
+      super        : TypeID                                                     
+      flags        : TypeFlags                                                  
+      visibility   : 'opaque'                                                   
+      methods?     : VTableRef?                                                 
+      gc_fields?   : GCTraceSpec?                                               
+    }                                                                           
+  ```                                                                           
+                                                                                
+  Rules:                                                                        
+                                                                                
+  *   `methods` absent → no dispatch allowed                                    
+  *   `gc_fields` absent → GC uses runtime‑supplied tracing                     
+  *   `super` always present (at least ROOT)                                    
+                                                                                
+  This allows MSIR, GC, and TYPECASE to function without knowing structure.     
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 4. How opaque types participate in the type lattice                        
+                                                                                
+  ### 4.1 Subtyping constraints                                                 
+                                                                                
+  Let `Opaque T` be declared as:                                                
+                                                                                
+  ```text                                                                       
+  opaque object T : U                                                           
+  ```                                                                           
+                                                                                
+  Then:                                                                         
+                                                                                
+  ```text                                                                       
+  T ≤ U        ✅                                                               
+  ```                                                                           
+                                                                                
+  But:                                                                          
+                                                                                
+  ```text                                                                       
+  For any V:                                                                    
+    V ≤ T  is unknown unless explicitly declared                                
+  ```                                                                           
+                                                                                
+  This prevents unsafe exhaustiveness assumptions.                              
+                                                                                
+  ***                                                                           
+                                                                                
+  ### 4.2 Consequence for TYPECASE exhaustiveness                               
+                                                                                
+  If a scrutinee static type includes an opaque type:                           
+                                                                                
+  ```text                                                                       
+  S = ref ROOT                                                                  
+  C includes opaque T                                                           
+  ```                                                                           
+                                                                                
+  Then:                                                                         
+                                                                                
+  *   Exhaustiveness **cannot** be proven without:                              
+      *   `else`, or                                                            
+      *   `ref ROOT` arm                                                        
+                                                                                
+  Formally (from your exhaustiveness rules):                                    
+                                                                                
+  ```text                                                                       
+  Dyn(T) is unknown ⇒ Covered ⊂ Universe                                        
+  ```                                                                           
+                                                                                
+  Opaque types force conservatism — *by design*.                                
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 5. Operations permitted on opaque types                                    
+                                                                                
+  ### 5.1 Allowed                                                               
+                                                                                
+  ```text                                                                       
+  var x : ref T          // ✅ allowed                                          
+  x = NIL                // ✅ allowed                                          
+  x = y                  // ✅ if y : ref T or ref subtype                      
+  istype(x, T)           // ✅ allowed                                          
+  TYPECASE x OF ref T    // ✅ allowed                                          
+  ```                                                                           
+                                                                                
+  ### 5.2 Forbidden in MSIR                                                     
+                                                                                
+  ```text                                                                       
+  x.f                    // ❌ field access                                     
+  x.m()                  // ❌ method call (unless method signature known)      
+  sizeof(T)              // ❌ layout query                                     
+  GCTraceSpec(T)         // ❌ static tracing                                   
+  ```                                                                           
+                                                                                
+  Opaque means *structurally uninterpretable*, not unusable.                    
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 6. Narrowing with opaque types                                             
+                                                                                
+  Narrowing remains sound because it relies only on RTTI identity.              
+                                                                                
+  ```ebnf                                                                       
+  narrow '(' RefExpr ',' ref TypeID ')'                                         
+  ```                                                                           
+                                                                                
+  Rules:                                                                        
+                                                                                
+  *   If RTTI says subtype → success                                            
+  *   Else → exception                                                          
+                                                                                
+  This works even if structure is hidden.                                       
+                                                                                
+  Opaque ≠ unsafe.                                                              
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 7. Separate compilation and visibility                                     
+                                                                                
+  To support real Modula‑3 interfaces, MSIR should distinguish:                 
+                                                                                
+  ```text                                                                       
+  visible type identity                                                         
+  hidden representation                                                         
+  ```                                                                           
+                                                                                
+  ### Example                                                                   
+                                                                                
+  Interface MSIR:                                                               
+                                                                                
+  ```text                                                                       
+  opaque object File : ROOT [sealed]                                            
+  ```                                                                           
+                                                                                
+  Implementation MSIR (same TypeID):                                            
+                                                                                
+  ```text                                                                       
+  object File : ROOT {                                                          
+    field fd : INTEGER                                                          
+    methods {                                                                   
+      method close(this: ref File)                                              
+    }                                                                           
+  }                                                                             
+  ```                                                                           
+                                                                                
+  Key invariant:                                                                
+                                                                                
+  > **TypeID is globally stable; representation availability is unit‑local.**   
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 8. Lowering obligations (critical)                                         
+                                                                                
+  Backends must ensure:                                                         
+                                                                                
+  | Concern    | Requirement                                    |               
+  | ---------- | ---------------------------------------------- |               
+  | GC         | Runtime must provide trace function            |               
+  | RTTI       | Descriptor identity preserved                  |               
+  | Equality   | Pointer equality only                          |               
+  | Visibility | LLVM must not inline/layout‑opt opaque objects |               
+                                                                                
+  This aligns perfectly with LLVM’s existing notion of *opaque types* and       
+  *opaque pointers* — but enforced earlier and more soundly.                    
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 9. Why this design fits MSIR (and not M3CG)                                
+                                                                                
+  M3CG cannot represent opacity properly because:                               
+                                                                                
+  *   It lowers layout eagerly                                                  
+  *   It erases type identity                                                   
+  *   It bakes in calling and storage details                                   
+                                                                                
+  MSIR, by contrast:                                                            
+                                                                                
+  *   Treats type identity as primary                                           
+  *   Defers representation intentionally                                       
+  *   Makes opacity a **first‑class semantic property**                         
+                                                                                
+  This matches:                                                                 
+                                                                                
+  *   Modula‑3 interfaces                                                       
+  *   ML signatures                                                             
+  *   Swift resilience                                                          
+  *   Rust `pub(crate)` + opaque returns                                        
+                                                                                
+  ***                                                                           
+                                                                                
+  ## 10. Summary model                                                          
+                                                                                
+  In MSIR:                                                                      
+                                                                                
+  *   **OBJECT** = fully known representation                                   
+  *   **OPAQUE OBJECT** = known identity, hidden structure                      
+  *   **REFANY** = `ref ROOT`                                                   
+  *   **TYPECASE / NARROW** work uniformly                                      
+  *   **Exhaustiveness** becomes conservative but sound                         
+  *   **LLVM lowering** remains mechanical and correct                          
+                                                                                
+  > **Opacity is not absence of meaning — it is controlled absence of           
+  structure.**                                                                  
+                                                                                
+  If you want next, I can:                                                      
+                                                                                
+  *   integrate opacity formally into the exhaustiveness equations              
+  *   show LLVM IR constraints for opaque MSIR types                            
+  *   or model Modula‑3 INTERFACE / MODULE boundaries explicitly in MSIR        
+                                                                                
+
+⏺ This is a good frame, and the core invariant — type identity is global, 
+  representation availability is unit-local — is exactly right. But a few pieces
+   overshoot, and one piece is subtly miscast in a way that matters for MSIR.
+
+  Where I agree
+
+  - "Opaque = identity known, structure hidden" is the correct mental model, and
+   it falls out of how M3 INTERFACE/MODULE separation already works. We're not
+  inventing a new concept — we're faithfully encoding §2.2.5/§2.5 partial
+  revelations.
+  - TYPECASE exhaustiveness must go conservative when an opaque type is in the
+  lattice. We already require mandatory ELSE (D18), so this is free.
+  - NARROW/ISTYPE/assignment via reference all work on identity alone — opacity
+  ≠ unsafety. Correct.
+  - LLVM mapping (%File = type opaque, ptr addrspace(1), runtime-supplied tracer
+   when layout unknown to this TU) is straightforward.
+
+  Where I'd push back
+
+  1. The attribute matrix is over-engineered. sealed/open is a Swift-resilience
+  concept; M3 has no language-level sealing — any unit that REVEALs a type can
+  extend it. nomethods isn't an attribute, it's automatic from the visible type
+  lattice (methods declared on the supertype remain dispatchable; methods added
+  in the hidden revelation are not). private-layout is what "opaque" means. So
+  we're left with: (a) is there a revelation visible here, and (b) what's the
+  visible supertype. That's it. Mirror M3, don't invent a new axis.
+  2. Opacity belongs in ops/visibility, not type identity. This is the subtle
+  one. In CM3, by the time you're compiling a unit, the front-end has resolved
+  every revelation visible to that unit. The full layout is available at the 
+  front-end. What "opaque from here" actually controls is which ops are legal at
+   this site — field_addr, dispatch on a privately-added method, sizeof — not
+  whether the type's structure exists in the global type table. So I'd encode
+  opacity as:
+    - one MSIR Type per global type identity, carrying whatever structure the
+  defining module knows
+    - per-module visibility records that say "from this MSIR module, type @File
+  is opaque / partially revealed (≤ROOT) / fully revealed"
+    - the verifier rejects field_addr etc. on types whose structure isn't
+  visible at this use site
+
+  This aligns with D20 ("structure lives in ops, not in control flow") —
+  extended to "structural visibility lives in module-local declarations, not in
+  global type identity." It also means the same type can be opaque in one MSIR
+  unit and transparent in another without duplicating the type, which matches M3
+   semantics exactly.
+  3. TypeDescriptor.gc_fields? absent → "runtime-supplied tracing" is more than 
+  we need. In CM3, descriptors are always emitted by the defining module. An
+  opaque-importing unit doesn't need a tracer; it just emits references and lets
+   the linker resolve the descriptor symbol. No "runtime-supplied" hand-off
+  needed.
+
+  Concrete proposal for MSIR v0
+
+  - Keep TypeKind.Object as today (super, fields, methods, descriptorSym).
+  - Add a Visibility per-import: { Full, PartialAsSubtypeOf(U), Hidden }.
+  - Verifier consults visibility for FieldAddr / Dispatch / layout-dependent
+  ops; types remain globally identified by name/symbol regardless.
+  - Defer attribute flags entirely. If we ever need sealed, add it later when a
+  real M3 use case forces it.
+
+  Scope for now
+
+  Opaque types aren't on the critical path for the first m3front builder pass
+  (which we agreed would start with integer-only procedures). I'd capture this
+  as a resolved sketch in MSIR-design.md (new D21: "opacity is per-site
+  visibility, not per-type") and revisit when the builder reaches OBJECT
+  compilation. Want me to write that up?
+
+✻ Sautéed for 53s
+
+❯ Sure                                                                          
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(MSIR-design.md)
+  ⎿  Added 30 lines
+      484  (`Module__Proc`, etc.) so MSIR-compiled and C-compiled transla
+           tion
+      485  units link together during incremental adoption.
+      486  
+      487 +### D21. Opacity is per-site visibility, not per-type identity
+          +.                                                             
+      488 +                                                              
+      489 +**Why:** In M3, *type identity is global; revelation is unit-l
+          +ocal*. By                                                     
+      490 +the time m3front compiles a unit, every revelation visible to 
+          +that unit                                                     
+      491 +has been resolved, so the full layout is already in hand at th
+          +e                                                             
+      492 +front-end. What "opaque from here" actually controls is **whic
+          +h ops are                                                     
+      493 +legal at this site** — `field_addr`, `dispatch` on a privately
+          +-added                                                        
+      494 +method, layout queries — not whether the type's structure exis
+          +ts in the                                                     
+      495 +global type table. Encoding opacity in the type itself would f
+          +orce the                                                      
+      496 +same Modula-3 type to appear as two distinct MSIR types depend
+          +ing on                                                        
+      497 +which unit was compiling, breaking type-identity-based reasoni
+          +ng                                                            
+      498 +(NARROW, ISTYPE, TYPECASE, GC descriptor identity) that alread
+          +y works                                                       
+      499 +correctly on identity alone.                                  
+      500 +                                                              
+      501 +**Consequence:** One MSIR `Type` per global type identity, car
+          +rying                                                         
+      502 +whatever structure the *defining* module knows. Each MSIR modu
+          +le                                                            
+      503 +carries per-import **visibility records** of the form `{ Full,
+      504 +PartialAsSubtypeOf(U), Hidden }`. The verifier consults visibi
+          +lity for                                                      
+      505 +layout-dependent ops (`field_addr`, `dispatch` on hidden metho
+          +ds,                                                           
+      506 +`sizeof`); identity-only ops (`narrow`, `istype`, `typecase`, 
+      507 +assignment, NIL, equality) are always legal regardless of visi
+          +bility.                                                       
+      508 +TYPECASE exhaustiveness automatically goes conservative when a
+          +n opaque                                                      
+      509 +type appears in the lattice — the mandatory-ELSE rule (D18) al
+          +ready                                                         
+      510 +forces this with no special case. Descriptors are emitted by t
+          +he                                                            
+      511 +*defining* module; opaque-importing units reference the descri
+          +ptor by                                                       
+      512 +symbol and let the linker resolve it. No "runtime-supplied tra
+          +cer"                                                          
+      513 +hand-off, and no Swift-style `sealed`/`open` attribute matrix 
+          +—                                                             
+      514 +opacity in M3 is binary at any given site (revealed-here or no
+          +t), and                                                       
+      515 +the partial-revelation supertype is the only additional bit ne
+          +eded.                                                         
+      516 +                                                              
+      517  ---
+      518  
+      519  ## Open questions
+
+⏺ Now update the Status table to mention opacity, and the Terminology section
+  already mentions "opacity" as one of the op-level invariants — that's still
+  accurate.
+
+⏺ Update(MSIR-design.md)
+  ⎿  Added 1 line
+      29  | Intrinsic surface              | Pinned for OBJECT/EH/opens/s
+          ets/RTTI; growing |
+      30  | Procedure attributes           | Pinned                      
+             |
+      31  | Non-local control              | Pinned                      
+             |
+      32 +| Opacity / visibility           | Pinned (D21); not yet wired 
+         +   |                                                           
+      33  | Verifier                       | Sketched (see A9 / D20)     
+             |
+      34  | `m3-sys/msir` v0 package       | Built; ships; smoke test run
+          s  |
+      35  
+
+⏺ Added D21: Opacity is per-site visibility, not per-type identity to
+  MSIR-design.md, and a row in the Status table marking it pinned but not yet
+  wired. The decision captures the three points we converged on: (a) one MSIR
+  Type per global identity, (b) per-module visibility records {Full, 
+  PartialAsSubtypeOf(U), Hidden} consulted by the verifier for layout-dependent
+  ops, (c) no sealed/open/nomethods attribute matrix — opacity in M3 is binary
+  at any given site.
+
+  We can leave the implementation deferred until the m3front builder reaches
+  OBJECT compilation. Ready to start (b) — the m3front MSIR builder — whenever
+  you are.
+
+✻ Churned for 53s

@@ -1,0 +1,1489 @@
+module Main
+
+global Main__StateMutex : gc_slot void
+global Main__States : [5]enum 
+global Main__Holder : word8
+global Main__ActionMutex : gc_slot void
+global Main__ActionProcs : [5]ptr void
+global Main__TestMutex : gc_slot void
+global Main__TestCond : gc_slot void
+global Main__Threads : [5]gc_ref void
+global Main__Closures : [5]gc_ref @Cl
+
+proc Main__W(a.Msg: gc_ref void) -> void
+entry:
+  %Msg.slot = alloca gc_ref void
+  store a.Msg, %Msg.slot
+  %t1 = load ptr void, @Main_M3_imp.3+0
+  %t2 = ptr.add %t1, 112
+  %t3 = load gc_ref void, %t2
+  %t4 = load gc_ref void, %Msg.slot
+  call Wr__PutText(%t3, %t4)
+  %t5 = load ptr void, @Main_M3_imp.3+0
+  %t6 = ptr.add %t5, 112
+  %t7 = load gc_ref void, %t6
+  call Wr__PutText(%t7, "\0a")
+  %t8 = load ptr void, @Main_M3_imp.3+0
+  %t9 = ptr.add %t8, 112
+  %t10 = load gc_ref void, %t9
+  call Wr__Flush(%t10)
+  ret
+
+proc Main__ThImage(a.ThN: word8) -> gc_ref void
+entry:
+  %_result.slot = alloca gc_ref void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  store nil, %_result.slot
+  %t2 = load i64, %ThN.slot
+  %t3 = trunc 10 to word8
+  %t4 = call Fmt__Int(%t2, %t3) -> gc_ref void
+  %t5 = call RTHooks__Concat("Thread ", %t4) -> gc_ref void
+  ret %t5
+
+proc Main__StateImage(a.St: enum ) -> gc_ref void
+entry:
+  %_result.slot = alloca gc_ref void
+  %LResult.slot = alloca gc_ref void
+  %St.slot = alloca i64
+  %t1 = zext a.St to i64
+  store %t1, %St.slot
+  store nil, %LResult.slot
+  store nil, %_result.slot
+  %t2 = load i64, %St.slot
+  %t3 = icmp slt %t2, 0
+  cond_br %t3, case.else.8, case.inrange.10
+case.body.1:
+  store "null", %LResult.slot
+  br case.merge.9
+case.body.2:
+  store "idle", %LResult.slot
+  br case.merge.9
+case.body.3:
+  store "entering Acquire", %LResult.slot
+  br case.merge.9
+case.body.4:
+  store "entering Release", %LResult.slot
+  br case.merge.9
+case.body.5:
+  store "entering Wait", %LResult.slot
+  br case.merge.9
+case.body.6:
+  store "asleep in Wait", %LResult.slot
+  br case.merge.9
+case.body.7:
+  store "entering Signal", %LResult.slot
+  br case.merge.9
+case.else.8:
+  br case.merge.9
+case.merge.9:
+  %t17 = load gc_ref void, %LResult.slot
+  ret %t17
+case.inrange.10:
+  %t4 = icmp sle %t2, 0
+  cond_br %t4, case.body.1, case.next.11
+case.next.11:
+  %t5 = icmp slt %t2, 1
+  cond_br %t5, case.else.8, case.inrange.12
+case.inrange.12:
+  %t6 = icmp sle %t2, 1
+  cond_br %t6, case.body.2, case.next.13
+case.next.13:
+  %t7 = icmp slt %t2, 2
+  cond_br %t7, case.else.8, case.inrange.14
+case.inrange.14:
+  %t8 = icmp sle %t2, 2
+  cond_br %t8, case.body.3, case.next.15
+case.next.15:
+  %t9 = icmp slt %t2, 3
+  cond_br %t9, case.else.8, case.inrange.16
+case.inrange.16:
+  %t10 = icmp sle %t2, 3
+  cond_br %t10, case.body.4, case.next.17
+case.next.17:
+  %t11 = icmp slt %t2, 4
+  cond_br %t11, case.else.8, case.inrange.18
+case.inrange.18:
+  %t12 = icmp sle %t2, 4
+  cond_br %t12, case.body.5, case.next.19
+case.next.19:
+  %t13 = icmp slt %t2, 5
+  cond_br %t13, case.else.8, case.inrange.20
+case.inrange.20:
+  %t14 = icmp sle %t2, 5
+  cond_br %t14, case.body.6, case.next.21
+case.next.21:
+  %t15 = icmp slt %t2, 6
+  cond_br %t15, case.else.8, case.inrange.22
+case.inrange.22:
+  %t16 = icmp sle %t2, 6
+  cond_br %t16, case.body.7, case.else.8
+
+proc Main__Action(a.ThN: word8, a.Apply: ptr void) -> void
+entry:
+  %t30 = alloca i32
+  %t29 = alloca ptr void
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %Apply.slot = alloca ptr void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  store a.Apply, %Apply.slot
+  %t2 = gc.load @Main_M3_info+128
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t8 = load i64, %ThN.slot
+  %t9 = array.elem_addr @Main_M3_info+136, %t8
+  %t10 = load ptr void, %t9
+  %t11 = icmp eq %t10, nil
+  %t12 = icmp eq %t11, 0
+  cond_br %t12, check.fault.6, check.cont.7
+lock.lpad.1:
+  %t14 = landingpad catch _ZTI6_M3Exc
+  %t15 = extractvalue %t14, 0
+  %t16 = call __cxa_get_exception_ptr(%t15) -> ptr void
+  %t17 = load ptr void, %t16
+  store %t17, %t6
+  store i32 1, %t7
+  br lock.fin.2
+lock.fin.2:
+  %t18 = convert %t2 to ptr ptr void
+  %t19 = load ptr void, %t18
+  %t20 = ptr.add %t19, 8
+  %t21 = load ptr void, %t20
+  call.indirect %t21(%t2)
+  %t22 = load i32, %t7
+  %t23 = icmp eq %t22, 1
+  cond_br %t23, lock.resume.3, lock.fin.notexc.9
+lock.resume.3:
+  %t24 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t24)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  br loop.header.10
+check.fault.6:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 2656)
+check.cont.7:
+  %t13 = load ptr void, %Apply.slot
+  store %t13, %t9
+  br lock.fin.2
+invoke.cont.8:
+  unreachable
+lock.fin.notexc.9:
+  br lock.done.5
+loop.header.10:
+  call Thread__Pause(1.00000000000000006D-1)
+  %t25 = gc.load @Main_M3_info+128
+  %t26 = convert %t25 to ptr ptr void
+  %t27 = load ptr void, %t26
+  %t28 = load ptr void, %t27
+  call.indirect %t28(%t25)
+  store i32 0, %t30
+  %t31 = load i64, %ThN.slot
+  %t32 = array.elem_addr @Main_M3_info+136, %t31
+  %t33 = load ptr void, %t32
+  %t34 = icmp eq %t33, nil
+  cond_br %t34, if.then.17, if.merge.18
+loop.exit.11:
+  ret
+lock.lpad.12:
+  %t35 = landingpad catch _ZTI6_M3Exc
+  %t36 = extractvalue %t35, 0
+  %t37 = call __cxa_get_exception_ptr(%t36) -> ptr void
+  %t38 = load ptr void, %t37
+  store %t38, %t29
+  store i32 1, %t30
+  br lock.fin.13
+lock.fin.13:
+  %t39 = convert %t25 to ptr ptr void
+  %t40 = load ptr void, %t39
+  %t41 = ptr.add %t40, 8
+  %t42 = load ptr void, %t41
+  call.indirect %t42(%t25)
+  %t43 = load i32, %t30
+  %t44 = icmp eq %t43, 1
+  cond_br %t44, lock.resume.14, lock.fin.notexc.20
+lock.resume.14:
+  %t46 = load ptr void, %t29
+  call RTHooks__ResumeRaise(%t46)
+  unreachable
+lock.ret.15:
+lock.done.16:
+  br loop.header.10
+if.then.17:
+  store i32 2, %t30
+  br lock.fin.13
+if.merge.18:
+  br lock.fin.13
+exit.dead.19:
+  br if.merge.18
+lock.fin.notexc.20:
+  %t45 = icmp eq %t43, 2
+  cond_br %t45, lock.doexit.21, lock.done.16
+lock.doexit.21:
+  br loop.exit.11
+
+proc Main__ActionWait(a.ThN: word8, a.Apply: ptr void) -> void
+entry:
+  %t16 = alloca i32
+  %t15 = alloca ptr void
+  %t10 = alloca i32
+  %t9 = alloca ptr void
+  %Apply.slot = alloca ptr void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  store a.Apply, %Apply.slot
+  %t2 = load i64, %ThN.slot
+  %t3 = trunc %t2 to word8
+  %t4 = load ptr void, %Apply.slot
+  call Main__Action(%t3, %t4)
+  br loop.header.1
+loop.header.1:
+  %t5 = gc.load @Main_M3_info+176
+  %t6 = convert %t5 to ptr ptr void
+  %t7 = load ptr void, %t6
+  %t8 = load ptr void, %t7
+  call.indirect %t8(%t5)
+  store i32 0, %t10
+  %t11 = gc.load @Main_M3_info+104
+  %t12 = convert %t11 to ptr ptr void
+  %t13 = load ptr void, %t12
+  %t14 = load ptr void, %t13
+  invoke.indirect %t14(%t11) to dispatch.cont.8 unwind lock.lpad.3
+loop.exit.2:
+  ret
+lock.lpad.3:
+  %t47 = landingpad catch _ZTI6_M3Exc
+  %t48 = extractvalue %t47, 0
+  %t49 = call __cxa_get_exception_ptr(%t48) -> ptr void
+  %t50 = load ptr void, %t49
+  store %t50, %t9
+  store i32 1, %t10
+  br lock.fin.4
+lock.fin.4:
+  %t51 = convert %t5 to ptr ptr void
+  %t52 = load ptr void, %t51
+  %t53 = ptr.add %t52, 8
+  %t54 = load ptr void, %t53
+  call.indirect %t54(%t5)
+  %t55 = load i32, %t10
+  %t56 = icmp eq %t55, 1
+  cond_br %t56, lock.resume.5, lock.fin.notexc.32
+lock.resume.5:
+  %t58 = load ptr void, %t9
+  call RTHooks__ResumeRaise(%t58)
+  unreachable
+lock.ret.6:
+lock.done.7:
+  br loop.header.1
+dispatch.cont.8:
+  store i32 0, %t16
+  %t17 = load i64, %ThN.slot
+  %t18 = array.elem_addr @Main_M3_info+112, %t17
+  %t19 = load enum , %t18
+  %t20 = icmp ne %t19, 4
+  cond_br %t20, if.then.14, if.next.15
+lock.lpad.9:
+  %t35 = landingpad catch _ZTI6_M3Exc
+  %t36 = extractvalue %t35, 0
+  %t37 = call __cxa_get_exception_ptr(%t36) -> ptr void
+  %t38 = load ptr void, %t37
+  store %t38, %t15
+  store i32 1, %t16
+  br lock.fin.10
+lock.fin.10:
+  %t39 = convert %t11 to ptr ptr void
+  %t40 = load ptr void, %t39
+  %t41 = ptr.add %t40, 8
+  %t42 = load ptr void, %t41
+  invoke.indirect %t42(%t11) to dispatch.cont.28 unwind lock.lpad.3
+lock.resume.11:
+  %t46 = load ptr void, %t15
+  invoke RTHooks__ResumeRaise(%t46)
+lock.ret.12:
+lock.done.13:
+  br lock.fin.4
+if.then.14:
+  %t21 = load i64, %ThN.slot
+  %t22 = trunc %t21 to word8
+  %t23 = invoke Main__ThImage(%t22) -> gc_ref void
+if.next.15:
+  %t25 = load word8, @Main_M3_info+117
+  %t26 = load i64, %ThN.slot
+  %t27 = zext %t25 to i64
+  %t28 = icmp eq %t27, %t26
+  %t29 = icmp eq %t28, 0
+  cond_br %t29, check.fault.20, check.cont.21
+invoke.cont.16:
+  %t24 = invoke RTHooks__Concat(%t23, " Failed to wait in Wait.") -> gc_ref void
+invoke.cont.17:
+  invoke Main__W(%t24)
+invoke.cont.18:
+  invoke RTHooks__Raise(@Main__Failure_excptr, nil, nil, 0)
+invoke.cont.19:
+  unreachable
+check.fault.20:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 3680)
+check.cont.21:
+  %t30 = trunc 0 to word8
+  store %t30, @Main_M3_info+117
+  store enum  5, %t18
+  %t31 = load i64, %ThN.slot
+  %t32 = trunc %t31 to word8
+  %t33 = invoke Main__ThImage(%t32) -> gc_ref void
+invoke.cont.22:
+  unreachable
+invoke.cont.23:
+  %t34 = invoke RTHooks__Concat(%t33, " Waiting.") -> gc_ref void
+invoke.cont.24:
+  invoke Main__W(%t34)
+invoke.cont.25:
+  store i32 2, %t16
+  br lock.fin.10
+exit.dead.26:
+  br if.merge.27
+if.merge.27:
+  br lock.fin.10
+dispatch.cont.28:
+  %t43 = load i32, %t16
+  %t44 = icmp eq %t43, 1
+  cond_br %t44, lock.resume.11, lock.fin.notexc.29
+lock.fin.notexc.29:
+  %t45 = icmp eq %t43, 2
+  cond_br %t45, lock.doexit.30, lock.done.13
+lock.doexit.30:
+  store i32 2, %t10
+  br lock.fin.4
+lock.resume.cont.31:
+  unreachable
+lock.fin.notexc.32:
+  %t57 = icmp eq %t55, 2
+  cond_br %t57, lock.doexit.33, lock.done.7
+lock.doexit.33:
+  br loop.exit.2
+
+proc Main__WaitForHeld() -> word8
+entry:
+  %t7 = alloca word8
+  %t6 = alloca i32
+  %t5 = alloca ptr void
+  %_result.slot = alloca i64
+  %LHolder.slot = alloca i64
+  store i64 0, %LHolder.slot
+  store i64 0, %_result.slot
+  br loop.header.1
+loop.header.1:
+  call Thread__Pause(1.00000000000000006D-1)
+  %t1 = gc.load @Main_M3_info+104
+  %t2 = convert %t1 to ptr ptr void
+  %t3 = load ptr void, %t2
+  %t4 = load ptr void, %t3
+  call.indirect %t4(%t1)
+  store i32 0, %t6
+  %t8 = load word8, @Main_M3_info+117
+  %t9 = zext %t8 to i64
+  store %t9, %LHolder.slot
+  br lock.fin.4
+loop.exit.2:
+  %t23 = load i64, %LHolder.slot
+  %t24 = trunc %t23 to word8
+  ret %t24
+lock.lpad.3:
+  %t10 = landingpad catch _ZTI6_M3Exc
+  %t11 = extractvalue %t10, 0
+  %t12 = call __cxa_get_exception_ptr(%t11) -> ptr void
+  %t13 = load ptr void, %t12
+  store %t13, %t5
+  store i32 1, %t6
+  br lock.fin.4
+lock.fin.4:
+  %t14 = convert %t1 to ptr ptr void
+  %t15 = load ptr void, %t14
+  %t16 = ptr.add %t15, 8
+  %t17 = load ptr void, %t16
+  call.indirect %t17(%t1)
+  %t18 = load i32, %t6
+  %t19 = icmp eq %t18, 1
+  cond_br %t19, lock.resume.5, lock.fin.notexc.8
+lock.resume.5:
+  %t20 = load ptr void, %t5
+  call RTHooks__ResumeRaise(%t20)
+  unreachable
+lock.ret.6:
+lock.done.7:
+  %t21 = load i64, %LHolder.slot
+  %t22 = icmp ne %t21, 0
+  cond_br %t22, if.then.9, if.merge.10
+lock.fin.notexc.8:
+  br lock.done.7
+if.then.9:
+  br loop.exit.2
+if.merge.10:
+  br loop.header.1
+exit.dead.11:
+  br if.merge.10
+
+proc Main__WaitForStateSet(a.ThN: word8, a.Sts: i8) -> void
+entry:
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %Sts.slot = alloca i8
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  store a.Sts, %Sts.slot
+  br loop.header.1
+loop.header.1:
+  %t2 = gc.load @Main_M3_info+104
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t8 = load i64, %ThN.slot
+  %t9 = array.elem_addr @Main_M3_info+112, %t8
+  %t10 = load i8, %Sts.slot
+  %t11 = load enum , %t9
+  %t12 = icmp ult %t11, 8
+  %t13 = select %t12, %t11, 0
+  %t14 = ilshr %t10, %t13
+  %t15 = iand %t14, 1
+  %t16 = icmp ne %t15, 0
+  cond_br %t16, if.then.8, if.merge.9
+loop.exit.2:
+  ret
+lock.lpad.3:
+  %t17 = landingpad catch _ZTI6_M3Exc
+  %t18 = extractvalue %t17, 0
+  %t19 = call __cxa_get_exception_ptr(%t18) -> ptr void
+  %t20 = load ptr void, %t19
+  store %t20, %t6
+  store i32 1, %t7
+  br lock.fin.4
+lock.fin.4:
+  %t21 = convert %t2 to ptr ptr void
+  %t22 = load ptr void, %t21
+  %t23 = ptr.add %t22, 8
+  %t24 = load ptr void, %t23
+  call.indirect %t24(%t2)
+  %t25 = load i32, %t7
+  %t26 = icmp eq %t25, 1
+  cond_br %t26, lock.resume.5, lock.fin.notexc.11
+lock.resume.5:
+  %t28 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t28)
+  unreachable
+lock.ret.6:
+lock.done.7:
+  call Thread__Pause(1.00000000000000006D-1)
+  br loop.header.1
+if.then.8:
+  store i32 2, %t7
+  br lock.fin.4
+if.merge.9:
+  br lock.fin.4
+exit.dead.10:
+  br if.merge.9
+lock.fin.notexc.11:
+  %t27 = icmp eq %t25, 2
+  cond_br %t27, lock.doexit.12, lock.done.7
+lock.doexit.12:
+  br loop.exit.2
+
+proc Main__WaitForState(a.ThN: word8, a.St: enum ) -> void
+entry:
+  %St.slot = alloca i64
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  %t2 = zext a.St to i64
+  store %t2, %St.slot
+  %t3 = load i64, %ThN.slot
+  %t4 = trunc %t3 to word8
+  %t5 = load i64, %St.slot
+  %t6 = trunc %t5 to i8
+  %t7 = icmp slt %t6, 0
+  cond_br %t7, check.fault.1, check.cont.2
+check.fault.1:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5121)
+  unreachable
+check.cont.2:
+  %t8 = icmp sgt %t6, 6
+  cond_br %t8, check.fault.3, check.cont.4
+check.fault.3:
+  call RTHooks__ReportFault(@Main_M3_info+0, 5121)
+  unreachable
+check.cont.4:
+  %t9 = ishl 1, %t6
+  %t10 = ior 0, %t9
+  call Main__WaitForStateSet(%t4, %t10)
+  ret
+
+proc Main__NoteWhetherStateSet(a.ThN: word8, a.Sts: i8, a.YesMsg: gc_ref void, a.NoMsg: gc_ref void) -> i1
+entry:
+  %t8 = alloca i1
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %_result.slot = alloca i64
+  %LMsg.slot = alloca gc_ref void
+  %LState.slot = alloca i64
+  %LResult.slot = alloca i64
+  %NoMsg.slot = alloca gc_ref void
+  %YesMsg.slot = alloca gc_ref void
+  %Sts.slot = alloca i8
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  store a.Sts, %Sts.slot
+  store a.YesMsg, %YesMsg.slot
+  store a.NoMsg, %NoMsg.slot
+  store i64 0, %LResult.slot
+  store i64 0, %LState.slot
+  store nil, %LMsg.slot
+  store i64 0, %_result.slot
+  %t2 = gc.load @Main_M3_info+104
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t9 = load i64, %ThN.slot
+  %t10 = array.elem_addr @Main_M3_info+112, %t9
+  %t11 = load enum , %t10
+  %t12 = zext %t11 to i64
+  store %t12, %LState.slot
+  %t13 = load i8, %Sts.slot
+  %t14 = load i64, %LState.slot
+  %t15 = zext %t13 to i64
+  %t16 = icmp ult %t14, 64
+  %t17 = select %t16, %t14, 0
+  %t18 = ilshr %t15, %t17
+  %t19 = iand %t18, 1
+  %t20 = icmp ne %t19, 0
+  %t21 = zext %t20 to i64
+  store %t21, %LResult.slot
+  %t22 = load i64, %ThN.slot
+  %t23 = trunc %t22 to word8
+  %t24 = invoke Main__ThImage(%t23) -> gc_ref void
+lock.lpad.1:
+  %t42 = landingpad catch _ZTI6_M3Exc
+  %t43 = extractvalue %t42, 0
+  %t44 = call __cxa_get_exception_ptr(%t43) -> ptr void
+  %t45 = load ptr void, %t44
+  store %t45, %t6
+  store i32 1, %t7
+  br lock.fin.2
+lock.fin.2:
+  %t46 = convert %t2 to ptr ptr void
+  %t47 = load ptr void, %t46
+  %t48 = ptr.add %t47, 8
+  %t49 = load ptr void, %t48
+  call.indirect %t49(%t2)
+  %t50 = load i32, %t7
+  %t51 = icmp eq %t50, 1
+  cond_br %t51, lock.resume.3, lock.fin.notexc.20
+lock.resume.3:
+  %t52 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t52)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  %t53 = load i64, %LResult.slot
+  %t54 = trunc %t53 to i1
+  ret %t54
+invoke.cont.6:
+  %t25 = invoke RTHooks__Concat(%t24, " is ") -> gc_ref void
+invoke.cont.7:
+  %t26 = load i64, %LState.slot
+  %t27 = invoke Main__StateImage(%t26) -> gc_ref void
+invoke.cont.8:
+  %t28 = invoke RTHooks__Concat(%t25, %t27) -> gc_ref void
+invoke.cont.9:
+  store %t28, %LMsg.slot
+  %t29 = load i64, %LResult.slot
+  %t30 = trunc %t29 to i1
+  cond_br %t30, if.then.10, if.next.11
+if.then.10:
+  %t31 = load gc_ref void, %YesMsg.slot
+  %t32 = icmp ne %t31, nil
+  cond_br %t32, if.then.12, if.merge.13
+if.next.11:
+  %t36 = load gc_ref void, %NoMsg.slot
+  %t37 = icmp ne %t36, nil
+  cond_br %t37, if.then.16, if.merge.17
+if.then.12:
+  %t33 = load gc_ref void, %LMsg.slot
+  %t34 = load gc_ref void, %YesMsg.slot
+  %t35 = invoke RTHooks__Concat(%t33, %t34) -> gc_ref void
+if.merge.13:
+  br if.merge.15
+invoke.cont.14:
+  store %t35, %LMsg.slot
+  br if.merge.13
+if.merge.15:
+  %t41 = load gc_ref void, %LMsg.slot
+  invoke Main__W(%t41)
+if.then.16:
+  %t38 = load gc_ref void, %LMsg.slot
+  %t39 = load gc_ref void, %NoMsg.slot
+  %t40 = invoke RTHooks__Concat(%t38, %t39) -> gc_ref void
+if.merge.17:
+  br if.merge.15
+invoke.cont.18:
+  store %t40, %LMsg.slot
+  br if.merge.17
+invoke.cont.19:
+  br lock.fin.2
+lock.fin.notexc.20:
+  br lock.done.5
+
+proc Main__NoteWhetherState(a.ThN: word8, a.St: enum , a.YesMsg: gc_ref void, a.NoMsg: gc_ref void) -> i1
+entry:
+  %_result.slot = alloca i64
+  %NoMsg.slot = alloca gc_ref void
+  %YesMsg.slot = alloca gc_ref void
+  %St.slot = alloca i64
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  %t2 = zext a.St to i64
+  store %t2, %St.slot
+  store a.YesMsg, %YesMsg.slot
+  store a.NoMsg, %NoMsg.slot
+  store i64 0, %_result.slot
+  %t3 = load i64, %ThN.slot
+  %t4 = trunc %t3 to word8
+  %t5 = load i64, %St.slot
+  %t6 = trunc %t5 to i8
+  %t7 = icmp slt %t6, 0
+  cond_br %t7, check.fault.1, check.cont.2
+check.fault.1:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6081)
+  unreachable
+check.cont.2:
+  %t8 = icmp sgt %t6, 6
+  cond_br %t8, check.fault.3, check.cont.4
+check.fault.3:
+  call RTHooks__ReportFault(@Main_M3_info+0, 6081)
+  unreachable
+check.cont.4:
+  %t9 = ishl 1, %t6
+  %t10 = ior 0, %t9
+  %t11 = load gc_ref void, %YesMsg.slot
+  %t12 = load gc_ref void, %NoMsg.slot
+  %t13 = call Main__NoteWhetherStateSet(%t4, %t10, %t11, %t12) -> i1
+  ret %t13
+
+proc Main__TestApply(a.Self: gc_ref @Cl) -> gc_ref void
+entry:
+  %t13 = alloca gc_ref void
+  %t12 = alloca i32
+  %t11 = alloca ptr void
+  %_result.slot = alloca gc_ref void
+  %LProc.slot = alloca ptr void
+  %Self.slot = alloca gc_ref @Cl
+  store a.Self, %Self.slot
+  store nil, %LProc.slot
+  store nil, %_result.slot
+  br loop.header.1
+loop.header.1:
+  %t1 = load gc_ref @Cl, %Self.slot
+  %t2 = ptr.add %t1, 8
+  %t3 = load word8, %t2
+  %t4 = sitofp %t3 to f64
+  %t5 = fmul %t4, 1.00000000000000002D-2
+  %t6 = fadd 2.00000000000000011D-1, %t5
+  call Thread__Pause(%t6)
+  %t7 = gc.load @Main_M3_info+128
+  %t8 = convert %t7 to ptr ptr void
+  %t9 = load ptr void, %t8
+  %t10 = load ptr void, %t9
+  call.indirect %t10(%t7)
+  store i32 0, %t12
+  %t14 = load gc_ref @Cl, %Self.slot
+  %t15 = ptr.add %t14, 8
+  %t16 = load word8, %t15
+  %t17 = zext %t16 to i64
+  %t18 = array.elem_addr @Main_M3_info+136, %t17
+  %t19 = load ptr void, %t18
+  %t20 = icmp ne %t19, nil
+  cond_br %t20, if.then.8, if.merge.9
+loop.exit.2:
+  ret nil
+lock.lpad.3:
+  %t22 = landingpad catch _ZTI6_M3Exc
+  %t23 = extractvalue %t22, 0
+  %t24 = call __cxa_get_exception_ptr(%t23) -> ptr void
+  %t25 = load ptr void, %t24
+  store %t25, %t11
+  store i32 1, %t12
+  br lock.fin.4
+lock.fin.4:
+  %t26 = convert %t7 to ptr ptr void
+  %t27 = load ptr void, %t26
+  %t28 = ptr.add %t27, 8
+  %t29 = load ptr void, %t28
+  call.indirect %t29(%t7)
+  %t30 = load i32, %t12
+  %t31 = icmp eq %t30, 1
+  cond_br %t31, lock.resume.5, lock.fin.notexc.10
+lock.resume.5:
+  %t32 = load ptr void, %t11
+  call RTHooks__ResumeRaise(%t32)
+  unreachable
+lock.ret.6:
+lock.done.7:
+  %t33 = load ptr void, %LProc.slot
+  %t34 = icmp ne %t33, nil
+  cond_br %t34, if.then.11, if.merge.12
+if.then.8:
+  %t21 = load ptr void, %t18
+  store %t21, %LProc.slot
+  store nil, %t18
+  br if.merge.9
+if.merge.9:
+  br lock.fin.4
+lock.fin.notexc.10:
+  br lock.done.7
+if.then.11:
+  %t35 = load ptr void, %LProc.slot
+  %t36 = load gc_ref @Cl, %Self.slot
+  %t37 = ptr.add %t36, 8
+  %t38 = load word8, %t37
+  %t39 = load i64, %t35
+  %t40 = icmp eq %t39, -1
+  cond_br %t40, cl.closure.13, cl.direct.14
+if.merge.12:
+  br loop.header.1
+cl.closure.13:
+  %t41 = ptr.add %t35, 8
+  %t42 = load ptr void, %t41
+  %t43 = ptr.add %t35, 16
+  %t44 = load ptr void, %t43
+  call.indirect %t42(%t44, %t38)
+  br cl.merge.15
+cl.direct.14:
+  call.indirect %t35(%t38)
+  br cl.merge.15
+cl.merge.15:
+  store nil, %LProc.slot
+  br if.merge.12
+
+proc Main__DoAcq(a.ThN: word8) -> void
+entry:
+  %t35 = alloca i32
+  %t34 = alloca ptr void
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  %t2 = gc.load @Main_M3_info+104
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t8 = load i64, %ThN.slot
+  %t9 = array.elem_addr @Main_M3_info+112, %t8
+  store enum  2, %t9
+  br lock.fin.2
+lock.lpad.1:
+  %t10 = landingpad catch _ZTI6_M3Exc
+  %t11 = extractvalue %t10, 0
+  %t12 = call __cxa_get_exception_ptr(%t11) -> ptr void
+  %t13 = load ptr void, %t12
+  store %t13, %t6
+  store i32 1, %t7
+  br lock.fin.2
+lock.fin.2:
+  %t14 = convert %t2 to ptr ptr void
+  %t15 = load ptr void, %t14
+  %t16 = ptr.add %t15, 8
+  %t17 = load ptr void, %t16
+  call.indirect %t17(%t2)
+  %t18 = load i32, %t7
+  %t19 = icmp eq %t18, 1
+  cond_br %t19, lock.resume.3, lock.fin.notexc.6
+lock.resume.3:
+  %t20 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t20)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  %t21 = load i64, %ThN.slot
+  %t22 = trunc %t21 to word8
+  %t23 = call Main__ThImage(%t22) -> gc_ref void
+  %t24 = call RTHooks__Concat(%t23, " Entering Acquire of TestMutex.") -> gc_ref void
+  call Main__W(%t24)
+  %t25 = gc.load @Main_M3_info+176
+  call Thread__Acquire(%t25)
+  %t26 = load i64, %ThN.slot
+  %t27 = trunc %t26 to word8
+  %t28 = call Main__ThImage(%t27) -> gc_ref void
+  %t29 = call RTHooks__Concat(%t28, " Acquired TestMutex.") -> gc_ref void
+  call Main__W(%t29)
+  %t30 = gc.load @Main_M3_info+104
+  %t31 = convert %t30 to ptr ptr void
+  %t32 = load ptr void, %t31
+  %t33 = load ptr void, %t32
+  call.indirect %t33(%t30)
+  store i32 0, %t35
+  %t36 = load i64, %ThN.slot
+  %t37 = array.elem_addr @Main_M3_info+112, %t36
+  %t38 = load enum , %t37
+  %t39 = icmp eq %t38, 2
+  %t40 = icmp eq %t39, 0
+  cond_br %t40, check.fault.12, check.cont.13
+lock.fin.notexc.6:
+  br lock.done.5
+lock.lpad.7:
+  %t47 = landingpad catch _ZTI6_M3Exc
+  %t48 = extractvalue %t47, 0
+  %t49 = call __cxa_get_exception_ptr(%t48) -> ptr void
+  %t50 = load ptr void, %t49
+  store %t50, %t34
+  store i32 1, %t35
+  br lock.fin.8
+lock.fin.8:
+  %t51 = convert %t30 to ptr ptr void
+  %t52 = load ptr void, %t51
+  %t53 = ptr.add %t52, 8
+  %t54 = load ptr void, %t53
+  call.indirect %t54(%t30)
+  %t55 = load i32, %t35
+  %t56 = icmp eq %t55, 1
+  cond_br %t56, lock.resume.9, lock.fin.notexc.18
+lock.resume.9:
+  %t57 = load ptr void, %t34
+  call RTHooks__ResumeRaise(%t57)
+  unreachable
+lock.ret.10:
+lock.done.11:
+  ret
+check.fault.12:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 7744)
+check.cont.13:
+  store enum  1, %t37
+  %t41 = load word8, @Main_M3_info+117
+  %t42 = zext %t41 to i64
+  %t43 = icmp eq %t42, 0
+  %t44 = icmp eq %t43, 0
+  cond_br %t44, check.fault.15, check.cont.16
+invoke.cont.14:
+  unreachable
+check.fault.15:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 7808)
+check.cont.16:
+  %t45 = load i64, %ThN.slot
+  %t46 = trunc %t45 to word8
+  store %t46, @Main_M3_info+117
+  br lock.fin.8
+invoke.cont.17:
+  unreachable
+lock.fin.notexc.18:
+  br lock.done.11
+
+proc Main__DoRel(a.ThN: word8) -> void
+entry:
+  %t35 = alloca i32
+  %t34 = alloca ptr void
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  %t2 = gc.load @Main_M3_info+104
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t8 = load i64, %ThN.slot
+  %t9 = array.elem_addr @Main_M3_info+112, %t8
+  store enum  3, %t9
+  br lock.fin.2
+lock.lpad.1:
+  %t10 = landingpad catch _ZTI6_M3Exc
+  %t11 = extractvalue %t10, 0
+  %t12 = call __cxa_get_exception_ptr(%t11) -> ptr void
+  %t13 = load ptr void, %t12
+  store %t13, %t6
+  store i32 1, %t7
+  br lock.fin.2
+lock.fin.2:
+  %t14 = convert %t2 to ptr ptr void
+  %t15 = load ptr void, %t14
+  %t16 = ptr.add %t15, 8
+  %t17 = load ptr void, %t16
+  call.indirect %t17(%t2)
+  %t18 = load i32, %t7
+  %t19 = icmp eq %t18, 1
+  cond_br %t19, lock.resume.3, lock.fin.notexc.6
+lock.resume.3:
+  %t20 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t20)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  %t21 = load i64, %ThN.slot
+  %t22 = trunc %t21 to word8
+  %t23 = call Main__ThImage(%t22) -> gc_ref void
+  %t24 = call RTHooks__Concat(%t23, " Entering release of TestMutex.") -> gc_ref void
+  call Main__W(%t24)
+  %t25 = gc.load @Main_M3_info+176
+  call Thread__Release(%t25)
+  %t26 = load i64, %ThN.slot
+  %t27 = trunc %t26 to word8
+  %t28 = call Main__ThImage(%t27) -> gc_ref void
+  %t29 = call RTHooks__Concat(%t28, " Released TestMutex.") -> gc_ref void
+  call Main__W(%t29)
+  %t30 = gc.load @Main_M3_info+104
+  %t31 = convert %t30 to ptr ptr void
+  %t32 = load ptr void, %t31
+  %t33 = load ptr void, %t32
+  call.indirect %t33(%t30)
+  store i32 0, %t35
+  %t36 = load i64, %ThN.slot
+  %t37 = array.elem_addr @Main_M3_info+112, %t36
+  %t38 = load enum , %t37
+  %t39 = icmp eq %t38, 3
+  %t40 = icmp eq %t39, 0
+  cond_br %t40, check.fault.12, check.cont.13
+lock.fin.notexc.6:
+  br lock.done.5
+lock.lpad.7:
+  %t47 = landingpad catch _ZTI6_M3Exc
+  %t48 = extractvalue %t47, 0
+  %t49 = call __cxa_get_exception_ptr(%t48) -> ptr void
+  %t50 = load ptr void, %t49
+  store %t50, %t34
+  store i32 1, %t35
+  br lock.fin.8
+lock.fin.8:
+  %t51 = convert %t30 to ptr ptr void
+  %t52 = load ptr void, %t51
+  %t53 = ptr.add %t52, 8
+  %t54 = load ptr void, %t53
+  call.indirect %t54(%t30)
+  %t55 = load i32, %t35
+  %t56 = icmp eq %t55, 1
+  cond_br %t56, lock.resume.9, lock.fin.notexc.18
+lock.resume.9:
+  %t57 = load ptr void, %t34
+  call RTHooks__ResumeRaise(%t57)
+  unreachable
+lock.ret.10:
+lock.done.11:
+  ret
+check.fault.12:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 8288)
+check.cont.13:
+  store enum  1, %t37
+  %t41 = load word8, @Main_M3_info+117
+  %t42 = load i64, %ThN.slot
+  %t43 = zext %t41 to i64
+  %t44 = icmp eq %t43, %t42
+  %t45 = icmp eq %t44, 0
+  cond_br %t45, check.fault.15, check.cont.16
+invoke.cont.14:
+  unreachable
+check.fault.15:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 8352)
+check.cont.16:
+  %t46 = trunc 0 to word8
+  store %t46, @Main_M3_info+117
+  br lock.fin.8
+invoke.cont.17:
+  unreachable
+lock.fin.notexc.18:
+  br lock.done.11
+
+proc Main__DoWait(a.ThN: word8) -> void
+entry:
+  %t44 = alloca i32
+  %t43 = alloca ptr void
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  %t2 = gc.load @Main_M3_info+104
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t8 = load i64, %ThN.slot
+  %t9 = array.elem_addr @Main_M3_info+112, %t8
+  %t10 = load word8, @Main_M3_info+117
+  %t11 = load i64, %ThN.slot
+  %t12 = zext %t10 to i64
+  %t13 = icmp eq %t12, %t11
+  %t14 = icmp eq %t13, 0
+  cond_br %t14, check.fault.6, check.cont.7
+lock.lpad.1:
+  %t18 = landingpad catch _ZTI6_M3Exc
+  %t19 = extractvalue %t18, 0
+  %t20 = call __cxa_get_exception_ptr(%t19) -> ptr void
+  %t21 = load ptr void, %t20
+  store %t21, %t6
+  store i32 1, %t7
+  br lock.fin.2
+lock.fin.2:
+  %t22 = convert %t2 to ptr ptr void
+  %t23 = load ptr void, %t22
+  %t24 = ptr.add %t23, 8
+  %t25 = load ptr void, %t24
+  call.indirect %t25(%t2)
+  %t26 = load i32, %t7
+  %t27 = icmp eq %t26, 1
+  cond_br %t27, lock.resume.3, lock.fin.notexc.12
+lock.resume.3:
+  %t28 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t28)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  %t29 = load i64, %ThN.slot
+  %t30 = trunc %t29 to word8
+  %t31 = call Main__ThImage(%t30) -> gc_ref void
+  %t32 = call RTHooks__Concat(%t31, " Entering Wait on TestCond.") -> gc_ref void
+  call Main__W(%t32)
+  %t33 = gc.load @Main_M3_info+176
+  %t34 = gc.load @Main_M3_info+184
+  call Thread__Wait(%t33, %t34)
+  %t35 = load i64, %ThN.slot
+  %t36 = trunc %t35 to word8
+  %t37 = call Main__ThImage(%t36) -> gc_ref void
+  %t38 = call RTHooks__Concat(%t37, " Was Signalled in TestCond and reacquired TestMutex.") -> gc_ref void
+  call Main__W(%t38)
+  %t39 = gc.load @Main_M3_info+104
+  %t40 = convert %t39 to ptr ptr void
+  %t41 = load ptr void, %t40
+  %t42 = load ptr void, %t41
+  call.indirect %t42(%t39)
+  store i32 0, %t44
+  %t45 = load i64, %ThN.slot
+  %t46 = array.elem_addr @Main_M3_info+112, %t45
+  %t47 = load enum , %t46
+  %t48 = icmp eq %t47, 5
+  %t49 = icmp eq %t48, 0
+  cond_br %t49, check.fault.18, check.cont.19
+check.fault.6:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 8704)
+check.cont.7:
+  %t15 = load enum , %t9
+  %t16 = icmp eq %t15, 1
+  %t17 = icmp eq %t16, 0
+  cond_br %t17, check.fault.9, check.cont.10
+invoke.cont.8:
+  unreachable
+check.fault.9:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 8736)
+check.cont.10:
+  store enum  4, %t9
+  br lock.fin.2
+invoke.cont.11:
+  unreachable
+lock.fin.notexc.12:
+  br lock.done.5
+lock.lpad.13:
+  %t54 = landingpad catch _ZTI6_M3Exc
+  %t55 = extractvalue %t54, 0
+  %t56 = call __cxa_get_exception_ptr(%t55) -> ptr void
+  %t57 = load ptr void, %t56
+  store %t57, %t43
+  store i32 1, %t44
+  br lock.fin.14
+lock.fin.14:
+  %t58 = convert %t39 to ptr ptr void
+  %t59 = load ptr void, %t58
+  %t60 = ptr.add %t59, 8
+  %t61 = load ptr void, %t60
+  call.indirect %t61(%t39)
+  %t62 = load i32, %t44
+  %t63 = icmp eq %t62, 1
+  cond_br %t63, lock.resume.15, lock.fin.notexc.21
+lock.resume.15:
+  %t64 = load ptr void, %t43
+  call RTHooks__ResumeRaise(%t64)
+  unreachable
+lock.ret.16:
+lock.done.17:
+  ret
+check.fault.18:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 9120)
+check.cont.19:
+  %t50 = load i64, %ThN.slot
+  %t51 = array.elem_addr @Main_M3_info+112, %t50
+  store enum  1, %t51
+  %t52 = load i64, %ThN.slot
+  %t53 = trunc %t52 to word8
+  store %t53, @Main_M3_info+117
+  br lock.fin.14
+invoke.cont.20:
+  unreachable
+lock.fin.notexc.21:
+  br lock.done.17
+
+proc Main__DoSignal(a.ThN: word8) -> void
+entry:
+  %t35 = alloca i32
+  %t34 = alloca ptr void
+  %t7 = alloca i32
+  %t6 = alloca ptr void
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  %t2 = gc.load @Main_M3_info+104
+  %t3 = convert %t2 to ptr ptr void
+  %t4 = load ptr void, %t3
+  %t5 = load ptr void, %t4
+  call.indirect %t5(%t2)
+  store i32 0, %t7
+  %t8 = load i64, %ThN.slot
+  %t9 = array.elem_addr @Main_M3_info+112, %t8
+  store enum  6, %t9
+  br lock.fin.2
+lock.lpad.1:
+  %t10 = landingpad catch _ZTI6_M3Exc
+  %t11 = extractvalue %t10, 0
+  %t12 = call __cxa_get_exception_ptr(%t11) -> ptr void
+  %t13 = load ptr void, %t12
+  store %t13, %t6
+  store i32 1, %t7
+  br lock.fin.2
+lock.fin.2:
+  %t14 = convert %t2 to ptr ptr void
+  %t15 = load ptr void, %t14
+  %t16 = ptr.add %t15, 8
+  %t17 = load ptr void, %t16
+  call.indirect %t17(%t2)
+  %t18 = load i32, %t7
+  %t19 = icmp eq %t18, 1
+  cond_br %t19, lock.resume.3, lock.fin.notexc.6
+lock.resume.3:
+  %t20 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t20)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  %t21 = load i64, %ThN.slot
+  %t22 = trunc %t21 to word8
+  %t23 = call Main__ThImage(%t22) -> gc_ref void
+  %t24 = call RTHooks__Concat(%t23, " Entering Signal on TestCond") -> gc_ref void
+  call Main__W(%t24)
+  %t25 = gc.load @Main_M3_info+184
+  call Thread__Signal(%t25)
+  %t26 = load i64, %ThN.slot
+  %t27 = trunc %t26 to word8
+  %t28 = call Main__ThImage(%t27) -> gc_ref void
+  %t29 = call RTHooks__Concat(%t28, " TestCond Signalled ") -> gc_ref void
+  call Main__W(%t29)
+  %t30 = gc.load @Main_M3_info+104
+  %t31 = convert %t30 to ptr ptr void
+  %t32 = load ptr void, %t31
+  %t33 = load ptr void, %t32
+  call.indirect %t33(%t30)
+  store i32 0, %t35
+  %t36 = load i64, %ThN.slot
+  %t37 = array.elem_addr @Main_M3_info+112, %t36
+  store enum  1, %t37
+  br lock.fin.8
+lock.fin.notexc.6:
+  br lock.done.5
+lock.lpad.7:
+  %t38 = landingpad catch _ZTI6_M3Exc
+  %t39 = extractvalue %t38, 0
+  %t40 = call __cxa_get_exception_ptr(%t39) -> ptr void
+  %t41 = load ptr void, %t40
+  store %t41, %t34
+  store i32 1, %t35
+  br lock.fin.8
+lock.fin.8:
+  %t42 = convert %t30 to ptr ptr void
+  %t43 = load ptr void, %t42
+  %t44 = ptr.add %t43, 8
+  %t45 = load ptr void, %t44
+  call.indirect %t45(%t30)
+  %t46 = load i32, %t35
+  %t47 = icmp eq %t46, 1
+  cond_br %t47, lock.resume.9, lock.fin.notexc.12
+lock.resume.9:
+  %t48 = load ptr void, %t34
+  call RTHooks__ResumeRaise(%t48)
+  unreachable
+lock.ret.10:
+lock.done.11:
+  ret
+lock.fin.notexc.12:
+  br lock.done.11
+
+proc Main__ForceSignalled(a.ThN: word8) -> void
+entry:
+  %LThN.slot = alloca i64
+  %ThN.slot = alloca i64
+  %t1 = zext a.ThN to i64
+  store %t1, %ThN.slot
+  store i64 0, %LThN.slot
+  call Thread__Pause(3.00000000000000000D0)
+  %t2 = load i64, %ThN.slot
+  %t3 = trunc %t2 to word8
+  %t4 = call Main__NoteWhetherState(%t3, 5, "", "") -> i1
+  cond_br %t4, if.then.1, if.merge.2
+if.then.1:
+  %t5 = trunc 3 to word8
+  call Main__Action(%t5, @Main__DoSignal)
+  %t6 = trunc 3 to word8
+  call Main__WaitForState(%t6, 1)
+  %t7 = call Main__WaitForHeld() -> word8
+  %t8 = zext %t7 to i64
+  store %t8, %LThN.slot
+  %t9 = load i64, %LThN.slot
+  %t10 = load i64, %ThN.slot
+  %t11 = icmp eq %t9, %t10
+  %t12 = icmp eq %t11, 0
+  cond_br %t12, check.fault.3, check.cont.4
+if.merge.2:
+  %t13 = load i64, %ThN.slot
+  %t14 = trunc %t13 to word8
+  call Main__Action(%t14, @Main__DoRel)
+  %t15 = load i64, %ThN.slot
+  %t16 = trunc %t15 to word8
+  call Main__WaitForState(%t16, 1)
+  ret
+check.fault.3:
+  call RTHooks__ReportFault(@Main_M3_info+0, 10112)
+  unreachable
+check.cont.4:
+  br if.merge.2
+
+proc Main__TestSeq() -> void
+entry:
+  %LThNo.slot = alloca i64
+  store i64 0, %LThNo.slot
+  %t1 = trunc 1 to word8
+  invoke Main__Action(%t1, @Main__DoAcq)
+lpad.1:
+  %t43 = landingpad catch _ZTI6_M3Exc
+  %t44 = extractvalue %t43, 0
+  %t45 = call __cxa_get_exception_ptr(%t44) -> ptr void
+  %t46 = load ptr void, %t45
+  %t47 = load ptr void, %t46
+  %t48 = load i64, %t47
+  %t49 = icmp eq %t48, -1505293580
+  cond_br %t49, h.body.51, exc.next.52
+try.merge.2:
+  ret
+invoke.cont.3:
+  %t2 = trunc 1 to word8
+  invoke Main__WaitForState(%t2, 1)
+invoke.cont.4:
+  %t3 = trunc 1 to word8
+  invoke Main__ActionWait(%t3, @Main__DoWait)
+invoke.cont.5:
+  %t4 = trunc 1 to word8
+  invoke Main__WaitForState(%t4, 5)
+invoke.cont.6:
+  %t5 = trunc 2 to word8
+  invoke Main__Action(%t5, @Main__DoAcq)
+invoke.cont.7:
+  %t6 = trunc 2 to word8
+  invoke Main__WaitForState(%t6, 1)
+invoke.cont.8:
+  %t7 = trunc 2 to word8
+  invoke Main__ActionWait(%t7, @Main__DoWait)
+invoke.cont.9:
+  %t8 = trunc 2 to word8
+  invoke Main__WaitForState(%t8, 5)
+invoke.cont.10:
+  %t9 = trunc 3 to word8
+  invoke Main__Action(%t9, @Main__DoAcq)
+invoke.cont.11:
+  %t10 = trunc 3 to word8
+  invoke Main__WaitForState(%t10, 1)
+invoke.cont.12:
+  %t11 = trunc 3 to word8
+  invoke Main__Action(%t11, @Main__DoSignal)
+invoke.cont.13:
+  %t12 = trunc 3 to word8
+  invoke Main__WaitForState(%t12, 1)
+invoke.cont.14:
+  %t13 = trunc 3 to word8
+  invoke Main__Action(%t13, @Main__DoRel)
+invoke.cont.15:
+  %t14 = trunc 3 to word8
+  invoke Main__WaitForState(%t14, 1)
+invoke.cont.16:
+  %t15 = invoke Main__WaitForHeld() -> word8
+invoke.cont.17:
+  %t16 = zext %t15 to i64
+  store %t16, %LThNo.slot
+  %t17 = load i64, %LThNo.slot
+  %t18 = icmp eq %t17, 1
+  cond_br %t18, if.then.18, if.next.19
+if.then.18:
+  %t19 = trunc 1 to word8
+  invoke Main__Action(%t19, @Main__DoRel)
+if.next.19:
+  %t22 = load i64, %LThNo.slot
+  %t23 = icmp eq %t22, 2
+  %t24 = icmp eq %t23, 0
+  cond_br %t24, check.fault.24, check.cont.25
+invoke.cont.20:
+  %t20 = trunc 1 to word8
+  invoke Main__WaitForState(%t20, 1)
+invoke.cont.21:
+  %t21 = trunc 2 to word8
+  invoke Main__ForceSignalled(%t21)
+invoke.cont.22:
+  br if.merge.23
+if.merge.23:
+  %t28 = trunc 4 to word8
+  invoke Main__Action(%t28, @Main__DoAcq)
+check.fault.24:
+  invoke RTHooks__ReportFault(@Main_M3_info+0, 11936)
+check.cont.25:
+  %t25 = trunc 2 to word8
+  invoke Main__Action(%t25, @Main__DoRel)
+invoke.cont.26:
+  unreachable
+invoke.cont.27:
+  %t26 = trunc 2 to word8
+  invoke Main__WaitForState(%t26, 1)
+invoke.cont.28:
+  %t27 = trunc 1 to word8
+  invoke Main__ForceSignalled(%t27)
+invoke.cont.29:
+  br if.merge.23
+invoke.cont.30:
+  %t29 = trunc 4 to word8
+  invoke Main__WaitForState(%t29, 1)
+invoke.cont.31:
+  %t30 = trunc 4 to word8
+  invoke Main__ActionWait(%t30, @Main__DoWait)
+invoke.cont.32:
+  %t31 = trunc 4 to word8
+  invoke Main__WaitForState(%t31, 5)
+invoke.cont.33:
+  %t32 = trunc 3 to word8
+  invoke Main__Action(%t32, @Main__DoAcq)
+invoke.cont.34:
+  %t33 = trunc 3 to word8
+  invoke Main__WaitForState(%t33, 1)
+invoke.cont.35:
+  %t34 = trunc 3 to word8
+  invoke Main__Action(%t34, @Main__DoSignal)
+invoke.cont.36:
+  %t35 = trunc 3 to word8
+  invoke Main__WaitForState(%t35, 1)
+invoke.cont.37:
+  %t36 = trunc 3 to word8
+  invoke Main__Action(%t36, @Main__DoRel)
+invoke.cont.38:
+  %t37 = trunc 3 to word8
+  invoke Main__WaitForState(%t37, 1)
+invoke.cont.39:
+  invoke Thread__Pause(3.00000000000000000D0)
+invoke.cont.40:
+  %t38 = trunc 4 to word8
+  invoke Main__WaitForStateSet(%t38, 34)
+invoke.cont.41:
+  %t39 = trunc 4 to word8
+  %t40 = invoke Main__NoteWhetherState(%t39, 1, "", "") -> i1
+invoke.cont.42:
+  cond_br %t40, if.then.43, if.next.44
+if.then.43:
+  %t41 = trunc 4 to word8
+  invoke Main__Action(%t41, @Main__DoRel)
+if.next.44:
+  invoke Main__W("FAILURE: This is the \22twice used ticket\22 bug we are testing for.")
+invoke.cont.45:
+  %t42 = trunc 4 to word8
+  invoke Main__WaitForState(%t42, 1)
+invoke.cont.46:
+  invoke Main__W("SUCCESS: all as expected.")
+invoke.cont.47:
+  br if.merge.48
+if.merge.48:
+  br try.merge.2
+invoke.cont.49:
+  invoke RTHooks__Raise(@Main__Failure_excptr, nil, nil, 0)
+invoke.cont.50:
+  unreachable
+h.body.51:
+  %t50 = call __cxa_begin_catch(%t44) -> ptr void
+  call __cxa_end_catch()
+  br try.merge.2
+exc.next.52:
+  resume %t43
+
+proc Main__Init() -> void
+entry:
+  %t13 = alloca i64
+  %LThNo.slot = alloca i64
+  %t1 = load ptr void, @tl_obj_356643957
+  %t2 = call RTHooks__AllocateTracedObj(%t1) -> gc_ref @_t9d8fb489
+  %t3 = convert %t2 to gc_ref void
+  gc.store %t3, @Main_M3_info+128
+  %t4 = load ptr void, @tl_obj_356643957
+  %t5 = call RTHooks__AllocateTracedObj(%t4) -> gc_ref @_t9d8fb489
+  %t6 = convert %t5 to gc_ref void
+  gc.store %t6, @Main_M3_info+104
+  %t7 = load ptr void, @tl_obj_356643957
+  %t8 = call RTHooks__AllocateTracedObj(%t7) -> gc_ref @_t9d8fb489
+  %t9 = convert %t8 to gc_ref void
+  gc.store %t9, @Main_M3_info+176
+  %t10 = load ptr void, @tl_obj_1475387830
+  %t11 = call RTHooks__AllocateTracedObj(%t10) -> gc_ref @_t9d8fb489
+  %t12 = convert %t11 to gc_ref void
+  gc.store %t12, @Main_M3_info+184
+  store i64 0, %LThNo.slot
+  store i64 4, %t13
+  br for.header.1
+for.header.1:
+  %t14 = load i64, %LThNo.slot
+  %t15 = load i64, %t13
+  %t16 = icmp sle %t14, %t15
+  cond_br %t16, for.body.2, for.exit.3
+for.body.2:
+  %t17 = load i64, %LThNo.slot
+  %t18 = array.elem_addr @Main_M3_info+384, %t17
+  %t19 = load ptr void, @tl_obj_1940822287
+  %t20 = call RTHooks__AllocateTracedObj(%t19) -> gc_ref @_t9d8fb489
+  %t21 = convert %t20 to gc_ref @Cl
+  %t22 = load i64, %LThNo.slot
+  %t23 = ptr.add %t21, 8
+  store %t22, %t23
+  store %t21, %t18
+  %t24 = load i64, %LThNo.slot
+  %t25 = array.elem_addr @Main_M3_info+112, %t24
+  store enum  1, %t25
+  %t26 = load i64, %LThNo.slot
+  %t27 = array.elem_addr @Main_M3_info+192, %t26
+  %t28 = load i64, %LThNo.slot
+  %t29 = array.elem_addr @Main_M3_info+384, %t28
+  %t30 = load gc_ref @Cl, %t29
+  %t31 = call Thread__Fork(%t30) -> gc_ref void
+  store %t31, %t27
+  %t32 = load i64, %LThNo.slot
+  %t33 = iadd %t32, 1
+  store %t33, %LThNo.slot
+  br for.header.1
+for.exit.3:
+  ret
+
+proc Main_M3() -> void
+entry:
+  call Main__Init()
+  call Main__TestSeq()
+  ret
+

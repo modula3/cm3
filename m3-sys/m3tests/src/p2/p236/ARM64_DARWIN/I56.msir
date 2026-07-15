@@ -1,0 +1,6 @@
+module I56
+
+proc I56_I3() -> void
+entry:
+  ret
+

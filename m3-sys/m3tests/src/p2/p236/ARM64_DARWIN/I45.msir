@@ -1,0 +1,6 @@
+module I45
+
+proc I45_I3() -> void
+entry:
+  ret
+

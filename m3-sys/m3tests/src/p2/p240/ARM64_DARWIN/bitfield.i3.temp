@@ -1,0 +1,2 @@
+INTERFACE bitfield;
+END bitfield.

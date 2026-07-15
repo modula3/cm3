@@ -1,0 +1,1418 @@
+module Main
+
+global Main__top_of_stack : ptr void
+
+proc Main__Line() -> gc_ref void
+entry:
+  %_result.slot = alloca gc_ref void
+  store nil, %_result.slot
+  %t1 = trunc 10 to word8
+  %t2 = call Fmt__Int(11, %t1) -> gc_ref void
+  ret %t2
+
+proc Main__GetStack() -> ptr void
+entry:
+  %_result.slot = alloca ptr void
+  %a.slot = alloca ptr void
+  store nil, %a.slot
+  store nil, %_result.slot
+  store %a.slot, %a.slot
+  %t1 = load ptr void, %a.slot
+  ret %t1
+
+proc Main__GetStackHeight() -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca ptr void
+  store nil, %b.slot
+  %t1 = call Main__GetStack() -> ptr void
+  store %t1, %b.slot
+  %t2 = load ptr void, %b.slot
+  %t3 = load ptr void, @Main_M3_info+112
+  %t4 = icmp sgt %t2, %t3
+  cond_br %t4, if.then.1, if.merge.2
+if.then.1:
+  %t5 = load ptr void, %b.slot
+  %t6 = load ptr void, @Main_M3_info+112
+  %t7 = convert %t5 to i64
+  %t8 = convert %t6 to i64
+  %t9 = isub %t7, %t8
+  ret %t9
+if.merge.2:
+  %t10 = load ptr void, @Main_M3_info+112
+  %t11 = load ptr void, %b.slot
+  %t12 = convert %t10 to i64
+  %t13 = convert %t11 to i64
+  %t14 = isub %t12, %t13
+  ret %t14
+
+proc Main__PrintStackHeight() -> void
+entry:
+  call IO__Put("stack_height:", nil)
+  %t1 = call Main__GetStackHeight() -> i64
+  call IO__PutInt(%t1, nil)
+  call IO__Put(" ", nil)
+  ret
+
+proc Main__NL() -> void
+entry:
+  call IO__Put("\0a", nil)
+  ret
+
+proc Main__F0() -> void
+entry:
+  call IO__Put("F0 ", nil)
+  call Main__NL()
+  call Main__PrintStackHeight()
+  ret
+
+proc Main__F1() -> void
+entry:
+  %t3 = alloca @lpad_t
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put("F1 ", nil)
+  call Main__NL()
+  call Main__PrintStackHeight()
+  store i32 0, %t1
+  invoke Main__PrintStackHeight()
+fin.lpad.1:
+  %t6 = landingpad catch _ZTI6_M3Exc
+  %t7 = extractvalue %t6, 0
+  %t8 = call __cxa_get_exception_ptr(%t7) -> ptr void
+  %t9 = load ptr void, %t8
+  store %t9, %t2
+  store i32 1, %t1
+  br fin.body.2
+fin.body.2:
+  %t10 = call Main__Line() -> gc_ref void
+  %t11 = call RTHooks__Concat("F1 ", %t10) -> gc_ref void
+  call IO__Put(%t11, nil)
+  call Main__NL()
+  %t12 = load i32, %t1
+  %t13 = icmp eq %t12, 1
+  cond_br %t13, fin.rethrow.3, fin.notexc.11
+fin.rethrow.3:
+  %t14 = load ptr void, %t2
+  call RTHooks__ResumeRaise(%t14)
+  unreachable
+fin.done.4:
+  ret
+invoke.cont.5:
+  %t4 = invoke Main__Line() -> gc_ref void
+invoke.cont.6:
+  %t5 = invoke RTHooks__Concat("F1 ", %t4) -> gc_ref void
+invoke.cont.7:
+  invoke IO__Put(%t5, nil)
+invoke.cont.8:
+  invoke Main__NL()
+invoke.cont.9:
+  invoke RTHooks__Raise(@Main__E_excptr, nil, nil, 0)
+invoke.cont.10:
+  unreachable
+fin.notexc.11:
+  br fin.done.4
+
+proc Main__F2() -> void
+entry:
+  %t8 = alloca @lpad_t
+  %t7 = alloca ptr void
+  %t6 = alloca i32
+  %t3 = alloca @lpad_t
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put("F2 ", nil)
+  call Main__NL()
+  call Main__PrintStackHeight()
+  store i32 0, %t1
+  invoke Main__PrintStackHeight()
+fin.lpad.1:
+  %t20 = landingpad catch _ZTI6_M3Exc
+  %t21 = extractvalue %t20, 0
+  %t22 = call __cxa_get_exception_ptr(%t21) -> ptr void
+  %t23 = load ptr void, %t22
+  store %t23, %t2
+  store i32 1, %t1
+  br fin.body.2
+fin.body.2:
+  %t24 = call Main__Line() -> gc_ref void
+  %t25 = call RTHooks__Concat("F2 ", %t24) -> gc_ref void
+  call IO__Put(%t25, nil)
+  call Main__NL()
+  %t26 = load i32, %t1
+  %t27 = icmp eq %t26, 1
+  cond_br %t27, fin.rethrow.3, fin.notexc.27
+fin.rethrow.3:
+  %t28 = load ptr void, %t2
+  call RTHooks__ResumeRaise(%t28)
+  unreachable
+fin.done.4:
+  ret
+invoke.cont.5:
+  %t4 = invoke Main__Line() -> gc_ref void
+invoke.cont.6:
+  %t5 = invoke RTHooks__Concat("F2 ", %t4) -> gc_ref void
+invoke.cont.7:
+  invoke IO__Put(%t5, nil)
+invoke.cont.8:
+  invoke Main__NL()
+invoke.cont.9:
+  invoke Main__PrintStackHeight()
+invoke.cont.10:
+  store i32 0, %t6
+  invoke Main__PrintStackHeight()
+fin.lpad.11:
+  %t11 = landingpad catch _ZTI6_M3Exc
+  %t12 = extractvalue %t11, 0
+  %t13 = call __cxa_get_exception_ptr(%t12) -> ptr void
+  %t14 = load ptr void, %t13
+  store %t14, %t7
+  store i32 1, %t6
+  br fin.body.12
+fin.body.12:
+  %t15 = invoke Main__Line() -> gc_ref void
+fin.rethrow.13:
+  %t19 = load ptr void, %t7
+  invoke RTHooks__ResumeRaise(%t19)
+fin.done.14:
+  br fin.body.2
+invoke.cont.15:
+  %t9 = invoke Main__Line() -> gc_ref void
+invoke.cont.16:
+  %t10 = invoke RTHooks__Concat("F2 ", %t9) -> gc_ref void
+invoke.cont.17:
+  invoke IO__Put(%t10, nil)
+invoke.cont.18:
+  invoke Main__NL()
+invoke.cont.19:
+  invoke RTHooks__Raise(@Main__E_excptr, nil, nil, 0)
+invoke.cont.20:
+  unreachable
+invoke.cont.21:
+  %t16 = invoke RTHooks__Concat("F2 ", %t15) -> gc_ref void
+invoke.cont.22:
+  invoke IO__Put(%t16, nil)
+invoke.cont.23:
+  invoke Main__NL()
+invoke.cont.24:
+  %t17 = load i32, %t6
+  %t18 = icmp eq %t17, 1
+  cond_br %t18, fin.rethrow.13, fin.notexc.25
+fin.notexc.25:
+  br fin.done.14
+fin.rethrow.cont.26:
+  unreachable
+fin.notexc.27:
+  br fin.done.4
+
+proc Main__F3() -> void
+entry:
+  %t39 = alloca @lpad_t
+  %t38 = alloca ptr void
+  %t37 = alloca i32
+  %t26 = alloca @lpad_t
+  %t25 = alloca ptr void
+  %t24 = alloca i32
+  %t13 = alloca @lpad_t
+  %t12 = alloca ptr void
+  %t11 = alloca i32
+  %i.slot = alloca i64
+  %Function.slot = alloca gc_ref void
+  store nil, %Function.slot
+  store i64 0, %i.slot
+  store "F3 ", %Function.slot
+  %t1 = load i64, %i.slot
+  %t2 = trunc 10 to word8
+  %t3 = call Fmt__Int(%t1, %t2) -> gc_ref void
+  %t4 = call RTHooks__Concat(%t3, " ") -> gc_ref void
+  %t5 = load gc_ref void, %Function.slot
+  %t6 = call RTHooks__Concat(%t4, %t5) -> gc_ref void
+  %t7 = call Main__Line() -> gc_ref void
+  %t8 = call RTHooks__Concat(%t6, %t7) -> gc_ref void
+  call IO__Put(%t8, nil)
+  call Main__NL()
+  %t9 = load word64, %i.slot
+  %t10 = iadd %t9, 1
+  store %t10, %i.slot
+  call Main__PrintStackHeight()
+  store i32 0, %t11
+  invoke Main__PrintStackHeight()
+fin.lpad.1:
+  %t84 = landingpad catch _ZTI6_M3Exc
+  %t85 = extractvalue %t84, 0
+  %t86 = call __cxa_get_exception_ptr(%t85) -> ptr void
+  %t87 = load ptr void, %t86
+  store %t87, %t12
+  store i32 1, %t11
+  br fin.body.2
+fin.body.2:
+  %t88 = load i64, %i.slot
+  %t89 = trunc 10 to word8
+  %t90 = call Fmt__Int(%t88, %t89) -> gc_ref void
+  %t91 = call RTHooks__Concat(%t90, " ") -> gc_ref void
+  %t92 = load gc_ref void, %Function.slot
+  %t93 = call RTHooks__Concat(%t91, %t92) -> gc_ref void
+  %t94 = call Main__Line() -> gc_ref void
+  %t95 = call RTHooks__Concat(%t93, %t94) -> gc_ref void
+  call IO__Put(%t95, nil)
+  call Main__NL()
+  %t96 = load word64, %i.slot
+  %t97 = iadd %t96, 1
+  store %t97, %i.slot
+  %t98 = load i32, %t11
+  %t99 = icmp eq %t98, 1
+  cond_br %t99, fin.rethrow.3, fin.notexc.57
+fin.rethrow.3:
+  %t100 = load ptr void, %t12
+  call RTHooks__ResumeRaise(%t100)
+  unreachable
+fin.done.4:
+  ret
+invoke.cont.5:
+  %t14 = load i64, %i.slot
+  %t15 = trunc 10 to word8
+  %t16 = invoke Fmt__Int(%t14, %t15) -> gc_ref void
+invoke.cont.6:
+  %t17 = invoke RTHooks__Concat(%t16, " ") -> gc_ref void
+invoke.cont.7:
+  %t18 = load gc_ref void, %Function.slot
+  %t19 = invoke RTHooks__Concat(%t17, %t18) -> gc_ref void
+invoke.cont.8:
+  %t20 = invoke Main__Line() -> gc_ref void
+invoke.cont.9:
+  %t21 = invoke RTHooks__Concat(%t19, %t20) -> gc_ref void
+invoke.cont.10:
+  invoke IO__Put(%t21, nil)
+invoke.cont.11:
+  invoke Main__NL()
+invoke.cont.12:
+  %t22 = load word64, %i.slot
+  %t23 = iadd %t22, 1
+  store %t23, %i.slot
+  invoke Main__PrintStackHeight()
+invoke.cont.13:
+  store i32 0, %t24
+  invoke Main__PrintStackHeight()
+fin.lpad.14:
+  %t67 = landingpad catch _ZTI6_M3Exc
+  %t68 = extractvalue %t67, 0
+  %t69 = call __cxa_get_exception_ptr(%t68) -> ptr void
+  %t70 = load ptr void, %t69
+  store %t70, %t25
+  store i32 1, %t24
+  br fin.body.15
+fin.body.15:
+  %t71 = load i64, %i.slot
+  %t72 = trunc 10 to word8
+  %t73 = invoke Fmt__Int(%t71, %t72) -> gc_ref void
+fin.rethrow.16:
+  %t83 = load ptr void, %t25
+  invoke RTHooks__ResumeRaise(%t83)
+fin.done.17:
+  br fin.body.2
+invoke.cont.18:
+  %t27 = load i64, %i.slot
+  %t28 = trunc 10 to word8
+  %t29 = invoke Fmt__Int(%t27, %t28) -> gc_ref void
+invoke.cont.19:
+  %t30 = invoke RTHooks__Concat(%t29, " ") -> gc_ref void
+invoke.cont.20:
+  %t31 = load gc_ref void, %Function.slot
+  %t32 = invoke RTHooks__Concat(%t30, %t31) -> gc_ref void
+invoke.cont.21:
+  %t33 = invoke Main__Line() -> gc_ref void
+invoke.cont.22:
+  %t34 = invoke RTHooks__Concat(%t32, %t33) -> gc_ref void
+invoke.cont.23:
+  invoke IO__Put(%t34, nil)
+invoke.cont.24:
+  invoke Main__NL()
+invoke.cont.25:
+  %t35 = load word64, %i.slot
+  %t36 = iadd %t35, 1
+  store %t36, %i.slot
+  store i32 0, %t37
+  invoke Main__PrintStackHeight()
+fin.lpad.26:
+  %t50 = landingpad catch _ZTI6_M3Exc
+  %t51 = extractvalue %t50, 0
+  %t52 = call __cxa_get_exception_ptr(%t51) -> ptr void
+  %t53 = load ptr void, %t52
+  store %t53, %t38
+  store i32 1, %t37
+  br fin.body.27
+fin.body.27:
+  store "finally F3 ", %Function.slot
+  %t54 = load i64, %i.slot
+  %t55 = trunc 10 to word8
+  %t56 = invoke Fmt__Int(%t54, %t55) -> gc_ref void
+fin.rethrow.28:
+  %t66 = load ptr void, %t38
+  invoke RTHooks__ResumeRaise(%t66)
+fin.done.29:
+  br fin.body.15
+invoke.cont.30:
+  %t40 = load i64, %i.slot
+  %t41 = trunc 10 to word8
+  %t42 = invoke Fmt__Int(%t40, %t41) -> gc_ref void
+invoke.cont.31:
+  %t43 = invoke RTHooks__Concat(%t42, " ") -> gc_ref void
+invoke.cont.32:
+  %t44 = load gc_ref void, %Function.slot
+  %t45 = invoke RTHooks__Concat(%t43, %t44) -> gc_ref void
+invoke.cont.33:
+  %t46 = invoke Main__Line() -> gc_ref void
+invoke.cont.34:
+  %t47 = invoke RTHooks__Concat(%t45, %t46) -> gc_ref void
+invoke.cont.35:
+  invoke IO__Put(%t47, nil)
+invoke.cont.36:
+  invoke Main__NL()
+invoke.cont.37:
+  %t48 = load word64, %i.slot
+  %t49 = iadd %t48, 1
+  store %t49, %i.slot
+  invoke RTHooks__Raise(@Main__E_excptr, nil, nil, 0)
+invoke.cont.38:
+  unreachable
+invoke.cont.39:
+  %t57 = invoke RTHooks__Concat(%t56, " ") -> gc_ref void
+invoke.cont.40:
+  %t58 = load gc_ref void, %Function.slot
+  %t59 = invoke RTHooks__Concat(%t57, %t58) -> gc_ref void
+invoke.cont.41:
+  %t60 = invoke Main__Line() -> gc_ref void
+invoke.cont.42:
+  %t61 = invoke RTHooks__Concat(%t59, %t60) -> gc_ref void
+invoke.cont.43:
+  invoke IO__Put(%t61, nil)
+invoke.cont.44:
+  invoke Main__NL()
+invoke.cont.45:
+  %t62 = load word64, %i.slot
+  %t63 = iadd %t62, 1
+  store %t63, %i.slot
+  %t64 = load i32, %t37
+  %t65 = icmp eq %t64, 1
+  cond_br %t65, fin.rethrow.28, fin.notexc.46
+fin.notexc.46:
+  br fin.done.29
+fin.rethrow.cont.47:
+  unreachable
+invoke.cont.48:
+  %t74 = invoke RTHooks__Concat(%t73, " ") -> gc_ref void
+invoke.cont.49:
+  %t75 = load gc_ref void, %Function.slot
+  %t76 = invoke RTHooks__Concat(%t74, %t75) -> gc_ref void
+invoke.cont.50:
+  %t77 = invoke Main__Line() -> gc_ref void
+invoke.cont.51:
+  %t78 = invoke RTHooks__Concat(%t76, %t77) -> gc_ref void
+invoke.cont.52:
+  invoke IO__Put(%t78, nil)
+invoke.cont.53:
+  invoke Main__NL()
+invoke.cont.54:
+  %t79 = load word64, %i.slot
+  %t80 = iadd %t79, 1
+  store %t80, %i.slot
+  %t81 = load i32, %t24
+  %t82 = icmp eq %t81, 1
+  cond_br %t82, fin.rethrow.16, fin.notexc.55
+fin.notexc.55:
+  br fin.done.17
+fin.rethrow.cont.56:
+  unreachable
+fin.notexc.57:
+  br fin.done.4
+
+proc Main__F4() -> void
+entry:
+  %t12 = alloca ptr void
+  %t11 = alloca i32
+  %t8 = alloca ptr void
+  %t7 = alloca i32
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t1 = call Main__Line() -> gc_ref void
+  %t2 = call RTHooks__Concat("F4 ", %t1) -> gc_ref void
+  call IO__Put(%t2, nil)
+  call Main__NL()
+  call Main__PrintStackHeight()
+  store i32 0, %t3
+  %t5 = invoke Main__Line() -> gc_ref void
+lpad.1:
+  %t29 = landingpad catch _ZTI6_M3Exc
+  %t30 = extractvalue %t29, 0
+  %t31 = call __cxa_get_exception_ptr(%t30) -> ptr void
+  %t32 = load ptr void, %t31
+  %t33 = load ptr void, %t32
+  %t34 = load i64, %t33
+  store %t32, %t4
+  store i32 1, %t3
+  %t35 = call __cxa_begin_catch(%t30) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  ret
+else.dispatch.3:
+  %t36 = load i32, %t3
+  %t37 = icmp eq %t36, 1
+  cond_br %t37, else.endcatch.28, else.skip.endcatch.29
+invoke.cont.4:
+  %t6 = invoke RTHooks__Concat("F4 ", %t5) -> gc_ref void
+invoke.cont.5:
+  invoke IO__Put(%t6, nil)
+invoke.cont.6:
+  invoke Main__NL()
+invoke.cont.7:
+  invoke Main__PrintStackHeight()
+invoke.cont.8:
+  store i32 0, %t7
+  %t9 = invoke Main__Line() -> gc_ref void
+lpad.9:
+  %t22 = landingpad catch _ZTI6_M3Exc
+  %t23 = extractvalue %t22, 0
+  %t24 = call __cxa_get_exception_ptr(%t23) -> ptr void
+  %t25 = load ptr void, %t24
+  %t26 = load ptr void, %t25
+  %t27 = load i64, %t26
+  store %t25, %t8
+  store i32 1, %t7
+  %t28 = call __cxa_begin_catch(%t23) -> ptr void
+  br else.dispatch.11
+try.merge.10:
+  br try.merge.2
+else.dispatch.11:
+  invoke RTHooks__Raise(@Main__E3_excptr, nil, nil, 0)
+invoke.cont.12:
+  %t10 = invoke RTHooks__Concat("F4 ", %t9) -> gc_ref void
+invoke.cont.13:
+  invoke IO__Put(%t10, nil)
+invoke.cont.14:
+  invoke Main__NL()
+invoke.cont.15:
+  invoke Main__PrintStackHeight()
+invoke.cont.16:
+  store i32 0, %t11
+  %t13 = invoke Main__Line() -> gc_ref void
+lpad.17:
+  %t15 = landingpad catch _ZTI6_M3Exc
+  %t16 = extractvalue %t15, 0
+  %t17 = call __cxa_get_exception_ptr(%t16) -> ptr void
+  %t18 = load ptr void, %t17
+  %t19 = load ptr void, %t18
+  %t20 = load i64, %t19
+  store %t18, %t12
+  store i32 1, %t11
+  %t21 = call __cxa_begin_catch(%t16) -> ptr void
+  br else.dispatch.19
+try.merge.18:
+  br try.merge.10
+else.dispatch.19:
+  invoke RTHooks__Raise(@Main__E2_excptr, nil, nil, 0)
+invoke.cont.20:
+  %t14 = invoke RTHooks__Concat("F4 ", %t13) -> gc_ref void
+invoke.cont.21:
+  invoke IO__Put(%t14, nil)
+invoke.cont.22:
+  invoke Main__NL()
+invoke.cont.23:
+  invoke Main__PrintStackHeight()
+invoke.cont.24:
+  invoke RTHooks__Raise(@Main__E1_excptr, nil, nil, 0)
+invoke.cont.25:
+  unreachable
+invoke.cont.26:
+  unreachable
+invoke.cont.27:
+  unreachable
+else.endcatch.28:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.29:
+  br try.merge.2
+
+proc Main__F5() -> void
+entry:
+  %t6 = alloca ptr void
+  %t5 = alloca i32
+  %t1 = alloca i64
+  %i.slot = alloca i64
+  store i64 1, %i.slot
+  store i64 10, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %i.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i32 0, %t5
+  %t7 = invoke Main__Line() -> gc_ref void
+for.exit.3:
+  ret
+lpad.4:
+  %t9 = landingpad catch _ZTI6_M3Exc
+  %t10 = extractvalue %t9, 0
+  %t11 = call __cxa_get_exception_ptr(%t10) -> ptr void
+  %t12 = load ptr void, %t11
+  %t13 = load ptr void, %t12
+  %t14 = load i64, %t13
+  store %t12, %t6
+  store i32 1, %t5
+  %t15 = call __cxa_begin_catch(%t10) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  %t18 = load i64, %i.slot
+  %t19 = iadd %t18, 1
+  store %t19, %i.slot
+  br for.header.1
+else.dispatch.6:
+  %t16 = load i32, %t5
+  %t17 = icmp eq %t16, 1
+  cond_br %t17, else.endcatch.13, else.skip.endcatch.14
+invoke.cont.7:
+  %t8 = invoke RTHooks__Concat("F5 ", %t7) -> gc_ref void
+invoke.cont.8:
+  invoke IO__Put(%t8, nil)
+invoke.cont.9:
+  invoke Main__NL()
+invoke.cont.10:
+  invoke Main__PrintStackHeight()
+invoke.cont.11:
+  invoke RTHooks__Raise(@Main__E1_excptr, nil, nil, 0)
+invoke.cont.12:
+  unreachable
+else.endcatch.13:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.14:
+  br try.merge.5
+
+proc Main__F6() -> void
+entry:
+  %t7 = alloca @lpad_t
+  %t6 = alloca ptr void
+  %t5 = alloca i32
+  %t1 = alloca i64
+  %i.slot = alloca i64
+  store i64 1, %i.slot
+  store i64 10, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %i.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i32 0, %t5
+  %t8 = invoke Main__Line() -> gc_ref void
+for.exit.3:
+  ret
+fin.lpad.4:
+  %t10 = landingpad catch _ZTI6_M3Exc
+  %t11 = extractvalue %t10, 0
+  %t12 = call __cxa_get_exception_ptr(%t11) -> ptr void
+  %t13 = load ptr void, %t12
+  store %t13, %t6
+  store i32 1, %t5
+  br fin.body.5
+fin.body.5:
+  %t14 = load i32, %t5
+  %t15 = icmp eq %t14, 1
+  cond_br %t15, fin.rethrow.6, fin.notexc.13
+fin.rethrow.6:
+  %t16 = load ptr void, %t6
+  call RTHooks__ResumeRaise(%t16)
+  unreachable
+fin.done.7:
+  %t17 = load i64, %i.slot
+  %t18 = iadd %t17, 1
+  store %t18, %i.slot
+  br for.header.1
+invoke.cont.8:
+  %t9 = invoke RTHooks__Concat("F6 ", %t8) -> gc_ref void
+invoke.cont.9:
+  invoke IO__Put(%t9, nil)
+invoke.cont.10:
+  invoke Main__NL()
+invoke.cont.11:
+  invoke Main__PrintStackHeight()
+invoke.cont.12:
+  br fin.body.5
+fin.notexc.13:
+  br fin.done.7
+
+proc Main__Main() -> void
+entry:
+  %t29 = alloca ptr void
+  %t28 = alloca i32
+  %t16 = alloca ptr void
+  %t15 = alloca i32
+  %t3 = alloca ptr void
+  %t2 = alloca i32
+  %t1 = call Main__GetStack() -> ptr void
+  store %t1, @Main_M3_info+112
+  call Main__F0()
+  store i32 0, %t2
+  invoke Main__F1()
+lpad.1:
+  %t4 = landingpad catch _ZTI6_M3Exc
+  %t5 = extractvalue %t4, 0
+  %t6 = call __cxa_get_exception_ptr(%t5) -> ptr void
+  %t7 = load ptr void, %t6
+  %t8 = load ptr void, %t7
+  %t9 = load i64, %t8
+  store %t7, %t3
+  store i32 1, %t2
+  %t10 = call __cxa_begin_catch(%t5) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  store i32 0, %t15
+  invoke Main__F2()
+else.dispatch.3:
+  %t11 = call Main__Line() -> gc_ref void
+  %t12 = call RTHooks__Concat("exception ", %t11) -> gc_ref void
+  call IO__Put(%t12, nil)
+  call Main__NL()
+  %t13 = load i32, %t2
+  %t14 = icmp eq %t13, 1
+  cond_br %t14, else.endcatch.5, else.skip.endcatch.6
+invoke.cont.4:
+  br try.merge.2
+else.endcatch.5:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.6:
+  br try.merge.2
+lpad.7:
+  %t17 = landingpad catch _ZTI6_M3Exc
+  %t18 = extractvalue %t17, 0
+  %t19 = call __cxa_get_exception_ptr(%t18) -> ptr void
+  %t20 = load ptr void, %t19
+  %t21 = load ptr void, %t20
+  %t22 = load i64, %t21
+  store %t20, %t16
+  store i32 1, %t15
+  %t23 = call __cxa_begin_catch(%t18) -> ptr void
+  br else.dispatch.9
+try.merge.8:
+  store i32 0, %t28
+  invoke Main__F3()
+else.dispatch.9:
+  %t24 = call Main__Line() -> gc_ref void
+  %t25 = call RTHooks__Concat("exception ", %t24) -> gc_ref void
+  call IO__Put(%t25, nil)
+  call Main__NL()
+  %t26 = load i32, %t15
+  %t27 = icmp eq %t26, 1
+  cond_br %t27, else.endcatch.11, else.skip.endcatch.12
+invoke.cont.10:
+  br try.merge.8
+else.endcatch.11:
+  call __cxa_end_catch()
+  br try.merge.8
+else.skip.endcatch.12:
+  br try.merge.8
+lpad.13:
+  %t30 = landingpad catch _ZTI6_M3Exc
+  %t31 = extractvalue %t30, 0
+  %t32 = call __cxa_get_exception_ptr(%t31) -> ptr void
+  %t33 = load ptr void, %t32
+  %t34 = load ptr void, %t33
+  %t35 = load i64, %t34
+  store %t33, %t29
+  store i32 1, %t28
+  %t36 = call __cxa_begin_catch(%t31) -> ptr void
+  br else.dispatch.15
+try.merge.14:
+  call Main__F4()
+  call Main__F5()
+  call Main__F6()
+  ret
+else.dispatch.15:
+  %t37 = call Main__Line() -> gc_ref void
+  %t38 = call RTHooks__Concat("exception ", %t37) -> gc_ref void
+  call IO__Put(%t38, nil)
+  call Main__NL()
+  %t39 = load i32, %t28
+  %t40 = icmp eq %t39, 1
+  cond_br %t40, else.endcatch.17, else.skip.endcatch.18
+invoke.cont.16:
+  br try.merge.14
+else.endcatch.17:
+  call __cxa_end_catch()
+  br try.merge.14
+else.skip.endcatch.18:
+  br try.merge.14
+
+proc Main__Finally() -> void
+entry:
+  %t36 = alloca ptr void
+  %t35 = alloca i32
+  %t23 = alloca ptr void
+  %t22 = alloca i32
+  %t10 = alloca ptr void
+  %t9 = alloca i32
+  %t3 = alloca @lpad_t
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  store i32 0, %t1
+  %t4 = invoke Main__GetStack() -> ptr void
+fin.lpad.1:
+  %t5 = landingpad catch _ZTI6_M3Exc
+  %t6 = extractvalue %t5, 0
+  %t7 = call __cxa_get_exception_ptr(%t6) -> ptr void
+  %t8 = load ptr void, %t7
+  store %t8, %t2
+  store i32 1, %t1
+  br fin.body.2
+fin.body.2:
+  store i32 0, %t9
+  invoke Main__F1()
+fin.rethrow.3:
+  %t50 = load ptr void, %t2
+  call RTHooks__ResumeRaise(%t50)
+  unreachable
+fin.done.4:
+  ret
+invoke.cont.5:
+  store %t4, @Main_M3_info+112
+  invoke Main__F0()
+invoke.cont.6:
+  br fin.body.2
+lpad.7:
+  %t11 = landingpad catch _ZTI6_M3Exc
+  %t12 = extractvalue %t11, 0
+  %t13 = call __cxa_get_exception_ptr(%t12) -> ptr void
+  %t14 = load ptr void, %t13
+  %t15 = load ptr void, %t14
+  %t16 = load i64, %t15
+  store %t14, %t10
+  store i32 1, %t9
+  %t17 = call __cxa_begin_catch(%t12) -> ptr void
+  br else.dispatch.9
+try.merge.8:
+  store i32 0, %t22
+  invoke Main__F2()
+else.dispatch.9:
+  %t18 = call Main__Line() -> gc_ref void
+  %t19 = call RTHooks__Concat("exception ", %t18) -> gc_ref void
+  call IO__Put(%t19, nil)
+  call Main__NL()
+  %t20 = load i32, %t9
+  %t21 = icmp eq %t20, 1
+  cond_br %t21, else.endcatch.11, else.skip.endcatch.12
+invoke.cont.10:
+  br try.merge.8
+else.endcatch.11:
+  call __cxa_end_catch()
+  br try.merge.8
+else.skip.endcatch.12:
+  br try.merge.8
+lpad.13:
+  %t24 = landingpad catch _ZTI6_M3Exc
+  %t25 = extractvalue %t24, 0
+  %t26 = call __cxa_get_exception_ptr(%t25) -> ptr void
+  %t27 = load ptr void, %t26
+  %t28 = load ptr void, %t27
+  %t29 = load i64, %t28
+  store %t27, %t23
+  store i32 1, %t22
+  %t30 = call __cxa_begin_catch(%t25) -> ptr void
+  br else.dispatch.15
+try.merge.14:
+  store i32 0, %t35
+  invoke Main__F3()
+else.dispatch.15:
+  %t31 = call Main__Line() -> gc_ref void
+  %t32 = call RTHooks__Concat("exception ", %t31) -> gc_ref void
+  call IO__Put(%t32, nil)
+  call Main__NL()
+  %t33 = load i32, %t22
+  %t34 = icmp eq %t33, 1
+  cond_br %t34, else.endcatch.17, else.skip.endcatch.18
+invoke.cont.16:
+  br try.merge.14
+else.endcatch.17:
+  call __cxa_end_catch()
+  br try.merge.14
+else.skip.endcatch.18:
+  br try.merge.14
+lpad.19:
+  %t37 = landingpad catch _ZTI6_M3Exc
+  %t38 = extractvalue %t37, 0
+  %t39 = call __cxa_get_exception_ptr(%t38) -> ptr void
+  %t40 = load ptr void, %t39
+  %t41 = load ptr void, %t40
+  %t42 = load i64, %t41
+  store %t40, %t36
+  store i32 1, %t35
+  %t43 = call __cxa_begin_catch(%t38) -> ptr void
+  br else.dispatch.21
+try.merge.20:
+  call Main__F4()
+  call Main__F5()
+  call Main__F6()
+  %t48 = load i32, %t1
+  %t49 = icmp eq %t48, 1
+  cond_br %t49, fin.rethrow.3, fin.notexc.25
+else.dispatch.21:
+  %t44 = call Main__Line() -> gc_ref void
+  %t45 = call RTHooks__Concat("exception ", %t44) -> gc_ref void
+  call IO__Put(%t45, nil)
+  call Main__NL()
+  %t46 = load i32, %t35
+  %t47 = icmp eq %t46, 1
+  cond_br %t47, else.endcatch.23, else.skip.endcatch.24
+invoke.cont.22:
+  br try.merge.20
+else.endcatch.23:
+  call __cxa_end_catch()
+  br try.merge.20
+else.skip.endcatch.24:
+  br try.merge.20
+fin.notexc.25:
+  br fin.done.4
+
+proc Main__NestedFinally() -> void
+entry:
+  %t157 = alloca @lpad_t
+  %t156 = alloca ptr void
+  %t155 = alloca i32
+  %t140 = alloca @lpad_t
+  %t139 = alloca ptr void
+  %t138 = alloca i32
+  %t133 = alloca @lpad_t
+  %t132 = alloca ptr void
+  %t131 = alloca i32
+  %t129 = alloca @lpad_t
+  %t128 = alloca ptr void
+  %t127 = alloca i32
+  %t105 = alloca ptr void
+  %t104 = alloca i32
+  %t103 = alloca @lpad_t
+  %t102 = alloca ptr void
+  %t101 = alloca i32
+  %t82 = alloca @lpad_t
+  %t81 = alloca ptr void
+  %t80 = alloca i32
+  %t79 = alloca ptr void
+  %t78 = alloca i32
+  %t59 = alloca @lpad_t
+  %t58 = alloca ptr void
+  %t57 = alloca i32
+  %t56 = alloca ptr void
+  %t55 = alloca i32
+  %t36 = alloca @lpad_t
+  %t35 = alloca ptr void
+  %t34 = alloca i32
+  %t33 = alloca ptr void
+  %t32 = alloca i32
+  %t13 = alloca @lpad_t
+  %t12 = alloca ptr void
+  %t11 = alloca i32
+  %t10 = alloca ptr void
+  %t9 = alloca i32
+  %t3 = alloca @lpad_t
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  store i32 0, %t1
+  %t4 = invoke Main__GetStack() -> ptr void
+fin.lpad.1:
+  %t5 = landingpad catch _ZTI6_M3Exc
+  %t6 = extractvalue %t5, 0
+  %t7 = call __cxa_get_exception_ptr(%t6) -> ptr void
+  %t8 = load ptr void, %t7
+  store %t8, %t2
+  store i32 1, %t1
+  br fin.body.2
+fin.body.2:
+  store i32 0, %t9
+  store i32 0, %t11
+  invoke Main__F1()
+fin.rethrow.3:
+  %t126 = load ptr void, %t2
+  call RTHooks__ResumeRaise(%t126)
+  unreachable
+fin.done.4:
+  store i32 0, %t127
+  %t130 = invoke Main__GetStack() -> ptr void
+invoke.cont.5:
+  store %t4, @Main_M3_info+112
+  invoke Main__F0()
+invoke.cont.6:
+  br fin.body.2
+lpad.7:
+  %t21 = landingpad catch _ZTI6_M3Exc
+  %t22 = extractvalue %t21, 0
+  %t23 = call __cxa_get_exception_ptr(%t22) -> ptr void
+  %t24 = load ptr void, %t23
+  %t25 = load ptr void, %t24
+  %t26 = load i64, %t25
+  store %t24, %t10
+  store i32 1, %t9
+  %t27 = call __cxa_begin_catch(%t22) -> ptr void
+  br else.dispatch.9
+try.merge.8:
+  store i32 0, %t32
+  store i32 0, %t34
+  invoke Main__F1()
+else.dispatch.9:
+  %t28 = call Main__Line() -> gc_ref void
+  %t29 = call RTHooks__Concat("exception ", %t28) -> gc_ref void
+  call IO__Put(%t29, nil)
+  call Main__NL()
+  %t30 = load i32, %t9
+  %t31 = icmp eq %t30, 1
+  cond_br %t31, else.endcatch.18, else.skip.endcatch.19
+fin.lpad.10:
+  %t14 = landingpad catch _ZTI6_M3Exc
+  %t15 = extractvalue %t14, 0
+  %t16 = call __cxa_get_exception_ptr(%t15) -> ptr void
+  %t17 = load ptr void, %t16
+  store %t17, %t12
+  store i32 1, %t11
+  br fin.body.11
+fin.body.11:
+  invoke Main__F0()
+fin.rethrow.12:
+  %t20 = load ptr void, %t12
+  invoke RTHooks__ResumeRaise(%t20)
+fin.done.13:
+  br try.merge.8
+invoke.cont.14:
+  br fin.body.11
+invoke.cont.15:
+  %t18 = load i32, %t11
+  %t19 = icmp eq %t18, 1
+  cond_br %t19, fin.rethrow.12, fin.notexc.16
+fin.notexc.16:
+  br fin.done.13
+fin.rethrow.cont.17:
+  unreachable
+else.endcatch.18:
+  call __cxa_end_catch()
+  br try.merge.8
+else.skip.endcatch.19:
+  br try.merge.8
+lpad.20:
+  %t44 = landingpad catch _ZTI6_M3Exc
+  %t45 = extractvalue %t44, 0
+  %t46 = call __cxa_get_exception_ptr(%t45) -> ptr void
+  %t47 = load ptr void, %t46
+  %t48 = load ptr void, %t47
+  %t49 = load i64, %t48
+  store %t47, %t33
+  store i32 1, %t32
+  %t50 = call __cxa_begin_catch(%t45) -> ptr void
+  br else.dispatch.22
+try.merge.21:
+  store i32 0, %t55
+  store i32 0, %t57
+  invoke Main__F1()
+else.dispatch.22:
+  %t51 = call Main__Line() -> gc_ref void
+  %t52 = call RTHooks__Concat("exception ", %t51) -> gc_ref void
+  call IO__Put(%t52, nil)
+  call Main__NL()
+  %t53 = load i32, %t32
+  %t54 = icmp eq %t53, 1
+  cond_br %t54, else.endcatch.31, else.skip.endcatch.32
+fin.lpad.23:
+  %t37 = landingpad catch _ZTI6_M3Exc
+  %t38 = extractvalue %t37, 0
+  %t39 = call __cxa_get_exception_ptr(%t38) -> ptr void
+  %t40 = load ptr void, %t39
+  store %t40, %t35
+  store i32 1, %t34
+  br fin.body.24
+fin.body.24:
+  invoke Main__F0()
+fin.rethrow.25:
+  %t43 = load ptr void, %t35
+  invoke RTHooks__ResumeRaise(%t43)
+fin.done.26:
+  br try.merge.21
+invoke.cont.27:
+  br fin.body.24
+invoke.cont.28:
+  %t41 = load i32, %t34
+  %t42 = icmp eq %t41, 1
+  cond_br %t42, fin.rethrow.25, fin.notexc.29
+fin.notexc.29:
+  br fin.done.26
+fin.rethrow.cont.30:
+  unreachable
+else.endcatch.31:
+  call __cxa_end_catch()
+  br try.merge.21
+else.skip.endcatch.32:
+  br try.merge.21
+lpad.33:
+  %t67 = landingpad catch _ZTI6_M3Exc
+  %t68 = extractvalue %t67, 0
+  %t69 = call __cxa_get_exception_ptr(%t68) -> ptr void
+  %t70 = load ptr void, %t69
+  %t71 = load ptr void, %t70
+  %t72 = load i64, %t71
+  store %t70, %t56
+  store i32 1, %t55
+  %t73 = call __cxa_begin_catch(%t68) -> ptr void
+  br else.dispatch.35
+try.merge.34:
+  store i32 0, %t78
+  store i32 0, %t80
+  invoke Main__F1()
+else.dispatch.35:
+  %t74 = call Main__Line() -> gc_ref void
+  %t75 = call RTHooks__Concat("exception ", %t74) -> gc_ref void
+  call IO__Put(%t75, nil)
+  call Main__NL()
+  %t76 = load i32, %t55
+  %t77 = icmp eq %t76, 1
+  cond_br %t77, else.endcatch.44, else.skip.endcatch.45
+fin.lpad.36:
+  %t60 = landingpad catch _ZTI6_M3Exc
+  %t61 = extractvalue %t60, 0
+  %t62 = call __cxa_get_exception_ptr(%t61) -> ptr void
+  %t63 = load ptr void, %t62
+  store %t63, %t58
+  store i32 1, %t57
+  br fin.body.37
+fin.body.37:
+  invoke Main__F0()
+fin.rethrow.38:
+  %t66 = load ptr void, %t58
+  invoke RTHooks__ResumeRaise(%t66)
+fin.done.39:
+  br try.merge.34
+invoke.cont.40:
+  br fin.body.37
+invoke.cont.41:
+  %t64 = load i32, %t57
+  %t65 = icmp eq %t64, 1
+  cond_br %t65, fin.rethrow.38, fin.notexc.42
+fin.notexc.42:
+  br fin.done.39
+fin.rethrow.cont.43:
+  unreachable
+else.endcatch.44:
+  call __cxa_end_catch()
+  br try.merge.34
+else.skip.endcatch.45:
+  br try.merge.34
+lpad.46:
+  %t90 = landingpad catch _ZTI6_M3Exc
+  %t91 = extractvalue %t90, 0
+  %t92 = call __cxa_get_exception_ptr(%t91) -> ptr void
+  %t93 = load ptr void, %t92
+  %t94 = load ptr void, %t93
+  %t95 = load i64, %t94
+  store %t93, %t79
+  store i32 1, %t78
+  %t96 = call __cxa_begin_catch(%t91) -> ptr void
+  br else.dispatch.48
+try.merge.47:
+  store i32 0, %t101
+  store i32 0, %t104
+  invoke Main__F2()
+else.dispatch.48:
+  %t97 = call Main__Line() -> gc_ref void
+  %t98 = call RTHooks__Concat("exception ", %t97) -> gc_ref void
+  call IO__Put(%t98, nil)
+  call Main__NL()
+  %t99 = load i32, %t78
+  %t100 = icmp eq %t99, 1
+  cond_br %t100, else.endcatch.57, else.skip.endcatch.58
+fin.lpad.49:
+  %t83 = landingpad catch _ZTI6_M3Exc
+  %t84 = extractvalue %t83, 0
+  %t85 = call __cxa_get_exception_ptr(%t84) -> ptr void
+  %t86 = load ptr void, %t85
+  store %t86, %t81
+  store i32 1, %t80
+  br fin.body.50
+fin.body.50:
+  invoke Main__F0()
+fin.rethrow.51:
+  %t89 = load ptr void, %t81
+  invoke RTHooks__ResumeRaise(%t89)
+fin.done.52:
+  br try.merge.47
+invoke.cont.53:
+  br fin.body.50
+invoke.cont.54:
+  %t87 = load i32, %t80
+  %t88 = icmp eq %t87, 1
+  cond_br %t88, fin.rethrow.51, fin.notexc.55
+fin.notexc.55:
+  br fin.done.52
+fin.rethrow.cont.56:
+  unreachable
+else.endcatch.57:
+  call __cxa_end_catch()
+  br try.merge.47
+else.skip.endcatch.58:
+  br try.merge.47
+fin.lpad.59:
+  %t117 = landingpad catch _ZTI6_M3Exc
+  %t118 = extractvalue %t117, 0
+  %t119 = call __cxa_get_exception_ptr(%t118) -> ptr void
+  %t120 = load ptr void, %t119
+  store %t120, %t102
+  store i32 1, %t101
+  br fin.body.60
+fin.body.60:
+  call Main__F0()
+  %t121 = load i32, %t101
+  %t122 = icmp eq %t121, 1
+  cond_br %t122, fin.rethrow.61, fin.notexc.73
+fin.rethrow.61:
+  %t123 = load ptr void, %t102
+  call RTHooks__ResumeRaise(%t123)
+  unreachable
+fin.done.62:
+  %t124 = load i32, %t1
+  %t125 = icmp eq %t124, 1
+  cond_br %t125, fin.rethrow.3, fin.notexc.74
+lpad.63:
+  %t106 = landingpad catch _ZTI6_M3Exc
+  %t107 = extractvalue %t106, 0
+  %t108 = call __cxa_get_exception_ptr(%t107) -> ptr void
+  %t109 = load ptr void, %t108
+  %t110 = load ptr void, %t109
+  %t111 = load i64, %t110
+  store %t109, %t105
+  store i32 1, %t104
+  %t112 = call __cxa_begin_catch(%t107) -> ptr void
+  br else.dispatch.65
+try.merge.64:
+  br fin.body.60
+else.dispatch.65:
+  %t113 = invoke Main__Line() -> gc_ref void
+invoke.cont.66:
+  br try.merge.64
+invoke.cont.67:
+  %t114 = invoke RTHooks__Concat("exception ", %t113) -> gc_ref void
+invoke.cont.68:
+  invoke IO__Put(%t114, nil)
+invoke.cont.69:
+  invoke Main__NL()
+invoke.cont.70:
+  %t115 = load i32, %t104
+  %t116 = icmp eq %t115, 1
+  cond_br %t116, else.endcatch.71, else.skip.endcatch.72
+else.endcatch.71:
+  call __cxa_end_catch()
+  br try.merge.64
+else.skip.endcatch.72:
+  br try.merge.64
+fin.notexc.73:
+  br fin.done.62
+fin.notexc.74:
+  br fin.done.4
+fin.lpad.75:
+  %t151 = landingpad catch _ZTI6_M3Exc
+  %t152 = extractvalue %t151, 0
+  %t153 = call __cxa_get_exception_ptr(%t152) -> ptr void
+  %t154 = load ptr void, %t153
+  store %t154, %t128
+  store i32 1, %t127
+  br fin.body.76
+fin.body.76:
+  store i32 0, %t155
+  invoke Main__F0()
+fin.rethrow.77:
+  %t167 = load ptr void, %t128
+  call RTHooks__ResumeRaise(%t167)
+  unreachable
+fin.done.78:
+  ret
+invoke.cont.79:
+  store %t130, @Main_M3_info+112
+  store i32 0, %t131
+  invoke Main__F0()
+fin.lpad.80:
+  %t134 = landingpad catch _ZTI6_M3Exc
+  %t135 = extractvalue %t134, 0
+  %t136 = call __cxa_get_exception_ptr(%t135) -> ptr void
+  %t137 = load ptr void, %t136
+  store %t137, %t132
+  store i32 1, %t131
+  br fin.body.81
+fin.body.81:
+  store i32 0, %t138
+  invoke Main__F0()
+fin.rethrow.82:
+  %t150 = load ptr void, %t132
+  invoke RTHooks__ResumeRaise(%t150)
+fin.done.83:
+  br fin.body.76
+invoke.cont.84:
+  br fin.body.81
+fin.lpad.85:
+  %t141 = landingpad catch _ZTI6_M3Exc
+  %t142 = extractvalue %t141, 0
+  %t143 = call __cxa_get_exception_ptr(%t142) -> ptr void
+  %t144 = load ptr void, %t143
+  store %t144, %t139
+  store i32 1, %t138
+  br fin.body.86
+fin.body.86:
+  invoke Main__F0()
+fin.rethrow.87:
+  %t147 = load ptr void, %t139
+  invoke RTHooks__ResumeRaise(%t147)
+fin.done.88:
+  %t148 = load i32, %t131
+  %t149 = icmp eq %t148, 1
+  cond_br %t149, fin.rethrow.82, fin.notexc.93
+invoke.cont.89:
+  br fin.body.86
+invoke.cont.90:
+  %t145 = load i32, %t138
+  %t146 = icmp eq %t145, 1
+  cond_br %t146, fin.rethrow.87, fin.notexc.91
+fin.notexc.91:
+  br fin.done.88
+fin.rethrow.cont.92:
+  unreachable
+fin.notexc.93:
+  br fin.done.83
+fin.rethrow.cont.94:
+  unreachable
+fin.lpad.95:
+  %t158 = landingpad catch _ZTI6_M3Exc
+  %t159 = extractvalue %t158, 0
+  %t160 = call __cxa_get_exception_ptr(%t159) -> ptr void
+  %t161 = load ptr void, %t160
+  store %t161, %t156
+  store i32 1, %t155
+  br fin.body.96
+fin.body.96:
+  call Main__F0()
+  %t162 = load i32, %t155
+  %t163 = icmp eq %t162, 1
+  cond_br %t163, fin.rethrow.97, fin.notexc.100
+fin.rethrow.97:
+  %t164 = load ptr void, %t156
+  call RTHooks__ResumeRaise(%t164)
+  unreachable
+fin.done.98:
+  %t165 = load i32, %t127
+  %t166 = icmp eq %t165, 1
+  cond_br %t166, fin.rethrow.77, fin.notexc.101
+invoke.cont.99:
+  br fin.body.96
+fin.notexc.100:
+  br fin.done.98
+fin.notexc.101:
+  br fin.done.78
+
+proc Main_M3() -> void
+entry:
+  %t29 = alloca ptr void
+  %t28 = alloca i32
+  %t16 = alloca ptr void
+  %t15 = alloca i32
+  %t3 = alloca ptr void
+  %t2 = alloca i32
+  call Main__Main()
+  %t1 = call Main__GetStack() -> ptr void
+  store %t1, @Main_M3_info+112
+  call Main__F0()
+  store i32 0, %t2
+  invoke Main__F1()
+lpad.1:
+  %t4 = landingpad catch _ZTI6_M3Exc
+  %t5 = extractvalue %t4, 0
+  %t6 = call __cxa_get_exception_ptr(%t5) -> ptr void
+  %t7 = load ptr void, %t6
+  %t8 = load ptr void, %t7
+  %t9 = load i64, %t8
+  store %t7, %t3
+  store i32 1, %t2
+  %t10 = call __cxa_begin_catch(%t5) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  store i32 0, %t15
+  invoke Main__F2()
+else.dispatch.3:
+  %t11 = call Main__Line() -> gc_ref void
+  %t12 = call RTHooks__Concat("exception ", %t11) -> gc_ref void
+  call IO__Put(%t12, nil)
+  call Main__NL()
+  %t13 = load i32, %t2
+  %t14 = icmp eq %t13, 1
+  cond_br %t14, else.endcatch.5, else.skip.endcatch.6
+invoke.cont.4:
+  br try.merge.2
+else.endcatch.5:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.6:
+  br try.merge.2
+lpad.7:
+  %t17 = landingpad catch _ZTI6_M3Exc
+  %t18 = extractvalue %t17, 0
+  %t19 = call __cxa_get_exception_ptr(%t18) -> ptr void
+  %t20 = load ptr void, %t19
+  %t21 = load ptr void, %t20
+  %t22 = load i64, %t21
+  store %t20, %t16
+  store i32 1, %t15
+  %t23 = call __cxa_begin_catch(%t18) -> ptr void
+  br else.dispatch.9
+try.merge.8:
+  store i32 0, %t28
+  invoke Main__F3()
+else.dispatch.9:
+  %t24 = call Main__Line() -> gc_ref void
+  %t25 = call RTHooks__Concat("exception ", %t24) -> gc_ref void
+  call IO__Put(%t25, nil)
+  call Main__NL()
+  %t26 = load i32, %t15
+  %t27 = icmp eq %t26, 1
+  cond_br %t27, else.endcatch.11, else.skip.endcatch.12
+invoke.cont.10:
+  br try.merge.8
+else.endcatch.11:
+  call __cxa_end_catch()
+  br try.merge.8
+else.skip.endcatch.12:
+  br try.merge.8
+lpad.13:
+  %t30 = landingpad catch _ZTI6_M3Exc
+  %t31 = extractvalue %t30, 0
+  %t32 = call __cxa_get_exception_ptr(%t31) -> ptr void
+  %t33 = load ptr void, %t32
+  %t34 = load ptr void, %t33
+  %t35 = load i64, %t34
+  store %t33, %t29
+  store i32 1, %t28
+  %t36 = call __cxa_begin_catch(%t31) -> ptr void
+  br else.dispatch.15
+try.merge.14:
+  call Main__F4()
+  call Main__F5()
+  call Main__F6()
+  call Main__Finally()
+  call Main__NestedFinally()
+  ret
+else.dispatch.15:
+  %t37 = call Main__Line() -> gc_ref void
+  %t38 = call RTHooks__Concat("exception ", %t37) -> gc_ref void
+  call IO__Put(%t38, nil)
+  call Main__NL()
+  %t39 = load i32, %t28
+  %t40 = icmp eq %t39, 1
+  cond_br %t40, else.endcatch.17, else.skip.endcatch.18
+invoke.cont.16:
+  br try.merge.14
+else.endcatch.17:
+  call __cxa_end_catch()
+  br try.merge.14
+else.skip.endcatch.18:
+  br try.merge.14
+

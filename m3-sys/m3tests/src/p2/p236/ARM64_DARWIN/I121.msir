@@ -1,0 +1,6 @@
+module I121
+
+proc I121_I3() -> void
+entry:
+  ret
+

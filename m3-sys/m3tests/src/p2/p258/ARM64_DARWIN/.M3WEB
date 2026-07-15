@@ -1,0 +1,59 @@
+Main.m3 681
+Dump.i3 308
+$ 0
+@../Main.m3
+AMain
+R1b5338c3 2 00000000 0
+Sstart 195c2a74
+Scount 195c2a74
+N2da6581d 195c2a74 0 31 8
+Ma1cc839c 2da6581d 32
+N2ea6581d 195c2a74 0 32 8
+Mfa01f0e5 2ea6581d 64
+N2fa3581d 195c2a74 0 63 8
+M5b4f85b8 2fa3581d 64
+N28a3581d 195c2a74 0 64 8
+Me4c005f6 28a3581d 128
+Gf400f3db 195c2a74 128
+DMain
+CDump
+CRTHooks
+Q0bff0c24 f400f3db
+Ea1cc839c Main.F31.T
+Efa01f0e5 Main.F32.T
+E5b4f85b8 Main.F63.T
+Ee4c005f6 Main.F64.T
+Ra4bb9882 2 00000000 -1
+Smodule 08402063
+Sinfo 195c2a74
+Rca5a0c48 6 00000000 0
+Stype 195c2a74
+Soffset 195c2a74
+Scount 195c2a74
+Sbitsize 195c2a74
+Sbytesize 195c2a74
+Saddress 08402063
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063
+@../Dump.i3
+BDump
+Rca5a0c48 6 00000000 0
+Stype 195c2a74
+Soffset 195c2a74
+Scount 195c2a74
+Sbitsize 195c2a74
+Sbytesize 195c2a74
+Saddress 08402063
+R4e00e8fe 2 00000000 0
+StextLiteral 50f86574
+Sdecimal 195c2a74
+DDump
+CRTHooks
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063

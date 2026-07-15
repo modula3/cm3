@@ -1,0 +1,4622 @@
+module Main
+
+proc Main__F0() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 1, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 0, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(0, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F1() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 1, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(1, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F2() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 2, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(2, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F3() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 3, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(3, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F4() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 4, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(4, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F5() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 5, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(5, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F6() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 6, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(6, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F7() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i8
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 7, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i8 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i8
+  %t22 = trunc %t20 to i8
+  %t23 = isub 7, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(7, %t28, %t29, 8, 1, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F8() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 8, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(8, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F9() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 9, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(9, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F10() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 10, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(10, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F11() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 11, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(11, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F12() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 12, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(12, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F13() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 13, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(13, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F14() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 14, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(14, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F15() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i16
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 15, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i16 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i16
+  %t22 = trunc %t20 to i16
+  %t23 = isub 15, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(15, %t28, %t29, 16, 2, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F16() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 16, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(16, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F17() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 17, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(17, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F18() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 18, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(18, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F19() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 19, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(19, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F20() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 20, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(20, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F21() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 21, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(21, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F22() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 22, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(22, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F23() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 23, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(23, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F24() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 24, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(24, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F25() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 25, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(25, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F26() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 26, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(26, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F27() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 27, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(27, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F28() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 28, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(28, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F29() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 29, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(29, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F30() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 30, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(30, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F31() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i32
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 31, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i32 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = trunc %t16 to i32
+  %t22 = trunc %t20 to i32
+  %t23 = isub 31, %t22
+  %t24 = iashr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(31, %t28, %t29, 32, 4, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main__F32() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 32, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(32, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F33() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 33, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(33, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F34() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 34, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(34, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F35() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 35, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(35, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F36() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 36, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(36, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F37() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 37, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(37, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F38() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 38, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(38, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F39() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 39, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(39, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F40() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 40, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(40, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F41() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 41, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(41, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F42() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 42, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(42, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F43() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 43, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(43, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F44() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 44, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(44, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F45() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 45, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(45, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F46() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 46, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(46, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F47() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 47, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(47, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F48() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 48, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(48, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F49() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 49, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(49, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F50() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 50, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(50, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F51() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 51, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(51, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F52() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 52, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(52, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F53() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 53, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(53, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F54() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 54, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(54, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F55() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 55, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(55, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F56() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 56, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(56, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F57() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 57, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(57, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F58() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 58, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(58, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F59() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 59, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(59, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F60() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 60, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(60, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F61() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 61, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(61, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F62() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 62, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(62, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F63() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i64
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 63, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i64 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t30 = load i64, %count.slot
+  %t31 = iadd %t30, 1
+  store %t31, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = isub 63, %t20
+  %t22 = iashr -1, %t21
+  %t23 = ishl -1, %t16
+  %t24 = iand %t22, %t23
+  %t25 = ior 0, %t24
+  store %t25, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t26 = load i64, %offset.slot
+  %t27 = load i64, %count.slot
+  call Dump(63, %t26, %t27, 64, 8, %a.slot)
+  %t28 = load i64, %offset.slot
+  %t29 = iadd %t28, 1
+  store %t29, %offset.slot
+  br for.header.6
+
+proc Main__F64() -> void
+entry:
+  %t10 = alloca i64
+  %t7 = alloca i64
+  %offset.slot = alloca i64
+  %t1 = alloca i64
+  %count.slot = alloca i64
+  %a.slot = alloca i128
+  store i64 0, %count.slot
+  store i64 2, %t1
+  br for.header.1
+for.header.1:
+  %t2 = load i64, %count.slot
+  %t3 = load i64, %t1
+  %t4 = icmp sle %t2, %t3
+  cond_br %t4, for.body.2, for.exit.3
+for.body.2:
+  store i64 0, %offset.slot
+  %t5 = load i64, %count.slot
+  %t6 = isub 64, %t5
+  store i64 0, %t7
+  %t8 = icmp sge 0, %t6
+  cond_br %t8, max.merge.5, max.useb.4
+for.exit.3:
+  ret
+max.useb.4:
+  store %t6, %t7
+  br max.merge.5
+max.merge.5:
+  %t9 = load i64, %t7
+  store %t9, %t10
+  br for.header.6
+for.header.6:
+  %t11 = load i64, %offset.slot
+  %t12 = load i64, %t10
+  %t13 = icmp sle %t11, %t12
+  cond_br %t13, for.body.7, for.exit.8
+for.body.7:
+  store i128 0, %a.slot
+  %t14 = load i64, %count.slot
+  %t15 = icmp sgt %t14, 0
+  cond_br %t15, if.then.9, if.merge.10
+for.exit.8:
+  %t32 = load i64, %count.slot
+  %t33 = iadd %t32, 1
+  store %t33, %count.slot
+  br for.header.1
+if.then.9:
+  %t16 = load i64, %offset.slot
+  %t17 = load i64, %offset.slot
+  %t18 = load i64, %count.slot
+  %t19 = iadd %t17, %t18
+  %t20 = isub %t19, 1
+  %t21 = zext %t16 to i128
+  %t22 = zext %t20 to i128
+  %t23 = isub 127, %t22
+  %t24 = ilshr -1, %t23
+  %t25 = ishl -1, %t21
+  %t26 = iand %t24, %t25
+  %t27 = ior 0, %t26
+  store %t27, %a.slot
+  br if.merge.10
+if.merge.10:
+  %t28 = load i64, %offset.slot
+  %t29 = load i64, %count.slot
+  call Dump(64, %t28, %t29, 128, 16, %a.slot)
+  %t30 = load i64, %offset.slot
+  %t31 = iadd %t30, 1
+  store %t31, %offset.slot
+  br for.header.6
+
+proc Main_M3() -> void
+entry:
+  call Main__F0()
+  call Main__F1()
+  call Main__F2()
+  call Main__F3()
+  call Main__F4()
+  call Main__F5()
+  call Main__F6()
+  call Main__F7()
+  call Main__F8()
+  call Main__F9()
+  call Main__F10()
+  call Main__F11()
+  call Main__F12()
+  call Main__F13()
+  call Main__F14()
+  call Main__F15()
+  call Main__F16()
+  call Main__F17()
+  call Main__F18()
+  call Main__F19()
+  call Main__F20()
+  call Main__F21()
+  call Main__F22()
+  call Main__F23()
+  call Main__F24()
+  call Main__F25()
+  call Main__F26()
+  call Main__F27()
+  call Main__F28()
+  call Main__F29()
+  call Main__F30()
+  call Main__F31()
+  call Main__F32()
+  call Main__F33()
+  call Main__F34()
+  call Main__F35()
+  call Main__F36()
+  call Main__F37()
+  call Main__F38()
+  call Main__F39()
+  call Main__F40()
+  call Main__F41()
+  call Main__F42()
+  call Main__F43()
+  call Main__F44()
+  call Main__F45()
+  call Main__F46()
+  call Main__F47()
+  call Main__F48()
+  call Main__F49()
+  call Main__F50()
+  call Main__F51()
+  call Main__F52()
+  call Main__F53()
+  call Main__F54()
+  call Main__F55()
+  call Main__F56()
+  call Main__F57()
+  call Main__F58()
+  call Main__F59()
+  call Main__F60()
+  call Main__F61()
+  call Main__F62()
+  call Main__F63()
+  call Main__F64()
+  ret
+

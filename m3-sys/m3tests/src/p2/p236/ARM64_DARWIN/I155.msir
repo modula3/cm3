@@ -1,0 +1,6 @@
+module I155
+
+proc I155_I3() -> void
+entry:
+  ret
+

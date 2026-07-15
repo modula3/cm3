@@ -1,0 +1,229 @@
+module Main
+
+global Main__d : @T
+
+proc Main__NL() -> void
+entry:
+  call RTIO__PutText("\0a")
+  call RTIO__Flush()
+  ret
+
+proc Main_M3() -> void
+entry:
+  %t56 = alloca @T
+  %t26 = alloca @T
+  %t1 = ptr.add @Main_M3_info+104, 0
+  store word64 0, %t1
+  %t2 = ptr.add @Main_M3_info+104, 8
+  store enum  0, %t2
+  %t3 = ptr.add @Main_M3_info+104, 9
+  store word8 1, %t3
+  %t4 = ptr.add @Main_M3_info+104, 10
+  store word8 0, %t4
+  %t5 = ptr.add @Main_M3_info+104, 11
+  store word8 0, %t5
+  %t6 = ptr.add @Main_M3_info+104, 12
+  store word8 0, %t6
+  %t7 = ptr.add @Main_M3_info+104, 16
+  store i64 0, %t7
+  %t8 = ptr.add @Main_M3_info+104, 24
+  store nil, %t8
+  %t9 = ptr.add @Main_M3_info+104, 32
+  store enum  0, %t9
+  call RTIO__PutText("&d ")
+  call RTIO__PutAddr(@Main_M3_info+104, 0)
+  call Main__NL()
+  call RTIO__PutText("&year ")
+  %t10 = ptr.add @Main_M3_info+104, 0
+  call RTIO__PutAddr(%t10, 0)
+  call Main__NL()
+  call RTIO__PutText("&month ")
+  %t11 = ptr.add @Main_M3_info+104, 8
+  call RTIO__PutAddr(%t11, 0)
+  call Main__NL()
+  call RTIO__PutText("&day ")
+  %t12 = ptr.add @Main_M3_info+104, 9
+  call RTIO__PutAddr(%t12, 0)
+  call Main__NL()
+  call RTIO__PutText("&hour ")
+  %t13 = ptr.add @Main_M3_info+104, 10
+  call RTIO__PutAddr(%t13, 0)
+  call Main__NL()
+  call RTIO__PutText("&minute ")
+  %t14 = ptr.add @Main_M3_info+104, 11
+  call RTIO__PutAddr(%t14, 0)
+  call Main__NL()
+  call RTIO__PutText("&second ")
+  %t15 = ptr.add @Main_M3_info+104, 12
+  call RTIO__PutAddr(%t15, 0)
+  call Main__NL()
+  call RTIO__PutText("&offset ")
+  %t16 = ptr.add @Main_M3_info+104, 16
+  call RTIO__PutAddr(%t16, 0)
+  call Main__NL()
+  call RTIO__PutText("&zone ")
+  %t17 = ptr.add @Main_M3_info+104, 24
+  call RTIO__PutAddr(%t17, 0)
+  call Main__NL()
+  call RTIO__PutText("&weekday ")
+  %t18 = ptr.add @Main_M3_info+104, 32
+  call RTIO__PutAddr(%t18, 0)
+  call Main__NL()
+  call RTIO__PutText("size T ")
+  call RTIO__PutInt(40, 0)
+  call Main__NL()
+  call RTIO__PutText("size year ")
+  call RTIO__PutInt(8, 0)
+  call Main__NL()
+  call RTIO__PutText("size month ")
+  call RTIO__PutInt(1, 0)
+  call Main__NL()
+  call RTIO__PutText("size day ")
+  call RTIO__PutInt(1, 0)
+  call Main__NL()
+  call RTIO__PutText("size hour ")
+  call RTIO__PutInt(1, 0)
+  call Main__NL()
+  call RTIO__PutText("size minute ")
+  call RTIO__PutInt(1, 0)
+  call Main__NL()
+  call RTIO__PutText("size second ")
+  call RTIO__PutInt(1, 0)
+  call Main__NL()
+  call RTIO__PutText("size offset ")
+  call RTIO__PutInt(8, 0)
+  call Main__NL()
+  call RTIO__PutText("size zone ")
+  call RTIO__PutInt(8, 0)
+  call Main__NL()
+  call RTIO__PutText("size weekday ")
+  call RTIO__PutInt(1, 0)
+  call Main__NL()
+  call RTIO__PutText("now ")
+  %t19 = call Time__Now() -> f64
+  call RTIO__PutF(%t19)
+  call Main__NL()
+  call RTIO__PutText("or possibly the posix value printed from Win32 ")
+  %t20 = call Time__Now() -> f64
+  %t21 = fsub %t20, 1.16444736000000000D10
+  call RTIO__PutF(%t21)
+  call Main__NL()
+  %t22 = call Time__Now() -> f64
+  %t23 = load ptr void, @Main_M3_imp.3+0
+  %t24 = ptr.add %t23, 104
+  %t25 = load gc_ref void, %t24
+  call Date__FromTime(%t26, %t22, %t25)
+  %t27 = load @T, %t26
+  store %t27, @Main_M3_info+104
+  call RTIO__PutText("local year ")
+  %t28 = ptr.add @Main_M3_info+104, 0
+  %t29 = load word64, %t28
+  call RTIO__PutInt(%t29, 0)
+  call Main__NL()
+  call RTIO__PutText("local month ")
+  %t30 = ptr.add @Main_M3_info+104, 8
+  %t31 = load enum , %t30
+  %t32 = convert %t31 to i64
+  call RTIO__PutInt(%t32, 0)
+  call Main__NL()
+  call RTIO__PutText("local day ")
+  %t33 = ptr.add @Main_M3_info+104, 9
+  %t34 = load word8, %t33
+  %t35 = zext %t34 to i64
+  call RTIO__PutInt(%t35, 0)
+  call Main__NL()
+  call RTIO__PutText("local hour ")
+  %t36 = ptr.add @Main_M3_info+104, 10
+  %t37 = load word8, %t36
+  %t38 = zext %t37 to i64
+  call RTIO__PutInt(%t38, 0)
+  call Main__NL()
+  call RTIO__PutText("local minute ")
+  %t39 = ptr.add @Main_M3_info+104, 11
+  %t40 = load word8, %t39
+  %t41 = zext %t40 to i64
+  call RTIO__PutInt(%t41, 0)
+  call Main__NL()
+  call RTIO__PutText("local second ")
+  %t42 = ptr.add @Main_M3_info+104, 12
+  %t43 = load word8, %t42
+  %t44 = zext %t43 to i64
+  call RTIO__PutInt(%t44, 0)
+  call Main__NL()
+  call RTIO__PutText("local offset ")
+  %t45 = ptr.add @Main_M3_info+104, 16
+  %t46 = load i64, %t45
+  call RTIO__PutInt(%t46, 0)
+  call Main__NL()
+  call RTIO__PutText("local zone ")
+  %t47 = ptr.add @Main_M3_info+104, 24
+  %t48 = load gc_ref void, %t47
+  call RTIO__PutText(%t48)
+  call Main__NL()
+  call RTIO__PutText("local weekday ")
+  %t49 = ptr.add @Main_M3_info+104, 32
+  %t50 = load enum , %t49
+  %t51 = convert %t50 to i64
+  call RTIO__PutInt(%t51, 0)
+  call Main__NL()
+  %t52 = call Time__Now() -> f64
+  %t53 = load ptr void, @Main_M3_imp.3+0
+  %t54 = ptr.add %t53, 112
+  %t55 = load gc_ref void, %t54
+  call Date__FromTime(%t56, %t52, %t55)
+  %t57 = load @T, %t56
+  store %t57, @Main_M3_info+104
+  call RTIO__PutText("utc year ")
+  %t58 = ptr.add @Main_M3_info+104, 0
+  %t59 = load word64, %t58
+  call RTIO__PutInt(%t59, 0)
+  call Main__NL()
+  call RTIO__PutText("utc month ")
+  %t60 = ptr.add @Main_M3_info+104, 8
+  %t61 = load enum , %t60
+  %t62 = convert %t61 to i64
+  call RTIO__PutInt(%t62, 0)
+  call Main__NL()
+  call RTIO__PutText("utc day ")
+  %t63 = ptr.add @Main_M3_info+104, 9
+  %t64 = load word8, %t63
+  %t65 = zext %t64 to i64
+  call RTIO__PutInt(%t65, 0)
+  call Main__NL()
+  call RTIO__PutText("utc hour ")
+  %t66 = ptr.add @Main_M3_info+104, 10
+  %t67 = load word8, %t66
+  %t68 = zext %t67 to i64
+  call RTIO__PutInt(%t68, 0)
+  call Main__NL()
+  call RTIO__PutText("utc minute ")
+  %t69 = ptr.add @Main_M3_info+104, 11
+  %t70 = load word8, %t69
+  %t71 = zext %t70 to i64
+  call RTIO__PutInt(%t71, 0)
+  call Main__NL()
+  call RTIO__PutText("utc second ")
+  %t72 = ptr.add @Main_M3_info+104, 12
+  %t73 = load word8, %t72
+  %t74 = zext %t73 to i64
+  call RTIO__PutInt(%t74, 0)
+  call Main__NL()
+  call RTIO__PutText("utc offset ")
+  %t75 = ptr.add @Main_M3_info+104, 16
+  %t76 = load i64, %t75
+  call RTIO__PutInt(%t76, 0)
+  call Main__NL()
+  call RTIO__PutText("utc zone ")
+  %t77 = ptr.add @Main_M3_info+104, 24
+  %t78 = load gc_ref void, %t77
+  call RTIO__PutText(%t78)
+  call Main__NL()
+  call RTIO__PutText("utc weekday ")
+  %t79 = ptr.add @Main_M3_info+104, 32
+  %t80 = load enum , %t79
+  %t81 = convert %t80 to i64
+  call RTIO__PutInt(%t81, 0)
+  call Main__NL()
+  call RTIO__Flush()
+  ret
+

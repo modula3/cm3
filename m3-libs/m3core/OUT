@@ -1,0 +1,2352 @@
+EVAL ("/Users/hosking/cm3/bin/cm3.cfg")
+mkdir ARM64_DARWIN
+--- building in ARM64_DARWIN ---
+
+cd ARM64_DARWIN
+ignoring ../src/m3overrides
+
+EVAL ("m3make.args")
+rm .M3SHIP
+rm .M3OVERRIDES
+inhale libm3core.m3x
+checking RTBuiltin.mx
+reading "../src/runtime/common/RTBuiltin.mx": 0 seconds
+checking RTHooks.i3
+
+new source -> compiling RTHooks.i3
+m3front ../src/runtime/common/RTHooks.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -c -x c /dev/null -o /dev/null 2>&1 | fgrep "cc1: error: invalid option \`32'" >/dev/null
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -c -x c /dev/null -o /dev/null 2>&1 | fgrep "cc1: error: unrecognized command line option \\"-arch\\"" >/dev/null
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -fno-reorder-blocks -c -x c /dev/null -o /dev/null 2>&1 | fgrep fno-reorder-blocks >/dev/null
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -c -x c /dev/null -o /dev/null 2>&1 | fgrep funwind-tables >/dev/null
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHooks.i3.cpp -o RTHooks_i.o
+  compile_c => 0
+rm RTHooks.i3.cpp
+checking RTHooks.m3
+checking RuntimeError.i3
+checking RT0.i3
+
+new source -> compiling RT0.i3
+m3front ../src/runtime/common/RT0.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RT0.i3.cpp -o RT0_i.o
+  compile_c => 0
+rm RT0.i3.cpp
+
+new source -> compiling RuntimeError.i3
+m3front ../src/runtime/common/RuntimeError.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RuntimeError.i3.cpp -o RuntimeError_i.o
+  compile_c => 0
+rm RuntimeError.i3.cpp
+checking Word.i3
+checking WordRep.i3
+
+new source -> compiling WordRep.i3
+m3front ../src/word/WordRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WordRep.i3.cpp -o WordRep_i.o
+  compile_c => 0
+rm WordRep.i3.cpp
+
+new source -> compiling Word.i3
+m3front ../src/word/Word.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Word.i3.cpp -o Word_i.o
+  compile_c => 0
+rm Word.i3.cpp
+checking RTException.i3
+
+new source -> compiling RTException.i3
+m3front ../src/runtime/common/RTException.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTException.i3.cpp -o RTException_i.o
+  compile_c => 0
+rm RTException.i3.cpp
+
+new source -> compiling RTHooks.m3
+m3front ../src/runtime/common/RTHooks.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHooks.m3.cpp -o RTHooks_m.o
+  compile_c => 0
+rm RTHooks.m3.cpp
+checking RT0.m3
+
+new source -> compiling RT0.m3
+m3front ../src/runtime/common/RT0.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RT0.m3.cpp -o RT0_m.o
+  compile_c => 0
+rm RT0.m3.cpp
+checking RuntimeError.m3
+checking Compiler.i3
+
+new source -> compiling Compiler.i3
+m3front ../ARM64_DARWIN/Compiler.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Compiler.i3.cpp -o Compiler_i.o
+  compile_c => 0
+rm Compiler.i3.cpp
+
+new source -> compiling RuntimeError.m3
+m3front ../src/runtime/common/RuntimeError.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RuntimeError.m3.cpp -o RuntimeError_m.o
+  compile_c => 0
+rm RuntimeError.m3.cpp
+checking Compiler.m3
+
+new source -> compiling Compiler.m3
+m3front ../src/runtime/common/Compiler.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Compiler.m3.cpp -o Compiler_m.o
+  compile_c => 0
+rm Compiler.m3.cpp
+checking RTAllocator.i3
+
+new source -> compiling RTAllocator.i3
+m3front ../src/runtime/common/RTAllocator.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTAllocator.i3.cpp -o RTAllocator_i.o
+  compile_c => 0
+rm RTAllocator.i3.cpp
+checking RTType.i3
+
+new source -> compiling RTType.i3
+m3front ../src/runtime/common/RTType.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTType.i3.cpp -o RTType_i.o
+  compile_c => 0
+rm RTType.i3.cpp
+checking RTAllocator.m3
+checking RTThread.i3
+checking RTHeapRep.i3
+
+new source -> compiling RTHeapRep.i3
+m3front ../src/runtime/common/RTHeapRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapRep.i3.cpp -o RTHeapRep_i.o
+  compile_c => 0
+rm RTHeapRep.i3.cpp
+checking FloatMode.i3
+
+new source -> compiling FloatMode.i3
+m3front ../src/float/C99/FloatMode.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FloatMode.i3.cpp -o FloatMode_i.o
+  compile_c => 0
+rm FloatMode.i3.cpp
+
+new source -> compiling RTThread.i3
+m3front ../src/runtime/common/RTThread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTThread.i3.cpp -o RTThread_i.o
+  compile_c => 0
+rm RTThread.i3.cpp
+checking Scheduler.i3
+
+new source -> compiling Scheduler.i3
+m3front ../src/thread/Common/Scheduler.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Scheduler.i3.cpp -o Scheduler_i.o
+  compile_c => 0
+rm Scheduler.i3.cpp
+checking RTOS.i3
+
+new source -> compiling RTOS.i3
+m3front ../src/runtime/common/RTOS.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTOS.i3.cpp -o RTOS_i.o
+  compile_c => 0
+rm RTOS.i3.cpp
+checking RTMisc.i3
+
+new source -> compiling RTMisc.i3
+m3front ../src/runtime/common/RTMisc.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTMisc.i3.cpp -o RTMisc_i.o
+  compile_c => 0
+rm RTMisc.i3.cpp
+checking Cstdlib.i3
+
+new source -> compiling Cstdlib.i3
+m3front ../src/C/Common/Cstdlib.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Cstdlib.i3.cpp -o Cstdlib_i.o
+  compile_c => 0
+rm Cstdlib.i3.cpp
+checking Cstddef.i3
+
+new source -> compiling Cstddef.i3
+m3front ../src/C/Common/Cstddef.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Cstddef.i3.cpp -o Cstddef_i.o
+  compile_c => 0
+rm Cstddef.i3.cpp
+checking Ctypes.i3
+checking BasicCtypes.i3
+checking Long.i3
+checking LongRep.i3
+
+new source -> compiling LongRep.i3
+m3front ../src/word/LongRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c LongRep.i3.cpp -o LongRep_i.o
+  compile_c => 0
+rm LongRep.i3.cpp
+
+new source -> compiling Long.i3
+m3front ../src/word/Long.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Long.i3.cpp -o Long_i.o
+  compile_c => 0
+rm Long.i3.cpp
+
+new source -> compiling BasicCtypes.i3
+m3front ../src/C/64BITS/BasicCtypes.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c BasicCtypes.i3.cpp -o BasicCtypes_i.o
+  compile_c => 0
+rm BasicCtypes.i3.cpp
+
+new source -> compiling Ctypes.i3
+m3front ../src/C/Common/Ctypes.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Ctypes.i3.cpp -o Ctypes_i.o
+  compile_c => 0
+rm Ctypes.i3.cpp
+checking RTAllocCnts.i3
+
+new source -> compiling RTAllocCnts.i3
+m3front ../src/runtime/common/RTAllocCnts.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTAllocCnts.i3.cpp -o RTAllocCnts_i.o
+  compile_c => 0
+rm RTAllocCnts.i3.cpp
+
+new source -> compiling RTAllocator.m3
+m3front ../src/runtime/common/RTAllocator.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTAllocator.m3.cpp -o RTAllocator_m.o
+  compile_c => 0
+rm RTAllocator.m3.cpp
+checking RTAllocStats.i3
+
+new source -> compiling RTAllocStats.i3
+m3front ../src/runtime/common/RTAllocStats.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTAllocStats.i3.cpp -o RTAllocStats_i.o
+  compile_c => 0
+rm RTAllocStats.i3.cpp
+checking RTAllocStats.m3
+checking Convert.i3
+
+new source -> compiling Convert.i3
+m3front ../src/convert/Convert.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Convert.i3.cpp -o Convert_i.o
+  compile_c => 0
+rm Convert.i3.cpp
+checking Text.i3
+checking TextClass.i3
+
+new source -> compiling TextClass.i3
+m3front ../src/text/TextClass.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextClass.i3.cpp -o TextClass_i.o
+  compile_c => 0
+rm TextClass.i3.cpp
+
+new source -> compiling Text.i3
+m3front ../src/text/Text.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text.i3.cpp -o Text_i.o
+  compile_c => 0
+rm Text.i3.cpp
+checking RTProcedureSRC.i3
+
+new source -> compiling RTProcedureSRC.i3
+m3front ../src/runtime/common/RTProcedureSRC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTProcedureSRC.i3.cpp -o RTProcedureSRC_i.o
+  compile_c => 0
+rm RTProcedureSRC.i3.cpp
+checking RTProcedure.i3
+checking Fingerprint.i3
+
+new source -> compiling Fingerprint.i3
+m3front ../src/fingerprint/Fingerprint.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Fingerprint.i3.cpp -o Fingerprint_i.o
+  compile_c => 0
+rm Fingerprint.i3.cpp
+
+new source -> compiling RTProcedure.i3
+m3front ../src/runtime/common/RTProcedure.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTProcedure.i3.cpp -o RTProcedure_i.o
+  compile_c => 0
+rm RTProcedure.i3.cpp
+checking RTStack.i3
+checking RTMachine.i3
+
+new source -> compiling RTMachine.i3
+m3front ../src/runtime/ARM64_DARWIN/RTMachine.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTMachine.i3.cpp -o RTMachine_i.o
+  compile_c => 0
+rm RTMachine.i3.cpp
+
+new source -> compiling RTStack.i3
+m3front ../src/runtime/common/RTStack.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTStack.i3.cpp -o RTStack_i.o
+  compile_c => 0
+rm RTStack.i3.cpp
+
+new source -> compiling RTAllocStats.m3
+m3front ../src/runtime/common/RTAllocStats.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTAllocStats.m3.cpp -o RTAllocStats_m.o
+  compile_c => 0
+rm RTAllocStats.m3.cpp
+checking RTHeap.i3
+
+new source -> compiling RTHeap.i3
+m3front ../src/runtime/common/RTHeap.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeap.i3.cpp -o RTHeap_i.o
+  compile_c => 0
+rm RTHeap.i3.cpp
+checking RTHeap.m3
+checking TextLiteral.i3
+
+new source -> compiling TextLiteral.i3
+m3front ../src/text/TextLiteral.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextLiteral.i3.cpp -o TextLiteral_i.o
+  compile_c => 0
+rm TextLiteral.i3.cpp
+
+new source -> compiling RTHeap.m3
+m3front ../src/runtime/common/RTHeap.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeap.m3.cpp -o RTHeap_m.o
+  compile_c => 0
+rm RTHeap.m3.cpp
+checking RTHeapInfo.i3
+
+new source -> compiling RTHeapInfo.i3
+m3front ../src/runtime/common/RTHeapInfo.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapInfo.i3.cpp -o RTHeapInfo_i.o
+  compile_c => 0
+rm RTHeapInfo.i3.cpp
+checking RTHeapInfo.m3
+checking Cstring.i3
+
+new source -> compiling Cstring.i3
+m3front ../src/C/Common/Cstring.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Cstring.i3.cpp -o Cstring_i.o
+  compile_c => 0
+rm Cstring.i3.cpp
+checking Thread.i3
+
+new source -> compiling Thread.i3
+m3front ../src/thread/Common/Thread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Thread.i3.cpp -o Thread_i.o
+  compile_c => 0
+rm Thread.i3.cpp
+checking RTPerfTool.i3
+
+new source -> compiling RTPerfTool.i3
+m3front ../src/runtime/POSIX/RTPerfTool.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTPerfTool.i3.cpp -o RTPerfTool_i.o
+  compile_c => 0
+rm RTPerfTool.i3.cpp
+checking RTParams.i3
+
+new source -> compiling RTParams.i3
+m3front ../src/runtime/common/RTParams.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTParams.i3.cpp -o RTParams_i.o
+  compile_c => 0
+rm RTParams.i3.cpp
+
+new source -> compiling RTHeapInfo.m3
+m3front ../src/runtime/common/RTHeapInfo.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapInfo.m3.cpp -o RTHeapInfo_m.o
+  compile_c => 0
+rm RTHeapInfo.m3.cpp
+checking RTHeapMap.i3
+
+new source -> compiling RTHeapMap.i3
+m3front ../src/runtime/common/RTHeapMap.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapMap.i3.cpp -o RTHeapMap_i.o
+  compile_c => 0
+rm RTHeapMap.i3.cpp
+checking RTHeapMap.m3
+checking RTIO.i3
+
+new source -> compiling RTIO.i3
+m3front ../src/runtime/common/RTIO.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTIO.i3.cpp -o RTIO_i.o
+  compile_c => 0
+rm RTIO.i3.cpp
+checking RTMapOp.i3
+checking RTTypeMap.i3
+
+new source -> compiling RTTypeMap.i3
+m3front ../src/runtime/common/RTTypeMap.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTypeMap.i3.cpp -o RTTypeMap_i.o
+  compile_c => 0
+rm RTTypeMap.i3.cpp
+
+new source -> compiling RTMapOp.i3
+m3front ../src/runtime/common/RTMapOp.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTMapOp.i3.cpp -o RTMapOp_i.o
+  compile_c => 0
+rm RTMapOp.i3.cpp
+checking RTModule.i3
+
+new source -> compiling RTModule.i3
+m3front ../src/runtime/common/RTModule.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTModule.i3.cpp -o RTModule_i.o
+  compile_c => 0
+rm RTModule.i3.cpp
+
+new source -> compiling RTHeapMap.m3
+m3front ../src/runtime/common/RTHeapMap.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapMap.m3.cpp -o RTHeapMap_m.o
+  compile_c => 0
+rm RTHeapMap.m3.cpp
+checking RTHeapRep.m3
+
+new source -> compiling RTHeapRep.m3
+m3front ../src/runtime/common/RTHeapRep.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapRep.m3.cpp -o RTHeapRep_m.o
+  compile_c => 0
+rm RTHeapRep.m3.cpp
+checking RTHeapStats.i3
+
+new source -> compiling RTHeapStats.i3
+m3front ../src/runtime/common/RTHeapStats.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapStats.i3.cpp -o RTHeapStats_i.o
+  compile_c => 0
+rm RTHeapStats.i3.cpp
+checking RTHeapStats.m3
+checking RTTypeSRC.i3
+
+new source -> compiling RTTypeSRC.i3
+m3front ../src/runtime/common/RTTypeSRC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTypeSRC.i3.cpp -o RTTypeSRC_i.o
+  compile_c => 0
+rm RTTypeSRC.i3.cpp
+checking RTCollector.i3
+
+new source -> compiling RTCollector.i3
+m3front ../src/runtime/common/RTCollector.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTCollector.i3.cpp -o RTCollector_i.o
+  compile_c => 0
+rm RTCollector.i3.cpp
+
+new source -> compiling RTHeapStats.m3
+m3front ../src/runtime/common/RTHeapStats.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapStats.m3.cpp -o RTHeapStats_m.o
+  compile_c => 0
+rm RTHeapStats.m3.cpp
+checking RTCollector.m3
+checking Time.i3
+
+new source -> compiling Time.i3
+m3front ../src/time/Common/Time.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Time.i3.cpp -o Time_i.o
+  compile_c => 0
+rm Time.i3.cpp
+checking RTLinker.i3
+
+new source -> compiling RTLinker.i3
+m3front ../src/runtime/common/RTLinker.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTLinker.i3.cpp -o RTLinker_i.o
+  compile_c => 0
+rm RTLinker.i3.cpp
+checking RTProcess.i3
+
+new source -> compiling RTProcess.i3
+m3front ../src/runtime/common/RTProcess.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTProcess.i3.cpp -o RTProcess_i.o
+  compile_c => 0
+rm RTProcess.i3.cpp
+checking RTHeapEvent.i3
+
+new source -> compiling RTHeapEvent.i3
+m3front ../src/runtime/common/RTHeapEvent.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapEvent.i3.cpp -o RTHeapEvent_i.o
+  compile_c => 0
+rm RTHeapEvent.i3.cpp
+checking RTWeakRef.i3
+
+new source -> compiling RTWeakRef.i3
+m3front ../src/runtime/common/RTWeakRef.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTWeakRef.i3.cpp -o RTWeakRef_i.o
+  compile_c => 0
+rm RTWeakRef.i3.cpp
+checking RTCollectorSRC.i3
+
+new source -> compiling RTCollectorSRC.i3
+m3front ../src/runtime/common/RTCollectorSRC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTCollectorSRC.i3.cpp -o RTCollectorSRC_i.o
+  compile_c => 0
+rm RTCollectorSRC.i3.cpp
+
+new source -> compiling RTCollector.m3
+m3front ../src/runtime/common/RTCollector.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTCollector.m3.cpp -o RTCollector_m.o
+  compile_c => 0
+rm RTCollector.m3.cpp
+checking RTIO.m3
+
+new source -> compiling RTIO.m3
+m3front ../src/runtime/common/RTIO.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTIO.m3.cpp -o RTIO_m.o
+  compile_c => 0
+rm RTIO.m3.cpp
+checking RTLinkerX.i3
+
+new source -> compiling RTLinkerX.i3
+m3front ../src/runtime/common/RTLinkerX.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTLinkerX.i3.cpp -o RTLinkerX_i.o
+  compile_c => 0
+rm RTLinkerX.i3.cpp
+checking RTLinker.m3
+checking RTSignal.i3
+
+new source -> compiling RTSignal.i3
+m3front ../src/runtime/common/RTSignal.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTSignal.i3.cpp -o RTSignal_i.o
+  compile_c => 0
+rm RTSignal.i3.cpp
+checking RTDebug.i3
+
+new source -> compiling RTDebug.i3
+m3front ../src/runtime/common/RTDebug.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTDebug.i3.cpp -o RTDebug_i.o
+  compile_c => 0
+rm RTDebug.i3.cpp
+
+new source -> compiling RTLinker.m3
+m3front ../src/runtime/common/RTLinker.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTLinker.m3.cpp -o RTLinker_m.o
+  compile_c => 0
+rm RTLinker.m3.cpp
+checking RTDebug.m3
+
+new source -> compiling RTDebug.m3
+m3front ../src/runtime/common/RTDebug.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTDebug.m3.cpp -o RTDebug_m.o
+  compile_c => 0
+rm RTDebug.m3.cpp
+checking RTError.i3
+
+new source -> compiling RTError.i3
+m3front ../src/runtime/common/RTError.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTError.i3.cpp -o RTError_i.o
+  compile_c => 0
+rm RTError.i3.cpp
+checking RTError.m3
+
+new source -> compiling RTError.m3
+m3front ../src/runtime/common/RTError.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTError.m3.cpp -o RTError_m.o
+  compile_c => 0
+rm RTError.m3.cpp
+checking RTException.m3
+checking M3toC.i3
+
+new source -> compiling M3toC.i3
+m3front ../src/C/Common/M3toC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c M3toC.i3.cpp -o M3toC_i.o
+  compile_c => 0
+rm M3toC.i3.cpp
+
+new source -> compiling RTException.m3
+m3front ../src/runtime/common/RTException.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTException.m3.cpp -o RTException_m.o
+  compile_c => 0
+rm RTException.m3.cpp
+checking RTMapOp.m3
+
+new source -> compiling RTMapOp.m3
+m3front ../src/runtime/common/RTMapOp.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTMapOp.m3.cpp -o RTMapOp_m.o
+  compile_c => 0
+rm RTMapOp.m3.cpp
+checking RTMisc.m3
+
+new source -> compiling RTMisc.m3
+m3front ../src/runtime/common/RTMisc.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTMisc.m3.cpp -o RTMisc_m.o
+  compile_c => 0
+rm RTMisc.m3.cpp
+checking RTPacking.i3
+
+new source -> compiling RTPacking.i3
+m3front ../src/runtime/common/RTPacking.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTPacking.i3.cpp -o RTPacking_i.o
+  compile_c => 0
+rm RTPacking.i3.cpp
+checking RTPacking.m3
+
+new source -> compiling RTPacking.m3
+m3front ../src/runtime/common/RTPacking.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTPacking.m3.cpp -o RTPacking_m.o
+  compile_c => 0
+rm RTPacking.m3.cpp
+checking RTParams.m3
+checking RTArgs.i3
+
+new source -> compiling RTArgs.i3
+m3front ../src/runtime/common/RTArgs.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTArgs.i3.cpp -o RTArgs_i.o
+  compile_c => 0
+rm RTArgs.i3.cpp
+
+new source -> compiling RTParams.m3
+m3front ../src/runtime/common/RTParams.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTParams.m3.cpp -o RTParams_m.o
+  compile_c => 0
+rm RTParams.m3.cpp
+checking RTProcedure.m3
+
+new source -> compiling RTProcedure.m3
+m3front ../src/runtime/common/RTProcedure.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTProcedure.m3.cpp -o RTProcedure_m.o
+  compile_c => 0
+rm RTProcedure.m3.cpp
+checking RTProcess.m3
+
+new source -> compiling RTProcess.m3
+m3front ../src/runtime/common/RTProcess.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTProcess.m3.cpp -o RTProcess_m.o
+  compile_c => 0
+rm RTProcess.m3.cpp
+checking RTTipe.i3
+
+new source -> compiling RTTipe.i3
+m3front ../src/runtime/common/RTTipe.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTipe.i3.cpp -o RTTipe_i.o
+  compile_c => 0
+rm RTTipe.i3.cpp
+checking RTTipe.m3
+
+new source -> compiling RTTipe.m3
+m3front ../src/runtime/common/RTTipe.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTipe.m3.cpp -o RTTipe_m.o
+  compile_c => 0
+rm RTTipe.m3.cpp
+checking RTType.m3
+
+new source -> compiling RTType.m3
+m3front ../src/runtime/common/RTType.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTType.m3.cpp -o RTType_m.o
+  compile_c => 0
+rm RTType.m3.cpp
+checking RTTypeFP.i3
+
+new source -> compiling RTTypeFP.i3
+m3front ../src/runtime/common/RTTypeFP.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTypeFP.i3.cpp -o RTTypeFP_i.o
+  compile_c => 0
+rm RTTypeFP.i3.cpp
+checking RTTypeFP.m3
+
+new source -> compiling RTTypeFP.m3
+m3front ../src/runtime/common/RTTypeFP.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTypeFP.m3.cpp -o RTTypeFP_m.o
+  compile_c => 0
+rm RTTypeFP.m3.cpp
+checking RTTypeMap.m3
+
+new source -> compiling RTTypeMap.m3
+m3front ../src/runtime/common/RTTypeMap.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTypeMap.m3.cpp -o RTTypeMap_m.o
+  compile_c => 0
+rm RTTypeMap.m3.cpp
+checking RTutils.i3
+
+new source -> compiling RTutils.i3
+m3front ../src/runtime/common/RTutils.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTutils.i3.cpp -o RTutils_i.o
+  compile_c => 0
+rm RTutils.i3.cpp
+checking RTutils.m3
+
+new source -> compiling RTutils.m3
+m3front ../src/runtime/common/RTutils.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTutils.m3.cpp -o RTutils_m.o
+  compile_c => 0
+rm RTutils.m3.cpp
+checking RTHeapDebug.i3
+
+new source -> compiling RTHeapDebug.i3
+m3front ../src/runtime/common/RTHeapDebug.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapDebug.i3.cpp -o RTHeapDebug_i.o
+  compile_c => 0
+rm RTHeapDebug.i3.cpp
+checking RTHeapDebug.m3
+checking WeakRef.i3
+
+new source -> compiling WeakRef.i3
+m3front ../src/weakref/WeakRef.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WeakRef.i3.cpp -o WeakRef_i.o
+  compile_c => 0
+rm WeakRef.i3.cpp
+
+new source -> compiling RTHeapDebug.m3
+m3front ../src/runtime/common/RTHeapDebug.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapDebug.m3.cpp -o RTHeapDebug_m.o
+  compile_c => 0
+rm RTHeapDebug.m3.cpp
+checking RTArgs.m3
+
+new source -> compiling RTArgs.m3
+m3front ../src/runtime/POSIX/RTArgs.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTArgs.m3.cpp -o RTArgs_m.o
+  compile_c => 0
+rm RTArgs.m3.cpp
+checking RTOS.m3
+checking Uuio.i3
+
+new source -> compiling Uuio.i3
+m3front ../src/unix/Common/Uuio.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uuio.i3.cpp -o Uuio_i.o
+  compile_c => 0
+rm Uuio.i3.cpp
+checking Unix.i3
+
+new source -> compiling Unix.i3
+m3front ../src/unix/POSIX/Unix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Unix.i3.cpp -o Unix_i.o
+  compile_c => 0
+rm Unix.i3.cpp
+checking Utypes.i3
+checking Cstdint.i3
+
+new source -> compiling Cstdint.i3
+m3front ../src/C/Common/Cstdint.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Cstdint.i3.cpp -o Cstdint_i.o
+  compile_c => 0
+rm Cstdint.i3.cpp
+
+new source -> compiling Utypes.i3
+m3front ../src/unix/Common/Utypes.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Utypes.i3.cpp -o Utypes_i.o
+  compile_c => 0
+rm Utypes.i3.cpp
+
+new source -> compiling RTOS.m3
+m3front ../src/runtime/POSIX/RTOS.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTOS.m3.cpp -o RTOS_m.o
+  compile_c => 0
+rm RTOS.m3.cpp
+checking RTPerfTool.m3
+checking Uexec.i3
+
+new source -> compiling Uexec.i3
+m3front ../src/unix/Common/Uexec.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uexec.i3.cpp -o Uexec_i.o
+  compile_c => 0
+rm Uexec.i3.cpp
+
+new source -> compiling RTPerfTool.m3
+m3front ../src/runtime/POSIX/RTPerfTool.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTPerfTool.m3.cpp -o RTPerfTool_m.o
+  compile_c => 0
+rm RTPerfTool.m3.cpp
+checking RTSignalPrivate.i3
+
+new source -> compiling RTSignalPrivate.i3
+m3front ../src/runtime/POSIX/RTSignalPrivate.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTSignalPrivate.i3.cpp -o RTSignalPrivate_i.o
+  compile_c => 0
+rm RTSignalPrivate.i3.cpp
+checking RTSignalC.i3
+
+new source -> compiling RTSignalC.i3
+m3front ../src/runtime/POSIX/RTSignalC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTSignalC.i3.cpp -o RTSignalC_i.o
+  compile_c => 0
+rm RTSignalC.i3.cpp
+checking RTSignal.m3
+
+new source -> compiling RTSignal.m3
+m3front ../src/runtime/POSIX/RTSignal.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTSignal.m3.cpp -o RTSignal_m.o
+  compile_c => 0
+rm RTSignal.m3.cpp
+checking RTExStack.m3
+checking RTEHScan.i3
+
+new source -> compiling RTEHScan.i3
+m3front ../src/runtime/ex_stack/RTEHScan.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTEHScan.i3.cpp -o RTEHScan_i.o
+  compile_c => 0
+rm RTEHScan.i3.cpp
+
+new source -> compiling RTExStack.m3
+m3front ../src/runtime/ex_stack/RTExStack.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTExStack.m3.cpp -o RTExStack_m.o
+  compile_c => 0
+rm RTExStack.m3.cpp
+checking RTEHScan.m3
+
+new source -> compiling RTEHScan.m3
+m3front ../src/runtime/ex_stack/RTEHScan.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTEHScan.m3.cpp -o RTEHScan_m.o
+  compile_c => 0
+rm RTEHScan.m3.cpp
+checking ThreadF.i3
+
+new source -> compiling ThreadF.i3
+m3front ../src/thread/Common/ThreadF.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadF.i3.cpp -o ThreadF_i.o
+  compile_c => 0
+rm ThreadF.i3.cpp
+checking SchedulerPosix.i3
+
+new source -> compiling SchedulerPosix.i3
+m3front ../src/thread/Common/SchedulerPosix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c SchedulerPosix.i3.cpp -o SchedulerPosix_i.o
+  compile_c => 0
+rm SchedulerPosix.i3.cpp
+checking ThreadInternal.i3
+
+new source -> compiling ThreadInternal.i3
+m3front ../src/thread/Common/ThreadInternal.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadInternal.i3.cpp -o ThreadInternal_i.o
+  compile_c => 0
+rm ThreadInternal.i3.cpp
+checking MutexRep.i3
+
+new source -> compiling MutexRep.i3
+m3front ../src/thread/Common/MutexRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c MutexRep.i3.cpp -o MutexRep_i.o
+  compile_c => 0
+rm MutexRep.i3.cpp
+checking ThreadEvent.i3
+
+new source -> compiling ThreadEvent.i3
+m3front ../src/thread/Common/ThreadEvent.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadEvent.i3.cpp -o ThreadEvent_i.o
+  compile_c => 0
+rm ThreadEvent.i3.cpp
+checking ThreadPThread.i3
+
+new source -> compiling ThreadPThread.i3
+m3front ../src/thread/PTHREAD/ThreadPThread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadPThread.i3.cpp -o ThreadPThread_i.o
+  compile_c => 0
+rm ThreadPThread.i3.cpp
+checking ThreadPThreadRT.i3
+
+new source -> compiling ThreadPThreadRT.i3
+m3front ../src/thread/PTHREAD/ThreadPThreadRT.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadPThreadRT.i3.cpp -o ThreadPThreadRT_i.o
+  compile_c => 0
+rm ThreadPThreadRT.i3.cpp
+checking SchedulerPThread.i3
+
+new source -> compiling SchedulerPThread.i3
+m3front ../src/thread/PTHREAD/SchedulerPThread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c SchedulerPThread.i3.cpp -o SchedulerPThread_i.o
+  compile_c => 0
+rm SchedulerPThread.i3.cpp
+checking ThreadPThread.m3
+checking Uerror.i3
+
+new source -> compiling Uerror.i3
+m3front ../src/unix/Common/Uerror.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uerror.i3.cpp -o Uerror_i.o
+  compile_c => 0
+rm Uerror.i3.cpp
+checking Usched.i3
+
+new source -> compiling Usched.i3
+m3front ../src/unix/Common/Usched.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Usched.i3.cpp -o Usched_i.o
+  compile_c => 0
+rm Usched.i3.cpp
+checking Cerrno.i3
+
+new source -> compiling Cerrno.i3
+m3front ../src/C/Common/Cerrno.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Cerrno.i3.cpp -o Cerrno_i.o
+  compile_c => 0
+rm Cerrno.i3.cpp
+
+new source -> compiling ThreadPThread.m3
+m3front ../src/thread/PTHREAD/ThreadPThread.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadPThread.m3.cpp -o ThreadPThread_m.o
+  compile_c => 0
+rm ThreadPThread.m3.cpp
+checking Coroutine.i3
+
+new source -> compiling Coroutine.i3
+m3front ../src/coroutine/Common/Coroutine.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Coroutine.i3.cpp -o Coroutine_i.o
+  compile_c => 0
+rm Coroutine.i3.cpp
+checking ContextC.i3
+
+new source -> compiling ContextC.i3
+m3front ../src/coroutine/UCONTEXT/ContextC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ContextC.i3.cpp -o ContextC_i.o
+  compile_c => 0
+rm ContextC.i3.cpp
+checking CoroutineUcontext.i3
+
+new source -> compiling CoroutineUcontext.i3
+m3front ../src/coroutine/UCONTEXT/CoroutineUcontext.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c CoroutineUcontext.i3.cpp -o CoroutineUcontext_i.o
+  compile_c => 0
+rm CoroutineUcontext.i3.cpp
+checking CoroutineUcontext.m3
+
+new source -> compiling CoroutineUcontext.m3
+m3front ../src/coroutine/UCONTEXT/CoroutineUcontext.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c CoroutineUcontext.m3.cpp -o CoroutineUcontext_m.o
+  compile_c => 0
+rm CoroutineUcontext.m3.cpp
+checking WinBaseTypes.i3
+
+new source -> compiling WinBaseTypes.i3
+m3front ../src/win32/WinBaseTypes.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinBaseTypes.i3.cpp -o WinBaseTypes_i.o
+  compile_c => 0
+rm WinBaseTypes.i3.cpp
+checking WinDef.i3
+
+new source -> compiling WinDef.i3
+m3front ../src/win32/WinDef.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinDef.i3.cpp -o WinDef_i.o
+  compile_c => 0
+rm WinDef.i3.cpp
+checking WinDef.m3
+
+new source -> compiling WinDef.m3
+m3front ../src/win32/WinDef.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinDef.m3.cpp -o WinDef_m.o
+  compile_c => 0
+rm WinDef.m3.cpp
+checking WinNT.i3
+
+new source -> compiling WinNT.i3
+m3front ../src/win32/WinNT.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinNT.i3.cpp -o WinNT_i.o
+  compile_c => 0
+rm WinNT.i3.cpp
+checking WinNT.m3
+
+new source -> compiling WinNT.m3
+m3front ../src/win32/WinNT.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinNT.m3.cpp -o WinNT_m.o
+  compile_c => 0
+rm WinNT.m3.cpp
+checking WinError.i3
+
+new source -> compiling WinError.i3
+m3front ../src/win32/WinError.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinError.i3.cpp -o WinError_i.o
+  compile_c => 0
+rm WinError.i3.cpp
+checking WinBase.i3
+
+new source -> compiling WinBase.i3
+m3front ../src/win32/WinBase.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinBase.i3.cpp -o WinBase_i.o
+  compile_c => 0
+rm WinBase.i3.cpp
+checking WinCon.i3
+
+new source -> compiling WinCon.i3
+m3front ../src/win32/WinCon.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinCon.i3.cpp -o WinCon_i.o
+  compile_c => 0
+rm WinCon.i3.cpp
+checking WinGDI.i3
+
+new source -> compiling WinGDI.i3
+m3front ../src/win32/WinGDI.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinGDI.i3.cpp -o WinGDI_i.o
+  compile_c => 0
+rm WinGDI.i3.cpp
+checking WinIoctl.i3
+
+new source -> compiling WinIoctl.i3
+m3front ../src/win32/WinIoctl.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinIoctl.i3.cpp -o WinIoctl_i.o
+  compile_c => 0
+rm WinIoctl.i3.cpp
+checking WinIoctl.m3
+
+new source -> compiling WinIoctl.m3
+m3front ../src/win32/WinIoctl.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinIoctl.m3.cpp -o WinIoctl_m.o
+  compile_c => 0
+rm WinIoctl.m3.cpp
+checking WinNetwk.i3
+
+new source -> compiling WinNetwk.i3
+m3front ../src/win32/WinNetwk.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinNetwk.i3.cpp -o WinNetwk_i.o
+  compile_c => 0
+rm WinNetwk.i3.cpp
+checking WinNLS.i3
+
+new source -> compiling WinNLS.i3
+m3front ../src/win32/WinNLS.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinNLS.i3.cpp -o WinNLS_i.o
+  compile_c => 0
+rm WinNLS.i3.cpp
+checking WinReg.i3
+
+new source -> compiling WinReg.i3
+m3front ../src/win32/WinReg.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinReg.i3.cpp -o WinReg_i.o
+  compile_c => 0
+rm WinReg.i3.cpp
+checking WinReg.m3
+
+new source -> compiling WinReg.m3
+m3front ../src/win32/WinReg.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinReg.m3.cpp -o WinReg_m.o
+  compile_c => 0
+rm WinReg.m3.cpp
+checking WinUser.i3
+
+new source -> compiling WinUser.i3
+m3front ../src/win32/WinUser.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinUser.i3.cpp -o WinUser_i.o
+  compile_c => 0
+rm WinUser.i3.cpp
+checking WinVer.i3
+
+new source -> compiling WinVer.i3
+m3front ../src/win32/WinVer.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinVer.i3.cpp -o WinVer_i.o
+  compile_c => 0
+rm WinVer.i3.cpp
+checking WinVer.m3
+
+new source -> compiling WinVer.m3
+m3front ../src/win32/WinVer.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinVer.m3.cpp -o WinVer_m.o
+  compile_c => 0
+rm WinVer.m3.cpp
+checking NB30.i3
+
+new source -> compiling NB30.i3
+m3front ../src/win32/NB30.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c NB30.i3.cpp -o NB30_i.o
+  compile_c => 0
+rm NB30.i3.cpp
+checking NB30.m3
+
+new source -> compiling NB30.m3
+m3front ../src/win32/NB30.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c NB30.m3.cpp -o NB30_m.o
+  compile_c => 0
+rm NB30.m3.cpp
+checking CDErr.i3
+
+new source -> compiling CDErr.i3
+m3front ../src/win32/CDErr.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c CDErr.i3.cpp -o CDErr_i.o
+  compile_c => 0
+rm CDErr.i3.cpp
+checking CommDlg.i3
+
+new source -> compiling CommDlg.i3
+m3front ../src/win32/CommDlg.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c CommDlg.i3.cpp -o CommDlg_i.o
+  compile_c => 0
+rm CommDlg.i3.cpp
+checking TlHelp32.i3
+
+new source -> compiling TlHelp32.i3
+m3front ../src/win32/TlHelp32.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TlHelp32.i3.cpp -o TlHelp32_i.o
+  compile_c => 0
+rm TlHelp32.i3.cpp
+checking WinMidi.i3
+
+new source -> compiling WinMidi.i3
+m3front ../src/win32/WinMidi.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinMidi.i3.cpp -o WinMidi_i.o
+  compile_c => 0
+rm WinMidi.i3.cpp
+checking WinCommCtrl.i3
+
+new source -> compiling WinCommCtrl.i3
+m3front ../src/win32/WinCommCtrl.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinCommCtrl.i3.cpp -o WinCommCtrl_i.o
+  compile_c => 0
+rm WinCommCtrl.i3.cpp
+checking WinImageList.i3
+
+new source -> compiling WinImageList.i3
+m3front ../src/win32/WinImageList.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WinImageList.i3.cpp -o WinImageList_i.o
+  compile_c => 0
+rm WinImageList.i3.cpp
+checking UnixC.i3
+
+new source -> compiling UnixC.i3
+m3front ../src/unix/Common/UnixC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c UnixC.i3.cpp -o UnixC_i.o
+  compile_c => 0
+rm UnixC.i3.cpp
+checking Unetdb.i3
+
+new source -> compiling Unetdb.i3
+m3front ../src/unix/Common/Unetdb.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Unetdb.i3.cpp -o Unetdb_i.o
+  compile_c => 0
+rm Unetdb.i3.cpp
+checking Ugrp.i3
+
+new source -> compiling Ugrp.i3
+m3front ../src/unix/Common/Ugrp.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Ugrp.i3.cpp -o Ugrp_i.o
+  compile_c => 0
+rm Ugrp.i3.cpp
+checking Uin.i3
+
+new source -> compiling Uin.i3
+m3front ../src/unix/Common/Uin.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uin.i3.cpp -o Uin_i.o
+  compile_c => 0
+rm Uin.i3.cpp
+checking Usignal.i3
+
+new source -> compiling Usignal.i3
+m3front ../src/unix/Common/Usignal.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Usignal.i3.cpp -o Usignal_i.o
+  compile_c => 0
+rm Usignal.i3.cpp
+checking Uutmp.i3
+
+new source -> compiling Uutmp.i3
+m3front ../src/unix/Common/Uutmp.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uutmp.i3.cpp -o Uutmp_i.o
+  compile_c => 0
+rm Uutmp.i3.cpp
+checking Umman.i3
+
+new source -> compiling Umman.i3
+m3front ../src/unix/Common/Umman.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Umman.i3.cpp -o Umman_i.o
+  compile_c => 0
+rm Umman.i3.cpp
+checking Upwd.i3
+
+new source -> compiling Upwd.i3
+m3front ../src/unix/Common/Upwd.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Upwd.i3.cpp -o Upwd_i.o
+  compile_c => 0
+rm Upwd.i3.cpp
+checking Uugid.i3
+
+new source -> compiling Uugid.i3
+m3front ../src/unix/Common/Uugid.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uugid.i3.cpp -o Uugid_i.o
+  compile_c => 0
+rm Uugid.i3.cpp
+checking Uprocess.i3
+
+new source -> compiling Uprocess.i3
+m3front ../src/unix/Common/Uprocess.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Uprocess.i3.cpp -o Uprocess_i.o
+  compile_c => 0
+rm Uprocess.i3.cpp
+checking Unix.m3
+
+new source -> compiling Unix.m3
+m3front ../src/unix/Common/Unix.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Unix.m3.cpp -o Unix_m.o
+  compile_c => 0
+rm Unix.m3.cpp
+checking Utime.i3
+
+new source -> compiling Utime.i3
+m3front ../src/unix/Common/Utime.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Utime.i3.cpp -o Utime_i.o
+  compile_c => 0
+rm Utime.i3.cpp
+checking Usocket.i3
+
+new source -> compiling Usocket.i3
+m3front ../src/unix/Common/Usocket.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Usocket.i3.cpp -o Usocket_i.o
+  compile_c => 0
+rm Usocket.i3.cpp
+checking Ustat.i3
+
+new source -> compiling Ustat.i3
+m3front ../src/unix/Common/Ustat.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Ustat.i3.cpp -o Ustat_i.o
+  compile_c => 0
+rm Ustat.i3.cpp
+checking Udir.i3
+
+new source -> compiling Udir.i3
+m3front ../src/unix/Common/Udir.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Udir.i3.cpp -o Udir_i.o
+  compile_c => 0
+rm Udir.i3.cpp
+checking M3toC.m3
+checking Text8CString.i3
+
+new source -> compiling Text8CString.i3
+m3front ../src/text/Text8CString.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text8CString.i3.cpp -o Text8CString_i.o
+  compile_c => 0
+rm Text8CString.i3.cpp
+checking Text8.i3
+
+new source -> compiling Text8.i3
+m3front ../src/text/Text8.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text8.i3.cpp -o Text8_i.o
+  compile_c => 0
+rm Text8.i3.cpp
+
+new source -> compiling M3toC.m3
+m3front ../src/C/Common/M3toC.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c M3toC.m3.cpp -o M3toC_m.o
+  compile_c => 0
+rm M3toC.m3.cpp
+checking Cstdio.i3
+
+new source -> compiling Cstdio.i3
+m3front ../src/C/Common/Cstdio.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Cstdio.i3.cpp -o Cstdio_i.o
+  compile_c => 0
+rm Cstdio.i3.cpp
+checking Csignal.i3
+
+new source -> compiling Csignal.i3
+m3front ../src/C/Common/Csignal.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Csignal.i3.cpp -o Csignal_i.o
+  compile_c => 0
+rm Csignal.i3.cpp
+checking Csetjmp.i3
+
+new source -> compiling Csetjmp.i3
+m3front ../src/C/Common/Csetjmp.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Csetjmp.i3.cpp -o Csetjmp_i.o
+  compile_c => 0
+rm Csetjmp.i3.cpp
+checking Grisu.i3
+
+new source -> compiling Grisu.i3
+m3front ../src/float/Common/no_grisu/Grisu.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Grisu.i3.cpp -o Grisu_i.o
+  compile_c => 0
+rm Grisu.i3.cpp
+checking Grisu.m3
+
+new source -> compiling Grisu.m3
+m3front ../src/float/Common/no_grisu/Grisu.m3 -unfold_nested_procs -check_procs -w1
+"../src/float/Common/no_grisu/Grisu.m3", line 10: warning: not used (v)
+"../src/float/Common/no_grisu/Grisu.m3", line 11: warning: not used (mode)
+"../src/float/Common/no_grisu/Grisu.m3", line 12: warning: not used (requestedDigits)
+"../src/float/Common/no_grisu/Grisu.m3", line 13: warning: not used (buffer)
+"../src/float/Common/no_grisu/Grisu.m3", line 14: warning: not used (length)
+"../src/float/Common/no_grisu/Grisu.m3", line 15: warning: not used (decimalPoint)
+6 warnings encountered
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Grisu.m3.cpp -o Grisu_m.o
+  compile_c => 0
+rm Grisu.m3.cpp
+checking FPU.i3
+
+new source -> compiling FPU.i3
+m3front ../src/float/Common/FPU.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FPU.i3.cpp -o FPU_i.o
+  compile_c => 0
+rm FPU.i3.cpp
+checking RealFloat.i3
+checking Real.i3
+
+new source -> compiling Real.i3
+m3front ../src/float/IEEE/Real.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Real.i3.cpp -o Real_i.o
+  compile_c => 0
+rm Real.i3.cpp
+
+new source -> compiling RealFloat.i3
+m3front ../src/float/Common/RealFloat.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RealFloat.i3.cpp -o RealFloat_i.o
+  compile_c => 0
+rm RealFloat.i3.cpp
+checking LongFloat.i3
+checking LongReal.i3
+
+new source -> compiling LongReal.i3
+m3front ../src/float/IEEE/LongReal.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c LongReal.i3.cpp -o LongReal_i.o
+  compile_c => 0
+rm LongReal.i3.cpp
+
+new source -> compiling LongFloat.i3
+m3front ../src/float/Common/LongFloat.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c LongFloat.i3.cpp -o LongFloat_i.o
+  compile_c => 0
+rm LongFloat.i3.cpp
+checking ExtendedFloat.i3
+checking Extended.i3
+
+new source -> compiling Extended.i3
+m3front ../src/float/IEEE/ext64/Extended.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Extended.i3.cpp -o Extended_i.o
+  compile_c => 0
+rm Extended.i3.cpp
+
+new source -> compiling ExtendedFloat.i3
+m3front ../src/float/Common/ExtendedFloat.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ExtendedFloat.i3.cpp -o ExtendedFloat_i.o
+  compile_c => 0
+rm ExtendedFloat.i3.cpp
+checking IEEESpecial.i3
+
+new source -> compiling IEEESpecial.i3
+m3front ../src/float/Common/IEEESpecial.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c IEEESpecial.i3.cpp -o IEEESpecial_i.o
+  compile_c => 0
+rm IEEESpecial.i3.cpp
+checking IEEESpecial.m3
+checking ExtendedRep.i3
+checking LongRealRep.i3
+
+new source -> compiling LongRealRep.i3
+m3front ../src/float/IEEE-le/LongRealRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c LongRealRep.i3.cpp -o LongRealRep_i.o
+  compile_c => 0
+rm LongRealRep.i3.cpp
+
+new source -> compiling ExtendedRep.i3
+m3front ../src/float/IEEE-le/ext64/ExtendedRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ExtendedRep.i3.cpp -o ExtendedRep_i.o
+  compile_c => 0
+rm ExtendedRep.i3.cpp
+checking RealRep.i3
+
+new source -> compiling RealRep.i3
+m3front ../src/float/IEEE-le/RealRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RealRep.i3.cpp -o RealRep_i.o
+  compile_c => 0
+rm RealRep.i3.cpp
+
+new source -> compiling IEEESpecial.m3
+m3front ../src/float/Common/IEEESpecial.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c IEEESpecial.m3.cpp -o IEEESpecial_m.o
+  compile_c => 0
+rm IEEESpecial.m3.cpp
+checking Real.m3
+checking Int32.i3
+
+new source -> compiling Int32.i3
+m3front ../src/types/Int32.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Int32.i3.cpp -o Int32_i.o
+  compile_c => 0
+rm Int32.i3.cpp
+
+new source -> compiling Real.m3
+m3front ../src/float/Common/Real.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Real.m3.cpp -o Real_m.o
+  compile_c => 0
+rm Real.m3.cpp
+checking LongReal.m3
+
+new source -> compiling LongReal.m3
+m3front ../src/float/Common/LongReal.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c LongReal.m3.cpp -o LongReal_m.o
+  compile_c => 0
+rm LongReal.m3.cpp
+checking Extended.m3
+
+new source -> compiling Extended.m3
+m3front ../src/float/Common/Extended.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Extended.m3.cpp -o Extended_m.o
+  compile_c => 0
+rm Extended.m3.cpp
+checking DragonInt.i3
+
+new source -> compiling DragonInt.i3
+m3front ../src/float/Common/DragonInt.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DragonInt.i3.cpp -o DragonInt_i.o
+  compile_c => 0
+rm DragonInt.i3.cpp
+checking DragonInt.m3
+
+new source -> compiling DragonInt.m3
+m3front ../src/float/Common/DragonInt.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DragonInt.m3.cpp -o DragonInt_m.o
+  compile_c => 0
+rm DragonInt.m3.cpp
+checking DragonT.i3
+
+new source -> compiling DragonT.i3
+m3front ../src/float/Common/DragonT.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DragonT.i3.cpp -o DragonT_i.o
+  compile_c => 0
+rm DragonT.i3.cpp
+checking DragonT.m3
+
+new source -> compiling DragonT.m3
+m3front ../src/float/Common/DragonT.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DragonT.m3.cpp -o DragonT_m.o
+  compile_c => 0
+rm DragonT.m3.cpp
+checking FloatUtils.i3
+
+new source -> compiling FloatUtils.i3
+m3front ../src/float/Common/FloatUtils.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FloatUtils.i3.cpp -o FloatUtils_i.o
+  compile_c => 0
+rm FloatUtils.i3.cpp
+checking FloatUtils.m3
+
+new source -> compiling FloatUtils.m3
+m3front ../src/float/Common/FloatUtils.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FloatUtils.m3.cpp -o FloatUtils_m.o
+  compile_c => 0
+rm FloatUtils.m3.cpp
+checking TextToFloat.i3
+
+new source -> compiling TextToFloat.i3
+m3front ../src/float/Common/TextToFloat.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextToFloat.i3.cpp -o TextToFloat_i.o
+  compile_c => 0
+rm TextToFloat.i3.cpp
+checking TextToFloat.m3
+
+new source -> compiling TextToFloat.m3
+m3front ../src/float/Common/TextToFloat.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextToFloat.m3.cpp -o TextToFloat_m.o
+  compile_c => 0
+rm TextToFloat.m3.cpp
+checking FloatMode.m3
+checking FloatModeC.i3
+
+new source -> compiling FloatModeC.i3
+m3front ../src/float/C99/FloatModeC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FloatModeC.i3.cpp -o FloatModeC_i.o
+  compile_c => 0
+rm FloatModeC.i3.cpp
+
+new source -> compiling FloatMode.m3
+m3front ../src/float/C99/FloatMode.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FloatMode.m3.cpp -o FloatMode_m.o
+  compile_c => 0
+rm FloatMode.m3.cpp
+checking RealFloat.m3
+
+new source -> compiling RealFloat.m3
+m3front ../src/float/IEEE/RealFloat.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RealFloat.m3.cpp -o RealFloat_m.o
+  compile_c => 0
+rm RealFloat.m3.cpp
+checking LongFloat.m3
+
+new source -> compiling LongFloat.m3
+m3front ../src/float/IEEE/LongFloat.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c LongFloat.m3.cpp -o LongFloat_m.o
+  compile_c => 0
+rm LongFloat.m3.cpp
+checking ExtendedFloat.m3
+
+new source -> compiling ExtendedFloat.m3
+m3front ../src/float/IEEE/ext64/ExtendedFloat.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ExtendedFloat.m3.cpp -o ExtendedFloat_m.o
+  compile_c => 0
+rm ExtendedFloat.m3.cpp
+checking Tick.i3
+
+new source -> compiling Tick.i3
+m3front ../src/time/Common/Tick.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Tick.i3.cpp -o Tick_i.o
+  compile_c => 0
+rm Tick.i3.cpp
+checking Date.i3
+
+new source -> compiling Date.i3
+m3front ../src/time/Common/Date.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Date.i3.cpp -o Date_i.o
+  compile_c => 0
+rm Date.i3.cpp
+checking FmtTime.i3
+
+new source -> compiling FmtTime.i3
+m3front ../src/time/Common/FmtTime.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FmtTime.i3.cpp -o FmtTime_i.o
+  compile_c => 0
+rm FmtTime.i3.cpp
+checking FmtTime.m3
+
+new source -> compiling FmtTime.m3
+m3front ../src/time/Common/FmtTime.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c FmtTime.m3.cpp -o FmtTime_m.o
+  compile_c => 0
+rm FmtTime.m3.cpp
+checking TickPortable.m3
+
+new source -> compiling TickPortable.m3
+m3front ../src/time/Portable/TickPortable.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TickPortable.m3.cpp -o TickPortable_m.o
+  compile_c => 0
+rm TickPortable.m3.cpp
+checking TimePosix.i3
+
+new source -> compiling TimePosix.i3
+m3front ../src/time/POSIX/TimePosix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TimePosix.i3.cpp -o TimePosix_i.o
+  compile_c => 0
+rm TimePosix.i3.cpp
+checking TimePosix.m3
+
+new source -> compiling TimePosix.m3
+m3front ../src/time/POSIX/TimePosix.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TimePosix.m3.cpp -o TimePosix_m.o
+  compile_c => 0
+rm TimePosix.m3.cpp
+checking DatePosix.i3
+
+new source -> compiling DatePosix.i3
+m3front ../src/time/POSIX/DatePosix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DatePosix.i3.cpp -o DatePosix_i.o
+  compile_c => 0
+rm DatePosix.i3.cpp
+checking DatePosix.m3
+
+new source -> compiling DatePosix.m3
+m3front ../src/time/POSIX/DatePosix.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DatePosix.m3.cpp -o DatePosix_m.o
+  compile_c => 0
+rm DatePosix.m3.cpp
+checking CConvert.i3
+
+new source -> compiling CConvert.i3
+m3front ../src/convert/CConvert.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c CConvert.i3.cpp -o CConvert_i.o
+  compile_c => 0
+rm CConvert.i3.cpp
+checking CConvert.m3
+
+new source -> compiling CConvert.m3
+m3front ../src/convert/CConvert.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c CConvert.m3.cpp -o CConvert_m.o
+  compile_c => 0
+rm CConvert.m3.cpp
+checking Convert.m3
+
+new source -> compiling Convert.m3
+m3front ../src/convert/Convert.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Convert.m3.cpp -o Convert_m.o
+  compile_c => 0
+rm Convert.m3.cpp
+checking String8.i3
+
+new source -> compiling String8.i3
+m3front ../src/text/String8.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c String8.i3.cpp -o String8_i.o
+  compile_c => 0
+rm String8.i3.cpp
+checking String8.m3
+
+new source -> compiling String8.m3
+m3front ../src/text/String8.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c String8.m3.cpp -o String8_m.o
+  compile_c => 0
+rm String8.m3.cpp
+checking String16.i3
+
+new source -> compiling String16.i3
+m3front ../src/text/String16.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c String16.i3.cpp -o String16_i.o
+  compile_c => 0
+rm String16.i3.cpp
+checking String16.m3
+
+new source -> compiling String16.m3
+m3front ../src/text/String16.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c String16.m3.cpp -o String16_m.o
+  compile_c => 0
+rm String16.m3.cpp
+checking Text.m3
+checking TextSub.i3
+
+new source -> compiling TextSub.i3
+m3front ../src/text/TextSub.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextSub.i3.cpp -o TextSub_i.o
+  compile_c => 0
+rm TextSub.i3.cpp
+checking TextCat.i3
+
+new source -> compiling TextCat.i3
+m3front ../src/text/TextCat.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextCat.i3.cpp -o TextCat_i.o
+  compile_c => 0
+rm TextCat.i3.cpp
+checking Text16.i3
+
+new source -> compiling Text16.i3
+m3front ../src/text/Text16.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text16.i3.cpp -o Text16_i.o
+  compile_c => 0
+rm Text16.i3.cpp
+checking TextStats.i3
+checking Text16Short.i3
+
+new source -> compiling Text16Short.i3
+m3front ../src/text/Text16Short.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text16Short.i3.cpp -o Text16Short_i.o
+  compile_c => 0
+rm Text16Short.i3.cpp
+checking Text8Short.i3
+
+new source -> compiling Text8Short.i3
+m3front ../src/text/Text8Short.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text8Short.i3.cpp -o Text8Short_i.o
+  compile_c => 0
+rm Text8Short.i3.cpp
+
+new source -> compiling TextStats.i3
+m3front ../src/text/TextStats.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextStats.i3.cpp -o TextStats_i.o
+  compile_c => 0
+rm TextStats.i3.cpp
+
+new source -> compiling Text.m3
+m3front ../src/text/Text.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text.m3.cpp -o Text_m.o
+  compile_c => 0
+rm Text.m3.cpp
+checking TextClass.m3
+
+new source -> compiling TextClass.m3
+m3front ../src/text/TextClass.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextClass.m3.cpp -o TextClass_m.o
+  compile_c => 0
+rm TextClass.m3.cpp
+checking TextLiteral.m3
+
+new source -> compiling TextLiteral.m3
+m3front ../src/text/TextLiteral.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextLiteral.m3.cpp -o TextLiteral_m.o
+  compile_c => 0
+rm TextLiteral.m3.cpp
+checking Text8.m3
+
+new source -> compiling Text8.m3
+m3front ../src/text/Text8.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text8.m3.cpp -o Text8_m.o
+  compile_c => 0
+rm Text8.m3.cpp
+checking Text8Short.m3
+
+new source -> compiling Text8Short.m3
+m3front ../src/text/Text8Short.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text8Short.m3.cpp -o Text8Short_m.o
+  compile_c => 0
+rm Text8Short.m3.cpp
+checking Text8CString.m3
+
+new source -> compiling Text8CString.m3
+m3front ../src/text/Text8CString.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text8CString.m3.cpp -o Text8CString_m.o
+  compile_c => 0
+rm Text8CString.m3.cpp
+checking Text16.m3
+
+new source -> compiling Text16.m3
+m3front ../src/text/Text16.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text16.m3.cpp -o Text16_m.o
+  compile_c => 0
+rm Text16.m3.cpp
+checking Text16Short.m3
+
+new source -> compiling Text16Short.m3
+m3front ../src/text/Text16Short.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text16Short.m3.cpp -o Text16Short_m.o
+  compile_c => 0
+rm Text16Short.m3.cpp
+checking TextSub.m3
+
+new source -> compiling TextSub.m3
+m3front ../src/text/TextSub.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextSub.m3.cpp -o TextSub_m.o
+  compile_c => 0
+rm TextSub.m3.cpp
+checking TextCat.m3
+
+new source -> compiling TextCat.m3
+m3front ../src/text/TextCat.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextCat.m3.cpp -o TextCat_m.o
+  compile_c => 0
+rm TextCat.m3.cpp
+checking TextStats.m3
+
+new source -> compiling TextStats.m3
+m3front ../src/text/TextStats.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextStats.m3.cpp -o TextStats_m.o
+  compile_c => 0
+rm TextStats.m3.cpp
+checking TextConv.i3
+
+new source -> compiling TextConv.i3
+m3front ../src/text/TextConv.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextConv.i3.cpp -o TextConv_i.o
+  compile_c => 0
+rm TextConv.i3.cpp
+checking TextConv.m3
+
+new source -> compiling TextConv.m3
+m3front ../src/text/TextConv.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TextConv.m3.cpp -o TextConv_m.o
+  compile_c => 0
+rm TextConv.m3.cpp
+checking Fingerprint.m3
+checking Poly.i3
+
+new source -> compiling Poly.i3
+m3front ../src/fingerprint/Poly.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Poly.i3.cpp -o Poly_i.o
+  compile_c => 0
+rm Poly.i3.cpp
+
+new source -> compiling Fingerprint.m3
+m3front ../src/fingerprint/Fingerprint.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Fingerprint.m3.cpp -o Fingerprint_m.o
+  compile_c => 0
+rm Fingerprint.m3.cpp
+checking Poly.m3
+
+new source -> compiling Poly.m3
+m3front ../src/fingerprint/Poly.m3 -unfold_nested_procs -check_procs -w1
+"../src/fingerprint/Poly.m3", line 175: warning: LOOPHOLE: expression's alignment may differ from type's
+"../src/fingerprint/Poly.m3", line 209: warning: LOOPHOLE: expression's alignment may differ from type's
+2 warnings encountered
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Poly.m3.cpp -o Poly_m.o
+  compile_c => 0
+rm Poly.m3.cpp
+checking PolyBasis.i3
+
+new source -> compiling PolyBasis.i3
+m3front ../src/fingerprint/PolyBasis.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c PolyBasis.i3.cpp -o PolyBasis_i.o
+  compile_c => 0
+rm PolyBasis.i3.cpp
+checking PolyBasis.m3
+
+new source -> compiling PolyBasis.m3
+m3front ../src/fingerprint/PolyBasis.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c PolyBasis.m3.cpp -o PolyBasis_m.o
+  compile_c => 0
+rm PolyBasis.m3.cpp
+checking Main.i3
+
+new source -> compiling Main.i3
+m3front ../src/main/Main.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Main.i3.cpp -o Main_i.o
+  compile_c => 0
+rm Main.i3.cpp
+checking WeakRef.m3
+
+new source -> compiling WeakRef.m3
+m3front ../src/weakref/WeakRef.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WeakRef.m3.cpp -o WeakRef_m.o
+  compile_c => 0
+rm WeakRef.m3.cpp
+checking Word.m3
+
+new source -> compiling Word.m3
+m3front ../src/word/Word.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Word.m3.cpp -o Word_m.o
+  compile_c => 0
+rm Word.m3.cpp
+checking Long.m3
+
+new source -> compiling Long.m3
+m3front ../src/word/Long.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Long.m3.cpp -o Long_m.o
+  compile_c => 0
+rm Long.m3.cpp
+checking Boolean.i3
+
+new source -> compiling Boolean.i3
+m3front ../src/types/Boolean.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Boolean.i3.cpp -o Boolean_i.o
+  compile_c => 0
+rm Boolean.i3.cpp
+checking Boolean.m3
+
+new source -> compiling Boolean.m3
+m3front ../src/types/Boolean.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Boolean.m3.cpp -o Boolean_m.o
+  compile_c => 0
+rm Boolean.m3.cpp
+checking Char.i3
+
+new source -> compiling Char.i3
+m3front ../src/types/Char.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Char.i3.cpp -o Char_i.o
+  compile_c => 0
+rm Char.i3.cpp
+checking Char.m3
+
+new source -> compiling Char.m3
+m3front ../src/types/Char.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Char.m3.cpp -o Char_m.o
+  compile_c => 0
+rm Char.m3.cpp
+checking Int32.m3
+
+new source -> compiling Int32.m3
+m3front ../src/types/Int32.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Int32.m3.cpp -o Int32_m.o
+  compile_c => 0
+rm Int32.m3.cpp
+checking Int64.i3
+
+new source -> compiling Int64.i3
+m3front ../src/types/Int64.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Int64.i3.cpp -o Int64_i.o
+  compile_c => 0
+rm Int64.i3.cpp
+checking Int64.m3
+
+new source -> compiling Int64.m3
+m3front ../src/types/Int64.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Int64.m3.cpp -o Int64_m.o
+  compile_c => 0
+rm Int64.m3.cpp
+checking Integer.i3
+
+new source -> compiling Integer.i3
+m3front ../src/types/Integer.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Integer.i3.cpp -o Integer_i.o
+  compile_c => 0
+rm Integer.i3.cpp
+checking Integer.m3
+
+new source -> compiling Integer.m3
+m3front ../src/types/Integer.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Integer.m3.cpp -o Integer_m.o
+  compile_c => 0
+rm Integer.m3.cpp
+checking Longint.i3
+
+new source -> compiling Longint.i3
+m3front ../src/types/Longint.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Longint.i3.cpp -o Longint_i.o
+  compile_c => 0
+rm Longint.i3.cpp
+checking Longint.m3
+
+new source -> compiling Longint.m3
+m3front ../src/types/Longint.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Longint.m3.cpp -o Longint_m.o
+  compile_c => 0
+rm Longint.m3.cpp
+checking Refany.i3
+
+new source -> compiling Refany.i3
+m3front ../src/types/Refany.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Refany.i3.cpp -o Refany_i.o
+  compile_c => 0
+rm Refany.i3.cpp
+checking Refany.m3
+
+new source -> compiling Refany.m3
+m3front ../src/types/Refany.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Refany.m3.cpp -o Refany_m.o
+  compile_c => 0
+rm Refany.m3.cpp
+checking ASCII.i3
+
+new source -> compiling ASCII.i3
+m3front ../src/types/ASCII.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ASCII.i3.cpp -o ASCII_i.o
+  compile_c => 0
+rm ASCII.i3.cpp
+checking ASCII.m3
+
+new source -> compiling ASCII.m3
+m3front ../src/types/ASCII.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ASCII.m3.cpp -o ASCII_m.o
+  compile_c => 0
+rm ASCII.m3.cpp
+checking WideChar.i3
+
+new source -> compiling WideChar.i3
+m3front ../src/types/WideChar.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WideChar.i3.cpp -o WideChar_i.o
+  compile_c => 0
+rm WideChar.i3.cpp
+checking WideChar.m3
+
+new source -> compiling WideChar.m3
+m3front ../src/types/WideChar.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c WideChar.m3.cpp -o WideChar_m.o
+  compile_c => 0
+rm WideChar.m3.cpp
+checking Unicode.i3
+
+new source -> compiling Unicode.i3
+m3front ../src/types/Unicode.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Unicode.i3.cpp -o Unicode_i.o
+  compile_c => 0
+rm Unicode.i3.cpp
+checking Unicode.m3
+
+new source -> compiling Unicode.m3
+m3front ../src/types/Unicode.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Unicode.m3.cpp -o Unicode_m.o
+  compile_c => 0
+rm Unicode.m3.cpp
+checking Address.i3
+
+new source -> compiling Address.i3
+m3front ../src/types/Address.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Address.i3.cpp -o Address_i.o
+  compile_c => 0
+rm Address.i3.cpp
+checking Address.m3
+
+new source -> compiling Address.m3
+m3front ../src/types/Address.m3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Address.m3.cpp -o Address_m.o
+  compile_c => 0
+rm Address.m3.cpp
+checking Swap.i3
+
+new source -> compiling Swap.i3
+m3front ../src/swap/Swap.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Swap.i3.cpp -o Swap_i.o
+  compile_c => 0
+rm Swap.i3.cpp
+checking Swap.m3
+
+new source -> compiling Swap.m3
+m3front ../src/swap/Swap.m3 -unfold_nested_procs -check_procs -w1
+"../src/swap/Swap.m3", line 74: warning: LOOPHOLE: expression's alignment may differ from type's
+1 warning encountered
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Swap.m3.cpp -o Swap_m.o
+  compile_c => 0
+rm Swap.m3.cpp
+checking m3unix.h
+checking m3core.h
+checking dtoa.c
+
+new source -> compiling dtoa.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/Csupport/dtoa.c -o dtoa.o
+  compile_c => 0
+checking hand.c
+
+new source -> compiling hand.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/Csupport/hand.c -o hand.o
+  compile_c => 0
+checking libgcc.c
+
+new source -> compiling libgcc.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/Csupport/libgcc.c -o libgcc.o
+  compile_c => 0
+checking RTIOc.c
+
+new source -> compiling RTIOc.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/common/RTIOc.c -o RTIOc.o
+  compile_c => 0
+checking RTLinkerC.c
+
+new source -> compiling RTLinkerC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/common/RTLinkerC.c -o RTLinkerC.o
+  compile_c => 0
+checking RTDebugC.c
+
+new source -> compiling RTDebugC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/common/RTDebugC.c -o RTDebugC.o
+  compile_c => 0
+checking RTMiscC.c
+
+new source -> compiling RTMiscC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/common/RTMiscC.c -o RTMiscC.o
+  compile_c => 0
+checking RTProcessC.c
+
+new source -> compiling RTProcessC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/common/RTProcessC.c -o RTProcessC.o
+  compile_c => 0
+checking RTOSc.c
+
+new source -> compiling RTOSc.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/POSIX/RTOSc.c -o RTOSc.o
+  compile_c => 0
+checking RTSignalC.c
+
+new source -> compiling RTSignalC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/POSIX/RTSignalC.c -o RTSignalC.o
+  compile_c => 0
+checking RTStackC.c
+
+new source -> compiling RTStackC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/runtime/ARM64_DARWIN/RTStackC.c -o RTStackC.o
+  compile_c => 0
+checking ThreadInternal.c
+
+new source -> compiling ThreadInternal.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/thread/Common/ThreadInternal.c -o ThreadInternal.o
+  compile_c => 0
+checking ThreadPThreadC.c
+
+new source -> compiling ThreadPThreadC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/thread/PTHREAD/ThreadPThreadC.c -o ThreadPThreadC.o
+  compile_c => 0
+checking ThreadPThreadC_rt.c
+
+new source -> compiling ThreadPThreadC_rt.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/thread/PTHREAD/ThreadPThreadC_rt.c -o ThreadPThreadC_rt.o
+  compile_c => 0
+checking ThreadApple.c
+
+new source -> compiling ThreadApple.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/thread/PTHREAD/ThreadApple.c -o ThreadApple.o
+  compile_c => 0
+checking ContextC.c
+
+new source -> compiling ContextC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/coroutine/UCONTEXT/ContextC.c -o ContextC.o
+  compile_c => 0
+checking UtimeC.c
+
+new source -> compiling UtimeC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/UtimeC.c -o UtimeC.o
+  compile_c => 0
+checking UnixC.c
+
+new source -> compiling UnixC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/UnixC.c -o UnixC.o
+  compile_c => 0
+checking UnixLink.c
+
+new source -> compiling UnixLink.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/UnixLink.c -o UnixLink.o
+  compile_c => 0
+checking Uexec.c
+
+new source -> compiling Uexec.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uexec.c -o Uexec.o
+  compile_c => 0
+checking Unetdb.c
+
+new source -> compiling Unetdb.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Unetdb.c -o Unetdb.o
+  compile_c => 0
+checking Umman.c
+
+new source -> compiling Umman.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Umman.c -o Umman.o
+  compile_c => 0
+checking Ugrp.c
+
+new source -> compiling Ugrp.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Ugrp.c -o Ugrp.o
+  compile_c => 0
+checking Uin.c
+
+new source -> compiling Uin.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uin.c -o Uin.o
+  compile_c => 0
+checking Uugid.c
+
+new source -> compiling Uugid.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uugid.c -o Uugid.o
+  compile_c => 0
+checking Uuio.c
+
+new source -> compiling Uuio.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uuio.c -o Uuio.o
+  compile_c => 0
+checking Uutmp.c
+
+new source -> compiling Uutmp.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uutmp.c -o Uutmp.o
+  compile_c => 0
+checking Usignal.c
+
+new source -> compiling Usignal.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Usignal.c -o Usignal.o
+  compile_c => 0
+checking Upwd.c
+
+new source -> compiling Upwd.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Upwd.c -o Upwd.o
+  compile_c => 0
+checking Uprocess.c
+
+new source -> compiling Uprocess.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uprocess.c -o Uprocess.o
+  compile_c => 0
+checking Uconstants.c
+
+new source -> compiling Uconstants.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Uconstants.c -o Uconstants.o
+  compile_c => 0
+checking UstatC.c
+
+new source -> compiling UstatC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/UstatC.c -o UstatC.o
+  compile_c => 0
+checking Usocket.c
+
+new source -> compiling Usocket.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/Usocket.c -o Usocket.o
+  compile_c => 0
+checking UdirC.c
+
+new source -> compiling UdirC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/unix/Common/UdirC.c -o UdirC.o
+  compile_c => 0
+checking CstdlibC.c
+
+new source -> compiling CstdlibC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/C/Common/CstdlibC.c -o CstdlibC.o
+  compile_c => 0
+checking CerrnoC.c
+
+new source -> compiling CerrnoC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/C/Common/CerrnoC.c -o CerrnoC.o
+  compile_c => 0
+checking CstringC.c
+
+new source -> compiling CstringC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/C/Common/CstringC.c -o CstringC.o
+  compile_c => 0
+checking CstdioC.c
+
+new source -> compiling CstdioC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/C/Common/CstdioC.c -o CstdioC.o
+  compile_c => 0
+checking CsignalC.c
+
+new source -> compiling CsignalC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/C/Common/CsignalC.c -o CsignalC.o
+  compile_c => 0
+checking CsetjmpC.c
+
+new source -> compiling CsetjmpC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/C/Common/CsetjmpC.c -o CsetjmpC.o
+  compile_c => 0
+checking Float.ig
+checking FloatModeC.c
+
+new source -> compiling FloatModeC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/float/C99/FloatModeC.c -o FloatModeC.o
+  compile_c => 0
+checking DatePosixC.c
+
+new source -> compiling DatePosixC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/time/POSIX/DatePosixC.c -o DatePosixC.o
+  compile_c => 0
+checking TimePosixC.c
+
+new source -> compiling TimePosixC.c
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -I../src/unix/Common -I../src -I../src/Csupport -I../src/runtime/common -I../src/runtime/POSIX -I../src/runtime/ARM64_DARWIN -I../src/thread/Common -I../src/thread/PTHREAD -I../src/coroutine/UCONTEXT -I../src/C/Common -I../src/float/C99 -I../src/time/POSIX -g -c ../src/time/POSIX/TimePosixC.c -o TimePosixC.o
+  compile_c => 0
+checking GenWord.ig
+checking GenWord.mg
+checking libm3core.a
+new exporters RTHooks.i3
+ -> export TextCat not used, verified
+
+new exporters -> recompiling RTHooks.i3
+m3front ../src/runtime/common/RTHooks.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHooks.i3.cpp -o RTHooks_i.o
+  compile_c => 0
+rm RTHooks.i3.cpp
+new exporters RTAllocCnts.i3
+ -> export RTAllocator not used, verified
+
+new exporters -> recompiling RTAllocCnts.i3
+m3front ../src/runtime/common/RTAllocCnts.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTAllocCnts.i3.cpp -o RTAllocCnts_i.o
+  compile_c => 0
+rm RTAllocCnts.i3.cpp
+new exporters RTHeapRep.i3
+ -> export RTCollector not used, verified
+
+new exporters -> recompiling RTHeapRep.i3
+m3front ../src/runtime/common/RTHeapRep.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTHeapRep.i3.cpp -o RTHeapRep_i.o
+  compile_c => 0
+rm RTHeapRep.i3.cpp
+new exporters RTCollectorSRC.i3
+ -> export RTCollector not used, verified
+
+new exporters -> recompiling RTCollectorSRC.i3
+m3front ../src/runtime/common/RTCollectorSRC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTCollectorSRC.i3.cpp -o RTCollectorSRC_i.o
+  compile_c => 0
+rm RTCollectorSRC.i3.cpp
+new exporters RTWeakRef.i3
+ -> export RTCollector not used, verified
+
+new exporters -> recompiling RTWeakRef.i3
+m3front ../src/runtime/common/RTWeakRef.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTWeakRef.i3.cpp -o RTWeakRef_i.o
+  compile_c => 0
+rm RTWeakRef.i3.cpp
+new exporters RTException.i3
+ -> export RTExStack not used, verified
+
+new exporters -> recompiling RTException.i3
+m3front ../src/runtime/common/RTException.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTException.i3.cpp -o RTException_i.o
+  compile_c => 0
+rm RTException.i3.cpp
+new exporters RTModule.i3
+ -> export RTLinker not used, verified
+
+new exporters -> recompiling RTModule.i3
+m3front ../src/runtime/common/RTModule.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTModule.i3.cpp -o RTModule_i.o
+  compile_c => 0
+rm RTModule.i3.cpp
+new exporters RTThread.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling RTThread.i3
+m3front ../src/runtime/common/RTThread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTThread.i3.cpp -o RTThread_i.o
+  compile_c => 0
+rm RTThread.i3.cpp
+new exporters RTProcedureSRC.i3
+ -> export RTProcedure not used, verified
+
+new exporters -> recompiling RTProcedureSRC.i3
+m3front ../src/runtime/common/RTProcedureSRC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTProcedureSRC.i3.cpp -o RTProcedureSRC_i.o
+  compile_c => 0
+rm RTProcedureSRC.i3.cpp
+new exporters RTTypeSRC.i3
+ -> export RTType not used, verified
+
+new exporters -> recompiling RTTypeSRC.i3
+m3front ../src/runtime/common/RTTypeSRC.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTTypeSRC.i3.cpp -o RTTypeSRC_i.o
+  compile_c => 0
+rm RTTypeSRC.i3.cpp
+new exporters RTOS.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling RTOS.i3
+m3front ../src/runtime/common/RTOS.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTOS.i3.cpp -o RTOS_i.o
+  compile_c => 0
+rm RTOS.i3.cpp
+new exporters RTSignalPrivate.i3
+ -> export RTSignal not used, verified
+
+new exporters -> recompiling RTSignalPrivate.i3
+m3front ../src/runtime/POSIX/RTSignalPrivate.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c RTSignalPrivate.i3.cpp -o RTSignalPrivate_i.o
+  compile_c => 0
+rm RTSignalPrivate.i3.cpp
+new exporters Thread.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling Thread.i3
+m3front ../src/thread/Common/Thread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Thread.i3.cpp -o Thread_i.o
+  compile_c => 0
+rm Thread.i3.cpp
+new exporters ThreadF.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling ThreadF.i3
+m3front ../src/thread/Common/ThreadF.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadF.i3.cpp -o ThreadF_i.o
+  compile_c => 0
+rm ThreadF.i3.cpp
+new exporters Scheduler.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling Scheduler.i3
+m3front ../src/thread/Common/Scheduler.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Scheduler.i3.cpp -o Scheduler_i.o
+  compile_c => 0
+rm Scheduler.i3.cpp
+new exporters SchedulerPosix.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling SchedulerPosix.i3
+m3front ../src/thread/Common/SchedulerPosix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c SchedulerPosix.i3.cpp -o SchedulerPosix_i.o
+  compile_c => 0
+rm SchedulerPosix.i3.cpp
+new exporters ThreadPThreadRT.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling ThreadPThreadRT.i3
+m3front ../src/thread/PTHREAD/ThreadPThreadRT.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c ThreadPThreadRT.i3.cpp -o ThreadPThreadRT_i.o
+  compile_c => 0
+rm ThreadPThreadRT.i3.cpp
+new exporters SchedulerPThread.i3
+ -> export ThreadPThread not used, verified
+
+new exporters -> recompiling SchedulerPThread.i3
+m3front ../src/thread/PTHREAD/SchedulerPThread.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c SchedulerPThread.i3.cpp -o SchedulerPThread_i.o
+  compile_c => 0
+rm SchedulerPThread.i3.cpp
+new exporters Coroutine.i3
+ -> export CoroutineUcontext not used, verified
+
+new exporters -> recompiling Coroutine.i3
+m3front ../src/coroutine/Common/Coroutine.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Coroutine.i3.cpp -o Coroutine_i.o
+  compile_c => 0
+rm Coroutine.i3.cpp
+new exporters Time.i3
+ -> export TimePosix not used, verified
+
+new exporters -> recompiling Time.i3
+m3front ../src/time/Common/Time.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Time.i3.cpp -o Time_i.o
+  compile_c => 0
+rm Time.i3.cpp
+new exporters Tick.i3
+ -> export TickPortable not used, verified
+
+new exporters -> recompiling Tick.i3
+m3front ../src/time/Common/Tick.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Tick.i3.cpp -o Tick_i.o
+  compile_c => 0
+rm Tick.i3.cpp
+new exporters Date.i3
+ -> export DatePosix not used, verified
+
+new exporters -> recompiling Date.i3
+m3front ../src/time/Common/Date.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Date.i3.cpp -o Date_i.o
+  compile_c => 0
+rm Date.i3.cpp
+new exporters TimePosix.i3
+ -> export TimePosix used, not verified
+
+new exporters -> recompiling TimePosix.i3
+m3front ../src/time/POSIX/TimePosix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c TimePosix.i3.cpp -o TimePosix_i.o
+  compile_c => 0
+rm TimePosix.i3.cpp
+new exporters DatePosix.i3
+ -> export DatePosix used, not verified
+
+new exporters -> recompiling DatePosix.i3
+m3front ../src/time/POSIX/DatePosix.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c DatePosix.i3.cpp -o DatePosix_i.o
+  compile_c => 0
+rm DatePosix.i3.cpp
+new exporters Text.i3
+ -> export TextSub not used, verified
+
+new exporters -> recompiling Text.i3
+m3front ../src/text/Text.i3 -unfold_nested_procs -check_procs -w1
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -x c++ -funwind-tables -g -c Text.i3.cpp -o Text_i.o
+  compile_c => 0
+rm Text.i3.cpp
+exhale libm3core.m3x
+
+ -> archiving libm3core.a
+rm libm3core.a
+/usr/bin/libtool  -static -o libm3core.a dtoa.o hand.o libgcc.o RTHooks_i.o RTHooks_m.o RT0_i.o RT0_m.o RuntimeError_i.o RuntimeError_m.o Compiler_i.o Compiler_m.o RTAllocator_i.o RTAllocator_m.o RTAllocCnts_i.o RTAllocStats_i.o RTAllocStats_m.o RTHeap_i.o RTHeap_m.o RTHeapInfo_i.o RTHeapInfo_m.o RTHeapMap_i.o RTHeapMap_m.o RTHeapRep_i.o RTHeapRep_m.o RTHeapStats_i.o RTHeapStats_m.o RTCollector_i.o RTCollector_m.o RTCollectorSRC_i.o RTWeakRef_i.o RTIO_i.o RTIO_m.o RTIOc.o RTLinkerX_i.o RTLinker_i.o RTLinker_m.o RTLinkerC.o RTDebug_i.o RTDebug_m.o RTDebugC.o RTError_i.o RTError_m.o RTException_i.o RTException_m.o RTMapOp_i.o RTMapOp_m.o RTMisc_i.o RTMisc_m.o RTMiscC.o RTModule_i.o RTPacking_i.o RTPacking_m.o RTParams_i.o RTParams_m.o RTProcedure_i.o RTProcedure_m.o RTProcess_i.o RTProcess_m.o RTProcessC.o RTThread_i.o RTTipe_i.o RTTipe_m.o RTType_i.o RTType_m.o RTTypeFP_i.o RTTypeFP_m.o RTTypeMap_i.o RTTypeMap_m.o RTutils_i.o RTutils_m.o RTHeapDebug_i.o RTHeapDebug_m.o RTArgs_i.o RTHeapEvent_i.o RTProcedureSRC_i.o RTSignal_i.o RTStack_i.o RTTypeSRC_i.o RTOS_i.o RTArgs_m.o RTOS_m.o RTPerfTool_i.o RTPerfTool_m.o RTOSc.o RTSignalPrivate_i.o RTSignalC.o RTSignalC_i.o RTSignal_m.o RTExStack_m.o RTEHScan_i.o RTEHScan_m.o RTMachine_i.o RTStackC.o Thread_i.o ThreadF_i.o Scheduler_i.o SchedulerPosix_i.o ThreadInternal_i.o ThreadInternal.o MutexRep_i.o ThreadEvent_i.o ThreadPThread_i.o ThreadPThreadRT_i.o SchedulerPThread_i.o ThreadPThread_m.o ThreadPThreadC.o ThreadPThreadC_rt.o ThreadApple.o Coroutine_i.o ContextC.o ContextC_i.o CoroutineUcontext_i.o CoroutineUcontext_m.o WinBaseTypes_i.o WinDef_i.o WinDef_m.o WinNT_i.o WinNT_m.o WinError_i.o WinBase_i.o WinCon_i.o WinGDI_i.o WinIoctl_i.o WinIoctl_m.o WinNetwk_i.o WinNLS_i.o WinReg_i.o WinReg_m.o WinUser_i.o WinVer_i.o WinVer_m.o NB30_i.o NB30_m.o CDErr_i.o CommDlg_i.o TlHelp32_i.o WinMidi_i.o WinCommCtrl_i.o WinImageList_i.o Unix_i.o UtimeC.o UnixC.o UnixC_i.o UnixLink.o Uexec_i.o Uexec.o Unetdb_i.o Unetdb.o Umman.o Ugrp_i.o Ugrp.o Uin_i.o Uin.o Uugid.o Uuio.o Uutmp.o Usignal.o Upwd.o Uprocess.o Usignal_i.o Uconstants.o Uutmp_i.o Umman_i.o UstatC.o Uuio_i.o Upwd_i.o Uugid_i.o Uprocess_i.o Unix_m.o Utime_i.o Utypes_i.o Uerror_i.o Usched_i.o Usocket_i.o Usocket.o Ustat_i.o Udir_i.o UdirC.o Cerrno_i.o Cstddef_i.o Cstdint_i.o Cstdlib_i.o CstdlibC.o Ctypes_i.o M3toC_i.o M3toC_m.o CerrnoC.o Cstring_i.o CstringC.o Cstdio_i.o CstdioC.o Csignal_i.o CsignalC.o Csetjmp_i.o CsetjmpC.o BasicCtypes_i.o Grisu_i.o Grisu_m.o FPU_i.o RealFloat_i.o LongFloat_i.o ExtendedFloat_i.o IEEESpecial_i.o IEEESpecial_m.o Real_m.o LongReal_m.o Extended_m.o DragonInt_i.o DragonInt_m.o DragonT_i.o DragonT_m.o FloatUtils_i.o FloatUtils_m.o TextToFloat_i.o TextToFloat_m.o FloatMode_i.o FloatMode_m.o FloatModeC_i.o FloatModeC.o Real_i.o LongReal_i.o RealFloat_m.o LongFloat_m.o Extended_i.o ExtendedFloat_m.o RealRep_i.o LongRealRep_i.o ExtendedRep_i.o Time_i.o Tick_i.o Date_i.o FmtTime_i.o FmtTime_m.o TickPortable_m.o TimePosix_i.o TimePosix_m.o DatePosix_i.o DatePosix_m.o DatePosixC.o TimePosixC.o CConvert_i.o CConvert_m.o Convert_i.o Convert_m.o String8_i.o String8_m.o String16_i.o String16_m.o Text_i.o Text_m.o TextClass_i.o TextClass_m.o TextLiteral_i.o TextLiteral_m.o Text8_i.o Text8_m.o Text8Short_i.o Text8Short_m.o Text8CString_i.o Text8CString_m.o Text16_i.o Text16_m.o Text16Short_i.o Text16Short_m.o TextSub_i.o TextSub_m.o TextCat_i.o TextCat_m.o TextStats_i.o TextStats_m.o TextConv_i.o TextConv_m.o Fingerprint_i.o Fingerprint_m.o Poly_i.o Poly_m.o PolyBasis_i.o PolyBasis_m.o Main_i.o WeakRef_i.o WeakRef_m.o WordRep_i.o Word_i.o LongRep_i.o Long_i.o Word_m.o Long_m.o Boolean_i.o Boolean_m.o Char_i.o Char_m.o Int32_i.o Int32_m.o Int64_i.o Int64_m.o Integer_i.o Integer_m.o Longint_i.o Longint_m.o Refany_i.o Refany_m.o ASCII_i.o ASCII_m.o WideChar_i.o WideChar_m.o Unicode_i.o Unicode_m.o Address_i.o Address_m.o Swap_i.o Swap_m.o
+g++ -g -fPIC -Wall -Werror -Wno-return-type -Wno-missing-braces -m64 -arch arm64 -dynamiclib -twolevel_namespace -compatibility_version 5 -current_version 5.2 -install_name @rpath/libm3core.5.dylib -headerpad_max_install_names -o libm3core.5.2.dylib -dead_strip dtoa.o hand.o libgcc.o RTHooks_i.o RTHooks_m.o RT0_i.o RT0_m.o RuntimeError_i.o RuntimeError_m.o Compiler_i.o Compiler_m.o RTAllocator_i.o RTAllocator_m.o RTAllocCnts_i.o RTAllocStats_i.o RTAllocStats_m.o RTHeap_i.o RTHeap_m.o RTHeapInfo_i.o RTHeapInfo_m.o RTHeapMap_i.o RTHeapMap_m.o RTHeapRep_i.o RTHeapRep_m.o RTHeapStats_i.o RTHeapStats_m.o RTCollector_i.o RTCollector_m.o RTCollectorSRC_i.o RTWeakRef_i.o RTIO_i.o RTIO_m.o RTIOc.o RTLinkerX_i.o RTLinker_i.o RTLinker_m.o RTLinkerC.o RTDebug_i.o RTDebug_m.o RTDebugC.o RTError_i.o RTError_m.o RTException_i.o RTException_m.o RTMapOp_i.o RTMapOp_m.o RTMisc_i.o RTMisc_m.o RTMiscC.o RTModule_i.o RTPacking_i.o RTPacking_m.o RTParams_i.o RTParams_m.o RTProcedure_i.o RTProcedure_m.o RTProcess_i.o RTProcess_m.o RTProcessC.o RTThread_i.o RTTipe_i.o RTTipe_m.o RTType_i.o RTType_m.o RTTypeFP_i.o RTTypeFP_m.o RTTypeMap_i.o RTTypeMap_m.o RTutils_i.o RTutils_m.o RTHeapDebug_i.o RTHeapDebug_m.o RTArgs_i.o RTHeapEvent_i.o RTProcedureSRC_i.o RTSignal_i.o RTStack_i.o RTTypeSRC_i.o RTOS_i.o RTArgs_m.o RTOS_m.o RTPerfTool_i.o RTPerfTool_m.o RTOSc.o RTSignalPrivate_i.o RTSignalC.o RTSignalC_i.o RTSignal_m.o RTExStack_m.o RTEHScan_i.o RTEHScan_m.o RTMachine_i.o RTStackC.o Thread_i.o ThreadF_i.o Scheduler_i.o SchedulerPosix_i.o ThreadInternal_i.o ThreadInternal.o MutexRep_i.o ThreadEvent_i.o ThreadPThread_i.o ThreadPThreadRT_i.o SchedulerPThread_i.o ThreadPThread_m.o ThreadPThreadC.o ThreadPThreadC_rt.o ThreadApple.o Coroutine_i.o ContextC.o ContextC_i.o CoroutineUcontext_i.o CoroutineUcontext_m.o WinBaseTypes_i.o WinDef_i.o WinDef_m.o WinNT_i.o WinNT_m.o WinError_i.o WinBase_i.o WinCon_i.o WinGDI_i.o WinIoctl_i.o WinIoctl_m.o WinNetwk_i.o WinNLS_i.o WinReg_i.o WinReg_m.o WinUser_i.o WinVer_i.o WinVer_m.o NB30_i.o NB30_m.o CDErr_i.o CommDlg_i.o TlHelp32_i.o WinMidi_i.o WinCommCtrl_i.o WinImageList_i.o Unix_i.o UtimeC.o UnixC.o UnixC_i.o UnixLink.o Uexec_i.o Uexec.o Unetdb_i.o Unetdb.o Umman.o Ugrp_i.o Ugrp.o Uin_i.o Uin.o Uugid.o Uuio.o Uutmp.o Usignal.o Upwd.o Uprocess.o Usignal_i.o Uconstants.o Uutmp_i.o Umman_i.o UstatC.o Uuio_i.o Upwd_i.o Uugid_i.o Uprocess_i.o Unix_m.o Utime_i.o Utypes_i.o Uerror_i.o Usched_i.o Usocket_i.o Usocket.o Ustat_i.o Udir_i.o UdirC.o Cerrno_i.o Cstddef_i.o Cstdint_i.o Cstdlib_i.o CstdlibC.o Ctypes_i.o M3toC_i.o M3toC_m.o CerrnoC.o Cstring_i.o CstringC.o Cstdio_i.o CstdioC.o Csignal_i.o CsignalC.o Csetjmp_i.o CsetjmpC.o BasicCtypes_i.o Grisu_i.o Grisu_m.o FPU_i.o RealFloat_i.o LongFloat_i.o ExtendedFloat_i.o IEEESpecial_i.o IEEESpecial_m.o Real_m.o LongReal_m.o Extended_m.o DragonInt_i.o DragonInt_m.o DragonT_i.o DragonT_m.o FloatUtils_i.o FloatUtils_m.o TextToFloat_i.o TextToFloat_m.o FloatMode_i.o FloatMode_m.o FloatModeC_i.o FloatModeC.o Real_i.o LongReal_i.o RealFloat_m.o LongFloat_m.o Extended_i.o ExtendedFloat_m.o RealRep_i.o LongRealRep_i.o ExtendedRep_i.o Time_i.o Tick_i.o Date_i.o FmtTime_i.o FmtTime_m.o TickPortable_m.o TimePosix_i.o TimePosix_m.o DatePosix_i.o DatePosix_m.o DatePosixC.o TimePosixC.o CConvert_i.o CConvert_m.o Convert_i.o Convert_m.o String8_i.o String8_m.o String16_i.o String16_m.o Text_i.o Text_m.o TextClass_i.o TextClass_m.o TextLiteral_i.o TextLiteral_m.o Text8_i.o Text8_m.o Text8Short_i.o Text8Short_m.o Text8CString_i.o Text8CString_m.o Text16_i.o Text16_m.o Text16Short_i.o Text16Short_m.o TextSub_i.o TextSub_m.o TextCat_i.o TextCat_m.o TextStats_i.o TextStats_m.o TextConv_i.o TextConv_m.o Fingerprint_i.o Fingerprint_m.o Poly_i.o Poly_m.o PolyBasis_i.o PolyBasis_m.o Main_i.o WeakRef_i.o WeakRef_m.o WordRep_i.o Word_i.o LongRep_i.o Long_i.o Word_m.o Long_m.o Boolean_i.o Boolean_m.o Char_i.o Char_m.o Int32_i.o Int32_m.o Int64_i.o Int64_m.o Integer_i.o Integer_m.o Longint_i.o Longint_m.o Refany_i.o Refany_m.o ASCII_i.o ASCII_m.o WideChar_i.o WideChar_m.o Unicode_i.o Unicode_m.o Address_i.o Address_m.o Swap_i.o Swap_m.o 
+rm libm3core.5.dylib
+ln -s libm3core.5.2.dylib libm3core.5.dylib
+rm libm3core.dylib
+ln -s libm3core.5.dylib libm3core.dylib
+  make_lib => 0
+
+ seconds  #times  operation
+    0.04     294  merging new link info
+    1.89     293  compiling Modula-3 -> IL
+   19.40     336  compiling C -> object
+    0.02       1  exhaling new link info
+    0.11       1  building library archive
+    0.03     296  removing temporary files
+    1.29      68  garbage collection
+---------------------------------------------------
+   22.79          TOTAL
+
+rm m3make.args
+cd ..
+is_empty (ARM64_DARWIN) => WinCon_i.o

@@ -1,0 +1,239 @@
+Main.m3 596
+HighlightVBT.m3 1922
+HighlightVBT.i3 1221
+VBT.i3 1294
+$ 0
+@../Main.m3
+AMain
+R7b78c34f 0 00000000 0
+DMain
+CHighlightVBT
+CRTHooks
+Yf81917df 341f663f
+R58c1d1d1 1 9d8fb489 0
+St 08402063
+Ke99b66b4 64 1
+LPoint_T_field 0 64 195c2a74
+Kfcd63cae 64 1
+LPaintOp_T_field 0 64 195c2a74
+K5ccffb05 64 1
+LPixmap_T_field 0 64 195c2a74
+N8a2831d7 195c2a74 0 0 8
+F4f238aae 8a2831d7 195c2a74 64
+N4a3373b8 195c2a74 0 1024 16
+M67a7b112 4a3373b8 1088
+N2ca4581d 195c2a74 0 10 8
+Mddb62bb7 2ca4581d 16
+Ra4bb9882 2 00000000 -1
+Smodule 08402063
+Sinfo 195c2a74
+Ef81917df HighlightVBT.HighlightVBT_T
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063
+@../HighlightVBT.m3
+AHighlightVBT
+Kfcd63cae 64 1
+LPaintOp_T_field 0 64 195c2a74
+Pc87182a6 fcd63cae
+Q0329c351 fcd63cae
+K5ccffb05 64 1
+LPixmap_T_field 0 64 195c2a74
+P7f433ff9 5ccffb05
+Qa33004fa 5ccffb05
+Ke99b66b4 64 1
+LPoint_T_field 0 64 195c2a74
+P0b0595be e99b66b4
+Q1664994b e99b66b4
+N8a2831d7 195c2a74 0 0 8
+F4f238aae 8a2831d7 195c2a74 64
+Pb628f43c 4f238aae
+Qb0dc7551 4f238aae
+Gf400f3db 195c2a74 128
+P217fba22 f400f3db
+Q0bff0c24 f400f3db
+N4a3373b8 195c2a74 0 1024 16
+M67a7b112 4a3373b8 1088
+P4797dfdb 67a7b112
+Q98584eed 67a7b112
+N2ca4581d 195c2a74 0 10 8
+Mddb62bb7 2ca4581d 16
+Ped1cf615 ddb62bb7
+Q2249d448 ddb62bb7
+R87ece3f8 14 00000000 0
+SpaintOpValue fcd63cae
+SpaintOpReadOnly 0329c351
+SpixmapValue 5ccffb05
+SpixmapReadOnly a33004fa
+SrecordValue e99b66b4
+SrecordReadOnly 1664994b
+SfixedArrayValue 4f238aae
+SfixedArrayReadOnly b0dc7551
+SopenArrayValue 0bff0c24
+SopenArrayReadOnly 0bff0c24
+SbigSetValue 67a7b112
+SbigSetReadOnly 98584eed
+SsmallSetValue ddb62bb7
+SsmallSetReadOnly 2249d448
+V341f663f 9d8fb489 0 1 0 0
+Winit 87ece3f8
+V2a7f2412 341f663f 0 0 1 0 HighlightVBT # AuTo-BrAnD # _0000M
+Xinit HighlightVBT.Be
+Yf81917df 341f663f
+R4c1cafca 15 00000000 0
+Sv f81917df
+SpaintOpValue fcd63cae
+SpaintOpReadOnly 0329c351
+SpixmapValue 5ccffb05
+SpixmapReadOnly a33004fa
+SrecordValue e99b66b4
+SrecordReadOnly 1664994b
+SfixedArrayValue 4f238aae
+SfixedArrayReadOnly b0dc7551
+SopenArrayValue 0bff0c24
+SopenArrayReadOnly 0bff0c24
+SbigSetValue 67a7b112
+SbigSetReadOnly 98584eed
+SsmallSetValue ddb62bb7
+SsmallSetReadOnly 2249d448
+DHighlightVBT
+CVBT
+CRTHooks
+Ef81917df HighlightVBT.HighlightVBT_T
+Zf81917df 2a7f2412
+R983b02e7 2 1c1c45e6 0
+St 08402063
+Ssizes 0bff0c24
+E341f663f VBT.VBT_T
+Eddb62bb7 VBT.SmallSet
+E67a7b112 VBT.BigSet
+E4f238aae VBT.FixedArray
+Ef400f3db VBT.OpenArray
+E5ccffb05 VBT.Pixmap_T
+Efcd63cae VBT.PaintOp_T
+Ee99b66b4 VBT.Point_T
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063
+@../HighlightVBT.i3
+BHighlightVBT
+Kfcd63cae 64 1
+LPaintOp_T_field 0 64 195c2a74
+Pc87182a6 fcd63cae
+Q0329c351 fcd63cae
+K5ccffb05 64 1
+LPixmap_T_field 0 64 195c2a74
+P7f433ff9 5ccffb05
+Qa33004fa 5ccffb05
+Ke99b66b4 64 1
+LPoint_T_field 0 64 195c2a74
+P0b0595be e99b66b4
+Q1664994b e99b66b4
+N8a2831d7 195c2a74 0 0 8
+F4f238aae 8a2831d7 195c2a74 64
+Pb628f43c 4f238aae
+Qb0dc7551 4f238aae
+Gf400f3db 195c2a74 128
+P217fba22 f400f3db
+Q0bff0c24 f400f3db
+N4a3373b8 195c2a74 0 1024 16
+M67a7b112 4a3373b8 1088
+P4797dfdb 67a7b112
+Q98584eed 67a7b112
+N2ca4581d 195c2a74 0 10 8
+Mddb62bb7 2ca4581d 16
+Ped1cf615 ddb62bb7
+Q2249d448 ddb62bb7
+R87ece3f8 14 00000000 0
+SpaintOpValue fcd63cae
+SpaintOpReadOnly 0329c351
+SpixmapValue 5ccffb05
+SpixmapReadOnly a33004fa
+SrecordValue e99b66b4
+SrecordReadOnly 1664994b
+SfixedArrayValue 4f238aae
+SfixedArrayReadOnly b0dc7551
+SopenArrayValue 0bff0c24
+SopenArrayReadOnly 0bff0c24
+SbigSetValue 67a7b112
+SbigSetReadOnly 98584eed
+SsmallSetValue ddb62bb7
+SsmallSetReadOnly 2249d448
+V341f663f 9d8fb489 0 1 0 0
+Winit 87ece3f8
+Yf81917df 341f663f
+DHighlightVBT
+CVBT
+CRTHooks
+E341f663f VBT.VBT_T
+Ef81917df HighlightVBT.HighlightVBT_T
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063
+@../VBT.i3
+BVBT
+Kfcd63cae 64 1
+LPaintOp_T_field 0 64 195c2a74
+Pc87182a6 fcd63cae
+Q0329c351 fcd63cae
+K5ccffb05 64 1
+LPixmap_T_field 0 64 195c2a74
+P7f433ff9 5ccffb05
+Qa33004fa 5ccffb05
+Ke99b66b4 64 1
+LPoint_T_field 0 64 195c2a74
+P0b0595be e99b66b4
+Q1664994b e99b66b4
+N8a2831d7 195c2a74 0 0 8
+F4f238aae 8a2831d7 195c2a74 64
+Pb628f43c 4f238aae
+Qb0dc7551 4f238aae
+Gf400f3db 195c2a74 128
+P217fba22 f400f3db
+Q0bff0c24 f400f3db
+N4a3373b8 195c2a74 0 1024 16
+M67a7b112 4a3373b8 1088
+P4797dfdb 67a7b112
+Q98584eed 67a7b112
+N2ca4581d 195c2a74 0 10 8
+Mddb62bb7 2ca4581d 16
+Ped1cf615 ddb62bb7
+Q2249d448 ddb62bb7
+R87ece3f8 14 00000000 0
+SpaintOpValue fcd63cae
+SpaintOpReadOnly 0329c351
+SpixmapValue 5ccffb05
+SpixmapReadOnly a33004fa
+SrecordValue e99b66b4
+SrecordReadOnly 1664994b
+SfixedArrayValue 4f238aae
+SfixedArrayReadOnly b0dc7551
+SopenArrayValue 0bff0c24
+SopenArrayReadOnly 0bff0c24
+SbigSetValue 67a7b112
+SbigSetReadOnly 98584eed
+SsmallSetValue ddb62bb7
+SsmallSetReadOnly 2249d448
+V341f663f 9d8fb489 0 1 0 0
+Winit 87ece3f8
+DVBT
+CRTHooks
+E341f663f VBT.VBT_T
+Eddb62bb7 VBT.SmallSet
+E67a7b112 VBT.BigSet
+E4f238aae VBT.FixedArray
+Ef400f3db VBT.OpenArray
+E5ccffb05 VBT.Pixmap_T
+Efcd63cae VBT.PaintOp_T
+Ee99b66b4 VBT.Point_T
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063

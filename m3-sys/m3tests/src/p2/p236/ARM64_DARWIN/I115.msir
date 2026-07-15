@@ -1,0 +1,6 @@
+module I115
+
+proc I115_I3() -> void
+entry:
+  ret
+

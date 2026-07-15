@@ -1,0 +1,6 @@
+module I63
+
+proc I63_I3() -> void
+entry:
+  ret
+

@@ -1,0 +1,6 @@
+module I42
+
+proc I42_I3() -> void
+entry:
+  ret
+

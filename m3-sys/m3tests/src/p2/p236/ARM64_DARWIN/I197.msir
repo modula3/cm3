@@ -1,0 +1,6 @@
+module I197
+
+proc I197_I3() -> void
+entry:
+  ret
+

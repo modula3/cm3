@@ -1,0 +1,6 @@
+module I135
+
+proc I135_I3() -> void
+entry:
+  ret
+

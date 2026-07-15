@@ -1,0 +1,6 @@
+module I51
+
+proc I51_I3() -> void
+entry:
+  ret
+

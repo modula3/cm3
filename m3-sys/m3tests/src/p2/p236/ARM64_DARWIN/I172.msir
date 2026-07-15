@@ -1,0 +1,6 @@
+module I172
+
+proc I172_I3() -> void
+entry:
+  ret
+

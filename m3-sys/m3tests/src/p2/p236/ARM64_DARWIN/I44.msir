@@ -1,0 +1,6 @@
+module I44
+
+proc I44_I3() -> void
+entry:
+  ret
+

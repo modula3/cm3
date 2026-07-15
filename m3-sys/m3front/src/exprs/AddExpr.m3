@@ -11,7 +11,7 @@ MODULE AddExpr;
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT SetType, Addr, Module, Error, Target, ErrType, TInt;
 IMPORT AddressExpr, SetExpr, IntegerExpr, ReelExpr;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET };

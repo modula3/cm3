@@ -1,0 +1,6 @@
+module I130
+
+proc I130_I3() -> void
+entry:
+  ret
+

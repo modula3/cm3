@@ -1,0 +1,73 @@
+M3 v4.2
+N0 Main
+
+M0 1 4 0 0 0 0 12 0 0 20 0 0
+A0
+N1 Wr
+B1
+N2 Fmt
+B2
+N3 FileWr
+B3
+N4 RTHooks
+B4
+N5 Failure
+V0 1 5 0cdfd45683b35c52
+i0
+N6 Open
+V1 3 6 0380bd0d684b5d3f
+i1
+N7 TextLitInfo
+V2 4 7 fdc7f49fa7f061c3
+i2
+N8 TextLitGetChar
+V3 4 8 bf853738ef95b58f
+i3
+N9 TextLitGetWideChar
+V4 4 9 6b44a8081c4ee8f1
+i4
+N10 TextLitGetChars
+V5 4 10 e51aa8c54a895201
+i5
+N11 TextLitGetWideChars
+V6 4 11 face384698a06a95
+i6
+N12 LongReal
+V7 2 12 41f215b2c0b42bd7
+i7
+N13 PutText
+V8 1 13 004d23e0fae46c51
+i8
+N14 CheckLoadTracedRef
+V9 4 14 33cac043de87135c
+i9
+N15 CheckStoreTraced
+V10 4 15 8ffa5ad840254ad5
+i10
+N16 ScanTypecase
+V11 4 16 6c0355050f2d5a7c
+i11
+t7b78c34f
+td1d9dd0e
+tad398276
+t9a0e5dbc
+t49473232
+t6d871b27
+tb750d684
+t38df5df5
+tb964357b
+t9132dde7
+t89cd34bd
+tc9e236c8
+ta19bdc21
+t966fe87f
+t2e1fcf67
+t95aa481c
+t62761487
+t1bee6e85
+t37e50548
+t9b134ca4
+Q62761487 9d8fb489
+Q6d871b27 50f86574
+Q9a0e5dbc 9a0e5dbf
+Qd1d9dd0e 1c1c45e6

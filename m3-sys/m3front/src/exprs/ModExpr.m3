@@ -10,7 +10,7 @@ MODULE ModExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, Target;
 IMPORT Reel, LReel, EReel, ReelExpr, DivExpr, TInt;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cERR };

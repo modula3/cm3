@@ -1,0 +1,6 @@
+% See if each TRY has a frame, or if just the function has one.
+
+m3back_optimize = ""
+implementation("Main")
+build_standalone()
+include ("../../Test.common")

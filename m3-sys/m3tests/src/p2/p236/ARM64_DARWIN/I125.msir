@@ -1,0 +1,6 @@
+module I125
+
+proc I125_I3() -> void
+entry:
+  ret
+

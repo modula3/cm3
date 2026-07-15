@@ -1,0 +1,5 @@
+set_config_options ()
+readonly _all = TRUE % cm3 -build
+M3_KEEP_FILES = TRUE
+M3_MODE = "build"
+include_dir ("..")

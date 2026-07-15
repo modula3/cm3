@@ -1,0 +1,2 @@
+INTERFACE extract_constant_count;
+END extract_constant_count.

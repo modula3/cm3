@@ -1,0 +1,2 @@
+INTERFACE Minus;
+END Minus.

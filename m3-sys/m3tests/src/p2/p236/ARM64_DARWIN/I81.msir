@@ -1,0 +1,6 @@
+module I81
+
+proc I81_I3() -> void
+entry:
+  ret
+

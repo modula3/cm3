@@ -1,0 +1,6 @@
+module I112
+
+proc I112_I3() -> void
+entry:
+  ret
+

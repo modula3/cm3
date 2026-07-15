@@ -1,0 +1,57 @@
+module Main
+
+global Main__n : word64
+global Main__fp : @T
+global Main__proc : ptr void
+global Main__xfp : [2]i32
+
+proc Main__Toto() -> void
+entry:
+  ret
+
+proc Main_M3() -> void
+entry:
+  %t10 = alloca @T
+  %t1 = call RTProcedureSRC__NumProcedures() -> word64
+  store %t1, @Main_M3_info+104
+  %t2 = load ptr void, @Main_M3_imp.3+0
+  %t3 = ptr.add %t2, 120
+  %t4 = load gc_ref void, %t3
+  %t5 = load word64, @Main_M3_info+104
+  %t6 = trunc 10 to word8
+  %t7 = call Fmt__Int(%t5, %t6) -> gc_ref void
+  %t8 = call RTHooks__Concat(%t7, " procedures\0a") -> gc_ref void
+  call Wr__PutText(%t4, %t8)
+  store ptr @Main__Toto, @Main_M3_info+120
+  %t9 = load ptr void, @Main_M3_info+120
+  call RTProcedure__ToFingerprint(%t10, %t9)
+  %t11 = load @T, %t10
+  store %t11, @Main_M3_info+112
+  %t12 = load [2]i32, @Main_M3_info+112
+  store %t12, @Main_M3_info+128
+  %t13 = load ptr void, @Main_M3_imp.3+0
+  %t14 = ptr.add %t13, 120
+  %t15 = load gc_ref void, %t14
+  %t16 = array.elem_addr @Main_M3_info+128, 0
+  %t17 = load i32, %t16
+  %t18 = sext %t17 to i64
+  %t19 = trunc 10 to word8
+  %t20 = call Fmt__Int(%t18, %t19) -> gc_ref void
+  %t21 = call RTHooks__Concat("Toto fingerprint = {", %t20) -> gc_ref void
+  %t22 = call RTHooks__Concat(%t21, ", ") -> gc_ref void
+  %t23 = array.elem_addr @Main_M3_info+128, 1
+  %t24 = load i32, %t23
+  %t25 = sext %t24 to i64
+  %t26 = trunc 10 to word8
+  %t27 = call Fmt__Int(%t25, %t26) -> gc_ref void
+  %t28 = call RTHooks__Concat(%t22, %t27) -> gc_ref void
+  %t29 = call RTHooks__Concat(%t28, "}\0a") -> gc_ref void
+  call Wr__PutText(%t15, %t29)
+  %t30 = call RTProcedure__FromFingerprint(@Main_M3_info+112) -> ptr void
+  store %t30, @Main_M3_info+120
+  %t31 = load ptr void, @Main_M3_info+120
+  %t32 = icmp eq %t31, @Main__Toto
+  call Test__checkB(%t32, 1)
+  call Test__done()
+  ret
+

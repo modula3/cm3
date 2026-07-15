@@ -1,0 +1,559 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.137
+           Sonnet 4.6 · Claude Team
+  ▘▘ ▝▝    ~/git/cm3
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Read m3-sys/m3front/src/msir/MSIRType.m3 (179 lines)
+  ⎿  Referenced file m3-sys/m3front/src/msir/MSIRBuilder.m3
+  ⎿  Read ../../../../tmp/msir-build-debug.txt (9 lines)
+  ⎿  Read ../../../../tmp/msir-smoke/Main.m3 (242 lines)
+  ⎿  Read ../../../../tmp/msir-smoke/ARM64_DARWIN/Main.msir (299 lines)
+
+⏺ Reading the three files I need to modify in parallel.
+
+  Searched for 1 pattern, read 3 files (ctrl+o to expand)
+
+⏺ Good — the debug trace is already gone (likely never committed or already
+  cleaned up). Now let me implement the two missing compileMSIR overrides.
+
+⏺ Update(m3-sys/m3front/src/exprs/TextExpr.m3)
+  ⎿  Added 1 line
+      10  
+      11  IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
+      12  IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure, Wor
+          d;
+      13 +IMPORT MSIR;                                                   
+      14  
+      15  TYPE
+      16    P = Expr.T OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/TextExpr.m3)
+  ⎿  Added 2 lines, removed 1 line
+      37          prepLiteral  := PrepLiteral;
+      38          genLiteral   := GenLiteral;
+      39          note_write   := ExprRep.NotWritable;
+      40 -        exprAlign    := ExprRep.ExprAddrAlign;                 
+      40 +        exprAlign    := ExprRep.ExprAddrAlign;                 
+      41 +        compileMSIR  := CompileMSIR;                           
+      42        END;
+      43  
+      44  (* NOTE! These UIDs have nothing to do with the UIDs that are h
+          ashes
+
+⏺ Now add the CompileMSIR procedure to TextExpr.m3 before the BEGIN:
+
+⏺ Update(m3-sys/m3front/src/exprs/TextExpr.m3)
+  ⎿  Added 5 lines
+      294                   is_const);
+      295    END GenLiteral;
+      296  
+      297 +PROCEDURE CompileMSIR (<*UNUSED*> p: P): MSIR.Value =         
+      298 +  BEGIN                                                       
+      299 +    RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));       
+      300 +  END CompileMSIR;                                            
+      301 +                                                              
+      302  BEGIN
+      303  END TextExpr.
+
+⏺ Now ConcatExpr.m3:
+
+⏺ Update(m3-sys/m3front/src/exprs/ConcatExpr.m3)
+  ⎿  Added 1 line
+      10  
+      11  IMPORT CG, Expr, ExprRep, Type, Textt, Procedure, Target;
+      12  IMPORT TextExpr, AssignStmt, Host, NarrowExpr, RunTyme, Error;
+      13 +IMPORT MSIR;                                                   
+      14  
+      15  TYPE
+      16    P = ExprRep.Tab BRANDED "ConcatExpr.P" OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/ConcatExpr.m3)
+  ⎿  Added 2 lines, removed 1 line
+      37          prepLiteral  := ExprRep.NoPrepLiteral;
+      38          genLiteral   := ExprRep.NoLiteral;
+      39          note_write   := ExprRep.NotWritable;
+      40 -        exprAlign    := ExprRep.ExprAddrAlign;                 
+      40 +        exprAlign    := ExprRep.ExprAddrAlign;                 
+      41 +        compileMSIR  := CompileMSIR;                           
+      42        END;
+      43  
+      44  PROCEDURE New (a, b: Expr.T): Expr.T =
+
+⏺ Update(m3-sys/m3front/src/exprs/ConcatExpr.m3)
+  ⎿  Added 8 lines
+      144      RETURN e3;
+      145    END Fold;
+      146  
+      147 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      148 +  BEGIN                                                       
+      149 +    IF p.folded # NIL THEN RETURN Expr.CompileMSIR (p.folded) 
+          +END;                                                          
+      150 +    EVAL Expr.CompileMSIR (p.a);                              
+      151 +    EVAL Expr.CompileMSIR (p.b);                              
+      152 +    RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));       
+      153 +  END CompileMSIR;                                            
+      154 +                                                              
+      155  BEGIN
+      156  END ConcatExpr.
+
+⏺ Now rebuild and test:
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/msir && cm3 -build && cm3 -ship 2>&1 |
+      tail -5)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     . => /Users/hosking/cm3/pkg/msir/ARM64_DARWIN
+     … +5 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +4 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -3 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -5)
+  ⎿    Procedure.i3      Revelation.m3     Revelation.i3     Tipe.i3
+
+       Tipe.m3           Variable.i3       Variable.m3
+     … +7 lines (ctrl+o to expand)
+
+⏺ Bash(cp /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3 &&
+      echo "installed")
+  ⎿  installed
+
+⏺ Bash(cd /tmp/msir-smoke && touch Main.m3 && cm3 '@M3m3front-msir' -build 2>&1
+      | grep -v "^$")
+  ⎿  --- building in ARM64_DARWIN ---
+     new source -> compiling Main.m3
+     "../Main.m3", line 150: warning: not used (LoadInt)
+     … +4 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Clean build. Now check the MSIR output:
+
+  Read 1 file (ctrl+o to expand)
+⏺ All user-defined procedures now appear cleanly. Let me also check whether
+  Main_M3 (the module body) appears or is skipped:
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ Two remaining abandons in Main_M3 — let me identify them before committing:
+
+  Searched for 7 patterns, listed 4 directories (ctrl+o to expand)
+
+⏺ Let me look at CallExpr.CompileMSIR to understand how external calls are
+  handled:
+
+  Searched for 2 patterns, read 7 files (ctrl+o to expand)
+
+⏺ Now I have the full picture. Two missing implementations: EnumExpr (for
+  Color.Blue) and AddressExpr (for NIL). Adding them now.
+
+⏺ Update(m3-sys/m3front/src/exprs/EnumExpr.m3)
+  ⎿  Added 1 line
+       9  MODULE EnumExpr;
+      10  
+      11  IMPORT M3, CG, Expr, ExprRep, Type, M3Buf, Target, TInt;
+      12 +IMPORT MSIR, MSIRType, MSIRBuilder;                            
+      13  
+      14  TYPE
+      15    P = Expr.T BRANDED "EnumExpr.T" OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/EnumExpr.m3)
+  ⎿  Added 1 line
+      35          prepLiteral  := ExprRep.NoPrepLiteral;
+      36          genLiteral   := GenLiteral;
+      37          note_write   := ExprRep.NotWritable;
+      38 +        compileMSIR  := CompileMSIR;                           
+      39        END;
+      40  
+      41  PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr
+          .T =
+
+⏺ Update(m3-sys/m3front/src/exprs/EnumExpr.m3)
+  ⎿  Added 15 lines
+      111      RETURN TInt.EQ (p.value, TInt.Zero);
+      112    END IsZeroes;
+      113  
+      114 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      115 +  VAR i: INTEGER;  t: MSIR.T;                                 
+      116 +  BEGIN                                                       
+      117 +    IF NOT TInt.ToInt (p.value, i) THEN                       
+      118 +      MSIRBuilder.Abandon ("enum literal out of INTEGER range"
+          +);                                                            
+      119 +      RETURN NIL;                                             
+      120 +    END;                                                      
+      121 +    t := MSIRType.Translate (p.type);                         
+      122 +    IF t = NIL THEN                                           
+      123 +      MSIRBuilder.Abandon ("unsupported enum literal type");  
+      124 +      RETURN NIL;                                             
+      125 +    END;                                                      
+      126 +    RETURN MSIR.ConstInt (t, VAL (i, LONGINT));               
+      127 +  END CompileMSIR;                                            
+      128 +                                                              
+      129  PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
+      130    BEGIN
+      131      M3Buf.PutText (buf, "ENUM<");
+
+⏺ Now AddressExpr for NIL:
+
+⏺ Update(m3-sys/m3front/src/exprs/AddressExpr.m3)
+  ⎿  Added 1 line
+      11  
+      12  IMPORT M3, CG, Expr, ExprRep, Type, Addr, Null, IntegerExpr;
+      13  IMPORT Target, TInt, TWord, M3Buf;
+      14 +IMPORT MSIR, MSIRBuilder;                                      
+      15  
+      16  TYPE
+      17    P = Expr.T OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/AddressExpr.m3)
+  ⎿  Added 1 line
+      37          prepLiteral  := ExprRep.NoPrepLiteral;
+      38          genLiteral   := GenLiteral;
+      39          note_write   := ExprRep.NotWritable;
+      40 +        compileMSIR  := CompileMSIR;                           
+      41        END;
+      42  
+      43  PROCEDURE New (READONLY value: Target.Int): Expr.T =
+
+⏺ Update(m3-sys/m3front/src/exprs/AddressExpr.m3)
+  ⎿  Added 14 lines
+      156      IF (val # 0) THEN CG.Add_offset (Target.Byte * val) END;
+      157    END Compile;
+      158  
+      159 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      160 +  BEGIN                                                       
+      161 +    IF NOT TInt.EQ (p.value, TInt.Zero) THEN                  
+      162 +      MSIRBuilder.Abandon ("non-NIL address constant not suppo
+          +rted in MSIR v0");                                            
+      163 +      RETURN NIL;                                             
+      164 +    END;                                                      
+      165 +    (* NIL: untraced null pointer or null gc-ref depending on 
+          +context.                                                      
+      166 +       Return gc_ref void — EqualExpr's icmp handles mixed poi
+          +nter comparisons. *)                                          
+      167 +    IF p.type = Null.T                                        
+      168 +      THEN RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
+      169 +      ELSE RETURN MSIR.ConstNil (MSIR.TPtr  (MSIR.TVoid ())); 
+      170 +    END;                                                      
+      171 +  END CompileMSIR;                                            
+      172 +                                                              
+      173  PROCEDURE Bounder (p: P;   VAR min, max: Target.Int) =
+      174    BEGIN
+      175      min := p.value;
+
+⏺ Now rebuild:
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -8)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +4 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -3)
+  ⎿    Tipe.m3           Variable.i3       Variable.m3
+       PersistentRevelation.i3  PersistentRevelation.m3
+     ignoring ../src/m3overrides
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cp /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin/cm3 && cd
+       /tmp/msir-smoke && rm -f /tmp/msir-debug.txt && touch Main.m3 && cm3
+      '@M3m3front-msir'…)
+  ⎿  --- building in ARM64_DARWIN ---
+     new source -> compiling Main.m3
+     "../Main.m3", line 150: warning: not used (LoadInt)
+     … +4 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Progress — now only one abandon in Main_M3, and it's the expected "builtin
+  call" (NEW). Let me check the MSIR:
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ One remaining builtin call (NEW). Let me check how builtins register their
+  compileMSIR:
+
+  Searched for 3 patterns, read 2 files (ctrl+o to expand)
+
+⏺ Good, it's exported. Now add a stub NEW handler that returns a null GC ref:
+
+⏺ Update(m3-sys/m3front/src/builtinOps/New.m3)
+  ⎿  Added 1 line
+      14  IMPORT Field, Method, Int, ProcType, AssignStmt, OpenArrayType;
+      15  IMPORT Scope, RecordType, TypeExpr, Null, Revelation, Target;
+      16  IMPORT ArrayExpr, M3ID, M3RT, RunTyme, ErrType;
+      17 +IMPORT MSIR, MSIRType;                                         
+      18  
+      19  VAR Z: CallExpr.MethodList;
+      20  
+
+⏺ Update(m3-sys/m3front/src/builtinOps/New.m3)
+  ⎿  Added 14 lines
+      426      END;
+      427    END GenOpaque;
+      428  
+      429 +PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =          
+      430 +  VAR t: Type.T;  mt: MSIR.T;                                 
+      431 +  BEGIN                                                       
+      432 +    IF TypeExpr.Split (ce.args[0], t) THEN                    
+      433 +      mt := MSIRType.Translate (t);                           
+      434 +    ELSE                                                      
+      435 +      mt := NIL;                                              
+      436 +    END;                                                      
+      437 +    IF mt = NIL THEN mt := MSIR.TVoid () END;                 
+      438 +    (* v0 stub: NEW is not fully modeled in MSIR yet. *)      
+      439 +    RETURN MSIR.ConstNil (MSIR.TGcRef (mt));                  
+      440 +  END CompileMSIR;                                            
+      441 +                                                              
+      442  PROCEDURE Initialize () =
+      443    BEGIN
+      444      Z := CallExpr.NewMethodList (1, LAST (INTEGER), TRUE, TRUE
+           , TRUE, NIL,
+     ...
+      458                                   CallExpr.IsNever, (* designat
+           or *)
+      459                                   CallExpr.NotWritable (* noteW
+           riter *));
+      460      Procedure.DefinePredefined ("NEW", Z, TRUE);
+      461 +    CallExpr.SetMethodMSIR (Z, CompileMSIR);                  
+      462    END Initialize;
+      463  
+      464  BEGIN
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -8)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -3 && cp ARM64_DARWIN/cm3 ~/cm3/bin/cm3 && echo
+      "installed")
+  ⎿    Tipe.m3           Variable.i3       Variable.m3
+       PersistentRevelation.i3  PersistentRevelation.m3
+     ignoring ../src/m3overrides
+     … +4 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && rm -f /tmp/msir-debug.txt && touch Main.m3 && cm3
+      '@M3m3front-msir' -build 2>&1 | grep -v "^$" && echo "---" && cat
+      /tmp/msir-debug.txt 2>…)
+  ⎿  --- building in ARM64_DARWIN ---
+     new source -> compiling Main.m3
+     "../Main.m3", line 150: warning: not used (LoadInt)
+     … +6 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ New failure: "named-expr value is not a Variable". Let me check
+  NamedExpr.CompileMSIR:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Let me look at how BeginProc is called and what scope is passed for the module
+   body:
+
+  Searched for 7 patterns, read 6 files (ctrl+o to expand)
+
+⏺ Let me add a more descriptive error to pin down what's failing:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 1 line, removed 1 line
+      11  IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
+      12  IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
+      13  IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
+      14 -IMPORT MSIR, MSIRBuilder;                                      
+      14 +IMPORT MSIR, MSIRBuilder, Fmt;                                 
+      15  
+      16  TYPE
+      17    P = Expr.T BRANDED "Named Expr" OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 3 lines, removed 1 line
+      227            RETURN v;
+      228          END;
+      229      ELSE
+      230 -      MSIRBuilder.Abandon ("named-expr value is not a Variable
+          -");                                                           
+      230 +      MSIRBuilder.Abandon ("named-expr value is not a Variable
+          +: "                                                           
+      231 +        & M3ID.ToText(p.name) & " class="                     
+      232 +        & Fmt.Int(ORD(Value.ClassOf(p.value))));              
+      233        RETURN NIL;
+      234      END;
+      235    END CompileMSIR;
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -5 &&
+      cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | t…)
+  ⎿  ignoring ../src/m3overrides
+
+     new source -> compiling NamedExpr.m3
+     … +8 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && rm -f /tmp/msir-debug.txt && touch Main.m3 && cm3
+      '@M3m3front-msir' -build 2>&1 | grep -v "^$" && cat /tmp/msir-debug.txt)
+  ⎿  --- building in ARM64_DARWIN ---
+     new source -> compiling Main.m3
+     "../Main.m3", line 150: warning: not used (LoadInt)
+     … +5 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+⏺ The failing expression is NIL with class=0. Let me check the Value.Class enum:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ NIL resolves as Value.Class.Expr (a named constant containing an expression).
+  Let me check Value.ToExpr and add the case:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 5 lines
+      214    END Compile;
+      215  
+      216  PROCEDURE CompileMSIR (p: P): MSIR.Value =
+      217 +  VAR constExpr: Expr.T;                                      
+      218    BEGIN
+      219      IF p.value = NIL THEN Resolve (p) END;
+      220      TYPECASE p.value OF
+     ...
+      228            RETURN v;
+      229          END;
+      230      ELSE
+      231 +      IF Value.ClassOf (p.value) = Value.Class.Expr THEN      
+      232 +        constExpr := Value.ToExpr (p.value);                  
+      233 +        IF constExpr # NIL THEN RETURN Expr.CompileMSIR (const
+          +Expr) END;                                                    
+      234 +      END;                                                    
+      235        MSIRBuilder.Abandon ("named-expr value is not a Variable
+           : "
+      236          & M3ID.ToText(p.name) & " class="
+      237          & Fmt.Int(ORD(Value.ClassOf(p.value))));
+
+⏺ Also need to import Expr (it's already imported). Let me check:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Let me clean up the debug message before rebuilding:
+
+⏺ Update(m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 1 line, removed 1 line
+      11  IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
+      12  IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
+      13  IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
+      14 -IMPORT MSIR, MSIRBuilder, Fmt;                                 
+      14 +IMPORT MSIR, MSIRBuilder;                                      
+      15  
+      16  TYPE
+      17    P = Expr.T BRANDED "Named Expr" OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/NamedExpr.m3)
+  ⎿  Added 1 line, removed 3 lines
+      232          constExpr := Value.ToExpr (p.value);
+      233          IF constExpr # NIL THEN RETURN Expr.CompileMSIR (const
+           Expr) END;
+      234        END;
+      235 -      MSIRBuilder.Abandon ("named-expr value is not a Variable
+          -: "                                                           
+      236 -        & M3ID.ToText(p.name) & " class="                     
+      237 -        & Fmt.Int(ORD(Value.ClassOf(p.value))));              
+      235 +      MSIRBuilder.Abandon ("named-expr value is not a Variable
+          +");                                                           
+      236        RETURN NIL;
+      237      END;
+      238    END CompileMSIR;
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -5 &&
+      cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | t…)
+  ⎿  ignoring ../src/m3overrides
+
+     new source -> compiling NamedExpr.m3
+     … +8 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && rm -f /tmp/msir-debug.txt && touch Main.m3 && cm3
+      '@M3m3front-msir' -build 2>&1 | grep -v "^$" && echo "--- debug ---" &&
+      cat /tmp/msir-de…)
+  ⎿  --- building in ARM64_DARWIN ---
+     new source -> compiling Main.m3
+     "../Main.m3", line 150: warning: not used (LoadInt)
+     … +6 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ No abandons at all. Let me check the full MSIR output:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Main_M3 is now emitted. All 28 procedures appear. Let me verify the smoke test
+   still runs correctly:
+
+⏺ Bash(/tmp/msir-smoke/ARM64_DARWIN/smoke)
+  ⎿  Add(2,3) = 5
+     Factorial(5) = 120
+     Abs(-7) = 7
+     … +19 lines (ctrl+o to expand)
+
+⏺ All correct. Now commit this batch of work:
+
+⏺ Bash(git diff --stat HEAD)
+  ⎿   m3-sys/m3front/src/builtinOps/New.m3    | 15 +++++++++++++++
+      m3-sys/m3front/src/exprs/AddressExpr.m3 | 16 ++++++++++++++++
+      m3-sys/m3front/src/exprs/ConcatExpr.m3  | 12 +++++++++++-
+     … +5 lines (ctrl+o to expand)
+
+⏺ Bash(git add m3-sys/m3front/src/builtinOps/New.m3 \
+               m3-sys/m3front/src/exprs/AddressExpr.m3 \…)
+  ⎿  [msir 6236aff89c] msir: objects, TEXT, enums, NIL, named constants, NE
+     W stub
+      7 files changed, 77 insertions(+), 2 deletions(-)
+
+⏺ All 28 procedures including Main_M3 now emit cleanly with no abandons. The
+  fixes cover: Object/Opaque types → gc_ref void, TEXT literals and
+  concatenation (stub), enum literals (ordinal as integer constant), NIL (null
+  gc_ref void), named constants like NIL via Value.Class.Expr delegation, and a
+  NEW stub returning null.
+
+✻ Sautéed for 22m 8s
+
+❯ /usage 
+  ⎿  Settings dialog dismissed
+
+❯ What next                                                                     
+
+⏺ Good stopping point to assess coverage. The MSIR now handles:
+  - All arithmetic/compare/logic ops, control flow (IF/ELSIF, WHILE, LOOP/EXIT)
+
+  - Records, fixed arrays, open arrays, VAR/READONLY formals
+  - Globals (traced + untraced), gc_ref, enums, NIL, TEXT/object stubs
+
+  What's still missing that matters for real programs:
+
+  1. FOR loops — FOR i := lo TO hi DO / BY step — very common, requires a
+  preheader+body+exit block pattern similar to WHILE
+  2. CASE statements — CASE x OF | a => ... | b => ... — maps cleanly to a
+  switch/branch chain in SSA
+  3. DIV / MOD — x DIV y, x MOD y — common, DivExpr.m3 / ModExpr.m3 need
+  compileMSIR
+  4. AND / OR short-circuit — AndExpr, OrExpr need lazy-evaluation block
+  structure
+  5. LLVM emitter — wiring MSIR → LLVM IR is the destination; the IR is now rich
+   enough to start a skeleton MSIRToLLVM.m3
+
+  My recommendation: FOR + CASE + DIV/MOD next, then pivot to the LLVM emitter.
+  FOR and CASE are the most common missing constructs in real M3 code; DIV/MOD
+  is two files and trivial. After those three, the MSIR is complete enough to
+  make an LLVM emitter meaningful.
+
+  Or if you want to jump straight to the LLVM layer, the existing MSIR is
+  already enough for a skeleton — integers, structs, arrays, calls, branches,
+  globals all translate directly.
+
+✻ Cooked for 30s
+
+❯ OK, let's do 1-4                                                              
+  ⎿  You've hit your limit · resets 3:10am (Australia/Sydney)
+     /extra-usage to request more usage from your admin.
+✻ Cooked for 0s

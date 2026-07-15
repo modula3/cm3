@@ -1,0 +1,6 @@
+module I139
+
+proc I139_I3() -> void
+entry:
+  ret
+

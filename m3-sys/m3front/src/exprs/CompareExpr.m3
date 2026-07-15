@@ -247,6 +247,19 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  (* A comparison yields a BOOLEAN, which in the ZType model is machine width
+     (i64) like every other ordinal value; the icmp/fcmp naturally produces i1,
+     so widen it.  Branch consumers (BuildCondBr) narrow i64->i1 automatically. *)
+  VAR r := CompileMSIRRaw (p);
+  BEGIN
+    IF r # NIL AND MSIR.Kind (MSIR.ValueType (r)) = MSIR.TypeKind.I1 THEN
+      r := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", r,
+                           MSIR.TI (Target.Integer.size));
+    END;
+    RETURN r;
+  END CompileMSIR;
+
+PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
   VAR
     lv, rv:   MSIR.Value;
     pred:     MSIR.CmpPred;
@@ -308,7 +321,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("unsupported comparison class in MSIR");
       RETURN NIL;
     END;
-  END CompileMSIR;
+  END CompileMSIRRaw;
 
 BEGIN
 END CompareExpr.

@@ -1,0 +1,474 @@
+module Main
+
+global Main__exitCode : word64
+global Main__maxCount : word64
+global Main__mutex : gc_slot void
+global Main__numThreads : word64
+global Main__sharedArray : gc_slot void
+global Main__sharedCounter : word64
+
+proc Main__Print(a.msg: gc_ref void) -> void
+entry:
+  %msg.slot = alloca gc_ref void
+  store a.msg, %msg.slot
+  %t1 = load gc_ref void, %msg.slot
+  %t2 = call RTHooks__Concat(%t1, "\0a") -> gc_ref void
+  call IO__Put(%t2, nil)
+  ret
+
+proc Main__ChildApply(a.self: gc_ref @ChildClosure) -> gc_ref void
+entry:
+  %t23 = alloca gc_ref void
+  %t22 = alloca @lpad_t
+  %t21 = alloca ptr void
+  %t20 = alloca i32
+  %t7 = alloca gc_ref void
+  %t6 = alloca i32
+  %t5 = alloca ptr void
+  %_result.slot = alloca gc_ref void
+  %numLoops.slot = alloca i64
+  %self.slot = alloca gc_ref @ChildClosure
+  store a.self, %self.slot
+  store i64 0, %numLoops.slot
+  store nil, %_result.slot
+  store word64 0, %numLoops.slot
+  %t1 = gc.load @Main_M3_info+384
+  %t2 = convert %t1 to ptr ptr void
+  %t3 = load ptr void, %t2
+  %t4 = load ptr void, %t3
+  call.indirect %t4(%t1)
+  store i32 0, %t6
+  br while.header.6
+lock.lpad.1:
+  %t34 = landingpad catch _ZTI6_M3Exc
+  %t35 = extractvalue %t34, 0
+  %t36 = call __cxa_get_exception_ptr(%t35) -> ptr void
+  %t37 = load ptr void, %t36
+  store %t37, %t5
+  store i32 1, %t6
+  br lock.fin.2
+lock.fin.2:
+  %t38 = convert %t1 to ptr ptr void
+  %t39 = load ptr void, %t38
+  %t40 = ptr.add %t39, 8
+  %t41 = load ptr void, %t40
+  call.indirect %t41(%t1)
+  %t42 = load i32, %t6
+  %t43 = icmp eq %t42, 1
+  cond_br %t43, lock.resume.3, lock.fin.notexc.18
+lock.resume.3:
+  %t44 = load ptr void, %t5
+  call RTHooks__ResumeRaise(%t44)
+  unreachable
+lock.ret.4:
+lock.done.5:
+  ret nil
+while.header.6:
+  %t8 = load word64, @Main_M3_info+408
+  %t9 = load word64, @Main_M3_info+376
+  %t10 = icmp slt %t8, %t9
+  cond_br %t10, while.body.7, while.exit.8
+while.body.7:
+  %t11 = load word64, @Main_M3_info+408
+  %t12 = gc.load @Main_M3_info+400
+  %t13 = load openarray<1> word64, %t12
+  %t14 = openarray.elem_addr %t13, %t11
+  %t15 = load word64, %t14
+  %t16 = iadd %t15, 1
+  store %t16, %t14
+  %t17 = load word64, @Main_M3_info+408
+  %t18 = iadd %t17, 1
+  store %t18, @Main_M3_info+408
+  %t19 = gc.load @Main_M3_info+384
+  invoke Thread__Release(%t19)
+while.exit.8:
+  br lock.fin.2
+invoke.cont.9:
+  store i32 0, %t20
+  %t24 = load word64, %numLoops.slot
+  %t25 = iadd %t24, 1
+  store %t25, %numLoops.slot
+  invoke Thread__Pause(1.10000000000000001D-1)
+fin.lpad.10:
+  %t26 = landingpad catch _ZTI6_M3Exc
+  %t27 = extractvalue %t26, 0
+  %t28 = call __cxa_get_exception_ptr(%t27) -> ptr void
+  %t29 = load ptr void, %t28
+  store %t29, %t21
+  store i32 1, %t20
+  br fin.body.11
+fin.body.11:
+  %t30 = gc.load @Main_M3_info+384
+  invoke Thread__Acquire(%t30)
+fin.rethrow.12:
+  %t33 = load ptr void, %t21
+  invoke RTHooks__ResumeRaise(%t33)
+fin.done.13:
+  br while.header.6
+invoke.cont.14:
+  br fin.body.11
+invoke.cont.15:
+  %t31 = load i32, %t20
+  %t32 = icmp eq %t31, 1
+  cond_br %t32, fin.rethrow.12, fin.notexc.16
+fin.notexc.16:
+  br fin.done.13
+fin.rethrow.cont.17:
+  unreachable
+lock.fin.notexc.18:
+  br lock.done.5
+
+proc Main__CheckResults() -> void
+entry:
+  %t88 = alloca i1
+  %t81 = alloca i1
+  %t61 = alloca i64
+  %n.slot = alloca i64
+  %t25 = alloca i64
+  %i.slot.1 = alloca i64
+  %t13 = alloca i64
+  %i.slot = alloca i64
+  %t2 = alloca @__oa_shape
+  %error.slot = alloca i64
+  %count.slot = alloca gc_ref void
+  store nil, %count.slot
+  store i64 0, %error.slot
+  store i1 0, %error.slot
+  %t1 = load ptr void, @tl_arr_-476616643
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 1, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = load word64, @Main_M3_info+376
+  %t8 = iadd %t7, 1
+  %t9 = convert %t8 to i64
+  store %t9, %t6
+  %t10 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t11 = convert %t10 to gc_ref void
+  store %t11, %count.slot
+  store i64 0, %i.slot
+  %t12 = load word64, @Main_M3_info+376
+  store %t12, %t13
+  br for.header.1
+for.header.1:
+  %t14 = load i64, %i.slot
+  %t15 = load i64, %t13
+  %t16 = icmp sle %t14, %t15
+  cond_br %t16, for.body.2, for.exit.3
+for.body.2:
+  %t17 = load i64, %i.slot
+  %t18 = load gc_ref void, %count.slot
+  %t19 = load openarray<1> word64, %t18
+  %t20 = openarray.elem_addr %t19, %t17
+  store i64 0, %t20
+  %t21 = load i64, %i.slot
+  %t22 = iadd %t21, 1
+  store %t22, %i.slot
+  br for.header.1
+for.exit.3:
+  store i64 0, %i.slot.1
+  %t23 = load word64, @Main_M3_info+376
+  %t24 = isub %t23, 1
+  store %t24, %t25
+  br for.header.4
+for.header.4:
+  %t26 = load i64, %i.slot.1
+  %t27 = load i64, %t25
+  %t28 = icmp sle %t26, %t27
+  cond_br %t28, for.body.5, for.exit.6
+for.body.5:
+  %t29 = load i64, %i.slot.1
+  %t30 = gc.load @Main_M3_info+400
+  %t31 = load openarray<1> word64, %t30
+  %t32 = openarray.elem_addr %t31, %t29
+  %t33 = load word64, %t32
+  %t34 = load word64, @Main_M3_info+376
+  %t35 = icmp sgt %t33, %t34
+  cond_br %t35, if.then.7, if.next.8
+for.exit.6:
+  %t55 = load word64, @Main_M3_info+376
+  %t56 = trunc 10 to word8
+  %t57 = call Fmt__Int(%t55, %t56) -> gc_ref void
+  %t58 = call RTHooks__Concat("\0aHISTOGRAM:  (result should be [1: ", %t57) -> gc_ref void
+  %t59 = call RTHooks__Concat(%t58, "] with no other entries)\0a---------") -> gc_ref void
+  call Main__Print(%t59)
+  store i64 0, %n.slot
+  %t60 = load word64, @Main_M3_info+376
+  store %t60, %t61
+  br for.header.10
+if.then.7:
+  %t36 = zext 1 to i64
+  store %t36, %error.slot
+  %t37 = load i64, %i.slot.1
+  %t38 = trunc 10 to word8
+  %t39 = call Fmt__Int(%t37, %t38) -> gc_ref void
+  %t40 = call RTHooks__Concat("!!! Something really broken in CM3 because sharedArray[", %t39) -> gc_ref void
+  %t41 = call RTHooks__Concat(%t40, "] = ") -> gc_ref void
+  %t42 = load word64, %t32
+  %t43 = trunc 10 to word8
+  %t44 = call Fmt__Int(%t42, %t43) -> gc_ref void
+  %t45 = call RTHooks__Concat(%t41, %t44) -> gc_ref void
+  %t46 = call RTHooks__Concat(%t45, " which is greater than maxCount !!!") -> gc_ref void
+  call Main__Print(%t46)
+  br if.merge.9
+if.next.8:
+  %t47 = load word64, %t32
+  %t48 = load gc_ref void, %count.slot
+  %t49 = load openarray<1> word64, %t48
+  %t50 = openarray.elem_addr %t49, %t47
+  %t51 = load word64, %t50
+  %t52 = iadd %t51, 1
+  store %t52, %t50
+  br if.merge.9
+if.merge.9:
+  %t53 = load i64, %i.slot.1
+  %t54 = iadd %t53, 1
+  store %t54, %i.slot.1
+  br for.header.4
+for.header.10:
+  %t62 = load i64, %n.slot
+  %t63 = load i64, %t61
+  %t64 = icmp sle %t62, %t63
+  cond_br %t64, for.body.11, for.exit.12
+for.body.11:
+  %t65 = load i64, %n.slot
+  %t66 = load gc_ref void, %count.slot
+  %t67 = load openarray<1> word64, %t66
+  %t68 = openarray.elem_addr %t67, %t65
+  %t69 = load word64, %t68
+  %t70 = icmp sgt %t69, 0
+  cond_br %t70, if.then.13, if.merge.14
+for.exit.12:
+  %t98 = load i64, %error.slot
+  %t99 = trunc %t98 to i1
+  cond_br %t99, if.then.23, if.next.24
+if.then.13:
+  %t71 = load i64, %n.slot
+  %t72 = trunc 10 to word8
+  %t73 = call Fmt__Int(%t71, %t72) -> gc_ref void
+  %t74 = call RTHooks__Concat("[", %t73) -> gc_ref void
+  %t75 = call RTHooks__Concat(%t74, ": ") -> gc_ref void
+  %t76 = load word64, %t68
+  %t77 = trunc 10 to word8
+  %t78 = call Fmt__Int(%t76, %t77) -> gc_ref void
+  %t79 = call RTHooks__Concat(%t75, %t78) -> gc_ref void
+  %t80 = call RTHooks__Concat(%t79, "]") -> gc_ref void
+  call Main__Print(%t80)
+  br if.merge.14
+if.merge.14:
+  store i1 0, %t81
+  %t82 = load i64, %n.slot
+  %t83 = icmp ne %t82, 1
+  cond_br %t83, and.rhs.15, and.merge.16
+and.rhs.15:
+  %t84 = load word64, %t68
+  %t85 = icmp ne %t84, 0
+  store %t85, %t81
+  br and.merge.16
+and.merge.16:
+  %t86 = load i1, %t81
+  cond_br %t86, if.then.17, if.next.18
+if.then.17:
+  %t87 = zext 1 to i64
+  store %t87, %error.slot
+  br if.merge.19
+if.next.18:
+  store i1 0, %t88
+  %t89 = load i64, %n.slot
+  %t90 = icmp eq %t89, 1
+  cond_br %t90, and.rhs.20, and.merge.21
+if.merge.19:
+  %t96 = load i64, %n.slot
+  %t97 = iadd %t96, 1
+  store %t97, %n.slot
+  br for.header.10
+and.rhs.20:
+  %t91 = load word64, %t68
+  %t92 = load word64, @Main_M3_info+376
+  %t93 = icmp ne %t91, %t92
+  store %t93, %t88
+  br and.merge.21
+and.merge.21:
+  %t94 = load i1, %t88
+  cond_br %t94, if.then.22, if.merge.19
+if.then.22:
+  %t95 = zext 1 to i64
+  store %t95, %error.slot
+  br if.merge.19
+if.then.23:
+  call Main__Print("\0a! ERROR DETECTED !")
+  store i64 1, @Main_M3_info+368
+  call Main__Print("\0a!!! Something is broken in the CM3 system and needs to be fixed !!!")
+  br if.merge.25
+if.next.24:
+  call Main__Print("OK")
+  br if.merge.25
+if.merge.25:
+  ret
+
+proc Main_M3() -> void
+entry:
+  %t85 = alloca i64
+  %i.slot.2 = alloca i64
+  %t67 = alloca i64
+  %i.slot.1 = alloca i64
+  %minutes.slot = alloca i64
+  %t26 = alloca i64
+  %i.slot = alloca i64
+  %t15 = alloca @__oa_shape
+  %t5 = alloca @__oa_shape
+  %child.slot = alloca gc_ref void
+  %t1 = load ptr void, @tl_obj_356643957
+  %t2 = call RTHooks__AllocateTracedObj(%t1) -> gc_ref @_t9d8fb489
+  %t3 = convert %t2 to gc_ref void
+  gc.store %t3, @Main_M3_info+384
+  store i64 10, @Main_M3_info+392
+  store nil, %child.slot
+  %t4 = load ptr void, @tl_arr_-784487079
+  %t6 = ptr.add %t5, 16
+  %t7 = ptr.add %t5, 0
+  store %t6, %t7
+  %t8 = ptr.add %t5, 8
+  store i64 1, %t8
+  %t9 = ptr.add %t5, 16
+  %t10 = load word64, @Main_M3_info+392
+  %t11 = convert %t10 to i64
+  store %t11, %t9
+  %t12 = call RTHooks__AllocateOpenArray(%t4, %t5) -> gc_ref void
+  %t13 = convert %t12 to gc_ref void
+  store %t13, %child.slot
+  call Main__Print("-------------------------------------------------------------------------------")
+  call Main__Print("This program designed to test if MUTEX working properly using multiple threads.")
+  call Main__Print("Author:  Randy Coleburn")
+  call Main__Print("Inspiration:  \22The Little Book of Semaphores\22, by Allen Downey")
+  call Main__Print("              Section 8.1: Mutex checker problem.")
+  call Main__Print("              http://www.greenteapress.com/semaphores/")
+  call Main__Print("-------------------------------------------------------------------------------")
+  store i64 303, @Main_M3_info+392
+  store i64 573741, @Main_M3_info+376
+  %t14 = load ptr void, @tl_arr_-476616643
+  %t16 = ptr.add %t15, 16
+  %t17 = ptr.add %t15, 0
+  store %t16, %t17
+  %t18 = ptr.add %t15, 8
+  store i64 1, %t18
+  %t19 = ptr.add %t15, 16
+  %t20 = load word64, @Main_M3_info+376
+  %t21 = convert %t20 to i64
+  store %t21, %t19
+  %t22 = call RTHooks__AllocateOpenArray(%t14, %t15) -> gc_ref void
+  %t23 = convert %t22 to gc_ref void
+  gc.store %t23, @Main_M3_info+400
+  store i64 0, %i.slot
+  %t24 = load word64, @Main_M3_info+376
+  %t25 = isub %t24, 1
+  store %t25, %t26
+  br for.header.1
+for.header.1:
+  %t27 = load i64, %i.slot
+  %t28 = load i64, %t26
+  %t29 = icmp sle %t27, %t28
+  cond_br %t29, for.body.2, for.exit.3
+for.body.2:
+  %t30 = load i64, %i.slot
+  %t31 = gc.load @Main_M3_info+400
+  %t32 = load openarray<1> word64, %t31
+  %t33 = openarray.elem_addr %t32, %t30
+  store i64 0, %t33
+  %t34 = load i64, %i.slot
+  %t35 = iadd %t34, 1
+  store %t35, %i.slot
+  br for.header.1
+for.exit.3:
+  %t36 = load word64, @Main_M3_info+392
+  %t37 = trunc 10 to word8
+  %t38 = call Fmt__Int(%t36, %t37) -> gc_ref void
+  %t39 = call RTHooks__Concat("Using ", %t38) -> gc_ref void
+  %t40 = call RTHooks__Concat(%t39, " threads with maxCount = ") -> gc_ref void
+  %t41 = load word64, @Main_M3_info+376
+  %t42 = trunc 10 to word8
+  %t43 = call Fmt__Int(%t41, %t42) -> gc_ref void
+  %t44 = call RTHooks__Concat(%t40, %t43) -> gc_ref void
+  call Main__Print(%t44)
+  %t45 = load word64, @Main_M3_info+376
+  %t46 = sitofp %t45 to f64
+  %t47 = fmul %t46, 1.10000000000000001D-1
+  %t48 = load word64, @Main_M3_info+392
+  %t49 = sitofp %t48 to f64
+  %t50 = fdiv %t47, %t49
+  %t51 = fdiv %t50, 6.00000000000000000D1
+  %t52 = fpround %t51
+  %t53 = fptosi %t52 to i64
+  %t54 = iadd %t53, 1
+  store %t54, %minutes.slot
+  %t55 = load i64, %minutes.slot
+  %t56 = trunc 10 to word8
+  %t57 = call Fmt__Int(%t55, %t56) -> gc_ref void
+  %t58 = call RTHooks__Concat("Expected runtime is approx. ", %t57) -> gc_ref void
+  %t59 = call RTHooks__Concat(%t58, " to ") -> gc_ref void
+  %t60 = load i64, %minutes.slot
+  %t61 = iadd %t60, 1
+  %t62 = trunc 10 to word8
+  %t63 = call Fmt__Int(%t61, %t62) -> gc_ref void
+  %t64 = call RTHooks__Concat(%t59, %t63) -> gc_ref void
+  %t65 = call RTHooks__Concat(%t64, " minutes.") -> gc_ref void
+  call Main__Print(%t65)
+  call Main__Print("-------------------------------------------------------------------------------")
+  store i64 1, %i.slot.1
+  %t66 = load word64, @Main_M3_info+392
+  store %t66, %t67
+  br for.header.4
+for.header.4:
+  %t68 = load i64, %i.slot.1
+  %t69 = load i64, %t67
+  %t70 = icmp sle %t68, %t69
+  cond_br %t70, for.body.5, for.exit.6
+for.body.5:
+  %t71 = load i64, %i.slot.1
+  %t72 = isub %t71, 1
+  %t73 = load gc_ref void, %child.slot
+  %t74 = load openarray<1> gc_ref void, %t73
+  %t75 = openarray.elem_addr %t74, %t72
+  %t76 = load ptr void, @tl_obj_-1770097841
+  %t77 = call RTHooks__AllocateTracedObj(%t76) -> gc_ref @_t9d8fb489
+  %t78 = convert %t77 to gc_ref @ChildClosure
+  %t79 = load i64, %i.slot.1
+  %t80 = ptr.add %t78, 8
+  store %t79, %t80
+  %t81 = call Thread__Fork(%t78) -> gc_ref void
+  gc.store %t81, %t75 [container: %t73]
+  %t82 = load i64, %i.slot.1
+  %t83 = iadd %t82, 1
+  store %t83, %i.slot.1
+  br for.header.4
+for.exit.6:
+  store i64 1, %i.slot.2
+  %t84 = load word64, @Main_M3_info+392
+  store %t84, %t85
+  br for.header.7
+for.header.7:
+  %t86 = load i64, %i.slot.2
+  %t87 = load i64, %t85
+  %t88 = icmp sle %t86, %t87
+  cond_br %t88, for.body.8, for.exit.9
+for.body.8:
+  %t89 = load i64, %i.slot.2
+  %t90 = isub %t89, 1
+  %t91 = load gc_ref void, %child.slot
+  %t92 = load openarray<1> gc_ref void, %t91
+  %t93 = openarray.elem_addr %t92, %t90
+  %t94 = gc.load %t93
+  %t95 = call Thread__Join(%t94) -> gc_ref void
+  %t96 = load i64, %i.slot.2
+  %t97 = iadd %t96, 1
+  store %t97, %i.slot.2
+  br for.header.7
+for.exit.9:
+  call Main__CheckResults()
+  %t98 = load word64, @Main_M3_info+368
+  %t99 = trunc %t98 to word32
+  call Process__Exit(%t99)
+  ret
+

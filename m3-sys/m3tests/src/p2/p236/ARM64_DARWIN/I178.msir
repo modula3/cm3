@@ -1,0 +1,6 @@
+module I178
+
+proc I178_I3() -> void
+entry:
+  ret
+

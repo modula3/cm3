@@ -1,0 +1,75 @@
+M3 v4.2
+N0 Main
+
+M0 1 2 0 0 0 0 12 0 0 18 0 0
+A0
+N1 print
+B1
+N2 RTHooks
+B2
+N3 TextLitInfo
+V0 2 3 fdc7f49fa7f061c3
+i0
+N4 TextLitGetChar
+V1 2 4 bf853738ef95b58f
+i1
+N5 TextLitGetWideChar
+V2 2 5 6b44a8081c4ee8f1
+i2
+N6 TextLitGetChars
+V3 2 6 e51aa8c54a895201
+i3
+N7 TextLitGetWideChars
+V4 2 7 face384698a06a95
+i4
+N8 AllocateTracedRef
+V5 2 8 29ea9480867f065a
+i5
+N9 AllocateOpenArray
+V6 2 9 969bbff1aa993659
+i6
+N10 CheckLoadTracedRef
+V7 2 10 33cac043de87135c
+i7
+N11 CheckStoreTraced
+V8 2 11 8ffa5ad840254ad5
+i8
+N12 ReportFault
+V9 2 12 e0ad157f9f695006
+i9
+N13 ref
+V10 1 13 0990dbfea0f42d77
+i10
+N14 ScanTypecase
+V11 2 14 6c0355050f2d5a7c
+i11
+tf400f3db
+t89cd34bd
+t9d19e327
+t6d871b27
+tb750d684
+t38df5df5
+tb964357b
+t9132dde7
+tc9e236c8
+ta19bdc21
+t966fe87f
+t7cfe252f
+t217fba22
+t983b02e7
+t37e50548
+ta4bb9882
+tca710884
+t9b134ca4
+Q6d871b27 50f86574
+
+I1 1 1 0 0 0 0 3 1 0 2 1 0
+A1
+B2
+i7
+i8
+i11
+E10
+t37e50548
+t9b134ca4
+Tca710884

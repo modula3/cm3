@@ -1,0 +1,2 @@
+INTERFACE Mod;
+END Mod.

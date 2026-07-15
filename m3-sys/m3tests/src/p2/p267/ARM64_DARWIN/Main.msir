@@ -1,0 +1,55 @@
+module Main
+
+proc Main__Clean1(a.r: gc_ref void) -> void
+entry:
+  %r.slot = alloca gc_ref void
+  store a.r, %r.slot
+  call RTIO__PutText("Clean1:")
+  %t1 = load gc_ref void, %r.slot
+  call RTIO__PutAddr(%t1, 0)
+  call RTIO__PutText("\0a")
+  call RTIO__Flush()
+  ret
+
+proc Main__Clean2(a.r: gc_ref void) -> void
+entry:
+  %r.slot = alloca gc_ref void
+  store a.r, %r.slot
+  call RTIO__PutText("Clean2:")
+  %t1 = load gc_ref void, %r.slot
+  call RTIO__PutAddr(%t1, 0)
+  call RTIO__PutText("\0a")
+  call RTIO__Flush()
+  ret
+
+proc Main__Test() -> void
+entry:
+  %a.slot = alloca gc_ref @A
+  store nil, %a.slot
+  %t1 = load ptr void, @tl_obj_-1520182960
+  %t2 = call RTHooks__AllocateTracedObj(%t1) -> gc_ref @_t9d8fb489
+  %t3 = convert %t2 to gc_ref @A
+  store %t3, %a.slot
+  call RTIO__PutText("Test:")
+  %t4 = load gc_ref @A, %a.slot
+  call RTIO__PutAddr(%t4, 0)
+  call RTIO__PutText("\0a")
+  call RTIO__Flush()
+  %t5 = load gc_ref @A, %a.slot
+  call RTHeapRep__RegisterFinalCleanup(%t5, @Main__Clean1)
+  %t6 = load gc_ref @A, %a.slot
+  call RTHeapRep__RegisterFinalCleanup(%t6, @Main__Clean2)
+  ret
+
+proc Main_M3() -> void
+entry:
+  br while.header.1
+while.header.1:
+  cond_br 1, while.body.2, while.exit.3
+while.body.2:
+  call Main__Test()
+  call RTCollector__Collect()
+  br while.header.1
+while.exit.3:
+  ret
+

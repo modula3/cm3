@@ -1,0 +1,6 @@
+module I50
+
+proc I50_I3() -> void
+entry:
+  ret
+

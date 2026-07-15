@@ -1,0 +1,302 @@
+module Main
+
+proc Main__F2(a.b: ptr openarray<1> i64) -> void
+entry:
+  ret
+
+proc Main__F3(var a.b: openarray<1> i64) -> void
+entry:
+  ret
+
+proc Main__F4(a.b: gc_ref void) -> gc_ref void
+entry:
+  %_result.slot = alloca gc_ref void
+  %b.slot = alloca gc_ref void
+  store a.b, %b.slot
+  store nil, %_result.slot
+  %t1 = load gc_ref void, %b.slot
+  ret %t1
+
+proc Main__F5() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %t1 = load ptr void, @tl_arr_562018850
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 1, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 11 to i64
+  store %t7, %t6
+  %t8 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t9 = convert %t8 to gc_ref void
+  ret
+
+proc Main__F6() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %t1 = load ptr void, @tl_arr_2039485594
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 2, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 11 to i64
+  store %t7, %t6
+  %t8 = ptr.add %t2, 24
+  %t9 = convert 12 to i64
+  store %t9, %t8
+  %t10 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t11 = convert %t10 to gc_ref void
+  ret
+
+proc Main__F6v() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %a.slot = alloca gc_ref void
+  store nil, %a.slot
+  %t1 = load ptr void, @tl_arr_2039485594
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 2, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 13 to i64
+  store %t7, %t6
+  %t8 = ptr.add %t2, 24
+  %t9 = convert 14 to i64
+  store %t9, %t8
+  %t10 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t11 = convert %t10 to gc_ref void
+  store %t11, %a.slot
+  ret
+
+proc Main__F6_3() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %t1 = load ptr void, @tl_arr_-653524506
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 3, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 15 to i64
+  store %t7, %t6
+  %t8 = ptr.add %t2, 24
+  %t9 = convert 2 to i64
+  store %t9, %t8
+  %t10 = ptr.add %t2, 32
+  %t11 = convert 3 to i64
+  store %t11, %t10
+  %t12 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t13 = convert %t12 to gc_ref void
+  ret
+
+proc Main__F6_3v() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %a.slot = alloca gc_ref void
+  store nil, %a.slot
+  %t1 = load ptr void, @tl_arr_-653524506
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 3, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 16 to i64
+  store %t7, %t6
+  %t8 = ptr.add %t2, 24
+  %t9 = convert 4 to i64
+  store %t9, %t8
+  %t10 = ptr.add %t2, 32
+  %t11 = convert 5 to i64
+  store %t11, %t10
+  %t12 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t13 = convert %t12 to gc_ref void
+  store %t13, %a.slot
+  ret
+
+proc Main__F6_4v() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %a.slot = alloca gc_ref void
+  store nil, %a.slot
+  %t1 = load ptr void, @tl_arr_-940375170
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 4, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 17 to i64
+  store %t7, %t6
+  %t8 = ptr.add %t2, 24
+  %t9 = convert 7 to i64
+  store %t9, %t8
+  %t10 = ptr.add %t2, 32
+  %t11 = convert 5 to i64
+  store %t11, %t10
+  %t12 = ptr.add %t2, 40
+  %t13 = convert 2 to i64
+  store %t13, %t12
+  %t14 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t15 = convert %t14 to gc_ref void
+  store %t15, %a.slot
+  ret
+
+proc Main__F6_4() -> void
+entry:
+  %t2 = alloca @__oa_shape
+  %t1 = load ptr void, @tl_arr_-940375170
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 4, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 11 to i64
+  store %t7, %t6
+  %t8 = ptr.add %t2, 24
+  %t9 = convert 21 to i64
+  store %t9, %t8
+  %t10 = ptr.add %t2, 32
+  %t11 = convert 31 to i64
+  store %t11, %t10
+  %t12 = ptr.add %t2, 40
+  %t13 = convert 24 to i64
+  store %t13, %t12
+  %t14 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t15 = convert %t14 to gc_ref void
+  ret
+
+proc Main__F7() -> void
+entry:
+  %t23 = alloca openarray<1> i64
+  %t15 = alloca openarray<1> i64
+  %t2 = alloca @__oa_shape
+  %a.slot = alloca gc_ref void
+  store nil, %a.slot
+  %t1 = load ptr void, @tl_arr_562018850
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 1, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 12 to i64
+  store %t7, %t6
+  %t8 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t9 = convert %t8 to gc_ref void
+  store %t9, %a.slot
+  %t10 = load gc_ref void, %a.slot
+  %t11 = ptr.add %t10, 0
+  %t12 = load ptr void, %t11
+  %t13 = imul 0, 8
+  %t14 = gep.byte %t12, %t13
+  %t16 = ptr.add %t15, 0
+  store %t14, %t16
+  %t17 = ptr.add %t15, 8
+  store i64 4, %t17
+  %t18 = load gc_ref void, %a.slot
+  %t19 = ptr.add %t18, 0
+  %t20 = load ptr void, %t19
+  %t21 = imul 1, 8
+  %t22 = gep.byte %t20, %t21
+  %t24 = ptr.add %t23, 0
+  store %t22, %t24
+  %t25 = ptr.add %t23, 8
+  store i64 4, %t25
+  %t26 = load openarray<1> i64, %t23
+  %t27 = load openarray<1> i64, %t15
+  %t28 = openarray.elem_addr %t27, 0
+  %t29 = openarray.elem_addr %t26, 0
+  %t30 = openarray.size %t26, 0
+  %t31 = imul %t30, 8
+  %t32 = call memcpy(%t28, %t29, %t31) -> ptr void
+  ret
+
+proc Main__F1() -> gc_ref void
+entry:
+  %t35 = alloca openarray<1> i64
+  %t27 = alloca openarray<1> i64
+  %t18 = alloca @
+  %t2 = alloca @__oa_shape
+  %_result.slot = alloca gc_ref void
+  %a.slot = alloca gc_ref void
+  store nil, %a.slot
+  store nil, %_result.slot
+  %t1 = load ptr void, @tl_arr_562018850
+  %t3 = ptr.add %t2, 16
+  %t4 = ptr.add %t2, 0
+  store %t3, %t4
+  %t5 = ptr.add %t2, 8
+  store i64 1, %t5
+  %t6 = ptr.add %t2, 16
+  %t7 = convert 10 to i64
+  store %t7, %t6
+  %t8 = call RTHooks__AllocateOpenArray(%t1, %t2) -> gc_ref void
+  %t9 = convert %t8 to gc_ref void
+  store %t9, %a.slot
+  %t10 = load gc_ref void, %a.slot
+  %t11 = ptr.add %t10, 0
+  %t12 = load ptr void, %t11
+  %t13 = ptr.add %t10, 8
+  %t14 = load i64, %t13
+  %t15 = imul %t14, 8
+  %t16 = alloca.dyn %t15
+  %t17 = call memcpy(%t16, %t12, %t15) -> ptr void
+  %t19 = ptr.add %t18, 0
+  store %t16, %t19
+  %t20 = ptr.add %t18, 8
+  store %t14, %t20
+  call Main__F2(%t18)
+  %t21 = load gc_ref void, %a.slot
+  call Main__F3(%t21)
+  %t22 = load gc_ref void, %a.slot
+  %t23 = ptr.add %t22, 0
+  %t24 = load ptr void, %t23
+  %t25 = imul 0, 8
+  %t26 = gep.byte %t24, %t25
+  %t28 = ptr.add %t27, 0
+  store %t26, %t28
+  %t29 = ptr.add %t27, 8
+  store i64 4, %t29
+  %t30 = load gc_ref void, %a.slot
+  %t31 = ptr.add %t30, 0
+  %t32 = load ptr void, %t31
+  %t33 = imul 0, 8
+  %t34 = gep.byte %t32, %t33
+  %t36 = ptr.add %t35, 0
+  store %t34, %t36
+  %t37 = ptr.add %t35, 8
+  store i64 4, %t37
+  %t38 = load openarray<1> i64, %t35
+  %t39 = load openarray<1> i64, %t27
+  %t40 = openarray.elem_addr %t39, 0
+  %t41 = openarray.elem_addr %t38, 0
+  %t42 = openarray.size %t38, 0
+  %t43 = imul %t42, 8
+  %t44 = call memcpy(%t40, %t41, %t43) -> ptr void
+  %t45 = load gc_ref void, %a.slot
+  %t46 = call Main__F4(%t45) -> gc_ref void
+  ret %t46
+
+proc Main_M3() -> void
+entry:
+  call Main__F5()
+  call Main__F6()
+  call Main__F6v()
+  call Main__F6_3()
+  call Main__F6_3v()
+  call Main__F6_4()
+  call Main__F6_4v()
+  call Main__F7()
+  %t1 = call Main__F1() -> gc_ref void
+  %t2 = call Main__F4(%t1) -> gc_ref void
+  ret
+

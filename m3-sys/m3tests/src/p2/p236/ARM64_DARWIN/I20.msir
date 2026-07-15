@@ -1,0 +1,6 @@
+module I20
+
+proc I20_I3() -> void
+entry:
+  ret
+

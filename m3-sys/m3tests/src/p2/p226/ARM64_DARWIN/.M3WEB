@@ -1,0 +1,59 @@
+Main.m3 977
+$ 0
+@../Main.m3
+AMain
+K4e105fda 8 1
+Lrep 0 8 1e59237d
+K8fed4546 8 1
+Lrep 0 8 56e16863
+Kf2208220 64 1
+Lrep 0 64 195c2a74
+Ka39142ee 64 1
+Lrep 0 64 05562176
+Kfcf62c53 64 1
+Lrep 0 64 1c1c45e6
+Ka7bbadda 16 1
+Lrep 0 16 88f439fc
+Kb17d7b27 64 1
+Lrep 0 64 08402063
+R7b78c34f 0 00000000 0
+R52ab93a7 0 1e59237d 0
+P50c57d3a 195c2a74
+DMain
+CWideChar
+CRefany
+CLongint
+CInteger
+CChar
+CBoolean
+CAddress
+CAtomicWideChar
+CAtomicRefany
+CAtomicLongint
+CAtomicInteger
+CAtomicChar
+CAtomicBoolean
+CAtomicAddress
+CRTHooks
+E50c57d3a Main.Test_AtomicRefany_LoadStore.AA
+R37e50548 1 00000000 0
+Sref 1c1c45e6
+R7cfe252f 1 1c1c45e6 0
+St 08402063
+E88f439fc WideChar.T
+E1c1c45e6 Refany.T
+E05562176 Longint.T
+E195c2a74 Integer.T
+E56e16863 Char.T
+E1e59237d Boolean.T
+E08402063 Address.T
+Ea7bbadda AtomicWideChar.T
+Efcf62c53 AtomicRefany.T
+Ea39142ee AtomicLongint.T
+Ef2208220 AtomicInteger.T
+E8fed4546 AtomicChar.T
+E4e105fda AtomicBoolean.T
+Eb17d7b27 AtomicAddress.T
+R9b134ca4 2 195c2a74 0
+Sref 1c1c45e6
+Sx 08402063

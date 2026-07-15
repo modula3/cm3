@@ -1,0 +1,1512 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.137
+           Opus 4.7 · API Usage Billing
+  ▘▘ ▝▝    ~/git/cm3
+
+✻ Conversation compacted (ctrl+o for history)
+
+
+❯ /compact                                                                      
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Read src/msir/MSIRType.m3 (119 lines)
+  ⎿  Read ../../../../../../tmp/msir-smoke/ARM64_DARWIN/Main.msir (126 lines)
+  ⎿  Read src/msir/MSIREmit.m3 (63 lines)
+  ⎿  Read src/msir/MSIREmit.i3 (34 lines)
+  ⎿  Read src/msir/MSIRBuilder.m3 (348 lines)
+
+❯ COntinue                                                                      
+
+⏺ The conversation was compacted. The MSIR emission is working — I can see
+  /tmp/msir-smoke/ARM64_DARWIN/Main.msir produced output for direct calls,
+  control flow, comparisons, locals, and record types (MakePoint/PointSum).
+
+  Looking at the smoke output, two known cosmetic issues are visible in Sign:
+  - duplicate if.then / if.next labels across ELSIF clauses
+  - unreachable if.merge: block
+
+  Both are documented in CLAUDE.md as harmless. What would you like to tackle
+  next?
+
+  Some candidates:
+  1. Fix the duplicate-label issue in NewBlock (counter suffix)
+  2. Add VAR-mode formal/local support (currently abandoned)
+  3. Add more types (arrays, open arrays, sets)
+  4. Something else from your roadmap
+
+✻ Churned for 14s
+
+❯ Did we finish getting a human readable name for the record type?              
+
+⏺ Let me check — the smoke output still shows @Main__Point, but the stripping
+  code is in MSIRType.m3.
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ The MSIRType.m3 source is newer than both the .o and the cm3 binary — the
+  stripping code was edited but never rebuilt. Let me rebuild and re-run.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -20)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -5 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -10 && cp
+      /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bi…)
+  ⎿    Field.m3          Formal.m3         Formal.i3         Ident.m3
+
+       Ident.i3          Method.i3         Method.m3         Procedure.m3
+     … +12 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -3 && cm3 '@M3m3front-msir'
+      -build 2>&1 | tail -5 && grep -E "Point|@" ARM64_DARWIN/Main.msir)
+  ⎿  --- cleaning ARM64_DARWIN ---
+
+     --- building in ARM64_DARWIN ---
+     … +8 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Yes — done. The record type now prints as @Point instead of @Main__Point. The
+  Module__ prefix is stripped from the human-readable name.
+
+✻ Brewed for 52s
+
+❯ WHat next?                                                                    
+
+⏺ A few logical next steps, ordered by impact toward real-code coverage:
+
+  1. VAR-mode formals/locals — currently abandoned in AddLocal/LookupVarAddr.
+  Most non-trivial M3 code uses VAR params, so this unblocks a lot.
+  2. Pointer dereference (^) — needed to do anything useful with Reff/typed
+  pointers already in the type translator.
+  3. Fixed arrays + indexing — adds a whole class of real programs.
+  4. Cosmetic: unique block labels — 5-min fix for the duplicate if.then/if.next
+   issue.
+
+  I'd recommend (1) — it's the biggest gap and the infrastructure (alloca-based
+  locals, LookupVarAddr) is mostly in place; we mainly need to thread the
+  indirect flag through. Want me to start there?
+
+✻ Cogitated for 15s
+
+❯ Yes                                                                           
+
+⏺ Let me dig into the current state — how the indirect flag is set, and how
+  loads/stores currently work.
+
+  Searched for 6 patterns, read 3 files (ctrl+o to expand)
+⏺ Got the model. Plan: in BeginProc, for indirect formals (VAR/READONLY),
+  register the param value itself as an alloca-style address (no alloca needed —
+   the param IS the address from the caller). Then LookupVar/LookupVarAddr
+  handle them naturally.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 14 lines, removed 1 line
+      104                  VAR
+      105                    paramVal := MSIR.ProcParam(curProc, vIdx);
+      106                    mt:        MSIR.T;
+      107 +                  vType:     Type.T;                          
+      108 +                  vGlobal, vIndirect, vLhs: BOOLEAN;          
+      109                  BEGIN
+      110 +                  Variable.Split(svv, vType, vGlobal, vIndirec
+          +t, vLhs);                                                     
+      111                    mt := MSIR.ValueType(paramVal);
+      109 -                  IF MSIR.Kind(mt) = MSIR.TypeKind.Struct THEN
+      112 +                  IF vIndirect THEN                           
+      113 +                    (* VAR/READONLY-indirect formal: the param
+          + value IS the                                                 
+      114 +                       address of the caller's storage. Loads/
+          +stores route                                                  
+      115 +                       through it directly — no alloca needed.
+          + *)                                                           
+      116 +                    IF varMapN < MaxVarMap THEN               
+      117 +                      varMap[varMapN].key      := svv;        
+      118 +                      varMap[varMapN].val      := paramVal;   
+      119 +                      varMap[varMapN].elemType := mt;         
+      120 +                      INC(varMapN);                           
+      121 +                    END;                                      
+      122 +                  ELSIF MSIR.Kind(mt) = MSIR.TypeKind.Struct T
+          +HEN                                                           
+      123                      (* struct by-value formal: alloca+store fo
+           r field access *)
+      124                      VAR allocaVal := MSIR.BuildAlloca(curBlock
+           ,
+      125                            Value.GlobalName(sv, dots := FALSE, 
+           with_module := FALSE),
+
+⏺ Now build and write a smoke test with a VAR-mode parameter.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -3 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -3 && cp
+      /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin…)
+  ⎿    Procedure.i3      Revelation.m3     Revelation.i3     Tipe.i3
+
+       Tipe.m3           Variable.i3       Variable.m3
+     … +6 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(/tmp/msir-smoke/Main.m3)
+  ⎿  Added 18 lines
+       83      RETURN ORD(c);
+       84    END ColorToInt;
+       85  
+       86 +PROCEDURE Swap (VAR a, b: INTEGER) =                          
+       87 +  VAR t: INTEGER;                                             
+       88 +  BEGIN                                                       
+       89 +    t := a;                                                   
+       90 +    a := b;                                                   
+       91 +    b := t;                                                   
+       92 +  END Swap;                                                   
+       93 +                                                              
+       94 +PROCEDURE IncBy (VAR a: INTEGER;  b: INTEGER) =               
+       95 +  BEGIN                                                       
+       96 +    a := a + b;                                               
+       97 +  END IncBy;                                                  
+       98 +                                                              
+       99 +PROCEDURE ReadOnlySum (READONLY p: Point): INTEGER =          
+      100 +  BEGIN                                                       
+      101 +    RETURN p.x + p.y;                                         
+      102 +  END ReadOnlySum;                                            
+      103 +                                                              
+      104  BEGIN
+      105    IO.Put ("Add(2,3) = " & Fmt.Int(Add(2,3)) & "\n");
+      106    IO.Put ("Factorial(5) = " & Fmt.Int(Factorial(5)) & "\n");
+
+⏺ Update(/tmp/msir-smoke/Main.m3)
+  ⎿  Added 11 lines
+      114    IO.Put ("FactSum(4) = " & Fmt.Int(FactSum(4)) & "\n");
+      115    IO.Put ("PointSum({3,4}) = " & Fmt.Int(PointSum(MakePoint(3,
+           4))) & "\n");
+      116    IO.Put ("ColorToInt(Blue) = " & Fmt.Int(ColorToInt(Color.Blu
+           e)) & "\n");
+      117 +                                                              
+      118 +  VAR x, y: INTEGER;  q: Point;                               
+      119 +  BEGIN                                                       
+      120 +    x := 11;  y := 22;                                        
+      121 +    Swap(x, y);                                               
+      122 +    IO.Put ("after Swap(11,22): x=" & Fmt.Int(x) & " y=" & Fmt
+          +.Int(y) & "\n");                                              
+      123 +    IncBy(x, 100);                                            
+      124 +    IO.Put ("after IncBy(x,100): x=" & Fmt.Int(x) & "\n");    
+      125 +    q := MakePoint(5, 7);                                     
+      126 +    IO.Put ("ReadOnlySum({5,7}) = " & Fmt.Int(ReadOnlySum(q)) 
+          +& "\n");                                                      
+      127 +  END;                                                        
+      128  END Main.
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -2 && cm3 '@M3m3front-msir'
+      -build 2>&1 | tail -10)
+  ⎿  --- cleaning ARM64_DARWIN ---
+
+     --- building in ARM64_DARWIN ---
+     … +3 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(cd /tmp/msir-smoke && ./ARM64_DARWIN/smoke 2>&1)
+  ⎿  Add(2,3) = 5
+     Factorial(5) = 120
+     Abs(-7) = 7
+     … +12 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Runtime is correct (m3back unchanged). Now let's check the MSIR output for
+  VAR/READONLY procs.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Existing struct by-value path unchanged. VAR/READONLY now works:
+  - Swap(var a: i64, var b: i64) — loads/stores route through param
+  - IncBy(var a: i64, b: i64) — mixed VAR + by-value
+  - ReadOnlySum(readonly p: @Point) — field_addr on param directly (no
+  alloca+store)
+
+  Want me to commit, or push on to the next item (pointer dereference / arrays /
+   cosmetic block-label fix)?
+
+✻ Crunched for 3m 14s
+
+❯ push on                                                                       
+
+⏺ Picking pointer dereference next. Let me find how ^ is currently handled in
+  the expression layer.
+
+  Searched for 2 patterns, read 3 files, listed 1 directory (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/exprs/DerefExpr.m3)
+  ⎿  Added 3 lines
+      10  
+      11  IMPORT Expr, ExprRep, RefType, Error, Type, RunTyme;
+      12  IMPORT NilChkExpr, CG, ErrType, Host;
+      13 +IMPORT MSIR, MSIRBuilder, MSIRType;                            
+      14  
+      15  TYPE
+      16    P = ExprRep.Ta BRANDED "DerefExpr.P" OBJECT
+     ...
+      36          prepLiteral  := ExprRep.NoPrepLiteral;
+      37          genLiteral   := ExprRep.NoLiteral;
+      38          note_write   := NoteWrites;
+      39 +        compileMSIR       := CompileMSIR;                      
+      40 +        compileLValueMSIR := LValueMSIR;                       
+      41        END;
+      42  
+      43  PROCEDURE New (a: Expr.T): Expr.T =
+
+⏺ Update(m3-sys/m3front/src/exprs/DerefExpr.m3)  ⎿  Added 19 lines
+      182      Expr.NoteWrite (p.a);
+      183    END NoteWrites;
+      184  
+      185 +PROCEDURE LValueMSIR (p: P): MSIR.Value =                     
+      186 +  BEGIN                                                       
+      187 +    (* p^ as lvalue: the address is the pointer value itself. 
+          +*)                                                            
+      188 +    RETURN Expr.CompileMSIR (p.a);                            
+      189 +  END LValueMSIR;                                             
+      190 +                                                              
+      191 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      192 +  VAR addr: MSIR.Value;  ty: MSIR.T;                          
+      193 +  BEGIN                                                       
+      194 +    addr := Expr.CompileMSIR (p.a);                           
+      195 +    IF addr = NIL THEN RETURN NIL END;                        
+      196 +    ty := MSIRType.Translate (p.type);                        
+      197 +    IF ty = NIL THEN                                          
+      198 +      MSIRBuilder.Abandon ("unsupported deref target type");  
+      199 +      RETURN NIL;                                             
+      200 +    END;                                                      
+      201 +    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty
+          +, addr);                                                      
+      202 +  END CompileMSIR;                                            
+      203 +                                                              
+      204  BEGIN
+      205  END DerefExpr.
+
+⏺ Now check how AssignStmt does MSIR for stores — it should already use
+  LValueMSIR of the lhs.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Build and test.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -3 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -3 && cp
+      /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin…)
+  ⎿    Procedure.i3      Revelation.m3     Revelation.i3     Tipe.i3
+
+       Tipe.m3           Variable.i3       Variable.m3
+     … +6 lines (ctrl+o to expand)
+
+⏺ Update(/tmp/msir-smoke/Main.m3)
+  ⎿  Added 17 lines
+      101      RETURN p.x + p.y;
+      102    END ReadOnlySum;
+      103  
+      104 +TYPE IntPtr = UNTRACED REF INTEGER;                           
+      105 +                                                              
+      106 +PROCEDURE LoadInt (p: IntPtr): INTEGER =                      
+      107 +  BEGIN                                                       
+      108 +    RETURN p^;                                                
+      109 +  END LoadInt;                                                
+      110 +                                                              
+      111 +PROCEDURE StoreInt (p: IntPtr;  v: INTEGER) =                 
+      112 +  BEGIN                                                       
+      113 +    p^ := v;                                                  
+      114 +  END StoreInt;                                               
+      115 +                                                              
+      116 +PROCEDURE BumpInt (p: IntPtr) =                               
+      117 +  BEGIN                                                       
+      118 +    p^ := p^ + 1;                                             
+      119 +  END BumpInt;                                                
+      120 +                                                              
+      121  BEGIN
+      122    IO.Put ("Add(2,3) = " & Fmt.Int(Add(2,3)) & "\n");
+      123    IO.Put ("Factorial(5) = " & Fmt.Int(Factorial(5)) & "\n");
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -2 && cm3 '@M3m3front-msir'
+      -build 2>&1 | tail -5)
+  ⎿  --- cleaning ARM64_DARWIN ---
+
+     "../Main.m3", line 106: warning: not used (LoadInt)
+     … +4 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+  Searched for 2 patterns, read 2 files (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/exprs/NilChkExpr.m3)
+  ⎿  Added 1 line
+      10  
+      11  IMPORT CG, Expr, ExprRep, Type, AddressExpr;
+      12  IMPORT Target, TInt, RefType, Host, OpenArrayType, M3RT;
+      13 +IMPORT MSIR;                                                   
+      14  
+      15  TYPE
+      16    P = ExprRep.Ta BRANDED "NilChkExpr.P" OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/NilChkExpr.m3)
+  ⎿  Added 2 lines
+      36          prepLiteral  := ExprRep.NoPrepLiteral;
+      37          genLiteral   := ExprRep.NoLiteral;
+      38          note_write   := NoteWrites;
+      39 +        compileMSIR       := CompileMSIR;                      
+      40 +        compileLValueMSIR := LValueMSIR;                       
+      41        END;
+      42  
+      43  PROCEDURE New (a: Expr.T): Expr.T =
+
+⏺ Update(m3-sys/m3front/src/exprs/NilChkExpr.m3)
+  ⎿  Added 12 lines
+      120      Expr.NoteWrite (p.a);
+      121    END NoteWrites;
+      122  
+      123 +(* MSIR: forward through the nil-check wrapper. The nil check 
+          +itself is a                                                   
+      124 +   runtime concern that can be modeled in a later pass. *)    
+      125 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      126 +  BEGIN                                                       
+      127 +    RETURN Expr.CompileMSIR (p.a);                            
+      128 +  END CompileMSIR;                                            
+      129 +                                                              
+      130 +PROCEDURE LValueMSIR (p: P): MSIR.Value =                     
+      131 +  BEGIN                                                       
+      132 +    RETURN Expr.LValueMSIR (p.a);                             
+      133 +  END LValueMSIR;                                             
+      134 +                                                              
+      135  BEGIN
+      136  END NilChkExpr.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -5 &&
+      cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | t…)
+  ⎿  ignoring ../src/m3overrides
+
+     new source -> compiling NilChkExpr.m3
+     … +8 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -1 && rm -f
+      /tmp/msir-debug.txt && cm3 '@M3m3front-msir' -build 2>&1 | tail -3 && awk
+      '/^proc LoadInt|^proc StoreIn…)
+  ⎿  "../Main.m3", line 116: warning: not used (BumpInt)
+     3 warnings encountered
+      -> linking smoke
+     … +21 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Pointer deref works. Let me verify the full smoke still runs and nothing
+  regressed.
+
+⏺ Bash(cd /tmp/msir-smoke && ./ARM64_DARWIN/smoke 2>&1 | tail -20)
+  ⎿  Add(2,3) = 5
+     Factorial(5) = 120
+     Abs(-7) = 7
+     … +12 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ All existing tests pass. Pointer deref:
+
+  - LoadInt(p): %1 = load i64, p; ret %1 — p^
+  - StoreInt(p, v): store v, p — p^ := v
+  - BumpInt(p): load + iadd + store — p^ := p^ + 1
+
+  Note: p shows as ptr void because MSIRType.Translate doesn't yet thread the
+  target type into TPtr/TGcRef. That's a separate refinement.
+
+  Want me to push on to the next item (typed pointers in MSIRType, fixed arrays,
+   or block-label fix), or pause to commit?
+
+✻ Brewed for 3m 38s
+
+❯ Yes.                                                                          
+
+⏺ Picking typed pointers in MSIRType — small refinement that makes LoadInt(p: 
+  *i64) instead of ptr void.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+⏺ Update(m3-sys/m3front/src/msir/MSIRType.m3)
+  ⎿  Added 1 line, removed 1 line
+      2  
+      3  IMPORT MSIR, Type, Int, LInt, Bool, Target;
+      4  IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
+      5 -IMPORT RecordType, Field, M3ID, Value, Text;                    
+      5 +IMPORT RecordType, Field, M3ID, Value, Text, RefType;           
+      6  
+      7  PROCEDURE Translate(t: Type.T): MSIR.T =
+      8    VAR base: Type.T;  info: Type.Info;  nameId: M3ID.T;  typeName
+         : TEXT;
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRType.m3)
+  ⎿  Added 30 lines, removed 3 lines
+       71          RETURN TranslateRecord(base, typeName);
+       72  
+       73      | Type.Class.Ref =>
+       74 -        IF info.isTraced                                      
+       75 -          THEN RETURN MSIR.TGcRef(MSIR.TVoid());              
+       76 -          ELSE RETURN MSIR.TPtr(MSIR.TVoid());                
+       74 +        VAR target: Type.T;  targetMsir: MSIR.T := MSIR.TVoid(
+          +);                                                            
+       75 +        BEGIN                                                 
+       76 +          (* Try to thread a typed target so we get e.g. TPtr(
+          +i64) for                                                      
+       77 +             UNTRACED REF INTEGER. Conservatively fall back to
+          + TVoid for                                                    
+       78 +             pointer-of-pointer or pointer-to-record/object ca
+          +ses — those                                                   
+       79 +             can be self-referential and would recurse without
+          + a visited                                                    
+       80 +             set. *)                                          
+       81 +          IF RefType.Split(base, target) AND target # NIL THEN
+       82 +            VAR ti: Type.Info;  ok: BOOLEAN;                  
+       83 +            BEGIN                                             
+       84 +              ok := Type.CheckInfo(target, ti);               
+       85 +              IF ok THEN                                      
+       86 +                CASE ti.class OF                              
+       87 +                | Type.Class.Integer, Type.Class.Longint,     
+       88 +                  Type.Class.Enum, Type.Class.Real,           
+       89 +                  Type.Class.Longreal, Type.Class.Extended => 
+       90 +                    VAR tt := Translate(target);              
+       91 +                    BEGIN                                     
+       92 +                      IF tt # NIL THEN targetMsir := tt END;  
+       93 +                    END;                                      
+       94 +                ELSE                                          
+       95 +                  (* Record/Object/Ref/etc.: leave as void to 
+          +avoid recursion. *)                                           
+       96 +                END;                                          
+       97 +              END;                                            
+       98 +            END;                                              
+       99 +          END;                                                
+      100 +          IF info.isTraced                                    
+      101 +            THEN RETURN MSIR.TGcRef(targetMsir);              
+      102 +            ELSE RETURN MSIR.TPtr(targetMsir);                
+      103 +          END;                                                
+      104          END;
+      105  
+      106      ELSE
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +8 lines (ctrl+o to expand)
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRType.m3)
+  ⎿  Added 12 lines, removed 14 lines
+      79               can be self-referential and would recurse without 
+          a visited
+      80               set. *)
+      81            IF RefType.Split(base, target) AND target # NIL THEN
+      82 -            VAR ti: Type.Info;  ok: BOOLEAN;                   
+      82 +            VAR ti: Type.Info;                                 
+      83              BEGIN
+      84 -              ok := Type.CheckInfo(target, ti);                
+      85 -              IF ok THEN                                       
+      86 -                CASE ti.class OF                               
+      87 -                | Type.Class.Integer, Type.Class.Longint,      
+      88 -                  Type.Class.Enum, Type.Class.Real,            
+      89 -                  Type.Class.Longreal, Type.Class.Extended =>  
+      90 -                    VAR tt := Translate(target);               
+      91 -                    BEGIN                                      
+      92 -                      IF tt # NIL THEN targetMsir := tt END;   
+      93 -                    END;                                       
+      94 -                ELSE                                           
+      95 -                  (* Record/Object/Ref/etc.: leave as void to a
+         -void recursion. *)                                             
+      96 -                END;                                           
+      84 +              EVAL Type.CheckInfo(target, ti);                 
+      85 +              CASE ti.class OF                                 
+      86 +              | Type.Class.Integer, Type.Class.Longint,        
+      87 +                Type.Class.Enum, Type.Class.Real,              
+      88 +                Type.Class.Longreal, Type.Class.Extended =>    
+      89 +                  VAR tt := Translate(target);                 
+      90 +                  BEGIN                                        
+      91 +                    IF tt # NIL THEN targetMsir := tt END;     
+      92 +                  END;                                         
+      93 +              ELSE                                             
+      94 +                (* Record/Object/Ref/etc.: leave as void to avo
+         +id recursion. *)                                               
+      95                END;
+      96              END;
+      97            END;
+
+⏺ Bash(cm3 -build 2>&1 | tail -8 && cm3 -ship 2>&1 | tail -2 && cd
+      /Users/hosking/git/cm3/m3-sys/cm3 && cm3 -build 2>&1 | tail -3 && cp
+      /Users/hosking/git/cm3/m3-sys/c…)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +10 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -1 && cm3 '@M3m3front-msir'
+      -build 2>&1 | tail -3 && awk '/^proc LoadInt|^proc StoreInt|^proc
+      BumpInt/{p=1} p{print…)
+  ⎿  "../Main.m3", line 116: warning: not used (BumpInt)
+     3 warnings encountered
+      -> linking smoke
+     … +19 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Typed pointers now show as ptr i64 instead of ptr void. Let me also verify
+  nothing regressed (existing struct refs, etc.).
+
+⏺ Bash(cd /tmp/msir-smoke && ./ARM64_DARWIN/smoke 2>&1 | tail -3 && echo "---"
+      && grep -c "^proc" ARM64_DARWIN/Main.msir)
+  ⎿  after Swap(11,22): x=22 y=11
+     after IncBy(x,100): x=122
+     ReadOnlySum({5,7}) = 12
+     … +2 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ 15 procs emitted, runtime correct.
+
+  Summary of progress this session:
+  1. Typename strip — @Point instead of @Main__Point (rebuilt + verified)
+  2. VAR/READONLY formals — params used directly as the address; var a: i64,
+  readonly p: @Point
+  3. Pointer dereference (p^ rvalue + p^ := v lvalue) via DerefExpr/NilChkExpr
+  MSIR overrides
+  4. Typed pointers — ptr i64/gc_ref i64 for scalar-target REFs (records/objects
+   still void to avoid cycle recursion)
+
+  Want me to commit this batch, or keep going (block-label uniqueness, fixed
+  arrays)?
+
+✻ Baked for 1m 42s
+
+❯ Let's keep going.                                                             
+
+⏺ Quick win first: unique block labels. Let me find NewBlock in MSIRBuilder.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 1 line
+      21    curProc:   MSIR.Proc  := NIL;
+      22    curBlock:  MSIR.Block := NIL;
+      23    abandoned: BOOLEAN    := FALSE;
+      24 +  blockSeq:  INTEGER    := 0;   (* per-proc block label counter
+         + *)                                                            
+      25  
+      26    varMap:  ARRAY [0..MaxVarMap-1]  OF VarEntry;
+      27    varMapN: INTEGER := 0;
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 1 line, removed 1 line
+      1  MODULE MSIRBuilder;
+      2  
+      3  IMPORT MSIR, MSIRType, MSIREmit;
+      4 -IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType;    
+      4 +IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt
+        +;                                                               
+      5  
+      6  CONST MaxVarMap   = 64;
+      7  CONST MaxExitStack = 16;
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 4 lines, removed 2 lines
+      263    BEGIN RETURN curBlock END CurrentBlock;
+      264  
+      265  PROCEDURE NewBlock(label: TEXT): MSIR.Block =
+      266 -  VAR b: MSIR.Block;                                          
+      266 +  VAR b: MSIR.Block;  uniq: TEXT;                             
+      267    BEGIN
+      268 -    b := MSIR.NewBlock(label, ARRAY OF MSIR.BlockParam{});    
+      268 +    INC(blockSeq);                                            
+      269 +    uniq := label & "." & Fmt.Int(blockSeq);                  
+      270 +    b := MSIR.NewBlock(uniq, ARRAY OF MSIR.BlockParam{});     
+      271      MSIR.ProcAddBlock(curProc, b);
+      272      RETURN b;
+      273    END NewBlock;
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Error editing file
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 1 line
+      48      abandoned := FALSE;
+      49      varMapN   := 0;
+      50      exitDepth := 0;
+      51 +    blockSeq  := 0;                                            
+      52  
+      53      resultT := MSIRType.TranslateResult(result);
+      54      IF resultT = NIL THEN
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -5 &&
+      cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | t…)
+  ⎿  ignoring ../src/m3overrides
+
+     new source -> compiling MSIRBuilder.m3
+     … +8 lines (ctrl+o to expand)
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -1 && cm3 '@M3m3front-msir'
+      -build 2>&1 | tail -3 && awk '/^proc Sign/{p=1} p{print} /^$/ && p{p=0;
+      exit}' ARM64_DA…)
+  ⎿  "../Main.m3", line 116: warning: not used (BumpInt)
+     3 warnings encountered
+      -> linking smoke
+     … +16 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Sign now has unique block labels (if.then.2, if.then.4, etc.). The unreachable
+   if.merge.1 is still there (no predecessors) — that's the other known cosmetic
+   issue. Want me to also suppress unreachable merge blocks, or move on to fixed
+   arrays?
+
+✻ Sautéed for 1m 13s
+
+❯ Yes, suppress.                                                                
+
+  Searched for 2 patterns, read 2 files (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/stmts/IfStmt.m3)
+  ⎿  Added 19 lines, removed 10 lines
+      145      condVal:    MSIR.Value;
+      146      thenBlock:  MSIR.Block;
+      147      nextBlock:  MSIR.Block;   (* false branch target for each 
+           clause *)
+      148 -    mergeBlock: MSIR.Block;                                   
+      149 -  BEGIN                                                       
+      150 -    mergeBlock := MSIRBuilder.NewBlock ("if.merge");          
+      148 +    mergeBlock: MSIR.Block := NIL;  (* lazily created on first
+          + need *)                                                      
+      149  
+      150 +  PROCEDURE EnsureMerge (): MSIR.Block =                      
+      151 +    BEGIN                                                     
+      152 +      IF mergeBlock = NIL THEN                                
+      153 +        mergeBlock := MSIRBuilder.NewBlock ("if.merge");      
+      154 +      END;                                                    
+      155 +      RETURN mergeBlock;                                      
+      156 +    END EnsureMerge;                                          
+      157 +                                                              
+      158 +  BEGIN                                                       
+      159      c := p.clauses;
+      160      WHILE (c # NIL) AND MSIRBuilder.InProc () DO
+      161        (* Compile condition into the current block. *)
+     ...
+      167        IF (c.next # NIL) OR (p.elseBody # NIL) THEN
+      168          nextBlock := MSIRBuilder.NewBlock ("if.next");
+      169        ELSE
+      163 -        nextBlock := mergeBlock;                              
+      170 +        nextBlock := EnsureMerge ();                          
+      171        END;
+      172  
+      173        MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), condVal,
+     ...
+      178        MSIRBuilder.SetCurrentBlock (thenBlock);
+      179        Stmt.CompileMSIR (c.body);
+      180        IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBloc
+           kTerminated () THEN
+      174 -        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock,
+      181 +        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), EnsureMerge
+          + (),                                                          
+      182                        ARRAY OF MSIR.Value{});
+      183        END;
+      184  
+     ...
+      186        c := c.next;
+      187      END;
+      188  
+      182 -    (* Compile else body (if any) in the current block (nextBl
+          -ock or merge). *)                                             
+      189 +    (* Compile else body (if any) in the current block. *)    
+      190      IF (p.elseBody # NIL) AND MSIRBuilder.InProc () THEN
+      191        Stmt.CompileMSIR (p.elseBody);
+      192        IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
+      186 -        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlock,
+      193 +        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), EnsureMerge
+          + (),                                                          
+      194                        ARRAY OF MSIR.Value{});
+      195        END;
+      189 -      MSIRBuilder.SetCurrentBlock (mergeBlock);               
+      196 +      IF mergeBlock # NIL THEN                                
+      197 +        MSIRBuilder.SetCurrentBlock (mergeBlock);             
+      198 +      END;                                                    
+      199      END;
+      191 -    (* If no else body, nextBlock was already set to mergeBloc
+          -k above,                                                      
+      192 -       so curBlock is already mergeBlock for the no-else case.
+          - *)                                                           
+      200 +    (* If no else body, nextBlock was set to merge for the las
+          +t clause,                                                     
+      201 +       so curBlock is already merge when one was needed. *)   
+      202    END CompileMSIR;
+      203  
+      204  BEGIN
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -8)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -3 && cp
+      /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin…)
+  ⎿    Tipe.m3           Variable.i3       Variable.m3
+       PersistentRevelation.i3  PersistentRevelation.m3
+     ignoring ../src/m3overrides
+     … +22 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Clean — no if.merge block, every block has unique labels and a predecessor.
+  Let me also verify Abs (which has a merge that IS reached) still works.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && ./ARM64_DARWIN/smoke 2>&1 | tail -5)
+  ⎿  PointSum({3,4}) = 7
+     ColorToInt(Blue) = 2
+     after Swap(11,22): x=22 y=11
+     … +2 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ All working. The output is now:
+  - Unique block labels (counter suffix)
+  - No unreachable if.merge blocks
+  - Runtime behavior unchanged
+
+  Want me to push on with fixed arrays next, or pause to commit?
+
+✻ Churned for 1m 45s
+
+❯ Yes, push on.                                                                 
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+⏺ This is a bigger change — MSIR doesn't yet have a fixed-array type. Let me
+  scope it:
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ Adding fixed arrays. Plan: add FixedArray type kind + BuildArrayElemAddr op to
+   MSIR, then wire up SubscriptExpr and MSIRType.Translate.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now I'll add a fixed-array type and elem-addr op to MSIR.
+
+⏺ Update(m3-sys/msir/src/MSIR.i3)
+  ⎿  Added 1 line
+      23    Object,                             (* class type with super,
+           methods, descriptor *)
+      24    OpenArray,                          (* fat pointer: { data, s
+          izes... } *)
+      25    HeapArray,                          (* REF ARRAY OF T: heap d
+          ope-prefix struct *)
+      26 +  FixedArray,                         (* ARRAY [lo..hi] OF T: c
+         +ontiguous storage *)                                           
+      27    Subrange,                           (* parent type T constrai
+          ned to [lo..hi] *)
+      28    Set,                                (* set with element type 
+          and domain [lo..hi] *)
+      29    ProcType
+
+⏺ Update(m3-sys/msir/src/MSIR.i3)
+  ⎿  Added 1 line
+      49                    descriptorSym: TEXT): T;
+      50  PROCEDURE TOpenArray(rank: INTEGER;  elt: T): T;
+      51  PROCEDURE THeapArray(rank: INTEGER;  elt: T): T;
+      52 +PROCEDURE TFixedArray(len: LONGINT;  elt: T): T;               
+      53  PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T;
+      54  PROCEDURE TSet(elt: T;  lo, hi: LONGINT): T;
+      55  
+
+⏺ Update(m3-sys/msir/src/MSIR.i3)
+  ⎿  Added 3 lines
+      77  PROCEDURE HeapArrayRank(t: T): INTEGER;
+      78  PROCEDURE HeapArrayElt(t: T): T;
+      79  
+      80 +PROCEDURE FixedArrayLen(t: T): LONGINT;                        
+      81 +PROCEDURE FixedArrayElt(t: T): T;                              
+      82 +                                                               
+      83  PROCEDURE SubrangeParent(t: T): T;
+      84  PROCEDURE SubrangeLo(t: T): LONGINT;
+      85  PROCEDURE SubrangeHi(t: T): LONGINT;
+
+⏺ Update(m3-sys/msir/src/MSIR.i3)  ⎿  Added 2 lines
+      244    (* open arrays *)
+      245    OpenArraySize, OpenArrayElemAddr, Subarray,
+      246    OpenArrayNew, OpenArrayDeref,
+      247 +  (* fixed arrays *)                                          
+      248 +  ArrayElemAddr,                                              
+      249    (* runtime checks *)
+      250    SubscriptCheck, NilCheck, RangeCheck,
+      251    (* representation conversion *)
+
+⏺ Update(m3-sys/msir/src/MSIR.i3)
+  ⎿  Added 6 lines
+      311                                               (* obj: gc_ref Ob
+           ject | gc_ref Struct |
+      312                                                  ptr Struct; re
+           sult: ptr fieldType *)
+      313  
+      314 +(* `array.elem_addr arr, idx` — pointer arithmetic on a fixed 
+          +array.                                                        
+      315 +   arr must be ptr FixedArray (i.e. an alloca or by-ref).     
+      316 +   Result: ptr (element type). *)                             
+      317 +PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;           
+      318 +                             arr: Value;  idx: Value): Value; 
+      319 +                                                              
+      320  PROCEDURE BuildNew(b: Block;  name: TEXT;  type: T): Value;
+      321                                               (* type must be O
+           bject; result: gc_ref type *)
+      322  
+
+⏺ Now MSIR.m3 — add type, builder, and accessors:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/msir/src/MSIR.m3)
+  ⎿  Added 1 line
+      18    objMethods:       REF ARRAY OF Method := NIL;
+      19    objDescriptorSym: TEXT                := NIL;
+      20    openArrayRank:    INTEGER             := 0;    (* OpenArray *
+          )
+      21 +  arrayLen:         LONGINT              := 0L;   (* FixedArray
+         + length *)                                                     
+      22    subrLo, subrHi:   LONGINT              := 0L;   (* Subrange /
+           Set bounds *)
+      23  END;
+      24  
+
+⏺ Update(m3-sys/msir/src/MSIR.m3)
+  ⎿  Added 9 lines
+      148      RETURN t;
+      149    END THeapArray;
+      150  
+      151 +PROCEDURE TFixedArray(len: LONGINT;  elt: T): T =             
+      152 +  VAR t := NewType(TypeKind.FixedArray);                      
+      153 +  BEGIN                                                       
+      154 +    <* ASSERT len >= 0L, "TFixedArray: length must be >= 0" *>
+      155 +    t.arrayLen := len;                                        
+      156 +    t.elt      := elt;                                        
+      157 +    RETURN t;                                                 
+      158 +  END TFixedArray;                                            
+      159 +                                                              
+      160  PROCEDURE TSubrange(parent: T;  lo, hi: LONGINT): T =
+      161    VAR t := NewType(TypeKind.Subrange);
+      162    BEGIN
+
+⏺ Update(m3-sys/msir/src/MSIR.m3)
+  ⎿  Added 3 lines
+      192      | TypeKind.OpenArray, TypeKind.HeapArray =>
+      193          IF a.openArrayRank # b.openArrayRank THEN RETURN FALSE
+            END;
+      194          RETURN Equal(a.elt, b.elt);
+      195 +    | TypeKind.FixedArray =>                                  
+      196 +        IF a.arrayLen # b.arrayLen THEN RETURN FALSE END;     
+      197 +        RETURN Equal(a.elt, b.elt);                           
+      198      | TypeKind.Subrange, TypeKind.Set =>
+      199          IF a.subrLo # b.subrLo OR a.subrHi # b.subrHi THEN RET
+           URN FALSE END;
+      200          RETURN Equal(a.elt, b.elt);
+
+⏺ Now find HeapArrayRank/Elt accessors and add FixedArray ones:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(m3-sys/msir/src/MSIR.m3)
+  ⎿  Added 2 lines
+      256  PROCEDURE OpenArrayElt(t: T): T        = BEGIN RETURN t.elt   
+                   END OpenArrayElt;
+      257  PROCEDURE HeapArrayRank(t: T): INTEGER = BEGIN RETURN t.openAr
+           rayRank END HeapArrayRank;
+      258  PROCEDURE HeapArrayElt(t: T): T        = BEGIN RETURN t.elt   
+                   END HeapArrayElt;
+      259 +PROCEDURE FixedArrayLen(t: T): LONGINT = BEGIN RETURN t.arrayL
+          +en      END FixedArrayLen;                                    
+      260 +PROCEDURE FixedArrayElt(t: T): T       = BEGIN RETURN t.elt   
+          +        END FixedArrayElt;                                    
+      261  
+      262  PROCEDURE SubrangeParent(t: T): T   = BEGIN RETURN t.elt    EN
+           D SubrangeParent;
+      263  PROCEDURE SubrangeLo(t: T): LONGINT = BEGIN RETURN t.subrLo EN
+           D SubrangeLo;
+
+⏺ Now the builder. Look at how BuildFieldAddr is structured to match the style:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/msir/src/MSIR.m3)
+  ⎿  Added 22 lines
+       976      RETURN i.result;
+       977    END BuildFieldAddr;
+       978  
+       979 +PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;          
+       980 +                             arr: Value;  idx: Value): Value 
+           +=                                                            
+       981 +  VAR                                                        
+       982 +    i := NEW(Insn);                                          
+       983 +    ops := NEW(REF ARRAY OF Value, 2);                       
+       984 +    arrT := arr.type;                                        
+       985 +    eltT: T := NIL;                                          
+       986 +  BEGIN                                                      
+       987 +    <* ASSERT arrT # NIL, "BuildArrayElemAddr: arr has no typ
+           +e" *>                                                        
+       988 +    <* ASSERT Kind(arrT) = TypeKind.Ptr                      
+       989 +       AND Kind(arrT.elt) = TypeKind.FixedArray,             
+       990 +       "BuildArrayElemAddr: arr must be ptr FixedArray" *>   
+       991 +    eltT := arrT.elt.elt;                                    
+       992 +    i.op := Op.ArrayElemAddr;                                
+       993 +    ops[0] := arr;                                           
+       994 +    ops[1] := idx;                                           
+       995 +    i.operands := ops;                                       
+       996 +    i.result := makeResult(b, TPtr(eltT), name, i);          
+       997 +    addInsn(b, i);                                           
+       998 +    RETURN i.result;                                         
+       999 +  END BuildArrayElemAddr;                                    
+      1000 +                                                             
+      1001  PROCEDURE BuildNew(b: Block;  name: TEXT;  type: T): Value =
+      1002    VAR i := NEW(Insn);
+      1003    BEGIN
+
+⏺ Now the printer. Let me check it.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/msir/src/MSIRPrinter.m3)
+  ⎿  Added 5 lines
+      46          Wr.PutText(wr, Fmt.Int(MSIR.HeapArrayRank(t)));
+      47          Wr.PutText(wr, "> ");
+      48          Type(wr, MSIR.HeapArrayElt(t));
+      49 +    | MSIR.TypeKind.FixedArray =>                              
+      50 +        Wr.PutText(wr, "[");                                   
+      51 +        Wr.PutText(wr, Fmt.LongInt(MSIR.FixedArrayLen(t)));    
+      52 +        Wr.PutText(wr, "]");                                   
+      53 +        Type(wr, MSIR.FixedArrayElt(t));                       
+      54      | MSIR.TypeKind.Subrange =>
+      55          Wr.PutText(wr, "subrange<");
+      56          Type(wr, MSIR.SubrangeParent(t));
+
+⏺ Now the op text and op printing:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/msir/src/MSIRPrinter.m3)
+  ⎿  Added 1 line
+      161      | MSIR.Op.SetMember          => RETURN "set_member";
+      162      | MSIR.Op.OpenArrayNew       => RETURN "openarray.new";
+      163      | MSIR.Op.OpenArrayDeref     => RETURN "openarray.deref";
+      164 +    | MSIR.Op.ArrayElemAddr      => RETURN "array.elem_addr"; 
+      165      END;
+      166    END OpText;
+      167  
+
+⏺ Now find where FieldAddr is printed (because ArrayElemAddr will look similar):
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/msir/src/MSIRPrinter.m3)
+  ⎿  Added 5 lines
+      259          NameRef(wr, MSIR.InsnOperand(i, 0));
+      260          Wr.PutText(wr, ", .");
+      261          Wr.PutText(wr, MSIR.InsnSelector(i));
+      262 +    | MSIR.Op.ArrayElemAddr =>                                
+      263 +        Wr.PutText(wr, " ");                                  
+      264 +        NameRef(wr, MSIR.InsnOperand(i, 0));                  
+      265 +        Wr.PutText(wr, ", ");                                 
+      266 +        NameRef(wr, MSIR.InsnOperand(i, 1));                  
+      267      | MSIR.Op.New =>
+      268          Wr.PutText(wr, " ");
+      269          Type(wr, MSIR.InsnTargetType(i));
+
+⏺ Let me build msir, then handle the m3front side.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/msir && cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     new source -> compiling MSIR.i3
+     … +6 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -build 2>&1 | tail -3 && cm3 -ship 2>&1 | tail -2)
+  ⎿  --- building in ARM64_DARWIN ---
+
+       MSIR.i3           MSIR.m3           MSIRPrinter.i3    MSIRPrinter.m3
+     … +2 lines (ctrl+o to expand)
+
+  Searched for 3 patterns (ctrl+o to expand)
+⏺ Bash(cm3 -build 2>&1 | grep -E "warning|error" | head -10)
+  ⎿  (No output)
+
+⏺ Bash(cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+  Searched for 4 patterns, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRType.m3)
+  ⎿  Added 1 line, removed 1 line
+      2  
+      3  IMPORT MSIR, Type, Int, LInt, Bool, Target;
+      4  IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
+      5 -IMPORT RecordType, Field, M3ID, Value, Text, RefType;           
+      5 +IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType,
+        + TInt;                                                          
+      6  
+      7  PROCEDURE Translate(t: Type.T): MSIR.T =
+      8    VAR base: Type.T;  info: Type.Info;  nameId: M3ID.T;  typeName
+         : TEXT;
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRType.m3)
+  ⎿  Added 3 lines
+      70      | Type.Class.Record =>
+      71          RETURN TranslateRecord(base, typeName);
+      72  
+      73 +    | Type.Class.Array =>                                      
+      74 +        RETURN TranslateFixedArray(base);                      
+      75 +                                                               
+      76      | Type.Class.Ref =>
+      77          VAR target: Type.T;  targetMsir: MSIR.T := MSIR.TVoid()
+          ;
+      78          BEGIN
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRType.m3)
+  ⎿  Added 14 lines
+      136      END;
+      137    END TranslateRecord;
+      138  
+      139 +PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =            
+      140 +  VAR                                                         
+      141 +    indexT, eltT: Type.T;                                     
+      142 +    nElts: INTEGER;                                           
+      143 +    eltMsir: MSIR.T;                                          
+      144 +  BEGIN                                                       
+      145 +    IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL EN
+          +D;                                                            
+      146 +    IF indexT = NIL THEN RETURN NIL END;  (* open array — hand
+          +led elsewhere *)                                              
+      147 +    IF NOT TInt.ToInt(Type.Number(indexT), nElts) THEN RETURN 
+          +NIL END;                                                      
+      148 +    eltMsir := Translate(eltT);                               
+      149 +    IF eltMsir = NIL THEN RETURN NIL END;                     
+      150 +    RETURN MSIR.TFixedArray(VAL(nElts, LONGINT), eltMsir);    
+      151 +  END TranslateFixedArray;                                    
+      152 +                                                              
+      153  PROCEDURE TranslateResult(t: Type.T): MSIR.T =
+      154    BEGIN
+      155      IF t = NIL THEN RETURN MSIR.TVoid() END;
+
+⏺ Now SubscriptExpr MSIR overrides:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/exprs/SubscriptExpr.m3)
+  ⎿  Added 1 line
+      12  IMPORT ArrayExpr, OpenArrayType, Host, EnumExpr;
+      13  IMPORT CheckExpr, SubtractExpr, IntegerExpr, ErrType;
+      14  IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
+      15 +IMPORT MSIR, MSIRBuilder, MSIRType;                            
+      16  
+      17  TYPE
+      18    P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
+
+⏺ Update(m3-sys/m3front/src/exprs/SubscriptExpr.m3)
+  ⎿  Added 2 lines
+      50          genLiteral   := ExprRep.NoLiteral;
+      51          note_write   := NoteWrites;
+      52          exprAlign    := SubscriptExprAlign;
+      53 +        compileMSIR       := CompileMSIR;                      
+      54 +        compileLValueMSIR := LValueMSIR;                       
+      55        END;
+      56  
+      57  (* EXPORTED: *) 
+
+⏺ Update(m3-sys/m3front/src/exprs/SubscriptExpr.m3)
+  ⎿  Added 30 lines
+      506      Expr.NoteWrite (p.a);
+      507    END NoteWrites;
+      508  
+      509 +(* MSIR support: fixed (non-open) 1-D subscript only for v0. T
+          +he index is                                                   
+      510 +   already biased to 0..N-1 in p.biased_b. *)                 
+      511 +PROCEDURE LValueMSIR (p: P): MSIR.Value =                     
+      512 +  VAR arrAddr, idxVal: MSIR.Value;                            
+      513 +  BEGIN                                                       
+      514 +    IF p.lhsOpenDepth # 0 THEN                                
+      515 +      MSIRBuilder.Abandon ("open-array subscript not yet suppo
+          +rted in MSIR");                                               
+      516 +      RETURN NIL;                                             
+      517 +    END;                                                      
+      518 +    arrAddr := Expr.LValueMSIR (p.a);                         
+      519 +    IF arrAddr = NIL THEN RETURN NIL END;                     
+      520 +    idxVal := Expr.CompileMSIR (p.biased_b);                  
+      521 +    IF idxVal = NIL THEN RETURN NIL END;                      
+      522 +    RETURN MSIR.BuildArrayElemAddr (                          
+      523 +             MSIRBuilder.CurrentBlock (), "", arrAddr, idxVal)
+          +;                                                             
+      524 +  END LValueMSIR;                                             
+      525 +                                                              
+      526 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      527 +  VAR addr: MSIR.Value;  ty: MSIR.T;                          
+      528 +  BEGIN                                                       
+      529 +    addr := LValueMSIR (p);                                   
+      530 +    IF addr = NIL THEN RETURN NIL END;                        
+      531 +    ty := MSIRType.Translate (p.type);                        
+      532 +    IF ty = NIL THEN                                          
+      533 +      MSIRBuilder.Abandon ("unsupported subscript element type
+          +");                                                           
+      534 +      RETURN NIL;                                             
+      535 +    END;                                                      
+      536 +    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", ty
+          +, addr);                                                      
+      537 +  END CompileMSIR;                                            
+      538 +                                                              
+      539  BEGIN
+      540  END SubscriptExpr.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     ignoring ../src/m3overrides
+     … +5 lines (ctrl+o to expand)
+
+⏺ Bash(cm3 -ship 2>&1 | tail -2 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | tail -3 && cp
+      /Users/hosking/git/cm3/m3-sys/cm3/ARM64_DARWIN/cm3 ~/cm3/bin…)
+  ⎿    Tipe.m3           Variable.i3       Variable.m3
+       PersistentRevelation.i3  PersistentRevelation.m3
+     ignoring ../src/m3overrides
+     … +4 lines (ctrl+o to expand)
+
+⏺ Now add an array test:
+
+⏺ Update(/tmp/msir-smoke/Main.m3)
+  ⎿  Added 29 lines
+      118      p^ := p^ + 1;
+      119    END BumpInt;
+      120  
+      121 +TYPE Vec5 = ARRAY [0..4] OF INTEGER;                          
+      122 +                                                              
+      123 +PROCEDURE FillVec (VAR v: Vec5) =                             
+      124 +  VAR i: INTEGER;                                             
+      125 +  BEGIN                                                       
+      126 +    i := 0;                                                   
+      127 +    WHILE i <= 4 DO                                           
+      128 +      v[i] := i * i;                                          
+      129 +      i := i + 1;                                             
+      130 +    END;                                                      
+      131 +  END FillVec;                                                
+      132 +                                                              
+      133 +PROCEDURE SumVec (READONLY v: Vec5): INTEGER =                
+      134 +  VAR i, s: INTEGER;                                          
+      135 +  BEGIN                                                       
+      136 +    s := 0;                                                   
+      137 +    i := 0;                                                   
+      138 +    WHILE i <= 4 DO                                           
+      139 +      s := s + v[i];                                          
+      140 +      i := i + 1;                                             
+      141 +    END;                                                      
+      142 +    RETURN s;                                                 
+      143 +  END SumVec;                                                 
+      144 +                                                              
+      145 +PROCEDURE GetSecond (READONLY v: Vec5): INTEGER =             
+      146 +  BEGIN                                                       
+      147 +    RETURN v[1];                                              
+      148 +  END GetSecond;                                              
+      149 +                                                              
+      150  BEGIN
+      151    IO.Put ("Add(2,3) = " & Fmt.Int(Add(2,3)) & "\n");
+      152    IO.Put ("Factorial(5) = " & Fmt.Int(Factorial(5)) & "\n");
+
+⏺ Update(/tmp/msir-smoke/Main.m3)
+  ⎿  Added 7 lines
+      171      q := MakePoint(5, 7);
+      172      IO.Put ("ReadOnlySum({5,7}) = " & Fmt.Int(ReadOnlySum(q)) 
+           & "\n");
+      173    END;
+      174 +                                                              
+      175 +  VAR v: Vec5;                                                
+      176 +  BEGIN                                                       
+      177 +    FillVec(v);                                               
+      178 +    IO.Put ("SumVec(squares 0..4) = " & Fmt.Int(SumVec(v)) & "
+          +\n");                                                         
+      179 +    IO.Put ("GetSecond = " & Fmt.Int(GetSecond(v)) & "\n");   
+      180 +  END;                                                        
+      181  END Main.
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -1 && rm -f
+      /tmp/msir-debug.txt && cm3 '@M3m3front-msir' -build 2>&1 | tail -5 &&
+      ./ARM64_DARWIN/smoke 2>&1 | tail…)
+  ⎿  new source -> compiling Main.m3
+     "../Main.m3", line 106: warning: not used (LoadInt)
+     "../Main.m3", line 111: warning: not used (StoreInt)
+     … +3 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 '@M3m3front-msir' -build 2>&1 | tail -30)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     new source -> compiling Main.m3
+     … +4 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+⏺ Update(m3-sys/msir/src/MSIR.m3)
+  ⎿  Added 13 lines, removed 5 lines
+       982      i := NEW(Insn);
+       983      ops := NEW(REF ARRAY OF Value, 2);
+       984      arrT := arr.type;
+       985 -    eltT: T := NIL;                                          
+       985 +    arrayT: T := NIL;                                        
+       986 +    eltT:   T := NIL;                                        
+       987    BEGIN
+       988      <* ASSERT arrT # NIL, "BuildArrayElemAddr: arr has no typ
+            e" *>
+       988 -    <* ASSERT Kind(arrT) = TypeKind.Ptr                      
+       989 -       AND Kind(arrT.elt) = TypeKind.FixedArray,             
+       990 -       "BuildArrayElemAddr: arr must be ptr FixedArray" *>   
+       991 -    eltT := arrT.elt.elt;                                    
+       989 +    (* Accept either `ptr FixedArray` (alloca'd local) or a F
+           +ixedArray                                                    
+       990 +       value (e.g., VAR-mode formal whose value already repre
+           +sents the                                                    
+       991 +       address). *)                                          
+       992 +    IF Kind(arrT) = TypeKind.Ptr THEN                        
+       993 +      arrayT := arrT.elt;                                    
+       994 +    ELSE                                                     
+       995 +      arrayT := arrT;                                        
+       996 +    END;                                                     
+       997 +    <* ASSERT Kind(arrayT) = TypeKind.FixedArray,            
+       998 +       "BuildArrayElemAddr: arr must be FixedArray or ptr Fix
+           +edArray" *>                                                  
+       999 +    eltT := arrayT.elt;                                      
+      1000      i.op := Op.ArrayElemAddr;
+      1001      ops[0] := arr;
+      1002      ops[1] := idx;
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/msir && cm3 -build 2>&1 | tail -3 && cm3
+       -ship 2>&1 | tail -1 && cd /Users/hosking/git/cm3/m3-sys/m3front && cm3
+      -build 2>&1 |…)
+  ⎿  "../src/MSIR.m3", line 598: warning: unreachable statement
+     1 warning encountered
+     new "MSIR_m.o" -> archiving libmsir.a
+     … +10 lines (ctrl+o to expand)
+
+⏺ Bash(cd /tmp/msir-smoke && cm3 -clean 2>&1 | tail -1 && cm3 '@M3m3front-msir'
+      -build 2>&1 | tail -10)
+  ⎿  --- building in ARM64_DARWIN ---
+
+     new source -> compiling Main.m3
+     … +5 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(cd /tmp/msir-smoke && ./ARM64_DARWIN/smoke 2>&1 | tail -7 && echo "---"
+      && awk '/^proc FillVec|^proc SumVec|^proc GetSecond/{p=1} p{print} /^$/ &&
+       p{p=0; print…)
+  ⎿  PointSum({3,4}) = 7
+     ColorToInt(Blue) = 2
+     after Swap(11,22): x=22 y=11
+     … +13 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/exprs/CheckExpr.m3)
+  ⎿  Added 1 line
+      10  
+      11  IMPORT M3, CG, Expr, ExprRep, Type, IntegerExpr, EnumExpr, Host
+          ;
+      12  IMPORT Target, TInt, Error, LInt;
+      13 +IMPORT MSIR;                                                   
+      14  
+      15  TYPE
+      16    Class = { cLOWER, cUPPER, cBOTH };
+
+⏺ Update(m3-sys/m3front/src/exprs/CheckExpr.m3)
+  ⎿  Added 2 lines, removed 1 line
+      49          prepLiteral  := ExprRep.NoPrepLiteral;
+      50          genLiteral   := ExprRep.NoLiteral;
+      51          note_write   := ExprRep.NotWritable;
+      52 -        exprAlign    := CheckExprAlign;                        
+      52 +        exprAlign    := CheckExprAlign;                        
+      53 +        compileMSIR  := CompileMSIR;                           
+      54        END;
+      55  
+      56  PROCEDURE New (a: Expr.T;  READONLY min, max: Target.Int;
+
+⏺ Update(m3-sys/m3front/src/exprs/CheckExpr.m3)
+  ⎿  Added 7 lines
+      201      END;
+      202    END Bounder;
+      203  
+      204 +(* MSIR: forward through the range-check wrapper. The runtime 
+          +check                                                         
+      205 +   itself (range_check op) can be added in a later refinement.
+          + *)                                                           
+      206 +PROCEDURE CompileMSIR (p: P): MSIR.Value =                    
+      207 +  BEGIN                                                       
+      208 +    RETURN Expr.CompileMSIR (p.expr);                         
+      209 +  END CompileMSIR;                                            
+      210 +                                                              
+      211  BEGIN
+      212  END CheckExpr.
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -3 &&
+      cm3 -ship 2>&1 | tail -1 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | t…)
+  ⎿  new source -> compiling CheckExpr.m3
+     new "CheckExpr_m.o" -> archiving libm3front.a
+       PersistentRevelation.i3  PersistentRevelation.m3
+     … +19 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ All three array procs now emit. Let me inspect them:
+
+⏺ Bash(awk '/^proc FillVec|^proc SumVec/{p=1} p{print} /^$/ && p{p=0; print
+      "----"}' /tmp/msir-smoke/ARM64_DARWIN/Main.msir; echo "==="; cd
+      /tmp/msir-smoke && ./ARM64_…)
+  ⎿  proc FillVec(var v: [5]i64) -> void
+     entry:
+       %i = alloca i64
+     … +40 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ I notice all void procs are missing a trailing ret void. Let me find the body
+  translator and add an implicit terminator at the end.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(m3-sys/m3front/src/msir/MSIRBuilder.m3)
+  ⎿  Added 14 lines
+      232    END AddLocal;
+      233  
+      234  PROCEDURE EndProc() =
+      235 +  VAR resultT: MSIR.T;                                        
+      236    BEGIN
+      237      IF curProc = NIL THEN RETURN END;
+      238 +    IF NOT abandoned                                          
+      239 +       AND curBlock # NIL                                     
+      240 +       AND NOT MSIR.BlockIsTerminated(curBlock) THEN          
+      241 +      (* Implicit fall-through at end of body: emit `ret` for 
+          +void procs;                                                   
+      242 +         emit `unreachable` for value-returning procs (the sou
+          +rce omits a                                                   
+      243 +         return path, which is a runtime error in M3 if reache
+          +d). *)                                                        
+      244 +      resultT := MSIR.ProcResultType(curProc);                
+      245 +      IF resultT # NIL AND MSIR.Kind(resultT) = MSIR.TypeKind.
+          +Void THEN                                                     
+      246 +        MSIR.BuildRet(curBlock, NIL);                         
+      247 +      ELSE                                                    
+      248 +        MSIR.BuildUnreachable(curBlock);                      
+      249 +      END;                                                    
+      250 +    END;                                                      
+      251      IF NOT abandoned THEN
+      252        MSIREmit.AddProc(curProc);
+      253      END;
+
+⏺ Bash(cd /Users/hosking/git/cm3/m3-sys/m3front && cm3 -build 2>&1 | tail -3 &&
+      cm3 -ship 2>&1 | tail -1 && cd /Users/hosking/git/cm3/m3-sys/cm3 && cm3
+      -build 2>&1 | t…)
+  ⎿  new source -> compiling MSIRBuilder.m3
+     new "MSIRBuilder_m.o" -> archiving libm3front.a
+       PersistentRevelation.i3  PersistentRevelation.m3
+     … +36 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ Bash(cd /tmp/msir-smoke && ./ARM64_DARWIN/smoke 2>&1 | tail -3)
+  ⎿  ReadOnlySum({5,7}) = 12
+     SumVec(squares 0..4) = 30
+     GetSecond = 1
+  ⎿  Shell cwd was reset to /Users/hosking/git/cm3
+
+⏺ All passing. Summary of new additions this round:
+
+  1. MSIR layer: new FixedArray type kind, TFixedArray(len, elt) constructor,
+  FixedArrayLen/Elt accessors, Op.ArrayElemAddr, BuildArrayElemAddr (accepts
+  both ptr FixedArray and a bare FixedArray value)
+  2. Printer: [N]T for the type, array.elem_addr arr, idx for the op
+  3. m3front: MSIRType.TranslateFixedArray, SubscriptExpr.{CompileMSIR, 
+  LValueMSIR} for 1-D fixed-array subscripts, CheckExpr.CompileMSIR (forward
+  through range-check wrapper)
+  4. Bonus: MSIRBuilder.EndProc now emits implicit ret (for void) or unreachable
+   (for value procs) when control falls off the end without a terminator
+
+  Want to commit this large batch (since the last commit) or keep going?
+  Reasonable next steps: rangechk emitting range_check op, multi-dim arrays,
+  NIL/REF allocation, more expression types (DIV/MOD).
+
+✻ Cooked for 8m 20s
+
+❯ Commit                                                                        
+
+⏺ Bash(git status)
+  ⎿  On branch msir
+     Changes not staged for commit:
+       (use "git add <file>..." to update what will be committed)
+     … +28 lines (ctrl+o to expand)
+⏺ Bash(git diff --stat m3-sys/)
+  ⎿   m3-sys/m3front/src/exprs/CheckExpr.m3     |  11 ++-
+      m3-sys/m3front/src/exprs/DerefExpr.m3     |  22 +++++
+      m3-sys/m3front/src/exprs/Expr.i3          |   2 +
+     … +14 lines (ctrl+o to expand)
+
+⏺ Bash(git log --oneline -10)
+  ⎿  2fc09108e6 docs: add CLAUDE.md with MSIR build and dev notes
+     2d1f5072a9 msir: document why nest+trampolines are ruled out for neste
+     d procs
+     … +13 lines (ctrl+o to expand)
+
+⏺ Bash(git diff m3-sys/m3front/src/exprs/QualifyExpr.m3
+      m3-sys/m3front/src/stmts/AssignStmt.m3
+      m3-sys/m3front/src/exprs/NamedExpr.m3 m3-sys/m3front/src/exprs/Expr.i3 m…)
+  ⎿  diff --git a/m3-sys/m3front/src/exprs/Expr.i3 b/m3-sys/m3front/src/exp
+     rs/Expr.i3
+     index 737c306d09..cde0e4477c 100644
+     … +100 lines (ctrl+o to expand)
+
+⏺ Bash(git diff m3-sys/m3front/src/msir/MSIRType.i3
+      m3-sys/m3front/src/exprs/ExprRep.i3)
+  ⎿  diff --git a/m3-sys/m3front/src/exprs/ExprRep.i3 b/m3-sys/m3front/src/
+     exprs/ExprRep.i3
+     index ea35bc291b..73e745a476 100644
+     … +29 lines (ctrl+o to expand)
+
+⏺ Committing the MSIR-related changes:
+
+⏺ Bash(git add m3-sys/m3front/src/exprs/CheckExpr.m3
+      m3-sys/m3front/src/exprs/DerefExpr.m3 m3-sys/m3front/src/exprs/Expr.i3
+      m3-sys/m3front/src/exprs/Expr.m3 m3-sys/m3f…)
+  ⎿  [msir 95931dc7b7] msir: records, refs, VAR/READONLY formals, fixed arr
+     ays, deref
+      19 files changed, 522 insertions(+), 67 deletions(-)
+     … +18 lines (ctrl+o to expand)
+
+⏺ Committed as 95931dc7b7. 19 files, +522/-67. Untracked files left alone
+  (pre-existing scratch/log files).
+
+✻ Baked for 1m 10s
+
+❯ What's next?                                                                  
+
+⏺ Plenty of common-case gaps still left. Top candidates:
+
+  1. Builtins (ORD, INC, DEC, NEW, ABS, MAX, MIN) — ColorToInt is the one proc
+  still abandoned in our smoke test (ORD(c)); NEW would unblock heap-allocated
+  record/object code.
+  2. Sets — needed for any code using BITS FOR / IN / set unions.
+  3. CASE statements — common control flow not yet wired up.
+  4. NIL constants + pointer comparisons — required for anything that checks p =
+   NIL.
+  5. More arithmetic — DIV, MOD, bitwise, logical short-circuit.
+
+  I'd suggest (1) builtins, starting with ORD (trivial — same MSIR as the
+  underlying enum/char value) and NEW for refs (wires up BuildNew). That's
+  probably the most "real code" coverage per hour.
+
+  Want me to start there?
+
+✻ Cogitated for 17s

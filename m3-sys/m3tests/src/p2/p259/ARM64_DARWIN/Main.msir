@@ -1,0 +1,557 @@
+module Main
+
+global Main__top_of_stack : ptr void
+
+proc Main__NL() -> void
+entry:
+  call IO__Put("\0a", nil)
+  ret
+
+proc Main__GetStack() -> ptr void
+entry:
+  %_result.slot = alloca ptr void
+  %b.slot = alloca ptr void
+  store nil, %b.slot
+  store nil, %_result.slot
+  store %b.slot, %b.slot
+  %t1 = load ptr void, %b.slot
+  ret %t1
+
+proc Main__GetStackHeight() -> i64
+entry:
+  %_result.slot = alloca i64
+  %b.slot = alloca ptr void
+  store nil, %b.slot
+  %t1 = call Main__GetStack() -> ptr void
+  store %t1, %b.slot
+  %t2 = load ptr void, %b.slot
+  %t3 = load ptr void, @Main_M3_info+104
+  %t4 = icmp sgt %t2, %t3
+  cond_br %t4, if.then.1, if.merge.2
+if.then.1:
+  %t5 = load ptr void, %b.slot
+  %t6 = load ptr void, @Main_M3_info+104
+  %t7 = convert %t5 to i64
+  %t8 = convert %t6 to i64
+  %t9 = isub %t7, %t8
+  ret %t9
+if.merge.2:
+  %t10 = load ptr void, @Main_M3_info+104
+  %t11 = load ptr void, %b.slot
+  %t12 = convert %t10 to i64
+  %t13 = convert %t11 to i64
+  %t14 = isub %t12, %t13
+  ret %t14
+
+proc Main__PrintStackHeight() -> void
+entry:
+  call IO__Put("stack_height:", nil)
+  %t1 = call Main__GetStackHeight() -> i64
+  call IO__PutInt(%t1, nil)
+  call IO__Put(" ", nil)
+  call Main__NL()
+  ret
+
+proc Main__Try1__Try1_Try2() -> void
+entry:
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try1_Try2", nil)
+  call Main__NL()
+  store i32 0, %t1
+  store i32 0, %t3
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t14 = landingpad catch _ZTI6_M3Exc
+  %t15 = extractvalue %t14, 0
+  %t16 = call __cxa_get_exception_ptr(%t15) -> ptr void
+  %t17 = load ptr void, %t16
+  %t18 = load ptr void, %t17
+  %t19 = load i64, %t18
+  store %t17, %t2
+  store i32 1, %t1
+  %t20 = call __cxa_begin_catch(%t15) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try1_Try2", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t21 = load i32, %t1
+  %t22 = icmp eq %t21, 1
+  cond_br %t22, else.endcatch.10, else.skip.endcatch.11
+lpad.4:
+  %t5 = landingpad catch _ZTI6_M3Exc
+  %t6 = extractvalue %t5, 0
+  %t7 = call __cxa_get_exception_ptr(%t6) -> ptr void
+  %t8 = load ptr void, %t7
+  %t9 = load ptr void, %t8
+  %t10 = load i64, %t9
+  store %t8, %t4
+  store i32 1, %t3
+  %t11 = call __cxa_begin_catch(%t6) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  br try.merge.2
+else.dispatch.6:
+  %t12 = load i32, %t3
+  %t13 = icmp eq %t12, 1
+  cond_br %t13, else.endcatch.8, else.skip.endcatch.9
+invoke.cont.7:
+  br try.merge.5
+else.endcatch.8:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.9:
+  br try.merge.5
+else.endcatch.10:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.11:
+  br try.merge.2
+
+proc Main__Try1() -> void
+entry:
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try1", nil)
+  call Main__NL()
+  call Main__Try1__Try1_Try2()
+  store i32 0, %t1
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t3 = landingpad catch _ZTI6_M3Exc
+  %t4 = extractvalue %t3, 0
+  %t5 = call __cxa_get_exception_ptr(%t4) -> ptr void
+  %t6 = load ptr void, %t5
+  %t7 = load ptr void, %t6
+  %t8 = load i64, %t7
+  store %t6, %t2
+  store i32 1, %t1
+  %t9 = call __cxa_begin_catch(%t4) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try1", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t10 = load i32, %t1
+  %t11 = icmp eq %t10, 1
+  cond_br %t11, else.endcatch.5, else.skip.endcatch.6
+invoke.cont.4:
+  br try.merge.2
+else.endcatch.5:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.6:
+  br try.merge.2
+
+proc Main__Try2__Try2_Try2() -> void
+entry:
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try2_Try2", nil)
+  call Main__NL()
+  store i32 0, %t1
+  store i32 0, %t3
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t14 = landingpad catch _ZTI6_M3Exc
+  %t15 = extractvalue %t14, 0
+  %t16 = call __cxa_get_exception_ptr(%t15) -> ptr void
+  %t17 = load ptr void, %t16
+  %t18 = load ptr void, %t17
+  %t19 = load i64, %t18
+  store %t17, %t2
+  store i32 1, %t1
+  %t20 = call __cxa_begin_catch(%t15) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try2_Try2", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t21 = load i32, %t1
+  %t22 = icmp eq %t21, 1
+  cond_br %t22, else.endcatch.10, else.skip.endcatch.11
+lpad.4:
+  %t5 = landingpad catch _ZTI6_M3Exc
+  %t6 = extractvalue %t5, 0
+  %t7 = call __cxa_get_exception_ptr(%t6) -> ptr void
+  %t8 = load ptr void, %t7
+  %t9 = load ptr void, %t8
+  %t10 = load i64, %t9
+  store %t8, %t4
+  store i32 1, %t3
+  %t11 = call __cxa_begin_catch(%t6) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  br try.merge.2
+else.dispatch.6:
+  %t12 = load i32, %t3
+  %t13 = icmp eq %t12, 1
+  cond_br %t13, else.endcatch.8, else.skip.endcatch.9
+invoke.cont.7:
+  br try.merge.5
+else.endcatch.8:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.9:
+  br try.merge.5
+else.endcatch.10:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.11:
+  br try.merge.2
+
+proc Main__Try2() -> void
+entry:
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try2", nil)
+  call Main__NL()
+  call Main__Try2__Try2_Try2()
+  store i32 0, %t1
+  store i32 0, %t3
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t14 = landingpad catch _ZTI6_M3Exc
+  %t15 = extractvalue %t14, 0
+  %t16 = call __cxa_get_exception_ptr(%t15) -> ptr void
+  %t17 = load ptr void, %t16
+  %t18 = load ptr void, %t17
+  %t19 = load i64, %t18
+  store %t17, %t2
+  store i32 1, %t1
+  %t20 = call __cxa_begin_catch(%t15) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try2", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t21 = load i32, %t1
+  %t22 = icmp eq %t21, 1
+  cond_br %t22, else.endcatch.10, else.skip.endcatch.11
+lpad.4:
+  %t5 = landingpad catch _ZTI6_M3Exc
+  %t6 = extractvalue %t5, 0
+  %t7 = call __cxa_get_exception_ptr(%t6) -> ptr void
+  %t8 = load ptr void, %t7
+  %t9 = load ptr void, %t8
+  %t10 = load i64, %t9
+  store %t8, %t4
+  store i32 1, %t3
+  %t11 = call __cxa_begin_catch(%t6) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  br try.merge.2
+else.dispatch.6:
+  %t12 = load i32, %t3
+  %t13 = icmp eq %t12, 1
+  cond_br %t13, else.endcatch.8, else.skip.endcatch.9
+invoke.cont.7:
+  br try.merge.5
+else.endcatch.8:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.9:
+  br try.merge.5
+else.endcatch.10:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.11:
+  br try.merge.2
+
+proc Main__Try3__Try3_Try1() -> void
+entry:
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try3_Try1", nil)
+  call Main__NL()
+  store i32 0, %t1
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t3 = landingpad catch _ZTI6_M3Exc
+  %t4 = extractvalue %t3, 0
+  %t5 = call __cxa_get_exception_ptr(%t4) -> ptr void
+  %t6 = load ptr void, %t5
+  %t7 = load ptr void, %t6
+  %t8 = load i64, %t7
+  store %t6, %t2
+  store i32 1, %t1
+  %t9 = call __cxa_begin_catch(%t4) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try3_Try1", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t10 = load i32, %t1
+  %t11 = icmp eq %t10, 1
+  cond_br %t11, else.endcatch.5, else.skip.endcatch.6
+invoke.cont.4:
+  br try.merge.2
+else.endcatch.5:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.6:
+  br try.merge.2
+
+proc Main__Try3__Try3_Try2() -> void
+entry:
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try3_Try2", nil)
+  call Main__NL()
+  store i32 0, %t1
+  store i32 0, %t3
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t14 = landingpad catch _ZTI6_M3Exc
+  %t15 = extractvalue %t14, 0
+  %t16 = call __cxa_get_exception_ptr(%t15) -> ptr void
+  %t17 = load ptr void, %t16
+  %t18 = load ptr void, %t17
+  %t19 = load i64, %t18
+  store %t17, %t2
+  store i32 1, %t1
+  %t20 = call __cxa_begin_catch(%t15) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try3_Try2", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t21 = load i32, %t1
+  %t22 = icmp eq %t21, 1
+  cond_br %t22, else.endcatch.10, else.skip.endcatch.11
+lpad.4:
+  %t5 = landingpad catch _ZTI6_M3Exc
+  %t6 = extractvalue %t5, 0
+  %t7 = call __cxa_get_exception_ptr(%t6) -> ptr void
+  %t8 = load ptr void, %t7
+  %t9 = load ptr void, %t8
+  %t10 = load i64, %t9
+  store %t8, %t4
+  store i32 1, %t3
+  %t11 = call __cxa_begin_catch(%t6) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  br try.merge.2
+else.dispatch.6:
+  %t12 = load i32, %t3
+  %t13 = icmp eq %t12, 1
+  cond_br %t13, else.endcatch.8, else.skip.endcatch.9
+invoke.cont.7:
+  br try.merge.5
+else.endcatch.8:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.9:
+  br try.merge.5
+else.endcatch.10:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.11:
+  br try.merge.2
+
+proc Main__Try3__Try3_Try3() -> void
+entry:
+  %t6 = alloca ptr void
+  %t5 = alloca i32
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try3_Try3", nil)
+  call Main__NL()
+  store i32 0, %t1
+  store i32 0, %t3
+  store i32 0, %t5
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t25 = landingpad catch _ZTI6_M3Exc
+  %t26 = extractvalue %t25, 0
+  %t27 = call __cxa_get_exception_ptr(%t26) -> ptr void
+  %t28 = load ptr void, %t27
+  %t29 = load ptr void, %t28
+  %t30 = load i64, %t29
+  store %t28, %t2
+  store i32 1, %t1
+  %t31 = call __cxa_begin_catch(%t26) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try3_Try3", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t32 = load i32, %t1
+  %t33 = icmp eq %t32, 1
+  cond_br %t33, else.endcatch.15, else.skip.endcatch.16
+lpad.4:
+  %t16 = landingpad catch _ZTI6_M3Exc
+  %t17 = extractvalue %t16, 0
+  %t18 = call __cxa_get_exception_ptr(%t17) -> ptr void
+  %t19 = load ptr void, %t18
+  %t20 = load ptr void, %t19
+  %t21 = load i64, %t20
+  store %t19, %t4
+  store i32 1, %t3
+  %t22 = call __cxa_begin_catch(%t17) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  br try.merge.2
+else.dispatch.6:
+  %t23 = load i32, %t3
+  %t24 = icmp eq %t23, 1
+  cond_br %t24, else.endcatch.13, else.skip.endcatch.14
+lpad.7:
+  %t7 = landingpad catch _ZTI6_M3Exc
+  %t8 = extractvalue %t7, 0
+  %t9 = call __cxa_get_exception_ptr(%t8) -> ptr void
+  %t10 = load ptr void, %t9
+  %t11 = load ptr void, %t10
+  %t12 = load i64, %t11
+  store %t10, %t6
+  store i32 1, %t5
+  %t13 = call __cxa_begin_catch(%t8) -> ptr void
+  br else.dispatch.9
+try.merge.8:
+  br try.merge.5
+else.dispatch.9:
+  %t14 = load i32, %t5
+  %t15 = icmp eq %t14, 1
+  cond_br %t15, else.endcatch.11, else.skip.endcatch.12
+invoke.cont.10:
+  br try.merge.8
+else.endcatch.11:
+  call __cxa_end_catch()
+  br try.merge.8
+else.skip.endcatch.12:
+  br try.merge.8
+else.endcatch.13:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.14:
+  br try.merge.5
+else.endcatch.15:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.16:
+  br try.merge.2
+
+proc Main__Try3() -> void
+entry:
+  %t6 = alloca ptr void
+  %t5 = alloca i32
+  %t4 = alloca ptr void
+  %t3 = alloca i32
+  %t2 = alloca ptr void
+  %t1 = alloca i32
+  call IO__Put(">Try3", nil)
+  call Main__NL()
+  call Main__Try3__Try3_Try1()
+  call Main__Try3__Try3_Try2()
+  call Main__Try3__Try3_Try3()
+  store i32 0, %t1
+  store i32 0, %t3
+  store i32 0, %t5
+  invoke Main__PrintStackHeight()
+lpad.1:
+  %t25 = landingpad catch _ZTI6_M3Exc
+  %t26 = extractvalue %t25, 0
+  %t27 = call __cxa_get_exception_ptr(%t26) -> ptr void
+  %t28 = load ptr void, %t27
+  %t29 = load ptr void, %t28
+  %t30 = load i64, %t29
+  store %t28, %t2
+  store i32 1, %t1
+  %t31 = call __cxa_begin_catch(%t26) -> ptr void
+  br else.dispatch.3
+try.merge.2:
+  call IO__Put("<Try3", nil)
+  call Main__NL()
+  ret
+else.dispatch.3:
+  %t32 = load i32, %t1
+  %t33 = icmp eq %t32, 1
+  cond_br %t33, else.endcatch.15, else.skip.endcatch.16
+lpad.4:
+  %t16 = landingpad catch _ZTI6_M3Exc
+  %t17 = extractvalue %t16, 0
+  %t18 = call __cxa_get_exception_ptr(%t17) -> ptr void
+  %t19 = load ptr void, %t18
+  %t20 = load ptr void, %t19
+  %t21 = load i64, %t20
+  store %t19, %t4
+  store i32 1, %t3
+  %t22 = call __cxa_begin_catch(%t17) -> ptr void
+  br else.dispatch.6
+try.merge.5:
+  br try.merge.2
+else.dispatch.6:
+  %t23 = load i32, %t3
+  %t24 = icmp eq %t23, 1
+  cond_br %t24, else.endcatch.13, else.skip.endcatch.14
+lpad.7:
+  %t7 = landingpad catch _ZTI6_M3Exc
+  %t8 = extractvalue %t7, 0
+  %t9 = call __cxa_get_exception_ptr(%t8) -> ptr void
+  %t10 = load ptr void, %t9
+  %t11 = load ptr void, %t10
+  %t12 = load i64, %t11
+  store %t10, %t6
+  store i32 1, %t5
+  %t13 = call __cxa_begin_catch(%t8) -> ptr void
+  br else.dispatch.9
+try.merge.8:
+  br try.merge.5
+else.dispatch.9:
+  %t14 = load i32, %t5
+  %t15 = icmp eq %t14, 1
+  cond_br %t15, else.endcatch.11, else.skip.endcatch.12
+invoke.cont.10:
+  br try.merge.8
+else.endcatch.11:
+  call __cxa_end_catch()
+  br try.merge.8
+else.skip.endcatch.12:
+  br try.merge.8
+else.endcatch.13:
+  call __cxa_end_catch()
+  br try.merge.5
+else.skip.endcatch.14:
+  br try.merge.5
+else.endcatch.15:
+  call __cxa_end_catch()
+  br try.merge.2
+else.skip.endcatch.16:
+  br try.merge.2
+
+proc Main_M3() -> void
+entry:
+  %t1 = call Main__GetStack() -> ptr void
+  store %t1, @Main_M3_info+104
+  call Main__Try1()
+  call Main__NL()
+  call Main__Try2()
+  call Main__NL()
+  call Main__Try3()
+  call Main__NL()
+  call Main__Try1()
+  call Main__NL()
+  call Main__Try2()
+  call Main__NL()
+  call Main__Try3()
+  call Main__NL()
+  ret
+

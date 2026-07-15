@@ -1,0 +1,6 @@
+module I28
+
+proc I28_I3() -> void
+entry:
+  ret
+

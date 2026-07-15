@@ -1,0 +1,6 @@
+module Dump
+
+proc Dump_I3() -> void
+entry:
+  ret
+
