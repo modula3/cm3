@@ -360,7 +360,7 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
   END DeclareGlobalMSIR;
 
 PROCEDURE RegisterExternMSIR (t: T) =
-  VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
+  VAR mt: MSIR.T;  eltType: MSIR.T;
       m : MSIR.Module;  g: MSIR.Global;
       nm: TEXT;
   BEGIN
@@ -417,17 +417,16 @@ PROCEDURE RegisterExternMSIR (t: T) =
         RETURN;
       END;
     END;
-    isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
-                 OR MSIR.Kind(mt) = MSIR.TypeKind.GcSlot);
+    (* Keep the real element type (a GcRef renders as LLVM `ptr`, so there is no
+       `void` global) so a load returns a correctly typed reference.  Flattening
+       traced externals to ptr(void) — as the old code did — made an exported
+       traced interface variable load as ptr(void), which mismatches the declared
+       type when returned directly (Sx.FromBool: RETURN True where True: Atom.T).
+       Pass isTraced := FALSE to NewGlobal regardless: the storage is owned and
+       GC-traced by the DEFINING unit, so this (referencing) module must not add
+       the external symbol to its own GC map. *)
     eltType  := mt;
-    IF isTraced THEN
-      (* GC reference: the storage slot is a pointer.  Use TPtr(void) so the
-         LLVM external global declaration gets type "ptr" rather than "void".
-         LLVM does not allow global variables or loads of type void. *)
-      eltType := MSIR.TPtr(MSIR.TVoid());
-      isTraced := FALSE;
-    END;
-    g := MSIR.NewGlobal(nm, eltType, isTraced, isExternal:=TRUE);
+    g := MSIR.NewGlobal(nm, eltType, isTraced := FALSE, isExternal := TRUE);
     MSIRBuilder.GlobalMapAdd(t, g, m);
   END RegisterExternMSIR;
 

@@ -1033,6 +1033,21 @@ PROCEDURE DeclareGlobalData (t: T) =
                                                 ModuleTypeUID, is_const := FALSE);
   END DeclareGlobalData;
 
+PROCEDURE ExportedViaImportScope (t: T;  v: Variable.T): BOOLEAN =
+  (* TRUE if v (a localScope variable) is also present in t's importScope as an
+     exportable External wrapper — i.e. it is an interface-exported variable
+     owned by the interface unit, which the importScope walk of DeclareGlobalsMSIR
+     routes through the owner's import chain.  Such a variable must NOT be defined
+     into this module's own info struct by the localScope walk. *)
+  VAR sv := Scope.ToList (t.importScope);
+  BEGIN
+    WHILE sv # NIL DO
+      IF External.IsExportable (sv) AND Value.Base (sv) = v THEN RETURN TRUE END;
+      sv := sv.next;
+    END;
+    RETURN FALSE;
+  END ExportedViaImportScope;
+
 PROCEDURE DeclareGlobalsMSIR (t: T) =
   (* MSIR analog of DeclareGlobalData + the scope-walk portion of
      CompileModule/CompileInterface.  Registers module-level variables and
@@ -1047,6 +1062,17 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
       | Variable.T (v) =>
           IF Value.IsExternal (sv) OR Value.IsImported (sv) THEN
             Variable.RegisterExternMSIR (v);
+          ELSIF ExportedViaImportScope (t, v) THEN
+            (* An exported interface variable (MODULE Z EXPORTS Z) reaches this
+               module's localScope AND appears in importScope as an exportable
+               External wrapper.  It is owned by the interface unit, whose info
+               struct holds its storage at the interface unit's offsets.  Defining
+               a copy here would land it in THIS module's info at those offsets,
+               colliding with this module's own private globals (a separate
+               counter also starting just past the ModuleInfo header) — RTLinker's
+               argc/argv aliased init_done/n_modules and InitRuntime SIGBUSed.
+               Skip it here; the importScope walk below routes it through the
+               owner's import chain. *)
           ELSE
             Variable.DeclareGlobalMSIR (v);
           END;
@@ -1089,35 +1115,29 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
                 IF v.external THEN
                   Variable.RegisterExternMSIR (v);
                 ELSE
-                  (* Non-external exportable variable.  If the interface's .ll
-                     was already emitted separately (e.g. MODULE A EXPORTS AF
-                     where AF.i3 → AF.ll exists), the interface owns the storage
-                     and A accesses it via the import chain (p080).
-                     If the interface's .ll was suppressed (MODULE Z EXPORTS Z,
-                     same-name scenario where Z.m3 overwrites Z.i3's .ll), then
-                     this module must define the storage directly (p189). *)
-                  VAR iUnit := Scope.ToUnit (v);
-                      iName : TEXT := NIL;
-                  BEGIN
-                    TYPECASE iUnit OF
-                    | T(iMod) => iName := M3ID.ToText(iMod.name);
-                    ELSE
-                    END;
-                    IF iName # NIL
-                       AND NOT Text.Equal (iName, M3ID.ToText (t.name)) THEN
-                      (* Interface and module have different names: interface's
-                         .ll is emitted separately and owns the storage.  Access
-                         via the import chain (p080: MODULE A EXPORTS AF). *)
-                      Variable.RegisterExternMSIR (v);
-                    ELSE
-                      (* Same-name scenario: MODULE Z EXPORTS Z.  The interface
-                         unit ALSO defines this exported variable, so emit the
-                         module's copy WEAK — the interface's strong def wins at
-                         link, avoiding a duplicate symbol, while a standalone
-                         build (no separate interface object) still has a def. *)
-                      Variable.DeclareGlobalMSIR (v, weak := TRUE);
-                    END;
-                  END;
+                  (* Non-external exported interface variable.  The interface
+                     unit — Foo.i3 -> Foo_i.o, a DISTINCT object from this
+                     module's Foo_m.o even when it shares the module's name —
+                     OWNS the storage: it emits the variable in its own info
+                     struct AND a strong external alias @Foo__<var> pointing at
+                     it (the alias loop in MSIRToLLVM).  So reference that alias
+                     as a link-time external symbol (the C-external branch of
+                     RegisterExternMSIR), exactly like the C backend references
+                     I_Foo.  NEVER define a copy in this module's info struct:
+                     for MODULE Z EXPORTS Z the old weak-copy path put argc/argv
+                     at their interface offsets inside @Z_M3_info, aliasing this
+                     module's own init_done/n_modules and crashing InitRuntime
+                     with a wild pointer.  A prior attempt routed these through
+                     the runtime _I3 import chain (like a cross-module import);
+                     that works for ordinary imports but NOT for the bootstrap
+                     linker referencing ITSELF (the import pointer is still NULL
+                     when RTLinker.InitRuntime writes argc), so the direct
+                     external-symbol form is used instead — no runtime resolution.
+                     Force imported := FALSE so RegisterExternMSIR takes the
+                     C-external (alias) branch, not the import-chain branch;
+                     savedImp restores the flag below. *)
+                  v.imported := FALSE;
+                  Variable.RegisterExternMSIR (v);
                 END;
                 v.imported := savedImp;
                 v.exported := savedExp;
