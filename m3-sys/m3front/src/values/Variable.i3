@@ -30,7 +30,10 @@ PROCEDURE IsFormal   (t: T): BOOLEAN;
 PROCEDURE IsUpLevel  (t: T): BOOLEAN;  (* accessed from a nested procedure *)
 
 (* MSIR declarations — called from DeclareGlobalsMSIR and BeginProc. *)
-PROCEDURE DeclareGlobalMSIR  (t: T);
+PROCEDURE DeclareGlobalMSIR  (t: T;  weak: BOOLEAN := FALSE);
+(* weak=TRUE marks the emitted global weak — used when a same-name module
+   re-defines an interface-exported variable (the interface unit's strong def
+   wins at link).  Module-private globals use the default (strong). *)
 PROCEDURE RegisterExternMSIR (t: T);
 PROCEDURE AddLocalMSIR       (t: T;  b: MSIR.Block): BOOLEAN;
 PROCEDURE BindFormalMSIR     (t: T;  p: MSIR.Proc;  b: MSIR.Block);

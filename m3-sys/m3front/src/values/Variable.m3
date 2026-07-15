@@ -267,7 +267,7 @@ PROCEDURE IsUpLevel (t: T): BOOLEAN =
     RETURN (t # NIL) AND t.up_level;
   END IsUpLevel;
 
-PROCEDURE DeclareGlobalMSIR (t: T) =
+PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
   VAR mt: MSIR.T;  isTraced: BOOLEAN;  eltType: MSIR.T;
       m : MSIR.Module;  g: MSIR.Global;
       byteSize, byteAlign, byteOff: INTEGER;
@@ -309,6 +309,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
       g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                           mt, isTraced := FALSE);
       MSIR.GlobalSetBackingBytes(g, byteSize);
+      IF weak THEN MSIR.GlobalSetWeak(g) END;
       (* Set refValue so LookupVarAddr returns the global's address typed as
          ptr(mt) so that SubscriptExpr can GEP into the backing storage.
          Use byteOffset=-1 to mark it as standalone (not struct-embedded). *)
@@ -342,6 +343,7 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
     MSIR.ModuleNoteGlobal(m, byteOff + byteSize);
     g := MSIR.NewGlobal(Value.GlobalName(t, dots:=FALSE, with_module:=TRUE),
                         eltType, isTraced);
+    IF weak THEN MSIR.GlobalSetWeak(g) END;
     (* Attach struct field info and update refValue to a StructFieldRef. *)
     VAR fieldType: MSIR.T;
     BEGIN

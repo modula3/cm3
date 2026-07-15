@@ -958,6 +958,11 @@ REVEAL Global = BRANDED "MSIR.Global" REF RECORD
   byteOffset:   INTEGER  := -1;   (* -1 = standalone global; >=0 = offset in @Mod_M3_info *)
   refValue:     Value    := NIL;
   backingBytes: INTEGER  := 0;    (* >0: emit as [N x i8] zeroinitializer backing storage *)
+  isWeak:       BOOLEAN  := FALSE; (* TRUE => emit weak linkage: an interface-
+                                      exported var re-defined by its same-name
+                                      implementation module, so the interface
+                                      unit's strong def wins at link.  Module-
+                                      private globals stay strong (FALSE). *)
 END;
 
 PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
@@ -983,6 +988,8 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
 
 PROCEDURE GlobalName       (g: Global): TEXT    = BEGIN RETURN g.name       END GlobalName;
 PROCEDURE GlobalType       (g: Global): T       = BEGIN RETURN g.type       END GlobalType;
+PROCEDURE GlobalSetWeak    (g: Global) = BEGIN g.isWeak := TRUE END GlobalSetWeak;
+PROCEDURE GlobalIsWeak     (g: Global): BOOLEAN = BEGIN RETURN g.isWeak     END GlobalIsWeak;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN = BEGIN RETURN g.isExternal    END GlobalIsExternal;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER = BEGIN RETURN g.byteOffset END GlobalByteOffset;

@@ -1110,9 +1110,12 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
                          via the import chain (p080: MODULE A EXPORTS AF). *)
                       Variable.RegisterExternMSIR (v);
                     ELSE
-                      (* Same-name scenario: MODULE Z EXPORTS Z.  The module .ll
-                         overwrites the interface .ll; define storage here (p189). *)
-                      Variable.DeclareGlobalMSIR (v);
+                      (* Same-name scenario: MODULE Z EXPORTS Z.  The interface
+                         unit ALSO defines this exported variable, so emit the
+                         module's copy WEAK — the interface's strong def wins at
+                         link, avoiding a duplicate symbol, while a standalone
+                         build (no separate interface object) still has a def. *)
+                      Variable.DeclareGlobalMSIR (v, weak := TRUE);
                     END;
                   END;
                 END;

@@ -436,6 +436,8 @@ PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
                     isExternal: BOOLEAN := FALSE): Global;
 PROCEDURE GlobalName       (g: Global): TEXT;
 PROCEDURE GlobalType       (g: Global): T;
+PROCEDURE GlobalSetWeak    (g: Global);          (* mark weak linkage *)
+PROCEDURE GlobalIsWeak     (g: Global): BOOLEAN;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)

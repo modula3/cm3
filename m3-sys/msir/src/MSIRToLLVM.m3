@@ -2797,16 +2797,16 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
       END;
     ELSE
       Wr.PutText(wr, MSIR.GlobalName(g));
-      (* Standalone (indirect / non-struct-embedded) global definition.  Like
-         the struct-embedded alias case, an interface variable's backing global
-         is emitted by BOTH the interface unit and its same-name implementation
-         module (MODULE Z EXPORTS Z) — two strong defs are a link-time duplicate
-         symbol (e.g. RTHeapRep.align, DragonInt.allocates in m3core).  Mirror
-         the _I3 / alias discipline: interface unit STRONG, non-interface WEAK.
-         All such globals are zero-initialized (BSS), so a weak merge is safe. *)
-      IF MSIR.ModuleIsInterface(m)
-        THEN Wr.PutText(wr, " = global ");
-        ELSE Wr.PutText(wr, " = weak global ");
+      (* An interface variable's backing global is emitted by BOTH the interface
+         unit and its same-name implementation module (MODULE Z EXPORTS Z) — two
+         strong defs are a link-time duplicate (e.g. RTHeapRep.align in m3core).
+         Such globals are flagged weak by the front end (GlobalSetWeak) so the
+         interface's strong def wins and the module's is a safe BSS fallback.
+         Module-PRIVATE globals are NOT flagged, so they stay strong and remain
+         externally referenceable (e.g. a C test harness referencing Main.gCounter). *)
+      IF MSIR.GlobalIsWeak(g)
+        THEN Wr.PutText(wr, " = weak global ");
+        ELSE Wr.PutText(wr, " = global ");
       END;
       VAR nb := MSIR.GlobalBackingBytes(g);
       BEGIN
@@ -4036,15 +4036,14 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
               ELSE lltype := LLTypeStr(MSIR.GlobalType(g));
             END;
             (* An interface variable's alias is emitted by BOTH the interface
-               unit and every same-name implementation module (MODULE Z EXPORTS
-               Z), each pointing at the canonical t.offset within the (weak,
-               layout-identical) @<Mod>_M3_info.  Emitting both strong gives a
-               link-time duplicate-symbol error.  Mirror the _I3 binder / module
-               info discipline: interface unit STRONG, non-interface unit WEAK,
-               so the linker keeps the interface's definition and the module's
-               is a safe standalone fallback.  Uniform across MSIRObj and
-               parallel @M3m3front-msir emission (no mode-gating). *)
-            IF NOT isInterface THEN aliaslink := "weak " END;
+               unit and its same-name implementation module (MODULE Z EXPORTS Z),
+               each pointing at the canonical t.offset within the (weak, layout-
+               identical) @<Mod>_M3_info.  Two strong defs are a link-time
+               duplicate.  The front end flags the module unit's copy weak
+               (GlobalSetWeak) so the interface's strong def wins; a module-
+               PRIVATE global alias is not flagged and stays strong (so external
+               references resolve). *)
+            IF MSIR.GlobalIsWeak(g) THEN aliaslink := "weak " END;
             Wr.PutText(wr, "@" & MSIR.GlobalName(g)
                            & " = " & aliaslink & "alias " & lltype
                            & ", ptr getelementptr inbounds (i8, ptr "
