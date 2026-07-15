@@ -327,6 +327,17 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
       END;
       MSIR.ModuleAddGlobal(m, g);
       MSIRBuilder.GlobalMapAdd(t, g, m);
+      (* The OWNER accesses this indirect global via the backing address directly
+         (above), but an IMPORTER reads it through the RT0 import chain, which
+         loads the pointer from this module's info struct at t.offset
+         (RegisterExternMSIR's needsLoad path).  That slot is otherwise zero, so
+         the importer would load NULL (e.g. RTCollector writing RTHeapRep.align,
+         a 2KB > Max_zero_global array → NULL base → SIGSEGV).  Initialise the
+         slot to the backing address via the early global constructor. *)
+      VAR ptrByteOff := t.offset DIV Target.Char.size;
+      BEGIN
+        MSIR.ModuleAddGlobalInit (m, ptrByteOff, MSIR.GlobalAddrValue (g));
+      END;
       RETURN;
     END;
     isTraced := (MSIR.Kind(mt) = MSIR.TypeKind.GcRef
