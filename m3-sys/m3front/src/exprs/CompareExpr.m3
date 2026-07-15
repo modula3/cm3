@@ -246,15 +246,6 @@ PROCEDURE Fold (p: P): Expr.T =
     RETURN NIL;
   END Fold;
 
-PROCEDURE WidenICmpOp (VAR v: MSIR.Value;  targetT: MSIR.T) =
-  BEGIN
-    IF MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.W8 AND
-       MSIR.Kind (MSIR.ValueType (v)) <= MSIR.TypeKind.W64
-      THEN v := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", v, targetT)
-      ELSE v := MSIR.BuildSExt (MSIRBuilder.CurrentBlock (), "", v, targetT)
-    END
-  END WidenICmpOp;
-
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR
     lv, rv:   MSIR.Value;
@@ -283,14 +274,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       END;
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;
       rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
-      (* Widen the narrower integer operand to the wider type before comparison.
-         M3 integer arithmetic is performed at INTEGER width; compact subrange
-         types must be extended first. *)
-      IF MSIR.BitWidth (MSIR.ValueType (lv)) < MSIR.BitWidth (MSIR.ValueType (rv)) THEN
-        WidenICmpOp (lv, MSIR.ValueType (rv));
-      ELSIF MSIR.BitWidth (MSIR.ValueType (rv)) < MSIR.BitWidth (MSIR.ValueType (lv)) THEN
-        WidenICmpOp (rv, MSIR.ValueType (lv));
-      END;
+      (* Operands are ZType (machine width); no width reconciliation needed. *)
       RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", pred, lv, rv);
     ELSIF p.class = cSET THEN
       lv := Expr.CompileMSIR (p.a);  IF lv = NIL THEN RETURN NIL END;

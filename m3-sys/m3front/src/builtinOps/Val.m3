@@ -115,7 +115,11 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
 PROCEDURE ValMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
     v          := Expr.CompileMSIR (ce.args[0]);
-    resultT    := MSIRType.Translate (Expr.TypeOf (ce));
+    (* Produce the ZType (machine width): VAL(x, T) relabels x as T without
+       changing its value, and in the ZType model every ordinal value is machine
+       width — truncating to T's narrow MType here (e.g. VAL(c+32, CHAR) -> word8)
+       would make it mismatch other i64 ordinal operands (icmp/binop). *)
+    resultT    := MSIRType.ComputeType (Expr.TypeOf (ce));
     blk        := MSIRBuilder.CurrentBlock ();
     srcT       : MSIR.T;
     srcW, dstW : INTEGER;
