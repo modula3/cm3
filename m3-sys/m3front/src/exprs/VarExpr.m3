@@ -9,7 +9,7 @@
 MODULE VarExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Type, Value, Variable;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = Expr.T OBJECT
@@ -104,6 +104,21 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF v = NIL THEN
       MSIRBuilder.Abandon ("unbound variable reference: " & Value.GlobalName (p.v));
       RETURN NIL;
+    END;
+    (* Normalize an ordinal variable read to ZType (machine width).  Local reads
+       already land at i64 (their allocas are widened), but global reads return
+       the narrow MType storage width; widen so every variable read is uniform
+       width.  No-op for non-scalars (BitWidth < 0) and already-i64 locals. *)
+    VAR t := Value.TypeOf (p.v);  zt: MSIR.T;
+    BEGIN
+      IF t # NIL THEN
+        zt := MSIRType.ComputeType (t);
+        IF zt # NIL AND MSIR.BitWidth (zt) > 0
+           AND MSIR.BitWidth (MSIR.ValueType (v)) > 0
+           AND NOT MSIR.Equal (zt, MSIR.ValueType (v)) THEN
+          v := MSIRBuilder.CoerceToMSIR (MSIRBuilder.CurrentBlock (), v, zt);
+        END;
+      END;
     END;
     RETURN v;
   END CompileMSIR;

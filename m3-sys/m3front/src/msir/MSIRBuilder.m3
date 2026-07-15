@@ -2038,8 +2038,10 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
 
 PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value =
   (* Sign-aware widening/truncation for arithmetic operators.
-     SExt for I-kind (signed: I8, I16, I32, I64 — signed subranges like [-20..20]).
-     ZExt for W-kind (unsigned: W8, W16, W32, W64 — CHAR, [0..N], CARDINAL).
+     SExt for signed I-kind (I8, I16, I32, I64 — signed subranges like [-20..20]).
+     ZExt for W-kind (unsigned: W8, W16, W32, W64 — CHAR, [0..N], CARDINAL) AND
+     for I1 (BOOLEAN is 0/1 unsigned — there is no signed 1-bit type, so SExt
+     would turn TRUE into all-ones).
      MSIRType.Translate encodes signedness: non-negative subranges → TW,
      signed subranges → TI.  No coercion needed when bit-widths match. *)
   VAR vb := MSIR.BitWidth (MSIR.ValueType (v));
@@ -2047,7 +2049,7 @@ PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value
   BEGIN
     IF vb <= 0 OR rb <= 0 OR vb = rb THEN RETURN v END;
     IF vb < rb THEN
-      IF MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.I1 AND
+      IF MSIR.Kind (MSIR.ValueType (v)) >= MSIR.TypeKind.I8 AND
          MSIR.Kind (MSIR.ValueType (v)) <= MSIR.TypeKind.I64
         THEN RETURN MSIR.BuildSExt (blk, "", v, rt);
         ELSE RETURN MSIR.BuildZExt (blk, "", v, rt);
