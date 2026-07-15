@@ -2797,7 +2797,17 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
       END;
     ELSE
       Wr.PutText(wr, MSIR.GlobalName(g));
-      Wr.PutText(wr, " = global ");
+      (* Standalone (indirect / non-struct-embedded) global definition.  Like
+         the struct-embedded alias case, an interface variable's backing global
+         is emitted by BOTH the interface unit and its same-name implementation
+         module (MODULE Z EXPORTS Z) — two strong defs are a link-time duplicate
+         symbol (e.g. RTHeapRep.align, DragonInt.allocates in m3core).  Mirror
+         the _I3 / alias discipline: interface unit STRONG, non-interface WEAK.
+         All such globals are zero-initialized (BSS), so a weak merge is safe. *)
+      IF MSIR.ModuleIsInterface(m)
+        THEN Wr.PutText(wr, " = global ");
+        ELSE Wr.PutText(wr, " = weak global ");
+      END;
       VAR nb := MSIR.GlobalBackingBytes(g);
       BEGIN
         IF nb > 0 THEN
