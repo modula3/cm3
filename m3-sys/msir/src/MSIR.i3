@@ -452,6 +452,15 @@ PROCEDURE GlobalAddrValue      (g: Global): Value;       (* @Name as a ptr const
 
 PROCEDURE ModuleAddGlobal(m: Module;  g: Global);
 
+(* Record a compile-time-constant initial value for an embedded user global at
+   byteOff within @Mod_M3_info.  Emitted by an early global constructor (before
+   any module body runs) because the user region is otherwise a zero blob and
+   some globals (RTType's InfoMap tables) are read during RTLinker startup. *)
+PROCEDURE ModuleAddGlobalInit(m: Module;  byteOff: INTEGER;  val: Value);
+PROCEDURE ModuleGlobalInitCount(m: Module): INTEGER;
+PROCEDURE ModuleGlobalInitOffset(m: Module;  i: INTEGER): INTEGER;
+PROCEDURE ModuleGlobalInitValue(m: Module;  i: INTEGER): Value;
+
 (* Number of fields in RT0.ModuleInfo; all are pointer-or-integer-sized,
    so the struct byte size is MI_nFields * Target.Address.bytes. *)
 CONST MI_nFields = 13;

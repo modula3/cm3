@@ -929,6 +929,11 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
+  globalInits: RefSeq.T;                           (* elements: GlobalInit —
+     compile-time-constant initial values for embedded user globals, applied by
+     an early global constructor (see MSIRToLLVM); needed because @Mod_M3_info's
+     user region is a zero blob and some globals (e.g. RTType's InfoMap tables)
+     are used before any module body runs. *)
   excDescs:      RefSeq.T;                         (* elements: ExcDesc *)
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
@@ -1018,6 +1023,32 @@ PROCEDURE ModuleAddGlobal(m: Module;  g: Global) =
     END;
     m.globals.addhi(g)
   END ModuleAddGlobal;
+
+TYPE GlobalInitRec = BRANDED "MSIR.GlobalInit" REF RECORD
+  byteOff : INTEGER;
+  val     : Value;
+END;
+
+PROCEDURE ModuleAddGlobalInit(m: Module;  byteOff: INTEGER;  val: Value) =
+  BEGIN
+    FOR i := 0 TO m.globalInits.size() - 1 DO
+      IF NARROW(m.globalInits.get(i), GlobalInitRec).byteOff = byteOff THEN
+        RETURN  (* already recorded at this offset *)
+      END;
+    END;
+    m.globalInits.addhi(NEW(GlobalInitRec, byteOff := byteOff, val := val));
+  END ModuleAddGlobalInit;
+
+PROCEDURE ModuleGlobalInitCount(m: Module): INTEGER =
+  BEGIN RETURN m.globalInits.size() END ModuleGlobalInitCount;
+
+PROCEDURE ModuleGlobalInitOffset(m: Module;  i: INTEGER): INTEGER =
+  BEGIN RETURN NARROW(m.globalInits.get(i), GlobalInitRec).byteOff END
+  ModuleGlobalInitOffset;
+
+PROCEDURE ModuleGlobalInitValue(m: Module;  i: INTEGER): Value =
+  BEGIN RETURN NARROW(m.globalInits.get(i), GlobalInitRec).val END
+  ModuleGlobalInitValue;
 PROCEDURE ModuleGlobalCount(m: Module): INTEGER =
   BEGIN RETURN m.globals.size() END ModuleGlobalCount;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global =
@@ -1370,6 +1401,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.imports       := NEW(RefSeq.T).init();
     m.procs         := NEW(RefSeq.T).init();
     m.globals       := NEW(RefSeq.T).init();
+    m.globalInits   := NEW(RefSeq.T).init();
     m.excDescs      := NEW(RefSeq.T).init();
     m.importBinders := NEW(RefSeq.T).init();
     m.typeDescs      := NEW(RefSeq.T).init();

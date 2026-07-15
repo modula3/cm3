@@ -4103,6 +4103,43 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     END;
   END EmitModuleBinder;
 
+(* Emit an early global constructor that applies compile-time-constant record
+   initializers to embedded user globals (recorded by Variable.DeclareGlobalMSIR).
+   Needed in MSIRObj mode because @Mod_M3_info's user region is a zero blob, and
+   globals like RTType's InfoMap tables (uids/types/brands) are read during
+   RTLinker startup — before any module body runs.  A @llvm.global_ctors entry
+   runs the initializer at image load, before main() → before InitRuntime.  The
+   const value carries proper relocations (proc/text-literal pointers), so a
+   single typed store per global suffices. *)
+PROCEDURE EmitGlobalInitCtor(wr: Wr.T;  m: MSIR.Module) =
+  VAR
+    n        := MSIR.ModuleGlobalInitCount(m);
+    modName  := MSIR.ModuleName(m);
+    ctorName := "MSIR_InitGlobals_" & modName & "_M3";
+    ap_t     := "i" & Fmt.Int(Target.AddressSize());
+  BEGIN
+    IF n = 0 THEN RETURN END;
+    Wr.PutText(wr, "\n; const-initialised user globals (early ctor)\n");
+    Wr.PutText(wr, "define void @" & ctorName & "() {\nentry:\n");
+    FOR i := 0 TO n - 1 DO
+      VAR off := MSIR.ModuleGlobalInitOffset(m, i);
+          val := MSIR.ModuleGlobalInitValue(m, i);
+      BEGIN
+        Wr.PutText(wr, "  store ");
+        LLTypedVal(wr, val);
+        Wr.PutText(wr, ", ptr getelementptr inbounds (i8, ptr @"
+                       & modName & "_M3_info, " & ap_t & " "
+                       & Fmt.Int(off) & ")\n");
+      END;
+    END;
+    Wr.PutText(wr, "  ret void\n}\n");
+    Wr.PutText(wr, "@llvm.global_ctors = appending global"
+                   & " [1 x { i32, ptr, ptr }] ["
+                   & " { i32, ptr, ptr } { i32 65535, ptr @" & ctorName
+                   & ", ptr null }"
+                   & " ]\n");
+  END EmitGlobalInitCtor;
+
 (*------------------------------------------------------ module emission *)
 
 PROCEDURE ModuleHasEH(m: MSIR.Module): BOOLEAN =
@@ -4322,6 +4359,13 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
 
     (* RTLinker binder and ModuleInfo descriptor *)
     EmitModuleBinder(wr, m, externs);
+
+    (* Early global constructor for const-initialised user globals.  Only in
+       MSIRObj (forRuntime) mode: standalone mode already emits a @llvm.global_ctors
+       for MSIR_InitTypeLinks, and LLVM allows only one such array per module. *)
+    IF forRuntime THEN
+      EmitGlobalInitCtor(wr, m);
+    END;
 
     (* Emit mutable type-table globals collected during typecase emission.
        ScanTypecase lazily fills the defn pointer so these must be global

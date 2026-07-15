@@ -852,14 +852,25 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
     IF nf # MSIR.StructFieldCount(msirT) THEN RETURN FALSE END;
     fields := NEW(REF ARRAY OF MSIR.Value, nf);
     FOR i := 0 TO nf - 1 DO
+      ft := MSIR.StructField(msirT, i).type;
       IF p.map^[i].expr = NIL THEN
-        ft := MSIR.StructField(msirT, i).type;
         fields[i] := MSIR.ConstZero(ft);
       ELSE
-        ft := MSIR.StructField(msirT, i).type;
         fv := TryConstFieldMSIR(p.map^[i].expr, ft);
-        IF fv = NIL THEN RETURN FALSE END;
-        fields[i] := fv;
+        IF fv = NIL THEN
+          (* A pointer/reference field whose constant value we cannot otherwise
+             represent (e.g. an ADDRESS field defaulting to NIL, like InfoMap.map)
+             is a null pointer — safe to zero-initialize. *)
+          IF MSIR.Kind(ft) = MSIR.TypeKind.Ptr
+             OR MSIR.Kind(ft) = MSIR.TypeKind.GcRef
+             OR MSIR.Kind(ft) = MSIR.TypeKind.GcSlot THEN
+            fields[i] := MSIR.ConstZero(ft);
+          ELSE
+            RETURN FALSE;
+          END;
+        ELSE
+          fields[i] := fv;
+        END;
       END;
     END;
     v := MSIR.ConstStruct(msirT, fields^);

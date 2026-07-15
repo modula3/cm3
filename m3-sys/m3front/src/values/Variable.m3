@@ -14,7 +14,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
 IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
-IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
+IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr, RecordExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap, RecordType;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
 IMPORT Text;
@@ -356,6 +356,35 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
       IF isTraced THEN fieldType := MSIR.TGcSlot(eltType)
                   ELSE fieldType := MSIR.TPtr(eltType) END;
       MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff, fieldType);
+    END;
+    (* Record a compile-time-constant record initializer so an early global
+       constructor can apply it (the info-struct user region is a zero blob, and
+       globals such as RTType's InfoMap tables — uids/types/brands — are read
+       during RTLinker startup, before any module body runs).  Only whole-record
+       const initializers are handled here; scalar/array cases are covered by the
+       runtime init path / zeroinit and are added on demand. *)
+    IF t.initExpr # NIL THEN
+      VAR cv    : MSIR.Value := NIL;
+          folded: Expr.T;
+          ti    : Target.Int;
+          tt    : Type.T;
+          iv    : INTEGER;
+      BEGIN
+        IF RecordExpr.TryCompileConstMSIR (t.initExpr, cv) AND cv # NIL THEN
+          (* whole-record constant (e.g. RTType's InfoMap tables) *)
+          MSIR.ModuleAddGlobalInit (m, byteOff, cv);
+        ELSE
+          (* scalar ordinal constant with a non-zero value (e.g. RTType's
+             n_info := InfoChunk).  Store it at MType (memory) width so the
+             constructor's store matches the global's storage size. *)
+          folded := Expr.ConstValue (t.initExpr);
+          IF folded # NIL AND Type.IsOrdinal (t.type)
+             AND IntegerExpr.Split (folded, ti, tt)
+             AND TInt.ToInt (ti, iv) AND iv # 0 THEN
+            MSIR.ModuleAddGlobalInit (m, byteOff, MSIR.ConstInt (mt, iv));
+          END;
+        END;
+      END;
     END;
   END DeclareGlobalMSIR;
 

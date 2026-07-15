@@ -312,9 +312,13 @@ PROCEDURE GenLiteral
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR uid: INTEGER;  chars: TEXT;  cnt: INTEGER;
   BEGIN
-    IF NOT MSIREmit.IsEnabled () OR NOT MSIRBuilder.InProc () THEN
+    IF NOT MSIREmit.IsEnabled () THEN
       RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
     END;
+    (* A text literal is a pure compile-time constant (SetUID + ConstTextLit emit
+       no instructions), so build it even outside a proc — const record
+       initializers of module globals are captured at global-declaration time
+       (Variable.DeclareGlobalMSIR), where InProc is FALSE. *)
     (* SetUID registers the literal in the CG per-module table (deduplication)
        and returns the uid used to name the LLVM global @textlit_<uid>. *)
     uid := SetUID (p);
