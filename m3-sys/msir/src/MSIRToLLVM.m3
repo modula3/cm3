@@ -4009,14 +4009,24 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
           off := MSIR.GlobalByteOffset(g);
       BEGIN
         IF off >= 0 AND NOT MSIR.GlobalIsExternal(g) THEN
-          VAR lltype: TEXT;
+          VAR lltype: TEXT;  aliaslink := "";
           BEGIN
             IF MSIR.GlobalIsTraced(g)
               THEN lltype := "ptr";
               ELSE lltype := LLTypeStr(MSIR.GlobalType(g));
             END;
+            (* An interface variable's alias is emitted by BOTH the interface
+               unit and every same-name implementation module (MODULE Z EXPORTS
+               Z), each pointing at the canonical t.offset within the (weak,
+               layout-identical) @<Mod>_M3_info.  Emitting both strong gives a
+               link-time duplicate-symbol error.  Mirror the _I3 binder / module
+               info discipline: interface unit STRONG, non-interface unit WEAK,
+               so the linker keeps the interface's definition and the module's
+               is a safe standalone fallback.  Uniform across MSIRObj and
+               parallel @M3m3front-msir emission (no mode-gating). *)
+            IF NOT isInterface THEN aliaslink := "weak " END;
             Wr.PutText(wr, "@" & MSIR.GlobalName(g)
-                           & " = alias " & lltype
+                           & " = " & aliaslink & "alias " & lltype
                            & ", ptr getelementptr inbounds (i8, ptr "
                            & infoName & ", " & ap_t & " " & Fmt.Int(off) & ")\n");
           END;
