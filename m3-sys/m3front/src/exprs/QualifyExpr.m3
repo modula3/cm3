@@ -940,7 +940,13 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           RETURN slotAddr;
         END;
     ELSE
-      MSIRBuilder.Abandon ("lvalue not supported for this qualify class");
+      (* enumLit / objTypeMethod / objMethod / unknown: these are values or
+         method references, not writable designators — they have no lvalue.
+         Return NIL (recoverable) rather than Abandon so a speculative caller
+         (e.g. RecordType.InitFieldDefaultMSIR, which tries LValueMSIR for an
+         aggregate default before falling back to CompileMSIR) is not poisoned.
+         Abandoning here dropped the whole enclosing proc — e.g. NEW(Activation)
+         where the `state` field default is an enum literal (Thread.Fork). *)
       RETURN NIL;
     END;
   END LValueMSIR;
