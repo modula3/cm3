@@ -270,6 +270,10 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
     | Variable.T(vv) =>
+        (* Bit-field WITH alias has no plain lvalue; return NIL so AssignStmt
+           routes the write through MSIRBuilder.TryBitFieldStore (InsertBitField)
+           instead of Abandoning. *)
+        IF MSIRBuilder.IsBitFieldVar (vv) THEN RETURN NIL END;
         VAR addr := MSIRBuilder.LookupVarAddr (vv);
         BEGIN
           IF addr = NIL THEN
@@ -320,6 +324,22 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       RETURN NIL;
     END;
   END LValueMSIR;
+
+(* If p names a bit-field WITH alias, write rhs through it (InsertBitField) and
+   return TRUE; else FALSE.  Called by AssignStmt when the LHS has no lvalue. *)
+PROCEDURE BitFieldStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
+  VAR p: P;
+  BEGIN
+    TYPECASE e OF
+    | P (pp) => p := pp;
+    ELSE        RETURN FALSE;
+    END;
+    IF p.value = NIL THEN Resolve (p) END;
+    TYPECASE p.value OF
+    | Variable.T (vv) => RETURN MSIRBuilder.TryBitFieldStore (vv, rhs);
+    ELSE                 RETURN FALSE;
+    END;
+  END BitFieldStoreMSIR;
 
 PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN

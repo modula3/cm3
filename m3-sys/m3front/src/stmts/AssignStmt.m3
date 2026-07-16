@@ -11,7 +11,7 @@ MODULE AssignStmt;
 
 IMPORT CG, Stmt, StmtRep, Expr, Type, Error, Module, Target, TInt;
 IMPORT Token, Scanner, CallStmt, Addr, CheckExpr, ErrType;
-IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
+IMPORT M3ID, Value, NamedExpr, VarExpr, ArrayType, ConsExpr;
 IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr, SubscriptExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
@@ -868,6 +868,12 @@ PROCEDURE CompileMSIR (p: P) =
       rhsVal := Expr.CompileMSIR (p.rhs);
       IF rhsVal = NIL THEN RETURN END;
       IF QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal) THEN
+        Expr.NoteWrite (p.lhs); RETURN
+      END;
+      (* Bit-field WITH alias LHS (`WITH s = rec.bitf DO s := v`): the alias has
+         no plain lvalue; write through it via InsertBitField. *)
+      IF NamedExpr.BitFieldStoreMSIR (p.lhs, rhsVal)
+         OR VarExpr.BitFieldStoreMSIR (p.lhs, rhsVal) THEN
         Expr.NoteWrite (p.lhs); RETURN
       END;
       EVAL SubscriptExpr.SubByteStoreElemMSIR (p.lhs, rhsVal);

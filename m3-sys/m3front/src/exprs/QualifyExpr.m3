@@ -1003,6 +1003,57 @@ PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
     END;
   END SubByteStoreMSIR;
 
+(* If e is a sub-byte/bit-field record or object field designator, compute the
+   containing storage's base pointer (evaluated ONCE) and return the field's bit
+   offset, width, and raw type.  Used by WithStmt to bind a bit-field WITH alias
+   by reference (base captured once; reads/writes route through Extract/Insert).
+   Returns FALSE for byte-aligned fields (they have an ordinary lvalue) and for
+   anything that is not a rec/obj field. *)
+PROCEDURE BitFieldBaseMSIR (e: Expr.T;  VAR base: MSIR.Value;
+                            VAR bitOff, width: INTEGER;
+                            VAR ftype: Type.T): BOOLEAN =
+  VAR
+    p         : P;
+    fieldInfo : Field.Info;
+    fti       : Type.Info;
+  BEGIN
+    TYPECASE e OF
+    | P (pp) => p := pp;
+    ELSE        RETURN FALSE;
+    END;
+    Resolve (p);
+    CASE p.class OF
+    | Class.recField =>
+        Field.Split (p.rhsValue, fieldInfo);
+        EVAL Type.CheckInfo (fieldInfo.type, fti);
+        IF fti.size MOD Target.Byte = 0 AND fieldInfo.offset MOD Target.Byte = 0 THEN
+          RETURN FALSE;
+        END;
+        base := Expr.LValueMSIR (p.lhsExpr);
+        IF base = NIL THEN RETURN FALSE END;
+        bitOff := fieldInfo.offset;  width := fti.size;  ftype := fieldInfo.type;
+        RETURN TRUE;
+    | Class.objField =>
+        Field.Split (p.rhsValue, fieldInfo);
+        VAR objOff, objAlign : INTEGER;
+        BEGIN
+          ObjectType.GetFieldsOffsetAndAlign (p.holder, objOff, objAlign);
+          IF objOff < 0 THEN RETURN FALSE END;
+          bitOff := objOff + fieldInfo.offset;
+          EVAL Type.CheckInfo (fieldInfo.type, fti);
+          IF fti.size MOD Target.Byte = 0 AND bitOff MOD Target.Byte = 0 THEN
+            RETURN FALSE;
+          END;
+          base := Expr.CompileMSIR (p.lhsExpr);
+          IF base = NIL THEN RETURN FALSE END;
+          width := fti.size;  ftype := fieldInfo.type;
+          RETURN TRUE;
+        END;
+    ELSE
+      RETURN FALSE;
+    END;
+  END BitFieldBaseMSIR;
+
 PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
                           rawFieldType: Type.T): MSIR.Value =
   VAR blk      := MSIRBuilder.CurrentBlock ();

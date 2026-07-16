@@ -11,7 +11,7 @@ MODULE WithStmt;
 
 IMPORT M3ID, CG, Expr, Scope, Value, Variable, OpenArrayType;
 IMPORT Type, Stmt, StmtRep, Token, M3RT, Target, Tracer, AssignStmt;
-IMPORT ArrayExpr;
+IMPORT ArrayExpr, QualifyExpr;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
 IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
@@ -191,23 +191,33 @@ PROCEDURE CompileMSIR (p: P) =
     | Kind.designator =>
         addr := Expr.LValueMSIR (p.expr);
         IF addr = NIL THEN
-          (* The designator has no lvalue — e.g. it is a packed sub-byte field
-             (QualifyExpr/SubscriptExpr.LValueMSIR return NIL for bit-addressed
-             designators, reads go through ExtractBitField).  Bind the alias to
-             a read-only copy of the value rather than abandoning the whole proc.
-             Writing through such an alias is not supported (rare); the common
-             read-only case works.  Fixes RTCollector.RebuildFreelist's
-             `WITH space = page.desc.space` where space is a packed field. *)
+          (* The designator has no lvalue.  Two cases:
+             (a) a packed sub-byte / bit-field designator (QualifyExpr.LValueMSIR
+                 returns NIL): bind the alias as a bit-field VIEW by reference —
+                 base captured once, reads via ExtractBitField, writes via
+                 InsertBitField — matching the C backend (writes propagate to the
+                 field).  Fixes RTCollector.RebuildFreelist's
+                 `WITH space = page.desc.space`.
+             (b) any other no-lvalue designator (enum literal, method ref, ...):
+                 these are not assignable, so a read-only by-value copy is
+                 semantically correct. *)
           IF MSIRBuilder.IsAbandoned () THEN RETURN END;
-          val := Expr.CompileMSIR (p.expr);
-          IF val = NIL THEN RETURN END;
-          IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock (),
-                                        force := TRUE) THEN
-            RETURN
+          VAR bfBase: MSIR.Value;  bfOff, bfW: INTEGER;  bfT: Type.T;
+          BEGIN
+            IF QualifyExpr.BitFieldBaseMSIR (p.expr, bfBase, bfOff, bfW, bfT) THEN
+              MSIRBuilder.BindVarBitField (p.var, bfBase, bfOff, bfW, bfT);
+            ELSE
+              val := Expr.CompileMSIR (p.expr);
+              IF val = NIL THEN RETURN END;
+              IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock (),
+                                            force := TRUE) THEN
+                RETURN
+              END;
+              addr := MSIRBuilder.LookupVarAddr (p.var);
+              IF addr = NIL THEN RETURN END;
+              MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
+            END;
           END;
-          addr := MSIRBuilder.LookupVarAddr (p.var);
-          IF addr = NIL THEN RETURN END;
-          MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
         ELSE
           Variable.Split (p.var, t, global, indirect, lhs);
           mt := MSIRType.Translate (t);

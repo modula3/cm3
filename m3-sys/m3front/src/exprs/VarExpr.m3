@@ -123,6 +123,16 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN v;
   END CompileMSIR;
 
+(* If p is a bit-field WITH alias, write rhs through it (InsertBitField) and
+   return TRUE; else FALSE.  Called by AssignStmt for a no-lvalue var LHS. *)
+PROCEDURE BitFieldStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
+  BEGIN
+    TYPECASE e OF
+    | P (p) => RETURN MSIRBuilder.TryBitFieldStore (p.v, rhs);
+    ELSE       RETURN FALSE;
+    END;
+  END BitFieldStoreMSIR;
+
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     IF Variable.IsUpLevel (p.v) THEN CaptureAnalysis.Note (ca, p.v, FALSE) END;

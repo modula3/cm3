@@ -56,6 +56,16 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN;
    Used for WITH designator variables, where addr is the target's address. *)
 PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T);
 
+(* Bind a WITH alias over a sub-byte/bit-field designator (`WITH s = rec.bitf`)
+   as a bit-field VIEW: `base` is the containing storage's pointer, captured once.
+   LookupVar(v) reads via ExtractBitField; TryBitFieldStore(v,rhs) writes via
+   InsertBitField; LookupVarAddr(v) returns NIL (no plain lvalue).  Matches the
+   C backend's by-reference alias (writes propagate to the field). *)
+PROCEDURE BindVarBitField(v: Variable.T; base: MSIR.Value;
+                          bitOff, width: INTEGER; ftype: Type.T);
+PROCEDURE IsBitFieldVar(v: Variable.T): BOOLEAN;
+PROCEDURE TryBitFieldStore(v: Variable.T; rhs: MSIR.Value): BOOLEAN;
+
 (* EndProc finalizes the current proc. If unsupported was ever
    asserted, the proc is dropped; otherwise it is appended to the
    current MSIREmit module. *)

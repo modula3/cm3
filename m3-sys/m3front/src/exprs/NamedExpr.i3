@@ -7,7 +7,7 @@
 
 INTERFACE NamedExpr;
 
-IMPORT M3ID, Expr, Value;
+IMPORT M3ID, Expr, Value, MSIR;
 
 PROCEDURE New (name: M3ID.T;  value: Value.T): Expr.T;
 
@@ -18,5 +18,9 @@ PROCEDURE Split (e: Expr.T;  VAR name: M3ID.T;  VAR v: Value.T): BOOLEAN;
 PROCEDURE SplitName (e: Expr.T;  VAR name: M3ID.T): BOOLEAN;
 
 PROCEDURE Is (e: Expr.T): BOOLEAN;
+
+(* If e names a bit-field WITH alias, write rhs through it (InsertBitField),
+   return TRUE; else FALSE.  Used by AssignStmt for a no-lvalue var LHS. *)
+PROCEDURE BitFieldStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;
 
 END NamedExpr.
