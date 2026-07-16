@@ -27,4 +27,11 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN;
    float constants, set v to a ConstStruct Value and return TRUE.
    Otherwise return FALSE. *)
 
+(* General compile-time-constant lowering for a value of MSIR type ft: handles
+   integer/enum/BOOLEAN, float, TEXT literal, procedure ref, fixed array, and
+   nested record constants (recursing via TryCompileConstMSIR).  Emits NO IR
+   (safe at module-declare time).  Returns NIL if e is not such a constant.
+   Used both for record fields and for whole module-global initializers. *)
+PROCEDURE TryConstFieldMSIR(e: Expr.T;  ft: MSIR.T): MSIR.Value;
+
 END RecordExpr.

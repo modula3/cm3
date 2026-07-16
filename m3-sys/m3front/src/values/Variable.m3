@@ -374,41 +374,30 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
        during RTLinker startup, before any module body runs).  Only whole-record
        const initializers are handled here; scalar/array cases are covered by the
        runtime init path / zeroinit and are added on demand. *)
-    IF t.initExpr # NIL THEN
-      VAR cv    : MSIR.Value := NIL;
-          folded: Expr.T;
-          ti    : Target.Int;
-          tt    : Type.T;
-          iv    : INTEGER;
+    (* Compile-time-constant global initializer: lower it to a constant MSIR
+       value (record via nested ConstStruct, int/enum/BOOLEAN, float, TEXT lit,
+       proc ref, or fixed-array) and apply it through the early @MSIR_InitGlobals
+       constructor, which runs BEFORE RTLinker — exactly like the C backend's
+       static data segment.  This is the SOLE place module-global constant inits
+       are emitted in MSIRObj mode; there is no late module-body store (which
+       would re-run after RTLinker.FixTypes and clobber runtime-populated tables,
+       e.g. RTType's InfoMap: cnt 131 -> 0 -> MissingType).  Mark initDone +
+       msirInitDone so ConstInit/UserInit emit nothing further.
+       Skip zero initializers: the info-struct blob is already zero (BSS).
+       The ctor is recorded in BOTH backend modes (the C-authoritative
+       @M3m3front-msir diagnostic path also lowers + runs the .ll).  Only in
+       AUTHORITATIVE MSIRObj mode do we mark initDone/msirInitDone — there the
+       ctor is the sole initializer, so ConstInit's CG GenLiteral and UserInit's
+       module-body store must both be suppressed; in diagnostic mode CG still
+       owns the real static init and must run. *)
+    IF t.initExpr # NIL AND NOT t.initZero THEN
+      VAR cv := RecordExpr.TryConstFieldMSIR (t.initExpr, mt);
       BEGIN
-        IF RecordExpr.TryCompileConstMSIR (t.initExpr, cv) AND cv # NIL THEN
-          (* whole-record constant (e.g. RTType's InfoMap tables) *)
+        IF cv # NIL THEN
           MSIR.ModuleAddGlobalInit (m, byteOff, cv);
-          (* In MSIRObj-authoritative mode the early global constructor now owns
-             this initialization (it runs before RTLinker, exactly like the C
-             backend's static data segment).  Mark it done so UserInit does NOT
-             also emit a runtime assignment in the module body — that assignment
-             would re-run AFTER RTLinker's FixTypes and wipe tables the runtime
-             already populated (e.g. RTType's `types` InfoMap: cnt 131 -> 0).
-             Only in authoritative mode: in the C-authoritative diagnostic path
-             ConstInit's GenLiteral still owns the real static init. *)
           IF Target.BackendMode IN Target.BackendMSIRSet THEN
             t.initDone := TRUE;
             t.msirInitDone := TRUE;
-          END;
-        ELSE
-          (* scalar ordinal constant with a non-zero value (e.g. RTType's
-             n_info := InfoChunk).  Store it at MType (memory) width so the
-             constructor's store matches the global's storage size. *)
-          folded := Expr.ConstValue (t.initExpr);
-          IF folded # NIL AND Type.IsOrdinal (t.type)
-             AND IntegerExpr.Split (folded, ti, tt)
-             AND TInt.ToInt (ti, iv) AND iv # 0 THEN
-            MSIR.ModuleAddGlobalInit (m, byteOff, MSIR.ConstInt (mt, iv));
-            IF Target.BackendMode IN Target.BackendMSIRSet THEN
-              t.initDone := TRUE;
-              t.msirInitDone := TRUE;
-            END;
           END;
         END;
       END;
@@ -1646,41 +1635,12 @@ PROCEDURE UserInit (t: T) =
       END;
       t.msirInitDone := TRUE;
     END;
-    (* MSIR: globals with simple constant initializers are statically initialized
-       by ConstInit (CG), setting initDone=TRUE before UserInit runs.  The MSIR
-       _M3_info struct is always zero-initialized, so we must still emit a
-       runtime store in the module init proc for those globals.
-       EXCEPTION: when DeclareGlobalMSIR already recorded an early global
-       constructor (@MSIR_InitGlobals) for this const initializer, it set
-       msirInitDone=TRUE.  That ctor runs BEFORE RTLinker, so re-emitting the
-       store here — in the module init proc, which runs AFTER RTLinker.FixTypes —
-       would clobber tables the runtime already populated (RTType's `types`
-       InfoMap: cnt 131 -> 0 -> MissingType crash).  Skip when the ctor owns it. *)
-    IF t.global AND t.initDone AND (t.initExpr # NIL) AND (NOT t.imported)
-       AND (NOT t.initStatic) AND (NOT t.initZero) AND (NOT t.msirInitDone)
-       AND MSIRBuilder.InProc () THEN
-      IF Expr.ConstValue (t.initExpr) # NIL THEN
-        VAR initVal := Expr.CompileMSIR (t.initExpr);
-            addr    := MSIRBuilder.LookupVarAddr (t);
-        BEGIN
-          IF initVal # NIL AND addr # NIL THEN
-            VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
-                blk   := MSIRBuilder.CurrentBlock ();
-                srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
-                dstW  := MSIR.BitWidth (slotT);
-            BEGIN
-              IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
-                IF srcW > dstW
-                  THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
-                  ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
-                END;
-              END;
-              MSIR.BuildStore (blk, initVal, addr);
-            END;
-          END;
-        END;
-      END;
-    END;
+    (* NOTE: module-global CONSTANT initializers are NOT emitted here.  In MSIRObj
+       mode DeclareGlobalMSIR records them in the early @MSIR_InitGlobals ctor
+       (runs before RTLinker, like the C backend's static data); in the C-
+       authoritative diagnostic path CG's ConstInit does the static init.  A late
+       module-body store here would run AFTER RTLinker.FixTypes and clobber
+       runtime-populated tables (RTType's InfoMap: cnt 131 -> 0 -> MissingType). *)
   END UserInit;
 
 (* EXPORTED *)

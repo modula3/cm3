@@ -797,6 +797,18 @@ PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
       IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
       RETURN MSIR.ConstInt(ft, intV);
     END;
+    (* Floating literal (ReelExpr): its CompileMSIR returns a pure ConstFloat
+       (no IR emitted).  Gate on a float field type so we never CompileMSIR a
+       non-scalar folded value (which would emit instructions). *)
+    IF ft # NIL AND (MSIR.Kind(ft) = MSIR.TypeKind.F32
+                     OR MSIR.Kind(ft) = MSIR.TypeKind.F64
+                     OR MSIR.Kind(ft) = MSIR.TypeKind.F128) THEN
+      cv := Expr.CompileMSIR(folded);
+      IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstFloat THEN
+        RETURN cv;
+      END;
+      RETURN NIL;
+    END;
     (* TEXT literal — CompileMSIR on a const TextExpr emits no IR instructions,
        it just registers the literal and returns a ConstTextLit value. *)
     IF TextExpr.IsTextExpr(folded) THEN
