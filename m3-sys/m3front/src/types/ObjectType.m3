@@ -937,6 +937,12 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     IF m = NIL THEN RETURN END;
     EVAL Type.CheckInfo (t, info);
     uid := Type.GlobalUID (t);
+    (* Idempotency + recursion terminator: skip if this typecell is already
+       registered in the module (a type may be reached both directly and as a
+       supertype of another). *)
+    FOR i := 0 TO MSIR.ModuleTypeDescCount (m) - 1 DO
+      IF MSIR.TypeDescUID (MSIR.ModuleTypeDesc (m, i)) = uid THEN RETURN END;
+    END;
     GetObjectTypeInfo (t, fldSize, fldAlign, methBytes, dataOff, parUID,
                        nSlots, names, vtableKnown);
     fldAlign := fldAlign DIV Target.Byte;
@@ -993,6 +999,27 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     (* Generate the field-default initializer proc (TC_initProc) if needed. *)
     GenInitProcMSIR (NARROW(t, P), desc);
     MSIR.ModuleAddTypeDesc (m, desc);
+    (* Register the supertype's typecell too, so RTLinker can resolve this
+       type's parentID (FinishTypecell -> FindType).  The C backend compiles the
+       whole super chain via Type.Compile; MSIR must likewise materialise every
+       visible/partial-revelation supertype (e.g. an object T <: Public = TEXT
+       OBJECT: the full revelation, Public, and TEXT are three distinct object
+       typecells).  Without this the intermediate Public was never emitted and
+       its UID was unregistered -> MissingType at startup.  The entry guard above
+       makes this idempotent and terminates the recursion. *)
+    VAR super := Super (t);
+    BEGIN
+      IF super # NIL THEN
+        TYPECASE super OF
+        | P (sp) => InitTypecellMSIR (sp);
+        ELSE
+          (* Non-P super (builtin TEXT/ROOT, or an opaque reference): its
+             typecell is materialised by its own path, so do not NARROW it here
+             (NARROW(t,P) would fail).  We only need to fill the intermediate
+             P supertypes (e.g. TextSub.Public) that no other path emits. *)
+        END;
+      END;
+    END;
   END InitTypecellMSIR;
 
 PROCEDURE FillOwnMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
