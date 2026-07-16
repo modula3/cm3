@@ -3851,28 +3851,30 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
        We define @<Mod>_I3 (the interface binder) first so it can be
        referenced without a preceding declare (which would conflict).
        All other binders are external and need explicit declare statements. *)
-    IF nImports > 0 THEN
-      (* Emit @<Mod>_I3, the module's own interface binder.
-         - An interface unit emits a STRONG definition.
-         - A non-interface unit ALWAYS emits a WEAK definition.  A MODULE Foo
-           that implements INTERFACE Foo lists Foo_I3 in its own import chain
-           (i3InImports = TRUE); when the interface and implementation are
-           compiled/linked as a single unit (no separate INTERFACE Foo object),
-           nobody else defines Foo_I3, so the implementation must.  Emitting it
-           `weak` is always safe: if a separately compiled INTERFACE Foo IS
-           linked, its strong definition overrides this weak fallback; otherwise
-           this weak definition provides the binder.  (Previously a non-interface
-           unit with i3InImports = TRUE only DECLARED the binder, leaving it
-           undefined at link time — the dominant MSIR-FAIL "missing _I3" cause.)
-         MaybeAddExtern skips the module's own _I3 so CollectExterns never
-         emits a `declare` for it — LLVM 22 rejects declare+define for the same
-         symbol in one module. *)
-      VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
-        Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
-      END;
+    (* Emit @<Mod>_I3, the module's own interface binder.  Emitted regardless of
+       nImports so that an interface with no imports still provides its binder
+       (a nImports=0 interface previously emitted nothing, which is what forced
+       the weak-fallback workaround below and left importers with an undefined
+       _I3 — commit d265a0cbd9).
+       - Interface unit: STRONG definition (runs the init body on mode#0).
+       - Non-interface unit that imports a separate interface (i3InImports): the
+         separate interface unit owns @<Mod>_I3 (and, crucially, the interface's
+         object typecells tc_obj, which live ONLY in that unit).  DECLARE _I3
+         external here so the archive linker is FORCED to pull the interface
+         unit.  A weak definition here would satisfy the reference, leave the
+         interface unit (and its typecells) unlinked, and RTLinker's
+         ResolveTypeLinks would then fail with MissingType at startup for any
+         type declared in that interface (e.g. RTTipe.Subrange) — even though
+         the module's own import chain names _I3, the weak binder returns THIS
+         module's info, not the interface unit's typecell-bearing info.
+       - Standalone non-interface unit (no separate interface): WEAK definition
+         as a fallback binder. *)
+    IF isInterface THEN
+      Wr.PutText(wr, "\ndefine ptr @" & modName & "_I3(" & ip_t
+                     & " %mode) personality ptr @__gxx_personality_v0 {\n");
       (* For an interface with an init body, run it on mode # 0 (mirrors the
          _M3 binder), so VAR initializers in the interface execute. *)
-      IF isInterface AND bodyExists THEN
+      IF bodyExists THEN
         Wr.PutText(wr, "entry:\n");
         Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
         Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
@@ -3885,7 +3887,21 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
       END;
       Wr.PutText(wr, "  ret ptr " & infoName & "\n");
       Wr.PutText(wr, "}\n");
+    ELSIF i3InImports THEN
+      (* Force the separate interface unit to be pulled from the archive by
+         leaving _I3 an undefined external reference.  Skip if CollectExterns
+         already emitted the declare (LLVM 22+ rejects duplicate declares). *)
+      IF NOT NameInExterns(externs, modName & "_I3") THEN
+        Wr.PutText(wr, "\ndeclare ptr @" & modName & "_I3(" & ip_t & ")\n");
+      END;
+    ELSE
+      Wr.PutText(wr, "\ndefine weak ptr @" & modName & "_I3(" & ip_t & " %mode) {\n");
+      Wr.PutText(wr, "entry:\n");
+      Wr.PutText(wr, "  ret ptr " & infoName & "\n");
+      Wr.PutText(wr, "}\n");
+    END;
 
+    IF nImports > 0 THEN
       Wr.PutText(wr, "\n; RT0.ImportInfo chain for " & modName & "\n");
       (* Declare external binders (skip modName_I3 and any already declared by
          CollectExterns — LLVM 22+ rejects duplicate declare statements). *)
@@ -4052,33 +4068,10 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
         END;
       END;
     END;
-    (* Interface binder @<Mod>_I3.  Define it when this is the interface unit or
-       a standalone implementation; declare it when a separate interface exists. *)
-    IF nImports = 0 THEN
-      IF isInterface OR NOT i3InImports THEN
-        VAR link := "";  BEGIN  IF NOT isInterface THEN link := "weak " END;
-          Wr.PutText(wr, "\ndefine " & link & "ptr @" & modName & "_I3(" & ip_t
-                         & " %mode) personality ptr @__gxx_personality_v0 {\n");
-        END;
-        (* Run the interface init body on mode # 0 (mirrors the _M3 binder), so
-           an import-less interface's VAR initializers still execute. *)
-        IF isInterface AND bodyExists THEN
-          Wr.PutText(wr, "entry:\n");
-          Wr.PutText(wr, "  %do_body = icmp ne " & ip_t & " %mode, 0\n");
-          Wr.PutText(wr, "  br i1 %do_body, label %run, label %done\n");
-          Wr.PutText(wr, "run:\n");
-          Wr.PutText(wr, "  call void " & bodyName & "()\n");
-          Wr.PutText(wr, "  br label %done\n");
-          Wr.PutText(wr, "done:\n");
-        ELSE
-          Wr.PutText(wr, "entry:\n");
-        END;
-        Wr.PutText(wr, "  ret ptr " & infoName & "\n");
-        Wr.PutText(wr, "}\n");
-      ELSE
-        Wr.PutText(wr, "\ndeclare ptr @" & modName & "_I3(" & ip_t & ")\n");
-      END;
-    END;
+    (* NOTE: the @<Mod>_I3 interface binder is emitted unconditionally above
+       (interface: strong define; module importing a separate interface: declare
+       to force the archive to pull that unit; standalone module: weak define),
+       so no per-nImports emission is needed here. *)
 
     (* Binder function: mode=0 → return MI; mode≠0 → run body + return MI.
        For interface modules, @<Mod>_I3 was already defined in the imports section
