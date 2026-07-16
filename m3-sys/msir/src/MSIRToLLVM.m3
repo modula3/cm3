@@ -3238,7 +3238,86 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                 & Fmt.Int(Text.Length(uName) + 1) & " x i8] c\""
                 & uName & "\\00\"\n");
             END;
-            IF nMethods > 0 AND MSIR.TypeDescDynamicMethOff(d) THEN
+            IF MSIR.TypeDescUseLinkProc(d) AND MSIR.TypeDescMethodInitCount(d) > 0 THEN
+              (* C-GenLinkProc-faithful mode (mirrors ObjectType.GenLinkProc):
+                 store each method (own OR override) at its DECLARING type's method
+                 base + method.offset.  defaultMethods stays null so RTLinker
+                 allocates the vtable and copies the parent's methods first; this
+                 linkProc then overlays our overrides/own methods at the correct
+                 absolute slots.  declBase is a compile-time constant when known,
+                 else loaded at runtime from the declaring type's typecell
+                 OTC_methodOffset (via its TypeLink @tl_obj_<declUID>). *)
+              VAR
+                lpName  := nm & ".linkproc";
+                nInit   := MSIR.TypeDescMethodInitCount(d);
+                moBytes := M3RT.OTC_methodOffset DIV Target.Char.size;
+              BEGIN
+                lpv := "@" & lpName;
+                (* Pass 1: declare the method procs not defined in this module. *)
+                FOR j := 0 TO nInit - 1 DO
+                  VAR mname := MSIR.TypeDescMethodInitProc(d, j);
+                      already := FALSE;
+                  BEGIN
+                    IF mname # NIL THEN
+                      FOR di := 0 TO declaredMethods.size() - 1 DO
+                        IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
+                          already := TRUE; EXIT
+                        END;
+                      END;
+                      IF NOT IsMethodProcDefined(m, mname) AND NOT already THEN
+                        Wr.PutText(wr, "declare void @" & mname & "()\n");
+                        declaredMethods.addhi(mname);
+                      END;
+                    END;
+                  END;
+                END;
+                (* Pass 2: the linkProc body. *)
+                Wr.PutText(wr, "define internal void @" & lpName
+                               & "(ptr %tp) personality ptr @__gxx_personality_v0 {\n");
+                Wr.PutText(wr, "entry:\n");
+                Wr.PutText(wr, "  %dm.ptr = getelementptr inbounds i8, ptr %tp, i64 "
+                               & Fmt.Int(OTC_defaultMethods_BYTES) & "\n");
+                Wr.PutText(wr, "  %dm = load ptr, ptr %dm.ptr\n");
+                FOR j := 0 TO nInit - 1 DO
+                  VAR
+                    mname := MSIR.TypeDescMethodInitProc(d, j);
+                    off   := MSIR.TypeDescMethodInitOff(d, j);
+                    sj    := Fmt.Int(j);
+                  BEGIN
+                    IF MSIR.TypeDescMethodInitBaseKnown(d, j) THEN
+                      (* absolute byte offset is a compile-time constant *)
+                      VAR ab := MSIR.TypeDescMethodInitBase(d, j) + off;
+                      BEGIN
+                        Wr.PutText(wr, "  %slot." & sj
+                                       & " = getelementptr inbounds i8, ptr %dm, i64 "
+                                       & Fmt.Int(ab) & "\n");
+                      END;
+                    ELSE
+                      (* runtime: absolute = declaring cell's OTC_methodOffset + off *)
+                      VAR du := Fmt.Int(MSIR.TypeDescMethodInitDeclUID(d, j));
+                      BEGIN
+                        Wr.PutText(wr, "  %dtc." & sj & " = load ptr, ptr @tl_obj_"
+                                       & du & "\n");
+                        Wr.PutText(wr, "  %dmo.ptr." & sj
+                                       & " = getelementptr inbounds i8, ptr %dtc."
+                                       & sj & ", i64 " & Fmt.Int(moBytes) & "\n");
+                        Wr.PutText(wr, "  %dmo." & sj & " = load i64, ptr %dmo.ptr."
+                                       & sj & "\n");
+                        Wr.PutText(wr, "  %ab." & sj & " = add i64 %dmo." & sj
+                                       & ", " & Fmt.Int(off) & "\n");
+                        Wr.PutText(wr, "  %slot." & sj
+                                       & " = getelementptr inbounds i8, ptr %dm, i64 %ab."
+                                       & sj & "\n");
+                      END;
+                    END;
+                    Wr.PutText(wr, "  store ptr @" & mname & ", ptr %slot."
+                                   & sj & "\n");
+                  END;
+                END;
+                Wr.PutText(wr, "  ret void\n}\n");
+                (* defaultMethods (dmv) stays null. *)
+              END;
+            ELSIF nMethods > 0 AND MSIR.TypeDescDynamicMethOff(d) THEN
               (* Dynamic linkProc mode: method names at LOCAL indices (0..nLocal-1),
                  supertype method count unknown at compile time.  Emit a linkProc
                  that reads OTC_methodOffset from the TypeCell at runtime (set by

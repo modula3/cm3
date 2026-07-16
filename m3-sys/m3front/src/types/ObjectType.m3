@@ -14,7 +14,7 @@ IMPORT Value, Error, RecordType, ProcType, OpaqueType, Revelation;
 IMPORT Field, Reff, Addr, Word, M3Buf, ErrType, Procedure, AddressExpr;
 IMPORT ObjectAdr, ObjectRef, Token, Module, Method, Brand;
 IMPORT AssignStmt, M3RT, Scanner, TipeMap, TipeDesc, TypeFP, Target;
-IMPORT MSIR, MSIREmit, MSIRBuilder, MSIRType, Fmt;
+IMPORT MSIR, MSIREmit, MSIRBuilder, MSIRType, Fmt, Text;
 IMPORT PackedType;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -920,6 +920,71 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
     MSIR.ModuleAddProc (m, proc);
   END GenInitProcMSIR;
 
+PROCEDURE GenLinkProcMSIR (p: P;  desc: MSIR.TypeDesc): BOOLEAN =
+(* MSIR analogue of ObjectType.GenLinkProc.  Record one method-init entry per
+   method (own method OR override) that has a proc-literal default, so the
+   emitter can build a linkProc storing each proc at its absolute vtable byte
+   offset = (declaring type's method base) + method.offset.  The declaring
+   type's base is a compile-time constant when MethodOffset(tVisible) >= 0, else
+   resolved at runtime from that type's typecell OTC_methodOffset (declUID).
+   Returns TRUE if any entry was recorded. *)
+  VAR
+    m      : MSIR.Module := MSIREmit.CurrentModule ();
+    v      : Value.T := Scope.ToList (p.methods);
+    method : Method.Info;
+    top    : Value.T;
+    tVis   : Type.T;
+    expr   : Expr.T;
+    proc   : Value.T;
+    declBase : INTEGER;
+    any    : BOOLEAN := FALSE;
+
+  PROCEDURE EnsureObjTypeLink (uid: INTEGER) =
+  (* Register tl_obj_<uid> in the current module so the emitted linkProc can
+     load the declaring type's typecell (and its OTC_methodOffset) at runtime.
+     Idempotent. *)
+    VAR tlnm := "tl_obj_" & Fmt.Int (uid);
+    BEGIN
+      IF m = NIL THEN RETURN END;
+      FOR i := 0 TO MSIR.ModuleTypeLinkCount (m) - 1 DO
+        IF Text.Equal (MSIR.TypeLinkName (MSIR.ModuleTypeLink (m, i)), tlnm) THEN
+          RETURN;
+        END;
+      END;
+      MSIR.ModuleAddTypeLink (m, MSIR.NewTypeLink (tlnm, uid));
+    END EnsureObjTypeLink;
+
+  BEGIN
+    WHILE (v # NIL) DO
+      Method.SplitX (v, method);
+      IF (method.dfault # NIL) THEN
+        expr := Expr.ConstValue (method.dfault);
+        IF (expr # NIL) AND UserProc.IsProcedureLiteral (expr, proc)
+           AND (proc # NIL) THEN
+          VAR nm := Value.GlobalName (proc, dots := FALSE, with_module := TRUE);
+          BEGIN
+            IF (nm # NIL) AND LookUp (p, method.name, top, tVis) AND (tVis # NIL) THEN
+              declBase := MethodOffset (tVis);
+              IF (declBase >= 0) THEN
+                MSIR.AddTypeDescMethodInit (desc, nm,
+                    method.offset DIV Target.Byte, TRUE,
+                    declBase DIV Target.Byte, 0);
+              ELSE
+                EnsureObjTypeLink (Type.GlobalUID (tVis));
+                MSIR.AddTypeDescMethodInit (desc, nm,
+                    method.offset DIV Target.Byte, FALSE, 0,
+                    Type.GlobalUID (tVis));
+              END;
+              any := TRUE;
+            END;
+          END;
+        END;
+      END;
+      v := v.next;
+    END;
+    RETURN any;
+  END GenLinkProcMSIR;
+
 PROCEDURE InitTypecellMSIR (t: Type.T) =
   VAR
     fldSize, fldAlign, methBytes, dataOff, nSlots: INTEGER;
@@ -956,34 +1021,25 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
                                 parUID, dataOff, names^, methBytes);
-    ELSIF NOT vtableKnown AND MethodOffset(t) < 0 THEN
-      (* Opaque supertype: static method offset unknown.  Collect own methods at
-         LOCAL indices (0..nLocal-1).  The MSIR emitter generates a dynamic
-         linkProc that reads OTC_methodOffset at runtime (set by RTLinker from
-         the parent's methodSize) and stores each own method at the correct
-         absolute vtable slot.  This fixes UndefinedMethod crashes for types
-         that extend an opaque supertype defined in another module. *)
-      VAR p := NARROW(t, P);
-          ownNames := NEW(REF ARRAY OF TEXT, p.methodSize DIV Target.Address.size);
-      BEGIN
-        IF FillOwnMethodNames(p, ownNames^) AND NUMBER(ownNames^) > 0 THEN
-          desc := MSIR.NewTypeDesc("tc_obj_" & Fmt.Int(uid), uid,
-                                   info.isTraced, ORD(M3RT.TypeKind.Obj),
-                                   fldSize, fldAlign,
-                                   parUID, dataOff, ownNames^, methBytes);
-          MSIR.SetTypeDescDynamicMethOff(desc, TRUE);
-        ELSE
-          desc := MSIR.NewTypeDesc("tc_obj_" & Fmt.Int(uid), uid,
-                                   info.isTraced, ORD(M3RT.TypeKind.Obj),
-                                   fldSize, fldAlign,
-                                   parUID, dataOff, ARRAY OF TEXT{}, methBytes);
-        END;
-      END;
     ELSE
+      (* Not a fully-static vtable — an opaque supertype somewhere in the chain,
+         or some inherited slot's default is not a visible proc literal here.
+         Mirror C's ObjectType.GenLinkProc: emit defaultMethods=NIL and a linkProc
+         that stores each method-with-default (own method OR override of an
+         inherited method) at its DECLARING type's method base + method.offset.
+         RTLinker copies the parent's method suite into defaultMethods before
+         running the linkProc, so non-overridden inherited slots stay valid and
+         our overrides overlay the correct absolute slots.  This is the
+         override-aware replacement for the old FillOwnMethodNames path, which
+         handled only own methods and silently dropped every override (e.g.
+         FileRd.T, which is override-only -> init at slot 6 was UndefinedMethod). *)
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
                                 info.isTraced, ORD (M3RT.TypeKind.Obj),
                                 fldSize, fldAlign,
                                 parUID, dataOff, ARRAY OF TEXT{}, methBytes);
+      IF GenLinkProcMSIR (NARROW(t, P), desc) THEN
+        MSIR.SetTypeDescUseLinkProc (desc, TRUE);
+      END;
     END;
     VAR tfp := TypeFP.FromType (t);
         fpa : ARRAY [0..7] OF [0..255];

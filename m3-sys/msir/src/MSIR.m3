@@ -1029,6 +1029,60 @@ TYPE GlobalInitRec = BRANDED "MSIR.GlobalInit" REF RECORD
   val     : Value;
 END;
 
+(* One entry per object method that has a proc default (own methods AND
+   overrides of inherited methods).  Mirrors C's ObjectType.GenLinkProc: the
+   emitted linkProc stores `proc` into the object's defaultMethods vtable at
+   byte offset `declBase + offBytes`, where declBase is the DECLARING type's
+   method-region base — a compile-time constant when known, else loaded at
+   runtime from the declaring type's typecell OTC_methodOffset (declUID). *)
+TYPE MethodInitRec = BRANDED "MSIR.MethodInit" REF RECORD
+  proc          : TEXT;
+  offBytes      : INTEGER;   (* method.offset within its declaring type, bytes *)
+  declBaseKnown : BOOLEAN;
+  declBase      : INTEGER;   (* declaring type method base (bytes), if known *)
+  declUID       : INTEGER;   (* declaring type UID (runtime methodOffset load) *)
+END;
+
+PROCEDURE AddTypeDescMethodInit(d: TypeDesc;  proc: TEXT;  offBytes: INTEGER;
+                                declBaseKnown: BOOLEAN;  declBase: INTEGER;
+                                declUID: INTEGER) =
+  BEGIN
+    IF d.methodInits = NIL THEN d.methodInits := NEW(RefSeq.T).init() END;
+    d.methodInits.addhi(NEW(MethodInitRec, proc := proc, offBytes := offBytes,
+                            declBaseKnown := declBaseKnown, declBase := declBase,
+                            declUID := declUID));
+  END AddTypeDescMethodInit;
+
+PROCEDURE TypeDescMethodInitCount(d: TypeDesc): INTEGER =
+  BEGIN IF d.methodInits = NIL THEN RETURN 0 END; RETURN d.methodInits.size() END
+  TypeDescMethodInitCount;
+
+PROCEDURE TypeDescMethodInitProc(d: TypeDesc; i: INTEGER): TEXT =
+  BEGIN RETURN NARROW(d.methodInits.get(i), MethodInitRec).proc END
+  TypeDescMethodInitProc;
+
+PROCEDURE TypeDescMethodInitOff(d: TypeDesc; i: INTEGER): INTEGER =
+  BEGIN RETURN NARROW(d.methodInits.get(i), MethodInitRec).offBytes END
+  TypeDescMethodInitOff;
+
+PROCEDURE TypeDescMethodInitBaseKnown(d: TypeDesc; i: INTEGER): BOOLEAN =
+  BEGIN RETURN NARROW(d.methodInits.get(i), MethodInitRec).declBaseKnown END
+  TypeDescMethodInitBaseKnown;
+
+PROCEDURE TypeDescMethodInitBase(d: TypeDesc; i: INTEGER): INTEGER =
+  BEGIN RETURN NARROW(d.methodInits.get(i), MethodInitRec).declBase END
+  TypeDescMethodInitBase;
+
+PROCEDURE TypeDescMethodInitDeclUID(d: TypeDesc; i: INTEGER): INTEGER =
+  BEGIN RETURN NARROW(d.methodInits.get(i), MethodInitRec).declUID END
+  TypeDescMethodInitDeclUID;
+
+PROCEDURE SetTypeDescUseLinkProc(d: TypeDesc; b: BOOLEAN) =
+  BEGIN d.useLinkProc := b END SetTypeDescUseLinkProc;
+
+PROCEDURE TypeDescUseLinkProc(d: TypeDesc): BOOLEAN =
+  BEGIN RETURN d.useLinkProc END TypeDescUseLinkProc;
+
 PROCEDURE ModuleAddGlobalInit(m: Module;  byteOff: INTEGER;  val: Value) =
   BEGIN
     FOR i := 0 TO m.globalInits.size() - 1 DO
@@ -1177,6 +1231,10 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
   dynamicMethOff: BOOLEAN  := FALSE;  (* OBJ: method names at LOCAL indices; linkProc reads OTC_methodOffset at runtime *)
+  useLinkProc   : BOOLEAN  := FALSE;  (* OBJ: emit defaultMethods=NIL + a C-GenLinkProc-style
+                                         linkProc from methodInits (handles overrides of
+                                         inherited methods; RTLinker copies parent first) *)
+  methodInits   : RefSeq.T := NIL;    (* OBJ: elements MethodInitRec (see below) *)
   nDimensions   : INTEGER := 0;  (* Array: open array rank *)
   elementSize   : INTEGER := 0;  (* Array: element byte size *)
   ptrVal        : Value := NIL;

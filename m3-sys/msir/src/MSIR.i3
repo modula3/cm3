@@ -353,6 +353,21 @@ PROCEDURE TypeDescDynamicMethOff(d: TypeDesc): BOOLEAN;
 PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN);
 PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescMethod      (d: TypeDesc;  i: INTEGER): TEXT;
+(* C-GenLinkProc-style method initialisers: one per method (own or override)
+   with a proc default.  When useLinkProc is set the emitter produces
+   defaultMethods=NIL + a linkProc that stores each proc at declBase+offBytes
+   (declBase const if known, else runtime OTC_methodOffset of declUID's cell). *)
+PROCEDURE AddTypeDescMethodInit(d: TypeDesc;  proc: TEXT;  offBytes: INTEGER;
+                                declBaseKnown: BOOLEAN;  declBase: INTEGER;
+                                declUID: INTEGER);
+PROCEDURE TypeDescMethodInitCount   (d: TypeDesc): INTEGER;
+PROCEDURE TypeDescMethodInitProc    (d: TypeDesc;  i: INTEGER): TEXT;
+PROCEDURE TypeDescMethodInitOff     (d: TypeDesc;  i: INTEGER): INTEGER;
+PROCEDURE TypeDescMethodInitBaseKnown(d: TypeDesc;  i: INTEGER): BOOLEAN;
+PROCEDURE TypeDescMethodInitBase    (d: TypeDesc;  i: INTEGER): INTEGER;
+PROCEDURE TypeDescMethodInitDeclUID (d: TypeDesc;  i: INTEGER): INTEGER;
+PROCEDURE SetTypeDescUseLinkProc(d: TypeDesc; b: BOOLEAN);
+PROCEDURE TypeDescUseLinkProc   (d: TypeDesc): BOOLEAN;
 (* Array TypeCell extensions (kind = ORD(M3RT.TypeKind.Array)). *)
 PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER);
 PROCEDURE TypeDescNDimensions (d: TypeDesc): INTEGER;
