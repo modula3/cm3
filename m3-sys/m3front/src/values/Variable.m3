@@ -337,6 +337,12 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
       VAR ptrByteOff := t.offset DIV Target.Char.size;
       BEGIN
         MSIR.ModuleAddGlobalInit (m, ptrByteOff, MSIR.GlobalAddrValue (g));
+        (* Reserve the pointer slot in the info-struct blob so the emitter sizes
+           @<Mod>_M3_info to contain it.  Without this, nextGlobalOff stays at the
+           MI header size, no [N x i8] blob is emitted, and the ctor's store at
+           ptrByteOff overflows past the info struct into the adjacent global
+           (e.g. corrupting a typecell's selfID -> FinishObjectTypes MissingType). *)
+        MSIR.ModuleNoteGlobal (m, ptrByteOff + Target.Address.bytes);
       END;
       RETURN;
     END;
