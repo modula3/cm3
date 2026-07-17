@@ -4418,14 +4418,29 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     (* TypeLink globals for type_cell_ptrs chain, plus MSIR_InitTypeLinks *)
     EmitTypeLinks(wr, m, forRuntime);
 
-    (* Exception descriptors: { i64 uid, ptr null, i64 0 } = ExceptionDesc *)
+    (* Exception descriptors: RT0.ExceptionDesc = { i64 uid, ptr name, i64 0 }.
+       The `name` field must point at the qualified name string ("Module.Exc")
+       so RTException.Crash can print it (a null name there prints blank and
+       then SEGVs in M3toC.StoT). *)
     FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO
-      VAR d := MSIR.ModuleExcDesc(m, i);
+      VAR d       := MSIR.ModuleExcDesc(m, i);
+          disp    := MSIR.ExcDescDisplay(d);
+          nameRef := "ptr null";
       BEGIN
-        Wr.PutText(wr, "\n@" & MSIR.ExcDescName(d)
+        IF disp # NIL AND NOT Text.Equal(disp, "") THEN
+          VAR strSym := "@" & MSIR.ExcDescName(d) & "_name";
+          BEGIN
+            (* M3 exception names are safe LLVM string chars (idents + '.'). *)
+            Wr.PutText(wr, "\n" & strSym & " = internal constant ["
+                           & Fmt.Int(Text.Length(disp) + 1) & " x i8] c\""
+                           & disp & "\\00\"\n");
+            nameRef := "ptr " & strSym;
+          END;
+        END;
+        Wr.PutText(wr, "@" & MSIR.ExcDescName(d)
                        & " = internal global { i64, ptr, i64 } { i64 "
                        & Fmt.Int(MSIR.ExcDescUID(d))
-                       & ", ptr null, i64 0 }\n");
+                       & ", " & nameRef & ", i64 0 }\n");
       END;
     END;
 

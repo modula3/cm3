@@ -1185,16 +1185,18 @@ PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
 (*---------------------------------------------- exception descriptors *)
 
 REVEAL ExcDesc = BRANDED "MSIR.ExcDesc" REF RECORD
-  name  : TEXT;
-  uid   : INTEGER;
-  ptrVal: Value := NIL;  (* cached ptr value *)
+  name    : TEXT;
+  uid     : INTEGER;
+  display : TEXT := NIL;  (* human-readable qualified name, e.g. "Main.a" *)
+  ptrVal  : Value := NIL;  (* cached ptr value *)
 END;
 
-PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER): ExcDesc =
+PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL): ExcDesc =
   VAR d := NEW(ExcDesc);  v := NEW(Value);
   BEGIN
-    d.name := name;
-    d.uid  := uid;
+    d.name    := name;
+    d.uid     := uid;
+    d.display := display;
     (* Use a bare InsnResult-style value with the full @symbol name so
        LLOpVal emits it as-is without going through LLGlobalSym. *)
     v.type  := TPtr(TVoid());
@@ -1206,6 +1208,7 @@ PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER): ExcDesc =
 
 PROCEDURE ExcDescName (d: ExcDesc): TEXT    = BEGIN RETURN d.name   END ExcDescName;
 PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER = BEGIN RETURN d.uid    END ExcDescUID;
+PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT = BEGIN RETURN d.display END ExcDescDisplay;
 PROCEDURE ExcDescValue(d: ExcDesc): Value   = BEGIN RETURN d.ptrVal END ExcDescValue;
 
 PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc) = BEGIN m.excDescs.addhi(d) END ModuleAddExcDesc;

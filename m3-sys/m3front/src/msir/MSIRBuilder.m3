@@ -1660,8 +1660,12 @@ PROCEDURE ExcDescValue (v: Value.T): MSIR.Value =
         RETURN MSIR.ExcDescValue(desc);
       END;
     END;
-    (* Not found — create and register. *)
-    desc := MSIR.NewExcDesc(name, uid);
+    (* Not found — create and register.  Carry the qualified display name
+       ("Module.Exc") so the descriptor's RT0.ExceptionDesc.name field can point
+       at it — RTException.Crash reads it via M3toC.StoT to print "Unhandled
+       exception: Module.Exc"; a null name there prints blank and then SEGVs. *)
+    desc := MSIR.NewExcDesc(name, uid,
+              Value.GlobalName(v, dots := TRUE, with_module := TRUE));
     MSIR.ModuleAddExcDesc(m, desc);
     RETURN MSIR.ExcDescValue(desc);
   END ExcDescValue;

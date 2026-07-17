@@ -298,9 +298,10 @@ PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
    directly as the 'ex' argument to RTHooks__Raise. *)
 TYPE ExcDesc <: REFANY;
 
-PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER): ExcDesc;
+PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL): ExcDesc;
 PROCEDURE ExcDescName (d: ExcDesc): TEXT;    (* LLVM global symbol *)
 PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER;
+PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT; (* qualified name, e.g. "Main.a"; NIL if none *)
 PROCEDURE ExcDescValue(d: ExcDesc): Value;   (* ptr to descriptor *)
 
 PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc);
