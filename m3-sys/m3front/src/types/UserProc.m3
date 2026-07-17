@@ -414,8 +414,15 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
                 dynBaseVal  := MSIR.BuildLoad(b2, "", intT,
                                  MSIRBuilder.BuildPtrByteOff(b2, "", tc, otcMethOff));
                 b2 := MSIRBuilder.CurrentBlock();
+                (* methodInfo.offset is a BIT offset within this type's own
+                   methods; the runtime OTC_methodOffset is in BYTES.  Convert
+                   the method offset to bytes before adding (the const path at
+                   the bottom of this proc divides by Target.Address.size, and
+                   the linkProc store divides by Target.Byte — this runtime path
+                   previously forgot, landing 8x too far into the vtable). *)
                 totalByteOff := MSIR.BuildIAdd(b2, "", dynBaseVal,
-                                  MSIR.ConstInt(intT, methodInfo.offset));
+                                  MSIR.ConstInt(intT,
+                                    methodInfo.offset DIV Target.Char.size));
                 b2 := MSIRBuilder.CurrentBlock();
                 (* Load vtable pointer from object (first word). *)
                 suite := MSIR.BuildLoad(b2, "", ptrT,
