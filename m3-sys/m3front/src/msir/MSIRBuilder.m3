@@ -1591,6 +1591,25 @@ PROCEDURE WidenCallResult(v: MSIR.Value;  resultType: Type.T): MSIR.Value =
     RETURN CoerceToMSIR(curBlock, v, MSIRType.ComputeType(resultType));
   END WidenCallResult;
 
+PROCEDURE PackConstBits(byteVals: REF ARRAY OF INTEGER;
+                        bitOff, bitWidth, value: INTEGER) =
+  VAR twoW := 1;  v := value;  p2 := 1;
+  BEGIN
+    FOR k := 1 TO bitWidth DO twoW := twoW * 2 END;    (* 2^bitWidth *)
+    v := v MOD twoW;
+    IF v < 0 THEN v := v + twoW END;
+    FOR bit := 0 TO bitWidth - 1 DO
+      IF (v DIV p2) MOD 2 = 1 THEN
+        VAR pos := bitOff + bit;  bitp2 := 1;
+        BEGIN
+          FOR z := 1 TO pos MOD Target.Byte DO bitp2 := bitp2 * 2 END;  (* 2^(pos MOD 8) *)
+          byteVals[pos DIV Target.Byte] := byteVals[pos DIV Target.Byte] + bitp2;
+        END;
+      END;
+      p2 := p2 * 2;
+    END;
+  END PackConstBits;
+
 PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value) =
   VAR
     assertProc := HookProc(RunTyme.Hook.AssertFailed);  (* RTHooks__AssertFailed *)
@@ -2317,6 +2336,40 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
     nExplicit := ArrayExpr.EltCount(ae);
     IF NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
       nTotal := nExplicit;
+    END;
+    (* Sub-byte packed element array (BITS n FOR, n < 8): the declared storage is
+       a byte array [nBytes x i8] with elements bit-packed, so emitting one
+       ConstInt per logical element (nTotal values under an nBytes-long type) is a
+       type mismatch (p279 ARRAY[2..6] OF BITS 6; p277 BITS 5/4 arrays).  Fold the
+       constant elements and pack them into bytes at compile time, matching the
+       little-endian bit-within-byte layout InsertBitField uses on the runtime
+       constructor path so the packed reads (ExtractBitField) see the same bits. *)
+    VAR eltPack := ArrayType.EltPack(arrType);
+    BEGIN
+      IF eltPack > 0 AND eltPack < Target.Byte THEN
+        VAR nBytes   := (nTotal * eltPack + Target.Byte - 1) DIV Target.Byte;
+            byteVals := NEW(REF ARRAY OF INTEGER, nBytes);
+        BEGIN
+          FOR j := 0 TO nBytes - 1 DO byteVals[j] := 0 END;
+          FOR i := 0 TO nTotal - 1 DO
+            VAR ev := Expr.CompileMSIR(ArrayExpr.Elt(ae, MIN(i, nExplicit - 1)));
+            BEGIN
+              IF ev = NIL OR MSIR.GetValueKind(ev) # MSIR.ValueKind.ConstInt THEN
+                Abandon("ConstArray: packed element is not a constant integer");
+                RETURN NIL;
+              END;
+              PackConstBits(byteVals, i * eltPack, eltPack, MSIR.GetIntVal(ev));
+            END;
+          END;
+          VAR belts := NEW(REF ARRAY OF MSIR.Value, nBytes);
+          BEGIN
+            FOR j := 0 TO nBytes - 1 DO
+              belts[j] := MSIR.ConstInt(MSIR.TI(Target.Byte), byteVals[j]);
+            END;
+            RETURN MSIR.ConstAggArray(arrMsir, belts^);
+          END;
+        END;
+      END;
     END;
     elts := NEW(REF ARRAY OF MSIR.Value, nTotal);
     FOR i := 0 TO nTotal - 1 DO

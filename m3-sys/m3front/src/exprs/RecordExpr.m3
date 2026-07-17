@@ -779,7 +779,13 @@ PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
    Mirrors the old TryConstFieldMSIR struct case. *)
   VAR cv: MSIR.Value;
   BEGIN
-    IF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.Struct THEN
+    (* Accept a Struct field OR a packed record lowered to a [N x i8] byte blob
+       (ByteArrayFallback); TryCompileConstMSIR routes the latter to the
+       bit-packing path (p279 record half, p277). *)
+    IF ft # NIL
+       AND (MSIR.Kind (ft) = MSIR.TypeKind.Struct
+            OR (MSIR.Kind (ft) = MSIR.TypeKind.FixedArray
+                AND MSIR.Kind (MSIR.FixedArrayElt (ft)) = MSIR.TypeKind.I8)) THEN
       IF TryCompileConstMSIR (p, cv) AND cv # NIL THEN RETURN cv END;
     END;
     RETURN NIL;
@@ -815,9 +821,15 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
     IF NOT p.is_const THEN RETURN FALSE END;
     IF p.map = NIL    THEN RETURN FALSE END;
     msirT := MSIRType.Translate(p.tipe);
-    IF msirT = NIL OR MSIR.Kind(msirT) # MSIR.TypeKind.Struct THEN
-      RETURN FALSE;
+    IF msirT = NIL THEN RETURN FALSE END;
+    (* Packed record represented as [N x i8] (ByteArrayFallback): bit-pack each
+       field's folded value into the byte array, mirroring CompileLValueMSIR's
+       runtime InsertBitField path (p279 record half; p277 packed records). *)
+    IF MSIR.Kind(msirT) = MSIR.TypeKind.FixedArray
+       AND MSIR.Kind(MSIR.FixedArrayElt(msirT)) = MSIR.TypeKind.I8 THEN
+      RETURN TryPackedRecordConstMSIR(p, msirT, v);
     END;
+    IF MSIR.Kind(msirT) # MSIR.TypeKind.Struct THEN RETURN FALSE END;
     nf := NUMBER(p.map^);
     IF nf # MSIR.StructFieldCount(msirT) THEN RETURN FALSE END;
     fields := NEW(REF ARRAY OF MSIR.Value, nf);
@@ -846,6 +858,67 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
     v := MSIR.ConstStruct(msirT, fields^);
     RETURN TRUE;
   END TryCompileConstMSIR;
+
+PROCEDURE TryPackedRecordConstMSIR(p: P;  msirT: MSIR.T;
+                                   VAR v: MSIR.Value): BOOLEAN =
+  (* Build a packed [N x i8] constant for a const record whose fields are
+     bit-packed (BITS n FOR ...).  Each field's folded value is OR'd into the
+     byte array at its bit offset/size (PackConstBits), matching the runtime
+     constructor (InsertBitField) and the readers (ExtractBitField).  A field
+     that is itself a packed [M x i8] aggregate (nested packed record/array) has
+     its bytes copied in.  Returns FALSE (caller leaves the global unhandled) for
+     any field whose constant we cannot reduce to bytes. *)
+  VAR
+    nBytes    := VAL(MSIR.FixedArrayLen(msirT), INTEGER);
+    byteVals  := NEW(REF ARRAY OF INTEGER, nBytes);
+    fieldInfo : Field.Info;
+    fti       : Type.Info;
+    ft        : MSIR.T;
+    fv        : MSIR.Value;
+  BEGIN
+    FOR j := 0 TO nBytes - 1 DO byteVals[j] := 0 END;
+    FOR i := 0 TO LAST(p.map^) DO
+      WITH info = p.map^[i] DO
+        IF info.expr # NIL THEN
+          Field.Split(info.field, fieldInfo);
+          EVAL Type.CheckInfo(fieldInfo.type, fti);
+          ft := MSIRType.Translate(fieldInfo.type);
+          fv := TryConstFieldMSIR(info.expr, ft);
+          IF fv = NIL THEN RETURN FALSE END;
+          CASE MSIR.GetValueKind(fv) OF
+          | MSIR.ValueKind.ConstInt =>
+              MSIRBuilder.PackConstBits(byteVals, fieldInfo.offset, fti.size,
+                                        MSIR.GetIntVal(fv));
+          | MSIR.ValueKind.ConstAggArray, MSIR.ValueKind.ConstStruct =>
+              (* Nested packed [M x i8] aggregate field: copy its bytes in. *)
+              VAR mBytes := MSIR.GetConstStructFieldCount(fv);  bv: MSIR.Value;
+              BEGIN
+                FOR j := 0 TO mBytes - 1 DO
+                  bv := MSIR.GetConstStructField(fv, j);
+                  IF MSIR.GetValueKind(bv) # MSIR.ValueKind.ConstInt THEN
+                    RETURN FALSE;
+                  END;
+                  MSIRBuilder.PackConstBits(byteVals,
+                      fieldInfo.offset + j * Target.Byte,
+                      MIN(Target.Byte, fti.size - j * Target.Byte),
+                      MSIR.GetIntVal(bv));
+                END;
+              END;
+          ELSE
+            RETURN FALSE;
+          END;
+        END;
+      END;
+    END;
+    VAR belts := NEW(REF ARRAY OF MSIR.Value, nBytes);
+    BEGIN
+      FOR j := 0 TO nBytes - 1 DO
+        belts[j] := MSIR.ConstInt(MSIR.TI(Target.Byte), byteVals[j]);
+      END;
+      v := MSIR.ConstAggArray(msirT, belts^);
+    END;
+    RETURN TRUE;
+  END TryPackedRecordConstMSIR;
 
 BEGIN
 END RecordExpr.

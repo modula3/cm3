@@ -431,6 +431,16 @@ PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value
    required for <*EXTERNAL*> C functions returning sub-word ints (p228). *)
 PROCEDURE WidenCallResult(v: MSIR.Value;  resultType: Type.T): MSIR.Value;
 
+(* OR the low bitWidth bits of `value` into the little-endian byte array
+   `byteVals` starting at bit offset `bitOff`, matching InsertBitField's layout
+   (byte = bit DIV 8, bit-in-byte = bit MOD 8).  Used to assemble packed
+   BITS-n-FOR array/record CONSTANTS at compile time so their const-init bytes
+   match what the runtime constructor path (InsertBitField) and the readers
+   (ExtractBitField) expect.  Callers pre-zero byteVals and pass non-overlapping
+   fields, so bits are only ever set (never cleared). *)
+PROCEDURE PackConstBits(byteVals: REF ARRAY OF INTEGER;
+                        bitOff, bitWidth, value: INTEGER);
+
 (* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
 PROCEDURE ConstInt       (t: MSIR.T;  READONLY v: Target.Int): MSIR.Value;
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;
