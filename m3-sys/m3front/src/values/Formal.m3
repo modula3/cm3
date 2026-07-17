@@ -1354,6 +1354,20 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
           Split (form, formInfo);
           formT := MSIRType.Translate (formInfo.type);
           IF formT # NIL AND MSIR.Kind (formT) = MSIR.TypeKind.FixedArray THEN
+            (* Runtime shape check: the open actual's outer count must equal the
+               fixed formal's length, else IncompatibleArrayShape (mirrors the CG
+               path's CG.Check_eq).  Without it an oversized/undersized open
+               array is silently truncated/over-read (m3tests r003). *)
+            VAR chkBlk := MSIRBuilder.CurrentBlock ();
+                intT   := MSIR.TI (Target.Integer.size);
+                cnt    := MSIR.BuildOpenArraySize (chkBlk, "", actVal, 0);
+                wantN  := MSIR.ConstInt (intT, MSIR.FixedArrayLen (formT));
+                bad    := MSIR.BuildICmp (chkBlk, "", MSIR.CmpPred.Ne, cnt, wantN);
+            BEGIN
+              MSIRBuilder.EmitReportFault
+                (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
+            END;
+            (* EmitReportFault branches; continue in the fresh current block. *)
             VAR blk2 := MSIRBuilder.CurrentBlock ();
                 zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", actVal,
