@@ -1541,6 +1541,14 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     RETURN result;
   END EmitCallIndirect;
 
+PROCEDURE CurrentModuleInfoRef(): MSIR.Value =
+  VAR m := MSIREmit.CurrentModule();
+  BEGIN
+    IF m = NIL THEN RETURN NIL END;
+    RETURN MSIR.StructFieldRef(MSIR.ModuleName(m) & "_M3_info", 0,
+                               MSIR.TPtr(MSIR.TVoid()));
+  END CurrentModuleInfoRef;
+
 PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
   VAR
     reportProc := HookProc(RunTyme.Hook.Abort);  (* RTHooks__ReportFault *)

@@ -228,6 +228,15 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
    correctly invokes to the enclosing TRY's unwind block when inside one. *)
 PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER);
 
+(* Returns a ptr to the current module's descriptor — &@<curMod>_M3_info at
+   offset 0.  Callers use this to pass the module to runtime hooks (e.g.
+   RTHooks__Raise) WITHOUT importing MSIREmit directly: a direct client->MSIREmit
+   import edge perturbs m3front's module-initialization order and corrupts MSIR
+   emission of the first compiled unit (observed as an EndProc/BlockInsnCount
+   crash on RTHooks.i3).  MSIRBuilder already imports MSIREmit, so routing
+   through here is safe.  NIL if there is no current module. *)
+PROCEDURE CurrentModuleInfoRef(): MSIR.Value;
+
 (* Like EmitCall but prepends the capture arguments for a lambda-lifted nested
    proc.  calleeVal is the Value.T for the nested proc (used to look up the
    capture list registered by RegisterProc).  For each capture, passes

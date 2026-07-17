@@ -10,7 +10,7 @@ MODULE RaiseStmt;
 
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
-IMPORT MSIR, MSIRBuilder, MSIREmit, RunTyme, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, RunTyme, CaptureAnalysis;
 IMPORT Target, RefType;
 FROM M3 IMPORT QID;
 
@@ -209,11 +209,13 @@ PROCEDURE CompileMSIR (p: P) =
     args := NEW(REF ARRAY OF MSIR.Value, 4);
     args[0] := descVal;
     args[1] := argVal;
-    (* module = &@<curMod>_M3_info (offset 0), line = current source line.
-       Needed so the unhandled-exception backstop can print the "file ... line"
-       diagnostic (mirrors MSIRBuilder.EmitReportFault). *)
-    args[2] := MSIR.StructFieldRef(
-                 MSIR.ModuleName(MSIREmit.CurrentModule()) & "_M3_info", 0, ptrT);
+    (* module = &@<curMod>_M3_info (offset 0), line = current source line, so the
+       unhandled-exception backstop can print the "file ... line" diagnostic.
+       Get the module ref via MSIRBuilder (NOT a direct IMPORT MSIREmit here — a
+       direct RaiseStmt->MSIREmit import edge perturbs m3front's module-init order
+       and crashes MSIR emission of the first unit; see CurrentModuleInfoRef). *)
+    args[2] := MSIRBuilder.CurrentModuleInfoRef();
+    IF args[2] = NIL THEN args[2] := MSIR.ConstNil(ptrT) END;
     VAR srcFile: TEXT;  srcLine: INTEGER;
     BEGIN
       Scanner.Here(srcFile, srcLine);
