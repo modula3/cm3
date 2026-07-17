@@ -595,6 +595,17 @@ PROCEDURE MSIRDefault (<*UNUSED*> e: T): MSIR.Value =
     RETURN NIL;
   END MSIRDefault;
 
+PROCEDURE NoLiteralMSIR (<*UNUSED*> e: T;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
+  (* Default: this expr kind has no pure static-constant MSIR form. *)
+  BEGIN
+    RETURN NIL;
+  END NoLiteralMSIR;
+
+PROCEDURE GenLiteralMSIR (t: T;  ft: MSIR.T): MSIR.Value =
+  BEGIN
+    RETURN t.genLiteralMSIR (ft);
+  END GenLiteralMSIR;
+
 PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T): MSIR.Value =
   BEGIN
     RETURN NIL;

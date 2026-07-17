@@ -153,6 +153,11 @@ PROCEDURE PrepLiteral (t: T;  type: M3.Type;  is_const: BOOLEAN);
 (* prepares constant values for GenLiteral *)
 
 PROCEDURE GenLiteral (t: T;  offset: INTEGER;  type: M3.Type;  is_const: BOOLEAN);
+
+(* MSIR analogue of GenLiteral: a PURE constant MSIR value for this (folded)
+   constant expr, for a global/static initializer (emits no IR).  NIL if none.
+   ft is the desired MSIR type (may be NIL). *)
+PROCEDURE GenLiteralMSIR (t: T;  ft: MSIR.T): MSIR.Value;
 (* initializes the global storage at ADR(x)+offset in the global data segment
    or constant pool to the constant value t.  For any expression t, PrepLiteral(t)
    must be called before GenLiteral (t).  *)

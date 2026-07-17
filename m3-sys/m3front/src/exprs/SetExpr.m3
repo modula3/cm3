@@ -59,6 +59,7 @@ TYPE
         genFPLiteral := GenFPLiteral;
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
+        genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         checkUseFailure := CheckUseFailure;
         capture  := Capture;
@@ -1163,6 +1164,77 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     RETURN result;
   END CompileMSIR;
+
+PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
+(* Polymorphic MSIR analogue of GenLiteral: return a PURE constant MSIR value
+   for a fully-constant set, suitable for a static/global initializer (emits NO
+   IR).  Single-word sets → a biased-bit-mask ConstInt; multi-word sets → a
+   ConstAggArray of per-word i{Grain} masks (word 0 = low bits, matching the
+   little-endian iN layout the membership test reads).  Returns NIL when the set
+   has non-constant elements or a static out-of-range element (no literal). *)
+  VAR info: Type.Info;  ti: MSIR.T;
+  BEGIN
+    IF p.broken THEN RETURN NIL END;
+    EVAL Type.CheckInfo (p.tipe, info);
+    IF NOT p.mapped THEN EVAL BuildMap (p, p) END;
+    (* Non-constant elements can't be a static literal. *)
+    IF p.nOthers > 0 THEN RETURN NIL END;
+    (* A statically out-of-range element is a checked RT error, not a literal. *)
+    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN RETURN NIL END;
+    ti := MSIR.TI (info.size);
+    IF info.size <= Target.Word.size THEN
+      (* Single word: accumulate the biased bit mask (mirrors CompileMSIR). *)
+      VAR n := p.tree;  cur := TInt.Zero;  tmp: Target.Int;  v: INTEGER;
+      BEGIN
+        WHILE n # NIL DO
+          TWord.And (left [n.min - p.minI], right [n.max - p.minI], tmp);
+          TWord.Or  (cur, tmp, cur);
+          n := n.next;
+        END;
+        IF NOT TInt.ToInt (cur, v) THEN RETURN NIL END;
+        RETURN MSIR.ConstInt (ti, v);
+      END;
+    ELSE
+      (* Multi-word: per-word masks (mirrors PrepBig's constant-word loop),
+         emitted as a ConstAggArray of i{Grain} words. *)
+      VAR nWords    := info.size DIV Grain;
+          wmask     := NEW (REF ARRAY OF Target.Int, nWords);
+          words     := NEW (REF ARRAY OF MSIR.Value, nWords);
+          wTy       := MSIR.TI (Grain);
+          n         := p.tree;
+          curWordNo := 0;
+          curMask   := TInt.Zero;
+          loW, loB, hiW, hiB: INTEGER;
+          tmp       : Target.Int;
+          wv        : INTEGER;
+      BEGIN
+        FOR i := 0 TO nWords - 1 DO wmask [i] := TInt.Zero END;
+        WHILE (n # NIL) DO
+          loW := (n.min - p.minI) DIV Grain;  loB := (n.min - p.minI) MOD Grain;
+          hiW := (n.max - p.minI) DIV Grain;  hiB := (n.max - p.minI) MOD Grain;
+          IF (loW # curWordNo) THEN
+            wmask [curWordNo] := curMask;
+            curWordNo := loW;  curMask := TInt.Zero;
+          END;
+          IF (loW # hiW) THEN
+            TWord.Or (curMask, left [loB], tmp);  wmask [loW] := tmp;
+            FOR i := loW + 1 TO hiW - 1 DO wmask [i] := full END;
+            curWordNo := hiW;  curMask := right [hiB];
+          ELSE
+            TWord.And (left [loB], right [hiB], tmp);
+            TWord.Or (curMask, tmp, curMask);
+          END;
+          n := n.next;
+        END;
+        wmask [curWordNo] := curMask;
+        FOR i := 0 TO nWords - 1 DO
+          IF NOT TInt.ToInt (wmask [i], wv) THEN RETURN NIL END;
+          words [i] := MSIR.ConstInt (wTy, wv);
+        END;
+        RETURN MSIR.ConstAggArray (MSIR.TFixedArray (nWords, wTy), words^);
+      END;
+    END;
+  END GenLiteralMSIR;
 
 PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: INTEGER): BOOLEAN =
   VAR

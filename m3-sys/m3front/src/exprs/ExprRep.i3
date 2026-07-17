@@ -58,6 +58,14 @@ REVEAL
        enclosing procedure will be dropped. *)
     compileLValueMSIR (): MSIR.Value               := LValueMSIRDefault;
     (* Emit MSIR address of this lvalue. Returns NIL on unsupported. *)
+    genLiteralMSIR (ft: MSIR.T): MSIR.Value        := NoLiteralMSIR;
+    (* MSIR analogue of genLiteral: return a PURE constant MSIR value for this
+       (already-folded) constant expression, suitable for a global/static
+       initializer — must emit NO IR.  ft is the desired MSIR type (may be NIL).
+       Returns NIL when this expr kind has no static-constant MSIR form.  Each
+       const-capable leaf *Expr overrides this (Integer/Enum/Reel/Text/Proc/Set/
+       Array/Record); the polymorphic dispatch replaces the old centralized
+       type-switch in RecordExpr.TryConstFieldMSIR. *)
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
@@ -104,6 +112,7 @@ PROCEDURE PrepNoBranch   (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NoBranch       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NotWritable    (e: M3.Expr);
 PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
+PROCEDURE NoLiteralMSIR  (e: M3.Expr;  ft: MSIR.T): MSIR.Value;
 (* default: signals "not yet supported" by calling MSIRBuilder.Abandon
    and returning NIL. Subclasses override when they have a translation. *)
 PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;

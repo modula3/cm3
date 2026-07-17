@@ -787,6 +787,12 @@ PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
   BEGIN
     folded := Expr.ConstValue(fieldExpr);
     IF folded = NIL THEN RETURN NIL END;
+    (* Polymorphic const lowering: each const-capable leaf *Expr overrides
+       genLiteralMSIR to return its own pure constant MSIR value (the MSIR
+       analogue of CG's genLiteral).  SetExpr uses this; the remaining
+       type-specific cases below are being migrated onto it. *)
+    cv := Expr.GenLiteralMSIR(folded, ft);
+    IF cv # NIL THEN RETURN cv END;
     IF IntegerExpr.Split(folded, ti, tt) THEN
       IF NOT TInt.ToInt(ti, intV) THEN RETURN NIL END;
       IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
