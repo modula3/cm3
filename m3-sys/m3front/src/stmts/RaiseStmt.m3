@@ -10,7 +10,7 @@ MODULE RaiseStmt;
 
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
-IMPORT MSIR, MSIRBuilder, RunTyme, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, MSIREmit, RunTyme, CaptureAnalysis;
 IMPORT Target, RefType;
 FROM M3 IMPORT QID;
 
@@ -209,8 +209,16 @@ PROCEDURE CompileMSIR (p: P) =
     args := NEW(REF ARRAY OF MSIR.Value, 4);
     args[0] := descVal;
     args[1] := argVal;
-    args[2] := MSIR.ConstNil(ptrT);    (* module: NIL *)
-    args[3] := MSIR.ConstInt(MSIR.TI(64), 0);  (* line: 0 *)
+    (* module = &@<curMod>_M3_info (offset 0), line = current source line.
+       Needed so the unhandled-exception backstop can print the "file ... line"
+       diagnostic (mirrors MSIRBuilder.EmitReportFault). *)
+    args[2] := MSIR.StructFieldRef(
+                 MSIR.ModuleName(MSIREmit.CurrentModule()) & "_M3_info", 0, ptrT);
+    VAR srcFile: TEXT;  srcLine: INTEGER;
+    BEGIN
+      Scanner.Here(srcFile, srcLine);
+      args[3] := MSIR.ConstInt(MSIR.TI(64), srcLine);
+    END;
 
     EVAL MSIRBuilder.EmitCall("", raiseProc, args^);
     (* RTHooks__Raise never returns normally. *)

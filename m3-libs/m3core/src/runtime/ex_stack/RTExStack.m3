@@ -14,6 +14,7 @@ IMPORT Cstring;
 
 VAR
   DEBUG := FALSE;
+  dump_enabled := FALSE;
 
 TYPE
   CharArr = REF ARRAY OF CHAR;
@@ -72,6 +73,11 @@ VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
 
 PROCEDURE DumpStack () =
   BEGIN
+    (* Match ex_frame: the stack dump is a diagnostic aid, off by default.
+       Without this gate every unhandled exception (the RTProcess.Crash path)
+       prints a full libunwind stack dump, which differs from the historical
+       ex_frame behaviour and from the m3tests reference outputs. *)
+    IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
     PrintStack(0);
   END DumpStack;
 
@@ -157,5 +163,6 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
 
 BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
+  dump_enabled := RTParams.IsPresent ("stackdump");
   <*ASSERT RTStack.Has_walker*>
 END RTExStack.

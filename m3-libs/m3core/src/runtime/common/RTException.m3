@@ -48,6 +48,20 @@ PROCEDURE DefaultBackstop (VAR a: RT0.RaiseActivation;
     END;
   END DefaultBackstop;
 
+PROCEDURE ReportUnhandled (act: ADDRESS) =
+  (* Called from the C++ std::terminate handler when an M3 _M3Exc escapes with
+     no handler.  Preserve the failing exception as the "un_except"/"un_arg"
+     (as DefaultBackstop's ELSE branch would) and print the diagnostic via
+     Crash — WITHOUT re-raising (a throw from inside terminate would recurse). *)
+  VAR
+    a := LOOPHOLE (act, UNTRACED REF RT0.RaiseActivation)^;
+    err := RuntimeError.Self ();
+  BEGIN
+    a.un_except := a.exception;
+    a.un_arg    := a.arg;
+    Crash (a, raises := FALSE, rte := err);
+  END ReportUnhandled;
+
 PROCEDURE Crash (VAR a: RT0.RaiseActivation;  raises: BOOLEAN;  rte: ADDRESS) =
   CONST
     Pre  = ARRAY BOOLEAN OF TEXT { "Unhandled exception: ",  "Exception \"" };

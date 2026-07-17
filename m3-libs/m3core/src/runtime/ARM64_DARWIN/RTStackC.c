@@ -245,4 +245,28 @@ void RTStack__Unwind (Frame *target)
 extern "C" void RTStack__ThrowM3Exc(void* act) {
   throw _M3Exc{act};
 }
+
+/* When an M3 exception (_M3Exc) is thrown with no matching handler, the
+   standard C++ personality (@__gxx_personality_v0, used by both the M3C.m3
+   catch clauses and MSIR's invoke/landingpad lowering) calls std::terminate,
+   which by default prints "libc++abi: terminating due to uncaught exception".
+   Install a terminate handler that instead re-throws to recover the escaping
+   _M3Exc and hands its activation to RTException.ReportUnhandled, which prints
+   the proper M3 runtime-error diagnostic ("Unhandled exception: ...") and
+   aborts.  This is the ex_stack analogue of the frame-walk backstop; MSIR uses
+   it for every top-level unhandled exception. */
+#include <exception>
+extern "C" void RTException__ReportUnhandled(void* act);
+static void _m3_terminate_handler(void) {
+  try { throw; }
+  catch (_M3Exc& e) { RTException__ReportUnhandled(e.act); }
+  catch (...) { }
+  abort();
+}
+namespace {
+  struct _M3TerminateInstaller {
+    _M3TerminateInstaller() { std::set_terminate(_m3_terminate_handler); }
+  };
+  static _M3TerminateInstaller _m3_terminate_installer;
+}
 #endif
