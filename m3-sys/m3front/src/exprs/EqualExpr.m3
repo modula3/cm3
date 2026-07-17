@@ -1258,13 +1258,21 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
           (* When one side is a dereferenced REF ARRAY (gc_ref<OpenArray>), the
              address points to the heap dope {data_ptr, size}, not the element data.
              Extract the data pointer by loading the first field of the dope (p034). *)
+          (* Retype the gc_ref<OpenArray> to an opaque ptr before loading the
+             dope's data-pointer field.  A load's result type must match the
+             pointer's element type UNLESS that element is Void (the verifier's
+             opaque-pointer escape).  A gc_ref whose element is the OpenArray
+             dope is not Void, so a direct `load ptr void` through it fails
+             verification; go through TPtr(TVoid()) to read field 0 (p034). *)
           IF MSIR.Kind (MSIR.ValueType (addrA)) = MSIR.TypeKind.GcRef AND
              MSIR.Kind (MSIR.EltType (MSIR.ValueType (addrA))) = MSIR.TypeKind.OpenArray THEN
-            addrA := MSIR.BuildLoad (blk, "", MSIR.TPtr (MSIR.TVoid ()), addrA);
+            addrA := MSIR.BuildLoad (blk, "", MSIR.TPtr (MSIR.TVoid ()),
+                       MSIR.RetypeValue (addrA, MSIR.TPtr (MSIR.TVoid ())));
           END;
           IF MSIR.Kind (MSIR.ValueType (addrB)) = MSIR.TypeKind.GcRef AND
              MSIR.Kind (MSIR.EltType (MSIR.ValueType (addrB))) = MSIR.TypeKind.OpenArray THEN
-            addrB := MSIR.BuildLoad (blk, "", MSIR.TPtr (MSIR.TVoid ()), addrB);
+            addrB := MSIR.BuildLoad (blk, "", MSIR.TPtr (MSIR.TVoid ()),
+                       MSIR.RetypeValue (addrB, MSIR.TPtr (MSIR.TVoid ())));
           END;
           blk := MSIRBuilder.CurrentBlock ();
           idxSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI (Target.Integer.size));
