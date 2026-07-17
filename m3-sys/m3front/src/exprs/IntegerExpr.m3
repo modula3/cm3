@@ -35,6 +35,7 @@ TYPE
         genFPLiteral := GenFPLiteral;
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
+        genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         compileMSIR  := CompileMSIR;
       END;
@@ -83,6 +84,17 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     <* ASSERT NOT StaticOnly *>
     CG.Load_integer (Type.CGType (p.type), p.value);
   END Compile;
+
+PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
+(* Pure constant for a static/global initializer, honouring the field MSIR
+   type ft (may be narrower than the ZType).  Mirrors the old
+   RecordExpr.TryConstFieldMSIR integer/enum case. *)
+  VAR intV: INTEGER;
+  BEGIN
+    IF NOT TInt.ToInt (p.value, intV) THEN RETURN NIL END;
+    IF ft = NIL THEN ft := MSIR.TI (Target.Integer.size) END;
+    RETURN MSIR.ConstInt (ft, intV);
+  END GenLiteralMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR t: MSIR.T;

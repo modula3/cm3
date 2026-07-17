@@ -176,6 +176,7 @@ REVEAL
     genFPLiteral := GenFPLiteral;
     prepLiteral  := PrepLiteral;
     genLiteral   := GenLiteral;
+    genLiteralMSIR := GenLiteralMSIR;
     note_write   := ExprRep.NotWritable;
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
@@ -2527,6 +2528,16 @@ BEGIN
   END;
   RETURN alloca;
 END LValueMSIR_MSIR;
+
+PROCEDURE GenLiteralMSIR (p: T;  ft: MSIR.T): MSIR.Value =
+(* Static/global-initializer constant: inline ConstAggArray for a fixed-array
+   field.  Mirrors the old RecordExpr.TryConstFieldMSIR array case. *)
+  BEGIN
+    IF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.FixedArray THEN
+      RETURN MSIRBuilder.BuildConstAggArrayExpr (p, Expr.TypeOf (p), ft);
+    END;
+    RETURN NIL;
+  END GenLiteralMSIR;
 
 PROCEDURE CompileMSIR_MSIR (p: T): MSIR.Value =
   VAR addr: MSIR.Value;  arrT: MSIR.T;

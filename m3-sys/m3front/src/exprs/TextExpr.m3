@@ -37,6 +37,7 @@ TYPE
         genFPLiteral := GenFPLiteral;
         prepLiteral  := PrepLiteral;
         genLiteral   := GenLiteral;
+        genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         exprAlign    := ExprRep.ExprAddrAlign;
         compileMSIR      := CompileMSIR;
@@ -308,6 +309,15 @@ PROCEDURE GenLiteral
                  literals[uid].cgOffset + Target.Address.pack,
                  is_const);
   END GenLiteral;
+
+PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
+(* Static/global-initializer constant.  This expr's CompileMSIR returns a pure
+   ConstTextLit (no IR); use it, else NIL. *)
+  VAR cv := CompileMSIR (p);
+  BEGIN
+    IF cv # NIL AND MSIR.GetValueKind (cv) = MSIR.ValueKind.ConstTextLit THEN RETURN cv END;
+    RETURN NIL;
+  END GenLiteralMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR uid: INTEGER;  chars: TEXT;  cnt: INTEGER;

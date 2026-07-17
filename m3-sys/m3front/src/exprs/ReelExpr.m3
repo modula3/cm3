@@ -36,6 +36,7 @@ TYPE
         genFPLiteral := GenFPLiteral;
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
+        genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -68,6 +69,15 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     <* ASSERT NOT StaticOnly *>
     CG.Load_float (p.val);
   END Compile;
+
+PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
+(* Static/global-initializer constant.  This expr's CompileMSIR returns a pure
+   ConstFloat (no IR); use it, else NIL. *)
+  VAR cv := CompileMSIR (p);
+  BEGIN
+    IF cv # NIL AND MSIR.GetValueKind (cv) = MSIR.ValueKind.ConstFloat THEN RETURN cv END;
+    RETURN NIL;
+  END GenLiteralMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR mt := MSIRType.Translate (p.type);

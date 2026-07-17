@@ -35,6 +35,7 @@ TYPE
         genFPLiteral := GenFPLiteral;
         prepLiteral  := ExprRep.NoPrepLiteral;
         genLiteral   := GenLiteral;
+        genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         compileMSIR  := CompileMSIR;
       END;
@@ -114,6 +115,15 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T;
   BEGIN
     CG.Init_proc (offset, Procedure.CGName (p.proc), is_const);
   END GenLiteral;
+
+PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
+(* Static/global-initializer constant.  This expr's CompileMSIR returns a pure
+   ConstProc (no IR); use it, else NIL. *)
+  VAR cv := CompileMSIR (p);
+  BEGIN
+    IF cv # NIL AND MSIR.GetValueKind (cv) = MSIR.ValueKind.ConstProc THEN RETURN cv END;
+    RETURN NIL;
+  END GenLiteralMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR procType := Type.Base (Expr.TypeOf (p));

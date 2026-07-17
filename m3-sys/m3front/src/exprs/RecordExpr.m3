@@ -14,7 +14,6 @@ IMPORT M3, M3ID, CG, Error, Type, RecordType, Module, Target;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
 IMPORT MSIR, MSIRBuilder, MSIRType;
-IMPORT IntegerExpr, EnumExpr, TextExpr, ProcExpr, TInt;
 
 TYPE
   Info = RECORD
@@ -63,6 +62,7 @@ TYPE
         genFPLiteral := GenFPLiteral;
         prepLiteral  := PrepLiteral;
         genLiteral   := GenLiteral;
+        genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
@@ -774,81 +774,28 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirT, slot);
   END CompileMSIR;
 
-PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
-(* Try to extract a compile-time constant MSIR value from a field expression.
-   Handles integers, enums, and TEXT literals — all safe (no instruction emission).
-   Returns NIL for other field types. *)
-  VAR
-    folded : Expr.T;
-    ti     : Target.Int;
-    tt     : Type.T;
-    intV   : INTEGER;
-    cv     : MSIR.Value;
+PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
+(* Static/global-initializer constant: build a ConstStruct for a record field.
+   Mirrors the old TryConstFieldMSIR struct case. *)
+  VAR cv: MSIR.Value;
   BEGIN
-    folded := Expr.ConstValue(fieldExpr);
-    IF folded = NIL THEN RETURN NIL END;
-    (* Polymorphic const lowering: each const-capable leaf *Expr overrides
-       genLiteralMSIR to return its own pure constant MSIR value (the MSIR
-       analogue of CG's genLiteral).  SetExpr uses this; the remaining
-       type-specific cases below are being migrated onto it. *)
-    cv := Expr.GenLiteralMSIR(folded, ft);
-    IF cv # NIL THEN RETURN cv END;
-    IF IntegerExpr.Split(folded, ti, tt) THEN
-      IF NOT TInt.ToInt(ti, intV) THEN RETURN NIL END;
-      IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
-      RETURN MSIR.ConstInt(ft, intV);
-    END;
-    IF EnumExpr.Split(folded, ti, tt) THEN
-      IF NOT TInt.ToInt(ti, intV) THEN RETURN NIL END;
-      IF ft = NIL THEN ft := MSIR.TI(Target.Integer.size) END;
-      RETURN MSIR.ConstInt(ft, intV);
-    END;
-    (* Floating literal (ReelExpr): its CompileMSIR returns a pure ConstFloat
-       (no IR emitted).  Gate on a float field type so we never CompileMSIR a
-       non-scalar folded value (which would emit instructions). *)
-    IF ft # NIL AND (MSIR.Kind(ft) = MSIR.TypeKind.F32
-                     OR MSIR.Kind(ft) = MSIR.TypeKind.F64
-                     OR MSIR.Kind(ft) = MSIR.TypeKind.F128) THEN
-      cv := Expr.CompileMSIR(folded);
-      IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstFloat THEN
-        RETURN cv;
-      END;
-      RETURN NIL;
-    END;
-    (* TEXT literal — CompileMSIR on a const TextExpr emits no IR instructions,
-       it just registers the literal and returns a ConstTextLit value. *)
-    IF TextExpr.IsTextExpr(folded) THEN
-      cv := Expr.CompileMSIR(folded);
-      IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstTextLit THEN
-        RETURN cv;
-      END;
-    END;
-    (* Procedure reference — analogous to ProcExpr.GenLiteral → CG.Init_proc.
-       CompileMSIR on a non-nested ProcExpr emits no IR instructions; it just
-       looks up / creates the MSIR proc and returns a ConstProc value. *)
-    VAR proc: Value.T;
-    BEGIN
-      IF ProcExpr.Split(folded, proc) THEN
-        cv := Expr.CompileMSIR(folded);
-        IF cv # NIL AND MSIR.GetValueKind(cv) = MSIR.ValueKind.ConstProc THEN
-          RETURN cv;
-        END;
-      END;
-    END;
-    (* Array-constructor field — e.g. Fingerprint.T{ARRAY OF BITS 8 {...}}.
-       Build an inline ConstAggArray so the enclosing record is a genuine
-       compile-time constant (otherwise CompileMSIR returns a runtime InsnResult
-       and the const-array/global emission abandons). *)
-    IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.FixedArray THEN
-      cv := MSIRBuilder.BuildConstAggArrayExpr(folded, Expr.TypeOf(fieldExpr), ft);
-      IF cv # NIL THEN RETURN cv END;
-    END;
-    (* Nested record-constant field (e.g. RT0.ObjectTypecell.common : Typecell) —
-       recurse so the enclosing record is a genuine compile-time constant. *)
-    IF ft # NIL AND MSIR.Kind(ft) = MSIR.TypeKind.Struct THEN
-      IF TryCompileConstMSIR(fieldExpr, cv) AND cv # NIL THEN RETURN cv END;
+    IF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.Struct THEN
+      IF TryCompileConstMSIR (p, cv) AND cv # NIL THEN RETURN cv END;
     END;
     RETURN NIL;
+  END GenLiteralMSIR;
+
+PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
+(* Extract a pure compile-time constant MSIR value from a field/initializer
+   expression, for a static/global initializer (emits no IR).  Folds to the
+   canonical constant and dispatches to its own genLiteralMSIR — each
+   const-capable leaf *Expr (Integer/Enum/Reel/Text/Proc/Set/Array/Record) owns
+   its lowering, the MSIR analogue of CG's polymorphic genLiteral.  Returns NIL
+   when there is no static-constant form. *)
+  VAR folded := Expr.ConstValue(fieldExpr);
+  BEGIN
+    IF folded = NIL THEN RETURN NIL END;
+    RETURN Expr.GenLiteralMSIR(folded, ft);
   END TryConstFieldMSIR;
 
 PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
