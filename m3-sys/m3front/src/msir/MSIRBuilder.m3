@@ -1579,6 +1579,38 @@ PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
     curBlock := contBlk;
   END EmitReportFault;
 
+PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value) =
+  VAR
+    assertProc := HookProc(RunTyme.Hook.AssertFailed);  (* RTHooks__AssertFailed *)
+    faultBlk, contBlk: MSIR.Block;
+    f: TEXT;  line: INTEGER;
+    ptrT  := MSIR.TPtr(MSIR.TVoid());
+    modRef: MSIR.Value;
+    args  : ARRAY [0..2] OF MSIR.Value;
+  BEGIN
+    IF NOT InProc() OR faultCond = NIL OR msgVal = NIL THEN RETURN END;
+    IF assertProc = NIL THEN
+      Abandon("assert: RTHooks__AssertFailed hook unavailable");  RETURN;
+    END;
+    Scanner.Here(f, line);
+    faultBlk := NewBlock("assert.fault");
+    contBlk  := NewBlock("assert.cont");
+    MSIR.BuildCondBr(CurrentBlock(), faultCond,
+                     faultBlk, ARRAY OF MSIR.Value{},
+                     contBlk,  ARRAY OF MSIR.Value{});
+    curBlock := faultBlk;
+    modRef := CurrentModuleInfoRef();
+    IF modRef = NIL THEN modRef := MSIR.ConstNil(ptrT) END;
+    args[0] := modRef;                                              (* module *)
+    args[1] := MSIR.ConstInt(MSIR.TI(Target.Integer.size), line);  (* line *)
+    args[2] := msgVal;                                             (* msg: TEXT *)
+    EVAL EmitCall("", assertProc, args);
+    IF NOT CurrentBlockTerminated() THEN
+      MSIR.BuildUnreachable(CurrentBlock());
+    END;
+    curBlock := contBlk;
+  END EmitAssertFail;
+
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;  resultSlot: MSIR.Value;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =

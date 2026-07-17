@@ -228,6 +228,14 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
    correctly invokes to the enclosing TRY's unwind block when inside one. *)
 PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER);
 
+(* Like EmitReportFault but for <*ASSERT expr*> with a message: when faultCond is
+   TRUE, calls RTHooks__AssertFailed(@<curMod>_M3_info, line, msgVal) — which
+   raises RuntimeError.AssertFailed carrying msgVal as info0 so the backstop
+   prints `<*ASSERT*> failed: <msg>` (ReportFault only yields the generic
+   `<*ASSERT*> failed.`).  msgVal is the already-compiled TEXT message value.
+   No-op outside a proc or if faultCond/msgVal is NIL. *)
+PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value);
+
 (* Returns a ptr to the current module's descriptor — &@<curMod>_M3_info at
    offset 0.  Callers use this to pass the module to runtime hooks (e.g.
    RTHooks__Raise) WITHOUT importing MSIREmit directly: a direct client->MSIREmit

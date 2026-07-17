@@ -154,11 +154,25 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
 
+PROCEDURE DoFaultMSIR (p: P;  faultCond: MSIR.Value) =
+(* When faultCond is TRUE, fail the assertion.  With a message, call
+   RTHooks__AssertFailed(module, line, msg) so the backstop prints
+   `<*ASSERT*> failed: <msg>` (mirrors the CG path's Crash); otherwise fall back
+   to ReportFault which yields the generic `<*ASSERT*> failed.`. *)
+  VAR msgVal: MSIR.Value := NIL;
+  BEGIN
+    IF p.msg # NIL THEN msgVal := Expr.CompileMSIR (p.msg) END;
+    IF msgVal # NIL THEN
+      MSIRBuilder.EmitAssertFail (faultCond, msgVal);
+    ELSE
+      MSIRBuilder.EmitReportFault (faultCond, ORD (CG.RuntimeError.AssertFailed));
+    END;
+  END DoFaultMSIR;
+
 PROCEDURE CompileMSIRStmt (p: P) =
-(* MSIR analogue of Compile: raise RuntimeError.AssertFailed (via ReportFault)
-   when the condition is false.  Mirrors the CG path's Crash for the no-message
-   case (CG.Abort(AssertFailed)); a custom assert message is not yet attached
-   (ReportFault produces the default "<*ASSERT*> failed." text). *)
+(* MSIR analogue of Compile: raise RuntimeError.AssertFailed when the condition
+   is false, carrying the assert message (the source expression text) so the
+   backstop prints `<*ASSERT*> failed: <msg>` like the CG path's Crash. *)
   VAR v: Expr.T;  i: Target.Int;  u: Type.T;  cond, faultCond: MSIR.Value;
   BEGIN
     IF NOT Host.doAsserts OR NOT MSIRBuilder.InProc () THEN RETURN END;
@@ -169,11 +183,10 @@ PROCEDURE CompileMSIRStmt (p: P) =
       (* fault when the condition is false: icmp eq cond, 0 *)
       faultCond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Eq,
                      cond, MSIR.ConstInt (MSIR.ValueType (cond), 0));
-      MSIRBuilder.EmitReportFault (faultCond, ORD (CG.RuntimeError.AssertFailed));
+      DoFaultMSIR (p, faultCond);
     ELSIF EnumExpr.Split (v, i, u) AND TInt.EQ (i, TInt.Zero) THEN
       (* ASSERT(FALSE): unconditional fault. *)
-      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (CG.RuntimeError.AssertFailed));
+      DoFaultMSIR (p, MSIR.ConstInt (MSIR.TI1 (), 1));
     END;
     (* ASSERT(TRUE): nothing to emit. *)
   END CompileMSIRStmt;
