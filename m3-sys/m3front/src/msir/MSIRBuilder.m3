@@ -1579,6 +1579,12 @@ PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
     curBlock := contBlk;
   END EmitReportFault;
 
+PROCEDURE WidenCallResult(v: MSIR.Value;  resultType: Type.T): MSIR.Value =
+  BEGIN
+    IF v = NIL OR resultType = NIL THEN RETURN v END;
+    RETURN CoerceToMSIR(curBlock, v, MSIRType.ComputeType(resultType));
+  END WidenCallResult;
+
 PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value) =
   VAR
     assertProc := HookProc(RunTyme.Hook.AssertFailed);  (* RTHooks__AssertFailed *)

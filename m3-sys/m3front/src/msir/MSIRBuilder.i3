@@ -423,6 +423,14 @@ PROCEDURE OpenArrayToFixedStore(lhsPtr, rhsVal: MSIR.Value;
    Returns v unchanged if bit-widths are identical or either is unknown. *)
 PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value;
 
+(* Widen a procedure-call result from its MType (natural width, per
+   MSIRType.TranslateResult) up to the ZType computation width, SExt/ZExt per the
+   MType kind (the load-side of the MType<->ZType discipline for proc results).
+   No-op for NIL / void / already-ZType-width results.  Call it on EVERY
+   small-result call return in UserProc so callers see machine-width values —
+   required for <*EXTERNAL*> C functions returning sub-word ints (p228). *)
+PROCEDURE WidenCallResult(v: MSIR.Value;  resultType: Type.T): MSIR.Value;
+
 (* Front-end INTEGER helpers — avoid LONGINT in m3front source files. *)
 PROCEDURE ConstInt       (t: MSIR.T;  READONLY v: Target.Int): MSIR.Value;
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value;

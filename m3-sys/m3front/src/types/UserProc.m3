@@ -351,7 +351,9 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
                       IF callArgs[i] = NIL THEN RETURN NIL END;
                     END;
                   END;
-                  RETURN MSIRBuilder.EmitClosureCall("", fn, rtype, callArgs^);
+                  RETURN MSIRBuilder.WidenCallResult(
+                    MSIRBuilder.EmitClosureCall("", fn, rtype, callArgs^),
+                    ProcType.Result(procType));
                 END;
               END;
             END;
@@ -454,7 +456,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
                   IF isLargeR THEN
                     RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", largeResT, largeResSlot);
                   END;
-                  RETURN callRes;
+                  RETURN MSIRBuilder.WidenCallResult(callRes, ProcType.Result(procType));
                 END;
               END;
             END;
@@ -492,7 +494,9 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
               EVAL MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, resultSlot, dispArgs^);
               RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT, resultSlot);
             ELSE
-              RETURN MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, NIL, dispArgs^);
+              RETURN MSIRBuilder.WidenCallResult(
+                MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, NIL, dispArgs^),
+                ProcType.Result(procType));
             END;
           END;
         END;
@@ -517,7 +521,9 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             iArgVals[i] := argVal;
           END;
         END;
-        RETURN MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^);
+        RETURN MSIRBuilder.WidenCallResult(
+          MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^),
+          ProcType.Result(procType));
       END;
     END;
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
@@ -565,7 +571,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
         ELSE
           callResult := MSIRBuilder.EmitCall("", msirCallee, argVals^);
         END;
-        RETURN callResult;
+        RETURN MSIRBuilder.WidenCallResult(callResult, ProcType.Result(procType));
       END;
     END;
   END CompileMSIR;

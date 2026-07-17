@@ -469,12 +469,28 @@ PROCEDURE ComputeType(t: Type.T): MSIR.T =
 PROCEDURE TranslateResult(t: Type.T): MSIR.T =
   BEGIN
     IF t = NIL THEN RETURN MSIR.TVoid() END;
-    (* Ordinal result types (BOOLEAN, CHAR, enumerations, subranges) use the
-       computation width i64, matching loads, alloca slots, and formal params.
-       Without this, an enum proc like Stack_Get: ST = {...} would have result
-       type TEnum (kind Enum > W64) and ReturnStmt's i64→narrow coercions
-       wouldn't fire — triggering "return type mismatch not yet supported". *)
-    IF Type.IsOrdinal(t) THEN RETURN MSIR.TI(Target.Integer.size) END;
+    (* CG-faithful: a procedure result is the type's NATURAL (MType) width with
+       signedness, exactly like CG's ProcType.CGResult = CGType(in_memory).  The
+       callee's ReturnStmt narrows the i64 (ZType) computation value to this
+       width (its Trunc branch), and every call site widens the result back to
+       ZType (CoerceToMSIR, SExt/ZExt by the MType kind) — the same MType<->ZType
+       discipline as memory stores/loads.  This is required for correctness of
+       calls to <*EXTERNAL*> C functions returning sub-word ints (int8_t etc.),
+       whose ABI returns only the natural width; declaring the call i64 read
+       garbage upper bits (m3tests p228).
+       Translate already encodes signedness (signed subrange -> TI, non-negative
+       -> TW).  An enum yields TEnum (kind Enum, outside I1..W64), which would
+       stop ReturnStmt's narrow branch from firing — so map it to a same-width
+       unsigned TW (enum values are 0..n-1). *)
+    IF Type.IsOrdinal(t) THEN
+      VAR mt := Translate(t);
+      BEGIN
+        IF mt # NIL AND MSIR.Kind(mt) = MSIR.TypeKind.Enum THEN
+          mt := MSIR.TW(MSIR.BitWidth(mt));
+        END;
+        RETURN mt;
+      END;
+    END;
     RETURN Translate(t);
   END TranslateResult;
 
