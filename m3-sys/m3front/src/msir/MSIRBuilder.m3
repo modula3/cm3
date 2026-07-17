@@ -2548,6 +2548,14 @@ PROCEDURE VarMapContains(v: Variable.T): BOOLEAN =
     RETURN FALSE;
   END VarMapContains;
 
+PROCEDURE NoteModuleSrcFile() =
+  VAR mf: TEXT;  ml: INTEGER;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled() THEN RETURN END;
+    Scanner.Here(mf, ml);
+    IF mf # NIL THEN MSIR.ModuleSetSrcFile(MSIREmit.CurrentModule(), mf) END;
+  END NoteModuleSrcFile;
+
 PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
   VAR resultT: MSIR.T;
   BEGIN

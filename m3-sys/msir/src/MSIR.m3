@@ -926,6 +926,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   isInterface: BOOLEAN := FALSE;
   triple:      TEXT := NIL;
   datalayout:  TEXT := NIL;
+  srcFile:     TEXT := NIL;  (* source file, for RT0.ModuleInfo.file *)
   imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
@@ -1473,6 +1474,9 @@ PROCEDURE NewModule(name: TEXT): Module =
   END NewModule;
 
 PROCEDURE ModuleName(m: Module): TEXT = BEGIN RETURN m.name END ModuleName;
+PROCEDURE ModuleSrcFile(m: Module): TEXT = BEGIN RETURN m.srcFile END ModuleSrcFile;
+PROCEDURE ModuleSetSrcFile(m: Module;  f: TEXT) =
+  BEGIN IF m.srcFile = NIL THEN m.srcFile := f END END ModuleSetSrcFile;
 PROCEDURE ModuleSetIsInterface(m: Module;  isInterface: BOOLEAN) =
   BEGIN m.isInterface := isInterface END ModuleSetIsInterface;
 PROCEDURE ModuleIsInterface(m: Module): BOOLEAN =

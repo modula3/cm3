@@ -478,6 +478,13 @@ PROCEDURE VarMapContains(v: Variable.T): BOOLEAN;
    the globalMap).  Returns FALSE when MSIR is not enabled. *)
 PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN;
 
+(* Record the current unit's source file (from the Scanner's current position)
+   as RT0.ModuleInfo.file, so the unhandled-exception backstop can print
+   `file "..." line N`.  Call ONCE per unit, from Module.EmitBody after
+   Scanner.offset has been set to the body origin — the MSIR analogue of the
+   front-end's single CG.set_source_file call.  No-op when MSIR is disabled. *)
+PROCEDURE NoteModuleSrcFile();
+
 (* Update the MSIR current-source-line from Scanner.offset.
    Call once per statement at the top of CompileMSIR statement loops,
    after setting Scanner.offset := t.origin.  No-op outside a proc. *)

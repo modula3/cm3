@@ -268,6 +268,8 @@ TYPE Module <: REFANY;
 
 PROCEDURE NewModule(name: TEXT): Module;
 PROCEDURE ModuleName(m: Module): TEXT;
+PROCEDURE ModuleSrcFile(m: Module): TEXT;             (* RT0.ModuleInfo.file; NIL if unset *)
+PROCEDURE ModuleSetSrcFile(m: Module;  f: TEXT);      (* records once (first non-NIL wins) *)
 PROCEDURE ModuleSetIsInterface(m: Module;  isInterface: BOOLEAN);
 PROCEDURE ModuleIsInterface(m: Module): BOOLEAN;
 PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT);

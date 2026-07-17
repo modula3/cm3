@@ -4046,6 +4046,15 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     END;
     Wr.PutText(wr, " }\n");
 
+    (* Source-file string for the RT0.ModuleInfo.file field (below).  Emitted as
+       an internal string constant that MI_file points at, so RTError can print
+       `file "..." line N` for unhandled exceptions / runtime errors. *)
+    IF MSIR.ModuleSrcFile(m) # NIL AND NOT Text.Equal(MSIR.ModuleSrcFile(m), "") THEN
+      Wr.PutText(wr, "@" & modName & "_M3_srcfile = internal constant ["
+                     & Fmt.Int(Text.Length(MSIR.ModuleSrcFile(m)) + 1)
+                     & " x i8] c\"" & MSIR.ModuleSrcFile(m) & "\\00\"\n");
+    END;
+
     (* Emit global initializer — one CASE arm per RT0.ModuleInfo field.
        Interface units use internal linkage (mirrors C-mode 'static') to avoid
        duplicate-symbol conflicts with the implementation unit's exported info. *)
@@ -4055,7 +4064,11 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     END;
     FOR k := 0 TO nFields - 1 DO
       CASE k OF
-      | MI_file           => fieldType := "ptr"; fieldVal := "null";           fieldName := "file";
+      | MI_file           => fieldType := "ptr"; fieldName := "file";
+                             IF MSIR.ModuleSrcFile(m) # NIL AND NOT Text.Equal(MSIR.ModuleSrcFile(m), "")
+                               THEN fieldVal := "@" & modName & "_M3_srcfile";
+                               ELSE fieldVal := "null";
+                             END;
       | MI_type_cells     => fieldType := "ptr"; fieldName := "type_cells";
                              IF MSIR.ModuleTypeDescCount(m) > 0
                                THEN fieldVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, 0));

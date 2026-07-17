@@ -1261,6 +1261,9 @@ PROCEDURE EmitBody (x: InitBody) =
     (* generate my initialization procedure *)
     CG.Comment (-1, FALSE, "module main body ", x.name);
     Scanner.offset := t.body_origin;
+    (* Single point recording this unit's source file for RT0.ModuleInfo.file
+       (MSIR path) — the Scanner is now positioned at the body origin. *)
+    IF msirOk THEN MSIRBuilder.NoteModuleSrcFile () END;
     CG.Gen_location (t.body_origin);
     CG.Begin_procedure (x.cg_proc);
 
