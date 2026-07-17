@@ -298,7 +298,11 @@ PROCEDURE BeginProc(name: TEXT;
           params[nHidden + i].name := "__cap_" & Fmt.Int(i);
           params[nHidden + i].mode := MSIR.ParamMode.ByValue;
           IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
-            params[nHidden + i].type := mt;           (* pass by value *)
+            (* By-value scalar capture: use ZType (computation width), not MType.
+               The value passed in is always ZType (LookupVar widens; the outer
+               var's own slot is ZType), so the param, the closure-env spill
+               slot, and the shim's reload must all be ZType to match (p048). *)
+            params[nHidden + i].type := MSIRType.ComputeType(vt);  (* by value *)
           ELSIF mt # NIL THEN
             params[nHidden + i].type := MSIR.TPtr(mt); (* typed ptr to storage *)
           ELSE
@@ -1269,7 +1273,9 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         slot := MSIR.BuildPtrAdd(curBlock, "", envP, k * AP);
         ptr  := MSIR.BuildLoad(curBlock, "", ptrT, slot);
         IF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
-          capArgs[k] := MSIR.BuildLoad(curBlock, "", mt, ptr);
+          (* Reload the by-value scalar capture at ZType to match the env slot
+             and the nested proc's (now ZType) capture param (p048). *)
+          capArgs[k] := MSIR.BuildLoad(curBlock, "", MSIRType.ComputeType(vt), ptr);
         ELSE
           capArgs[k] := ptr;
         END;
@@ -1375,8 +1381,8 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
                by value).  Spill the current value to a fresh stack slot so the
                closure env can hold a stable pointer.  The shim will reload the
                value through this pointer when invoking the nested proc. *)
-            VAR tmp := MSIR.BuildAlloca(b, "", mt);
-                val := LookupVar(capVar);
+            VAR tmp := MSIR.BuildAlloca(b, "", MSIRType.ComputeType(vt));
+                val := LookupVar(capVar);   (* ZType; slot must match (p048) *)
             BEGIN
               IF val = NIL THEN
                 Abandon("BuildClosureValue: scalar cap var not found");
