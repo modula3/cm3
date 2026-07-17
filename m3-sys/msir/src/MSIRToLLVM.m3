@@ -1539,10 +1539,34 @@ PROCEDURE MaybeAddExtern(m: MSIR.Module;  externs: RefSeq.T;  p: MSIR.Proc) =
     externs.addhi(p);
   END MaybeAddExtern;
 
+PROCEDURE ScanConstForExterns(m: MSIR.Module;  externs: RefSeq.T;  v: MSIR.Value) =
+  (* Recursively add extern declarations for every external proc reachable as a
+     ConstProc, including ones nested inside constant aggregates (ConstStruct /
+     ConstAggArray) — e.g. a record/array global const-initialised with proc
+     values.  Aggregate elements are read with the same GetConstStructField*
+     API the emitter uses for both aggregate kinds. *)
+  BEGIN
+    IF v = NIL THEN RETURN END;
+    CASE MSIR.GetValueKind(v) OF
+    | MSIR.ValueKind.ConstProc =>
+        MaybeAddExtern(m, externs, MSIR.GetConstProc(v));
+    | MSIR.ValueKind.ConstStruct, MSIR.ValueKind.ConstAggArray =>
+        FOR i := 0 TO MSIR.GetConstStructFieldCount(v) - 1 DO
+          ScanConstForExterns(m, externs, MSIR.GetConstStructField(v, i));
+        END;
+    ELSE
+      (* leaf non-proc constant / non-const value: nothing to declare *)
+    END;
+  END ScanConstForExterns;
+
 PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
   (* Walk all insns in all internal procs.  Collect:
      (a) external direct callees (Call/Invoke),
-     (b) external procs used as ConstProc values (function-pointer args). *)
+     (b) external procs used as ConstProc values (function-pointer args),
+     (c) external procs referenced by const-initialised module globals — these
+         live in the module global-init list (emitted by EmitGlobalInitCtor as
+         a separate ctor), NOT in any ModuleProc, so they are invisible to the
+         per-proc insn walk (p031: @ProcInst__Val1 used-but-undeclared). *)
   VAR
     np  := MSIR.ModuleProcCount(m);
     p   : MSIR.Proc;
@@ -1551,7 +1575,6 @@ PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
     ni  : INTEGER;
     ins : MSIR.Insn;
     nop : INTEGER;
-    v   : MSIR.Value;
   BEGIN
     FOR pi := 0 TO np - 1 DO
       p  := MSIR.ModuleProc(m, pi);
@@ -1566,16 +1589,18 @@ PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
              MSIR.InsnOp(ins) = MSIR.Op.Invoke THEN
             MaybeAddExtern(m, externs, MSIR.InsnCallee(ins));
           END;
-          (* (b) ConstProc operands — external procs used as function-pointer values. *)
+          (* (b) ConstProc operands — external procs used as function-pointer
+                 values, including ones nested in constant aggregates. *)
           nop := MSIR.InsnOperandCount(ins);
           FOR oi := 0 TO nop - 1 DO
-            v := MSIR.InsnOperand(ins, oi);
-            IF v # NIL AND MSIR.GetValueKind(v) = MSIR.ValueKind.ConstProc THEN
-              MaybeAddExtern(m, externs, MSIR.GetConstProc(v));
-            END;
+            ScanConstForExterns(m, externs, MSIR.InsnOperand(ins, oi));
           END;
         END;
       END;
+    END;
+    (* (c) Const-initialised module globals (EmitGlobalInitCtor stores). *)
+    FOR gi := 0 TO MSIR.ModuleGlobalInitCount(m) - 1 DO
+      ScanConstForExterns(m, externs, MSIR.ModuleGlobalInitValue(m, gi));
     END;
   END CollectExterns;
 
