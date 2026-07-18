@@ -2471,6 +2471,58 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
       END;
       n := nTotal;
     END;
+    (* Sub-byte packed element array (BITS n FOR, n < 8): materialize the PACKED
+       byte image ([declBytes x i8], zero-padded to the declared storage width),
+       NOT one slot per logical element — every reader addresses these constants
+       with ExtractBitField bit offsets and byte-blob copies (p277 CArrsInOArr:
+       FArr[i] := A1C loaded @constarray with raw values 1,4,7,10 where the
+       packed bytes 129,28,5,0 were expected). *)
+    VAR arrT    := Expr.TypeOf(constExpr);
+        eltPack := ArrayType.EltPack(arrT);
+    BEGIN
+      IF eltPack > 0 AND eltPack < Target.Byte THEN
+        VAR denseBytes := (n * eltPack + Target.Byte - 1) DIV Target.Byte;
+            nBytes     := denseBytes;
+            declT      := MSIRType.Translate(arrT);
+        BEGIN
+          IF declT # NIL AND MSIR.Kind(declT) = MSIR.TypeKind.FixedArray THEN
+            nBytes := MAX(denseBytes, MSIR.FixedArrayLen(declT));
+          END;
+          VAR byteVals := NEW(REF ARRAY OF INTEGER, nBytes);
+          BEGIN
+            FOR j := 0 TO nBytes - 1 DO byteVals[j] := 0 END;
+            FOR i := 0 TO n - 1 DO
+              VAR ev := Expr.CompileMSIR(
+                          ArrayExpr.Elt(ae, MIN(i, ArrayExpr.EltCount(ae) - 1)));
+              BEGIN
+                IF ev = NIL OR MSIR.GetValueKind(ev) # MSIR.ValueKind.ConstInt THEN
+                  Abandon("ConstArray: packed element is not a constant integer");
+                  RETURN NIL;
+                END;
+                PackConstBits(byteVals, i * eltPack, eltPack, MSIR.GetIntVal(ev));
+              END;
+            END;
+            VAR belts := NEW(REF ARRAY OF MSIR.Value, nBytes);
+            BEGIN
+              FOR j := 0 TO nBytes - 1 DO
+                belts[j] := MSIR.ConstInt(MSIR.TI(Target.Byte), byteVals[j]);
+              END;
+              m    := MSIREmit.CurrentModule();
+              name := "constarray_" & Fmt.Int(constArraySeq);  INC(constArraySeq);
+              ca   := MSIR.NewConstArray(name, MSIR.TI(Target.Byte), belts^);
+              MSIR.ModuleAddConstArray(m, ca);
+              v    := MSIR.ConstArrayValue(ca);
+              IF constArrayMapN < MaxConstArrayMap THEN
+                constArrayMap[constArrayMapN].key := m3Val;
+                constArrayMap[constArrayMapN].val := v;
+                INC(constArrayMapN);
+              END;
+              RETURN v;
+            END;
+          END;
+        END;
+      END;
+    END;
     eltMsir := MSIRType.Translate(eltT);
     IF eltMsir = NIL THEN
       Abandon("ConstArray: unsupported element type");  RETURN NIL;

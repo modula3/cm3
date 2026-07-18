@@ -2438,14 +2438,27 @@ BEGIN
     END;
     IF eltPack > 0 AND eltPack < Target.Byte THEN
       (* Sub-byte elements: build using InsertBitField on a ByteArrayFallback.
-         The alloca is [N x i8] where N = ceiling(nElts * eltPack / 8). *)
+         Size the byte array by the type's DECLARED storage (CheckInfo.size, the
+         same source CG's Declare_temp sizing derives from), not the dense
+         nElts*eltPack bit count: the declared size can be padded larger (p277:
+         ARRAY[0..3] OF BITS 5 = 20 dense bits, 4-byte declared storage), and
+         every consumer — by-value call formals (Translate(Arr) = [N x i8]),
+         record fields, array-element strides — is typed by the declared width.
+         Padding bytes are zeroed below. *)
       IF p.args = NIL OR nElts <= 0 THEN RETURN NIL END;
       VAR curB   := MSIRBuilder.CurrentBlock ();  (* must fetch before use *)
           totalBits := nElts * eltPack;
-          nBytes    := (totalBits + Target.Byte - 1) DIV Target.Byte;
-          baT       := MSIR.TFixedArray (nBytes, MSIR.TI (Target.Byte));
-          bAlloca   := MSIR.BuildAlloca (curB, "", baT);
+          denseBytes := (totalBits + Target.Byte - 1) DIV Target.Byte;
+          declInfo  : Type.Info;
+          nBytes    : INTEGER;
+          baT       : MSIR.T;
+          bAlloca   : MSIR.Value;
       BEGIN
+        EVAL Type.CheckInfo (baseType, declInfo);
+        nBytes := MAX (denseBytes,
+                       (declInfo.size + Target.Byte - 1) DIV Target.Byte);
+        baT     := MSIR.TFixedArray (nBytes, MSIR.TI (Target.Byte));
+        bAlloca := MSIR.BuildAlloca (curB, "", baT);
         (* Zero the alloca first. *)
         FOR j := 0 TO nBytes - 1 DO
           curB := MSIRBuilder.CurrentBlock ();
