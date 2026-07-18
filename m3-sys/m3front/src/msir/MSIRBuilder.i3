@@ -394,6 +394,11 @@ PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
    for a subscript expression.  Abandons and returns NIL on unsupported types. *)
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value;
 
+(* Pointer to element [0,0,...,0] of an open array = the flat data pointer.
+   Emits BuildOpenArrayElemAddr with one zero index per dope rank, so it is
+   correct for any rank (a bare single-zero index asserts on rank>1). *)
+PROCEDURE OpenArrayDataPtr(blk: MSIR.Block;  oa: MSIR.Value): MSIR.Value;
+
 (* Build an inline ConstAggArray value from an array-constructor expression of
    Modula-3 type arrType (translated MSIR type arrMsir).  For a const record
    field whose value is an array constructor.  NIL if not a constructor. *)

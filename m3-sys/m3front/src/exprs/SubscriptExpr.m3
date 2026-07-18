@@ -584,71 +584,72 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           RETURN MSIR.BuildArrayElemAddr (blk, "", tmp, idxVal);
         END;
       END;
-      (* For multi-depth open arrays (M3 depth > MSIR rank), the standard
-         BuildOpenArrayElemAddr uses wrong stride (sizeof(inner-dope) instead of
-         dim1 * sizeof(elt)).  When we have the heap pointer (oaBase), build a
-         correct virtual sub-dope for the subscripted row using heap-loaded dims. *)
+      (* FLAT rank-N model (M3 runtime dope contract): the MSIR open-array rank
+         now equals the remaining M3 open depth; data is flat row-major.  A
+         PARTIAL subscript (rank > 1) consumes dimension 0 and yields a rank-1
+         lower virtual sub-dope over the flat data:
+           rowBytes = (n1 * .. * n_{rank-1} * eltPack) / 8
+           row_ptr  = data + idx * rowBytes.
+         eltPack is the packed bit size of the nearest NON-open element (CG's
+         NonopenEltPack) — bit-accurate so sub-byte packs (BITS 4) work. *)
       VAR msirRank := MSIR.OpenArrayRank (MSIR.ValueType (oa));
       BEGIN
-        IF msirRank < p.lhsOpenDepth AND oaBase_outer # NIL THEN
-          VAR intT     := MSIR.TI (Target.Integer.size);
-              ptrT     := MSIR.TPtr (MSIR.TVoid ());
-              apB      := Target.Address.size DIV Target.Byte;
-              intB     := Target.Integer.size DIV Target.Byte;
-              m3EltT   := OpenArrayType.NonopenEltType (p.taBase);
-              eltMsirT := MSIRType.Translate (m3EltT);
-              eltInfo  : Type.Info;
-              elemBytes : INTEGER;
+        IF msirRank > 1 THEN
+          VAR intT    := MSIR.TI (Target.Integer.size);
+              apB     := Target.Address.size DIV Target.Byte;
+              intB    := Target.Integer.size DIV Target.Byte;
+              eltPack := OpenArrayType.EltPack (p.taBase);
+              zeros   := NEW (REF ARRAY OF MSIR.Value, msirRank);
+              rowElts, rowBytes, dataPtr : MSIR.Value;
           BEGIN
-            EVAL Type.CheckInfo (m3EltT, eltInfo);
-            elemBytes := eltInfo.size DIV Target.Byte;
-            IF elemBytes > 0 AND eltMsirT # NIL THEN
-              (* Load data_ptr from dope field 0. *)
-              VAR data_ptr := MSIR.BuildLoad (blk, "", ptrT,
-                                MSIRBuilder.BuildPtrByteOff (blk, "", oaBase_outer, 0));
-                  stride   : MSIR.Value := MSIR.ConstInt (intT, elemBytes);
-              BEGIN
-                blk := MSIRBuilder.CurrentBlock ();
-                (* Multiply stride by each extra dimension (dims 1..lhsOpenDepth-1). *)
-                FOR k := 1 TO p.lhsOpenDepth - 1 DO
-                  VAR dimK := MSIR.BuildLoad (blk, "", intT,
-                                MSIRBuilder.BuildPtrByteOff (blk, "", oaBase_outer,
-                                                             apB + k * intB));
-                  BEGIN
-                    blk := MSIRBuilder.CurrentBlock ();
-                    stride := MSIR.BuildIMul (blk, "", stride, dimK);
-                  END;
-                END;
-                blk := MSIRBuilder.CurrentBlock ();
-                (* row_ptr = data_ptr + idxVal * stride *)
-                VAR row_off := MSIR.BuildIMul (blk, "", idxVal, stride);
-                    row_ptr := MSIR.BuildGepByte (blk, "", data_ptr, row_off);
-                    resultDepth := p.lhsOpenDepth - 1;
-                    dopeT := MSIR.TOpenArray (resultDepth, eltMsirT);
-                    dopeA := MSIR.BuildAlloca (blk, "", dopeT);
-                BEGIN
-                  blk := MSIRBuilder.CurrentBlock ();
-                  MSIR.BuildStore (blk, row_ptr,
-                    MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
-                  (* Copy inner dimension sizes dim[1..resultDepth] into new dope. *)
-                  FOR k := 1 TO resultDepth DO
-                    VAR dimK := MSIR.BuildLoad (blk, "", intT,
-                                  MSIRBuilder.BuildPtrByteOff (blk, "", oaBase_outer,
-                                                               apB + k * intB));
-                    BEGIN
-                      blk := MSIRBuilder.CurrentBlock ();
-                      MSIR.BuildStore (blk, dimK,
-                        MSIRBuilder.BuildPtrByteOff (blk, "", dopeA,
-                                                     apB + (k - 1) * intB));
-                    END;
-                  END;
-                  RETURN dopeA;
-                END;
+            IF eltPack <= 0 THEN
+              MSIRBuilder.Abandon ("open-array partial subscript: no element pack");
+              RETURN NIL;
+            END;
+            FOR k := 0 TO msirRank - 1 DO zeros[k] := MSIR.ConstInt (intT, 0) END;
+            dataPtr := MSIR.BuildOpenArrayElemAddr (blk, "", oa, zeros^);
+            rowElts := MSIR.BuildOpenArraySize (blk, "", oa, 1);
+            FOR k := 2 TO msirRank - 1 DO
+              rowElts := MSIR.BuildIMul (blk, "", rowElts,
+                           MSIR.BuildOpenArraySize (blk, "", oa, k));
+            END;
+            IF eltPack MOD Target.Byte = 0 THEN
+              rowBytes := MSIR.BuildIMul (blk, "", rowElts,
+                            MSIR.ConstInt (intT, eltPack DIV Target.Byte));
+            ELSE
+              (* Sub-byte: rows of legal full-subscript chains are byte-aligned
+                 (CM3 rejects partial subscripting of non-byte-aligned rows);
+                 compute bytes = (rowElts*pack + 7) >> 3. *)
+              rowBytes := MSIR.BuildILShr (blk, "",
+                            MSIR.BuildIAdd (blk, "",
+                              MSIR.BuildIMul (blk, "", rowElts,
+                                MSIR.ConstInt (intT, eltPack)),
+                              MSIR.ConstInt (intT, Target.Byte - 1)),
+                            MSIR.ConstInt (intT, 3));
+            END;
+            VAR rowOff := MSIR.BuildIMul (blk, "", idxVal, rowBytes);
+                rowPtr := MSIR.BuildGepByte (blk, "", dataPtr, rowOff);
+                dopeT  := MSIR.TOpenArray (msirRank - 1,
+                            MSIR.OpenArrayElt (MSIR.ValueType (oa)));
+                dopeA  := MSIR.BuildAlloca (blk, "", dopeT);
+            BEGIN
+              MSIR.BuildStore (blk, rowPtr,
+                MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
+              FOR k := 1 TO msirRank - 1 DO
+                MSIR.BuildStore (blk,
+                  MSIR.BuildOpenArraySize (blk, "", oa, k),
+                  MSIRBuilder.BuildPtrByteOff (blk, "", dopeA,
+                                               apB + (k - 1) * intB));
               END;
+              RETURN dopeA;
             END;
           END;
         END;
       END;
+      (* Final dimension.  Sub-byte packed elements have no element ADDRESS —
+         return NIL (recoverable, NOT Abandon) so CompileMSIR reads through
+         ExtractBitFieldDyn and AssignStmt stores through SubByteStoreElemMSIR. *)
+      IF OpenArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN NIL END;
       VAR slot := MSIR.BuildOpenArrayElemAddr (blk, "", oa,
                                                ARRAY OF MSIR.Value{idxVal});
       BEGIN
@@ -778,11 +779,90 @@ PROCEDURE CompilePackedElemMSIR (p: P): MSIR.Value =
     RETURN MSIRBuilder.ExtractBitFieldDyn (arrBase, eltPack, info.size, idxVal, p.type);
   END CompilePackedElemMSIR;
 
+PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
+                             VAR eltPack: INTEGER): MSIR.Value =
+(* Shared helper for sub-byte packed OPEN-array element access (final open
+   dimension, rank-1 dope): returns the flat DATA pointer, the widened element
+   index, and the element pack.  Evaluation order matches LValueMSIR: index
+   first, then the base.  eltPack for open arrays is a power of two dividing
+   Target.Byte (CM3 restriction: open scalar packs divide 64), so the
+   Extract/InsertBitFieldDyn byte path applies and containerBits is unused. *)
+  VAR oa, oaBase: MSIR.Value;  blk: MSIR.Block;
+      idxBits: INTEGER;
+      preAband := MSIRBuilder.IsAbandoned ();
+  BEGIN
+    eltPack := OpenArrayType.EltPack (p.taBase);
+    IF eltPack <= 0 OR eltPack >= Target.Byte THEN RETURN NIL END;
+    idxVal := Expr.CompileMSIR (p.biased_b);
+    IF idxVal = NIL THEN RETURN NIL END;
+    idxBits := MSIR.BitWidth (MSIR.ValueType (idxVal));
+    IF idxBits > 0 AND idxBits < Target.Integer.size THEN
+      blk    := MSIRBuilder.CurrentBlock ();
+      idxVal := MSIR.BuildZExt (blk, "", idxVal, MSIR.TI (Target.Integer.size));
+    END;
+    (* Acquire the dope: lvalue of the base (ptr to dope) or, failing that,
+       the dope value directly — same discipline as LValueMSIR. *)
+    oaBase := Expr.LValueMSIR (p.a);
+    IF oaBase # NIL THEN
+      blk := MSIRBuilder.CurrentBlock ();
+      IF MSIR.Kind (MSIR.ValueType (oaBase)) = MSIR.TypeKind.GcRef THEN
+        MSIRBuilder.SetPendingContainer (oaBase);
+      END;
+      VAR eltT := MSIR.EltType (MSIR.ValueType (oaBase));
+      BEGIN
+        IF MSIR.Kind (eltT) = MSIR.TypeKind.Void THEN
+          eltT := MSIRType.Translate (p.taBase);
+        END;
+        oa := MSIR.BuildLoad (blk, "", eltT, oaBase);
+      END;
+    ELSE
+      IF NOT preAband AND MSIRBuilder.IsAbandoned () THEN
+        MSIRBuilder.ClearAbandoned ();
+      END;
+      oa := Expr.CompileMSIR (p.a);
+    END;
+    IF oa = NIL THEN RETURN NIL END;
+    IF MSIR.Kind (MSIR.ValueType (oa)) # MSIR.TypeKind.OpenArray THEN
+      RETURN NIL;
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+    VAR zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
+    BEGIN
+      RETURN MSIR.BuildOpenArrayElemAddr (blk, "", oa,
+                                          ARRAY OF MSIR.Value{zero});
+    END;
+  END GetOpenPackedBase;
+
+PROCEDURE CompileOpenPackedElemMSIR (p: P): MSIR.Value =
+(* Read a sub-byte element from the final dimension of a packed open array
+   (flat nibble/bit-packed data, matching CG's NonopenEltPack layout). *)
+  VAR dataPtr, idxVal: MSIR.Value;  eltPack: INTEGER;
+  BEGIN
+    dataPtr := GetOpenPackedBase (p, idxVal, eltPack);
+    IF dataPtr = NIL THEN
+      MSIRBuilder.Abandon ("packed open-array element read not representable");
+      RETURN NIL;
+    END;
+    (* containerBits = 0: open-array packs are powers of two (byte path). *)
+    RETURN MSIRBuilder.ExtractBitFieldDyn (dataPtr, eltPack, 0, idxVal, p.type);
+  END CompileOpenPackedElemMSIR;
+
 PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
 (* Write a sub-byte element into a ByteArrayFallback packed array. *)
   BEGIN
     TYPECASE e OF
     | P (p) =>
+        IF p.lhsOpenDepth = 1
+           AND OpenArrayType.EltsAreBitAddressed (p.taBase) THEN
+          (* Final dimension of a packed open array: flat bit-packed data. *)
+          VAR dataPtr, idxVal: MSIR.Value;  eltPack: INTEGER;
+          BEGIN
+            dataPtr := GetOpenPackedBase (p, idxVal, eltPack);
+            IF dataPtr = NIL THEN RETURN FALSE END;
+            MSIRBuilder.InsertBitFieldDyn (dataPtr, eltPack, 0, idxVal, rhs);
+            RETURN TRUE;
+          END;
+        END;
         IF p.lhsOpenDepth # 0 THEN RETURN FALSE END;
         IF NOT ArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN FALSE END;
         VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
@@ -815,6 +895,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     (* Packed-element fixed array: ByteArrayFallback [N x i1] sentinel. *)
     IF p.lhsOpenDepth = 0 AND ArrayType.EltsAreBitAddressed (p.taBase) THEN
       RETURN CompilePackedElemMSIR (p);
+    END;
+    (* Final dimension of a packed OPEN array: flat bit-packed data, no
+       element address — read via ExtractBitFieldDyn (p277, p269 EI4). *)
+    IF p.lhsOpenDepth = 1
+       AND OpenArrayType.EltsAreBitAddressed (p.taBase) THEN
+      RETURN CompileOpenPackedElemMSIR (p);
     END;
     addr := LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;

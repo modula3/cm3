@@ -3,6 +3,7 @@ MODULE MSIRType;
 IMPORT MSIR, Type, Int, LInt, Bool, Target;
 IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
 IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType, TInt;
+IMPORT OpenArrayType;
 IMPORT EnumType, ObjectType;
 
 (* Per-module translation cache: maps base Type.T pointer → MSIR.T.
@@ -374,13 +375,34 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
   END TranslateRecord;
 
 PROCEDURE TranslateOpenArray(t: Type.T): MSIR.T =
-  VAR indexT, eltT: Type.T;  eltMsir: MSIR.T;
+  (* FLAT rank-N model, matching the M3 runtime dope contract: an open array of
+     M3 open depth N is ONE fat pointer { data, n0, .., n_{N-1} } over flat
+     row-major data whose element is the nearest NON-open element type.  The old
+     per-level nesting (openarray<1> openarray<1> elt) implied the outer data
+     region held inner dope structs — no M3 producer (heap NEW, fixed->open
+     conversion, VALUE copies) builds that, so depth>=2 readers dereferenced
+     flat data bytes as dope pointers (p277 OArrsInOArr SEGV, p269 D3..D6). *)
+  VAR
+    depth   := OpenArrayType.OpenDepth(t);
+    eltT    := OpenArrayType.NonopenEltType(t);
+    eltMsir : MSIR.T;
+    eltPack : INTEGER;
   BEGIN
-    IF NOT ArrayType.Split(t, indexT, eltT) THEN RETURN NIL END;
-    (* indexT = NIL for open arrays at every level of nesting. *)
+    IF depth <= 0 THEN RETURN NIL END;
     eltMsir := Translate(eltT);
     IF eltMsir = NIL THEN RETURN NIL END;
-    RETURN MSIR.TOpenArray(1, eltMsir);
+    (* Element storage-width override, mirroring TranslateFixedArray: when the
+       packed element width differs from the natural scalar width AND is a whole
+       number of bytes, use TI(eltPack) so elem_addr GEP strides match memory
+       (e.g. BITS 16 FOR [0..N] stored 2 bytes, natural i64).  Sub-byte packs
+       keep the nominal element type — bit-addressed access goes through
+       Extract/InsertBitFieldDyn which ignores the element type entirely. *)
+    eltPack := OpenArrayType.EltPack(t);
+    IF eltPack >= Target.Byte AND eltPack MOD Target.Byte = 0
+       AND MSIR.BitWidth(eltMsir) > 0 AND eltPack # MSIR.BitWidth(eltMsir) THEN
+      eltMsir := MSIR.TI(eltPack);
+    END;
+    RETURN MSIR.TOpenArray(depth, eltMsir);
   END TranslateOpenArray;
 
 PROCEDURE ByteArrayFallback(t: Type.T): MSIR.T =

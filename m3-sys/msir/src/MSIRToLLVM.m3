@@ -639,6 +639,11 @@ PROCEDURE EmitFloorMod(wr: Wr.T;  res: MSIR.Value;  a, b: MSIR.Value) =
 (*----------------------------------------------- open-array elem addr *)
 
 PROCEDURE EmitOAElemAddr(wr: Wr.T;  i: MSIR.Insn) =
+  (* Open arrays are a fat pointer { data, n0, .., n_{rank-1} } over FLAT
+     row-major data (the M3 runtime dope contract).  The element address is
+     data + ((i0*n1 + i1)*n2 + ...)*sizeof(elt) — the flat index needs the
+     dope's inner dimension sizes at runtime.  (A multi-index GEP on a plain
+     pointer does NOT mean that; the old rank>1 emission was wrong.) *)
   VAR
     res     := MSIR.InsnResult(i);
     oaV     := MSIR.InsnOperand(i, 0);
@@ -646,19 +651,40 @@ PROCEDURE EmitOAElemAddr(wr: Wr.T;  i: MSIR.Insn) =
     rank    := MSIR.OpenArrayRank(oaT);
     eltType := MSIR.OpenArrayElt(oaT);
     dataPtr := NewAux();
+    ip      := "i" & Fmt.Int(Target.IntegerSize());
+    flat    : TEXT;
   BEGIN
     Wr.PutText(wr, "  " & dataPtr & " = extractvalue ");
     LLType(wr, oaT); Wr.PutText(wr, " "); LLOpVal(wr, oaV);
     Wr.PutText(wr, ", 0\n");
 
-    Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr inbounds ");
-    LLType(wr, eltType);
-    Wr.PutText(wr, ", ptr " & dataPtr);
-    FOR k := 0 TO rank - 1 DO
-      Wr.PutText(wr, ", ");
-      LLTypedVal(wr, MSIR.InsnOperand(i, 1 + k));
+    IF rank = 1 THEN
+      Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr inbounds ");
+      LLType(wr, eltType);
+      Wr.PutText(wr, ", ptr " & dataPtr & ", ");
+      LLTypedVal(wr, MSIR.InsnOperand(i, 1));
+      Wr.PutText(wr, "\n");
+    ELSE
+      flat := LLOpValStr(MSIR.InsnOperand(i, 1));
+      FOR k := 1 TO rank - 1 DO
+        VAR nk  := NewAux();
+            mulV := NewAux();
+            addV := NewAux();
+        BEGIN
+          Wr.PutText(wr, "  " & nk & " = extractvalue ");
+          LLType(wr, oaT); Wr.PutText(wr, " "); LLOpVal(wr, oaV);
+          Wr.PutText(wr, ", " & Fmt.Int(1 + k) & "\n");
+          Wr.PutText(wr, "  " & mulV & " = mul " & ip & " " & flat
+                         & ", " & nk & "\n");
+          Wr.PutText(wr, "  " & addV & " = add " & ip & " " & mulV & ", "
+                         & LLOpValStr(MSIR.InsnOperand(i, 1 + k)) & "\n");
+          flat := addV;
+        END;
+      END;
+      Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = getelementptr inbounds ");
+      LLType(wr, eltType);
+      Wr.PutText(wr, ", ptr " & dataPtr & ", " & ip & " " & flat & "\n");
     END;
-    Wr.PutText(wr, "\n");
   END EmitOAElemAddr;
 
 (*------------------------------------------------------ insn emission *)

@@ -1369,9 +1369,7 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
             END;
             (* EmitReportFault branches; continue in the fresh current block. *)
             VAR blk2 := MSIRBuilder.CurrentBlock ();
-                zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
-                dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", actVal,
-                          ARRAY OF MSIR.Value {zero});
+                dPtr := MSIRBuilder.OpenArrayDataPtr (blk2, actVal);
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (formT));
             BEGIN
               RETURN MSIR.BuildLoad (blk2, "", formT, tPtr);
@@ -1506,10 +1504,21 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           FOR k := 1 TO formDepth - 1 DO
             totalEltsDyn := MSIR.BuildIMul (b2, "", totalEltsDyn, dims[k]);
           END;
-          eltSizeBytes  := OpenArrayType.EltPack (formType) DIV Target.Char.size;
-          totalBytesDyn := MSIR.BuildIMul (b2, "",
-                             totalEltsDyn,
-                             MSIR.ConstInt (intT, eltSizeBytes));
+          (* Bit-accurate byte count: sub-byte element packs (BITS 4 etc.) made
+             the old  EltPack DIV Byte  factor ZERO, so the copy buffer and
+             memcpy were empty (p277 OArrsInOArr).  bytes = (elts*pack + 7)/8. *)
+          eltSizeBytes := OpenArrayType.EltPack (formType);   (* bits here *)
+          IF eltSizeBytes MOD Target.Byte = 0 THEN
+            totalBytesDyn := MSIR.BuildIMul (b2, "", totalEltsDyn,
+                               MSIR.ConstInt (intT, eltSizeBytes DIV Target.Byte));
+          ELSE
+            totalBytesDyn := MSIR.BuildILShr (b2, "",
+                               MSIR.BuildIAdd (b2, "",
+                                 MSIR.BuildIMul (b2, "", totalEltsDyn,
+                                   MSIR.ConstInt (intT, eltSizeBytes)),
+                                 MSIR.ConstInt (intT, Target.Byte - 1)),
+                               MSIR.ConstInt (intT, 3));
+          END;
           VAR copyPtr := MSIR.BuildAllocaDyn (b2, "", totalBytesDyn);
           BEGIN
             MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
@@ -1555,7 +1564,8 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     END;
     eltPackBits := OpenArrayType.EltPack (formType);
     IF totalElts < 1 THEN totalElts := 1 END;
-    totalBytes := totalElts * (eltPackBits DIV Target.Char.size);
+    (* Bit-accurate: sub-byte packs made  pack DIV Byte  zero (p277). *)
+    totalBytes := (totalElts * eltPackBits + Target.Byte - 1) DIV Target.Byte;
 
     dataPtr := Expr.LValueMSIR (actual);
     IF dataPtr = NIL THEN RETURN NIL END;

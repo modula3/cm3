@@ -2436,7 +2436,12 @@ BEGIN
     ELSIF eltPack > 0 AND eltPack # eltBits THEN
       eltT := MSIR.TI (eltPack);
     END;
-    IF eltPack > 0 AND eltPack < Target.Byte THEN
+    (* eltBits > 0 restricts this to SCALAR sub-byte elements.  A multi-dim
+       packed array (ARRAY OF ARRAY OF BITS 4) reports the same innermost
+       eltPack but has nested-array elements (eltBits < 0); those are built by
+       the per-element memcpy loop below, each inner row packed by its own
+       recursive LValueMSIR_MSIR (p277 OArrsInOArr). *)
+    IF eltPack > 0 AND eltPack < Target.Byte AND eltBits > 0 THEN
       (* Sub-byte elements: build using InsertBitField on a ByteArrayFallback.
          Size the byte array by the type's DECLARED storage (CheckInfo.size, the
          same source CG's Declare_temp sizing derives from), not the dense

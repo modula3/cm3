@@ -966,11 +966,16 @@ PROCEDURE CompileMSIR (p: P) =
                memcpy from the open-array data pointer. *)
             VAR blk2    := MSIRBuilder.CurrentBlock ();
                 lhsInfo : Type.Info;
-                zero    := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
-                srcPtr  := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
-                             ARRAY OF MSIR.Value {zero});
+                rhsRank := MSIR.OpenArrayRank (rhsT);
+                zeros   := NEW (REF ARRAY OF MSIR.Value, rhsRank);
+                srcPtr  : MSIR.Value;
                 nBytes  : INTEGER;
             BEGIN
+              (* elem_addr needs one index per dope rank (flat rank-N model). *)
+              FOR k := 0 TO rhsRank - 1 DO
+                zeros[k] := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
+              END;
+              srcPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal, zeros^);
               EVAL Type.CheckInfo (Expr.TypeOf (p.lhs), lhsInfo);
               nBytes := lhsInfo.size DIV Target.Char.size;
               MSIRBuilder.EmitMemcpy (lhsPtr, srcPtr, nBytes);
@@ -1038,12 +1043,22 @@ PROCEDURE CompileMSIR (p: P) =
                 END;
                 (* EltPack from RHS type: accounts for fixed inner dims in the rhs
                    element size.  e.g. ARRAY OF ARRAY[0..9] OF T: EltPack = sizeof(T)*10.
-                   Extra open dims (counted above) are NOT in EltPack — no double-count. *)
-                VAR totalBytes := MSIR.BuildIMul (blk2, "", totalElts,
-                                    MSIR.ConstInt (intT,
-                                      OpenArrayType.EltPack (Expr.TypeOf (p.rhs))
-                                        DIV Target.Char.size));
+                   Extra open dims (counted above) are NOT in EltPack — no double-count.
+                   Bit-accurate: sub-byte packs (BITS 4) made  pack DIV Byte  zero. *)
+                VAR packBits   := OpenArrayType.EltPack (Expr.TypeOf (p.rhs));
+                    totalBytes : MSIR.Value;
                 BEGIN
+                  IF packBits MOD Target.Byte = 0 THEN
+                    totalBytes := MSIR.BuildIMul (blk2, "", totalElts,
+                                    MSIR.ConstInt (intT, packBits DIV Target.Byte));
+                  ELSE
+                    totalBytes := MSIR.BuildILShr (blk2, "",
+                                    MSIR.BuildIAdd (blk2, "",
+                                      MSIR.BuildIMul (blk2, "", totalElts,
+                                        MSIR.ConstInt (intT, packBits)),
+                                      MSIR.ConstInt (intT, Target.Byte - 1)),
+                                    MSIR.ConstInt (intT, 3));
+                  END;
                   MSIRBuilder.EmitMemcpyDyn (dstDataPtr, srcDataPtr, totalBytes);
                 END;
               END;

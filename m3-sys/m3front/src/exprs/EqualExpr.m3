@@ -1113,7 +1113,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
             zeros := NEW (REF ARRAY OF MSIR.Value, 1);
             zeros[0] := zero;
             IF lvIsOA THEN
-              pA := MSIR.BuildOpenArrayElemAddr (blk, "", lv, zeros^);
+              pA := MSIRBuilder.OpenArrayDataPtr (blk, lv);
             ELSE
               pA := Expr.LValueMSIR (p.a);
               IF pA = NIL THEN
@@ -1123,7 +1123,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
               pA := MSIR.RetypeValue (pA, MSIR.TPtr (eltMsir));
             END;
             IF rvIsOA THEN
-              pB := MSIR.BuildOpenArrayElemAddr (blk, "", rv, zeros^);
+              pB := MSIRBuilder.OpenArrayDataPtr (blk, rv);
             ELSE
               pB := Expr.LValueMSIR (p.b);
               IF pB = NIL THEN

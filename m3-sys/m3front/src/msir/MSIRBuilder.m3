@@ -2172,7 +2172,6 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
     slotT  := MSIR.ValueType (lhsPtr);
     eltT   := MSIR.EltType (slotT);
     rhsT   := MSIR.ValueType (rhsVal);
-    zero   : MSIR.Value;
     srcPtr : MSIR.Value;
     info   : Type.Info;
   BEGIN
@@ -2181,9 +2180,7 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
       RETURN FALSE;
     END;
     IF curBlock = NIL OR abandoned THEN RETURN TRUE END;
-    zero   := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
-    srcPtr := MSIR.BuildOpenArrayElemAddr (curBlock, "", rhsVal,
-                ARRAY OF MSIR.Value {zero});
+    srcPtr := OpenArrayDataPtr (curBlock, rhsVal);
     IF MSIR.OpenArrayRank (rhsT) = 1 AND
        MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
       VAR tPtr := MSIR.RetypeValue (srcPtr, MSIR.TPtr (eltT));
@@ -2349,7 +2346,12 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
        constructor path so the packed reads (ExtractBitField) see the same bits. *)
     VAR eltPack := ArrayType.EltPack(arrType);
     BEGIN
-      IF eltPack > 0 AND eltPack < Target.Byte THEN
+      (* Only the SCALAR-element case is byte-packed here.  ArrayType.EltPack
+         returns the INNERMOST element pack, so a multi-dim packed array
+         (ARRAY OF ARRAY OF BITS 4) also reports pack < 8 — but its direct
+         elements are sub-arrays (ConstAggArray), not ConstInts; those recurse
+         through the normal element loop below (p269 Constants). *)
+      IF eltPack > 0 AND eltPack < Target.Byte AND Type.IsOrdinal(eltT) THEN
         (* Emit under the caller's declared type: arrMsir is [N x i8] derived
            from the declared type at a safe (pre-codegen) time, and N can exceed
            the dense byte count when the storage is padded (p277: ARRAY[0..3] OF
@@ -2425,6 +2427,16 @@ PROCEDURE BuildConstAggArrayExpr(constExpr: Expr.T;  arrType: Type.T;
    override eltMsir post-build from the actual element MSIR type).
    Root fix would be in Constant.Check to store the concrete inferred type — deferred
    because it touches front-end type inference and the workaround is correct. *)
+PROCEDURE OpenArrayDataPtr(blk: MSIR.Block;  oa: MSIR.Value): MSIR.Value =
+  VAR rank  := MSIR.OpenArrayRank(MSIR.ValueType(oa));
+      zeros := NEW(REF ARRAY OF MSIR.Value, MAX(rank, 1));
+  BEGIN
+    FOR k := 0 TO NUMBER(zeros^) - 1 DO
+      zeros[k] := MSIR.ConstInt(MSIR.TI(Target.Integer.size), 0);
+    END;
+    RETURN MSIR.BuildOpenArrayElemAddr(blk, "", oa, zeros^);
+  END OpenArrayDataPtr;
+
 PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
   VAR
     ae:       ArrayExpr.T;
@@ -2477,10 +2489,14 @@ PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
        with ExtractBitField bit offsets and byte-blob copies (p277 CArrsInOArr:
        FArr[i] := A1C loaded @constarray with raw values 1,4,7,10 where the
        packed bytes 129,28,5,0 were expected). *)
-    VAR arrT    := Expr.TypeOf(constExpr);
-        eltPack := ArrayType.EltPack(arrT);
+    VAR arrT     := Expr.TypeOf(constExpr);
+        eltPack  := ArrayType.EltPack(arrT);
+        aIdxT, aEltT: Type.T;
+        scalarElt := ArrayType.Split(arrT, aIdxT, aEltT) AND Type.IsOrdinal(aEltT);
     BEGIN
-      IF eltPack > 0 AND eltPack < Target.Byte THEN
+      (* Scalar-element packed array only (multi-dim packed arrays report the
+         same innermost pack but have sub-array elements — p269 Constants). *)
+      IF eltPack > 0 AND eltPack < Target.Byte AND scalarElt THEN
         VAR denseBytes := (n * eltPack + Target.Byte - 1) DIV Target.Byte;
             nBytes     := denseBytes;
             declT      := MSIRType.Translate(arrT);
