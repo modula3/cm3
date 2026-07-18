@@ -742,6 +742,24 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
           b := MSIRBuilder.CurrentBlock ();
           fieldPtr := MSIRBuilder.BuildPtrByteOff (b, "", slot, byteOff);
           fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (ft));
+          (* Packed-aggregate field narrower than its declared storage: a
+             BITS-n-FOR array constructor builds a dense [M x i8] value (CG's
+             top.totalSize bits) while the field's declared type is a padded
+             [N x i8], M < N (p277: ARRAY[0..3] OF BITS 5 = 3 dense bytes in a
+             4-byte field).  Mirror CG, which copies exactly totalSize bits into
+             the field (CG.Copy is untyped): retype the dest to the VALUE's type
+             and store its M bytes into the field's prefix, leaving the padding
+             bytes untouched — the same bytes CG leaves unwritten. *)
+          VAR fvT := MSIR.ValueType (fieldVal);
+          BEGIN
+            IF MSIR.Kind (ft) = MSIR.TypeKind.FixedArray
+               AND MSIR.Kind (fvT) = MSIR.TypeKind.FixedArray
+               AND MSIR.Kind (MSIR.FixedArrayElt (ft)) = MSIR.TypeKind.I8
+               AND MSIR.Kind (MSIR.FixedArrayElt (fvT)) = MSIR.TypeKind.I8
+               AND MSIR.FixedArrayLen (fvT) < MSIR.FixedArrayLen (ft) THEN
+              fieldPtr := MSIR.RetypeValue (fieldPtr, MSIR.TPtr (fvT));
+            END;
+          END;
           IF NOT MSIRBuilder.OpenArrayToFixedStore (fieldPtr, fieldVal,
                                                     fieldInfo.type) THEN
             dstBits := MSIR.BitWidth (ft);

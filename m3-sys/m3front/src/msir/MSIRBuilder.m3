@@ -2252,13 +2252,16 @@ PROCEDURE MaterializeConstElt(elt: Expr.T; eltMsir: MSIR.T): MSIR.Value =
       IF folded # NIL AND folded # elt THEN elt := folded END;
     END;
     ae := ArrayExpr.ArrayConstrExpr(elt);
+    IF ae # NIL AND MSIR.Kind(eltMsir) = MSIR.TypeKind.FixedArray THEN
+      (* Nested fixed-array element: naturally aligned, OR sub-byte packed
+         (bit-addressed, declared [N x i8]) — BuildConstAggArray's packed branch
+         bit-packs the latter under eltMsir's declared byte count (p277
+         CArrsInCArr: a const array whose elements are const packed arrays). *)
+      RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), eltMsir);
+    END;
     IF ae # NIL
        AND NOT ArrayType.EltsAreBitAddressed(Expr.TypeOf(elt)) THEN
-      IF MSIR.Kind(eltMsir) = MSIR.TypeKind.FixedArray THEN
-        (* Recurse into a nested array constructor only when the declared element
-           type is a genuine, naturally-aligned fixed array. *)
-        RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), eltMsir);
-      ELSIF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray THEN
+      IF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray THEN
         (* Element declared as open array (e.g. CONST b = ARRAY OF ARRAY OF INTEGER {c,...}).
            Compute concrete eltMsir = TFixedArray(nElts, inner_elt_type) from the element
            count and element type of the inner array constructor.  p081. *)
@@ -2347,8 +2350,27 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
     VAR eltPack := ArrayType.EltPack(arrType);
     BEGIN
       IF eltPack > 0 AND eltPack < Target.Byte THEN
-        VAR nBytes   := (nTotal * eltPack + Target.Byte - 1) DIV Target.Byte;
-            byteVals := NEW(REF ARRAY OF INTEGER, nBytes);
+        (* Emit under the caller's declared type: arrMsir is [N x i8] derived
+           from the declared type at a safe (pre-codegen) time, and N can exceed
+           the dense byte count when the storage is padded (p277: ARRAY[0..3] OF
+           BITS 5 = 3 dense bytes in [4 x i8]).  The value must carry exactly N
+           bytes to be type-correct; the padding bytes are zero.  NOTE: do NOT
+           query Type.CheckInfo/MSIRType.Translate here for the declared size —
+           fresh type queries at MSIR-codegen time corrupted later SubscriptExpr
+           codegen (p269); arrMsir is already in hand. *)
+        VAR denseBytes := (nTotal * eltPack + Target.Byte - 1) DIV Target.Byte;
+            nBytes     := denseBytes;
+        BEGIN
+        IF MSIR.Kind(arrMsir) = MSIR.TypeKind.FixedArray THEN
+          nBytes := MSIR.FixedArrayLen(arrMsir);
+          IF nBytes < denseBytes THEN
+            (* Should not happen (declared storage >= dense bits); bail rather
+               than write past the byte array. *)
+            Abandon("ConstArray: packed constructor larger than declared type");
+            RETURN NIL;
+          END;
+        END;
+        VAR byteVals := NEW(REF ARRAY OF INTEGER, nBytes);
         BEGIN
           FOR j := 0 TO nBytes - 1 DO byteVals[j] := 0 END;
           FOR i := 0 TO nTotal - 1 DO
@@ -2368,6 +2390,7 @@ PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
             END;
             RETURN MSIR.ConstAggArray(arrMsir, belts^);
           END;
+        END;
         END;
       END;
     END;
