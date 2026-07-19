@@ -95,14 +95,15 @@ PROCEDURE CompileMSIR (p: P) =
                MSIR.Kind (resultT) = MSIR.TypeKind.Ptr)) THEN
             v := MSIR.RetypeValue (v, resultT);
           ELSIF MSIR.Kind (MSIR.ValueType (v))  = MSIR.TypeKind.OpenArray AND
-                MSIR.OpenArrayRank (MSIR.ValueType (v)) = 1              AND
-                MSIR.Kind (resultT) = MSIR.TypeKind.FixedArray           AND
-                MSIR.Equal (MSIR.OpenArrayElt  (MSIR.ValueType (v)),
-                             MSIR.FixedArrayElt (resultT)) THEN
-            (* RETURN open_array_var from a fixed-array-result proc.
-               Extract the data pointer from the dope vector, retype it to
-               ptr([N]T) so the verifier accepts the load, then load the
-               fixed-array value. *)
+                MSIR.Kind (resultT) = MSIR.TypeKind.FixedArray THEN
+            (* RETURN an open-array value from a fixed-array-result proc (e.g.
+               ByVALUE(VALUE v: ARRAY OF T): FixedArr).  In the flat rank-N model
+               the dope's data pointer addresses the row-major element data, and
+               a fixed array of matching total shape has that same flat layout —
+               so extract the data pointer (rank-many zero indices), retype it to
+               ptr(FixedArr) and load, for ANY rank (p280 TestArrayMO multi-dim).
+               M3 assignability already guarantees the leaf types and total shape
+               match. *)
             VAR blk  := MSIRBuilder.CurrentBlock ();
                 dPtr := MSIRBuilder.OpenArrayDataPtr (blk, v);
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (resultT));
