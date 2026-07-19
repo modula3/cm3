@@ -1638,16 +1638,47 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
            Construct the {ptr, count} descriptor so the callee sees a valid dope. *)
         VAR dimSizes  : REF ARRAY OF INTEGER;
             msirInner : MSIR.T;
+            m3Inner   : Type.T;
+            eltPack   := OpenArrayType.EltPack (formType);
         BEGIN
           dimSizes  := NEW (REF ARRAY OF INTEGER, formDepth);
           msirInner := lvalEltT;
+          m3Inner   := Expr.RepTypeOf (actual);
+          IF m3Inner = NIL THEN m3Inner := actType END;
           FOR k := 0 TO formDepth - 1 DO
             IF MSIR.Kind (msirInner) # MSIR.TypeKind.FixedArray THEN
               MSIRBuilder.Abandon ("GenOpenArgMSIR: open-array constructor depth mismatch");
               RETURN NIL;
             END;
-            dimSizes[k] := VAL (MSIR.FixedArrayLen (msirInner), INTEGER);
-            msirInner   := MSIR.FixedArrayElt (msirInner);
+            (* Dope sizes must be the M3 LOGICAL dimension counts, exactly as the
+               CG path builds them (Type.Number).  MSIR.FixedArrayLen is a BYTE
+               count for a packed (sub-byte) innermost dim — e.g. ARRAY OF BITS 4
+               => [N x i8] gives N bytes, not the 2N nibble elements — so a packed
+               open-TYPED const (whose M3 type is open, giving no Number) got a
+               dope with the wrong inner size and every read row-shifted (p269
+               OpenValue/FactoredOpenValue).  Prefer Type.Number from the M3 type;
+               when that is unavailable (open type) recover the packed count from
+               the byte length and the element pack. *)
+            VAR eltMsir := MSIR.FixedArrayElt (msirInner);
+                dimI    := VAL (MSIR.FixedArrayLen (msirInner), INTEGER);
+                ixT, etT: Type.T;  cntI: INTEGER;
+            BEGIN
+              IF m3Inner # NIL THEN m3Inner := Type.StripPacked (m3Inner) END;
+              IF m3Inner # NIL AND ArrayType.Split (m3Inner, ixT, etT)
+                 AND ixT # NIL AND TInt.ToInt (Type.Number (ixT), cntI) THEN
+                dimI    := cntI;
+                m3Inner := etT;
+              ELSE
+                m3Inner := NIL;  (* M3 type gone open — recover packed count below *)
+                IF eltPack > 0 AND eltPack < Target.Byte
+                   AND (MSIR.Kind (eltMsir) = MSIR.TypeKind.I8
+                        OR MSIR.Kind (eltMsir) = MSIR.TypeKind.W8) THEN
+                  dimI := dimI * Target.Byte DIV eltPack;
+                END;
+              END;
+              dimSizes[k] := dimI;
+              msirInner   := eltMsir;
+            END;
           END;
           flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
           flds[0] := MSIR.Field {name := "", type := ptrT};
