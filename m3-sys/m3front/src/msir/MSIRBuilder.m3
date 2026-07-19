@@ -155,6 +155,7 @@ VAR
   constArraySeq:  INTEGER := 0;
 
   memcpyProc: MSIR.Proc := NIL;  (* lazy C memcpy stub *)
+  memcmpProc: MSIR.Proc := NIL;  (* lazy C memcmp stub *)
 
 PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
   (* TRUE for types safe to pass by value as a capture param.
@@ -2153,6 +2154,7 @@ PROCEDURE BeginModule() =
     constArrayMapN   := 0;
     constArraySeq    := 0;
     memcpyProc       := NIL;
+    memcmpProc       := NIL;
     MSIRType.Reset();
   END BeginModule;
 
@@ -2187,6 +2189,34 @@ PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
     EVAL MSIR.BuildCall(curBlock, "", GetMemcpyProc(),
       ARRAY OF MSIR.Value{dst, src, byteCount});
   END EmitMemcpyDyn;
+
+PROCEDURE GetMemcmpProc(): MSIR.Proc =
+  BEGIN
+    IF memcmpProc = NIL THEN
+      memcmpProc := MSIR.NewProc("memcmp",
+        ARRAY OF MSIR.Param{
+          MSIR.Param{name := "a",  type := MSIR.TPtr(MSIR.TVoid()),
+                     mode := MSIR.ParamMode.ByValue},
+          MSIR.Param{name := "b",  type := MSIR.TPtr(MSIR.TVoid()),
+                     mode := MSIR.ParamMode.ByValue},
+          MSIR.Param{name := "n",  type := MSIR.TI(Target.Integer.size),
+                     mode := MSIR.ParamMode.ByValue}
+        },
+        MSIR.TI(32));  (* memcmp returns int (0 iff equal) *)
+    END;
+    RETURN memcmpProc;
+  END GetMemcmpProc;
+
+PROCEDURE BuildMemcmp(b: MSIR.Block;  a, bb: MSIR.Value;
+                       byteCount: INTEGER): MSIR.Value =
+(* memcmp(a, bb, byteCount) -> i32 (0 iff the byteCount bytes are equal).  For
+   comparing aggregate values (records / fixed arrays) byte-wise, where LLVM
+   icmp does not apply (p280 open-array-of-aggregates equality). *)
+  BEGIN
+    RETURN MSIR.BuildCall(b, "", GetMemcmpProc(),
+      ARRAY OF MSIR.Value{a, bb,
+        MSIR.ConstInt(MSIR.TI(Target.Integer.size), byteCount)});
+  END BuildMemcmp;
 
 PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
                                   lhsType: Type.T): BOOLEAN =
@@ -2859,6 +2889,30 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
       FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
       maskVal := maskVal - 1;
       extracted := MSIR.BuildIAnd (b, "", shifted, MSIR.ConstInt (wordT, maskVal));
+      (* Aggregate field (a misaligned {i8,i8}/[3 x i8] record/array field read
+         via Misaligned.TheField): the extracted bits are not a scalar ordinal —
+         write them out as the aggregate's byte image and return the aggregate
+         value, not a widened integer (p280 TestRecord/TestSmallArray). *)
+      VAR fieldMsir := MSIRType.Translate (rawFieldType);
+      BEGIN
+        IF fieldMsir # NIL
+           AND (MSIR.Kind (fieldMsir) = MSIR.TypeKind.Struct
+                OR MSIR.Kind (fieldMsir) = MSIR.TypeKind.FixedArray) THEN
+          VAR nB  := (bitWidth + 7) DIV 8;
+              tmp := MSIR.BuildAlloca (b, "", fieldMsir);
+          BEGIN
+            FOR j := 0 TO nB - 1 DO
+              MSIR.BuildStore (b,
+                MSIR.BuildTrunc (b, "",
+                  MSIR.BuildILShr (b, "", extracted,
+                    MSIR.ConstInt (wordT, j * 8)),
+                  MSIR.TI (8)),
+                MSIR.BuildPtrAdd (b, "", tmp, j));
+            END;
+            RETURN MSIR.BuildLoad (b, "", fieldMsir, tmp);
+          END;
+        END;
+      END;
       VAR
         packedBase : Type.T;
         packedSize : INTEGER;
@@ -2909,6 +2963,34 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     b0        : MSIR.Value;
     maskVal   : INTEGER := 1;
   BEGIN
+    (* An aggregate rhs — a small record/array VALUE stored into a misaligned
+       field, e.g. `Misaligned.TheField := Val1` where TheField is {i8,i8} or
+       [3 x i8] — has no scalar bit width and cannot be zext/trunc'd by the bit
+       math below.  Spill it and reassemble its bytes (little-endian) into a
+       machine-width integer first (p280 TestRecord/TestSmallArray). *)
+    VAR rhsK := MSIR.Kind (MSIR.ValueType (rhs));
+    BEGIN
+      IF rhsK = MSIR.TypeKind.Struct OR rhsK = MSIR.TypeKind.FixedArray THEN
+        VAR aggT := MSIR.ValueType (rhs);
+            nB   := (bitWidth + 7) DIV 8;
+            intT := MSIR.TI (Target.Integer.size);
+            tmp  := MSIR.BuildAlloca (b, "", aggT);
+            acc  : MSIR.Value := MSIR.ConstInt (intT, 0);
+        BEGIN
+          MSIR.BuildStore (b, rhs, tmp);
+          FOR j := 0 TO nB - 1 DO
+            VAR bj := MSIR.BuildLoad (b, "", MSIR.TI (8),
+                        MSIR.BuildPtrAdd (b, "", tmp, j));
+            BEGIN
+              acc := MSIR.BuildIOr (b, "", acc,
+                       MSIR.BuildIShl (b, "", MSIR.BuildZExt (b, "", bj, intT),
+                         MSIR.ConstInt (intT, j * 8)));
+            END;
+          END;
+          rhs := acc;
+        END;
+      END;
+    END;
     (* Wide field: > 16 bits (> 2 bytes).  Decompose into 8-bit chunks, each
        injected by a recursive single/two-byte InsertBitField call. *)
     IF bitInByte + bitWidth > 16 THEN

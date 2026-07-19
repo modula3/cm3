@@ -1177,11 +1177,29 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
           idx1    := MSIR.BuildLoad (loopBodBlk, "", MSIR.TI (Target.Integer.size), idxSlot);
           ebV     := MSIR.ConstInt (MSIR.TI (Target.Integer.size), elemBytes);
           byteOff := MSIR.BuildIMul (loopBodBlk, "", idx1, ebV);
-          eA      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
-                       MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff));
-          eB      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
-                       MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff));
-          bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq, eA, eB);
+          (* When the element type is itself an aggregate (a fixed array or
+             record — e.g. ARRAY OF ARRAY OF T), LLVM icmp cannot compare the
+             loaded aggregates; compare the two element byte-regions with memcmp
+             instead (p280 TestArrayMO: ARRAY OF [3 x [3 x i64]]). *)
+          VAR eltK := MSIR.Kind (eltMsir);
+          BEGIN
+            IF eltK = MSIR.TypeKind.Struct OR eltK = MSIR.TypeKind.FixedArray THEN
+              VAR cmp := MSIRBuilder.BuildMemcmp (loopBodBlk,
+                           MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff),
+                           MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff),
+                           elemBytes);
+              BEGIN
+                bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq,
+                             cmp, MSIR.ConstInt (MSIR.TI (32), 0));
+              END;
+            ELSE
+              eA      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
+                           MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff));
+              eB      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
+                           MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff));
+              bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq, eA, eB);
+            END;
+          END;
           MSIR.BuildCondBr (loopBodBlk, bodCond,
                             incrBlk,  ARRAY OF MSIR.Value{},
                             failBlk,  ARRAY OF MSIR.Value{});

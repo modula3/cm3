@@ -419,6 +419,11 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 
+PROCEDURE BuildMemcmp(b: MSIR.Block;  a, bb: MSIR.Value;
+                       byteCount: INTEGER): MSIR.Value;
+(* memcmp(a, bb, byteCount) -> i32 (0 iff equal).  For byte-wise comparison of
+   aggregate values where LLVM icmp does not apply. *)
+
 (* If rhsVal is an OpenArray value and lhsPtr is a pointer to a FixedArray,
    emit the appropriate element copy (typed load+store for rank-1 matching
    elements, memcpy otherwise) and return TRUE.
