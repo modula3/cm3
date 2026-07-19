@@ -792,6 +792,23 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirT, slot);
   END CompileMSIR;
 
+PROCEDURE EmitUseFailureMSIR (e: Expr.T) =
+(* If e is a record constructor whose use is a statically-detected runtime error
+   (DoGenRTAbort — e.g. an out-of-range field), emit an unconditional
+   ReportFault, the MSIR analogue of CheckUseFailure -> CG.Abort.  Fold sites
+   (QualifyExpr's Rec{...}.X) extract a field constant without going through
+   CompileLValueMSIR, so they would otherwise skip the fault (p268). *)
+  BEGIN
+    TYPECASE e OF
+    | P (p) =>
+        IF p.checked AND AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
+          MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                       ORD (p.RTErrorCode));
+        END;
+    ELSE (* not a record constructor: nothing to fault on *)
+    END;
+  END EmitUseFailureMSIR;
+
 PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
 (* Static/global-initializer constant: build a ConstStruct for a record field.
    Mirrors the old TryConstFieldMSIR struct case. *)

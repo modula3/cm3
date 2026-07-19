@@ -34,4 +34,11 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN;
    Used both for record fields and for whole module-global initializers. *)
 PROCEDURE TryConstFieldMSIR(e: Expr.T;  ft: MSIR.T): MSIR.Value;
 
+PROCEDURE EmitUseFailureMSIR(e: Expr.T);
+(* MSIR analogue of CheckUseFailure's CG.Abort: if e is a record constructor
+   whose use is a statically-detected runtime error (per AssignStmt.DoGenRTAbort,
+   e.g. an out-of-range field), emit an unconditional ReportFault.  Used at
+   const-fold sites (QualifyExpr) that extract a field value without going
+   through CompileLValueMSIR, which emits the fault itself.  No-op otherwise. *)
+
 END RecordExpr.

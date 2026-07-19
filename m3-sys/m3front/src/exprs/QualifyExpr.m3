@@ -1157,6 +1157,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         VAR stripped := Expr.StripNamedCons (p.lhsExpr);
         BEGIN
           IF stripped # NIL THEN
+            (* Selecting a field of a record constructor with a statically
+               out-of-range field is a checked RT error (CT-warned); the fold
+               below bypasses CompileLValueMSIR, so emit the fault here (p268). *)
+            RecordExpr.EmitUseFailureMSIR (stripped);
             EVAL RecordExpr.Qualify (stripped, p.name, folded);
           END;
         END;
