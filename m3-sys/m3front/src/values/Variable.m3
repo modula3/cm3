@@ -297,7 +297,7 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
        end assigned (t.offset), which the import chain uses — and modules reach it
        via the _I3 binder's II_import.  This mirrors the C backend's I_<intf> data
        segment.  Hence we no longer skip interface units here. *)
-    infoName  := MSIR.ModuleName(m) & "_M3_info";
+    infoName  := MSIR.ModuleInfoName(m);
     IF t.indirect THEN
       (* Large global (size > Max_zero_global): in the C backend the module
          struct holds a pointer to a separately-allocated BSS buffer.  In MSIR

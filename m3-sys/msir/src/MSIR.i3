@@ -268,6 +268,10 @@ TYPE Module <: REFANY;
 
 PROCEDURE NewModule(name: TEXT): Module;
 PROCEDURE ModuleName(m: Module): TEXT;
+
+PROCEDURE ModuleInfoName(m: Module): TEXT;
+(* The RT0 ModuleInfo struct symbol: <Name>_I3_info for interfaces, <Name>_M3_info
+   for modules — distinct so a MODULE Z EXPORTS Z pair does not collide. *)
 PROCEDURE ModuleSrcFile(m: Module): TEXT;             (* RT0.ModuleInfo.file; NIL if unset *)
 PROCEDURE ModuleSetSrcFile(m: Module;  f: TEXT);      (* records once (first non-NIL wins) *)
 PROCEDURE ModuleSetIsInterface(m: Module;  isInterface: BOOLEAN);

@@ -3929,7 +3929,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
   VAR
     modName    := MSIR.ModuleName(m);
     binderName := modName & "_M3";
-    infoName   := "@" & modName & "_M3_info";
+    infoName   := "@" & MSIR.ModuleInfoName(m);  (* _I3_info iface / _M3_info mod *)
     bodyName   := "@" & modName & "__" & modName & "_M3";
     bodyExists := FALSE;
     ap         := Target.AddressBytes();   (* bytes per field slot *)
@@ -4251,9 +4251,15 @@ PROCEDURE EmitGlobalInitCtor(wr: Wr.T;  m: MSIR.Module) =
   VAR
     n        := MSIR.ModuleGlobalInitCount(m);
     modName  := MSIR.ModuleName(m);
-    ctorName := "MSIR_InitGlobals_" & modName & "_M3";
+    (* Interface-aware suffix: a MODULE Z EXPORTS Z produces both a Z_I3 and a
+       Z_M3 unit; each with const-initialised globals emits its own ctor, so the
+       ctor name and the info-struct it writes must be distinct per unit. *)
+    unitSfx  := "_M3";
+    ctorName : TEXT;
     ap_t     := "i" & Fmt.Int(Target.AddressSize());
   BEGIN
+    IF MSIR.ModuleIsInterface(m) THEN unitSfx := "_I3" END;
+    ctorName := "MSIR_InitGlobals_" & modName & unitSfx;
     IF n = 0 THEN RETURN END;
     Wr.PutText(wr, "\n; const-initialised user globals (early ctor)\n");
     Wr.PutText(wr, "define void @" & ctorName & "() {\nentry:\n");
@@ -4264,7 +4270,7 @@ PROCEDURE EmitGlobalInitCtor(wr: Wr.T;  m: MSIR.Module) =
         Wr.PutText(wr, "  store ");
         LLTypedVal(wr, val);
         Wr.PutText(wr, ", ptr getelementptr inbounds (i8, ptr @"
-                       & modName & "_M3_info, " & ap_t & " "
+                       & MSIR.ModuleInfoName(m) & ", " & ap_t & " "
                        & Fmt.Int(off) & ")\n");
       END;
     END;

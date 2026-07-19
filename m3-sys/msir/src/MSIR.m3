@@ -1474,6 +1474,19 @@ PROCEDURE NewModule(name: TEXT): Module =
   END NewModule;
 
 PROCEDURE ModuleName(m: Module): TEXT = BEGIN RETURN m.name END ModuleName;
+PROCEDURE ModuleInfoName(m: Module): TEXT =
+(* The RT0 ModuleInfo struct symbol for m: <Name>_I3_info for an interface unit,
+   <Name>_M3_info for a module unit.  A MODULE Z EXPORTS Z produces BOTH units
+   with the same Name, so the interface (which owns the exported interface VARs'
+   storage) and the module must use DISTINCT info-struct symbols — mirroring the
+   C backend's I_<intf> vs M_<mod> data segments (Module.MainBodySuffix/DataName
+   index by t.interface).  When they collided (_M3_info for both) an importer's
+   RT0 import chain resolved to the smaller module struct and read an interface
+   VAR off the end of it (p280 TestSet SIGSEGV). *)
+  BEGIN
+    IF m.isInterface THEN RETURN m.name & "_I3_info"
+    ELSE RETURN m.name & "_M3_info" END;
+  END ModuleInfoName;
 PROCEDURE ModuleSrcFile(m: Module): TEXT = BEGIN RETURN m.srcFile END ModuleSrcFile;
 PROCEDURE ModuleSetSrcFile(m: Module;  f: TEXT) =
   BEGIN IF m.srcFile = NIL THEN m.srcFile := f END END ModuleSetSrcFile;

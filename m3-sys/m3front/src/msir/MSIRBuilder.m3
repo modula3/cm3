@@ -1556,7 +1556,7 @@ PROCEDURE CurrentModuleInfoRef(): MSIR.Value =
   VAR m := MSIREmit.CurrentModule();
   BEGIN
     IF m = NIL THEN RETURN NIL END;
-    RETURN MSIR.StructFieldRef(MSIR.ModuleName(m) & "_M3_info", 0,
+    RETURN MSIR.StructFieldRef(MSIR.ModuleInfoName(m), 0,
                                MSIR.TPtr(MSIR.TVoid()));
   END CurrentModuleInfoRef;
 
@@ -1579,9 +1579,9 @@ PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
                      faultBlk, ARRAY OF MSIR.Value{},
                      contBlk,  ARRAY OF MSIR.Value{});
     curBlock := faultBlk;
-    (* info = line*32 + ORD(code); module = &@<curMod>_M3_info (offset 0). *)
+    (* info = line*32 + ORD(code); module = &@<curMod>_{M3,I3}_info (offset 0). *)
     args[0] := MSIR.StructFieldRef(
-                 MSIR.ModuleName(MSIREmit.CurrentModule()) & "_M3_info", 0, ptrT);
+                 MSIR.ModuleInfoName(MSIREmit.CurrentModule()), 0, ptrT);
     args[1] := MSIR.ConstInt(MSIR.TI(Target.Integer.size), line * 32 + errCode);
     EVAL EmitCall("", reportProc, args);
     IF NOT CurrentBlockTerminated() THEN
