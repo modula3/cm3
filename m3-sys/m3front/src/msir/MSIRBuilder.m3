@@ -2290,6 +2290,35 @@ PROCEDURE TFixedArrayI(len: INTEGER;  elt: MSIR.T): MSIR.T =
    inline ConstAggArray) and record constructors (ConstStruct); falls back to
    Expr.CompileMSIR for scalars.  Returns NIL on a value that cannot appear in a
    global constant initializer (caller abandons). *)
+PROCEDURE ConcreteConstAggType(elt: Expr.T): MSIR.T =
+(* For a (possibly multi-dimensional OPEN) array-constructor element, return the
+   concrete flat MSIR FixedArray type [n0 x [n1 x ... leaf]] matching the
+   constructor's actual per-level element counts.  MSIRType.Translate of an open
+   type yields a dope {ptr,size}; a const array of open-typed elements must
+   instead materialise as nested fixed DATA (the dopes are built at the use site
+   from that flat data).  Recurse when the inner element type is itself open, so
+   ARRAY OF ARRAY OF ARRAY OF T does not leave a {ptr,size} at the middle level
+   (p280 TestArrayMO const array-of-dopes / GenOpenArgMSIR depth mismatch). *)
+  VAR ae := ArrayExpr.ArrayConstrExpr(elt);
+      idxT, innerEltT: Type.T;  n: INTEGER;
+  BEGIN
+    IF ae = NIL OR NOT ArrayType.Split(Expr.TypeOf(elt), idxT, innerEltT) THEN
+      RETURN MSIRType.Translate(Expr.TypeOf(elt));
+    END;
+    IF idxT = NIL OR NOT TInt.ToInt(Type.Number(idxT), n) OR n <= 0 THEN
+      n := ArrayExpr.EltCount(ae);
+    END;
+    VAR innerMsir := MSIRType.Translate(innerEltT);
+    BEGIN
+      IF innerMsir # NIL AND MSIR.Kind(innerMsir) = MSIR.TypeKind.OpenArray
+         AND ArrayExpr.EltCount(ae) > 0 THEN
+        innerMsir := ConcreteConstAggType(ArrayExpr.Elt(ae, 0));
+      END;
+      IF innerMsir = NIL OR n <= 0 THEN RETURN NIL END;
+      RETURN MSIR.TFixedArray(n, innerMsir);
+    END;
+  END ConcreteConstAggType;
+
 PROCEDURE MaterializeConstElt(elt: Expr.T; eltMsir: MSIR.T): MSIR.Value =
   VAR ae: ArrayExpr.T;  cv, v: MSIR.Value;
   BEGIN
@@ -2311,26 +2340,15 @@ PROCEDURE MaterializeConstElt(elt: Expr.T; eltMsir: MSIR.T): MSIR.Value =
     IF ae # NIL
        AND NOT ArrayType.EltsAreBitAddressed(Expr.TypeOf(elt)) THEN
       IF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray THEN
-        (* Element declared as open array (e.g. CONST b = ARRAY OF ARRAY OF INTEGER {c,...}).
-           Compute concrete eltMsir = TFixedArray(nElts, inner_elt_type) from the element
-           count and element type of the inner array constructor.  p081. *)
-        VAR innerIdxT, innerEltT: Type.T;
-            innerEltMsir: MSIR.T;
-            nInner: INTEGER;
+        (* Element declared as open array (e.g. CONST b = ARRAY OF ARRAY OF INTEGER {c,...},
+           or p280's ARRAY OF ARRAY OF ARRAY OF INTEGER).  Materialise it as nested
+           fixed DATA using the constructor's concrete per-level counts — recursing
+           so a middle open dimension does not leave a {ptr,size} dope (p081, p280). *)
+        VAR concreteArrT := ConcreteConstAggType(elt);
         BEGIN
-          IF ArrayType.Split(Expr.TypeOf(elt), innerIdxT, innerEltT) THEN
-            (* count: use index range or number of explicit elements *)
-            IF innerIdxT = NIL OR NOT TInt.ToInt(Type.Number(innerIdxT), nInner)
-               OR nInner <= 0 THEN
-              nInner := ArrayExpr.EltCount(ae);
-            END;
-            innerEltMsir := MSIRType.Translate(innerEltT);
-            IF innerEltMsir # NIL AND nInner > 0 THEN
-              VAR concreteArrT := MSIR.TFixedArray(nInner, innerEltMsir);
-              BEGIN
-                RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), concreteArrT);
-              END;
-            END;
+          IF concreteArrT # NIL
+             AND MSIR.Kind(concreteArrT) = MSIR.TypeKind.FixedArray THEN
+            RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), concreteArrT);
           END;
         END;
       END;
