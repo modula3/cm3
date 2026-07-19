@@ -506,10 +506,11 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
         fnVal   : MSIR.Value;
         rtype   : MSIR.T;
         iArgVals: REF ARRAY OF MSIR.Value;
+        procResult    := ProcType.Result(procType);
+        isLargeResult := ProcType.LargeResult(procResult);
       BEGIN
         fnVal := Expr.CompileMSIR(p.proc);
         IF fnVal = NIL THEN RETURN NIL END;
-        rtype := MSIRType.TranslateResult(ProcType.Result(procType));
         n := NUMBER(p.args^);
         iArgVals := NEW(REF ARRAY OF MSIR.Value, n);
         VAR fv := ProcType.Formals(procType); BEGIN
@@ -521,9 +522,32 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             iArgVals[i] := argVal;
           END;
         END;
-        RETURN MSIRBuilder.WidenCallResult(
-          MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^),
-          ProcType.Result(procType));
+        (* Large result: the callee (or its closure shim) writes through a hidden
+           result pointer; alloc a slot, pass it first via EmitClosureCall, and
+           load the value after.  Previously the indirect path ignored large
+           results and called with an i192-by-value return + no result pointer,
+           so the callee treated the first formal (e.g. Msg) as its result_ptr
+           and wrote the result over a read-only text literal (p280 SIGSEGV). *)
+        IF isLargeResult THEN
+          VAR resultMsirT := MSIRType.Translate(procResult);
+              resultSlot  : MSIR.Value;
+          BEGIN
+            IF resultMsirT = NIL THEN
+              MSIRBuilder.Abandon("indirect large-result type not translatable");
+              RETURN NIL;
+            END;
+            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+            EVAL MSIRBuilder.EmitClosureCall("", fnVal, NIL, iArgVals^,
+                                             resultPtr := resultSlot);
+            RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT,
+                                  resultSlot);
+          END;
+        ELSE
+          rtype := MSIRType.TranslateResult(procResult);
+          RETURN MSIRBuilder.WidenCallResult(
+            MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^),
+            procResult);
+        END;
       END;
     END;
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);

@@ -308,7 +308,10 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
    Otherwise calls fn(args…) directly.
    Used by indirect-call sites where CouldBeClosure is true. *)
 PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
-                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+                           READONLY args: ARRAY OF MSIR.Value;
+                           resultPtr: MSIR.Value := NIL): MSIR.Value;
+(* resultPtr # NIL: large result via a hidden pointer passed first (rtype NIL);
+   the caller loads the result from resultPtr afterwards. *)
 
 (* Construct a stack-allocated fat-pointer closure for a nested procedure
    value.  v is the nested Procedure.T; procType is its M3 PROCEDURE type.

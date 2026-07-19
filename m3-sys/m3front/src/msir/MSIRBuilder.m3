@@ -1440,10 +1440,15 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
   END BuildClosureValue;
 
 PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
-                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+                           READONLY args: ARRAY OF MSIR.Value;
+                           resultPtr: MSIR.Value := NIL): MSIR.Value =
   (* Runtime CL_marker check: if *fn == -1 it's a closure, else a direct ptr.
      Uses an alloca slot to merge the result across the two paths, since
-     MSIRToLLVM does not yet lower block-param values to phi nodes. *)
+     MSIRToLLVM does not yet lower block-param values to phi nodes.
+     resultPtr # NIL => large result via hidden pointer: it is passed FIRST
+     (the direct proc is void f(result_ptr, formals…); the closure shim is
+     void shim(result_ptr, env, formals…) — result_ptr precedes the env), and
+     rtype must be NIL/void.  The caller loads the result from resultPtr. *)
   VAR
     ptrT       := MSIR.TPtr(MSIR.TVoid());
     intT       := MSIR.TI(Target.Integer.size);
@@ -1487,18 +1492,35 @@ PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
                  MSIR.BuildPtrAdd(curBlock, "", fn, IP));
     envPtr  := MSIR.BuildLoad(curBlock, "", ptrT,
                  MSIR.BuildPtrAdd(curBlock, "", fn, IP + AP));
-    shimArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
-    shimArgs[0] := envPtr;
-    FOR i := 0 TO nArgs - 1 DO shimArgs[1 + i] := args[i] END;
+    IF resultPtr # NIL THEN
+      (* shim(result_ptr, env, formals…) *)
+      shimArgs := NEW(REF ARRAY OF MSIR.Value, 2 + nArgs);
+      shimArgs[0] := resultPtr;
+      shimArgs[1] := envPtr;
+      FOR i := 0 TO nArgs - 1 DO shimArgs[2 + i] := args[i] END;
+    ELSE
+      shimArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
+      shimArgs[0] := envPtr;
+      FOR i := 0 TO nArgs - 1 DO shimArgs[1 + i] := args[i] END;
+    END;
     closureRes := EmitCallIndirect(name, shimPtr, rtype, shimArgs^);
     IF NOT isVoid THEN
       MSIR.BuildStore(curBlock, closureRes, resultSlot);
     END;
     MSIR.BuildBr(curBlock, mergeBlk, ARRAY OF MSIR.Value{});
 
-    (* Direct path: call fn directly. *)
+    (* Direct path: call fn directly (result_ptr first for a large result). *)
     SetCurrentBlock(directBlk);
-    directRes := EmitCallIndirect(name, fn, rtype, args);
+    IF resultPtr # NIL THEN
+      VAR directArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
+      BEGIN
+        directArgs[0] := resultPtr;
+        FOR i := 0 TO nArgs - 1 DO directArgs[1 + i] := args[i] END;
+        directRes := EmitCallIndirect(name, fn, rtype, directArgs^);
+      END;
+    ELSE
+      directRes := EmitCallIndirect(name, fn, rtype, args);
+    END;
     IF NOT isVoid THEN
       MSIR.BuildStore(curBlock, directRes, resultSlot);
     END;
