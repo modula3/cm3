@@ -8,7 +8,7 @@
 
 INTERFACE Procedure;
 
-IMPORT CG, Value, Type, CallExpr, Decl;
+IMPORT CG, Value, Type, CallExpr, Decl, Scope;
 
 TYPE T <: Value.T;
 
@@ -50,5 +50,13 @@ PROCEDURE EmitCall (t: T);
    on the stack. *)
    
 PROCEDURE Reset ();
+
+PROCEDURE PreRegisterScopeCapturesMSIR (scope: Scope.T);
+(* Pre-register (to a fixpoint) the capture list of every nested procedure
+   declared in `scope`, before any of their bodies are compiled, so a proc used
+   as a value by an earlier-compiled sibling gets a closure shim with the right
+   capture args.  GenBodyMSIR does this for a procedure's own scope; BlockStmt.
+   CompileMSIR calls it for a local-procedure block scope (p035 group O: a
+   block-local `bar` capturing `i`, used as a value by `foo` compiled first). *)
 
 END Procedure.

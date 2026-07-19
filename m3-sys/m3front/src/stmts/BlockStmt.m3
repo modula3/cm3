@@ -9,7 +9,7 @@
 MODULE BlockStmt;
 
 IMPORT M3ID, Scope, Token, Stmt, StmtRep, Scanner, Decl, ESet, Tracer;
-IMPORT CaptureAnalysis, Variable, Value, Expr;
+IMPORT CaptureAnalysis, Variable, Value, Expr, Procedure;
 FROM Scanner IMPORT Match, cur;
 
 TYPE
@@ -124,7 +124,14 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
 
 PROCEDURE CompileMSIR (p: P) =
   BEGIN
-    IF p.scope # NIL THEN Scope.InitValues (p.scope) END;
+    IF p.scope # NIL THEN
+      (* Pre-register the captures of block-local nested procedures before their
+         bodies compile, so a proc used as a value by an earlier-compiled sibling
+         gets a closure shim with the correct capture args (p035 group O: a
+         block-local `bar` capturing `i`, used as a value by `foo`). *)
+      Procedure.PreRegisterScopeCapturesMSIR (p.scope);
+      Scope.InitValues (p.scope);
+    END;
     Stmt.CompileMSIR (p.body);
   END CompileMSIR;
 

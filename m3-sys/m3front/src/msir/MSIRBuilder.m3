@@ -134,6 +134,10 @@ VAR
                  caps: REF ARRAY OF CaptureAnalysis.Capture;
                END;
   captureMapN: INTEGER := 0;
+  captureRegChanged: BOOLEAN := FALSE;
+               (* Set by RegisterCaptures when a proc's capture COUNT grows;
+                  lets the pre-registration pass iterate transitive captures to
+                  a fixpoint (Procedure.PreRegisterNestedCaptures). *)
 
 TYPE ShimEntry = RECORD key: Value.T; val: MSIR.Proc END;
 VAR
@@ -2013,16 +2017,34 @@ PROCEDURE RegisterCaptures(v: Value.T;
   (* Record a nested proc's capture list ahead of body compilation so sibling
      call sites can pass the right capture args even when the callee's body has
      not been compiled yet.  Idempotent: updates an existing entry. *)
+  VAR newN := 0;
   BEGIN
     IF v = NIL THEN RETURN END;
+    IF caps # NIL THEN newN := NUMBER(caps^) END;
     FOR i := 0 TO captureMapN - 1 DO
-      IF captureMap[i].key = v THEN  captureMap[i].caps := caps;  RETURN  END;
+      IF captureMap[i].key = v THEN
+        VAR oldN := 0;
+        BEGIN
+          IF captureMap[i].caps # NIL THEN oldN := NUMBER(captureMap[i].caps^) END;
+          (* Capture sets grow monotonically as transitive captures propagate;
+             flag a count increase so the caller can iterate to a fixpoint. *)
+          IF newN # oldN THEN captureRegChanged := TRUE END;
+        END;
+        captureMap[i].caps := caps;  RETURN;
+      END;
     END;
     IF captureMapN >= MaxProcMap THEN RETURN END;
     captureMap[captureMapN].key  := v;
     captureMap[captureMapN].caps := caps;
+    IF newN > 0 THEN captureRegChanged := TRUE END;
     INC(captureMapN);
   END RegisterCaptures;
+
+PROCEDURE CaptureRegResetChanged() =
+  BEGIN captureRegChanged := FALSE END CaptureRegResetChanged;
+
+PROCEDURE CaptureRegChanged(): BOOLEAN =
+  BEGIN RETURN captureRegChanged END CaptureRegChanged;
 
 PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
   BEGIN

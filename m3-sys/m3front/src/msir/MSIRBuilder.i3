@@ -178,6 +178,12 @@ PROCEDURE RegisterCaptures(v: Value.T;
    GetProcCaptures falls back to this when the proc is not yet in the proc map.
    Used by Procedure.GenBodyMSIR's capture pre-pass. *)
 
+PROCEDURE CaptureRegResetChanged();
+PROCEDURE CaptureRegChanged(): BOOLEAN;
+(* Support a fixpoint pre-registration loop: ResetChanged before a round of
+   RegisterCaptures calls, then Changed reports whether any proc's capture count
+   grew during that round (i.e. another transitive round is needed). *)
+
 PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture;
 (* Return the capture list stored by RegisterProc for v; NIL if not nested
    or not yet registered.  Used by EmitNestedCall and call sites to build

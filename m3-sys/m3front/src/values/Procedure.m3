@@ -694,6 +694,28 @@ PROCEDURE PreRegisterNestedCaptures (v: Value.T) =
     END;
   END PreRegisterNestedCaptures;
 
+(* Pre-register nested-proc captures, iterating to a FIXPOINT.  Transitive
+   captures — a sibling call pulling in the callee's own captures (NoteCapture ->
+   GetProcCaptures) — propagate one hop per round, so a chain bar->foo->baz needs
+   as many rounds as its depth.  Two fixed rounds handled only 2-hop chains and
+   missed p035's coco (a capture reached `bar` only on a later round, so its
+   closure shim was built with too few capture args -> msir-verify arg-count
+   mismatch).  Capture sets grow monotonically (rounds only ADD transitive
+   captures), so iterate until a round changes nothing; bounded for safety. *)
+PROCEDURE PreRegisterScopeCapturesMSIR (syms: Scope.T) =
+  CONST MaxRounds = 64;
+  VAR round := 0;
+  BEGIN
+    IF syms = NIL OR NOT MSIRBuilder.InProc () THEN RETURN END;
+    Scope.ForEachValue (syms, PreRegisterNestedCaptures);  (* seed direct caps *)
+    LOOP
+      MSIRBuilder.CaptureRegResetChanged ();
+      Scope.ForEachValue (syms, PreRegisterNestedCaptures);
+      INC (round);
+      IF NOT MSIRBuilder.CaptureRegChanged () OR round >= MaxRounds THEN EXIT END;
+    END;
+  END PreRegisterScopeCapturesMSIR;
+
 (* Scope.ForEachValue visitor (pass 2): compile the MSIR body of a nested
    procedure declared in an enclosing proc's scope.  Non-procedure values
    (formals) and bodyless procs (external/imported) are skipped.  GenBodyMSIR's
@@ -757,8 +779,7 @@ PROCEDURE GenBodyMSIR (p: T) =
        for sibling calls (e.g. P0_0 calling Dump0 which needs P0.LVisitNo —
        UserProc.Capture adds Dump0's captures to P0_0's set on this second round,
        now that round 1 has populated captureMap); pass 3 compiles the bodies. *)
-    Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);  (* round 1: direct *)
-    Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);  (* round 2: transitive *)
+    PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     Scope.ForEachValue (p.syms, CompileNestedBodyMSIR);
     (* Initialize local variables (VAR declarations in p.syms).
        The CG path handles this via GenBody → Scope.InitValues(p.syms).
@@ -886,8 +907,7 @@ PROCEDURE GenBody (p: T) =
        now that round 1 has populated captureMap.  Must run before Scope.InitValues
        which triggers LangInit → GenBodyMSIR for each nested proc. *)
     IF MSIRBuilder.InProc () THEN
-      Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
-      Scope.ForEachValue (p.syms, PreRegisterNestedCaptures);
+      PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     END;
     (* CG path: skip when cg_proc=NIL (M3CG_DoNothing / MSIRObj mode) *)
     IF p.cg_proc # NIL THEN
