@@ -2407,6 +2407,59 @@ BEGIN
     MSIRBuilder.Abandon ("ArrayExpr: cannot split array type");
     RETURN NIL;
   END;
+  (* An open-typed constructor (e.g. OpenValue : ARRAY OF ARRAY OF T {Row0, ...},
+     or p277's ARRAY OF OArr {OArr{...}, ...}) splits to an OPEN element type,
+     which Translate maps to OpenArray -> the eltBits<0/OpenArray NIL bail below,
+     silently dropping the constructor into a zeroed target (p269 LVarInitOpen :=
+     OpenValue; p277 OArrsInOArr).  The declared element type is open, so it has
+     no sized slot and CheckInfo(innerT) fails; but every element compiles to a
+     CONCRETE fixed array (only the outermost level carries the open element
+     type — each inner constructor splits to its fixed leaf and builds a packed
+     [K x i8]).  Build element 0 to discover the concrete element MSIR type, then
+     allocate [nElts x concreteElt] and copy each element in by a typed aggregate
+     load/store.  Mirrors CG laying out the flat data of an open constructor,
+     sizing from the (m3front-derived) element type.  Recurses naturally for
+     deeper open nesting (each level's element build re-enters here). *)
+  IF innerT # NIL AND OpenArrayType.Is (innerT)
+     AND p.args # NIL AND p.eltCt > 0 THEN
+    VAR e0 := Expr.LValueMSIR (p.args^[0]);
+    BEGIN
+      IF e0 # NIL AND MSIR.Kind (MSIR.ValueType (e0)) = MSIR.TypeKind.Ptr THEN
+        VAR ceT := MSIR.EltType (MSIR.ValueType (e0));
+        BEGIN
+          IF MSIR.Kind (ceT) = MSIR.TypeKind.FixedArray THEN
+            (* ceT is the element's concrete storage type, already sized from the
+               m3front type by the recursive element build (its sub-byte path
+               sizes itself via Type.CheckInfo, declared padding included).  Copy
+               each element by a typed aggregate load/store of ceT — no re-derived
+               byte count needed; the type carries the size. *)
+            VAR nOuter  := p.eltCt;
+                oArrT   := MSIRBuilder.TFixedArrayI (nOuter, ceT);
+                oB      := MSIRBuilder.CurrentBlock ();
+                oAlloca := MSIR.BuildAlloca (oB, "", oArrT);
+                oIntT   := MSIR.TI (Target.Integer.size);
+            BEGIN
+              FOR i := 0 TO nOuter - 1 DO
+                VAR bb  := MSIRBuilder.CurrentBlock ();
+                    ea  := MSIR.BuildArrayElemAddr (bb, "", oAlloca,
+                             MSIR.ConstInt (oIntT, i));
+                    src : MSIR.Value;
+                BEGIN
+                  IF i = 0 THEN src := e0
+                  ELSE src := Expr.LValueMSIR (p.args^[MIN (i, LAST (p.args^))]);
+                  END;
+                  IF src = NIL THEN RETURN NIL END;
+                  bb := MSIRBuilder.CurrentBlock ();
+                  MSIR.BuildStore (bb, MSIR.BuildLoad (bb, "", ceT, src), ea);
+                END;
+              END;
+              RETURN oAlloca;
+            END;
+          END;
+        END;
+      END;
+    END;
+  END;
   eltT := MSIRType.Translate (innerT);
   IF eltT = NIL THEN
     MSIRBuilder.Abandon ("ArrayExpr: unsupported element type");
