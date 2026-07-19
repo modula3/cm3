@@ -260,14 +260,16 @@ PROCEDURE BeginProc(name: TEXT;
       PopBeginContext();
       RETURN FALSE;
     END;
-    isLargeResult := ProcType.LargeResult(result);
-    IF isLargeResult THEN
-      curResultType := resultT;  (* save translated type before overriding *)
-      resultT       := MSIR.TVoid();
-      nHidden       := 1;
-    ELSE
-      nHidden := 0;
-    END;
+    (* Native large-result ABI: MSIR returns large results BY VALUE (`ret <agg>`;
+       LLVM applies the target aggregate-return ABI — an x8 sret slot on AArch64
+       — uniformly) instead of CG's hidden result pointer as an explicit first
+       argument.  All M3 code is recompiled under this convention, and the
+       C<->M3 boundary carries no large-by-value result (C returns scalars and
+       struct POINTERS), so nothing external is broken and every call path treats
+       a large result exactly like a small one.  resultT keeps the real
+       aggregate type from TranslateResult above; no hidden result param. *)
+    isLargeResult := FALSE;
+    nHidden       := 0;
 
     isNested  := procContextDepth > 0;
     IF captures = NIL THEN caps := NIL
@@ -1162,10 +1164,9 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
     IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
     resultT := MSIRType.TranslateResult(ProcType.Result(procType));
     IF resultT = NIL THEN RETURN NIL END;
-    isLR := ProcType.LargeResult(ProcType.Result(procType));
-    IF isLR THEN resultT := MSIR.TVoid(); nHidden := 1
-    ELSE nHidden := 0
-    END;
+    (* Native large-result ABI: return by value, no hidden result pointer
+       (see BeginProc).  The shim's result type matches the lifted proc's. *)
+    isLR := FALSE;  nHidden := 0;
 
     (* Count explicit formals. *)
     f := ProcType.Formals(procType);
@@ -2109,10 +2110,9 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
       Abandon("unsupported result type in callee");
       RETURN NIL;
     END;
-    largeResult := ProcType.LargeResult(ProcType.Result(procType));
-    IF largeResult THEN resultT := MSIR.TVoid(); nHidden := 1
-    ELSE nHidden := 0
-    END;
+    (* Native large-result ABI: the callee stub returns by value, no hidden
+       result pointer (see BeginProc); resultT stays the real result type. *)
+    largeResult := FALSE;  nHidden := 0;
     f := ProcType.Formals(procType);
     WHILE f # NIL DO INC(nFormals);  f := f.next END;
     VAR params := NEW(REF ARRAY OF MSIR.Param, nHidden + nFormals);

@@ -381,7 +381,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
                 nExtra      : INTEGER;
                 largeResT   : MSIR.T;
                 largeResSlot: MSIR.Value := NIL;
-                isLargeR    := ProcType.LargeResult(ProcType.Result(procType));
+                isLargeR    := FALSE; (* native by-value — see MSIRBuilder.BeginProc *)
                 rtype2      : MSIR.T;
                 allArgs2    : REF ARRAY OF MSIR.Value;
                 procResult2 := ProcType.Result(procType);
@@ -475,7 +475,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             END;
           END;
           VAR procResult    := ProcType.Result(procType);
-              isLargeResult := ProcType.LargeResult(procResult);
+              isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
               resultMsirT   : MSIR.T;
               resultSlot    : MSIR.Value := NIL;
           BEGIN
@@ -507,7 +507,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
         rtype   : MSIR.T;
         iArgVals: REF ARRAY OF MSIR.Value;
         procResult    := ProcType.Result(procType);
-        isLargeResult := ProcType.LargeResult(procResult);
+        isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
       BEGIN
         fnVal := Expr.CompileMSIR(p.proc);
         IF fnVal = NIL THEN RETURN NIL END;
@@ -567,7 +567,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     END;
     (* Large-result: alloca slot, prepend hidden result ptr, load after call. *)
     VAR procResult    := ProcType.Result(procType);
-        isLargeResult := ProcType.LargeResult(procResult);
+        isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
         resultSlot    : MSIR.Value := NIL;
         resultMsirT   : MSIR.T    := NIL;
         actualArgs    : REF ARRAY OF MSIR.Value;
@@ -651,7 +651,7 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
           IF objVal = NIL THEN RETURN NIL END;
           n          := NUMBER(p.args^);
           procResult := ProcType.Result(procType);
-          isLargeResult := ProcType.LargeResult(procResult);
+          isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
           resultMsirT   := MSIRType.Translate(procResult);
           IF resultMsirT = NIL THEN
             MSIRBuilder.Abandon("method lvalue: result type not translatable");
@@ -702,7 +702,7 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
       END;
     END;
     VAR procResult    := ProcType.Result(procType);
-        isLargeResult := ProcType.LargeResult(procResult);
+        isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
         resultMsirT   : MSIR.T;
     BEGIN
       resultMsirT := MSIRType.Translate(procResult);
