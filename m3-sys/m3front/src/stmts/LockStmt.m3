@@ -235,7 +235,7 @@ PROCEDURE CompileMSIR (p: P) =
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
            M3RT.MUTEX_acquire DIV Target.Address.pack,
-           MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
+           MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR.
@@ -251,8 +251,7 @@ PROCEDURE CompileMSIR (p: P) =
                     MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
 
     (* retSlot for RETURN value threading through the mutex release. *)
-    retT := MSIRBuilder.CurrentResultType();
-    IF retT = NIL THEN retT := MSIR.ProcResultType(MSIRBuilder.CurrentProc()) END;
+    retT := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
     IF retT # NIL AND MSIR.Kind(retT) # MSIR.TypeKind.Void THEN
       retSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", retT);
     ELSE
@@ -306,7 +305,7 @@ PROCEDURE CompileMSIR (p: P) =
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu,
            M3RT.MUTEX_release DIV Target.Address.pack,
-           MSIR.TVoid(), NIL, ARRAY OF MSIR.Value{});
+           MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
 
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN

@@ -675,10 +675,7 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
                       MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Normal),
                       innerSelector);
-      innerRetT := MSIRBuilder.CurrentResultType();
-      IF innerRetT = NIL THEN
-        innerRetT := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
-      END;
+      innerRetT := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
       IF innerRetT # NIL AND MSIR.Kind(innerRetT) # MSIR.TypeKind.Void THEN
         innerRetSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", innerRetT);
       ELSE

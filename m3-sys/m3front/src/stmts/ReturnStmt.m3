@@ -80,13 +80,10 @@ PROCEDURE CompileMSIR (p: P) =
          - NIL constant → any non-void result type (e.g. RETURN NIL from ADDRESS proc)
          - gc_ref X → gc_ref void when the proc result is REFANY / gc_ref void
            (REF T <: REFANY is valid M3 but MSIR types are not structurally equal)
-         For large-result procs the LLVM result type is void; use CurrentResultType()
-         to get the actual M3-level type for coercion purposes. *)
-      VAR resultT := MSIRBuilder.CurrentResultType ();
+         Results (large or small) are returned by value, so the proc's own LLVM
+         result type is the coercion target. *)
+      VAR resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
       BEGIN
-        IF resultT = NIL THEN
-          resultT := MSIR.ProcResultType (MSIRBuilder.CurrentProc ());
-        END;
         IF resultT # NIL AND MSIR.Kind (resultT) # MSIR.TypeKind.Void AND
            NOT MSIR.Equal (MSIR.ValueType (v), resultT) THEN
           IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstNil OR
@@ -179,15 +176,8 @@ PROCEDURE CompileMSIR (p: P) =
     IF MSIRBuilder.EmitReturnThroughFinally (v) THEN
       RETURN;
     END;
-    VAR resultPtr := MSIRBuilder.CurrentResultPtr ();  blk := MSIRBuilder.CurrentBlock ();
-    BEGIN
-      IF resultPtr # NIL AND v # NIL THEN
-        MSIR.BuildStore (blk, v, resultPtr);
-        MSIR.BuildRet (blk, NIL);
-      ELSE
-        MSIR.BuildRet (blk, v);
-      END;
-    END;
+    (* Native large-result ABI: results (large or small) are returned by value. *)
+    MSIR.BuildRet (MSIRBuilder.CurrentBlock (), v);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

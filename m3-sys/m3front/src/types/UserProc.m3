@@ -378,10 +378,6 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
                 dynBaseVal  : MSIR.Value;
                 totalByteOff: MSIR.Value;
                 suite, slotPtr, fn: MSIR.Value;
-                nExtra      : INTEGER;
-                largeResT   : MSIR.T;
-                largeResSlot: MSIR.Value := NIL;
-                isLargeR    := FALSE; (* native by-value — see MSIRBuilder.BeginProc *)
                 rtype2      : MSIR.T;
                 allArgs2    : REF ARRAY OF MSIR.Value;
                 procResult2 := ProcType.Result(procType);
@@ -435,29 +431,17 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
                 b2 := MSIRBuilder.CurrentBlock();
                 fn := MSIR.BuildLoad(b2, "", ptrT, slotPtr);
                 b2 := MSIRBuilder.CurrentBlock();
-                (* Build call args: [resultSlot?, obj, explicit args] *)
-                IF isLargeR THEN
-                  largeResT    := MSIRType.Translate(procResult2);
-                  largeResSlot := MSIR.BuildAlloca(b2, "", largeResT);
-                END;
+                (* Build call args: [obj, explicit args].  The result comes back
+                   by value (native large-result ABI). *)
                 rtype2 := MSIRType.TranslateResult(procResult2);
-                nExtra := 1 + ORD(isLargeR);
-                allArgs2 := NEW(REF ARRAY OF MSIR.Value, nExtra + n);
-                IF isLargeR THEN
-                  allArgs2[0] := largeResSlot;
-                  allArgs2[1] := objVal;
-                ELSE
-                  allArgs2[0] := objVal;
-                END;
-                FOR k := 0 TO n - 1 DO allArgs2[nExtra + k] := dispArgs[k] END;
+                allArgs2 := NEW(REF ARRAY OF MSIR.Value, 1 + n);
+                allArgs2[0] := objVal;
+                FOR k := 0 TO n - 1 DO allArgs2[1 + k] := dispArgs[k] END;
                 (* Direct indirect call through the vtable function pointer —
                    NOT closure dispatch (vtable holds direct proc ptrs). *)
-                VAR callRes := MSIRBuilder.EmitCallIndirect("", fn, rtype2, allArgs2^); BEGIN
-                  IF isLargeR THEN
-                    RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", largeResT, largeResSlot);
-                  END;
-                  RETURN MSIRBuilder.WidenCallResult(callRes, ProcType.Result(procType));
-                END;
+                RETURN MSIRBuilder.WidenCallResult(
+                  MSIRBuilder.EmitCallIndirect("", fn, rtype2, allArgs2^),
+                  ProcType.Result(procType));
               END;
             END;
             midx := (mBase + methodInfo.offset) DIV Target.Address.size;
@@ -474,40 +458,23 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
               IF dispArgs[i] = NIL THEN RETURN NIL END;
             END;
           END;
-          VAR procResult    := ProcType.Result(procType);
-              isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
-              resultMsirT   : MSIR.T;
-              resultSlot    : MSIR.Value := NIL;
+          VAR procResult := ProcType.Result(procType);
+              rtype      := MSIRType.TranslateResult(procResult);
           BEGIN
-            IF isLargeResult THEN
-              resultMsirT := MSIRType.Translate(procResult);
-              IF resultMsirT = NIL THEN
-                MSIRBuilder.Abandon("method call: large-result type not translatable");
-                RETURN NIL;
-              END;
-              resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-              rtype := NIL;
-            ELSE
-              rtype := MSIRType.TranslateResult(procResult);
-            END;
-            IF isLargeResult THEN
-              EVAL MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, resultSlot, dispArgs^);
-              RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT, resultSlot);
-            ELSE
-              RETURN MSIRBuilder.WidenCallResult(
-                MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, NIL, dispArgs^),
-                ProcType.Result(procType));
-            END;
+            RETURN MSIRBuilder.WidenCallResult(
+              MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^),
+              procResult);
           END;
         END;
       END;
-      (* Indirect call through a procedure-typed variable or expression. *)
+      (* Indirect call through a procedure-typed variable or expression.  The
+         result comes back by value (native large-result ABI); EmitClosureCall
+         handles the closure-vs-plain-pointer dispatch. *)
       VAR
         fnVal   : MSIR.Value;
         rtype   : MSIR.T;
         iArgVals: REF ARRAY OF MSIR.Value;
-        procResult    := ProcType.Result(procType);
-        isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
+        procResult := ProcType.Result(procType);
       BEGIN
         fnVal := Expr.CompileMSIR(p.proc);
         IF fnVal = NIL THEN RETURN NIL END;
@@ -522,32 +489,10 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
             iArgVals[i] := argVal;
           END;
         END;
-        (* Large result: the callee (or its closure shim) writes through a hidden
-           result pointer; alloc a slot, pass it first via EmitClosureCall, and
-           load the value after.  Previously the indirect path ignored large
-           results and called with an i192-by-value return + no result pointer,
-           so the callee treated the first formal (e.g. Msg) as its result_ptr
-           and wrote the result over a read-only text literal (p280 SIGSEGV). *)
-        IF isLargeResult THEN
-          VAR resultMsirT := MSIRType.Translate(procResult);
-              resultSlot  : MSIR.Value;
-          BEGIN
-            IF resultMsirT = NIL THEN
-              MSIRBuilder.Abandon("indirect large-result type not translatable");
-              RETURN NIL;
-            END;
-            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-            EVAL MSIRBuilder.EmitClosureCall("", fnVal, NIL, iArgVals^,
-                                             resultPtr := resultSlot);
-            RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT,
-                                  resultSlot);
-          END;
-        ELSE
-          rtype := MSIRType.TranslateResult(procResult);
-          RETURN MSIRBuilder.WidenCallResult(
-            MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^),
-            procResult);
-        END;
+        rtype := MSIRType.TranslateResult(procResult);
+        RETURN MSIRBuilder.WidenCallResult(
+          MSIRBuilder.EmitClosureCall("", fnVal, rtype, iArgVals^),
+          procResult);
       END;
     END;
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
@@ -565,38 +510,15 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
         argVals[i] := argVal;
       END;
     END;
-    (* Large-result: alloca slot, prepend hidden result ptr, load after call. *)
-    VAR procResult    := ProcType.Result(procType);
-        isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
-        resultSlot    : MSIR.Value := NIL;
-        resultMsirT   : MSIR.T    := NIL;
-        actualArgs    : REF ARRAY OF MSIR.Value;
-        callResult    : MSIR.Value;
+    (* Result returned by value (native large-result ABI). *)
+    VAR callResult : MSIR.Value;
     BEGIN
-      IF isLargeResult THEN
-        resultMsirT := MSIRType.Translate(procResult);
-        IF resultMsirT = NIL THEN
-          MSIRBuilder.Abandon("large-result type not translatable");
-          RETURN NIL;
-        END;
-        resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-        IF isNested THEN
-          callResult := MSIRBuilder.EmitNestedCall("", msirCallee, v, resultSlot, argVals^);
-        ELSE
-          actualArgs := NEW(REF ARRAY OF MSIR.Value, 1 + n);
-          actualArgs[0] := resultSlot;
-          FOR i := 0 TO n - 1 DO actualArgs[1 + i] := argVals[i] END;
-          callResult := MSIRBuilder.EmitCall("", msirCallee, actualArgs^);
-        END;
-        RETURN MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", resultMsirT, resultSlot);
+      IF isNested THEN
+        callResult := MSIRBuilder.EmitNestedCall("", msirCallee, v, argVals^);
       ELSE
-        IF isNested THEN
-          callResult := MSIRBuilder.EmitNestedCall("", msirCallee, v, NIL, argVals^);
-        ELSE
-          callResult := MSIRBuilder.EmitCall("", msirCallee, argVals^);
-        END;
-        RETURN MSIRBuilder.WidenCallResult(callResult, ProcType.Result(procType));
+        callResult := MSIRBuilder.EmitCall("", msirCallee, argVals^);
       END;
+      RETURN MSIRBuilder.WidenCallResult(callResult, ProcType.Result(procType));
     END;
   END CompileMSIR;
 
@@ -617,8 +539,8 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
     END;
     IF NOT IsProcedureLiteral(p.proc, v) THEN
       (* Virtual method dispatch or indirect proc call — handle the lvalue case.
-         We need an addressable result: allocate a slot, emit the method call
-         using the CM3 large-result hidden-pointer convention, return the slot. *)
+         The result comes back by value (native large-result ABI); spill it to a
+         fresh alloca and return that address. *)
       VAR
         methodVal : Value.T;
         methodInfo: Method.Info;
@@ -627,7 +549,6 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
         dispArgs  : REF ARRAY OF MSIR.Value;
         midx      : INTEGER;
         procResult    : Type.T;
-        isLargeResult : BOOLEAN;
         resultMsirT   : MSIR.T;
         resultSlot    : MSIR.Value;
         rtype         : MSIR.T;
@@ -651,7 +572,6 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
           IF objVal = NIL THEN RETURN NIL END;
           n          := NUMBER(p.args^);
           procResult := ProcType.Result(procType);
-          isLargeResult := FALSE (* native by-value large results — see MSIRBuilder.BeginProc *);
           resultMsirT   := MSIRType.Translate(procResult);
           IF resultMsirT = NIL THEN
             MSIRBuilder.Abandon("method lvalue: result type not translatable");
@@ -662,22 +582,15 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
             dispArgs[i] := Expr.CompileMSIR(p.args[i]);
             IF dispArgs[i] = NIL THEN RETURN NIL END;
           END;
-          IF isLargeResult THEN
-            (* Hidden-ptr convention: alloca receives result written by callee. *)
-            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-            EVAL MSIRBuilder.EmitMethodCall("", objVal, midx, NIL, resultSlot, dispArgs^);
-            RETURN resultSlot;
-          ELSE
-            (* Small result: make call, spill return value to alloca. *)
-            rtype      := MSIRType.TranslateResult(procResult);
-            resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-            VAR callVal := MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, NIL, dispArgs^);
-            BEGIN
-              IF callVal = NIL THEN RETURN NIL END;
-              MSIR.BuildStore(MSIRBuilder.CurrentBlock(), callVal, resultSlot);
-            END;
-            RETURN resultSlot;
+          (* Make the call, spill the by-value return to an alloca, return it. *)
+          rtype      := MSIRType.TranslateResult(procResult);
+          resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
+          VAR callVal := MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
+          BEGIN
+            IF callVal = NIL THEN RETURN NIL END;
+            MSIR.BuildStore(MSIRBuilder.CurrentBlock(), callVal, resultSlot);
           END;
+          RETURN resultSlot;
         END;
       END;
       MSIRBuilder.Abandon("lvalue of indirect call result not yet supported in MSIR");

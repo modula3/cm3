@@ -103,14 +103,6 @@ PROCEDURE TakePendingContainer(): MSIR.Value;
 PROCEDURE CurrentProc(): MSIR.Proc;
 PROCEDURE CurrentBlock(): MSIR.Block;
 
-(* Hidden result pointer for large-result procs (records, arrays, large sets).
-   Non-NIL while inside a proc whose M3 result type satisfies ProcType.LargeResult.
-   ReturnStmt.CompileMSIR stores through this pointer and emits ret void.
-   CurrentResultType() is the non-void MSIR type of the result (same as what
-   the proc would have returned before the hidden-ptr convention was applied). *)
-PROCEDURE CurrentResultPtr(): MSIR.Value;
-PROCEDURE CurrentResultType(): MSIR.T;
-
 (*-------------------------------------------------------------- Control flow *)
 
 (* Create a new block, add it to curProc, return it.
@@ -255,10 +247,8 @@ PROCEDURE CurrentModuleInfoRef(): MSIR.Value;
    proc.  calleeVal is the Value.T for the nested proc (used to look up the
    capture list registered by RegisterProc).  For each capture, passes
    LookupVarAddr(cap.var) from the current (outer) proc's varMap.
-   resultPtr: for large-result procs, the hidden result-slot pointer to place
-   at arg index 0, before the capture args; pass NIL for normal-result procs. *)
+   Results (large or small) are returned by value — no hidden result pointer. *)
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
-                         resultPtr: MSIR.Value;
                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
 (* Emit a virtual method dispatch on a CM3 object reference.
@@ -294,24 +284,19 @@ PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
 PROCEDURE CurrentCatchActPtr (): MSIR.Value;
 
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
-                          rtype: MSIR.T;  resultSlot: MSIR.Value;
+                          rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
-(* rtype is the return type for small-result calls (resultSlot = NIL).
-   For large-result (struct) calls, pass resultSlot = the alloca that receives
-   the result; rtype is ignored and the call uses void return with the hidden
-   result pointer prepended as arg[0] before obj. *)
+(* rtype is the (by-value) return type; the result — large or small — is
+   returned by value. *)
 
 (* Like EmitCallIndirect but emits a runtime CL_marker check so the call
    works whether fn is a plain function pointer or a fat-pointer closure.
    If the first word of fn equals M3RT.CL_marker_value (-1), the closure
    path loads CL_frame (env) and CL_proc (shim) and calls shim(env, args…).
-   Otherwise calls fn(args…) directly.
+   Otherwise calls fn(args…) directly.  The result comes back by value.
    Used by indirect-call sites where CouldBeClosure is true. *)
 PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
-                           READONLY args: ARRAY OF MSIR.Value;
-                           resultPtr: MSIR.Value := NIL): MSIR.Value;
-(* resultPtr # NIL: large result via a hidden pointer passed first (rtype NIL);
-   the caller loads the result from resultPtr afterwards. *)
+                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
 (* Construct a stack-allocated fat-pointer closure for a nested procedure
    value.  v is the nested Procedure.T; procType is its M3 PROCEDURE type.

@@ -470,8 +470,7 @@ PROCEDURE CompileMSIR (p: P) =
     (* Allocate a retSlot for a pending RETURN value if this proc returns a
        value.  When a RETURN in the TRY body routes through this finally,
        ReturnStmt stores the value here; the epilogue loads and returns it. *)
-    retT    := MSIRBuilder.CurrentResultType();
-    IF retT = NIL THEN retT := MSIR.ProcResultType(MSIRBuilder.CurrentProc()) END;
+    retT    := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
     IF retT # NIL AND MSIR.Kind(retT) # MSIR.TypeKind.Void THEN
       retSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", retT);
     ELSE
