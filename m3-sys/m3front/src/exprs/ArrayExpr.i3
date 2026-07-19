@@ -79,4 +79,12 @@ PROCEDURE EltCount (constr: T): INTEGER;
 PROCEDURE Elt (constr: T; i: INTEGER): Expr.T;
 (* i-th element expression (0-based). Requires i < EltCount(constr). *)
 
+PROCEDURE EmitUseFailureMSIR (e: Expr.T);
+(* MSIR analogue of CheckUseFailure's CG.Abort: if e is (or wraps) an array
+   constructor whose use is a statically-detected runtime error (per
+   AssignStmt.DoGenRTAbort, e.g. an out-of-range element), emit an unconditional
+   ReportFault.  Named-const array uses materialise via MaterializeConstArray,
+   which skips the fault LValueMSIR_MSIR emits for inline constructors; the
+   NamedExpr const-array path calls this to restore it (p270).  No-op otherwise. *)
+
 END ArrayExpr.

@@ -2371,6 +2371,23 @@ PROCEDURE CheckUseFailure (top: T): BOOLEAN =
     END;
   END CheckUseFailure;
 
+PROCEDURE EmitUseFailureMSIR (e: Expr.T) =
+(* If e is (or wraps) an array constructor whose use is a statically-detected
+   runtime error (DoGenRTAbort — e.g. an out-of-range element), emit an
+   unconditional ReportFault, the MSIR analogue of CheckUseFailure -> CG.Abort.
+   Named-const array uses (AcceptArr(LC), LV := LC, WITH W = GC where LC/GC hold
+   an out-of-range element) materialise via MaterializeConstArray, which skips
+   the fault LValueMSIR_MSIR emits inline; NamedExpr calls this to restore it
+   (p270).  Fires per use (NamedExpr is compiled per use), not de-duped. *)
+  VAR ae := ArrayConstrExpr (e);
+  BEGIN
+    IF ae # NIL AND ae.state >= StateTyp.Checked
+       AND AssignStmt.DoGenRTAbort (ae.RTErrorCode) THEN
+      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                   ORD (ae.RTErrorCode));
+    END;
+  END EmitUseFailureMSIR;
+
 PROCEDURE LValueMSIR_MSIR (p: T): MSIR.Value =
 (* Materialize the array constructor into a fresh alloca and return its address.
    Handles 1-D and multi-D constructors where each element is a simple expression

@@ -294,6 +294,10 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           IF constExpr # NIL THEN
             (* CONST ARRAY OF T — materialise as a private constant global. *)
             IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
+              (* Using a const array with a statically out-of-range element is a
+                 CT-warned RT error; MaterializeConstArray skips the fault the
+                 inline path emits, so raise it here at the use site (p270). *)
+              ArrayExpr.EmitUseFailureMSIR (constExpr);
               RETURN MSIRBuilder.MaterializeConstArray (p.value, constExpr);
             END;
             (* Other named constants (record, set, scalar) referenced where an
