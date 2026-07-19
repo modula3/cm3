@@ -66,6 +66,15 @@ Interface ("RTStack")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 
+% MSIR ABI link-guard marker: defines `m3_abi_msir_v1`, referenced by every
+% object the MSIR backend emits in a real MSIRObj build.  Compiled into m3core
+% only when m3core itself is built in MSIRObj mode, so an MSIR object cannot be
+% linked against a runtime built with a different backend/ABI.  See RTAbiMSIR.c
+% and MSIRToLLVM.Module.
+if defined("M3_BACKEND_MODE") and equal(M3_BACKEND_MODE, "MSIRObj")
+  c_source ("RTAbiMSIR")
+end
+
 proc FileExists(a) is
     return not stale (a, a)
 end

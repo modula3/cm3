@@ -4360,6 +4360,28 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     END;
     Wr.PutText(wr, "\n");
 
+    (* MSIR ABI link guard.  In a real MSIRObj object build (forRuntime), every
+       object carries an undefined reference to the versioned marker
+       `m3_abi_msir_v1`, which an MSIRObj-built m3core defines exactly once (see
+       runtime/common/RTAbiMSIR.c).  Linking an MSIR object against a runtime
+       built with a different backend/ABI then fails at link time (undefined
+       symbol) rather than silently corrupting calls; a future incompatible ABI
+       change bumps the version so old objects fail against a newer runtime.
+       Gated on forRuntime so parallel @M3m3front-msir .ll emission (whose real
+       object is the C backend's, and whose smoke test links a C-built runtime)
+       is unaffected.  The reference is a private constant holding the marker's
+       address, retained via @llvm.used so it survives as a real relocation. *)
+    IF forRuntime THEN
+      VAR refName := "_m3_abi_ref." & MSIR.ModuleInfoName(m);
+      BEGIN
+        Wr.PutText(wr, "@m3_abi_msir_v1 = external global i8\n");
+        Wr.PutText(wr, "@" & refName
+                       & " = private constant ptr @m3_abi_msir_v1\n");
+        Wr.PutText(wr, "@llvm.used = appending global [1 x ptr] [ptr @"
+                       & refName & "], section \"llvm.metadata\"\n\n");
+      END;
+    END;
+
     (* EH — emitted once per module when any proc uses invoke.
        @_ZTI6_M3Exc is defined as linkonce_odr so each MSIR-compiled module
        is self-sufficient, avoiding dependence on the private/unexported copy
