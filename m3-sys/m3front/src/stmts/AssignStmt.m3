@@ -882,6 +882,32 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
+    (* Nested-procedure assignability RT check — MSIR analogue of CG's
+       AssignOrRTCheckProcedure (DoEmit, Type.Class.Procedure).  Assigning a
+       statically-nested procedure to a procedure variable must fault at
+       runtime (2.3.1).  The array-constructor path already emits this (via
+       CheckStaticRTErrExec), but a plain `p := NestedProc` — including an open
+       array heap element `r^[i] := NestedProc` (p270) — reached the store below
+       unchecked. *)
+    VAR lhsProcInfo: Type.Info;
+    BEGIN
+      EVAL Type.CheckInfo (Type.Base (Expr.RepTypeOf (p.lhs)), lhsProcInfo);
+      IF lhsProcInfo.class = Type.Class.Procedure THEN
+        CASE ProcRTCheckKind (p.rhs) OF
+        | RTCheckKind.Fail =>
+            (* Unconditional fault — same idiom as the constructor path's
+               static-RT-error emission (ArrayExpr, DoGenRTAbort). *)
+            MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                         ORD (CG.RuntimeError.NarrowFailed));
+        | RTCheckKind.Conditional =>
+            (* Rare: source is a proc variable that might hold a nested proc.
+               A runtime closure-marker test is not yet emitted here (unchanged
+               from before); the common statically-nested case (Fail) is now
+               checked. *)
+        | RTCheckKind.None => (* statically top-level: no check *)
+        END;
+      END;
+    END;
     (* Range-check a scalar ordinal assignment — the MSIR analogue of the CG
        path's CheckExpr.EmitChecks in Emit.  EmitChecksMSIR only fires for an
        integer rhs whose static range can violate the lhs ordinal bounds, and
