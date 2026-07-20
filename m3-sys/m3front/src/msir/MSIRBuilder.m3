@@ -432,28 +432,20 @@ PROCEDURE BeginProc(name: TEXT;
         END;
       END;
 
-      (* Bind explicit formals. *)
-      VAR fDecl := formals;  fInfo: Formal.Info;
-      BEGIN
-        WHILE fDecl # NIL DO
-          Formal.Split(fDecl, fInfo);
-          VAR sv := Scope.LookUp(syms, fInfo.name, strict := TRUE);
-          BEGIN
-            TYPECASE sv OF
-            | Variable.T(svv) => Variable.BindFormalMSIR(svv, curProc, curBlock);
-            ELSE
-            END;
-          END;
-          fDecl := fDecl.next;
-        END;
-      END;
-      (* Bind non-formal locals. *)
+      (* Bind formals and locals in one pass over the proc scope, mirroring the
+         CG path's scope enumeration.  Do NOT resolve formals via Scope.LookUp:
+         LookUp marks the symbol used and, while Scanner.in_main, spuriously
+         fires the "<*UNUSED*> symbol used" warning for <*UNUSED*> formals (a
+         diff the CG path never produces — p269/p270/p280).  BindFormalMSIR
+         self-locates its parameter by name, so scope-list order is fine. *)
       VAR sv: Value.T := Scope.ToList(syms);
       BEGIN
         WHILE sv # NIL DO
           TYPECASE sv OF
           | Variable.T(svv) =>
-              IF NOT Variable.IsFormal(svv) THEN
+              IF Variable.IsFormal(svv) THEN
+                Variable.BindFormalMSIR(svv, curProc, curBlock);
+              ELSE
                 EVAL Variable.AddLocalMSIR(svv, curBlock);
               END;
           ELSE
