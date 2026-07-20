@@ -1572,8 +1572,17 @@ PROCEDURE UserInit (t: T) =
         t.initPending := FALSE;
         ArrayExpr.NoteUseTargetVar (t.initExpr);
         AssignStmt.PrepForEmit (t.type, t.initExpr, initializing := TRUE);
-        LoadLValue (t);
-        AssignStmt.DoEmit (t.type, t.initExpr, t.cg_align, initializing := TRUE);
+        (* CG init emission.  Skipped in MSIRObj/MSIRAsm modes (BackendMSIRSet),
+           where M3CG output is discarded and the MSIR emission below is
+           authoritative.  Beyond being wasteful, the CG DoEmit here trips
+           front-end invariants that only hold for a full CG build — e.g. an
+           imported structured constant initializer (VAR e := I.b) reaches
+           ArrayExpr.InnerCompile -> Module.LoadGlobalAddr(foreignUnit,
+           is_const:=TRUE), whose <*ASSERT NOT is_const*> then fires (p205). *)
+        IF NOT (Target.BackendMode IN Target.BackendMSIRSet) THEN
+          LoadLValue (t);
+          AssignStmt.DoEmit (t.type, t.initExpr, t.cg_align, initializing := TRUE);
+        END;
         (* MSIR: compile and store the initializer expression *)
         IF MSIRBuilder.InProc () THEN
           VAR initVal := Expr.CompileMSIR (t.initExpr);
