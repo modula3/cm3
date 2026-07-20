@@ -3153,6 +3153,20 @@ BEGIN
     ELSE
       print(self,"typedef double EXTENDED;\n");
     END;
+    (* MSIR ABI link guard (CG side).  On targets where the MSIR backend can
+       coexist with this C backend (the ex_stack targets), every C-backend
+       object references the versioned marker `m3_abi_cg_v1`, which a C-mode
+       m3core defines (runtime/common/RTAbiCG.c).  A CG object then cannot link
+       against an MSIR-built runtime (undefined symbol), the mirror of the MSIR
+       side's `m3_abi_msir_v1` (see MSIRToLLVM.Module / RTAbiMSIR.c).  Scoped to
+       the MSIR-capable targets so other platforms are untouched. *)
+    IF Text.Equal(Target.System_name, "ARM64_DARWIN")
+       OR Text.Equal(Target.System_name, "AMD64_DARWIN")
+       OR Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      print(self, "extern char m3_abi_cg_v1;\n");
+      print(self, "static char * const _m3_abi_cg_ref "
+                  & "__attribute__((used)) = &m3_abi_cg_v1;\n");
+    END;
 END Prefix_Print;
 
 PROCEDURE multipass_end_unit(self: Multipass_t) =
