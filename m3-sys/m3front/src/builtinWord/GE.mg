@@ -60,7 +60,11 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       IF yb > W THEN y := MSIR.BuildTrunc (b, "", y, wt)
       ELSE            y := MSIR.BuildZExt  (b, "", y, wt) END;
     END;
-    RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Uge, x, y);
+    (* Widen the i1 result to the ZType BOOLEAN width (i64) — see LT.mg (p227). *)
+    VAR cmp := MSIR.BuildICmp (b, "", MSIR.CmpPred.Uge, x, y);
+    BEGIN
+      RETURN MSIR.BuildZExt (b, "", cmp, MSIR.TI (Target.Integer.size));
+    END;
   END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

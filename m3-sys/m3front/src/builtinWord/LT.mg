@@ -60,7 +60,14 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       IF yb > W THEN y := MSIR.BuildTrunc (b, "", y, wt)
       ELSE            y := MSIR.BuildZExt  (b, "", y, wt) END;
     END;
-    RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Ult, x, y);
+    (* Widen the i1 result to the ZType BOOLEAN width (i64), the convention for
+       BOOLEAN expression temps (BuildCondBr narrows at branch).  Without this a
+       bare i1 mixes with i64 BOOLEANs — e.g. `(i<j) # Long.LT(i,j)` gave
+       `icmp ne i64, i1` (p227). *)
+    VAR cmp := MSIR.BuildICmp (b, "", MSIR.CmpPred.Ult, x, y);
+    BEGIN
+      RETURN MSIR.BuildZExt (b, "", cmp, MSIR.TI (Target.Integer.size));
+    END;
   END CompileMSIR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
