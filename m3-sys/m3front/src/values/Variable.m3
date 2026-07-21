@@ -504,9 +504,17 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
        loads TI64 directly with no extension.  Values are always in range for
        regular locals; counters briefly exceed range but the alloca holds them.
        With lambda-lifting, up-level variables are ordinary stack allocas in
-       the outer proc. *)
+       the outer proc.
+       EXCEPTION: a variable whose address is taken (need_addr: ADR, VAR-mode
+       actual, LOOPHOLE, ...) must be stored at its declared MType width.  An
+       external writer stores exactly that many bytes through the pointer
+       (C ftoa writes 4 bytes into a Ctypes.int; an MSIR/CG callee writes the
+       formal's MType through a VAR formal), so a word-wide slot would keep
+       stack garbage in its high bytes and every full-width read would see it
+       (p040: Convert.FromFloat's decpt).  VarMapAdd computes wideType/
+       signedWiden from the M3 type, and LookupVar widens each read. *)
     allocType := mt;
-    IF Type.IsOrdinal (t.type) THEN
+    IF Type.IsOrdinal (t.type) AND NOT t.need_addr THEN
       allocType := MSIR.TI (Target.Integer.size);
       mt := allocType;  (* keep mt in sync — init code uses mt for ConstInt/ConstZero *)
     END;
