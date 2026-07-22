@@ -10,12 +10,13 @@ MODULE Formal;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
-IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
+IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, NamedExpr, M3Buf, Tracer;
 IMPORT Module, Variable, Procedure, UserProc, Target, M3RT;
 IMPORT RTIO, RTParams;
-IMPORT MSIR, MSIRBuilder, MSIRType, TInt;
+IMPORT MSIR, MSIRBuilder, MSIRType, MSIREmit, TInt, Fmt;
 
 VAR debug := FALSE;
+VAR constDopeSeq := 0;  (* unique names for static const-actual dopes *)
 
 TYPE
   T = Value.T BRANDED OBJECT 
@@ -1323,7 +1324,7 @@ PROCEDURE OpenActualToFixedRefMSIR (form: T;  lval: MSIR.Value): MSIR.Value =
      is not a fixed array. *)
   VAR
     formInfo : Info;
-    formT, ft, lvalT, dopeT : MSIR.T;
+    formT, lvalT, dopeT : MSIR.T;
     dope, cnt, wantN, bad : MSIR.Value;
     rank : INTEGER;
     blk  : MSIR.Block;
@@ -1347,16 +1348,29 @@ PROCEDURE OpenActualToFixedRefMSIR (form: T;  lval: MSIR.Value): MSIR.Value =
     blk  := MSIRBuilder.CurrentBlock ();
     dope := MSIR.BuildLoad (blk, "", dopeT, lval);
     rank := MSIR.OpenArrayRank (dopeT);
-    ft   := formT;
-    FOR k := 0 TO rank - 1 DO
-      IF MSIR.Kind (ft) # MSIR.TypeKind.FixedArray THEN EXIT END;
-      blk   := MSIRBuilder.CurrentBlock ();
-      cnt   := MSIR.BuildOpenArraySize (blk, "", dope, k);
-      wantN := MSIR.ConstInt (intT, MSIR.FixedArrayLen (ft));
-      bad   := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, cnt, wantN);
-      MSIRBuilder.EmitReportFault
-        (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
-      ft := MSIR.FixedArrayElt (ft);
+    (* Walk the formal's M3 type for the LOGICAL per-dimension counts.  Do
+       NOT use MSIR.FixedArrayLen here: a packed innermost dimension
+       (ARRAY [0..3] OF BITS 4) translates to a BYTE array ([2 x i8]), so
+       FixedArrayLen is the byte count (2), not the element count (4), and
+       the shape check would false-fault (p269 CheckConstOpenness). *)
+    VAR mt3 := formInfo.type;
+        idxT, eltT3 : Type.T;
+        ni : INTEGER;
+    BEGIN
+      FOR k := 0 TO rank - 1 DO
+        IF NOT ArrayType.Split (Type.Base (mt3), idxT, eltT3)
+           OR idxT = NIL
+           OR NOT TInt.ToInt (Type.Number (idxT), ni) THEN
+          EXIT;
+        END;
+        blk   := MSIRBuilder.CurrentBlock ();
+        cnt   := MSIR.BuildOpenArraySize (blk, "", dope, k);
+        wantN := MSIR.ConstInt (intT, ni);
+        bad   := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, cnt, wantN);
+        MSIRBuilder.EmitReportFault
+          (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
+        mt3 := eltT3;
+      END;
     END;
     VAR dPtr := MSIRBuilder.OpenArrayDataPtr (MSIRBuilder.CurrentBlock (), dope);
     BEGIN
@@ -1812,7 +1826,32 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
             flds[1 + k] := MSIR.Field {name := "", type := intT};
           END;
           b     := MSIRBuilder.CurrentBlock ();
-          dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+          IF Expr.ConstValue (actual) # NIL AND NamedExpr.Is (actual) THEN
+            (* NAMED constant actual (an open-typed constant like
+               CONST OpenValue = ARRAY OF ... {...}): give the dope a STATIC
+               (module-lifetime) home rather than a per-call stack temp,
+               matching the C backend's static layout for constant open
+               values.  The data pointer and every dimension are constants,
+               so re-storing the same values on each use is idempotent
+               (recursion/thread safe).  p269's CheckConstOpenness counts
+               one more test for a non-stack dope (CheckDopeShape). *)
+            VAR m := MSIREmit.CurrentModule ();
+                g : MSIR.Global;
+            BEGIN
+              IF m # NIL THEN
+                g := MSIR.NewGlobal ("constdope_" & Fmt.Int (constDopeSeq),
+                                     MSIR.TStruct ("", flds^),
+                                     isTraced := FALSE);
+                INC (constDopeSeq);
+                MSIR.ModuleAddGlobal (m, g);
+                dopeA := MSIR.GlobalValue (g);
+              ELSE
+                dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+              END;
+            END;
+          ELSE
+            dopeA := MSIR.BuildAlloca (b, "", MSIR.TStruct ("", flds^));
+          END;
           MSIR.BuildStore (b, lval, MSIRBuilder.BuildPtrByteOff (b, "", dopeA, 0));
           FOR k := 0 TO formDepth - 1 DO
             MSIR.BuildStore (b, MSIR.ConstInt (intT, dimSizes[k]),

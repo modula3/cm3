@@ -3920,6 +3920,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     fieldType  : TEXT;
     fieldVal   : TEXT;
     gcMapName   : TEXT := NIL;  (* NIL if no traced module globals *)
+    procInfoName: TEXT := NIL;  (* NIL if the module defines no procs *)
     fullRevName : TEXT := NIL;  (* NIL if no full REVEAL records *)
     ip_t       := "i" & Fmt.Int(Target.IntegerSize());   (* INTEGER type string *)
     ap_t       := "i" & Fmt.Int(Target.AddressSize());   (* ADDRESS type string *)
@@ -4080,10 +4081,48 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     (* Source-file string for the RT0.ModuleInfo.file field (below).  Emitted as
        an internal string constant that MI_file points at, so RTError can print
        `file "..." line N` for unhandled exceptions / runtime errors. *)
-    IF MSIR.ModuleSrcFile(m) # NIL AND NOT Text.Equal(MSIR.ModuleSrcFile(m), "") THEN
+    VAR srcFile := MSIR.ModuleSrcFile(m);
+    BEGIN
+      (* Fall back to the module name: RT0.ModuleInfo.file must never be NIL —
+         RTError prints it, and introspective code (p269 UnsafeUtils) scans it
+         without a NIL check. *)
+      IF srcFile = NIL OR Text.Equal(srcFile, "") THEN srcFile := modName END;
       Wr.PutText(wr, "@" & modName & "_M3_srcfile = internal constant ["
-                     & Fmt.Int(Text.Length(MSIR.ModuleSrcFile(m)) + 1)
-                     & " x i8] c\"" & MSIR.ModuleSrcFile(m) & "\\00\"\n");
+                     & Fmt.Int(Text.Length(srcFile) + 1)
+                     & " x i8] c\"" & srcFile & "\\00\"\n");
+    END;
+
+    (* RT0.ProcInfo table ({proc, name} pairs, proc=NIL terminated) for the
+       MI_proc_info field.  Runtime services walk m.proc_info to map PCs to
+       procedure names (RTProcedure.Init, stack dumps) and introspective code
+       derefs it unconditionally (p269 UnsafeUtils.FindConstAreas: SEGV on a
+       NIL table).  Every module proc is emitted with its defining symbol. *)
+    VAR nMProcs := MSIR.ModuleProcCount(m);
+    BEGIN
+      IF nMProcs > 0 THEN
+        procInfoName := modName & "_M3_procs";
+        Wr.PutText(wr, "%RT0_PI_t = type { ptr, ptr }\n");
+        FOR i := 0 TO nMProcs - 1 DO
+          VAR pn := MSIR.ProcName(MSIR.ModuleProc(m, i));
+          BEGIN
+            Wr.PutText(wr, "@" & modName & "_M3_pnm_" & Fmt.Int(i)
+                           & " = internal constant ["
+                           & Fmt.Int(Text.Length(pn) + 1)
+                           & " x i8] c\"" & pn & "\\00\"\n");
+          END;
+        END;
+        Wr.PutText(wr, "@" & procInfoName & " = internal constant ["
+                       & Fmt.Int(nMProcs + 1) & " x %RT0_PI_t] [");
+        FOR i := 0 TO nMProcs - 1 DO
+          VAR pn := MSIR.ProcName(MSIR.ModuleProc(m, i));
+          BEGIN
+            Wr.PutText(wr, "%RT0_PI_t { ptr @" & pn
+                           & ", ptr @" & modName & "_M3_pnm_" & Fmt.Int(i)
+                           & " }, ");
+          END;
+        END;
+        Wr.PutText(wr, "%RT0_PI_t { ptr null, ptr null }]\n");
+      END;
     END;
 
     (* Emit global initializer — one CASE arm per RT0.ModuleInfo field.
@@ -4096,10 +4135,7 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
     FOR k := 0 TO nFields - 1 DO
       CASE k OF
       | MI_file           => fieldType := "ptr"; fieldName := "file";
-                             IF MSIR.ModuleSrcFile(m) # NIL AND NOT Text.Equal(MSIR.ModuleSrcFile(m), "")
-                               THEN fieldVal := "@" & modName & "_M3_srcfile";
-                               ELSE fieldVal := "null";
-                             END;
+                             fieldVal := "@" & modName & "_M3_srcfile";
       | MI_type_cells     => fieldType := "ptr"; fieldName := "type_cells";
                              IF MSIR.ModuleTypeDescCount(m) > 0
                                THEN fieldVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, 0));
@@ -4116,7 +4152,11 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                                ELSE fieldVal := "null";
                              END;
       | MI_part_rev       => fieldType := "ptr"; fieldVal := "null";           fieldName := "part_rev";
-      | MI_proc_info      => fieldType := "ptr"; fieldVal := "null";           fieldName := "proc_info";
+      | MI_proc_info      => fieldType := "ptr"; fieldName := "proc_info";
+                             IF procInfoName # NIL
+                               THEN fieldVal := "@" & procInfoName;
+                               ELSE fieldVal := "null";
+                             END;
       | MI_try_scopes     => fieldType := "ptr"; fieldVal := "null";           fieldName := "try_scopes";
       | MI_var_map        => fieldType := "ptr"; fieldName := "var_map";
                              IF gcMapName # NIL

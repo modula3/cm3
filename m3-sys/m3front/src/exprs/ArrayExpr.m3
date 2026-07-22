@@ -2388,6 +2388,177 @@ PROCEDURE EmitUseFailureMSIR (e: Expr.T) =
     END;
   END EmitUseFailureMSIR;
 
+PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
+                                  e0: MSIR.Value): MSIR.Value =
+(* An open-typed constructor whose elements are DYNAMIC open-array values —
+   dereferenced heap arrays (V[0,0]^) or nested constructors of such (p269
+   Dynamic.m3 T6{T5{V[0,0]^,...}, ..., O5Changed^, ...}).  Mirrors the CG
+   path's dynamic case (fixingLenVal): the FIRST element's runtime shape
+   fixes the constructor's element shape; every other element's logical
+   dimensions are runtime-checked against it (IncompatibleArrayShape — this
+   is what makes a wrong-shaped element like O5Changed^ fault), then each
+   element's data is copied into a dynamically-sized flat temp.  Returns a
+   pointer to a freshly built dope {data, nElts, dims...} — the same shape
+   every downstream open-array consumer already handles.
+   Static levels BELOW an element's dope rank (a rank-3 value used where a
+   rank-5 open type is expected) come from the element's MSIR fixed levels;
+   the deepest level of a sub-byte-packed element is a byte array, so its
+   logical count is len*8 DIV packBits, NOT FixedArrayLen (the byte-count
+   trap). *)
+  VAR
+    elemDepth := OpenArrayType.OpenDepth (innerT);
+    nOuter    := p.eltCt;
+    intT      := MSIR.TI (Target.Integer.size);
+    apB       := Target.Address.size DIV Target.Byte;
+    ipB       := Target.Integer.size DIV Target.Byte;
+    dims      : REF ARRAY OF MSIR.Value;
+    elemBytes : MSIR.Value := NIL;
+    flat      : MSIR.Value := NIL;
+    packBits  : INTEGER;
+    eltMsirT  : MSIR.T;
+    deepest, idxT, sub : Type.T;
+    blk       : MSIR.Block;
+  BEGIN
+    IF elemDepth <= 0 OR nOuter <= 0 THEN
+      MSIRBuilder.Abandon ("open constructor: element not open");
+      RETURN NIL;
+    END;
+    dims := NEW (REF ARRAY OF MSIR.Value, elemDepth);
+    (* Descend to the deepest open level; its EltPack is the nonopen block's
+       packed bit size. *)
+    deepest := innerT;
+    FOR k := 1 TO elemDepth - 1 DO
+      IF NOT ArrayType.Split (Type.Base (deepest), idxT, sub) THEN EXIT END;
+      deepest := sub;
+    END;
+    packBits := OpenArrayType.EltPack (Type.Base (deepest));
+    IF packBits <= 0 THEN
+      MSIRBuilder.Abandon ("open constructor: unknown element pack");
+      RETURN NIL;
+    END;
+    eltMsirT := MSIRType.Translate
+                  (OpenArrayType.NonopenEltType (Type.Base (innerT)));
+    IF eltMsirT = NIL THEN eltMsirT := MSIR.TI (Target.Byte) END;
+
+    FOR i := 0 TO nOuter - 1 DO
+      VAR lvI, dopeI, dataI : MSIR.Value;
+          lvK  : MSIR.TypeKind;
+          eltK : MSIR.T;
+          mRank: INTEGER := 0;
+          wt   : MSIR.T := NIL;
+      BEGIN
+        IF i = 0 AND e0 # NIL
+          THEN lvI := e0;
+          ELSE lvI := Expr.LValueMSIR (p.args^[MIN (i, LAST (p.args^))]);
+        END;
+        IF lvI = NIL THEN
+          MSIRBuilder.Abandon ("open constructor: dynamic element has no lvalue");
+          RETURN NIL;
+        END;
+        lvK := MSIR.Kind (MSIR.ValueType (lvI));
+        IF lvK # MSIR.TypeKind.Ptr AND lvK # MSIR.TypeKind.GcRef THEN
+          MSIRBuilder.Abandon ("open constructor: element lvalue not a pointer");
+          RETURN NIL;
+        END;
+        eltK := MSIR.EltType (MSIR.ValueType (lvI));
+        blk  := MSIRBuilder.CurrentBlock ();
+        IF MSIR.Kind (eltK) = MSIR.TypeKind.OpenArray THEN
+          dopeI := MSIR.BuildLoad (blk, "", eltK, lvI);
+          dataI := MSIRBuilder.OpenArrayDataPtr (blk, dopeI);
+          mRank := MSIR.OpenArrayRank (eltK);
+          wt    := MSIR.OpenArrayElt (eltK);
+        ELSE
+          (* A concrete (fixed) element mixed in among dynamics. *)
+          dopeI := NIL;
+          dataI := MSIR.RetypeValue (lvI, MSIR.TPtr (MSIR.TVoid ()));
+          mRank := 0;
+          wt    := eltK;
+        END;
+        (* Logical dims of this element: runtime from the dope for the first
+           mRank levels, static from the MSIR fixed levels below. *)
+        FOR k := 0 TO elemDepth - 1 DO
+          VAR szK : MSIR.Value;
+          BEGIN
+            IF k < mRank THEN
+              blk := MSIRBuilder.CurrentBlock ();
+              szK := MSIR.BuildOpenArraySize (blk, "", dopeI, k);
+            ELSE
+              IF wt = NIL OR MSIR.Kind (wt) # MSIR.TypeKind.FixedArray THEN
+                MSIRBuilder.Abandon
+                  ("open constructor: element shallower than the element type");
+                RETURN NIL;
+              END;
+              VAR len := MSIR.FixedArrayLen (wt);
+              BEGIN
+                IF k = elemDepth - 1 AND packBits < Target.Byte THEN
+                  (* Sub-byte-packed deepest level: the MSIR rep is a byte
+                     array, FixedArrayLen is the BYTE count. *)
+                  len := len * Target.Byte DIV packBits;
+                END;
+                szK := MSIR.ConstInt (intT, len);
+                wt  := MSIR.FixedArrayElt (wt);
+              END;
+            END;
+            IF i = 0 THEN
+              dims[k] := szK;
+            ELSE
+              blk := MSIRBuilder.CurrentBlock ();
+              VAR bad := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, szK, dims[k]);
+              BEGIN
+                MSIRBuilder.EmitReportFault
+                  (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
+              END;
+            END;
+          END;
+        END;
+        IF i = 0 THEN
+          (* elemBytes := (prod dims) * packBits / 8;  flat := alloca. *)
+          VAR tot := dims[0];
+          BEGIN
+            blk := MSIRBuilder.CurrentBlock ();
+            FOR k := 1 TO elemDepth - 1 DO
+              tot := MSIR.BuildIMul (blk, "", tot, dims[k]);
+            END;
+            IF packBits MOD Target.Byte = 0 THEN
+              elemBytes := MSIR.BuildIMul (blk, "", tot,
+                             MSIR.ConstInt (intT, packBits DIV Target.Byte));
+            ELSE
+              elemBytes := MSIR.BuildILShr (blk, "",
+                             MSIR.BuildIMul (blk, "", tot,
+                               MSIR.ConstInt (intT, packBits)),
+                             MSIR.ConstInt (intT, 3));
+            END;
+            flat := MSIR.BuildAllocaDyn (blk, "",
+                      MSIR.BuildIMul (blk, "", elemBytes,
+                        MSIR.ConstInt (intT, nOuter)));
+          END;
+        END;
+        blk := MSIRBuilder.CurrentBlock ();
+        MSIRBuilder.EmitMemcpyDyn (
+          MSIR.BuildGepByte (blk, "", flat,
+            MSIR.BuildIMul (blk, "", MSIR.ConstInt (intT, i), elemBytes)),
+          dataI, elemBytes);
+      END;
+    END;
+
+    (* Result dope: {data=flat, n0=nOuter, n1..=first element's dims}. *)
+    VAR resT    := MSIR.TOpenArray (elemDepth + 1, eltMsirT);
+        resDope : MSIR.Value;
+    BEGIN
+      blk     := MSIRBuilder.CurrentBlock ();
+      resDope := MSIR.BuildAlloca (blk, "", resT);
+      MSIR.BuildStore (blk, flat, MSIR.BuildPtrAdd (blk, "", resDope, 0));
+      MSIR.BuildStore (blk, MSIR.ConstInt (intT, nOuter),
+                       MSIR.BuildPtrAdd (blk, "", resDope, apB));
+      FOR k := 0 TO elemDepth - 1 DO
+        MSIR.BuildStore (blk, dims[k],
+                         MSIR.BuildPtrAdd (blk, "", resDope,
+                                           apB + (k + 1) * ipB));
+      END;
+      RETURN resDope;
+    END;
+  END DynOpenConstructorMSIR;
+
 PROCEDURE LValueMSIR_MSIR (p: T): MSIR.Value =
 (* Materialize the array constructor into a fresh alloca and return its address.
    Handles 1-D and multi-D constructors where each element is a simple expression
@@ -2465,7 +2636,11 @@ BEGIN
                   IF i = 0 THEN src := e0
                   ELSE src := Expr.LValueMSIR (p.args^[MIN (i, LAST (p.args^))]);
                   END;
-                  IF src = NIL THEN RETURN NIL END;
+                  IF src = NIL THEN
+                    MSIRBuilder.Abandon
+                      ("open constructor: concrete element has no lvalue");
+                    RETURN NIL;
+                  END;
                   bb := MSIRBuilder.CurrentBlock ();
                   MSIR.BuildStore (bb, MSIR.BuildLoad (bb, "", ceT, src), ea);
                 END;
@@ -2475,6 +2650,10 @@ BEGIN
           END;
         END;
       END;
+      (* Elements are DYNAMIC open-array values (dereferenced heap arrays, or
+         nested constructors of such — p269 Dynamic.m3).  No static concrete
+         element type exists; build a dynamically-sized flat temp + dope. *)
+      RETURN DynOpenConstructorMSIR (p, innerT, e0);
     END;
   END;
   eltT := MSIRType.Translate (innerT);
