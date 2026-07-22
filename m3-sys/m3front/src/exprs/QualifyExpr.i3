@@ -48,6 +48,13 @@ PROCEDURE MethodHolder (e: Expr.T): Type.T;
    bit-insertion of rhs and return TRUE.  Otherwise return FALSE immediately. *)
 PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;
 
+PROCEDURE FieldByteAddrMSIR (e: Expr.T): MSIR.Value;
+(* The raw byte address of a record-field access whose BIT OFFSET is
+   byte-aligned, regardless of the field's bit WIDTH — for ADR of a packed
+   field (ADR(r.f) where f: BITS 23 FOR ... starts on a byte boundary),
+   which has a well-defined address but no loadable/storable lvalue.
+   Returns NIL when e is not such an access. *)
+
 (* If e is a sub-byte/bit-field rec/obj field, return its containing storage
    base pointer (evaluated once) + bit offset/width/raw type; else FALSE.  Used
    to bind a bit-field WITH alias by reference. *)

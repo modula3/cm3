@@ -10,7 +10,7 @@ MODULE Adr;
 
 IMPORT CallExpr, Expr, ExprRep, Procedure, Error, Module, Addr, CG;
 IMPORT RefType, Type, Host, Target;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, QualifyExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -58,9 +58,19 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  VAR lv: MSIR.Value;
   BEGIN
     IF ce.hasError THEN MSIRBuilder.Abandon ("ADR: hasError"); RETURN NIL END;
-    RETURN Expr.LValueMSIR (ce.args[0]);
+    lv := Expr.LValueMSIR (ce.args[0]);
+    IF lv # NIL THEN RETURN lv END;
+    (* A bit-packed field has no loadable lvalue, but when it starts on a
+       byte boundary its ADDRESS is still well-defined (ADR(r.f) with
+       f: BITS 23 FOR ...).  Returning NIL here silently dropped the whole
+       enclosing call (p280 CallShortTypeDesig: Result stayed 0). *)
+    lv := QualifyExpr.FieldByteAddrMSIR (ce.args[0]);
+    IF lv # NIL THEN RETURN lv END;
+    MSIRBuilder.Abandon ("ADR: argument has no addressable lvalue");
+    RETURN NIL;
   END CompileMSIR;
 
 PROCEDURE Initialize () =

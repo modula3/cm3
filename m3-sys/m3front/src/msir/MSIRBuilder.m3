@@ -2870,9 +2870,19 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
         IF fieldMsir # NIL
            AND (MSIR.Kind (fieldMsir) = MSIR.TypeKind.Struct
                 OR MSIR.Kind (fieldMsir) = MSIR.TypeKind.FixedArray) THEN
-          VAR nB  := (bitWidth + 7) DIV 8;
-              tmp := MSIR.BuildAlloca (b, "", fieldMsir);
+          (* Clamp the byte count to the aggregate's NATURAL size: a BITS n
+             FOR <agg> field may declare MORE bits than the aggregate holds
+             (BITS 17 FOR a 16-bit record), and ceil(n/8) would then write
+             one byte past the temp alloca (stack clobber, p280 short
+             aggregate reads). *)
+          VAR natInfo : Type.Info;
+              nB      := (bitWidth + 7) DIV 8;
+              tmp     := MSIR.BuildAlloca (b, "", fieldMsir);
           BEGIN
+            EVAL Type.CheckInfo (Type.StripPacked (rawFieldType), natInfo);
+            IF natInfo.size > 0 THEN
+              nB := MIN (nB, (natInfo.size + 7) DIV 8);
+            END;
             FOR j := 0 TO nB - 1 DO
               MSIR.BuildStore (b,
                 MSIR.BuildTrunc (b, "",
@@ -2925,6 +2935,38 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     END;
   END ExtractBitField;
 
+PROCEDURE AggByteSize (t: MSIR.T): INTEGER =
+  (* Byte size of an MSIR value type; -1 when it cannot be determined. *)
+  VAR w: INTEGER;
+  BEGIN
+    IF t = NIL THEN RETURN -1 END;
+    CASE MSIR.Kind (t) OF
+    | MSIR.TypeKind.FixedArray =>
+        VAR eb := AggByteSize (MSIR.FixedArrayElt (t));
+        BEGIN
+          IF eb <= 0 THEN RETURN -1 END;
+          RETURN MSIR.FixedArrayLen (t) * eb;
+        END;
+    | MSIR.TypeKind.Struct =>
+        VAR n := MSIR.StructFieldCount (t);
+        BEGIN
+          IF n = 0 THEN RETURN 0 END;
+          VAR f  := MSIR.StructField (t, n - 1);
+              eb := AggByteSize (f.type);
+          BEGIN
+            IF eb <= 0 THEN RETURN -1 END;
+            RETURN f.offset + eb;
+          END;
+        END;
+    | MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
+        RETURN Target.Address.bytes;
+    ELSE
+        w := MSIR.BitWidth (t);
+        IF w <= 0 THEN RETURN -1 END;
+        RETURN (w + 7) DIV 8;
+    END;
+  END AggByteSize;
+
 PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
                            rhs: MSIR.Value) =
   VAR
@@ -2948,7 +2990,13 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
             intT := MSIR.TI (Target.Integer.size);
             tmp  := MSIR.BuildAlloca (b, "", aggT);
             acc  : MSIR.Value := MSIR.ConstInt (intT, 0);
+            aggB : INTEGER;
         BEGIN
+          (* Clamp to the aggregate's own byte size: the declared field width
+             (BITS n FOR <agg>) may exceed the aggregate's bits, and reading
+             ceil(n/8) bytes would run past the spill temp. *)
+          aggB := AggByteSize (aggT);
+          IF aggB > 0 THEN nB := MIN (nB, aggB) END;
           MSIR.BuildStore (b, rhs, tmp);
           FOR j := 0 TO nB - 1 DO
             VAR bj := MSIR.BuildLoad (b, "", MSIR.TI (8),

@@ -848,6 +848,56 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN r;
   END CompileMSIR;
 
+PROCEDURE FixedSideExtents (e: Expr.T;  v: MSIR.Value;  openRank: INTEGER;
+                            VAR (*OUT*) totElts: INTEGER): REF ARRAY OF INTEGER =
+(* Per-dimension element counts for the NON-dope side of an open-array
+   equality (a fixed array, or an open-TYPED constant materialised as flat
+   fixed data).  Prefer the static index count from the M3 type; when a level
+   of the M3 type is OPEN (idxT = NIL — e.g. CONST c = ARRAY OF ARRAY OF
+   INTEGER {...}), fall back to the MSIR value's FixedArray length at that
+   level (p280: the extents defaulted to 1, so every shape check against an
+   open-typed constant failed and `a # openTypedConst` was always TRUE).
+   totElts is the product of the extents — the M3 Type.Info size is the DOPE
+   size for open types and must not be used to count elements. *)
+  VAR
+    exts := NEW (REF ARRAY OF INTEGER, openRank);
+    curr := Type.Base (Expr.TypeOf (e));
+    mT   : MSIR.T := NIL;
+    idxT, eltT2 : Type.T;
+    nTi  : Target.Int;
+    ni   : INTEGER;
+  BEGIN
+    IF v # NIL THEN
+      mT := MSIR.ValueType (v);
+      IF MSIR.Kind (mT) = MSIR.TypeKind.Ptr
+         OR MSIR.Kind (mT) = MSIR.TypeKind.GcRef THEN
+        mT := MSIR.EltType (mT);
+      END;
+    END;
+    totElts := 1;
+    FOR d := 0 TO openRank - 1 DO
+      exts[d] := 1;
+      IF curr # NIL AND ArrayType.Split (curr, idxT, eltT2) THEN
+        IF idxT # NIL THEN
+          nTi := Type.Number (idxT);
+          IF TInt.ToInt (nTi, ni) THEN exts[d] := ni END;
+        ELSIF mT # NIL AND MSIR.Kind (mT) = MSIR.TypeKind.FixedArray THEN
+          exts[d] := MSIR.FixedArrayLen (mT);
+        END;
+        curr := eltT2;
+      ELSIF mT # NIL AND MSIR.Kind (mT) = MSIR.TypeKind.FixedArray THEN
+        exts[d] := MSIR.FixedArrayLen (mT);
+        curr := NIL;
+      END;
+      IF mT # NIL AND MSIR.Kind (mT) = MSIR.TypeKind.FixedArray
+        THEN mT := MSIR.FixedArrayElt (mT);
+        ELSE mT := NIL;
+      END;
+      totElts := totElts * exts[d];
+    END;
+    RETURN exts;
+  END FixedSideExtents;
+
 PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
   VAR
     lv, rv:  MSIR.Value;
@@ -939,7 +989,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
           VAR
             lvIsOA := (MSIR.Kind (MSIR.ValueType (lv)) = MSIR.TypeKind.OpenArray);
             rvIsOA := (MSIR.Kind (MSIR.ValueType (rv)) = MSIR.TypeKind.OpenArray);
-            tbType : Type.T;  tbInfo : Type.Info;  tbElts : INTEGER;
+            tbElts : INTEGER;
             (* Per-dim static extents for fixed side *)
             tbDimExtents : REF ARRAY OF INTEGER := NIL;
             (* Heap pointer for each OA side (for extra dims beyond MSIR rank) *)
@@ -971,53 +1021,19 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
             END;
 
             IF NOT lvIsOA THEN
-              (* Derive static per-dim extents from the fixed array type. *)
-              tbType := Type.Base (Expr.TypeOf (p.a));
-              EVAL Type.CheckInfo (tbType, tbInfo);
-              tbElts := tbInfo.size DIV (elemBytes * Target.Byte);
-              tbDimExtents := NEW (REF ARRAY OF INTEGER, openRank);
-              VAR curr := tbType;
-              BEGIN
-                FOR d := 0 TO openRank - 1 DO
-                  VAR idxT, eltT2: Type.T; nTi: Target.Int; ni: INTEGER;
-                  BEGIN
-                    IF ArrayType.Split (curr, idxT, eltT2) THEN
-                      nTi := Type.Number (idxT);
-                      IF TInt.ToInt (nTi, ni)
-                        THEN tbDimExtents[d] := ni;
-                        ELSE tbDimExtents[d] := 1;
-                      END;
-                      curr := eltT2;
-                    ELSE
-                      tbDimExtents[d] := 1;
-                    END;
-                  END;
-                END;
-              END;
+              (* Derive static per-dim extents from the fixed array side. *)
+              tbDimExtents := FixedSideExtents (p.a, lv, openRank, tbElts);
             END;
             IF NOT rvIsOA THEN
-              tbType := Type.Base (Expr.TypeOf (p.b));
-              EVAL Type.CheckInfo (tbType, tbInfo);
-              tbElts := tbInfo.size DIV (elemBytes * Target.Byte);
               IF tbDimExtents = NIL THEN
-                tbDimExtents := NEW (REF ARRAY OF INTEGER, openRank);
-                VAR curr := tbType;
+                tbDimExtents := FixedSideExtents (p.b, rv, openRank, tbElts);
+              ELSE
+                (* Both sides fixed: still recompute tbElts from the rhs so a
+                   later `total` uses a valid count (semantics unchanged: with
+                   both sides static, the shapes were checked at compile time). *)
+                VAR dummy := FixedSideExtents (p.b, rv, openRank, tbElts);
                 BEGIN
-                  FOR d := 0 TO openRank - 1 DO
-                    VAR idxT, eltT2: Type.T; nTi: Target.Int; ni: INTEGER;
-                    BEGIN
-                      IF ArrayType.Split (curr, idxT, eltT2) THEN
-                        nTi := Type.Number (idxT);
-                        IF TInt.ToInt (nTi, ni)
-                          THEN tbDimExtents[d] := ni;
-                          ELSE tbDimExtents[d] := 1;
-                        END;
-                        curr := eltT2;
-                      ELSE
-                        tbDimExtents[d] := 1;
-                      END;
-                    END;
-                  END;
+                  <* ASSERT dummy # NIL *>
                 END;
               END;
             END;

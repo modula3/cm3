@@ -1286,8 +1286,14 @@ PROCEDURE ReadonlyArgAddrMSIR (form: T;  actual: Expr.T): MSIR.Value =
     formT   : MSIR.T;
     b       : MSIR.Block;
   BEGIN
+    (* NOT PackedType.Is: BITS n FOR T is the SAME TYPE as T for IsEqual, but
+       a packed designator's storage is narrower than the formal's read width
+       — aliasing it makes the callee read adjacent bits (p280 CallShortType:
+       enum 17 -> 0).  CG's GenOrdinal/GenFloat exclude packed actuals from
+       the by-ref case identically. *)
     IF Expr.IsDesignator (actual)
-       AND Type.IsEqual (TypeOf (form), Expr.TypeOf (actual), NIL) THEN
+       AND Type.IsEqual (TypeOf (form), Expr.TypeOf (actual), NIL)
+       AND NOT PackedType.Is (Type.Strip (Expr.TypeOf (actual))) THEN
       VAR lv := Expr.LValueMSIR (actual);
       BEGIN  IF lv # NIL THEN RETURN lv END;  END;
     END;
@@ -1304,12 +1310,132 @@ PROCEDURE ReadonlyArgAddrMSIR (form: T;  actual: Expr.T): MSIR.Value =
     RETURN slot;
   END ReadonlyArgAddrMSIR;
 
+PROCEDURE OpenActualToFixedRefMSIR (form: T;  lval: MSIR.Value): MSIR.Value =
+  (* A by-reference (VAR or READONLY) FIXED-array formal receiving an
+     OPEN-array actual (e.g. P(r^) where r: REF ARRAY OF T): the actual's
+     lvalue is a pointer to its dope, but the callee expects a pointer to
+     the ELEMENT DATA — passing the dope reads {data ptr, counts} as
+     elements, and a VAR write-back clobbers the dope itself.  Mirror the
+     CG path's RedepthArray formDepth=0 case: runtime-check each open
+     dimension's count against the formal's static length
+     (IncompatibleArrayShape), then pass the data pointer.
+     Returns lval unchanged when it is not a pointer-to-dope or the formal
+     is not a fixed array. *)
+  VAR
+    formInfo : Info;
+    formT, ft, lvalT, dopeT : MSIR.T;
+    dope, cnt, wantN, bad : MSIR.Value;
+    rank : INTEGER;
+    blk  : MSIR.Block;
+    intT := MSIR.TI (Target.Integer.size);
+  BEGIN
+    IF lval = NIL THEN RETURN NIL END;
+    lvalT := MSIR.ValueType (lval);
+    (* The actual's lvalue may be a plain pointer (stack/param dope) or a
+       gc_ref (heap dope, e.g. r^ for r: REF ARRAY OF T). *)
+    IF MSIR.Kind (lvalT) # MSIR.TypeKind.Ptr
+       AND MSIR.Kind (lvalT) # MSIR.TypeKind.GcRef THEN
+      RETURN lval;
+    END;
+    dopeT := MSIR.EltType (lvalT);
+    IF MSIR.Kind (dopeT) # MSIR.TypeKind.OpenArray THEN RETURN lval END;
+    Split (form, formInfo);
+    formT := MSIRType.Translate (formInfo.type);
+    IF formT = NIL OR MSIR.Kind (formT) # MSIR.TypeKind.FixedArray THEN
+      RETURN lval;
+    END;
+    blk  := MSIRBuilder.CurrentBlock ();
+    dope := MSIR.BuildLoad (blk, "", dopeT, lval);
+    rank := MSIR.OpenArrayRank (dopeT);
+    ft   := formT;
+    FOR k := 0 TO rank - 1 DO
+      IF MSIR.Kind (ft) # MSIR.TypeKind.FixedArray THEN EXIT END;
+      blk   := MSIRBuilder.CurrentBlock ();
+      cnt   := MSIR.BuildOpenArraySize (blk, "", dope, k);
+      wantN := MSIR.ConstInt (intT, MSIR.FixedArrayLen (ft));
+      bad   := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, cnt, wantN);
+      MSIRBuilder.EmitReportFault
+        (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
+      ft := MSIR.FixedArrayElt (ft);
+    END;
+    VAR dPtr := MSIRBuilder.OpenArrayDataPtr (MSIRBuilder.CurrentBlock (), dope);
+    BEGIN
+      RETURN MSIR.RetypeValue (dPtr, MSIR.TPtr (formT));
+    END;
+  END OpenActualToFixedRefMSIR;
+
+PROCEDURE StructRoArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
+  (* READONLY aggregate (record / fixed array / object) formal.  Mirror the C
+     backend's GenStruct mREADONLY case: pass BY REFERENCE only when the type
+     is OK for it — for arrays any assignable non-packed actual, for records
+     an equal-type non-packed actual — and the actual is a designator or an
+     anonymous constructor.  Everything else (different record type, packed
+     BITS-FOR actual, misaligned packed field, non-designator) passes a COPY
+     by reference: the language's by-value semantics must be observable
+     (ADR(formal) # ADR(actual), p280 "actual has not been copied") and a
+     packed actual's storage cannot be read at the formal's width anyway. *)
+  VAR
+    actSemType     := Expr.TypeOf (actual);
+    typeOKForByRef : BOOLEAN;
+    formInfo       : Info;
+    formTypeInfo   : Type.Info;
+    formT          : MSIR.T;
+    lv, v, slot    : MSIR.Value;
+    b              : MSIR.Block;
+  BEGIN
+    typeOKForByRef :=
+        (form.kind = Type.Class.Array
+         OR Type.IsEqual (TypeOf (form), actSemType, NIL))
+        AND NOT PackedType.Is (Type.Strip (actSemType));
+    IF typeOKForByRef
+       AND (Expr.IsDesignator (actual) OR Expr.IsAnonConstructor (actual)) THEN
+      RETURN OpenActualToFixedRefMSIR (form, Expr.LValueMSIR (actual));
+    END;
+    Split (form, formInfo);
+    EVAL Type.CheckInfo (formInfo.type, formTypeInfo);
+    formT := MSIRType.Translate (formInfo.type);
+    IF formT = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
+    lv := Expr.LValueMSIR (actual);
+    IF lv # NIL AND (MSIR.Kind (MSIR.ValueType (lv)) = MSIR.TypeKind.Ptr
+                     OR MSIR.Kind (MSIR.ValueType (lv)) = MSIR.TypeKind.GcRef) THEN
+      IF MSIR.Kind (MSIR.EltType (MSIR.ValueType (lv)))
+         = MSIR.TypeKind.OpenArray THEN
+        (* Open actual: shape-check and reduce to its data pointer first. *)
+        lv := OpenActualToFixedRefMSIR (form, lv);
+      END;
+      IF lv # NIL
+         AND MSIR.Kind (MSIR.EltType (MSIR.ValueType (lv)))
+             # MSIR.TypeKind.OpenArray THEN
+        (* Byte-addressable actual: copy the formal's byte size into a temp. *)
+        b    := MSIRBuilder.CurrentBlock ();
+        slot := MSIR.BuildAlloca (b, "", formT);
+        MSIRBuilder.EmitMemcpy (slot, lv, formTypeInfo.size DIV Target.Byte);
+        RETURN slot;
+      END;
+    END;
+    (* No byte lvalue (bit-packed field, rvalue): compile the extracted value
+       and spill it.  The extracted value's own MSIR type sizes the store;
+       the slot is the formal's type so the callee's reads stay in bounds. *)
+    v := Expr.CompileMSIR (actual);
+    IF v = NIL THEN RETURN NIL END;
+    b    := MSIRBuilder.CurrentBlock ();
+    slot := MSIR.BuildAlloca (b, "", formT);
+    IF MSIR.Equal (MSIR.ValueType (v), formT) THEN
+      MSIR.BuildStore (b, v, slot);
+    ELSE
+      MSIR.BuildStore (b, v,
+        MSIR.RetypeValue (slot, MSIR.TPtr (MSIR.ValueType (v))));
+    END;
+    RETURN slot;
+  END StructRoArgMSIR;
+
 PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
   VAR form: T := formalValue;
   BEGIN
     IF form.mode = Mode.mVAR THEN
       IF form.openArray THEN RETURN GenOpenArgMSIR (form, actual) END;
-      RETURN Expr.LValueMSIR (actual);
+      RETURN OpenActualToFixedRefMSIR (form, Expr.LValueMSIR (actual));
     END;
     IF form.openArray THEN
       IF form.mode = Mode.mVALUE THEN
@@ -1325,7 +1451,7 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
          type designator, else spill to a temp). *)
       CASE form.kind OF
       | Type.Class.Record, Type.Class.Array, Type.Class.Object =>
-          RETURN Expr.LValueMSIR (actual);
+          RETURN StructRoArgMSIR (form, actual);
       | Type.Class.Set =>
           (* Both small and multi-word sets go through ReadonlyArgAddrMSIR: a
              same-type designator passes its own lvalue (aliasing preserved),

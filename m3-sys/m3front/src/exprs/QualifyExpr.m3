@@ -1122,6 +1122,25 @@ PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN =
     END;
   END ObjTypeMethod;
 
+(*EXPORTED*)
+PROCEDURE FieldByteAddrMSIR (e: Expr.T): MSIR.Value =
+  VAR p: P;  fieldInfo: Field.Info;  baseAddr: MSIR.Value;
+  BEGIN
+    TYPECASE e OF
+    | NULL => RETURN NIL;
+    | P(x) => p := x;
+    ELSE      RETURN NIL;
+    END;
+    Resolve (p);
+    IF p.class # Class.recField THEN RETURN NIL END;
+    Field.Split (p.rhsValue, fieldInfo);
+    IF fieldInfo.offset MOD Target.Byte # 0 THEN RETURN NIL END;
+    baseAddr := Expr.LValueMSIR (p.lhsExpr);
+    IF baseAddr = NIL THEN RETURN NIL END;
+    RETURN MSIRBuilder.BuildPtrByteOff (MSIRBuilder.CurrentBlock (), "",
+             baseAddr, fieldInfo.offset DIV Target.Byte);
+  END FieldByteAddrMSIR;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR fieldInfo: Field.Info;  fieldType: MSIR.T;  addr: MSIR.Value;
       folded: Expr.T;
@@ -1173,7 +1192,29 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           IF ftiRec.size MOD Target.Byte # 0 OR fieldInfo.offset MOD Target.Byte # 0 THEN
             VAR baseAddr := Expr.LValueMSIR (p.lhsExpr);
             BEGIN
-              IF baseAddr = NIL THEN RETURN NIL END;
+              IF baseAddr = NIL THEN
+                (* The base itself has no byte lvalue — it is a bit-packed
+                   field (e.g. srr.f.a where f is BITS 17 FOR a record).
+                   Compile the base VALUE, spill it to a temp, and extract
+                   this field from the spill.  Returning NIL here silently
+                   dropped the whole enclosing expression (p280 short
+                   aggregate reads: Concat(nil,...) SIGSEGV). *)
+                VAR bv := Expr.CompileMSIR (p.lhsExpr);
+                BEGIN
+                  IF bv = NIL THEN
+                    MSIRBuilder.Abandon
+                      ("recField: packed base has neither lvalue nor value");
+                    RETURN NIL;
+                  END;
+                  VAR blk := MSIRBuilder.CurrentBlock ();
+                      tmp := MSIR.BuildAlloca (blk, "", MSIR.ValueType (bv));
+                  BEGIN
+                    MSIR.BuildStore (blk, bv, tmp);
+                    RETURN MSIRBuilder.ExtractBitField
+                             (tmp, fieldInfo.offset, ftiRec.size, fieldInfo.type);
+                  END;
+                END;
+              END;
               RETURN MSIRBuilder.ExtractBitField (baseAddr, fieldInfo.offset, ftiRec.size,
                                       fieldInfo.type);
             END;

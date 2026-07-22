@@ -13,7 +13,7 @@ IMPORT Text, Fmt, CaptureAnalysis;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
-IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module;
+IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module, Word;
 IMPORT MSIR, MSIRBuilder;
 
 TYPE
@@ -1047,7 +1047,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           TWord.Or  (cur, tmp, cur);
           n := n.next;
         END;
-        IF NOT TInt.ToInt (cur, v) THEN
+        IF NOT MaskToHostInt (cur, v) THEN
           MSIRBuilder.Abandon ("SetExpr MSIR: set mask overflows INTEGER");
           RETURN NIL;
         END;
@@ -1165,6 +1165,25 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN result;
   END CompileMSIR;
 
+PROCEDURE MaskToHostInt (READONLY mask: Target.Int;  VAR v: INTEGER): BOOLEAN =
+(* Convert a word-sized set bit mask to the host INTEGER carrying the same
+   BIT PATTERN.  TInt.ToInt alone fails when the mask's top bit is set (the
+   unsigned value exceeds LAST(INTEGER)) — e.g. any set containing element 63
+   of its word, like SET OF [0..191] { 191 } — which silently dropped global
+   set initializers (p280 Set.Val1 read back as {}) and Abandoned runtime
+   constructors.  Reassemble the two 32-bit halves with host Word ops so the
+   sign bit lands via two's-complement wraparound. *)
+  VAR lo, hi: Target.Int;  loI, hiI: INTEGER;
+  BEGIN
+    IF TInt.ToInt (mask, v) THEN RETURN TRUE END;
+    IF NOT TWord.Extract (mask, 0, 32, lo) THEN RETURN FALSE END;
+    IF NOT TWord.Extract (mask, 32, 32, hi) THEN RETURN FALSE END;
+    IF NOT TInt.ToInt (lo, loI) THEN RETURN FALSE END;
+    IF NOT TInt.ToInt (hi, hiI) THEN RETURN FALSE END;
+    v := Word.Or (Word.LeftShift (hiI, 32), loI);
+    RETURN TRUE;
+  END MaskToHostInt;
+
 PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
 (* Polymorphic MSIR analogue of GenLiteral: return a PURE constant MSIR value
    for a fully-constant set, suitable for a static/global initializer (emits NO
@@ -1191,7 +1210,7 @@ PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
           TWord.Or  (cur, tmp, cur);
           n := n.next;
         END;
-        IF NOT TInt.ToInt (cur, v) THEN RETURN NIL END;
+        IF NOT MaskToHostInt (cur, v) THEN RETURN NIL END;
         RETURN MSIR.ConstInt (ti, v);
       END;
     ELSE
@@ -1228,7 +1247,7 @@ PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
         END;
         wmask [curWordNo] := curMask;
         FOR i := 0 TO nWords - 1 DO
-          IF NOT TInt.ToInt (wmask [i], wv) THEN RETURN NIL END;
+          IF NOT MaskToHostInt (wmask [i], wv) THEN RETURN NIL END;
           words [i] := MSIR.ConstInt (wTy, wv);
         END;
         RETURN MSIR.ConstAggArray (MSIR.TFixedArray (nWords, wTy), words^);
@@ -1258,7 +1277,7 @@ PROCEDURE GetWordBitMask (e: Expr.T;  VAR minOrd: INTEGER;  VAR mask: INTEGER): 
       TWord.Or  (cur, tmp, cur);
       n := n.next;
     END;
-    IF NOT TInt.ToInt (cur, v) THEN RETURN FALSE END;
+    IF NOT MaskToHostInt (cur, v) THEN RETURN FALSE END;
     mask := v;
     RETURN TRUE;
   END GetWordBitMask;
