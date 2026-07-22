@@ -154,6 +154,7 @@ PROCEDURE GetOutcome (t: T): Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (t: T) =
+  VAR warned := FALSE;
   BEGIN
     WHILE (t # NIL) AND MSIRBuilder.InProc () DO
       Scanner.offset := t.origin;
@@ -161,20 +162,30 @@ PROCEDURE CompileMSIR (t: T) =
       Tracer.EmitPendingMSIR ();
       t.compileMSIR ();
       IF NOT (Outcome.FallThrough IN t.outcomes ()) THEN
-        (* Mirror the CG path's Compile: statements after one that cannot
-           fall through are dead — warn (level 1, like -w1's "unreachable
-           statement") and do not compile them.  outcomes() is the same
-           static estimator GetOutcome uses, so the dead-code decisions
-           match the C backend's exactly (p019/p020/p023/p272: these
-           warnings were missing from MSIRObj build logs). *)
-        IF (t.next # NIL) THEN
-          Scanner.offset := t.next.origin;
-          Error.Warn (1, "unreachable statement");
+        (* Match the CG path's diagnostic: statements after one that cannot
+           fall through get a level-1 "unreachable statement" warning (shown
+           under -w1; p019/p020/p023/p272 were missing these from MSIRObj
+           build logs).  Unlike CG's Compile we do NOT stop compiling the
+           tail: CG's stop decision comes from compile()'s RETURNED outcome,
+           whereas outcomes() is only the static estimator — where the two
+           disagree, stopping here deleted LIVE code (the self-hosted
+           compiler's QMachine lost a proc tail: quake `defined` failed with
+           "expected return value is missing").  Compiling a dead statement
+           is merely redundant; dropping a live one is fatal. *)
+        IF (t.next # NIL) AND NOT warned THEN
+          (* Once per list, like CG's Compile (which warns once and stops):
+             warning again at every later no-fallthrough statement produced
+             extra warnings vs the goldens (p020). *)
+          warned := TRUE;
+          VAR save := Scanner.offset;
+          BEGIN
+            Scanner.offset := t.next.origin;
+            Error.Warn (1, "unreachable statement");
+            Scanner.offset := save;
+          END;
         END;
-        t := NIL;
-      ELSE
-        t := t.next;
       END;
+      t := t.next;
     END;
     Tracer.EmitPendingMSIR ();
   END CompileMSIR;

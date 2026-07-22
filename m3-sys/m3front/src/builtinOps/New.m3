@@ -469,6 +469,25 @@ PROCEDURE CallAllocHook (t: Type.T;  hook: RunTyme.Hook;
     RETURN MSIR.BuildConvert (MSIRBuilder.CurrentBlock (), "", res, mt);
   END CallAllocHook;
 
+PROCEDURE NarrowFieldStoreMSIR (b: MSIR.Block;  valV: MSIR.Value;
+                                fieldAddr: MSIR.Value;  fieldType: Type.T) =
+(* Store a keyword-initializer value into a NEW'd record/object field.
+   valV carries the ZType computation width (i64 for BOOLEAN/enum/subrange),
+   but fieldAddr is an untyped byte pointer, so a plain store writes valV's
+   FULL width — an 8-byte store into a 1-byte BOOLEAN field clobbers the
+   following 7 bytes (QCode.ProcInfo: `builtin := TRUE` zeroed the adjacent
+   isFunc byte, breaking every quake function call in a self-hosted cm3).
+   Truncate integer values to the field's declared storage width first. *)
+  VAR fti: Type.Info;  vw: INTEGER;
+  BEGIN
+    EVAL Type.CheckInfo (fieldType, fti);
+    vw := MSIR.BitWidth (MSIR.ValueType (valV));
+    IF fti.size > 0 AND vw > 0 AND fti.size < vw THEN
+      valV := MSIR.BuildTrunc (b, "", valV, MSIR.TI (fti.size));
+    END;
+    MSIR.BuildStore (b, valV, fieldAddr);
+  END NarrowFieldStoreMSIR;
+
 PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
   CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedRef,
                                                 RunTyme.Hook.NewTracedRef };
@@ -534,7 +553,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
                                             packedSize, valV);
               ELSE
                 fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", refVal, byteOff);
-                MSIR.BuildStore (b, valV, fieldAddr);
+                NarrowFieldStoreMSIR (b, valV, fieldAddr, fieldInfo.type);
               END;
             END;
           END;
@@ -674,7 +693,7 @@ PROCEDURE GenObjectMSIR (t: Type.T;  ce: CallExpr.T): MSIR.Value =
             MSIRBuilder.InsertBitField (fieldAddr, fieldBitOff, packedSize, valV);
           ELSE
             fieldAddr := MSIRBuilder.BuildPtrByteOff (b, "", objVal, fieldBitOff DIV 8);
-            MSIR.BuildStore (b, valV, fieldAddr);
+            NarrowFieldStoreMSIR (b, valV, fieldAddr, fieldInfo.type);
           END;
         END;
       END;
