@@ -1,5 +1,5 @@
 "../Main.m3", line 9: illegal recursive declaration (N)
 "../Main.m3", line 9: unsafe '+'
-"../Main.m3", line 9: value is not constant
+"../Main.m3", line 9: Value of CONST is not constant (2.4.2, 2.6.15).
 3 errors encountered
 Fatal Error: package build failed

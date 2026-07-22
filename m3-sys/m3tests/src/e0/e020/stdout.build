@@ -1,1 +1,7 @@
+"../Main.m3", line 11: illegal recursive type declaration
+"../Main.m3", line 11: illegal recursive type declaration
+"../Main.m3", line 11: illegal recursive supertype (2.4.8).
+"../Main.m3", line 11: identification is not to a legal subtype (V)
+"../Main.m3", line 17: unknown qualification '.' (b)
+5 errors encountered
 Fatal Error: package build failed

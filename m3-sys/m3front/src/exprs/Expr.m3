@@ -69,6 +69,13 @@ PROCEDURE RepTypeOf (t: T): Type.T =
     stripped := StripNamedCons (t);
     IF stripped = NIL THEN stripped := t END;
     IF stripped.repType = NIL THEN
+      (* Pre-set a cycle breaker before dispatching: an illegal recursive
+         declaration (CONST N = N + 1, e019) re-enters RepTypeOf on the SAME
+         expression — StripNamedCons resolves the name straight to its
+         defining expression, bypassing Value.RepTypeOf's inTypeOf guard —
+         and recursed to a stack overflow.  A legal expression can never
+         contain itself, so only the illegal cycle sees the sentinel. *)
+      stripped.repType := ErrType.T;
       stripped.repType := stripped.repTypeOf ();
     END;
     RETURN stripped.repType;

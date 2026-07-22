@@ -381,6 +381,55 @@ PROCEDURE Check (p: P) =
           Error.Msg ("illegal recursive supertype (2.4.8).");
           super := NIL;
           p.superType := NIL;
+        ELSE
+          (* Also catch multi-step cycles through opaque revelations
+             (e020: REVEAL V = W OBJECT...; W = V OBJECT... — V's chain is
+             W -> revealed W = V-object -> V -> ... back to p).  Walk the
+             revealed super chain; re-encountering p (or exhausting a sane
+             bound) is the same error.  Without this the C backend fails
+             only by accident (broken generated code) and the MSIR backend
+             compiled the cycle into a crashing executable. *)
+          VAR s := super;  steps := 0;
+          BEGIN
+            LOOP
+              IF s = NIL OR steps >= 1000 THEN
+                IF steps >= 1000 THEN
+                  Error.Msg ("illegal recursive supertype (2.4.8).");
+                  super := NIL;
+                  p.superType := NIL;
+                END;
+                EXIT;
+              END;
+              s := Type.Strip (s);
+              TYPECASE s OF
+              | NULL => EXIT;
+              | P (sp) =>
+                  IF sp = p THEN
+                    Error.Msg ("illegal recursive supertype (2.4.8).");
+                    super := NIL;
+                    p.superType := NIL;
+                    EXIT;
+                  END;
+                  s := sp.superType;
+              ELSE
+                  IF OpaqueType.Is (s) THEN
+                    (* Follow the REVELATION when one is visible — the cycle
+                       runs through it; the declared bound (<: ROOT) would
+                       end the walk without seeing it. *)
+                    VAR r := Revelation.LookUp (s);
+                    BEGIN
+                      IF r # NIL
+                        THEN s := r;
+                        ELSE s := OpaqueType.Super (s);
+                      END;
+                    END;
+                  ELSE
+                    EXIT;
+                  END;
+              END;
+              INC (steps);
+            END;
+          END;
         END;
       ELSE
         (* super type isn't an object! *)
