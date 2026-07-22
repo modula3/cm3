@@ -160,7 +160,21 @@ PROCEDURE CompileMSIR (t: T) =
       MSIRBuilder.GenLocation ();
       Tracer.EmitPendingMSIR ();
       t.compileMSIR ();
-      t := t.next;
+      IF NOT (Outcome.FallThrough IN t.outcomes ()) THEN
+        (* Mirror the CG path's Compile: statements after one that cannot
+           fall through are dead — warn (level 1, like -w1's "unreachable
+           statement") and do not compile them.  outcomes() is the same
+           static estimator GetOutcome uses, so the dead-code decisions
+           match the C backend's exactly (p019/p020/p023/p272: these
+           warnings were missing from MSIRObj build logs). *)
+        IF (t.next # NIL) THEN
+          Scanner.offset := t.next.origin;
+          Error.Warn (1, "unreachable statement");
+        END;
+        t := NIL;
+      ELSE
+        t := t.next;
+      END;
     END;
     Tracer.EmitPendingMSIR ();
   END CompileMSIR;

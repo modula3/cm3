@@ -30,7 +30,13 @@ PROCEDURE Test() =
     checkI (BITSIZE(ADDRESS), 64);
     checkI (BITSIZE(int32), 32);
     checkI (BITSIZE(LONGREAL), 64);
-    checkI (BITSIZE(EXTENDED), 128);
+    (* EXTENDED is 128 bits where the C toolchain has _Float128
+       (e.g. AMD64_LINUX) but equals LONGREAL (64 bits) on targets whose
+       toolchain lacks it (Darwin: Apple clang).  Both satisfy the language
+       requirement that EXTENDED have at least LONGREAL's precision. *)
+    IF BITSIZE(EXTENDED) # 128 THEN
+      checkI (BITSIZE(EXTENDED), BITSIZE(LONGREAL));
+    END;
     checkI (BITSIZE(LONGINT), BITSIZE(INTEGER));
 
     (* REAL *)
