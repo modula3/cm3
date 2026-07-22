@@ -1154,7 +1154,7 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
   BEGIN
     (* Initialise on first call: start right after MI_SIZE *)
     IF m.nextGlobalOff = 0 THEN
-      m.nextGlobalOff := MI_nFields * Target.AddressBytes();
+      m.nextGlobalOff := MI_nFields * Target.Address.bytes;
     END;
     (* Round up to alignment *)
     off := m.nextGlobalOff;
@@ -1178,7 +1178,7 @@ PROCEDURE ModuleNoteGlobal(m: Module;  endByteOff: INTEGER) =
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
   BEGIN
     IF m.nextGlobalOff = 0 THEN
-      RETURN MI_nFields * Target.AddressBytes();
+      RETURN MI_nFields * Target.Address.bytes;
     END;
     RETURN m.nextGlobalOff;
   END ModuleGlobalStructSize;
@@ -1300,7 +1300,7 @@ PROCEDURE TypeDescMethodBytes(d: TypeDesc): INTEGER =
   BEGIN
     IF d.methodBytes >= 0 THEN RETURN d.methodBytes END;
     IF d.methods = NIL THEN RETURN 0 END;
-    RETURN NUMBER(d.methods^) * Target.AddressBytes();
+    RETURN NUMBER(d.methods^) * Target.Address.bytes;
   END TypeDescMethodBytes;
 PROCEDURE TypeDescMethodCount(d: TypeDesc): INTEGER =
   BEGIN
@@ -2365,7 +2365,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
-    dimVal := ConstInt(TI(Target.IntegerSize()), dim);
+    dimVal := ConstInt(TI(Target.Integer.size), dim);
   BEGIN
     <* ASSERT Kind(oa.type) = TypeKind.OpenArray,
        "BuildOpenArraySize: operand must be openarray" *>
@@ -2375,7 +2375,7 @@ PROCEDURE BuildOpenArraySize(b: Block;  name: TEXT;
     ops[0] := oa;
     ops[1] := dimVal;
     i.operands := ops;
-    i.result := makeResult(b, TI(Target.IntegerSize()), name, i);
+    i.result := makeResult(b, TI(Target.Integer.size), name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildOpenArraySize;

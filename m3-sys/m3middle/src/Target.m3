@@ -440,12 +440,6 @@ BEGIN
   RETURN wideCharMax + 1;
 END WideCharNumber;
 
-PROCEDURE AddressSize  (): CARDINAL = BEGIN RETURN Address.size  END AddressSize;
-PROCEDURE AddressBytes (): CARDINAL = BEGIN RETURN Address.bytes END AddressBytes;
-PROCEDURE IntegerSize  (): CARDINAL = BEGIN RETURN Integer.size  END IntegerSize;
-PROCEDURE IntegerBytes (): CARDINAL = BEGIN RETURN Integer.bytes END IntegerBytes;
-PROCEDURE GetSystemName (): TEXT    = BEGIN RETURN System_name   END GetSystemName;
-
 PROCEDURE SetWideChar16 () =
 BEGIN
   wideCharSize := 16;

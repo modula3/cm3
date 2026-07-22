@@ -529,13 +529,4 @@ PROCEDURE WideCharSize (): INTEGER;
 PROCEDURE WideCharMax (): INTEGER;
 PROCEDURE WideCharNumber (): INTEGER; (* WideCharMax() + 1 *)
 
-(* Accessor procedures for struct fields that MSIRToLLVM / MSIR need.
-   Using procedures ensures T-symbol visibility in both C and MSIRObj modes,
-   avoiding link failures when libm3middle is compiled in C mode. *)
-PROCEDURE AddressSize  (): CARDINAL;
-PROCEDURE AddressBytes (): CARDINAL;
-PROCEDURE IntegerSize  (): CARDINAL;
-PROCEDURE IntegerBytes (): CARDINAL;
-PROCEDURE GetSystemName (): TEXT;
-
 END Target.
