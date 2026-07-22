@@ -174,6 +174,17 @@ PROCEDURE Finish (a, b, c, d: TEXT := NIL): INTEGER =
     RETURN base;
   END Finish;
 
+PROCEDURE FinishBytes (): Bytes =
+  VAR res: Bytes;
+  BEGIN
+    IF (n_bytes = 0) THEN busy := FALSE; RETURN NIL END;
+    Add (cursor, Op.Stop, 0);
+    res := NEW (Bytes, n_bytes);
+    res^ := SUBARRAY (bytes^, 0, n_bytes);
+    busy := FALSE;
+    RETURN res;
+  END FinishBytes;
+
 PROCEDURE Add (offset: INTEGER;  o: Op;  arg: INTEGER) =
   VAR x, y, z, n: INTEGER;
   BEGIN

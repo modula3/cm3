@@ -380,6 +380,23 @@ PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER);
 PROCEDURE TypeDescNDimensions (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescElementSize (d: TypeDesc): INTEGER;
 
+(* Runtime type maps, built by the front end (TipeMap / TipeDesc) exactly as
+   for the C backend, attached here as raw bytes and emitted verbatim into
+   the TypeCell.  NIL/empty => the corresponding TypeCell field is NIL.
+   - gc_map (TC_gc_map): refs-only RTMapOp program the collector interprets
+     to trace/fix up references inside the referent during a moving GC.
+   - type_map (TC_type_map): full RTMapOp program (every field, not just
+     refs) interpreted by RTTypeMap.WalkRef — the pickle ver1 machinery.
+   - type_desc (TC_type_desc): RTTipe type description (op count + preorder
+     type AST) — the pickle ver2 / ConvertPacking machinery. *)
+TYPE GcMapBytes = REF ARRAY OF [0..255];
+PROCEDURE SetTypeDescGcMap    (d: TypeDesc;  bytes: GcMapBytes);
+PROCEDURE TypeDescGcMap       (d: TypeDesc): GcMapBytes;
+PROCEDURE SetTypeDescTypeMap  (d: TypeDesc;  bytes: GcMapBytes);
+PROCEDURE TypeDescTypeMap     (d: TypeDesc): GcMapBytes;
+PROCEDURE SetTypeDescPickleDesc (d: TypeDesc;  bytes: GcMapBytes);
+PROCEDURE TypeDescPickleDesc    (d: TypeDesc): GcMapBytes;
+
 PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc);
 PROCEDURE ModuleTypeDescCount(m: Module): INTEGER;
 PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc;

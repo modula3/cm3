@@ -1052,6 +1052,51 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
       IF uName # NIL THEN MSIR.SetTypeDescUserName (desc, uName) END;
     END;
     MSIR.SetTypeDescMethodOffset (desc, methOff);
+    (* Runtime type maps over this type's OWN fields, with offsets relative
+       to the field region (RTHeapMap.DoWalkRef / RTTypeMap.DoWalkRef advance
+       the walk address by dataOffset before interpreting the map).  Mirrors
+       the C backend's InitTypecell:
+       - TC_gc_map (refs_only=TRUE): without it a moving collection never
+         fixes up this type's reference fields.
+       - TC_type_map (refs_only=FALSE): RTTypeMap.WalkRef — pickle ver1.
+       - TC_type_desc: RTTipe description — pickle ver2 / ConvertPacking. *)
+    VAR fields := Scope.ToList (NARROW (t, P).fields);
+        v      := fields;
+        field  : Field.Info;
+        nFields := 0;
+    BEGIN
+      TipeMap.Start ();
+      v := fields;
+      WHILE (v # NIL) DO
+        Field.Split (v, field);
+        Type.GenMap (field.type, field.offset, -1, refs_only := TRUE);
+        v := v.next;
+      END;
+      MSIR.SetTypeDescGcMap (desc, TipeMap.FinishBytes ());
+      TipeMap.Start ();
+      v := fields;
+      WHILE (v # NIL) DO
+        Field.Split (v, field);
+        Type.GenMap (field.type, field.offset, -1, refs_only := FALSE);
+        v := v.next;
+      END;
+      MSIR.SetTypeDescTypeMap (desc, TipeMap.FinishBytes ());
+      IF info.isTraced THEN
+        TipeDesc.Start ();
+        IF TipeDesc.AddO (TipeDesc.Op.Object, t) THEN
+          v := fields;
+          WHILE (v # NIL) DO INC (nFields);  v := v.next;  END;
+          TipeDesc.AddI (nFields);
+          v := fields;
+          WHILE (v # NIL) DO
+            Field.Split (v, field);
+            Type.GenDesc (field.type);
+            v := v.next;
+          END;
+        END;
+        MSIR.SetTypeDescPickleDesc (desc, TipeDesc.FinishBytes ());
+      END;
+    END;
     (* Generate the field-default initializer proc (TC_initProc) if needed. *)
     GenInitProcMSIR (NARROW(t, P), desc);
     MSIR.ModuleAddTypeDesc (m, desc);

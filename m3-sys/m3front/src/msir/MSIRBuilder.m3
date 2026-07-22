@@ -7,7 +7,7 @@ IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT, TypeFP;
 IMPORT Expr, ArrayExpr, ArrayType, OpenArrayType, RecordExpr;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
-IMPORT RefType;
+IMPORT RefType, TipeMap, TipeDesc;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 CONST MaxExitStack = 16;
@@ -1733,6 +1733,47 @@ PROCEDURE CurrentCatchActPtr(): MSIR.Value =
     RETURN catchActStack[catchDepth - 1];
   END CurrentCatchActPtr;
 
+PROCEDURE RefMapBytes(t: Type.T;  refs_only: BOOLEAN): MSIR.GcMapBytes =
+  (* The RTMapOp map for REF type t's referent — the MSIR analogue of the C
+     backend's RefType.GenTypeMap.  refs_only=TRUE gives the collector map
+     (TC_gc_map): RTHeapMap.Walk interprets it to trace and fix up references
+     inside the referent during a moving collection; without it a moving
+     collection either leaves stale interior pointers or (with a guessed map)
+     chases non-pointer data (p197: REF ARRAY OF INTEGER walked as REF ARRAY
+     OF REFANY).  refs_only=FALSE gives the full map (TC_type_map) that
+     RTTypeMap.WalkRef interprets — the pickle ver1 machinery.  Type.GenMap
+     emits nothing for untraced referents in refs_only mode, so this returns
+     NIL exactly when the C backend emits no map. *)
+  VAR r: Type.T;
+  BEGIN
+    IF NOT RefType.Split(t, r) THEN RETURN NIL END;
+    TipeMap.Start();
+    Type.GenMap(r, 0, -1, refs_only);
+    RETURN TipeMap.FinishBytes();
+  END RefMapBytes;
+
+PROCEDURE RefPickleDescBytes(t: Type.T;  isTraced: BOOLEAN): MSIR.GcMapBytes =
+  (* The RTTipe type description (TC_type_desc) for REF type t's referent —
+     the MSIR analogue of the C backend's RefType.GenTypeDesc.  Read by
+     RTTipe for the pickle ver2 / ConvertPacking machinery.  Like the C
+     backend, only traced types get a description. *)
+  VAR r: Type.T;
+  BEGIN
+    IF NOT isTraced THEN RETURN NIL END;
+    IF NOT RefType.Split(t, r) THEN RETURN NIL END;
+    TipeDesc.Start();
+    Type.GenDesc(r);
+    RETURN TipeDesc.FinishBytes();
+  END RefPickleDescBytes;
+
+PROCEDURE SetRefTypeDescMaps(desc: MSIR.TypeDesc;  t: Type.T;
+                             isTraced: BOOLEAN) =
+  BEGIN
+    MSIR.SetTypeDescGcMap(desc, RefMapBytes(t, refs_only := TRUE));
+    MSIR.SetTypeDescTypeMap(desc, RefMapBytes(t, refs_only := FALSE));
+    MSIR.SetTypeDescPickleDesc(desc, RefPickleDescBytes(t, isTraced));
+  END SetRefTypeDescMaps;
+
 PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
                                dataAlignment: INTEGER;
                                isTraced: BOOLEAN): MSIR.Value =
@@ -1767,6 +1808,7 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
       FOR i := 0 TO 7 DO fpa[i] := tfp.byte[i] END;
       MSIR.SetTypeDescFP(desc, fpa);
     END;
+    SetRefTypeDescMaps(desc, t, isTraced);
     MSIR.ModuleAddTypeDesc(m, desc);
     RETURN MSIR.TypeDescValue(desc);
   END TypeDescValueForRef;
@@ -1798,6 +1840,7 @@ PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
       MSIR.SetTypeDescFP(desc, fpa);
     END;
     MSIR.TypeDescSetArrayInfo(desc, nDimensions, elementSize);
+    SetRefTypeDescMaps(desc, t, isTraced);
     MSIR.ModuleAddTypeDesc(m, desc);
     RETURN MSIR.TypeDescValue(desc);
   END TypeDescValueForRefArray;

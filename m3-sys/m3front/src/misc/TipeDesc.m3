@@ -63,6 +63,25 @@ PROCEDURE Finish (a, b, c, d: TEXT := NIL): INTEGER =
     RETURN base;
   END Finish;
 
+PROCEDURE FinishBytes (): Bytes =
+  VAR res: Bytes;  n_data_bytes, k: INTEGER;
+  BEGIN
+    IF (n_bytes = 0) THEN busy := FALSE; RETURN NIL END;
+
+    (* add the op count *)
+    n_data_bytes := n_bytes;
+    AddI (n_types);
+
+    (* op count first, then the data bytes — the same layout Finish emits *)
+    res := NEW (Bytes, n_bytes);
+    k := 0;
+    FOR i := n_data_bytes TO n_bytes-1 DO res[k] := bytes[i];  INC (k) END;
+    FOR i := 0 TO n_data_bytes-1 DO res[k] := bytes[i];  INC (k) END;
+
+    busy := FALSE;
+    RETURN res;
+  END FinishBytes;
+
 PROCEDURE AddO (o: Op;  type: Type.T): BOOLEAN =
   CONST MaxSmall = 255 - ORD (Op.Old0);
   VAR tt: Type.T;

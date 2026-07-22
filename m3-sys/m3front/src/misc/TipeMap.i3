@@ -30,6 +30,13 @@ PROCEDURE Finish (a, b, c, d: TEXT := NIL): INTEGER;
 (* finish the map, allocate global constant space for it and emit it.  Returns
    the offset of the generated map in the global constant pool. *)
 
+TYPE Bytes = REF ARRAY OF [0..255];
+
+PROCEDURE FinishBytes (): Bytes;
+(* finish the map and return its bytes directly, without emitting anything
+   to the global constant pool (used by MSIR typecell emission, which stores
+   the map in its own module data).  Returns NIL if the map is empty. *)
+
 PROCEDURE Add (offset: INTEGER;  o: Op;  arg: INTEGER);
 (* add '(o, arg)' as the description for the bits
    at 'offset' in the current map *)

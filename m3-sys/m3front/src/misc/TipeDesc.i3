@@ -77,6 +77,14 @@ PROCEDURE Finish (a, b, c, d: TEXT := NIL): INTEGER;
 (* finish the description, allocate global constant space for it and emit it.
    Returns the offset of the generated map in the global constant pool. *)
 
+TYPE Bytes = REF ARRAY OF [0..255];
+
+PROCEDURE FinishBytes (): Bytes;
+(* finish the description and return its bytes directly (op count first,
+   then the preorder data — the same layout Finish emits), without writing
+   anything to the global constant pool (used by MSIR typecell emission).
+   Returns NIL if the description is empty. *)
+
 PROCEDURE AddO (o: Op;  type: M3.Type): BOOLEAN;
 (* add operator 'o' to the current description.  If 'type' has already been
    seen, adds an 'Old' opcode and returns FALSE, otherwise returns TRUE. *)

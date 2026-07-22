@@ -1241,6 +1241,9 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   methodInits   : RefSeq.T := NIL;    (* OBJ: elements MethodInitRec (see below) *)
   nDimensions   : INTEGER := 0;  (* Array: open array rank *)
   elementSize   : INTEGER := 0;  (* Array: element byte size *)
+  gcMap         : GcMapBytes := NIL;  (* refs-only RTMapOp bytes for TC_gc_map *)
+  typeMap       : GcMapBytes := NIL;  (* full RTMapOp bytes for TC_type_map *)
+  pickleDesc    : GcMapBytes := NIL;  (* RTTipe bytes for TC_type_desc *)
   ptrVal        : Value := NIL;
 END;
 
@@ -1314,6 +1317,18 @@ PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN) =
 
 PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER) =
   BEGIN d.nDimensions := nDimensions;  d.elementSize := elementSize END TypeDescSetArrayInfo;
+PROCEDURE SetTypeDescGcMap(d: TypeDesc; bytes: GcMapBytes) =
+  BEGIN d.gcMap := bytes END SetTypeDescGcMap;
+PROCEDURE TypeDescGcMap(d: TypeDesc): GcMapBytes =
+  BEGIN RETURN d.gcMap END TypeDescGcMap;
+PROCEDURE SetTypeDescTypeMap(d: TypeDesc; bytes: GcMapBytes) =
+  BEGIN d.typeMap := bytes END SetTypeDescTypeMap;
+PROCEDURE TypeDescTypeMap(d: TypeDesc): GcMapBytes =
+  BEGIN RETURN d.typeMap END TypeDescTypeMap;
+PROCEDURE SetTypeDescPickleDesc(d: TypeDesc; bytes: GcMapBytes) =
+  BEGIN d.pickleDesc := bytes END SetTypeDescPickleDesc;
+PROCEDURE TypeDescPickleDesc(d: TypeDesc): GcMapBytes =
+  BEGIN RETURN d.pickleDesc END TypeDescPickleDesc;
 PROCEDURE TypeDescNDimensions(d: TypeDesc): INTEGER =
   BEGIN RETURN d.nDimensions END TypeDescNDimensions;
 PROCEDURE TypeDescElementSize(d: TypeDesc): INTEGER =

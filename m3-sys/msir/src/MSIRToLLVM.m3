@@ -3087,6 +3087,21 @@ CONST TLKinds = ARRAY [0 .. TL_nFields - 1] OF FieldKind {
 (* Render the 64-bit fingerprint from a TypeDesc as an unsigned hex LLVM i64.
    Bytes are stored little-endian (byte[0]=LSB); emit byte[7..0] MSB-first.
    Uses the LLVM IR u0x prefix for unsigned hex integer constants. *)
+PROCEDURE EmitMapBytes(wr: Wr.T;  name: TEXT;  gm: MSIR.GcMapBytes): TEXT =
+  (* Emit `gm` as an internal [N x i8] constant named `name` and return
+     "@name"; return "null" (emitting nothing) when gm is NIL or empty. *)
+  BEGIN
+    IF gm = NIL OR NUMBER(gm^) = 0 THEN RETURN "null" END;
+    Wr.PutText(wr, "@" & name & " = internal constant ["
+                 & Fmt.Int(NUMBER(gm^)) & " x i8] [");
+    FOR i := 0 TO LAST(gm^) DO
+      IF i > 0 THEN Wr.PutText(wr, ", ") END;
+      Wr.PutText(wr, "i8 " & Fmt.Int(gm[i]));
+    END;
+    Wr.PutText(wr, "]\n");
+    RETURN "@" & name;
+  END EmitMapBytes;
+
 PROCEDURE FPHex(d: MSIR.TypeDesc): TEXT =
   VAR s := "u0x";
   BEGIN
@@ -3253,7 +3268,6 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
         nextVal  : TEXT;
         tcVals    : ARRAY [0 .. TC_nBase - 1] OF TEXT;
         extVals   : REF ARRAY OF TEXT := NIL;
-        gcMapName : TEXT := NIL;
       BEGIN
         IF k < n - 1
           THEN nextVal := "@" & MSIR.TypeDescName(MSIR.ModuleTypeDesc(m, k+1));
@@ -3541,55 +3555,21 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
         tcVals[TC_link_state] := "0";
         tcVals[TC_dataAlign]  := Fmt.Int(MSIR.TypeDescAlign(d));
         tcVals[TC_dataSize]   := Fmt.Int(MSIR.TypeDescSize(d));
-        tcVals[TC_type_map]   := "null";
-        (* Emit gc_maps for traced types that the GC would otherwise treat as
-           "pure" (no traced references).  The CM3 GC checks:
-             (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj))
-           If that condition holds, the GC makes a bitwise copy without pointer
-           fixup, leaving stale pointers after collection.
-
-           TK.Ref (1): REF RECORD / REF to opaque type.
-             Conservative map: one Op.Ref (byte 4) per pointer-sized slot,
-             terminated by Op.Stop (byte 0).  Emitted only when size > 0.
-
-           TK.Array (3): REF ARRAY OF T (open array).
-             Safe map only for the common single-traced-pointer-per-element
-             case (elementSize = addressBytes, nDimensions <= 255):
-               [Op.OpenArray_1 (24), nDimensions, Op.Ref (4), Op.Stop (0)]
-             This correctly traces REF ARRAY OF REFANY and similar types.
-             More complex element layouts are left with gc_map=null for now. *)
-        IF MSIR.TypeDescTraced(d) THEN
-          IF knd = TK_Ref THEN
-            (* For TK_Ref we don't emit a gc_map.  The conservative
-               one-Ref-per-slot map was wrong: it made the GC chase integer
-               values in e.g. REF ARRAY OF INTEGER as if they were pointers
-               (SIGSEGV at collection time).  A null gc_map is correct for
-               referents with no internal traced pointers; for referents WITH
-               internal pointers the GC will skip tracing them (possible
-               retention but no crash).  We accept this trade-off until a
-               proper structural gc_map is generated.  isTraced=1 is still set
-               so the GC tracks the REF container itself. *)
-            (* gcMapName stays NIL → tc_gc_map = "null" below *)
-          ELSIF knd = TK_Array THEN
-            VAR nDims := MSIR.TypeDescNDimensions(d);
-                eltSz := MSIR.TypeDescElementSize(d);
-            BEGIN
-              (* Only handle the safe case: 1 pointer per element, <=255 dims *)
-              IF nDims > 0 AND nDims <= 255
-                 AND eltSz = Target.AddressBytes() THEN
-                gcMapName := nm & "_gc_map";
-                (* [OpenArray_1 (24), nDims, Ref (4), Stop (0)] *)
-                Wr.PutText(wr, "@" & gcMapName & " = internal constant [4 x i8]"
-                             & " [i8 24, i8 " & Fmt.Int(nDims) & ", i8 4, i8 0]\n");
-              END;
-            END;
-          END;
-        END;
-        IF gcMapName # NIL
-          THEN tcVals[TC_gc_map] := "@" & gcMapName;
-          ELSE tcVals[TC_gc_map] := "null";
-        END;
-        tcVals[TC_type_desc]  := "null";
+        (* TC_type_map / TC_gc_map / TC_type_desc: the front end supplies the
+           exact RTMapOp / RTTipe byte programs (TipeMap / TipeDesc output,
+           identical to the C backend's) on the TypeDesc.  Emit them
+           verbatim.  A NIL/empty map means the corresponding field is null —
+           which the GC reads as "pure" for non-OBJECT kinds (bitwise copy,
+           no fixup).  Guessing the maps here from element sizes is NOT safe:
+           an 8-byte element may be a pointer (REF ARRAY OF REFANY) or an
+           integer (REF ARRAY OF INTEGER, p197 — the GC chased pickle ids as
+           heap pointers). *)
+        tcVals[TC_type_map]  := EmitMapBytes(wr, nm & "_type_map",
+                                             MSIR.TypeDescTypeMap(d));
+        tcVals[TC_gc_map]    := EmitMapBytes(wr, nm & "_gc_map",
+                                             MSIR.TypeDescGcMap(d));
+        tcVals[TC_type_desc] := EmitMapBytes(wr, nm & "_type_desc",
+                                             MSIR.TypeDescPickleDesc(d));
         (* Set TC_initProc to the object's field-default init procedure if one
            was registered (for OBJECT types with non-zero field defaults). *)
         IF isObj THEN
