@@ -3593,20 +3593,17 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                                              MSIR.TypeDescGcMap(d));
         tcVals[TC_type_desc] := EmitMapBytes(wr, nm & "_type_desc",
                                              MSIR.TypeDescPickleDesc(d));
-        (* Set TC_initProc to the object's field-default init procedure if one
-           was registered (for OBJECT types with non-zero field defaults). *)
-        IF isObj THEN
-          VAR ipName := MSIR.TypeDescInitProcName(d);
-          BEGIN
-            IF ipName # NIL THEN
-              (* Declare the init proc — emitted as a define in the same module. *)
-              tcVals[TC_initProc] := "@" & ipName;
-            ELSE
-              tcVals[TC_initProc] := "null";
-            END;
+        (* Set TC_initProc to the type's field-default init procedure if one
+           was registered: OBJECT types (ObjectType.GenInitProcMSIR) and REF
+           record/array types (RefType.GenInitProcMSIR).  The proc is defined
+           (internal) in this same module, so no declare is needed. *)
+        VAR ipName := MSIR.TypeDescInitProcName(d);
+        BEGIN
+          IF ipName # NIL THEN
+            tcVals[TC_initProc] := "@" & ipName;
+          ELSE
+            tcVals[TC_initProc] := "null";
           END;
-        ELSE
-          tcVals[TC_initProc]   := "null";
         END;
         tcVals[TC_brand_ptr]  := "null";
         IF nameSym # NIL

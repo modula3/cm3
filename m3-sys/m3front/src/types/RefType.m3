@@ -13,7 +13,7 @@ IMPORT Null, Reff, Addr, Error, Module, M3Buf, Brand;
 IMPORT Revelation, OpenArrayType, TipeMap, TipeDesc, TypeFP;
 IMPORT ProcType, ObjectAdr, Word, M3RT;
 IMPORT RTIO, RTParams;
-IMPORT MSIRBuilder, MSIREmit;
+IMPORT MSIR, MSIRBuilder, MSIREmit, RecordType;
 
 VAR debug := FALSE;
 
@@ -359,6 +359,142 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     END;
   END InitTypecellMSIR;
 
+PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
+(* MSIR analogue of GenInitProc: emit an internal helper procedure that
+   applies the referent's language-defined initial values to a freshly
+   allocated (zeroed) object, and register it as TC_initProc so RTAllocator
+   (NewTraced / GetOpenArray -> InitArray) runs it — the same runtime
+   contract as the C backend.  Invoked from MSIRBuilder's
+   TypeDescValueForRef* new-desc path (SetRefInitProcGen callback), so every
+   desc creator triggers generation exactly once per module.  The recursive
+   type walk is RecordType.GenInitMSIR (records, fixed arrays, scalar
+   subranges); open-array referents loop over the flat element region using
+   the shape in the dope.  Helper-proc plumbing mirrors
+   ObjectType.GenInitProcMSIR. *)
+  VAR
+    r        : Type.T;
+    procName : TEXT;
+    m        : MSIR.Module;
+    proc     : MSIR.Proc;
+    entry    : MSIR.Block;
+    ptrT     := MSIR.TPtr (MSIR.TVoid ());
+    intT     := MSIR.TI (Target.Integer.size);
+    objParam : MSIR.Value;
+    ndims    : INTEGER;
+  BEGIN
+    IF NOT MSIREmit.IsEnabled () THEN RETURN END;
+    IF NOT Split (t, r) THEN RETURN END;
+    r := Type.StripPacked (r);
+    IF Type.InitCost (r, TRUE) <= 0 THEN RETURN END;
+    m := MSIREmit.CurrentModule ();
+    IF m = NIL THEN RETURN END;
+
+    ndims := OpenArrayType.OpenDepth (Type.Base (r));
+    IF ndims > 0 THEN
+      (* Byte-aligned elements only; sub-byte element packs cannot carry
+         non-zero defaults reachable here (records are byte-aligned and a
+         packed scalar subrange excluding 0 in a NEW'd open array is not
+         expressible without a record wrapper). *)
+      IF OpenArrayType.EltPack (Type.Base (r)) MOD Target.Byte # 0 THEN
+        RETURN;
+      END;
+    END;
+
+    (* Module-prefixed so LLSymbol's ContainsDunder check skips re-prefixing. *)
+    procName := MSIR.ModuleName (m) & "__" & Type.LinkName (t, "_INIT");
+    MSIR.SetTypeDescInitProc (desc, procName);
+
+    proc := MSIR.NewProc (procName,
+              ARRAY OF MSIR.Param{
+                MSIR.Param{name := "obj", type := ptrT,
+                           mode := MSIR.ParamMode.ByValue}},
+              MSIR.TVoid ());
+    MSIR.ProcSetLinkage (proc, MSIR.Linkage.Internal);
+    entry := MSIR.NewBlock ("entry", ARRAY OF MSIR.BlockParam{});
+    MSIR.ProcAddBlock (proc, entry);
+
+    VAR savedProc  := MSIRBuilder.CurrentProc ();
+        savedBlock := MSIRBuilder.CurrentBlock ();
+    BEGIN
+      MSIRBuilder.BeginHelperProc (proc, entry);
+      objParam := MSIR.ProcParam (proc, 0);
+
+      IF ndims > 0 THEN
+        (* Open-array referent: init each element of the flat region.
+           Layout: data ptr at byte 0; sizes at AP + k*IP, k in [0..ndims). *)
+        VAR
+          ta       := Type.Base (r);
+          eltType  := ta;
+          eltPack  := OpenArrayType.EltPack (ta);
+          apBytes  := Target.Address.size DIV Target.Byte;
+          ipBytes  := Target.Integer.size DIV Target.Byte;
+          b        := MSIRBuilder.CurrentBlock ();
+          dataPtr  := MSIR.BuildLoad (b, "", ptrT,
+                        MSIRBuilder.BuildPtrByteOff (b, "", objParam, 0));
+          totalV   : MSIR.Value := NIL;
+          idxA     : MSIR.Value;
+          hdrB, bodyB, exitB: MSIR.Block;
+        BEGIN
+          FOR k := 1 TO ndims DO
+            EVAL OpenArrayType.Split (eltType, eltType);
+          END;
+          FOR k := 0 TO ndims - 1 DO
+            b := MSIRBuilder.CurrentBlock ();
+            VAR dimV := MSIR.BuildLoad (b, "", intT,
+                          MSIRBuilder.BuildPtrByteOff (b, "", objParam,
+                                                       apBytes + ipBytes * k));
+            BEGIN
+              IF totalV = NIL
+                THEN totalV := dimV;
+                ELSE totalV := MSIR.BuildIMul (b, "", totalV, dimV);
+              END;
+            END;
+          END;
+          hdrB  := MSIRBuilder.NewBlock ("tcinit.hdr");
+          bodyB := MSIRBuilder.NewBlock ("tcinit.body");
+          exitB := MSIRBuilder.NewBlock ("tcinit.done");
+          b     := MSIRBuilder.CurrentBlock ();
+          idxA  := MSIR.BuildAlloca (b, "", intT);
+          MSIR.BuildStore (b, MSIR.ConstInt (intT, 0), idxA);
+          MSIR.BuildBr (MSIRBuilder.CurrentBlock (), hdrB,
+                        ARRAY OF MSIR.Value{});
+          MSIRBuilder.SetCurrentBlock (hdrB);
+          VAR idx  := MSIR.BuildLoad (hdrB, "", intT, idxA);
+              cond := MSIR.BuildICmp (hdrB, "", MSIR.CmpPred.Slt, idx, totalV);
+          BEGIN
+            MSIR.BuildCondBr (hdrB, cond, bodyB, ARRAY OF MSIR.Value{},
+                              exitB, ARRAY OF MSIR.Value{});
+            MSIRBuilder.SetCurrentBlock (bodyB);
+            VAR off     := MSIR.BuildIMul (bodyB, "", idx,
+                             MSIR.ConstInt (intT, eltPack DIV Target.Byte));
+                eltAddr := MSIR.BuildGepByte (bodyB, "", dataPtr, off);
+            BEGIN
+              RecordType.GenInitMSIR (eltType, eltAddr);
+            END;
+            VAR b2 := MSIRBuilder.CurrentBlock ();
+            BEGIN
+              MSIR.BuildStore (b2,
+                MSIR.BuildIAdd (b2, "", idx, MSIR.ConstInt (intT, 1)), idxA);
+              MSIR.BuildBr (MSIRBuilder.CurrentBlock (), hdrB,
+                            ARRAY OF MSIR.Value{});
+            END;
+          END;
+          MSIRBuilder.SetCurrentBlock (exitB);
+        END;
+      ELSE
+        (* Record / fixed array / scalar referent. *)
+        RecordType.GenInitMSIR (r, objParam);
+      END;
+
+      MSIR.BuildRet (MSIRBuilder.CurrentBlock (), NIL);
+      MSIRBuilder.EndHelperProc ();
+      IF savedProc # NIL THEN
+        MSIRBuilder.BeginHelperProc (savedProc, savedBlock);
+      END;
+    END;
+    MSIR.ModuleAddProc (m, proc);
+  END GenInitProcMSIR;
+
 PROCEDURE GenTypeMap (p: P;  refs_only: BOOLEAN): INTEGER =
   (* generate my "TypeMap" (called by the garbage collector) *)
   BEGIN
@@ -476,4 +612,5 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
 
 BEGIN
   debug := RTParams.IsPresent ("m3front-debug-reftype");
+  MSIRBuilder.SetRefInitProcGen (GenInitProcMSIR);
 END RefType.

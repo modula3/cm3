@@ -477,6 +477,27 @@ PROCEDURE GenInitArrayMSIR (t: Type.T;  baseAddr: MSIR.Value) =
     IF nElts <= 0 THEN RETURN END;
     eltMsirT := MSIRType.Translate (eltT);
     IF eltMsirT = NIL THEN RETURN END;
+    (* An untyped base (ptr void from RefType.GenInitProcMSIR's obj param)
+       cannot feed BuildArrayElemAddr — retype it to the declared storage,
+       with the element type pack-corrected so the stride matches (a [0..255]
+       element is stored i8 though Translate gives the i64 computation type).
+       Byte-aligned packs only; a sub-byte-packed array cannot reach here from
+       an init proc (RefType gates on byte-multiple element packs). *)
+    VAR bt := MSIR.ValueType (baseAddr);
+    BEGIN
+      IF NOT (MSIR.Kind (bt) = MSIR.TypeKind.Ptr
+              AND MSIR.Kind (MSIR.EltType (bt)) = MSIR.TypeKind.FixedArray) THEN
+        VAR eltPack := ArrayType.EltPack (t);
+        BEGIN
+          IF eltPack <= 0 OR eltPack MOD Target.Byte # 0 THEN RETURN END;
+          IF MSIR.BitWidth (eltMsirT) > 0 AND eltPack # MSIR.BitWidth (eltMsirT) THEN
+            eltMsirT := MSIR.TI (eltPack);
+          END;
+          baseAddr := MSIR.RetypeValue (baseAddr,
+                        MSIR.TPtr (MSIRBuilder.TFixedArrayI (nElts, eltMsirT)));
+        END;
+      END;
+    END;
     (* Scalar subrange element with non-zero bounds: store constant to each slot. *)
     IF Type.GetBounds (eltT, elo, ehi)
        AND (TInt.LT (TInt.Zero, elo) OR TInt.LT (ehi, TInt.Zero))
@@ -528,7 +549,33 @@ PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value) =
       GenInitArrayMSIR (t, baseAddr);
       RETURN;
     END;
-    IF p = NIL THEN RETURN END;
+    IF p = NIL THEN
+      (* Top-level scalar subrange whose range excludes 0 (REF [4..9]
+         referents, open-array elements reached from RefType.GenInitProcMSIR):
+         store the low bound, mirroring CG Type.InitValue's ordinal case.
+         Idempotent when a caller has already zero/min-initialized. *)
+      VAR elo, ehi: Target.Int;  eloI: INTEGER;
+          emt: MSIR.T;  sInfo: Type.Info;
+      BEGIN
+        IF Type.GetBounds (t, elo, ehi)
+           AND (TInt.LT (TInt.Zero, elo) OR TInt.LT (ehi, TInt.Zero))
+           AND TInt.ToInt (elo, eloI) THEN
+          EVAL Type.CheckInfo (t, sInfo);
+          emt := MSIRType.Translate (t);
+          IF emt # NIL AND sInfo.size > 0 AND MSIR.BitWidth (emt) # sInfo.size THEN
+            emt := MSIR.TI (sInfo.size);
+          END;
+          IF emt # NIL THEN
+            VAR b := MSIRBuilder.CurrentBlock ();
+            BEGIN
+              MSIR.BuildStore (b, MSIR.ConstInt (emt, eloI),
+                               MSIR.RetypeValue (baseAddr, MSIR.TPtr (emt)));
+            END;
+          END;
+        END;
+        RETURN;
+      END;
+    END;
     VAR field : Field.Info;
         v     := Scope.ToList (p.fields);
     BEGIN

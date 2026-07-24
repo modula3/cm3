@@ -1815,6 +1815,13 @@ PROCEDURE SetRefTypeDescMaps(desc: MSIR.TypeDesc;  t: Type.T;
     MSIR.SetTypeDescPickleDesc(desc, RefPickleDescBytes(t, isTraced));
   END SetRefTypeDescMaps;
 
+VAR refInitProcGen: RefInitProcGen := NIL;
+
+PROCEDURE SetRefInitProcGen(g: RefInitProcGen) =
+  BEGIN
+    refInitProcGen := g;
+  END SetRefInitProcGen;
+
 PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
                                dataAlignment: INTEGER;
                                isTraced: BOOLEAN): MSIR.Value =
@@ -1850,7 +1857,11 @@ PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
       MSIR.SetTypeDescFP(desc, fpa);
     END;
     SetRefTypeDescMaps(desc, t, isTraced);
+    (* Add the desc BEFORE generating the init proc: the generator compiles
+       default-value expressions, which may re-enter TypeDescValueFor* for
+       other types; the module registry must already know this desc. *)
     MSIR.ModuleAddTypeDesc(m, desc);
+    IF refInitProcGen # NIL THEN refInitProcGen(t, desc) END;
     RETURN MSIR.TypeDescValue(desc);
   END TypeDescValueForRef;
 
@@ -1882,7 +1893,8 @@ PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
     END;
     MSIR.TypeDescSetArrayInfo(desc, nDimensions, elementSize);
     SetRefTypeDescMaps(desc, t, isTraced);
-    MSIR.ModuleAddTypeDesc(m, desc);
+    MSIR.ModuleAddTypeDesc(m, desc);   (* before init-proc gen — see ForRef *)
+    IF refInitProcGen # NIL THEN refInitProcGen(t, desc) END;
     RETURN MSIR.TypeDescValue(desc);
   END TypeDescValueForRefArray;
 
