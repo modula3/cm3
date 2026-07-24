@@ -909,6 +909,15 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF MSIR.Kind (addrType) = MSIR.TypeKind.GcSlot THEN
       RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
     END;
+    (* Traced ref element read through a plain pointer (byref open-array
+       parameter, VAR-mode container): same incremental-GC read barrier
+       requirement as above — CG barriers all indirect traced loads. *)
+    IF MSIR.Kind (addrType) = MSIR.TypeKind.Ptr
+       AND MSIR.Kind (MSIR.EltType (addrType)) = MSIR.TypeKind.GcRef THEN
+      RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "",
+               MSIR.RetypeValue (addr,
+                 MSIR.TGcSlot (MSIR.EltType (MSIR.EltType (addrType)))));
+    END;
     (* ZType (machine width) so an ordinal element read is uniform width; the
        load below reads storage width (addrEltT) and widens to ty. *)
     ty := MSIRType.ComputeType (p.type);

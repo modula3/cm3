@@ -54,7 +54,11 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN;
 (* Bind a Variable.T to an existing address (no alloca emitted).
    LookupVar(v) will emit a load through addr; LookupVarAddr(v) returns addr.
    Used for WITH designator variables, where addr is the target's address. *)
-PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T);
+PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
+                      container: MSIR.Value := NIL);
+(* container: for a WITH alias over a heap designator, the containing heap
+   object (the pending container its LValueMSIR set) — re-armed on every
+   LookupVarAddr so stores through the alias carry the write barrier. *)
 
 (* Bind a WITH alias over a sub-byte/bit-field designator (`WITH s = rec.bitf`)
    as a bit-field VIEW: `base` is the containing storage's pointer, captured once.

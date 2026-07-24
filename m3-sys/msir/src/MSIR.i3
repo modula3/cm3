@@ -390,6 +390,10 @@ PROCEDURE TypeDescElementSize (d: TypeDesc): INTEGER;
    - type_desc (TC_type_desc): RTTipe type description (op count + preorder
      type AST) — the pickle ver2 / ConvertPacking machinery. *)
 TYPE GcMapBytes = REF ARRAY OF [0..255];
+(* Front-end TipeMap bytes covering the module's traced globals (RT0.ModuleInfo
+   gc_map/var_map).  Offsets are module-segment-relative (t.offset). *)
+PROCEDURE SetModuleGcMap (m: Module;  bytes: GcMapBytes);
+PROCEDURE ModuleGcMap    (m: Module): GcMapBytes;
 PROCEDURE SetTypeDescGcMap    (d: TypeDesc;  bytes: GcMapBytes);
 PROCEDURE TypeDescGcMap       (d: TypeDesc): GcMapBytes;
 PROCEDURE SetTypeDescTypeMap  (d: TypeDesc;  bytes: GcMapBytes);
@@ -546,7 +550,7 @@ TYPE Op = {
   (* memory *)
   Alloca,    (* static-count stack alloc: alloca T, i64 N    *)
   AllocaDyn, (* dynamic-count stack alloc: alloca i8, i64 %n — byteCount is operand 0 *)
-  Load, Store, GcLoad, GcStore, FieldAddr,
+  Load, Store, GcLoad, GcStore, GcDirty, FieldAddr,
   (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
   IUDiv, IURem,                          (* unsigned divide / remainder *)
@@ -731,6 +735,12 @@ PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value;
    (which are GC roots and don't need a write barrier).  When non-NIL, the
    lowering emits the CM3 dirty-bit check and a conditional call to
    RTHooks__CheckStoreTraced before the actual store. *)
+(* Write-barrier ONLY (no store): mark `container` (a heap object) dirty so
+   the incremental/generational collector re-scans it.  Used before AGGREGATE
+   copies into heap objects (memcpy/array stores), which cannot go through
+   BuildGcStore's single-slot barrier+store. *)
+PROCEDURE BuildGcDirty(b: Block;  container: Value);
+
 PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
                         container: Value := NIL);
 

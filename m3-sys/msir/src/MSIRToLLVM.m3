@@ -187,6 +187,17 @@ PROCEDURE LLSymbol(p: MSIR.Proc): TEXT =
          module proc — prepend the module prefix. *)
       IF ContainsDunder(n) THEN
         RETURN n;
+      ELSIF Text.Equal(n, MSIR.ModuleName(curEmitModule) & "_M3")
+         OR Text.Equal(n, MSIR.ModuleName(curEmitModule) & "_I3") THEN
+        (* The unit's own binder referenced as an extern (e.g. MODULE RTLinker
+           calling RTLinkerX.RTLinker_M3): resolve to the public wrapper
+           @<Mod>_M3 emitted by EmitModuleBinder, NOT the inner body proc
+           @<Mod>__<Mod>_M3.  Only the wrapper returns the ModuleInfo pointer;
+           binding the inner body handed RTLinker.InitRuntime's FixImports
+           garbage, leaving the import chain NIL in the pre-FindModules
+           window (AddUnitI's gc_flags check reads RTCollectorSRC.incremental
+           through that chain and crashed at startup). *)
+        RETURN n;
       ELSE
         RETURN MSIR.ModuleName(curEmitModule) & "__" & n;
       END;
@@ -835,6 +846,12 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, ", ptr ");
         LLOpVal(wr, MSIR.InsnOperand(i, 1));
         Wr.PutText(wr, "\n");
+
+    | MSIR.Op.GcDirty =>
+        (* ops[0]=container: write barrier ONLY — mark the heap object dirty
+           before an aggregate copy (memcpy / array store) writes traced refs
+           into it.  Same fast-path as GcStore's barrier, no store follows. *)
+        EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 0)), locIdx);
 
     | MSIR.Op.GcStore =>
         (* ops[0]=value, ops[1]=slot, ops[2]=container (optional).
@@ -1559,6 +1576,12 @@ PROCEDURE MaybeAddExtern(m: MSIR.Module;  externs: RefSeq.T;  p: MSIR.Proc) =
     IF p = NIL OR MSIR.ProcName(p) = NIL OR IsModuleProc(m, p) OR ProcSeen(externs, p) THEN RETURN END;
     sym := LLSymbol(p);
     IF Text.Equal(sym, MSIR.ModuleName(m) & "_I3") THEN RETURN END;
+    (* Likewise skip the unit's own _M3 binder wrapper: a non-interface unit
+       always define's @<Mod>_M3 (EmitModuleBinder), so an extern stub that
+       LLSymbol resolves to it (the unit calling its own binder via, e.g.,
+       RTLinkerX) must not also emit a 'declare'. *)
+    IF NOT MSIR.ModuleIsInterface(m)
+       AND Text.Equal(sym, MSIR.ModuleName(m) & "_M3") THEN RETURN END;
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
       IF Text.Equal(LLSymbol(MSIR.ModuleProc(m, i)), sym) THEN RETURN END;
     END;
@@ -3823,7 +3846,18 @@ PROCEDURE EmitGcMapGlobal(wr: Wr.T;  m: MSIR.Module;
                            modName: TEXT;  miBytes: INTEGER): BOOLEAN =
   VAR bytes: GcMapBytes := NEW(GcMapBytes, 64);  n := 0;  cursor := 0;
       nGlob := MSIR.ModuleGlobalCount(m);  hasTraced := FALSE;
+      fb := MSIR.ModuleGcMap(m);
   BEGIN
+    (* Front-end-provided map: authoritative full Type.GenMap descent over the
+       module's traced globals — covers aggregates (ARRAY OF TEXT marked one
+       Ref per element, not one per global) and indirect standalone globals
+       (PushPtr at the t.offset slot, walk the backing storage, Return).  The
+       legacy scan below misses both (Text.fromCharCache was never traced or
+       updated → stale single-char TEXTs after a moving collection). *)
+    IF fb # NIL THEN
+      RETURN NOT Text.Equal(
+                 EmitMapBytes(wr, modName & "_M3_gc_map", fb), "null");
+    END;
     FOR i := 0 TO nGlob - 1 DO
       VAR g := MSIR.ModuleGlobal(m, i);
       BEGIN
@@ -4177,7 +4211,18 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
       | MI_binder         => fieldType := "ptr"; fieldVal := "@" & binderName; fieldName := "binder";
       | MI_gc_flags       => fieldType := ip_t;
                              (* RT0.GC_both = GC_gen | GC_inc = 3 *)
-                             fieldVal := "3";                                   fieldName := "gc_flags";
+                             (* RT0.GC_gen (1): this module's code carries the
+                                GENERATIONAL write barriers (gc.store +
+                                gc.dirty on aggregate copies and VAR-arg
+                                formation).  Do NOT claim RT0.GC_inc (2) yet:
+                                RTLinker trusts it to mean complete
+                                incremental READ-barrier coverage, and one
+                                unbarriered ref-acquisition channel remains
+                                (stage-2 orchestrator stale-TEXT dispatch at
+                                ~278 suite builds).  One honest module keeps
+                                the runtime in the safe mode; flip to "3"
+                                when read coverage is proven. *)
+                             fieldVal := "1";                                   fieldName := "gc_flags";
       ELSE                   fieldType := "ptr"; fieldVal := "null";            fieldName := "?";
       END;
       IF k < nFields - 1
@@ -4322,7 +4367,8 @@ PROCEDURE ProcHasGcOp(p: MSIR.Proc): BOOLEAN =
         FOR ii := 0 TO ni - 1 DO
           VAR op := MSIR.InsnOp(MSIR.BlockInsn(b, ii));
           BEGIN
-            IF op = MSIR.Op.GcLoad OR op = MSIR.Op.GcStore THEN
+            IF op = MSIR.Op.GcLoad OR op = MSIR.Op.GcStore
+               OR op = MSIR.Op.GcDirty THEN
               RETURN TRUE;
             END;
           END;

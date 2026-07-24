@@ -941,6 +941,11 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   textLiterals:  RefSeq.T;                         (* elements: TextLit *)
   constArrays:   RefSeq.T;                         (* elements: ConstArray *)
   nextGlobalOff: INTEGER := 0;  (* byte offset for next embedded user global *)
+  moduleGcMap: GcMapBytes := NIL;  (* front-end TipeMap bytes for RT0.ModuleInfo
+     gc_map/var_map — full Type.GenMap descent over the module's traced globals
+     (aggregates included, indirect globals via PushPtr/Return), replacing the
+     emitter's naive one-Ref-per-scalar scan which missed standalone (indirect)
+     globals entirely (Text.fromCharCache: moved TEXT never updated → stale). *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
@@ -1317,6 +1322,11 @@ PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN) =
 
 PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER) =
   BEGIN d.nDimensions := nDimensions;  d.elementSize := elementSize END TypeDescSetArrayInfo;
+PROCEDURE SetModuleGcMap(m: Module; bytes: GcMapBytes) =
+  BEGIN m.moduleGcMap := bytes END SetModuleGcMap;
+PROCEDURE ModuleGcMap(m: Module): GcMapBytes =
+  BEGIN RETURN m.moduleGcMap END ModuleGcMap;
+
 PROCEDURE SetTypeDescGcMap(d: TypeDesc; bytes: GcMapBytes) =
   BEGIN d.gcMap := bytes END SetTypeDescGcMap;
 PROCEDURE TypeDescGcMap(d: TypeDesc): GcMapBytes =
@@ -1998,6 +2008,17 @@ PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value =
     addInsn(b, i);
     RETURN i.result;
   END BuildGcLoad;
+
+PROCEDURE BuildGcDirty(b: Block;  container: Value) =
+  VAR
+    i   := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    i.op := Op.GcDirty;
+    ops[0] := container;
+    i.operands := ops;
+    addInsn(b, i);
+  END BuildGcDirty;
 
 PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
                         container: Value := NIL) =

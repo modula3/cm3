@@ -1449,7 +1449,27 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
   BEGIN
     IF form.mode = Mode.mVAR THEN
       IF form.openArray THEN RETURN GenOpenArgMSIR (form, actual) END;
-      RETURN OpenActualToFixedRefMSIR (form, Expr.LValueMSIR (actual));
+      (* Discard any stale pending container left by earlier argument
+         expressions (AssignStmt does the same before its LValueMSIR) —
+         taking one from another block breaks dominance. *)
+      EVAL MSIRBuilder.TakePendingContainer ();
+      VAR lv   := Expr.LValueMSIR (actual);
+          cont := MSIRBuilder.TakePendingContainer ();
+          vInfo: Type.Info;
+      BEGIN
+        (* Passing a traced-content lvalue by VAR: the callee may store refs
+           through the formal with no knowledge of the containing heap
+           object, so dirty the container NOW — the C backend does the same
+           via CompileAddress(traced := TRUE) at every VAR argument
+           (QualifyExpr/DerefExpr PrepLV -> EmitCheckStoreTraced). *)
+        IF cont # NIL THEN
+          EVAL Type.CheckInfo (Expr.TypeOf (actual), vInfo);
+          IF vInfo.isTraced THEN
+            MSIR.BuildGcDirty (MSIRBuilder.CurrentBlock (), cont);
+          END;
+        END;
+        RETURN OpenActualToFixedRefMSIR (form, lv);
+      END;
     END;
     IF form.openArray THEN
       IF form.mode = Mode.mVALUE THEN
@@ -1762,8 +1782,24 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           lvalT    : MSIR.T;
           lvalEltT : MSIR.T;
       BEGIN
+        EVAL MSIRBuilder.TakePendingContainer ();  (* discard stale *)
         lval := Expr.LValueMSIR (actual);
         IF lval = NIL THEN RETURN NIL END;
+        (* VAR open-array formal over a heap actual: dirty the container at
+           the call site (see EmitArgMSIR's mVAR case) — the callee stores
+           elements through the dope with no container in sight. *)
+        IF form.mode = Mode.mVAR THEN
+          VAR cont := MSIRBuilder.TakePendingContainer ();
+              vInfo: Type.Info;
+          BEGIN
+            IF cont # NIL THEN
+              EVAL Type.CheckInfo (Expr.TypeOf (actual), vInfo);
+              IF vInfo.isTraced THEN
+                MSIR.BuildGcDirty (MSIRBuilder.CurrentBlock (), cont);
+              END;
+            END;
+          END;
+        END;
         lvalT    := MSIR.ValueType (lval);
         lvalEltT := NIL;
         IF MSIR.Kind (lvalT) = MSIR.TypeKind.Ptr THEN

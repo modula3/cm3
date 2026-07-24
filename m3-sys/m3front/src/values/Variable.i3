@@ -37,6 +37,10 @@ PROCEDURE InitExpr   (t: T): M3.Expr;  (* t's initializer expression, or NIL.
 
 (* MSIR declarations — called from DeclareGlobalsMSIR and BeginProc. *)
 PROCEDURE DeclareGlobalMSIR  (t: T;  weak: BOOLEAN := FALSE);
+(* TipeMap bytes for the scope's traced globals (RT0.ModuleInfo gc_map/var_map);
+   NIL if none.  Same walk as GenGlobalMap, returned as bytes for the MSIR
+   emitter instead of being emitted into the CG global segment. *)
+PROCEDURE GenGlobalMapBytesMSIR (s: Scope.T): MSIR.GcMapBytes;
 (* weak=TRUE marks the emitted global weak — used when a same-name module
    re-defines an interface-exported variable (the interface unit's strong def
    wins at link).  Module-private globals use the default (strong). *)

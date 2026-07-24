@@ -205,6 +205,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.Store              => RETURN "store";
     | MSIR.Op.GcLoad             => RETURN "gc.load";
     | MSIR.Op.GcStore            => RETURN "gc.store";
+    | MSIR.Op.GcDirty            => RETURN "gc.dirty";
     | MSIR.Op.FieldAddr          => RETURN "field_addr";
     | MSIR.Op.IAdd               => RETURN "iadd";
     | MSIR.Op.ISub               => RETURN "isub";
@@ -396,6 +397,9 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
     | MSIR.Op.GcLoad =>
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+    | MSIR.Op.GcDirty =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
     | MSIR.Op.GcStore =>

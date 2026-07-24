@@ -2746,6 +2746,7 @@ BEGIN
      element type. *)
   VAR isArrayElt := MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray;
       eltBytes   := 0;
+      fillVal    : MSIR.Value := NIL;  (* last explicit scalar element, for '..' *)
   BEGIN
     IF isArrayElt THEN
       VAR info: Type.Info;
@@ -2770,8 +2771,15 @@ BEGIN
         END;
       ELSE
         IF p.args = NIL OR i > LAST (p.args^) THEN
-          elemVal := MSIR.ConstZero (eltT);
-          IF elemVal = NIL THEN RETURN NIL END;
+          (* '..' region: M3 semantics repeat the LAST explicit element, not
+             zero (TInt.MOne = Int{16_FF,..} became {FF,0,..} = +255 in the
+             stage-2 compiler: LAST of empty subranges 255, NUMBER 256, p009).
+             The element was evaluated exactly once above — CG parity. *)
+          elemVal := fillVal;
+          IF elemVal = NIL THEN
+            elemVal := MSIR.ConstZero (eltT);  (* no explicit args at all *)
+            IF elemVal = NIL THEN RETURN NIL END;
+          END;
         ELSE
           elemVal := Expr.CompileMSIR (p.args^[i]);
           IF elemVal = NIL THEN RETURN NIL END;
@@ -2787,6 +2795,7 @@ BEGIN
               END;
             END;
           END;
+          IF i = LAST (p.args^) THEN fillVal := elemVal END;
         END;
         b := MSIRBuilder.CurrentBlock ();
         MSIR.BuildStore (b, elemVal, elemAddr);

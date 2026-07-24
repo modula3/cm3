@@ -969,6 +969,23 @@ PROCEDURE CompileMSIR (p: P) =
       BEGIN
         IF eltIsOA OR rhsIsOA OR
            (NOT MSIR.Equal (eltT, rhsT) AND (eltIsFA OR rhsIsFA)) THEN
+          (* The array-copy dispatcher below writes via memcpy / whole-array
+             stores, which bypass BuildGcStore's single-slot write barrier.
+             When the destination lives in a HEAP object (LValueMSIR left a
+             pending container) and the copied content carries traced refs,
+             the container must still be marked dirty, or the incremental/
+             generational collector never re-scans it and the newly stored
+             refs go stale after the next moving collection (stage-2
+             self-hosted cm3: flaky method dispatch into vtable data). *)
+          IF container # NIL THEN
+            VAR cInfo: Type.Info;
+            BEGIN
+              EVAL Type.CheckInfo (Expr.TypeOf (p.lhs), cInfo);
+              IF cInfo.isTraced THEN
+                MSIR.BuildGcDirty (MSIRBuilder.CurrentBlock (), container);
+              END;
+            END;
+          END;
           IF MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray AND
              MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray  AND
              MSIR.OpenArrayRank (rhsT) = 1               AND
@@ -1111,6 +1128,19 @@ PROCEDURE CompileMSIR (p: P) =
     IF MSIR.Kind (MSIR.ValueType (lhsPtr)) = MSIR.TypeKind.GcSlot THEN
       MSIR.BuildGcStore (MSIRBuilder.CurrentBlock(), lhsPtr, rhsVal, container);
     ELSE
+      (* A heap-resident AGGREGATE destination (record/array field of a heap
+         object) is typed TPtr, not GcSlot, so it misses BuildGcStore's
+         barrier; when its content carries traced refs the container must
+         still be dirtied for the incremental/generational collector. *)
+      IF container # NIL THEN
+        VAR cInfo: Type.Info;
+        BEGIN
+          EVAL Type.CheckInfo (Expr.TypeOf (p.lhs), cInfo);
+          IF cInfo.isTraced THEN
+            MSIR.BuildGcDirty (MSIRBuilder.CurrentBlock (), container);
+          END;
+        END;
+      END;
       MSIR.BuildStore (MSIRBuilder.CurrentBlock(), rhsVal, lhsPtr);
     END;
     Expr.NoteWrite (p.lhs);

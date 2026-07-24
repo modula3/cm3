@@ -403,6 +403,11 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckBranchTarget(c, i, 0);
     | MSIR.Op.GcLoad =>
         CheckGcLoad(c, i);
+    | MSIR.Op.GcDirty =>
+        (* barrier-only: one operand, the heap container (gc_ref/ptr) *)
+        IF MSIR.InsnOperandCount(i) # 1 THEN
+          Err(c, "gc.dirty requires exactly one operand");
+        END;
     | MSIR.Op.GcStore =>
         CheckGcStore(c, i);
     | MSIR.Op.Call, MSIR.Op.Invoke =>

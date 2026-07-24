@@ -123,7 +123,16 @@ PROCEDURE FinishCollection () =
   BEGIN
     TRY
       RTOS.LockHeap();
-      FinishGC();
+      (* Nothing to finish when no collection is in progress.  This guard
+         also makes the call safe during EARLY STARTUP: RTLinker.AddUnitI
+         calls FinishCollection when a registering module's gc_flags lacks
+         GC_gen/GC_inc (the per-module barrier-coverage contract), which for
+         a whole program built by such a backend happens at the FIRST module
+         registration — before the heap, timers, or collector exist.
+         FinishGC's CollectorOn/Time.Now crashed there. *)
+      IF collectorState # CollectorState.Zero THEN
+        FinishGC();
+      END;
     FINALLY
       RTOS.UnlockHeap();
     END;

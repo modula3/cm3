@@ -39,6 +39,14 @@ TYPE VarEntry = RECORD
   bfBitOff:    INTEGER := 0;
   bfWidth:     INTEGER := 0;
   bfType:      Type.T  := NIL;   (* raw field type: drives Extract's ZExt/SExt *)
+  (* WITH designator alias over a HEAP lvalue: the containing heap object,
+     captured at bind time (the pending container the designator's LValueMSIR
+     set).  Re-armed by LookupVarAddr so a store THROUGH the alias carries the
+     generational/incremental write barrier — Table.mg Put's
+     `WITH first = tbl.buckets[h] DO ... first := NEW(...)` emitted gc.store
+     with no container, the young EntryList was missed by the minor GC, and
+     the stage-2 driver crashed on stale TextIntTbl keys. *)
+  container:   MSIR.Value := NIL;
 END;
 
 (* One frame of the unified loop/finally cleanup stack. *)
@@ -421,10 +429,12 @@ PROCEDURE BeginProc(name: TEXT;
                 varMap[varMapN].storageType := NIL;  (* by-value: return param directly *)
                 varMap[varMapN].wideType    := NIL;
                 varMap[varMapN].signedWiden := FALSE;
+                varMap[varMapN].container   := NIL;
               ELSE
                 varMap[varMapN].storageType := mt;   (* ptr: load through it *)
                 varMap[varMapN].wideType    := mt;
                 varMap[varMapN].signedWiden := FALSE;
+                varMap[varMapN].container   := NIL;
               END;
               INC(varMapN);
             END;
@@ -496,6 +506,18 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
           IF MSIR.Kind(MSIR.ValueType(varMap[i].val)) = MSIR.TypeKind.GcSlot THEN
             RETURN MSIR.BuildGcLoad(curBlock, "", varMap[i].val);
           END;
+          (* Traced ref read through a BYREF FORMAL (VAR/READONLY parameter,
+             a Param-kind pointer into caller storage that may be heap):
+             needs the incremental-GC read barrier, like CG's NamedExpr
+             'indirect' case.  Plain local allocas are exempt — their refs
+             were barriered when acquired and stacks are scanned
+             conservatively. *)
+          IF MSIR.Kind(varMap[i].storageType) = MSIR.TypeKind.GcRef
+             AND MSIR.GetValueKind(varMap[i].val) = MSIR.ValueKind.Param THEN
+            RETURN MSIR.BuildGcLoad(curBlock, "",
+                     MSIR.RetypeValue(varMap[i].val,
+                       MSIR.TGcSlot(MSIR.EltType(varMap[i].storageType))));
+          END;
           VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
           BEGIN
             IF NOT MSIR.Equal(varMap[i].storageType, varMap[i].wideType) THEN
@@ -533,6 +555,14 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
               END;
             END;
             IF mt = NIL THEN RETURN NIL END;
+            (* Traced ref imported global: read barrier, like CG's NamedExpr
+               'global' case (the import-chain slot lives in another module's
+               info struct — plain memory, but the VALUE needs the gray
+               check). *)
+            IF MSIR.Kind(mt) = MSIR.TypeKind.GcRef THEN
+              RETURN MSIR.BuildGcLoad(curBlock, "",
+                       MSIR.RetypeValue(addr, MSIR.TGcSlot(MSIR.EltType(mt))));
+            END;
             RETURN MSIR.BuildLoad(curBlock, "", mt, addr);
           END;
         END;
@@ -575,6 +605,13 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
         IF varMap[i].storageType = NIL THEN
           Abandon("cannot store to by-value formal in MSIR v0");
           RETURN NIL;
+        END;
+        (* WITH alias over a heap designator: re-arm the write-barrier
+           container captured at bind time, so a store through the alias
+           dirties the heap object exactly like the direct designator would.
+           Harmless for reads — consumers pre-discard stale pendings. *)
+        IF varMap[i].container # NIL THEN
+          SetPendingContainer(varMap[i].container);
         END;
         RETURN varMap[i].val;   (* alloca ptr (typed as ptr(storageType)) *)
       END;
@@ -675,10 +712,12 @@ PROCEDURE RegisterLoopVar(v: Variable.T;  paramVal: MSIR.Value) =
     varMap[varMapN].storageType := NIL;   (* return paramVal directly *)
     varMap[varMapN].wideType    := NIL;
     varMap[varMapN].signedWiden := FALSE;
+    varMap[varMapN].container   := NIL;
     INC(varMapN);
   END RegisterLoopVar;
 
-PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
+PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
+                      container: MSIR.Value := NIL) =
   (* WITH designator: addr is already a pointer to the target; no alloca widening. *)
   BEGIN
     IF varMapN >= MaxVarMap THEN
@@ -691,6 +730,7 @@ PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T) =
     varMap[varMapN].storageType := elemType;
     varMap[varMapN].wideType    := elemType;  (* WITH aliases keep natural type *)
     varMap[varMapN].signedWiden := FALSE;
+    varMap[varMapN].container   := container;
     INC(varMapN);
   END BindVarAddr;
 
@@ -709,6 +749,7 @@ PROCEDURE BindVarBitField(v: Variable.T;  base: MSIR.Value;
     varMap[varMapN].storageType := NIL;
     varMap[varMapN].wideType    := NIL;
     varMap[varMapN].signedWiden := FALSE;
+    varMap[varMapN].container   := NIL;
     varMap[varMapN].isBitField  := TRUE;
     varMap[varMapN].bfBitOff    := bitOff;
     varMap[varMapN].bfWidth     := width;
@@ -2749,6 +2790,7 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
     varMap[varMapN].storageType := storageType;
     varMap[varMapN].wideType    := wideType;
     varMap[varMapN].signedWiden := signedWiden;
+    varMap[varMapN].container   := NIL;
     INC(varMapN);
   END VarMapAdd;
 

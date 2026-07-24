@@ -13,7 +13,7 @@ IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 IMPORT Jmpbufs;
-IMPORT MSIREmit, MSIRBuilder, Text;
+IMPORT MSIR, MSIREmit, MSIRBuilder, Text;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -949,6 +949,13 @@ PROCEDURE Compile (t: T) =
         load_map[TRUE]  := NIL;
       END;
       CG.End_unit ();
+      IF MSIREmit.IsEnabled () AND MSIREmit.CurrentModule () # NIL THEN
+        (* Module-global GC map for RT0.ModuleInfo.gc_map/var_map: the full
+           TipeMap walk (aggregates, indirect globals via PushPtr).  Must run
+           after CompileInterface/CompileModule so all offsets are final. *)
+        MSIR.SetModuleGcMap (MSIREmit.CurrentModule (),
+                             Variable.GenGlobalMapBytesMSIR (t.localScope));
+      END;
       MSIREmit.EndUnit ();
       Host.env.note_webinfo (WebInfo.Finish ());
     Scope.Pop (zz);

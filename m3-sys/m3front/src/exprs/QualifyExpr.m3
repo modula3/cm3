@@ -1066,6 +1066,19 @@ PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
       zt       := MSIRType.ComputeType (rawFieldType);
   BEGIN
     IF zt = NIL THEN zt := naturalT END;
+    (* Traced ref field read through a NON-GcSlot pointer (byref record
+       parameter, WITH alias, VAR-mode container): still needs the
+       incremental-GC read barrier.  The C backend barriers every traced
+       ref load from a 'global OR indirect' container (NamedExpr /
+       QualifyExpr Prep with doIncGC); without it the mutator acquires
+       GRAY objects and reads stale (forwarded) refs from them — the
+       stage-2 self-hosted compiler crashed dispatching on a stale
+       TextSub.base loaded through a byref QValue record. *)
+    IF MSIR.Kind (addrEltT) = MSIR.TypeKind.GcRef THEN
+      RETURN MSIR.BuildGcLoad (blk, "",
+               MSIR.RetypeValue (addr,
+                 MSIR.TGcSlot (MSIR.EltType (addrEltT))));
+    END;
     VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
     BEGIN
       RETURN MSIRBuilder.CoerceToMSIR (blk, loaded, zt);

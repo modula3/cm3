@@ -1705,6 +1705,48 @@ PROCEDURE GenGlobalMap (s: Scope.T): INTEGER =
   END GenGlobalMap;
 
 (* EXPORTED *)
+PROCEDURE GenGlobalMapBytesMSIR (s: Scope.T): MSIR.GcMapBytes =
+  (* MSIR analogue of GenGlobalMap: the identical TipeMap walk over the
+     scope's traced globals, returned as raw bytes for the MSIR emitter to
+     place in RT0.ModuleInfo.gc_map/var_map.  Indirect (standalone-storage)
+     globals are covered through the pointer slot at t.offset — PushPtr,
+     walk the backing storage, Return — which works because the early MSIR
+     global ctor initialises that slot to the backing address.  No CG side
+     effects (Declare/used) — the CG GenGlobalMap owns those. *)
+  VAR started := FALSE;  info: Type.Info;  v := Scope.ToList (s);
+  BEGIN
+    WHILE (v # NIL) DO
+      TYPECASE Value.Base (v) OF
+      | NULL =>  (* do nothing *)
+      | T(t) =>  IF (NOT t.imported)
+                   AND (NOT t.external) THEN
+                   EVAL Type.CheckInfo (t.type, info);
+                   IF (info.isTraced) THEN
+                     IF (NOT started) THEN
+                       TipeMap.Start ();
+                       started := TRUE;
+                     END;
+                     IF (t.indirect) THEN
+                       TipeMap.Add (t.offset, TipeMap.Op.PushPtr, 0);
+                       Type.GenMap (t.type, 0, -1, refs_only := TRUE);
+                       TipeMap.Add (t.size, TipeMap.Op.Return, 0);
+                       TipeMap.SetCursor (t.offset + Target.Address.size);
+                     ELSE
+                       Type.GenMap (t.type, t.offset, -1, refs_only := TRUE);
+                     END;
+                   END;
+                 END;
+      ELSE (* do nothing *)
+      END;
+      v := v.next;
+    END;
+    IF (started)
+      THEN RETURN TipeMap.FinishBytes ();
+      ELSE RETURN NIL;
+    END;
+  END GenGlobalMapBytesMSIR;
+
+(* EXPORTED *)
 PROCEDURE NeedGlobalInit (t: T): BOOLEAN =
   BEGIN
     RETURN (NOT t.initDone) AND (NOT t.external);

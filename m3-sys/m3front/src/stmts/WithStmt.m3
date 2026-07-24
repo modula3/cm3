@@ -189,6 +189,11 @@ PROCEDURE CompileMSIR (p: P) =
   BEGIN
     CASE p.kind OF
     | Kind.designator =>
+        (* Clear any stale pending container, then capture the one this
+           designator's LValueMSIR sets: it identifies the heap object that
+           stores THROUGH the alias must dirty (write barrier).  Passed to
+           BindVarAddr and re-armed by LookupVarAddr at each alias use. *)
+        EVAL MSIRBuilder.TakePendingContainer ();
         addr := Expr.LValueMSIR (p.expr);
         IF addr = NIL THEN
           (* The designator has no lvalue.  Two cases:
@@ -225,19 +230,22 @@ PROCEDURE CompileMSIR (p: P) =
             MSIRBuilder.Abandon ("WITH designator: unsupported type");
             RETURN;
           END;
-          MSIRBuilder.BindVarAddr (p.var, addr, mt);
+          MSIRBuilder.BindVarAddr (p.var, addr, mt,
+                                   MSIRBuilder.TakePendingContainer ());
         END;
 
     | Kind.openarray =>
         (* Bind the alias variable to the lvalue address (dope vector pointer).
            For open-array constructors that cannot be materialized in MSIR
            (e.g. packed sub-byte arrays), silently skip the WITH body. *)
+        EVAL MSIRBuilder.TakePendingContainer ();
         addr := Expr.LValueMSIR (p.expr);
         IF addr = NIL THEN RETURN END;
         Variable.Split (p.var, t, global, indirect, lhs);
         mt := MSIRType.Translate (t);
         IF mt = NIL THEN RETURN END;
-        MSIRBuilder.BindVarAddr (p.var, addr, mt);
+        MSIRBuilder.BindVarAddr (p.var, addr, mt,
+                                 MSIRBuilder.TakePendingContainer ());
 
     | Kind.other, Kind.structure =>
         (* Rvalue (scalar or aggregate): compile into a fresh alloca and bind
