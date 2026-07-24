@@ -473,6 +473,12 @@ PROCEDURE ConstZero(t: T): Value =
     END;
   END ConstZero;
 
+PROCEDURE ValueDefInsn(v: Value): Insn =
+  BEGIN
+    IF v = NIL THEN RETURN NIL END;
+    RETURN v.insn;
+  END ValueDefInsn;
+
 PROCEDURE RetypeValue(v: Value;  t: T): Value =
   VAR w := NEW(Value);
   BEGIN

@@ -949,6 +949,15 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         RETURN MSIR.BuildTrunc (blk, "", loaded, ty);
       END;
     END;
+    (* Traced ref element whose address lost element typing (ptr void from
+       openarray.elem_addr — READONLY open-array formals in TextExtras.JoinN
+       were plain gc_ref loads; rb-audit): the earlier GcSlot / Ptr(GcRef)
+       checks miss it, but array storage is potentially heap, so the read
+       barrier is still required. *)
+    IF MSIR.Kind (ty) = MSIR.TypeKind.GcRef THEN
+      RETURN MSIR.BuildGcLoad (blk, "",
+               MSIR.RetypeValue (addr, MSIR.TGcSlot (MSIR.EltType (ty))));
+    END;
     RETURN MSIR.BuildLoad (blk, "", ty, addr);
   END CompileMSIR;
 

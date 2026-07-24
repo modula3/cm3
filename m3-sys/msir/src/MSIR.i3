@@ -628,6 +628,9 @@ TYPE AtomicRMWOp = { Xchg, Add, Sub, And, Or, Xor };
 
 PROCEDURE InsnOp(i: Insn): Op;
 PROCEDURE InsnResult(i: Insn): Value;        (* NIL if Void-typed *)
+PROCEDURE ValueDefInsn(v: Value): Insn;      (* defining insn for InsnResult
+   values (survives RetypeValue); NIL for params/consts/globals.  Used by the
+   verifier's read-barrier audit to walk address provenance. *)
 PROCEDURE InsnOperandCount(i: Insn): INTEGER;
 PROCEDURE InsnOperand(i: Insn;  k: INTEGER): Value;
 

@@ -14,6 +14,10 @@ IMPORT MSIR;
    messages on failure. Each message is prefixed with a location such as
    "@ProcName: block label: insn N". *)
 PROCEDURE VerifyModule(m: MSIR.Module): REF ARRAY OF TEXT;
+(* Incremental read-barrier completeness audit (gc.load coverage); returns
+   violation descriptions, NIL if none.  Gated by the caller (MSIREmit runs
+   it under @M3msirrbaudit). *)
+PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT;
 PROCEDURE VerifyProc(p: MSIR.Proc): REF ARRAY OF TEXT;
 
 END MSIRVerifier.

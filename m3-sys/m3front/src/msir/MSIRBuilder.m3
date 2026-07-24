@@ -506,17 +506,29 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
           IF MSIR.Kind(MSIR.ValueType(varMap[i].val)) = MSIR.TypeKind.GcSlot THEN
             RETURN MSIR.BuildGcLoad(curBlock, "", varMap[i].val);
           END;
-          (* Traced ref read through a BYREF FORMAL (VAR/READONLY parameter,
-             a Param-kind pointer into caller storage that may be heap):
-             needs the incremental-GC read barrier, like CG's NamedExpr
-             'indirect' case.  Plain local allocas are exempt — their refs
-             were barriered when acquired and stacks are scanned
-             conservatively. *)
-          IF MSIR.Kind(varMap[i].storageType) = MSIR.TypeKind.GcRef
-             AND MSIR.GetValueKind(varMap[i].val) = MSIR.ValueKind.Param THEN
-            RETURN MSIR.BuildGcLoad(curBlock, "",
-                     MSIR.RetypeValue(varMap[i].val,
-                       MSIR.TGcSlot(MSIR.EltType(varMap[i].storageType))));
+          (* Traced ref read through NON-LOCAL storage: byref formals
+             (VAR/READONLY parameters — pointers into caller storage that may
+             be heap) and WITH designator aliases bound to global or heap
+             lvalues (BindVarAddr: `WITH wr = Stdio.stdout` in MxGen.Msg was
+             a plain gc_ref load — rb-audit).  Needs the incremental-GC read
+             barrier, like CG's NamedExpr global/indirect case.  Only a
+             function-local alloca slot is exempt — its refs were barriered
+             when acquired and stacks are scanned conservatively. *)
+          IF MSIR.Kind(varMap[i].storageType) = MSIR.TypeKind.GcRef THEN
+            VAR isLocalSlot := FALSE;
+            BEGIN
+              IF MSIR.GetValueKind(varMap[i].val) = MSIR.ValueKind.InsnResult THEN
+                VAR d := MSIR.ValueDefInsn(varMap[i].val);
+                BEGIN
+                  isLocalSlot := d # NIL AND MSIR.InsnOp(d) = MSIR.Op.Alloca;
+                END;
+              END;
+              IF NOT isLocalSlot THEN
+                RETURN MSIR.BuildGcLoad(curBlock, "",
+                         MSIR.RetypeValue(varMap[i].val,
+                           MSIR.TGcSlot(MSIR.EltType(varMap[i].storageType))));
+              END;
+            END;
           END;
           VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
           BEGIN
@@ -586,6 +598,13 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
           RETURN MSIR.BuildGcLoad(curBlock, "", gv);
         ELSE
           gt := MSIR.GlobalType(globalMap[i].val);
+          (* Traced ref in the module's OWN globals: read barrier, like CG's
+             NamedExpr 'global' case (rb-audit: Stdio.stdout et al. were
+             plain loads — only the import-chain branch had the barrier). *)
+          IF MSIR.Kind(gt) = MSIR.TypeKind.GcRef THEN
+            RETURN MSIR.BuildGcLoad(curBlock, "",
+                     MSIR.RetypeValue(gv, MSIR.TGcSlot(MSIR.EltType(gt))));
+          END;
           RETURN MSIR.BuildLoad(curBlock, "", gt, gv);
         END;
       END;

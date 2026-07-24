@@ -165,6 +165,21 @@ PROCEDURE EndUnit() =
     EXCEPT
       OSError.E => (* best-effort *)
     END;
+    IF RTParams.IsPresent("msirrbaudit") THEN
+      (* Incremental read-barrier completeness audit: report every traced-ref
+         acquisition that bypasses gc.load.  Informational (stderr), never
+         fails the build — run with @M3msirrbaudit and grep 'rb-audit:'. *)
+      VAR aud := MSIRVerifier.AuditReadBarriers(curModule);
+      BEGIN
+        IF aud # NIL THEN
+          FOR i := 0 TO LAST(aud^) DO
+            Wr.PutText(Stdio.stderr,
+              "rb-audit: " & MSIR.ModuleName(curModule) & ": " & aud[i] & "\n");
+          END;
+          TRY Wr.Flush(Stdio.stderr) EXCEPT ELSE END;
+        END;
+      END;
+    END;
     errs := MSIRVerifier.VerifyModule(curModule);
     IF errs # NIL THEN
       FOR i := 0 TO LAST(errs^) DO

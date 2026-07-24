@@ -4207,19 +4207,25 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
       | MI_link_state     => fieldType := ip_t; fieldVal := "0";               fieldName := "link_state";
       | MI_binder         => fieldType := "ptr"; fieldVal := "@" & binderName; fieldName := "binder";
       | MI_gc_flags       => fieldType := ip_t;
-                             (* RT0.GC_both = GC_gen | GC_inc = 3 *)
-                             (* RT0.GC_gen (1): this module's code carries the
-                                GENERATIONAL write barriers (gc.store +
-                                gc.dirty on aggregate copies and VAR-arg
-                                formation).  Do NOT claim RT0.GC_inc (2) yet:
-                                RTLinker trusts it to mean complete
-                                incremental READ-barrier coverage, and one
-                                unbarriered ref-acquisition channel remains
-                                (stage-2 orchestrator stale-TEXT dispatch at
-                                ~278 suite builds).  One honest module keeps
-                                the runtime in the safe mode; flip to "3"
-                                when read coverage is proven. *)
-                             fieldVal := "1";                                   fieldName := "gc_flags";
+                             (* RT0.GC_both = GC_gen (1) | GC_inc (2) = 3:
+                                this module's code carries the GENERATIONAL
+                                write barriers (gc.store + gc.dirty on
+                                aggregate copies, VAR-arg formation, and
+                                WITH-alias stores) AND complete incremental
+                                READ-barrier coverage (gc.load on every
+                                traced-ref acquisition from non-local
+                                storage: globals own+imported, fields,
+                                array elements incl. type-erased open-array
+                                paths, deref referents, byref formals, WITH
+                                aliases).  Completeness is enforced by
+                                MSIRVerifier.AuditReadBarriers
+                                (@M3msirrbaudit): every plain gc_ref load
+                                must have alloca provenance; the only
+                                exemptions are LOOPHOLE'd collector/crash
+                                internals that CG also leaves unbarriered
+                                (RTCollector.PostHandleWeakRefs,
+                                RTException.Crash). *)
+                             fieldVal := "3";                                   fieldName := "gc_flags";
       ELSE                   fieldType := "ptr"; fieldVal := "null";            fieldName := "?";
       END;
       IF k < nFields - 1

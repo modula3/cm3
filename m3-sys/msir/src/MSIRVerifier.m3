@@ -573,5 +573,110 @@ PROCEDURE VerifyModule(m: MSIR.Module): REF ARRAY OF TEXT =
     RETURN ResultArray(all);
   END VerifyModule;
 
+(*---------------------------------------------- read-barrier audit ----*)
+
+PROCEDURE LocalProvenance(v: MSIR.Value): BOOLEAN =
+(* TRUE iff the address value derives from a function-local alloca through
+   pure address arithmetic — the one case where CG omits the incremental
+   read barrier (locals are roots: the conservative stack scan blackens
+   whole frames at the flip, so refs in local storage point to black
+   objects, and post-flip stores into locals came from barriered loads).
+   Everything else — globals, params used as addresses (byref formals),
+   pointers themselves loaded from memory, open-array element addresses
+   (the data pointer inside a dope names heap storage) — must be read
+   through gc.load. *)
+  VAR steps := 0;
+  BEGIN
+    LOOP
+      INC(steps);
+      IF v = NIL OR steps > 64 THEN RETURN FALSE END;
+      CASE MSIR.GetValueKind(v) OF
+      | MSIR.ValueKind.InsnResult =>
+          VAR d := MSIR.ValueDefInsn(v);
+          BEGIN
+            IF d = NIL THEN RETURN FALSE END;
+            CASE MSIR.InsnOp(d) OF
+            | MSIR.Op.Alloca, MSIR.Op.AllocaDyn =>
+                RETURN TRUE;
+            | MSIR.Op.PtrAdd, MSIR.Op.GepByte,
+              MSIR.Op.ArrayElemAddr, MSIR.Op.Convert =>
+                v := MSIR.InsnOperand(d, 0);
+            ELSE
+                RETURN FALSE;
+            END;
+          END;
+      ELSE
+          RETURN FALSE;
+      END;
+    END;
+  END LocalProvenance;
+
+(* EXPORTED *)
+PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT =
+(* Incremental read-barrier completeness audit: report (1) every plain load
+   whose RESULT is a traced ref (gc_ref) from a non-local address — such a
+   load must be gc.load so the mutator gray-checks the acquired reference —
+   and (2) every instruction operand typed gc_ref whose defining insn is a
+   plain load of a NON-ref type from a non-local address (a loaded pointer
+   "laundered" into a traced ref by RetypeValue, bypassing the barrier). *)
+  VAR all := NEW(RefSeq.T).init();
+  BEGIN
+    FOR k := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      VAR p  := MSIR.ModuleProc(m, k);
+          pn := MSIR.ProcName(p);
+      BEGIN
+        IF pn = NIL THEN pn := "<anon>" END;
+        FOR bi := 0 TO MSIR.ProcBlockCount(p) - 1 DO
+          VAR b := MSIR.ProcBlock(p, bi);
+          BEGIN
+            FOR ii := 0 TO MSIR.BlockInsnCount(b) - 1 DO
+              VAR i   := MSIR.BlockInsn(b, ii);
+                  res := MSIR.InsnResult(i);
+              BEGIN
+                (* (1) plain load producing gc_ref *)
+                IF MSIR.InsnOp(i) = MSIR.Op.Load AND res # NIL
+                   AND MSIR.Kind(MSIR.ValueType(res)) = MSIR.TypeKind.GcRef
+                   AND NOT LocalProvenance(MSIR.InsnOperand(i, 0)) THEN
+                  all.addhi(pn & ": block " & MSIR.BlockLabel(b)
+                            & ": plain load of gc_ref from non-local address ("
+                            & MSIR.ValueName(res) & ")");
+                END;
+                (* (2) gc_ref operand defined by a plain non-ref load *)
+                FOR oi := 0 TO MSIR.InsnOperandCount(i) - 1 DO
+                  VAR op := MSIR.InsnOperand(i, oi);
+                  BEGIN
+                    IF op # NIL
+                       AND MSIR.GetValueKind(op) = MSIR.ValueKind.InsnResult
+                       AND MSIR.Kind(MSIR.ValueType(op)) = MSIR.TypeKind.GcRef
+                    THEN
+                      VAR d := MSIR.ValueDefInsn(op);
+                      BEGIN
+                        IF d # NIL AND MSIR.InsnOp(d) = MSIR.Op.Load THEN
+                          VAR dres := MSIR.InsnResult(d);
+                          BEGIN
+                            IF dres # NIL
+                               AND MSIR.Kind(MSIR.ValueType(dres))
+                                   # MSIR.TypeKind.GcRef
+                               AND NOT LocalProvenance(MSIR.InsnOperand(d, 0))
+                            THEN
+                              all.addhi(pn & ": block " & MSIR.BlockLabel(b)
+                                & ": gc_ref operand laundered from plain "
+                                & "non-ref load (" & MSIR.ValueName(op) & ")");
+                            END;
+                          END;
+                        END;
+                      END;
+                    END;
+                  END;
+                END;
+              END;
+            END;
+          END;
+        END;
+      END;
+    END;
+    RETURN ResultArray(all);
+  END AuditReadBarriers;
+
 BEGIN
 END MSIRVerifier.
