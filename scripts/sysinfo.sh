@@ -244,6 +244,12 @@ if [ "x$CM3_TARGET" = "x" ] ; then
           else
             CM3_TARGET=I386_DARWIN
           fi;;
+        arm)
+          if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+            CM3_TARGET=ARM64_DARWIN
+          else
+            CM3_TARGET=ARM_DARWIN
+          fi;;
       esac;;
 
     SunOS)
