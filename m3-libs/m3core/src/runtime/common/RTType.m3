@@ -319,7 +319,7 @@ PROCEDURE FinishTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
     IF  (def.dataAlignment # 4) AND (def.dataAlignment # 8)
     AND (def.dataAlignment # 1) AND (def.dataAlignment # 2)
     AND (def.dataAlignment # 16) THEN
-      IF (m = NIL) THEN m := RTModule.FromDataAddress (m); END;
+      IF (m = NIL) THEN m := RTModule.FromDataAddress (def); END;
       Fail (RTE.ValueOutOfRange, m, def, NIL);
     END;
 
