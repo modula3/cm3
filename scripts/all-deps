@@ -19,6 +19,8 @@ m3-sys/m3tools m3tools: m3scanner m3quake m3middle libm3
 m3-sys/m3cgcat m3cgcat: m3quake m3middle
 m3-sys/m3cggen m3cggen: m3middle
 m3-sys/m3gdb m3gdb: 
+m3-sys/llvm/llvm22bindings llvmbindings: m3core
+m3-sys/llvm/llvm22 llvm: libm3 m3middle m3quake llvm22bindings
 m3-tools/m3bundle m3bundle: libm3
 m3-sys/mklib mklib: m3middle libm3
 m3-sys/fix_nl fix_nl: libm3

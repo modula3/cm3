@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc]
+        backend: [c, gcc, llvm]
 
     env:
       CM3_TARGET: AMD64_LINUX
@@ -35,6 +35,11 @@ jobs:
       run: |
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev
+
+#install llvm libs - check if just install llvm-22-dev it installs all deps
+#check if this if will only install llvm stuff
+        if: ${{ matrix.backend == 'llvm' }}
+          sudo apt-get install --quiet --assume-yes libz-dev libzstd-dev lzma llvm-21 llvm-21-dev
 
     - name: Define install location
       run: |

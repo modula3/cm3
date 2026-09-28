@@ -102,6 +102,10 @@ HEADLESS = "headless"
 POSIX = "POSIX"
 WIN32 = "WIN32"
 
+# llvm version
+LLVMVER = "22"
+LLVM = "llvm" + LLVMVER
+LLVMBINDINGS = "llvm" + LLVMVER + "bindings"
 
 # Setup logging to `concierge.log`
 
@@ -224,9 +228,9 @@ COMPILER_DEFINE = -D<name> | -D<name>=<value>
 
 Select the backend to use for compliation.  Breaking from tradition,
 the "c" backend is used as the default if nothing is specified, and
-the gcc backend is only built when explicitly requested.
+the gcc or llvm backend is only built when explicitly requested.
 
-BACKEND_OPTION = --backend (c|gcc|integrated) | -c | -gcc | -integrated
+BACKEND_OPTION = --backend (c|gcc|integrated|llvm) | -c | -gcc | -integrated | -llvm
 
 Select the compile target.  The command-line "--target" takes
 precedence over the "CM3_TARGET" environment variable, which takes
@@ -352,6 +356,13 @@ class Platform:
         "The integrated backend supports only 32-bit Windows"
         return self.name() in ["NT386", "I386_NT"]
 
+    def has_llvm_backend(self):
+        "The llvm backend only supported on Linux at present"
+        if re.search(r"LINUX", self.name()):
+            return True
+        else:
+            return False
+
     def has_serial(self):
         return self.is_win32()
 
@@ -431,7 +442,11 @@ class Cm3:
         if self._backend == "integrated" and not self.target().has_integrated_backend():
             self._backend = "c"
 
-        assert self._backend in ["c", "gcc", "integrated"]
+        # Don't try to use the llvm backend when not available.
+        if self._backend == "llvm" and not self.target().has_llvm_backend():
+            self._backend = "c"
+
+        assert self._backend in ["c", "gcc", "integrated", "llvm"]
         return self._backend
 
     def build(self, *paths):
@@ -615,6 +630,9 @@ class Cm3:
     def use_gcc_backend(self):
         return self.backend() == "gcc"
 
+    def use_llvm_backend(self):
+        return self.backend() == "llvm"
+
     def get_backend(self):
         return self._backend
 
@@ -649,7 +667,8 @@ class WithCm3:
             "use_c_backend",
             "get_backend",
             "set_backend",
-            "use_gcc_backend"
+            "use_gcc_backend",
+            "use_llvm_backend"
         ]
         if method_name not in forwards:
             raise AttributeError
@@ -916,6 +935,9 @@ class PackageAction(WithCm3):
         if self.use_gcc_backend():
             defines.append(f"-DM3_BACKEND_MODE=ExternalAssembly")
 
+        if self.use_llvm_backend():
+            defines.append(f"-DM3_BACKEND_MODE=StAloneLlvmObj")
+
         # Include any defines given on the command-line.
         return defines + self.cm3().defines()
 
@@ -1177,12 +1199,12 @@ class ConciergeCommand(WithPackageActions):
                 backend = tail.pop(0)
             elif head.startswith("--backend="):
                 backend = head[10:]
-            elif head in ["-c", "-gcc", "-integrated"]:
+            elif head in ["-c", "-gcc", "-integrated", "llvm"]:
                 backend = head[1:]
             else:
                 args.append(head)
 
-        if backend not in ["c", "gcc", "integrated"]:
+        if backend not in ["c", "gcc", "integrated", "llvm"]:
             raise UsageError(f"{backend} is not a recognized backend")
 
         setattr(namespace, "_backend", backend)
@@ -1329,6 +1351,8 @@ class UpgradeCommand(ConciergeCommand):
 
         if self.use_gcc_backend():
             self._doGcc()
+        elif self.use_llvm_backend():
+            self._doLLVM()
         else:
             self._doCandIntegrated()
 
@@ -1411,6 +1435,38 @@ class UpgradeCommand(ConciergeCommand):
         self.buildship(base_packages)
         self._ship_front()
 
+    def _doLLVM(self):
+        "Do the LLVM backend"
+        base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+        self.set_backend("c")
+        self._resetCfg()
+
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
+        #force build of llvm
+        self.realclean([LLVMBINDINGS])
+        self.buildship([LLVMBINDINGS])
+        self.realclean([LLVM])
+        self.buildship([LLVM])
+        self._ship_llvm_back()
+
+        #set backend to llvm
+        self.set_backend("llvm")
+        self._resetCfg()
+
+        #first build
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
+        #second build
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
     def _resetCfg(self):
         "reset the cm3.cfg file"
         backend = ''
@@ -1456,6 +1512,10 @@ include(path() & SL & "config" & SL & TARGET)
     def _ship_back(self):
         "Ship the compiler 'backend', i.e., GCC"
         self._copy_compiler(self.build("m3-sys/m3cc"), self.install("bin"))
+
+    def _ship_llvm_back(self):
+        "Ship the llvm 'backend', i.e., m3llvm"
+        self._copy_compiler(self.build("m3-sys/llvm/", LLVM), self.install("bin"))
 
     def _ship_front(self):
         "Ship the comiler 'frontent', i.e., cm3"
@@ -1510,6 +1570,9 @@ include(path() & SL & "config" & SL & TARGET)
 
         if self.use_gcc_backend():
             backend = ' M3_BACKEND_MODE = "ExternalAssembly"\n'
+
+        if self.use_llvm_backend():
+            backend = ' M3_BACKEND_MODE = "StAloneLlvmObj"\n'
 
         cross_compile = ''
         if self.config() == "I386_LINUX":
@@ -1724,14 +1787,14 @@ class MakeBootstrapCommand(ConciergeCommand):
             if not cmakelists.is_file():
                 continue
             package_dir = Path(bootstrap_dir) / Path(package_path).name
-            
+
             self.mkdir(package_dir)
             self.cp(cmakelists, package_dir)
             package_dirs.append(Path(package_dir).name)
 
             package_sources = []
             if not self.no_action():
-                
+
                 for file in Path(self.build(package_path)).iterdir():
                     if file.suffix in [".c", ".cpp", ".h"]:
                         self.cp(file, package_dir)
@@ -1920,7 +1983,7 @@ class Concierge:
             "make-dist":      MakeDistributionCommand,
             "upgrade":        UpgradeCommand
         }
-
+        args =["--backend", "llvm", "upgrade"]
         constructor = None
         for arg in args:
             if arg in commands:
