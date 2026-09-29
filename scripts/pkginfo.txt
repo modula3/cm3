@@ -234,8 +234,8 @@ mscheme-threads m3-scheme
 sstubgen m3-scheme
 sstubgen/sstubgen_prog m3-scheme
 
-llvm22bindings base core
-llvm22 base core 
+llvm22bindings base core front
+llvm22 base core front
 
 cm3 core front headless unicode
 m3cc core front headless m3gnudevtool unicode

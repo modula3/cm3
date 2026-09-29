@@ -106,6 +106,8 @@ WIN32 = "WIN32"
 LLVMVER = "22"
 LLVM = "llvm" + LLVMVER
 LLVMBINDINGS = "llvm" + LLVMVER + "bindings"
+LB = "-" + LLVMBINDINGS
+L = "-" + LLVM
 
 # Setup logging to `concierge.log`
 
@@ -1364,7 +1366,7 @@ class UpgradeCommand(ConciergeCommand):
         if not self.install("bin/cm3cg").is_file():
             #assume CI/CD or corruption and build m3cc from scratch
             #and front using C backend
-            base_packages = ["+front", "+m3bundle", "-m3cc"]
+            base_packages = ["+front", "+m3bundle", "-m3cc", LB, L]
 
             #after setting the backend we have to ensure the
             #cm3.cfg installed config file has no M3_BACKEND_MODE
@@ -1397,7 +1399,7 @@ class UpgradeCommand(ConciergeCommand):
             self._ship_front()
         else:
             #build using installed gcc backend
-            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
+            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3", LB, L]
             runtime_packages = ["+m3core", "+libm3"]
 
             #we follow the design of upgrade.sh and not build the runtime first
@@ -1425,7 +1427,7 @@ class UpgradeCommand(ConciergeCommand):
         "Do the C and integrated backends"
 
         #assume front contains m3core and libm3 as first packages
-        base_packages = ["+front", "+m3bundle", "-m3cc"]
+        base_packages = ["+front", "+m3bundle", "-m3cc", LB, L]
 
         #first build
         self.realclean(base_packages)
@@ -1439,7 +1441,7 @@ class UpgradeCommand(ConciergeCommand):
 
     def _doLLVM(self):
         "Do the LLVM backend"
-        base_packages = ["+front", "+m3bundle", "-m3cc"]
+        base_packages = ["+front", "+m3bundle", "-m3cc", LB, L]
 
         self.set_backend("c")
         self._resetCfg()
