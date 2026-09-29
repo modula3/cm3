@@ -1351,8 +1351,9 @@ class UpgradeCommand(ConciergeCommand):
 
         if self.use_gcc_backend():
             self._doGcc()
-        elif self.use_llvm_backend():
-            self._doLLVM()
+        #elif self.use_llvm_backend():
+            #still work in progress
+            #    self._doLLVM()
         else:
             self._doCandIntegrated()
 
