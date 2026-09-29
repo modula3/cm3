@@ -358,10 +358,11 @@ class Platform:
 
     def has_llvm_backend(self):
         "The llvm backend only supported on Linux at present"
-        if re.search(r"LINUX", self.name()):
-            return True
-        else:
-            return False
+        return False
+        #if re.search(r"LINUX", self.name()):
+        #    return True
+        #else:
+        #    return False
 
     def has_serial(self):
         return self.is_win32()
@@ -1199,7 +1200,7 @@ class ConciergeCommand(WithPackageActions):
                 backend = tail.pop(0)
             elif head.startswith("--backend="):
                 backend = head[10:]
-            elif head in ["-c", "-gcc", "-integrated", "llvm"]:
+            elif head in ["-c", "-gcc", "-integrated", "-llvm"]:
                 backend = head[1:]
             else:
                 args.append(head)
@@ -1351,9 +1352,9 @@ class UpgradeCommand(ConciergeCommand):
 
         if self.use_gcc_backend():
             self._doGcc()
-        #elif self.use_llvm_backend():
+        elif self.use_llvm_backend():
             #still work in progress
-            #    self._doLLVM()
+            self._doLLVM()
         else:
             self._doCandIntegrated()
 
@@ -1984,7 +1985,7 @@ class Concierge:
             "make-dist":      MakeDistributionCommand,
             "upgrade":        UpgradeCommand
         }
-        args =["--backend", "llvm", "upgrade"]
+
         constructor = None
         for arg in args:
             if arg in commands:
