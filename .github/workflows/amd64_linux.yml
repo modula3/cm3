@@ -38,8 +38,8 @@ jobs:
 
 #install llvm libs - check if just install llvm-22-dev it installs all deps
 #check if this if will only install llvm stuff
-        if: ${{ matrix.backend == 'llvm' }}
-          sudo apt-get install --quiet --assume-yes libz-dev libzstd-dev lzma llvm-21 llvm-21-dev
+#        if: ${{ matrix.backend == 'llvm' }}
+        sudo apt-get install --quiet --assume-yes libz-dev libzstd-dev lzma llvm-21 llvm-21-dev
 
     - name: Define install location
       run: |
