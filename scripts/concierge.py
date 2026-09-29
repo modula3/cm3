@@ -1605,7 +1605,7 @@ class FullUpgradeCommand(UpgradeCommand):
         super().execute()
 
         # Clean, but again there is no point in rebuilding GCC.
-        self.realclean([ALL, "-m3cc"])
+        self.realclean([ALL, "-m3cc", LB, L])
 
         # Reinstall all packages.
         self.buildship(self.packages())
@@ -1775,7 +1775,7 @@ class MakeBootstrapCommand(ConciergeCommand):
 
     def execute(self):
         # Compile cm3 and its dependencies to C.
-        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen"]
+        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen", LB, L]
         self.realclean(packages)
         self.buildlocal(packages)
 
