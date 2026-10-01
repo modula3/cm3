@@ -1614,8 +1614,8 @@ class FullUpgradeCommand(UpgradeCommand):
 
         # Reinstall all packages.
         #fixme - should exclude the compiler at this point we have upgraded it
-        self.buildship([ALL, "-m3cc", "-llvm"])
-        #self.buildship(self.packages())
+        #self.buildship([ALL, "-m3cc", "-llvm"]) does not work on NT
+        self.buildship(self.packages() + ["-llvm"])
 
     def packages(self):
         "Return the packages requested on the command-line"
