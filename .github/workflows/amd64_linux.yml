@@ -5,7 +5,7 @@ on:
   workflow_call:
     inputs:
       os:
-        default: ubuntu-latest
+        default: ubuntu-26.04
         required: false
         type: string
       release:
@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc]
+        backend: [c, gcc, llvm]
 
     env:
       CM3_TARGET: AMD64_LINUX
@@ -35,6 +35,7 @@ jobs:
       run: |
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev
+        sudo apt-get install --quiet --assume-yes libz-dev libzstd-dev lzma llvm-22 llvm-22-dev
 
     - name: Define install location
       run: |
@@ -50,7 +51,7 @@ jobs:
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Build everything
       run: |
