@@ -14,9 +14,9 @@ void line(...){}
 void circle(...){}
 void range(...){}
 #else
-line(){}
-circle(){}
-range(){}
+void line(){}
+void circle(){}
+void range(){}
 #endif
 
 static float pxmin, pxmax, pymin, pymax, cradius;

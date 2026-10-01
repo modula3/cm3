@@ -102,13 +102,6 @@ HEADLESS = "headless"
 POSIX = "POSIX"
 WIN32 = "WIN32"
 
-# llvm version
-LLVMVER = "22"
-LLVM = "llvm" + LLVMVER
-LLVMBINDINGS = "llvm" + LLVMVER + "bindings"
-LB = "-" + LLVMBINDINGS
-L = "-" + LLVM
-
 # Setup logging to `concierge.log`
 
 class Tee:
@@ -360,11 +353,10 @@ class Platform:
 
     def has_llvm_backend(self):
         "The llvm backend only supported on Linux at present"
-        return False
-        #if re.search(r"LINUX", self.name()):
-        #    return True
-        #else:
-        #    return False
+        if re.search(r"LINUX", self.name()):
+            return True
+        else:
+            return False
 
     def has_serial(self):
         return self.is_win32()
@@ -788,7 +780,6 @@ class PackageDatabase(WithCm3):
         "Do we try to build this package?"
         if os.environ.get("CM3_ALL"):
             return True
-
         if name == "X11R4":  return self.target().is_posix()
         if name == "m3cc":   return self.use_gcc_backend()
         if name == "m3gdb":  return self.use_gcc_backend() and self.target().has_gdb()
@@ -1355,7 +1346,7 @@ class UpgradeCommand(ConciergeCommand):
         if self.use_gcc_backend():
             self._doGcc()
         elif self.use_llvm_backend():
-            #still work in progress
+            #work in progress
             self._doLLVM()
         else:
             self._doCandIntegrated()
@@ -1366,7 +1357,7 @@ class UpgradeCommand(ConciergeCommand):
         if not self.install("bin/cm3cg").is_file():
             #assume CI/CD or corruption and build m3cc from scratch
             #and front using C backend
-            base_packages = ["+front", "+m3bundle", "-m3cc", LB, L]
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
 
             #after setting the backend we have to ensure the
             #cm3.cfg installed config file has no M3_BACKEND_MODE
@@ -1399,7 +1390,7 @@ class UpgradeCommand(ConciergeCommand):
             self._ship_front()
         else:
             #build using installed gcc backend
-            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3", LB, L]
+            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
             runtime_packages = ["+m3core", "+libm3"]
 
             #we follow the design of upgrade.sh and not build the runtime first
@@ -1427,7 +1418,7 @@ class UpgradeCommand(ConciergeCommand):
         "Do the C and integrated backends"
 
         #assume front contains m3core and libm3 as first packages
-        base_packages = ["+front", "+m3bundle", "-m3cc", LB, L]
+        base_packages = ["+front", "+m3bundle", "-m3cc"]
 
         #first build
         self.realclean(base_packages)
@@ -1441,35 +1432,53 @@ class UpgradeCommand(ConciergeCommand):
 
     def _doLLVM(self):
         "Do the LLVM backend"
-        base_packages = ["+front", "+m3bundle", "-m3cc", LB, L]
 
-        self.set_backend("c")
-        self._resetCfg()
+        if not self.install("bin/m3llvm").is_file():
 
-        self.realclean(base_packages)
-        self.buildship(base_packages)
-        self._ship_front()
+            base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
 
-        #force build of llvm
-        self.realclean([LLVMBINDINGS])
-        self.buildship([LLVMBINDINGS])
-        self.realclean([LLVM])
-        self.buildship([LLVM])
-        self._ship_llvm_back()
+            self.set_backend("c")
+            self._resetCfg()
 
-        #set backend to llvm
-        self.set_backend("llvm")
-        self._resetCfg()
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
 
-        #first build
-        self.realclean(base_packages)
-        self.buildship(base_packages)
-        self._ship_front()
+            #set backend to llvm
+            self.set_backend("llvm")
+            self._resetCfg()
 
-        #second build
-        self.realclean(base_packages)
-        self.buildship(base_packages)
-        self._ship_front()
+            #llvm not in front
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+            #first build
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #second build
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+        else:
+            #build using installed llvm backend
+            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
+            runtime_packages = ["+m3core", "+libm3"]
+
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #force build of llvm 
+            self.realclean(["+llvm"])
+            self.buildship(["+llvm"])
+
+            #second pass build runtime and base
+            self.realclean(runtime_packages)
+            self.buildship(runtime_packages)
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
 
     def _resetCfg(self):
         "reset the cm3.cfg file"
@@ -1516,10 +1525,6 @@ include(path() & SL & "config" & SL & TARGET)
     def _ship_back(self):
         "Ship the compiler 'backend', i.e., GCC"
         self._copy_compiler(self.build("m3-sys/m3cc"), self.install("bin"))
-
-    def _ship_llvm_back(self):
-        "Ship the llvm 'backend', i.e., m3llvm"
-        self._copy_compiler(self.build("m3-sys/llvm/", LLVM), self.install("bin"))
 
     def _ship_front(self):
         "Ship the comiler 'frontent', i.e., cm3"
@@ -1605,10 +1610,12 @@ class FullUpgradeCommand(UpgradeCommand):
         super().execute()
 
         # Clean, but again there is no point in rebuilding GCC.
-        self.realclean([ALL, "-m3cc", LB, L])
+        self.realclean([ALL, "-m3cc", "-llvm"])
 
         # Reinstall all packages.
-        self.buildship(self.packages())
+        #fixme - should exclude the compiler at this point we have upgraded it
+        self.buildship([ALL, "-m3cc", "-llvm"])
+        #self.buildship(self.packages())
 
     def packages(self):
         "Return the packages requested on the command-line"
@@ -1775,7 +1782,7 @@ class MakeBootstrapCommand(ConciergeCommand):
 
     def execute(self):
         # Compile cm3 and its dependencies to C.
-        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen", LB, L]
+        packages = ["+front", "-m3cc", "-m3cgcat", "-m3cggen"]
         self.realclean(packages)
         self.buildlocal(packages)
 
