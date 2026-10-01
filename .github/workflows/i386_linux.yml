@@ -44,7 +44,7 @@ jobs:
         echo CM3_INSTALL="$(pwd)/../install" >> $GITHUB_ENV
 
     - name: Fetch sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Install bootstrap release
       env:
