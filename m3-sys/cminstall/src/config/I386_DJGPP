@@ -36,6 +36,8 @@ M3_BACKEND_MODE = "C"
 include ("cm3cfg.common")
 
 proc compile_c(source, object, options, optimize, debug) is
+  % Something elsewhere is forming the paths incorrectly.
+  options       = escape(subst_chars(options, "\\", "/"))
 % driver has problems, skip it
 % i.e. it does not run a specific version, and many fail, or learn more flags to specify version?
 %
