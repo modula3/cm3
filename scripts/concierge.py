@@ -1435,14 +1435,46 @@ class UpgradeCommand(ConciergeCommand):
 
         if not self.install("bin/m3llvm").is_file():
 
-            base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
 
-            self.set_backend("c")
+            #after setting the backend we have to ensure the
+            #cm3.cfg installed config file has no M3_BACKEND_MODE
+            #setting as it overrides the one we place on the command line.
+
+            #test rebuild without building with c backend first
+            #self.set_backend("c")
+            #self._resetCfg()
+
+            #self.realclean(base_packages)
+            #self.buildship(base_packages)
+            #self._ship_front()
+
+            #set backend back to gcc
+            self.set_backend("gcc")
             self._resetCfg()
 
+            #build gcc backend and ship
+            self.realclean(["m3cc"])
+            self.buildship(["m3cc"])
+            self._ship_back()
+
+            #build compiler with gcc backend
             self.realclean(base_packages)
             self.buildship(base_packages)
-            self._ship_front()
+
+            #now do the llvm build
+            base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
+
+            #self.set_backend("c")
+            #self._resetCfg()
+
+            #self.realclean(base_packages)
+            #self.buildship(base_packages)
+            #self._ship_front()
+
+            #force build of llvm - copied from below
+            self.realclean(["+llvm"])
+            self.buildship(["+llvm"])
 
             #set backend to llvm
             self.set_backend("llvm")
