@@ -13,11 +13,8 @@ IMPORT Stdio, Rd, Wr, Thread, Word, Text, (*ViewportVBT,*) Trestle;
 IMPORT VBT, PaintOp, TrestleComm, Color, Region, Rect, Point;
 IMPORT AnchorBtnVBT, TextVBT, BorderedVBT, MenuBtnVBT, Split, HVSplit;
 IMPORT ButtonVBT, Axis, Font, VBTClass, Fmt, Process, HVBar;
+IMPORT RTHeapInfo;
 IMPORT ZIO;
-
-CONST (* Copied from RTHeapInfo.i3 due to version skew... *)
-  SENDING_TYPES  = -23;
-  SENDING_COUNTS = -24;
 
 TYPE
   Vector = REF ARRAY OF INTEGER;
@@ -369,8 +366,8 @@ PROCEDURE Run () =
     TRY
       LOOP
         cmd := ZIO.GetInt ();
-        IF    (cmd = SENDING_COUNTS) THEN GetData ();
-        ELSIF (cmd = SENDING_TYPES)  THEN GetTypes ();
+        IF    (cmd = RTHeapInfo.SENDING_COUNTS) THEN GetData ();
+        ELSIF (cmd = RTHeapInfo.SENDING_TYPES)  THEN GetTypes ();
         ELSE  (* the data stream is out of synch, just ignore the data... *)
         END;
       END;

@@ -71,8 +71,9 @@
 # otherwise instructed the concierge will build only the C and
 # integrated backends (only on I386_NT) and will not build GCC.
 #
-# Developers can specify `-gcc` or `--backend gcc` the build the GCC
+# Developers can specify `-gcc` or `--backend gcc` to build the GCC
 # backend.
+# Or could specify `-llvm` or `--backend llvm` to build the LLVM backend
 #
 # GCC is not included in the distribution tarball and is not available
 # on new system installs, it must be built from source using
@@ -1223,7 +1224,9 @@ class ConciergeCommand(WithPackageActions):
             "-times",      # produce a dump of elapsed times
             "-trace",      # trace quake code execution
             "-verbose",    # list internal steps as they are performed
-            "-why"         # explain why code is being recompiled
+            "-why",        # explain why code is being recompiled
+            "-g0",         # turn off debug generation in backends
+            "-O3"          # turn on full optimisation in backends
         ]
         flags   = [arg for arg in args if arg in cm3flags]
         args[:] = [arg for arg in args if arg not in flags]
@@ -1363,12 +1366,13 @@ class UpgradeCommand(ConciergeCommand):
             #cm3.cfg installed config file has no M3_BACKEND_MODE
             #setting as it overrides the one we place on the command line.
 
-            self.set_backend("c")
-            self._resetCfg()
+            #test not building the compiler with c backend first
+            #self.set_backend("c")
+            #self._resetCfg()
 
-            self.realclean(base_packages)
-            self.buildship(base_packages)
-            self._ship_front()
+            #self.realclean(base_packages)
+            #self.buildship(base_packages)
+            #self._ship_front()
 
             #set backend back to gcc
             self.set_backend("gcc")
@@ -1459,8 +1463,11 @@ class UpgradeCommand(ConciergeCommand):
             self._ship_back()
 
             #build compiler with gcc backend
+            #have to build llvm backed with gcc backend because of
+            #incompatible c issues dealing with procs returning structs
             self.realclean(base_packages)
             self.buildship(base_packages)
+            self._ship_front()
 
             #now do the llvm build
             base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
@@ -1472,7 +1479,7 @@ class UpgradeCommand(ConciergeCommand):
             #self.buildship(base_packages)
             #self._ship_front()
 
-            #force build of llvm - copied from below
+            #force build of llvm using gcc backend 
             self.realclean(["+llvm"])
             self.buildship(["+llvm"])
 
@@ -1483,15 +1490,15 @@ class UpgradeCommand(ConciergeCommand):
             #llvm not in front
             base_packages = ["+front", "+m3bundle", "-m3cc"]
 
-            #first build
+            #build compiler with llvm backend
             self.realclean(base_packages)
             self.buildship(base_packages)
             self._ship_front()
 
-            #second build
-            self.realclean(base_packages)
-            self.buildship(base_packages)
-            self._ship_front()
+            #second build with llvm can be skipped
+            #self.realclean(base_packages)
+            #self.buildship(base_packages)
+            #self._ship_front()
         else:
             #build using installed llvm backend
             base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
@@ -1647,7 +1654,7 @@ class FullUpgradeCommand(UpgradeCommand):
         # Reinstall all packages.
         #fixme - should exclude the compiler at this point we have upgraded it
         #self.buildship([ALL, "-m3cc", "-llvm"]) does not work on NT
-        self.buildship(self.packages() + ["-llvm"])
+        self.buildship(self.packages() + ["-llvm"] + ["-m3cc"] + ["-front"])
 
     def packages(self):
         "Return the packages requested on the command-line"
