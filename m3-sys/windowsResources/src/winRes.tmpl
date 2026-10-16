@@ -24,7 +24,7 @@ readonly proc WindowsResource (file) is
          if stale (res, src)
             % Next line is all wrong, confusing mode and host and target. This
             % entire function should probably be in config files.
-            if (equal (M3_BACKEND_MODE, "0") or equal (M3_BACKEND_MODE, "C")) and not equal (TARGET, "AMD64_MINGW")
+            if (equal (M3_BACKEND_MODE, "0") or equal (M3_BACKEND_MODE, "C") or equal (M3_BACKEND_MODE, "StAloneLlvmObj")) and not equal (TARGET, "AMD64_MINGW")
               exec ("rc -DWIN32 -i", path_of(""), "-fo", res, src)
             else
               exec ("windres -DWIN32 -I", path_of(""), "-o", res, "-i", subst_chars(src, "\\", "/"))
