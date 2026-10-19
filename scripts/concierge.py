@@ -1349,7 +1349,6 @@ class UpgradeCommand(ConciergeCommand):
         if self.use_gcc_backend():
             self._doGcc()
         elif self.use_llvm_backend():
-            #work in progress
             self._doLLVM()
         else:
             self._doCandIntegrated()
@@ -1400,7 +1399,7 @@ class UpgradeCommand(ConciergeCommand):
             #we follow the design of upgrade.sh and not build the runtime first
             #since the runtime could have been changed wrt to front end
             #but this has problems when the runtime was previously built with
-            #the C backend. in this case one option is to manually
+            #the C backend. In this case one option is to manually
             #compile and ship the runtime using the gcc backend
             self.realclean(base_packages)
             self.buildship(base_packages)
@@ -1445,14 +1444,6 @@ class UpgradeCommand(ConciergeCommand):
             #cm3.cfg installed config file has no M3_BACKEND_MODE
             #setting as it overrides the one we place on the command line.
 
-            #test rebuild without building with c backend first
-            #self.set_backend("c")
-            #self._resetCfg()
-
-            #self.realclean(base_packages)
-            #self.buildship(base_packages)
-            #self._ship_front()
-
             #set backend back to gcc
             self.set_backend("gcc")
             self._resetCfg()
@@ -1463,21 +1454,15 @@ class UpgradeCommand(ConciergeCommand):
             self._ship_back()
 
             #build compiler with gcc backend
-            #have to build llvm backed with gcc backend because of
-            #incompatible c issues dealing with procs returning structs
+            #have to build llvm backed with compiler built with gcc backend
+            #because of incompatible c issues dealing with procs
+            #returning structs
             self.realclean(base_packages)
             self.buildship(base_packages)
             self._ship_front()
 
             #now do the llvm build
-            base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
-
-            #self.set_backend("c")
-            #self._resetCfg()
-
-            #self.realclean(base_packages)
-            #self.buildship(base_packages)
-            #self._ship_front()
+            #base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
 
             #force build of llvm using gcc backend 
             self.realclean(["+llvm"])

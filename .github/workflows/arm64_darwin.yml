@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc]
+        backend: [c, gcc, llvm]
 
     env:
       CM3_TARGET: ARM64_DARWIN
@@ -33,7 +33,7 @@ jobs:
     - name: Install prerequisites
       run: |
         brew update
-        brew install libxaw libxft ninja xquartz
+        brew install libxaw libxft ninja xquartz llvm@22
 
     - name: Define install location
       run: |
