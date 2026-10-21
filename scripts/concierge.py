@@ -334,8 +334,7 @@ class Platform:
 
         # Our GCC is too old for ARM support.
         if re.match(r"ARM|SOL", name):
-            #return False test arm
-            return True
+            return False
 
         # Many platforms only work on the C backend, or at least
         # there are no protesting users.
@@ -358,8 +357,7 @@ class Platform:
         if re.search(r"LINUX", self.name()):
             return True
         else:
-            #test arm
-            return True
+            return False
 
     def has_serial(self):
         return self.is_win32()
