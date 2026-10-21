@@ -34,6 +34,7 @@ jobs:
       run: |
         brew update
         brew install libxaw libxft ninja xquartz llvm@22
+        brew link llvm@22
 
     - name: Define install location
       run: |
