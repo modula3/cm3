@@ -5,3 +5,13 @@
 c_source ("dtoa")
 c_source ("hand")
 c_source ("libgcc")
+
+%temporary proc to get triple and datalayout from target
+proc checklayout() is
+  local tt = try_exec("clang -I../src -S -emit-llvm -o../src/proc.ll ../src/Csupport/hand.c")
+  rr = fs_contents("../src/proc.ll")
+  rr = sub(rr, 0, 300)
+  write (rr)
+end
+checklayout()
+
