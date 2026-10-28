@@ -1689,7 +1689,14 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
                     Asm := DoWriteAsm);
           END; 
           IF ok AND DoRunC THEN 
-            ok := RunCC (s, CCodeName, u.object, TRUE, FALSE, s.include_path_empty);
+            (* u.debug / u.optimize, not TRUE / FALSE.  Every other back
+               end on this path passes the unit's own flags, as do the
+               other two RunCC call sites; only this one hardcoded them,
+               so m3_optimize in an m3makefile and -O on the command line
+               were silently ignored by the C back end and every build
+               was unoptimized with debug forced on. *)
+            ok := RunCC (s, CCodeName, u.object, u.debug, u.optimize,
+                         s.include_path_empty);
           END;
           IF ok AND DoRunAsm THEN 
             ok := RunAsm (s, asmName, u.object);
