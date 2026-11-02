@@ -5,7 +5,7 @@ on:
   workflow_call:
     inputs:
       os:
-        default: ubuntu-26.04
+        default: ubuntu-latest
         required: false
         type: string
       release:
