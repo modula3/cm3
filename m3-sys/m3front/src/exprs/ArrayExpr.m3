@@ -2227,7 +2227,7 @@ PROCEDURE InnerCompile (top: T; StaticOnly: BOOLEAN) =
       <* ASSERT top.buildTempVar # NIL *>
       <* ASSERT (top.finalVal = NIL) = (NOT UsesAssignProtocol (top)) *>
       IF top.finalVal = NIL THEN
-        CG.Load_addr_of_temp (top.buildTempVar, 0, top.topRepAlign)
+        CG.Load_addr_of (top.buildTempVar, 0, top.topRepAlign)
       ELSE
         IF top.state < StateTyp.Compiled THEN (* Don't copy twice. *)
           CG.Push (top.finalVal);
