@@ -4,7 +4,7 @@
 
 UNSAFE MODULE RTExStack EXPORTS RTException;
 
-IMPORT RT0, RTOS, RTIO, RTStack, RTParams, RTEHScan;
+IMPORT RT0, RTOS, RTIO, RTStack, RTParams;
 IMPORT RTProcedureSRC;
 FROM RT0 IMPORT RaiseActivation;
 (*
@@ -80,7 +80,6 @@ PROCEDURE PrintStack (uid : INTEGER) =
   VAR
     here, f: RTStack.Frame;
     name: RTProcedureSRC.Name;
-    scan : BOOLEAN;
   BEGIN
     RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
@@ -94,12 +93,7 @@ PROCEDURE PrintStack (uid : INTEGER) =
 
       IF f.lsda # NIL THEN
         IF uid # 0 THEN
-          (* scan the dwarf eh scopes found by the unwinder *)
-          scan := RTEHScan.ScanEHTable(f, uid);
-          IF scan THEN
-            (* print the exception stuff. Fixme. Would have to modify
-               ScanEHTable to take a parameter to dump its debug info. *)
-          END;
+        (* fixme - scan and print the dwarf eh scopes found by the unwinder *)
         END;
       END;
 
