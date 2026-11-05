@@ -65,13 +65,13 @@ PROCEDURE Swap2U (i: UInt16): UInt16 =
     RETURN Or(RightShift(And(B1, i), 8), LeftShift(And(B0, i), 8));
   END Swap2U;
 
-
 PROCEDURE Swap8 (READONLY i: Int64On32): Int64On32 =
   BEGIN
     IF BYTESIZE(INTEGER) = 4 THEN
       RETURN Int64On32{a := Swap4(i.b), b := Swap4(i.a)}
     ELSIF BYTESIZE(INTEGER) = 8 THEN
-      RETURN LOOPHOLE(Int64On64{v := SwapInt(LOOPHOLE(i, Int64On64).v)},
+      RETURN LOOPHOLE(Int64On64{v := 
+                                SwapInt(LOOPHOLE(i, Int64On64).v)}, <*NOWARN*>
                       Int64On32);
     ELSE
       RAISE Failure;

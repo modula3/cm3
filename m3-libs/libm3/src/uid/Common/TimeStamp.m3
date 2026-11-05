@@ -129,7 +129,7 @@ PROCEDURE Hash (READONLY t: T): INTEGER =
   VAR i: INTEGER;
       endian := Swap.GetEndian ();
   BEGIN
-    WITH a = LOOPHOLE(t, ARRAY [0 .. 3] OF Swap.Int32) DO
+    WITH a = LOOPHOLE(t, ARRAY [0 .. 3] OF Swap.Int32) DO <*NOWARN*>
       i := Word.Xor(Word.Xor(a[0], a[1]), Word.Xor(a[2], a[3]));
     END;
     IF endian = Swap.Endian.Big THEN i := Swap.Swap4 (i) END;
@@ -138,8 +138,9 @@ PROCEDURE Hash (READONLY t: T): INTEGER =
 
 PROCEDURE ToTime (READONLY t: T): Time.T =
   VAR
-    frac := FLOAT(LOOPHOLE(t, TimeStampRep.T).fineTime, LONGREAL) / 256.0D0;
-    time := LOOPHOLE(t, TimeStampRep.T).time;
+    frac := FLOAT(LOOPHOLE(t, TimeStampRep.T).fineTime, <*NOWARN*>
+                           LONGREAL) / 256.0D0;
+    time := LOOPHOLE(t, TimeStampRep.T).time; <*NOWARN*>
     endian := Swap.GetEndian ();
   BEGIN
     IF NOT init_done THEN Init () END;

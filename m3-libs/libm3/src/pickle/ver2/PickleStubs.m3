@@ -261,7 +261,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
             VAR ii: Int64On64;
             BEGIN
               ii.v := i;
-              ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
+<*NOWARN*>    ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
               i := ii.v;
             END;
           ELSE
@@ -351,7 +351,7 @@ PROCEDURE InWord (reader: Pickle.Reader;
             VAR ii: Int64On64;
             BEGIN
               ii.v := i;
-              ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
+<*NOWARN*>    ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
               i := ii.v;
             END;
           ELSE
@@ -425,7 +425,7 @@ PROCEDURE InLongint(reader: Pickle.Reader;
             VAR ii: Int64On64;
             BEGIN
               ii.v := VAL(i, INTEGER);
-              ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
+<*NOWARN*>    ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
               i := VAL(ii.v, LONGINT);
             END;
           ELSE
