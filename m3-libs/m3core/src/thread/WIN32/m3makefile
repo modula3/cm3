@@ -2,9 +2,15 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-interface ("ThreadContext")
+%if equal(OS_TYPE, "WIN32")
+  if equal(WORD_SIZE, "64BITS")
+    include_dir("64BITS")
+  else
+    include_dir("32BITS")
+  end
+%end
+
 module ("ThreadWin32")
-c_source("ThreadWin32C")
 if equal (OS_TYPE, "POSIX")   
     implementation("SchedulerPosix")   
 end 
