@@ -15,7 +15,7 @@ VAR
   drain        : RTPerfTool.Handle;
   self         : Thread.T := NIL;
   cnt          : INTEGER := 0;
-  buf          : ARRAY [0..255] OF INTEGER;
+  buf_of_RTHeapInfo_m3          : ARRAY [0..255] OF INTEGER;
   update       : LONGREAL := 5.0d0;
   n_types_sent : CARDINAL := 0;
 
@@ -58,7 +58,7 @@ PROCEDURE Producer (<*UNUSED*> self: Thread.Closure): REFANY =
 PROCEDURE SendTypes (nTypes: INTEGER) =
   (* LL = heap lock *)
   TYPE TK = RT0.TypeKind;
-  VAR t: RT0.TypeDefn;  str: ADDRESS;  n: INTEGER;  buf: ARRAY [0..31] OF CHAR;
+  VAR t: RT0.TypeDefn;  str: ADDRESS;  n: INTEGER;  buf_of_RTHeapInfo_m3: ARRAY [0..31] OF CHAR;
   BEGIN
     n := nTypes - n_types_sent;
     IF (n > 0) THEN
@@ -74,7 +74,7 @@ PROCEDURE SendTypes (nTypes: INTEGER) =
         str := t.name;
         IF (str # NIL)
           THEN n := Cstring.strlen (str);
-          ELSE n := BuildTypeName (t, buf);  str := ADR (buf[0]);
+          ELSE n := BuildTypeName (t, buf_of_RTHeapInfo_m3);  str := ADR (buf_of_RTHeapInfo_m3[0]);
         END;
         Send (n);
         Flush ();
@@ -84,47 +84,47 @@ PROCEDURE SendTypes (nTypes: INTEGER) =
     END;
   END SendTypes;
 
-PROCEDURE BuildTypeName (t: RT0.TypeDefn;  VAR buf: ARRAY OF CHAR): INTEGER =
+PROCEDURE BuildTypeName (t: RT0.TypeDefn;  VAR buf_of_RTHeapInfo_m3: ARRAY OF CHAR): INTEGER =
   CONST Digits = ARRAY [0..15] OF CHAR {'0','1','2','3','4','5','6','7',
                                         '8','9','a','b','c','d','e','f'};
   VAR uid, n: INTEGER;
   BEGIN
-    buf[0] := '<';
-    buf[1] := '_';
-    buf[2] := 't';
+    buf_of_RTHeapInfo_m3[0] := '<';
+    buf_of_RTHeapInfo_m3[1] := '_';
+    buf_of_RTHeapInfo_m3[2] := 't';
     uid := t.selfID;
     FOR i := 10 TO 3 BY -1 DO
-      buf[i] := Digits[ Word.And (uid, 16_f) ];
+      buf_of_RTHeapInfo_m3[i] := Digits[ Word.And (uid, 16_f) ];
       uid := Word.RightShift (uid, 4);
     END;
-    buf[11] := ' ';
-    buf[12] := 'T';
-    buf[13] := 'C';
-    buf[14] := '=';
+    buf_of_RTHeapInfo_m3[11] := ' ';
+    buf_of_RTHeapInfo_m3[12] := 'T';
+    buf_of_RTHeapInfo_m3[13] := 'C';
+    buf_of_RTHeapInfo_m3[14] := '=';
     uid := t.typecode;
     n := 1;
     WHILE (uid > 10) DO INC (n);  uid := uid DIV 10 END;
     uid := t.typecode;
     FOR i := 14+n TO 15 BY -1 DO
-      buf[i] := Digits[ uid MOD 10 ];
+      buf_of_RTHeapInfo_m3[i] := Digits[ uid MOD 10 ];
       uid := uid DIV 10;
     END;
-    buf[15+n] := '>';
-    buf[16+n] := '\000';
+    buf_of_RTHeapInfo_m3[15+n] := '>';
+    buf_of_RTHeapInfo_m3[16+n] := '\000';
     RETURN 15+n;
   END BuildTypeName;
 
 PROCEDURE Send (i: INTEGER) =
   BEGIN
-    IF (cnt >= NUMBER (buf)) THEN Flush () END;
-    buf[cnt] := i;
+    IF (cnt >= NUMBER (buf_of_RTHeapInfo_m3)) THEN Flush () END;
+    buf_of_RTHeapInfo_m3[cnt] := i;
     INC (cnt);
   END Send;
 
 PROCEDURE Flush () =
   BEGIN
     IF (cnt > 0) THEN
-      EVAL RTPerfTool.Send (drain, ADR (buf), cnt * BYTESIZE (buf[0]));
+      EVAL RTPerfTool.Send (drain, ADR (buf_of_RTHeapInfo_m3), cnt * BYTESIZE (buf_of_RTHeapInfo_m3[0]));
       cnt := 0;
     END;
   END Flush;
