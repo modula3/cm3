@@ -581,11 +581,11 @@ Q = "" # TBD
 
 Host = None
 print("A working cm3 is required. Checking.")
-print(CM3 + " -version | fgrep host:")
+print(CM3 + " -version | fgrep target:")
 for a in os.popen(CM3 + " -version 2>" + DevNull):
-    if StringContains(a, "host:"):
+    if StringContains(a, "target:"):
         print(a)
-        Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("host:", "")
+        Host = a.replace("\r", "").replace("\n", "").replace(" ", "").replace("target:", "")
         break
 
 #-----------------------------------------------------------------------------
