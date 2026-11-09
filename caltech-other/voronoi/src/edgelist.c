@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-static int ntry, totalsearch;
-
 /*int ELhashsize;*/
 void
 ELinitialize(void)
@@ -90,9 +88,7 @@ Halfedge *he;
 	    {	if ((he=ELgethash(bucket-i)) != NULL) break;
 		if ((he=ELgethash(bucket+i)) != NULL) break;
 	    }
-	totalsearch += i;
 	}
-	ntry += 1;
 /* Now search linear list of halfedges for the corect one */
 	if (he==ELleftend  || (he != ELrightend && right_of(he,p)))
 	{do {he = he -> ELright;} while (he!=ELrightend && right_of(he,p));
