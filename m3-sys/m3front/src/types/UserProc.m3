@@ -221,15 +221,43 @@ PROCEDURE GenClosureCall (p_temp: CG.Val;  result: CG.Type;
   VAR skip := CG.Next_label ();
       handler,handler_body : CG.Label;
       info : CG.Var;
+      link : CG.Val;
   BEGIN
+    (* The static link must be DEFINED on both paths.
+
+       The indirect call below reads the static link unconditionally,
+       but only the closure arm used to write it, so when the value was
+       a top-level procedure the static link was read having never been
+       written.  A back end that lowers a never-written local to an
+       undefined value may then treat the two arms as interchangeable
+       and fold away the closure test itself.  The C back end plus
+       clang -O2 does exactly that: SimplifyCFG demotes the CL_marker
+       comparison to llvm.assume, after which every suitably aligned
+       non-NIL procedure value takes the closure path and is called
+       through a word read out of its own instruction stream.
+
+       For a top-level procedure the value is a don't-care, since the
+       callee ignores it -- but "don't care" and "undefined" are not
+       the same thing to an optimizer.
+
+       Pop_static_link spills the stack top to a fresh temporary each
+       time it is called, so it is not enough to call it twice: the
+       second call allocates a second temp and the first store is dead.
+       One temp is written on both arms and popped once after the
+       join. *)
+    CG.Load_nil ();
+    link := CG.Pop_temp ();
     CG.If_closure (p_temp, CG.No_label, skip, CG.Maybe);
     CG.Push (p_temp);
     CG.Closure_frame ();
-    CG.Pop_static_link ();
+    CG.Store_temp (link);
     CG.Push (p_temp);
     CG.Closure_proc ();
     CG.Store_temp (p_temp);
     CG.Set_label (skip);
+    CG.Push (link);
+    CG.Pop_static_link ();
+    CG.Free (link);
     CG.Push (p_temp);
     IF Marker.NextHandler(handler, handler_body, info) THEN
       CG.Invoke_indirect(result, cc, handler);
