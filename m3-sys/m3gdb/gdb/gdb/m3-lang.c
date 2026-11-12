@@ -3054,8 +3054,8 @@ get_linespec_token ( char * * start, char * * finish )
    but it is somehow invalid, this will produce an error and/or throw an
    exception.
  */
-struct symtabs_and_lines
-m3_decode_linespec (
+static struct symtabs_and_lines
+m3_decode_linespec_1 (
     char ** argptr,
     int funfirstline,
     char * * * canonical,
@@ -3387,6 +3387,63 @@ m3_decode_linespec (
         else /* Malformed for Modula-3. */
           { return result_sals; }
       } /* while */
+  } /* m3_decode_linespec_1 */
+
+/* m3gdb: length of the location part of the linespec at S, i.e. up to
+   a following "if" or "thread" keyword (as in "break Main.P if x = 1"),
+   which belongs to the breakpoint command, not to the location.  */
+static int
+m3_linespec_length ( char * s )
+  { char * p = s;
+
+    while ( * p != '\0' )
+      { if ( ( * p == ' ' || * p == '\t' ) )
+          { char * q = p;
+            while ( * q == ' ' || * q == '\t' ) { q ++; }
+            if ( ( strncmp ( q, "if", 2 ) == 0
+                   && ( q [ 2 ] == ' ' || q [ 2 ] == '\t' || q [ 2 ] == '\0' )
+                 )
+                 || ( strncmp ( q, "thread", 6 ) == 0
+                      && ( q [ 6 ] == ' ' || q [ 6 ] == '\t'
+                           || q [ 6 ] == '\0'
+                         )
+                    )
+               )
+              { return p - s; }
+            p = q;
+          }
+        else { p ++; }
+      }
+    return p - s;
+  }
+
+struct symtabs_and_lines
+m3_decode_linespec (
+    char ** argptr,
+    int funfirstline,
+    char * * * canonical,
+    int *not_found_ptr
+  )
+  { char * orig = * argptr;
+    int len = m3_linespec_length ( orig );
+    char * copy;
+    char * p;
+    struct symtabs_and_lines result;
+
+    if ( orig [ len ] == '\0' )
+      { return m3_decode_linespec_1
+                 ( argptr, funfirstline, canonical, not_found_ptr );
+      }
+    copy = ( char * ) alloca ( len + 1 );
+    memcpy ( copy, orig, len );
+    copy [ len ] = '\0';
+    p = copy;
+    result = m3_decode_linespec_1 ( & p, funfirstline, canonical, not_found_ptr );
+    if ( result . nelts > 0 )
+      { * argptr = orig + ( p - copy );
+        while ( * * argptr == ' ' || * * argptr == '\t' ) { ( * argptr ) ++; }
+      }
+    return result;
   } /* m3_decode_linespec */
 
 char *

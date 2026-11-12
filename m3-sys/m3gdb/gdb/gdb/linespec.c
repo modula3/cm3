@@ -939,7 +939,16 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
     struct symtabs_and_lines values;
     CORE_ADDR pc; 
 
-    sans_file_name = saved_arg; 
+    /* m3gdb: only the first whitespace-delimited token is the
+       location; anything after it (e.g. "if n = 2" in a conditional
+       breakpoint) belongs to the caller.  Previously the whole rest of
+       the line was parsed as the expression and then consumed.  */
+    char *m3_end = saved_arg;
+    while (*m3_end != '\0' && *m3_end != ' ' && *m3_end != '\t')
+      m3_end++;
+    sans_file_name = alloca (m3_end - saved_arg + 1);
+    memcpy (sans_file_name, saved_arg, m3_end - saved_arg);
+    sans_file_name[m3_end - saved_arg] = '\0';
     if ((expr = m3_ls_safe_parse (sans_file_name)) != 0
 	&& (val = m3_ls_safe_evaluate (expr)) != 0) {
       pc = 0;
@@ -961,7 +970,8 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 	     record isn't set yet.  It could also be a global var so
 	     we have to be careful. sans_file_name is of the form a.b, we
 	     want to isolate a. */
-	  int interface_name_length = *argptr - sans_file_name;
+	  int interface_name_length = *argptr - saved_arg;
+	  int rest_length = m3_end - *argptr;
 	  char *interface_name = alloca (interface_name_length + 1);
           /* FIXME:  Uses of char_buf are classic C buffer overrun bugs. */ 
 	  char char_buf [1000];
@@ -977,17 +987,20 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 					    interface_name, 1))
 	      != 0) {
 	    for (i = 0; i < TYPE_NFIELDS (implementers); i++) {
-	      sprintf (char_buf, "%s%s", TYPE_FIELD_NAME (implementers, i),
-		       *argptr);
+	      if (rest_length < 0)
+		rest_length = 0;
+	      snprintf (char_buf, sizeof char_buf, "%s%.*s",
+			TYPE_FIELD_NAME (implementers, i),
+			rest_length, *argptr);
 	      if ((expr = m3_ls_safe_parse (char_buf))) {
   		if ((val = m3_ls_safe_evaluate (expr)) != 0) {
 		  if (TYPE_CODE (value_type (val)) == TYPE_CODE_M3_PROC) {
 		    pc = m3_value_as_address (val);
 		    break; }}}}}}}
       if (pc != 0) {
-	while (**argptr != '\000') {
+	*argptr = m3_end;
+	while (**argptr == ' ' || **argptr == '\t')
 	  (*argptr)++;
-	}
 	/* Arg is the name of a function */
 	values.sals = (struct symtab_and_line *)
 	xmalloc (sizeof (struct symtab_and_line));
