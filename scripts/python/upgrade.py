@@ -70,17 +70,26 @@ os.environ["OMIT_GCC"] = "yes"
 CopyConfigForDistribution(InstallRoot) or sys.exit(1)
 
 # once more
+#
+# Do it twice.  The first pass is compiled by the compiler shipped above,
+# i.e. the new sources compiled by the *old* compiler.  The compiler folds
+# floating point constants using its own EXTENDED (m3middle/src/TFloat.m3),
+# so if the representation of EXTENDED differs between the old and the new
+# compiler (it became 128 bits on AMD64_LINUX), that compiler folds EXTENDED
+# constants in m3core, libm3 and in the new compiler itself (Target's
+# Extended min/max) with the old representation.  Packages built later by
+# the shipped compiler then fail with "bad version stamps" on Extended.*
+# constants or INTERNAL CG ERRORs (e.g. m3-libs/arithmetic).  The second
+# pass is compiled by the compiler shipped by the first, and is consistent.
+#
 
-DoPackage(argv_RealClean, [ "m3bundle", "m3middle", "m3quake", "m3objfile",
-                            "set", "m3linker", "m3back", "m3front", "sysutils",
-                            "cm3", "mklib", "m3core", "libm3"
-    ]) or sys.exit(1)
+CorePackages = [ "m3bundle", "m3middle", "m3quake", "m3objfile",
+                 "set", "m3linker", "m3back", "m3front", "sysutils",
+                 "cm3", "mklib", "m3core", "libm3" ]
 
-DoPackage(argv_BuildShip, [ "m3bundle", "m3middle", "m3quake", "m3objfile",
-                            "set", "m3linker", "m3back", "m3front", "sysutils",
-                            "cm3", "mklib", "m3core", "libm3"
-    ]) or sys.exit(1)
-
-ShipFront() or sys.exit(1)
+for i in range(2):
+    DoPackage(argv_RealClean, CorePackages) or sys.exit(1)
+    DoPackage(argv_BuildShip, CorePackages) or sys.exit(1)
+    ShipFront() or sys.exit(1)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
