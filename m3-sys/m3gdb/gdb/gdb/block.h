@@ -82,9 +82,11 @@ struct block
 
   struct dictionary *dict;
 
-  /* Used for language-specific info.  */
+  /* Used for language-specific info.  m3gdb: this was a union, but
+     the Modula-3 body_block pointer then aliased the C++ namespace
+     pointer, and C++/C lookups through M3 blocks crashed.  */
 
-  union
+  struct
   {
     struct
     {
@@ -95,12 +97,12 @@ struct block
       struct block_namespace_info *namespace;
     }
     cplus_specific;
-#ifdef _LANG_m3
+    /* Unconditional (not #ifdef _LANG_m3) so that every translation
+       unit agrees on the layout of struct block.  */
     struct
       { struct block * body_block;
       } 
     m3_specific; 
-#endif 
   }
   language_specific;
 
