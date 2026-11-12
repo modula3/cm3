@@ -615,13 +615,28 @@ find_m3_function_start_sal (
   ) 
 {
   struct symtab_and_line sal;
+  CORE_ADDR func_start = 0, func_end = 0;
 
   if (funfirstline)
     {
       pc += DEPRECATED_FUNCTION_START_OFFSET;
-      SKIP_PROLOGUE (pc);
+      /* m3gdb: the result of SKIP_PROLOGUE used to be discarded.  */
+      pc = SKIP_PROLOGUE (pc);
     }
   sal = find_pc_line (pc, 0);
+
+  /* As in find_function_start_sal: if SKIP_PROLOGUE left us in
+     mid-line (modern gcc stores the arguments after the frame is
+     set up), advance to the first pc of the next line, provided it
+     is still inside the same function.  */
+  if (funfirstline
+      && sal.pc != pc
+      && find_pc_partial_function (pc, NULL, &func_start, &func_end)
+      && func_start <= sal.end && sal.end < func_end)
+    {
+      pc = sal.end;
+      sal = find_pc_line (pc, 0);
+    }
   sal.pc = pc;
 
   return sal;
@@ -629,6 +644,39 @@ find_m3_function_start_sal (
 #endif /* _LANG_m3 */
 
 
+#ifdef _LANG_m3
+/* m3gdb: catch_errors returns int, so it cannot carry a pointer result
+   on LP64 hosts (pointers above 4GB, e.g. in a PIE gdb, got truncated
+   and gdb crashed).  These wrappers return the pointer directly.  */
+static struct expression *
+m3_ls_safe_parse (char *str)
+{
+  struct expression *volatile result = NULL;
+  struct gdb_exception e;
+  TRY_CATCH (e, RETURN_MASK_ALL)
+    {
+      result = parse_expression (str);
+    }
+  if (e.reason < 0)
+    return NULL;
+  return result;
+}
+
+static struct value *
+m3_ls_safe_evaluate (struct expression *expr)
+{
+  struct value *volatile result = NULL;
+  struct gdb_exception e;
+  TRY_CATCH (e, RETURN_MASK_ALL)
+    {
+      result = evaluate_expression (expr);
+    }
+  if (e.reason < 0)
+    return NULL;
+  return result;
+}
+#endif
+
 /* The parser of linespec itself. */
 
 /* Parse a string that specifies a line number.
@@ -892,12 +940,8 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
     CORE_ADDR pc; 
 
     sans_file_name = saved_arg; 
-    if ((expr = (struct expression *) catch_errors 
-           ((int (*)()) parse_expression, sans_file_name, (char *) 0, RETURN_MASK_ALL)
-        ) != 0
-	&& (val = (struct value *) catch_errors 
-                  ((int (*)()) evaluate_expression, expr, (char *) 0, RETURN_MASK_ALL)
-           ) != 0) {
+    if ((expr = m3_ls_safe_parse (sans_file_name)) != 0
+	&& (val = m3_ls_safe_evaluate (expr)) != 0) {
       pc = 0;
       if (TYPE_CODE (value_type (val)) == TYPE_CODE_FUNC) {
 	/* Found a minimal symbol of the form Unit__Entry
@@ -935,15 +979,8 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 	    for (i = 0; i < TYPE_NFIELDS (implementers); i++) {
 	      sprintf (char_buf, "%s%s", TYPE_FIELD_NAME (implementers, i),
 		       *argptr);
-	      if ((expr = (struct expression *) catch_errors
-                     ( (int (*)()) parse_expression, 
-                       char_buf, 
-                       (char *) 0, RETURN_MASK_ALL
-                     )
-                 )) {
-  		if ((val = (struct value *) catch_errors ((int (*)()) evaluate_expression,
-						 expr, (char *) 0,
-						 RETURN_MASK_ALL)) != 0) {
+	      if ((expr = m3_ls_safe_parse (char_buf))) {
+  		if ((val = m3_ls_safe_evaluate (expr)) != 0) {
 		  if (TYPE_CODE (value_type (val)) == TYPE_CODE_M3_PROC) {
 		    pc = m3_value_as_address (val);
 		    break; }}}}}}}
