@@ -8,7 +8,12 @@ template("float")
 Generic_implementation("FloatEx")
 FloatEx("Real",     "Real")
 FloatEx("LongReal", "LongReal")
-FloatEx("Extended", "Extended")
+% EXTENDED is 128-bit only on AMD64_LINUX; see m3core/src/float/IEEE-le
+if equal (TARGET, "AMD64_LINUX")
+  include_dir ("ext128")
+else
+  include_dir ("ext64")
+end
 
 Generic_module("FloatBasic")
 FloatBasic("Real",     "Real",     "Real",     "RealFloat")
