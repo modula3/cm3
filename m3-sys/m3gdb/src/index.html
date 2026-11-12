@@ -17,9 +17,57 @@ While gdb tries to determine automatically the language for
 the current frame (procedure), you may sometimes want to
 explicitely set the current language:
 <PRE>
-    (m3gdb) set language m3
+    (m3gdb) set language Modula-3
     (m3gdb) set language c
 </PRE>
+
+<H2 ID="Linux">Debugging on current Linux systems</H2>
+
+<P>
+<TT>m3gdb</TT> is based on gdb 6.4, which predates several features of
+current toolchains.  On AMD64_LINUX (tested on Debian 12: gcc 12,
+glibc 2.36):
+
+<UL>
+<LI><B>Link without PIE.</B>  gdb 6.4 cannot debug position-independent
+executables, which gcc now produces by default; breakpoints will fail
+with "Cannot insert breakpoint".  Link the program with
+<TT>-no-pie</TT>:
+<PRE>
+    cm3 -DPOSITION_INDEPENDENT_EXECUTABLE=-no-pie
+</PRE>
+
+<LI><B>GCC backend.</B>  Modula-3 code compiled by <TT>cm3cg</TT> carries
+stabs debug information and gets full Modula-3 support (types, objects,
+<TT>TEXT</TT>, open arrays, <TT>Module.name</TT> expressions).  The C
+parts of the runtime libraries are usually compiled with DWARF 5, which
+gdb 6.4 cannot read; <TT>m3gdb</TT> skips those compilation units with a
+warning ("skipping DWARF 5 compilation units") and still reads
+everything else, including the Modula-3 stabs.  This also works for
+statically linked programs (<TT>build_standalone()</TT>).
+Breakpoint conditions use Modula-3 syntax:
+<PRE>
+    (m3gdb) break Main.Fib if n = 2
+    (m3gdb) break Main.Outer.Inner          (nested procedure)
+</PRE>
+
+<LI><B>C backend.</B>  Programs built with
+<TT>M3_BACKEND_MODE = "C"</TT> are debugged as C/C++: breakpoints by
+generated name (<TT>break Main__Proc</TT>) or by Modula-3 source line
+(<TT>break Main.m3:31</TT>), stepping, backtraces and source listing in
+the <TT>.m3</TT> file all work, but values are shown with C types and
+generated names (e.g. <TT>n_L_49</TT>).  Breakpoint conditions there are
+C expressions, e.g. <TT>break Main.m3:76 if n_L_71 == 2</TT> (in C,
+<TT>=</TT> would be an assignment).  The C compiler must emit
+DWARF 2, e.g. by setting in the config file used for the build:
+<PRE>
+    SYSTEM_CC   = "gcc -gdwarf-2 -gstrict-dwarf -m64 -fPIC"
+    SYSTEM_CXXC = "g++ -gdwarf-2 -gstrict-dwarf -m64 -fPIC"
+</PRE>
+The generated source refers to <TT>../src/</TT>; if <TT>m3gdb</TT>
+cannot find the source, use <TT>directory src</TT> from the package
+directory.
+</UL>
 
 <H2 ID="GC">Garbage collection</H2>
 
@@ -75,7 +123,7 @@ stopped before continuing the execution (i.e. the first thread
 listed by the <TT>threads</TT>).
 If the <TT>switch</TT> command is interrupted, the state of
 <TT>m3gdb</TT> is essentially random and it will most likely crash.
-The current language must be <TT>m3</TT> for the <TT>threads</TT>
+The current language must be <TT>Modula-3</TT> for the <TT>threads</TT>
 and <TT>switch</TT> commands to work.
 <P>
 
