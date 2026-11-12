@@ -160,8 +160,39 @@ print_frame_nameless_args (struct frame_info *frame, long start, int num,
    ints of argumentss according to the stack frame".  */
 
 static void
+print_frame_args_1 (struct symbol *func, struct frame_info *frame,
+		    int num, struct ui_file *stream);
+
+static void
+m3gdb_restore_language (void *arg)
+{
+  current_language = (const struct language_defn *) arg;
+}
+
+/* m3gdb: print each frame's arguments using that frame's own source
+   language (as modern gdb does), so that a backtrace that mixes
+   Modula-3 frames (stabs) with C/C++ frames (e.g. code from the CM3 C
+   backend) prints correctly whatever the current language is.  */
+
+static void
 print_frame_args (struct symbol *func, struct frame_info *frame,
 		  int num, struct ui_file *stream)
+{
+  struct cleanup *old_chain
+    = make_cleanup (m3gdb_restore_language, (void *) current_language);
+
+  if (func != NULL
+      && SYMBOL_LANGUAGE (func) != language_unknown
+      && SYMBOL_LANGUAGE (func) != language_auto)
+    current_language = language_def (SYMBOL_LANGUAGE (func));
+
+  print_frame_args_1 (func, frame, num, stream);
+  do_cleanups (old_chain);
+}
+
+static void
+print_frame_args_1 (struct symbol *func, struct frame_info *frame,
+		    int num, struct ui_file *stream)
 {
   int first = 1;
   /* Offset of next stack argument beyond the one we have seen that is
