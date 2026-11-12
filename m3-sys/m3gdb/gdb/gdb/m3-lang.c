@@ -2333,9 +2333,16 @@ m3_observer_solib_unloaded ( struct so_list * so )
 
 static void
 m3_observer_inferior_created (struct target_ops *objfile, int from_tty)
-  { /* Currently not needed, but it took work to figure out how to hook
-       this event, so I am leaving this empty function here for now.
-       rodney.bates@wichita.edu. */
+  { /* m3gdb: when the runtime is linked into the executable itself
+       (build_standalone, static linking), m3_observer_solib_symbols_loaded
+       never sees libm3core.so, so the pthread runtime's GC suspend signal
+       (SIGRTMAX, SIG64 on Linux) would stop the program.  Set it up here
+       too; by now the executable's symbols are loaded.  */
+    if ( ! m3_libm3core_so_is_loaded )
+      { m3_thread_kind_cached = tk_unknown;
+        if ( m3_thread_kind ( ) == tk_pthread )
+          { handle_command ( "SIG64 nostop noprint pass", /* from_tty = */ 0 ); }
+      }
   } /* m3_observer_inferior_created */
 
 /*
