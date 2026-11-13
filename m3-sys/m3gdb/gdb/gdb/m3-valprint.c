@@ -1450,9 +1450,18 @@ m3_val_print2 (
       m3_ordinal_bounds (target, &lower, &upper);
       fputs_filtered ("{", stream);
 
-      for (i = 0; i < TYPE_LENGTH (type) / sizeof (long); i++) {
-        val = m3_extract_ord (valaddr, bitpos, m3_target_integer_bit, FALSE);
-        for (j = 0; j < m3_target_integer_bit; j++) {
+      /* m3gdb: sets smaller than a word (e.g. SET OF a 7-element
+         enumeration, 1 byte) used to print as {} because the word count
+         was rounded down.  Round up, and only extract the bits that are
+         actually present in a partial last word.  */
+      { int total_bits = TYPE_LENGTH (type) * TARGET_CHAR_BIT;
+        int nwords = (total_bits + m3_target_integer_bit - 1)
+                     / m3_target_integer_bit;
+      for (i = 0; i < nwords; i++) {
+        int wbits = total_bits - i * m3_target_integer_bit;
+        if (wbits > m3_target_integer_bit) wbits = m3_target_integer_bit;
+        val = m3_extract_ord (valaddr, bitpos, wbits, FALSE);
+        for (j = 0; j < wbits; j++) {
           LONGEST ord = i * m3_target_integer_bit + j + lower;
           if ((val & one_longest << j) && (ord <= upper)) {
             if (n > 0) {
@@ -1466,7 +1475,7 @@ m3_val_print2 (
             else {
               print_longest (stream, 'd', 1, ord); }
             n++; }}
-        valaddr += sizeof (long); }
+        valaddr += m3_target_integer_bit / TARGET_CHAR_BIT; }}
 
       fputs_filtered ("}", stream);
 

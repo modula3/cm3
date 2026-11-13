@@ -201,8 +201,12 @@ elf64_x86_64_info_to_howto (bfd *abfd ATTRIBUTE_UNUSED, arelent *cache_ptr,
     {
       if (r_type >= (unsigned int) R_X86_64_standard)
 	{
-	  (*_bfd_error_handler) (_("%B: invalid relocation type %d"),
-				 abfd, (int) r_type);
+	  /* m3gdb: relocation types 27..43 (TLSDESC, IRELATIVE,
+	     GOTPCRELX, ...) postdate this BFD.  They only matter to the
+	     linker, so quietly treat them as R_X86_64_NONE.  */
+	  if (r_type > 43)
+	    (*_bfd_error_handler) (_("%B: invalid relocation type %d"),
+				   abfd, (int) r_type);
 	  r_type = R_X86_64_NONE;
 	}
       i = r_type;

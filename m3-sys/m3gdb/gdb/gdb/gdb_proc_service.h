@@ -25,6 +25,9 @@
 
 #ifdef HAVE_PROC_SERVICE_H
 #include <proc_service.h>
+#include "gregset.h"
+/* Modern glibc no longer defines paddr_t; its API uses psaddr_t. */
+typedef psaddr_t paddr_t;
 #else
 
 #ifdef HAVE_SYS_PROCFS_H

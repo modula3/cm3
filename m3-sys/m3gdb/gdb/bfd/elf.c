@@ -2095,6 +2095,12 @@ bfd_section_from_shdr (bfd *abfd, unsigned int shindex)
     case SHT_SHLIB:
       return TRUE;
 
+    case SHT_RELR:
+      /* Packed relative relocations (e.g. glibc >= 2.36).  Only the
+	 dynamic linker needs them; treat as an ordinary section so
+	 that modern shared libraries can be opened.  */
+      return _bfd_elf_make_section_from_shdr (abfd, hdr, name, shindex);
+
     case SHT_GROUP:
       /* We need a BFD section for objcopy and relocatable linking,
 	 and it's handy to have the signature available as the section

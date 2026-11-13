@@ -57,6 +57,37 @@
 #include "gdb-events.h"
 #include "mi/mi-common.h"
 
+/* m3gdb: parse a breakpoint condition in the source language of the
+   breakpoint's location (when the language is "auto"), not in whatever
+   language happens to be current.  Otherwise "break Main.P if n = 2",
+   given before the program runs (language still C), was parsed as a C
+   assignment.  Later gdb versions do the same.  */
+
+static void
+restore_current_language_cleanup (void *arg)
+{
+  current_language = (const struct language_defn *) arg;
+}
+
+static struct expression *
+parse_cond_at_pc (char **arg, CORE_ADDR pc)
+{
+  struct cleanup *old_chain
+    = make_cleanup (restore_current_language_cleanup,
+		    (void *) current_language);
+  struct symtab *st = find_pc_symtab (pc);
+  struct expression *result;
+
+  if (language_mode == language_mode_auto
+      && st != NULL
+      && st->language != language_unknown
+      && st->language != language_auto)
+    current_language = language_def (st->language);
+  result = parse_exp_1 (arg, block_for_pc (pc), 0);
+  do_cleanups (old_chain);
+  return result;
+}
+
 /* Prototypes for local functions. */
 
 static void until_break_command_continuation (struct continuation_arg *arg);
@@ -579,7 +610,7 @@ condition_command (char *arg, int from_tty)
 	  b->cond_string = savestring (arg, strlen (arg));
 	  if (!b->pending)
 	    {
-	      b->cond = parse_exp_1 (&arg, block_for_pc (b->loc->address), 0);
+	      b->cond = parse_cond_at_pc (&arg, b->loc->address);
 	      if (*arg)
 		error (_("Junk at end of expression"));
 	    }
@@ -4980,7 +5011,7 @@ create_breakpoints (struct symtabs_and_lines sals, char **addr_string,
 	      {
 		arg = pending_bp->cond_string;
 		b->cond_string = savestring (arg, strlen (arg));
-		b->cond = parse_exp_1 (&arg, block_for_pc (b->loc->address), 0);
+		b->cond = parse_cond_at_pc (&arg, b->loc->address);
 		if (*arg)
 		  error (_("Junk at end of pending breakpoint condition expression"));
 	      }
@@ -5278,8 +5309,7 @@ break_command_1 (char *arg, int flag, int from_tty, struct breakpoint *pending_b
 	      if (toklen >= 1 && strncmp (tok, "if", toklen) == 0)
 		{
 		  tok = cond_start = end_tok + 1;
-		  cond[i] = parse_exp_1 (&tok, block_for_pc (sals.sals[i].pc), 
-				         0);
+		  cond[i] = parse_cond_at_pc (&tok, sals.sals[i].pc);
 		  make_cleanup (xfree, cond[i]);
 		  cond_end = tok;
 		  cond_string[i] = savestring (cond_start, 
@@ -5434,7 +5464,7 @@ do_captured_breakpoint (struct ui_out *uiout, void *data)
       if (args->condition != NULL)
 	{
 	  char *tok = args->condition;
-	  cond[i] = parse_exp_1 (&tok, block_for_pc (sals.sals[i].pc), 0);
+	  cond[i] = parse_cond_at_pc (&tok, sals.sals[i].pc);
 	  if (*tok != '\0')
 	    error (_("Garbage %s follows condition"), tok);
 	  make_cleanup (xfree, cond[i]);
@@ -7070,7 +7100,7 @@ breakpoint_re_set_one (void *bint)
 		     to parse_exp_1.  */
 		  b->cond = NULL;
 		}
-	      b->cond = parse_exp_1 (&s, block_for_pc (sals.sals[i].pc), 0);
+	      b->cond = parse_cond_at_pc (&s, sals.sals[i].pc);
 	    }
 
 	  /* We need to re-set the breakpoint if the address changes... */

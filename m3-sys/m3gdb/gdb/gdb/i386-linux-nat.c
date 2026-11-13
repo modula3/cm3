@@ -692,8 +692,8 @@ i386_linux_dr_get_status (void)
    storage (or its descriptor).  */
 
 ps_err_e
-ps_get_thread_area (const struct ps_prochandle *ph, 
-		    lwpid_t lwpid, int idx, void **base)
+ps_get_thread_area (struct ps_prochandle *ph, 
+		    lwpid_t lwpid, int idx, psaddr_t *base)
 {
   /* NOTE: cagney/2003-08-26: The definition of this buffer is found
      in the kernel header <asm-i386/ldt.h>.  It, after padding, is 4 x
