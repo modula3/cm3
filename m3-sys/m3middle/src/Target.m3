@@ -8,7 +8,7 @@
 
 MODULE Target;
 
-IMPORT Text, TargetMap, M3RT, TextUtils;
+IMPORT Text, TargetMap, M3RT, TextUtils, Ext;
 
 TYPE
   (* Just a few systems need special handling and are listed here.
@@ -183,11 +183,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        On all other targets it maps to LONGREAL (64-bit IEEE double).
        The module-level initializer uses Ext.BitSize which is baked in at
        compile time from the HOST target's ExtendedRep; reset here for any
-       host/target mismatch. *)
+       host/target mismatch, both ways. *)
     IF NOT Text.Equal(system, "AMD64_LINUX") THEN
       Extended := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8,
                      Float{Precision.Extended, 0, -1.79769313486231570x+308},
                      Float{Precision.Extended, 0, 1.79769313486231570x+308}};
+    ELSE
+      (* 128-bit layout even on a 64-bit-EXTENDED host; FIRST/LAST then stay
+         limited to the host's EXTENDED range. *)
+      Extended := Float_type{CGType.XReel, Precision.Extended, 128, 128, 16,
+                     Float{Precision.Extended, 0, Ext.Min},
+                     Float{Precision.Extended, 0, Ext.Max}};
     END;
 
     (* add the system-specific customization *)

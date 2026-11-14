@@ -3149,6 +3149,11 @@ BEGIN
         print(self, Prefix[i] & "\n");
     END;
     IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      (* g++ < 13 and clang++ have no _Float128 in C++; __float128 is the
+         same IEEE binary128 type on x86-64, and libquadmath's own type. *)
+      print(self, "#if defined(__cplusplus) && defined(__x86_64__)\n" &
+                  "#define _Float128 __float128\n" &
+                  "#endif\n");
       print(self, "typedef _Float128 EXTENDED;\n");
     ELSE
       print(self,"typedef double EXTENDED;\n");
