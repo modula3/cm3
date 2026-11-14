@@ -32,11 +32,18 @@ archive carries the m3back fix, the config probe can be removed.
 
 - **Probe:** bare `_Float128` fails to compile as C++ on g++ 12 and on every clang++
   tested. With the mapping it compiles on g++ 12, 14 and 16 and on clang++.
-- **End-to-end on debian:12 (g++ 12):** a full upgrade with the cminstall workaround
-  removed rebuilt m3core and libm3, and a program using EXTENDED arithmetic printed
-  the expected result.
-- **Caveat:** cm3 deletes the generated C, so it was not inspected directly. The proof
-  that the M3C prefix is what fixed the build is by elimination.
+- **End-to-end on debian:12 (g++ 12.2), this change alone on top of master:**
+  - Bootstrap from the d5.12.0 boot archive. Its C++ predates this fix, so it still
+    needs `-DCMAKE_CXX_FLAGS=-D_Float128=__float128`.
+  - `concierge.py full-upgrade --backend c` with the change as-is succeeded. A test
+    program computing `1.5X0 * 2.0X0` printed `3`, and `BITSIZE(EXTENDED)` printed `128`.
+  - With the cminstall probe deleted from the installed config, m3core and libm3 were
+    rebuilt (`cm3 -build -keep`) and shipped with the new M3C alone. The same program
+    gave the same output.
+  - The kept generated C (e.g. `m3core/AMD64_LINUX/ASCII.i3.cpp`) shows the
+    `#define _Float128 __float128` guard right before `typedef _Float128 EXTENDED;`.
+- **Not exercised:** the m3middle cross-host case (building AMD64_LINUX code from an
+  ARM64_DARWIN host).
 
 ## Out of scope
 
