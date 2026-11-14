@@ -42,8 +42,22 @@ archive carries the m3back fix, the config probe can be removed.
     gave the same output.
   - The kept generated C (e.g. `m3core/AMD64_LINUX/ASCII.i3.cpp`) shows the
     `#define _Float128 __float128` guard right before `typedef _Float128 EXTENDED;`.
-- **Not exercised:** the m3middle cross-host case (building AMD64_LINUX code from an
-  ARM64_DARWIN host).
+- **Cross-host, ARM64_DARWIN → AMD64_LINUX:** m3core built with
+  `cm3 -build -DTARGET=AMD64_LINUX -DM3_BACKEND_MODE=C -keep` on an ARM64_DARWIN host.
+  - master's compiler: 25 `LOOPHOLE: expression's size (64) differs from type's (128)`
+    errors in `IEEESpecial.m3` and `ext128/ExtendedFloat.m3`.
+  - This change (its m3middle and m3back in cm3): no front-end errors.
+  - The generated C++ was compiled with `-c -m64 -fPIC` on Linux:
+
+    | Compiler | master (264 files) | this change (266 files) |
+    |---|---|---|
+    | g++ 12.2 (debian:12) | 0 compile | all compile |
+    | g++ 13.3 (ubuntu:24.04) | all compile | all compile |
+    | clang++ 18 (ubuntu:24.04) | 0 compile | all compile |
+
+  This covers a cross-built boot archive. Cross-building and linking whole programs was
+  not tested. With a 64-bit-EXTENDED host, FIRST/LAST(EXTENDED) stay limited to the
+  host's range.
 
 ## Out of scope
 
