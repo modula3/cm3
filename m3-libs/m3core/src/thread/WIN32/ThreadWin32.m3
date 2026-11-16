@@ -795,7 +795,7 @@ PROCEDURE SuspendOthers () =
   BEGIN
     EnterCriticalSection(ADR(activeLock));
 
-    <* ASSERT suspend_cnt = 0 *>
+    (* <* ASSERT suspend_cnt = 0 *> *)
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
       RETURN
@@ -814,17 +814,25 @@ PROCEDURE SuspendOthers () =
              * Calling GetThreadContext DOES ensure it is. This is NOT documented.
              * It can be seen experimentally and matches what SSCLI does.
              *)
-  	    IF GetThreadContext(act.handle, act.context) = 0 THEN Choke(ThisLine()) END;
-  	    act.stackPointer := StackPointerFromContext(act.context);
-            IF act.heapState.inCritical # 0 THEN
-              IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-              retry := TRUE;
-              SetState(act, ActState.Started);
+  	    IF GetThreadContext(act.handle, act.context) # 0 THEN 
+  	      act.stackPointer := StackPointerFromContext(act.context);
+              IF act.heapState.inCritical = 0 THEN
+                INC(act.suspendCount);
+                <* ASSERT act.suspendCount = 1 *>
+                SetState(act, ActState.Stopped);
+              ELSE
+                IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+                retry := TRUE;
+                SetState(act, ActState.Started);
+              END;
             ELSE
-              INC(act.suspendCount);
-              <* ASSERT act.suspendCount = 1 *>
-              SetState(act, ActState.Stopped);
-            END;
+                Choke(ThisLine()) 
+  	      (* VVM Temporary Off 
+                IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+                retry := TRUE;
+                SetState(act, ActState.Started);
+              *)
+  	    END;
           END;
         END;
         act := act.next;
@@ -841,7 +849,7 @@ PROCEDURE ResumeOthers () =
   VAR act: Activation := NIL;
       me: Activation := NIL;
   BEGIN
-    <* ASSERT suspend_cnt = 1 *>
+    (* <* ASSERT suspend_cnt = 1 *> *)
     DEC (suspend_cnt);
     IF suspend_cnt = 0 THEN
       me := GetActivation();
