@@ -1172,6 +1172,144 @@ used is unclear.
 `.ll`) and deletes it unless `cm3 -keep`; any library a test imports
 must also be rebuilt through MSIR because of the ABI link guard.
 
+### Abstraction review and decisions (2026-11-19)
+
+Four independent read-only reviews of `git diff d2108205fd msir`, with the
+main findings spot-checked.  Decisions (Tony, 2026-11-19):
+
+- **D22. MSIR behaviour attaches through TypeRep/ExprRep methods.**  Add
+  methods such as `initValueMSIR`, `storeMSIR` and `checkUseFailureMSIR`
+  beside their CG counterparts, override them per node/type, and delete the
+  exported helpers and shape inspection that re-implement them.
+- **D23. MSIRBuilder is node-agnostic.**  It only constructs IR.  Node and
+  type modules own their lowering; capture results move to CaptureAnalysis
+  or `Procedure.T`; the builder's symbol maps take handles from callers
+  instead of importing node modules.
+- **D24. RT0 layout has one source.**  Use `M3RT` offsets and sizes
+  everywhere; keep the LLVM field-type tables, but assert once that their
+  padded offsets equal `M3RT`'s `TC_*`/`OTC_*`/`ATC_*`/`MI_*` values.
+- Clutter (session transcripts, a test binary, editor backups) removed in
+  `77a724b298`.
+
+Scope: `git diff d2108205fd msir` (master merged in) over m3front, m3middle,
+m3-sys/msir and the cm3 driver.  Four independent read-only reviews, with the
+most serious findings spot-checked against the code.  Nothing built.
+
+#### Summary
+
+- **Holding:** the `*Rep` interfaces are still imported only within their own
+  subsystems.  Every expression and statement kind adds `compileMSIR` /
+  `capture` methods to ExprRep/StmtRep and dispatches through Expr/Stmt, which
+  is the intended pattern.  The `m3-sys/msir` package imports nothing from
+  m3front, keeps every IR handle opaque and is lowered only through its own
+  API.
+- **Not holding:** where MSIR needs per-type or per-node behaviour that CG
+  gets from a TypeRep/ExprRep method, it was mostly added as exported
+  procedures, cross-module probes, or code in MSIRBuilder that inspects node
+  and type shapes.  Several of those copies already disagree with the CG
+  path.  The MSIR layer and the front end now import each other, and MSIR
+  piggybacks on the CG pass's state and ordering (see O17).
+
+#### 1. Bugs (no judgement call needed)
+
+| # | Where | Problem |
+|---|-------|---------|
+| B1 | `MSIRToLLVM.m3:3608` | `TC_brand_ptr` always `null`: BRANDED types lose their brand at runtime. |
+| B2 | `UserProc.m3` `LValueMSIR` (~582) | Method-call args compiled with `Expr.CompileMSIR`, not `Formal.EmitArgMSIR`: VAR/READONLY/open-array modes ignored. |
+| B3 | `ObjectType.m3:805` `GenInitProcMSIR` | Skips fields with no explicit default but `InitCost > 0` (CG calls `Type.InitValue`), and skips packed fields (`:931`). |
+| B4 | `RecordType.m3:584` | `GenInitMSIR` silently skips non-byte-aligned fields. |
+| B5 | `MSIRBuilder.m3` maps (`2028, 2071, 2685, 2750, 2770`) | Fixed-size tables (`varMap[512]`, `globalMap[256]`, ...) silently drop entries when full instead of abandoning. |
+| B6 | `WithStmt.m3:243` | Unsupported case returns without `Abandon`: WITH body silently omitted. |
+| B7 | `Tracer.m3:90` | `EmitPendingMSIR` drains the shared trace queue and does nothing (no `msir_apply` override exists): traces lost. |
+| B8 | `QualifyExpr` `LValueMSIR` + `SubByteStoreMSIR` | Base designator evaluated twice for sub-byte stores (three times under INC): `a[f()].bits := x` may call `f` twice. Read-only finding; not yet confirmed by a test. |
+| B9 | m3core `runtime/common/m3makefile:75` | ABI guard keys on `"MSIRObj"` only; an MSIRAsm-built m3core cannot link. |
+| B10 | `Variable.m3` (5 copies of compile/trunc/zext/store) | Zero-extension is wrong for negative subranges. |
+| B11 | `Variable.m3:496` | MSIR sets `t.indirect := FALSE`, which CG's `Split`/`LoadLValue` read; nested MSIR bodies run during the outer CG pass. (Adjudicate: is this reachable in `@M3m3front-msir` C-authoritative mode?) |
+| B12 | `Procedure.m3:875` vs `:731` | Two capture computations; the GenBody fallback omits `CaptureOwnScopeInits`. |
+| B13 | `BlockStmt.GetScope` / `Procedure.FilterOwnScope` | Only the outermost block's locals are filtered from captures; inner-scope locals aren't, contrary to `BlockStmt.Capture`'s comment. |
+
+#### 2. Abstraction violations by theme
+
+##### 2a. Node internals exported for MSIR (expressions)
+- `QualifyExpr.i3`: `LhsExpr`, `MethodSlotBase`, `ObjTypeMethod`, `MethodHolder` hand out
+  `lhsExpr`/`holder`/`objType`; `UserProc` rebuilds vtable/default-method dispatch from them.
+  Fix: a QualifyExpr operation returning the resolved callee and receiver.
+- `ArrayExpr.i3`: `EltCount`/`Elt` let MSIRBuilder walk constructor elements and
+  re-implement "repeat last element" (`MSIRBuilder.m3:2320-2650`).  Fix: move into
+  `ArrayExpr.genLiteralMSIR`/`compileLValueMSIR`; drop the accessors.
+- `TextExpr`: MSIR literals call `SetUID` (CG global-data allocation); `MSIREmit`
+  iterates the CG literal table via `LiteralCount`/`LiteralExpr`.
+- Sub-byte stores dispatched by probing four modules in turn (`AssignStmt`, `Inc`,
+  `Dec`) instead of an Expr method; `EmitUseFailureMSIR` likewise.  Fix: ExprRep
+  methods `storeMSIR`, `checkUseFailureMSIR`.
+- `RecordExpr.TryConstFieldMSIR` / `TryCompileConstMSIR` duplicate `genLiteralMSIR`.
+
+##### 2b. Per-type behaviour re-implemented outside TypeRep (types/values)
+- Default initialisation: `RecordType.GenInitMSIR`/`GenInitArrayMSIR` (also handling
+  arrays and scalar subranges), `Variable.GenScalarInitMSIR`, `ObjectType.GenInitProcMSIR`,
+  `RefType.GenInitProcMSIR`.  Divergences B3, B4.  Fix: `initValueMSIR` method on
+  `TypeRep.T`, overridden per type constructor, dispatched via `Type.InitValueMSIR`.
+- Typecells: built in parallel by ObjectType, RefType and MSIRBuilder; brand lost (B1);
+  `ObjectType.m3:1063` invents a `dataOffset` CG leaves to RTLinker.  Fix: one
+  backend-neutral typecell description per type constructor, consumed by both.
+- `RefMapBytes`/`RefPickleDescBytes` in MSIRBuilder duplicate RefType's.
+
+##### 2c. Two-way layering between front end and MSIR layer
+- Type, RefType, ObjectType, RecordType, UserProc, Variable, Formal, Procedure,
+  Revelation and Module import MSIRBuilder/MSIREmit, while MSIRBuilder imports
+  Variable, Formal, Procedure, RefType, ArrayExpr, RecordExpr and keeps maps keyed
+  by `Variable.T`/`Procedure`.
+- Capture results live in the builder and are read back by front-end analysis
+  (`UserProc.Capture` -> `MSIRBuilder.GetProcCaptures`; `NamedExpr.m3:470`).
+- `MSIRBuilder.SetRefInitProcGen` callback guards a cycle that doesn't exist
+  (MSIRBuilder already imports RefType).
+- Global side channel `SetPendingContainer`/`TakePendingContainer` between lvalues
+  and Assign/With.
+
+##### 2d. MSIR depends on the CG pass (overlaps O17)
+- `BlockStmt.CompileMSIR` calls `Scope.InitValues`, re-running `LangInit`/`UserInit`
+  and CG `Tracer.EmitPending`; `Variable` patches this with `msirInitDone`.
+- Hook points inside CG emission: `Variable.Declare:1007`, `Revelation.GenList:610`,
+  `Type.GenCells:878` (+ `GenCellsMSIR` scan), `Module.BuildImportLink:1225`.
+- Mode detection by side effect: `p.cg_proc # NIL` (`Procedure.GenBody:913`) and
+  `M3CG_DoNothing.New` returning NIL procs as a signal; `M3CG_Check` special-cases
+  `M3CG_DoNothing`; Builder bypasses `M3Backend.Open`; the driver imports
+  `MSIREmit.SetLLOutPath` instead of using the front-end environment.
+- `Revelation.AddInheritedMSIR`/`GenCellsMSIR` re-emit interface content in the
+  module unit because "the module .ll overwrites the interface .ll": a file-naming
+  problem patched in front-end semantics.
+
+##### 2e. Runtime (RT0) layout written out by hand
+- `MSIRToLLVM.m3:3316` `OTC_defaultMethods_BYTES = 136` (64-bit literal next to
+  `M3RT.OTC_methodOffset`); `MSIR.i3:509` `MI_nFields = 13` vs front end's
+  `M3RT.MI_SIZE`; field tables `:3038-3108`, `:3897-3918`; `RH_*` offsets `:7-11`;
+  exception descriptor `{i64, ptr, i64}` (`:4602`); open-array dope in
+  `Formal.m3:1557,1772`, `RefType.m3:429`; method dispatch in `UserProc:331`.
+- `M3C.m3:3163` third copy of the stack-walker target list (use `Target.Has_stack_walker`).
+
+#### 3. Clutter on the public branch
+
+- 7 Claude session transcripts (~1.6 MB) at the repo root, `m3-sys/cm3/`,
+  `m3-sys/msir/`, `m3-sys/msir/test/` (checked: no emails, credentials, Defence
+  names or mail-tool use; only a generic Claude Code API-key warning).
+- `m3-sys/msir/test/smoke/smoke-realrt` (1.2 MB binary).
+- 33 editor backups `*.~<sha>~` across m3front.
+- Dead code: `Variable.BitSize`, `Variable.ForceInitMSIR`, `ObjectType.FillOwnMethodNames`,
+  `SetExpr.GetWordBitMask`, `TextExpr.IsTextExpr`, `Variable.m3:1632` (`IF FALSE AND`),
+  `Expr.TaCaptureLV`/`TabCaptureLV`; stale comments (MSIREmit env var, ExprRep note).
+- `CG.m3:3597` `Index_bits` change and `TFloat` precision change alter the C backend
+  and belong in separate, upstreamable commits.
+
+#### 4. Judged fine
+
+ExprRep/StmtRep additions (dispatch methods only); CallExpr method registration;
+CompareExpr/EqualExpr moving to a local `Op` enum (reduces CG coupling); narrow
+queries (`EnumType.EltList`, `ObjectType.FieldList`, `RefType.ReduceToRef`,
+`M3WString.GetChar`); `CaptureAnalysis` using `Variable.IsUpLevel`; GC/type maps via
+`Type.GenMap`/`GenDesc`; `Target.i3` additions; MSIRObj/MSIRAsm fitting Builder's
+mode structure; `MSIRToLLVM.Module(forRuntime)`; verifier/printer use only the API;
+ABI marker design.
+
 ### Known Limitations
 
 All p0/p1/p2 test-suite procedures now compile without abandons.  The
