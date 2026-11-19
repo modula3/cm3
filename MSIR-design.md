@@ -33,10 +33,11 @@ the rationale in the commit.
 | Verifier                       | Sketched (see A9 / D20)        |
 | `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs); smoke test 124/124 exit 0 |
 | `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
-| **Latest validation (2026-07-24)** | **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
+| **Clean re-validation (2026-11-19)** | **Supersedes the row below.** Fresh `ci-ladder.sh` runs on ARM64_DARWIN: m3tests under the stage-2 driver **290/292** before the master merge (p165 regression, stale e020 expected output); full three-stage IR fixpoint holds (1416/1416 `.mb`/`.ib` files). See *Merge from master (2026-11)*. |
+| **Latest validation (2026-07-24)** | *Not reproducible from a clean build (see above).* **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
 | **Platform coverage**           | **ARM64_DARWIN only.** AMD64_DARWIN and AMD64_LINUX (the other `ex_stack` targets) have **not** been validated. A CI job on all three is needed before proposing for master. |
 | **Front end decoupled from M3CG** | **Not started.** MSIR emission is interleaved with the M3CG pass and reuses state that pass allocates (see O17). Needed before proposing for master. |
-| **Merge from master (2026-11)** | **In progress.** See *Merge from master (2026-11)* below. |
+| **Merge from master (2026-11)** | **Merged locally (`593cb56d0c`), not yet pushed.** See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Not done.** m3tests in MSIRObj run without `-O`. master now runs the llvm backend's m3tests at `-O3` (`a03e61e15b`), and #1243 (undefined static link) only appeared at `-O2`. Add MSIRObj to that clause in `m3tests/src/m3makefile`, or add an optimised variant to `.github/workflows/msir.yml`. |
 | **EXTENDED on AMD64_LINUX**     | **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
 | **Full compiler self-hosting**  | **Achieved 2026-07-14**: m3middle+m3linker+m3front+m3quake+m3objfile+m3back+cm3 all built from 100% LLVM IR objects (MSIRObj mode). Resulting `cm3` binary runs, compiles M3 programs, and passes the same 292-test suite as the C-backend cm3 (26 errors in both — all pre-existing C-backend failures). Zero new regressions. |
@@ -918,6 +919,10 @@ MSIR IS the backend, so more code paths execute through MSIR.
 
 ### Validation Ladder (2026-07-24, ARM64_DARWIN)
 
+> **Superseded (2026-11-19).** A clean rebuild of `b28fd265c3` fails
+> p165 and e020, and the fixpoint now covers all MSIR-built modules.
+> See *Merge from master (2026-11)*.  The record below is kept for history.
+
 The ladder run for the last three `msir` commits (`f6b3f3c5d2`,
 `bbf78535cf`, `b28fd265c3`), the last with incremental + generational
 GC live:
@@ -1087,14 +1092,19 @@ case so `do-cm3-*.sh` scripts run without the `TARGET` override.
 
 ### Merge from master (2026-11)
 
-**Status: not started.**  Fill in as the merge proceeds.
+**Status: merged locally (`593cb56d0c`, 2026-11-19); not yet pushed.**
 
 **Starting point.**  Merge base `3faae855fb` (2026-05-08); master is 64
 commits ahead (at `d2108205fd`).  A trial `git merge-tree` reports two
 conflicts, both expected-output files:
 
-- [ ] `m3-sys/m3tests/src/e0/e019/stdout.build`: resolution:
-- [ ] `m3-sys/m3tests/src/e0/e020/stdout.build`: resolution:
+- [x] `m3-sys/m3tests/src/e0/e019/stdout.build`: resolution: took master's (it matches master's
+  expanded test, N0..N8); the merged compiler's output matches it.
+- [x] `m3-sys/m3tests/src/e0/e020/stdout.build`: resolution: kept msir's at merge time, then
+  updated to the merged compiler's output (`cffab7a395`).  Master's early `RETURN ErrType.T`
+  in `Type.Check` now runs before msir's supertype-cycle walk in `ObjectType.Check`, so the
+  compiler reports the illegal recursive type plus cascading errors instead of 'illegal
+  recursive supertype (2.4.8)'.  Still rejected cleanly.  Revisit with #1254.
 
 **Files changed on both sides that merge without conflicts.**  Check
 the MSIR paths in each after merging:
@@ -1127,16 +1137,40 @@ the MSIR paths in each after merging:
 - `cf2fa27f90`: EXTENDED/LONGREAL alignment in `RTTipe`/`ConvertPacking`
   (pickles).  Runtime-only; MSIR builds pick it up.
 
-**Results:**
+**Results** (fresh `ci-ladder.sh` runs on ARM64_DARWIN, 2026-11-19, each
+from a copy of the installed cm3 in its own worktree):
 
-| Check | Before merge (`acfc673db3`, ARM64_DARWIN) | After merge |
-|-------|--------------------------------------------|-------------|
-| m3tests, C-backend driver | 292/0 (2026-07-24) | |
-| m3tests, stage-2 driver (MSIRObj) | 292/0 (2026-07-24) | |
-| Fixpoint (all compiler `.ll`) | 383/383 identical (2026-07-14) | |
-| msir CI: ARM64_DARWIN | run `44444889638` | |
-| msir CI: AMD64_DARWIN | run `44444889638` | |
-| msir CI: AMD64_LINUX | run `44444889638` | |
+| Check | Before merge (`068afbd602` = `b28fd265c3` + CI) | After merge (`dcab4efdde`) |
+|-------|------------------------------------------------|----------------------------|
+| m3tests, stage-2 driver (MSIRObj runtime + tests) | 292 tests, 2 errors: p165, e020 | 293 tests, 3 errors: p165, e020, p295 |
+| Fixpoint, stage 1 = 2 = 3 (all MSIR-built `.mb`/`.ib`) | 1416/1416 identical | 1414/1414 identical (`RTEHScan` removed) |
+| Smoke test, stage-3 cm3 | pass | pass |
+| msir CI | run `44444889638` cancelled (ladder script bugs, since fixed) | not yet run (merge not pushed) |
+
+Failures:
+
+- **p165** (TYPECODE of `REF INTEGER`): runtime abort "A compile-time
+  type is missing".  Present **before** the merge, so it's an msir
+  regression, not a merge effect.  Bisecting `f6b3f3c5d2` vs
+  `bbf78535cf` (prime suspect: "typecell initProcs for REF types, drop
+  NEW-site inline init").
+- **e020**: see the conflict note above; expected output updated in
+  `cffab7a395`.
+- **p295**: new test from master; its `stdout.pgm` lacked the trailing
+  newline the program prints.  Fixed in `75a09f8f37`; should also go to
+  master.
+- **p204** (imports `tcp`) failed in an earlier run only because the
+  ladder didn't rebuild `tcp` through MSIR; m3core's ABI link guard
+  (`RTAbiCG.c`) correctly refused the mixed link.  Fixed in the ladder.
+
+The 2026-07-24 "292/0" could not be reproduced from a clean build.  The
+installed `cm3` reports `bbf78535cf`, while the installed `libm3core.a`
+and that results file share a 16:27 timestamp, so which commits that run
+used is unclear.
+
+**Ladder lessons:** MSIRObj writes LLVM IR as `<unit>.mb`/`.ib` (not
+`.ll`) and deletes it unless `cm3 -keep`; any library a test imports
+must also be rebuilt through MSIR because of the ABI link guard.
 
 ### Known Limitations
 
