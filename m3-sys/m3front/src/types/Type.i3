@@ -8,7 +8,7 @@
 
 INTERFACE Type;
 
-IMPORT M3, CG, Target, M3ID;
+IMPORT M3, CG, Target, M3ID, MSIR;
 
 TYPE
   T          = M3.Type;
@@ -157,6 +157,23 @@ PROCEDURE LoadInfo (t: T;  offset: INTEGER;  addr := FALSE);
 PROCEDURE InitValue (t: T;  zeroed: BOOLEAN);
 (* initialize the variable addressed by s0.A to an arbitrary value of type 't'.
    If 'zeroed' the variable is assumed to already have all bits set to zero. *)
+
+PROCEDURE InitValueMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER;
+                         zeroed: BOOLEAN);
+(* MSIR analogue of InitValue: initialize the storage of type t that starts
+   bitOff bits past the pointer base to t's language-defined initial value.
+   If zeroed, the storage is known to be zero already.  Dispatches through
+   t's initValueMSIR method (D22). *)
+
+PROCEDURE ZeroMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER);
+(* Store zero over the storage of type t at (base, bitOff). *)
+
+PROCEDURE StoreScalarMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER;
+                           v: MSIR.Value);
+(* Store the scalar v into the storage of type t at (base, bitOff), converting
+   it to the storage width (sign-extending for types with negative values).
+   Sub-byte storage is written with a read-modify-write.  A value of a type
+   not stored as one scalar (a wide set, an aggregate) is stored as it is. *)
 
 PROCEDURE Zero (t: T);
 (* initialize the variable of type 't' addressed by s0.A to zeros. *)

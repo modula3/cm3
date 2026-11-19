@@ -16,7 +16,7 @@ IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
 IMPORT RTIO, RTParams, MSIREmit;
-IMPORT MSIR;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -944,6 +944,129 @@ PROCEDURE InitValue (t: T;  zeroed: BOOLEAN) =
   END InitValue;
 
 (*EXPORTED*)
+PROCEDURE InitValueMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER;
+                         zeroed: BOOLEAN) =
+  (* Same cost logic as InitValue. *)
+  VAR c1, c2: INTEGER;
+  BEGIN
+    IF base = NIL THEN RETURN END;
+    t := Check (t);
+    c1 := InitCost (t, zeroed);
+    IF (c1 = 0) THEN RETURN END;
+    IF (NOT zeroed) THEN
+      c2 := InitCost (t, TRUE);
+      IF (c2 = 0) THEN
+        ZeroMSIR (t, base, bitOff);
+        RETURN;
+      ELSIF (c1 > 2 * c2) THEN
+        ZeroMSIR (t, base, bitOff);
+        t.initValueMSIR (base, bitOff, TRUE);
+        RETURN;
+      END;
+    END;
+    t.initValueMSIR (base, bitOff, zeroed);
+  END InitValueMSIR;
+
+PROCEDURE ScalarStorageMSIR (t: T): MSIR.T =
+  (* The MSIR type a value of t is stored as, or NIL if t is not stored as a
+     single scalar (aggregates, wide sets).  Integers use the storage width,
+     which can be narrower than the computation type (BITS 8 FOR [0..255]). *)
+  VAR mt := MSIRType.Translate (t);  size := t.info.size;
+  BEGIN
+    IF mt = NIL THEN RETURN NIL END;
+    CASE MSIR.Kind (mt) OF
+    | MSIR.TypeKind.I1, MSIR.TypeKind.I8, MSIR.TypeKind.I16,
+      MSIR.TypeKind.I32, MSIR.TypeKind.I64, MSIR.TypeKind.W8,
+      MSIR.TypeKind.W16, MSIR.TypeKind.W32, MSIR.TypeKind.W64 =>
+        IF MSIR.BitWidth (mt) # size THEN RETURN MSIR.TI (size) END;
+        RETURN mt;
+    | MSIR.TypeKind.F32, MSIR.TypeKind.F64, MSIR.TypeKind.F128,
+      MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
+        RETURN mt;
+    ELSE
+        RETURN NIL;
+    END;
+  END ScalarStorageMSIR;
+
+PROCEDURE IsIntKind (k: MSIR.TypeKind): BOOLEAN =
+  BEGIN
+    RETURN k IN SET OF MSIR.TypeKind {
+             MSIR.TypeKind.I1, MSIR.TypeKind.I8, MSIR.TypeKind.I16,
+             MSIR.TypeKind.I32, MSIR.TypeKind.I64, MSIR.TypeKind.W8,
+             MSIR.TypeKind.W16, MSIR.TypeKind.W32, MSIR.TypeKind.W64 };
+  END IsIntKind;
+
+(*EXPORTED*)
+PROCEDURE ZeroMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER) =
+  VAR size: INTEGER;  st: MSIR.T;  ptr, z: MSIR.Value;  b: MSIR.Block;
+  BEGIN
+    IF base = NIL THEN RETURN END;
+    t := Check (t);
+    size := t.info.size;
+    IF size <= 0 THEN RETURN END;
+    IF bitOff MOD Target.Byte # 0 OR size MOD Target.Byte # 0 THEN
+      IF size > Target.Integer.size THEN
+        MSIRBuilder.Abandon ("zeroing a wide value at a sub-byte offset");
+        RETURN;
+      END;
+      MSIRBuilder.InsertBitField (base, bitOff, size,
+        MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0));
+      RETURN;
+    END;
+    b := MSIRBuilder.CurrentBlock ();
+    IF b = NIL THEN RETURN END;
+    ptr := MSIRBuilder.BuildPtrByteOff (b, "", base, bitOff DIV Target.Byte);
+    st := ScalarStorageMSIR (t);
+    IF st # NIL THEN
+      z := MSIR.ConstZero (st);
+      IF z # NIL THEN
+        MSIR.BuildStore (b, z, MSIR.RetypeValue (ptr, MSIR.TPtr (st)));
+        RETURN;
+      END;
+    END;
+    MSIRBuilder.EmitZeroBytes (ptr, size DIV Target.Byte);
+  END ZeroMSIR;
+
+(*EXPORTED*)
+PROCEDURE StoreScalarMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER;
+                           v: MSIR.Value) =
+  VAR
+    size : INTEGER;
+    st, vt : MSIR.T;
+    b    : MSIR.Block;
+    min, max : Target.Int;
+  BEGIN
+    IF base = NIL OR v = NIL THEN RETURN END;
+    t := Check (t);
+    size := t.info.size;
+    IF bitOff MOD Target.Byte # 0 OR size MOD Target.Byte # 0 THEN
+      MSIRBuilder.InsertBitField (base, bitOff, size, v);
+      RETURN;
+    END;
+    b  := MSIRBuilder.CurrentBlock ();
+    IF b = NIL THEN RETURN END;
+    vt := MSIR.ValueType (v);
+    st := ScalarStorageMSIR (t);
+    IF st = NIL THEN st := vt END;  (* wide set or aggregate value: as is *)
+    IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstNil THEN
+      v := MSIR.RetypeValue (v, st);
+    ELSIF IsIntKind (MSIR.Kind (vt)) AND IsIntKind (MSIR.Kind (st))
+          AND MSIR.BitWidth (vt) # MSIR.BitWidth (st) THEN
+      IF MSIR.BitWidth (vt) > MSIR.BitWidth (st) THEN
+        v := MSIR.BuildTrunc (b, "", v, st);
+      ELSIF GetBounds (t, min, max) AND TInt.LT (min, TInt.Zero) THEN
+        v := MSIR.BuildSExt (b, "", v, st);
+      ELSE
+        v := MSIR.BuildZExt (b, "", v, st);
+      END;
+    END;
+    MSIR.BuildStore (b, v,
+      MSIR.RetypeValue (
+        MSIRBuilder.BuildPtrByteOff (b, "", base, bitOff DIV Target.Byte),
+        MSIR.TPtr (st)));
+  END StoreScalarMSIR;
+
+(*EXPORTED*)
 PROCEDURE Zero (full_t: T) =
   VAR
     u    := Check (full_t);
@@ -1025,6 +1148,13 @@ PROCEDURE InitToZeros (t: T;  zeroed: BOOLEAN) =
       ELSE CG.Discard (CG.Type.Addr);
     END;
   END InitToZeros;
+
+(*EXPORTED (TypeRep.i3) *)
+PROCEDURE InitToZerosMSIR (t: T;  base: MSIR.Value;  bitOff: INTEGER;
+                           zeroed: BOOLEAN) =
+  BEGIN
+    IF NOT zeroed THEN ZeroMSIR (t, base, bitOff) END;
+  END InitToZerosMSIR;
 
 (*EXPORTED (TypeRep.i3) *)
 PROCEDURE GenRefMap (t: T;  offset, size: INTEGER;  refs_only: BOOLEAN) =

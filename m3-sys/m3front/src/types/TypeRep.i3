@@ -8,7 +8,7 @@
 
 INTERFACE TypeRep;
 
-IMPORT M3, M3FP, Type;
+IMPORT M3, M3FP, Type, MSIR;
 
 CONST
   NO_UID   = -1;
@@ -37,6 +37,11 @@ REVEAL
     compile     ();
     initCost    (zeroed: BOOLEAN): INTEGER;
     initValue   (zeroed: BOOLEAN);
+    initValueMSIR (base: MSIR.Value;  bitOff: INTEGER;  zeroed: BOOLEAN)
+                := InitToZerosMSIR;
+      (* MSIR analogue of initValue: initialize the storage bitOff bits past
+         base to the type's language-defined initial value.  Called only via
+         Type.InitValueMSIR (D22). *)
     mapper      (offset, size: INTEGER; refs: BOOLEAN);
     gen_desc    ();
     fprint      (VAR x: M3.FPInfo);
@@ -53,6 +58,10 @@ PROCEDURE NoSubtypes (a, b: TT): BOOLEAN;
 
 PROCEDURE InitToZeros (t: TT;  zeroed: BOOLEAN);
 (* == initialize Size(t) bits to zero *)
+
+PROCEDURE InitToZerosMSIR (t: TT;  base: MSIR.Value;  bitOff: INTEGER;
+                           zeroed: BOOLEAN);
+(* == IF NOT zeroed THEN Type.ZeroMSIR (t, base, bitOff) END *)
 
 PROCEDURE GenRefMap (t: TT;  offset, size: INTEGER;  refs_only: BOOLEAN);
 (* == TypeMap.Add (offset, Op.{Untraced}Ref, 0) *)

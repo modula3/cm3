@@ -11,6 +11,7 @@ MODULE NamedType;
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
 IMPORT Error, Scope, Brand, Value, ErrType, Target;
 IMPORT RTIO, RTParams;
+IMPORT MSIR;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -29,6 +30,7 @@ TYPE
         compile    := Compiler;
         initCost   := InitCoster;
         initValue  := GenInit;
+        initValueMSIR := GenInitMSIR;
         mapper     := GenMap;
         gen_desc   := GenDesc;
         fprint     := FPrinter;
@@ -227,6 +229,13 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     Resolve (p);
     Type.InitValue (p.type, zeroed);
   END GenInit;
+
+PROCEDURE GenInitMSIR (p: P;  base: MSIR.Value;  bitOff: INTEGER;
+                       zeroed: BOOLEAN) =
+  BEGIN
+    Resolve (p);
+    Type.InitValueMSIR (p.type, base, bitOff, zeroed);
+  END GenInitMSIR;
 
 PROCEDURE GenMap (p: P;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   BEGIN

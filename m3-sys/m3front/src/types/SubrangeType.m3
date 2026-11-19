@@ -12,6 +12,7 @@ IMPORT M3, CG, Type, TypeRep, Int, LInt, Expr, Token, Card, M3Buf;
 IMPORT Error, IntegerExpr, EnumExpr, Word, TipeMap, TipeDesc;
 IMPORT Target, TInt, TWord, TargetMap, LCard;
 IMPORT Charr, WCharr; 
+IMPORT MSIR, MSIRBuilder;
 FROM Scanner IMPORT Match;
 
 TYPE 
@@ -30,6 +31,7 @@ TYPE
         compile    := Compiler;
         initCost   := InitCoster;
         initValue  := GenInit;
+        initValueMSIR := GenInitMSIR;
         mapper     := GenMap;
         gen_desc   := GenDesc;
         fprint     := FPrinter;
@@ -365,6 +367,22 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
       CG.Store_indirect (info.stk_type, 0, info.size);
     END;
   END GenInit;
+
+PROCEDURE GenInitMSIR (p: P;  base: MSIR.Value;  bitOff: INTEGER;
+                       zeroed: BOOLEAN) =
+  VAR minI: INTEGER;
+  BEGIN
+    IF TInt.LT (TInt.Zero, p.min) OR TInt.LT (p.max, TInt.Zero) THEN
+      IF NOT TInt.ToInt (p.min, minI) THEN
+        MSIRBuilder.Abandon ("subrange initial value out of INTEGER range");
+        RETURN;
+      END;
+      Type.StoreScalarMSIR (p, base, bitOff,
+        MSIR.ConstInt (MSIR.TI (Target.Integer.size), minI));
+    ELSIF NOT zeroed THEN
+      Type.ZeroMSIR (p, base, bitOff);
+    END;
+  END GenInitMSIR;
 
 PROCEDURE GenMap (p: P;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   VAR bit_offset := offset MOD Target.Byte;  op: TipeMap.Op;

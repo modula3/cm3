@@ -10,10 +10,12 @@ INTERFACE RecordType;
 
 IMPORT M3ID, Type, Scope, Value, MSIR;
 
-(* MSIR analogue of the record's CG initValue: store each field's declared
-   default into the record at baseAddr (recursing for nested records).  A
-   no-op when t is not a record. *)
-PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value);
+PROCEDURE InitFieldsMSIR (fields: Scope.T;  base: MSIR.Value;  bitOff: INTEGER;
+                          zeroed: BOOLEAN);
+(* Initialize the fields of a record or object whose field region starts
+   bitOff bits past base: each field gets its declared default, or its type's
+   initial value (Type.InitValueMSIR).  The MSIR counterpart of the field
+   loops in RecordType's and ObjectType's CG initializers. *)
 
 PROCEDURE Parse (): Type.T;
 PROCEDURE ParseFieldList ();

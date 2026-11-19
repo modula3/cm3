@@ -11,6 +11,7 @@ MODULE PackedType;
 IMPORT M3, CG, Word, Type, TypeRep, Error, Expr, Target;
 IMPORT M3Buf, Token, IntegerExpr, Scanner, TipeDesc;
 IMPORT NamedType;
+IMPORT MSIR, MSIRBuilder, TInt;
 
 CONST
   NO_SIZE = -1;
@@ -28,6 +29,7 @@ TYPE
         compile    := Compiler;
         initCost   := InitCoster;
         initValue  := GenInit;
+        initValueMSIR := GenInitMSIR;
         mapper     := GenMap;
         gen_desc   := GenDesc;
         fprint     := FPrinter;
@@ -224,6 +226,29 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   BEGIN
     Type.InitValue (p.baseType, zeroed);  (* BUG!! *)
   END GenInit;
+
+PROCEDURE GenInitMSIR (p: P;  base: MSIR.Value;  bitOff: INTEGER;
+                       zeroed: BOOLEAN) =
+  (* Unlike GenInit, write only the packed width: a scalar base type's
+     initial value is stored into p's BITS n, not the base type's size. *)
+  VAR min, max: Target.Int;  minI: INTEGER;
+  BEGIN
+    IF Type.IsOrdinal (p.baseType) THEN
+      IF Type.GetBounds (p.baseType, min, max)
+         AND (TInt.LT (TInt.Zero, min) OR TInt.LT (max, TInt.Zero)) THEN
+        IF NOT TInt.ToInt (min, minI) THEN
+          MSIRBuilder.Abandon ("packed initial value out of INTEGER range");
+          RETURN;
+        END;
+        Type.StoreScalarMSIR (p, base, bitOff,
+          MSIR.ConstInt (MSIR.TI (Target.Integer.size), minI));
+      ELSIF NOT zeroed THEN
+        Type.ZeroMSIR (p, base, bitOff);
+      END;
+    ELSE
+      Type.InitValueMSIR (p.baseType, base, bitOff, zeroed);
+    END;
+  END GenInitMSIR;
 
 (* Externally dispatched-to: *) 
 PROCEDURE GenMap (p: P;  offset, size: INTEGER;  refs_only: BOOLEAN) =

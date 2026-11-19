@@ -10,6 +10,7 @@ MODULE OpenArrayType;
 
 IMPORT M3, CG, Type, TypeRep, Error, Target, TInt, Word;
 IMPORT ArrayType, PackedType, RecordType, TipeMap, TipeDesc;
+IMPORT MSIR, MSIRBuilder, M3RT;
 
 TYPE
   P = Type.T BRANDED "OpenArrayType.P" OBJECT
@@ -29,6 +30,7 @@ TYPE
         compile    := Compiler;
         initCost   := InitCoster;
         initValue  := GenInit;
+        initValueMSIR := GenInitMSIR;
         mapper     := GenMap;
         gen_desc   := GenDesc;
         fprint     := FPrinter;
@@ -337,6 +339,46 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     CG.Free (max);
     CG.Free (array);
   END GenInit;
+
+PROCEDURE GenInitMSIR (p: P;  base: MSIR.Value;  bitOff: INTEGER;
+                       zeroed: BOOLEAN) =
+  (* base points at the dope; initialize every element it describes. *)
+  VAR
+    depth := OpenDepth (p);
+    elt   := NonopenEltType (p);
+    intT  := MSIR.TI (Target.Integer.size);
+    ptrT  := MSIR.TPtr (MSIR.TVoid ());
+    total, data, idx, eltA : MSIR.Value := NIL;
+    b     : MSIR.Block;
+    l     : MSIRBuilder.CountedLoop;
+  BEGIN
+    IF bitOff # 0 OR p.NonopenEltPack MOD Target.Byte # 0 THEN
+      MSIRBuilder.Abandon ("initializing an open array of sub-byte elements");
+      RETURN;
+    END;
+    b := MSIRBuilder.CurrentBlock ();
+    IF b = NIL THEN RETURN END;
+    FOR i := 0 TO depth - 1 DO
+      VAR n := MSIR.BuildLoad (b, "", intT,
+                 MSIRBuilder.BuildPtrByteOff (b, "", base,
+                   (M3RT.OA_sizes + i * Target.Integer.pack) DIV Target.Byte));
+      BEGIN
+        IF total = NIL THEN total := n
+                       ELSE total := MSIR.BuildIMul (b, "", total, n) END;
+      END;
+    END;
+    data := MSIR.BuildLoad (b, "", ptrT,
+              MSIRBuilder.BuildPtrByteOff (b, "", base,
+                M3RT.OA_elt_ptr DIV Target.Byte));
+    idx := MSIRBuilder.BeginCountedLoop (total, l);
+    IF idx = NIL THEN RETURN END;
+    b := MSIRBuilder.CurrentBlock ();
+    eltA := MSIR.BuildGepByte (b, "", data,
+              MSIR.BuildIMul (b, "", idx,
+                MSIR.ConstInt (intT, p.NonopenEltPack DIV Target.Byte)));
+    Type.InitValueMSIR (elt, eltA, 0, zeroed);
+    MSIRBuilder.EndCountedLoop (l);
+  END GenInitMSIR;
 
 (* Externally dispatched-to: *)
 PROCEDURE GenMap (p: P;  offset: INTEGER;  <*UNUSED*> size: INTEGER;

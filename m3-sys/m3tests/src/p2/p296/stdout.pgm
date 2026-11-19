@@ -1,0 +1,15 @@
+global a=5 b=17 c=200 s=3 n=-30 w=-7
+gMany[5] a=5 b=17 c=200 s=3 n=-30 w=-7
+local a=5 b=17 c=200 s=3 n=-30 w=-7
+few[2] a=5 b=17 c=200 s=3 n=-30 w=-7
+many[0] a=5 b=17 c=200 s=3 n=-30 w=-7
+many[9] a=5 b=17 c=200 s=3 n=-30 w=-7
+holder.rs 10 10 10 10 10 10
+holder.r a=5 b=17 c=200 s=3 n=-30 w=-7
+NEW R a=5 b=17 c=200 s=3 n=-30 w=-7
+NEW ARRAY OF R [6] a=5 b=17 c=200 s=3 n=-30 w=-7
+NEW ARRAY OF ARRAY OF R [1,2] a=5 b=17 c=200 s=3 n=-30 w=-7
+O.r a=5 b=17 c=200 s=3 n=-30 w=-7
+O.p=42 O.q=1
+O.h.rs 10 10 10 10 10 10
+O.h.r a=5 b=17 c=200 s=3 n=-30 w=-7

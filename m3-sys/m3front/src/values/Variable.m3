@@ -15,7 +15,7 @@ IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
 IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr, RecordExpr;
-IMPORT Type, OpenArrayType, ErrType, TipeMap, RecordType;
+IMPORT Type, OpenArrayType, ErrType, TipeMap;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
 IMPORT Text;
 FROM Scanner IMPORT GetToken, Match, cur;
@@ -1188,31 +1188,6 @@ PROCEDURE NeedInit (t: T): BOOLEAN =
   END NeedInit;
   
 (* Externally dispatched-to *)
-PROCEDURE GenScalarInitMSIR (t: T) =
-(* Emit MSIR initialization for scalar subrange variables where the language-
-   defined init value is NOT zero (e.g. BITS 8 FOR [-30..-12] → init to -30).
-   Mirrors SubrangeType.GenInit.  Only emits if InitCost > 0 and the type is a
-   scalar subrange with lo > 0 or hi < 0 (zero not in range).  Called from
-   LangInit alongside RecordType.GenInitMSIR so both record fields and scalars
-   get their correct initial values (p143). *)
-  VAR lo, hi: Target.Int;  loI: INTEGER;
-      mt  := MSIRType.Translate (t.type);
-      addr := MSIRBuilder.LookupVarAddr (t);
-  BEGIN
-    IF mt = NIL OR addr = NIL THEN RETURN END;
-    IF Type.IsOrdinal (t.type) THEN
-      mt := MSIR.TI (Target.Integer.size);
-    END;
-    IF NOT Type.GetBounds (t.type, lo, hi) THEN RETURN END;
-    IF NOT (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero)) THEN RETURN END;
-    IF NOT TInt.ToInt (lo, loI) THEN RETURN END;
-    VAR initVal := MSIR.ConstInt (mt, loI);
-        b       := MSIRBuilder.CurrentBlock ();
-    BEGIN
-      IF initVal # NIL THEN MSIR.BuildStore (b, initVal, addr) END;
-    END;
-  END GenScalarInitMSIR;
-
 PROCEDURE LangInit (t: T) =
   VAR refType: Type.T;
   BEGIN
@@ -1256,11 +1231,8 @@ PROCEDURE LangInit (t: T) =
         CG.Gen_location (t.origin);
         LoadLValue (t);
         Type.InitValue (t.type, FALSE);
-        (* MSIR: GenInit (Type.InitValue) is CG-only.  Emit equivalent MSIR
-           for records (field defaults) and scalar subranges (p143, p288). *)
         IF MSIRBuilder.InProc () THEN
-          GenScalarInitMSIR (t);
-          RecordType.GenInitMSIR (t.type, MSIRBuilder.LookupVarAddr (t));
+          Type.InitValueMSIR (t.type, MSIRBuilder.LookupVarAddr (t), 0, FALSE);
         END;
       END;
       IF (t.trace # NIL) AND (NOT t.imported) THEN
@@ -1280,7 +1252,7 @@ PROCEDURE ForceInit (t: T) =
     LoadLValue (t);
     Type.InitValue (t.type, FALSE);
     IF MSIRBuilder.InProc () THEN
-      RecordType.GenInitMSIR (t.type, MSIRBuilder.LookupVarAddr (t));
+      Type.InitValueMSIR (t.type, MSIRBuilder.LookupVarAddr (t), 0, FALSE);
     END;
   END ForceInit;
 

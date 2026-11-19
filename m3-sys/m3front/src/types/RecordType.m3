@@ -11,8 +11,8 @@ MODULE RecordType;
 
 IMPORT M3, M3ID, CG, Type, TypeRep, Scope, Expr, Value, Token;
 IMPORT Error, Field, Ident, PackedType, Target, TipeDesc;
-IMPORT Word, AssignStmt, M3Buf, TInt, ArrayType;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT Word, AssignStmt, M3Buf;
+IMPORT MSIR, MSIRBuilder;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 VAR MaxBitSize := LAST (INTEGER);
@@ -30,6 +30,7 @@ TYPE
         compile    := Compiler;
         initCost   := InitCoster;
         initValue  := GenInit;
+        initValueMSIR := GenInitMSIR;
         mapper     := GenMap;
         gen_desc   := GenDesc;
         fprint     := FPrinter;
@@ -423,211 +424,59 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     CG.Free (ptr);
   END GenInit;
 
-PROCEDURE InitFieldDefaultMSIR (addr: MSIR.Value;  dfault: Expr.T;
-                                size: INTEGER) =
-(* Emit the default value of one record field into its (already typed) slot
-   address.  Aggregate defaults (array/record constants) have an lvalue and are
-   memcpy'd; set and scalar defaults have none — compile the value and store it
-   (the same dispatch Variable.m3 uses for variable initializers). *)
-  VAR byteCount := size DIV Target.Byte;
+PROCEDURE GenInitMSIR (p: P;  base: MSIR.Value;  bitOff: INTEGER;
+                       zeroed: BOOLEAN) =
   BEGIN
-    VAR lv := Expr.LValueMSIR (dfault);
-    BEGIN
-      IF lv # NIL AND byteCount > 0 THEN
-        MSIRBuilder.EmitMemcpy (addr, lv, byteCount);
-        RETURN;
-      END;
-    END;
-    VAR v := Expr.CompileMSIR (dfault);
-    BEGIN
-      IF v = NIL THEN RETURN END;
-      VAR b     := MSIRBuilder.CurrentBlock ();
-          eltT  := MSIR.EltType (MSIR.ValueType (addr));
-          srcW  := MSIR.BitWidth (MSIR.ValueType (v));
-          dstW  := MSIR.BitWidth (eltT);
-      BEGIN
-        IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
-          IF srcW > dstW
-            THEN v := MSIR.BuildTrunc (b, "", v, eltT);
-            ELSE v := MSIR.BuildZExt  (b, "", v, eltT);
-          END;
-        END;
-        MSIR.BuildStore (b, v, addr);
-      END;
-    END;
-  END InitFieldDefaultMSIR;
+    InitFieldsMSIR (p.fields, base, bitOff, zeroed);
+  END GenInitMSIR;
 
 (* EXPORTED *)
-PROCEDURE GenInitArrayMSIR (t: Type.T;  baseAddr: MSIR.Value) =
-(* Emit element-wise init for a fixed-array type whose elements have non-zero
-   language-defined initial values.  Supports:
-   - ARRAY OF scalar-subrange: store min value to each element
-   - ARRAY OF Record: recurse via GenInitMSIR per element
-   - ARRAY OF ARRAY: recurse per element *)
-  VAR indexT, eltT: Type.T;  nElts: INTEGER;  lo, hi, elo, ehi: Target.Int;
-      loI, hiI, eloI: INTEGER;
-      eltMsirT: MSIR.T;
-      b: MSIR.Block;  intT := MSIR.TI (Target.Integer.size);
+PROCEDURE InitFieldsMSIR (fields: Scope.T;  base: MSIR.Value;  bitOff: INTEGER;
+                          zeroed: BOOLEAN) =
+  VAR field: Field.Info;  v := Scope.ToList (fields);
   BEGIN
-    IF NOT ArrayType.Split (t, indexT, eltT) THEN RETURN END;
-    IF NOT Type.GetBounds (indexT, lo, hi) THEN RETURN END;
-    IF NOT TInt.ToInt (lo, loI) THEN RETURN END;
-    IF NOT TInt.ToInt (hi, hiI) THEN RETURN END;
-    nElts := hiI - loI + 1;
-    IF nElts <= 0 THEN RETURN END;
-    eltMsirT := MSIRType.Translate (eltT);
-    IF eltMsirT = NIL THEN RETURN END;
-    (* An untyped base (ptr void from RefType.GenInitProcMSIR's obj param)
-       cannot feed BuildArrayElemAddr — retype it to the declared storage,
-       with the element type pack-corrected so the stride matches (a [0..255]
-       element is stored i8 though Translate gives the i64 computation type).
-       Byte-aligned packs only; a sub-byte-packed array cannot reach here from
-       an init proc (RefType gates on byte-multiple element packs). *)
-    VAR bt := MSIR.ValueType (baseAddr);
-    BEGIN
-      IF NOT (MSIR.Kind (bt) = MSIR.TypeKind.Ptr
-              AND MSIR.Kind (MSIR.EltType (bt)) = MSIR.TypeKind.FixedArray) THEN
-        VAR eltPack := ArrayType.EltPack (t);
-        BEGIN
-          IF eltPack <= 0 OR eltPack MOD Target.Byte # 0 THEN RETURN END;
-          IF MSIR.BitWidth (eltMsirT) > 0 AND eltPack # MSIR.BitWidth (eltMsirT) THEN
-            eltMsirT := MSIR.TI (eltPack);
-          END;
-          baseAddr := MSIR.RetypeValue (baseAddr,
-                        MSIR.TPtr (MSIRBuilder.TFixedArrayI (nElts, eltMsirT)));
+    WHILE (v # NIL) DO
+      Field.Split (v, field);
+      IF (field.dfault = NIL) THEN
+        IF (Type.InitCost (field.type, zeroed) > 0) THEN
+          Type.InitValueMSIR (field.type, base, bitOff + field.offset, zeroed);
         END;
+      ELSIF (NOT zeroed) OR (NOT Expr.IsZeroes (field.dfault)) THEN
+        StoreDefaultMSIR (field.type, field.dfault, base,
+                          bitOff + field.offset);
       END;
+      v := v.next;
     END;
-    (* Scalar subrange element with non-zero bounds: store constant to each slot. *)
-    IF Type.GetBounds (eltT, elo, ehi)
-       AND (TInt.LT (TInt.Zero, elo) OR TInt.LT (ehi, TInt.Zero))
-       AND TInt.ToInt (elo, eloI) THEN
-      VAR initVal := MSIR.ConstInt (eltMsirT, eloI);
-      BEGIN
-        IF initVal = NIL THEN RETURN END;
-        b := MSIRBuilder.CurrentBlock ();
-        FOR i := 0 TO nElts - 1 DO
-          VAR elemAddr := MSIR.BuildArrayElemAddr (b, "", baseAddr,
-                            MSIR.ConstInt (intT, i));
-          BEGIN
-            b := MSIRBuilder.CurrentBlock ();
-            MSIR.BuildStore (b, initVal, elemAddr);
-          END;
-        END;
-      END;
-      RETURN;
-    END;
-    (* Record or nested array elements: recurse. *)
-    IF Type.InitCost (eltT, FALSE) > 0 THEN
-      b := MSIRBuilder.CurrentBlock ();
-      FOR i := 0 TO nElts - 1 DO
-        VAR elemAddr := MSIR.BuildArrayElemAddr (b, "", baseAddr,
-                          MSIR.ConstInt (intT, i));
-        BEGIN
-          b := MSIRBuilder.CurrentBlock ();
-          GenInitMSIR (eltT, elemAddr);
-        END;
-      END;
-    END;
-  END GenInitArrayMSIR;
+  END InitFieldsMSIR;
 
-PROCEDURE GenInitMSIR (t: Type.T;  baseAddr: MSIR.Value) =
-(* MSIR analogue of GenInit: initialize a record variable's fields to their
-   declared defaults.  Called from Variable.LangInit/ForceInit alongside the CG
-   Type.InitValue, since GenInit emits nothing for MSIR.  Fields without a
-   default that are themselves records are recursed into; scalar fields without
-   a default are zeroed (a proc-local alloca is not pre-zeroed; a global already
-   is, so a redundant zero store is harmless).  Also handles array-of-records
-   and array-of-subranges when elements need non-zero init (p143). *)
-  VAR p := Reduce (t);
-      indexT, eltT: Type.T;
+PROCEDURE StoreDefaultMSIR (t: Type.T;  dfault: Expr.T;  base: MSIR.Value;
+                            bitOff: INTEGER) =
+(* Store a field's (constant) default.  Record and array defaults have an
+   lvalue and are copied; scalar and set defaults are compiled and stored. *)
+  VAR info: Type.Info;  folded: Expr.T;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
-    IF baseAddr = NIL THEN RETURN END;
-    (* Handle array types whose elements need non-zero initialization. *)
-    IF p = NIL AND ArrayType.Split (t, indexT, eltT)
-       AND Type.InitCost (t, FALSE) > 0 THEN
-      GenInitArrayMSIR (t, baseAddr);
-      RETURN;
-    END;
-    IF p = NIL THEN
-      (* Top-level scalar subrange whose range excludes 0 (REF [4..9]
-         referents, open-array elements reached from RefType.GenInitProcMSIR):
-         store the low bound, mirroring CG Type.InitValue's ordinal case.
-         Idempotent when a caller has already zero/min-initialized. *)
-      VAR elo, ehi: Target.Int;  eloI: INTEGER;
-          emt: MSIR.T;  sInfo: Type.Info;
+    EVAL Type.CheckInfo (t, info);
+    IF info.class IN SET OF Type.Class {Type.Class.Record, Type.Class.Array}
+       AND bitOff MOD Target.Byte = 0 AND info.size MOD Target.Byte = 0
+       AND info.size > 0 THEN
+      VAR lv := Expr.LValueMSIR (dfault);
       BEGIN
-        IF Type.GetBounds (t, elo, ehi)
-           AND (TInt.LT (TInt.Zero, elo) OR TInt.LT (ehi, TInt.Zero))
-           AND TInt.ToInt (elo, eloI) THEN
-          EVAL Type.CheckInfo (t, sInfo);
-          emt := MSIRType.Translate (t);
-          IF emt # NIL AND sInfo.size > 0 AND MSIR.BitWidth (emt) # sInfo.size THEN
-            emt := MSIR.TI (sInfo.size);
-          END;
-          IF emt # NIL THEN
-            VAR b := MSIRBuilder.CurrentBlock ();
-            BEGIN
-              MSIR.BuildStore (b, MSIR.ConstInt (emt, eloI),
-                               MSIR.RetypeValue (baseAddr, MSIR.TPtr (emt)));
-            END;
-          END;
+        IF lv # NIL THEN
+          b := MSIRBuilder.CurrentBlock ();
+          IF b = NIL THEN RETURN END;
+          MSIRBuilder.EmitMemcpy (
+            MSIRBuilder.BuildPtrByteOff (b, "", base, bitOff DIV Target.Byte),
+            lv, info.size DIV Target.Byte);
+          RETURN;
         END;
-        RETURN;
       END;
     END;
-    VAR field : Field.Info;
-        v     := Scope.ToList (p.fields);
-    BEGIN
-      WHILE v # NIL DO
-        Field.Split (v, field);
-        IF field.offset MOD Target.Byte = 0 THEN
-          VAR byteOff := field.offset DIV 8;
-              b       := MSIRBuilder.CurrentBlock ();
-              ft      := MSIRType.Translate (field.type);
-              fInfo   : Type.Info;
-              fslot   : MSIR.Value;
-          BEGIN
-            EVAL Type.CheckInfo (field.type, fInfo);
-            fslot := MSIRBuilder.BuildPtrByteOff (b, "", baseAddr, byteOff);
-            IF ft # NIL THEN
-              (* When real storage width differs from the natural MSIR type
-                 (e.g. [0..255] is i8 but Translate gives i64), use TI(size). *)
-              IF fInfo.size > 0 AND MSIR.BitWidth (ft) > 0
-                 AND fInfo.size # MSIR.BitWidth (ft) THEN
-                ft := MSIR.TI (fInfo.size);
-              END;
-              fslot := MSIR.RetypeValue (fslot, MSIR.TPtr (ft));
-            END;
-            IF field.dfault # NIL THEN
-              InitFieldDefaultMSIR (fslot, field.dfault, fInfo.size);
-            ELSIF Reduce (field.type) # NIL THEN
-              GenInitMSIR (field.type, fslot);
-            ELSIF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.FixedArray
-                  AND Type.InitCost (field.type, FALSE) > 0 THEN
-              (* Fixed-array field whose elements need non-zero init
-                 (e.g. ShortArray = ARRAY [-30..-12] OF Short: p143). *)
-              GenInitArrayMSIR (field.type, fslot);
-            ELSIF ft # NIL THEN
-              (* For subranges with lo > 0 or hi < 0, use minimum value
-                 (matches SubrangeType.GenInit; p143). *)
-              VAR initVal: MSIR.Value := NIL;  lo, hi: Target.Int;  loI: INTEGER;
-              BEGIN
-                IF Type.GetBounds (field.type, lo, hi)
-                   AND (TInt.LT (TInt.Zero, lo) OR TInt.LT (hi, TInt.Zero))
-                   AND TInt.ToInt (lo, loI) THEN
-                  initVal := MSIR.ConstInt (ft, loI);
-                END;
-                IF initVal = NIL THEN initVal := MSIR.ConstZero (ft) END;
-                IF initVal # NIL THEN MSIR.BuildStore (b, initVal, fslot) END;
-              END;
-            END;
-          END;
-        END;
-        v := v.next;
-      END;
-    END;
-  END GenInitMSIR;
+    folded := Expr.ConstValue (dfault);
+    IF folded = NIL THEN folded := dfault END;
+    v := Expr.CompileMSIR (folded);
+    IF v = NIL THEN RETURN END;
+    Type.StoreScalarMSIR (t, base, bitOff, v);
+  END StoreDefaultMSIR;
 
 PROCEDURE GenMap (p: P;  offset: INTEGER;  <*UNUSED*> size: INTEGER;
                   refs_only: BOOLEAN) =

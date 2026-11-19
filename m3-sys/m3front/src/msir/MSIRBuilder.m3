@@ -160,6 +160,7 @@ VAR
 
   memcpyProc: MSIR.Proc := NIL;  (* lazy C memcpy stub *)
   memcmpProc: MSIR.Proc := NIL;  (* lazy C memcmp stub *)
+  memsetProc: MSIR.Proc := NIL;  (* lazy C memset stub *)
 
 PROCEDURE IsScalarType(mt: MSIR.T): BOOLEAN =
   (* TRUE for types safe to pass by value as a capture param.
@@ -2181,6 +2182,7 @@ PROCEDURE BeginModule() =
     constArraySeq    := 0;
     memcpyProc       := NIL;
     memcmpProc       := NIL;
+    memsetProc       := NIL;
     MSIRType.Reset();
   END BeginModule;
 
@@ -2208,6 +2210,57 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER) =
       ARRAY OF MSIR.Value{dst, src,
         MSIR.ConstInt(MSIR.TI(Target.Integer.size), byteCount)});
   END EmitMemcpy;
+
+PROCEDURE EmitZeroBytes(dst: MSIR.Value;  byteCount: INTEGER) =
+  BEGIN
+    IF curBlock = NIL OR abandoned OR byteCount <= 0 THEN RETURN END;
+    IF memsetProc = NIL THEN
+      memsetProc := MSIR.NewProc("memset",
+        ARRAY OF MSIR.Param{
+          MSIR.Param{name := "dst", type := MSIR.TPtr(MSIR.TVoid()),
+                     mode := MSIR.ParamMode.ByValue},
+          MSIR.Param{name := "c",   type := MSIR.TI(32),
+                     mode := MSIR.ParamMode.ByValue},
+          MSIR.Param{name := "n",   type := MSIR.TI(Target.Integer.size),
+                     mode := MSIR.ParamMode.ByValue}
+        },
+        MSIR.TPtr(MSIR.TVoid()));
+    END;
+    EVAL MSIR.BuildCall(curBlock, "", memsetProc,
+      ARRAY OF MSIR.Value{dst, MSIR.ConstInt(MSIR.TI(32), 0),
+        MSIR.ConstInt(MSIR.TI(Target.Integer.size), byteCount)});
+  END EmitZeroBytes;
+
+PROCEDURE BeginCountedLoop(count: MSIR.Value;  VAR l: CountedLoop): MSIR.Value =
+  VAR intT := MSIR.TI(Target.Integer.size);  body: MSIR.Block;
+  BEGIN
+    l := CountedLoop{};
+    IF curBlock = NIL OR abandoned THEN RETURN NIL END;
+    l.hdr  := NewBlock("loop.hdr");
+    body   := NewBlock("loop.body");
+    l.exit := NewBlock("loop.exit");
+    l.idxA := MSIR.BuildAlloca(curBlock, "", intT);
+    MSIR.BuildStore(curBlock, MSIR.ConstInt(intT, 0), l.idxA);
+    MSIR.BuildBr(curBlock, l.hdr, ARRAY OF MSIR.Value{});
+    l.idx := MSIR.BuildLoad(l.hdr, "", intT, l.idxA);
+    MSIR.BuildCondBr(l.hdr,
+      MSIR.BuildICmp(l.hdr, "", MSIR.CmpPred.Slt, l.idx, count),
+      body, ARRAY OF MSIR.Value{}, l.exit, ARRAY OF MSIR.Value{});
+    curBlock := body;
+    RETURN l.idx;
+  END BeginCountedLoop;
+
+PROCEDURE EndCountedLoop(READONLY l: CountedLoop) =
+  VAR intT := MSIR.TI(Target.Integer.size);
+  BEGIN
+    IF l.hdr = NIL THEN RETURN END;
+    IF curBlock # NIL THEN
+      MSIR.BuildStore(curBlock,
+        MSIR.BuildIAdd(curBlock, "", l.idx, MSIR.ConstInt(intT, 1)), l.idxA);
+      MSIR.BuildBr(curBlock, l.hdr, ARRAY OF MSIR.Value{});
+    END;
+    curBlock := l.exit;
+  END EndCountedLoop;
 
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value) =
   BEGIN

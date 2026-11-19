@@ -419,6 +419,23 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 
+(* Emit memset(dst, 0, byteCount) in the current block. *)
+PROCEDURE EmitZeroBytes(dst: MSIR.Value;  byteCount: INTEGER);
+
+(* A counted loop over idx in [0, count).  BeginCountedLoop branches from the
+   current block, leaves the current block in the loop body and returns idx;
+   EndCountedLoop closes the body and leaves the current block after the loop.
+   Returns NIL, and
+   EndCountedLoop does nothing, when there is no current block.  The
+   counter is an alloca (MSIRToLLVM hoists allocas to the entry block, and
+   does not lower block parameters), so loops nest. *)
+TYPE CountedLoop = RECORD
+    hdr, exit : MSIR.Block := NIL;
+    idxA, idx : MSIR.Value := NIL;
+  END;
+PROCEDURE BeginCountedLoop(count: MSIR.Value;  VAR l: CountedLoop): MSIR.Value;
+PROCEDURE EndCountedLoop(READONLY l: CountedLoop);
+
 PROCEDURE BuildMemcmp(b: MSIR.Block;  a, bb: MSIR.Value;
                        byteCount: INTEGER): MSIR.Value;
 (* memcmp(a, bb, byteCount) -> i32 (0 iff equal).  For byte-wise comparison of
