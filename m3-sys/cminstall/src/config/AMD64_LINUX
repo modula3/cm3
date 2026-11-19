@@ -16,6 +16,11 @@ readonly SYSTEM_ASM = "as --64" % Assembler
 % "if not defined" guard fires correctly.
 if defined("M3_USE_STACK_WALKER")
   M3_BACKEND_MODE = "C"
+  % Link through g++ so libstdc++ (__cxa_throw, __gxx_personality_v0, ...)
+  % is pulled in.  Linux.common builds SYSTEM_LD from SYSTEM_CXXXC, which
+  % otherwise defaults to SYSTEM_CC (gcc) as it stands at include time.
+  % Not "-x c++": that would make the linker driver treat .o files as source.
+  SYSTEM_CXXXC = "g++ -g -m64 -fPIC"
 end
 
 include("AMD64.common")
