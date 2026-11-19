@@ -36,6 +36,9 @@ the rationale in the commit.
 | **Latest validation (2026-07-24)** | **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
 | **Platform coverage**           | **ARM64_DARWIN only.** AMD64_DARWIN and AMD64_LINUX (the other `ex_stack` targets) have **not** been validated. A CI job on all three is needed before proposing for master. |
 | **Front end decoupled from M3CG** | **Not started.** MSIR emission is interleaved with the M3CG pass and reuses state that pass allocates (see O17). Needed before proposing for master. |
+| **Merge from master (2026-11)** | **In progress.** See *Merge from master (2026-11)* below. |
+| **Optimised m3tests**           | **Not done.** m3tests in MSIRObj run without `-O`. master now runs the llvm backend's m3tests at `-O3` (`a03e61e15b`), and #1243 (undefined static link) only appeared at `-O2`. Add MSIRObj to that clause in `m3tests/src/m3makefile`, or add an optimised variant to `.github/workflows/msir.yml`. |
+| **EXTENDED on AMD64_LINUX**     | **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
 | **Full compiler self-hosting**  | **Achieved 2026-07-14**: m3middle+m3linker+m3front+m3quake+m3objfile+m3back+cm3 all built from 100% LLVM IR objects (MSIRObj mode). Resulting `cm3` binary runs, compiles M3 programs, and passes the same 292-test suite as the C-backend cm3 (26 errors in both — all pre-existing C-backend failures). Zero new regressions. |
 | **Full stack self-hosting**     | **Achieved 2026-07-14**: m3core (311 objects) + libm3 (299 objects) also build clean in MSIRObj mode. Full m3tests with MSIRObj runtime+stdlib: 292 tests, 26 errors — identical to C-backend baseline. The entire CM3 system (runtime, stdlib, compiler) runs from LLVM IR. |
 | **Bootstrap fixpoint stability** | **Confirmed 2026-07-14**: Two consecutive three-stage fixpoint tests pass. Stage-1 (C-backend cm3) and stage-2 (MSIRObj cm3) generate bit-for-bit identical .ll files for all 383 compiler-package modules (m3middle×26, m3linker×12, m3front×299, m3quake×18, m3objfile×4, cm3×15). Stage-3 repeats the result. The MSIR code generator is fully deterministic and self-consistent. |
@@ -834,6 +837,41 @@ backend, assigning global, frame and typecell layout before emission;
 methods are already separate from `Compile`, so most of the work is in
 the driver and the layout state, not the per-node code generation.
 
+### O18. Closure-call lowering reads the procedure's first word.
+
+**Open.**  `MSIRBuilder.EmitClosureCall` tells a closure from a plain
+procedure by loading the first word of the procedure value and comparing
+it with `CL_marker` (-1), as the CG path does.
+
+- It does **not** have the #1243/#1244 defect: each arm makes its own
+  call (closures go through the shim with the env, plain procedures are
+  called directly), so no undefined static link reaches a join.
+- It still reads the code bytes of a plain procedure.  The C-output
+  analysis in #1243 flagged the same pattern as undefined behaviour in C.
+  In LLVM it works in practice, but it would fault on targets where code
+  memory is execute-only.
+- It skips the CG path's pre-checks (pointer 8-aligned, non-NIL), so
+  calling a NIL procedure value is a bare SIGSEGV rather than a Modula-3
+  runtime error.
+
+Options: (a) reproduce the CG pre-checks, which keeps the code-byte load
+but restores the NIL diagnostic and skips the load for unaligned code
+addresses; (b) represent closures with a tag bit in the pointer (code is
+at least 4-byte aligned on all three targets), so the test needs no
+memory access.  (b) changes the closure ABI shared with C-backend code
+and the runtime, so it is a whole-system change.
+
+### O19. Target triple and data layout are hard-coded.
+
+**Open.**  `MSIREmit.BeginUnit` hard-codes the triple and data layout per
+target, including minimum OS versions (`arm64-apple-macosx11.0`,
+`x86_64-apple-macosx10.15`).  Peter's LLVM backend has the same need; on
+master he briefly derived them by compiling `Csupport/hand.c` with
+`clang -S -emit-llvm` and reading the header (`04bef6698f`, removed in
+`837ada4731`).  Proposal: define triple and data layout once, in `Target`
+or the platform config, so both LLVM backends share one source and the
+data layout can follow the installed LLVM.
+
 ---
 
 ## Cross-references
@@ -1046,6 +1084,59 @@ identically with the C backend; it is not an MSIR issue.
 Also fixed: `scripts/sysinfo.sh` arm/arm64 detection — `uname -p` returns `arm`
 on Apple Silicon; added `arm | arm64) CM3_TARGET=ARM64_DARWIN` to the Darwin
 case so `do-cm3-*.sh` scripts run without the `TARGET` override.
+
+### Merge from master (2026-11)
+
+**Status: not started.**  Fill in as the merge proceeds.
+
+**Starting point.**  Merge base `3faae855fb` (2026-05-08); master is 64
+commits ahead (at `d2108205fd`).  A trial `git merge-tree` reports two
+conflicts, both expected-output files:
+
+- [ ] `m3-sys/m3tests/src/e0/e019/stdout.build`: resolution:
+- [ ] `m3-sys/m3tests/src/e0/e020/stdout.build`: resolution:
+
+**Files changed on both sides that merge without conflicts.**  Check
+the MSIR paths in each after merging:
+
+| File | master change | MSIR relevance / result |
+|------|---------------|-------------------------|
+| `m3front/src/exprs/QualifyExpr.m3` | recursion recovery in `Bounder`, `ResolveTypes` (Rodney) | MSIR read barriers on byref field loads live here |
+| `m3front/src/values/Formal.m3` | comment only (BITS FOR excluded from by-reference) | MSIR dirties containers at VAR-argument formation |
+| `m3front/src/exprs/NamedExpr.m3` | return `ErrType.T` on illegal recursion | |
+| `m3front/src/values/Value.m3` | `TypeOf`/`RepTypeOf` short-circuit on `t.error` | |
+| `m3front/src/types/Type.m3` | `Check` returns `ErrType.T` on recursion | `Type.GenCellsMSIR` lives here |
+| `m3front/src/misc/CG.m3` | `Store_indirect` stack-type fix (p207) | CG path only |
+| `m3middle/src/TFloat.m3` | 17-digit LONGREAL | identical change already on msir |
+| `m3core/src/runtime/ex_stack/RTExStack.m3` | `RTEHScan` removed | used only for stack printing, not EH |
+| `scripts/pkginfo.txt`, `scripts/sysinfo.sh` | python3, Apple Silicon detection | |
+
+**Other master changes that affect MSIR:**
+
+- `ThreadPThread.DisposeStacks` (`dfa907c4a1`): a WITH alias read after
+  `DISPOSE`.  It's a bug in the Modula-3 source, so MSIR-built m3core has
+  it too; it shows up on Ubuntu 26.04 only.  Needed for the AMD64_LINUX
+  ladder.
+- Rodney's 2022 front-end commits (packed actuals passed READONLY by
+  value, recovery from illegal recursion) update the expected output for
+  p047, p179, p207, p228, p280, e019, e020 and e041.  The earlier "p280:
+  all 321 cases pass" was measured against the old expected output.
+- `0921ea25f6`: `llvm_backend`/`llvm_opt` in `Unix.common` now take their
+  level from `m3back_optimize` (`-O2`), which MSIRObj also uses.  Record
+  the effective `opt`/`llc` levels for MSIR builds with and without `-O`.
+- `cf2fa27f90`: EXTENDED/LONGREAL alignment in `RTTipe`/`ConvertPacking`
+  (pickles).  Runtime-only; MSIR builds pick it up.
+
+**Results:**
+
+| Check | Before merge (`acfc673db3`, ARM64_DARWIN) | After merge |
+|-------|--------------------------------------------|-------------|
+| m3tests, C-backend driver | 292/0 (2026-07-24) | |
+| m3tests, stage-2 driver (MSIRObj) | 292/0 (2026-07-24) | |
+| Fixpoint (all compiler `.ll`) | 383/383 identical (2026-07-14) | |
+| msir CI: ARM64_DARWIN | run `44444889638` | |
+| msir CI: AMD64_DARWIN | run `44444889638` | |
+| msir CI: AMD64_LINUX | run `44444889638` | |
 
 ### Known Limitations
 
