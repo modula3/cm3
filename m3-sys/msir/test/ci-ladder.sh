@@ -107,7 +107,7 @@ case $CM3_TARGET in
     set_cfg "$SRC_CFG" C 1
     scripts/concierge.py full-upgrade --backend c base ;;
 esac
-cm3 -version | head -3
+cm3 -version 2>&1 | sed -n 1,3p   # not head: an early close makes cm3 fail with EPIPE
 
 log "Stage 2: stage-1 cm3 builds the compiler through MSIR"
 set_cfg "$INST_CFG" MSIRObj 1
@@ -124,8 +124,8 @@ log "m3tests under the stage-2 cm3 (MSIRObj)"
 ) || echo "cm3 -DHTML exited non-zero (checking results file)"
 RES=$ROOT/m3-sys/m3tests/m3tests-results.xml
 if [ -f "$RES" ]; then
-  head -c 2000 "$RES" | grep -oE '<testsuite[^>]*>' | head -1
-  errs=$(grep -oE '<testsuite[^>]*errors="[0-9]+"' "$RES" | head -1 | grep -oE '[0-9]+"$' | tr -d '"')
+  head -c 2000 "$RES" | grep -m1 -oE '<testsuite[^>]*>' || true
+  errs=$(grep -m1 -oE '<testsuite[^>]*errors="[0-9]+"' "$RES" | grep -oE '[0-9]+"$' | tr -d '"' || true)
   [ "${errs:-1}" = 0 ] || fail "m3tests: ${errs:-unknown} errors"
 else
   fail "m3tests: no results file"
