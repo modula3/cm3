@@ -33,6 +33,9 @@ the rationale in the commit.
 | Verifier                       | Sketched (see A9 / D20)        |
 | `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs); smoke test 124/124 exit 0 |
 | `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
+| **Latest validation (2026-07-24)** | **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
+| **Platform coverage**           | **ARM64_DARWIN only.** AMD64_DARWIN and AMD64_LINUX (the other `ex_stack` targets) have **not** been validated. A CI job on all three is needed before proposing for master. |
+| **Front end decoupled from M3CG** | **Not started.** MSIR emission is interleaved with the M3CG pass and reuses state that pass allocates (see O17). Needed before proposing for master. |
 | **Full compiler self-hosting**  | **Achieved 2026-07-14**: m3middle+m3linker+m3front+m3quake+m3objfile+m3back+cm3 all built from 100% LLVM IR objects (MSIRObj mode). Resulting `cm3` binary runs, compiles M3 programs, and passes the same 292-test suite as the C-backend cm3 (26 errors in both — all pre-existing C-backend failures). Zero new regressions. |
 | **Full stack self-hosting**     | **Achieved 2026-07-14**: m3core (311 objects) + libm3 (299 objects) also build clean in MSIRObj mode. Full m3tests with MSIRObj runtime+stdlib: 292 tests, 26 errors — identical to C-backend baseline. The entire CM3 system (runtime, stdlib, compiler) runs from LLVM IR. |
 | **Bootstrap fixpoint stability** | **Confirmed 2026-07-14**: Two consecutive three-stage fixpoint tests pass. Stage-1 (C-backend cm3) and stage-2 (MSIRObj cm3) generate bit-for-bit identical .ll files for all 383 compiler-package modules (m3middle×26, m3linker×12, m3front×299, m3quake×18, m3objfile×4, cm3×15). Stage-3 repeats the result. The MSIR code generator is fully deterministic and self-consistent. |
@@ -801,6 +804,36 @@ Linker-level deduplication is probably the path of least resistance
 heap-derived subarrays lean on conservative interior-pointer pinning
 until statepoints replace it.
 
+### O17. Decoupling MSIR emission from the M3CG pass.
+
+**Open; scope not yet estimated.**  Today MSIR is produced *during* the
+M3CG pass, not instead of it:
+
+- **Driver interleaving.** `Module.Compile` calls `CG.Begin_unit` then
+  `MSIREmit.BeginUnit`.  `Procedure.GenBody` brackets each procedure with
+  both `CG.Begin_procedure` and `MSIRBuilder.BeginProc`, and runs
+  `Stmt.Compile` (CG) and then `Stmt.CompileMSIR` over the same body.
+  Nested procedures differ: CG defers them, MSIR compiles them inline
+  (`GenBodyMSIR`, which guards against being triggered twice).
+- **Shared layout state.** Module globals use the offsets the CG pass
+  assigns (`DeclareGlobalData` / `t.offset`), so importers agree on them
+  (`Variable.m3`; MSIR's own dense packing collided).  The module GC
+  map must be built after `CompileModule` because only then are the
+  offsets final.
+- **Type and runtime metadata.** Typecells and initProcs have MSIR paths
+  (`Type.GenCellsMSIR`, RefType/ObjectType) but are kept at parity with
+  the CG output, not generated independently.
+- **Breadth.** About 97 m3front files outside `src/msir/` contain MSIR
+  code, with about 174 `*MSIR` procedures; 36 expression files and 20
+  statement files have `CompileMSIR` / `LValueMSIR` methods.
+
+Decoupling likely means: (1) a layout phase that is independent of any
+backend, assigning global, frame and typecell layout before emission;
+(2) a separate driver path that runs only MSIR in MSIRObj mode; and
+(3) unifying nested-procedure ordering.  The per-node `CompileMSIR`
+methods are already separate from `Compile`, so most of the work is in
+the driver and the layout state, not the per-node code generation.
+
 ---
 
 ## Cross-references
@@ -844,6 +877,29 @@ loop at runtime (p161/p267); sweep.py kills those after 60 s.
 config.  In `"C"` mode, MSIR runs alongside the C backend (abandons short-
 circuit early, VERIFY warnings don't affect linking).  In `"MSIRObj"` mode,
 MSIR IS the backend, so more code paths execute through MSIR.
+
+### Validation Ladder (2026-07-24, ARM64_DARWIN)
+
+The ladder run for the last three `msir` commits (`f6b3f3c5d2`,
+`bbf78535cf`, `b28fd265c3`), the last with incremental + generational
+GC live:
+
+1. **Stage 1 (the C-backend driver):** full m3tests: **292 tests, 0
+   errors** (`m3-sys/m3tests/m3tests-results.xml`, 2026-07-24 16:27).
+2. **Stage 2:** stage 1 builds the compiler packages in MSIRObj mode,
+   giving a `cm3` whose own code is entirely MSIR → LLVM.  Smoke test
+   passes; p292 stress test 10/10.
+3. **Full m3tests under the stage-2 driver:** **292 tests, 0 errors.**
+4. **Stage 3:** stage 2 rebuilds the compiler packages; the result
+   passes the smoke test.
+5. **Fixpoint:** stage 2 and stage 3 emit identical IR.  Note: on
+   2026-07-24 this compared `Main.msir` only.  The full check (all 383
+   compiler-module `.ll` files bit-identical) was last run on
+   2026-07-14; see *Bootstrap Fixpoint Stability*.  Re-run the full
+   check before relying on it.
+
+Not covered: AMD64_DARWIN and AMD64_LINUX (no runs yet), and
+`do-cm3-base` / `do-cm3-std` package sweeps since 2026-07-14.
 
 ### Current Status
 
@@ -964,6 +1020,10 @@ m3middle×26, m3linker×12, m3front×299, m3quake×18, m3objfile×4, cm3×15.
 
 The stage-N cm3 binary SHA256 differs between stages (linker non-determinism is
 expected); the `.ll` identity is what matters for fixpoint correctness.
+
+**Since then:** the 2026-07-24 runs compared only stage-2 and stage-3
+`Main.msir` (identical).  The full 383-file comparison has not been
+re-run since the GC-correctness batch (`f6b3f3c5d2` onward).
 
 **Script:** `m3-sys/msir/test/fixpoint.sh` (in session scratchpad; not tracked).
 Requires `PATH=$(brew --prefix llvm)/bin:$HOME/cm3/bin:$PATH` and MSIRObj mode
