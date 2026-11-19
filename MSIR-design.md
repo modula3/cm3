@@ -33,13 +33,14 @@ the rationale in the commit.
 | Verifier                       | Sketched (see A9 / D20)        |
 | `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs); smoke test 124/124 exit 0 |
 | `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
-| **Clean re-validation (2026-11-19)** | **Supersedes the row below.** Fresh `ci-ladder.sh` runs on ARM64_DARWIN: m3tests under the stage-2 driver **290/292** before the master merge (p165 regression, stale e020 expected output); full three-stage IR fixpoint holds (1416/1416 `.mb`/`.ib` files). See *Merge from master (2026-11)*. |
+| **CI on all three targets (2026-11-19)** | **Supersedes the two rows below.** `.github/workflows/msir.yml` runs `ci-ladder.sh` from a clean d5.12.0 bootstrap on each `ex_stack` target. Run 44512471173 (`5b8b606ed4`, after the second master merge): **ARM64_DARWIN** fixpoint 1414/1414, smoke passes, m3tests 292/293 (p165). **AMD64_LINUX** full ladder for the first time: smoke passes, stage 2 == stage 3, but **3 files differ between stage 1 and stage 2** (RTCollector, ThreadPThread, AutoFlushWr), m3tests 281/293. **AMD64_DARWIN** fixpoint 1414/1414 but **smoke fails** (a RAISE in a module body is not caught), m3tests 284/293. See *CI results on the x86_64 targets* below. |
+| **Clean re-validation (2026-11-19)** | **Superseded by the row above.** Fresh `ci-ladder.sh` runs on ARM64_DARWIN: m3tests under the stage-2 driver **290/292** before the master merge (p165 regression, stale e020 expected output); full three-stage IR fixpoint holds (1416/1416 `.mb`/`.ib` files). See *Merge from master (2026-11)*. |
 | **Latest validation (2026-07-24)** | *Not reproducible from a clean build (see above).* **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
-| **Platform coverage**           | **ARM64_DARWIN only.** AMD64_DARWIN and AMD64_LINUX (the other `ex_stack` targets) have **not** been validated. A CI job on all three is needed before proposing for master. |
+| **Platform coverage**           | **CI on all three `ex_stack` targets (2026-11-19).** ARM64_DARWIN is clean apart from p165. Both x86_64 targets build the compiler through MSIR but have open code-generation bugs (see *CI results on the x86_64 targets*). |
 | **Front end decoupled from M3CG** | **Not started.** MSIR emission is interleaved with the M3CG pass and reuses state that pass allocates (see O17). Needed before proposing for master. |
-| **Merge from master (2026-11)** | **Merged locally (`593cb56d0c`), not yet pushed.** See *Merge from master (2026-11)* below. |
+| **Merge from master (2026-11)** | **Merged and pushed** (`593cb56d0c`, then `15ab336899` for #1251, #1253, #1254). See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Not done.** m3tests in MSIRObj run without `-O`. master now runs the llvm backend's m3tests at `-O3` (`a03e61e15b`), and #1243 (undefined static link) only appeared at `-O2`. Add MSIRObj to that clause in `m3tests/src/m3makefile`, or add an optimised variant to `.github/workflows/msir.yml`. |
-| **EXTENDED on AMD64_LINUX**     | **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
+| **EXTENDED on AMD64_LINUX**     | **Failing (2026-11-19).** fp128 comparisons, negation and constants fixed (`544b07b7c9`), but the MSIR-built stage-2 compiler still differs from stage 1 in three files and p113/p118/p123/p131 fail: probably fp128 arithmetic in the compiler's own constant folding. Original note: **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
 | **Full compiler self-hosting**  | **Achieved 2026-07-14**: m3middle+m3linker+m3front+m3quake+m3objfile+m3back+cm3 all built from 100% LLVM IR objects (MSIRObj mode). Resulting `cm3` binary runs, compiles M3 programs, and passes the same 292-test suite as the C-backend cm3 (26 errors in both — all pre-existing C-backend failures). Zero new regressions. |
 | **Full stack self-hosting**     | **Achieved 2026-07-14**: m3core (311 objects) + libm3 (299 objects) also build clean in MSIRObj mode. Full m3tests with MSIRObj runtime+stdlib: 292 tests, 26 errors — identical to C-backend baseline. The entire CM3 system (runtime, stdlib, compiler) runs from LLVM IR. |
 | **Bootstrap fixpoint stability** | **Confirmed 2026-07-14**: Two consecutive three-stage fixpoint tests pass. Stage-1 (C-backend cm3) and stage-2 (MSIRObj cm3) generate bit-for-bit identical .ll files for all 383 compiler-package modules (m3middle×26, m3linker×12, m3front×299, m3quake×18, m3objfile×4, cm3×15). Stage-3 repeats the result. The MSIR code generator is fully deterministic and self-consistent. |
@@ -63,6 +64,35 @@ READONLY TEXT dispatch (CompileLValueMSIR alloca spill + Formal.EmitArgMSIR in v
 Word built-in ops (Plus/Minus/Times/Divide/Mod/Rotate/Extract/Insert),
 import-chain variable access (GlobalMapAddImport + ImportChainAddr),
 MSIRObj end-to-end smoke test (124/124 checks, exit 0 against real CM3 runtime).
+
+
+### CI results on the x86_64 targets (2026-11-19)
+
+First runs of the ladder on AMD64_DARWIN and AMD64_LINUX.  Fixes found and
+pushed on the way:
+
+| Problem | Target | Fix |
+|---|---|---|
+| Homebrew builds LLVM from source on Intel macOS; job hit the 4 h limit | AMD64_DARWIN | Take `llvm-tools` from conda-forge (`4c48ed7c66`) |
+| Stack-walker build linked with `gcc`: undefined `__cxa_throw` etc. | AMD64_LINUX | `SYSTEM_CXXXC = g++` when `M3_USE_STACK_WALKER` (`a0092c5aa9`) |
+| `=`, `#`, unary minus on EXTENDED emitted integer ops; fp128 constants printed as doubles | AMD64_LINUX | `MSIR.IsFloat`; `0xL` fp128 literals (`544b07b7c9`) |
+| `llvm.roundeven` becomes a `roundevenf` libcall macOS lacks | AMD64_DARWIN | Lower ROUND with `llvm.rint` (`544b07b7c9`) |
+| `constdope_N` globals duplicated across units at link | AMD64_LINUX | Internal linkage (`GlobalSetPrivate`, `5b8b606ed4`) |
+
+Still open:
+
+| Failure | Targets | Notes |
+|---|---|---|
+| Set tests p053, p156, p157, p159, p160, p162 (SEGV) and p280 | both x86_64 | Not on ARM64; suspect by-memory argument passing on x86_64. |
+| RAISE in a module body not caught (smoke) | AMD64_DARWIN | Compiler itself self-hosts, so EH works elsewhere. |
+| p223 (.M3SHIP Library) build failure | AMD64_DARWIN | |
+| Stage 1 vs stage 2 IR differs (RTCollector, ThreadPThread, AutoFlushWr); p113, p118, p123, p131 | AMD64_LINUX | fp128 EXTENDED arithmetic in MSIR-built code, probably. The ladder now uploads the differing files (`fixpoint-diff/`). |
+| p165 | all | Suspected: Main's type link to `REF INTEGER` has no registered typecell because the program doesn't link RTHooks' interface object. Bisect inconclusive; see *Merge from master (2026-11)*. |
+
+ROUND semantics note: MSIR rounds ties to even (FloatMode.RoundDefault),
+as the language definition requires; the C backend calls C `round()`,
+which rounds ties away from zero, so `ROUND(2.5)` is 2 under MSIR and 3
+under the C backend.
 
 ## Terminology: what "structured" means here
 
@@ -1155,7 +1185,12 @@ Failures:
   `bbf78535cf` (prime suspect: "typecell initProcs for REF types, drop
   NEW-site inline init").
 - **e020**: see the conflict note above; expected output updated in
-  `cffab7a395`.
+  `cffab7a395`.  The output then varied between runs: revelations were
+  checked in hash-bucket order, keyed on an M3ID number that depends on
+  the imports and the compiler build.  Fixed by checking them in
+  declaration order (`39fffcecd5`); ported to master with the recursive
+  supertype check (`7f3cebbdc5`), where e020 had been accepted and
+  crashed at run time.
 - **p295**: new test from master; its `stdout.pgm` lacked the trailing
   newline the program prints.  Fixed in `75a09f8f37`; should also go to
   master.
