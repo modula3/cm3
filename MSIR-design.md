@@ -24,7 +24,7 @@ the rationale in the commit.
 | Type system kinds              | Pinned at low resolution       |
 | Procedure / CFG / SSA shape    | Pinned                         |
 | GC contract                    | Pinned (MVP)                   |
-| EH contract                    | Pinned (`Has_stack_walker`)    |
+| EH contract                    | Pinned: structured envelopes (D8, D20, D25). **Not yet implemented**: the front end emits `invoke`/`landingpad` directly |
 | Module / init contract         | Pinned                         |
 | Intrinsic surface              | Pinned for OBJECT/EH/opens/sets/RTTI; growing |
 | Procedure attributes           | Pinned                         |
@@ -37,7 +37,7 @@ the rationale in the commit.
 | **Clean re-validation (2026-11-19)** | **Superseded by the row above.** Fresh `ci-ladder.sh` runs on ARM64_DARWIN: m3tests under the stage-2 driver **290/292** before the master merge (p165 regression, stale e020 expected output); full three-stage IR fixpoint holds (1416/1416 `.mb`/`.ib` files). See *Merge from master (2026-11)*. |
 | **Latest validation (2026-07-24)** | *Not reproducible from a clean build (see above).* **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
 | **Platform coverage**           | **CI on all three `ex_stack` targets (2026-11-19).** ARM64_DARWIN is clean apart from p165. Both x86_64 targets build the compiler through MSIR but have open code-generation bugs (see *CI results on the x86_64 targets*). |
-| **Front end decoupled from M3CG** | **Not started.** MSIR emission is interleaved with the M3CG pass and reuses state that pass allocates (see O17). Needed before proposing for master. |
+| **Front end decoupled from M3CG** | **Not started; plan agreed (D25).** MSIR emission runs inside the M3CG pass's driver and relies on its link-information side effects (see O17). Needed before proposing for master. |
 | **Merge from master (2026-11)** | **Merged and pushed** (`593cb56d0c`, then `15ab336899` for #1251, #1253, #1254). See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Not done.** m3tests in MSIRObj run without `-O`. master now runs the llvm backend's m3tests at `-O3` (`a03e61e15b`), and #1243 (undefined static link) only appeared at `-O2`. Add MSIRObj to that clause in `m3tests/src/m3makefile`, or add an optimised variant to `.github/workflows/msir.yml`. |
 | **EXTENDED on AMD64_LINUX**     | **Failing (2026-11-19).** fp128 comparisons, negation and constants fixed (`544b07b7c9`), but the MSIR-built stage-2 compiler still differs from stage 1 in three files and p113/p118/p123/p131 fail: probably fp128 arithmetic in the compiler's own constant folding. Original note: **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
@@ -852,11 +852,15 @@ M3CG pass, not instead of it:
   `Stmt.Compile` (CG) and then `Stmt.CompileMSIR` over the same body.
   Nested procedures differ: CG defers them, MSIR compiles them inline
   (`GenBodyMSIR`, which guards against being triggered twice).
-- **Shared layout state.** Module globals use the offsets the CG pass
-  assigns (`DeclareGlobalData` / `t.offset`), so importers agree on them
-  (`Variable.m3`; MSIR's own dense packing collided).  The module GC
-  map must be built after `CompileModule` because only then are the
-  offsets final.
+- **Shared layout state.** Module globals use the same offsets as the
+  CG path (`t.offset`), so importers agree on them (MSIR's own dense
+  packing collided).  These offsets are assigned during type checking
+  (`Module.TypeCheck` → `Module.SetGlobals` → `Variable.AllocGlobalVarSpace`),
+  not by the CG pass, so they are already backend-independent.  What does
+  hang off the CG pass is `DeclareGlobalMSIR`, called from inside
+  `Variable.Declare`.  The module GC map is built after `CompileModule`
+  "so the offsets are final"; with offsets fixed at type check this
+  ordering is probably unnecessary (to verify).
 - **Type and runtime metadata.** Typecells and initProcs have MSIR paths
   (`Type.GenCellsMSIR`, RefType/ObjectType) but are kept at parity with
   the CG output, not generated independently.
@@ -870,6 +874,39 @@ backend, assigning global, frame and typecell layout before emission;
 (3) unifying nested-procedure ordering.  The per-node `CompileMSIR`
 methods are already separate from `Compile`, so most of the work is in
 the driver and the layout state, not the per-node code generation.
+
+**Survey (2026-11-20), MSIRObj mode.**  The per-procedure CG walk is
+already skipped (`p.cg_proc = NIL`, so `GenBody` runs only its MSIR
+half), but the module-level CG walk still runs into `M3CG_DoNothing`.
+What MSIR takes from it, by static reading of the `*MSIR` procedures
+(not yet confirmed by a build with the walk switched off):
+
+- **(A) The driver itself.**  MSIR bodies are emitted inside CG's
+  `Procedure.GenBody`, reached through `ProcBody.EmitAll` from
+  `CompileModule`/`CompileInterface`; nested procedures through
+  `LangInit` → `GenBodyMSIR` from `Scope.InitValues`.  The fragile
+  ordering hangs off this: the `msirSkip`/`ProcMapContains` guard
+  (`Procedure.GenBody`), `Variable.m3`'s "CG's ProcBody.EmitAll fires
+  before GenBodyMSIR", the `msirInitDone` patch.
+- **(B) Link information, needed by every backend.**  The `.m3x` /
+  `.M3EXPORTS` notes are made from CG-side procedures: `note_type`
+  (`Type.Compile`, via `Type.CompileAll`), `note_version_stamp`
+  (`Value.Declare`), `note_revelation` (`Revelation.DeclareRevelation`),
+  `note_opaque` (OpaqueType's `Compiler`), `note_opaque_magic`
+  (`ObjectType.NoteOffsets`), `note_interface_use`
+  (`External.GenInitLinks`), `note_unit` / `note_webinfo`
+  (`Module.Compile`).
+- **(C) Pure CG work, discarded.**  `DeclareGlobalData` segments, type
+  `compile` methods (typecell declarations and their `Module.Allocate`
+  offsets), revelation tables, coverage tables, `ProcBody` proc info,
+  `Variable.GenGlobalMap`, `GenLinkerInfo`.  MSIR has its own
+  equivalents (`DeclareGlobalsMSIR`, `GenCellsMSIR`, `SetModuleGcMap`,
+  module hooks, the byte-producing `TipeMap`/`TipeDesc` entry points).
+- **(D) Not dependencies.**  Global offsets (type check, above) and field
+  offsets (type check).  No `*MSIR` procedure reads an offset the CG walk
+  allocates (strings, constants, exception descriptors, typecells).
+
+Plan: see D25.
 
 ### O18. Closure-call lowering reads the procedure's first word.
 
@@ -1226,6 +1263,43 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - **D24. RT0 layout has one source.**  Use `M3RT` offsets and sizes
   everywhere; keep the LLVM field-type tables, but assert once that their
   padded offsets equal `M3RT`'s `TC_*`/`OTC_*`/`ATC_*`/`MI_*` values.
+- **D25. MSIR becomes the front end's only lowering; EH stays structured**
+  (Tony, 2026-11-20).  The end state is m3front → MSIR only, with M3CG
+  kept as the input to the existing backends (C, m3cc, IntLlvm*) and
+  produced by an MSIR→M3CG lowering, so every node has one lowering and
+  every target keeps working.  EH keeps the envelopes of D8/D20.
+  - **Gap found.**  The envelope API exists (`NewTryExcept`,
+    `NewTryFinally`, `BuildUnwindTo`, `BuildRetThroughEnvelope`,
+    `BuildRaise`) but nothing uses it and `MSIRToLLVM` does not lower it.
+    TryStmt, TryFinStmt and LockStmt build `invoke`/`landingpad`/`resume`
+    and call `__cxa_get_exception_ptr` themselves, so the IR is committed
+    to C++ EH before any backend sees it.  An MSIR→M3CG lowering could
+    serve the `ex_stack` targets from that, but not `ex_frame` ones.
+  - **Order** (revised 2026-11-20: the lowering comes before decoupling,
+    and envelopes before the lowering).
+    1. D22–D24.
+    2. *Optional spike:* lower only procedures without TRY or LOCK to
+       M3CG and push m3core through MSIR → M3CG → C.  Measures how much
+       type information the C backend needs that MSIR lacks: `M3C`
+       builds its C types from 19 `declare_*` methods (`declare_record`,
+       `declare_field`, …) fed by m3front's type modules, which the
+       lowering would have to regenerate from MSIR types.
+    3. TRY/EXCEPT, TRY/FINALLY and LOCK onto envelopes, with
+       `invoke`/`landingpad`/`resume` produced only in `MSIRToLLVM`; the
+       verifier checks D8.  Done before the lowering so the lowering's
+       EH is written once, for both `ex_stack` and `ex_frame`.
+    4. MSIR→M3CG lowering in `m3-sys/msir`, run as a sibling of MSIRObj
+       (CG walk discarded as now, MSIR lowered to M3CG for the C
+       backend).  Validated with the ladder and m3tests, first on the
+       `ex_stack` targets, then `ex_frame` ones.  Checks are behavioural
+       (m3tests, bootstrap fixpoint), not diffs against direct CG
+       output.  A failure in both MSIR backends points at MSIR or the
+       front end; in one only, at that lowering.
+    5. Decouple (O17): an MSIR-only driver walk (A), link information in
+       a backend-neutral pass (B), skip the discarded CG work (C).
+       Checked against both MSIR backends.
+    6. Make MSIR → M3CG the default; delete the per-node CG methods
+       (`compile`, `prep*`, `compileLV`, `compileBR`).
 - Clutter (session transcripts, a test binary, editor backups) removed in
   `77a724b298`.
 
