@@ -482,6 +482,8 @@ PROCEDURE GlobalName       (g: Global): TEXT;
 PROCEDURE GlobalType       (g: Global): T;
 PROCEDURE GlobalSetWeak    (g: Global);          (* mark weak linkage *)
 PROCEDURE GlobalIsWeak     (g: Global): BOOLEAN;
+PROCEDURE GlobalSetPrivate (g: Global);          (* mark internal linkage *)
+PROCEDURE GlobalIsPrivate  (g: Global): BOOLEAN;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)

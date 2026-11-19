@@ -1880,6 +1880,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
                                      MSIR.TStruct ("", flds^),
                                      isTraced := FALSE);
                 INC (constDopeSeq);
+                MSIR.GlobalSetPrivate (g);
                 MSIR.ModuleAddGlobal (m, g);
                 dopeA := MSIR.GlobalValue (g);
               ELSE

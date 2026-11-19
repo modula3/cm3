@@ -2894,9 +2894,15 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
          interface's strong def wins and the module's is a safe BSS fallback.
          Module-PRIVATE globals are NOT flagged, so they stay strong and remain
          externally referenceable (e.g. a C test harness referencing Main.gCounter). *)
-      IF MSIR.GlobalIsWeak(g)
-        THEN Wr.PutText(wr, " = weak global ");
-        ELSE Wr.PutText(wr, " = global ");
+      IF MSIR.GlobalIsPrivate(g) THEN
+        (* Compiler-generated, per-unit data (e.g. Formal's constdope_N):
+           every unit numbers its own from 0, so external linkage gives
+           duplicate definitions at link time. *)
+        Wr.PutText(wr, " = internal global ");
+      ELSIF MSIR.GlobalIsWeak(g) THEN
+        Wr.PutText(wr, " = weak global ");
+      ELSE
+        Wr.PutText(wr, " = global ");
       END;
       VAR nb := MSIR.GlobalBackingBytes(g);
       BEGIN

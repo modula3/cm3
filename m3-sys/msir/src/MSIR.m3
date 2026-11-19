@@ -986,6 +986,8 @@ REVEAL Global = BRANDED "MSIR.Global" REF RECORD
                                       implementation module, so the interface
                                       unit's strong def wins at link.  Module-
                                       private globals stay strong (FALSE). *)
+  isPrivate:    BOOLEAN  := FALSE; (* TRUE => internal linkage: compiler-
+                                      generated per-unit data. *)
 END;
 
 PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
@@ -1013,6 +1015,8 @@ PROCEDURE GlobalName       (g: Global): TEXT    = BEGIN RETURN g.name       END 
 PROCEDURE GlobalType       (g: Global): T       = BEGIN RETURN g.type       END GlobalType;
 PROCEDURE GlobalSetWeak    (g: Global) = BEGIN g.isWeak := TRUE END GlobalSetWeak;
 PROCEDURE GlobalIsWeak     (g: Global): BOOLEAN = BEGIN RETURN g.isWeak     END GlobalIsWeak;
+PROCEDURE GlobalSetPrivate (g: Global) = BEGIN g.isPrivate := TRUE END GlobalSetPrivate;
+PROCEDURE GlobalIsPrivate  (g: Global): BOOLEAN = BEGIN RETURN g.isPrivate END GlobalIsPrivate;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN = BEGIN RETURN g.isExternal    END GlobalIsExternal;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER = BEGIN RETURN g.byteOffset END GlobalByteOffset;
