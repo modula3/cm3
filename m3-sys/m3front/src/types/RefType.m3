@@ -213,6 +213,34 @@ PROCEDURE NoteRefName (t: Type.T;  name: TEXT) =
     IF (p # NIL) THEN p.user_name := name; END;
   END NoteRefName;
 
+(* Dope size and per-element byte-rounded size of an open-array referent
+   with 'dims' open dimensions, as RT0.ArrayTypecell records them.  Shared by
+   the CG and MSIR typecells. *)
+PROCEDURE OpenArraySizes (ta: Type.T;  dims, addrAlign: INTEGER;
+                          VAR targetSize, elemSize: INTEGER) =
+  BEGIN
+    targetSize := Target.Address.size (* Size of elements pointer. *);
+    WITH ia = Target.Integer.align DO
+      targetSize
+        := ((targetSize + ia - 1) DIV ia) * ia (* Padding, ahead of shape *);
+      INC (targetSize, Target.Integer.size * dims) (* The shape words. *);
+    END;
+    targetSize
+      := ((targetSize + addrAlign - 1) DIV addrAlign) * addrAlign
+         (* Padding, ahead of elements *);
+    elemSize := OpenArrayType.EltPack (ta);
+    IF elemSize < Target.Byte THEN (* Sub-byte elements, 1, 2, or 4 bits. *)
+      <* ASSERT Target.Byte MOD elemSize = 0 *>
+      elemSize := Target.Byte;
+(* FIXME: This is a quick hack for open arrays of element bitsize 1, 2, or 4.
+        The RTS only knows byte counts for element sizes.  Until RTS can be
+        fixed to understand bit sizes, this will at least make things work,
+        at the cost of over-allocating a full byte for every element. *)
+    ELSE
+      <* ASSERT elemSize MOD Target.Byte = 0 *>
+    END;
+  END OpenArraySizes;
+
 (* EXPORTED *)
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   TYPE TKind = M3RT.TypeKind;
@@ -243,27 +271,7 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
       targetSize := targetInfo.size;
       elemSize := 8 (*Dead*);
     ELSE (* target is an open array.  targetSize := dope size. *)
-      targetSize := Target.Address.size (* Size of elements pointer. *);
-      WITH ia = Target.Integer.align DO
-        targetSize
-          := ((targetSize + ia - 1) DIV ia) * ia (* Padding, ahead of shape *);
-        INC (targetSize, Target.Integer.size * dims) (* The shape words. *);
-      END;
-      WITH aa = p.info.addr_align DO
-        targetSize
-          := ((targetSize + aa - 1) DIV aa) * aa (* Padding, ahead of elements *);
-      END;
-      elemSize := OpenArrayType.EltPack (ta);
-      IF elemSize < Target.Byte THEN (* Sub-byte elements, 1, 2, or 4 bits. *)
-        <* ASSERT Target.Byte MOD elemSize = 0 *>
-        elemSize := Target.Byte;
-(* FIXME: This is a quick hack for open arrays of element bitsize 1, 2, or 4.
-          The RTS only knows byte counts for element sizes.  Until RTS can be
-          fixed to understand bit sizes, this will at least make things work,
-          at the cost of over-allocating a full byte for every element. *)
-      ELSE
-        <* ASSERT elemSize MOD Target.Byte = 0 *>
-      END;
+      OpenArraySizes (ta, dims, p.info.addr_align, targetSize, elemSize);
     END;
 
     IF (p.user_name # NIL) THEN
@@ -332,17 +340,7 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     ta   := Type.Base (r);
     dims := OpenArrayType.OpenDepth (ta);
     IF dims > 0 THEN
-      (* ATC: compute dope-vector size and element size exactly as InitTypecell does *)
-      dopeSize := Target.Address.size;
-      WITH ia = Target.Integer.align DO
-        dopeSize := ((dopeSize + ia - 1) DIV ia) * ia;
-        INC (dopeSize, Target.Integer.size * dims);
-      END;
-      WITH aa = info.addr_align DO
-        dopeSize := ((dopeSize + aa - 1) DIV aa) * aa;
-      END;
-      elemSize := OpenArrayType.EltPack (ta);
-      IF elemSize < Target.Byte THEN elemSize := Target.Byte END;
+      OpenArraySizes (ta, dims, info.addr_align, dopeSize, elemSize);
       EVAL MSIRBuilder.TypeDescValueForRefArray (
              t,
              dopeSize DIV Target.Char.size,
@@ -426,7 +424,7 @@ PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
           ta       := Type.Base (r);
           eltType  := ta;
           eltPack  := OpenArrayType.EltPack (ta);
-          apBytes  := Target.Address.size DIV Target.Byte;
+          shapeB  := M3RT.OA_sizes DIV Target.Byte;
           ipBytes  := Target.Integer.size DIV Target.Byte;
           b        := MSIRBuilder.CurrentBlock ();
           dataPtr  := MSIR.BuildLoad (b, "", ptrT,
@@ -442,7 +440,7 @@ PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
             b := MSIRBuilder.CurrentBlock ();
             VAR dimV := MSIR.BuildLoad (b, "", intT,
                           MSIRBuilder.BuildPtrByteOff (b, "", objParam,
-                                                       apBytes + ipBytes * k));
+                                                       shapeB + ipBytes * k));
             BEGIN
               IF totalV = NIL
                 THEN totalV := dimV;

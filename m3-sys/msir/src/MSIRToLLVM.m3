@@ -1,15 +1,14 @@
 MODULE MSIRToLLVM;
 
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT Target, TFloat, M3RT;
+IMPORT Target, TFloat, M3RT, Process;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
-(* RT0.RefHeaderBits bit-field offsets — derived from the BITS declarations:
-     forwarded : BITS 1; typecode : BITS 20; dirty : BITS 1; gray : BITS 1 *)
+(* RT0.RefHeaderBits bit-field offsets come from M3RT (D24). *)
 CONST
-  RH_typecode_offset = 1;           (* after 1-bit forwarded *)
-  RH_dirty_offset    = RH_typecode_offset + 20;
-  RH_gray_offset     = RH_dirty_offset + 1;
+  RH_typecode_offset = M3RT.RH_typecode_offset;
+  RH_dirty_offset    = M3RT.RH_dirty_offset;
+  RH_gray_offset     = M3RT.RH_gray_offset;
 
 (* TEXT is always typecode 1: it is the first type registered at runtime. *)
 CONST TEXT_typecode = 1;
@@ -3196,6 +3195,100 @@ PROCEDURE RTFieldLLType(fk: FieldKind): TEXT =
     END;
   END RTFieldLLType;
 
+(* D24: the field-kind tables above are the LLVM view of RT0 records whose
+   canonical layout is M3RT's.  Check once per compiler run that the padded
+   offsets the walker produces equal M3RT's, so a change on either side fails
+   loudly instead of emitting typecells the runtime misreads. *)
+VAR rtLayoutChecked := FALSE;
+
+CONST EDKinds = ARRAY [0 .. 2] OF FieldKind {
+  FieldKind.IP,   (* uid *)
+  FieldKind.Ptr,  (* name *)
+  FieldKind.IP    (* implicit *)
+};
+
+PROCEDURE PadOffsets(READONLY kinds: ARRAY OF FieldKind;  start: INTEGER;
+                     VAR offs: ARRAY OF INTEGER): INTEGER =
+  (* Byte offset of each field after natural-alignment padding, starting at
+     byte 'start'; returns the end offset. *)
+  VAR off := start;
+  BEGIN
+    FOR i := 0 TO LAST(kinds) DO
+      VAR sz := RTFieldSize(kinds[i]);
+      BEGIN
+        INC(off, (-off) MOD sz);
+        offs[i] := off;
+        INC(off, sz);
+      END;
+    END;
+    RETURN off;
+  END PadOffsets;
+
+PROCEDURE CheckLayout(what: TEXT;  READONLY kinds: ARRAY OF FieldKind;
+                      start: INTEGER;  READONLY rt: ARRAY OF INTEGER;
+                      rtSize: INTEGER): INTEGER =
+  (* 'rt' and 'rtSize' are M3RT offsets in bits; 'start' and the result are
+     bytes.  Returns the end offset. *)
+  VAR
+    offs := NEW(REF ARRAY OF INTEGER, NUMBER(kinds));
+    B    := Target.Char.size;
+    end  : INTEGER;
+  BEGIN
+    IF NUMBER(rt) # NUMBER(kinds) THEN
+      Process.Crash("MSIRToLLVM: " & what & " has " & Fmt.Int(NUMBER(kinds))
+                    & " fields, M3RT " & Fmt.Int(NUMBER(rt)));
+    END;
+    end := PadOffsets(kinds, start, offs^);
+    FOR i := 0 TO LAST(kinds) DO
+      IF offs[i] * B # rt[i] THEN
+        Process.Crash("MSIRToLLVM: " & what & " field " & Fmt.Int(i)
+                      & " at byte " & Fmt.Int(offs[i]) & ", M3RT says "
+                      & Fmt.Int(rt[i] DIV B));
+      END;
+    END;
+    IF end * B # rtSize THEN
+      Process.Crash("MSIRToLLVM: " & what & " ends at byte " & Fmt.Int(end)
+                    & ", M3RT size " & Fmt.Int(rtSize DIV B));
+    END;
+    RETURN end;
+  END CheckLayout;
+
+PROCEDURE CheckRTLayouts() =
+  VAR
+    tcEnd : INTEGER;
+    miKinds : ARRAY [0 .. MSIR.MI_nFields - 1] OF FieldKind;
+  BEGIN
+    tcEnd := CheckLayout("RT0.Typecell", TCKinds, 0,
+      ARRAY OF INTEGER {
+        M3RT.TC_typecode, M3RT.TC_selfID, M3RT.TC_fp, M3RT.TC_traced,
+        M3RT.TC_kind, M3RT.TC_link_state, M3RT.TC_dataAlignment,
+        M3RT.TC_dataSize, M3RT.TC_type_map, M3RT.TC_gc_map,
+        M3RT.TC_type_desc, M3RT.TC_initProc, M3RT.TC_brand, M3RT.TC_name,
+        M3RT.TC_next }, M3RT.TC_SIZE);
+    EVAL CheckLayout("RT0.ObjectTypecell", OTCExtKinds, tcEnd,
+      ARRAY OF INTEGER {
+        M3RT.OTC_parentID, M3RT.OTC_linkProc, M3RT.OTC_dataOffset,
+        M3RT.OTC_methodOffset, M3RT.OTC_methodSize,
+        M3RT.OTC_defaultMethods, M3RT.OTC_parent }, M3RT.OTC_SIZE);
+    EVAL CheckLayout("RT0.ArrayTypecell", ATCExtKinds, tcEnd,
+      ARRAY OF INTEGER { M3RT.ATC_nDimensions, M3RT.ATC_elementSize },
+      M3RT.ATC_SIZE);
+    FOR k := 0 TO LAST(miKinds) DO
+      IF MIIsInt[k] THEN miKinds[k] := FieldKind.IP
+                    ELSE miKinds[k] := FieldKind.Ptr END;
+    END;
+    EVAL CheckLayout("RT0.ModuleInfo", miKinds, 0,
+      ARRAY OF INTEGER {
+        M3RT.MI_file, M3RT.MI_type_cells, M3RT.MI_type_cell_ptrs,
+        M3RT.MI_full_rev, M3RT.MI_part_rev, M3RT.MI_proc_info,
+        M3RT.MI_try_scopes, M3RT.MI_var_map, M3RT.MI_gc_map,
+        M3RT.MI_imports, M3RT.MI_link_state, M3RT.MI_binder,
+        M3RT.MI_gc_flags }, M3RT.MI_SIZE);
+    EVAL CheckLayout("RT0.ExceptionDesc", EDKinds, 0,
+      ARRAY OF INTEGER { M3RT.ED_uid, M3RT.ED_name, M3RT.ED_implicit },
+      M3RT.ED_SIZE);
+  END CheckRTLayouts;
+
 PROCEDURE EmitRTStructType(wr: Wr.T; name: TEXT;
                             READONLY kinds: ARRAY OF FieldKind) =
   BEGIN
@@ -3351,12 +3444,9 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
 
         (* OTC extension — sets nameSym and emits ancillary globals *)
         IF isObj THEN
-          CONST
-            (* OTC_defaultMethods byte offset in the ObjectTypecell struct.
-               Derived from M3RT.m3: OTC_defaultMethods = TC_SIZE + 5*IP + AP = 96+40+8=...
-               Actual = 136 bytes (TC_SIZE=96, OTC extras: parentID+linkProc+3*INTEGER = 40). *)
-            OTC_defaultMethods_BYTES = 136;
           VAR
+            (* Byte offset of defaultMethods in RT0.ObjectTypecell (D24). *)
+            OTC_defaultMethods_BYTES := M3RT.OTC_defaultMethods DIV Target.Char.size;
             uName    := MSIR.TypeDescUserName(d);
             nMethods := MSIR.TypeDescMethodCount(d);
             dmv      : TEXT := "null";
@@ -4457,6 +4547,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     needsEH    : BOOLEAN;
     needsGC    : BOOLEAN;
   BEGIN
+    IF NOT rtLayoutChecked THEN CheckRTLayouts (); rtLayoutChecked := TRUE END;
     curEmitModule := m;
     auxN          := 0;
     tcN           := 0;
@@ -4637,7 +4728,8 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     (* TypeLink globals for type_cell_ptrs chain, plus MSIR_InitTypeLinks *)
     EmitTypeLinks(wr, m, forRuntime);
 
-    (* Exception descriptors: RT0.ExceptionDesc = { i64 uid, ptr name, i64 0 }.
+    (* Exception descriptors: RT0.ExceptionDesc = { INTEGER uid, ptr name,
+       INTEGER implicit = 0 }; layout checked against M3RT.ED_* (D24).
        The `name` field must point at the qualified name string ("Module.Exc")
        so RTException.Crash can print it (a null name there prints blank and
        then SEGVs in M3toC.StoT). *)
@@ -4656,10 +4748,13 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
             nameRef := "ptr " & strSym;
           END;
         END;
-        Wr.PutText(wr, "@" & MSIR.ExcDescName(d)
-                       & " = internal global { i64, ptr, i64 } { i64 "
-                       & Fmt.Int(MSIR.ExcDescUID(d))
-                       & ", " & nameRef & ", i64 0 }\n");
+        VAR ipT := RTFieldLLType(FieldKind.IP);
+        BEGIN
+          Wr.PutText(wr, "@" & MSIR.ExcDescName(d)
+                         & " = internal global { " & ipT & ", ptr, " & ipT
+                         & " } { " & ipT & " " & Fmt.Int(MSIR.ExcDescUID(d))
+                         & ", " & nameRef & ", " & ipT & " 0 }\n");
+        END;
       END;
     END;
 

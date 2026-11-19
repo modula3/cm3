@@ -2,7 +2,7 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text, Target, TFloat;
+IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -1175,7 +1175,7 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
   BEGIN
     (* Initialise on first call: start right after MI_SIZE *)
     IF m.nextGlobalOff = 0 THEN
-      m.nextGlobalOff := MI_nFields * Target.Address.bytes;
+      m.nextGlobalOff := M3RT.MI_SIZE DIV Target.Char.size;
     END;
     (* Round up to alignment *)
     off := m.nextGlobalOff;
@@ -1199,7 +1199,7 @@ PROCEDURE ModuleNoteGlobal(m: Module;  endByteOff: INTEGER) =
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER =
   BEGIN
     IF m.nextGlobalOff = 0 THEN
-      RETURN MI_nFields * Target.Address.bytes;
+      RETURN M3RT.MI_SIZE DIV Target.Char.size;
     END;
     RETURN m.nextGlobalOff;
   END ModuleGlobalStructSize;

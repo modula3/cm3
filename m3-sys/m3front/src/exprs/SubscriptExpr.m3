@@ -596,7 +596,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       BEGIN
         IF msirRank > 1 THEN
           VAR intT    := MSIR.TI (Target.Integer.size);
-              apB     := Target.Address.size DIV Target.Byte;
+              shapeB     := M3RT.OA_sizes DIV Target.Byte;
               intB    := Target.Integer.size DIV Target.Byte;
               eltPack := OpenArrayType.EltPack (p.taBase);
               zeros   := NEW (REF ARRAY OF MSIR.Value, msirRank);
@@ -639,7 +639,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
                 MSIR.BuildStore (blk,
                   MSIR.BuildOpenArraySize (blk, "", oa, k),
                   MSIRBuilder.BuildPtrByteOff (blk, "", dopeA,
-                                               apB + (k - 1) * intB));
+                                               shapeB + (k - 1) * intB));
               END;
               RETURN dopeA;
             END;

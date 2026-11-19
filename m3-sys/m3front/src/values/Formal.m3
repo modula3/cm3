@@ -1554,7 +1554,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     actDepth   := OpenArrayType.OpenDepth (actType);
     ptrT       := MSIR.TPtr (MSIR.TVoid ());
     intT       := MSIR.TI (Target.Integer.size);
-    apB        := Target.Address.size DIV Target.Byte;
+    szB        := M3RT.OA_sizes DIV Target.Byte  (* dope shape, D24 *);
     ipB        := Target.Integer.size DIV Target.Byte;
     flds       : REF ARRAY OF MSIR.Field;
     b          : MSIR.Block;
@@ -1622,7 +1622,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           FOR k := 0 TO formDepth - 1 DO
             MSIR.BuildStore (b, MSIR.ConstInt (intT, dimSizes[k]),
                              MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
-                                                          apB + ipB * k));
+                                                          szB + ipB * k));
           END;
           RETURN dopeA;
         END;
@@ -1645,7 +1645,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           FOR k := 0 TO nDynDims - 1 DO
             dims[k] := MSIR.BuildLoad (b2, "", intT,
                          MSIRBuilder.BuildPtrByteOff (b2, "", dopeAddr,
-                                                      apB + ipB * k));
+                                                      szB + ipB * k));
           END;
           IF actDepth < formDepth THEN
             (* Partial depth: inner dims are fixed; extract from M3 type. *)
@@ -1694,7 +1694,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
             FOR k := 0 TO formDepth - 1 DO
               MSIR.BuildStore (b2, dims[k],
                                MSIRBuilder.BuildPtrByteOff (b2, "", dopeA,
-                                                            apB + ipB * k));
+                                                            szB + ipB * k));
             END;
             RETURN dopeA;
           END;
@@ -1752,7 +1752,7 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
       MSIR.BuildStore (b,
                        MSIR.ConstInt (intT, cntI),
                        MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
-                                                    apB + ipB * k));
+                                                    szB + ipB * k));
       innerT := eltT;
     END;
     RETURN dopeA;
@@ -1769,7 +1769,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     actDepth  := OpenArrayType.OpenDepth (actType);
     ptrT      := MSIR.TPtr (MSIR.TVoid ());
     intT      := MSIR.TI (Target.Integer.size);
-    apB       := Target.Address.size DIV Target.Byte;
+    szB       := M3RT.OA_sizes DIV Target.Byte  (* dope shape, D24 *);
     ipB       := Target.Integer.size DIV Target.Byte;
     flds      : REF ARRAY OF MSIR.Field;
     b         : MSIR.Block;
@@ -1894,7 +1894,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           FOR k := 0 TO formDepth - 1 DO
             MSIR.BuildStore (b, MSIR.ConstInt (intT, dimSizes[k]),
                              MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
-                                                          apB + ipB * k));
+                                                          szB + ipB * k));
           END;
           RETURN dopeA;
         END;
@@ -1920,11 +1920,11 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
         FOR k := 0 TO actDepth - 1 DO
           VAR dim := MSIR.BuildLoad (b, "", intT,
                        MSIRBuilder.BuildPtrByteOff (b, "", dopeAddr,
-                                                    apB + ipB * k));
+                                                    szB + ipB * k));
           BEGIN
             MSIR.BuildStore (b, dim,
                              MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
-                                                          apB + ipB * k));
+                                                          szB + ipB * k));
           END;
         END;
         innerT := actType;
@@ -1938,7 +1938,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
           MSIR.BuildStore (b,
                            MSIR.ConstInt (intT, cntI),
                            MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
-                                                        apB + ipB * k));
+                                                        szB + ipB * k));
           innerT := eltT;
         END;
       END;
@@ -1955,7 +1955,7 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
         MSIR.BuildStore (b,
                          MSIR.ConstInt (intT, cntI),
                          MSIRBuilder.BuildPtrByteOff (b, "", dopeA,
-                                                      apB + ipB * k));
+                                                      szB + ipB * k));
         innerT := eltT;
       END;
     END;

@@ -715,7 +715,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     src_info, elt_info: Type.Info;
     eltMsirT : MSIR.T;
     elemPtr, dopeA: MSIR.Value;
-    apB   : INTEGER;
+    shapeB   : INTEGER;
     intT  : MSIR.T;
     count : INTEGER;
   BEGIN
@@ -759,7 +759,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("LOOPHOLE to open array: unsupported element type");
           RETURN NIL;
         END;
-        apB  := Target.Address.size DIV Target.Byte;
+        shapeB  := M3RT.OA_sizes DIV Target.Byte;
         intT := MSIR.TI (Target.Integer.size);
         blk  := MSIRBuilder.CurrentBlock ();
         IF p.kind = Kind.D_to_A THEN
@@ -789,7 +789,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         MSIR.BuildStore (blk, elemPtr,
                          MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
         MSIR.BuildStore (blk, MSIR.ConstInt (intT, count),
-                         MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB));
+                         MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, shapeB));
         RETURN dopeA;
     | Kind.V_to_S =>
         MSIRBuilder.Abandon ("LOOPHOLE lvalue: V_to_S has no lvalue");

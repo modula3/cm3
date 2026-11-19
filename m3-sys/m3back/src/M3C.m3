@@ -3164,10 +3164,9 @@ BEGIN
        m3core defines (runtime/common/RTAbiCG.c).  A CG object then cannot link
        against an MSIR-built runtime (undefined symbol), the mirror of the MSIR
        side's `m3_abi_msir_v1` (see MSIRToLLVM.Module / RTAbiMSIR.c).  Scoped to
-       the MSIR-capable targets so other platforms are untouched. *)
-    IF Text.Equal(Target.System_name, "ARM64_DARWIN")
-       OR Text.Equal(Target.System_name, "AMD64_DARWIN")
-       OR Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+       ex_stack builds, the only ones MSIR supports, so other platforms are
+       untouched. *)
+    IF Target.Has_stack_walker THEN
       print(self, "extern char m3_abi_cg_v1;\n");
       print(self, "static char * const _m3_abi_cg_ref "
                   & "__attribute__((used)) = &m3_abi_cg_v1;\n");

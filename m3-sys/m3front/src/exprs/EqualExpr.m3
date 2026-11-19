@@ -999,7 +999,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
             rvMsirRank : INTEGER := 0;
             intT  := MSIR.TI (Target.Integer.size);
             ptrT  := MSIR.TPtr (MSIR.TVoid ());
-            apB   := Target.Address.size DIV Target.Byte;
+            shapeB   := M3RT.OA_sizes DIV Target.Byte;
             intB  := Target.Integer.size DIV Target.Byte;
           BEGIN
             IF lvIsOA THEN
@@ -1051,7 +1051,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
                     THEN sa := MSIR.BuildOpenArraySize (blk, "", lv, dim);
                     ELSE sa := MSIR.BuildLoad (blk, "", intT,
                                   MSIRBuilder.BuildPtrByteOff (blk, "", heapLV,
-                                                                apB + dim * intB));
+                                                                shapeB + dim * intB));
                   END;
                 ELSE
                   sa := MSIR.ConstInt (intT, tbDimExtents[dim]);
@@ -1061,7 +1061,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
                     THEN sb := MSIR.BuildOpenArraySize (blk, "", rv, dim);
                     ELSE sb := MSIR.BuildLoad (blk, "", intT,
                                   MSIRBuilder.BuildPtrByteOff (blk, "", heapRV,
-                                                                apB + dim * intB));
+                                                                shapeB + dim * intB));
                   END;
                 ELSE
                   sb := MSIR.ConstInt (intT, tbDimExtents[dim]);
@@ -1082,7 +1082,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
               IF 0 < lvMsirRank
                 THEN total := MSIR.BuildOpenArraySize (blk, "", lv, 0);
                 ELSE total := MSIR.BuildLoad (blk, "", intT,
-                                MSIRBuilder.BuildPtrByteOff (blk, "", heapLV, apB));
+                                MSIRBuilder.BuildPtrByteOff (blk, "", heapLV, shapeB));
               END;
               FOR dim := 1 TO openRank - 1 DO
                 VAR sd : MSIR.Value;
@@ -1091,7 +1091,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
                     THEN sd := MSIR.BuildOpenArraySize (blk, "", lv, dim);
                     ELSE sd := MSIR.BuildLoad (blk, "", intT,
                                   MSIRBuilder.BuildPtrByteOff (blk, "", heapLV,
-                                                                apB + dim * intB));
+                                                                shapeB + dim * intB));
                   END;
                   blk := MSIRBuilder.CurrentBlock ();
                   total := MSIR.BuildIMul (blk, "", total, sd);
@@ -1101,7 +1101,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
               IF 0 < rvMsirRank
                 THEN total := MSIR.BuildOpenArraySize (blk, "", rv, 0);
                 ELSE total := MSIR.BuildLoad (blk, "", intT,
-                                MSIRBuilder.BuildPtrByteOff (blk, "", heapRV, apB));
+                                MSIRBuilder.BuildPtrByteOff (blk, "", heapRV, shapeB));
               END;
               FOR dim := 1 TO openRank - 1 DO
                 VAR sd : MSIR.Value;
@@ -1110,7 +1110,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
                     THEN sd := MSIR.BuildOpenArraySize (blk, "", rv, dim);
                     ELSE sd := MSIR.BuildLoad (blk, "", intT,
                                   MSIRBuilder.BuildPtrByteOff (blk, "", heapRV,
-                                                                apB + dim * intB));
+                                                                shapeB + dim * intB));
                   END;
                   blk := MSIRBuilder.CurrentBlock ();
                   total := MSIR.BuildIMul (blk, "", total, sd);

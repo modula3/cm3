@@ -15,7 +15,7 @@ IMPORT M3ID, Value, NamedExpr, VarExpr, ArrayType, ConsExpr;
 IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr, SubscriptExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis, M3RT;
 
 TYPE P = Stmt.T OBJECT
         lhs     : Expr.T;
@@ -1065,17 +1065,17 @@ PROCEDURE CompileMSIR (p: P) =
                 END;
                 (* Extra open dims (rhs M3 depth > MSIR rank): the heap dope stores
                    all dims at { ptr, dim0, dim1, ... }.  Load extras from the
-                   raw rhs dope pointer (offset apB + k * ipB for dim_k). *)
+                   raw rhs dope pointer (offset shapeB + k * ipB for dim_k). *)
                 IF rhsM3Depth > rhsRank THEN
                   VAR rhsDopePtr := Expr.LValueMSIR (p.rhs);
-                      apB        := Target.Address.size DIV Target.Byte;
+                      shapeB        := M3RT.OA_sizes DIV Target.Byte;
                       ipB        := Target.Integer.size DIV Target.Byte;
                   BEGIN
                     IF rhsDopePtr # NIL THEN
                       FOR k := rhsRank TO rhsM3Depth - 1 DO
                         VAR dimK := MSIR.BuildLoad (blk2, "", intT,
                                       MSIRBuilder.BuildPtrByteOff (blk2, "", rhsDopePtr,
-                                                                    apB + k * ipB));
+                                                                    shapeB + k * ipB));
                         BEGIN
                           blk2 := MSIRBuilder.CurrentBlock ();
                           totalElts := MSIR.BuildIMul (blk2, "", totalElts, dimK);

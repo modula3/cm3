@@ -585,7 +585,7 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     res      : MSIR.Value;
     mt       : MSIR.T;
     descV    : MSIR.Value;
-    apBytes  : INTEGER;
+    shapeB  : INTEGER;
     ipBytes  : INTEGER;
   BEGIN
     ndims := OpenArrayType.OpenDepth (ta);
@@ -611,17 +611,17 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     b := MSIRBuilder.CurrentBlock ();
     sizesA := MSIR.BuildAlloca (b, "", sizesT);
 
-    apBytes := Target.Address.size DIV Target.Byte;
+    shapeB := M3RT.OA_sizes DIV Target.Byte;
     ipBytes := Target.Integer.size DIV Target.Byte;
 
     (* OA_elt_ptr (byte 0) = &sizes.dim0 = sizesA + (AP + IP) bytes *)
-    VAR dim0Addr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes + ipBytes);
+    VAR dim0Addr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, shapeB + ipBytes);
     BEGIN
       MSIR.BuildStore (b, dim0Addr, MSIRBuilder.BuildPtrByteOff (b, "", sizesA, 0));
     END;
 
     (* OA_size_0 (byte AP) = number of open dimensions *)
-    VAR cntAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes);
+    VAR cntAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, shapeB);
     BEGIN
       MSIR.BuildStore (b, MSIR.ConstInt (intT, ndims), cntAddr);
     END;
@@ -629,7 +629,7 @@ PROCEDURE GenOpenArrayMSIR (t: Type.T;  READONLY t_info: Type.Info;
     (* OA_size_i (byte AP + IP*i, i in 1..ndims) = ce.args[i] dimension expression *)
     FOR i := 1 TO ndims DO
       VAR
-        dimAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, apBytes + ipBytes * i);
+        dimAddr := MSIRBuilder.BuildPtrByteOff (b, "", sizesA, shapeB + ipBytes * i);
         dimVal  : MSIR.Value;
       BEGIN
         dimVal := Expr.CompileMSIR (ce.args[i]);

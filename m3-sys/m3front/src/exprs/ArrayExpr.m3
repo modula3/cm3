@@ -2409,7 +2409,7 @@ PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
     elemDepth := OpenArrayType.OpenDepth (innerT);
     nOuter    := p.eltCt;
     intT      := MSIR.TI (Target.Integer.size);
-    apB       := Target.Address.size DIV Target.Byte;
+    shapeB       := M3RT.OA_sizes DIV Target.Byte;
     ipB       := Target.Integer.size DIV Target.Byte;
     dims      : REF ARRAY OF MSIR.Value;
     elemBytes : MSIR.Value := NIL;
@@ -2549,11 +2549,11 @@ PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
       resDope := MSIR.BuildAlloca (blk, "", resT);
       MSIR.BuildStore (blk, flat, MSIR.BuildPtrAdd (blk, "", resDope, 0));
       MSIR.BuildStore (blk, MSIR.ConstInt (intT, nOuter),
-                       MSIR.BuildPtrAdd (blk, "", resDope, apB));
+                       MSIR.BuildPtrAdd (blk, "", resDope, shapeB));
       FOR k := 0 TO elemDepth - 1 DO
         MSIR.BuildStore (blk, dims[k],
                          MSIR.BuildPtrAdd (blk, "", resDope,
-                                           apB + (k + 1) * ipB));
+                                           shapeB + (k + 1) * ipB));
       END;
       RETURN resDope;
     END;

@@ -507,14 +507,14 @@ PROCEDURE ModuleGlobalInitCount(m: Module): INTEGER;
 PROCEDURE ModuleGlobalInitOffset(m: Module;  i: INTEGER): INTEGER;
 PROCEDURE ModuleGlobalInitValue(m: Module;  i: INTEGER): Value;
 
-(* Number of fields in RT0.ModuleInfo; all are pointer-or-integer-sized,
-   so the struct byte size is MI_nFields * Target.Address.bytes. *)
+(* Number of fields in RT0.ModuleInfo.  Its byte size is M3RT.MI_SIZE;
+   MSIRToLLVM checks its field table against M3RT's MI_* offsets (D24). *)
 CONST MI_nFields = 13;
 
 (* Allocate space for a struct-embedded global in the module's @Mod_M3_info
    struct.  Returns the byte offset allocated; advances the internal cursor.
    byteSize is the size in bytes; byteAlign is the required byte alignment.
-   User globals follow the standard MI_nFields * Address.bytes header. *)
+   User globals follow the M3RT.MI_SIZE header. *)
 PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
                              byteAlign: INTEGER): INTEGER;
 (* Record that a user global extends to endByteOff in the module struct (used

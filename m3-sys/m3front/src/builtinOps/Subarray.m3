@@ -483,7 +483,7 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
 
     ptrT      := MSIR.TPtr (MSIR.TVoid ());
     intT      := MSIR.TI (Target.Integer.size);
-    apB       := Target.Address.size DIV Target.Byte;
+    shapeB       := M3RT.OA_sizes DIV Target.Byte;
     intB      := Target.Integer.size DIV Target.Byte;
 
     blk                        : MSIR.Block;
@@ -537,7 +537,7 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
         FOR k := 1 TO src_depth - 1 DO
           VAR dimK := MSIR.BuildLoad (blk, "", intT,
                         MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr,
-                                                     apB + k * intB));
+                                                     shapeB + k * intB));
           BEGIN
             blk := MSIRBuilder.CurrentBlock ();
             stride := MSIR.BuildIMul (blk, "", stride, dimK);
@@ -567,17 +567,17 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
     blk   := MSIRBuilder.CurrentBlock ();
     dopeA := MSIR.BuildAlloca (blk, "", MSIR.TOpenArray (resultDepth, eltMsirT));
     MSIR.BuildStore (blk, newEltPtr, MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, 0));
-    MSIR.BuildStore (blk, lenVal,    MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB));
+    MSIR.BuildStore (blk, lenVal,    MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, shapeB));
 
     IF src_depth > 1 THEN
       (* Copy inner dimension sizes size[1..N-1] from source dope to result. *)
       FOR k := 1 TO src_depth - 1 DO
         VAR dimK := MSIR.BuildLoad (blk, "", intT,
-                      MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, apB + k * intB));
+                      MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, shapeB + k * intB));
         BEGIN
           blk := MSIRBuilder.CurrentBlock ();
           MSIR.BuildStore (blk, dimK,
-            MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, apB + k * intB));
+            MSIRBuilder.BuildPtrByteOff (blk, "", dopeA, shapeB + k * intB));
         END;
       END;
     END;
