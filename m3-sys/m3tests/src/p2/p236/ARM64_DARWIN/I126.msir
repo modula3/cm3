@@ -1,6 +1,0 @@
-module I126
-
-proc I126_I3() -> void
-entry:
-  ret
-

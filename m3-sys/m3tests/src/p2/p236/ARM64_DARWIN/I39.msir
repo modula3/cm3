@@ -1,6 +1,0 @@
-module I39
-
-proc I39_I3() -> void
-entry:
-  ret
-

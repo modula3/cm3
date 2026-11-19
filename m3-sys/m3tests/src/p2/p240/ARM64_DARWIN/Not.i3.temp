@@ -1,2 +1,0 @@
-INTERFACE Not;
-END Not.

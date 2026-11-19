@@ -1,2 +1,0 @@
-INTERFACE LT;
-END LT.

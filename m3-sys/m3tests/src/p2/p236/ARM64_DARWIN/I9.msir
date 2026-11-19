@@ -1,6 +1,0 @@
-module I9
-
-proc I9_I3() -> void
-entry:
-  ret
-

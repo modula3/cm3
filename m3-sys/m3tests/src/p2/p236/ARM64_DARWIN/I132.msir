@@ -1,6 +1,0 @@
-module I132
-
-proc I132_I3() -> void
-entry:
-  ret
-

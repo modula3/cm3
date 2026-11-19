@@ -1,6 +1,0 @@
-module I54
-
-proc I54_I3() -> void
-entry:
-  ret
-

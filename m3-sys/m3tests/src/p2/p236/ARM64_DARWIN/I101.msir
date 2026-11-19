@@ -1,6 +1,0 @@
-module I101
-
-proc I101_I3() -> void
-entry:
-  ret
-

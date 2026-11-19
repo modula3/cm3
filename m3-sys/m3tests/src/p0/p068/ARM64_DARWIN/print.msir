@@ -1,6 +1,0 @@
-module print
-
-proc print_I3() -> void
-entry:
-  ret
-

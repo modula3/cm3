@@ -1,6 +1,0 @@
-module I180
-
-proc I180_I3() -> void
-entry:
-  ret
-

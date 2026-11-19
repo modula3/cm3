@@ -1,2 +1,0 @@
-INTERFACE insert_constant_offset;
-END insert_constant_offset.

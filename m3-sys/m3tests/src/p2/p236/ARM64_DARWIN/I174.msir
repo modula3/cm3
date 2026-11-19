@@ -1,6 +1,0 @@
-module I174
-
-proc I174_I3() -> void
-entry:
-  ret
-

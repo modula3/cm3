@@ -1,2 +1,0 @@
-INTERFACE extract_constant_offset;
-END extract_constant_offset.

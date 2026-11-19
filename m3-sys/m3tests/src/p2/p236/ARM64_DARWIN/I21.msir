@@ -1,6 +1,0 @@
-module I21
-
-proc I21_I3() -> void
-entry:
-  ret
-

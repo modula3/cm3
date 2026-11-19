@@ -1,6 +1,0 @@
-module VBT
-
-proc VBT_I3() -> void
-entry:
-  ret
-

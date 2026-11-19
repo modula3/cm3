@@ -1,6 +1,0 @@
-module I6
-
-proc I6_I3() -> void
-entry:
-  ret
-

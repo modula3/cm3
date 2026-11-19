@@ -1,6 +1,0 @@
-module I14
-
-proc I14_I3() -> void
-entry:
-  ret
-

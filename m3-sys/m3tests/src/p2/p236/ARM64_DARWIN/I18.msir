@@ -1,6 +1,0 @@
-module I18
-
-proc I18_I3() -> void
-entry:
-  ret
-

@@ -1,6 +1,0 @@
-module I154
-
-proc I154_I3() -> void
-entry:
-  ret
-

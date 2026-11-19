@@ -1,6 +1,0 @@
-module I24
-
-proc I24_I3() -> void
-entry:
-  ret
-

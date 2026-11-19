@@ -1,2 +1,0 @@
-INTERFACE GT;
-END GT.

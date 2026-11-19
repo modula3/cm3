@@ -1,6 +1,0 @@
-module I74
-
-proc I74_I3() -> void
-entry:
-  ret
-

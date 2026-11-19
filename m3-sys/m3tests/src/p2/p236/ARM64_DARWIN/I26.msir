@@ -1,6 +1,0 @@
-module I26
-
-proc I26_I3() -> void
-entry:
-  ret
-

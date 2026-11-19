@@ -1,6 +1,0 @@
-module I36
-
-proc I36_I3() -> void
-entry:
-  ret
-

@@ -1,2 +1,0 @@
-INTERFACE NE;
-END NE.

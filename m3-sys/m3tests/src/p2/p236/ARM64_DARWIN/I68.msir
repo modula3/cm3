@@ -1,6 +1,0 @@
-module I68
-
-proc I68_I3() -> void
-entry:
-  ret
-

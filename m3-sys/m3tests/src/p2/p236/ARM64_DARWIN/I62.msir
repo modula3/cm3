@@ -1,6 +1,0 @@
-module I62
-
-proc I62_I3() -> void
-entry:
-  ret
-

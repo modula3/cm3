@@ -1,6 +1,0 @@
-module I82
-
-proc I82_I3() -> void
-entry:
-  ret
-

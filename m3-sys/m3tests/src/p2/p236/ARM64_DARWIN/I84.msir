@@ -1,6 +1,0 @@
-module I84
-
-proc I84_I3() -> void
-entry:
-  ret
-

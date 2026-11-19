@@ -1,6 +1,0 @@
-module I129
-
-proc I129_I3() -> void
-entry:
-  ret
-

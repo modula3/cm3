@@ -1,6 +1,0 @@
-module I57
-
-proc I57_I3() -> void
-entry:
-  ret
-

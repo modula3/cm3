@@ -1,6 +1,0 @@
-module I15
-
-proc I15_I3() -> void
-entry:
-  ret
-

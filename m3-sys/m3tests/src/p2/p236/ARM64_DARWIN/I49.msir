@@ -1,6 +1,0 @@
-module I49
-
-proc I49_I3() -> void
-entry:
-  ret
-

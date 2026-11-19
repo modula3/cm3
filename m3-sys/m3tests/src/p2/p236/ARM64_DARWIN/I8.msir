@@ -1,6 +1,0 @@
-module I8
-
-proc I8_I3() -> void
-entry:
-  ret
-

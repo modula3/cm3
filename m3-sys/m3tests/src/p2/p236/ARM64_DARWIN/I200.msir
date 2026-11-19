@@ -1,6 +1,0 @@
-module I200
-
-proc I200_I3() -> void
-entry:
-  ret
-

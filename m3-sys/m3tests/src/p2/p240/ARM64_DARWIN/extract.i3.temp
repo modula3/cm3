@@ -1,2 +1,0 @@
-INTERFACE extract;
-END extract.

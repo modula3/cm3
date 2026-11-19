@@ -1,6 +1,0 @@
-module I4
-
-proc I4_I3() -> void
-entry:
-  ret
-

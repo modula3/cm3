@@ -1,6 +1,0 @@
-module I35
-
-proc I35_I3() -> void
-entry:
-  ret
-

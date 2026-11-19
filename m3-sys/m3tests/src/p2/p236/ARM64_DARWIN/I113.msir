@@ -1,6 +1,0 @@
-module I113
-
-proc I113_I3() -> void
-entry:
-  ret
-

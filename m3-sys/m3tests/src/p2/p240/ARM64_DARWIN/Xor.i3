@@ -1,2 +1,0 @@
-INTERFACE Xor;
-END Xor.

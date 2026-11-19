@@ -1,6 +1,0 @@
-module I145
-
-proc I145_I3() -> void
-entry:
-  ret
-

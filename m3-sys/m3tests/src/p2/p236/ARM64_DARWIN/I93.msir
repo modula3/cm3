@@ -1,6 +1,0 @@
-module I93
-
-proc I93_I3() -> void
-entry:
-  ret
-

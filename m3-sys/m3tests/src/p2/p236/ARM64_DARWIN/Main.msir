@@ -1,6 +1,0 @@
-module Main
-
-proc Main_M3() -> void
-entry:
-  ret
-

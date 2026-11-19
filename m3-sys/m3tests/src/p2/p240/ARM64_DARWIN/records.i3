@@ -1,2 +1,0 @@
-INTERFACE records;
-END records.

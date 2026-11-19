@@ -1,6 +1,0 @@
-module I184
-
-proc I184_I3() -> void
-entry:
-  ret
-

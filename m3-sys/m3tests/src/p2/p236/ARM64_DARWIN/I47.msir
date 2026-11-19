@@ -1,6 +1,0 @@
-module I47
-
-proc I47_I3() -> void
-entry:
-  ret
-

@@ -1,2 +1,0 @@
-INTERFACE EQ;
-END EQ.

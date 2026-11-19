@@ -1,6 +1,0 @@
-module I5
-
-proc I5_I3() -> void
-entry:
-  ret
-

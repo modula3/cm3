@@ -1,6 +1,0 @@
-module I55
-
-proc I55_I3() -> void
-entry:
-  ret
-

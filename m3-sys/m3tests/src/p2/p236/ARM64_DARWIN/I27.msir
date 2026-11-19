@@ -1,6 +1,0 @@
-module I27
-
-proc I27_I3() -> void
-entry:
-  ret
-

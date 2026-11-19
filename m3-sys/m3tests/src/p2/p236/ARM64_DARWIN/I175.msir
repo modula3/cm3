@@ -1,6 +1,0 @@
-module I175
-
-proc I175_I3() -> void
-entry:
-  ret
-

@@ -1,2 +1,0 @@
-INTERFACE Rotate;
-END Rotate.

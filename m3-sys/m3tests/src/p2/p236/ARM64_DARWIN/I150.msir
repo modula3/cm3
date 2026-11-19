@@ -1,6 +1,0 @@
-module I150
-
-proc I150_I3() -> void
-entry:
-  ret
-

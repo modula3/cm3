@@ -1,6 +1,0 @@
-module I43
-
-proc I43_I3() -> void
-entry:
-  ret
-

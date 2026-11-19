@@ -1,6 +1,0 @@
-module I120
-
-proc I120_I3() -> void
-entry:
-  ret
-

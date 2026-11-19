@@ -1,2 +1,0 @@
-INTERFACE LeftShift;
-END LeftShift.

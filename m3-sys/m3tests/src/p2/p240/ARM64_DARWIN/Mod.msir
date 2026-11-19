@@ -1,6 +1,0 @@
-module Mod
-
-proc Mod_I3() -> void
-entry:
-  ret
-

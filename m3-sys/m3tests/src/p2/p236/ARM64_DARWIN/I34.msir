@@ -1,6 +1,0 @@
-module I34
-
-proc I34_I3() -> void
-entry:
-  ret
-

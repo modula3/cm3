@@ -1,6 +1,0 @@
-module I110
-
-proc I110_I3() -> void
-entry:
-  ret
-

@@ -1,6 +1,0 @@
-module I198
-
-proc I198_I3() -> void
-entry:
-  ret
-

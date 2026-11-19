@@ -1,6 +1,0 @@
-module I23
-
-proc I23_I3() -> void
-entry:
-  ret
-

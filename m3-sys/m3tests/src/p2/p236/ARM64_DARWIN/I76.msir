@@ -1,6 +1,0 @@
-module I76
-
-proc I76_I3() -> void
-entry:
-  ret
-

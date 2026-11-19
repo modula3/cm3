@@ -1,2 +1,0 @@
-INTERFACE RightRotate;
-END RightRotate.

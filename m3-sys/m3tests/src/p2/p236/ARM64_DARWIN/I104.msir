@@ -1,6 +1,0 @@
-module I104
-
-proc I104_I3() -> void
-entry:
-  ret
-

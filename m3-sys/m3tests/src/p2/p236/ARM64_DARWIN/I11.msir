@@ -1,6 +1,0 @@
-module I11
-
-proc I11_I3() -> void
-entry:
-  ret
-

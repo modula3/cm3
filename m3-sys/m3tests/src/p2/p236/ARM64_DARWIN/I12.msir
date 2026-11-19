@@ -1,6 +1,0 @@
-module I12
-
-proc I12_I3() -> void
-entry:
-  ret
-

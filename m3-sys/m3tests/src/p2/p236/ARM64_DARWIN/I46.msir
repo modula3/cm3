@@ -1,6 +1,0 @@
-module I46
-
-proc I46_I3() -> void
-entry:
-  ret
-
