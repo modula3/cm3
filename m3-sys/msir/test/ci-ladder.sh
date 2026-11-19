@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# MSIR validation ladder: the three-stage bootstrap plus m3tests.
+#
+# Starts from an installed cm3 (e.g. a bootstrap release) at $CM3_INSTALL
+# with $CM3_INSTALL/bin on PATH.  Run from the repository root.
+#
+#   Stage 1  C backend: concierge full-upgrade (base set).  On AMD64_LINUX,
+#            ex_stack is off in the shipped config, so this is done twice:
+#            once with ex_frame, then again with M3_USE_STACK_WALKER on
+#            (the two-phase ex_stack transition; see CLAUDE.md).
+#   Stage 2  Switch the installed config to MSIRObj.  The stage-1 cm3
+#            rebuilds the compiler packages through MSIR -> LLVM and the
+#            result is installed: a cm3 whose own code is all MSIR.
+#            IR emitted by stage 1 is saved as ir-1.
+#   Tests    Full m3tests under the stage-2 cm3, in MSIRObj mode.
+#   Stage 3  The stage-2 cm3 rebuilds the compiler packages (ir-2) and the
+#            result is installed and smoke-tested.  The stage-3 cm3
+#            rebuilds them once more (ir-3).
+#   Fixpoint ir-1, ir-2 and ir-3 must be identical.
+#
+# Environment: CM3_TARGET (ARM64_DARWIN | AMD64_DARWIN | AMD64_LINUX),
+#              CM3_INSTALL, optional WORK (scratch dir, default ../msir-ladder),
+#              optional M3TESTS_TIMEOUT (seconds, default 5400).
+# Exit status is non-zero if any m3test errors, the smoke test fails, or
+# the IR differs between stages.
+
+set -euo pipefail
+
+: "${CM3_TARGET:?}" "${CM3_INSTALL:?}"
+ROOT=$(pwd)
+WORK=${WORK:-$ROOT/../msir-ladder}
+M3TESTS_TIMEOUT=${M3TESTS_TIMEOUT:-5400}
+SRC_CFG=$ROOT/m3-sys/cminstall/src/config/$CM3_TARGET
+INST_CFG=$CM3_INSTALL/bin/config/$CM3_TARGET
+mkdir -p "$WORK"
+
+# Packages rebuilt through MSIR, in dependency order (scripts/pkginfo.txt).
+PKGS=(m3-libs/m3core m3-libs/libm3 m3-libs/set m3-libs/sysutils
+      m3-sys/m3middle m3-sys/m3objfile m3-sys/m3linker m3-sys/m3back
+      m3-sys/msir m3-sys/m3quake m3-sys/m3front m3-sys/cm3)
+
+status=0
+log() { printf '\n=== %s ===\n' "$*"; }
+fail() { echo "::error::$*"; status=1; }
+
+# set_cfg FILE MODE WALKER: set M3_BACKEND_MODE in a target config and,
+# if WALKER is 1, uncomment M3_USE_STACK_WALKER = TRUE.  Only uncommented
+# assignments are rewritten, so "% M3_BACKEND_MODE = ..." lines stay put.
+set_cfg() {
+  MODE=$2 WALKER=$3 perl -i -pe '
+    s/^(\s*)M3_BACKEND_MODE\s*=\s*"[^"]*"/$1M3_BACKEND_MODE = "$ENV{MODE}"/;
+    s/^%\s*(M3_USE_STACK_WALKER\s*=\s*TRUE)/$1/ if $ENV{WALKER};
+  ' "$1"
+  grep -nE '^\s*(M3_BACKEND_MODE|M3_USE_STACK_WALKER)\s*=' "$1" || true
+}
+
+install_cm3() {
+  cp "$ROOT/m3-sys/cm3/$CM3_TARGET/cm3" "$CM3_INSTALL/bin/cm3"
+  if [ "$(uname)" = Darwin ]; then codesign -f -s - "$CM3_INSTALL/bin/cm3"; fi
+}
+
+# build_through_msir OUTDIR: clean-build and ship PKGS with the installed
+# cm3, then copy every emitted .ll to OUTDIR/<package>/.
+build_through_msir() {
+  local out=$1 p
+  rm -rf "$out"; mkdir -p "$out"
+  for p in "${PKGS[@]}"; do
+    echo "--- $p"
+    (cd "$ROOT/$p" && cm3 -clean >/dev/null && cm3 -build && cm3 -ship)
+    mkdir -p "$out/$p"
+    find "$ROOT/$p/$CM3_TARGET" -maxdepth 1 -name '*.ll' -exec cp {} "$out/$p/" \;
+  done
+  local n; n=$(find "$out" -name '*.ll' | wc -l | tr -d ' ')
+  echo "saved $n .ll files to $out"
+  [ "$n" -gt 0 ] || fail "no .ll files emitted; is MSIRObj mode active?"
+}
+
+smoke() {
+  local d="$WORK/smoke"
+  rm -rf "$d"; mkdir -p "$d/src"
+  cat >"$d/src/Main.m3" <<'EOF'
+MODULE Main;
+IMPORT IO, Fmt;
+VAR t := NEW(REF ARRAY OF INTEGER, 10);  s := 0;
+BEGIN
+  FOR i := FIRST(t^) TO LAST(t^) DO t[i] := i * i; INC(s, t[i]) END;
+  TRY RAISE IO.Error EXCEPT IO.Error => INC(s) END;
+  IO.Put("smoke " & Fmt.Int(s) & "\n");
+END Main.
+EOF
+  printf 'import("libm3")\nimplementation("Main")\nprogram("smoke")\n' >"$d/src/m3makefile"
+  (cd "$d/src" && cm3 -build) || { fail "smoke: build failed"; return; }
+  local got; got=$("$d/$CM3_TARGET/smoke") || { fail "smoke: run failed"; return; }
+  [ "$got" = "smoke 286" ] || fail "smoke: expected 'smoke 286', got '$got'"
+  echo "$got"
+}
+
+log "Stage 1: C backend"
+case $CM3_TARGET in
+  AMD64_LINUX)
+    set_cfg "$SRC_CFG" C 0
+    scripts/concierge.py full-upgrade --backend c base
+    log "Stage 1b: enable ex_stack (AMD64_LINUX two-phase transition)"
+    set_cfg "$SRC_CFG" C 1
+    scripts/concierge.py full-upgrade --backend c base ;;
+  *)
+    set_cfg "$SRC_CFG" C 1
+    scripts/concierge.py full-upgrade --backend c base ;;
+esac
+cm3 -version | head -3
+
+log "Stage 2: stage-1 cm3 builds the compiler through MSIR"
+set_cfg "$INST_CFG" MSIRObj 1
+build_through_msir "$WORK/ir-1"
+install_cm3
+
+log "m3tests under the stage-2 cm3 (MSIRObj)"
+(
+  cd "$ROOT/m3-sys/m3tests"
+  if command -v timeout >/dev/null; then T=timeout
+  elif command -v gtimeout >/dev/null; then T=gtimeout
+  else T=""; fi
+  ${T:+$T $M3TESTS_TIMEOUT} cm3 -DHTML
+) || echo "cm3 -DHTML exited non-zero (checking results file)"
+RES=$ROOT/m3-sys/m3tests/m3tests-results.xml
+if [ -f "$RES" ]; then
+  head -c 2000 "$RES" | grep -oE '<testsuite[^>]*>' | head -1
+  errs=$(grep -oE '<testsuite[^>]*errors="[0-9]+"' "$RES" | head -1 | grep -oE '[0-9]+"$' | tr -d '"')
+  [ "${errs:-1}" = 0 ] || fail "m3tests: ${errs:-unknown} errors"
+else
+  fail "m3tests: no results file"
+fi
+
+log "Stage 3: stage-2 cm3 rebuilds the compiler"
+build_through_msir "$WORK/ir-2"
+install_cm3
+log "Smoke test of the stage-3 cm3"
+smoke
+
+log "Stage-3 cm3 rebuilds the compiler (IR only compared)"
+build_through_msir "$WORK/ir-3"
+
+log "Fixpoint"
+for pair in "ir-1 ir-2" "ir-2 ir-3"; do
+  set -- $pair
+  if diff -rq "$WORK/$1" "$WORK/$2" >"$WORK/diff-$1-$2.txt"; then
+    echo "$1 == $2 ($(find "$WORK/$1" -name '*.ll' | wc -l | tr -d ' ') files)"
+  else
+    fail "fixpoint: $1 and $2 differ ($(wc -l <"$WORK/diff-$1-$2.txt" | tr -d ' ') files)"
+    head -20 "$WORK/diff-$1-$2.txt"
+  fi
+done
+
+exit $status
