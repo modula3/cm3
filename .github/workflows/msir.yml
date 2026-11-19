@@ -119,3 +119,5 @@ jobs:
         path: |
           m3-sys/m3tests/m3tests-results.xml
           ${{ runner.temp }}/msir-ladder/diff-*.txt
+          ${{ runner.temp }}/msir-ladder/fixpoint-diff/
+          ${{ runner.temp }}/msir-ladder/smoke/

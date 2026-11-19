@@ -93,7 +93,8 @@ BEGIN
 END Main.
 EOF
   printf 'import("libm3")\nimplementation("Main")\nprogram("smoke")\n' >"$d/src/m3makefile"
-  (cd "$d/src" && cm3 -build) || { fail "smoke: build failed"; return; }
+  # -keep leaves the LLVM IR (Main.mb) in $WORK/smoke for the CI artifact.
+  (cd "$d/src" && cm3 -build -keep) || { fail "smoke: build failed"; return; }
   local got; got=$("$d/$CM3_TARGET/smoke") || { fail "smoke: run failed"; return; }
   [ "$got" = "smoke 286" ] || fail "smoke: expected 'smoke 286', got '$got'"
   echo "$got"
@@ -152,6 +153,16 @@ for pair in "ir-1 ir-2" "ir-2 ir-3"; do
   else
     fail "fixpoint: $1 and $2 differ ($(wc -l <"$WORK/diff-$1-$2.txt" | tr -d ' ') files)"
     head -20 "$WORK/diff-$1-$2.txt"
+    # Keep both versions of each differing file (at most 20) for the CI
+    # artifact, so the difference can be read without a rerun.
+    sed -n 's/^Files \(.*\) and \(.*\) differ$/\1/p' "$WORK/diff-$1-$2.txt" | head -20 |
+    while read -r f; do
+      rel=${f#"$WORK/$1/"}
+      for st in "$1" "$2"; do
+        mkdir -p "$WORK/fixpoint-diff/$st/$(dirname "$rel")"
+        cp "$WORK/$st/$rel" "$WORK/fixpoint-diff/$st/$rel"
+      done
+    done
   fi
 done
 
