@@ -35,7 +35,7 @@ INST_CFG=$CM3_INSTALL/bin/config/$CM3_TARGET
 mkdir -p "$WORK"
 
 # Packages rebuilt through MSIR, in dependency order (scripts/pkginfo.txt).
-PKGS=(m3-libs/m3core m3-libs/libm3 m3-libs/set m3-libs/sysutils
+PKGS=(m3-libs/m3core m3-libs/libm3 m3-libs/set m3-libs/sysutils m3-comm/tcp
       m3-sys/m3middle m3-sys/m3objfile m3-sys/m3linker m3-sys/m3back
       m3-sys/msir m3-sys/m3quake m3-sys/m3front m3-sys/cm3)
 
@@ -60,19 +60,23 @@ install_cm3() {
 }
 
 # build_through_msir OUTDIR: clean-build and ship PKGS with the installed
-# cm3, then copy every emitted .ll to OUTDIR/<package>/.
+# cm3, then copy every emitted LLVM IR file to OUTDIR/<package>/.
+# MSIRObj writes its textual LLVM IR as <unit>.mb / <unit>.ib and deletes
+# it after llc unless -keep is given.  tcp is included because p204
+# imports it, and m3core's ABI link guard (RTAbiCG.c) refuses to link a
+# C-backend object against an MSIR-built runtime.
 build_through_msir() {
   local out=$1 p
   rm -rf "$out"; mkdir -p "$out"
   for p in "${PKGS[@]}"; do
     echo "--- $p"
-    (cd "$ROOT/$p" && cm3 -clean >/dev/null && cm3 -build && cm3 -ship)
+    (cd "$ROOT/$p" && cm3 -clean >/dev/null && cm3 -build -keep && cm3 -ship)
     mkdir -p "$out/$p"
-    find "$ROOT/$p/$CM3_TARGET" -maxdepth 1 -name '*.ll' -exec cp {} "$out/$p/" \;
+    find "$ROOT/$p/$CM3_TARGET" -maxdepth 1 \( -name '*.mb' -o -name '*.ib' \) -exec cp {} "$out/$p/" \;
   done
-  local n; n=$(find "$out" -name '*.ll' | wc -l | tr -d ' ')
-  echo "saved $n .ll files to $out"
-  [ "$n" -gt 0 ] || fail "no .ll files emitted; is MSIRObj mode active?"
+  local n; n=$(find "$out" \( -name '*.mb' -o -name '*.ib' \) | wc -l | tr -d ' ')
+  echo "saved $n LLVM IR files (.mb/.ib) to $out"
+  [ "$n" -gt 0 ] || fail "no LLVM IR (.mb/.ib) kept; is MSIRObj mode active?"
 }
 
 smoke() {
@@ -144,7 +148,7 @@ log "Fixpoint"
 for pair in "ir-1 ir-2" "ir-2 ir-3"; do
   set -- $pair
   if diff -rq "$WORK/$1" "$WORK/$2" >"$WORK/diff-$1-$2.txt"; then
-    echo "$1 == $2 ($(find "$WORK/$1" -name '*.ll' | wc -l | tr -d ' ') files)"
+    echo "$1 == $2 ($(find "$WORK/$1" -type f | wc -l | tr -d ' ') files)"
   else
     fail "fixpoint: $1 and $2 differ ($(wc -l <"$WORK/diff-$1-$2.txt" | tr -d ' ') files)"
     head -20 "$WORK/diff-$1-$2.txt"
