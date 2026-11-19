@@ -77,6 +77,7 @@ PROCEDURE StructName(t: T): TEXT;
 PROCEDURE StructFieldCount(t: T): INTEGER;
 PROCEDURE StructField(t: T; i: INTEGER): Field;
 PROCEDURE BitWidth(t: T): INTEGER;    (* for scalar kinds; -1 otherwise *)
+PROCEDURE IsFloat(k: TypeKind): BOOLEAN;  (* F32, F64 or F128 *)
 
 (* Type UID — the CM3 GlobalUID fingerprint, stored here so the lowering
    pass can deduplicate composite DWARF nodes across procs without pulling

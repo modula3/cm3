@@ -285,6 +285,17 @@ PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
   BEGIN
     MSIR.GetFloatVal(v, f);
     nBytes := TFloat.ToBytes(f, buf);
+    IF nBytes = 16 THEN
+      (* fp128 (EXTENDED on AMD64_LINUX): LLVM spells it 0xL followed by the
+         32 hex digits of the IEEE quad, most significant first; ToBytes
+         gives little-endian bytes. *)
+      Wr.PutText(wr, "0xL");
+      FOR i := 15 TO 0 BY -1 DO
+        Wr.PutChar(wr, HexDigit[Word.And(Word.Shift(buf[i], -4), 16_F)]);
+        Wr.PutChar(wr, HexDigit[Word.And(buf[i], 16_F)]);
+      END;
+      RETURN;
+    END;
     IF nBytes = 4 THEN
       (* Widen float32 → double64.  Reconstruct 32-bit IEEE from little-endian
          bytes, then rebias the exponent and extend the mantissa. *)
@@ -353,7 +364,7 @@ PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
   END EmitFloatHex;
 
 (* Emit a float constant.  LLVM 22+ rejects decimal literals for float (32-bit)
-   so we always use hex notation via EmitFloatHex, which handles both F32 and F64. *)
+   so we always use hex notation via EmitFloatHex, which handles F32, F64 and F128. *)
 PROCEDURE EmitFloatDecimal(wr: Wr.T;  v: MSIR.Value) =
   BEGIN
     EmitFloatHex(wr, v);
@@ -1044,7 +1055,12 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           | MSIR.Op.FPFloor     => iname := "llvm.floor.";
           | MSIR.Op.FPCeil      => iname := "llvm.ceil.";
           | MSIR.Op.FPAbs       => iname := "llvm.fabs.";
-          ELSE                     iname := "llvm.roundeven."; (* NearestElseEven = FloatMode.RoundDefault *)
+          ELSE
+            (* ROUND breaks ties per FloatMode.RoundDefault (NearestElseEven).
+               llvm.rint gives that under the default rounding mode, and,
+               unlike llvm.roundeven, its x86_64 libcall (rint/rintf) exists
+               in macOS libm, which has no roundeven. *)
+            iname := "llvm.rint.";
           END;
           Wr.PutText(wr, "  " & MSIR.ValueName(res) & " = call ");
           LLType(wr, ftype);

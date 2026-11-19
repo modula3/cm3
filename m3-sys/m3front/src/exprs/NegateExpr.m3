@@ -117,7 +117,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     t   := MSIR.ValueType (v);
     k   := MSIR.Kind (t);
     blk := MSIRBuilder.CurrentBlock ();
-    IF (k = MSIR.TypeKind.F32) OR (k = MSIR.TypeKind.F64) THEN
+    IF MSIR.IsFloat (k) THEN
       RETURN MSIR.BuildFNeg (blk, "", v);
     ELSE
       RETURN MSIR.BuildISub (blk, "", MSIR.ConstInt (t, 0), v);

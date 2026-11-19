@@ -1545,7 +1545,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
     rv := Expr.CompileMSIR (p.b);  IF rv = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
     lvKind := MSIR.Kind (MSIR.ValueType (lv));
-    IF (lvKind = MSIR.TypeKind.F32) OR (lvKind = MSIR.TypeKind.F64) THEN
+    IF MSIR.IsFloat (lvKind) THEN
       CASE p.op OF
       | Op.EQ => fpred := MSIR.FCmpPred.OEq;
       | Op.NE => fpred := MSIR.FCmpPred.ONe;

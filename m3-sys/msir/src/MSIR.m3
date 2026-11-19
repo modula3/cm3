@@ -276,6 +276,11 @@ PROCEDURE BitWidth(t: T): INTEGER =
     END;
   END BitWidth;
 
+PROCEDURE IsFloat(k: TypeKind): BOOLEAN =
+  BEGIN
+    RETURN k = TypeKind.F32 OR k = TypeKind.F64 OR k = TypeKind.F128;
+  END IsFloat;
+
 PROCEDURE TEnum(name: TEXT;  bits: INTEGER;  READONLY labels: ARRAY OF TEXT): T =
   VAR t  := NewType(TypeKind.Enum);
       ls := NEW(REF ARRAY OF TEXT, NUMBER(labels));
@@ -466,6 +471,7 @@ PROCEDURE ConstZero(t: T): Value =
       TypeKind.GcSlot                   => RETURN ConstNil(t);
     | TypeKind.F32                       => RETURN ConstFloat(t, TFloat.ZeroR);
     | TypeKind.F64                       => RETURN ConstFloat(t, TFloat.ZeroL);
+    | TypeKind.F128                      => RETURN ConstFloat(t, TFloat.ZeroX);
     | TypeKind.FixedArray,
       TypeKind.Struct                    => RETURN ConstNil(t);
       (* Emitter outputs "zeroinitializer" for ConstNil with aggregate types. *)
