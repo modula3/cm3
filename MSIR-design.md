@@ -78,15 +78,18 @@ pushed on the way:
 | `=`, `#`, unary minus on EXTENDED emitted integer ops; fp128 constants printed as doubles | AMD64_LINUX | `MSIR.IsFloat`; `0xL` fp128 literals (`544b07b7c9`) |
 | `llvm.roundeven` becomes a `roundevenf` libcall macOS lacks | AMD64_DARWIN | Lower ROUND with `llvm.rint` (`544b07b7c9`) |
 | `constdope_N` globals duplicated across units at link | AMD64_LINUX | Internal linkage (`GlobalSetPrivate`, `5b8b606ed4`) |
+| `_M3Exc` typeinfo emitted in the arm64 form (hidden, name pointer high bit) on all Darwin; x86_64 libc++abi matches by address, so a RAISE caught in a program linked to `libm3core.dylib` never matched (smoke) | AMD64_DARWIN | Emit clang's x86_64 form there: exported `linkonce_odr`, plain name pointer |
+| Multi-word sets (`i128`, `i192`) loaded/stored with LLVM's 16-byte ABI alignment though M3 aligns them to 8; real x86_64 faults on `movaps` (ARM64 and Rosetta don't) | both x86_64 | `align 8` on IWide loads and stores |
+| fp128 constants written high half first; LLVM's `0xL` form is low half first. `LAST(LONGREAL)` became -inf in the MSIR-built compiler (the stage-1/stage-2 diff) | AMD64_LINUX | Emit low 64 bits then high 64 bits |
 
 Still open:
 
 | Failure | Targets | Notes |
 |---|---|---|
-| Set tests p053, p156, p157, p159, p160, p162 (SEGV) and p280 | both x86_64 | Not on ARM64; suspect by-memory argument passing on x86_64. |
-| RAISE in a module body not caught (smoke) | AMD64_DARWIN | Compiler itself self-hosts, so EH works elsewhere. |
+| Set tests p053, p156, p157, p159, p160, p162 (SEGV) and p280 | both x86_64 | Alignment fix above; to be confirmed by CI on real hardware (Rosetta doesn't fault). |
+| RAISE in a module body not caught (smoke) | AMD64_DARWIN | Fixed (typeinfo, above); smoke passes in a local AMD64_DARWIN ladder under Rosetta. |
 | p223 (.M3SHIP Library) build failure | AMD64_DARWIN | |
-| Stage 1 vs stage 2 IR differs (RTCollector, ThreadPThread, AutoFlushWr); p113, p118, p123, p131 | AMD64_LINUX | fp128 EXTENDED arithmetic in MSIR-built code, probably. The ladder now uploads the differing files (`fixpoint-diff/`). |
+| Stage 1 vs stage 2 IR differs (RTCollector, ThreadPThread, AutoFlushWr); p113, p118, p123, p131 | AMD64_LINUX | Fixed (fp128 constant order, above), from the `fixpoint-diff/` artifact; to be confirmed by CI. |
 | p165 | all | Suspected: Main's type link to `REF INTEGER` has no registered typecell because the program doesn't link RTHooks' interface object. Bisect inconclusive; see *Merge from master (2026-11)*. |
 
 ROUND semantics note: MSIR rounds ties to even (FloatMode.RoundDefault),

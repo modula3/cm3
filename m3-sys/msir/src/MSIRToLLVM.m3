@@ -276,6 +276,19 @@ CONST HexDigit = ARRAY [0..15] OF CHAR {
    For float (32-bit): 16 hex chars must represent the VALUE as a 64-bit
    IEEE 754 double (widened from float32 — not the raw float bits padded).
    For double (64-bit): 16 hex chars of the native 64-bit IEEE pattern. *)
+(* Multi-word sets are IWide integers (i128, i192, ...).  LLVM gives
+   them 16-byte ABI alignment, but M3 lays sets out at word alignment, often
+   inside a module's ModuleInfo at an 8-mod-16 offset.  Unannotated loads and
+   stores then assume 16 and x86_64 emits movaps, which faults on real
+   hardware (ARM64 and Rosetta tolerate the misalignment).  State the
+   alignment M3 actually guarantees. *)
+PROCEDURE LLAlign(wr: Wr.T;  t: MSIR.T) =
+  BEGIN
+    IF t # NIL AND MSIR.Kind(t) = MSIR.TypeKind.IWide THEN
+      Wr.PutText(wr, ", align " & Fmt.Int(Target.Word.align DIV 8));
+    END;
+  END LLAlign;
+
 PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
   VAR
     f      : Target.Float;
@@ -286,11 +299,16 @@ PROCEDURE EmitFloatHex(wr: Wr.T;  v: MSIR.Value) =
     MSIR.GetFloatVal(v, f);
     nBytes := TFloat.ToBytes(f, buf);
     IF nBytes = 16 THEN
-      (* fp128 (EXTENDED on AMD64_LINUX): LLVM spells it 0xL followed by the
-         32 hex digits of the IEEE quad, most significant first; ToBytes
-         gives little-endian bytes. *)
+      (* fp128 (EXTENDED on AMD64_LINUX): LLVM spells it 0xL followed by
+         the LOW 64 bits, then the HIGH 64 bits, each as 16 hex digits
+         (clang writes 1.0Q as 0xL00000000000000003FFF000000000000).
+         ToBytes gives little-endian bytes: low half in buf[0..7]. *)
       Wr.PutText(wr, "0xL");
-      FOR i := 15 TO 0 BY -1 DO
+      FOR i := 7 TO 0 BY -1 DO
+        Wr.PutChar(wr, HexDigit[Word.And(Word.Shift(buf[i], -4), 16_F)]);
+        Wr.PutChar(wr, HexDigit[Word.And(buf[i], 16_F)]);
+      END;
+      FOR i := 15 TO 8 BY -1 DO
         Wr.PutChar(wr, HexDigit[Word.And(Word.Shift(buf[i], -4), 16_F)]);
         Wr.PutChar(wr, HexDigit[Word.And(buf[i], 16_F)]);
       END;
@@ -838,6 +856,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         LLType(wr, MSIR.ValueType(res));
         Wr.PutText(wr, ", ptr ");
         LLOpVal(wr, MSIR.InsnOperand(i, 0));
+        LLAlign(wr, MSIR.ValueType(res));
         Wr.PutText(wr, "\n");
 
     | MSIR.Op.GcLoad =>
@@ -856,6 +875,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ptr ");
         LLOpVal(wr, MSIR.InsnOperand(i, 1));
+        LLAlign(wr, MSIR.ValueType(MSIR.InsnOperand(i, 0)));
         Wr.PutText(wr, "\n");
 
     | MSIR.Op.GcDirty =>
@@ -4361,7 +4381,9 @@ PROCEDURE EmitGlobalInitCtor(wr: Wr.T;  m: MSIR.Module) =
         LLTypedVal(wr, val);
         Wr.PutText(wr, ", ptr getelementptr inbounds (i8, ptr @"
                        & MSIR.ModuleInfoName(m) & ", " & ap_t & " "
-                       & Fmt.Int(off) & ")\n");
+                       & Fmt.Int(off) & ")");
+        LLAlign(wr, MSIR.ValueType(val));
+        Wr.PutText(wr, "\n");
       END;
     END;
     Wr.PutText(wr, "  ret void\n}\n");
@@ -4478,19 +4500,33 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
        is self-sufficient, avoiding dependence on the private/unexported copy
        in libm3core.dylib when the program links against the shared library. *)
     IF needsEH THEN
-      VAR isDarwin := (Target.System_name # NIL) AND
-                      (Text.Equal(Target.System_name, "ARM64_DARWIN") OR
-                       Text.Equal(Target.System_name, "AMD64_DARWIN"));
+      VAR
+        isArm64Darwin := (Target.System_name # NIL) AND
+                         Text.Equal(Target.System_name, "ARM64_DARWIN");
+        isAmd64Darwin := (Target.System_name # NIL) AND
+                         Text.Equal(Target.System_name, "AMD64_DARWIN");
       BEGIN
         Wr.PutText(wr, "@_ZTVN10__cxxabiv117__class_type_infoE = external global [0 x ptr]\n");
-        IF isDarwin THEN
-          (* Mach-O: hidden, no comdat; MSB of name pointer set per Darwin ABI. *)
+        (* Match what clang emits for a class without a key function on each
+           target.  On arm64 Darwin, typeinfo is hidden and the name pointer's
+           top bit marks it non-unique, so libc++abi matches by name and each
+           image's private copy matches.  x86_64 Darwin matches by address,
+           so the definitions must be exported weak symbols that dyld
+           coalesces with libm3core's; a hidden copy in the executable never
+           matches the runtime's throw (the AMD64_DARWIN smoke test). *)
+        IF isArm64Darwin THEN
           Wr.PutText(wr, "@_ZTS6_M3Exc = linkonce_odr hidden constant [8 x i8] c\"6_M3Exc\\00\", align 1\n");
           Wr.PutText(wr,
             "@_ZTI6_M3Exc = linkonce_odr hidden constant { ptr, ptr }" &
             " { ptr getelementptr inbounds (ptr, ptr @_ZTVN10__cxxabiv117__class_type_infoE, i64 2)," &
             " ptr inttoptr (i64 add (i64 ptrtoint (ptr @_ZTS6_M3Exc to i64)," &
             " i64 -9223372036854775808) to ptr) }, align 8\n");
+        ELSIF isAmd64Darwin THEN
+          Wr.PutText(wr, "@_ZTS6_M3Exc = linkonce_odr constant [8 x i8] c\"6_M3Exc\\00\", align 1\n");
+          Wr.PutText(wr,
+            "@_ZTI6_M3Exc = linkonce_odr constant { ptr, ptr }" &
+            " { ptr getelementptr inbounds (ptr, ptr @_ZTVN10__cxxabiv117__class_type_infoE, i64 2)," &
+            " ptr @_ZTS6_M3Exc }, align 8\n");
         ELSE
           (* ELF: dso_local, comdat; plain name pointer. *)
           Wr.PutText(wr, "$_ZTI6_M3Exc = comdat any\n");
