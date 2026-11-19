@@ -1303,6 +1303,25 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - Clutter (session transcripts, a test binary, editor backups) removed in
   `77a724b298`.
 
+**Progress (2026-11-20).**
+- **D24 done** (`db7908eb1d`).  `MSIRToLLVM` checks once per run that its
+  Typecell, ObjectTypecell, ArrayTypecell, ModuleInfo and ExceptionDesc
+  field tables pad to `M3RT`'s offsets and sizes.  `OTC_defaultMethods`,
+  the RefHeader bits, the ModuleInfo size and the open-array dope offsets
+  come from `M3RT`; RefType's CG and MSIR typecells share one dope-size
+  computation; M3C's ABI guard uses `Target.Has_stack_walker`.
+- **D22, default initialization done** (`5f1a89dc08`).  `TypeRep.T` has
+  `initValueMSIR (base, bitOff, zeroed)` beside `initValue`, overridden by
+  Subrange, Named, Packed, Array, OpenArray and Record and dispatched by
+  `Type.InitValueMSIR`; `RecordType.InitFieldsMSIR` serves records and
+  objects.  Fixes B3 and B4; new m3test p296 (also on master).  Still to
+  do under D22: `storeMSIR` / `checkUseFailureMSIR` on ExprRep (2a),
+  typecells (2b), the QualifyExpr/ArrayExpr accessors.
+- **D23 not started.**
+- **Found on the way:** MSIR has block parameters (D20) but `MSIRToLLVM`
+  never lowers them to phis, and nothing in the front end uses them; loops
+  use alloca counters, which the lowering hoists to the entry block.
+
 Scope: `git diff d2108205fd msir` (master merged in) over m3front, m3middle,
 m3-sys/msir and the cm3 driver.  Four independent read-only reviews, with the
 most serious findings spot-checked against the code.  Nothing built.
@@ -1328,8 +1347,8 @@ most serious findings spot-checked against the code.  Nothing built.
 |---|-------|---------|
 | B1 | `MSIRToLLVM.m3:3608` | `TC_brand_ptr` always `null`: BRANDED types lose their brand at runtime. |
 | B2 | `UserProc.m3` `LValueMSIR` (~582) | Method-call args compiled with `Expr.CompileMSIR`, not `Formal.EmitArgMSIR`: VAR/READONLY/open-array modes ignored. |
-| B3 | `ObjectType.m3:805` `GenInitProcMSIR` | Skips fields with no explicit default but `InitCost > 0` (CG calls `Type.InitValue`), and skips packed fields (`:931`). |
-| B4 | `RecordType.m3:584` | `GenInitMSIR` silently skips non-byte-aligned fields. |
+| B3 | `ObjectType.m3:805` `GenInitProcMSIR` | **Fixed** (`5f1a89dc08`). Skips fields with no explicit default but `InitCost > 0` (CG calls `Type.InitValue`), and skips packed fields (`:931`). |
+| B4 | `RecordType.m3:584` | **Fixed** (`5f1a89dc08`). `GenInitMSIR` silently skips non-byte-aligned fields. |
 | B5 | `MSIRBuilder.m3` maps (`2028, 2071, 2685, 2750, 2770`) | Fixed-size tables (`varMap[512]`, `globalMap[256]`, ...) silently drop entries when full instead of abandoning. |
 | B6 | `WithStmt.m3:243` | Unsupported case returns without `Abandon`: WITH body silently omitted. |
 | B7 | `Tracer.m3:90` | `EmitPendingMSIR` drains the shared trace queue and does nothing (no `msir_apply` override exists): traces lost. |
