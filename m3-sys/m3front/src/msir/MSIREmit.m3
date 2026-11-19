@@ -69,12 +69,12 @@ PROCEDURE CurrentModule(): MSIR.Module =
 PROCEDURE RegisterImport(binder: TEXT) =
   BEGIN
     IF curModule = NIL THEN RETURN END;
-    (* RTHooks is always pre-initialised by RTLinker__InitRuntime before any
-       module body runs; it must not appear in the module's import chain or
-       the linker pulls in RTHooks_m.o which conflicts with raise_stub.cpp. *)
-    IF Text.Equal(binder, "RTHooks_I3") OR Text.Equal(binder, "RTHooks_M3") THEN
-      RETURN;
-    END;
+    (* Keep every import the front end records, RTHooks included, as the C
+       backend does.  The RTHooks link is what makes the linker pull in the
+       RTHooks interface object, whose typecells (REF INTEGER among them)
+       other units' type links resolve to; skipping it left p165's
+       TYPECODE(REF INTEGER) link unresolved ("A compile-time type is
+       missing").  The skip dated from the stub-runtime link test. *)
     MSIR.ModuleAddImportBinder(curModule, binder);
   END RegisterImport;
 
