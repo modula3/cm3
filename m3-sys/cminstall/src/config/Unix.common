@@ -128,8 +128,6 @@ end
 if not defined("m3llvm")
 
   proc m3llvm(source, outfile, optimize, debug) is
-  % will we ever need optimize and/or debug?
-
       local m3llvmname = "@m3llvm"
 
       local args = [ "-b" ]
@@ -140,8 +138,6 @@ if not defined("m3llvm")
 
       % add the target to the m3llvm call.
       args += "-t " & TARGET
-
-      %args += "-d" %While m3llvm is under development.
 
       return try_exec (m3llvmname, args, "-o", outfile, source )
   end % proc m3llvm
@@ -157,10 +153,6 @@ if not defined("llvmback_debug")
   llvmback_debug = ""
 end
 
-if not defined("llvmback_optimize")
-  llvmback_optimize = "-O2"
-end
-
 if not defined("llvmback_pic")
   llvmback_pic = "-relocation-model=pic"
 end
@@ -170,14 +162,12 @@ if not defined("llvm_backend")
   proc llvm_backend(source, outfile, optimize, debug, filetype) is
       local llcname = "@llc"
       local args = [ "-frame-pointer=all"]
-%llvm 8 changed option for frame pointer.
-%      local args = [ "-disable-fp-elim"]
 
       args += "--dwarf-directory=0 -filetype=" & filetype
       args += llvmback_pic
 
       if optimize
-          args += llvmback_optimize
+          args += m3back_optimize
       else
           args += "-O0"
       end
@@ -197,8 +187,9 @@ end % if not defined("llvm_backend")
 if not defined("llvm_opt")
 
   proc llvm_opt(source, outfile) is
+      local optname = "@opt"
 
-      local opt_ret = try_exec ("@opt", llvmback_optimize, source, "-o", outfile )
+      local opt_ret = try_exec (optname, m3back_optimize, source, "-o", outfile )
 
       return opt_ret
   end % proc llvm_opt
@@ -228,10 +219,21 @@ proc compile_c(source, object, options, optimize, debug) is
 
     local args = options
     if M3_PROFILING args += "-pg" end
-    if debug args += "-g" end
+
+    %debug is mostly set true in individual config files so setting
+    %flag here makes no difference
+    %if debug
+    %   args += "-g"
+    %end
 
     if not defined ("SYSTEM_CXXC")
        SYSTEM_CXXC = SYSTEM_CC
+    end
+
+    if optimize
+        args += m3back_optimize
+    else
+        args += "-O0"
     end
 
     local ret_code = 1

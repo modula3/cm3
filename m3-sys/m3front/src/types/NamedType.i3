@@ -17,6 +17,7 @@ PROCEDURE New (t: Type.T): Type.T;
 PROCEDURE Create (module, name: M3ID.T): Type.T;
 
 PROCEDURE Strip (t: Type.T): Type.T;
+  (* Identity, if t is not a named type. *)
 PROCEDURE Split (t: Type.T;  VAR name: QID): BOOLEAN;
 PROCEDURE SplitV (t: Type.T;  VAR v: Value.T): BOOLEAN;
 

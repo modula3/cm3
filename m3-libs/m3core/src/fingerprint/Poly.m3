@@ -169,10 +169,12 @@ PROCEDURE ExtendWords_LE (READONLY p: T;  source: ADDRESS;  len: INTEGER): T =
     tmp : IntBytes;
     p0  : INTEGER := p[0];
     p1  : INTEGER := p[1];
+    i32 : Int32;
   BEGIN
     WHILE (len > 0) DO
       (* split the low-order bytes *)
-      LOOPHOLE (tmp, Int32) := p0;
+      i32 := p0;
+      tmp := LOOPHOLE (i32, IntBytes);
 
       (* compute the new result *)
       p0 := Word.Xor (p1,  Word.Xor (Word.Xor (poly88[tmp.b0][0],
@@ -196,6 +198,7 @@ PROCEDURE ExtendWords_BE (READONLY p: T;  source: ADDRESS;  len: INTEGER): T =
     p0  := p[0];
     p1  := p[1];
     x, y: Int32;
+    i32 : Int32;
   BEGIN
     WHILE (len > 0) DO
       (* byte swap the input word -- inline *)
@@ -206,7 +209,8 @@ PROCEDURE ExtendWords_BE (READONLY p: T;  source: ADDRESS;  len: INTEGER): T =
       LOOPHOLE (x, IntBytes).b3 := LOOPHOLE (y, IntBytes).b0;
 
       (* split the low-order bytes *)
-      LOOPHOLE (tmp, Int32) := p0;
+      i32 := p0;
+      tmp := LOOPHOLE (i32, IntBytes);
 
       (* compute the new result *)
       p0 := Word.Xor (p1, Word.Xor (Word.Xor (poly88[tmp.b3][0],

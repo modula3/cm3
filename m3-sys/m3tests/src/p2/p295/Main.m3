@@ -83,6 +83,6 @@ BEGIN
   t1 := NEW(IntO, val := 2);
   t2 := NEW(LongO, val := 3L);
   res := T(t1,t2);
-  IO.Put("OK");
+  IO.Put("OK\n");
 END Main.
 

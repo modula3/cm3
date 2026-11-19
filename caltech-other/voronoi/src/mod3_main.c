@@ -160,7 +160,7 @@ mod3_getnext(void)
 {
   Triple *t;
   if (!triples) 
-    return (void *)0;
+    return (Triple *)0;
   
   {
     struct Triple *u=triples;

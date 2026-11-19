@@ -1,6 +1,6 @@
 (* ----------------------------------------------------------------------1- *)
 (* File Modes.mg for Modula3 compiler test p280                             *)
-(* Copyright 2020, Rodney M. Bates.                                         *)
+(* Copyright 2022, Rodney M. Bates.                                         *)
 (* rodney.m.bates@acm.org                                                   *)
 (* Licensed under the MIT license.                                          *)
 (* ----------------------------------------------------------------------2- *)
@@ -10,8 +10,14 @@ GENERIC MODULE Modes (Types)
 (* Types declares:
    Label: TEXT (* used to identify what is tested. *)
    Types . MainType: a type to be passed.
-   PackedType: BITS n FOR Types . MainType,
+   PackedType: BITS n FOR Types . MainType.
+   BytesType:
+   ShortType:
+   PadType:
 *)
+
+
+; IMPORT Fmt
 
 ; FROM Common IMPORT Case , Failure
 
@@ -24,7 +30,7 @@ GENERIC MODULE Modes (Types)
       ; RightPad : Types . PadType
       END 
 
-; PROCEDURE ByValue
+; PROCEDURE ByVALUE
     ( VALUE ValForm : Types . MainType ; ActAddr : ADDRESS ) : Types . MainType 
   = BEGIN
       IF ActAddr # NIL
@@ -37,7 +43,7 @@ GENERIC MODULE Modes (Types)
         END (* IF *) 
       END (* IF *) 
     ; RETURN ValForm 
-    END ByValue
+    END ByVALUE
 
 ; PROCEDURE TestVALUE ( )
   = VAR IsEqual : BOOLEAN 
@@ -47,7 +53,7 @@ GENERIC MODULE Modes (Types)
   ; BEGIN
     (* Unpacked value: *)
       LocV1 := Types . Val1
-    ; Result := ByValue ( LocV1 , ADR ( LocV1 ) ) 
+    ; Result := ByVALUE ( LocV1 , ADR ( LocV1 ) ) 
     ; IsEqual := Types . Equal ( LocV1 , Result )
     ; Case ( ) 
     ; IF NOT IsEqual
@@ -64,7 +70,7 @@ GENERIC MODULE Modes (Types)
         Misaligned . LeftPad := FIRST ( Types . PadType )  
       ; Misaligned . TheField := Types . Val1
       ; Misaligned . RightPad := FIRST ( Types . PadType )  
-      ; Result := ByValue ( Misaligned . TheField , NIL ) 
+      ; Result := ByVALUE ( Misaligned . TheField , NIL ) 
       ; IsEqual := Types . Equal ( Misaligned . TheField , Result )
       ; Case ( ) 
       ; IF NOT IsEqual
@@ -77,18 +83,19 @@ GENERIC MODULE Modes (Types)
         END (* IF *)
       END (* IF *)
 
-    (* Packed value: *)
+    (* Packed value (but byte-aligned): *)
     ; IF Types . DoPacked
       THEN
         Short . TheField := Types . Val1
       ; Short . RightPad := FIRST ( Types . PadType )  
-      ; Result := ByValue ( Short . TheField , ADR ( Short . TheField ) ) 
+      ; Result := ByVALUE ( Short . TheField , ADR ( Short . TheField ) ) 
       ; IsEqual := Types . Equal ( Short . TheField , Result )
       ; Case ( ) 
       ; IF NOT IsEqual
         THEN
           Failure
-            ( Types . Label & ", VALUE, packed 25, expected "
+            ( Types . Label & ", VALUE, BITS " & Fmt . Int ( Types . BitCt )
+              & ", expected "
               & Types . Image ( LocV1 )
               & ", got " & Types . Image ( Result )
             )  
@@ -96,18 +103,20 @@ GENERIC MODULE Modes (Types)
       END (* IF *)
     END TestVALUE  
 
-; PROCEDURE ByVar
-    ( VAR VarForm : Types . MainType ; Exp : Types . MainType
-    ; ChangeTo : Types . MainType ; ActAddr : ADDRESS
+; PROCEDURE ByVAR
+    ( VAR VarForm : Types . MainType
+    ; ExpectedVal : Types . MainType
+    ; ChangeTo : Types . MainType
+    ; ActAddr : ADDRESS
     )
   = VAR IsEqual : BOOLEAN 
   ; BEGIN
-      IsEqual := Types . Equal ( VarForm , Exp )
+      IsEqual := Types . Equal ( VarForm , ExpectedVal )
     ; Case ( ) 
     ; IF NOT IsEqual
       THEN
         Failure
-          ( Types . Label & ", VAR, expected " & Types . Image ( Exp )
+          ( Types . Label & ", VAR, expected " & Types . Image ( ExpectedVal )
             & ", got " & Types . Image ( VarForm )
           )  
       END (* IF *) 
@@ -118,7 +127,7 @@ GENERIC MODULE Modes (Types)
           ( Types . Label & ", VAR, formal and actual at different locations." )
       END (* IF *)
     ; VarForm := ChangeTo 
-    END ByVar
+    END ByVAR
 
 ; PROCEDURE TestVAR ( )
   = VAR Address : ADDRESS
@@ -126,7 +135,7 @@ GENERIC MODULE Modes (Types)
   ; BEGIN
       LocV1 := Types . Val1
     ; Address := ADR ( LocV1 )
-    ; ByVar ( LocV1 , Types . Val1 , Types . Val2 , Address )
+    ; ByVAR ( LocV1 , Types . Val1 , Types . Val2 , Address )
     ; Case ( ) 
     ; IF LocV1 # Types . Val2
       THEN
@@ -161,7 +170,7 @@ GENERIC MODULE Modes (Types)
     ; IF NOT IsEqual
       THEN
         Failure
-          ( Types . Label & ", REDONLY by ref, " & Msg & " expected "
+          ( Types . Label & ", READONLY by ref, " & Msg & " expected "
             & Types . Image ( ExpectedVal )
             & ", got " & Types . Image ( VarForm )
           )  
@@ -172,13 +181,15 @@ GENERIC MODULE Modes (Types)
       ; IF ADR ( VarForm ) # ActAddr 
         THEN
           Failure
-            ( Types . Label & ", VAR, formal and actual at different locations." )
+            ( Types . Label & ", READONLY by ref, " & Msg
+              & ", formal and actual at different locations."
+            )
         END (* IF *)
       END (* IF *)
     END ROByRef
 
 ; TYPE CallerProc = PROCEDURE ( Msg : TEXT ) 
-; TYPE ValCallerProc = PROCEDURE ( Msg : TEXT )  : Types . MainType  
+; TYPE ValCallerProc = PROCEDURE ( Msg : TEXT ) : Types . MainType  
 
 ; <* UNUSED *> PROCEDURE CallSameTypeDesignator ( ) 
   = VAR LocVal : Types . MainType (* Which is not packed. *) 
@@ -240,30 +251,50 @@ GENERIC MODULE Modes (Types)
     ; RETURN ValForm 
     END ROByValuePackedForm
 
-; PROCEDURE CallSameUnpackedTypeDesig ( Msg : TEXT ) 
+; PROCEDURE CallSameUnpackedTypeDesigRORef ( Msg : TEXT ) 
   = VAR LocVal : Types . MainType
   ; BEGIN
       LocVal := Types . Val1
-    ; ROByRef ( LocVal , LocVal , ADR ( LocVal ) , Msg ) 
-    END CallSameUnpackedTypeDesig 
+    ; ROByRef ( LocVal , Types . Val1 , ADR ( LocVal ) , Msg ) 
+    END CallSameUnpackedTypeDesigRORef 
 
-; PROCEDURE CallSameUnpackedTypeAnon ( Msg : TEXT ) 
+; PROCEDURE CallSameUnpackedTypeAnonRORef ( Msg : TEXT ) 
   = VAR LocVal : Types . MainType
   ; BEGIN
       LocVal := Types . Val1
-    ; ROByRef ( MakeAnon ( LocVal ) , LocVal , NIL , Msg ) 
-    END CallSameUnpackedTypeAnon  
+    ; ROByRef ( MakeAnon ( LocVal ) , Types . Val1 , NIL , Msg ) 
+    END CallSameUnpackedTypeAnonRORef  
 
-; PROCEDURE CallDiffTypeDesig ( Msg : TEXT ) : Types . MainType
+; <* UNUSED *> PROCEDURE CallDiffTypeDesigRORef ( Msg : TEXT )
+  = VAR LocVal : Types . BytesType
+  ; BEGIN
+      LocVal := Types . Val1
+    ; ROByRef ( LocVal , Types . Val1 , ADR ( LocVal ) , Msg ) 
+    END CallDiffTypeDesigRORef 
+
+; PROCEDURE CallDiffTypeDesigROVal ( Msg : TEXT ) : Types . MainType
   = VAR LocVal : Types . BytesType
   ; VAR Result : Types . MainType 
   ; BEGIN
       LocVal := Types . Val1
     ; Result := ROByValue ( LocVal , ADR ( LocVal ) , Msg ) 
     ; RETURN Result 
-    END CallDiffTypeDesig 
+    END CallDiffTypeDesigROVal 
 
-; PROCEDURE CallShortTypeDesig ( Msg : TEXT ) : Types . MainType
+; <* UNUSED *> PROCEDURE CallShortTypeDesigRORef ( Msg : TEXT ) 
+  = VAR Short : ShortRec 
+  ; BEGIN
+    (* Short value: *)
+      IF Types . DoPacked
+      THEN
+        Short . TheField := Types . Val1
+      ; Short . RightPad := FIRST ( Types . PadType )  
+      ; ROByRef
+          ( Short . TheField , Types . Val1 , ADR ( Short . TheField ) , Msg )
+      END (* IF *)
+    END CallShortTypeDesigRORef  
+
+; PROCEDURE CallShortTypeDesigROVal ( Msg : TEXT ) : Types . MainType
   = VAR Result : Types . MainType 
   ; VAR Short : ShortRec 
   ; BEGIN
@@ -278,9 +309,9 @@ GENERIC MODULE Modes (Types)
       ELSE Result := Types.Val1
       END (* IF *)
     ; RETURN Result 
-    END CallShortTypeDesig 
+    END CallShortTypeDesigROVal 
 
-; PROCEDURE CallMisalignedDesig ( Msg : TEXT ) : Types . MainType
+; PROCEDURE CallMisalignedDesigROVal ( Msg : TEXT ) : Types . MainType
   = VAR Result : Types . MainType 
   ; VAR Misaligned : MisalignedRec 
   ; BEGIN
@@ -296,23 +327,44 @@ GENERIC MODULE Modes (Types)
       ELSE Result := Types.Val1
       END (* IF *)
     ; RETURN Result 
-    END CallMisalignedDesig 
+    END CallMisalignedDesigROVal 
 
-; PROCEDURE CallPackedTypeDesig ( Msg : TEXT ) : Types . MainType
+; <* UNUSED *> PROCEDURE CallMisalignedDesigRORef ( Msg : TEXT ) 
+  = VAR Misaligned : MisalignedRec 
+  ; BEGIN
+    (* Misaligned value: *)
+      IF Types . DoPacked
+      THEN
+        Misaligned . LeftPad := FIRST ( Types . PadType )  
+      ; Misaligned . TheField := Types . Val1
+      ; Misaligned . RightPad := FIRST ( Types . PadType )  
+      ; ROByRef
+          ( Misaligned . TheField , Types . Val1 , NIL , Msg )
+      END (* IF *)
+    END CallMisalignedDesigRORef 
+
+; <* UNUSED *> PROCEDURE CallPackedTypeDesigRORef ( Msg : TEXT ) 
+  = VAR LocVal : Types . ShortType
+  ; BEGIN
+      LocVal := Types . Val1
+    ; ROByRef ( LocVal , Types . Val1 , ADR ( LocVal ) , Msg ) 
+    END CallPackedTypeDesigRORef
+
+; PROCEDURE CallPackedTypeDesigROVal ( Msg : TEXT ) : Types . MainType
   = VAR LocVal : Types . ShortType
   ; VAR Result : Types . MainType
   ; BEGIN
       LocVal := Types . Val1
     ; Result := ROByValue ( LocVal , ADR ( LocVal ) , Msg ) 
     ; RETURN Result 
-    END CallPackedTypeDesig 
+    END CallPackedTypeDesigROVal 
 
-; PROCEDURE CallSameUnpackedTypeNondesig ( Msg : TEXT ) : Types . MainType
+; PROCEDURE CallSameUnpackedTypeNondesigROVal ( Msg : TEXT ) : Types . MainType
   = VAR Result : Types . MainType
   ; BEGIN
       Result := ROByValue ( Types.NondesigVal1 , NIL , Msg ) 
     ; RETURN Result 
-    END CallSameUnpackedTypeNondesig 
+    END CallSameUnpackedTypeNondesigROVal 
 
 ; PROCEDURE TestROByValue ( Caller : ValCallerProc ; Msg : TEXT ) 
 
@@ -337,21 +389,39 @@ GENERIC MODULE Modes (Types)
 ; PROCEDURE TestREADONLY ( )
   = BEGIN
       TestROByRef
-        ( CallSameUnpackedTypeDesig , "same nonpacked type, designator" ) 
+        ( CallSameUnpackedTypeDesigRORef , "same nonpacked type, designator" ) 
     ; TestROByRef
-        ( CallSameUnpackedTypeAnon , "same nonpacked type, anonymous" ) 
+        ( CallSameUnpackedTypeAnonRORef , "same nonpacked type, anonymous" )
     ; TestROByValue
-        ( CallDiffTypeDesig , "different types, designator" ) 
-    ; TestROByValue
-        ( CallMisalignedDesig , "misaligned, designator" ) 
-    ; TestROByValue
-        ( CallShortTypeDesig , "short actual, designator" ) 
-    ; TestROByValue
-        ( CallPackedTypeDesig , "packed type, designator" ) 
-    ; TestROByValue
-        ( CallSameUnpackedTypeNondesig , "same nonpacked type, nondesignator" ) 
-    ; TestROByValue
-        ( CallDiffTypeDesig , "different types, designator" )
+        ( CallSameUnpackedTypeNondesigROVal , "same nonpacked type, nondesignator" ) 
+    ; IF Types . IsArray
+      THEN
+      (* Compiler will have ensured these are assignable and byte-addressable: *)
+        TestROByValue
+          ( CallDiffTypeDesigROVal , "different array type, designator" )
+      ; TestROByValue
+          ( CallPackedTypeDesigROVal , "packed array type, designator" )
+      (* The following two cases verify compiler exception to Modula3.
+         Specifically, when a field or element with a BITS FOR type is
+         passed READONLY, Cm3 passes it by value, regardless of alignment
+         or size.  This disagrees with 2.3.2, which says it is passed by
+         reference if it is an array and assignable.  BITS FOR T and T are
+         mutually assignable, regardless of use.
+      *) 
+      ; TestROByValue
+          ( CallMisalignedDesigROVal , "misaligned BITS FOR field, array type, designator" ) 
+      ; TestROByValue
+          ( CallShortTypeDesigROVal , "BITS FOR field, array type, designator" )
+      ELSE
+        TestROByValue
+          ( CallDiffTypeDesigROVal , "different type, designator" ) 
+      ; TestROByValue
+          ( CallPackedTypeDesigROVal , "packed type, designator" ) 
+      ; TestROByValue
+          ( CallMisalignedDesigROVal , "misaligned actual, designator" ) 
+      ; TestROByValue
+          ( CallShortTypeDesigROVal , "short actual, designator" ) 
+      END(* IF *)
     END TestREADONLY
 
 ; PROCEDURE TestAll ( )

@@ -2063,7 +2063,7 @@ PROCEDURE VName (v: LvVar; debug := FALSE): TEXT =
     ELSE
       name := M3ID.ToText(v.name);
     END;
-    IF v.varType = VarType.Param AND NOT debug THEN name := name & ".addr"; END;
+    IF v.varType = VarType.Param AND NOT debug THEN name := name & ".alloc"; END;
     RETURN name;
   END VName;
 
@@ -2598,18 +2598,10 @@ PROCEDURE begin_procedure (self: U; p: Proc) =
       param := NARROW(arg, LvVar);
       param.lv := lVal;
       IF param.type # Type.Struct THEN
-
-        memVar := NewVar(self, param.name, ptrBytes, ptrBytes, Type.Addr, TRUE,
-                         UID_ADDR, TRUE, FALSE, FALSE, FALSE, M3CG.Maybe,
-                         VarType.Local);
-        memVar.lvType := param.lvType;
-        self.allocVar(memVar);   (* memVar.lv is param.lvType* *)
+        self.allocVar(param); (* param.lv now points to its local *)
         (* build the store for the parameter *)
-        storeVal := LLVM.BuildStore(builderIR, lVal, memVar.lv);
+        storeVal := LLVM.BuildStore(builderIR, lVal, param.lv);
         LLVM.SetAlignment(storeVal, param.align);
-        param.lv := memVar.lv;
-      ELSE                       (* refer directly to the param *)
-        param.lv := lVal;
       END;
       INC(paramNo);
       lVal := LLVM.GetNextParam(lVal);

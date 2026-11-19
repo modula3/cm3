@@ -127,6 +127,7 @@ PROCEDURE TypeOf (p: P): Type.T =
         Value.IllegalRecursion (p.value);
         p.type := ErrType.T;
         p.repType := ErrType.T;
+        RETURN ErrType.T;
       END;
       p.inTypeOf := TRUE;
       p.type := Value.TypeOf (p.value);
@@ -143,6 +144,7 @@ PROCEDURE RepTypeOf (p: P): Type.T =
         Value.IllegalRecursion (p.value);
         p.type := ErrType.T;
         p.repType := ErrType.T;
+        RETURN ErrType.T;
       END;
       p.inTypeOf := TRUE;
       p.repType := Value.RepTypeOf (p.value);

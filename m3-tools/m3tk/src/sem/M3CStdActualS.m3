@@ -125,6 +125,11 @@ PROCEDURE Set(call: M3AST_AS.Call; pf: M3CStdProcs.T) RAISES {}=
       END; (* if *)
       INC(pos);
     END; (* loop *)
+    IF pos < count THEN
+      IF pf IN M3CStdProcs.OneOrTwoParameters THEN
+       INC(pos);
+      END;
+    END;
     IF pos < count THEN M3CActualUtil.TooManyArguments(call) END;
     M3CActualUtil.FindUnmatched(actuals);
   END Set;
