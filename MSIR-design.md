@@ -33,10 +33,10 @@ the rationale in the commit.
 | Verifier                       | Sketched (see A9 / D20)        |
 | `m3-sys/msir` v0 package       | Built; ships; 181/181 LLVM link test checks; 286/288 p0/p1/p2 tests clean in MSIRObj mode (0 genuine abandons, 2 TIMEOUTs); smoke test 124/124 exit 0 |
 | `m3-sys/m3middle` MSIRObj build | **Clean** — 50/50 object files produced, zero crashes, zero llc errors |
-| **CI on all three targets (2026-11-19)** | **Supersedes the two rows below.** `.github/workflows/msir.yml` runs `ci-ladder.sh` from a clean d5.12.0 bootstrap on each `ex_stack` target. Run 44512471173 (`5b8b606ed4`, after the second master merge): **ARM64_DARWIN** fixpoint 1414/1414, smoke passes, m3tests 292/293 (p165). **AMD64_LINUX** full ladder for the first time: smoke passes, stage 2 == stage 3, but **3 files differ between stage 1 and stage 2** (RTCollector, ThreadPThread, AutoFlushWr), m3tests 281/293. **AMD64_DARWIN** fixpoint 1414/1414 but **smoke fails** (a RAISE in a module body is not caught), m3tests 284/293. See *CI results on the x86_64 targets* below. |
+| **CI on all three targets (2026-11-20)** | **All green; supersedes the two rows below.** `.github/workflows/msir.yml` runs `ci-ladder.sh` from a clean d5.12.0 bootstrap on each `ex_stack` target. Run 44617989732 (`b13b4b26f9`): **ARM64_DARWIN, AMD64_DARWIN and AMD64_LINUX** each pass m3tests 293/293, the smoke test, and the three-stage IR fixpoint (1414/1414 files). The day before (run 44512471173) AMD64_LINUX differed between stages 1 and 2 and AMD64_DARWIN failed the smoke test; see *CI results on the x86_64 targets* below. |
 | **Clean re-validation (2026-11-19)** | **Superseded by the row above.** Fresh `ci-ladder.sh` runs on ARM64_DARWIN: m3tests under the stage-2 driver **290/292** before the master merge (p165 regression, stale e020 expected output); full three-stage IR fixpoint holds (1416/1416 `.mb`/`.ib` files). See *Merge from master (2026-11)*. |
 | **Latest validation (2026-07-24)** | *Not reproducible from a clean build (see above).* **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
-| **Platform coverage**           | **CI on all three `ex_stack` targets (2026-11-19).** ARM64_DARWIN is clean apart from p165. Both x86_64 targets build the compiler through MSIR but have open code-generation bugs (see *CI results on the x86_64 targets*). |
+| **Platform coverage**           | **CI on all three `ex_stack` targets, all green (2026-11-20).** The x86_64 code-generation bugs found on the way are fixed (see *CI results on the x86_64 targets*). |
 | **Front end decoupled from M3CG** | **Not started; plan agreed (D25).** MSIR emission runs inside the M3CG pass's driver and relies on its link-information side effects (see O17). Needed before proposing for master. |
 | **Merge from master (2026-11)** | **Merged and pushed** (`593cb56d0c`, then `15ab336899` for #1251, #1253, #1254). See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Not done.** m3tests in MSIRObj run without `-O`. master now runs the llvm backend's m3tests at `-O3` (`a03e61e15b`), and #1243 (undefined static link) only appeared at `-O2`. Add MSIRObj to that clause in `m3tests/src/m3makefile`, or add an optimised variant to `.github/workflows/msir.yml`. |
@@ -82,15 +82,15 @@ pushed on the way:
 | Multi-word sets (`i128`, `i192`) loaded/stored with LLVM's 16-byte ABI alignment though M3 aligns them to 8; real x86_64 faults on `movaps` (ARM64 and Rosetta don't) | both x86_64 | `align 8` on IWide loads and stores |
 | fp128 constants written high half first; LLVM's `0xL` form is low half first. `LAST(LONGREAL)` became -inf in the MSIR-built compiler (the stage-1/stage-2 diff) | AMD64_LINUX | Emit low 64 bits then high 64 bits |
 
-Still open:
+Open failures as of run 44512471173, all since fixed (run 44617989732 is green on all three targets):
 
 | Failure | Targets | Notes |
 |---|---|---|
-| Set tests p053, p156, p157, p159, p160, p162 (SEGV) and p280 | both x86_64 | Alignment fix above; to be confirmed by CI on real hardware (Rosetta doesn't fault). |
-| RAISE in a module body not caught (smoke) | AMD64_DARWIN | Fixed (typeinfo, above); smoke passes in a local AMD64_DARWIN ladder under Rosetta. |
-| p223 (.M3SHIP Library) build failure | AMD64_DARWIN | |
-| Stage 1 vs stage 2 IR differs (RTCollector, ThreadPThread, AutoFlushWr); p113, p118, p123, p131 | AMD64_LINUX | Fixed (fp128 constant order, above), from the `fixpoint-diff/` artifact; to be confirmed by CI. |
-| p165 | all | Suspected: Main's type link to `REF INTEGER` has no registered typecell because the program doesn't link RTHooks' interface object. Bisect inconclusive; see *Merge from master (2026-11)*. |
+| Set tests p053, p156, p157, p159, p160, p162 (SEGV) and p280 | both x86_64 | Fixed: `align 8` on IWide loads and stores (`03cd4e515a`). |
+| RAISE in a module body not caught (smoke) | AMD64_DARWIN | Fixed: x86_64 typeinfo form (`03cd4e515a`). |
+| p223 (.M3SHIP Library) build failure | AMD64_DARWIN | Missing expected output (Darwin ships `.dylib`, the default expects `.so`); added on msir (`b13b4b26f9`) and master (`30e5bbacf9`) for both Darwin targets. |
+| Stage 1 vs stage 2 IR differs (RTCollector, ThreadPThread, AutoFlushWr); p113, p118, p123, p131 | AMD64_LINUX | Fixed: fp128 constant half order (`03cd4e515a`). |
+| p165 | all | Fixed: `MSIREmit.RegisterImport` skipped RTHooks' binder, so a program's import chain never reached RTHooks and its typecells went unregistered (`7067f7d3be`). |
 
 ROUND semantics note: MSIR rounds ties to even (FloatMode.RoundDefault),
 as the language definition requires; the C backend calls C `round()`,
@@ -1220,10 +1220,10 @@ from a copy of the installed cm3 in its own worktree):
 Failures:
 
 - **p165** (TYPECODE of `REF INTEGER`): runtime abort "A compile-time
-  type is missing".  Present **before** the merge, so it's an msir
-  regression, not a merge effect.  Bisecting `f6b3f3c5d2` vs
-  `bbf78535cf` (prime suspect: "typecell initProcs for REF types, drop
-  NEW-site inline init").
+  type is missing".  An msir regression present before the merge.
+  Fixed in `7067f7d3be`: `MSIREmit.RegisterImport` skipped the RTHooks
+  binders, so RTHooks' typecells were never reached from the program's
+  import chain.
 - **e020**: see the conflict note above; expected output updated in
   `cffab7a395`.  The output then varied between runs: revelations were
   checked in hash-bucket order, keyed on an M3ID number that depends on
