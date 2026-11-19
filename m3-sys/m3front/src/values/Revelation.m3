@@ -156,7 +156,15 @@ PROCEDURE AddOne (t: T;  isLocal: BOOLEAN;  import: Value.T) =
   END AddOne;
 
 PROCEDURE TypeCheck (s: Set) =
-  VAR l: List;  save, n_buckets: INTEGER;  n: Node;
+  (* Revelations are checked in declaration order, not hash-bucket order.
+     The hash key is OpaqueType.UID, an M3ID number that depends on how
+     many identifiers were interned first (imports, compiler build), so
+     bucket order made diagnostics such as e020's mutually recursive
+     revelations come out differently from one environment to another. *)
+  VAR
+    l: List;  save, n_buckets: INTEGER;  n: Node;
+    bound: REF ARRAY OF List;  n_bound := 0;
+    keys : REF ARRAY OF Node;  n_keys  := 0;
   BEGIN
     IF (s.count <= 0) THEN RETURN END;
 
@@ -167,42 +175,32 @@ PROCEDURE TypeCheck (s: Set) =
     n_buckets := 2 * s.count;
     s.hash := NEW (HashTable, n_buckets);
     FOR i := 0 TO n_buckets - 1 DO s.hash[i] := NIL END;
+    bound := NEW (REF ARRAY OF List, s.count);
+    keys  := NEW (REF ARRAY OF Node, s.count);
 
-    (* bind the lhs qid's to types & map them into the hash table *)
+    (* bind the lhs qid's to types & map them into the hash table.
+       s.idents is newest-first, so bound[] and keys[] end up in reverse
+       declaration order; the loops below walk them backwards. *)
     WHILE (s.idents # NIL) DO
       l := s.idents;
       s.idents := l.next;
-      IF DoBind (l.ident) THEN HashInsert (s, l) END; 
-    END;
-
-    (* type check the lhs and rhs *)
-    FOR i := 0 TO n_buckets-1 DO
-      n := s.hash[i];
-      WHILE (n # NIL) DO
-        l := n.contents;
-        WHILE (l # NIL) DO DoCheck0 (l.ident); l := l.next;  END;
-        n := n.next;
+      IF DoBind (l.ident) THEN
+        n := NIL;
+        IF HashInsert (s, l, n) THEN
+          bound[n_bound] := l;  INC (n_bound);
+        END;
+        IF (n # NIL) THEN keys[n_keys] := n;  INC (n_keys) END;
       END;
     END;
 
     (* type check the lhs and rhs *)
-    FOR i := 0 TO n_buckets-1 DO
-      n := s.hash[i];
-      WHILE (n # NIL) DO
-        l := n.contents;
-        WHILE (l # NIL) DO DoCheck (l.ident); l := l.next;  END;
-        n := n.next;
-      END;
-    END;
+    FOR i := n_bound-1 TO 0 BY -1 DO DoCheck0 (bound[i].ident) END;
+
+    (* type check the lhs and rhs *)
+    FOR i := n_bound-1 TO 0 BY -1 DO DoCheck (bound[i].ident) END;
 
     (* find the strongest revelation for each type *)
-    FOR i := 0 TO n_buckets-1 DO
-      n := s.hash [i];
-      WHILE (n # NIL) DO
-        Reduce (s, n.key);
-        n := n.next;
-      END;
-    END;
+    FOR i := n_keys-1 TO 0 BY -1 DO Reduce (s, keys[i].key) END;
 
     Scanner.offset := save;
   END TypeCheck;
@@ -227,7 +225,9 @@ PROCEDURE DoBind (t: T) : BOOLEAN (*Success*) =
     RETURN TRUE; 
   END DoBind;
 
-PROCEDURE HashInsert (s: Set;  l: List) =
+PROCEDURE HashInsert (s: Set;  l: List;  VAR(*OUT*) newNode: Node): BOOLEAN =
+  (* Returns FALSE if l duplicates a revelation already present.  Sets
+     newNode to the node created for l's type, if this call created one. *)
   VAR lhs := l.ident.lhs;
   VAR hsh := OpaqueType.UID (lhs) MOD NUMBER (s.hash^);
   VAR n   := s.hash [hsh];
@@ -239,6 +239,7 @@ PROCEDURE HashInsert (s: Set;  l: List) =
         (* we didn't find a node for this type *)
         n := NEW (Node, next := s.hash[hsh], key := lhs);
         s.hash [hsh] := n;
+        newNode := n;
         EXIT;
       END;
       IF Type.IsEqual (n.key, lhs, NIL) THEN EXIT END;
@@ -250,13 +251,14 @@ PROCEDURE HashInsert (s: Set;  l: List) =
        revelations to be inherited twice.  sigh. *)
     x := n.contents;
     WHILE (x # NIL) DO
-      IF (x.ident = l.ident) THEN (* drop 'l' on the floor *) RETURN END;
+      IF (x.ident = l.ident) THEN (* drop 'l' on the floor *) RETURN FALSE END;
       x := x.next;
     END;
 
     (* add 'l' to the list *)
     l.next := n.contents;
     n.contents := l;
+    RETURN TRUE;
   END HashInsert;
 
 PROCEDURE DoCheck0 (t: T) =
