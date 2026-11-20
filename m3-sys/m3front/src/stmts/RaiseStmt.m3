@@ -155,7 +155,7 @@ PROCEDURE CompileMSIR (p: P) =
               heapPtr  : MSIR.Value;
           BEGIN
             refT     := Type.Check(refT);
-            typeCell := MSIRBuilder.TypeDescValueForRef(refT, nBytes,
+            typeCell := RefType.TypecellMSIR(refT, nBytes,
                           argInfo.alignment DIV Target.Byte,
                           TRUE (*isTraced*));
             IF typeCell = NIL OR allocHk = NIL THEN

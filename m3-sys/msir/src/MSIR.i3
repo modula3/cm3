@@ -401,6 +401,11 @@ PROCEDURE SetTypeDescTypeMap  (d: TypeDesc;  bytes: GcMapBytes);
 PROCEDURE TypeDescTypeMap     (d: TypeDesc): GcMapBytes;
 PROCEDURE SetTypeDescPickleDesc (d: TypeDesc;  bytes: GcMapBytes);
 PROCEDURE TypeDescPickleDesc    (d: TypeDesc): GcMapBytes;
+(* BRANDED types: the brand's characters (target byte order, no terminating
+   NUL) and the size of one character.  Lowered to the RT0 brand record
+   (an INTEGER byte count, then the characters and a NUL) for TC_brand. *)
+PROCEDURE SetTypeDescBrand (d: TypeDesc;  chars: GcMapBytes;  charBytes: INTEGER);
+PROCEDURE TypeDescBrand    (d: TypeDesc;  VAR charBytes: INTEGER): GcMapBytes;
 
 PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc);
 PROCEDURE ModuleTypeDescCount(m: Module): INTEGER;

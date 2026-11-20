@@ -512,7 +512,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
           b        : MSIR.Block;
         BEGIN
           refVal := CallAllocHook (t, PHook [t_info.isTraced],
-                                   MSIRBuilder.TypeDescValueForRef (t,
+                                   RefType.TypecellMSIR (t,
                                      r_info.size DIV Target.Byte,
                                      r_info.alignment DIV Target.Byte,
                                      t_info.isTraced));
@@ -558,7 +558,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
         END;
     ELSE
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                              MSIRBuilder.TypeDescValueForRef (t,
+                              RefType.TypecellMSIR (t,
                                 r_info.size DIV Target.Byte,
                                 r_info.alignment DIV Target.Byte,
                                 t_info.isTraced));

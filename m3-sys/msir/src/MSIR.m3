@@ -1265,6 +1265,8 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   gcMap         : GcMapBytes := NIL;  (* refs-only RTMapOp bytes for TC_gc_map *)
   typeMap       : GcMapBytes := NIL;  (* full RTMapOp bytes for TC_type_map *)
   pickleDesc    : GcMapBytes := NIL;  (* RTTipe bytes for TC_type_desc *)
+  brand         : GcMapBytes := NIL;  (* brand characters, for TC_brand *)
+  brandCharBytes: INTEGER    := 1;
   ptrVal        : Value := NIL;
 END;
 
@@ -1355,6 +1357,10 @@ PROCEDURE SetTypeDescPickleDesc(d: TypeDesc; bytes: GcMapBytes) =
   BEGIN d.pickleDesc := bytes END SetTypeDescPickleDesc;
 PROCEDURE TypeDescPickleDesc(d: TypeDesc): GcMapBytes =
   BEGIN RETURN d.pickleDesc END TypeDescPickleDesc;
+PROCEDURE SetTypeDescBrand(d: TypeDesc; chars: GcMapBytes; charBytes: INTEGER) =
+  BEGIN d.brand := chars;  d.brandCharBytes := charBytes END SetTypeDescBrand;
+PROCEDURE TypeDescBrand(d: TypeDesc; VAR charBytes: INTEGER): GcMapBytes =
+  BEGIN charBytes := d.brandCharBytes;  RETURN d.brand END TypeDescBrand;
 PROCEDURE TypeDescNDimensions(d: TypeDesc): INTEGER =
   BEGIN RETURN d.nDimensions END TypeDescNDimensions;
 PROCEDURE TypeDescElementSize(d: TypeDesc): INTEGER =

@@ -144,6 +144,18 @@ PROCEDURE CompileAll ();
 PROCEDURE Compile (t: T);
 (* generates the debugging declarations for 't' *)
 
+PROCEDURE OwnsCell (t: T): BOOLEAN;
+(* TRUE iff the module being compiled emits t's full typecell (t is on its
+   full_cells list), as opposed to seeing it through an import.  The runtime
+   rejects a second typecell for a branded type (DuplicateBrand), so only
+   this module's copy may carry the brand. *)
+
+PROCEDURE IsForeignCell (t: T): BOOLEAN;
+(* TRUE iff t's typecell belongs to another unit: it is predefined or a full
+   cell of an imported unit, so the module being compiled must not emit its
+   own copy (cf. Module.SetGlobals).  MSIR reaches such a cell through a
+   TypeLink, which RTLinker resolves by UID. *)
+
 PROCEDURE AddCell (t: T);
 (* Creates a typecell for t.  Normally, this done after Check
    time by Module.SetGlobals, but that only gets types created during

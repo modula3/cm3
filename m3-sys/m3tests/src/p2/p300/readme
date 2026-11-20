@@ -1,0 +1,2 @@
+Brands of BRANDED REF and OBJECT types reach the runtime: each typecell's
+brand_ptr holds the brand text (an unbranded type has none).

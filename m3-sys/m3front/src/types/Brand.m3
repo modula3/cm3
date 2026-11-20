@@ -4,7 +4,7 @@
 MODULE Brand;
 
 IMPORT M3, Expr, M3String, M3WString, M3Buf, Scanner, Module;
-IMPORT TextExpr, Target, Type, Token, M3ID, Error, CG, Word;
+IMPORT TextExpr, Target, Type, Token, M3ID, Error, CG, Word, Text;
 
 REVEAL
   T = BRANDED "Brand.T" REF RECORD
@@ -187,6 +187,34 @@ PROCEDURE Equal (a, b: T): BOOLEAN =
     ELSE  RETURN Expr.IsEqual (a.expr, b.expr, NIL);
     END;
   END Equal;
+
+PROCEDURE Image (t: T;  VAR charBytes: INTEGER): REF ARRAY OF [0..255] =
+  VAR r: REF ARRAY OF [0..255] := NIL;  txt: TEXT;  n, c, b: INTEGER;
+  BEGIN
+    charBytes := 1;
+    IF (t = NIL) THEN
+      (* no brand *)
+    ELSIF (t.val8 # NIL) THEN
+      txt := M3String.ToText (t.val8);
+      r := NEW (REF ARRAY OF [0..255], Text.Length (txt));
+      FOR i := 0 TO LAST (r^) DO r[i] := ORD (Text.GetChar (txt, i)) END;
+    ELSIF (t.val32 # NIL) THEN
+      charBytes := Target.Word32.size DIV Target.Int8.size;
+      n := M3WString.Length (t.val32);
+      r := NEW (REF ARRAY OF [0..255], n * charBytes);
+      FOR i := 0 TO n - 1 DO
+        c := M3WString.GetChar (t.val32, i);
+        FOR k := 0 TO charBytes - 1 DO
+          b := Word.And (Word.RightShift (c, 8 * k), 16_ff);
+          IF Target.endian = Target.Endian.Big
+            THEN r[i * charBytes + charBytes - 1 - k] := b;
+            ELSE r[i * charBytes + k] := b;
+          END;
+        END;
+      END;
+    END;
+    RETURN r;
+  END Image;
 
 PROCEDURE ToText (t: T): TEXT =
   VAR txt: TEXT := NIL;

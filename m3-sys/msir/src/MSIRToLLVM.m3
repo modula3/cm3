@@ -3166,6 +3166,31 @@ PROCEDURE EmitMapBytes(wr: Wr.T;  name: TEXT;  gm: MSIR.GcMapBytes): TEXT =
     RETURN "@" & name;
   END EmitMapBytes;
 
+PROCEDURE EmitBrand(wr: Wr.T;  name: TEXT;  d: MSIR.TypeDesc): TEXT =
+  (* Emit the RT0 brand record for d as Brand.Compile lays it out (an INTEGER
+     count of the characters' bytes, then the characters and a NUL character)
+     and return "@name"; "null" when d is not branded. *)
+  VAR
+    cb    : INTEGER;
+    chars := MSIR.TypeDescBrand(d, cb);
+    n, k  : INTEGER;
+    ipT   := RTFieldLLType(FieldKind.IP);
+  BEGIN
+    IF chars = NIL THEN RETURN "null" END;
+    n := NUMBER(chars^);
+    k := n + cb;
+    Wr.PutText(wr, "@" & name & " = internal constant { " & ipT & ", ["
+                 & Fmt.Int(k) & " x i8] } { " & ipT & " " & Fmt.Int(n)
+                 & ", [" & Fmt.Int(k) & " x i8] [");
+    FOR i := 0 TO k - 1 DO
+      IF i > 0 THEN Wr.PutText(wr, ", ") END;
+      IF i < n THEN Wr.PutText(wr, "i8 " & Fmt.Int(chars[i]));
+               ELSE Wr.PutText(wr, "i8 0") END;
+    END;
+    Wr.PutText(wr, "] }\n");
+    RETURN "@" & name;
+  END EmitBrand;
+
 PROCEDURE FPHex(d: MSIR.TypeDesc): TEXT =
   VAR s := "u0x";
   BEGIN
@@ -3737,7 +3762,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
             tcVals[TC_initProc] := "null";
           END;
         END;
-        tcVals[TC_brand_ptr]  := "null";
+        tcVals[TC_brand_ptr]  := EmitBrand(wr, nm & "_brand", d);
         IF nameSym # NIL
           THEN tcVals[TC_name] := nameSym;
           ELSE tcVals[TC_name] := "null";

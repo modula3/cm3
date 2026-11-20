@@ -1068,6 +1068,12 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     END;
     (* Generate the field-default initializer proc (TC_initProc) if needed. *)
     GenInitProcMSIR (NARROW(t, P), desc);
+    IF Type.OwnsCell (t) THEN  (* TC_brand, as InitTypecell; see OwnsCell *)
+      VAR cb: INTEGER;  chars := Brand.Image (NARROW(t, P).brand, cb);
+      BEGIN
+        MSIR.SetTypeDescBrand (desc, chars, cb);
+      END;
+    END;
     MSIR.ModuleAddTypeDesc (m, desc);
     (* Register the supertype's typecell too, so RTLinker can resolve this
        type's parentID (FinishTypecell -> FindType).  The C backend compiles the
@@ -1081,7 +1087,10 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     BEGIN
       IF super # NIL THEN
         TYPECASE super OF
-        | P (sp) => InitTypecellMSIR (sp);
+        | P (sp) =>
+            (* As Type.Compile: a supertype whose cell another unit owns is
+               emitted there, and RTLinker finds it by UID. *)
+            IF NOT Type.IsForeignCell (sp) THEN InitTypecellMSIR (sp) END;
         ELSE
           (* Non-P super (builtin TEXT/ROOT, or an opaque reference): its
              typecell is materialised by its own path, so do not NARROW it here

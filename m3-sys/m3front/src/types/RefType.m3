@@ -322,6 +322,16 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
 
   END InitTypecell;
 
+(* EXPORTED *)
+PROCEDURE TypecellMSIR (t: Type.T;  dataSize, dataAlign: INTEGER;
+                        isTraced: BOOLEAN): MSIR.Value =
+  BEGIN
+    IF Type.IsForeignCell (t) THEN
+      RETURN MSIRBuilder.TypeLinkValueForRef (t);
+    END;
+    RETURN MSIRBuilder.TypeDescValueForRef (t, dataSize, dataAlign, isTraced);
+  END TypecellMSIR;
+
 PROCEDURE InitTypecellMSIR (t: Type.T) =
   VAR
     info     : Type.Info;
@@ -356,6 +366,17 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
              info.isTraced);
     END;
   END InitTypecellMSIR;
+
+PROCEDURE CompleteTypeDescMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
+(* Called by MSIRBuilder for every new REF typecell descriptor: the parts
+   InitTypecell gets from the type itself (the brand, the init proc). *)
+  VAR p := Reduce (t);  cb: INTEGER;
+  BEGIN
+    IF p # NIL AND Type.OwnsCell (t) THEN  (* see Type.OwnsCell *)
+      MSIR.SetTypeDescBrand (desc, Brand.Image (p.brand, cb), cb);
+    END;
+    GenInitProcMSIR (t, desc);
+  END CompleteTypeDescMSIR;
 
 PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
 (* MSIR analogue of GenInitProc: emit an internal helper procedure that
@@ -544,5 +565,5 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
 
 BEGIN
   debug := RTParams.IsPresent ("m3front-debug-reftype");
-  MSIRBuilder.SetRefInitProcGen (GenInitProcMSIR);
+  MSIRBuilder.SetRefInitProcGen (CompleteTypeDescMSIR);
 END RefType.

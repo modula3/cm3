@@ -559,7 +559,11 @@ PROCEDURE AddInheritedMSIR (s: Set) =
     InitIterator (s, iter);
     WHILE Iterate (iter) DO
       l := iter.cur;
-      IF (NOT l.local) AND l.ident.equal THEN
+      IF (NOT l.local) AND l.ident.equal
+         AND NOT Type.IsForeignCell (l.ident.rhs) THEN
+        (* When another unit owns the concrete cell, that unit's REVEAL is
+           emitted there, as CG does; re-declaring the mapping here could
+           reach RTLinker before the cell (MissingType). *)
         (* Add the lhs→rhs revelation mapping. *)
         MSIRBuilder.AddRevelation(Type.GlobalUID(l.ident.lhs),
                                   Type.GlobalUID(l.ident.rhs));

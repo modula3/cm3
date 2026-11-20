@@ -25,6 +25,11 @@ PROCEDURE Equal (a, b: T): BOOLEAN;
 
 PROCEDURE ToText (t: T): TEXT;
 
+PROCEDURE Image (t: T;  VAR charBytes: INTEGER): REF ARRAY OF [0..255];
+(* The brand's characters as Compile lays them out after the length word:
+   target byte order, no terminating NUL.  charBytes is the size of one
+   character.  NIL if t is NIL. *)
+
 PROCEDURE Reset ();
 
 END Brand.

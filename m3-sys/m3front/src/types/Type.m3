@@ -62,6 +62,9 @@ VAR compile_started : BOOLEAN    := FALSE;
 VAR cur             : ModuleInfo := NIL;
 VAR compiled        : TypeTbl.T  := NIL;  (* type -> BOOLEAN *)
 VAR visible_cells   : TypeTbl.T  := NIL;  (* type -> CellInfo *)
+VAR foreign_cells   : TypeTbl.T  := NIL;
+  (* The cells visible_cells starts from (predefined, and imported units'
+     full cells); unlike visible_cells it lasts until the next module. *)
 VAR visible_types   : TypeTbl.T  := NIL;  (* type -> BOOLEAN *)
 
 (************************************************************************)
@@ -80,6 +83,7 @@ PROCEDURE Reset () =
     cur             := NIL;
     TypeTbl.Reset (compiled);
     TypeTbl.Reset (visible_cells);
+    TypeTbl.Reset (foreign_cells);
     TypeTbl.Reset (visible_types);
   END Reset;
 
@@ -377,6 +381,7 @@ PROCEDURE BeginSetGlobals () =
     cur.next_to_set := cur.module_types;
     cur.module := Module.Current ();
     TypeTbl.Reset (visible_cells);
+    TypeTbl.Reset (foreign_cells);
     InitPredefinedCells ();
     Module.VisitImports (NoteCells);
   END BeginSetGlobals;
@@ -388,6 +393,7 @@ PROCEDURE NoteCells (m: Module.T) =
   BEGIN
     WHILE (c # NIL) DO
       EVAL TypeTbl.Put (visible_cells, c.type, c);
+      EVAL TypeTbl.Put (foreign_cells, c.type, c);
       c := c.next;
     END;
   END NoteCells;
@@ -413,15 +419,38 @@ PROCEDURE SetGlobals (origin: INTEGER) =
 PROCEDURE InitPredefinedCells () =
   BEGIN
     EVAL TypeTbl.Put (visible_cells, Check(Null.T),      Null.T);
+    EVAL TypeTbl.Put (foreign_cells, Check(Null.T),      Null.T);
     EVAL TypeTbl.Put (visible_cells, Check(Addr.T),      Addr.T);
+    EVAL TypeTbl.Put (foreign_cells, Check(Addr.T),      Addr.T);
     EVAL TypeTbl.Put (visible_cells, Check(Reff.T),      Reff.T);
+    EVAL TypeTbl.Put (foreign_cells, Check(Reff.T),      Reff.T);
     EVAL TypeTbl.Put (visible_cells, Check(ObjectRef.T), ObjectRef.T);
+    EVAL TypeTbl.Put (foreign_cells, Check(ObjectRef.T), ObjectRef.T);
     EVAL TypeTbl.Put (visible_cells, Check(ObjectAdr.T), ObjectAdr.T);
+    EVAL TypeTbl.Put (foreign_cells, Check(ObjectAdr.T), ObjectAdr.T);
     (********** opaque types don't have typecells ************
     EVAL TypeTbl.Put (visible_cells, Check(Textt.T),     Textt.T);
     EVAL TypeTbl.Put (visible_cells, Check(Mutex.T),     Mutex.T);
     **********************************************************)
   END InitPredefinedCells;
+
+(*EXPORTED*)
+PROCEDURE OwnsCell (t: T): BOOLEAN =
+  VAR c := cur.full_cells;
+  BEGIN
+    t := Strip (Check (t));
+    WHILE (c # NIL) DO
+      IF (c.type = t) THEN RETURN TRUE END;
+      c := c.next;
+    END;
+    RETURN FALSE;
+  END OwnsCell;
+
+(*EXPORTED*)
+PROCEDURE IsForeignCell (t: T): BOOLEAN =
+  BEGIN
+    RETURN TypeTbl.Get (foreign_cells, Check (t)) # NIL;
+  END IsForeignCell;
 
 (*EXPORTED*)
 PROCEDURE AddCell (t: T) =
@@ -846,7 +875,8 @@ PROCEDURE GenCellsMSIR () =
     WHILE t # NIL DO
       u := Check(t);
       EVAL CheckInfo(u, info);
-      IF info.class = Class.Ref OR info.class = Class.Object THEN
+      IF (info.class = Class.Ref OR info.class = Class.Object)
+         AND NOT IsForeignCell (u) THEN
         uid := GlobalUID(u);
         (* Check if a TypeDesc for this uid is already registered. *)
         found := FALSE;
