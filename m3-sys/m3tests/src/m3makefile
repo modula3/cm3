@@ -531,8 +531,8 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
-p_test ("p2", "p298", "Method and indirect call results passed READONLY")
-p_test ("p2", "p296", "Initial values of packed fields, arrays and object fields")
+p_test ("p2", "p301", "Method and indirect call results passed READONLY")
+p_test ("p2", "p299", "Initial values of packed fields, arrays and object fields")
 p_test ("p2", "p295", "Integrated backend crash in typecase")
 p_test ("p2", "p293", "Mutex unlocked in event of exception within LOCK")
 p_test ("p2", "p292", "Correct CG type of struct for record temps")
