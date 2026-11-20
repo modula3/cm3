@@ -244,7 +244,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       | Value.Class.Expr =>
           constExpr := Value.ToExpr (p.value);
           IF constExpr # NIL THEN
-            (* For CONST arrays, try LValueMSIR (→ MaterializeConstArray) first so
+            (* For CONST arrays, try LValueMSIR (→ ArrayExpr.ConstArrayMSIR) first so
                open-typed nested array constants (b = ARRAY OF ARRAY OF INTEGER {c,...})
                produce const globals rather than abandoning.  p081. *)
             IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
@@ -299,10 +299,10 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
             (* CONST ARRAY OF T — materialise as a private constant global. *)
             IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
               (* Using a const array with a statically out-of-range element is a
-                 CT-warned RT error; MaterializeConstArray skips the fault the
+                 CT-warned RT error; ArrayExpr.ConstArrayMSIR skips the fault the
                  inline path emits, so raise it here at the use site (p270). *)
               EVAL Expr.CheckUseFailureMSIR (constExpr);
-              RETURN MSIRBuilder.MaterializeConstArray (p.value, constExpr);
+              RETURN ArrayExpr.ConstArrayMSIR (p.value, constExpr);
             END;
             (* Other named constants (record, set, scalar) referenced where an
                lvalue is needed (e.g. an aggregate passed by reference, or a

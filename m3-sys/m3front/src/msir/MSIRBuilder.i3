@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, Expr, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis, Target;
+IMPORT MSIR, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis, Target;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -363,23 +363,15 @@ PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
 
 (*------------------------------------------------------------- Module globals *)
 
-(* Materialise a CONST ARRAY OF T expression as a private constant LLVM global.
-   constExpr is the underlying ArrayExpr (or a ConsExpr wrapping one); m3Val
-   is the Value.T used as a de-dup key so the same CONST produces one global.
-   Returns a ptr-typed Value that points to the global — suitable as the LValue
-   for a subscript expression.  Abandons and returns NIL on unsupported types. *)
-PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value;
+(* A private constant global holding elts, each of type eltT, registered with
+   the current module.  Returns a ptr-typed Value pointing to it. *)
+PROCEDURE ConstArrayGlobal(eltT: MSIR.T;
+                           READONLY elts: ARRAY OF MSIR.Value): MSIR.Value;
 
 (* Pointer to element [0,0,...,0] of an open array = the flat data pointer.
    Emits BuildOpenArrayElemAddr with one zero index per dope rank, so it is
    correct for any rank (a bare single-zero index asserts on rank>1). *)
 PROCEDURE OpenArrayDataPtr(blk: MSIR.Block;  oa: MSIR.Value): MSIR.Value;
-
-(* Build an inline ConstAggArray value from an array-constructor expression of
-   Modula-3 type arrType (translated MSIR type arrMsir).  For a const record
-   field whose value is an array constructor.  NIL if not a constructor. *)
-PROCEDURE BuildConstAggArrayExpr(constExpr: Expr.T;  arrType: Type.T;
-                                 arrMsir: MSIR.T): MSIR.Value;
 
 (* Emit a memcpy(dst, src, byteCount) call in the current block.
    Uses the C library memcpy; the result ptr is discarded.

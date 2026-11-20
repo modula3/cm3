@@ -805,8 +805,7 @@ PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
   END CheckUseFailureMSIR;
 
 PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
-(* Static/global-initializer constant: build a ConstStruct for a record field.
-   Mirrors the old TryConstFieldMSIR struct case. *)
+(* Static/global-initializer constant: build a ConstStruct for a record field. *)
   VAR cv: MSIR.Value;
   BEGIN
     (* Accept a Struct field OR a packed record lowered to a [N x i8] byte blob
@@ -820,19 +819,6 @@ PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
     END;
     RETURN NIL;
   END GenLiteralMSIR;
-
-PROCEDURE TryConstFieldMSIR(fieldExpr: Expr.T;  ft: MSIR.T): MSIR.Value =
-(* Extract a pure compile-time constant MSIR value from a field/initializer
-   expression, for a static/global initializer (emits no IR).  Folds to the
-   canonical constant and dispatches to its own genLiteralMSIR — each
-   const-capable leaf *Expr (Integer/Enum/Reel/Text/Proc/Set/Array/Record) owns
-   its lowering, the MSIR analogue of CG's polymorphic genLiteral.  Returns NIL
-   when there is no static-constant form. *)
-  VAR folded := Expr.ConstValue(fieldExpr);
-  BEGIN
-    IF folded = NIL THEN RETURN NIL END;
-    RETURN Expr.GenLiteralMSIR(folded, ft);
-  END TryConstFieldMSIR;
 
 PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
   VAR
@@ -868,7 +854,7 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
       IF p.map^[i].expr = NIL THEN
         fields[i] := MSIR.ConstZero(ft);
       ELSE
-        fv := TryConstFieldMSIR(p.map^[i].expr, ft);
+        fv := Expr.ConstLiteralMSIR(p.map^[i].expr, ft);
         IF fv = NIL THEN
           (* A pointer/reference field whose constant value we cannot otherwise
              represent (e.g. an ADDRESS field defaulting to NIL, like InfoMap.map)
@@ -913,7 +899,7 @@ PROCEDURE TryPackedRecordConstMSIR(p: P;  msirT: MSIR.T;
           Field.Split(info.field, fieldInfo);
           EVAL Type.CheckInfo(fieldInfo.type, fti);
           ft := MSIRType.Translate(fieldInfo.type);
-          fv := TryConstFieldMSIR(info.expr, ft);
+          fv := Expr.ConstLiteralMSIR(info.expr, ft);
           IF fv = NIL THEN RETURN FALSE END;
           CASE MSIR.GetValueKind(fv) OF
           | MSIR.ValueKind.ConstInt =>

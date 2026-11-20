@@ -64,8 +64,7 @@ REVEAL
        initializer — must emit NO IR.  ft is the desired MSIR type (may be NIL).
        Returns NIL when this expr kind has no static-constant MSIR form.  Each
        const-capable leaf *Expr overrides this (Integer/Enum/Reel/Text/Proc/Set/
-       Array/Record); the polymorphic dispatch replaces the old centralized
-       type-switch in RecordExpr.TryConstFieldMSIR. *)
+       Array/Record).  Expr.ConstLiteralMSIR folds first. *)
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;

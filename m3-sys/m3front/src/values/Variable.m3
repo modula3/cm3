@@ -14,7 +14,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, M3String;
 IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
-IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr, RecordExpr;
+IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
 IMPORT Text;
@@ -397,7 +397,7 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
        module-body store must both be suppressed; in diagnostic mode CG still
        owns the real static init and must run. *)
     IF t.initExpr # NIL AND NOT t.initZero THEN
-      VAR cv := RecordExpr.TryConstFieldMSIR (t.initExpr, mt);
+      VAR cv := Expr.ConstLiteralMSIR (t.initExpr, mt);
       BEGIN
         IF cv # NIL THEN
           MSIR.ModuleAddGlobalInit (m, byteOff, cv);

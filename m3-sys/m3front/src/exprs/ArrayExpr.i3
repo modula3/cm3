@@ -9,7 +9,7 @@
 INTERFACE ArrayExpr;
 (* An array constructor. *) 
 
-IMPORT Type, Expr, Target, CG;
+IMPORT Type, Expr, Target, CG, Value, MSIR;
 
 TYPE T <: Expr.T;
 
@@ -73,10 +73,10 @@ PROCEDURE CheckStaticRTErrAssign
    statically unconditional runtime error when assigned to a variable
    of lhsType. *)
 
-PROCEDURE EltCount (constr: T): INTEGER;
-(* NUMBER of args in a 1-D fixed array constructor (0 if constr=NIL). *)
-
-PROCEDURE Elt (constr: T; i: INTEGER): Expr.T;
-(* i-th element expression (0-based). Requires i < EltCount(constr). *)
+PROCEDURE ConstArrayMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value;
+(* The named CONST array 'key', whose value is the array constructor
+   constExpr (possibly under a ConsExpr), as a private constant global of
+   the current MSIR unit; one global per CONST and unit.  Returns a pointer
+   to it, suitable as an lvalue, or NIL after Abandon. *)
 
 END ArrayExpr.

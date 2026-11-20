@@ -4,7 +4,6 @@ IMPORT MSIR, MSIRType, MSIREmit;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
-IMPORT Expr, ArrayExpr, ArrayType, OpenArrayType, RecordExpr;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
 IMPORT RefType;
@@ -151,11 +150,7 @@ VAR
 VAR globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
   globalMapN: INTEGER := 0;
 
-TYPE ConstArrayEntry = RECORD key: Value.T; val: MSIR.Value END;
-CONST MaxConstArrayMap = 64;
 VAR
-  constArrayMap:  ARRAY [0..MaxConstArrayMap-1] OF ConstArrayEntry;
-  constArrayMapN: INTEGER := 0;
   constArraySeq:  INTEGER := 0;
 
   memcpyProc: MSIR.Proc := NIL;  (* lazy C memcpy stub *)
@@ -2042,7 +2037,6 @@ PROCEDURE BeginModule() =
     procMapN         := 0;
     shimMapN         := 0;
     procContextDepth := 0;
-    constArrayMapN   := 0;
     constArraySeq    := 0;
     memcpyProc       := NIL;
     memcmpProc       := NIL;
@@ -2228,218 +2222,16 @@ PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: I
 PROCEDURE TFixedArrayI(len: INTEGER;  elt: MSIR.T): MSIR.T =
   BEGIN RETURN MSIR.TFixedArray(len, elt) END TFixedArrayI;
 
-(* Build a compile-time-constant MSIR value for one element of a CONST
-   aggregate.  Handles nested fixed-array constructors (recurses to produce an
-   inline ConstAggArray) and record constructors (ConstStruct); falls back to
-   Expr.CompileMSIR for scalars.  Returns NIL on a value that cannot appear in a
-   global constant initializer (caller abandons). *)
-PROCEDURE ConcreteConstAggType(elt: Expr.T): MSIR.T =
-(* For a (possibly multi-dimensional OPEN) array-constructor element, return the
-   concrete flat MSIR FixedArray type [n0 x [n1 x ... leaf]] matching the
-   constructor's actual per-level element counts.  MSIRType.Translate of an open
-   type yields a dope {ptr,size}; a const array of open-typed elements must
-   instead materialise as nested fixed DATA (the dopes are built at the use site
-   from that flat data).  Recurse when the inner element type is itself open, so
-   ARRAY OF ARRAY OF ARRAY OF T does not leave a {ptr,size} at the middle level
-   (p280 TestArrayMO const array-of-dopes / GenOpenArgMSIR depth mismatch). *)
-  VAR ae := ArrayExpr.ArrayConstrExpr(elt);
-      idxT, innerEltT: Type.T;  n: INTEGER;
+PROCEDURE ConstArrayGlobal(eltT: MSIR.T;
+                           READONLY elts: ARRAY OF MSIR.Value): MSIR.Value =
+  VAR ca := MSIR.NewConstArray("constarray_" & Fmt.Int(constArraySeq),
+                               eltT, elts);
   BEGIN
-    IF ae = NIL OR NOT ArrayType.Split(Expr.TypeOf(elt), idxT, innerEltT) THEN
-      RETURN MSIRType.Translate(Expr.TypeOf(elt));
-    END;
-    IF idxT = NIL OR NOT TInt.ToInt(Type.Number(idxT), n) OR n <= 0 THEN
-      n := ArrayExpr.EltCount(ae);
-    END;
-    VAR innerMsir := MSIRType.Translate(innerEltT);
-    BEGIN
-      IF innerMsir # NIL AND MSIR.Kind(innerMsir) = MSIR.TypeKind.OpenArray
-         AND ArrayExpr.EltCount(ae) > 0 THEN
-        innerMsir := ConcreteConstAggType(ArrayExpr.Elt(ae, 0));
-      END;
-      IF innerMsir = NIL OR n <= 0 THEN RETURN NIL END;
-      RETURN MSIR.TFixedArray(n, innerMsir);
-    END;
-  END ConcreteConstAggType;
+    INC(constArraySeq);
+    MSIR.ModuleAddConstArray(MSIREmit.CurrentModule(), ca);
+    RETURN MSIR.ConstArrayValue(ca);
+  END ConstArrayGlobal;
 
-PROCEDURE MaterializeConstElt(elt: Expr.T; eltMsir: MSIR.T): MSIR.Value =
-  VAR ae: ArrayExpr.T;  cv, v: MSIR.Value;
-  BEGIN
-    (* Resolve named CONST references (NamedExpr wrapping an ArrayExpr) so that
-       nested arrays like b = {c, c, ...} where c is a CONST are inlined as
-       ConstAggArray values rather than triggering an abandon (p081). *)
-    VAR folded := Expr.ConstValue(elt);
-    BEGIN
-      IF folded # NIL AND folded # elt THEN elt := folded END;
-    END;
-    ae := ArrayExpr.ArrayConstrExpr(elt);
-    IF ae # NIL AND MSIR.Kind(eltMsir) = MSIR.TypeKind.FixedArray THEN
-      (* Nested fixed-array element: naturally aligned, OR sub-byte packed
-         (bit-addressed, declared [N x i8]) — BuildConstAggArray's packed branch
-         bit-packs the latter under eltMsir's declared byte count (p277
-         CArrsInCArr: a const array whose elements are const packed arrays). *)
-      RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), eltMsir);
-    END;
-    IF ae # NIL
-       AND NOT ArrayType.EltsAreBitAddressed(Expr.TypeOf(elt)) THEN
-      IF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray THEN
-        (* Element declared as open array (e.g. CONST b = ARRAY OF ARRAY OF INTEGER {c,...},
-           or p280's ARRAY OF ARRAY OF ARRAY OF INTEGER).  Materialise it as nested
-           fixed DATA using the constructor's concrete per-level counts — recursing
-           so a middle open dimension does not leave a {ptr,size} dope (p081, p280). *)
-        VAR concreteArrT := ConcreteConstAggType(elt);
-        BEGIN
-          IF concreteArrT # NIL
-             AND MSIR.Kind(concreteArrT) = MSIR.TypeKind.FixedArray THEN
-            RETURN BuildConstAggArray(ae, Expr.TypeOf(elt), concreteArrT);
-          END;
-        END;
-      END;
-    END;
-    IF RecordExpr.TryCompileConstMSIR(elt, cv) THEN RETURN cv END;
-    v := Expr.CompileMSIR(elt);
-    IF v = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
-    (* Coerce integer constants to the declared element type (IntegerExpr
-       produces TI(64) for literals even when the element type is narrower). *)
-    IF MSIR.GetValueKind(v) = MSIR.ValueKind.ConstInt AND
-       NOT MSIR.Equal(MSIR.ValueType(v), eltMsir) THEN
-      v := MSIR.ConstInt(eltMsir, MSIR.GetIntVal(v));
-    END;
-    CASE MSIR.GetValueKind(v) OF
-    | MSIR.ValueKind.ConstInt, MSIR.ValueKind.ConstFloat,
-      MSIR.ValueKind.ConstNil, MSIR.ValueKind.ConstProc,
-      MSIR.ValueKind.ConstTextLit, MSIR.ValueKind.ConstStruct,
-      MSIR.ValueKind.ConstAggArray,
-      MSIR.ValueKind.GlobalRef, MSIR.ValueKind.StructFieldRef => (* OK *)
-    ELSE
-      Abandon("ConstArray: element has non-constant value (kind "
-              & Fmt.Int(ORD(MSIR.GetValueKind(v)))
-              & ") — cannot emit global");
-      RETURN NIL;
-    END;
-    RETURN v;
-  END MaterializeConstElt;
-
-(* Build an inline ConstAggArray value for a nested fixed-array constructor
-   'ae' of Modula-3 type 'arrType' (translated MSIR type 'arrMsir'). *)
-PROCEDURE BuildConstAggArray(ae: ArrayExpr.T;  arrType: Type.T;
-                             arrMsir: MSIR.T): MSIR.Value =
-  VAR
-    indexT, eltT: Type.T;
-    eltMsir: MSIR.T;
-    nExplicit, nTotal: INTEGER;
-    elts: REF ARRAY OF MSIR.Value;
-  BEGIN
-    IF NOT ArrayType.Split(arrType, indexT, eltT) THEN
-      Abandon("ConstArray: nested element is not an array type");  RETURN NIL;
-    END;
-    (* Use the outer array's declared MSIR element type (which incorporates
-       EltPack overrides for BOOLEAN/subrange) rather than re-translating eltT
-       from scratch.  Without this, BOOLEAN elements in [N x i8] arrays emit
-       as i1 constants — causing an LLVM type mismatch. *)
-    IF MSIR.Kind(arrMsir) = MSIR.TypeKind.FixedArray THEN
-      eltMsir := MSIR.FixedArrayElt(arrMsir);
-    ELSE
-      eltMsir := MSIRType.Translate(eltT);
-    END;
-    IF eltMsir = NIL THEN
-      Abandon("ConstArray: nested element has unsupported element type");
-      RETURN NIL;
-    END;
-    nExplicit := ArrayExpr.EltCount(ae);
-    IF NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
-      nTotal := nExplicit;
-    END;
-    (* Sub-byte packed element array (BITS n FOR, n < 8): the declared storage is
-       a byte array [nBytes x i8] with elements bit-packed, so emitting one
-       ConstInt per logical element (nTotal values under an nBytes-long type) is a
-       type mismatch (p279 ARRAY[2..6] OF BITS 6; p277 BITS 5/4 arrays).  Fold the
-       constant elements and pack them into bytes at compile time, matching the
-       little-endian bit-within-byte layout InsertBitField uses on the runtime
-       constructor path so the packed reads (ExtractBitField) see the same bits. *)
-    VAR eltPack := ArrayType.EltPack(arrType);
-    BEGIN
-      (* Only the SCALAR-element case is byte-packed here.  ArrayType.EltPack
-         returns the INNERMOST element pack, so a multi-dim packed array
-         (ARRAY OF ARRAY OF BITS 4) also reports pack < 8 — but its direct
-         elements are sub-arrays (ConstAggArray), not ConstInts; those recurse
-         through the normal element loop below (p269 Constants). *)
-      IF eltPack > 0 AND eltPack < Target.Byte AND Type.IsOrdinal(eltT) THEN
-        (* Emit under the caller's declared type: arrMsir is [N x i8] derived
-           from the declared type at a safe (pre-codegen) time, and N can exceed
-           the dense byte count when the storage is padded (p277: ARRAY[0..3] OF
-           BITS 5 = 3 dense bytes in [4 x i8]).  The value must carry exactly N
-           bytes to be type-correct; the padding bytes are zero.  NOTE: do NOT
-           query Type.CheckInfo/MSIRType.Translate here for the declared size —
-           fresh type queries at MSIR-codegen time corrupted later SubscriptExpr
-           codegen (p269); arrMsir is already in hand. *)
-        VAR denseBytes := (nTotal * eltPack + Target.Byte - 1) DIV Target.Byte;
-            nBytes     := denseBytes;
-        BEGIN
-        IF MSIR.Kind(arrMsir) = MSIR.TypeKind.FixedArray THEN
-          nBytes := MSIR.FixedArrayLen(arrMsir);
-          IF nBytes < denseBytes THEN
-            (* Should not happen (declared storage >= dense bits); bail rather
-               than write past the byte array. *)
-            Abandon("ConstArray: packed constructor larger than declared type");
-            RETURN NIL;
-          END;
-        END;
-        VAR byteVals := NEW(REF ARRAY OF INTEGER, nBytes);
-        BEGIN
-          FOR j := 0 TO nBytes - 1 DO byteVals[j] := 0 END;
-          FOR i := 0 TO nTotal - 1 DO
-            VAR ev := Expr.CompileMSIR(ArrayExpr.Elt(ae, MIN(i, nExplicit - 1)));
-            BEGIN
-              IF ev = NIL OR MSIR.GetValueKind(ev) # MSIR.ValueKind.ConstInt THEN
-                Abandon("ConstArray: packed element is not a constant integer");
-                RETURN NIL;
-              END;
-              PackConstBits(byteVals, i * eltPack, eltPack, MSIR.GetIntVal(ev));
-            END;
-          END;
-          VAR belts := NEW(REF ARRAY OF MSIR.Value, nBytes);
-          BEGIN
-            FOR j := 0 TO nBytes - 1 DO
-              belts[j] := MSIR.ConstInt(MSIR.TI(Target.Byte), byteVals[j]);
-            END;
-            RETURN MSIR.ConstAggArray(arrMsir, belts^);
-          END;
-        END;
-        END;
-      END;
-    END;
-    elts := NEW(REF ARRAY OF MSIR.Value, nTotal);
-    FOR i := 0 TO nTotal - 1 DO
-      VAR eltIdx := MIN(i, nExplicit - 1);
-      BEGIN
-        elts[i] := MaterializeConstElt(ArrayExpr.Elt(ae, eltIdx), eltMsir);
-        IF elts[i] = NIL THEN RETURN NIL END;
-      END;
-    END;
-    RETURN MSIR.ConstAggArray(arrMsir, elts^);
-  END BuildConstAggArray;
-
-PROCEDURE BuildConstAggArrayExpr(constExpr: Expr.T;  arrType: Type.T;
-                                 arrMsir: MSIR.T): MSIR.Value =
-  (* Exported wrapper: build a ConstAggArray from an array-constructor
-     expression (used by RecordExpr for a const record field whose value is an
-     array constructor, e.g. Fingerprint.T{ARRAY OF BITS 8 {...}}).  Returns
-     NIL if constExpr is not an array constructor. *)
-  VAR ae := ArrayExpr.ArrayConstrExpr(constExpr);
-  BEGIN
-    IF ae = NIL THEN RETURN NIL END;
-    RETURN BuildConstAggArray(ae, arrType, arrMsir);
-  END BuildConstAggArrayExpr;
-
-(* NOTE on open-array type propagation: CONST b = ARRAY OF ARRAY OF T {c,...}
-   declares b with an open type (ARRAY OF ARRAY OF T), so Constant.Check stores
-   valExpr.tipe as the open type.  ArrayType.Split on this open type yields
-   eltT = ARRAY OF T (also open), causing eltMsir = OpenArray instead of FixedArray.
-   Workarounds are applied below (use concrete element type from Elt(ae,0), and
-   override eltMsir post-build from the actual element MSIR type).
-   Root fix would be in Constant.Check to store the concrete inferred type — deferred
-   because it touches front-end type inference and the workaround is correct. *)
 PROCEDURE OpenArrayDataPtr(blk: MSIR.Block;  oa: MSIR.Value): MSIR.Value =
   VAR rank  := MSIR.OpenArrayRank(MSIR.ValueType(oa));
       zeros := NEW(REF ARRAY OF MSIR.Value, MAX(rank, 1));
@@ -2449,148 +2241,6 @@ PROCEDURE OpenArrayDataPtr(blk: MSIR.Block;  oa: MSIR.Value): MSIR.Value =
     END;
     RETURN MSIR.BuildOpenArrayElemAddr(blk, "", oa, zeros^);
   END OpenArrayDataPtr;
-
-PROCEDURE MaterializeConstArray(m3Val: Value.T; constExpr: Expr.T): MSIR.Value =
-  VAR
-    ae:       ArrayExpr.T;
-    n:        INTEGER;
-    indexT, eltT: Type.T;
-    eltMsir:  MSIR.T;
-    elts:     REF ARRAY OF MSIR.Value;
-    ca:       MSIR.ConstArray;
-    name:     TEXT;
-    v:        MSIR.Value;
-    m:        MSIR.Module;
-  BEGIN
-    IF NOT MSIREmit.IsEnabled() THEN RETURN NIL END;
-    (* De-dup: return cached value for this CONST if already materialized. *)
-    FOR i := 0 TO constArrayMapN - 1 DO
-      IF constArrayMap[i].key = m3Val THEN RETURN constArrayMap[i].val END;
-    END;
-    ae := ArrayExpr.ArrayConstrExpr(constExpr);
-    IF ae = NIL THEN
-      Abandon("ConstArray: not an array constructor");  RETURN NIL;
-    END;
-    (* EltCount returns only the number of explicit elements in the constructor
-       (e.g. 2 for Int{10, 0, ..}).  The total array size comes from the type.
-       Use the type-derived count to handle '..' (repeat-last) constructors. *)
-    VAR nExplicit := ArrayExpr.EltCount(ae);  nTotal: INTEGER;
-    BEGIN
-      IF NOT ArrayType.Split(Expr.TypeOf(constExpr), indexT, eltT) THEN
-        Abandon("ConstArray: not an array type");  RETURN NIL;
-      END;
-      (* When split yields an open-array eltT (e.g., CONST b = ARRAY OF ARRAY OF INTEGER {c,...}
-         gives eltT = ARRAY OF INTEGER), use the concrete element type from the
-         first explicit element's TypeOf instead (ARRAY [0..1] OF INTEGER).  p081. *)
-      IF eltT # NIL AND OpenArrayType.Is(eltT) AND nExplicit > 0 THEN
-        VAR concreteElt := Expr.TypeOf(ArrayExpr.Elt(ae, 0));
-        BEGIN
-          IF concreteElt # NIL AND NOT OpenArrayType.Is(concreteElt) THEN
-            eltT := concreteElt;
-          END;
-        END;
-      END;
-      (* When the index range is open/nil, use nExplicit for the count. *)
-      IF indexT = NIL OR NOT TInt.ToInt(Type.Number(indexT), nTotal) OR nTotal <= 0 THEN
-        nTotal := nExplicit;
-      END;
-      n := nTotal;
-    END;
-    (* Sub-byte packed element array (BITS n FOR, n < 8): materialize the PACKED
-       byte image ([declBytes x i8], zero-padded to the declared storage width),
-       NOT one slot per logical element — every reader addresses these constants
-       with ExtractBitField bit offsets and byte-blob copies (p277 CArrsInOArr:
-       FArr[i] := A1C loaded @constarray with raw values 1,4,7,10 where the
-       packed bytes 129,28,5,0 were expected). *)
-    VAR arrT     := Expr.TypeOf(constExpr);
-        eltPack  := ArrayType.EltPack(arrT);
-        aIdxT, aEltT: Type.T;
-        scalarElt := ArrayType.Split(arrT, aIdxT, aEltT) AND Type.IsOrdinal(aEltT);
-    BEGIN
-      (* Scalar-element packed array only (multi-dim packed arrays report the
-         same innermost pack but have sub-array elements — p269 Constants). *)
-      IF eltPack > 0 AND eltPack < Target.Byte AND scalarElt THEN
-        VAR denseBytes := (n * eltPack + Target.Byte - 1) DIV Target.Byte;
-            nBytes     := denseBytes;
-            declT      := MSIRType.Translate(arrT);
-        BEGIN
-          IF declT # NIL AND MSIR.Kind(declT) = MSIR.TypeKind.FixedArray THEN
-            nBytes := MAX(denseBytes, MSIR.FixedArrayLen(declT));
-          END;
-          VAR byteVals := NEW(REF ARRAY OF INTEGER, nBytes);
-          BEGIN
-            FOR j := 0 TO nBytes - 1 DO byteVals[j] := 0 END;
-            FOR i := 0 TO n - 1 DO
-              VAR ev := Expr.CompileMSIR(
-                          ArrayExpr.Elt(ae, MIN(i, ArrayExpr.EltCount(ae) - 1)));
-              BEGIN
-                IF ev = NIL OR MSIR.GetValueKind(ev) # MSIR.ValueKind.ConstInt THEN
-                  Abandon("ConstArray: packed element is not a constant integer");
-                  RETURN NIL;
-                END;
-                PackConstBits(byteVals, i * eltPack, eltPack, MSIR.GetIntVal(ev));
-              END;
-            END;
-            VAR belts := NEW(REF ARRAY OF MSIR.Value, nBytes);
-            BEGIN
-              FOR j := 0 TO nBytes - 1 DO
-                belts[j] := MSIR.ConstInt(MSIR.TI(Target.Byte), byteVals[j]);
-              END;
-              m    := MSIREmit.CurrentModule();
-              name := "constarray_" & Fmt.Int(constArraySeq);  INC(constArraySeq);
-              ca   := MSIR.NewConstArray(name, MSIR.TI(Target.Byte), belts^);
-              MSIR.ModuleAddConstArray(m, ca);
-              v    := MSIR.ConstArrayValue(ca);
-              IF constArrayMapN < MaxConstArrayMap THEN
-                constArrayMap[constArrayMapN].key := m3Val;
-                constArrayMap[constArrayMapN].val := v;
-                INC(constArrayMapN);
-              END;
-              RETURN v;
-            END;
-          END;
-        END;
-      END;
-    END;
-    eltMsir := MSIRType.Translate(eltT);
-    IF eltMsir = NIL THEN
-      Abandon("ConstArray: unsupported element type");  RETURN NIL;
-    END;
-    elts := NEW(REF ARRAY OF MSIR.Value, n);
-    FOR i := 0 TO n - 1 DO
-      (* For elements beyond the explicit args, repeat the last explicit value
-         ('..' constructor).  MIN ensures we never go past the args array. *)
-      VAR eltIdx := MIN(i, ArrayExpr.EltCount(ae) - 1);
-      BEGIN
-        elts[i] := MaterializeConstElt(ArrayExpr.Elt(ae, eltIdx), eltMsir);
-        IF elts[i] = NIL THEN RETURN NIL END;
-      END;
-    END;
-    (* If eltMsir is OpenArray but the actual built elements have a concrete type
-       (ConstAggArray with FixedArray), use the concrete element type for the outer
-       array.  This happens when CONST b = ARRAY OF ARRAY OF INTEGER {c,...} where
-       element type is open but elements compile as fixed-size arrays. p081. *)
-    IF MSIR.Kind(eltMsir) = MSIR.TypeKind.OpenArray
-       AND n > 0 AND elts[0] # NIL THEN
-      VAR concreteT := MSIR.ValueType(elts[0]);
-      BEGIN
-        IF MSIR.Kind(concreteT) = MSIR.TypeKind.FixedArray THEN
-          eltMsir := concreteT;
-        END;
-      END;
-    END;
-    m    := MSIREmit.CurrentModule();
-    name := "constarray_" & Fmt.Int(constArraySeq);  INC(constArraySeq);
-    ca   := MSIR.NewConstArray(name, eltMsir, elts^);
-    MSIR.ModuleAddConstArray(m, ca);
-    v    := MSIR.ConstArrayValue(ca);
-    IF constArrayMapN < MaxConstArrayMap THEN
-      constArrayMap[constArrayMapN].key := m3Val;
-      constArrayMap[constArrayMapN].val := v;
-      INC(constArrayMapN);
-    END;
-    RETURN v;
-  END MaterializeConstArray;
 
 (* ---- raw map-management helpers called from Variable.m3 ---- *)
 

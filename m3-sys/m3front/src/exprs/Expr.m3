@@ -626,6 +626,13 @@ PROCEDURE GenLiteralMSIR (t: T;  ft: MSIR.T): MSIR.Value =
     RETURN t.genLiteralMSIR (ft);
   END GenLiteralMSIR;
 
+PROCEDURE ConstLiteralMSIR (t: T;  ft: MSIR.T): MSIR.Value =
+  VAR folded := ConstValue (t);
+  BEGIN
+    IF folded = NIL THEN RETURN NIL END;
+    RETURN folded.genLiteralMSIR (ft);
+  END ConstLiteralMSIR;
+
 PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T): MSIR.Value =
   BEGIN
     RETURN NIL;

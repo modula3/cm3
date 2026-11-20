@@ -114,8 +114,7 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
 
 PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
 (* Pure constant for a static/global initializer, honouring the field MSIR
-   type ft (may be narrower than the ZType).  Mirrors the old
-   RecordExpr.TryConstFieldMSIR integer/enum case. *)
+   type ft (may be narrower than the ZType). *)
   VAR intV: INTEGER;
   BEGIN
     IF NOT TInt.ToInt (p.value, intV) THEN RETURN NIL END;
