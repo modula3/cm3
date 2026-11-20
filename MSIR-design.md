@@ -1323,7 +1323,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   `QualifyExpr.CompileMethodCallMSIR` owns receiver, actuals and
   dispatch; the four QualifyExpr accessors are gone.  Fixes B2; new
   m3test p301.
-- **Still to do under D22:** typecells (2b), the ArrayExpr accessors (2a),
+- **Still to do under D22:** the ArrayExpr accessors (2a),
   `RecordExpr.TryConstFieldMSIR`.
 - **D23 not started.**
 - **2b, cell ownership done; B1 fixed** (`cd64dbadc6`).  As in CG, a
@@ -1335,10 +1335,26 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   Branding first crashed the stage-2 cm3: an unbranded local copy
   registered first made the owner's branded cell a duplicate
   (DuplicateBrand); then a re-declared inherited revelation reached
-  RTLinker before its cell (MissingType).  New m3test p300.  Still to do
-  under 2b: one typecell description shared by the CG and MSIR paths,
-  `ObjectType`'s invented `dataOffset`, the type-map/pickle bytes in
-  MSIRBuilder.
+  RTLinker before its cell (MissingType).  New m3test p300.
+- **2b done.**  `Typecell.T` (`m3front/src/types/Typecell.i3`) describes
+  the data parts of a REF or OBJECT typecell: uid, fingerprint, traced,
+  kind, data size and alignment, the three byte programs (type map, GC
+  map, pickle description), brand, name, the open-array and object
+  extensions.  `RefType.Describe` and `ObjectType.Describe` build it; the
+  CG `InitTypecell`s and the MSIR `InitTypecellMSIR`s both write it out.
+  The code parts (init proc, link proc, default methods) stay per path.
+  `TipeMap.Emit`/`TipeDesc.Emit` let CG emit the finished bytes, so the
+  CG output does not change (libm3's C is byte-identical).  The REF
+  descriptor moved from MSIRBuilder to `RefType.TypeDescMSIR`, taking
+  `RefMapBytes`, `RefPickleDescBytes`, the `SetRefInitProcGen` callback
+  (2c) and the dead `ObjectTypeCellRef`/`ArrayTypeCellRef` with it;
+  `TypecellMSIR` no longer takes sizes from its NEW/RAISE callers.
+  `MSIR.TypeDesc` loses `dataOffset` and `methodOffset`, which
+  `MSIRToLLVM` never wrote (it emits 0 and RTLinker fills both in).
+  Changes on the MSIR side: a REF cell's size and alignment come from
+  the REF type as in CG, not from each caller's view of the stripped
+  referent (they differed only for `REF BITS n FOR T`); REF cells now
+  carry `TC_name`.
 - **Found on the way:** MSIR has block parameters (D20) but `MSIRToLLVM`
   never lowers them to phis, and nothing in the front end uses them; loops
   use alloca counters, which the lowering hoists to the entry block.
@@ -1404,7 +1420,8 @@ most serious findings spot-checked against the code.  Nothing built.
 - Typecells: built in parallel by ObjectType, RefType and MSIRBuilder; brand lost (B1);
   `ObjectType.m3:1063` invents a `dataOffset` CG leaves to RTLinker.  Fix: one
   backend-neutral typecell description per type constructor, consumed by both.
-- `RefMapBytes`/`RefPickleDescBytes` in MSIRBuilder duplicate RefType's.
+  **Done** (`Typecell.T`; see Progress).
+- `RefMapBytes`/`RefPickleDescBytes` in MSIRBuilder duplicate RefType's.  **Done.**
 
 ##### 2c. Two-way layering between front end and MSIR layer
 - Type, RefType, ObjectType, RecordType, UserProc, Variable, Formal, Procedure,
@@ -1414,7 +1431,7 @@ most serious findings spot-checked against the code.  Nothing built.
 - Capture results live in the builder and are read back by front-end analysis
   (`UserProc.Capture` -> `MSIRBuilder.GetProcCaptures`; `NamedExpr.m3:470`).
 - `MSIRBuilder.SetRefInitProcGen` callback guards a cycle that doesn't exist
-  (MSIRBuilder already imports RefType).
+  (MSIRBuilder already imports RefType).  **Gone** with 2b.
 - Global side channel `SetPendingContainer`/`TakePendingContainer` between lvalues
   and Assign/With.
 
