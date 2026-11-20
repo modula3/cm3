@@ -1314,10 +1314,28 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   `initValueMSIR (base, bitOff, zeroed)` beside `initValue`, overridden by
   Subrange, Named, Packed, Array, OpenArray and Record and dispatched by
   `Type.InitValueMSIR`; `RecordType.InitFieldsMSIR` serves records and
-  objects.  Fixes B3 and B4; new m3test p296 (also on master).  Still to
-  do under D22: `storeMSIR` / `checkUseFailureMSIR` on ExprRep (2a),
-  typecells (2b), the QualifyExpr/ArrayExpr accessors.
+  objects.  Fixes B3 and B4; new m3test p296 (also on master).
+- **D22, `storeMSIR` / `checkUseFailureMSIR` done** (`1aa16bfdb5`).
+  ExprRep methods replace the four-module sub-byte store probe in
+  AssignStmt/INC/DEC and the `EmitUseFailureMSIR` exports; the
+  SubscriptExpr, NamedExpr and VarExpr interfaces are back to master's.
+- **D22, method calls done** (`24f1f7ca59`).
+  `QualifyExpr.CompileMethodCallMSIR` owns receiver, actuals and
+  dispatch; the four QualifyExpr accessors are gone.  Fixes B2; new
+  m3test p298.
+- **Still to do under D22:** typecells (2b), the ArrayExpr accessors (2a),
+  `RecordExpr.TryConstFieldMSIR`.
 - **D23 not started.**
+- **B1 needs 2b first.**  Branding only the owning module's typecell
+  (`Type.OwnsCell`, i.e. on `full_cells`, as CG) still crashes the stage-2
+  cm3 at startup with DuplicateBrand: MSIR also emits unbranded copies of
+  REF/OBJECT typecells in every module that uses a type (NEW, RAISE,
+  supertypes), and when one registers first the owner's branded copy is
+  the duplicate.  CG never emits such copies; a non-owning module reaches
+  the owner's cell through its imports.  The fix is for non-owning modules
+  to use TypeLinks (`TypeLinkValueForRef`/`ForObject`) — the 2b work —
+  after which the brand goes on the owner's cell only.  Work in progress
+  and m3test p297 are held back.
 - **Found on the way:** MSIR has block parameters (D20) but `MSIRToLLVM`
   never lowers them to phis, and nothing in the front end uses them; loops
   use alloca counters, which the lowering hoists to the entry block.
@@ -1346,7 +1364,7 @@ most serious findings spot-checked against the code.  Nothing built.
 | # | Where | Problem |
 |---|-------|---------|
 | B1 | `MSIRToLLVM.m3:3608` | `TC_brand_ptr` always `null`: BRANDED types lose their brand at runtime. |
-| B2 | `UserProc.m3` `LValueMSIR` (~582) | Method-call args compiled with `Expr.CompileMSIR`, not `Formal.EmitArgMSIR`: VAR/READONLY/open-array modes ignored. |
+| B2 | `UserProc.m3` `LValueMSIR` (~582) | **Fixed** (`24f1f7ca59`). Method-call args compiled with `Expr.CompileMSIR`, not `Formal.EmitArgMSIR`: VAR/READONLY/open-array modes ignored. |
 | B3 | `ObjectType.m3:805` `GenInitProcMSIR` | **Fixed** (`5f1a89dc08`). Skips fields with no explicit default but `InitCost > 0` (CG calls `Type.InitValue`), and skips packed fields (`:931`). |
 | B4 | `RecordType.m3:584` | **Fixed** (`5f1a89dc08`). `GenInitMSIR` silently skips non-byte-aligned fields. |
 | B5 | `MSIRBuilder.m3` maps (`2028, 2071, 2685, 2750, 2770`) | Fixed-size tables (`varMap[512]`, `globalMap[256]`, ...) silently drop entries when full instead of abandoning. |
