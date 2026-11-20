@@ -1314,7 +1314,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   `initValueMSIR (base, bitOff, zeroed)` beside `initValue`, overridden by
   Subrange, Named, Packed, Array, OpenArray and Record and dispatched by
   `Type.InitValueMSIR`; `RecordType.InitFieldsMSIR` serves records and
-  objects.  Fixes B3 and B4; new m3test p296 (also on master).
+  objects.  Fixes B3 and B4; new m3test p299 (also on master; numbered p296 until #1258).
 - **D22, `storeMSIR` / `checkUseFailureMSIR` done** (`1aa16bfdb5`).
   ExprRep methods replace the four-module sub-byte store probe in
   AssignStmt/INC/DEC and the `EmitUseFailureMSIR` exports; the
@@ -1322,7 +1322,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - **D22, method calls done** (`24f1f7ca59`).
   `QualifyExpr.CompileMethodCallMSIR` owns receiver, actuals and
   dispatch; the four QualifyExpr accessors are gone.  Fixes B2; new
-  m3test p298.
+  m3test p301.
 - **Still to do under D22:** typecells (2b), the ArrayExpr accessors (2a),
   `RecordExpr.TryConstFieldMSIR`.
 - **D23 not started.**
@@ -1335,7 +1335,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   the owner's cell through its imports.  The fix is for non-owning modules
   to use TypeLinks (`TypeLinkValueForRef`/`ForObject`) — the 2b work —
   after which the brand goes on the owner's cell only.  Work in progress
-  and m3test p297 are held back.
+  and m3test p300 are held back.
 - **Found on the way:** MSIR has block parameters (D20) but `MSIRToLLVM`
   never lowers them to phis, and nothing in the front end uses them; loops
   use alloca counters, which the lowering hoists to the entry block.
