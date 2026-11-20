@@ -3,7 +3,7 @@
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RT0, RTMachInfo, RTError, RTException, RTProcess, RuntimeError;
+IMPORT RT0, RTMachInfo, RTError, RTException, RTProcess, RuntimeError, RTSignalC;
 IMPORT WinBase, WinCon, WinDef, WinNT, ThreadContext, Thread, RTThread;
 
 TYPE
@@ -47,7 +47,7 @@ PROCEDURE RuntimeFilter (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
     (* look for a known error... *)
     FOR i := FIRST (SysErrs) TO LAST (SysErrs) DO
       IF (SysErrs[i].err = err) THEN
-        IF Raise (SysErrs[i].rte, err, pc, ctxt) THEN
+        IF RTSignalC.Raise (SysErrs[i].rte, err, pc, ctxt) THEN
           RETURN -1; (* == EXCEPTION_CONTINUE_EXECUTION in EXCPT.H *)
         END;
         EXIT;
@@ -55,7 +55,7 @@ PROCEDURE RuntimeFilter (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
     END;
 
     (* try reporting a mysterious error *)
-    IF Raise (RTE.Unknown, err, pc, ctxt) THEN
+    IF RTSignalC.Raise (RTE.Unknown, err, pc, ctxt) THEN
       RETURN -1; (* == EXCEPTION_CONTINUE_EXECUTION in EXCPT.H *)
     END;
 
@@ -81,6 +81,7 @@ PROCEDURE RuntimeFilter (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
     RETURN 0; (* == EXCEPTION_CONTINUE_SEARCH in EXCPT.H *)
   END RuntimeFilter;
 
+(*
 PROCEDURE Raise (rte: RTE;  err, pc: INTEGER;
                  ctxt: ThreadContext.PCONTEXT): BOOLEAN =
 (* Alter the thread's stack and PC so that when it resumes, it looks
@@ -106,6 +107,7 @@ PROCEDURE Raise (rte: RTE;  err, pc: INTEGER;
 
     RETURN TRUE;
   END Raise;
+*)
 
 <*CALLBACK*>  (* so the fake call doesn't need to pop its arguments *)
 PROCEDURE SystemError (rte: INTEGER;  err: INTEGER;  pc: ADDRESS) RAISES ANY =

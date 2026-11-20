@@ -1,0 +1,7 @@
+% jay.krell@cornell.edu November 20 2026
+% Test of RTSignal.Raise, to fix for AMD64_NT.
+
+interface ("TestException")
+c_source ("TestException")
+implementation ("Main")
+include ("../../Test.common")
