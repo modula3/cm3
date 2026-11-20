@@ -91,10 +91,10 @@ PROCEDURE PrintStack (uid : INTEGER) =
 
     WHILE (f.pc # NIL) DO
 
-      IF f.lsda # NIL THEN
-        IF uid # 0 THEN
-        (* fixme - scan and print the dwarf eh scopes found by the unwinder *)
-        END;
+      IF uid # 0 THEN
+      (* fixme - scan and print the dwarf eh scopes found by the unwinder
+        IF f.lsda # NIL THEN
+        END; *)
       END;
 
       (* print the procedure's frame *)
