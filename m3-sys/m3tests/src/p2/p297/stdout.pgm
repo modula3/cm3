@@ -1,0 +1,6 @@
+const elements, [FALSE]    expect 7  -> 7
+const elements, [TRUE]     expect 99 -> 99
+var element,lt  [FALSE,43] expect 43  -> 43
+var element,lt  [TRUE,43]  expect 8 -> 8
+var element,rt  [FALSE,44] expect 9  -> 9
+var element,rt  [TRUE,44]  expect 44 -> 44

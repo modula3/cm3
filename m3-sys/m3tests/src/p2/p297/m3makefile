@@ -1,0 +1,12 @@
+% (* ----------------------------------------------------------------------1- *)
+% (* File m3makefile for Modula3 compiler test p296                           *)
+% (* ----------------------------------------------------------------------2- *)
+
+
+import("libm3")
+
+implementation ("Main")
+
+build_standalone ()
+include("../../Test.common")
+program ("pgm")

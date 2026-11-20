@@ -1,0 +1,13 @@
+Constant constructor:
+  17   0  19   0
+   0  21   0  25
+  17  19  21  25
+Copied variable:
+  17   0  19   0
+   0  21   0  25
+  17  19  21  25
+Variable with altered elements:
+  25   0  19   0
+  17   0  21   0
+  25  21  19  17
+Done.
