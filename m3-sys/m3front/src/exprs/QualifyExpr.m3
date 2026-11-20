@@ -961,6 +961,97 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
    natural expression type.  Same narrowing/widening logic as SubscriptExpr:
    - narrow storage (e.g. i8 for [0..255]) → ZExt or SExt to natural type
    - wide storage (e.g. i8 for BOOLEAN) → Trunc to natural type (i1) *)
+(* EXPORTED *)
+PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
+                                 resultType: Type.T;
+                                 VAR(*OUT*) result: MSIR.Value): BOOLEAN =
+  VAR
+    p        : P;
+    m        : Method.Info;
+    rtype    : MSIR.T;
+    ptrT     := MSIR.TPtr (MSIR.TVoid ());
+    intT     := MSIR.TI (Target.Integer.size);
+    b        : MSIR.Block;
+    obj, tc, fn : MSIR.Value;
+    explicit : REF ARRAY OF MSIR.Value;
+    base     : INTEGER;
+  BEGIN
+    result := NIL;
+    TYPECASE e OF
+    | NULL => RETURN FALSE;
+    | P (pp) => p := pp;
+    ELSE RETURN FALSE;
+    END;
+    Resolve (p);
+    IF p.class # Class.objMethod AND p.class # Class.objTypeMethod THEN
+      RETURN FALSE;
+    END;
+    IF NOT Method.Split (p.rhsValue, m) THEN RETURN FALSE END;
+    rtype := MSIRType.TranslateResult (resultType);
+    base  := ObjectType.MethodOffset (p.holder);
+
+    IF p.class = Class.objTypeMethod THEN
+      (* T.m(self, ...): T's binding of m is in T's typecell defaultMethods
+         table; the receiver is the first explicit actual.  As Compile. *)
+      IF base < 0 THEN
+        MSIRBuilder.Abandon ("static method call: runtime method offset (opaque holder)");
+        RETURN TRUE;
+      END;
+      tc := MSIRBuilder.TypeLinkValueForObject (p.objType);
+      IF tc = NIL THEN RETURN TRUE END;
+      b  := MSIRBuilder.CurrentBlock ();
+      fn := MSIR.BuildLoad (b, "", ptrT,
+              MSIR.BuildPtrAdd (b, "",
+                MSIR.BuildLoad (b, "", ptrT,
+                  MSIR.BuildPtrAdd (b, "", tc,
+                    M3RT.OTC_defaultMethods DIV Target.Char.size)),
+                (m.offset + base) DIV Target.Char.size));
+      explicit := args.compile ();
+      IF explicit = NIL THEN RETURN TRUE END;
+      result := MSIRBuilder.EmitClosureCall ("", fn, rtype, explicit^);
+      RETURN TRUE;
+    END;
+
+    (* obj.m(...): evaluate the receiver first, as Prep does. *)
+    obj := Expr.CompileMSIR (p.lhsExpr);
+    IF obj = NIL THEN RETURN TRUE END;
+    explicit := args.compile ();
+    IF explicit = NIL THEN RETURN TRUE END;
+
+    IF base >= 0 THEN
+      result := MSIRBuilder.EmitMethodCall ("", obj,
+                  (base + m.offset) DIV Target.Address.size, rtype, explicit^);
+      RETURN TRUE;
+    END;
+
+    (* Opaque supertype: the holder's methodOffset is only known at run time.
+       As Compile: load it from the holder's typecell, add m's byte offset,
+       and index the receiver's method suite. *)
+    tc := MSIRBuilder.TypeLinkValueForObject (p.holder);
+    IF tc = NIL THEN
+      MSIRBuilder.Abandon ("method call: no TypeLink for opaque holder");
+      RETURN TRUE;
+    END;
+    b  := MSIRBuilder.CurrentBlock ();
+    VAR
+      off := MSIR.BuildIAdd (b, "",
+               MSIR.BuildLoad (b, "", intT,
+                 MSIRBuilder.BuildPtrByteOff (b, "", tc,
+                   M3RT.OTC_methodOffset DIV Target.Char.size)),
+               MSIR.ConstInt (intT, m.offset DIV Target.Char.size));
+      suite := MSIR.BuildLoad (b, "", ptrT,
+                 MSIR.BuildConvert (b, "", obj, MSIR.TPtr (ptrT)));
+      all   := NEW (REF ARRAY OF MSIR.Value, 1 + NUMBER (explicit^));
+    BEGIN
+      fn := MSIR.BuildLoad (b, "", ptrT, MSIR.BuildGepByte (b, "", suite, off));
+      all[0] := obj;
+      SUBARRAY (all^, 1, NUMBER (explicit^)) := explicit^;
+      (* The suite holds plain procedure pointers: no closure check. *)
+      result := MSIRBuilder.EmitCallIndirect ("", fn, rtype, all^);
+    END;
+    RETURN TRUE;
+  END CompileMethodCallMSIR;
+
 (* storeMSIR: a sub-byte field gets a read-modify-write bit insertion. *)
 PROCEDURE SubByteStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
   VAR
@@ -1087,55 +1178,9 @@ PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
     END;
   END LoadFieldValue;
 
-PROCEDURE LhsExpr (e: Expr.T): Expr.T =
-  BEGIN
-    TYPECASE e OF
-    | NULL => RETURN NIL;
-    | P(p) => Resolve (p);
-              IF p.class = Class.objMethod THEN RETURN p.lhsExpr END;
-              RETURN NIL;
-    ELSE RETURN NIL;
-    END;
-  END LhsExpr;
 
-PROCEDURE MethodSlotBase (e: Expr.T): INTEGER =
-  BEGIN
-    TYPECASE e OF
-    | NULL => RETURN -1;
-    | P(p) => Resolve (p);
-              IF p.class = Class.objMethod THEN
-                RETURN ObjectType.MethodOffset (p.holder);
-              END;
-              RETURN -1;
-    ELSE RETURN -1;
-    END;
-  END MethodSlotBase;
 
-PROCEDURE MethodHolder (e: Expr.T): Type.T =
-  BEGIN
-    TYPECASE e OF
-    | P(p) => Resolve (p);
-              IF p.class = Class.objMethod OR p.class = Class.objTypeMethod THEN
-                RETURN p.holder;
-              END;
-    ELSE
-    END;
-    RETURN NIL;
-  END MethodHolder;
 
-PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN =
-  BEGIN
-    TYPECASE e OF
-    | NULL => RETURN FALSE;
-    | P(p) => Resolve (p);
-              IF p.class = Class.objTypeMethod THEN
-                objType := p.objType;  holder := p.holder;
-                RETURN TRUE;
-              END;
-              RETURN FALSE;
-    ELSE RETURN FALSE;
-    END;
-  END ObjTypeMethod;
 
 (*EXPORTED*)
 PROCEDURE FieldByteAddrMSIR (e: Expr.T): MSIR.Value =

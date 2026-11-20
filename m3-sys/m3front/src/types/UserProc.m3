@@ -11,8 +11,7 @@ MODULE UserProc;
 IMPORT M3ID, CG, Type, Expr, ExprRep, ProcType, Formal;
 IMPORT Procedure, NamedExpr, Variable, QualifyExpr, Value;
 IMPORT CallExpr, ProcExpr, Marker, ErrType;
-IMPORT MSIR, MSIRBuilder, MSIRType, Method, Target, CaptureAnalysis;
-IMPORT M3RT, ObjectType;
+IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 (* Externally dispatched-to, using a field of Methods: *)
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
@@ -274,6 +273,33 @@ PROCEDURE IsProcedureLiteral (e: Expr.T;  VAR proc: Value.T): BOOLEAN =
   END IsProcedureLiteral;
 
 (* EXPORTED: *)
+TYPE
+  MethodArgs = QualifyExpr.ArgsMSIR OBJECT
+    formals : Value.T;
+    args    : Expr.List;
+  OVERRIDES
+    compile := CompileMethodArgs;
+  END;
+
+PROCEDURE NewMethodArgs (procType: Type.T;  args: Expr.List): MethodArgs =
+  BEGIN
+    RETURN NEW (MethodArgs, formals := ProcType.Formals (procType), args := args);
+  END NewMethodArgs;
+
+PROCEDURE CompileMethodArgs (self: MethodArgs): REF ARRAY OF MSIR.Value =
+  (* The explicit actuals, passed by their formals' modes. *)
+  VAR r := NEW (REF ARRAY OF MSIR.Value, NUMBER (self.args^));
+      fv := self.formals;
+  BEGIN
+    FOR i := 0 TO LAST (r^) DO
+      <* ASSERT fv # NIL *>
+      r[i] := Formal.EmitArgMSIR (fv, self.args[i]);
+      IF r[i] = NIL THEN RETURN NIL END;
+      fv := fv.next;
+    END;
+    RETURN r;
+  END CompileMethodArgs;
+
 PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
   (* MSIR handler for user procedure calls — direct, virtual, and nested.
      Dispatched through methods.compileMSIR by CallExpr.CompileMSIR. *)
@@ -293,178 +319,15 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
       procType := Type.Base (t);
     END;
     IF NOT IsProcedureLiteral(p.proc, v) THEN
-      (* Virtual method dispatch: obj.method(args) *)
-      VAR
-        methodVal : Value.T;
-        methodInfo: Method.Info;
-        objExpr   : Expr.T;
-        objVal    : MSIR.Value;
-        rtype     : MSIR.T;
-        dispArgs  : REF ARRAY OF MSIR.Value;
-        midx      : INTEGER;
+      (* Method call, obj.m(...) or T.m(...): QualifyExpr owns the receiver
+         and the dispatch. *)
+      VAR res: MSIR.Value;  margs := NewMethodArgs (procType, p.args);
       BEGIN
-        IF QualifyExpr.Split(p.proc, methodVal) AND
-           Value.ClassOf(methodVal) = Value.Class.Method THEN
-          objExpr := QualifyExpr.LhsExpr(p.proc);
-          EVAL Method.Split(methodVal, methodInfo);
-          IF objExpr = NIL THEN
-            (* T.m(self, ...): a static supercall naming the method through its
-               type, not an instance.  T's binding of m lives in T's typecell
-               OTC_defaultMethods table; load it and call indirectly, with the
-               receiver passed as the first explicit actual.  Mirrors the C path
-               QualifyExpr.Compile (Class.objTypeMethod). *)
-            VAR otObjType, otHolder: Type.T; BEGIN
-              IF NOT QualifyExpr.ObjTypeMethod(p.proc, otObjType, otHolder) THEN
-                MSIRBuilder.Abandon("method call: cannot get receiver");
-                RETURN NIL;
-              END;
-              VAR objOff := ObjectType.MethodOffset(otHolder); BEGIN
-                IF objOff < 0 THEN
-                  MSIRBuilder.Abandon(
-                    "static method call: runtime method offset (opaque holder)");
-                  RETURN NIL;
-                END;
-                VAR
-                  b     := MSIRBuilder.CurrentBlock();
-                  ptrT  := MSIR.TPtr(MSIR.TVoid());
-                  tc    := MSIRBuilder.TypeLinkValueForObject(otObjType);
-                  dmOff := M3RT.OTC_defaultMethods DIV Target.Char.size;
-                  pOff  := (methodInfo.offset + objOff) DIV Target.Char.size;
-                  rtype := MSIRType.TranslateResult(ProcType.Result(procType));
-                  dmTbl, fn: MSIR.Value;
-                  callArgs : REF ARRAY OF MSIR.Value;
-                BEGIN
-                  IF tc = NIL THEN RETURN NIL END;
-                  (* table = *(typecell + OTC_defaultMethods) *)
-                  dmTbl := MSIR.BuildLoad(b, "", ptrT,
-                             MSIR.BuildPtrAdd(b, "", tc, dmOff));
-                  (* proc = *(table + method byte offset) *)
-                  fn := MSIR.BuildLoad(b, "", ptrT,
-                          MSIR.BuildPtrAdd(b, "", dmTbl, pOff));
-                  n := NUMBER(p.args^);
-                  callArgs := NEW(REF ARRAY OF MSIR.Value, n);
-                  VAR fv := ProcType.Formals(procType); BEGIN
-                    FOR i := 0 TO n - 1 DO
-                      <* ASSERT fv # NIL *>
-                      callArgs[i] := Formal.EmitArgMSIR(fv, p.args[i]);
-                      fv := fv.next;
-                      IF callArgs[i] = NIL THEN RETURN NIL END;
-                    END;
-                  END;
-                  RETURN MSIRBuilder.WidenCallResult(
-                    MSIRBuilder.EmitClosureCall("", fn, rtype, callArgs^),
-                    ProcType.Result(procType));
-                END;
-              END;
-            END;
-          END;
-          VAR mBase := QualifyExpr.MethodSlotBase(p.proc); BEGIN
-            IF mBase < 0 THEN
-              (* Opaque supertype: static method offset not known.  Mirrors the
-                 CG backend: Type.LoadInfo(holder, OTC_methodOffset) + Index_bytes.
-                 Load the methodOffset field from the holder's TypeCell at runtime,
-                 add methodInfo.offset (byte offset within this type's own methods),
-                 then do a dynamic vtable dispatch using the computed byte offset.
-                 OTC_methodOffset = TC_SIZE + OTC_parentID(IP) + OTC_linkProc(AP)
-                                  + OTC_dataOffset(IP) = TC_SIZE + 2*IP + AP. *)
-              VAR
-                ptrT   := MSIR.TPtr(MSIR.TVoid());
-                intT   := MSIR.TI(Target.Integer.size);
-                b2     := MSIRBuilder.CurrentBlock();
-                (* holder TypeCell via the TypeLink for the holder type *)
-                holderType   : Type.T;
-                tc          : MSIR.Value;
-                otcMethOff  : INTEGER;
-                dynBaseVal  : MSIR.Value;
-                totalByteOff: MSIR.Value;
-                suite, slotPtr, fn: MSIR.Value;
-                rtype2      : MSIR.T;
-                allArgs2    : REF ARRAY OF MSIR.Value;
-                procResult2 := ProcType.Result(procType);
-              BEGIN
-                holderType := QualifyExpr.MethodHolder(p.proc);
-                IF holderType = NIL THEN
-                  MSIRBuilder.Abandon("method call: cannot get holder type for opaque dispatch");
-                  RETURN NIL;
-                END;
-                objVal := Expr.CompileMSIR(objExpr);
-                IF objVal = NIL THEN RETURN NIL END;
-                n := NUMBER(p.args^);
-                dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
-                VAR fv := ProcType.Formals(procType); BEGIN
-                  FOR i := 0 TO n - 1 DO
-                    <* ASSERT fv # NIL *>
-                    dispArgs[i] := Formal.EmitArgMSIR(fv, p.args[i]);
-                    fv := fv.next;
-                    IF dispArgs[i] = NIL THEN RETURN NIL END;
-                  END;
-                END;
-                b2 := MSIRBuilder.CurrentBlock();
-                tc := MSIRBuilder.TypeLinkValueForObject(holderType);
-                IF tc = NIL THEN
-                  MSIRBuilder.Abandon("method call: no TypeLink for opaque holder");
-                  RETURN NIL;
-                END;
-                (* OTC_methodOffset byte position within the ObjectTypeCell.
-                   OTC = TC_SIZE + OTC_parentID(IP) + OTC_linkProc(AP)
-                        + OTC_dataOffset(IP) *)
-                otcMethOff := M3RT.OTC_methodOffset DIV Target.Char.size;
-                dynBaseVal  := MSIR.BuildLoad(b2, "", intT,
-                                 MSIRBuilder.BuildPtrByteOff(b2, "", tc, otcMethOff));
-                b2 := MSIRBuilder.CurrentBlock();
-                (* methodInfo.offset is a BIT offset within this type's own
-                   methods; the runtime OTC_methodOffset is in BYTES.  Convert
-                   the method offset to bytes before adding (the const path at
-                   the bottom of this proc divides by Target.Address.size, and
-                   the linkProc store divides by Target.Byte — this runtime path
-                   previously forgot, landing 8x too far into the vtable). *)
-                totalByteOff := MSIR.BuildIAdd(b2, "", dynBaseVal,
-                                  MSIR.ConstInt(intT,
-                                    methodInfo.offset DIV Target.Char.size));
-                b2 := MSIRBuilder.CurrentBlock();
-                (* Load vtable pointer from object (first word). *)
-                suite := MSIR.BuildLoad(b2, "", ptrT,
-                           MSIR.BuildConvert(b2, "", objVal, MSIR.TPtr(ptrT)));
-                b2 := MSIRBuilder.CurrentBlock();
-                (* GEP into vtable by dynamic byte offset. *)
-                slotPtr := MSIR.BuildGepByte(b2, "", suite, totalByteOff);
-                b2 := MSIRBuilder.CurrentBlock();
-                fn := MSIR.BuildLoad(b2, "", ptrT, slotPtr);
-                b2 := MSIRBuilder.CurrentBlock();
-                (* Build call args: [obj, explicit args].  The result comes back
-                   by value (native large-result ABI). *)
-                rtype2 := MSIRType.TranslateResult(procResult2);
-                allArgs2 := NEW(REF ARRAY OF MSIR.Value, 1 + n);
-                allArgs2[0] := objVal;
-                FOR k := 0 TO n - 1 DO allArgs2[1 + k] := dispArgs[k] END;
-                (* Direct indirect call through the vtable function pointer —
-                   NOT closure dispatch (vtable holds direct proc ptrs). *)
-                RETURN MSIRBuilder.WidenCallResult(
-                  MSIRBuilder.EmitCallIndirect("", fn, rtype2, allArgs2^),
-                  ProcType.Result(procType));
-              END;
-            END;
-            midx := (mBase + methodInfo.offset) DIV Target.Address.size;
-          END;
-          objVal := Expr.CompileMSIR(objExpr);
-          IF objVal = NIL THEN RETURN NIL END;
-          n       := NUMBER(p.args^);
-          dispArgs := NEW(REF ARRAY OF MSIR.Value, n);
-          VAR fv := ProcType.Formals(procType); BEGIN
-            FOR i := 0 TO n - 1 DO
-              <* ASSERT fv # NIL *>
-              dispArgs[i] := Formal.EmitArgMSIR(fv, p.args[i]);
-              fv := fv.next;
-              IF dispArgs[i] = NIL THEN RETURN NIL END;
-            END;
-          END;
-          VAR procResult := ProcType.Result(procType);
-              rtype      := MSIRType.TranslateResult(procResult);
-          BEGIN
-            RETURN MSIRBuilder.WidenCallResult(
-              MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^),
-              procResult);
-          END;
+        IF QualifyExpr.CompileMethodCallMSIR (p.proc, margs,
+                                              ProcType.Result (procType), res)
+        THEN
+          IF res = NIL THEN RETURN NIL END;
+          RETURN MSIRBuilder.WidenCallResult (res, ProcType.Result (procType));
         END;
       END;
       (* Indirect call through a procedure-typed variable or expression.  The
@@ -538,63 +401,23 @@ PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
       procType := Type.Base(t);
     END;
     IF NOT IsProcedureLiteral(p.proc, v) THEN
-      (* Virtual method dispatch or indirect proc call — handle the lvalue case.
-         The result comes back by value (native large-result ABI); spill it to a
-         fresh alloca and return that address. *)
+      (* Method or indirect call: compile it as a value (arguments by their
+         formals' modes) and spill the result to a fresh alloca. *)
       VAR
-        methodVal : Value.T;
-        methodInfo: Method.Info;
-        objExpr   : Expr.T;
-        objVal    : MSIR.Value;
-        dispArgs  : REF ARRAY OF MSIR.Value;
-        midx      : INTEGER;
-        procResult    : Type.T;
-        resultMsirT   : MSIR.T;
-        resultSlot    : MSIR.Value;
-        rtype         : MSIR.T;
+        resultMsirT := MSIRType.Translate (ProcType.Result (procType));
+        callVal     : MSIR.Value;
+        slot        : MSIR.Value;
       BEGIN
-        IF QualifyExpr.Split(p.proc, methodVal) AND
-           Value.ClassOf(methodVal) = Value.Class.Method THEN
-          objExpr := QualifyExpr.LhsExpr(p.proc);
-          IF objExpr = NIL THEN
-            MSIRBuilder.Abandon("method lvalue: cannot get receiver");
-            RETURN NIL;
-          END;
-          EVAL Method.Split(methodVal, methodInfo);
-          VAR mBase2 := QualifyExpr.MethodSlotBase(p.proc); BEGIN
-            IF mBase2 < 0 THEN
-              MSIRBuilder.Abandon("method lvalue: vtable base offset unknown (opaque type)");
-              RETURN NIL;
-            END;
-            midx := (mBase2 + methodInfo.offset) DIV Target.Address.size;
-          END;
-          objVal     := Expr.CompileMSIR(objExpr);
-          IF objVal = NIL THEN RETURN NIL END;
-          n          := NUMBER(p.args^);
-          procResult := ProcType.Result(procType);
-          resultMsirT   := MSIRType.Translate(procResult);
-          IF resultMsirT = NIL THEN
-            MSIRBuilder.Abandon("method lvalue: result type not translatable");
-            RETURN NIL;
-          END;
-          dispArgs   := NEW(REF ARRAY OF MSIR.Value, n);
-          FOR i := 0 TO n - 1 DO
-            dispArgs[i] := Expr.CompileMSIR(p.args[i]);
-            IF dispArgs[i] = NIL THEN RETURN NIL END;
-          END;
-          (* Make the call, spill the by-value return to an alloca, return it. *)
-          rtype      := MSIRType.TranslateResult(procResult);
-          resultSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", resultMsirT);
-          VAR callVal := MSIRBuilder.EmitMethodCall("", objVal, midx, rtype, dispArgs^);
-          BEGIN
-            IF callVal = NIL THEN RETURN NIL END;
-            MSIR.BuildStore(MSIRBuilder.CurrentBlock(), callVal, resultSlot);
-          END;
-          RETURN resultSlot;
+        IF resultMsirT = NIL THEN
+          MSIRBuilder.Abandon ("call lvalue: result type not translatable");
+          RETURN NIL;
         END;
+        callVal := CompileMSIR (p);
+        IF callVal = NIL THEN RETURN NIL END;
+        slot := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", resultMsirT);
+        MSIR.BuildStore (MSIRBuilder.CurrentBlock (), callVal, slot);
+        RETURN slot;
       END;
-      MSIRBuilder.Abandon("lvalue of indirect call result not yet supported in MSIR");
-      RETURN NIL;
     END;
     IF Procedure.IsNested(v) THEN
       MSIRBuilder.Abandon("lvalue of nested proc result not yet supported in MSIR");

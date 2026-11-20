@@ -1,0 +1,3 @@
+Results of method calls (dynamic and static T.m) and of calls through a
+procedure variable, passed to a READONLY record formal.  The calls' own
+VAR and READONLY open-array actuals must keep their modes.

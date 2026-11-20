@@ -20,29 +20,19 @@ PROCEDURE PassObject (e: Expr.T): BOOLEAN;
 
 PROCEDURE MethodType (e: Expr.T): Type.T;
 
-(* If e is a QualifyExpr for an object method call (class=objMethod),
-   return the left-hand object expression.  Otherwise return NIL.
-   Used by the MSIR path to compile virtual dispatch. *)
-PROCEDURE LhsExpr (e: Expr.T): Expr.T;
+TYPE ArgsMSIR = OBJECT METHODS compile (): REF ARRAY OF MSIR.Value END;
+(* The caller's explicit actuals for CompileMethodCallMSIR; compile returns
+   NIL after an Abandon. *)
 
-(* If e is a QualifyExpr for an object method (class=objMethod), return the
-   bit-offset of the holder type's own methods within the vtable (i.e.
-   ObjectType.MethodOffset(p.holder)).  Returns -1 if the offset is not known
-   at compile time (opaque supertype).  Used by the MSIR path to compute the
-   absolute vtable slot index: (MethodSlotBase + method.offset) / ptr_size. *)
-PROCEDURE MethodSlotBase (e: Expr.T): INTEGER;
-
-(* If e is a type-qualified method reference T.m (class=objTypeMethod), return
-   TRUE and set objType := T and holder := the type that introduces m.  Used by
-   the MSIR path to emit a static supercall: load m's proc from T's typecell
-   OTC_defaultMethods table and call it indirectly.  Returns FALSE otherwise. *)
-PROCEDURE ObjTypeMethod (e: Expr.T;  VAR objType, holder: Type.T): BOOLEAN;
-
-(* Return the holder type of a method reference (the object type that declares
-   the method — p.holder in QualifyExpr's private P type).  NIL if not a
-   method or not resolved.  Used for dynamic vtable dispatch when the holder's
-   methodOffset is not statically known (opaque supertype). *)
-PROCEDURE MethodHolder (e: Expr.T): Type.T;
+PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
+                                 resultType: Type.T;
+                                 VAR(*OUT*) result: MSIR.Value): BOOLEAN;
+(* If e is a method designator, obj.m or the static T.m, emit the call and
+   return TRUE with its raw result (NIL after an Abandon): evaluate the
+   receiver (obj.m), then args.compile(), then dispatch through the vtable
+   (obj.m) or T's default methods (T.m, whose receiver is the first explicit
+   actual).  The MSIR counterpart of Prep, Compile and PassObject for the
+   two method classes.  FALSE, emitting nothing, if e is not a method. *)
 
 PROCEDURE FieldByteAddrMSIR (e: Expr.T): MSIR.Value;
 (* The raw byte address of a record-field access whose BIT OFFSET is
