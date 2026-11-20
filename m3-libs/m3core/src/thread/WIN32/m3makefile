@@ -2,7 +2,9 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-interface ("ThreadContext")
+if not equal (TARGET, "AMD64_NT")
+  interface ("ThreadContext")
+end
 module ("ThreadWin32")
 c_source("ThreadWin32C")
 if equal (OS_TYPE, "POSIX")   
