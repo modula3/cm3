@@ -68,6 +68,7 @@ TYPE
         captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
+        storeMSIR         := SubByteStoreMSIR;
       END;
 
 PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
@@ -960,17 +961,13 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
    natural expression type.  Same narrowing/widening logic as SubscriptExpr:
    - narrow storage (e.g. i8 for [0..255]) → ZExt or SExt to natural type
    - wide storage (e.g. i8 for BOOLEAN) → Trunc to natural type (i1) *)
-PROCEDURE SubByteStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
+(* storeMSIR: a sub-byte field gets a read-modify-write bit insertion. *)
+PROCEDURE SubByteStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
   VAR
-    p         : P;
     fieldInfo : Field.Info;
     fti       : Type.Info;
     bitOff    : INTEGER;
   BEGIN
-    TYPECASE e OF
-    | P (pp) => p := pp;
-    ELSE        RETURN FALSE;
-    END;
     Resolve (p);
     CASE p.class OF
     | Class.recField =>
@@ -1197,7 +1194,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             (* Selecting a field of a record constructor with a statically
                out-of-range field is a checked RT error (CT-warned); the fold
                below bypasses CompileLValueMSIR, so emit the fault here (p268). *)
-            RecordExpr.EmitUseFailureMSIR (stripped);
+            EVAL Expr.CheckUseFailureMSIR (stripped);
             EVAL RecordExpr.Qualify (stripped, p.name, folded);
           END;
         END;

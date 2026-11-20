@@ -69,7 +69,14 @@ REVEAL
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
-    checkUseFailure (): BOOLEAN                    := DefaultCheckUseFailure
+    checkUseFailure (): BOOLEAN                    := DefaultCheckUseFailure;
+    checkUseFailureMSIR (): BOOLEAN                := DefaultCheckUseFailureMSIR;
+    (* MSIR analogue of checkUseFailure: emit the fault for a use that is a
+       statically detected runtime error and return FALSE (D22). *)
+    storeMSIR (rhs: MSIR.Value): BOOLEAN           := NoStoreMSIR;
+    (* Store rhs into this designator when it has no plain lvalue (sub-byte
+       field or element, bit-field WITH alias) and return TRUE; FALSE for
+       expressions whose stores go through compileLValueMSIR (D22). *)
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA;
@@ -140,6 +147,8 @@ PROCEDURE ExprAlignArg0    (e: Ta): Type.BitAlignT;
 PROCEDURE StaticLengthDefault (e: M3.Expr): Expr.lengthTyp;
 PROCEDURE UsesAssignProtocolDefault (e: M3.Expr): BOOLEAN;
 PROCEDURE DefaultCheckUseFailure (e: M3.Expr): BOOLEAN;
+PROCEDURE DefaultCheckUseFailureMSIR (e: M3.Expr): BOOLEAN;
+PROCEDURE NoStoreMSIR (e: M3.Expr;  rhs: MSIR.Value): BOOLEAN;
 
 PROCEDURE EqCheckA  (e: Ta;  x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;
 PROCEDURE EqCheckAB (e: Tab; x: M3.Expr;  z: M3.EqAssumption): BOOLEAN;

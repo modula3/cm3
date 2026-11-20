@@ -38,6 +38,7 @@ TYPE
         capture  := Capture;
         captureLV := CaptureLV;
         compileMSIR  := CompileMSIR;
+        storeMSIR    := BitFieldStoreMSIR;
       END;
 
 PROCEDURE New (t: Type.T;  name: M3ID.T): Expr.T =
@@ -123,14 +124,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN v;
   END CompileMSIR;
 
-(* If p is a bit-field WITH alias, write rhs through it (InsertBitField) and
-   return TRUE; else FALSE.  Called by AssignStmt for a no-lvalue var LHS. *)
-PROCEDURE BitFieldStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
+(* storeMSIR: if p is a bit-field WITH alias, write rhs through it
+   (InsertBitField). *)
+PROCEDURE BitFieldStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
   BEGIN
-    TYPECASE e OF
-    | P (p) => RETURN MSIRBuilder.TryBitFieldStore (p.v, rhs);
-    ELSE       RETURN FALSE;
-    END;
+    RETURN MSIRBuilder.TryBitFieldStore (p.v, rhs);
   END BitFieldStoreMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

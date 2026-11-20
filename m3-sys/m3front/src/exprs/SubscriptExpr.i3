@@ -7,13 +7,8 @@
 
 INTERFACE SubscriptExpr;
 
-IMPORT Expr, MSIR;
+IMPORT Expr;
 
 PROCEDURE New (a, b: Expr.T): Expr.T;
-
-PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN;
-(* If e is a SubscriptExpr on a packed-element (sub-byte) fixed array,
-   emit a read-modify-write bit insertion and return TRUE.
-   Otherwise return FALSE with no side effects. *)
 
 END SubscriptExpr.

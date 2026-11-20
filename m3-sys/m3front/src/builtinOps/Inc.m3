@@ -10,7 +10,7 @@ MODULE Inc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Dec, Target, TInt;
 IMPORT IntegerExpr, Host, Int, LInt, MSIR, MSIRBuilder, MSIRType;
-IMPORT CaptureAnalysis, QualifyExpr, SubscriptExpr;
+IMPORT CaptureAnalysis;
 
 VAR Z: CallExpr.MethodList;
 
@@ -116,8 +116,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         END;
         updated := MSIR.BuildIAdd (blk, "", old, delta);
       END;
-      IF QualifyExpr.SubByteStoreMSIR (lhsExpr, updated)
-         OR SubscriptExpr.SubByteStoreElemMSIR (lhsExpr, updated) THEN
+      IF Expr.StoreMSIR (lhsExpr, updated) THEN
         Expr.NoteWrite (lhsExpr);  RETURN NIL;
       END;
       MSIRBuilder.Abandon ("INC: cannot get lvalue in MSIR");

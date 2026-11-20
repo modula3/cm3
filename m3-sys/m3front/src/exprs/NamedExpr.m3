@@ -46,10 +46,12 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         checkUseFailure := CheckUseFailure;
+        checkUseFailureMSIR := CheckUseFailureMSIR;
         capture  := Capture;
         captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
+        storeMSIR         := BitFieldStoreMSIR;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -299,7 +301,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
               (* Using a const array with a statically out-of-range element is a
                  CT-warned RT error; MaterializeConstArray skips the fault the
                  inline path emits, so raise it here at the use site (p270). *)
-              ArrayExpr.EmitUseFailureMSIR (constExpr);
+              EVAL Expr.CheckUseFailureMSIR (constExpr);
               RETURN MSIRBuilder.MaterializeConstArray (p.value, constExpr);
             END;
             (* Other named constants (record, set, scalar) referenced where an
@@ -331,15 +333,10 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     END;
   END LValueMSIR;
 
-(* If p names a bit-field WITH alias, write rhs through it (InsertBitField) and
-   return TRUE; else FALSE.  Called by AssignStmt when the LHS has no lvalue. *)
-PROCEDURE BitFieldStoreMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
-  VAR p: P;
+(* storeMSIR: if p names a bit-field WITH alias, write rhs through it
+   (InsertBitField). *)
+PROCEDURE BitFieldStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
   BEGIN
-    TYPECASE e OF
-    | P (pp) => p := pp;
-    ELSE        RETURN FALSE;
-    END;
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
     | Variable.T (vv) => RETURN MSIRBuilder.TryBitFieldStore (vv, rhs);
@@ -442,6 +439,12 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     base := Value.ToExpr (p.value);
     RETURN Expr.CheckUseFailure (base);
   END CheckUseFailure;
+
+PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
+  BEGIN
+    <* ASSERT p.checked *>
+    RETURN Expr.CheckUseFailureMSIR (Value.ToExpr (p.value));
+  END CheckUseFailureMSIR;
 
 (* EXPORTED: *)
 PROCEDURE Is (e: Expr.T): BOOLEAN =

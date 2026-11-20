@@ -53,6 +53,7 @@ TYPE
         staticLength := StaticLength;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
+        checkUseFailureMSIR := CheckUseFailureMSIR;
         capture          := Capture;
         compileMSIR      := CompileMSIR_Cons;
         compileLValueMSIR := LValueMSIR_Cons;
@@ -263,6 +264,13 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     InnerSeal (p);
     RETURN Expr.CheckUseFailure (p.base) (* Delegate.*);
   END CheckUseFailure;
+
+PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
+  BEGIN
+    IF p = NIL THEN RETURN TRUE END;
+    InnerSeal (p);
+    RETURN Expr.CheckUseFailureMSIR (p.base) (* Delegate.*);
+  END CheckUseFailureMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

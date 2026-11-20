@@ -66,6 +66,7 @@ TYPE
         note_write   := ExprRep.NotWritable;
         usesAssignProtocol := UsesAssignProtocol;
         checkUseFailure := CheckUseFailure;
+        checkUseFailureMSIR := CheckUseFailureMSIR;
         capture  := Capture;
         compileMSIR      := CompileMSIR;
         compileLValueMSIR := CompileLValueMSIR;
@@ -621,10 +622,7 @@ PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
        CheckUseFailure -> CG.Abort.  Emit the MSIR analogue (unconditional
        ReportFault); fall through to build the now-unreachable record so the
        expression still yields a type-correct value.  Mirrors SetExpr. *)
-    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
-      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (p.RTErrorCode));
-    END;
+    EVAL CheckUseFailureMSIR (p);
     msirT := MSIRType.Translate (p.tipe);
     IF msirT = NIL THEN
       MSIRBuilder.Abandon ("record expr: type not translatable in MSIR");
@@ -792,22 +790,19 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirT, slot);
   END CompileMSIR;
 
-PROCEDURE EmitUseFailureMSIR (e: Expr.T) =
-(* If e is a record constructor whose use is a statically-detected runtime error
-   (DoGenRTAbort — e.g. an out-of-range field), emit an unconditional
-   ReportFault, the MSIR analogue of CheckUseFailure -> CG.Abort.  Fold sites
-   (QualifyExpr's Rec{...}.X) extract a field constant without going through
-   CompileLValueMSIR, so they would otherwise skip the fault (p268). *)
+PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
+(* MSIR analogue of CheckUseFailure: a use of a record constructor with a
+   statically detected runtime error (DoGenRTAbort, e.g. an out-of-range
+   field) faults unconditionally.  Called from CompileLValueMSIR and from
+   fold sites that bypass it (QualifyExpr's Rec{...}.X, p268). *)
   BEGIN
-    TYPECASE e OF
-    | P (p) =>
-        IF p.checked AND AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
-          MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                       ORD (p.RTErrorCode));
-        END;
-    ELSE (* not a record constructor: nothing to fault on *)
+    IF p.checked AND AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
+      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                   ORD (p.RTErrorCode));
+      RETURN FALSE;
     END;
-  END EmitUseFailureMSIR;
+    RETURN TRUE;
+  END CheckUseFailureMSIR;
 
 PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
 (* Static/global-initializer constant: build a ConstStruct for a record field.

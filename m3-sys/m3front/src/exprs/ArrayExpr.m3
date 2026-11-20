@@ -181,6 +181,7 @@ REVEAL
     staticLength := StaticLength;
     usesAssignProtocol := UsesAssignProtocol;
     checkUseFailure := CheckUseFailure;
+    checkUseFailureMSIR := CheckUseFailureMSIR;
     capture  := Capture;
     compileMSIR       := CompileMSIR_MSIR;
     compileLValueMSIR := LValueMSIR_MSIR
@@ -2371,22 +2372,21 @@ PROCEDURE CheckUseFailure (top: T): BOOLEAN =
     END;
   END CheckUseFailure;
 
-PROCEDURE EmitUseFailureMSIR (e: Expr.T) =
-(* If e is (or wraps) an array constructor whose use is a statically-detected
-   runtime error (DoGenRTAbort — e.g. an out-of-range element), emit an
-   unconditional ReportFault, the MSIR analogue of CheckUseFailure -> CG.Abort.
-   Named-const array uses (AcceptArr(LC), LV := LC, WITH W = GC where LC/GC hold
-   an out-of-range element) materialise via MaterializeConstArray, which skips
-   the fault LValueMSIR_MSIR emits inline; NamedExpr calls this to restore it
-   (p270).  Fires per use (NamedExpr is compiled per use), not de-duped. *)
-  VAR ae := ArrayConstrExpr (e);
+PROCEDURE CheckUseFailureMSIR (top: T): BOOLEAN =
+(* MSIR analogue of CheckUseFailure: a use of an array constructor with a
+   statically detected runtime error (DoGenRTAbort, e.g. an out-of-range
+   element) faults unconditionally.  Called where the constructor is used
+   (named-const uses materialized by MaterializeConstArray, p270) and from
+   LValueMSIR_MSIR; fires per use, not de-duped. *)
   BEGIN
-    IF ae # NIL AND ae.state >= StateTyp.Checked
-       AND AssignStmt.DoGenRTAbort (ae.RTErrorCode) THEN
+    IF top.state >= StateTyp.Checked
+       AND AssignStmt.DoGenRTAbort (top.RTErrorCode) THEN
       MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (ae.RTErrorCode));
+                                   ORD (top.RTErrorCode));
+      RETURN FALSE;
     END;
-  END EmitUseFailureMSIR;
+    RETURN TRUE;
+  END CheckUseFailureMSIR;
 
 PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
                                   e0: MSIR.Value): MSIR.Value =
@@ -2578,10 +2578,7 @@ BEGIN
      runtime error (CT-warned), raised by the CG path via CheckUseFailure ->
      CG.Abort.  Emit the MSIR analogue (unconditional ReportFault); execution
      falls through to build the now-unreachable array.  Mirrors SetExpr. *)
-  IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
-    MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                 ORD (p.RTErrorCode));
-  END;
+  EVAL CheckUseFailureMSIR (p);
   nElts := p.eltCt;
   IF nElts < 0 THEN
     MSIRBuilder.Abandon ("ArrayExpr: element count not computed");

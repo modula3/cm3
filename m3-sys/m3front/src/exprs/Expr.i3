@@ -121,6 +121,9 @@ PROCEDURE CompileMSIR (t: T): MSIR.Value;
    NIL on unsupported (the enclosing proc will be dropped). *)
 PROCEDURE LValueMSIR (t: T): MSIR.Value;
 (* Return the MSIR address (pointer) for lvalue t. NIL on unsupported. *)
+PROCEDURE StoreMSIR (t: T;  rhs: MSIR.Value): BOOLEAN;
+(* Store rhs into designator t when t has no plain lvalue (a sub-byte field
+   or element, a bit-field WITH alias).  FALSE if t is not of that kind. *)
 (* Emit code to evaluate the expression onto the top of stack. For some
    types, this could be an address (arrays, records, bit sets).
    StaticOnly means construct static data but do not evaluate. *)
@@ -179,6 +182,11 @@ PROCEDURE StaticSize (expr: T): INTEGER;
 PROCEDURE CheckUseFailure (t: T): BOOLEAN;
 (* Generate runtime actions prior to a use of t that does not call Compile.
    Return TRUE IFF following code is reachable. *)
+
+PROCEDURE CheckUseFailureMSIR (t: T): BOOLEAN;
+(* MSIR analogue of CheckUseFailure: if a use of t is a statically detected
+   runtime error, emit the fault.  Return TRUE IFF following code is
+   reachable. *)
 
 PROCEDURE Capture (t: T;  ca: CaptureAnalysis.T);
 (* Walk t, recording up-level variable captures in ca as reads. *)

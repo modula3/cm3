@@ -62,6 +62,7 @@ TYPE
         genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         checkUseFailure := CheckUseFailure;
+        checkUseFailureMSIR := CheckUseFailureMSIR;
         capture  := Capture;
         compileMSIR  := CompileMSIR;
       END;
@@ -996,6 +997,18 @@ PROCEDURE CheckUseFailure (p: P): BOOLEAN =
     END;
   END CheckUseFailure;
 
+PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
+(* MSIR analogue of CheckUseFailure: a use of a set constructor with a
+   statically detected runtime error faults unconditionally. *)
+  BEGIN
+    IF p.checked AND AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
+      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                   ORD (p.RTErrorCode));
+      RETURN FALSE;
+    END;
+    RETURN TRUE;
+  END CheckUseFailureMSIR;
+
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN
     IF p.args # NIL THEN
@@ -1029,10 +1042,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
        CG.Abort; emit the MSIR analogue here — an unconditional ReportFault.
        Execution falls through to build the (now unreachable) set value so the
        expression still yields a type-correct result. *)
-    IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
-      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (p.RTErrorCode));
-    END;
+    EVAL CheckUseFailureMSIR (p);
 
     IF info.size <= Target.Word.size THEN
       (* Single-word set: iterate constant tree nodes to accumulate a LONGINT mask.

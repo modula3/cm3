@@ -53,6 +53,7 @@ TYPE
         captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
+        storeMSIR         := SubByteStoreElemMSIR;
       END;
 
 (* EXPORTED: *) 
@@ -847,34 +848,31 @@ PROCEDURE CompileOpenPackedElemMSIR (p: P): MSIR.Value =
     RETURN MSIRBuilder.ExtractBitFieldDyn (dataPtr, eltPack, 0, idxVal, p.type);
   END CompileOpenPackedElemMSIR;
 
-PROCEDURE SubByteStoreElemMSIR (e: Expr.T;  rhs: MSIR.Value): BOOLEAN =
-(* Write a sub-byte element into a ByteArrayFallback packed array. *)
+PROCEDURE SubByteStoreElemMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
+(* storeMSIR: write a sub-byte element of a packed array (read-modify-write).
+   FALSE, with no side effects, for byte-addressed elements. *)
   BEGIN
-    TYPECASE e OF
-    | P (p) =>
-        IF p.lhsOpenDepth = 1
-           AND OpenArrayType.EltsAreBitAddressed (p.taBase) THEN
-          (* Final dimension of a packed open array: flat bit-packed data. *)
-          VAR dataPtr, idxVal: MSIR.Value;  eltPack: INTEGER;
-          BEGIN
-            dataPtr := GetOpenPackedBase (p, idxVal, eltPack);
-            IF dataPtr = NIL THEN RETURN FALSE END;
-            MSIRBuilder.InsertBitFieldDyn (dataPtr, eltPack, 0, idxVal, rhs);
-            RETURN TRUE;
-          END;
-        END;
-        IF p.lhsOpenDepth # 0 THEN RETURN FALSE END;
-        IF NOT ArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN FALSE END;
-        VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
-            info: Type.Info;
-        BEGIN
-          arrBase := GetPackedElemBase (p, idxVal, eltPack);
-          IF arrBase = NIL THEN RETURN FALSE END;
-          EVAL Type.CheckInfo (p.taBase, info);
-          MSIRBuilder.InsertBitFieldDyn (arrBase, eltPack, info.size, idxVal, rhs);
-          RETURN TRUE;
-        END;
-    ELSE RETURN FALSE;
+    IF p.lhsOpenDepth = 1
+       AND OpenArrayType.EltsAreBitAddressed (p.taBase) THEN
+      (* Final dimension of a packed open array: flat bit-packed data. *)
+      VAR dataPtr, idxVal: MSIR.Value;  eltPack: INTEGER;
+      BEGIN
+        dataPtr := GetOpenPackedBase (p, idxVal, eltPack);
+        IF dataPtr = NIL THEN RETURN FALSE END;
+        MSIRBuilder.InsertBitFieldDyn (dataPtr, eltPack, 0, idxVal, rhs);
+        RETURN TRUE;
+      END;
+    END;
+    IF p.lhsOpenDepth # 0 THEN RETURN FALSE END;
+    IF NOT ArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN FALSE END;
+    VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
+        info: Type.Info;
+    BEGIN
+      arrBase := GetPackedElemBase (p, idxVal, eltPack);
+      IF arrBase = NIL THEN RETURN FALSE END;
+      EVAL Type.CheckInfo (p.taBase, info);
+      MSIRBuilder.InsertBitFieldDyn (arrBase, eltPack, info.size, idxVal, rhs);
+      RETURN TRUE;
     END;
   END SubByteStoreElemMSIR;
 

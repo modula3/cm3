@@ -127,6 +127,19 @@ PROCEDURE DefaultCheckUseFailure (<*UNUSED*>e: M3.Expr): BOOLEAN =
     RETURN TRUE;
   END DefaultCheckUseFailure;
 
+(* EXPORTED: (ExprRep)*)
+PROCEDURE DefaultCheckUseFailureMSIR (<*UNUSED*>e: M3.Expr): BOOLEAN =
+  BEGIN
+    RETURN TRUE;
+  END DefaultCheckUseFailureMSIR;
+
+(* EXPORTED: (ExprRep)*)
+PROCEDURE NoStoreMSIR (<*UNUSED*> e: M3.Expr;
+                       <*UNUSED*> rhs: MSIR.Value): BOOLEAN =
+  BEGIN
+    RETURN FALSE;
+  END NoStoreMSIR;
+
 (* EXPORTED: *)
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
   VAR save: INTEGER;
@@ -629,6 +642,20 @@ PROCEDURE LValueMSIR (t: T): MSIR.Value =
     IF (t = NIL) THEN RETURN NIL END;
     RETURN t.compileLValueMSIR ();
   END LValueMSIR;
+
+PROCEDURE StoreMSIR (t: T;  rhs: MSIR.Value): BOOLEAN =
+  BEGIN
+    IF (t = NIL) OR (rhs = NIL) THEN RETURN FALSE END;
+    RETURN t.storeMSIR (rhs);
+  END StoreMSIR;
+
+PROCEDURE CheckUseFailureMSIR (t: T): BOOLEAN =
+  (* Same stripping as CheckUseFailure. *)
+  VAR stripped := StripNamedCons (t);
+  BEGIN
+    IF stripped = NIL THEN RETURN TRUE END;
+    RETURN stripped.checkUseFailureMSIR ();
+  END CheckUseFailureMSIR;
 
 PROCEDURE EqCheckA (a: Ta;  e: T;  x: M3.EqAssumption): BOOLEAN =
   BEGIN

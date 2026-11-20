@@ -11,8 +11,8 @@ MODULE AssignStmt;
 
 IMPORT CG, Stmt, StmtRep, Expr, Type, Error, Module, Target, TInt;
 IMPORT Token, Scanner, CallStmt, Addr, CheckExpr, ErrType;
-IMPORT M3ID, Value, NamedExpr, VarExpr, ArrayType, ConsExpr;
-IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr, SubscriptExpr;
+IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
+IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 IMPORT MSIR, MSIRBuilder, CaptureAnalysis, M3RT;
@@ -867,16 +867,12 @@ PROCEDURE CompileMSIR (p: P) =
       (* Sub-byte field/element write: no lvalue; use read-modify-write. *)
       rhsVal := Expr.CompileMSIR (p.rhs);
       IF rhsVal = NIL THEN RETURN END;
-      IF QualifyExpr.SubByteStoreMSIR (p.lhs, rhsVal) THEN
-        Expr.NoteWrite (p.lhs); RETURN
+      (* Sub-byte field or element, or a bit-field WITH alias
+         (`WITH s = rec.bitf DO s := v`): the designator stores it. *)
+      IF NOT Expr.StoreMSIR (p.lhs, rhsVal) THEN
+        MSIRBuilder.Abandon ("assignment: designator has no lvalue");
+        RETURN;
       END;
-      (* Bit-field WITH alias LHS (`WITH s = rec.bitf DO s := v`): the alias has
-         no plain lvalue; write through it via InsertBitField. *)
-      IF NamedExpr.BitFieldStoreMSIR (p.lhs, rhsVal)
-         OR VarExpr.BitFieldStoreMSIR (p.lhs, rhsVal) THEN
-        Expr.NoteWrite (p.lhs); RETURN
-      END;
-      EVAL SubscriptExpr.SubByteStoreElemMSIR (p.lhs, rhsVal);
       Expr.NoteWrite (p.lhs);
       RETURN;
     END;
