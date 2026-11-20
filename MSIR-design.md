@@ -1326,16 +1326,19 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - **Still to do under D22:** typecells (2b), the ArrayExpr accessors (2a),
   `RecordExpr.TryConstFieldMSIR`.
 - **D23 not started.**
-- **B1 needs 2b first.**  Branding only the owning module's typecell
-  (`Type.OwnsCell`, i.e. on `full_cells`, as CG) still crashes the stage-2
-  cm3 at startup with DuplicateBrand: MSIR also emits unbranded copies of
-  REF/OBJECT typecells in every module that uses a type (NEW, RAISE,
-  supertypes), and when one registers first the owner's branded copy is
-  the duplicate.  CG never emits such copies; a non-owning module reaches
-  the owner's cell through its imports.  The fix is for non-owning modules
-  to use TypeLinks (`TypeLinkValueForRef`/`ForObject`) — the 2b work —
-  after which the brand goes on the owner's cell only.  Work in progress
-  and m3test p300 are held back.
+- **2b, cell ownership done; B1 fixed** (`cd64dbadc6`).  As in CG, a
+  module emits typecells only for REF/OBJECT types whose cells no other
+  unit owns: `Type.IsForeignCell` (predefined, or an imported unit's full
+  cell) sends NEW/RAISE through `RefType.TypecellMSIR` to a TypeLink, and
+  foreign supertypes, re-declared types and inherited revelations are no
+  longer copied.  The owning cell carries its brand (`Type.OwnsCell`).
+  Branding first crashed the stage-2 cm3: an unbranded local copy
+  registered first made the owner's branded cell a duplicate
+  (DuplicateBrand); then a re-declared inherited revelation reached
+  RTLinker before its cell (MissingType).  New m3test p300.  Still to do
+  under 2b: one typecell description shared by the CG and MSIR paths,
+  `ObjectType`'s invented `dataOffset`, the type-map/pickle bytes in
+  MSIRBuilder.
 - **Found on the way:** MSIR has block parameters (D20) but `MSIRToLLVM`
   never lowers them to phis, and nothing in the front end uses them; loops
   use alloca counters, which the lowering hoists to the entry block.
@@ -1363,7 +1366,7 @@ most serious findings spot-checked against the code.  Nothing built.
 
 | # | Where | Problem |
 |---|-------|---------|
-| B1 | `MSIRToLLVM.m3:3608` | `TC_brand_ptr` always `null`: BRANDED types lose their brand at runtime. |
+| B1 | `MSIRToLLVM.m3:3608` | **Fixed** (`cd64dbadc6`). `TC_brand_ptr` always `null`: BRANDED types lose their brand at runtime. |
 | B2 | `UserProc.m3` `LValueMSIR` (~582) | **Fixed** (`24f1f7ca59`). Method-call args compiled with `Expr.CompileMSIR`, not `Formal.EmitArgMSIR`: VAR/READONLY/open-array modes ignored. |
 | B3 | `ObjectType.m3:805` `GenInitProcMSIR` | **Fixed** (`5f1a89dc08`). Skips fields with no explicit default but `InitCost > 0` (CG calls `Type.InitValue`), and skips packed fields (`:931`). |
 | B4 | `RecordType.m3:584` | **Fixed** (`5f1a89dc08`). `GenInitMSIR` silently skips non-byte-aligned fields. |
