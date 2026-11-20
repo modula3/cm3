@@ -13,7 +13,7 @@ IMPORT Null, Reff, Addr, Error, Module, M3Buf, Brand;
 IMPORT Revelation, OpenArrayType, TipeMap, TipeDesc, TypeFP;
 IMPORT ProcType, ObjectAdr, Word, M3RT;
 IMPORT RTIO, RTParams;
-IMPORT MSIR, MSIRBuilder, MSIREmit;
+IMPORT MSIR, MSIRBuilder, MSIREmit, Typecell, Fmt;
 
 VAR debug := FALSE;
 
@@ -242,55 +242,74 @@ PROCEDURE OpenArraySizes (ta: Type.T;  dims, addrAlign: INTEGER;
   END OpenArraySizes;
 
 (* EXPORTED *)
-PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
-  TYPE TKind = M3RT.TypeKind;
-  CONST Kind = ARRAY BOOLEAN OF TKind { TKind.Ref, TKind.Array};
+PROCEDURE Describe (t: Type.T;  VAR d: Typecell.T) =
   VAR
-    p           : P := t;
-    brand       := Brand.Compile (p.brand);
-    type_map    := GenTypeMap (p, refs_only := FALSE);
-    gc_map      := GenTypeMap (p, refs_only := TRUE);
-    type_desc   := GenTypeDesc (p);
-    initProc    := GenInitProc (p);
-    dims        : INTEGER;
-    targetSize  : INTEGER;
-    elemSize    : INTEGER;
-    ta          : Type.T;
-    isz         : INTEGER := Target.Integer.size;
-    name_offs   : INTEGER := 0;
-    fp          := TypeFP.FromType (p);
-    globals     := Module.GlobalData (is_const := FALSE);
-    consts      := Module.GlobalData (is_const := TRUE);
-    targetInfo  : Type.Info;
+    p          := Reduce (t);
+    targetInfo : Type.Info;
+    ta         : Type.T;
+    targetSize : INTEGER;
+    elemSize   : INTEGER := 0;
   BEGIN
+    EVAL Type.Check (p);
     EVAL Type.CheckInfo (p.target, targetInfo);
     ta := Type.Base (p.target);
-
-    dims := OpenArrayType.OpenDepth (ta);
-    IF (dims = 0) THEN (* Not an open array. *)
+    d.nDims := OpenArrayType.OpenDepth (ta);
+    IF (d.nDims = 0) THEN (* Not an open array. *)
+      d.kind := M3RT.TypeKind.Ref;
       targetSize := targetInfo.size;
-      elemSize := 8 (*Dead*);
     ELSE (* target is an open array.  targetSize := dope size. *)
-      OpenArraySizes (ta, dims, p.info.addr_align, targetSize, elemSize);
+      d.kind := M3RT.TypeKind.Array;
+      OpenArraySizes (ta, d.nDims, p.info.addr_align, targetSize, elemSize);
     END;
+    d.uid        := Type.GlobalUID (p);
+    d.fp         := TypeFP.FromType (p);
+    d.traced     := p.isTraced;
+    (* See comments in RT0.i3, regarding dataAlignment and dataSize. *)
+    d.dataAlign  := p.info.addr_align DIV Target.Byte;
+    d.dataSize   := targetSize DIV Target.Byte;
+    d.elemSize   := elemSize DIV Target.Byte;
+    d.typeMap    := TargetMap (p, refs_only := FALSE);
+    d.gcMap      := TargetMap (p, refs_only := TRUE);
+    d.typeDesc   := TargetDesc (p);
+    d.brand      := p.brand;
+    d.name       := p.user_name;
+    d.parentUID  := 0;
+    d.methodSize := 0;
+  END Describe;
 
-    IF (p.user_name # NIL) THEN
-      name_offs := CG.EmitText (p.user_name, is_const := TRUE);
+(* EXPORTED *)
+PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
+  VAR
+    p           : P := t;
+    d           : Typecell.T;
+    brand, type_map, gc_map, type_desc: INTEGER;
+    initProc    : CG.Proc;
+    isz         : INTEGER := Target.Integer.size;
+    name_offs   : INTEGER := 0;
+    globals     := Module.GlobalData (is_const := FALSE);
+    consts      := Module.GlobalData (is_const := TRUE);
+  BEGIN
+    Describe (p, d);
+    brand     := Brand.Compile (d.brand);
+    type_map  := TipeMap.Emit (d.typeMap, "type map for ", Type.Name (p));
+    gc_map    := TipeMap.Emit (d.gcMap, "type map for ", Type.Name (p));
+    type_desc := TipeDesc.Emit (d.typeDesc, "type description for ",
+                                Type.Name (p));
+    initProc  := GenInitProc (p);
+
+    IF (d.name # NIL) THEN
+      name_offs := CG.EmitText (d.name, is_const := TRUE);
     END;
 
     (* generate my Type cell info *)
-    CG.Init_intt   (offset + M3RT.TC_selfID, isz, Type.GlobalUID (p), FALSE);
-    FOR i := FIRST (fp.byte) TO LAST (fp.byte) DO
-      CG.Init_intt (offset + M3RT.TC_fp + i * 8, 8, fp.byte[i], FALSE);
+    CG.Init_intt   (offset + M3RT.TC_selfID, isz, d.uid, FALSE);
+    FOR i := FIRST (d.fp.byte) TO LAST (d.fp.byte) DO
+      CG.Init_intt (offset + M3RT.TC_fp + i * 8, 8, d.fp.byte[i], FALSE);
     END;
-    CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (p.isTraced), FALSE);
-    CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (Kind[dims > 0]), FALSE);
-    CG.Init_intt
-      (offset + M3RT.TC_dataAlignment, 8, p.info.addr_align DIV Target.Byte, FALSE);
-   (* ^VSee comments in RT0.i3, regarding dataAlignment and dataSize. *)
-
-    CG.Init_intt
-      (offset + M3RT.TC_dataSize, isz, targetSize DIV Target.Byte, FALSE);
+    CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (d.traced), FALSE);
+    CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (d.kind), FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, d.dataAlign, FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataSize, isz, d.dataSize, FALSE);
     IF (type_map >= 0) THEN
       CG.Init_var (offset + M3RT.TC_type_map, consts, type_map, FALSE);
     END;
@@ -306,86 +325,98 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     IF (brand >= 0) THEN
       CG.Init_var (offset + M3RT.TC_brand, consts, brand, FALSE);
     END;
-    IF (p.user_name # NIL) THEN
+    IF (d.name # NIL) THEN
       CG.Init_var (offset + M3RT.TC_name,  consts, name_offs, FALSE);
     END;
     IF (prev # 0) THEN
       CG.Init_var (offset + M3RT.TC_next,  globals, prev, FALSE);
     END;
 
-    IF (dims > 0) THEN
+    IF (d.kind = M3RT.TypeKind.Array) THEN
       (* REF ARRAY specific extensions to the typecell *)
-      CG.Init_intt (offset + M3RT.ATC_nDimensions, isz, dims, FALSE);
-      CG.Init_intt
-        (offset + M3RT.ATC_elementSize, isz, elemSize DIV Target.Byte, FALSE);
+      CG.Init_intt (offset + M3RT.ATC_nDimensions, isz, d.nDims, FALSE);
+      CG.Init_intt (offset + M3RT.ATC_elementSize, isz, d.elemSize, FALSE);
     END;
 
   END InitTypecell;
 
 (* EXPORTED *)
-PROCEDURE TypecellMSIR (t: Type.T;  dataSize, dataAlign: INTEGER;
-                        isTraced: BOOLEAN): MSIR.Value =
+PROCEDURE TypecellMSIR (t: Type.T): MSIR.Value =
   BEGIN
     IF Type.IsForeignCell (t) THEN
       RETURN MSIRBuilder.TypeLinkValueForRef (t);
     END;
-    RETURN MSIRBuilder.TypeDescValueForRef (t, dataSize, dataAlign, isTraced);
+    RETURN TypeDescMSIR (t);
   END TypecellMSIR;
 
+(* EXPORTED *)
 PROCEDURE InitTypecellMSIR (t: Type.T) =
-  VAR
-    info     : Type.Info;
-    rinfo    : Type.Info;
-    r        : Type.T;
-    ta       : Type.T;
-    dims     : INTEGER;
-    elemSize : INTEGER;
-    dopeSize : INTEGER;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
-    EVAL Type.CheckInfo (t, info);
-    IF NOT Split (t, r) THEN RETURN END;
-    r := Type.StripPacked (r);
-    EVAL Type.CheckInfo (r, rinfo);
-    ta   := Type.Base (r);
-    dims := OpenArrayType.OpenDepth (ta);
-    IF dims > 0 THEN
-      OpenArraySizes (ta, dims, info.addr_align, dopeSize, elemSize);
-      EVAL MSIRBuilder.TypeDescValueForRefArray (
-             t,
-             dopeSize DIV Target.Char.size,
-             rinfo.alignment DIV Target.Byte,
-             dims,
-             elemSize DIV Target.Byte,
-             info.isTraced);
-    ELSE
-      EVAL MSIRBuilder.TypeDescValueForRef (
-             t,
-             rinfo.size DIV Target.Char.size,
-             rinfo.alignment DIV Target.Byte,
-             info.isTraced);
-    END;
+    EVAL TypeDescMSIR (t);
   END InitTypecellMSIR;
 
-PROCEDURE CompleteTypeDescMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
-(* Called by MSIRBuilder for every new REF typecell descriptor: the parts
-   InitTypecell gets from the type itself (the brand, the init proc). *)
-  VAR p := Reduce (t);  cb: INTEGER;
+PROCEDURE TypeDescMSIR (t: Type.T): MSIR.Value =
+(* This module's typecell descriptor for REF type t, written from the same
+   Typecell.T as InitTypecell and created on first use. *)
+  CONST Prefix = ARRAY BOOLEAN OF TEXT { "tc_ref_", "tc_arr_" };
+  VAR
+    p    := Reduce (t);
+    m    := MSIREmit.CurrentModule ();
+    d    : Typecell.T;
+    desc : MSIR.TypeDesc;
+    uid  : INTEGER;
+    fpa  : ARRAY [0..7] OF [0..255];
+    cb   : INTEGER;
   BEGIN
-    IF p # NIL AND Type.OwnsCell (t) THEN  (* see Type.OwnsCell *)
-      MSIR.SetTypeDescBrand (desc, Brand.Image (p.brand, cb), cb);
+    IF (p = NIL) OR (m = NIL) THEN RETURN NIL END;
+    uid := Type.GlobalUID (p);
+    (* RTLinker maps an opaque UID to its revealed cell (full_rev); a cell
+       under the opaque UID would be OpaqueTypeRedefined. *)
+    FOR i := 0 TO MSIR.ModuleRevelationCount (m) - 1 DO
+      IF MSIR.RevelationLhsUID (MSIR.ModuleRevelation (m, i)) = uid THEN
+        RETURN NIL;
+      END;
     END;
-    GenInitProcMSIR (t, desc);
-  END CompleteTypeDescMSIR;
+    FOR i := 0 TO MSIR.ModuleTypeDescCount (m) - 1 DO
+      desc := MSIR.ModuleTypeDesc (m, i);
+      IF MSIR.TypeDescUID (desc) = uid
+         AND MSIR.TypeDescKind (desc) # ORD (M3RT.TypeKind.Obj) THEN
+        RETURN MSIR.TypeDescValue (desc);
+      END;
+    END;
+
+    Describe (p, d);
+    desc := MSIR.NewTypeDesc (Prefix[d.kind = M3RT.TypeKind.Array]
+                                & Fmt.Int (uid), uid, d.traced,
+                              ORD (d.kind), d.dataSize, d.dataAlign);
+    FOR i := 0 TO 7 DO fpa[i] := d.fp.byte[i] END;
+    MSIR.SetTypeDescFP (desc, fpa);
+    IF (d.kind = M3RT.TypeKind.Array) THEN
+      MSIR.TypeDescSetArrayInfo (desc, d.nDims, d.elemSize);
+    END;
+    MSIR.SetTypeDescGcMap (desc, d.gcMap);
+    MSIR.SetTypeDescTypeMap (desc, d.typeMap);
+    MSIR.SetTypeDescPickleDesc (desc, d.typeDesc);
+    IF (d.name # NIL) THEN MSIR.SetTypeDescUserName (desc, d.name) END;
+    IF Type.OwnsCell (p) THEN  (* see Type.OwnsCell *)
+      MSIR.SetTypeDescBrand (desc, Brand.Image (d.brand, cb), cb);
+    END;
+    (* Add the desc BEFORE generating the init proc: the generator compiles
+       default-value expressions, which may re-enter TypeDescMSIR for other
+       types; the module registry must already know this desc. *)
+    MSIR.ModuleAddTypeDesc (m, desc);
+    GenInitProcMSIR (p, desc);
+    RETURN MSIR.TypeDescValue (desc);
+  END TypeDescMSIR;
 
 PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
 (* MSIR analogue of GenInitProc: emit an internal helper procedure that
    applies the referent's language-defined initial values to a freshly
    allocated (zeroed) object, and register it as TC_initProc so RTAllocator
    (NewTraced / GetOpenArray -> InitArray) runs it — the same runtime
-   contract as the C backend.  Invoked from MSIRBuilder's
-   TypeDescValueForRef* new-desc path (SetRefInitProcGen callback), so every
-   desc creator triggers generation exactly once per module.  The referent is
+   contract as the C backend.  Called once per module and type, when
+   TypeDescMSIR creates the descriptor.  The referent is
    initialized by Type.InitValueMSIR, as GenInitProc uses Type.InitValue.
    Helper-proc plumbing mirrors ObjectType.GenInitProcMSIR. *)
   VAR
@@ -448,22 +479,23 @@ PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
     MSIR.ModuleAddProc (m, proc);
   END GenInitProcMSIR;
 
-PROCEDURE GenTypeMap (p: P;  refs_only: BOOLEAN): INTEGER =
-  (* generate my "TypeMap" (called by the garbage collector) *)
+PROCEDURE TargetMap (p: P;  refs_only: BOOLEAN): Typecell.Bytes =
+  (* my "TypeMap": the full map (TC_type_map, pickle ver1) or, with
+     refs_only, the garbage collector's (TC_gc_map) *)
   BEGIN
     TipeMap.Start ();
     Type.GenMap (p.target, 0, -1, refs_only);
-    RETURN TipeMap.Finish ("type map for ", Type.Name (p));
-  END GenTypeMap;
+    RETURN TipeMap.FinishBytes ();
+  END TargetMap;
 
-PROCEDURE GenTypeDesc (p: P): INTEGER =
-  (* generate my "TypeDesc" (called by the pickle machinery) *)
+PROCEDURE TargetDesc (p: P): Typecell.Bytes =
+  (* my "TypeDesc" (used by the pickle machinery) *)
   BEGIN
-    IF NOT p.isTraced THEN RETURN -1 END;
+    IF NOT p.isTraced THEN RETURN NIL END;
     TipeDesc.Start ();
     Type.GenDesc (p.target);
-    RETURN TipeDesc.Finish ("type description for ", Type.Name (p));
-  END GenTypeDesc;
+    RETURN TipeDesc.FinishBytes ();
+  END TargetDesc;
 
 PROCEDURE GenInitProc (p: P): CG.Proc =
   VAR name: TEXT;  proc: CG.Proc;  ref: CG.Var;
@@ -565,5 +597,4 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
 
 BEGIN
   debug := RTParams.IsPresent ("m3front-debug-reftype");
-  MSIRBuilder.SetRefInitProcGen (CompleteTypeDescMSIR);
 END RefType.

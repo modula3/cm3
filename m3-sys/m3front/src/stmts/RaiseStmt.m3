@@ -155,9 +155,7 @@ PROCEDURE CompileMSIR (p: P) =
               heapPtr  : MSIR.Value;
           BEGIN
             refT     := Type.Check(refT);
-            typeCell := RefType.TypecellMSIR(refT, nBytes,
-                          argInfo.alignment DIV Target.Byte,
-                          TRUE (*isTraced*));
+            typeCell := RefType.TypecellMSIR(refT);
             IF typeCell = NIL OR allocHk = NIL THEN
               MSIRBuilder.Abandon("raise: cannot heap-alloc aggregate arg");
               RETURN;

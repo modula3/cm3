@@ -1242,17 +1242,15 @@ PROCEDURE ModuleExcDesc     (m: Module;  i: INTEGER): ExcDesc =
 
 REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   name          : TEXT;
-  userName      : TEXT := NIL;  (* OBJ: user-visible name for TC_name field *)
+  userName      : TEXT := NIL;  (* user-visible name for TC_name *)
   initProcName  : TEXT := NIL;  (* OBJ: field-default init proc LLVM symbol *)
   uid           : INTEGER;
   fp            : ARRAY [0..7] OF [0..255];  (* Fingerprint2.T bytes, little-endian *)
   isTraced      : BOOLEAN;
   kind          : INTEGER;  (* ORD(RT0.TypeKind) *)
   dataSize      : INTEGER;  (* bytes *)
-  dataAlignment : INTEGER;  (* bits *)
+  dataAlignment : INTEGER;  (* bytes *)
   parentUID     : INTEGER;  (* OBJ: parent fingerprint *)
-  dataOffset    : INTEGER;  (* OBJ: field region byte offset *)
-  methodOffset  : INTEGER;  (* OBJ: vtable byte offset where own methods start *)
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
   dynamicMethOff: BOOLEAN  := FALSE;  (* OBJ: method names at LOCAL indices; linkProc reads OTC_methodOffset at runtime *)
@@ -1274,7 +1272,6 @@ PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
                       kind: INTEGER; dataSize: INTEGER;
                       dataAlignment: INTEGER;
                       parentUID: INTEGER := 0;
-                      dataOffset: INTEGER := 0;
                       READONLY methods: ARRAY OF TEXT := ARRAY OF TEXT{};
                       methodBytes: INTEGER := -1): TypeDesc =
   VAR d := NEW(TypeDesc);  v := NEW(Value);
@@ -1288,7 +1285,6 @@ PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
     d.dataSize      := dataSize;
     d.dataAlignment := dataAlignment;
     d.parentUID     := parentUID;
-    d.dataOffset    := dataOffset;
     d.methods       := ms;
     d.methodBytes   := methodBytes;
     v.type  := TPtr(TVoid());
@@ -1312,9 +1308,6 @@ PROCEDURE TypeDescKind       (d: TypeDesc): INTEGER = BEGIN RETURN d.kind       
 PROCEDURE TypeDescSize       (d: TypeDesc): INTEGER = BEGIN RETURN d.dataSize      END TypeDescSize;
 PROCEDURE TypeDescAlign      (d: TypeDesc): INTEGER = BEGIN RETURN d.dataAlignment END TypeDescAlign;
 PROCEDURE TypeDescParentUID  (d: TypeDesc): INTEGER = BEGIN RETURN d.parentUID     END TypeDescParentUID;
-PROCEDURE TypeDescDataOffset    (d: TypeDesc): INTEGER = BEGIN RETURN d.dataOffset    END TypeDescDataOffset;
-PROCEDURE TypeDescMethodOffset  (d: TypeDesc): INTEGER = BEGIN RETURN d.methodOffset  END TypeDescMethodOffset;
-PROCEDURE SetTypeDescMethodOffset(d: TypeDesc; mo: INTEGER) = BEGIN d.methodOffset := mo END SetTypeDescMethodOffset;
 PROCEDURE SetTypeDescUserName(d: TypeDesc; name: TEXT) = BEGIN d.userName := name      END SetTypeDescUserName;
 PROCEDURE TypeDescUserName   (d: TypeDesc): TEXT    = BEGIN RETURN d.userName          END TypeDescUserName;
 PROCEDURE SetTypeDescInitProc (d: TypeDesc; procName: TEXT) = BEGIN d.initProcName := procName   END SetTypeDescInitProc;

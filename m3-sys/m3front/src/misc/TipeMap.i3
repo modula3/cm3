@@ -34,8 +34,11 @@ TYPE Bytes = REF ARRAY OF [0..255];
 
 PROCEDURE FinishBytes (): Bytes;
 (* finish the map and return its bytes directly, without emitting anything
-   to the global constant pool (used by MSIR typecell emission, which stores
-   the map in its own module data).  Returns NIL if the map is empty. *)
+   to the global constant pool.  Returns NIL if the map is empty. *)
+
+PROCEDURE Emit (x: Bytes;  a, b, c, d: TEXT := NIL): INTEGER;
+(* allocate global constant space for the finished map 'x' and emit it, as
+   Finish does.  Returns -1 if 'x' is NIL. *)
 
 PROCEDURE Add (offset: INTEGER;  o: Op;  arg: INTEGER);
 (* add '(o, arg)' as the description for the bits

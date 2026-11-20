@@ -325,41 +325,11 @@ PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc;
    The descriptor { uid, null, 0 } is registered with the current module. *)
 PROCEDURE ExcDescValue (v: Value.T): MSIR.Value;
 
-(* Look up or create a TypeCell descriptor for a REF type.
-   Used by GenRefMSIR; handles both locally-declared and imported ref types. *)
-(* Field-default init-proc generator for REF typecells (TC_initProc), set by
-   RefType at startup — mirrors CG's RefType.GenInitProc.  Called from the
-   TypeDescValueForRef* new-desc path so every desc creator (InitTypecellMSIR
-   and NEW sites) triggers generation exactly once per module.  A callback
-   avoids the MSIRBuilder -> RefType import cycle. *)
-TYPE RefInitProcGen = PROCEDURE (t: Type.T;  desc: MSIR.TypeDesc);
-PROCEDURE SetRefInitProcGen (g: RefInitProcGen);
-
-PROCEDURE TypeDescValueForRef(t: Type.T;  dataSize: INTEGER;
-                               dataAlignment: INTEGER;
-                               isTraced: BOOLEAN): MSIR.Value;
-
-(* Look up or create an Array TypeCell descriptor for a REF ARRAY OF T type.
-   dopeSize is the dope-vector byte size; nDimensions/elementSize match ATC fields. *)
-PROCEDURE TypeDescValueForRefArray(t: Type.T;  dopeSize: INTEGER;
-                                    dataAlignment: INTEGER;
-                                    nDimensions: INTEGER;
-                                    elementSize: INTEGER;
-                                    isTraced: BOOLEAN): MSIR.Value;
-
-(* Return a forward reference to the ObjectTypeCell for t.
-   The TypeCell global (@tc_obj_<uid>) is defined later by compileMSIR.
-   Used by GenObjectMSIR before GenLinkerInfoMSIR has run. *)
-PROCEDURE ObjectTypeCellRef(t: Type.T): MSIR.Value;
-
-(* Return a forward reference to the ArrayTypeCell for a REF ARRAY type.
-   The @tc_arr_<uid> global is defined by InitTypecellMSIR via Type.GenCells. *)
-PROCEDURE ArrayTypeCellRef(t: Type.T): MSIR.Value;
-
 (* Analog of Type.LoadInfo: create a TypeLink entry in MI_type_cell_ptrs and
    emit a load of TypeLink.defn in the current block.  After RTLinker resolves
    the TypeLink, the loaded value is the TypeCell pointer.
-   Use these at NEW call sites instead of TypeDescValueForRef* or TypeCellRef. *)
+   A unit's own typecells are RefType.TypecellMSIR / InitTypecellMSIR and
+   ObjectType.InitTypecellMSIR. *)
 PROCEDURE TypeLinkValueForRef      (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForRefArray (t: Type.T): MSIR.Value;
 PROCEDURE TypeLinkValueForObject   (t: Type.T): MSIR.Value;

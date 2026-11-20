@@ -9,7 +9,7 @@
 
 INTERFACE ObjectType;
 
-IMPORT M3ID, Type, Scope, Value, Brand;
+IMPORT M3ID, Type, Scope, Value, Brand, Typecell;
 
 PROCEDURE Parse (super: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T;
 
@@ -54,6 +54,9 @@ PROCEDURE NoteRefName (t: Type.T;  name: TEXT);
 PROCEDURE UserName (t: Type.T): TEXT;
 (* Returns the user-visible global name recorded by NoteRefName, e.g.
    "Main__Animal", or NIL if none has been recorded yet. *)
+
+PROCEDURE Describe (t: Type.T;  VAR d: Typecell.T);
+(* describe the typecell of the object type 't' (see Typecell) *)
 
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER);
 

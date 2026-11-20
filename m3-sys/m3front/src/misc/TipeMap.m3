@@ -152,27 +152,28 @@ PROCEDURE Start () =
   END Start;
 
 PROCEDURE Finish (a, b, c, d: TEXT := NIL): INTEGER =
+  BEGIN
+    RETURN Emit (FinishBytes (), a, b, c, d);
+  END Finish;
+
+PROCEDURE Emit (x: Bytes;  a, b, c, d: TEXT := NIL): INTEGER =
   VAR base, offset: INTEGER;
   BEGIN
-    IF (n_bytes = 0) THEN busy := FALSE; RETURN -1 END;
-
-    Add (cursor, Op.Stop, 0);
+    IF (x = NIL) THEN RETURN -1 END;
 
     (* allocate space *)
-    base := Module.Allocate (n_bytes * Target.Int8.size,
+    base := Module.Allocate (NUMBER (x^) * Target.Int8.size,
                              Target.Int8.align, TRUE, "type_map");
     CG.Comment (base, TRUE, a, b, c, d);
 
     (* generate the bytes *)
     offset := base;
-    FOR i := 0 TO n_bytes-1 DO
-      CG.Init_intt (offset, Target.Int8.size, bytes[i], is_const := TRUE);
+    FOR i := 0 TO LAST (x^) DO
+      CG.Init_intt (offset, Target.Int8.size, x[i], is_const := TRUE);
       INC (offset, Target.Int8.size);
     END;
-
-    busy := FALSE;
     RETURN base;
-  END Finish;
+  END Emit;
 
 PROCEDURE FinishBytes (): Bytes =
   VAR res: Bytes;

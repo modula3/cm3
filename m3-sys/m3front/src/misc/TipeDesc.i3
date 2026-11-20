@@ -82,8 +82,12 @@ TYPE Bytes = REF ARRAY OF [0..255];
 PROCEDURE FinishBytes (): Bytes;
 (* finish the description and return its bytes directly (op count first,
    then the preorder data — the same layout Finish emits), without writing
-   anything to the global constant pool (used by MSIR typecell emission).
-   Returns NIL if the description is empty. *)
+   anything to the global constant pool.  Returns NIL if the description is
+   empty. *)
+
+PROCEDURE Emit (x: Bytes;  a, b, c, d: TEXT := NIL): INTEGER;
+(* allocate global constant space for the finished description 'x' and emit
+   it, as Finish does.  Returns -1 if 'x' is NIL. *)
 
 PROCEDURE AddO (o: Op;  type: M3.Type): BOOLEAN;
 (* add operator 'o' to the current description.  If 'type' has already been

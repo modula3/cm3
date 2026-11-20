@@ -326,14 +326,13 @@ TYPE TypeDesc <: REFANY;
 
 (* uid = Type.GlobalUID = M3FP.ToInt(fp), a 32-bit hash of the 64-bit fingerprint.
    kind: ORD(M3RT.TypeKind) — Ref=1, Obj=2, Array=3.
-   dataSize in bytes; dataAlignment in bits (matches M3RT TC_dataAlignment).
+   dataSize and dataAlignment in bytes (TC_dataSize, TC_dataAlignment).
    methods: names of vtable function symbols, one per slot (OBJECT only).
    methodBytes: total vtable byte size; -1 means compute from methods array. *)
 PROCEDURE NewTypeDesc(name: TEXT; uid: INTEGER; isTraced: BOOLEAN;
                       kind: INTEGER; dataSize: INTEGER;
                       dataAlignment: INTEGER;
                       parentUID: INTEGER := 0;
-                      dataOffset: INTEGER := 0;
                       READONLY methods: ARRAY OF TEXT := ARRAY OF TEXT{};
                       methodBytes: INTEGER := -1): TypeDesc;
 PROCEDURE TypeDescName        (d: TypeDesc): TEXT;
@@ -347,15 +346,12 @@ PROCEDURE TypeDescFPByte(d: TypeDesc; i: INTEGER): INTEGER;
 PROCEDURE TypeDescTraced      (d: TypeDesc): BOOLEAN;
 PROCEDURE TypeDescKind        (d: TypeDesc): INTEGER; (* ORD(M3RT.TypeKind) *)
 PROCEDURE TypeDescSize        (d: TypeDesc): INTEGER; (* dataSize in bytes *)
-PROCEDURE TypeDescAlign       (d: TypeDesc): INTEGER; (* dataAlignment in bits *)
+PROCEDURE TypeDescAlign       (d: TypeDesc): INTEGER; (* dataAlignment in bytes *)
 PROCEDURE TypeDescParentUID   (d: TypeDesc): INTEGER; (* OBJ: parent fingerprint *)
-PROCEDURE TypeDescDataOffset    (d: TypeDesc): INTEGER; (* OBJ: field region byte offset *)
-PROCEDURE TypeDescMethodOffset  (d: TypeDesc): INTEGER; (* OBJ: vtable byte offset of own methods *)
-PROCEDURE SetTypeDescMethodOffset(d: TypeDesc; mo: INTEGER); (* OBJ: set method offset *)
-PROCEDURE SetTypeDescUserName (d: TypeDesc; name: TEXT); (* OBJ: user-visible name for TC_name *)
+PROCEDURE SetTypeDescUserName (d: TypeDesc; name: TEXT); (* user-visible name for TC_name *)
 PROCEDURE SetTypeDescInitProc (d: TypeDesc; procName: TEXT); (* OBJ: field-default init proc *)
 PROCEDURE TypeDescInitProcName(d: TypeDesc): TEXT;           (* NIL if none *)
-PROCEDURE TypeDescUserName    (d: TypeDesc): TEXT;       (* OBJ: user-visible name or NIL *)
+PROCEDURE TypeDescUserName    (d: TypeDesc): TEXT;       (* user-visible name or NIL *)
 PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
 PROCEDURE TypeDescDynamicMethOff(d: TypeDesc): BOOLEAN;
 PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN);

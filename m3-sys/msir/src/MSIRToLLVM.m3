@@ -3467,22 +3467,26 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
           structNm := "TC_t";
         END;
 
-        (* OTC extension — sets nameSym and emits ancillary globals *)
+        (* TC_name, for every kind (as InitTypecell) *)
+        VAR uName := MSIR.TypeDescUserName(d);
+        BEGIN
+          IF uName # NIL THEN
+            nameSym := "@" & nm & ".tc_name";
+            Wr.PutText(wr, nameSym & " = private unnamed_addr constant ["
+              & Fmt.Int(Text.Length(uName) + 1) & " x i8] c\""
+              & uName & "\\00\"\n");
+          END;
+        END;
+
+        (* OTC extension — emits ancillary globals *)
         IF isObj THEN
           VAR
             (* Byte offset of defaultMethods in RT0.ObjectTypecell (D24). *)
             OTC_defaultMethods_BYTES := M3RT.OTC_defaultMethods DIV Target.Char.size;
-            uName    := MSIR.TypeDescUserName(d);
             nMethods := MSIR.TypeDescMethodCount(d);
             dmv      : TEXT := "null";
             lpv      : TEXT := "null";  (* linkProc value *)
           BEGIN
-            IF uName # NIL THEN
-              nameSym := "@" & nm & ".tc_name";
-              Wr.PutText(wr, nameSym & " = private unnamed_addr constant ["
-                & Fmt.Int(Text.Length(uName) + 1) & " x i8] c\""
-                & uName & "\\00\"\n");
-            END;
             IF MSIR.TypeDescUseLinkProc(d) AND MSIR.TypeDescMethodInitCount(d) > 0 THEN
               (* C-GenLinkProc-faithful mode (mirrors ObjectType.GenLinkProc):
                  store each method (own OR override) at its DECLARING type's method

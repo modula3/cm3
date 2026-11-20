@@ -14,7 +14,7 @@ IMPORT Value, Error, RecordType, ProcType, OpaqueType, Revelation;
 IMPORT Field, Reff, Addr, Word, M3Buf, ErrType, Procedure, AddressExpr;
 IMPORT ObjectAdr, ObjectRef, Token, Module, Method, Brand;
 IMPORT AssignStmt, M3RT, Scanner, TipeMap, TipeDesc, TypeFP, Target;
-IMPORT MSIR, MSIREmit, MSIRBuilder, Fmt, Text;
+IMPORT MSIR, MSIREmit, MSIRBuilder, Fmt, Text, Typecell;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 CONST
@@ -609,43 +609,67 @@ PROCEDURE UserName (t: Type.T): TEXT =
   END UserName;
 
 (*EXPORTED*)
+PROCEDURE Describe (t: Type.T;  VAR d: Typecell.T) =
+  VAR p := Confirm (t);  fields: Value.T;
+  BEGIN
+    GetSizes (p);
+    fields := Scope.ToList (p.fields);
+    d.uid        := Type.GlobalUID (p);
+    d.fp         := TypeFP.FromType (p);
+    d.traced     := p.isTraced;
+    d.kind       := M3RT.TypeKind.Obj;
+    (* See comments in RT0.i3, regarding dataAlignment and dataSize. *)
+    d.dataAlign  := p.info.addr_align DIV Target.Byte;
+    d.dataSize   := p.fieldSize DIV Target.Byte;
+    d.typeMap    := FieldsMap (fields, refs_only := FALSE);
+    d.gcMap      := FieldsMap (fields, refs_only := TRUE);
+    d.typeDesc   := FieldsDesc (p, fields);
+    d.brand      := p.brand;
+    d.name       := p.user_name;
+    d.nDims      := 0;
+    d.elemSize   := 0;
+    IF (p.superType # NIL)
+      THEN d.parentUID := Type.GlobalUID (p.superType);
+      ELSE d.parentUID := 0;
+    END;
+    d.methodSize := p.methodSize DIV Target.Byte;
+  END Describe;
+
+(*EXPORTED*)
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
   VAR
     p         : P := t;
-    fields    := Scope.ToList (p.fields);
-    brand     := Brand.Compile (p.brand);
-    type_map  := GenTypeMap (p, fields, refs_only := FALSE);
-    gc_map    := GenTypeMap (p, fields, refs_only := TRUE);
-    type_desc := GenTypeDesc (p, fields);
-    defaults  := GenMethodList (p);
-    initProc  := GenInitProc (p);
-    linkProc  := GenLinkProc (p, defaults);
-    super_id  : INTEGER := 0;
+    d         : Typecell.T;
+    brand, type_map, gc_map, type_desc, defaults: INTEGER;
+    initProc, linkProc: CG.Proc;
     isz       : INTEGER := Target.Integer.size;
     name_offs : INTEGER := 0;
-    fp        := TypeFP.FromType (p);
     globals   := Module.GlobalData (is_const := FALSE);
     consts    := Module.GlobalData (is_const := TRUE);
   BEGIN
-    IF (p.superType # NIL) THEN super_id := Type.GlobalUID (p.superType) END;
+    Describe (p, d);
+    brand     := Brand.Compile (d.brand);
+    type_map  := TipeMap.Emit (d.typeMap, "type map for ", Type.Name (p));
+    gc_map    := TipeMap.Emit (d.gcMap, "type map for ", Type.Name (p));
+    type_desc := TipeDesc.Emit (d.typeDesc, "type description for ",
+                                Type.Name (p));
+    defaults  := GenMethodList (p);
+    initProc  := GenInitProc (p);
+    linkProc  := GenLinkProc (p, defaults);
 
-    IF (p.user_name # NIL) THEN
-      name_offs := CG.EmitText (p.user_name, is_const := TRUE);
+    IF (d.name # NIL) THEN
+      name_offs := CG.EmitText (d.name, is_const := TRUE);
     END;
 
     (* generate my Type cell info *)
-    CG.Init_intt   (offset + M3RT.TC_selfID, isz, Type.GlobalUID (p), FALSE);
-    FOR i := FIRST (fp.byte) TO LAST (fp.byte) DO
-      CG.Init_intt (offset + M3RT.TC_fp + i * 8, 8, fp.byte[i], FALSE);
+    CG.Init_intt   (offset + M3RT.TC_selfID, isz, d.uid, FALSE);
+    FOR i := FIRST (d.fp.byte) TO LAST (d.fp.byte) DO
+      CG.Init_intt (offset + M3RT.TC_fp + i * 8, 8, d.fp.byte[i], FALSE);
     END;
-    CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (p.isTraced), FALSE);
-    CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (M3RT.TypeKind.Obj), FALSE);
-    CG.Init_intt
-      (offset + M3RT.TC_dataAlignment, 8, p.info.addr_align DIV Target.Byte, FALSE);
-    (* ^V See comments in RT0.i3, regarding dataAlignment and dataSize. *)
-
-    CG.Init_intt
-      (offset + M3RT.TC_dataSize, isz, p.fieldSize DIV Target.Byte, FALSE);
+    CG.Init_intt (offset + M3RT.TC_traced, 8, ORD (d.traced), FALSE);
+    CG.Init_intt (offset + M3RT.TC_kind, 8, ORD (d.kind), FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataAlignment, 8, d.dataAlign, FALSE);
+    CG.Init_intt (offset + M3RT.TC_dataSize, isz, d.dataSize, FALSE);
     IF (type_map >= 0) THEN
       CG.Init_var (offset + M3RT.TC_type_map, consts, type_map, FALSE);
     END;
@@ -661,7 +685,7 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     IF (brand >= 0) THEN
       CG.Init_var (offset + M3RT.TC_brand, consts, brand, FALSE);
     END;
-    IF (p.user_name # NIL) THEN
+    IF (d.name # NIL) THEN
       CG.Init_var (offset + M3RT.TC_name,  consts, name_offs, FALSE);
     END;
     IF (prev # 0) THEN
@@ -669,12 +693,11 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     END;
 
     (* OBJECT specific extensions to the typecell *)
-    CG.Init_intt (offset + M3RT.OTC_parentID, isz, super_id, FALSE);
+    CG.Init_intt (offset + M3RT.OTC_parentID, isz, d.parentUID, FALSE);
     IF (linkProc # NIL) THEN
       CG.Init_proc (offset + M3RT.OTC_linkProc, linkProc, FALSE);
     END;
-    CG.Init_intt (offset + M3RT.OTC_methodSize, isz,
-                      p.methodSize DIV Target.Byte, FALSE);
+    CG.Init_intt (offset + M3RT.OTC_methodSize, isz, d.methodSize, FALSE);
     IF (defaults >= 0) THEN
       CG.Init_var (offset + M3RT.OTC_defaultMethods, consts, defaults, FALSE);
     END;
@@ -682,15 +705,12 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     NoteOffsets (p, p);
   END InitTypecell;
 
-PROCEDURE GetObjectTypeInfo (t            : Type.T;
-                              VAR fieldSize    : INTEGER;
-                              VAR dataAlignment: INTEGER;
-                              VAR methodSize   : INTEGER;
-                              VAR dataOffset   : INTEGER;
-                              VAR parentUID    : INTEGER;
-                              VAR nSlots       : INTEGER;
-                              VAR names        : REF ARRAY OF TEXT;
-                              VAR vtableKnown  : BOOLEAN) =
+PROCEDURE GetVtableMSIR (t: Type.T;
+                         VAR nSlots     : INTEGER;
+                         VAR names      : REF ARRAY OF TEXT;
+                         VAR vtableKnown: BOOLEAN) =
+(* The MSIR form of OTC_defaultMethods: the method proc name in each slot
+   of t's full method suite, when known statically. *)
   VAR
     p     : P := Confirm (t);
     mBase : INTEGER;
@@ -698,24 +718,9 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
     names        := NIL;
     nSlots       := 0;
     vtableKnown  := FALSE;
-    IF p = NIL THEN
-      fieldSize := 0;  dataAlignment := Target.Address.align;
-      methodSize := 0;  dataOffset := -1;  parentUID := 0;
-      RETURN;
-    END;
+    IF p = NIL THEN RETURN END;
     GetSizes (p);
     GetOffsets (p, use_magic := FALSE);
-    fieldSize     := p.fieldSize DIV Target.Byte;
-    dataAlignment := p.info.addr_align;
-    methodSize    := p.methodSize DIV Target.Byte;
-    IF p.fieldOffset >= 0
-      THEN dataOffset := p.fieldOffset DIV Target.Byte;
-      ELSE dataOffset := -1;
-    END;
-    IF p.superType # NIL
-      THEN parentUID := Type.GlobalUID (p.superType);
-      ELSE parentUID := 0;
-    END;
     mBase := MethodOffset (p);
     IF mBase < 0 THEN RETURN END;  (* unknown super chain — vtableKnown stays FALSE *)
     nSlots := (mBase + p.methodSize) DIV Target.Address.size;
@@ -799,7 +804,7 @@ PROCEDURE GetObjectTypeInfo (t            : Type.T;
         END;
       END;
     END;
-  END GetObjectTypeInfo;
+  END GetVtableMSIR;
 
 PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
 (* Generate an MSIR procedure that initializes the fields of a newly
@@ -956,20 +961,19 @@ PROCEDURE GenLinkProcMSIR (p: P;  desc: MSIR.TypeDesc): BOOLEAN =
 
 PROCEDURE InitTypecellMSIR (t: Type.T) =
   VAR
-    fldSize, fldAlign, methBytes, dataOff, nSlots: INTEGER;
-    parUID      : INTEGER;
+    d           : Typecell.T;
+    nSlots      : INTEGER;
     names       : REF ARRAY OF TEXT;
     vtableKnown : BOOLEAN;
-    info        : Type.Info;
     uid         : INTEGER;
     m           : MSIR.Module;
     desc        : MSIR.TypeDesc;
-    methOff     : INTEGER := 0;
+    fpa         : ARRAY [0..7] OF [0..255];
+    cb          : INTEGER;
   BEGIN
     IF NOT MSIREmit.IsEnabled () THEN RETURN END;
     m := MSIREmit.CurrentModule ();
     IF m = NIL THEN RETURN END;
-    EVAL Type.CheckInfo (t, info);
     uid := Type.GlobalUID (t);
     (* Idempotency + recursion terminator: skip if this typecell is already
        registered in the module (a type may be reached both directly and as a
@@ -977,19 +981,15 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
     FOR i := 0 TO MSIR.ModuleTypeDescCount (m) - 1 DO
       IF MSIR.TypeDescUID (MSIR.ModuleTypeDesc (m, i)) = uid THEN RETURN END;
     END;
-    GetObjectTypeInfo (t, fldSize, fldAlign, methBytes, dataOff, parUID,
-                       nSlots, names, vtableKnown);
-    fldAlign := fldAlign DIV Target.Byte;
-    IF dataOff < 0 THEN dataOff := Target.Address.bytes END;
-    (* methodOffset = byte position in vtable where this type's own methods start *)
-    methOff := MethodOffset (t);
-    IF methOff < 0 THEN methOff := 0 END;
-    methOff := methOff DIV Target.Byte;
+    (* The data parts are InitTypecell's (Describe); the method suite is
+       MSIR's own form of GenMethodList / GenLinkProc. *)
+    Describe (t, d);
+    GetVtableMSIR (t, nSlots, names, vtableKnown);
     IF vtableKnown AND names # NIL THEN
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
-                                info.isTraced, ORD (M3RT.TypeKind.Obj),
-                                fldSize, fldAlign,
-                                parUID, dataOff, names^, methBytes);
+                                d.traced, ORD (d.kind),
+                                d.dataSize, d.dataAlign,
+                                d.parentUID, names^, d.methodSize);
     ELSE
       (* Not a fully-static vtable — an opaque supertype somewhere in the chain,
          or some inherited slot's default is not a visible proc literal here.
@@ -998,81 +998,25 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
          inherited method) at its DECLARING type's method base + method.offset.
          RTLinker copies the parent's method suite into defaultMethods before
          running the linkProc, so non-overridden inherited slots stay valid and
-         our overrides overlay the correct absolute slots.  This is the
-         override-aware replacement for the old FillOwnMethodNames path, which
-         handled only own methods and silently dropped every override (e.g.
-         FileRd.T, which is override-only -> init at slot 6 was UndefinedMethod). *)
+         our overrides overlay the correct absolute slots. *)
       desc := MSIR.NewTypeDesc ("tc_obj_" & Fmt.Int (uid), uid,
-                                info.isTraced, ORD (M3RT.TypeKind.Obj),
-                                fldSize, fldAlign,
-                                parUID, dataOff, ARRAY OF TEXT{}, methBytes);
+                                d.traced, ORD (d.kind),
+                                d.dataSize, d.dataAlign,
+                                d.parentUID, ARRAY OF TEXT{}, d.methodSize);
       IF GenLinkProcMSIR (NARROW(t, P), desc) THEN
         MSIR.SetTypeDescUseLinkProc (desc, TRUE);
       END;
     END;
-    VAR tfp := TypeFP.FromType (t);
-        fpa : ARRAY [0..7] OF [0..255];
-    BEGIN
-      FOR i := 0 TO 7 DO fpa[i] := tfp.byte[i] END;
-      MSIR.SetTypeDescFP (desc, fpa);
-    END;
-    VAR uName := UserName (t);
-    BEGIN
-      IF uName # NIL THEN MSIR.SetTypeDescUserName (desc, uName) END;
-    END;
-    MSIR.SetTypeDescMethodOffset (desc, methOff);
-    (* Runtime type maps over this type's OWN fields, with offsets relative
-       to the field region (RTHeapMap.DoWalkRef / RTTypeMap.DoWalkRef advance
-       the walk address by dataOffset before interpreting the map).  Mirrors
-       the C backend's InitTypecell:
-       - TC_gc_map (refs_only=TRUE): without it a moving collection never
-         fixes up this type's reference fields.
-       - TC_type_map (refs_only=FALSE): RTTypeMap.WalkRef — pickle ver1.
-       - TC_type_desc: RTTipe description — pickle ver2 / ConvertPacking. *)
-    VAR fields := Scope.ToList (NARROW (t, P).fields);
-        v      := fields;
-        field  : Field.Info;
-        nFields := 0;
-    BEGIN
-      TipeMap.Start ();
-      v := fields;
-      WHILE (v # NIL) DO
-        Field.Split (v, field);
-        Type.GenMap (field.type, field.offset, -1, refs_only := TRUE);
-        v := v.next;
-      END;
-      MSIR.SetTypeDescGcMap (desc, TipeMap.FinishBytes ());
-      TipeMap.Start ();
-      v := fields;
-      WHILE (v # NIL) DO
-        Field.Split (v, field);
-        Type.GenMap (field.type, field.offset, -1, refs_only := FALSE);
-        v := v.next;
-      END;
-      MSIR.SetTypeDescTypeMap (desc, TipeMap.FinishBytes ());
-      IF info.isTraced THEN
-        TipeDesc.Start ();
-        IF TipeDesc.AddO (TipeDesc.Op.Object, t) THEN
-          v := fields;
-          WHILE (v # NIL) DO INC (nFields);  v := v.next;  END;
-          TipeDesc.AddI (nFields);
-          v := fields;
-          WHILE (v # NIL) DO
-            Field.Split (v, field);
-            Type.GenDesc (field.type);
-            v := v.next;
-          END;
-        END;
-        MSIR.SetTypeDescPickleDesc (desc, TipeDesc.FinishBytes ());
-      END;
-    END;
+    FOR i := 0 TO 7 DO fpa[i] := d.fp.byte[i] END;
+    MSIR.SetTypeDescFP (desc, fpa);
+    IF d.name # NIL THEN MSIR.SetTypeDescUserName (desc, d.name) END;
+    MSIR.SetTypeDescGcMap (desc, d.gcMap);
+    MSIR.SetTypeDescTypeMap (desc, d.typeMap);
+    MSIR.SetTypeDescPickleDesc (desc, d.typeDesc);
     (* Generate the field-default initializer proc (TC_initProc) if needed. *)
     GenInitProcMSIR (NARROW(t, P), desc);
     IF Type.OwnsCell (t) THEN  (* TC_brand, as InitTypecell; see OwnsCell *)
-      VAR cb: INTEGER;  chars := Brand.Image (NARROW(t, P).brand, cb);
-      BEGIN
-        MSIR.SetTypeDescBrand (desc, chars, cb);
-      END;
+      MSIR.SetTypeDescBrand (desc, Brand.Image (d.brand, cb), cb);
     END;
     MSIR.ModuleAddTypeDesc (m, desc);
     (* Register the supertype's typecell too, so RTLinker can resolve this
@@ -1100,35 +1044,6 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
       END;
     END;
   END InitTypecellMSIR;
-
-PROCEDURE FillOwnMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
-  (* Fill m[0..nLocal-1] with THIS type's OWN method proc names at LOCAL
-     indices (relative to this type's own method region, not the full vtable).
-     Used when the static method offset (mBase) is unknown (opaque supertype);
-     the dynamic linkProc reads OTC_methodOffset at runtime to place them. *)
-  VAR v := Scope.ToList (p.methods);
-      method: Method.Info;
-      expr  : Expr.T;
-      proc  : Value.T;
-      nLocal := NUMBER(m);
-      localIdx: INTEGER := 0;
-  BEGIN
-    FOR i := 0 TO nLocal - 1 DO m[i] := NIL END;
-    WHILE v # NIL DO
-      Method.SplitX(v, method);
-      IF localIdx < nLocal THEN
-        expr := Expr.ConstValue(method.dfault);
-        IF expr # NIL AND UserProc.IsProcedureLiteral(expr, proc) AND proc # NIL THEN
-          VAR nm := Value.GlobalName(proc, dots := FALSE, with_module := TRUE); BEGIN
-            IF nm # NIL THEN m[localIdx] := nm END;
-          END;
-        END;
-      END;
-      INC(localIdx);
-      v := v.next;
-    END;
-    RETURN TRUE;
-  END FillOwnMethodNames;
 
 PROCEDURE FillMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
   VAR
@@ -1167,8 +1082,10 @@ PROCEDURE FillMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
     RETURN TRUE;
   END FillMethodNames;
 
-PROCEDURE GenTypeMap (p: P;  fields: Value.T;  refs_only: BOOLEAN): INTEGER =
-  (* generate my "TypeMap" (used by the garbage collector) *)
+PROCEDURE FieldsMap (fields: Value.T;  refs_only: BOOLEAN): Typecell.Bytes =
+  (* my "TypeMap" over my own fields, relative to the field region: the full
+     map (TC_type_map, pickle ver1) or, with refs_only, the garbage
+     collector's (TC_gc_map) *)
   VAR field: Field.Info;
   BEGIN
     TipeMap.Start ();
@@ -1179,14 +1096,14 @@ PROCEDURE GenTypeMap (p: P;  fields: Value.T;  refs_only: BOOLEAN): INTEGER =
       fields := fields.next;
     END;
 
-    RETURN TipeMap.Finish ("type map for ", Type.Name (p));
-  END GenTypeMap;
+    RETURN TipeMap.FinishBytes ();
+  END FieldsMap;
 
-PROCEDURE GenTypeDesc (p: P;  fields: Value.T): INTEGER =
-  (* generate my "TypeDesc" (used by the pickle machinery) *)
+PROCEDURE FieldsDesc (p: P;  fields: Value.T): Typecell.Bytes =
+  (* my "TypeDesc" (used by the pickle machinery) *)
   VAR field: Field.Info;  nFields := 0;  v := fields;
   BEGIN
-    IF NOT p.isTraced THEN RETURN -1 END;
+    IF NOT p.isTraced THEN RETURN NIL END;
 
     TipeDesc.Start ();
 
@@ -1202,8 +1119,8 @@ PROCEDURE GenTypeDesc (p: P;  fields: Value.T): INTEGER =
       END;
     END;
 
-    RETURN TipeDesc.Finish ("type description for ", Type.Name (p));
-  END GenTypeDesc;
+    RETURN TipeDesc.FinishBytes ();
+  END FieldsDesc;
 
 CONST
   MaxShortMethodList = 32;

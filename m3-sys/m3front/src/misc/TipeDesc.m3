@@ -33,35 +33,28 @@ PROCEDURE Start () =
   END Start;
     
 PROCEDURE Finish (a, b, c, d: TEXT := NIL): INTEGER =
-  VAR base, offset, n_data_bytes: INTEGER;
   BEGIN
-    IF (n_bytes = 0) THEN busy := FALSE; RETURN -1 END;
+    RETURN Emit (FinishBytes (), a, b, c, d);
+  END Finish;
 
-    (* add the op count *)
-    n_data_bytes := n_bytes;
-    AddI (n_types);
+PROCEDURE Emit (x: Bytes;  a, b, c, d: TEXT := NIL): INTEGER =
+  VAR base, offset: INTEGER;
+  BEGIN
+    IF (x = NIL) THEN RETURN -1 END;
 
     (* allocate space *)
-    base := Module.Allocate (n_bytes * Target.Int8.size,
+    base := Module.Allocate (NUMBER (x^) * Target.Int8.size,
                              Target.Int8.align, TRUE, "type_desc");
     CG.Comment (base, TRUE, a, b, c, d);
 
-    (* emit the op count *)
+    (* generate the bytes: the op count, then the data *)
     offset := base;
-    FOR i := n_data_bytes TO n_bytes-1 DO
-      CG.Init_intt (offset, Target.Int8.size, bytes[i], is_const := TRUE);
+    FOR i := 0 TO LAST (x^) DO
+      CG.Init_intt (offset, Target.Int8.size, x[i], is_const := TRUE);
       INC (offset, Target.Int8.size);
     END;
-
-    (* generate the bytes *)
-    FOR i := 0 TO n_data_bytes-1 DO
-      CG.Init_intt (offset, Target.Int8.size, bytes[i], is_const := TRUE);
-      INC (offset, Target.Int8.size);
-    END;
-
-    busy := FALSE;
     RETURN base;
-  END Finish;
+  END Emit;
 
 PROCEDURE FinishBytes (): Bytes =
   VAR res: Bytes;  n_data_bytes, k: INTEGER;

@@ -437,10 +437,9 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     IF    RefType.Split    (t, r) THEN
       (* RefType.Split succeeds for a locally-revealed opaque REF, reducing
          through the revelation to find the referent, but it leaves `t` as the
-         opaque type.  Passing the opaque type to GenRefMSIR reaches
-         TypeDescValueForRef with the opaque UID, which deliberately returns NIL
-         for any UID that is a revelation LHS in this module (RTLinker maps the
-         opaque uid to the revealed TypeCell).  That would silently drop the
+         opaque type.  RefType.TypecellMSIR returns NIL for any UID that is a
+         revelation LHS in this module (RTLinker maps the opaque uid to the
+         revealed TypeCell).  That would silently drop the
          allocation (empty NewSet => `unreachable` => SIGTRAP at startup).
          Use the concrete (reduced) REF type so the allocator hook gets a real
          TypeDesc keyed by the concrete RHS uid.  For a non-opaque ref this is
@@ -512,10 +511,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
           b        : MSIR.Block;
         BEGIN
           refVal := CallAllocHook (t, PHook [t_info.isTraced],
-                                   RefType.TypecellMSIR (t,
-                                     r_info.size DIV Target.Byte,
-                                     r_info.alignment DIV Target.Byte,
-                                     t_info.isTraced));
+                                   RefType.TypecellMSIR (t));
           IF refVal = NIL THEN RETURN NIL END;
           (* Field defaults are applied by the typecell's TC_initProc
              (RefType.GenInitProcMSIR), which RTAllocator runs at allocation —
@@ -558,10 +554,7 @@ PROCEDURE GenRefMSIR (t, r: Type.T;  ce: CallExpr.T): MSIR.Value =
         END;
     ELSE
         RETURN CallAllocHook (t, PHook [t_info.isTraced],
-                              RefType.TypecellMSIR (t,
-                                r_info.size DIV Target.Byte,
-                                r_info.alignment DIV Target.Byte,
-                                t_info.isTraced));
+                              RefType.TypecellMSIR (t));
     END;
   END GenRefMSIR;
 

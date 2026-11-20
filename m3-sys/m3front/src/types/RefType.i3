@@ -7,7 +7,7 @@
 
 INTERFACE RefType;
 
-IMPORT Type, Brand, MSIR;
+IMPORT Type, Brand, MSIR, Typecell;
 
 PROCEDURE Parse (): Type.T;
 
@@ -26,14 +26,15 @@ PROCEDURE ReduceToRef (t: Type.T): Type.T;
 PROCEDURE NoteRefName (t: Type.T;  name: TEXT);
 (* record a user name for the ref type 't' *)
 
+PROCEDURE Describe (t: Type.T;  VAR d: Typecell.T);
+(* describe the typecell of the REF type 't' (see Typecell) *)
+
 PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER);
 
-PROCEDURE TypecellMSIR (t: Type.T;  dataSize, dataAlign: INTEGER;
-                        isTraced: BOOLEAN): MSIR.Value;
+PROCEDURE TypecellMSIR (t: Type.T): MSIR.Value;
 (* The typecell of REF type t at a use site (NEW, RAISE).  As CG: when
    another unit owns the cell (Type.IsForeignCell), reach it through a
-   TypeLink; otherwise use this module's own descriptor.  dataSize and
-   dataAlign are the referent's, in bytes. *)
+   TypeLink; otherwise use this module's own descriptor. *)
 
 PROCEDURE InitTypecellMSIR (t: Type.T);
 
