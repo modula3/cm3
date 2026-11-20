@@ -1300,6 +1300,12 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
        Checked against both MSIR backends.
     6. Make MSIR → M3CG the default; delete the per-node CG methods
        (`compile`, `prep*`, `compileLV`, `compileBR`).
+    7. Rename the MSIR procedures and methods to the generic names the
+       CG path frees: `compileMSIR` → `compile`, `InitTypecellMSIR` →
+       `InitTypecell`, `Type.InitValueMSIR` → `Type.InitValue`, and so
+       on for every `xxxMSIR`/`xxx_MSIR` name in the front end.  Done
+       only after step 6, as one mechanical rename with no behaviour
+       change.
 - Clutter (session transcripts, a test binary, editor backups) removed in
   `77a724b298`.
 
@@ -1323,8 +1329,17 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   `QualifyExpr.CompileMethodCallMSIR` owns receiver, actuals and
   dispatch; the four QualifyExpr accessors are gone.  Fixes B2; new
   m3test p301.
-- **Still to do under D22:** the ArrayExpr accessors (2a),
-  `RecordExpr.TryConstFieldMSIR`.
+- **D22 done: constant images.**  The constant-array lowering
+  (constructor elements, the '..' repeat-last rule, sub-byte packing, the
+  open-element workarounds) moved from MSIRBuilder into ArrayExpr:
+  `genLiteralMSIR` builds an inline ConstAggArray (`ConstAggMSIR`) and
+  `ArrayExpr.ConstArrayMSIR` a named CONST's global, with its per-unit
+  cache (now unbounded; it stopped caching after 64).  MSIRBuilder keeps
+  only `ConstArrayGlobal(eltT, elts)`, and `EltCount`/`Elt` are gone.
+  `RecordExpr.TryConstFieldMSIR` became `Expr.ConstLiteralMSIR` (fold,
+  then `genLiteralMSIR`); `TryCompileConstMSIR` is private to RecordExpr.
+  MSIRBuilder no longer imports Expr, ArrayExpr, ArrayType,
+  OpenArrayType or RecordExpr.
 - **D23 not started.**
 - **2b, cell ownership done; B1 fixed** (`cd64dbadc6`).  As in CG, a
   module emits typecells only for REF/OBJECT types whose cells no other
@@ -1401,16 +1416,16 @@ most serious findings spot-checked against the code.  Nothing built.
 ##### 2a. Node internals exported for MSIR (expressions)
 - `QualifyExpr.i3`: `LhsExpr`, `MethodSlotBase`, `ObjTypeMethod`, `MethodHolder` hand out
   `lhsExpr`/`holder`/`objType`; `UserProc` rebuilds vtable/default-method dispatch from them.
-  Fix: a QualifyExpr operation returning the resolved callee and receiver.
+  Fix: a QualifyExpr operation returning the resolved callee and receiver.  **Done.**
 - `ArrayExpr.i3`: `EltCount`/`Elt` let MSIRBuilder walk constructor elements and
   re-implement "repeat last element" (`MSIRBuilder.m3:2320-2650`).  Fix: move into
-  `ArrayExpr.genLiteralMSIR`/`compileLValueMSIR`; drop the accessors.
+  `ArrayExpr.genLiteralMSIR`/`compileLValueMSIR`; drop the accessors.  **Done.**
 - `TextExpr`: MSIR literals call `SetUID` (CG global-data allocation); `MSIREmit`
   iterates the CG literal table via `LiteralCount`/`LiteralExpr`.
 - Sub-byte stores dispatched by probing four modules in turn (`AssignStmt`, `Inc`,
   `Dec`) instead of an Expr method; `EmitUseFailureMSIR` likewise.  Fix: ExprRep
-  methods `storeMSIR`, `checkUseFailureMSIR`.
-- `RecordExpr.TryConstFieldMSIR` / `TryCompileConstMSIR` duplicate `genLiteralMSIR`.
+  methods `storeMSIR`, `checkUseFailureMSIR`.  **Done.**
+- `RecordExpr.TryConstFieldMSIR` / `TryCompileConstMSIR` duplicate `genLiteralMSIR`.  **Done.**
 
 ##### 2b. Per-type behaviour re-implemented outside TypeRep (types/values)
 - Default initialisation: `RecordType.GenInitMSIR`/`GenInitArrayMSIR` (also handling
