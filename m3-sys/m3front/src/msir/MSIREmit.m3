@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError, Word;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError, Word;
 IMPORT TextExpr, M3String, M3WString;
 IMPORT RunTyme, Error, Fmt;
 
@@ -10,6 +10,7 @@ VAR
   enabled:    BOOLEAN     := FALSE;
   enabledSet: BOOLEAN     := FALSE;
   curModule:  MSIR.Module := NIL;
+  lastModule: MSIR.Module := NIL;  (* last unit that verified; see LastModule *)
   llOutPath:  TEXT        := NIL;
 
   (* Names of units emitted as a MODULE (non-interface) in this compilation.
@@ -45,6 +46,7 @@ PROCEDURE BeginUnit(name: M3ID.T;  isInterface: BOOLEAN := FALSE) =
     txt := M3ID.ToText(name);
     IF txt = NIL THEN txt := "<anonymous>" END;
     curModule := MSIR.NewModule(txt);
+    lastModule := NIL;
     MSIR.ModuleSetIsInterface(curModule, isInterface);
     triple := NIL;  datalayout := NIL;
     IF Target.System_name # NIL THEN
@@ -62,6 +64,13 @@ PROCEDURE BeginUnit(name: M3ID.T;  isInterface: BOOLEAN := FALSE) =
     IF triple # NIL THEN MSIR.SetModuleTarget(curModule, triple, datalayout) END;
     MSIRBuilder.BeginModule();
   END BeginUnit;
+
+PROCEDURE LastModule(): MSIR.Module =
+  VAR m := lastModule;
+  BEGIN
+    lastModule := NIL;
+    RETURN m;
+  END LastModule;
 
 PROCEDURE CurrentModule(): MSIR.Module =
   BEGIN RETURN curModule END CurrentModule;
@@ -180,6 +189,12 @@ PROCEDURE EndUnit() =
         END;
       END;
     END;
+    IF RTParams.IsPresent("msircensus") THEN
+      (* D25 spike: which procedures an MSIR -> M3CG lowering could take
+         today.  Informational; run with @M3msircensus, grep 'msir-census:'. *)
+      MSIRToM3CG.Census(Stdio.stderr, curModule);
+      TRY Wr.Flush(Stdio.stderr) EXCEPT ELSE END;
+    END;
     errs := MSIRVerifier.VerifyModule(curModule);
     IF errs # NIL THEN
       FOR i := 0 TO LAST(errs^) DO
@@ -196,6 +211,7 @@ PROCEDURE EndUnit() =
                    & errs[0] & ")");
       END;
     END;
+    IF errs = NIL THEN lastModule := curModule ELSE lastModule := NIL END;
     IF llOutPath # NIL THEN
       path := llOutPath;
     ELSE

@@ -8,5 +8,6 @@ Module("MSIR")
 Module("MSIRPrinter")
 Module("MSIRVerifier")
 Module("MSIRToLLVM")
+Module("MSIRToM3CG")
 
 library("msir")

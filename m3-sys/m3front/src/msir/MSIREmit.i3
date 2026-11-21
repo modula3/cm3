@@ -46,6 +46,11 @@ PROCEDURE SetLLOutPath(path: TEXT);
    No-op if not enabled. *)
 PROCEDURE EndUnit();
 
+(* The module of the unit EndUnit last finished, if it passed the verifier;
+   else NIL.  Clears it, so each unit's module is taken at most once.  Used
+   by the cm3 driver to lower the unit through MSIR -> M3CG (D25). *)
+PROCEDURE LastModule(): MSIR.Module;
+
 (* Return TRUE if a MODULE (non-interface) with this name has already been
    emitted to a .ll file this run.  Used by DeclareGlobalsMSIR to decide
    whether an exported interface variable should be owned by the

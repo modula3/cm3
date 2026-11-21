@@ -11,7 +11,8 @@ IMPORT Text, Thread, Wr;
 IMPORT M3C;
 IMPORT LLGen; (* Could be a dummy.  See the m3makefile. *) 
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
-IMPORT M3CG_BinWr, M3CG_Ops, M3CG_Tee, M3ID;
+IMPORT M3CG_BinWr, M3CG_Ops, M3CG_Tee, M3CG_Wr, M3CG_MultiPass, M3ID;
+IMPORT MSIR, MSIREmit, MSIRToM3CG, RTParams, Stdio;
 IMPORT Target; 
 
 VAR
@@ -21,6 +22,17 @@ VAR
 VAR
   log_wr   : Wr.T        := NIL;
   log_name : TEXT        := NIL;
+VAR
+  (* MSIR -> M3CG (D25), enabled by @M3msircg together with @M3m3front-msir:
+     the front end's M3CG stream is recorded, and Close either lowers the
+     unit's MSIR module into the C backend or replays the recording
+     (per-module fallback). *)
+  msir_rec : M3CG_MultiPass.T := NIL;
+  msir_c   : M3CG.T           := NIL;
+  (* @M3m3cgtext: also write the stream the C backend sees, as text, to
+     <target>.m3cg. *)
+  text_wr  : Wr.T        := NIL;
+  text_name: TEXT        := NIL;
 VAR
   ir_wr    : Wr.T        := NIL;
   ir_name  : TEXT        := NIL;
@@ -51,6 +63,19 @@ PROCEDURE Open (library (* or program *): TEXT;
     (* C backend: *)
     IF backend_mode = Target.M3BackendMode_t.C THEN
       cg := M3C.New (library, source_base_name, target_wr, target_name);
+      IF RTParams.IsPresent ("m3cgtext") THEN
+        text_name := target_name & ".m3cg";
+        text_wr := Utils.OpenWriter (text_name, fatal := TRUE);
+      END;
+      IF RTParams.IsPresent ("msircg") AND MSIREmit.IsEnabled () THEN
+        (* The text dump is written in Close: M3CG_Tee's labels come from
+           next_label, which a replay does not call. *)
+        msir_c := cg;
+        msir_rec := NEW (M3CG_MultiPass.T).Init ();
+        cg := msir_rec;
+      ELSIF text_wr # NIL THEN
+        cg := M3CG_Tee.New (cg, M3CG_Wr.New (text_wr));
+      END;
       (* cg.comment would not appear at the top because
        * earlier passes ignore it
        *)
@@ -99,7 +124,27 @@ PROCEDURE Open (library (* or program *): TEXT;
 
 (* EXPORTED: *)
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
+  VAR m: MSIR.Module;  index: INTEGER;
   BEGIN
+    IF msir_rec # NIL THEN
+      m := MSIREmit.LastModule ();
+      IF m # NIL AND MSIRToM3CG.Lowerable (m, Stdio.stderr) THEN
+        IF text_wr # NIL THEN
+          msir_c := M3CG_Tee.New (msir_c, M3CG_Wr.New (text_wr));
+        END;
+        MSIRToM3CG.Lower (m, msir_c);
+      ELSE
+        msir_rec.Replay (msir_c, index);
+        IF text_wr # NIL THEN
+          msir_rec.Replay (M3CG_Wr.New (text_wr), index);
+        END;
+      END;
+      msir_rec := NIL;
+      msir_c := NIL;
+    END;
+    Utils.CloseWriter (text_wr, text_name);
+    text_wr := NIL;
+    text_name := NIL;
     IF obj_file # NIL THEN
       TRY
         NTObjFile.Dump (obj_file, obj_wr);

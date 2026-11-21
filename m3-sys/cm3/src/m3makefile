@@ -22,6 +22,7 @@ import ("libm3")
 import ("m3middle")
 import ("m3linker")
 import ("m3front")
+import ("msir")
 import ("m3quake")
 %import ("cmkey")
 
