@@ -2,9 +2,11 @@
 name: integration
 # Build and test starting from latest bootstrap release.
 
+# Pushes run only on master: a branch with an open PR is tested by its
+# pull_request run, and a push run of the same code doubled the load.
 on:
   pull_request: {branches: master}
-  push:
+  push: {branches: master}
 
 concurrency: ci
 
