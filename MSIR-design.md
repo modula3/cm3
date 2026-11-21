@@ -1496,9 +1496,13 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   end and MSIR.  The C backend, and any portable C distribution, are
   lowerings that must implement those semantics, not shape them.
   - **Why.**  C has been defining Modula-3 by default:
-    - `ROUND` took C's `round()` tie-breaking (halves away from zero)
-      against the report's `FloatMode.RoundDefault` (NearestElseEven), until
-      `m3_round` was fixed.
+    - `ROUND` took the C library's tie-breaking (halves away from zero)
+      against the report's `FloatMode.RoundDefault` (NearestElseEven) in
+      both backends built on C-family runtimes: the C backend (`round()`)
+      and the gcc backend (`lround`, earlier `TRUNC (x +/- 0.5)`).  The
+      integrated x86 backend (x87 round-to-nearest-even before `FISTP`) and
+      MSIR's LLVM path (`llvm.roundeven`) followed the report.  Both fixed
+      in #1281.
     - `EXTENDED` is whatever C type a platform has: `_Float128` on
       AMD64_LINUX, `double` elsewhere.
     - Exceptions under `ex_stack` are C++ exceptions (`throw _M3Exc`), and
@@ -1563,7 +1567,8 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - **Divergence found, not changed here:** the report breaks `ROUND` ties by
   `FloatMode.RoundDefault`, NearestElseEven.  MSIR's `fpround` (roundeven)
   does; M3C's `m3_round` used C's `round` (halves away from zero), and the
-  lowering inherits it through `cvt_int(Round)`.  Fixed in M3C separately.
+  lowering inherits it through `cvt_int(Round)`.  The gcc backend did the
+  same with `lround`.  Both fixed separately (#1281).
 
 **Progress (2026-11-21): D26 step 4, EH scopes lowered to M3CG (ex_stack).**
 - `MSIRToM3CG` lowers scopes to CG's `ex_stack` scheme, as
