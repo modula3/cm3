@@ -1547,6 +1547,49 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     sizes before building MSIR, so MSIR is per-target like the C it
     replaces.
 
+- **D28. External globals: C variables and interface variables are
+  different things** (Tony, 2026-11-22: option B).
+  - **Problem.**  MSIR marks two kinds of global "external" alike
+    (`MSIR.GlobalIsExternal`), so MSIRToM3CG cannot lower either and falls
+    back on any unit that uses one (most of m3core's remaining 30 units):
+    - *C variables*, declared `<*EXTERNAL*>` (`Uerror.E2BIG`,
+      `Unix.O_RDONLY`, `Usocket`, `Usignal`, `Ustat`, `WinReg.HKEY_*`):
+      real linker symbols in every back end.
+    - *Interface variables referenced by the module that exports them*
+      (`ASCII.Control`, `RTHeapRep.allocatedPages`,
+      `RTCollectorSRC.gcRatio`, `IEEESpecial.LongNan`).  CG and the runtime
+      place an interface's variables in the interface unit's data segment
+      (`I_<Intf>`), reached through the import chain; they are not linker
+      symbols.  MSIR→LLVM instead emits a "backing global" symbol, from both
+      the interface unit and its exporting module (Variable.m3).
+    Units that *import* another interface's variable already use the import
+    chain in MSIR (`GlobalMapAddImport`: owner binder `<Intf>_I3`, byte
+    offset), as CG does.
+  - **Option A (annotate).**  Keep `isExternal` for `<*EXTERNAL*>` C
+    variables only; give an interface variable its owner binder and byte
+    offset (as imports have).  MSIR→LLVM keeps its backing symbols;
+    MSIRToM3CG lowers C variables to `import_global` and interface
+    variables through the import chain.  Smallest change; the two lowerings
+    keep different models.
+  - **Option B (one model).**  The exporting module reaches its own
+    interface's variables through the import chain, exactly as importers
+    do, in MSIR itself.  The duplicated backing globals go; both lowerings
+    follow the layout CG and the runtime use (D24's direction).  Costs one
+    load per access to such a variable in the exporting module, as the CG
+    path already pays, and touches the LLVM path, so it needs the ladder.
+  - **Recommendation: B**, as the representation the runtime actually has
+    and the one D27 asks the IR to own; A if the LLVM path should not move
+    now.  Either way `<*EXTERNAL*>` C variables stay external symbols.
+  - **Decided: B.**  An earlier MSIR attempt at the import chain here was
+    dropped for RTLinker, which writes its own `argc`/`argv` in
+    `InitRuntime`; but `InitRuntime` runs `FixImports` on itself first ("make
+    sure we can at least reference our own interface variables!"), as the
+    CG path relies on.  Done (2026-11-22): `Module.DeclareGlobalsMSIR`
+    routes an exported non-external interface variable through the import
+    chain; MSIRToM3CG declares `<*EXTERNAL*>` variables with
+    `import_global`.  m3core: all 291 units lower, none falling back; the
+    lowered m3core links and runs the test programs unchanged.
+
 **Progress (2026-11-21): D19 set intrinsics for multi-word sets.**
 - m3front emits the set intrinsics for sets wider than a word (still typed
   iN): `set_union`, `set_intersect`, `set_difference` and new

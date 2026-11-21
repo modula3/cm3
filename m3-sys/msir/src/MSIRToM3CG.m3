@@ -619,7 +619,13 @@ PROCEDURE CheckValue (w: Why;  v: MSIR.Value) =
           END;
         END;
     | ValueKind.GlobalRef =>
-        IF FindGlobal (name) = NIL THEN Fail (w, "global " & name) END;
+        VAR r: REFANY;  key := name;
+        BEGIN
+          IF key # NIL AND HasPrefix (key, "@") THEN key := Text.Sub (key, 1) END;
+          IF FindGlobal (key) = NIL OR NOT syms.get (key, r) THEN
+            Fail (w, "global " & name);
+          END;
+        END;
     | ValueKind.ConstTextLit =>
     | ValueKind.ConstStruct, ValueKind.ConstAggArray =>
         IF NOT IsInitConst (v) THEN Fail (w, "constant aggregate") END;
@@ -805,10 +811,14 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
             Fail (w, "standalone global " & MSIR.GlobalName (g));
           END;
         ELSE
-          (* MSIR does not say whether an external global is a C variable
-             or an exported interface variable (which is not a linker
-             symbol in M3C's output), so fall back on either. *)
-          Fail (w, "external global " & MSIR.GlobalName (g));
+          (* External globals are <*EXTERNAL*> C variables (D28); an
+             interface variable is reached through the import chain. *)
+          VAR a: INTEGER;
+          BEGIN
+            IF Size (MSIR.GlobalType (g), a) < 0 THEN
+              Fail (w, "external global of unsized type " & MSIR.GlobalName (g));
+            END;
+          END;
         END;
       END;
     END;
@@ -863,7 +873,11 @@ TYPE
   (* A large global (size > Max_zero_global) lives in its own zeroed
      global; the module struct's slot points to it (a global initializer).
      The CG path does the same (Variable.Declare, t.bss_var). *)
-  Backing = REF RECORD seg: Seg;  name: TEXT;  align: INTEGER END;
+  Backing = REF RECORD
+    seg: Seg;  name: TEXT;  align: INTEGER;
+    external := FALSE;   (* an <*EXTERNAL*> C variable: import_global *)
+    type: M3CG.Type := M3CG.Type.Struct;
+  END;
 
 VAR
   cseg, dseg: Seg;   (* constant and data segments *)
@@ -1051,7 +1065,19 @@ PROCEDURE Setup (m: MSIR.Module) =
     FOR i := 0 TO MSIR.ModuleGlobalCount (m) - 1 DO
       VAR g := MSIR.ModuleGlobal (m, i);  a: INTEGER;  bs: Backing;
       BEGIN
-        IF IsBacking (g) THEN
+        IF MSIR.GlobalIsExternal (g) THEN
+          (* An <*EXTERNAL*> variable (D28): a C symbol, named as declared. *)
+          VAR t := MSIR.GlobalType (g);  sz := Size (t, a);  ty := M3CG.Type.Struct;
+          BEGIN
+            IF IsScalar (t) AND NOT IsAgg (t) THEN ty := MType (t) END;
+            bs := NEW (Backing, name := MSIR.GlobalName (g), align := MAX (a, 1),
+                       external := TRUE, type := ty,
+                       seg := NEW (Seg, size := MAX (sz, 0),
+                                   items := NEW (RefSeq.T).init ()));
+            backing.addhi (bs);
+            NewSym (bs.name, bs.seg, 0);
+          END;
+        ELSIF IsBacking (g) THEN
           EVAL Size (MSIR.GlobalType (g), a);
           bs := NEW (Backing, name := MSIR.GlobalName (g), align := MAX (a, 1),
                      seg := NEW (Seg, size := MSIR.GlobalBackingBytes (g),
@@ -1687,8 +1713,13 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
     END;
     FOR k := 0 TO backing.size () - 1 DO
       WITH bs = NARROW (backing.get (k), Backing) DO
-        bs.seg.var := cg.declare_global (ID (bs.name), bs.seg.size, bs.align,
-                                     M3CG.Type.Struct, 0, FALSE, FALSE);
+        IF bs.external THEN
+          bs.seg.var := cg.import_global (ID (bs.name), bs.seg.size, bs.align,
+                                          bs.type, 0);
+        ELSE
+          bs.seg.var := cg.declare_global (ID (bs.name), bs.seg.size, bs.align,
+                                           M3CG.Type.Struct, 0, FALSE, FALSE);
+        END;
       END;
     END;
 
@@ -1981,6 +2012,15 @@ PROCEDURE Push (v: MSIR.Value) =
         EVAL syms.get (Text.Sub (name, 1), r);
         PushAddr (NARROW (r, Loc).s.var,
                   NARROW (r, Loc).off + MSIR.GetStructFieldOffset (v));
+    | ValueKind.GlobalRef =>
+        (* the address of a global with its own M3CG variable: an
+           <*EXTERNAL*> C variable or a large global's storage *)
+        VAR key := name;
+        BEGIN
+          IF HasPrefix (key, "@") THEN key := Text.Sub (key, 1) END;
+          EVAL syms.get (key, r);
+          PushAddr (NARROW (r, Loc).s.var, NARROW (r, Loc).off);
+        END;
     ELSE
       IF MSIR.ValueDefInsn (v) = NIL AND name # NIL AND HasPrefix (name, "@")
          AND syms.get (Text.Sub (name, 1), r) THEN

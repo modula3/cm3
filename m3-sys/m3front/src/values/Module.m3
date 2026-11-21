@@ -1126,28 +1126,20 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
                 IF v.external THEN
                   Variable.RegisterExternMSIR (v);
                 ELSE
-                  (* Non-external exported interface variable.  The interface
-                     unit — Foo.i3 -> Foo_i.o, a DISTINCT object from this
-                     module's Foo_m.o even when it shares the module's name —
-                     OWNS the storage: it emits the variable in its own info
-                     struct AND a strong external alias @Foo__<var> pointing at
-                     it (the alias loop in MSIRToLLVM).  So reference that alias
-                     as a link-time external symbol (the C-external branch of
-                     RegisterExternMSIR), exactly like the C backend references
-                     I_Foo.  NEVER define a copy in this module's info struct:
-                     for MODULE Z EXPORTS Z the old weak-copy path put argc/argv
-                     at their interface offsets inside @Z_M3_info, aliasing this
-                     module's own init_done/n_modules and crashing InitRuntime
-                     with a wild pointer.  A prior attempt routed these through
-                     the runtime _I3 import chain (like a cross-module import);
-                     that works for ordinary imports but NOT for the bootstrap
-                     linker referencing ITSELF (the import pointer is still NULL
-                     when RTLinker.InitRuntime writes argc), so the direct
-                     external-symbol form is used instead — no runtime resolution.
-                     Force imported := FALSE so RegisterExternMSIR takes the
-                     C-external (alias) branch, not the import-chain branch;
-                     savedImp restores the flag below. *)
-                  v.imported := FALSE;
+                  (* Non-external exported interface variable (D28).  The
+                     interface unit owns its storage, in its own data, at the
+                     offset the front end assigned; like any importer, this
+                     module reaches it through its import of the interface
+                     (the owner's _I3 binder), as the CG path does.  (Earlier
+                     this was referenced as a link-time symbol, an alias the
+                     interface unit emits; RTLinker reaching its own argc
+                     before its imports were filled was the worry, but
+                     InitRuntime runs FixImports on itself first, so the
+                     import pointer is set.)  Never define a copy in this
+                     module's own info struct: for MODULE Z EXPORTS Z that put
+                     the variables at their interface offsets inside
+                     @Z_M3_info, over this module's own globals. *)
+                  v.imported := TRUE;
                   Variable.RegisterExternMSIR (v);
                 END;
                 v.imported := savedImp;
