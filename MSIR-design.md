@@ -1263,6 +1263,61 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - **D24. RT0 layout has one source.**  Use `M3RT` offsets and sizes
   everywhere; keep the LLVM field-type tables, but assert once that their
   padded offsets equal `M3RT`'s `TC_*`/`OTC_*`/`ATC_*`/`MI_*` values.
+  - **Amendment (proposed 2026-11-21, with D27): the authority is RT0, in
+    Modula-3; `M3RT` is the compiler's copy, checked against it.**
+    - *Authority.*  The runtime's data structures are declared once, as
+      ordinary Modula-3 in `RT0` (and `RTException`, `RTExFrame` for the
+      `EA_`/`EF_` layouts): typecells, module and import info, procedure
+      info, revelations, closures, exception descriptors, and the object
+      header.  Runtime code reads them as fields.  The open-array dope
+      (`OA_`) has no runtime declaration and stays the compiler's.
+    - *The object header becomes a packed record again.*  From 2001 to
+      2022 `RT0.RefHeader` was a record of `BITS` fields (forwarded,
+      typecode, dirty, gray, weak, marka, markb, spare).  #992 replaced it
+      with a plain word and out-of-line accessors using literal bit
+      positions (`Word.Extract (h.word, 1, 20)`), keeping the packed record
+      only as an unused `RefHeaderBits`, so that one C bootstrap would serve
+      both byte orders.  The packed record comes back as `RefHeader`;
+      `RT0`'s accessors either go or become field reads that the C backend
+      inlines.  Reason: it states the layout in Modula-3, runtime code reads
+      `h.typecode` as an inline extract rather than a cross-unit call, and
+      the declaration can be checked (below).
+    - *Why this is safe for portable C.*  Packed-field lowering depends only
+      on byte order, word size and `Allow_packed_byte_aligned` (FALSE for
+      the C backend).  Checked 2026-11-21: the C the front end generates for
+      reads and writes of the packed header is identical for ARM64_DARWIN,
+      AMD64_DARWIN, AMD64_LINUX, ARM64_LINUX and AMD64_FREEBSD (narrow loads
+      at fixed byte offsets, e.g. `UINT32` at 0 for `typecode`, `UINT8` at 2
+      for `gray`).  Only big-endian targets differ, and they are out of
+      scope; if they return, the fix belongs in the lowering (a packed
+      field as logical bits of its word-aligned container, read with
+      whole-container loads), not in the runtime source (D27).
+    - *Why `M3RT` stays.*  The compiler needs these layouts for every unit,
+      including units that never import `RT0` (every unit has a module info
+      and typecells; `RTHooks` does not import `RT0`) and while compiling
+      `RT0` itself.  So `M3RT` cannot be derived from `RT0` on demand; it
+      remains the compiler's working copy, used by the front end, the
+      MSIR lowerings and (through D24's assert) the LLVM field tables.
+      m3back and m3linker do not use it.
+    - *The check.*  When the front end compiles `RT0`, and whenever it
+      loads `RT0` while compiling another unit, it compares the layout it
+      computes for `RT0`'s records with `M3RT`: each field's offset and
+      size (bits for `RefHeader`), and each record's size.  A difference is
+      a compile-time error naming the field.  Building m3core therefore
+      fails on any drift, and a compiler whose `M3RT` has changed rejects an
+      `RT0` that has not.  Optionally, a layout fingerprint in each module
+      info, checked by `RTLinker` at startup, catches a program linked
+      against an m3core built by a different compiler.
+    - *Considered.*  A compiler-provided interface (`RTLayout`, like the
+      built-in `Compiler`) exporting `M3RT`'s values as constants for the
+      runtime to use.  It gives one source and real constants, but makes the
+      runtime consume compiler constants instead of declaring its own
+      structures, needs a bootstrap step (older compilers lack the
+      interface), and is unnecessary once the header is a packed record
+      again.  Kept in reserve for any value that cannot be stated as an
+      `RT0` declaration.
+    - *Cost.*  Reverting the header part of #992 in m3core, and the check
+      in the front end (one procedure, run when `RT0` is compiled or loaded).
 - **D25. MSIR becomes the front end's only lowering; EH stays structured**
   (Tony, 2026-11-20).  The end state is m3front → MSIR only, with M3CG
   kept as the input to the existing backends (C, m3cc, IntLlvm*) and
@@ -1477,9 +1532,10 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
        so C's limits stay in that lowering.  A portable bootstrap fixes the
        generated code's target parameters (64-bit, little-endian, one
        `EXTENDED` size, C++ EH); a target's native rebuild then uses its own.
-    4. *Layout has one source* (D24 extended).  The object header's bit
-       layout used by the compiler (TYPECODE, NARROW, ISTYPE) and by `RT0`
-       comes from `M3RT`, not from offsets duplicated in both.
+    4. *Layout has one source* (D24, amended).  The runtime's structures,
+       the object header included, are declared in Modula-3 in `RT0`; the
+       compiler's `M3RT` copy is checked against them, rather than the bit
+       positions being duplicated by hand.
   - **Longer term, not scheduled.**  An EH personality owned by Modula-3
     (its own unwinder personality and tables, not C++'s) would separate
     exceptions from the C++ runtime.  A portable IR bootstrap would need
