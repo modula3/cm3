@@ -10,10 +10,43 @@ UNSAFE INTERFACE RTStack;
 IMPORT RTMachine;
 
 (* This interface defines the low-level routines used to traverse
-   the runtime stack.  Not all platforms support these routines.
-*)
+ * the runtime stack.  Not all platforms support these routines.
+ *
+ * NOTE: The meanings here have changed.
+ * "Has_walker" used to mean:
+ *  1 Modula-3 backend generates exception handling metadata.
+ *    Instead of using slowly maintaining a thread local linked list.
+ *    Well, hypothetical NT/x86 backend's best case is
+ *    a highly optimized thread local link list, through FS:0.
+ *  2 Modula-3 runtime could walk stack for exception handling.
+ *  3 Modula-3 runtime could walk stack for printing a stack back trace.
+ *
+ * Now it means:
+ *  1 Modula-3 backend generates exception handling metadata.
+ *    Typically via the C++ backend where it is relatively easy.
+ *  2 Does not apply. The C++ runtime does this, perhaps via shared OS cross
+ *    language functionality (e.g. Windows: RaiseException leading to
+ *    internally RtlVirtualUnwind and public RtlUwind).
+ *  3 Modula-3 runtime could walk stack for printing a stack back trace.
+ *    But these can also just always fail such as by returning pc=NIL.
+ *    Unwind always fails, even on modern systems with walker.
+ *    Implementing Unwind in Modula-3 runtime would break language interoperation.
+ *
+ * As such, "has walker" can be considered equivalent to "using C++ backend",
+ * or perhaps other cases also.
+ *
+ * So "has_walker" does not mean much.
+ * We could possibly link in ex_frame and ex_stack and use has_walker
+ * to decide between them at raise time, but how to throw generally
+ * can be guided by the backend. To output the slow frame maintenance
+ * calls or not and you don't want to slow own ex_stack systems like that.
+ * It only therefore makes residual sense if some system has a broken
+ * or missing C++ runtime and you have some sorta of pessimized
+ * dual bootstrap form.
+ *)
 
-CONST Has_walker = RTMachine.Has_stack_walker;
+<*EXTERNAL "RTStack_Has_walker"*>
+PROCEDURE Has_walker (): BOOLEAN;
 (* Indicates whether this platform has a stack walker.  If "Has_walker"
    is "FALSE", it is a checked runtime error to call any of the routines
    described below. *)
@@ -54,8 +87,7 @@ PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
 PROCEDURE ThrowM3Exc (act: ADDRESS);
 (* Throw a C++ _M3Exc carrying "act" (a pointer to a RT0.RaiseActivation)
    so that native C++ EH unwind dispatches to the appropriate TRY/EXCEPT
-   or TRY/FINALLY handler.  Only meaningful when Has_walker = TRUE and the
+   or TRY/FINALLY handler.  Only meaningful when Has_walker () = TRUE and the
    M3C backend generates C++ try/catch for exception handling. *)
 
 END RTStack.
-

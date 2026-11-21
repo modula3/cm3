@@ -151,5 +151,5 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
 
 BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
-  <*ASSERT RTStack.Has_walker*>
+  (* commented out ASSERT RTStack.Has_walker () *)
 END RTExStack.
