@@ -278,7 +278,10 @@ PROCEDURE DeclareGlobalMSIR (t: T) =
         VAR v := Expr.ConstLiteralMSIR (t.valExpr, mt);
         BEGIN
           IF v # NIL THEN
-            image := MSIRBuilder.ConstArrayGlobal (mt, ARRAY OF MSIR.Value {v});
+            (* the literal's own type: a set literal is [N x i64] where the
+               set type translates to one wide integer *)
+            image := MSIRBuilder.ConstArrayGlobal (MSIR.ValueType (v),
+                                                   ARRAY OF MSIR.Value {v});
           END;
         END;
       END;

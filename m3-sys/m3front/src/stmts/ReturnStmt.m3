@@ -68,7 +68,7 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (p: P) =
-  VAR v: MSIR.Value := NIL;  endCatch: MSIR.Proc;
+  VAR v: MSIR.Value := NIL;
   BEGIN
     IF NOT MSIRBuilder.InProc ()              THEN RETURN END;
     IF MSIRBuilder.CurrentBlockTerminated ()  THEN RETURN END;
@@ -160,24 +160,10 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
     END;
-    (* If returning from inside a catch handler, release the exception first. *)
-    endCatch := MSIRBuilder.CurrentCatchEndProc ();
-    IF endCatch # NIL THEN
-      EVAL MSIR.BuildCall (MSIRBuilder.CurrentBlock (), "", endCatch,
-                           ARRAY OF MSIR.Value {});
-    END;
-    (* Route the RETURN through any enclosing TRY/FINALLY cleanup frame.
-       A RETURN inside a TRY body must execute the FINALLY before leaving.
-       EmitReturnThroughFinally stores v into the frame's retSlot, sets
-       selector = Sel_Return, branches to finBody, and returns TRUE.
-       When it returns FALSE there is no enclosing finally and we emit a
-       plain ret.  (p020: QQ's RETURN j+10 must pass through FINALLY
-       j := 4; RETURN j+1, which overrides the return value to 5.) *)
-    IF MSIRBuilder.EmitReturnThroughFinally (v) THEN
-      RETURN;
-    END;
-    (* Native large-result ABI: results (large or small) are returned by value. *)
-    MSIR.BuildRet (MSIRBuilder.CurrentBlock (), v);
+    (* Inside EH scopes the RETURN is ret_through_envelope, which runs any
+       FINALLY code it leaves (D26); an enclosing EXCEPT ELSE catches it.
+       Results (large or small) are returned by value. *)
+    MSIRBuilder.EmitReturnMSIR (v);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

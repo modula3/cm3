@@ -12,12 +12,14 @@ IMPORT MSIR;
 
 (* Returns NIL on success, or a REF ARRAY OF TEXT of human-readable error
    messages on failure. Each message is prefixed with a location such as
-   "@ProcName: block label: insn N". *)
-PROCEDURE VerifyModule(m: MSIR.Module): REF ARRAY OF TEXT;
+   "@ProcName: block label: insn N".  'lowered': m has been through EH
+   lowering (MSIREH), so invoke, landingpad, extractvalue and resume may
+   appear; otherwise they are errors (D26). *)
+PROCEDURE VerifyModule(m: MSIR.Module;  lowered := FALSE): REF ARRAY OF TEXT;
 (* Incremental read-barrier completeness audit (gc.load coverage); returns
    violation descriptions, NIL if none.  Gated by the caller (MSIREmit runs
    it under @M3msirrbaudit). *)
 PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT;
-PROCEDURE VerifyProc(p: MSIR.Proc): REF ARRAY OF TEXT;
+PROCEDURE VerifyProc(p: MSIR.Proc;  lowered := FALSE): REF ARRAY OF TEXT;
 
 END MSIRVerifier.

@@ -949,6 +949,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
+  resumeRaiseProc : Proc := NIL;   (* RTHooks.ResumeRaiseEx, for EH lowering *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
   textLitHooks : ARRAY [0..4] OF Proc;
@@ -1210,13 +1211,15 @@ REVEAL ExcDesc = BRANDED "MSIR.ExcDesc" REF RECORD
   display : TEXT := NIL;  (* human-readable qualified name, e.g. "Main.a" *)
   ptrVal  : Value := NIL;  (* cached ptr value *)
   argType : T := NIL;      (* the argument's type; NIL if none *)
+  argByRef: BOOLEAN := FALSE;
 END;
 
 PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL;
-                     argType: T := NIL): ExcDesc =
+                     argType: T := NIL;  argByRef := FALSE): ExcDesc =
   VAR d := NEW(ExcDesc);  v := NEW(Value);
   BEGIN
     d.argType := argType;
+    d.argByRef := argByRef;
     d.name    := name;
     d.uid     := uid;
     d.display := display;
@@ -1234,6 +1237,12 @@ PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER = BEGIN RETURN d.uid    END ExcDescU
 PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT = BEGIN RETURN d.display END ExcDescDisplay;
 PROCEDURE ExcDescValue(d: ExcDesc): Value   = BEGIN RETURN d.ptrVal END ExcDescValue;
 PROCEDURE ExcDescArgType(d: ExcDesc): T     = BEGIN RETURN d.argType END ExcDescArgType;
+PROCEDURE ExcDescArgByRef(d: ExcDesc): BOOLEAN = BEGIN RETURN d.argByRef END ExcDescArgByRef;
+PROCEDURE SetExcDescArg(d: ExcDesc;  argType: T;  argByRef: BOOLEAN) =
+  BEGIN
+    d.argType := argType;
+    d.argByRef := argByRef;
+  END SetExcDescArg;
 
 PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc) = BEGIN m.excDescs.addhi(d) END ModuleAddExcDesc;
 PROCEDURE ModuleExcDescCount(m: Module): INTEGER     = BEGIN RETURN m.excDescs.size() END ModuleExcDescCount;
@@ -1552,6 +1561,10 @@ PROCEDURE SetModuleHooks(m: Module;
     m.gcStoreBarrierProc := gcStore;
     m.scanTypecaseProc   := scanTypecase;
   END SetModuleHooks;
+PROCEDURE SetModuleResumeRaise(m: Module;  p: Proc) =
+  BEGIN m.resumeRaiseProc := p END SetModuleResumeRaise;
+PROCEDURE ModuleResumeRaise(m: Module): Proc =
+  BEGIN RETURN m.resumeRaiseProc END ModuleResumeRaise;
 PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
   BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
 PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =
@@ -2384,6 +2397,58 @@ PROCEDURE BuildUnwindTo(b: Block;  target: Block;
     i.br0Args := copyArgs(args);
     addInsn(b, i);
   END BuildUnwindTo;
+
+PROCEDURE BuildHandlerActivation(b: Block;  name: TEXT): Value =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op := Op.HandlerActivation;
+    i.result := makeResult(b, TPtr(TVoid()), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildHandlerActivation;
+
+PROCEDURE BlockTakeInsns(b: Block): REF ARRAY OF Insn =
+  VAR n := b.insns.size();  r := NEW(REF ARRAY OF Insn, n);
+  BEGIN
+    FOR k := 0 TO n - 1 DO r[k] := b.insns.get(k) END;
+    b.insns := NEW(RefSeq.T).init();
+    RETURN r;
+  END BlockTakeInsns;
+
+PROCEDURE BlockAppendInsn(b: Block;  i: Insn) =
+  BEGIN
+    i.block := b;
+    b.insns.addhi(i);
+  END BlockAppendInsn;
+
+PROCEDURE InsnMakeInvoke(i: Insn;  normal, unwind: Block) =
+  BEGIN
+    CASE i.op OF
+    | Op.Call         => i.op := Op.Invoke;
+    | Op.CallIndirect => i.op := Op.InvokeIndirect;
+    ELSE <* ASSERT FALSE *>
+    END;
+    i.br0Tgt := normal;
+    i.br1Tgt := unwind;
+  END InsnMakeInvoke;
+
+PROCEDURE InsnMakeCopy(i: Insn;  v: Value) =
+  BEGIN
+    i.op := Op.Convert;
+    i.operands := NEW(REF ARRAY OF Value, 1);
+    i.operands[0] := v;
+    i.targetType := i.result.type;
+  END InsnMakeCopy;
+
+PROCEDURE ProcClearScopes(p: Proc) =
+  VAR root := ProcScope(p);
+  BEGIN
+    FOR k := 0 TO p.items.size() - 1 DO
+      NARROW(p.items.get(k), Block).scope := NIL;
+    END;
+    p.scopes := NEW(RefSeq.T).init();
+    p.scopes.addhi(root);
+  END ProcClearScopes;
 
 PROCEDURE BuildEndFinally(b: Block) =
   VAR i := NEW(Insn);

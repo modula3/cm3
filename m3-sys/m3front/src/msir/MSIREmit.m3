@@ -114,6 +114,19 @@ PROCEDURE EndUnit() =
       MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef),
       MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced),
       MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase));
+    (* EH lowering (MSIREH) re-raises through RTHooks.ResumeRaiseEx. *)
+    VAR scoped := FALSE;
+    BEGIN
+      FOR i := 0 TO MSIR.ModuleProcCount(curModule) - 1 DO
+        IF MSIR.ProcScopeCount(MSIR.ModuleProc(curModule, i)) > 1 THEN
+          scoped := TRUE;
+        END;
+      END;
+      IF scoped THEN
+        MSIR.SetModuleResumeRaise(curModule,
+          MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx));
+      END;
+    END;
     (* Populate text literals from TextExpr's per-module registry.
        TextExpr.SetUID tracks literals during compilation; we transfer
        them here so MSIRToLLVM (in the msir package) can emit the LLVM globals

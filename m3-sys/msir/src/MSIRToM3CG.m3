@@ -27,7 +27,8 @@ CONST
 
   EH = SET OF Op {
     Op.Invoke, Op.InvokeIndirect, Op.LandingPad, Op.ExtractValue,
-    Op.Resume, Op.Raise, Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally };
+    Op.Resume, Op.Raise, Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally,
+    Op.HandlerActivation };
 
   (* Kinds that are not a single M3CG stack value. *)
   Aggregate = SET OF TypeKind {

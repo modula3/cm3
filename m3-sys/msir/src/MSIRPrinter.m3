@@ -237,6 +237,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.UnwindTo           => RETURN "unwind_to";
     | MSIR.Op.RetThroughEnvelope => RETURN "ret_through_envelope";
     | MSIR.Op.EndFinally         => RETURN "end_finally";
+    | MSIR.Op.HandlerActivation  => RETURN "handler.activation";
     | MSIR.Op.Call               => RETURN "call";
     | MSIR.Op.Invoke             => RETURN "invoke";
     | MSIR.Op.New                => RETURN "new";

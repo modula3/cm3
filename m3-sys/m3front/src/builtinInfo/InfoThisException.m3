@@ -25,16 +25,10 @@ PROCEDURE Compile (<*UNUSED*> ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE CompileMSIR (<*UNUSED*> ce: CallExpr.T): MSIR.Value =
-  (* Return the activation pointer (RT0.ActivationPtr as ADDRESS) of the
-     exception being handled in the enclosing TRY handler.  TryStmt pushes it
-     onto the catch-context stack when it enters each handler body. *)
-  VAR act := MSIRBuilder.CurrentCatchActPtr ();
+  (* The activation (RT0.ActivationPtr as ADDRESS) of the exception being
+     handled by the enclosing handler (D26 handler.activation). *)
   BEGIN
-    IF act = NIL THEN
-      MSIRBuilder.Abandon ("Compiler.ThisException: no handler activation");
-      RETURN NIL;
-    END;
-    RETURN act;
+    RETURN MSIR.BuildHandlerActivation (MSIRBuilder.CurrentBlock (), "");
   END CompileMSIR;
 
 PROCEDURE Initialize () =

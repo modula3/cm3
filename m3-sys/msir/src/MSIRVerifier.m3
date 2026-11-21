@@ -7,6 +7,7 @@ TYPE Ctx = REF RECORD
   procName: TEXT;
   blockLabel: TEXT;
   insnIndex: INTEGER;
+  lowered: BOOLEAN := FALSE;  (* the module has been through MSIREH *)
 END;
 
 PROCEDURE Loc(c: Ctx): TEXT =
@@ -606,6 +607,25 @@ PROCEDURE CheckBlockScope(c: Ctx;  b: MSIR.Block) =
   BEGIN
     IF n = 0 THEN RETURN END;
     c.blockLabel := MSIR.BlockLabel(b);
+    (* Ops only MSIREH produces, and handler.activation outside handler
+       code. *)
+    FOR k := 0 TO n - 1 DO
+      i := MSIR.BlockInsn(b, k);
+      c.insnIndex := k;
+      CASE MSIR.InsnOp(i) OF
+      | MSIR.Op.Invoke, MSIR.Op.InvokeIndirect, MSIR.Op.LandingPad,
+        MSIR.Op.ExtractValue, MSIR.Op.Resume =>
+          IF NOT c.lowered THEN
+            Err(c, "invoke/landingpad/extractvalue/resume appear only after "
+                     & "EH lowering (MSIREH); use EH scopes (D26)");
+          END;
+      | MSIR.Op.HandlerActivation =>
+          IF NOT InHandler(MSIR.BlockScope(b)) THEN
+            Err(c, "handler.activation outside handler code");
+          END;
+      ELSE
+      END;
+    END;
     c.insnIndex := n - 1;
     i := MSIR.BlockInsn(b, n - 1);
     CASE MSIR.InsnOp(i) OF
@@ -640,11 +660,20 @@ PROCEDURE CheckBlockScope(c: Ctx;  b: MSIR.Block) =
     END;
   END CheckBlockScope;
 
+PROCEDURE InHandler(s: MSIR.Scope): BOOLEAN =
+  BEGIN
+    WHILE s # NIL DO
+      IF MSIR.ScopeKindOf(s) = MSIR.ScopeKind.Handler THEN RETURN TRUE END;
+      s := MSIR.ScopeParent(s);
+    END;
+    RETURN FALSE;
+  END InHandler;
+
 (*------------------------------------------ procedure / module entries *)
 
-PROCEDURE VerifyProc(p: MSIR.Proc): REF ARRAY OF TEXT =
+PROCEDURE VerifyProc(p: MSIR.Proc;  lowered := FALSE): REF ARRAY OF TEXT =
   VAR
-    c := NEW(Ctx);
+    c := NEW(Ctx, lowered := lowered);
     resultT: MSIR.T;
   BEGIN
     IF p = NIL THEN RETURN NIL END;
@@ -674,12 +703,12 @@ PROCEDURE ResultArray(errs: RefSeq.T): REF ARRAY OF TEXT =
     RETURN r;
   END ResultArray;
 
-PROCEDURE VerifyModule(m: MSIR.Module): REF ARRAY OF TEXT =
+PROCEDURE VerifyModule(m: MSIR.Module;  lowered := FALSE): REF ARRAY OF TEXT =
   VAR
     all := NEW(RefSeq.T).init();
   BEGIN
     FOR k := 0 TO MSIR.ModuleProcCount(m) - 1 DO
-      VAR errs := VerifyProc(MSIR.ModuleProc(m, k));
+      VAR errs := VerifyProc(MSIR.ModuleProc(m, k), lowered);
       BEGIN
         IF errs # NIL THEN
           FOR j := 0 TO LAST(errs^) DO all.addhi(errs[j]) END;

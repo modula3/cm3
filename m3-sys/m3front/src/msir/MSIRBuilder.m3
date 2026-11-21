@@ -6,7 +6,7 @@ IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
-IMPORT RefType;
+IMPORT RefType, Exceptionz;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 CONST MaxExitStack = 16;
@@ -48,18 +48,13 @@ TYPE VarEntry = RECORD
   container:   MSIR.Value := NIL;
 END;
 
-(* One frame of the unified loop/finally cleanup stack. *)
-TYPE CleanupKind = {Loop, Finally};
+(* One frame of the EXIT/RETURN routing stack: a loop, or the protected
+   body of a TRY with an ELSE (whose ELSE catches EXIT and RETURN). *)
+TYPE CleanupKind = {Loop, Else};
 TYPE CleanupFrame = RECORD
   kind:       CleanupKind;
-  exitBlock:  MSIR.Block := NIL;   (* Loop: branch target for EXIT *)
-  finBody:    MSIR.Block := NIL;   (* Finally: shared finally-body entry *)
-  selector:   MSIR.Value := NIL;   (* Finally: i32 alloca holding a Sel_* code *)
-  retSlot:    MSIR.Value := NIL;   (* Finally: alloca holding a pending RETURN value
-                                      (NIL for void-result procs); set by EmitReturnMSIR
-                                      when a RETURN appears in the TRY body *)
-  exitSeen:   BOOLEAN := FALSE;    (* Finally: an EXIT routed through it *)
-  returnSeen: BOOLEAN := FALSE;    (* Finally: a RETURN routed through it *)
+  exitBlock:  MSIR.Block := NIL;   (* Loop: branch target for EXIT;
+                                      Else: the ELSE code *)
 END;
 
 (* Saved state for one level of proc context (for nested proc compilation). *)
@@ -72,8 +67,7 @@ TYPE ProcContext = RECORD
   varMapN:       INTEGER;
   varMap:        ARRAY [0..MaxVarMap-1] OF VarEntry;
   exitDepth:     INTEGER;
-  tryDepth:      INTEGER;
-  catchDepth:    INTEGER;
+  scope:         MSIR.Scope;   (* curScope *)
   cleanupDepth:  INTEGER;
 END;
 
@@ -109,19 +103,11 @@ VAR
   exitStack: ARRAY [0..MaxExitStack-1] OF MSIR.Block;
   exitDepth: INTEGER := 0;
 
-  tryStack:  ARRAY [0..MaxTryDepth-1] OF MSIR.Block;
-  tryDepth:  INTEGER := 0;
+  (* The EH scope new blocks go in (D26); NIL: the proc's root. *)
+  curScope: MSIR.Scope := NIL;
 
-  catchStack: ARRAY [0..MaxCatchDepth-1] OF MSIR.Proc;  (* endCatch procs *)
-  (* Activation pointer (RT0.ActivationPtr as a void pointer) of the exception
-     being handled at each catch depth; retrieved by Compiler.ThisException. *)
-  catchActStack: ARRAY [0..MaxCatchDepth-1] OF MSIR.Value;
-  catchDepth: INTEGER := 0;
-
-  (* Unified cleanup-frame stack in nesting order — loops and finallys
-     interleaved — so a non-local EXIT can run every intervening finally before
-     branching to its target loop's exit block.  Loop frames are pushed by
-     PushExitBlock; Finally frames by PushFinallyCleanup. *)
+  (* EXIT/RETURN routing frames in nesting order: loops (PushExitBlock) and
+     the protected bodies of TRYs with an ELSE (PushElseFrame). *)
   cleanupStack: ARRAY [0..MaxCleanup-1] OF CleanupFrame;
   cleanupDepth: INTEGER := 0;
 
@@ -186,8 +172,7 @@ PROCEDURE PopBeginContext() =
       pendingContainer := ctx.pending;
       varMapN          := ctx.varMapN;
       exitDepth        := ctx.exitDepth;
-      tryDepth         := ctx.tryDepth;
-      catchDepth       := ctx.catchDepth;
+      curScope         := ctx.scope;
       cleanupDepth     := ctx.cleanupDepth;
       FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
     END;
@@ -225,8 +210,7 @@ PROCEDURE BeginProc(name: TEXT;
         ctx.pending    := pendingContainer;
         ctx.varMapN    := varMapN;
         ctx.exitDepth  := exitDepth;
-        ctx.tryDepth   := tryDepth;
-        ctx.catchDepth := catchDepth;
+        ctx.scope      := curScope;
         ctx.cleanupDepth := cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
@@ -241,8 +225,7 @@ PROCEDURE BeginProc(name: TEXT;
     abandoned      := FALSE;
     varMapN        := 0;
     exitDepth      := 0;
-    tryDepth       := 0;
-    catchDepth     := 0;
+    curScope       := NIL;
     cleanupDepth   := 0;
     blockSeq       := 0;
 
@@ -836,9 +819,8 @@ PROCEDURE EndProc() =
         pendingContainer := ctx.pending;
         varMapN          := ctx.varMapN;
         exitDepth        := ctx.exitDepth;
-        tryDepth         := ctx.tryDepth;
-        catchDepth       := ctx.catchDepth;
-      cleanupDepth     := ctx.cleanupDepth;
+        curScope         := ctx.scope;
+        cleanupDepth     := ctx.cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
       END;
     ELSE
@@ -847,8 +829,8 @@ PROCEDURE EndProc() =
       abandoned        := FALSE;
       varMapN          := 0;
       exitDepth        := 0;
-      tryDepth         := 0;
-      catchDepth       := 0;
+      curScope         := NIL;
+      cleanupDepth     := 0;
       pendingContainer := NIL;
       MSIR.SetCurrentSrcLine(0);
     END;
@@ -919,6 +901,7 @@ PROCEDURE NewBlock(label: TEXT): MSIR.Block =
     uniq := label & "." & Fmt.Int(blockSeq);
     b := MSIR.NewBlock(uniq, ARRAY OF MSIR.BlockParam{});
     MSIR.ProcAddBlock(curProc, b);
+    IF curScope # NIL THEN MSIR.BlockSetScope(b, curScope) END;
     RETURN b;
   END NewBlock;
 
@@ -931,6 +914,7 @@ PROCEDURE NewBlockWithParam(label: TEXT;  paramName: TEXT;  paramType: MSIR.T): 
            ARRAY OF MSIR.BlockParam{MSIR.BlockParam{name := paramName,
                                                      type := paramType}});
     MSIR.ProcAddBlock(curProc, b);
+    IF curScope # NIL THEN MSIR.BlockSetScope(b, curScope) END;
     RETURN b;
   END NewBlockWithParam;
 
@@ -988,125 +972,84 @@ PROCEDURE PopExitBlock() =
     END;
   END PopExitBlock;
 
-PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value;
-                              retSlot: MSIR.Value := NIL) =
-  BEGIN
-    IF cleanupDepth < MaxCleanup THEN
-      cleanupStack[cleanupDepth] := CleanupFrame{kind    := CleanupKind.Finally,
-                                                 finBody  := finBody,
-                                                 selector := selector,
-                                                 retSlot  := retSlot};
-      INC(cleanupDepth);
-    ELSE
-      Abandon("cleanup stack overflow");
-    END;
-  END PushFinallyCleanup;
-
-PROCEDURE PopFinallyCleanup() =
-  BEGIN
-    IF cleanupDepth > 0
-       AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally
-      THEN DEC(cleanupDepth)
-    END;
-  END PopFinallyCleanup;
-
-PROCEDURE EmitReturnThroughFinally(v: MSIR.Value): BOOLEAN =
-(* Route a RETURN from inside a TRY body through every enclosing Finally cleanup
-   frame.  For each Finally frame: store v into its retSlot (if any), set its
-   selector to Sel_Return, and branch to its finBody.  Returns TRUE if at least
-   one Finally frame was crossed (caller must NOT emit a plain BuildRet).
-   If no Finally frame is active, returns FALSE. *)
-  BEGIN
-    IF cleanupDepth = 0 THEN RETURN FALSE END;
-    IF cleanupStack[cleanupDepth-1].kind # CleanupKind.Finally THEN
-      RETURN FALSE;
-    END;
-    WITH frame = cleanupStack[cleanupDepth-1] DO
-      IF v # NIL AND frame.retSlot # NIL THEN
-        MSIR.BuildStore(CurrentBlock(), v, frame.retSlot);
-      END;
-      MSIR.BuildStore(CurrentBlock(),
-                      MSIR.ConstInt(MSIR.TI(32), Sel_Return),
-                      frame.selector);
-      frame.returnSeen := TRUE;
-      MSIR.BuildBr(CurrentBlock(), frame.finBody, ARRAY OF MSIR.Value{});
-    END;
-    RETURN TRUE;
-  END EmitReturnThroughFinally;
-
-PROCEDURE CurrentFinallyReturnSeen(): BOOLEAN =
-  BEGIN
-    IF cleanupDepth > 0
-       AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally
-      THEN RETURN cleanupStack[cleanupDepth-1].returnSeen
-      ELSE RETURN FALSE
-    END;
-  END CurrentFinallyReturnSeen;
-
-(* Emit the control transfer for an EXIT: branch to the innermost cleanup frame.
-   A Loop frame → branch straight to its exit block (identical to a plain EXIT).
-   A Finally frame → store Sel_Exit into its selector and branch to its body;
-   the finally's epilogue, after running the finally, calls EmitExitMSIR again
-   (its own frame now popped) to continue out to the next finally or the loop. *)
-PROCEDURE EmitExitMSIR() =
-  BEGIN
-    IF cleanupDepth = 0 THEN
-      Abandon("EXIT not inside a loop in MSIR");
-      RETURN;
-    END;
-    IF cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally THEN
-      (* Route the EXIT through this finally: record that its epilogue must emit
-         the Sel_Exit arm, store the selector, and branch to the finally body. *)
-      cleanupStack[cleanupDepth-1].exitSeen := TRUE;
-      MSIR.BuildStore(CurrentBlock(),
-                      MSIR.ConstInt(MSIR.TI(32), Sel_Exit),
-                      cleanupStack[cleanupDepth-1].selector);
-      MSIR.BuildBr(CurrentBlock(), cleanupStack[cleanupDepth-1].finBody,
-                   ARRAY OF MSIR.Value{});
-    ELSE
-      MSIR.BuildBr(CurrentBlock(), cleanupStack[cleanupDepth-1].exitBlock,
-                   ARRAY OF MSIR.Value{});
-    END;
-  END EmitExitMSIR;
-
-(* Whether an EXIT routed through the innermost (current) finally cleanup frame.
-   Called by TryFinStmt — while its Finally frame is still on top — to decide
-   whether the finally epilogue needs the Sel_Exit dispatch arm. *)
-PROCEDURE CurrentFinallyExitSeen(): BOOLEAN =
-  BEGIN
-    IF cleanupDepth > 0
-       AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Finally
-      THEN RETURN cleanupStack[cleanupDepth-1].exitSeen
-      ELSE RETURN FALSE
-    END;
-  END CurrentFinallyExitSeen;
-
 PROCEDURE CurrentExitBlock(): MSIR.Block =
   BEGIN
     IF exitDepth = 0 THEN RETURN NIL END;
     RETURN exitStack[exitDepth - 1];
   END CurrentExitBlock;
 
-PROCEDURE PushTryContext(lpadBlock: MSIR.Block) =
+(*----------------------------------------------------------- EH scopes *)
+
+PROCEDURE CurrentScope(): MSIR.Scope =
   BEGIN
-    IF tryDepth < MaxTryDepth THEN
-      tryStack[tryDepth] := lpadBlock;
-      INC(tryDepth);
+    IF curScope # NIL THEN RETURN curScope END;
+    RETURN MSIR.ProcScope(curProc);
+  END CurrentScope;
+
+PROCEDURE SetScope(s: MSIR.Scope): MSIR.Scope =
+  VAR prev := curScope;
+  BEGIN
+    curScope := s;
+    RETURN prev;
+  END SetScope;
+
+PROCEDURE NewScope(kind: MSIR.ScopeKind;  parent: MSIR.Scope;
+                   owner: MSIR.Scope := NIL): MSIR.Scope =
+  BEGIN
+    RETURN MSIR.NewScope(curProc, kind, parent, owner);
+  END NewScope;
+
+PROCEDURE EmitGoto(target: MSIR.Block;  READONLY args: ARRAY OF MSIR.Value) =
+  BEGIN
+    IF MSIR.BlockScope(target) = CurrentScope() THEN
+      MSIR.BuildBr(CurrentBlock(), target, args);
     ELSE
-      Abandon("try context stack overflow");
+      MSIR.BuildUnwindTo(CurrentBlock(), target, args);
     END;
-  END PushTryContext;
+  END EmitGoto;
 
-PROCEDURE PopTryContext() =
+PROCEDURE PushElseFrame(target: MSIR.Block) =
   BEGIN
-    IF tryDepth > 0 THEN DEC(tryDepth) END;
-  END PopTryContext;
+    IF cleanupDepth < MaxCleanup THEN
+      cleanupStack[cleanupDepth] :=
+        CleanupFrame{kind := CleanupKind.Else, exitBlock := target};
+      INC(cleanupDepth);
+    ELSE
+      Abandon("cleanup stack overflow");
+    END;
+  END PushElseFrame;
 
-PROCEDURE CurrentUnwindBlock(): MSIR.Block =
+PROCEDURE PopElseFrame() =
   BEGIN
-    IF tryDepth = 0 THEN RETURN NIL END;
-    RETURN tryStack[tryDepth - 1];
-  END CurrentUnwindBlock;
+    IF cleanupDepth > 0 AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Else
+      THEN DEC(cleanupDepth)
+    END;
+  END PopElseFrame;
+
+PROCEDURE EmitExitMSIR() =
+  BEGIN
+    IF cleanupDepth = 0 THEN
+      Abandon("EXIT not inside a loop in MSIR");
+      RETURN;
+    END;
+    EmitGoto(cleanupStack[cleanupDepth-1].exitBlock, ARRAY OF MSIR.Value{});
+  END EmitExitMSIR;
+
+PROCEDURE EmitReturnMSIR(v: MSIR.Value) =
+  BEGIN
+    FOR k := cleanupDepth - 1 TO 0 BY -1 DO
+      IF cleanupStack[k].kind = CleanupKind.Else THEN
+        (* the ELSE catches the RETURN; its value is dropped *)
+        EmitGoto(cleanupStack[k].exitBlock, ARRAY OF MSIR.Value{});
+        RETURN;
+      END;
+    END;
+    IF MSIR.ScopeIndex(CurrentScope()) = 0 THEN
+      MSIR.BuildRet(CurrentBlock(), v);
+    ELSE
+      MSIR.BuildRetThroughEnvelope(CurrentBlock(), v);
+    END;
+  END EmitReturnMSIR;
 
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
@@ -1231,8 +1174,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         ctx.pending    := pendingContainer;
         ctx.varMapN    := varMapN;
         ctx.exitDepth  := exitDepth;
-        ctx.tryDepth   := tryDepth;
-        ctx.catchDepth := catchDepth;
+        ctx.scope      := curScope;
         ctx.cleanupDepth := cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
@@ -1242,8 +1184,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
     abandoned      := FALSE;
     varMapN        := 0;
     exitDepth      := 0;
-    tryDepth       := 0;
-    catchDepth     := 0;
+    curScope       := NIL;
     cleanupDepth   := 0;
     blockSeq       := 0;
 
@@ -1305,9 +1246,8 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         pendingContainer := ctx.pending;
         varMapN          := ctx.varMapN;
         exitDepth        := ctx.exitDepth;
-        tryDepth         := ctx.tryDepth;
-        catchDepth       := ctx.catchDepth;
-      cleanupDepth     := ctx.cleanupDepth;
+        curScope         := ctx.scope;
+        cleanupDepth     := ctx.cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
       END;
     ELSE
@@ -1508,14 +1448,7 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
     result:  MSIR.Value;
   BEGIN
     b      := CurrentBlock();   (* advance past any dead-terminator block *)
-    unwind := CurrentUnwindBlock();
-    IF unwind # NIL THEN
-      normalB := NewBlock("invoke.cont");
-      result  := MSIR.BuildInvoke(b, name, callee, args, normalB, unwind);
-      curBlock := normalB;
-    ELSE
-      result := MSIR.BuildCall(b, name, callee, args);
-    END;
+    result := MSIR.BuildCall(b, name, callee, args);
     RETURN result;
   END EmitCall;
 
@@ -1528,14 +1461,7 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     result:  MSIR.Value;
   BEGIN
     b      := CurrentBlock();
-    unwind := CurrentUnwindBlock();
-    IF unwind # NIL THEN
-      normalB := NewBlock("invoke.ind.cont");
-      result  := MSIR.BuildInvokeIndirect(b, name, fn, rtype, args, normalB, unwind);
-      curBlock := normalB;
-    ELSE
-      result := MSIR.BuildCallIndirect(b, name, fn, rtype, args);
-    END;
+    result := MSIR.BuildCallIndirect(b, name, fn, rtype, args);
     RETURN result;
   END EmitCallIndirect;
 
@@ -1675,32 +1601,41 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
     allArgs[0] := obj;
     FOR k := 0 TO nArgs - 1 DO allArgs[1 + k] := args[k] END;
 
-    (* 5. Indirect call or invoke depending on TRY context. *)
-    unwind := CurrentUnwindBlock();
-    IF unwind # NIL THEN
-      normalB := NewBlock("dispatch.cont");
-      result  := MSIR.BuildInvokeIndirect(b, name, fn, rtype, allArgs^,
-                                            normalB, unwind);
-      curBlock := normalB;
-    ELSE
-      result := MSIR.BuildCallIndirect(b, name, fn, rtype, allArgs^);
-    END;
+    (* 5. Indirect call. *)
+    result := MSIR.BuildCallIndirect(b, name, fn, rtype, allArgs^);
     RETURN result;
   END EmitMethodCall;
 
 PROCEDURE ExcDescValue (v: Value.T): MSIR.Value =
+  VAR d := ExcDescFor(v);
+  BEGIN
+    IF d = NIL THEN RETURN NIL END;
+    RETURN MSIR.ExcDescValue(d);
+  END ExcDescValue;
+
+PROCEDURE ExcDescFor (v: Value.T): MSIR.ExcDesc =
   VAR
     m    := MSIREmit.CurrentModule();
     name := Value.GlobalName(v, dots := FALSE, with_module := TRUE) & "_excptr";
     uid  := M3FP.ToInt(M3FP.FromText(Value.GlobalName(v)));
     desc : MSIR.ExcDesc;
+    argT := Exceptionz.ArgType(v);
+    mt   : MSIR.T := NIL;
+    byRef := FALSE;
   BEGIN
     IF m = NIL THEN RETURN NIL END;
+    IF argT # NIL THEN
+      mt := MSIRType.Translate(argT);
+      byRef := Exceptionz.ArgByReference(argT);
+    END;
     (* Check if already registered for this module. *)
     FOR i := 0 TO MSIR.ModuleExcDescCount(m) - 1 DO
       desc := MSIR.ModuleExcDesc(m, i);
       IF Text.Equal(MSIR.ExcDescName(desc), name) THEN
-        RETURN MSIR.ExcDescValue(desc);
+        IF MSIR.ExcDescArgType(desc) = NIL AND mt # NIL THEN
+          MSIR.SetExcDescArg(desc, mt, byRef);
+        END;
+        RETURN desc;
       END;
     END;
     (* Not found — create and register.  Carry the qualified display name
@@ -1708,86 +1643,11 @@ PROCEDURE ExcDescValue (v: Value.T): MSIR.Value =
        at it — RTException.Crash reads it via M3toC.StoT to print "Unhandled
        exception: Module.Exc"; a null name there prints blank and then SEGVs. *)
     desc := MSIR.NewExcDesc(name, uid,
-              Value.GlobalName(v, dots := TRUE, with_module := TRUE));
+              Value.GlobalName(v, dots := TRUE, with_module := TRUE),
+              argType := mt, argByRef := byRef);
     MSIR.ModuleAddExcDesc(m, desc);
-    RETURN MSIR.ExcDescValue(desc);
-  END ExcDescValue;
-
-PROCEDURE CxaStub(name: TEXT;  READONLY params: ARRAY OF MSIR.Param;
-                   rtype: MSIR.T): MSIR.Proc =
-  (* Return a cached MSIR extern stub for a C++ ABI function. *)
-  BEGIN
-    FOR i := 0 TO procMapN - 1 DO
-      VAR pn := MSIR.ProcName(procMap[i].val); BEGIN
-        IF pn # NIL AND Text.Equal(pn, name) THEN
-          RETURN procMap[i].val;
-        END;
-      END;
-    END;
-    VAR p := MSIR.NewProc(name, params, rtype);
-    BEGIN
-      IF procMapN < MaxProcMap THEN
-        procMap[procMapN].key := NIL;
-        procMap[procMapN].val := p;
-        INC(procMapN);
-      END;
-      RETURN p;
-    END;
-  END CxaStub;
-
-PROCEDURE CxaBeginCatch(): MSIR.Proc =
-  VAR params := ARRAY [0..0] OF MSIR.Param{
-    MSIR.Param{name := "exc_header", type := MSIR.TPtr(MSIR.TVoid()),
-               mode := MSIR.ParamMode.ByValue}};
-  BEGIN
-    RETURN CxaStub("__cxa_begin_catch", params, MSIR.TPtr(MSIR.TVoid()));
-  END CxaBeginCatch;
-
-PROCEDURE CxaEndCatch(): MSIR.Proc =
-  BEGIN
-    RETURN CxaStub("__cxa_end_catch", ARRAY OF MSIR.Param{}, MSIR.TVoid());
-  END CxaEndCatch;
-
-PROCEDURE CxaRethrow(): MSIR.Proc =
-  BEGIN
-    RETURN CxaStub("__cxa_rethrow", ARRAY OF MSIR.Param{}, MSIR.TVoid());
-  END CxaRethrow;
-
-PROCEDURE CxaGetExceptionPtr(): MSIR.Proc =
-  VAR params := ARRAY [0..0] OF MSIR.Param{
-    MSIR.Param{name := "exc_header", type := MSIR.TPtr(MSIR.TVoid()),
-               mode := MSIR.ParamMode.ByValue}};
-  BEGIN
-    RETURN CxaStub("__cxa_get_exception_ptr", params, MSIR.TPtr(MSIR.TVoid()));
-  END CxaGetExceptionPtr;
-
-PROCEDURE PushCatchContext(endCatch: MSIR.Proc;  actPtr: MSIR.Value := NIL) =
-  BEGIN
-    IF catchDepth < MaxCatchDepth THEN
-      catchStack[catchDepth] := endCatch;
-      catchActStack[catchDepth] := actPtr;
-      INC(catchDepth);
-    ELSE
-      Abandon("catch context stack overflow");
-    END;
-  END PushCatchContext;
-
-PROCEDURE PopCatchContext() =
-  BEGIN
-    IF catchDepth > 0 THEN DEC(catchDepth) END;
-  END PopCatchContext;
-
-PROCEDURE CurrentCatchEndProc(): MSIR.Proc =
-  BEGIN
-    IF catchDepth = 0 THEN RETURN NIL END;
-    RETURN catchStack[catchDepth - 1];
-  END CurrentCatchEndProc;
-
-PROCEDURE CurrentCatchActPtr(): MSIR.Value =
-  BEGIN
-    IF catchDepth = 0 THEN RETURN NIL END;
-    RETURN catchActStack[catchDepth - 1];
-  END CurrentCatchActPtr;
+    RETURN desc;
+  END ExcDescFor;
 
 PROCEDURE TypeLinkValueForRef(t: Type.T): MSIR.Value =
   VAR m    := MSIREmit.CurrentModule();
@@ -2416,8 +2276,7 @@ PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
     abandoned := FALSE;
     varMapN   := 0;
     exitDepth := 0;
-    tryDepth  := 0;
-    catchDepth := 0;
+    curScope  := NIL;
     blockSeq  := 0;
     resultT   := MSIR.TVoid();
     curProc  := MSIR.NewProc(name, ARRAY OF MSIR.Param{}, resultT);

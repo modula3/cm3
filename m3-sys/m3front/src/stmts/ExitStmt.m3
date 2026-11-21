@@ -50,9 +50,8 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
 PROCEDURE CompileMSIR (<*UNUSED*> p: P) =
   VAR deadBlock: MSIR.Block;
   BEGIN
-    (* Branch to the innermost loop's exit block, running every intervening
-       TRY/FINALLY first.  EmitExitMSIR reduces to a plain `br exitBlock` when no
-       finally lies between this EXIT and its loop. *)
+    (* To the innermost loop's exit block (unwind_to if that leaves EH
+       scopes, running FINALLY code), or an enclosing EXCEPT ELSE. *)
     MSIRBuilder.EmitExitMSIR ();
     (* Instructions after EXIT are dead; switch to a fresh block. *)
     deadBlock := MSIRBuilder.NewBlock ("exit.dead");

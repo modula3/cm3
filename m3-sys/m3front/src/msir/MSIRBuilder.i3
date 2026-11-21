@@ -124,39 +124,32 @@ PROCEDURE PushExitBlock(b: MSIR.Block);
 PROCEDURE PopExitBlock();
 PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
 
-(* TRY/FINALLY selector codes (stored in the per-finally i32 selector alloca):
-   why the finally body was entered, so its epilogue can dispatch. *)
-CONST Sel_Normal = 0;  Sel_Exc = 1;  Sel_Exit = 2;  Sel_Return = 3;
+(* EH scopes (D26).  New blocks go in the current scope; TryStmt,
+   TryFinStmt and LockStmt switch it around a TRY's parts and restore it. *)
+PROCEDURE CurrentScope(): MSIR.Scope;        (* the proc's root if none *)
+PROCEDURE SetScope(s: MSIR.Scope): MSIR.Scope;  (* returns the previous *)
+PROCEDURE NewScope(kind: MSIR.ScopeKind;  parent: MSIR.Scope;
+                   owner: MSIR.Scope := NIL): MSIR.Scope;
 
-(* TRY/FINALLY registers a Finally cleanup frame around its body so a non-local
-   EXIT in the body runs the finally first.  finBody is the shared finally-body
-   entry; selector is an i32 alloca the EXIT stores Sel_Exit into.  Push around
-   the body only (pop before compiling the finally itself).
-   retSlot (if non-NIL) is an i64/ptr alloca for a pending RETURN value. *)
-PROCEDURE PushFinallyCleanup(finBody: MSIR.Block;  selector: MSIR.Value;
-                              retSlot: MSIR.Value := NIL);
-PROCEDURE PopFinallyCleanup();
+(* Branch from the current block to target, with unwind_to if that leaves
+   EH scopes (D8). *)
+PROCEDURE EmitGoto(target: MSIR.Block;
+                   READONLY args: ARRAY OF MSIR.Value);
 
-(* Emit a RETURN from inside a TRY body:  store the return value (v) into the
-   innermost Finally frame's retSlot, set selector to Sel_Return, and branch
-   to the finally body.  Returns TRUE if the RETURN was routed through a finally;
-   caller must emit a plain BuildRet when this returns FALSE. *)
-PROCEDURE EmitReturnThroughFinally(v: MSIR.Value): BOOLEAN;
+(* Modula-3's EXIT and RETURN are exceptions, so EXCEPT ELSE catches them
+   (D26).  TryStmt pushes an ELSE frame around the protected body of a TRY
+   with an ELSE: an EXIT or RETURN inside it goes to target, the ELSE code,
+   instead.  Loops (PushExitBlock) and ELSE frames nest in one stack. *)
+PROCEDURE PushElseFrame(target: MSIR.Block);
+PROCEDURE PopElseFrame();
 
-(* Whether a RETURN routed through the innermost finally cleanup frame.
-   Analogous to CurrentFinallyExitSeen; called while the frame is still live. *)
-PROCEDURE CurrentFinallyReturnSeen(): BOOLEAN;
-
-(* Emit an EXIT: branch to the innermost loop's exit block, running every
-   intervening finally first.  Used by ExitStmt and by a finally epilogue
-   continuing an EXIT that passed through it. *)
+(* EXIT: to the innermost loop's exit block, or the innermost ELSE frame's
+   target if nearer. *)
 PROCEDURE EmitExitMSIR();
 
-(* TRUE if an EXIT routed through the innermost (current) finally cleanup frame.
-   TryFinStmt calls this — while its Finally frame is still on top — to decide
-   whether to emit the Sel_Exit dispatch arm in the finally epilogue.  Avoids an
-   EmitExitMSIR with no loop target for finallys that contain no through-EXIT. *)
-PROCEDURE CurrentFinallyExitSeen(): BOOLEAN;
+(* RETURN v (NIL for none): to the innermost ELSE frame's target if any;
+   else ret, or ret_through_envelope inside EH scopes. *)
+PROCEDURE EmitReturnMSIR(v: MSIR.Value);
 
 (*-------------------------------------------------------------- Proc registry *)
 
@@ -202,16 +195,8 @@ PROCEDURE ProcMapHasBody(v: Value.T): BOOLEAN;
 
 (*------------------------------------------------------ Exception handling *)
 
-(* Push/pop a try context.  While a try context is active, EmitCall emits
-   `invoke` (routing the unwind path to lpadBlock) rather than `call`. *)
-PROCEDURE PushTryContext(lpadBlock: MSIR.Block);
-PROCEDURE PopTryContext();
-PROCEDURE CurrentUnwindBlock(): MSIR.Block;  (* NIL if not in a try *)
-
-(* Smart call emitter.  If inside a try context, creates a normal-continuation
-   block, emits `invoke callee(args) to label %normal unwind label %lpad`,
-   then switches curBlock to the continuation block.
-   Otherwise, emits a plain `call`. *)
+(* Emit a call in the current block.  Calls inside EH scopes stay plain
+   calls; EH lowering (MSIREH) decides which unwind (D26). *)
 PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
@@ -260,33 +245,7 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
    midx: vtable slot index (= Method.Info.offset / Target.Address.size)
    rtype: MSIR return type of the method (NIL for void)
    args:  explicit arguments (NOT including the implicit self/obj first arg)
-   Prepends obj as the first argument.  Uses invoke inside a TRY context. *)
-(* Itanium C++ ABI helpers needed around CATCH landingpads.
-   CxaBeginCatch(exc_header) -> exc_obj  — converts exception-header ptr
-     (field 0 of the landingpad result) to the actual thrown exception object.
-   CxaEndCatch()             — releases the exception; must be called once
-     per CxaBeginCatch, before every exit from the handler (including resume). *)
-PROCEDURE CxaBeginCatch      (): MSIR.Proc;
-PROCEDURE CxaEndCatch        (): MSIR.Proc;
-PROCEDURE CxaRethrow         (): MSIR.Proc;
-  (* __cxa_rethrow(): re-throw the exception currently being handled (after a
-     CxaBeginCatch).  noreturn — unwinds to the enclosing handler.  Used to
-     implement TRY/FINALLY: catch-all, run the finally, then rethrow. *)
-PROCEDURE CxaGetExceptionPtr (): MSIR.Proc;
-  (* __cxa_get_exception_ptr(ptr) -> ptr: peek at the exception object
-     WITHOUT acquiring ownership — no matching __cxa_end_catch needed. *)
-
-(* Catch-handler context stack.  Push before compiling a handler body so that
-   ReturnStmt.CompileMSIR can emit __cxa_end_catch before any ret inside the
-   handler.  Pop after the handler body is compiled. *)
-PROCEDURE PushCatchContext (endCatch: MSIR.Proc;  actPtr: MSIR.Value := NIL);
-PROCEDURE PopCatchContext  ();
-PROCEDURE CurrentCatchEndProc (): MSIR.Proc;  (* NIL when not in a handler *)
-(* Activation pointer (a void pointer) of the exception being handled at the
-   current catch depth; NIL when not in a handler.  Used by
-   Compiler.ThisException. *)
-PROCEDURE CurrentCatchActPtr (): MSIR.Value;
-
+   Prepends obj as the first argument. *)
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
@@ -324,6 +283,8 @@ PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc;
    Returns a Value of ptr type pointing to the descriptor.
    The descriptor { uid, null, 0 } is registered with the current module. *)
 PROCEDURE ExcDescValue (v: Value.T): MSIR.Value;
+(* The module's descriptor for exception v, with its argument's type. *)
+PROCEDURE ExcDescFor (v: Value.T): MSIR.ExcDesc;
 
 (* Analog of Type.LoadInfo: create a TypeLink entry in MI_type_cell_ptrs and
    emit a load of TypeLink.defn in the current block.  After RTLinker resolves

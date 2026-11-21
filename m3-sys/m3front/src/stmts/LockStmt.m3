@@ -10,7 +10,7 @@ MODULE LockStmt;
 
 IMPORT M3ID, Expr, Mutex, Error, Type, Stmt, StmtRep, Token, Marker;
 IMPORT CG, Target, M3RT, Scanner, Procedure, RunTyme;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis, TryFinStmt;
 FROM Scanner IMPORT Match;
 
 TYPE
@@ -199,202 +199,21 @@ PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (p: P) =
-  (* LOCK mu DO body END  ≡  mu.acquire(); TRY body FINALLY mu.release() END
-     M3RT.MUTEX_acquire and MUTEX_release are BIT offsets (AP = Target.Address.pack
-     = 64 on 64-bit).  EmitMethodCall takes a pointer-count index (midx), so
-     divide by AP (bits per pointer slot), not by bytes-per-addr.
-     M3RT.MUTEX_acquire = 0 * AP → midx 0
-     M3RT.MUTEX_release = 1 * AP → midx 1 *)
-  VAR
-    mu:          MSIR.Value;
-    lpad:        MSIR.Block;
-    finBody:     MSIR.Block;
-    resumeBlk:   MSIR.Block;
-    retBlk:      MSIR.Block;
-    merge:       MSIR.Block;
-    selector:    MSIR.Value;
-    retSlot:     MSIR.Value;
-    lpVal:       MSIR.Value;
-    selV:        MSIR.Value;
-    retT:        MSIR.T;
-    retV:        MSIR.Value;
-    i32:         MSIR.T;
-    ptrT:        MSIR.T;
-    actSlot:     MSIR.Value;
-    enclosing:   MSIR.Block;
-    returnSeen:  BOOLEAN;
-    exitSeen:    BOOLEAN;
+  (* LOCK mu DO body END  =  mu.acquire(); TRY body FINALLY mu.release() END,
+     the TRY as EH scopes (D26).  M3RT.MUTEX_acquire and MUTEX_release are bit
+     offsets; EmitMethodCall takes a pointer-slot index, so divide by
+     Target.Address.pack. *)
+  VAR mu: MSIR.Value;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
-
-    (* Compile the mutex expression. *)
     mu := Expr.CompileMSIR(p.mutex);
     IF mu = NIL THEN RETURN END;
-
-    (* Acquire the mutex: mu.acquire() — vtable slot M3RT.MUTEX_acquire / AP. *)
     EVAL MSIRBuilder.EmitMethodCall(
-           "", mu,
-           M3RT.MUTEX_acquire DIV Target.Address.pack,
+           "", mu, M3RT.MUTEX_acquire DIV Target.Address.pack,
            MSIR.TVoid(), ARRAY OF MSIR.Value{});
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
-
-    (* TRY body FINALLY mu.release() END — mirrors TryFinStmt.CompileMSIR.
-       Use PushFinallyCleanup so a RETURN inside the body routes through the
-       LOCK's mutex release before returning.  This fixes the case where a
-       RETURN inside a LOCK inside a LOOP doesn't release the mutex. *)
-    i32  := MSIR.TI(32);
-    ptrT := MSIR.TPtr(MSIR.TVoid());
-
-    actSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
-    selector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", i32);
-    MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
-                    MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
-
-    (* retSlot for RETURN value threading through the mutex release. *)
-    retT := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
-    IF retT # NIL AND MSIR.Kind(retT) # MSIR.TypeKind.Void THEN
-      retSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", retT);
-    ELSE
-      retSlot := NIL;
-    END;
-
-    lpad      := MSIRBuilder.NewBlock("lock.lpad");
-    finBody   := MSIRBuilder.NewBlock("lock.fin");
-    resumeBlk := MSIRBuilder.NewBlock("lock.resume");
-    (* retBlk (lock.ret) is created lazily below, only when the body contains
-       a RETURN routed through this LOCK's finally (returnSeen).  Creating it
-       unconditionally left an orphan empty block for the common no-RETURN case
-       (verifier: "lock.ret.N: empty block"), which is fatal in MSIRObj mode. *)
-    retBlk    := NIL;
-    merge     := MSIRBuilder.NewBlock("lock.done");
-
-    (* Body: push try context AND finally cleanup so EXIT/RETURN routes through. *)
-    MSIRBuilder.PushTryContext(lpad);
-    MSIRBuilder.PushFinallyCleanup(finBody, selector, retSlot);
-    Stmt.CompileMSIR(p.body);
-    exitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
-    returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
-    IF returnSeen THEN retBlk := MSIRBuilder.NewBlock("lock.ret"); END;
-    MSIRBuilder.PopFinallyCleanup();
-    MSIRBuilder.PopTryContext();
-    (* After Pop, CurrentUnwindBlock() is the ENCLOSING try context. *)
-    enclosing := MSIRBuilder.CurrentUnwindBlock();
-
-    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
-    END;
-
-    (* Landing pad: catch-all (non-cleanup) so phase 1 finds a handler.
-       Extract the M3 activation ptr via __cxa_get_exception_ptr (mirrors
-       TryFinStmt).  We do NOT call __cxa_begin_catch — the re-raise uses
-       a fresh RTHooks__ResumeRaise throw rather than C++ rethrow, so the
-       exception is never "activated" in the C++ ABI sense. *)
-    lpVal := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
-    VAR excHdr  := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
-        excObj  := MSIR.BuildCall(lpad, "", MSIRBuilder.CxaGetExceptionPtr(),
-                                  ARRAY OF MSIR.Value{excHdr});
-        actPtr  := MSIR.BuildLoad(lpad, "", ptrT, excObj);
-    BEGIN
-      MSIR.BuildStore(lpad, actPtr, actSlot);
-    END;
-    MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
-    MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
-
-    (* Finally body: release the mutex — vtable slot M3RT.MUTEX_release / AP. *)
-    MSIRBuilder.SetCurrentBlock(finBody);
-    EVAL MSIRBuilder.EmitMethodCall(
-           "", mu,
-           M3RT.MUTEX_release DIV Target.Address.pack,
-           MSIR.TVoid(), ARRAY OF MSIR.Value{});
-    IF NOT MSIRBuilder.InProc() THEN RETURN END;
-
-    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      VAR notExcBlk : MSIR.Block;
-      BEGIN
-        selV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", i32, selector);
-        (* Sel_Exc → resume; others handled below. *)
-        VAR isExc := MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
-                       MSIR.CmpPred.Eq, selV,
-                       MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc));
-        BEGIN
-          notExcBlk := MSIRBuilder.NewBlock("lock.fin.notexc");
-          MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(), isExc,
-                           resumeBlk, ARRAY OF MSIR.Value{},
-                           notExcBlk, ARRAY OF MSIR.Value{});
-        END;
-        MSIRBuilder.SetCurrentBlock(notExcBlk);
-        (* Dispatch on selector value for non-exception cases *)
-        IF returnSeen THEN
-          (* Sel_Return (3) → retBlk; other → next *)
-          VAR nextBlk := MSIRBuilder.NewBlock("lock.notret");
-              isRet := MSIR.BuildICmp(notExcBlk, "",
-                          MSIR.CmpPred.Eq, selV,
-                          MSIR.ConstInt(i32, MSIRBuilder.Sel_Return));
-          BEGIN
-            MSIR.BuildCondBr(notExcBlk, isRet,
-                             retBlk, ARRAY OF MSIR.Value{},
-                             nextBlk, ARRAY OF MSIR.Value{});
-            MSIRBuilder.SetCurrentBlock(nextBlk);
-          END;
-        END;
-        IF exitSeen THEN
-          (* Sel_Exit (2) → emit exit; otherwise → merge *)
-          VAR exitBlk := MSIRBuilder.NewBlock("lock.doexit");
-              curBlk  := MSIRBuilder.CurrentBlock();
-              isExit  := MSIR.BuildICmp(curBlk, "",
-                            MSIR.CmpPred.Eq, selV,
-                            MSIR.ConstInt(i32, MSIRBuilder.Sel_Exit));
-          BEGIN
-            MSIR.BuildCondBr(curBlk, isExit,
-                             exitBlk, ARRAY OF MSIR.Value{},
-                             merge,   ARRAY OF MSIR.Value{});
-            MSIRBuilder.SetCurrentBlock(exitBlk);
-            (* Propagate the EXIT through any enclosing finally/loops. *)
-            MSIRBuilder.EmitExitMSIR();
-          END;
-        ELSE
-          IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-            MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
-          END;
-        END;
-      END;
-    END;
-
-    (* Resume: re-raise the original exception via RTHooks__ResumeRaise.
-       A fresh throw (not C++ rethrow) is used — same as TryFinStmt — so
-       if there's an enclosing try context, the invoke routes to it; if
-       not, the exception propagates to the caller. *)
-    MSIRBuilder.SetCurrentBlock(resumeBlk);
-    VAR resumeHook := MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx);
-        actV       := MSIR.BuildLoad(resumeBlk, "", ptrT, actSlot);
-        rcont      : MSIR.Block;
-    BEGIN
-      IF enclosing # NIL THEN
-        rcont := MSIRBuilder.NewBlock("lock.resume.cont");
-        EVAL MSIR.BuildInvoke(resumeBlk, "", resumeHook,
-                              ARRAY OF MSIR.Value{actV}, rcont, enclosing);
-        MSIRBuilder.SetCurrentBlock(rcont);
-        MSIR.BuildUnreachable(rcont);
-      ELSE
-        EVAL MSIR.BuildCall(resumeBlk, "", resumeHook, ARRAY OF MSIR.Value{actV});
-        MSIR.BuildUnreachable(resumeBlk);
-      END;
-    END;
-
-    (* Return: load saved return value and emit ret (possibly through outer cleanup). *)
-    IF returnSeen THEN
-      MSIRBuilder.SetCurrentBlock(retBlk);
-      IF retSlot # NIL AND retT # NIL THEN
-        retV := MSIR.BuildLoad(retBlk, "", retT, retSlot);
-      ELSE
-        retV := NIL;
-      END;
-      IF NOT MSIRBuilder.EmitReturnThroughFinally(retV) THEN
-        MSIR.BuildRet(retBlk, retV);
-      END;
-    END;
-
-    MSIRBuilder.SetCurrentBlock(merge);
+    TryFinStmt.EmitFinallyMSIR(p.body, NIL, mu,
+                               M3RT.MUTEX_release DIV Target.Address.pack);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

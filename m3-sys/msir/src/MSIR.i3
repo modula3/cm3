@@ -312,6 +312,9 @@ PROCEDURE ModuleDataLayout(m: Module): TEXT;
 PROCEDURE SetModuleHooks(m: Module;
                           gcLoad, gcStore, scanTypecase: Proc);
 PROCEDURE ModuleGCLoadBarrier  (m: Module): Proc;
+(* The runtime's re-raise hook (RTHooks.ResumeRaiseEx), for EH lowering. *)
+PROCEDURE SetModuleResumeRaise(m: Module;  p: Proc);
+PROCEDURE ModuleResumeRaise   (m: Module): Proc;
 PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
 PROCEDURE ModuleScanTypecase   (m: Module): Proc;
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
@@ -331,8 +334,12 @@ PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
 TYPE ExcDesc <: REFANY;
 
 PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL;
-                     argType: T := NIL): ExcDesc;
+                     argType: T := NIL;  argByRef := FALSE): ExcDesc;
 PROCEDURE ExcDescArgType (d: ExcDesc): T;    (* the argument's type; NIL if none *)
+(* TRUE if the raise passes the argument's address rather than its value in
+   the activation's argument word (the front end's convention). *)
+PROCEDURE ExcDescArgByRef (d: ExcDesc): BOOLEAN;
+PROCEDURE SetExcDescArg (d: ExcDesc;  argType: T;  argByRef: BOOLEAN);
 PROCEDURE ExcDescName (d: ExcDesc): TEXT;    (* LLVM global symbol *)
 PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER;
 PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT; (* qualified name, e.g. "Main.a"; NIL if none *)
@@ -604,6 +611,7 @@ TYPE Op = {
   Br, CondBr, Ret, Unreachable,
   UnwindTo, RetThroughEnvelope,        (* cross-envelope exits *)
   EndFinally,                          (* FINALLY code done: resume (D26) *)
+  HandlerActivation,                   (* the handled exception's activation *)
   (* call / alloc *)
   Call, Invoke, New,
   (* M3 object/RTTI intrinsics *)
@@ -873,6 +881,26 @@ PROCEDURE BuildRetThroughEnvelope(b: Block;  value: Value);
    outcome that entered it: the exit continues, the RETURN returns, or the
    exception is re-raised (D26).  Terminator. *)
 PROCEDURE BuildEndFinally(b: Block);
+
+(* `handler.activation` is the activation record (RT0.RaiseActivation, as an
+   address) of the exception being handled by the nearest enclosing Handler
+   scope; valid only in blocks with such a scope (Compiler.ThisException). *)
+PROCEDURE BuildHandlerActivation(b: Block;  name: TEXT): Value;
+
+(*-------------------------------------------------- rewriting (passes) *)
+
+(* Primitives for passes that rewrite a procedure in place (MSIREH).
+   BlockTakeInsns empties b and returns its instructions in order;
+   BlockAppendInsn appends an existing instruction (one taken from a block)
+   to b.  InsnMakeInvoke turns a call or call_indirect into an invoke with
+   the given successors.  ProcClearScopes puts every block back in the
+   root scope and forgets the others. *)
+PROCEDURE BlockTakeInsns(b: Block): REF ARRAY OF Insn;
+PROCEDURE BlockAppendInsn(b: Block;  i: Insn);
+PROCEDURE InsnMakeInvoke(i: Insn;  normal, unwind: Block);
+(* Turn i, whose result has v's type, into a copy of v (a no-op convert). *)
+PROCEDURE InsnMakeCopy(i: Insn;  v: Value);
+PROCEDURE ProcClearScopes(p: Proc);
 
 (*-------------------------------------- Open arrays / runtime-check builders *)
 

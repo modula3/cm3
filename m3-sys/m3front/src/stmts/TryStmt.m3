@@ -618,300 +618,111 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
   END CompileHandler2;
 
 PROCEDURE CompileMSIR (p: P) =
+  (* TRY body EXCEPT handlers [ELSE elseBody] END as EH scopes (D26): the
+     body is an Except scope; each handler's code is a Handler scope it owns;
+     the lowering (MSIREH) builds landing pads and dispatch.  Modula-3's EXIT
+     and RETURN are exceptions, so with an ELSE, an EXIT or RETURN in the body
+     goes to the ELSE code too (PushElseFrame); the exception path reaches it
+     through the ELSE handler. *)
   VAR
-    h:             Handler;
-    e:             Except;
-    lpad:          MSIR.Block;
-    merge:         MSIR.Block;
-    hBody:         MSIR.Block;
-    checkBlk:      MSIR.Block;
-    nextBlk:       MSIR.Block;
-    lpVal:         MSIR.Value;
-    excObjPtr:     MSIR.Value;
-    actPtr:        MSIR.Value;
-    excDescPtr:    MSIR.Value;
-    uid:           MSIR.Value;
-    uidConst:      MSIR.Value;
-    cmp:           MSIR.Value;
-    enclosing:     MSIR.Block;
-    ptrT:          MSIR.T;
-    (* EXCEPT ELSE with RETURN/EXIT interception via PushFinallyCleanup *)
-    elseDispatch   : MSIR.Block := NIL;
-    innerSelector  : MSIR.Value := NIL;
-    innerRetSlot   : MSIR.Value := NIL;
-    actSlot        : MSIR.Value := NIL;
-    elseReturnSeen : BOOLEAN    := FALSE;
-    elseExitSeen   : BOOLEAN    := FALSE;
-    innerRetT      : MSIR.T     := NIL;
-    innerI32       : MSIR.T     := NIL;
-    useElseCleanup : BOOLEAN    := FALSE;
+    outer, s, hs : MSIR.Scope;
+    body, merge, elseCode, entry : MSIR.Block := NIL;
+    h  : Handler;
+    e  : Except;
+    mt : MSIR.T;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
-
-    (* No handlers: just compile the body. *)
     IF p.handles = NIL AND NOT p.hasElse THEN
       Stmt.CompileMSIR(p.body);
       RETURN;
     END;
 
-    ptrT  := MSIR.TPtr(MSIR.TVoid());
-    lpad  := MSIRBuilder.NewBlock("lpad");
+    outer := MSIRBuilder.CurrentScope();
     merge := MSIRBuilder.NewBlock("try.merge");
+    IF p.hasElse THEN elseCode := MSIRBuilder.NewBlock("try.else") END;
 
-    (* For TRY...EXCEPT ELSE (no specific handlers): intercept RETURN and EXIT
-       via PushFinallyCleanup so they route through the ELSE body and are
-       suppressed — matching the C backend's Return_exception mechanism.
-       In CM3 semantics, EXCEPT ELSE catches ALL "exceptional" exits from the body
-       including RETURN (the C backend stores Return_exception in info.exception;
-       EXCEPT ELSE recognises and swallows it).  MSIR replaces that mechanism
-       with PushFinallyCleanup: when RETURN/EXIT fires in the body, it goes to
-       elseDispatch (the else body) rather than propagating outward.  After the
-       else body runs, RETURN and EXIT are silently dropped (br merge), leaving
-       the enclosing FINALLY context (selector, retSlot) unmodified. *)
-    innerI32       := MSIR.TI(32);
-    useElseCleanup := p.hasElse AND (p.handles = NIL);
-    IF useElseCleanup THEN
-      innerSelector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", innerI32);
-      MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
-                      MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Normal),
-                      innerSelector);
-      innerRetT := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
-      IF innerRetT # NIL AND MSIR.Kind(innerRetT) # MSIR.TypeKind.Void THEN
-        innerRetSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", innerRetT);
-      ELSE
-        innerRetSlot := NIL;
-      END;
-      actSlot     := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
-      elseDispatch := MSIRBuilder.NewBlock("else.dispatch");
-    END;
-
-    (* Compile body; calls inside it become invoke with lpad as unwind target. *)
-    MSIRBuilder.PushTryContext(lpad);
-    IF useElseCleanup THEN
-      MSIRBuilder.PushFinallyCleanup(elseDispatch, innerSelector, innerRetSlot);
-    END;
-    Stmt.CompileMSIR(p.body);
-    IF useElseCleanup THEN
-      elseReturnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
-      elseExitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
-      MSIRBuilder.PopFinallyCleanup();
-    END;
-    MSIRBuilder.PopTryContext();
-    (* After the pop, the current unwind block is the ENCLOSING handler (NIL if
-       this TRY is outermost in the procedure).  The no-match path re-raises to
-       it. *)
-    enclosing := MSIRBuilder.CurrentUnwindBlock();
-
-    (* Normal fall-through → merge *)
+    (* The protected body. *)
+    s := MSIRBuilder.NewScope(MSIR.ScopeKind.Except, outer);
+    EVAL MSIRBuilder.SetScope(s);
+    body := MSIRBuilder.NewBlock("try.body");
+    MSIR.ScopeSetEntry(s, body);
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
+      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), body, ARRAY OF MSIR.Value{});
+    END;
+    MSIRBuilder.SetCurrentBlock(body);
+    IF p.hasElse THEN MSIRBuilder.PushElseFrame(elseCode) END;
+    Stmt.CompileMSIR(p.body);
+    IF p.hasElse THEN MSIRBuilder.PopElseFrame() END;
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIRBuilder.EmitGoto(merge, ARRAY OF MSIR.Value{});
     END;
 
-    (* Build landing pad: catch _M3Exc, extract exception UID.
-       Use __cxa_get_exception_ptr to PEEK at the exception object without
-       acquiring ownership — no matching __cxa_end_catch needed here.
-       This avoids pairing problems: ownership is acquired only inside the
-       matched handler body (with __cxa_begin_catch / __cxa_end_catch strictly
-       bracketed), and the no-match path resumes without any cleanup.
-
-       Itanium ABI note: landingpad field 0 is the _Unwind_Exception header
-       (starts with the ABI magic "CLNGC++"), not the thrown _M3Exc object.
-       __cxa_get_exception_ptr / __cxa_begin_catch translate header → object. *)
-    VAR
-      getPtr     := MSIRBuilder.CxaGetExceptionPtr();
-      beginCatch := MSIRBuilder.CxaBeginCatch();
-      endCatch   := MSIRBuilder.CxaEndCatch();
-      excHeader  : MSIR.Value;
-    BEGIN
-    IF getPtr = NIL OR beginCatch = NIL OR endCatch = NIL THEN
-      MSIRBuilder.Abandon("TRY/EXCEPT: C++ ABI helpers not available");
-      RETURN;
-    END;
-
-    lpVal      := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
-    excHeader  := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
-    (* Peek at exception object (no ownership — no end_catch needed). *)
-    excObjPtr  := MSIR.BuildCall(lpad, "", getPtr,
-                                  ARRAY OF MSIR.Value{excHeader});
-    actPtr     := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr);
-    excDescPtr := MSIR.BuildLoad(lpad, "", ptrT, actPtr);
-    uid        := MSIR.BuildLoad(lpad, "", MSIR.TI(64), excDescPtr);
-
-    IF useElseCleanup THEN
-      (* Pure EXCEPT ELSE: claim ownership via begin_catch, save actPtr so
-         elseDispatch can end_catch after the ELSE body, set selector=Sel_Exc,
-         and branch to the unified else dispatch block.  PushFinallyCleanup
-         routes RETURN/EXIT there too; they arrive with selector != Sel_Exc
-         so no end_catch is emitted for them. *)
-      MSIR.BuildStore(lpad, actPtr, actSlot);
-      MSIR.BuildStore(lpad, MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Exc),
-                      innerSelector);
-      EVAL MSIR.BuildCall(lpad, "", beginCatch,
-                           ARRAY OF MSIR.Value{excHeader});
-      MSIR.BuildBr(lpad, elseDispatch, ARRAY OF MSIR.Value{});
-    END;
-
-    (* Emit a chain of UID comparisons, one per (handler, exception) pair. *)
-    checkBlk := lpad;
+    (* Handlers: one Handler scope each, entered with the exception's
+       argument when it has one. *)
     h := p.handles;
     WHILE h # NIL DO
-      hBody := MSIRBuilder.NewBlock("h.body");
+      hs := MSIRBuilder.NewScope(MSIR.ScopeKind.Handler, outer, s);
+      EVAL MSIRBuilder.SetScope(hs);
+      mt := NIL;
+      IF h.tags # NIL AND Exceptionz.ArgType(h.tags.obj) # NIL THEN
+        mt := MSIRType.Translate(Exceptionz.ArgType(h.tags.obj));
+      END;
+      IF mt # NIL
+        THEN entry := MSIRBuilder.NewBlockWithParam("h.entry", "arg", mt);
+        ELSE entry := MSIRBuilder.NewBlock("h.entry");
+      END;
+      MSIR.ScopeSetEntry(hs, entry);
       e := h.tags;
       WHILE e # NIL DO
-        uidConst := MSIR.ConstInt(MSIR.TI(64),
-                      M3FP.ToInt(M3FP.FromText(Value.GlobalName(e.obj))));
-        cmp     := MSIR.BuildICmp(checkBlk, "",
-                                   MSIR.CmpPred.Eq, uid, uidConst);
-        nextBlk := MSIRBuilder.NewBlock("exc.next");
-        MSIR.BuildCondBr(checkBlk, cmp,
-                         hBody, ARRAY OF MSIR.Value{},
-                         nextBlk, ARRAY OF MSIR.Value{});
-        checkBlk := nextBlk;
+        MSIR.ScopeAddHandler(s, MSIRBuilder.ExcDescFor(e.obj), entry);
         e := e.next;
       END;
-
-      (* Handler body: acquire ownership here, compile body, release after.
-         __cxa_begin_catch is the FIRST insn; end_catch is emitted:
-           – before any ret   via MSIRBuilder.CurrentCatchEndProc() in ReturnStmt
-           – before br merge  via the explicit call below on fall-through *)
-      EVAL MSIR.BuildCall(hBody, "", beginCatch,
-                           ARRAY OF MSIR.Value{excHeader});
-      MSIRBuilder.SetCurrentBlock(hBody);
-
-      (* Register the handler-bound variable in the varMap; h.scope is
-         separate from the proc's main scope so BeginProc didn't add it. *)
+      MSIRBuilder.SetCurrentBlock(entry);
       IF h.scope # NIL THEN
+        (* EXCEPT E(v) => ...: bind v, a local of the handler's scope. *)
         EVAL MSIRBuilder.AddLocal(h.var);
-      END;
-
-      (* Bind exception argument if present: EXCEPT E(v) => ...
-         RaiseActivation.arg is at EA_arg = 1 × AP bytes after EA_exception.
-         ArgByReference = FALSE (scalar ≤ ptr): arg is the value itself
-           stored as a void* — convert ptr → argType → store to alloca.
-         ArgByReference = TRUE  (large/structured): arg is a ptr to the value
-           — load the value through it → store to alloca. *)
-      IF h.scope # NIL THEN
-        VAR
-          eaArgBytes := M3RT.EA_arg DIV Target.Char.size;
-          argFldPtr  := MSIRBuilder.BuildPtrByteOff(hBody, "", actPtr, eaArgBytes);
-          argRaw     := MSIR.BuildLoad(hBody, "", ptrT, argFldPtr);
-          argType    := h.type;  (* set by Check from Exceptionz.ArgType *)
-          mt         := MSIRType.Translate(argType);
-          varAddr    := MSIRBuilder.LookupVarAddr(h.var);
+        VAR varAddr := MSIRBuilder.LookupVarAddr(h.var);
+            argVal  : MSIR.Value;
         BEGIN
           IF mt # NIL AND varAddr # NIL THEN
-            IF Exceptionz.ArgByReference(argType) THEN
-              (* Large arg: argRaw is a pointer to the value. *)
-              VAR argLoaded := MSIR.BuildLoad(hBody, "", mt, argRaw);
-              BEGIN
-                MSIR.BuildStore(hBody, argLoaded, varAddr);
-              END;
-            ELSE
-              (* Small arg: argRaw is the value bit-cast from ADDRESS.
-                 Widen to the alloca's element type (TI64 for ordinals) via
-                 CoerceToMSIR so ORD(n) reads the correct value (p119). *)
-              VAR argVal   := MSIR.BuildConvert(hBody, "", argRaw, mt);
-                  slotEltT := MSIR.EltType(MSIR.ValueType(varAddr));
-              BEGIN
-                IF NOT MSIR.Equal(MSIR.ValueType(argVal), slotEltT) THEN
-                  argVal := MSIRBuilder.CoerceToMSIR(hBody, argVal, slotEltT);
-                END;
-                MSIR.BuildStore(hBody, argVal, varAddr);
+            argVal := MSIR.BlockParamValue(entry, 0);
+            VAR slotEltT := MSIR.EltType(MSIR.ValueType(varAddr));
+            BEGIN
+              IF NOT MSIR.Equal(MSIR.ValueType(argVal), slotEltT) THEN
+                argVal := MSIRBuilder.CoerceToMSIR(entry, argVal, slotEltT);
               END;
             END;
+            MSIR.BuildStore(entry, argVal, varAddr);
           END;
         END;
+        Variable.ScheduleTrace(h.var);
       END;
-
-      IF h.scope # NIL THEN Variable.ScheduleTrace(h.var) END;
-      MSIRBuilder.PushCatchContext(endCatch, actPtr);
       Stmt.CompileMSIR(h.body);
-      MSIRBuilder.PopCatchContext();
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-        EVAL MSIR.BuildCall(MSIRBuilder.CurrentBlock(), "", endCatch,
-                             ARRAY OF MSIR.Value{});
-        MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
+        MSIRBuilder.EmitGoto(merge, ARRAY OF MSIR.Value{});
       END;
-
       h := h.next;
     END;
 
-    MSIRBuilder.SetCurrentBlock(checkBlk);
-    IF useElseCleanup THEN
-      (* elseDispatch already terminates lpad via br; checkBlk=lpad is terminated.
-         elseDispatch is emitted below, after the no-match re-raise stub. *)
-    ELSIF p.hasElse THEN
-      (* The catch clause matched, so we must claim ownership via begin_catch /
-         end_catch exactly as for specific handlers.  Omitting begin_catch leaves
-         the C++ EH state machine with an unclaimed exception, which corrupts
-         subsequent EH and typically causes std::terminate. *)
-      EVAL MSIR.BuildCall(checkBlk, "", beginCatch,
-                           ARRAY OF MSIR.Value{excHeader});
-      MSIRBuilder.PushCatchContext(endCatch, actPtr);
+    (* ELSE: its handler goes straight to the ELSE code, which EXIT and
+       RETURN in the body also reach. *)
+    IF p.hasElse THEN
+      hs := MSIRBuilder.NewScope(MSIR.ScopeKind.Handler, outer, s);
+      EVAL MSIRBuilder.SetScope(hs);
+      entry := MSIRBuilder.NewBlock("else.entry");
+      MSIR.ScopeSetEntry(hs, entry);
+      MSIR.ScopeAddHandler(s, NIL, entry);
+      MSIRBuilder.SetCurrentBlock(entry);
+      MSIRBuilder.EmitGoto(elseCode, ARRAY OF MSIR.Value{});
+      EVAL MSIRBuilder.SetScope(outer);
+      MSIRBuilder.SetCurrentBlock(elseCode);
       Stmt.CompileMSIR(p.elseBody);
-      MSIRBuilder.PopCatchContext();
       IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-        EVAL MSIR.BuildCall(MSIRBuilder.CurrentBlock(), "", endCatch,
-                             ARRAY OF MSIR.Value{});
         MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
       END;
-    ELSE
-      (* No handler matched.  If there is an ENCLOSING handler in this same
-         procedure, re-raise the activation to it via a fresh RTHooks.ResumeRaise
-         throw (an invoke unwinding to the enclosing landing pad) — a plain
-         `resume` would continue unwinding straight to the CALLER, bypassing the
-         enclosing TRY/EXCEPT in this frame (the p0/p004 nested-handler hang).
-         No ownership was acquired here, so no end_catch.  When outermost, resume
-         correctly propagates to the caller. *)
-      IF enclosing # NIL THEN
-        VAR cont := MSIRBuilder.NewBlock("exc.reraise.cont"); BEGIN
-          EVAL MSIR.BuildInvoke(checkBlk, "",
-                 MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx),
-                 ARRAY OF MSIR.Value{actPtr}, cont, enclosing);
-          MSIRBuilder.SetCurrentBlock(cont);
-          MSIR.BuildUnreachable(cont);
-        END;
-      ELSE
-        MSIR.BuildResume(checkBlk, lpVal);
-      END;
-    END;
-    END; (* VAR getPtr, beginCatch, endCatch, excHeader *)
-
-    IF useElseCleanup THEN
-      (* elseDispatch: unified entry point for exceptions (Sel_Exc) and
-         RETURN/EXIT (Sel_Return/Sel_Exit) intercepted by PushFinallyCleanup.
-         Run the EXCEPT ELSE body, then:
-           Sel_Exc  → end_catch (release the caught exception), br merge
-           anything → br merge (RETURN/EXIT silently suppressed)
-         In both cases execution continues normally after the TRY/EXCEPT. *)
-      MSIRBuilder.SetCurrentBlock(elseDispatch);
-      (* Register catch-end proc so ReturnStmt inside elseBody emits end_catch
-         before ret; but elseBody typically falls through, so it's a no-op here.
-         We don't PushCatchContext because the end_catch is conditional
-         (only for Sel_Exc), so we emit it explicitly below. *)
-      Stmt.CompileMSIR(p.elseBody);
-      IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-        VAR blk := MSIRBuilder.CurrentBlock();
-            selV := MSIR.BuildLoad(blk, "", innerI32, innerSelector);
-            isExc := MSIR.BuildICmp(blk, "", MSIR.CmpPred.Eq,
-                                    selV,
-                                    MSIR.ConstInt(innerI32, MSIRBuilder.Sel_Exc));
-            endCatchBlk := MSIRBuilder.NewBlock("else.endcatch");
-            skipEndBlk  := MSIRBuilder.NewBlock("else.skip.endcatch");
-        BEGIN
-          MSIR.BuildCondBr(blk, isExc,
-                           endCatchBlk, ARRAY OF MSIR.Value{},
-                           skipEndBlk,  ARRAY OF MSIR.Value{});
-          MSIRBuilder.SetCurrentBlock(endCatchBlk);
-          EVAL MSIR.BuildCall(endCatchBlk, "", MSIRBuilder.CxaEndCatch(),
-                               ARRAY OF MSIR.Value{});
-          MSIR.BuildBr(endCatchBlk, merge, ARRAY OF MSIR.Value{});
-          MSIRBuilder.SetCurrentBlock(skipEndBlk);
-          MSIR.BuildBr(skipEndBlk, merge, ARRAY OF MSIR.Value{});
-        END;
-      END;
     END;
 
+    EVAL MSIRBuilder.SetScope(outer);
     MSIRBuilder.SetCurrentBlock(merge);
   END CompileMSIR;
 

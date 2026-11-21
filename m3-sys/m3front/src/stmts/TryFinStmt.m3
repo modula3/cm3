@@ -406,204 +406,56 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
   END Compile3;
 
 PROCEDURE CompileMSIR (p: P) =
-  (* TRY body FINALLY finally END.
-     The finally must run on BOTH the normal exit and the exceptional exit, and
-     on the exceptional exit the in-flight exception must continue to the
-     enclosing handler.  We model this exactly as the C backend does — as
-     `catch (...) { finally; throw; }`:
-
-       - The landing pad is a CATCH-ALL (isCleanup := FALSE → `catch _M3Exc`),
-         NOT a cleanup.  A cleanup is invisible to the Itanium phase-1 search,
-         so a raise in the body would find no handler and std::terminate before
-         the finally ran (and bypassing any enclosing TRY/EXCEPT in this frame).
-         A catch-all is a real handler, so phase 1 stops here.
-       - On the exceptional path we claim the exception (__cxa_begin_catch), set
-         the selector to Sel_Exc, run the finally, then __cxa_rethrow to re-raise
-         it.  The rethrow is an INVOKE unwinding to the ENCLOSING try context's
-         landing pad (so a nested TRY/EXCEPT in the same frame catches it); with
-         no enclosing handler it is a plain call that propagates to the caller.
-       - A non-local EXIT in the body branches here too (selector = Sel_Exit, via
-         MSIRBuilder.EmitExitMSIR routing through the registered Finally cleanup
-         frame); after the finally runs, the epilogue continues the EXIT outward.
-         That arm is emitted ONLY when an EXIT actually routed through this
-         finally (CurrentFinallyExitSeen) — otherwise there is no loop to
-         continue to and EmitExitMSIR would (wrongly) abandon.
-       - On the normal path the selector stays Sel_Normal → merge. *)
-  VAR
-    lpad:        MSIR.Block;
-    finBody:     MSIR.Block;
-    rethrow:     MSIR.Block;
-    chkExit:     MSIR.Block;
-    exitCont:    MSIR.Block;
-    chkReturn:   MSIR.Block;
-    rcont:       MSIR.Block;
-    merge:       MSIR.Block;
-    enclosing:   MSIR.Block;
-    selector:    MSIR.Value;
-    actSlot:     MSIR.Value;
-    lpadSlot:    MSIR.Value;
-    retSlot:     MSIR.Value;
-    lpVal:       MSIR.Value;
-    excHeader:   MSIR.Value;
-    excObjPtr:   MSIR.Value;
-    actPtr:      MSIR.Value;
-    selV:        MSIR.Value;
-    retV:        MSIR.Value;
-    i32:         MSIR.T;
-    ptrT:        MSIR.T;
-    retT:        MSIR.T;
-    exitSeen:    BOOLEAN;
-    returnSeen:  BOOLEAN;
+  (* TRY body FINALLY finally END as EH scopes (D26): the body is a Finally
+     scope, the finally a FinallyCode scope it owns, ending in end_finally.
+     The lowering (MSIREH) runs the finally on every way out of the body and
+     continues what entered it. *)
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
-
-    i32  := MSIR.TI(32);
-    ptrT := MSIR.TPtr(MSIR.TVoid());
-
-    (* Allocas go in the current (pre-try) block so they land in the entry. *)
-    selector := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", i32);
-    MSIR.BuildStore(MSIRBuilder.CurrentBlock(),
-                    MSIR.ConstInt(i32, MSIRBuilder.Sel_Normal), selector);
-    actSlot  := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", ptrT);
-    lpadSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", MSIR.TLandingPad());
-
-    (* Allocate a retSlot for a pending RETURN value if this proc returns a
-       value.  When a RETURN in the TRY body routes through this finally,
-       ReturnStmt stores the value here; the epilogue loads and returns it. *)
-    retT    := MSIR.ProcResultType(MSIRBuilder.CurrentProc());
-    IF retT # NIL AND MSIR.Kind(retT) # MSIR.TypeKind.Void THEN
-      retSlot := MSIR.BuildAlloca(MSIRBuilder.CurrentBlock(), "", retT);
-    ELSE
-      retSlot := NIL;
-    END;
-
-    lpad    := MSIRBuilder.NewBlock("fin.lpad");
-    finBody := MSIRBuilder.NewBlock("fin.body");
-    rethrow := MSIRBuilder.NewBlock("fin.rethrow");
-    merge   := MSIRBuilder.NewBlock("fin.done");
-
-    (* Compile body with the finally landing pad as unwind target AND a Finally
-       cleanup frame so a non-local EXIT/RETURN in the body runs the finally first. *)
-    MSIRBuilder.PushTryContext(lpad);
-    MSIRBuilder.PushFinallyCleanup(finBody, selector, retSlot);
-    Stmt.CompileMSIR(p.body);
-    exitSeen   := MSIRBuilder.CurrentFinallyExitSeen();
-    returnSeen := MSIRBuilder.CurrentFinallyReturnSeen();
-    MSIRBuilder.PopFinallyCleanup();
-    MSIRBuilder.PopTryContext();
-    (* After Pop, the current unwind block is the ENCLOSING try context (NIL if
-       this finally is outermost in the procedure). *)
-    enclosing := MSIRBuilder.CurrentUnwindBlock();
-
-    (* Normal fall-through → finBody (selector stays Sel_Normal). *)
-    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), finBody, ARRAY OF MSIR.Value{});
-    END;
-
-    (* Exceptional path: catch-all (so phase 1 finds a handler), but do NOT
-       __cxa_begin_catch.  We only PEEK at the exception object to recover the
-       M3 RaiseActivation (separately heap-allocated, so it survives), save it,
-       set Sel_Exc, and run the finally.  Re-raising later via RTHooks.ResumeRaise
-       is a FRESH throw — so a finally that itself raises a new exception leaves
-       no half-claimed C++ exception dangling (which otherwise hangs the unwinder
-       when the new exception passes through an intermediate non-matching
-       handler, e.g. p0/p004).  Mirrors the C backend, which likewise re-raises
-       via ResumeRaiseEx rather than a C++ rethrow.
-       Note: begin_catch + end_catch was tried (to match the C backend's implicit
-       behaviour) but caused the outer exception state to interfere with inner
-       EXCEPT handlers in complex EH patterns (p140/P26), so this peek-only
-       approach is retained.  Cleanup+resume was also tried but breaks p004
-       when the FINALLY body itself has exception handlers. *)
-    lpVal     := MSIR.BuildLandingPad(lpad, "", isCleanup := FALSE);
-    excHeader := MSIR.BuildExtractValue(lpad, "", lpVal, 0);
-    excObjPtr := MSIR.BuildCall(lpad, "", MSIRBuilder.CxaGetExceptionPtr(),
-                                ARRAY OF MSIR.Value{excHeader});
-    actPtr    := MSIR.BuildLoad(lpad, "", ptrT, excObjPtr); (* _M3Exc.act *)
-    MSIR.BuildStore(lpad, actPtr, actSlot);
-    MSIR.BuildStore(lpad, MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc), selector);
-    MSIR.BuildBr(lpad, finBody, ARRAY OF MSIR.Value{});
-
-    (* Finally body (shared by all entry paths). *)
-    MSIRBuilder.SetCurrentBlock(finBody);
-    Stmt.CompileMSIR(p.finally);
-
-    (* After finally, dispatch on the selector: Sel_Exc → rethrow; Sel_Exit →
-       continue the EXIT (only if an EXIT routed through here); else → merge. *)
-    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      selV := MSIR.BuildLoad(MSIRBuilder.CurrentBlock(), "", i32, selector);
-      (* Chain of selector checks: Sel_Exc → rethrow; Sel_Exit → continue EXIT
-         (only if seen); Sel_Return → emit ret with saved value (only if seen);
-         else → merge (normal fall-through). *)
-      VAR notExc := MSIRBuilder.NewBlock("fin.notexc");
-      BEGIN
-        MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
-                         MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
-                           MSIR.CmpPred.Eq, selV,
-                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exc)),
-                         rethrow, ARRAY OF MSIR.Value{},
-                         notExc,  ARRAY OF MSIR.Value{});
-        MSIRBuilder.SetCurrentBlock(notExc);
-      END;
-      IF exitSeen THEN
-        chkExit  := MSIRBuilder.NewBlock("fin.chkexit");
-        exitCont := MSIRBuilder.NewBlock("fin.exitcont");
-        MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
-                         MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
-                           MSIR.CmpPred.Eq, selV,
-                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Exit)),
-                         exitCont, ARRAY OF MSIR.Value{},
-                         chkExit,  ARRAY OF MSIR.Value{});
-        (* This finally's frame is already popped, so EmitExitMSIR targets the
-           next outer finally or the loop exit. *)
-        MSIRBuilder.SetCurrentBlock(exitCont);
-        MSIRBuilder.EmitExitMSIR();
-        MSIRBuilder.SetCurrentBlock(chkExit);
-      END;
-      IF returnSeen THEN
-        chkReturn := MSIRBuilder.NewBlock("fin.chkreturn");
-        MSIR.BuildCondBr(MSIRBuilder.CurrentBlock(),
-                         MSIR.BuildICmp(MSIRBuilder.CurrentBlock(), "",
-                           MSIR.CmpPred.Eq, selV,
-                           MSIR.ConstInt(i32, MSIRBuilder.Sel_Return)),
-                         chkReturn, ARRAY OF MSIR.Value{},
-                         merge,     ARRAY OF MSIR.Value{});
-        MSIRBuilder.SetCurrentBlock(chkReturn);
-        (* Pending RETURN: load the saved value, route through any enclosing
-           LOCK cleanup (mutex release) before actually returning. *)
-        IF retSlot # NIL AND retT # NIL THEN
-          retV := MSIR.BuildLoad(chkReturn, "", retT, retSlot);
-        ELSE
-          retV := NIL;
-        END;
-        IF NOT MSIRBuilder.EmitReturnThroughFinally(retV) THEN
-          MSIR.BuildRet(chkReturn, retV);
-        END;
-      ELSE
-        MSIR.BuildBr(MSIRBuilder.CurrentBlock(), merge, ARRAY OF MSIR.Value{});
-      END;
-    END;
-
-    (* Re-raise the saved activation (a fresh throw via RTHooks.ResumeRaise) to
-       the enclosing handler — or to the caller if outermost. *)
-    MSIRBuilder.SetCurrentBlock(rethrow);
-    VAR
-      resumeHook := MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx);
-      actV       := MSIR.BuildLoad(rethrow, "", ptrT, actSlot);
-    BEGIN
-      IF enclosing # NIL THEN
-        rcont := MSIRBuilder.NewBlock("fin.rethrow.cont");
-        EVAL MSIR.BuildInvoke(rethrow, "", resumeHook,
-                              ARRAY OF MSIR.Value{actV}, rcont, enclosing);
-        MSIRBuilder.SetCurrentBlock(rcont);
-        MSIR.BuildUnreachable(rcont);
-      ELSE
-        EVAL MSIR.BuildCall(rethrow, "", resumeHook, ARRAY OF MSIR.Value{actV});
-        MSIR.BuildUnreachable(rethrow);
-      END;
-    END;
-
-    MSIRBuilder.SetCurrentBlock(merge);
+    EmitFinallyMSIR(p.body, p.finally, NIL, 0);
   END CompileMSIR;
+
+PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
+                           midx: INTEGER) =
+  VAR
+    outer := MSIRBuilder.CurrentScope();
+    merge := MSIRBuilder.NewBlock("fin.done");
+    s     := MSIRBuilder.NewScope(MSIR.ScopeKind.Finally, outer);
+    fs    := MSIRBuilder.NewScope(MSIR.ScopeKind.FinallyCode, outer, s);
+    try, fin: MSIR.Block;
+  BEGIN
+    (* The protected body. *)
+    EVAL MSIRBuilder.SetScope(s);
+    try := MSIRBuilder.NewBlock("fin.try");
+    MSIR.ScopeSetEntry(s, try);
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIR.BuildBr(MSIRBuilder.CurrentBlock(), try, ARRAY OF MSIR.Value{});
+    END;
+    MSIRBuilder.SetCurrentBlock(try);
+    Stmt.CompileMSIR(body);
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIRBuilder.EmitGoto(merge, ARRAY OF MSIR.Value{});
+    END;
+
+    (* The FINALLY code, ending by resuming what entered it. *)
+    EVAL MSIRBuilder.SetScope(fs);
+    fin := MSIRBuilder.NewBlock("fin.code");
+    MSIR.ScopeSetEntry(fs, fin);
+    MSIR.ScopeSetFinally(s, fin);
+    MSIRBuilder.SetCurrentBlock(fin);
+    IF finally # NIL THEN
+      Stmt.CompileMSIR(finally);
+    ELSE
+      EVAL MSIRBuilder.EmitMethodCall("", obj, midx, MSIR.TVoid(),
+                                      ARRAY OF MSIR.Value{});
+    END;
+    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
+      MSIR.BuildEndFinally(MSIRBuilder.CurrentBlock());
+    END;
+
+    EVAL MSIRBuilder.SetScope(outer);
+    MSIRBuilder.SetCurrentBlock(merge);
+  END EmitFinallyMSIR;
 
 PROCEDURE GetOutcome (p: P): Stmt.Outcomes =
   VAR oc, xc, o: Stmt.Outcomes;
