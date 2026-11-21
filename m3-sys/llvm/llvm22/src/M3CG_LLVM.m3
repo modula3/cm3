@@ -119,8 +119,6 @@ REVEAL
       callResultType: Type;          (* Meaningful when inside a call. *)
       indirCallCC: CallingConvention;  (* Meaningful when inside an indirect
                                           call. *)
-      staticLinkBB: LLVM.BasicBlockRef;  (* BB that contains a
-                                            pop_static_link. *)
       persFn : LLVM.ValueRef;    (* personality function not used *)
       catchId: INTEGER         := 0;
 
@@ -761,18 +759,6 @@ PROCEDURE DumpLvVal (VR: LLVM.ValueRef) =
   BEGIN
     LLVM.DumpValue(VR);
   END DumpLvVal;
-
-PROCEDURE GetBBLastInstruction
-  (BB: LLVM.BasicBlockRef; expectedOp: LLVM.Opcode): LLVM.ValueRef =
-  VAR inst: LLVM.ValueRef;
-  VAR Op: LLVM.Opcode;
-  BEGIN
-    inst := LLVM.GetLastInstruction(BB);
-    <* ASSERT inst # NIL *>
-    Op := LLVM.GetInstructionOpcode(inst);
-    <* ASSERT Op = expectedOp *>
-    RETURN inst;
-  END GetBBLastInstruction;
 
 (*-------------------------simplify all the untraced array allocs for llvm ---*)
 
@@ -5256,18 +5242,17 @@ PROCEDURE call_invoke_indirect (self         : U;
   VAR
     s0                                     := Get(self.exprStack, 0);
     procExpr          : LvExpr;
-    currentBB, mergeBB: LLVM.BasicBlockRef;
+    nestBB, plainBB, mergeBB: LLVM.BasicBlockRef;
     resultVal1, resultVal2, resultVal3, mergePhi: LLVM.ValueRef;
+    linkVal, isNil                              : LLVM.ValueRef;
     resultsArr                                  : ValueArrType;
     resultsRef                                  : ValueRefType;
     BBsArr                                      : BBArrType;
     BBsRef                                      : BBRefType;
-    branchInst, loadInst                        : LLVM.ValueRef;
   BEGIN
     DumpExprStack(self, "call_indirect_top_level");
     procExpr := NARROW(s0, LvExpr);
     Pop(self.exprStack);
-    currentBB := LLVM.GetInsertBlock(builderIR); (* Save. *)
     IF self.callState = callStateTyp.insideIndirect THEN
       (* ^There was no pop_static_link => statically known to call a global
          proc. *)
@@ -5277,79 +5262,54 @@ PROCEDURE call_invoke_indirect (self         : U;
         resultVal3 := ExtendScalar(resultVal3, t);
         Push(self.exprStack, NEW(LvExpr, lVal := resultVal3));
       END
-    ELSIF self.staticLinkBB = currentBB THEN
-      (* same BB as the pop_static_link => statically known to call a nested
-         proc. *)
-      resultVal3 :=
-        self.innerCallIndirect(
-          procExpr.lVal, t, cc, next, handler, call, Nested := TRUE);
-      IF t # Type.Void THEN      (* push the return val onto exprStack*)
-        resultVal3 := ExtendScalar(resultVal3, t);
-        Push(self.exprStack, NEW(LvExpr, lVal := resultVal3));
-      END;
+    ELSE
+      (* A static link was popped, so it is the leftmost actual on callStack.
 
-    ELSE 
-     (* Big semantic mismatch between CG IR and llvm IR. The former can have
-        a call with dynamically differing parameter list (here, with/without
-        a static link), as long as it matches what the (also dynamically
-        differing) procedure's code expects. In llvm, a call instruction has
-        to have a static function type, including its parameter list. So we
-        need two call instructions, in different basic blocks.
+         CG IR can pass a static link to a procedure that does not take one,
+         as long as the callee ignores it.  An llvm call instruction has a
+         static function type, so it cannot: we need two calls, one with the
+         'nest' parameter and one without, and must choose between them at run
+         time.
 
-        Here, currentBB is on an execution path that does not leave a static
-        link on paramStack. Code in self.staticLinkBB is on a path that
-        contains the pop_static_link and statically does have one on
-        paramStack. On both paths, the code address is on top of exprStack
-        and is non-NIL, and paramStack, minus the SL if any, is otherwise
-        correct for the call. *)
+         The front end makes the choice decidable from the static link alone.
+         UserProc.GenClosureCall writes the link on both arms of its closure
+         test: the closure's frame on the closure arm and NIL on the other.
+         Marker.CallFinallyHandler passes a frame, which is never NIL.  So a
+         NIL link means a top-level procedure.  When the link is the address
+         of a local, as it is in CallFinallyHandler, llvm folds the test.
 
+         Earlier versions instead looked for the pop_static_link in the
+         closure arm's basic block and took the code address apart from the
+         instructions CG emitted there.  That depended on the exact sequence
+         the front end produced, and broke when the front end began writing
+         the link on both arms. *)
+      linkVal := NARROW(Get(self.callStack, 0), LvExpr).lVal;
+      nestBB := LLVM.AppendBasicBlockInContext(
+                  ctx, self.curProc.lvProc, "indir_sl_nest");
+      plainBB := LLVM.AppendBasicBlockInContext(
+                   ctx, self.curProc.lvProc, "indir_sl_plain");
       mergeBB := LLVM.AppendBasicBlockInContext(
                    ctx, self.curProc.lvProc, "indir_sl_merge");
+      isNil := LLVM.BuildICmp(builderIR, LLVM.IntPredicate.LLVMIntEQ, linkVal,
+                              Zero(AdrTy), "sl_is_nil");
+      EVAL LLVM.BuildCondBr(builderIR, isNil, plainBB, nestBB);
 
-      (* Let's switch to self.staticLinkBB first and take care of that case
-         while exprStack is right for it. *)
-
-      (* We have to use some inside knowledge of the code sequences CG is
-         producing.  Specifically, staticLinkBB ends with load (of code
-         address), a store (which we don't use) and a branch (which we don't
-         want to follow. *)
-
-      (* staticLinkBB already will have a terminating unconditional branch,
-         because it is followed by label for not-a-closure-call.  We have to
-         remove it.  The Load instruction 3rd from the end of staticLinkBB will
-         be the code addr. *)
-      branchInst := GetBBLastInstruction(self.staticLinkBB, LLVM.Opcode.LLVMBr);
-      loadInst := LLVM.GetPreviousInstruction(branchInst);
-      <* ASSERT LLVM.GetInstructionOpcode(loadInst) = LLVM.Opcode.LLVMStore *>
-      loadInst := LLVM.GetPreviousInstruction(loadInst);
-      <* ASSERT LLVM.GetInstructionOpcode(loadInst) = LLVM.Opcode.LLVMLoad *>
-      LLVM.InstructionEraseFromParent(branchInst);
-
-      LLVM.PositionBuilderAtEnd(builderIR, self.staticLinkBB);
-      (* REVIEW: The CG IR code contains another nil-check at this point on the
-         code address that was taken from the closure (having earlier
-         nil-checked the procedure pointer itself).  I think nil here can't
-         happen.  If it ever does, just insert nil-check and abort on loadInst
-         here.
-
-         In the CG code, this check is also in the non-closure path, where it
-         duplicates the earlier check, in the non-closure case, on the same
-         pointer.  But it is needed in that case, because only it does an abort
-         when it fails.  The CG code could really be reviewed here. *)
-      resultVal1 := self.innerCallIndirect(loadInst, t, cc, next, handler, call,
-                                           Nested := TRUE, merge := mergeBB);
+      (* The nested call, while callStack still holds the static link. *)
+      LLVM.PositionBuilderAtEnd(builderIR, nestBB);
+      resultVal1 := self.innerCallIndirect(procExpr.lVal, t, cc, next, handler,
+                                           call, Nested := TRUE,
+                                           merge := mergeBB);
       IF call THEN EVAL LLVM.BuildBr(builderIR, mergeBB); END;
-      (* If it has a result, prepare for a Phi at the top of the mergedBB. *)
+      (* If it has a result, prepare for a Phi at the top of mergeBB. *)
       IF t # Type.Void THEN
         resultsRef := NewValueArr(resultsArr, 2);
         resultsArr^[0] := resultVal1;
         BBsRef := NewBBArr(BBsArr, 2);
-        BBsArr^[0] := self.staticLinkBB;
+        BBsArr^[0] := nestBB;
       END;
 
-      (* Now switch back to currentBB, remove the SL from exprStack, and take
-         care of the no-SL version. *)
-      LLVM.PositionBuilderAtEnd(builderIR, currentBB);
+      (* The top-level call, without the static link. *)
+      LLVM.PositionBuilderAtEnd(builderIR, plainBB);
       Pop(self.callStack);       (* Remove SL from left of actual param list. *)
       (* But leave the rest of the params on self.call_stack.  They will be
          needed by InnerCallIndirect. *)
@@ -5362,7 +5322,7 @@ PROCEDURE call_invoke_indirect (self         : U;
       (* If it has a result, complete the Phi. *)
       IF t # Type.Void THEN
         resultsArr^[1] := resultVal2;
-        BBsArr^[1] := currentBB;
+        BBsArr^[1] := plainBB;
         mergePhi := LLVM.BuildPhi(builderIR, LLvmType(t), "indir_call_result");
         LLVM.AddIncoming(mergePhi, resultsRef, BBsRef, 2);
         mergePhi := ExtendScalar(mergePhi, t);
@@ -5443,8 +5403,6 @@ PROCEDURE pop_static_link (self: U) =
     <* ASSERT self.callState = callStateTyp.insideIndirect *>
     Push(self.callStack, s0);    (* Make SL the leftmost actual. *)
     Pop(self.exprStack);
-    self.staticLinkBB := LLVM.GetInsertBlock(builderIR);
-    (* ^So can see if it changes by the time we see the call_indirect. *)
     self.callState := callStateTyp.indirectAfterSL;
   END pop_static_link;
 
