@@ -1,0 +1,8 @@
+"../Main.m3", line 64: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 76: warning: potentially unhandled exceptions: Main.F, Main.G
+"../Main.m3", line 94: warning: potentially unhandled exceptions: Main.E, Main.F
+"../Main.m3", line 100: warning: potentially unhandled exception: Main.G
+"../Main.m3", line 112: warning: potentially unhandled exceptions: Main.F, Main.G
+"../Main.m3", line 112: warning: potentially unhandled exceptions: Main.F, Main.G
+"../Main.m3", line 118: warning: potentially unhandled exception: Main.G
+7 warnings encountered
