@@ -151,8 +151,9 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
          | Bad(msg) => RETURN -2
          END
        END WithLog;
-     The body is an Except scope (D26): Lookup's normal result leaves the
-     scope by unwind_to; the handlers are in the root scope. *)
+     The body is an Except scope (D26): Lookup's normal result leaves it by
+     unwind_to; each handler's code is a Handler scope owned by it, in the
+     root scope, also left by unwind_to. *)
   VAR
     i64    := MSIR.TI(64);
     msgT   := MSIR.TPtr(MSIR.TVoid());
@@ -179,7 +180,7 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
                 ARRAY OF MSIR.BlockParam{
                   MSIR.BlockParam{"n", i64}
                 });
-    s : MSIR.Scope;
+    s, hs1, hs2 : MSIR.Scope;
     v, n : MSIR.Value;
   BEGIN
     MSIR.ProcSetRaises(lookup, ARRAY OF TEXT{"@Main__NotFound", "@Main__Bad"});
@@ -196,6 +197,10 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
     s := MSIR.NewScope(p, MSIR.ScopeKind.Except, MSIR.ProcScope(p));
     MSIR.BlockSetScope(body, s);
     MSIR.ScopeSetEntry(s, body);
+    hs1 := MSIR.NewScope(p, MSIR.ScopeKind.Handler, MSIR.ProcScope(p), s);
+    hs2 := MSIR.NewScope(p, MSIR.ScopeKind.Handler, MSIR.ProcScope(p), s);
+    MSIR.BlockSetScope(h1, hs1);  MSIR.ScopeSetEntry(hs1, h1);
+    MSIR.BlockSetScope(h2, hs2);  MSIR.ScopeSetEntry(hs2, h2);
     MSIR.ScopeAddHandler(s, notFound, h1);
     MSIR.ScopeAddHandler(s, bad, h2);
 
@@ -207,8 +212,8 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
     MSIR.BuildUnwindTo(body, merge, ARRAY OF MSIR.Value{v});
 
     (* handlers *)
-    MSIR.BuildBr(h1, merge, ARRAY OF MSIR.Value{MSIR.ConstInt(i64, -1)});
-    MSIR.BuildBr(h2, merge, ARRAY OF MSIR.Value{MSIR.ConstInt(i64, -2)});
+    MSIR.BuildUnwindTo(h1, merge, ARRAY OF MSIR.Value{MSIR.ConstInt(i64, -1)});
+    MSIR.BuildUnwindTo(h2, merge, ARRAY OF MSIR.Value{MSIR.ConstInt(i64, -2)});
 
     (* merge: ret %n *)
     n := MSIR.BlockParamValue(merge, 0);
@@ -217,10 +222,50 @@ PROCEDURE BuildWithLog(m: MSIR.Module) =
     MSIR.ModuleAddProc(m, p);
   END BuildWithLog;
 
+PROCEDURE BuildWithFinally(m: MSIR.Module) =
+  (* PROCEDURE WithFinally(key: INTEGER): INTEGER =
+       BEGIN
+         TRY RETURN Lookup(key) FINALLY Done() END
+       END WithFinally;
+     A Finally scope; its FINALLY code is a FinallyCode scope ending in
+     end_finally, which resumes the RETURN (or an exception). *)
+  VAR
+    i64    := MSIR.TI(64);
+    lookup := MSIR.NewProc("Lookup",
+                ARRAY OF MSIR.Param{ MSIR.Param{"k", i64, MSIR.ParamMode.ByValue} },
+                i64);
+    done   := MSIR.NewProc("Done", ARRAY OF MSIR.Param{}, MSIR.TVoid());
+    p := MSIR.NewProc("WithFinally",
+           ARRAY OF MSIR.Param{ MSIR.Param{"key", i64, MSIR.ParamMode.ByValue} },
+           i64);
+    entry := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
+    body  := MSIR.NewBlock("body",  ARRAY OF MSIR.BlockParam{});
+    fin   := MSIR.NewBlock("fin",   ARRAY OF MSIR.BlockParam{});
+    s, fs : MSIR.Scope;
+  BEGIN
+    MSIR.ProcAddBlock(p, entry);
+    MSIR.ProcAddBlock(p, body);
+    MSIR.ProcAddBlock(p, fin);
+    s := MSIR.NewScope(p, MSIR.ScopeKind.Finally, MSIR.ProcScope(p));
+    fs := MSIR.NewScope(p, MSIR.ScopeKind.FinallyCode, MSIR.ProcScope(p), s);
+    MSIR.BlockSetScope(body, s);  MSIR.ScopeSetEntry(s, body);
+    MSIR.BlockSetScope(fin, fs);  MSIR.ScopeSetEntry(fs, fin);
+    MSIR.ScopeSetFinally(s, fin);
+
+    MSIR.BuildBr(entry, body, ARRAY OF MSIR.Value{});
+    MSIR.BuildRetThroughEnvelope(body,
+      MSIR.BuildCall(body, "v", lookup,
+                     ARRAY OF MSIR.Value{MSIR.ProcParam(p, 0)}));
+    EVAL MSIR.BuildCall(fin, "", done, ARRAY OF MSIR.Value{});
+    MSIR.BuildEndFinally(fin);
+    MSIR.ModuleAddProc(m, p);
+  END BuildWithFinally;
+
 PROCEDURE BuildBadScopes(m: MSIR.Module) =
   (* Deliberate D8 violations, each of which the verifier must report:
      a br out of a Finally scope, a ret inside it, an unwind_to into it,
-     and a handler-less Except scope. *)
+     FINALLY code that is not a FinallyCode scope (and so ends wrongly),
+     and a handler-less Except scope with a misplaced entry. *)
   VAR
     i64   := MSIR.TI(64);
     p     := MSIR.NewProc("BadScopes", ARRAY OF MSIR.Param{}, i64);
@@ -247,7 +292,7 @@ PROCEDURE BuildBadScopes(m: MSIR.Module) =
     MSIR.BuildUnwindTo(entry, inner2, ARRAY OF MSIR.Value{});  (* into a scope *)
     MSIR.BuildBr(inner, out, ARRAY OF MSIR.Value{});           (* crosses *)
     MSIR.BuildRet(inner2, MSIR.ConstInt(i64, 0));              (* ret in scope *)
-    MSIR.BuildBr(fin, out, ARRAY OF MSIR.Value{});
+    MSIR.BuildEndFinally(fin);                                 (* not FINALLY code *)
     MSIR.BuildRet(out, MSIR.ConstInt(i64, 1));
     MSIR.ModuleAddProc(m, p);
   END BuildBadScopes;
@@ -529,6 +574,7 @@ BEGIN
     BuildSum0ToN(m);
     BuildMaybeArea(m);
     BuildWithLog(m);
+    BuildWithFinally(m);
     BuildBadScopes(m);
     BuildOpenArraySum(m);
     BuildClamp(m);

@@ -733,6 +733,7 @@ END;
 REVEAL Scope = BRANDED "MSIR.Scope" REF RECORD
   kind:     ScopeKind;
   parent:   Scope := NIL;
+  owner:    Scope := NIL;
   index:    INTEGER := 0;
   entry:    Block := NIL;
   handlers: RefSeq.T := NIL;                      (* elements: REF Handler *)
@@ -744,8 +745,9 @@ TYPE HandlerRef = REF Handler;
 PROCEDURE ProcScope(p: Proc): Scope =
   BEGIN RETURN p.scopes.get(0) END ProcScope;
 
-PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope): Scope =
-  VAR s := NEW(Scope, kind := kind, parent := parent,
+PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope;
+                   owner: Scope := NIL): Scope =
+  VAR s := NEW(Scope, kind := kind, parent := parent, owner := owner,
                index := p.scopes.size(), handlers := NEW(RefSeq.T).init());
   BEGIN
     <* ASSERT kind # ScopeKind.Proc AND parent # NIL *>
@@ -760,6 +762,7 @@ PROCEDURE ProcScopeAt(p: Proc;  i: INTEGER): Scope =
 
 PROCEDURE ScopeKindOf(s: Scope): ScopeKind = BEGIN RETURN s.kind END ScopeKindOf;
 PROCEDURE ScopeParent(s: Scope): Scope = BEGIN RETURN s.parent END ScopeParent;
+PROCEDURE ScopeOwner(s: Scope): Scope = BEGIN RETURN s.owner END ScopeOwner;
 PROCEDURE ScopeIndex(s: Scope): INTEGER = BEGIN RETURN s.index END ScopeIndex;
 PROCEDURE ScopeSetEntry(s: Scope;  b: Block) = BEGIN s.entry := b END ScopeSetEntry;
 PROCEDURE ScopeEntry(s: Scope): Block = BEGIN RETURN s.entry END ScopeEntry;
@@ -2382,6 +2385,13 @@ PROCEDURE BuildUnwindTo(b: Block;  target: Block;
     addInsn(b, i);
   END BuildUnwindTo;
 
+PROCEDURE BuildEndFinally(b: Block) =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op := Op.EndFinally;
+    addInsn(b, i);
+  END BuildEndFinally;
+
 PROCEDURE BuildRetThroughEnvelope(b: Block;  value: Value) =
   VAR i := NEW(Insn);
   BEGIN
@@ -2590,7 +2600,7 @@ PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
     ri := BlockInsn(b, n-1);
     CASE ri.op OF
     | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable,
-      Op.UnwindTo, Op.RetThroughEnvelope, Op.Typecase,
+      Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally, Op.Typecase,
       Op.Resume, Op.Invoke, Op.InvokeIndirect =>
         RETURN TRUE;
     ELSE

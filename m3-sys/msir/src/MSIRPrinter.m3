@@ -236,6 +236,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.Unreachable        => RETURN "unreachable";
     | MSIR.Op.UnwindTo           => RETURN "unwind_to";
     | MSIR.Op.RetThroughEnvelope => RETURN "ret_through_envelope";
+    | MSIR.Op.EndFinally         => RETURN "end_finally";
     | MSIR.Op.Call               => RETURN "call";
     | MSIR.Op.Invoke             => RETURN "invoke";
     | MSIR.Op.New                => RETURN "new";
@@ -679,33 +680,46 @@ PROCEDURE ParamModeText(m: MSIR.ParamMode): TEXT =
 
 (* The procedure's EH scopes other than the root, one per line:
      scope s1: except in s0, entry L; Exc -> H1, else -> H2
-     scope s2: finally in s1, entry L; finally F *)
+     scope s2: handler of s1 in s0, entry H1
+     scope s3: finally in s0, entry L; finally F
+     scope s4: finally code of s3 in s0, entry F *)
 PROCEDURE Scopes(wr: Wr.T;  p: MSIR.Proc) =
   VAR s: MSIR.Scope;
   BEGIN
     FOR k := 1 TO MSIR.ProcScopeCount(p) - 1 DO
       s := MSIR.ProcScopeAt(p, k);
-      Wr.PutText(wr, "  scope s" & Fmt.Int(k));
-      IF MSIR.ScopeKindOf(s) = MSIR.ScopeKind.Finally
-        THEN Wr.PutText(wr, ": finally in s");
-        ELSE Wr.PutText(wr, ": except in s");
+      Wr.PutText(wr, "  scope s" & Fmt.Int(k) & ": ");
+      CASE MSIR.ScopeKindOf(s) OF
+      | MSIR.ScopeKind.Proc        => Wr.PutText(wr, "proc");
+      | MSIR.ScopeKind.Except      => Wr.PutText(wr, "except");
+      | MSIR.ScopeKind.Finally     => Wr.PutText(wr, "finally");
+      | MSIR.ScopeKind.Handler     => Wr.PutText(wr, "handler");
+      | MSIR.ScopeKind.FinallyCode => Wr.PutText(wr, "finally code");
       END;
-      Wr.PutText(wr, Fmt.Int(MSIR.ScopeIndex(MSIR.ScopeParent(s))));
-      Wr.PutText(wr, ", entry " & LabelOf(MSIR.ScopeEntry(s)) & ";");
-      IF MSIR.ScopeKindOf(s) = MSIR.ScopeKind.Finally THEN
-        Wr.PutText(wr, " finally " & LabelOf(MSIR.ScopeFinally(s)));
-      ELSE
-        FOR h := 0 TO MSIR.ScopeHandlerCount(s) - 1 DO
-          VAR hd := MSIR.ScopeHandler(s, h);
-          BEGIN
-            IF h > 0 THEN Wr.PutText(wr, ",") END;
-            IF hd.exc = NIL
-              THEN Wr.PutText(wr, " else");
-              ELSE Wr.PutText(wr, " " & MSIR.ExcDescName(hd.exc));
+      IF MSIR.ScopeOwner(s) # NIL THEN
+        Wr.PutText(wr, " of s" & Fmt.Int(MSIR.ScopeIndex(MSIR.ScopeOwner(s))));
+      END;
+      IF MSIR.ScopeParent(s) # NIL THEN
+        Wr.PutText(wr, " in s" & Fmt.Int(MSIR.ScopeIndex(MSIR.ScopeParent(s))));
+      END;
+      Wr.PutText(wr, ", entry " & LabelOf(MSIR.ScopeEntry(s)));
+      CASE MSIR.ScopeKindOf(s) OF
+      | MSIR.ScopeKind.Finally =>
+          Wr.PutText(wr, "; finally " & LabelOf(MSIR.ScopeFinally(s)));
+      | MSIR.ScopeKind.Except =>
+          Wr.PutText(wr, ";");
+          FOR h := 0 TO MSIR.ScopeHandlerCount(s) - 1 DO
+            VAR hd := MSIR.ScopeHandler(s, h);
+            BEGIN
+              IF h > 0 THEN Wr.PutText(wr, ",") END;
+              IF hd.exc = NIL
+                THEN Wr.PutText(wr, " else");
+                ELSE Wr.PutText(wr, " " & MSIR.ExcDescName(hd.exc));
+              END;
+              Wr.PutText(wr, " -> " & LabelOf(hd.entry));
             END;
-            Wr.PutText(wr, " -> " & LabelOf(hd.entry));
           END;
-        END;
+      ELSE
       END;
       Wr.PutText(wr, "\n");
     END;

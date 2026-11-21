@@ -1315,27 +1315,32 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   cannot hold a TRY body, with a representation that keeps D20's flat CFG.
   - **Representation.**  A procedure keeps its flat list of blocks.  It also
     has a tree of *EH scopes*; every block belongs to exactly one scope (the
-    procedure's outermost scope if no TRY encloses it).  A scope records:
-    - its kind: `Except` (TRY/EXCEPT) or `Finally` (TRY/FINALLY);
-    - its parent scope;
-    - for `Except`, its handlers: an exception (an `ExcDesc`) or ELSE, and
-      the handler's entry block, which takes the exception's argument as
-      its one block parameter when the exception has one;
-    - for `Finally`, the entry block of the FINALLY code.
+    procedure's root scope if no TRY encloses it).  Scope kinds:
+    - `Except` (TRY/EXCEPT) and `Finally` (TRY/FINALLY, LOCK) are
+      *protected*: an exception raised in their blocks is handled by them.
+      An `Except` scope lists its handlers, each an exception (an
+      `ExcDesc`) or ELSE, and the entry of the handler's code.  A `Finally`
+      scope has the entry of its FINALLY code.
+    - `Handler` and `FinallyCode` hold a handler's or a FINALLY's code.
+      They are not protected by their own TRY: their parent is the TRY
+      scope's parent, and they name the TRY scope as their *owner*.  They
+      exist so the lowering knows where that code ends (amended
+      2026-11-21): under `ex_stack` every way out of handler code must call
+      `__cxa_end_catch`, and FINALLY code ends by resuming what entered it.
 
-    Handler and FINALLY blocks belong to the *parent* scope: they are not
-    protected by the TRY they belong to, but are by any enclosing one.
-    Nothing is nested in storage, so passes that walk blocks are unchanged;
-    the scope tree is consulted only where EH matters.
+    A handler's entry block takes the exception's argument as its one
+    parameter when the exception has one.  Nothing is nested in storage, so
+    passes that walk blocks are unchanged; the scope tree is consulted only
+    where EH matters.
   - **Control (D8).**  An edge whose target is in the same scope, or enters
-    a child scope's protected blocks through that scope's entry, is an
-    ordinary `br`/`cond_br`.  Any other edge leaves one or more scopes and
-    must be explicit: `unwind_to target(args)` (EXIT, normal completion, or
-    a branch out of a handler or FINALLY into an outer scope) or
-    `ret_through_envelope v` (RETURN).  This holds for normal completion of
-    a TRY/EXCEPT too.  Under `ex_stack` leaving an `Except` scope needs no
-    code, but under `ex_frame` it pops the scope's setjmp frame, so the exit
-    must be visible to the lowering.
+    a child `Except`/`Finally` scope through its entry, is an ordinary
+    `br`/`cond_br`.  `Handler` and `FinallyCode` scopes are entered only by
+    the EH mechanism, never by a branch.  Any other edge leaves one or more
+    scopes and must be explicit: `unwind_to target(args)` (EXIT, normal
+    completion, a handler finishing) or `ret_through_envelope v` (RETURN).
+    This holds for normal completion of a TRY/EXCEPT too.  Under `ex_stack`
+    leaving an `Except` scope needs no code, but under `ex_frame` it pops
+    the scope's setjmp frame, so the exit must be visible to the lowering.
   - **Raising.**  `raise exc, arg` is a terminator; the lowering calls the
     runtime's raise hook (`RTHooks.RaiseEx` today).  Calls in protected
     blocks stay plain `call` / `call_indirect`: the lowering decides which
@@ -1345,16 +1350,26 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     raises runtime errors), as today.  A fault that is not a call (a signal
     converted to an exception) is not covered, by this or by either current
     backend.
-  - **FINALLY.**  The front end emits the FINALLY code once.  Each lowering
-    chooses between duplicating it per exit path (D9) and dispatching on a
-    selector; MSIRToLLVM keeps today's selector scheme.  Semantics the
-    lowering must keep:
+  - **FINALLY.**  The front end emits the FINALLY code once, in a
+    `FinallyCode` scope.  Each lowering chooses between duplicating it per
+    exit path (D9) and dispatching on a selector; MSIRToLLVM keeps today's
+    selector scheme.  Semantics the lowering must keep:
     - FINALLY runs on normal completion, on every explicit exit leaving the
-      scope, and on an exception propagating out of the protected blocks;
-    - afterwards the pending outcome resumes: the exit continues, the
-      RETURN returns, or the exception is re-raised;
-    - if the FINALLY code itself leaves by EXIT or RETURN, or raises, that
-      outcome *replaces* the pending one.
+      protected scope, and on an exception propagating out of it;
+    - the FINALLY code finishes with `end_finally`, which resumes the
+      outcome that entered it: the exit continues, the RETURN returns, or
+      the exception is re-raised;
+    - if the FINALLY code itself leaves by `unwind_to`,
+      `ret_through_envelope` or `raise`, that outcome *replaces* the pending
+      one.
+  - **Language rules stay in the front end** (amended 2026-11-21).  MSIR's
+    scopes are mechanism: protection, handlers chosen by exception identity
+    or ELSE, FINALLY with resumption, explicit exits.  What Modula-3 means
+    is expressed with them by the front end.  In particular EXIT and RETURN
+    are exceptions in Modula-3, so EXCEPT ELSE catches them: inside the
+    protected blocks of a TRY with an ELSE, the front end compiles EXIT and
+    RETURN as `unwind_to` the ELSE code, and the exception path reaches the
+    same code through the ELSE handler.  MSIR has no rule for it.
   - **LOCK.**  The front end emits the acquire, then a `Finally` scope whose
     FINALLY code releases the mutex.  No new op.
   - **RAISES checking.**  A procedure whose RAISES clause excludes some
@@ -1375,9 +1390,18 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     those choices fixed a failing test (p004, p140); the lowering must copy
     them unchanged, checked against the EH m3tests before anything else
     changes.
-  - **Verifier.**  Checks that the scope tree is well formed, that every
-    block has a scope, D8 as above, and that handler parameters match their
-    exceptions' argument types.
+  - **Verifier.**  Checks that the scope tree is well formed (handlers and
+    FINALLY entries in `Handler`/`FinallyCode` scopes owned by their TRY),
+    D8 as above, `end_finally` only in `FinallyCode`, and that handler
+    parameters match their exceptions' argument types.  The ops only the
+    EH pass produces (`invoke`, `landingpad`, `extractvalue`, `resume`) are
+    rejected in MSIR that has not been through it.
+  - **The EH pass** (the middle course, 2026-11-21).  MSIRToLLVM first runs
+    an MSIR-to-MSIR pass that rewrites scopes into today's
+    invoke/landing-pad form, carrying the front end's current EH code over
+    as builder calls; its output can still be printed and verified.  Once
+    the EH tests are stable, folding it into MSIRToLLVM's text emission
+    (and deleting those ops from MSIR) can be decided.
   - **Order.**  (1) MSIR API, printer and verifier; (2) MSIRToLLVM lowering
     of scopes, reproducing today's output semantics; (3) TryStmt,
     TryFinStmt, LockStmt, ReturnStmt and ExitStmt emit scopes (ladder,

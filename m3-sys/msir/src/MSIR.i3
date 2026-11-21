@@ -246,32 +246,38 @@ PROCEDURE BlockSetScope(b: Block;  s: Scope);
 (* D26.  The blocks of a procedure stay a flat list; each belongs to one EH
    scope, and the scopes form a tree rooted at the procedure's scope.
    - An Except scope (TRY/EXCEPT) protects its blocks; it has handlers, each
-     an exception (NIL: ELSE) and the handler's entry block, which takes the
-     exception's argument as its one parameter if the exception has one.
+     an exception (NIL: ELSE) and the entry block of the handler's code,
+     which takes the exception's argument as its one parameter if the
+     exception has one.
    - A Finally scope (TRY/FINALLY, LOCK) protects its blocks; it has the
      entry block of its FINALLY code.
-   Handler and FINALLY blocks belong to the scope's PARENT: they are not
-   protected by their own TRY.  Control enters a scope only by a branch from
-   its parent scope to its entry block; any other edge between scopes leaves
-   scopes and must be unwind_to or ret_through_envelope (D8).  When FINALLY
-   code completes, the outcome that entered it resumes; one it produces
-   itself (EXIT, RETURN or a raise) replaces it. *)
+   - A Handler or FinallyCode scope holds one handler's or the FINALLY's
+     code.  Its parent is its TRY scope's parent (it is not protected by its
+     own TRY), and the TRY scope is its owner.  It is entered only by the EH
+     mechanism.  FINALLY code finishes with end_finally, which resumes the
+     outcome that entered it; leaving it otherwise replaces that outcome.
+   Control enters an Except or Finally scope by a branch from its parent to
+   its entry block; any other edge between scopes leaves scopes and must be
+   unwind_to or ret_through_envelope (D8). *)
 
 TYPE Scope <: REFANY;
-TYPE ScopeKind = {Proc, Except, Finally};
+TYPE ScopeKind = {Proc, Except, Finally, Handler, FinallyCode};
 TYPE Handler = RECORD
   exc:   ExcDesc;   (* NIL: the ELSE handler *)
   entry: Block;
 END;
 
 PROCEDURE ProcScope(p: Proc): Scope;                (* the root, kind Proc *)
-PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope): Scope;
-                                             (* kind Except or Finally *)
+PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope;
+                   owner: Scope := NIL): Scope;
+                                             (* not Proc; owner: the TRY scope,
+                                                for Handler and FinallyCode *)
 PROCEDURE ProcScopeCount(p: Proc): INTEGER;         (* including the root *)
 PROCEDURE ProcScopeAt(p: Proc;  i: INTEGER): Scope; (* 0 is the root *)
 
 PROCEDURE ScopeKindOf(s: Scope): ScopeKind;
 PROCEDURE ScopeParent(s: Scope): Scope;             (* NIL for the root *)
+PROCEDURE ScopeOwner(s: Scope): Scope;              (* Handler, FinallyCode *)
 PROCEDURE ScopeIndex(s: Scope): INTEGER;            (* its ProcScopeAt index *)
 PROCEDURE ScopeSetEntry(s: Scope;  b: Block);       (* the first protected block *)
 PROCEDURE ScopeEntry(s: Scope): Block;
@@ -597,6 +603,7 @@ TYPE Op = {
   (* control *)
   Br, CondBr, Ret, Unreachable,
   UnwindTo, RetThroughEnvelope,        (* cross-envelope exits *)
+  EndFinally,                          (* FINALLY code done: resume (D26) *)
   (* call / alloc *)
   Call, Invoke, New,
   (* M3 object/RTTI intrinsics *)
@@ -861,6 +868,11 @@ PROCEDURE BuildUnwindTo(b: Block;  target: Block;
 (* `ret_through_envelope v` returns from inside EH scopes, running the
    FINALLY code of every Finally scope left (D8, D26). *)
 PROCEDURE BuildRetThroughEnvelope(b: Block;  value: Value);
+
+(* `end_finally` ends FINALLY code (in a FinallyCode scope), resuming the
+   outcome that entered it: the exit continues, the RETURN returns, or the
+   exception is re-raised (D26).  Terminator. *)
+PROCEDURE BuildEndFinally(b: Block);
 
 (*-------------------------------------- Open arrays / runtime-check builders *)
 

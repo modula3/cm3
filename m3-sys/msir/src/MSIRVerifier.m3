@@ -31,7 +31,7 @@ PROCEDURE IsTerminator(op: MSIR.Op): BOOLEAN =
   BEGIN
     CASE op OF
     | MSIR.Op.Br, MSIR.Op.CondBr, MSIR.Op.Ret, MSIR.Op.Unreachable,
-      MSIR.Op.UnwindTo, MSIR.Op.RetThroughEnvelope,
+      MSIR.Op.UnwindTo, MSIR.Op.RetThroughEnvelope, MSIR.Op.EndFinally,
       MSIR.Op.Raise, MSIR.Op.Typecase,
       MSIR.Op.Invoke, MSIR.Op.InvokeIndirect, MSIR.Op.Resume => RETURN TRUE;
     ELSE RETURN FALSE
@@ -495,11 +495,13 @@ PROCEDURE ScopeName(s: MSIR.Scope): TEXT =
 (* The scope tree is well formed and handler parameters match their
    exceptions' arguments. *)
 PROCEDURE CheckScopes(c: Ctx;  p: MSIR.Proc) =
-  VAR s, parent: MSIR.Scope;  where: TEXT;
+  VAR s, parent, owner: MSIR.Scope;  where: TEXT;  kind: MSIR.ScopeKind;
   BEGIN
     FOR k := 1 TO MSIR.ProcScopeCount(p) - 1 DO
       s := MSIR.ProcScopeAt(p, k);
+      kind := MSIR.ScopeKindOf(s);
       parent := MSIR.ScopeParent(s);
+      owner := MSIR.ScopeOwner(s);
       where := "scope " & ScopeName(s);
       IF parent = NIL OR MSIR.ScopeIndex(parent) >= k THEN
         ErrAt(c, where, "parent must be an earlier scope");
@@ -511,24 +513,23 @@ PROCEDURE CheckScopes(c: Ctx;  p: MSIR.Proc) =
         ErrAt(c, where, "entry block " & MSIR.BlockLabel(MSIR.ScopeEntry(s))
                           & " is not in the scope");
       END;
-      CASE MSIR.ScopeKindOf(s) OF
+      CASE kind OF
       | MSIR.ScopeKind.Finally =>
-          VAR f := MSIR.ScopeFinally(s);
-          BEGIN
-            IF f = NIL THEN
-              ErrAt(c, where, "no FINALLY block");
-            ELSIF MSIR.BlockScope(f) # parent THEN
-              ErrAt(c, where, "FINALLY block " & MSIR.BlockLabel(f)
-                                & " must be in the parent scope");
-            ELSIF MSIR.BlockParamCount(f) # 0 THEN
-              ErrAt(c, where, "FINALLY block takes no parameters");
-            END;
+          CheckCode(c, where, s, MSIR.ScopeFinally(s), "FINALLY code",
+                    MSIR.ScopeKind.FinallyCode);
+          IF MSIR.ScopeFinally(s) # NIL
+             AND MSIR.BlockParamCount(MSIR.ScopeFinally(s)) # 0 THEN
+            ErrAt(c, where, "FINALLY code takes no parameters");
           END;
       | MSIR.ScopeKind.Except =>
           IF MSIR.ScopeHandlerCount(s) = 0 THEN ErrAt(c, where, "no handlers") END;
           FOR h := 0 TO MSIR.ScopeHandlerCount(s) - 1 DO
-            CheckHandler(c, where, parent, MSIR.ScopeHandler(s, h),
+            CheckHandler(c, where, s, MSIR.ScopeHandler(s, h),
                          h = MSIR.ScopeHandlerCount(s) - 1);
+          END;
+      | MSIR.ScopeKind.Handler, MSIR.ScopeKind.FinallyCode =>
+          IF owner = NIL OR MSIR.ScopeParent(owner) # parent THEN
+            ErrAt(c, where, "must be in its owner TRY scope's parent");
           END;
       | MSIR.ScopeKind.Proc =>
           ErrAt(c, where, "only the root scope may be of kind Proc");
@@ -536,7 +537,22 @@ PROCEDURE CheckScopes(c: Ctx;  p: MSIR.Proc) =
     END;
   END CheckScopes;
 
-PROCEDURE CheckHandler(c: Ctx;  where: TEXT;  parent: MSIR.Scope;
+(* entry, the start of a handler's or the FINALLY's code, is the entry of a
+   scope of the given kind owned by s. *)
+PROCEDURE CheckCode(c: Ctx;  where: TEXT;  s: MSIR.Scope;  entry: MSIR.Block;
+                    what: TEXT;  kind: MSIR.ScopeKind) =
+  VAR cs: MSIR.Scope;
+  BEGIN
+    IF entry = NIL THEN ErrAt(c, where, "no " & what);  RETURN END;
+    cs := MSIR.BlockScope(entry);
+    IF MSIR.ScopeKindOf(cs) # kind OR MSIR.ScopeOwner(cs) # s
+       OR MSIR.ScopeEntry(cs) # entry THEN
+      ErrAt(c, where, what & " " & MSIR.BlockLabel(entry)
+                        & " must be the entry of a scope it owns");
+    END;
+  END CheckCode;
+
+PROCEDURE CheckHandler(c: Ctx;  where: TEXT;  s: MSIR.Scope;
                        READONLY h: MSIR.Handler;  last: BOOLEAN) =
   VAR argT: MSIR.T := NIL;  name := "else";
   BEGIN
@@ -546,13 +562,8 @@ PROCEDURE CheckHandler(c: Ctx;  where: TEXT;  parent: MSIR.Scope;
     ELSIF NOT last THEN
       ErrAt(c, where, "the ELSE handler must be the last");
     END;
-    IF h.entry = NIL THEN
-      ErrAt(c, where, "handler " & name & " has no entry block");
-      RETURN;
-    END;
-    IF MSIR.BlockScope(h.entry) # parent THEN
-      ErrAt(c, where, "handler " & name & " must be in the parent scope");
-    END;
+    CheckCode(c, where, s, h.entry, "handler " & name, MSIR.ScopeKind.Handler);
+    IF h.entry = NIL THEN RETURN END;
     IF argT = NIL THEN
       IF MSIR.BlockParamCount(h.entry) # 0 THEN
         ErrAt(c, where, "handler " & name & " takes no parameters");
@@ -564,9 +575,10 @@ PROCEDURE CheckHandler(c: Ctx;  where: TEXT;  parent: MSIR.Scope;
     END;
   END CheckHandler;
 
-(* D8: an edge from b to target stays in b's scope or enters a child scope
-   through its entry; anything else must be unwind_to, which may only leave
-   scopes. *)
+(* D8: an edge from b to target stays in b's scope or enters a child Except
+   or Finally scope through its entry; anything else must be unwind_to,
+   which may only leave scopes.  Handler and FinallyCode scopes are entered
+   only by the EH mechanism. *)
 PROCEDURE CheckEdge(c: Ctx;  b, target: MSIR.Block;  unwind: BOOLEAN) =
   VAR from, to: MSIR.Scope;
   BEGIN
@@ -580,7 +592,9 @@ PROCEDURE CheckEdge(c: Ctx;  b, target: MSIR.Block;  unwind: BOOLEAN) =
                  & ScopeName(to) & ")");
       END;
     ELSIF to # from
-          AND NOT (MSIR.ScopeParent(to) = from AND MSIR.ScopeEntry(to) = target) THEN
+          AND NOT (MSIR.ScopeParent(to) = from AND MSIR.ScopeEntry(to) = target
+                   AND MSIR.ScopeKindOf(to) IN SET OF MSIR.ScopeKind {
+                         MSIR.ScopeKind.Except, MSIR.ScopeKind.Finally }) THEN
       Err(c, "branch to " & MSIR.BlockLabel(target) & " crosses scopes (from "
                & ScopeName(from) & " to " & ScopeName(to) & "); use unwind_to");
     END;
@@ -608,6 +622,10 @@ PROCEDURE CheckBlockScope(c: Ctx;  b: MSIR.Block) =
         IF inScope THEN Err(c, "ret inside an EH scope; use ret_through_envelope") END;
     | MSIR.Op.RetThroughEnvelope =>
         IF NOT inScope THEN Err(c, "ret_through_envelope outside any EH scope") END;
+    | MSIR.Op.EndFinally =>
+        IF MSIR.ScopeKindOf(MSIR.BlockScope(b)) # MSIR.ScopeKind.FinallyCode THEN
+          Err(c, "end_finally outside FINALLY code");
+        END;
     | MSIR.Op.Raise =>
         VAR exc := MSIR.InsnExcDesc(i);
         BEGIN
