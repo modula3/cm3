@@ -565,14 +565,18 @@ PROCEDURE CheckHandler(c: Ctx;  where: TEXT;  s: MSIR.Scope;
     END;
     CheckCode(c, where, s, h.entry, "handler " & name, MSIR.ScopeKind.Handler);
     IF h.entry = NIL THEN RETURN END;
-    IF argT = NIL THEN
-      IF MSIR.BlockParamCount(h.entry) # 0 THEN
-        ErrAt(c, where, "handler " & name & " takes no parameters");
-      END;
-    ELSIF MSIR.BlockParamCount(h.entry) # 1 THEN
-      ErrAt(c, where, "handler " & name & " takes the exception's argument");
-    ELSIF NOT MSIR.Equal(MSIR.ValueType(MSIR.BlockParamValue(h.entry, 0)), argT) THEN
-      ErrAt(c, where, "handler " & name & ": parameter type is not the argument's");
+    (* The entry takes the argument, or nothing if the handler ignores it. *)
+    CASE MSIR.BlockParamCount(h.entry) OF
+    | 0 =>
+    | 1 =>
+        IF argT = NIL THEN
+          ErrAt(c, where, "handler " & name & ": the exception has no argument");
+        ELSIF NOT MSIR.Equal(MSIR.ValueType(MSIR.BlockParamValue(h.entry, 0)),
+                             argT) THEN
+          ErrAt(c, where, "handler " & name & ": parameter type is not the argument's");
+        END;
+    ELSE
+      ErrAt(c, where, "handler " & name & " takes at most the argument");
     END;
   END CheckHandler;
 

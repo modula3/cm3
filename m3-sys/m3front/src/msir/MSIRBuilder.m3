@@ -911,8 +911,9 @@ PROCEDURE NewBlockWithParam(label: TEXT;  paramName: TEXT;  paramType: MSIR.T): 
     INC(blockSeq);
     uniq := label & "." & Fmt.Int(blockSeq);
     b := MSIR.NewBlock(uniq,
-           ARRAY OF MSIR.BlockParam{MSIR.BlockParam{name := paramName,
-                                                     type := paramType}});
+           ARRAY OF MSIR.BlockParam{MSIR.BlockParam{
+                                       name := paramName & "." & Fmt.Int(blockSeq),
+                                       type := paramType}});
     MSIR.ProcAddBlock(curProc, b);
     IF curScope # NIL THEN MSIR.BlockSetScope(b, curScope) END;
     RETURN b;

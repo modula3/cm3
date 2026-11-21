@@ -2440,6 +2440,26 @@ PROCEDURE InsnMakeCopy(i: Insn;  v: Value) =
     i.targetType := i.result.type;
   END InsnMakeCopy;
 
+PROCEDURE BlockParamsToLoads(b: Block;  READONLY slots: ARRAY OF Value) =
+  VAR old := b.insns;  i: Insn;  v: Value;
+  BEGIN
+    IF b.paramValues = NIL THEN RETURN END;
+    <* ASSERT NUMBER(slots) = NUMBER(b.paramValues^) *>
+    b.insns := NEW(RefSeq.T).init();
+    FOR k := 0 TO LAST(b.paramValues^) DO
+      v := b.paramValues[k];
+      i := NEW(Insn, op := Op.Load, block := b, result := v);
+      i.operands := NEW(REF ARRAY OF Value, 1);
+      i.operands[0] := slots[k];
+      v.vKind := ValueKind.InsnResult;
+      v.insn := i;
+      b.insns.addhi(i);
+    END;
+    FOR k := 0 TO old.size() - 1 DO b.insns.addhi(old.get(k)) END;
+    b.params := NIL;
+    b.paramValues := NIL;
+  END BlockParamsToLoads;
+
 PROCEDURE ProcClearScopes(p: Proc) =
   VAR root := ProcScope(p);
   BEGIN

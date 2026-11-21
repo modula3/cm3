@@ -248,7 +248,7 @@ PROCEDURE BlockSetScope(b: Block;  s: Scope);
    - An Except scope (TRY/EXCEPT) protects its blocks; it has handlers, each
      an exception (NIL: ELSE) and the entry block of the handler's code,
      which takes the exception's argument as its one parameter if the
-     exception has one.
+     handler uses it.
    - A Finally scope (TRY/FINALLY, LOCK) protects its blocks; it has the
      entry block of its FINALLY code.
    - A Handler or FinallyCode scope holds one handler's or the FINALLY's
@@ -901,6 +901,10 @@ PROCEDURE InsnMakeInvoke(i: Insn;  normal, unwind: Block);
 (* Turn i, whose result has v's type, into a copy of v (a no-op convert). *)
 PROCEDURE InsnMakeCopy(i: Insn;  v: Value);
 PROCEDURE ProcClearScopes(p: Proc);
+(* Turn b's parameters into loads from slots[k] at the head of b, for
+   lowerings that do not pass block arguments: the parameter Values become
+   the loads' results, and b takes no parameters. *)
+PROCEDURE BlockParamsToLoads(b: Block;  READONLY slots: ARRAY OF Value);
 
 (*-------------------------------------- Open arrays / runtime-check builders *)
 

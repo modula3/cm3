@@ -1329,7 +1329,8 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
       `__cxa_end_catch`, and FINALLY code ends by resuming what entered it.
 
     A handler's entry block takes the exception's argument as its one
-    parameter when the exception has one.  Nothing is nested in storage, so
+    parameter when the handler uses it (a handler naming several exceptions
+    binds the argument only if they share its type).  Nothing is nested in storage, so
     passes that walk blocks are unchanged; the scope tree is consulted only
     where EH matters.
   - **Control (D8).**  An edge whose target is in the same scope, or enters
@@ -1411,6 +1412,19 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `ex_stack` (Discussion #1266), `ex_frame` remains for the M3CG consumers
     that have no invoke: m3cc and the integrated x86 backend, which are
     what MSIR→M3CG would feed.
+  - **Added while implementing** (2026-11-21):
+    - `handler.activation` yields the activation record of the exception
+      being handled by the nearest enclosing handler code
+      (`Compiler.ThisException`); the verifier allows it only there.
+    - `ExcDesc` records whether the raise passes the argument by reference
+      (the front end's `Exceptionz.ArgByReference`), so the lowering reads
+      the argument word correctly without recomputing the convention.
+    - A module records the runtime's re-raise hook (`ResumeRaiseEx`), set by
+      `MSIREmit` when any procedure has scopes.
+    - Within a protected body of a TRY with an ELSE, the front end routes
+      EXIT and RETURN to the ELSE code (`MSIRBuilder.PushElseFrame`); the
+      ELSE handler's own code just leaves for the same ELSE code, so the ELSE
+      body runs after `__cxa_end_catch` under `ex_stack`.
   - **Considered and rejected:** nested regions (envelopes holding block
     lists), the first draft of this decision.  Tree-shaped storage
     contradicts D20 and would force every block-walking pass to recurse.

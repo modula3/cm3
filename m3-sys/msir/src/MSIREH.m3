@@ -21,6 +21,11 @@ TYPE
     returns  := FALSE;
   END;
 
+  ArgSlot = REF RECORD               (* a handler entry's argument slot *)
+    entry : MSIR.Block;
+    slot  : MSIR.Value;
+  END;
+
   Pending = REF RECORD               (* an end_finally, lowered in phase 2 *)
     block : MSIR.Block;
     scope : MSIR.Scope;              (* its FinallyCode scope *)
@@ -34,6 +39,8 @@ VAR
   ptrT, i32, i64 : MSIR.T;
   getPtr, beginCatch, endCatch : MSIR.Proc;
   stubModule : MSIR.Module := NIL;   (* the module the stubs were made for *)
+  argSlots   : RefSeq.T;             (* ArgSlot, per handler entry *)
+  allocaBlk  : MSIR.Block;           (* the entry, where slots go *)
 
 (*---------------------------------------------------------------- helpers *)
 
@@ -229,25 +236,38 @@ PROCEDURE ExceptPad (s: MSIR.Scope) =
     END;
   END ExceptPad;
 
-(* Branch from b to handler h's code, passing the exception's argument, read
-   from the activation's argument word (by value or by reference). *)
+(* Branch from b to handler h's code with the exception's argument, read
+   from the activation's argument word (by value or by reference).  Block
+   arguments are not lowered (MSIRToLLVM has no phis), so the argument goes
+   through a slot the handler entry loads (BlockParamsToLoads, phase 1). *)
 PROCEDURE ToHandler (b: MSIR.Block;  READONLY h: MSIR.Handler;
                      act: MSIR.Value) =
   VAR fld, raw, val: MSIR.Value;  t: MSIR.T;
   BEGIN
-    IF MSIR.BlockParamCount (h.entry) = 0 THEN
-      MSIR.BuildBr (b, h.entry, NoArgs);
-      RETURN;
+    IF MSIR.BlockParamCount (h.entry) = 1 THEN
+      t   := MSIR.ExcDescArgType (h.exc);
+      fld := MSIR.BuildPtrAdd (b, "", act, M3RT.EA_arg DIV Target.Char.size);
+      raw := MSIR.BuildLoad (b, "", ptrT, fld);
+      IF MSIR.ExcDescArgByRef (h.exc)
+        THEN val := MSIR.BuildLoad (b, "", t, raw);
+        ELSE val := MSIR.BuildConvert (b, "", raw, t);
+      END;
+      MSIR.BuildStore (b, val, ArgSlotOf (h.entry, t));
     END;
-    t   := MSIR.ExcDescArgType (h.exc);
-    fld := MSIR.BuildPtrAdd (b, "", act, M3RT.EA_arg DIV Target.Char.size);
-    raw := MSIR.BuildLoad (b, "", ptrT, fld);
-    IF MSIR.ExcDescArgByRef (h.exc)
-      THEN val := MSIR.BuildLoad (b, "", t, raw);
-      ELSE val := MSIR.BuildConvert (b, "", raw, t);
-    END;
-    MSIR.BuildBr (b, h.entry, ARRAY OF MSIR.Value {val});
+    MSIR.BuildBr (b, h.entry, NoArgs);
   END ToHandler;
+
+PROCEDURE ArgSlotOf (entry: MSIR.Block;  t: MSIR.T): MSIR.Value =
+  VAR a: ArgSlot;
+  BEGIN
+    FOR k := 0 TO argSlots.size () - 1 DO
+      a := argSlots.get (k);
+      IF a.entry = entry THEN RETURN a.slot END;
+    END;
+    a := NEW (ArgSlot, entry := entry, slot := MSIR.BuildAlloca (allocaBlk, "", t));
+    argSlots.addhi (a);
+    RETURN a.slot;
+  END ArgSlotOf;
 
 (*------------------------------------------------------------ end_finally *)
 
@@ -287,6 +307,14 @@ PROCEDURE Is (b: MSIR.Block;  sel: MSIR.Value;  code: INTEGER): MSIR.Value =
     RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Eq, sel, MSIR.ConstInt (i32, code));
   END Is;
 
+PROCEDURE Prepend (a, b: REF ARRAY OF MSIR.Insn): REF ARRAY OF MSIR.Insn =
+  VAR r := NEW (REF ARRAY OF MSIR.Insn, NUMBER (a^) + NUMBER (b^));
+  BEGIN
+    SUBARRAY (r^, 0, NUMBER (a^)) := a^;
+    SUBARRAY (r^, NUMBER (a^), NUMBER (b^)) := b^;
+    RETURN r;
+  END Prepend;
+
 (*-------------------------------------------------------------- the pass *)
 
 PROCEDURE LowerProc (m: MSIR.Module;  p: MSIR.Proc) =
@@ -306,6 +334,8 @@ PROCEDURE LowerProc (m: MSIR.Module;  p: MSIR.Proc) =
     FOR k := 0 TO nBlocks - 1 DO orig[k] := MSIR.ProcBlock (p, k) END;
     entry := orig[0];
     entryInsns := MSIR.BlockTakeInsns (entry);
+    allocaBlk := entry;
+    argSlots := NEW (RefSeq.T).init ();
 
     (* Scope data; FINALLY state lives in allocas at the head of the entry. *)
     info := NEW (REF ARRAY OF ScopeInfo, nScopes);
@@ -337,6 +367,14 @@ PROCEDURE LowerProc (m: MSIR.Module;  p: MSIR.Proc) =
           u := Unwind (sc);  insns: REF ARRAY OF MSIR.Insn;
       BEGIN
         IF k = 0 THEN insns := entryInsns ELSE insns := MSIR.BlockTakeInsns (b) END;
+        IF MSIR.BlockParamCount (b) = 1 THEN
+          (* a handler entry: its argument arrives in a slot *)
+          VAR t := MSIR.ValueType (MSIR.BlockParamValue (b, 0));
+          BEGIN
+            MSIR.BlockParamsToLoads (b, ARRAY OF MSIR.Value {ArgSlotOf (b, t)});
+            insns := Prepend (MSIR.BlockTakeInsns (b), insns);
+          END;
+        END;
         IF MSIR.ScopeKindOf (sc) = ScopeKind.Handler AND MSIR.ScopeEntry (sc) = b THEN
           EVAL MSIR.BuildCall (cur, "", beginCatch,
                                ARRAY OF MSIR.Value {Info (MSIR.ScopeOwner (sc)).hdr});

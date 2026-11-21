@@ -663,8 +663,11 @@ PROCEDURE CompileMSIR (p: P) =
     WHILE h # NIL DO
       hs := MSIRBuilder.NewScope(MSIR.ScopeKind.Handler, outer, s);
       EVAL MSIRBuilder.SetScope(hs);
+      (* The entry takes the argument only if the handler binds it, which
+         Modula-3 allows only when every exception named has that type. *)
       mt := NIL;
-      IF h.tags # NIL AND Exceptionz.ArgType(h.tags.obj) # NIL THEN
+      IF h.scope # NIL AND h.tags # NIL
+         AND Exceptionz.ArgType(h.tags.obj) # NIL THEN
         mt := MSIRType.Translate(Exceptionz.ArgType(h.tags.obj));
       END;
       IF mt # NIL
