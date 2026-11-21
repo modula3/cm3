@@ -96,8 +96,12 @@ PCONTEXT __cdecl ThreadWin32__NewContext(void)
         unsigned char b[0x300];
     } CONTEXT300;
     PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CONTEXT300));
-    if (context)
+    if (context) {
+        /* Todo: try this
+        context->ContextFlags = (CONTEXT_ALL | CONTEXT_XSTATE);
+        */
         context->ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
+    };
     return context;
 }
 

@@ -9,9 +9,6 @@ include_dir ("Common")
 % FreeBSD 4 or earlier might not have a viable pthreads,
 % in which case make a separate config file and set NOPTHREAD = TRUE or such.
 %
-if equal (TARGET, "AMD64_NT")
-  include_dir (TARGET)
-end
 if equal (OS_TYPE, "WIN32") or equal (TARGET_OS, "CYGWIN")
   include_dir ("WIN32")
 else
