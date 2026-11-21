@@ -1299,7 +1299,14 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
        a backend-neutral pass (B), skip the discarded CG work (C).
        Checked against both MSIR backends.
     6. Make MSIR → M3CG the default; delete the per-node CG methods
-       (`compile`, `prep*`, `compileLV`, `compileBR`).
+       (`compile`, `prep*`, `compileLV`, `compileBR`).  With them go the CG-only
+       initialization routines (`Variable.LangInit`, `UserInit`,
+       `ForceInit`, `Scope.InitValues`), the CG walk's deferral of a default
+       value that an explicit initializer will overwrite (`initPending`; the
+       MSIR walk tests that condition directly in `LangInitMSIR`), and the
+       flag that tells the CG walk's setting of `initDone` from a
+       declaration's (`Variable.cgInitDone`, `DoneAtDeclaration`):
+       `initDone` then means initialized at declaration only.
     7. Rename the MSIR procedures and methods to the generic names the
        CG path frees: `compileMSIR` → `compile`, `InitTypecellMSIR` →
        `InitTypecell`, `Type.InitValueMSIR` → `Type.InitValue`, and so
