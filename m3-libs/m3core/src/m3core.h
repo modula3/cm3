@@ -892,7 +892,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #if defined(__APPLE__)
 
 #if defined(__i386__)
-#define M3_HOST_I386_DARWIN
+#define M3_HOST_I386_DARWIN 1
 #define M3_HOST "I386_DARWIN"
 #if __DARWIN_UNIX03
 #define GET_PC(context) ((context)->uc_mcontext->__ss.__eip)
@@ -902,7 +902,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 #elif defined(__x86_64__)
 
-#define M3_HOST_AMD64_DARWIN
+#define M3_HOST_AMD64_DARWIN 1
 #define M3_HOST "AMD64_DARWIN"
 
 #if __DARWIN_UNIX03
@@ -914,10 +914,10 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #elif defined(__ppc__) || defined(__ppc64__)
 
 #if defined(__ppc64__)
-#define M3_HOST_PPC64_DARWIN
+#define M3_HOST_PPC64_DARWIN 1
 #define M3_HOST "PPC64_DARWIN"
 #else
-#define M3_HOST_PPC_DARWIN
+#define M3_HOST_PPC_DARWIN 1
 #define M3_HOST "PPC_DARWIN"
 #endif
 
@@ -930,10 +930,10 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #elif defined(__arm__) || defined(__arm64__)
 
 #if defined(__arm64__)
-#define M3_HOST_ARM64_DARWIN
+#define M3_HOST_ARM64_DARWIN 1
 #define M3_HOST "ARM64_DARWIN"
 #else
-#define M3_HOST_ARM32_DARWIN
+#define M3_HOST_ARM32_DARWIN 1
 #define M3_HOST "ARM32_DARWIN"
 #endif
 
@@ -949,10 +949,10 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #elif defined(__CYGWIN__)
 #define M3_HOST_SKIP_UNAME 1
 #if defined(__amd64)
-#define M3_HOST_AMD64_CYGWIN
+#define M3_HOST_AMD64_CYGWIN 1
 #define M3_HOST "AMD64_CYGWIN"
 #elif defined(__i386)
-#define M3_HOST_I386_CYGWIN
+#define M3_HOST_I386_CYGWIN 1
 #define M3_HOST "I386_CYGWIN"
 #else
 #error Unknown Cygwin
@@ -962,7 +962,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 #ifdef __i386__
 #define M3_HOST_SKIP_UNAME 1 // uname yields I386_MS-DOS
-#define M3_HOST_I386_DJGPP
+#define M3_HOST_I386_DJGPP 1
 #define M3_HOST "I386_DJGPP"
 #else
 #error Unsupported Djgpp
@@ -971,11 +971,11 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #elif defined(__HAIKU__)
 #ifdef __amd64
 #define GET_PC(context) ((context)->uc_mcontext.rip)
-#define M3_HOST_AMD64_HAIKU
+#define M3_HOST_AMD64_HAIKU 1
 #define M3_HOST "AMD64_HAIKU"
 #elif defined(__i386__)
 #define GET_PC(context) ((context)->uc_mcontext.eip)
-#define M3_HOST_I386_HAIKU
+#define M3_HOST_I386_HAIKU 1
 #define M3_HOST "I386_HAIKU"
 // uname says the architecture is "BePC", skip it
 #define M3_HOST_SKIP_UNAME 1
@@ -988,7 +988,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #define GET_PC(context) ((context)->uc_mcontext.sc_pc)
 
 #if defined(__alpha__)
-#define M3_HOST_ALPHA_OSF
+#define M3_HOST_ALPHA_OSF 1
 #define M3_HOST "ALPHA_OSF"
 #endif
 
@@ -996,7 +996,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 #if defined(__amd64)
 
-#define M3_HOST_AMD64_OPENBSD
+#define M3_HOST_AMD64_OPENBSD 1
 #define M3_HOST "AMD64_OPENBSD"
 #define GET_PC(context) ((context)->sc_rip)
 
@@ -1008,7 +1008,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #endif
 
 #elif defined(__linux) && defined(__sparc) && __WORDSIZE == 64
-#define M3_HOST_SPARC64_LINUX
+#define M3_HOST_SPARC64_LINUX 1
 #define M3_HOST "SPARC64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.mc_gregs[REG_PC])
 
@@ -1017,7 +1017,7 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #if defined(REG_PC)
 #define GET_PC(context) ((context)->uc_mcontext.gregs[REG_PC])
 #elif defined(__sun) && defined(__i386) && (PC == 14)
-#define M3_HOST_I386_SOLARIS
+#define M3_HOST_I386_SOLARIS 1
 #define M3_HOST "I386_SOLARIS"
 #define GET_PC(context) ((context)->uc_mcontext.gregs[PC])
 #elif defined(__sun) && defined(__sparc) && (PC == 1)
@@ -1030,30 +1030,30 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 /* see /src/glibc-2.14/sysdeps/unix/sysv/linux/x/sigcontextinfo.h */
 #if defined(__i386)
-#define M3_HOST_I386_LINUX
+#define M3_HOST_I386_LINUX 1
 #define M3_HOST "I386_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.gregs[REG_EIP])
 #elif defined(__amd64)
-#define M3_HOST_AMD64_LINUX
+#define M3_HOST_AMD64_LINUX 1
 #define M3_HOST "AMD64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.gregs[REG_RIP])
 #elif defined(__powerpc)
 // ambiguous endian and wordsize; use uname
 #define GET_PC(context) ((context)->uc_mcontext.uc_regs->gregs[PT_NIP])
 #elif defined(__aarch64__)
-#define M3_HOST_ARM64_LINUX
+#define M3_HOST_ARM64_LINUX 1
 #define M3_HOST "ARM64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.pc)
 #elif defined(__arm__)
-#define M3_HOST_ARM32_LINUX
+#define M3_HOST_ARM32_LINUX 1
 #define M3_HOST "ARM32_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.arm_pc)
 #elif defined(__alpha__)
-#define M3_HOST_ALPHA_LINUX
+#define M3_HOST_ALPHA_LINUX 1
 #define M3_HOST "ALPHA_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.sc_pc)
 #elif defined(__ia64__)
-#define M3_HOST_IA64_LINUX
+#define M3_HOST_IA64_LINUX 1
 #define M3_HOST "IA64_LINUX"
 #define GET_PC(context) ((context)->uc_mcontext.sc_ip)
 #elif defined(__sh__)
@@ -1066,10 +1066,10 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #define GET_PC(context) ((context)->uc_mcontext.sregs.regs.psw.addr
 #elif defined(__riscv) || defined(__riscv64)
 #if defined(__riscv64)
-#define M3_HOST_RISCV64_LINUX
+#define M3_HOST_RISCV64_LINUX 1
 #define M3_HOST "RISCV64_LINUX"
 #else
-#define M3_HOST_RISCV32_LINUX
+#define M3_HOST_RISCV32_LINUX 1
 #define M3_HOST "RISCV32_LINUX"
 #endif
 #define GET_PC(context) ((context)->uc_mcontext.__gregs[REG_PC])
@@ -1090,12 +1090,12 @@ Process__RegisterExitor(void (__cdecl*)(void));
 #endif
 
 #elif defined(__hpux) && defined(__ia64) && (defined(_LP64) || defined(__LP64__))
-#define M3_HOST_IA64_HPUX64
+#define M3_HOST_IA64_HPUX64 1
 #define M3_HOST "IA64_HPUX64"
 // GET_PC does not fit, see RTSignalC.c
 
 #elif defined(__hpux) && defined(__ia64) && defined(_ILP32)
-#define M3_HOST_IA64_HPUX32
+#define M3_HOST_IA64_HPUX32 1
 #define M3_HOST "IA64_HPUX32"
 // GET_PC does not fit, see RTSignalC.c
 
