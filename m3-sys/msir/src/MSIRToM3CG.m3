@@ -14,6 +14,7 @@ CONST
     Op.IAnd, Op.IOr, Op.IXor, Op.IShl, Op.ILShr, Op.IAShr, Op.IRotL, Op.IRotR,
     Op.Select,
     Op.FAdd, Op.FSub, Op.FMul, Op.FDiv, Op.FNeg, Op.FPAbs,
+    Op.FPFloor, Op.FPCeil, Op.FPRound, Op.Typecase,
     Op.ICmp, Op.FCmp,
     Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
     Op.Call, Op.CallIndirect, Op.Dispatch,
@@ -208,6 +209,8 @@ VAR
 
 CONST
   Int64 = M3CG.Type.Int64;
+  RoundOp = ARRAY [Op.FPFloor .. Op.FPRound] OF M3CG.ConvertOp {
+    M3CG.ConvertOp.Floor, M3CG.ConvertOp.Ceiling, M3CG.ConvertOp.Round };
   Word64 = M3CG.Type.Word64;
   Addr = M3CG.Type.Addr;
 
@@ -243,11 +246,22 @@ PROCEDURE Base (t: MSIR.T): MSIR.T =
 PROCEDURE IsInt (t: MSIR.T): BOOLEAN =
   BEGIN
     t := Base (t);
-    RETURN t # NIL AND MSIR.Kind (t) IN SET OF TypeKind {
+    RETURN t # NIL AND (MSIR.Kind (t) IN SET OF TypeKind {
              TypeKind.I1, TypeKind.I8, TypeKind.I16, TypeKind.I32,
              TypeKind.I64, TypeKind.W8, TypeKind.W16, TypeKind.W32,
-             TypeKind.W64, TypeKind.Enum };
+             TypeKind.W64, TypeKind.Enum } OR IsOddInt (t));
   END IsInt;
+
+(* An integer narrower than a word whose width is not 8, 16 or 32 (e.g. the
+   i11 of a packed field); MSIR gives it kind IWide.  It is a word on the
+   M3CG stack and takes LLVM's size in a struct, but has no memory type,
+   so it is not loaded or stored directly. *)
+PROCEDURE IsOddInt (t: MSIR.T): BOOLEAN =
+  BEGIN
+    t := Base (t);
+    RETURN t # NIL AND MSIR.Kind (t) = TypeKind.IWide
+       AND MSIR.BitWidth (t) < 64;
+  END IsOddInt;
 
 PROCEDURE IsPtr (t: MSIR.T): BOOLEAN =
   BEGIN
@@ -286,7 +300,9 @@ PROCEDURE IsScalar (t: MSIR.T): BOOLEAN =
 PROCEDURE IntBits (t: MSIR.T): INTEGER =
   BEGIN
     t := Base (t);
-    IF MSIR.Kind (t) = TypeKind.Enum THEN RETURN MSIR.BitWidth (t) END;
+    IF MSIR.Kind (t) = TypeKind.Enum OR IsOddInt (t) THEN
+      RETURN MSIR.BitWidth (t);
+    END;
     CASE MSIR.Kind (t) OF
     | TypeKind.I1 => RETURN 1;
     | TypeKind.I8, TypeKind.W8 => RETURN 8;
@@ -406,6 +422,12 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
       | TypeKind.F64 => align := 8;
       ELSE align := 16;
       END;
+      RETURN align;
+    END;
+    IF IsOddInt (t) THEN
+      (* LLVM's allocation size: the next power-of-two number of bytes *)
+      align := 1;
+      WHILE align * 8 < IntBits (t) DO align := align * 2 END;
       RETURN align;
     END;
     IF IsInt (t) THEN
@@ -530,6 +552,7 @@ CONST
     Op.IAnd, Op.IOr, Op.IXor, Op.IShl, Op.ILShr, Op.IAShr, Op.IRotL, Op.IRotR,
     Op.Select,
     Op.FAdd, Op.FSub, Op.FMul, Op.FDiv, Op.FNeg, Op.FPAbs,
+    Op.FPFloor, Op.FPCeil, Op.FPRound, Op.Typecase,
     Op.ICmp, Op.FCmp,
     Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
     Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally, Op.HandlerActivation,
@@ -621,6 +644,16 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
           FOR j := 0 TO MSIR.InsnBrArgCount (i, k) - 1 DO
             CheckValue (w, MSIR.InsnBrArg (i, k, j));
           END;
+        END;
+    | Op.Typecase =>
+        IF MSIR.ModuleScanTypecase (mod) = NIL THEN
+          Fail (w, "typecase without the ScanTypecase hook");
+        END;
+    | Op.Load =>
+        IF IsOddInt (MSIR.ValueType (res)) THEN Fail (w, "load of odd width") END;
+    | Op.Store =>
+        IF IsOddInt (MSIR.ValueType (MSIR.InsnOperand (i, 0))) THEN
+          Fail (w, "store of odd width");
         END;
     | Op.Alloca =>
         IF Size (MSIR.InsnTargetType (i), a) < 0 THEN
@@ -739,7 +772,7 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       VAR g := MSIR.ModuleGlobal (m, i);
       BEGIN
         IF NOT MSIR.GlobalIsExternal (g) THEN
-          IF MSIR.GlobalByteOffset (g) < 0 THEN
+          IF MSIR.GlobalByteOffset (g) < 0 AND NOT IsBacking (g) THEN
             Fail (w, "standalone global " & MSIR.GlobalName (g));
           END;
         ELSE
@@ -797,8 +830,16 @@ TYPE
     emit ();
   END;
 
+TYPE
+  (* A large global (size > Max_zero_global) lives in its own zeroed
+     global; the module struct's slot points to it (a global initializer).
+     The CG path does the same (Variable.Declare, t.bss_var). *)
+  Backing = REF RECORD seg: Seg;  name: TEXT;  align: INTEGER END;
+
 VAR
   cseg, dseg: Seg;   (* constant and data segments *)
+  typecases: RefSeq.T;  (* TypecaseItem *)
+  backing: RefSeq.T;    (* Backing: large globals' separate storage *)
   procInfoOff, gcMapOff, fileOff: INTEGER;
   firstTC, lastTL, fullRevOff: INTEGER;
 
@@ -842,6 +883,10 @@ TYPE
                 OVERRIDES emit := EmitTextLit END;
   ConstArrayItem = Item OBJECT ca: MSIR.ConstArray
                    OVERRIDES emit := EmitConstArray END;
+  (* RTHooks.TypecaseCell array of a TYPECASE: defn (resolved lazily by
+     ScanTypecase), uid; the ELSE clause's uid 0 ends it. *)
+  TypecaseItem = Item OBJECT insn: MSIR.Insn
+                 OVERRIDES emit := EmitTypecase END;
 
 CONST TEXT_typecode = 1;
 
@@ -973,6 +1018,41 @@ PROCEDURE Setup (m: MSIR.Module) =
       END;
     END;
 
+    backing := NEW (RefSeq.T).init ();
+    FOR i := 0 TO MSIR.ModuleGlobalCount (m) - 1 DO
+      VAR g := MSIR.ModuleGlobal (m, i);  a: INTEGER;  bs: Backing;
+      BEGIN
+        IF IsBacking (g) THEN
+          EVAL Size (MSIR.GlobalType (g), a);
+          bs := NEW (Backing, name := MSIR.GlobalName (g), align := MAX (a, 1),
+                     seg := NEW (Seg, size := MSIR.GlobalBackingBytes (g),
+                                 items := NEW (RefSeq.T).init ()));
+          backing.addhi (bs);
+          NewSym (bs.name, bs.seg, 0);
+        END;
+      END;
+    END;
+
+    typecases := NEW (RefSeq.T).init ();
+    FOR pi := 0 TO nProcs - 1 DO
+      VAR p := MSIR.ModuleProc (m, pi);  b: MSIR.Block;  i: MSIR.Insn;
+          it: TypecaseItem;
+      BEGIN
+        FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+          b := MSIR.ProcBlock (p, bi);
+          FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+            i := MSIR.BlockInsn (b, ii);
+            IF MSIR.InsnOp (i) = Op.Typecase THEN
+              it := NEW (TypecaseItem, insn := i);
+              EVAL Alloc (dseg, MSIR.InsnTypecaseClauseCount (i) * 2 * ptr,
+                          ptr, it);
+              typecases.addhi (it);
+            END;
+          END;
+        END;
+      END;
+    END;
+
     FOR i := 0 TO MSIR.ModuleConstArrayCount (m) - 1 DO
       VAR ca := MSIR.ModuleConstArray (m, i);  a: INTEGER;
           sz := Size (MSIR.ConstArrayEltType (ca), a);
@@ -985,6 +1065,12 @@ PROCEDURE Setup (m: MSIR.Module) =
   END Setup;
 
 CONST TK_Obj = 2;  TK_Array = 3;
+
+PROCEDURE IsBacking (g: MSIR.Global): BOOLEAN =
+  BEGIN
+    RETURN NOT MSIR.GlobalIsExternal (g) AND MSIR.GlobalByteOffset (g) < 0
+       AND MSIR.GlobalBackingBytes (g) > 0;
+  END IsBacking;
 
 PROCEDURE Bytes (b: MSIR.GcMapBytes): INTEGER =
   BEGIN
@@ -1275,6 +1361,27 @@ PROCEDURE EmitMethods (it: MethodsItem) =
     END;
   END EmitMethods;
 
+PROCEDURE EmitTypecase (it: TypecaseItem) =
+  VAR ptr := Target.Address.bytes;
+  BEGIN
+    FOR k := 0 TO MSIR.InsnTypecaseClauseCount (it.insn) - 1 DO
+      VAR uid := MSIR.InsnTypecaseClause (it.insn, k).uid;
+      BEGIN
+        IF uid # 0 THEN InitInt (it.off + k * 2 * ptr + ptr, uid, Int64) END;
+      END;
+    END;
+  END EmitTypecase;
+
+PROCEDURE TypecaseOff (i: MSIR.Insn): INTEGER =
+  BEGIN
+    FOR k := 0 TO typecases.size () - 1 DO
+      WITH it = NARROW (typecases.get (k), TypecaseItem) DO
+        IF it.insn = i THEN RETURN it.off END;
+      END;
+    END;
+    <* ASSERT FALSE *>
+  END TypecaseOff;
+
 PROCEDURE EmitTypeLink (it: TypeLinkItem) =
   BEGIN
     InitPtr (it.off, dseg, it.prev);
@@ -1543,6 +1650,12 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
       THEN dseg.var := cg.declare_segment (ID ("I_" & modName), -1, FALSE);
       ELSE dseg.var := cg.declare_segment (ID ("M_" & modName), -1, FALSE);
     END;
+    FOR k := 0 TO backing.size () - 1 DO
+      WITH bs = NARROW (backing.get (k), Backing) DO
+        bs.seg.var := cg.declare_global (ID (bs.name), bs.seg.size, bs.align,
+                                     M3CG.Type.Struct, 0, FALSE, FALSE);
+      END;
+    END;
 
     (* The unit's binder. *)
     IF isIface THEN binderName := modName & "_I3"
@@ -1593,6 +1706,9 @@ PROCEDURE ImportCallees (p: MSIR.Proc) =
       FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
         i := MSIR.BlockInsn (b, ii);
         IF MSIR.InsnOp (i) = Op.Call THEN EVAL ProcFor (MSIR.InsnCallee (i)) END;
+        IF MSIR.InsnOp (i) = Op.Typecase THEN
+          EVAL ProcFor (MSIR.ModuleScanTypecase (mod));
+        END;
         FOR k := 0 TO MSIR.InsnOperandCount (i) - 1 DO
           v := MSIR.InsnOperand (i, k);
           IF v # NIL AND MSIR.GetValueKind (v) = ValueKind.ConstProc THEN
@@ -2694,6 +2810,12 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.FDiv => Binop (i);  cg.divide (RType (rt));  Def (res);
     | Op.FNeg => Push (MSIR.InsnOperand (i, 0));  cg.negate (RType (rt));  Def (res);
     | Op.FPAbs => Push (MSIR.InsnOperand (i, 0));  cg.abs (RType (rt));  Def (res);
+    | Op.FPFloor, Op.FPCeil, Op.FPRound =>
+        (* Float to float, as the CG path does it: through an integer. *)
+        Push (MSIR.InsnOperand (i, 0));
+        cg.cvt_int (RType (rt), Int64, RoundOp[op]);
+        cg.cvt_float (Int64, RType (rt));
+        Def (res);
 
     | Op.ICmp =>
         VAR pred := MSIR.InsnCmpPred (i);
@@ -2744,6 +2866,30 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.Ret =>
         IF nOps = 0 THEN cg.exit_proc (M3CG.Type.Void);
         ELSE GenRet (MSIR.InsnOperand (i, 0));
+        END;
+    | Op.Typecase =>
+        (* idx := ScanTypecase (ref, table); jump to clause idx, the last
+           (ELSE) clause by default. *)
+        VAR q := ProcFor (MSIR.ModuleScanTypecase (mod));
+            n := MSIR.InsnTypecaseClauseCount (i);
+            idx := cg.declare_temp (8, 8, Int64, FALSE);
+        BEGIN
+          cg.start_call_direct (q, 0, Int64);
+          Push (MSIR.InsnOperand (i, 0));
+          cg.pop_param (Addr);
+          cg.load_address (dseg.var, TypecaseOff (i));
+          cg.pop_param (Addr);
+          CallDirect (q, Int64);
+          cg.store (idx, 0, Int64, Int64);
+          FOR k := 0 TO n - 2 DO
+            cg.load (idx, 0, Int64, Int64);
+            PushInt (k);
+            cg.if_compare (Int64, M3CG.CompareOp.EQ,
+                           LabelOf (MSIR.InsnTypecaseClause (i, k).block),
+                           M3CG.Maybe);
+          END;
+          cg.free_temp (idx);
+          cg.jump (LabelOf (MSIR.InsnTypecaseClause (i, n - 1).block));
         END;
     | Op.UnwindTo =>
         Leave (curScope, MSIR.InsnBrTarget (i, 0), i, FALSE, NIL);

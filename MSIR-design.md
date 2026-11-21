@@ -1436,6 +1436,28 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     lists), the first draft of this decision.  Tree-shaped storage
     contradicts D20 and would force every block-walking pass to recurse.
 
+**Progress (2026-11-21): MSIR to M3CG, small gaps.**
+- TYPECASE: a `RTHooks.TypecaseCell` table per `typecase` in the data
+  segment (uids; defn filled lazily by `ScanTypecase`), the hook call, and a
+  compare chain to the clause blocks, ELSE last.
+- `fpfloor`/`fpceil`/`fpround` (float to float): `cvt_int` with the matching
+  rounding then `cvt_float`, as the CG path computes real MOD.
+- Large globals (size > `Max_zero_global`, MSIR's standalone backing
+  globals): their own zeroed `declare_global`, the module slot initialised
+  to its address, as `Variable.Declare` does for CG (`t.bss_var`).
+- Integers of odd width below a word (the `i11`/`i24` of packed fields,
+  kind `IWide` in MSIR): words on the stack, LLVM's allocation size in a
+  struct, never loaded or stored directly.
+- Results: m3core 259 of 290 units lower; besides external globals only
+  ASCII and TextConv (multi-word sets, next: D19 set intrinsics) fall back.
+  m3tests with every unit lowered where possible: no differences from the
+  baseline beyond its own failures; p019, p020, p023, p104 and p272, which
+  failed under the lowering, now pass.
+- **Divergence found, not changed here:** the report breaks `ROUND` ties by
+  `FloatMode.RoundDefault`, NearestElseEven.  MSIR's `fpround` (roundeven)
+  does; M3C's `m3_round` used C's `round` (halves away from zero), and the
+  lowering inherits it through `cvt_int(Round)`.  Fixed in M3C separately.
+
 **Progress (2026-11-21): D26 step 4, EH scopes lowered to M3CG (ex_stack).**
 - `MSIRToM3CG` lowers scopes to CG's `ex_stack` scheme, as
   `TryStmt.Compile1` and `TryFinStmt.Compile1` emit it.  A protected scope's
