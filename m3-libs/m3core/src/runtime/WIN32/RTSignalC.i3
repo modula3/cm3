@@ -2,13 +2,10 @@
 (* See file COPYRIGHT-CMASS for details. *)
 
 INTERFACE RTSignalC;
-IMPORT RuntimeError, ThreadContext;
 
-TYPE
-  RTE = RuntimeError.T;
-
-<* EXTERNAL "RTSignalC_Raise" *>
-PROCEDURE Raise (rte: RTE;  err, pc: INTEGER;
-                 ctxt: ThreadContext.PCONTEXT): BOOLEAN;
+<* EXTERNAL "RTSignalC_i386" *>  PROCEDURE i386() : INTEGER;
+<* EXTERNAL "RTSignalC_Amd64" *> PROCEDURE Amd64() : INTEGER;
+<* EXTERNAL "RTSignalC_Arm64" *> PROCEDURE Arm64() : INTEGER;
+<* EXTERNAL "RTSignalC_Arch" *>  PROCEDURE Arch() : INTEGER;
 
 END RTSignalC.
