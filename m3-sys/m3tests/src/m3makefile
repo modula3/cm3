@@ -531,6 +531,7 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+p_test ("p2", "p305", "TRY EXCEPT ELSE catches EXIT and RETURN past named handlers")
 p_test ("p2", "p302", "Address of a global at an offset, compared directly")
 p_test ("p2", "p299", "Initial values of packed fields, arrays and object fields")
 p_test ("p2", "p295", "Integrated backend crash in typecase")
