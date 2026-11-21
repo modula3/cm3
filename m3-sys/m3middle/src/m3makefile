@@ -13,6 +13,12 @@ import ("sysutils")
 
 include_dir (OS_TYPE)
 
+if equal (TARGET, "AMD64_LINUX")
+  include_dir ("ext128")
+else
+  include_dir ("ext64")
+end
+
 Module ("Target")
 Module ("TargetMap")
 Module ("TInt")

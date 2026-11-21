@@ -1,0 +1,4 @@
+dir .
+cd ~/t/calarm/traderulelib/FreeBSD4
+break StubUtils__Message
+run  -sno MarketDataInterface.T -T.M3IMPTAB

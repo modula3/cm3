@@ -16,7 +16,22 @@ readonly TARGET = "AMD64_DARWIN"
 readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU
 DarwinArch = "x86_64"
 
+% Use the C backend.  Darwin.common defaults to "3" (native x86 assembler
+% backend), but the C backend is more portable and required for ex_stack EH.
+% Must be set before including Darwin.common so its guard fires correctly.
+M3_BACKEND_MODE = "C"
+
+% Enable C++ zero-cost exception handling (ex_stack).
+% Must be set before including Darwin.common so its guard fires correctly.
+M3_USE_STACK_WALKER = TRUE
+
 include("AMD64.common")
 include("Darwin.common")
+
+% Limit parallel C compilation to 1 to avoid pthread deadlock under Rosetta 2.
+M3_PARALLEL_BACK = 1
+
+% libunwind is part of libSystem.B.dylib on macOS — no extra link flags needed.
+SYSTEM_LIBS{"UNWIND"} = []
 
 SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ]

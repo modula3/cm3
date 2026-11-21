@@ -137,7 +137,8 @@ declare_raises (n: Name);
 
 declare_object (t, super: TypeUID;  brand: TEXT;
                 traced: BOOLEAN;  n_fields, n_methods: INTEGER;
-                field_size: BitSize; super_typename := M3ID.NoID);
+                field_size: BitSize; field_offset : INTEGER;
+                method_offset : INTEGER; super_typename := M3ID.NoID);
 (* Object type.  The subsequent 'n_fields' occurrences of declare_field
    define the fields.  The subsequent 'n_methods' occurrences of declare_method
    define the methods.  These occurrences of declare_field and declare_formal all

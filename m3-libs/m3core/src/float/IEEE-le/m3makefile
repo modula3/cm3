@@ -7,3 +7,17 @@
 
 Interface ("RealRep")
 Interface ("LongRealRep")
+
+%ExtendedRep interface is one of these dirs depending on backend
+/*
+ *    If the target is windows and any backend except llvm we have
+ *    to keep the definition of extended as longreal 
+      if equal (TARGET_OS, "NT") and not IsBackendLlvm ()
+   No - we only allow the AMD64_LINUX target to have 128 bit floats.
+   Others can be added when proven.
+*/
+if equal (TARGET, "AMD64_LINUX")
+  include_dir ("ext128")
+else
+  include_dir ("ext64")
+end

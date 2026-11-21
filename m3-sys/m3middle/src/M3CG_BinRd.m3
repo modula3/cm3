@@ -380,7 +380,7 @@ PROCEDURE Scan_float (VAR s: State): Target.Float =
     i       := GetByte (s);
     pre     := Target.Precision.Short;
     n_bytes : INTEGER;
-    bytes   : ARRAY [0..BYTESIZE(EXTENDED)] OF TFloat.Byte;
+    bytes   : ARRAY [0..4 * BYTESIZE(REAL)] OF TFloat.Byte;
     result  : Target.Float;
   BEGIN
     CASE i OF
@@ -654,9 +654,12 @@ PROCEDURE declare_object (VAR s: State) =
       n_fields   := Scan_int (s);
       n_methods  := Scan_int (s);
       field_size := Scan_int (s);
+      field_offset  := Scan_int (s);
+      method_offset := Scan_int (s);
   BEGIN
     s.cg.declare_object (type, super, brand, traced,
-                         n_fields, n_methods, field_size);
+                         n_fields, n_methods, field_size,
+                         field_offset, method_offset);
   END declare_object;
 
 PROCEDURE declare_method (VAR s: State) =

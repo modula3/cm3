@@ -134,7 +134,11 @@ PROCEDURE MethodType (e: Expr.T): Type.T =
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
   BEGIN
     Resolve (p);
-    IF (p.inGetBounds) THEN Value.IllegalRecursion (p.rhsValue) END;
+    IF (p.inGetBounds) THEN
+      Value.IllegalRecursion (p.rhsValue);
+      EVAL Type.GetBounds (p.type, min, max);
+      RETURN;
+    END;
     p.inGetBounds := TRUE;
     CASE Value.ClassOf (p.rhsValue) OF
     | Value.Class.Expr => Expr.GetBounds (Value.ToExpr (p.rhsValue), min, max);
@@ -217,6 +221,7 @@ PROCEDURE ResolveTypes (p: P) =
       Value.IllegalRecursion (p.rhsValue);
       p.type := ErrType.T;
       p.repType := p.type;
+      RETURN;
     ELSE
       p.inTypeOf := TRUE;
       p.type := Value.TypeOf (p.rhsValue);

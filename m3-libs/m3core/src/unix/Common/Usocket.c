@@ -265,6 +265,7 @@ SockAddrNativeToM3(const NativeSockAddrUnionAll* native, M3SockAddrUnionAll* m3)
         return SockAddrNativeToM3Un(&native->un, &m3->un);
 #endif
     }
+    return -1;
 }
 
 #define TYPE_IS_SIGNED(t) (((t)~(t)0) < (t)0)
@@ -395,7 +396,7 @@ Usocket__recv (int a, void* b, size_t c, int d)
     ssize_t result = {0};                       \
     NativeSockAddrUnionAll native;              \
     M3SockAddrUnionAll m3;                      \
-    m3c_socklen_t len = {0};                    \
+    m3c_socklen_t len = (m3c_socklen_t) *plen;  \
     ZERO_MEMORY(native);                        \
     ZERO_MEMORY(m3);                            \
     ASSERT_PLEN_IN                              \
@@ -579,7 +580,7 @@ Usocket__un(
 
 int
 __cdecl
-Usocket_accept_un(int fd)
+Usocket__accept_un(int fd)
 {
     sockaddr_un addr;
     m3c_socklen_t socklen = sizeof(addr);

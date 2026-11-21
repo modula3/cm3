@@ -1,0 +1,30 @@
+After you have built and shipped this package you will have
+to define a quake variable to specify that you want to use this backend
+during compiles.
+
+You can define it on the command line thus
+cm3 -DM3_BACKEND_MODE="StAloneLlvmAsm" 
+or
+cm3 -DM3_BACKEND_MODE="StAloneLlvmObj" 
+
+The first one generates assember and adds the asseble step in the build
+and the second one generates object code.
+
+Having to specify the backend on each compile is cumbersome so you could
+define the var M3_BACKEND_MODE in cm3.cfg in the base of your
+install directory.
+
+If you tend to use different backends a lot it may help to provide a
+config file per backend and a short command to reset the main cm3.cfg
+to whatever backend you intend to use.
+
+You can check that you are using the llvm backend by compiling a short
+program via
+ cm3 -keep -commands
+You should see the m3llvm and llc commands excuting and in the target
+directory there will be files with .mb extensions.
+To inspect the generated llvm IR just run
+ llvm-dis file.mb
+and view file.mb.ll in your editor.
+
+ 

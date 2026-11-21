@@ -1,6 +1,6 @@
 MODULE FewerDotsTextPref;
 IMPORT TextEquivalence;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 IMPORT Integer;
 IMPORT Text;
 

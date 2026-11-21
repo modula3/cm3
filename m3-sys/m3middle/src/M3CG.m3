@@ -327,10 +327,13 @@ PROCEDURE declare_raises (xx: T;  n: Name) =
 PROCEDURE declare_object (xx: T; t, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
-                          field_size: BitSize; super_typename: Name) =
+                          field_size: BitSize;
+                          field_offset, method_offset : INTEGER;
+                          super_typename: Name) =
   BEGIN
     xx.child.declare_object (t, super, brand, traced, n_fields, n_methods,
-                             field_size, super_typename);
+                             field_size, field_offset,
+                             method_offset, super_typename);
   END declare_object;
 
 PROCEDURE declare_method (xx: T;  n: Name;  signature: TypeUID) =

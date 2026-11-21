@@ -51,8 +51,9 @@ PROCEDURE SetUser (who: TEXT) RAISES {Error} =
     uid: int;
     pw: Upwd.struct_passwd_star;
   BEGIN
-    p := M3toC.TtoS(who);
+    p := M3toC.SharedTtoS(who);
     pw := Upwd.getpwnam(p);
+    M3toC.FreeSharedS(who,p);
     IF pw = NIL THEN RAISE Error; END;
     uid := Uugid.getuid();
     IF uid # pw^.pw_uid THEN

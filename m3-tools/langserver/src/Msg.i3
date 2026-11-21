@@ -22,5 +22,8 @@ PROCEDURE BuildTypeDefinitionReply(id : INTEGER; uri : TEXT;
 PROCEDURE BuildRegistration(id,method : TEXT) : TEXT;
 PROCEDURE BuildUnregistration(id,method : TEXT) : TEXT;
 
+(* capabilities from our init message *)
+PROCEDURE GetIncrCap() : BOOLEAN;
+
 END Msg.
 

@@ -14,7 +14,7 @@ FROM Ctypes IMPORT char_star, int, short;
 TYPE
   mount_name = ARRAY [0..Unix.MaxPathLen-1] OF CHAR;
 
-  fsid_t = Utypes.quad;
+  fsid_t = Utypes.uid_t;
 
   struct_statfs_star = UNTRACED REF struct_statfs;
   struct_statfs = RECORD

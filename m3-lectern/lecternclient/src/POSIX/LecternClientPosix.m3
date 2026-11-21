@@ -11,8 +11,9 @@ UNSAFE MODULE LecternClientPosix EXPORTS LecternClient;
 
 FROM Ctypes IMPORT int;
 
-IMPORT Atom, Cerrno, Ctypes, FilePosix, FileWr, Fmt, M3toC, OSError, OSErrorPosix, Process,
-  Text, Thread, Uerror, Unix, Usocket, Ustat, Uugid, Word, Wr;
+IMPORT Atom, Cerrno, Ctypes, FilePosix, FileWr, Fmt, M3toC, OSError,
+       OSErrorPosix, Process, Text, Thread, Uerror, Unix, Usocket, Ustat,
+       Uugid, Word, Wr;
 
 PROCEDURE PutInt(wr: Wr.T; n: INTEGER) RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
@@ -82,12 +83,12 @@ PROCEDURE Send(READONLY params: ARRAY OF TEXT) RAISES {Error} =
         EXCEPT
           Wr.Failure, Thread.Alerted =>
         END;
-        FINALLY
-          M3toC.FreeSharedS(name, sun_path);
-          EVAL Unix.close(s)
-        END
-      EXCEPT OSError.E(code) => RAISE Error(Atom.ToText(code.head))
+      FINALLY
+        M3toC.FreeSharedS(name, sun_path);
+        EVAL Unix.close(s)
       END
+    EXCEPT
+      OSError.E(code) => RAISE Error(Atom.ToText(code.head))
     END
   END Send;
 

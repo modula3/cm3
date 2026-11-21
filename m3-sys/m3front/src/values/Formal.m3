@@ -523,6 +523,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             ELSIF Expr.IsDesignator (actualExpr)
                   AND Type.IsEqual (t, actSemType, NIL)
                       OR (ArrayType.Split (t, index, elt))
+                       (* ^Excludes BITS FOR *)
             THEN (* Pass by reference. *) 
               Expr.NeedsAddress (actualExpr);
             ELSE (* Type.IsAssignable (t, actSemType), pass by value. *)

@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; $Id$
+;; $Id: scodegen.scm,v 1.32 2010/05/09 08:04:19 mika Exp $
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
@@ -152,15 +152,14 @@
 (define types
   (list
    ;; sym-name, SQL-name, m3-name, m3-must-import, sql-m3-read
-   (list 'serial           "serial"           "INTEGER"   #f  int-conversion  )
-   (list 'varchar          "varchar"          "TEXT"      #f  str-conversion  )
-   (list 'integer          "integer"          "INTEGER"   #f  int-conversion  )
-   (list 'double-precision "double precision" "LONGREAL"  #f  lr-conversion   )
+   (list 'serial           "serial"           "INTEGER"   #f  int-conversion )
+   (list 'varchar          "varchar"          "TEXT"      #f  str-conversion )
+   (list 'integer          "integer"          "INTEGER"   #f  int-conversion )
+   (list 'double-precision "double precision" "LONGREAL"  #f  lr-conversion )
    (list 'boolean          "boolean"          "BOOLEAN"   #f  bool-conversion )
    (list 'timestamp        "timestamp with time zone" 
-                                              "XTime"     #t  ts-conversion   )
-   (list 'id               "integer"          "INTEGER"   #f  int-conversion  )  
-   (list 'date             "date"             "TEXT"      #f  str-conversion  ) ;; hack
+                                              "XTime"     #t  ts-conversion)
+   (list 'id               "integer"          "INTEGER"   #f  int-conversion)  
    )
 )
 
@@ -247,10 +246,10 @@
   (fields (get-fields (complete-tbl tbl))))
     
     (put-header db name)
-    (map2 (lambda (f) (begin (put-field-list db f)
+    (map2 (lambda (f) (begin (put-field-list gcoms f)
            (dis "," dnl port)))
 
-    (lambda (f) (put-field-list db f))
+    (lambda (f) (put-field-list gcoms f))
     
     fields)
     (dis dnl port)
@@ -260,7 +259,7 @@
 
 (define (putm3-field-list fld port)
     (let ((name (car fld))
-    (type (cadr fld)))
+	  (type (cadr fld)))
 
       (dis "  " name " : " (type->m3-typename type) ";" dnl port)
       (dis "  " name "_isNull : BOOLEAN := TRUE;" dnl port)
@@ -398,10 +397,10 @@
      "  <*FATAL FloatMode.Trap, Lex.Error*>" dnl
      "  VAR query := \"select count(*) from " tbl-name " where \"&" dnl
      "                        restriction;" dnl
-     "      attempts := 5;" dnl
+		 "      attempts := 5;" dnl
      "  BEGIN" dnl
      "    db.sync();" dnl
-     "    LOOP" dnl
+		 "    LOOP" dnl
      "      TRY" dnl
      "        WITH cnt = db.sExec(query, abortConnectionOnFail := attempts <= 1).getInt(\"count\") DO" dnl
      "          IF cnt > 0 THEN" dnl
@@ -415,15 +414,15 @@
      "            Insert(db,record,ex)" dnl
      "          END" dnl
      "        END(*WITH*);" dnl
-     "        EXIT" dnl
+		 "        EXIT" dnl
      "      EXCEPT" dnl
      "        DBerr.Error(txt) =>" dnl
      "          Debug.Out(\"caught DBerr.Error, \" & txt & \" attempts = \""dnl
-     "             & Fmt.Int(attempts));" dnl
+		 "             & Fmt.Int(attempts));" dnl
      "          DEC(attempts);" dnl
      "          IF attempts = 0 THEN" dnl 
-     "            ex.exception(query,txt);" dnl 
-     "            EXIT" dnl
+		 "            ex.exception(query,txt);" dnl 
+		 "            EXIT" dnl
      "          ELSE" dnl
      "            Thread.Pause(NEW(Random.Default)." dnl
      "                  init().longreal(1.0d0,3.0d0))" dnl
@@ -441,7 +440,7 @@
     (map (lambda(fld) (dis (ass-sql fld) mp)) fields) 
     (dis dnl mp)
 
-    (dis "    WITH q1 = \"update " tbl-name " set \" & TextUtils.FormatInfix(query,\",\") & \" where " 
+    (dis "    WITH q1 = \"update " tbl-name " set \" & CitTextUtils.FormatInfix(query,\",\") & \" where " 
    tbl-name "_id=\"&Fmt.Int(record." tbl-name "_id)&\";\", " dnl mp)
     (dis "         q2 = \"delete from clean where tabl='" tbl-name "' and rowid=\"&Fmt.Int(record." tbl-name "_id)&\";\"" dnl mp)
     (dis "      DO" dnl mp)
@@ -475,8 +474,8 @@
 (define (ins-sql fld)
   ;; the string corresponding to a SQL assignment (coded in M3)
   (let* ((name (car fld))
-   (m3name (string-append "record." name))
-   (type-name (cadr fld)))
+	 (m3name (string-append "record." name))
+	 (type-name (cadr fld)))
     (string-append 
      "    IF NOT " m3name "_isNull THEN" dnl
      "      fields.addhi(\" " name "\");" dnl
@@ -486,23 +485,23 @@
 
 (define (dis-nullset-m3 tbl mp)
   (let ((tbl-name (car tbl)) 
-  (fields (get-fields (complete-tbl tbl))))
+	(fields (get-fields (complete-tbl tbl))))
     (dis "  VAR" dnl mp)
     (dis "    res := FieldSet {};" dnl mp)
     (dis "  BEGIN" dnl mp)
     (map (lambda (fld) 
-     (let ((fld-name (car fld)))
-       (dis "    IF record."fld-name"_isNull THEN" dnl mp)
-       (dis "      res := res + FieldSet { Field." fld-name "}" dnl mp)
-       (dis "    END;" dnl mp)))
-   fields)
+	   (let ((fld-name (car fld)))
+	     (dis "    IF record."fld-name"_isNull THEN" dnl mp)
+	     (dis "      res := res + FieldSet { Field." fld-name "}" dnl mp)
+	     (dis "    END;" dnl mp)))
+	 fields)
     (dis "    RETURN res" dnl mp)
     (dis "  END " mp)
     ))
 
 (define (dis-insert-m3 tbl mp)
   (let ((tbl-name (car tbl)) 
-  (fields (get-fields (complete-tbl tbl))))
+	(fields (get-fields (complete-tbl tbl))))
     (dis "  VAR fields, values := NEW(TextSeq.T).init();" dnl
          "  BEGIN" dnl mp)
 
@@ -510,16 +509,16 @@
    fields) 
 
     (dis dnl mp)
-    (dis "    db.aExec(\"insert into " tbl-name " (\" & TextUtils.FormatInfix(fields,\",\") & \")\"&"
+    (dis "    db.aExec(\"insert into " tbl-name " (\" & CitTextUtils.FormatInfix(fields,\",\") & \")\"&"
    dnl mp)
-    (dis "                 \" values (\"& TextUtils.FormatInfix(values,\",\")&\")\", ex, MakeResCallback(db))" dnl mp)
+    (dis "                 \" values (\"& CitTextUtils.FormatInfix(values,\",\")&\")\", ex, MakeResCallback(db))" dnl mp)
     (dis "  END " mp)
     #t))
 
 
 (define (dis-batch-insert-m3 tbl mp)
   (let ((tbl-name (car tbl)) 
-  (fields (get-fields (complete-tbl tbl))))
+	(fields (get-fields (complete-tbl tbl))))
     (dis "  VAR maxFields, minFields : FieldSet;"           dnl mp)
     (dis "  BEGIN"                                          dnl mp)
     
@@ -571,22 +570,22 @@
     (dis "        IF f IN maxFields THEN fields.addhi(FieldNames[f]) END" dnl mp)
     (dis "      END;" dnl mp)
 
-    (dis "      Wx.PutText(wx, \"insert into " tbl-name " (\" & TextUtils.FormatInfix(fields,\",\") & \") SELECT \"); " dnl mp)
+    (dis "      Wx.PutText(wx, \"insert into " tbl-name " (\" & CitTextUtils.FormatInfix(fields,\",\") & \") SELECT \"); " dnl mp)
 
     (dis "      FOR i := FIRST(record) TO LAST(record) DO" dnl mp)
     (dis "        VAR values := NEW(TextSeq.T).init(); BEGIN" dnl mp)
 
     (map (lambda (fld)
-     (let* ((field-name (car fld))
-      (m3name (string-append "record[i]." field-name))
-      (type-name (cadr fld)))
+	   (let* ((field-name (car fld))
+		  (m3name (string-append "record[i]." field-name))
+		  (type-name (cadr fld)))
 
              (dis "          IF Field."field-name" IN maxFields THEN" dnl 
-      "            values.addhi(" (format-sql-from-m3 m3name type-name) ")" dnl
+		  "            values.addhi(" (format-sql-from-m3 m3name type-name) ")" dnl
                   "           END;" dnl mp)))
-   fields)
-           
-    (dis "          Wx.PutText(wx, TextUtils.FormatInfix(values, \",\"));" dnl mp)
+	 fields)
+		       
+    (dis "          Wx.PutText(wx, CitTextUtils.FormatInfix(values, \",\"));" dnl mp)
     (dis "          IF i # LAST(record) THEN" dnl mp)
     (dis "            Wx.PutText(wx, \" UNION SELECT \")" dnl mp)
     (dis "          END" dnl mp)
@@ -607,9 +606,9 @@
    fields) 
 
     (dis dnl mp)
-    (dis "    RETURN \"(\" & TextUtils.FormatInfix(fields,\",\") & \")\"&"
+    (dis "    RETURN \"(\" & CitTextUtils.FormatInfix(fields,\",\") & \")\"&"
    dnl mp)
-    (dis "                 \" values (\"& TextUtils.FormatInfix(values,\",\")&\")\"" dnl mp)
+    (dis "                 \" values (\"& CitTextUtils.FormatInfix(values,\",\")&\")\"" dnl mp)
     (dis "  END " mp)
     #t))
 
@@ -700,10 +699,10 @@
     (dis "  PROCEDURE Exec(q : TEXT) RAISES { DBerr.Error } =" dnl
          "    BEGIN" dnl
          "      IF sync THEN" dnl
-   "        <*ASSERT res = NIL AND ex = NIL *>" dnl
+	 "        <*ASSERT res = NIL AND ex = NIL *>" dnl
          "        EVAL db.sExec(q, abortConnectionOnFail := FALSE)" dnl
          "      ELSE" dnl
-   "        NARROW(db,DesynchronizedDB.T).aExec(q, ex, res)" dnl
+	 "        NARROW(db,DesynchronizedDB.T).aExec(q, ex, res)" dnl
          "      END" dnl
          "    END Exec;" dnl
          dnl mp)
@@ -732,7 +731,7 @@
          "      IF sync THEN" dnl
          "        EVAL db.sExec(q, abortConnectionOnFail := FALSE)" dnl
          "      ELSE" dnl
-         "        NARROW(db,DesynchronizedDB.T).aExec(q, ex)" dnl
+				 "        NARROW(db,DesynchronizedDB.T).aExec(q, ex)" dnl
          "      END" dnl
          "    END Exec;" dnl
          dnl mp)
@@ -741,7 +740,7 @@
 
     (dis "    IF row # AllRows THEN " dnl mp)
 
-    (dis "      <*ASSERT restriction = NIL *>" dnl mp)
+		(dis "      <*ASSERT restriction = NIL *>" dnl mp)
 
     (dis "      Exec(\"delete from clean where tabl='" tbl-name "' and rowid=\"&Fmt.Int(row)&\";\")" dnl mp)
    
@@ -805,7 +804,7 @@
    (append (list "DBerr" "Database" "DatabaseTable" "DesynchronizedDB"
                  "UpdateMonitor" "Thread" "Random" "Debug"
            "Scan" "Fmt" "Lex" "FloatMode" "PGSQLScan" "TextSeq" "Wx"
-           "TextUtils" "DBTable")
+           "CitTextUtils" "DBTable")
      (map type->m3-intfname 
           (filter m3-import? (map cadr fields))))))
     (dis-imports imports ip) 
@@ -844,7 +843,7 @@
     (list "QueryHeader" "() : TEXT" dis-query-m3))
 
 (define format 
-    (list "Format"
+		(list "Format"
     "(READONLY record : T) : TEXT"
     dis-format-m3
     ))
@@ -930,8 +929,8 @@
     ))
    (nullset
     (list "NullSet"
-    "(READONLY record : T) : FieldSet"
-    dis-nullset-m3))
+	  "(READONLY record : T) : FieldSet"
+	  dis-nullset-m3))
 
    (insert
     (list "Insert"
@@ -966,50 +965,50 @@
      (dis pname ";" dnl dnl dnl mp)))
        (list upheader 
              insert
-       format
+	     format
              upinsert
-       parseheader
-       dirtyheader
-       cleanheader
-       queryheader
+	     parseheader
+	     dirtyheader
+	     cleanheader
+	     queryheader
              getid
-       nullset
-       batch-insert)
+	     nullset
+	     batch-insert)
        )
       )
 
-    ;; finish .i3 file
+		;; finish .i3 file
     (dis "CONST Brand = \"" m3name "\";" dnl dnl ip)
     (dis "CONST TableName = \"" name "\";" dnl dnl ip)
     (dis "END " m3name "." dnl ip)     
 
-    ;; finish .m3 file
+		;; finish .m3 file
 
-    ;; exec callback, call update monitor...
+		;; exec callback, call update monitor...
 
-    (dis "TYPE" dnl
-         "  ResCallback = DesynchronizedDB.ResCallback OBJECT" dnl
-         "    um   : UpdateMonitor.T;" dnl
-         "  OVERRIDES" dnl
-         "    result := RCResult" dnl
+		(dis "TYPE" dnl
+				 "  ResCallback = DesynchronizedDB.ResCallback OBJECT" dnl
+				 "    um   : UpdateMonitor.T;" dnl
+				 "  OVERRIDES" dnl
+				 "    result := RCResult" dnl
          "  END;" dnl 
-         dnl
-         "PROCEDURE MakeResCallback(db : DesynchronizedDB.T) : ResCallback =" dnl
-         "  BEGIN" dnl
-         "    WITH um = NARROW(db.getAttribute(UpdateMonitor.Brand),UpdateMonitor.T) DO" dnl
-         "      IF um = NIL THEN RETURN NIL ELSE RETURN NEW(ResCallback, um := um) END" dnl
+				 dnl
+				 "PROCEDURE MakeResCallback(db : DesynchronizedDB.T) : ResCallback =" dnl
+				 "  BEGIN" dnl
+				 "    WITH um = NARROW(db.getAttribute(UpdateMonitor.Brand),UpdateMonitor.T) DO" dnl
+				 "      IF um = NIL THEN RETURN NIL ELSE RETURN NEW(ResCallback, um := um) END" dnl
          "    END" dnl
          "  END MakeResCallback;" dnl
-         dnl
-         "PROCEDURE RCResult(rc : ResCallback;" dnl
+				 dnl
+				 "PROCEDURE RCResult(rc : ResCallback;" dnl
          "                   <*UNUSED*>dt : DatabaseTable.T) =" dnl
-         "  BEGIN" dnl
-         "    rc.um.locallyUpdated(\"" name "\")" dnl
-         "  END RCResult;" dnl
-         dnl
-         mp)
+				 "  BEGIN" dnl
+				 "    rc.um.locallyUpdated(\"" name "\")" dnl
+				 "  END RCResult;" dnl
+				 dnl
+				 mp)
 
-    (dis "BEGIN END " m3name "." dnl mp)
+		(dis "BEGIN END " m3name "." dnl mp)
 
     (close-output-port ip) (close-output-port mp)
     #t
@@ -1076,7 +1075,7 @@
        (list ;;upheader 
              parseheader 
              ;;insert 
-             format
+						 format
              queryheader dirtyheader cleanheader getid)
        )
       )

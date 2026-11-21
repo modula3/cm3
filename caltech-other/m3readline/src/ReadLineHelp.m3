@@ -6,7 +6,7 @@ IMPORT ReadLine, ReadLineError;
 IMPORT ReadLineHelpNode AS Node;
 IMPORT ReadLineUI AS UI;
 IMPORT Text, TextReader;
-IMPORT Fmt, Rd, TextUtils;
+IMPORT Fmt, Rd, CitTextUtils AS TextUtils;
 IMPORT NetObj;
 IMPORT Thread;
 

@@ -543,9 +543,9 @@ BEGIN
 self.Add(NEW(declare_raises_t, op := Op.declare_raises, name := name));
 END declare_raises;
 
-PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; <*UNUSED*>super_typename: Name) =
+PROCEDURE declare_object(self: T; typeid, super_typeid: TypeUID; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; field_offset, method_offset : INTEGER; <*UNUSED*>super_typename: Name) =
 BEGIN
-self.Add(NEW(declare_object_t, op := Op.declare_raises, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, fields_bit_size := fields_bit_size));
+self.Add(NEW(declare_object_t, op := Op.declare_raises, typeid := typeid, super_typeid := super_typeid, brand := brand, traced := traced, n_fields := n_fields, n_methods := n_methods, fields_bit_size := fields_bit_size, field_offset := field_offset, method_offset := method_offset));
 END declare_object;
 
 PROCEDURE declare_method(self: T; name: Name; signature: TypeUID) =
@@ -1205,7 +1205,7 @@ PROCEDURE replay_declare_indirect(self: declare_indirect_t; <*UNUSED*>replay: Re
 PROCEDURE replay_declare_proctype(self: declare_proctype_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_proctype(self.typeid, self.n_formals, self. return_typeid, self.n_raises, self.callingConvention); END replay_declare_proctype;
 PROCEDURE replay_declare_formal(self: declare_formal_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_formal(self.name, self.typeid, self.typename); END replay_declare_formal;
 PROCEDURE replay_declare_raises(self: declare_raises_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_raises(self.name); END replay_declare_raises;
-PROCEDURE replay_declare_object(self: declare_object_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_object(self.typeid, self.super_typeid, self.brand, self.traced, self.n_fields, self.n_methods, self.fields_bit_size); END replay_declare_object;
+PROCEDURE replay_declare_object(self: declare_object_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_object(self.typeid, self.super_typeid, self.brand, self.traced, self.n_fields, self.n_methods, self.fields_bit_size, self.field_offset, self.method_offset); END replay_declare_object;
 PROCEDURE replay_declare_method(self: declare_method_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_method(self.name, self.signature); END replay_declare_method;
 PROCEDURE replay_declare_opaque(self: declare_opaque_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.declare_opaque(self.typeid, self.super_typeid); END replay_declare_opaque;
 PROCEDURE replay_reveal_opaque(self: reveal_opaque_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.reveal_opaque(self.lhs_typeid, self.rhs_typeid); END replay_reveal_opaque;
@@ -1365,8 +1365,8 @@ PROCEDURE replay_pop_param(self: pop_param_t; <*UNUSED*>replay: Replay_t; cg: cg
 PROCEDURE replay_pop_struct(self: pop_struct_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_struct(self.typeid, self.byte_size, self.alignment); END replay_pop_struct;
 PROCEDURE replay_pop_static_link(<*UNUSED*>self: pop_static_link_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.pop_static_link(); END replay_pop_static_link;
 PROCEDURE replay_call_indirect(self: call_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.call_indirect(self.type, self.callingConvention); END replay_call_indirect;
-PROCEDURE replay_start_try(self: start_try_t; replay: Replay_t; cg: cg_t) = BEGIN cg.start_try(); END replay_start_try;
-PROCEDURE replay_end_try(self: end_try_t; replay: Replay_t; cg: cg_t) = BEGIN cg.end_try(); END replay_end_try;
+PROCEDURE replay_start_try(<*UNUSED*>self: start_try_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.start_try(); END replay_start_try;
+PROCEDURE replay_end_try(<*UNUSED*>self: end_try_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.end_try(); END replay_end_try;
 PROCEDURE replay_invoke_direct(self: invoke_direct_t; replay: Replay_t; cg: cg_t) = BEGIN cg.invoke_direct(replay.GetProc(self.proc), self.type, self.next, self.handler); END replay_invoke_direct;
 PROCEDURE replay_invoke_indirect(self: invoke_indirect_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.invoke_indirect(self.type, self.callingConvention, self.next, self.handler); END replay_invoke_indirect;
 PROCEDURE replay_landing_pad(self: landing_pad_t; <*UNUSED*>replay: Replay_t; cg: cg_t) = BEGIN cg.landing_pad(self.type, self.handler, self.catches^); END replay_landing_pad;

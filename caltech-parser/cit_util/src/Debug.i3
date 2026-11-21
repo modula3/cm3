@@ -19,7 +19,7 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id$ *)
+(* $Id: Debug.i3,v 1.22 2009/09/09 10:27:14 mika Exp $ *)
 
 INTERFACE Debug;
 
@@ -36,11 +36,25 @@ INTERFACE Debug;
      DEBUGFILTER env. variable
    
      @M3debugtrace=<filename>[,<filename>...]  RT arg
-     @M3debugappend=<filename>[,<filename>...]  RT arg
+     @M3debugoverrides=<filename>              RT arg
+
+   If the @M3debugoverrides runtime argument is passed, then the specified
+   file path will be polled asynchronously and repeatedly (on a human 
+   timescale).  The debugoverrides file is expected to have the following
+   format.
+
+     <env var. from above list>  <value>
+     ...
+
+   The values in debugoverrides will override any other given values.  
+   Removing the values from debugoverrides will revert the values to their
+   otherwise-defaults.
+
 *)
 
 IMPORT Fmt, Wr, Pathname;
 IMPORT OSError;
+IMPORT Process;
 
 CONST DefaultLevel = 10;
 
@@ -62,9 +76,12 @@ PROCEDURE HexOut(t : TEXT; minLevel : CARDINAL := 10; cr:=TRUE; toHex:=ToHex);
 
 PROCEDURE S(t: TEXT; minLevel : CARDINAL := 5; cr:=TRUE);
 PROCEDURE Warning(t : TEXT);
-PROCEDURE Error(t : TEXT; exit := TRUE);
 
-PROCEDURE Check(b : BOOLEAN; msg : TEXT; exit := TRUE);
+CONST DefaultErrorExitCode : Process.ExitCode = 2;
+      
+PROCEDURE Error(t : TEXT; exit := TRUE; exitCode : Process.ExitCode := DefaultErrorExitCode);
+
+PROCEDURE Check(b : BOOLEAN; msg : TEXT; exit := TRUE; exitCode := DefaultErrorExitCode);
   (* if b is TRUE, do nothing
      if b is FALSE, same as Error(msg,exit) *)
 
@@ -91,6 +108,10 @@ PROCEDURE AddStream(newStream : Wr.T);
      This will change only the default output method; if you override it
      using output hook above, this will be ignored *)
   
+PROCEDURE AddWarnStream(newStream : Wr.T);
+  (* add another output stream for warnings only
+     Will be unconditional (output hook won't override) *)
+  
 PROCEDURE RemStream(deadStream : Wr.T);
   (* no-op if not in current set of streams *)
 
@@ -109,10 +130,29 @@ PROCEDURE FmtPointer(p : REFANY; base : Fmt.Base := 16) : TEXT;
 *)
 PROCEDURE DebugThis(this : TEXT; default := FALSE) : BOOLEAN;
 
+CONST This = DebugThis;
+
 TYPE Options = { PrintPID, PrintThreadID, PrintTime };
 
+CONST OptionNames = ARRAY Options OF TEXT {
+  "PrintPID", "PrintThreadID", "PrintTime" };
+
 PROCEDURE SetOptions(options : SET OF Options);
+  (* set options from program.
+
+     options are also set on startup by checking the environment
+     variable DEBUGOPT_<opt-name> and form the default set of options
+     to the Out procedure, etc. 
+  *)
+
+PROCEDURE EnableOptions(options : SET OF Options);
+  (* enable options if not set *)
+
+PROCEDURE DisableOptions(options : SET OF Options);
+  (* disable options if set *)
+
 PROCEDURE GetOptions() : SET OF Options;
+  (* check current options *)
 
 (* override environment variables programmatically *)
 
@@ -128,5 +168,10 @@ PROCEDURE SetDebugTimeZone(tz : TEXT) RAISES { OSError.E };
 
 PROCEDURE SetTimedDebugFlush(wr : Wr.T);
   (* flush this stream on a timer rather than automatically on every write *)
+
+TYPE SimpleCallback = PROCEDURE ();
+     
+PROCEDURE RegisterCallback(cb : SimpleCallback);
+  (* register a callback if debug level changes, etc. dynamically *)
 
 END Debug.

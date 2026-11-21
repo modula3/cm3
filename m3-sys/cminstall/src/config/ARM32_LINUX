@@ -1,0 +1,3 @@
+M3_PARALLEL_BACK = 20
+readonly TARGET = "ARM32_LINUX" % code generation target
+include("ARM_LINUX.common")

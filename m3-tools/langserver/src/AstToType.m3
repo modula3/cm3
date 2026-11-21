@@ -206,10 +206,27 @@ PROCEDURE ProcessTypeSpec (h: Handle; ts: M3AST_AS.TYPE_SPEC): Type.T =
         ELSE
           WITH revTs = o.sm_concrete_type_spec DO
             t := ProcessTypeSpec(h, revTs);
+            TYPECASE t OF
+            | Type.Object(ob) =>
+              ob.revIntf :=
+                  Atom.FromText(M3CId.ToText(revTs.tmp_unit_id.lx_symrep));
+            | Type.Ref(ref) =>
+(* fixme add stuff *)
+(*
+del these wrong type
+            | M3AST_AS.Ref_type (ref) =>
+            | M3AST_AS.Object_type (ob) =>
+              ob.revIntf :=
+                  Atom.FromText(M3CId.ToText(revTs.tmp_unit_id.lx_symrep));
+*)
+            ELSE
+            END;
+(*crashing with narrow fault
             WITH tt = NARROW(t, Type.Object) DO
               tt.revIntf :=
                   Atom.FromText(M3CId.ToText(revTs.tmp_unit_id.lx_symrep));
             END;
+*)
           END;
         END;
       | M3AST_AS.Procedure_type (proc) =>

@@ -14,7 +14,7 @@ IMPORT Process;
 IMPORT Env, MagPath;
 IMPORT GridPointSet, GridPointSetDef, RefList, GridPoint, FloatMode, Lex;
 IMPORT Scan;      
-FROM TextUtils IMPORT ReplaceChar;
+FROM CitTextUtils IMPORT ReplaceChar;
 IMPORT AtomList, AL;
 
 IMPORT Compass;

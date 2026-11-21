@@ -65,7 +65,7 @@ PROCEDURE Init () =
       EF1_SIZE       := EF1_jmpbuf + AP;
     ELSE
       <* ASSERT Target.Jumpbuf_size > 0 *>
-      EF1_jmpbuf     := RoundUp (EF1_jmpbuf, 128); (* : jmp_buf *)
+      EF1_jmpbuf     := RoundUp (EF1_jmpbuf, 128); (* : jmp_buf *) <*NOWARN*>
       EF1_SIZE       := EF1_jmpbuf + Target.Jumpbuf_size;
     END;
 

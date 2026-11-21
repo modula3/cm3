@@ -1,4 +1,4 @@
-(* $Id$ *)
+(* $Id: CSVParse.m3,v 1.2 2012/10/15 08:26:01 mika Exp $ *)
 
 MODULE CSVParse;
 IMPORT Rd, Lex, FloatMode, Text, Scan, Thread;
@@ -42,38 +42,74 @@ PROCEDURE StartLine(t : T)
 
 PROCEDURE WhatLine(t : T) : CARDINAL = BEGIN RETURN t.lNo END WhatLine;
 
-PROCEDURE Cell(t : T) : TEXT RAISES { EndOfLine } =
+PROCEDURE Cell(t : T; handleQuotes : BOOLEAN) : TEXT RAISES { EndOfLine } =
   VAR
     res : TEXT;
   BEGIN
-    IF t.cellB(res) THEN RETURN res ELSE RAISE EndOfLine END
+    IF t.cellB(res, handleQuotes) THEN RETURN res ELSE RAISE EndOfLine END
   END Cell;
 
-PROCEDURE CellB(t : T; VAR cell : TEXT) : BOOLEAN =
+PROCEDURE CellB(t : T; VAR cell : TEXT; handleQuotes : BOOLEAN) : BOOLEAN =
   VAR
     b, e : CARDINAL;
     
   CONST
     Seps = SET OF CHAR { '\r', ',' };
-    
+    DQ = '"';
   BEGIN
     LOOP
       IF Text.Length(t.line) <= t.q THEN RETURN FALSE END;
 
-      IF Text.GetChar(t.line,t.q) IN Seps THEN
-        b := t.p; e := t.q;
+      (* we have just consumed a field, at start of next *)
+      
+      WITH c = Text.GetChar(t.line,t.q) DO
+        IF handleQuotes AND c = DQ THEN
+          INC(t.p); INC(t.q); (* skip DQ *)
+          
+          (* handle DQ at EOL *)
+          IF t.p = t.n THEN
+            t.last := "";
+            cell := t.last;
+            RETURN TRUE
+          END;
+          LOOP
+            IF t.q = t.n OR Text.GetChar(t.line, t.q) = DQ THEN
+              (* at EOL or closing quote *)
+              t.last := Text.Sub(t.line, t.p, t.q-t.p);
+              cell := t.last;
 
-        t.p := t.q+1;
-        t.q := t.p;
-        EXIT
-      ELSIF t.q = t.n-1 THEN
-        b := t.p; e := t.q+1;
+              (* skip DQ *)
+              t.p := t.q+1;
 
-        t.p := t.q+1;
-        t.q := t.p;
-        EXIT
-      END;
-      INC(t.q)
+              (* skip sep if any *)
+              IF t.p <= t.n-1 AND Text.GetChar(t.line, t.p) IN Seps THEN
+                t.p := t.p + 1
+              END;
+              t.q := t.p;
+                
+              RETURN TRUE
+            END;
+
+            (* just gobble to next DQ or EOL *)
+            INC(t.q)
+          END
+        END;
+        
+        IF c IN Seps THEN
+          b := t.p; e := t.q;
+          
+          t.p := t.q+1;
+          t.q := t.p;
+          EXIT
+        ELSIF t.q = t.n-1 THEN
+          b := t.p; e := t.q+1;
+          
+          t.p := t.q+1;
+          t.q := t.p;
+          EXIT
+        END;
+        INC(t.q)
+      END
     END;
     t.last := Text.Sub(t.line, b, e-b);
     cell := t.last;

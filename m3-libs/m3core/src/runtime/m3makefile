@@ -10,7 +10,9 @@ readonly HAS_STACK_WALKER = {
 % "DS3100"     : TRUE,
 % "SOLgnu"     : TRUE,
 % "SOLsun"     : TRUE,
- "AMD64_LINUX" : TRUE,
+ "AMD64_LINUX"   : TRUE,
+ "AMD64_DARWIN"  : TRUE,
+ "ARM64_DARWIN"  : TRUE,
 }
 
 include_dir ("common")

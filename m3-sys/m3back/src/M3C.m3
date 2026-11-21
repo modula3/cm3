@@ -55,6 +55,8 @@ TYPE Multipass_t = M3CG_MultiPass.T OBJECT
         set_runtime_proc := set_runtime_proc;
     END;
 
+TYPE LabelRef = REF INTEGER; (* REF Label; Label = INTEGER *)
+
 TYPE
 T = M3CG_DoNothing.T OBJECT
 
@@ -79,6 +81,7 @@ T = M3CG_DoNothing.T OBJECT
         c      : Wr.T := NIL;
         stack  : RefSeq.T := NIL;
         params : RefSeq.T := NIL;
+        try_handler_stack: RefSeq.T := NIL; (* stack of LabelRef for nested TRY blocks *)
         op_index := 0;
 
         unit_name := "L_";
@@ -90,6 +93,7 @@ T = M3CG_DoNothing.T OBJECT
         RTHooks_Raise_id := M3ID.NoID;
         RTHooks_ReportFault_id := M3ID.NoID;
         RTHooks_ReportFault_imported_or_declared := FALSE;
+        RTStack_ThrowM3Exc_id := M3ID.NoID;
         alloca_id := M3ID.NoID;
         setjmp_id := M3ID.NoID;
         jmpbuf_size_id := M3ID.NoID;
@@ -380,6 +384,7 @@ CONST reservedWords = ARRAY OF TEXT{
 "UINT16",
 "UINT32",
 "UINT64",
+"_Float128",
 (* TODO fill in more strings here like INT8, STRUCT that we use,
 so i.e. they can be used for parameter, local, field names *)
 (*
@@ -2581,9 +2586,15 @@ CONST Prefix = ARRAY OF TEXT {
 "#define LONGREAL LONGREAL",
 "#define EXTENDED EXTENDED",
 
+"//#include <cmath>",
+"#include <limits>",
+"#define INFINITY (std::numeric_limits<double>::infinity() )",
+"#define Infinity INFINITY",
+"#define NAN (std::numeric_limits<double>::quiet_NaN() )",
+"#define NaN NAN",
+
 "typedef float REAL;",
 "typedef double LONGREAL;",
-"typedef /*long*/ double EXTENDED;",
 
 "#ifdef __cplusplus",
 "extern \"C\" {",
@@ -2609,6 +2620,14 @@ CONST Prefix = ARRAY OF TEXT {
 "void __cdecl m3_memmove(void* dest, const void* source, size_t n);",
 "void __cdecl m3_memset(void* dest, int fill, size_t count);",
 "int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
+"} /* extern \"C\" */",
+"struct _M3Exc { void* act; };",
+"#ifdef _MSC_VER",
+"static __declspec(thread) void* _m3_caught;",
+"#else",
+"static __thread void* _m3_caught __attribute__((unused));",
+"#endif",
+"extern \"C\" {",
 
 ""};
 
@@ -2634,26 +2653,26 @@ CONST intLiteralSuffix = ARRAY CGType OF TEXT {
     NIL, ..     (* 8 REAL 9 LONGREAL A EXTENDED B ADDRESS C STRUCT D void *)
 };
 
-CONST cgtypeToText = ARRAY CGType OF TEXT {
+VAR cgtypeToText := ARRAY CGType OF TEXT {
     Text_uint8,  Text_int8,   (* 0 1 *)
     Text_uint16, Text_int16,  (* 2 3 *)
     Text_uint32, Text_int32,  (* 4 5 *)
     Text_uint64, Text_int64,  (* 6 7 *)
     "float",  (* REAL *)        (* 8 *)
     "double", (* LONGREAL *)    (* 9 *)
-    "EXTENDED",                 (* A *) (* TODO change to double *)
+    "EXTENDED", (* EXTENDED *)    (* A *)
     Text_address,               (* B *)
     "STRUCT",                   (* C *)
     "void"                      (* D *)
 };
 
 (* Mainly ADDRESS -> void* to avoid warnings but also cleanups *)
-CONST cgtypeToParamText = ARRAY CGType OF TEXT {
+VAR cgtypeToParamText := ARRAY CGType OF TEXT {
     "unsigned char",  "signed char",
     "unsigned short", "short",
     "unsigned", "int",
     "UINT64", "INT64",
-    "float", "double", "double",
+    "float", "double", "EXTENDED",
     "void*",
     NIL,
     NIL
@@ -3013,8 +3032,8 @@ BEGIN
     self.Type_Init (type);
     EVAL declare_typename_no_replace (self, type.typeid, M3ID.Add ("EXTENDED")); (* TODO remove this *)
     EVAL DeclareTypes_FlushOnce (self);
-    type.base_text := "double"; (* more readable output (fewer hashes) *)
-    type.text := "double"; (* more readable output (fewer hashes) *)
+    type.base_text := "EXTENDED"; (* more readable output (fewer hashes) *)
+    type.text := "EXTENDED"; (* more readable output (fewer hashes) *)
 
     (* TODO: We do not have to predeclare BOOLEAN, m3front provides it.
      * But after it is declared, we should find it and rename it.
@@ -3119,6 +3138,7 @@ BEGIN
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");
     self.RTHooks_AssertFailed_id := M3ID.Add("RTHooks__AssertFailed");
+    self.RTStack_ThrowM3Exc_id := M3ID.Add("RTStack__ThrowM3Exc");
     SuppressLineDirective(self, 1, "begin_unit");
     IF NUMBER(multipass.op_data[M3CG_Binary.Op.case_jump]^) > 0 THEN
         IF CaseDefaultAssertFalse THEN
@@ -3127,6 +3147,16 @@ BEGIN
     END;
     FOR i := FIRST(Prefix) TO LAST(Prefix) DO
         print(self, Prefix[i] & "\n");
+    END;
+    IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      (* g++ < 13 and clang++ have no _Float128 in C++; __float128 is the
+         same IEEE binary128 type on x86-64, and libquadmath's own type. *)
+      print(self, "#if defined(__cplusplus)\n" &
+                  "#define _Float128 __float128\n" &
+                  "#endif\n");
+      print(self, "typedef _Float128 EXTENDED;\n");
+    ELSE
+      print(self,"typedef double EXTENDED;\n");
     END;
 END Prefix_Print;
 
@@ -3856,7 +3886,7 @@ END declare_raises;
 (* TODO check that objects are really described correctly; I think they are not,
  * in that base type layout is not always known at compile-time.
  *)
-PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize; <*UNUSED*>super_typename: Name) =
+PROCEDURE declare_object(self: DeclareTypes_t; typeid, super: TypeUID; brand: TEXT; traced: BOOLEAN; field_count, method_count: INTEGER; field_size: BitSize; field_offset, method_offset : INTEGER; <*UNUSED*>super_typename: Name) =
 VAR record: Record_t := NIL;
     x := self.self;
 BEGIN
@@ -3867,6 +3897,8 @@ BEGIN
             & " traced:" & BoolToText[traced]
             & " field_count:" & IntToDec(field_count)
             & " method_count:" & IntToDec(method_count)
+            & " field_offset:" & IntToDec(field_offset)
+            & " method_offset:" & IntToDec(method_offset)
             & " field_size:" & IntToDec(field_size));
     ELSIF debug THEN
         x.comment("declare_object");
@@ -4311,6 +4343,8 @@ OVERRIDES
     if_false := MarkUsed_if_true;
     if_compare := MarkUsed_if_compare;
     case_jump := MarkUsed_case_jump;
+    invoke_direct := MarkUsed_invoke_direct;
+    invoke_indirect := MarkUsed_invoke_indirect;
     load := MarkUsed_load;
     load_address := MarkUsed_load_address;
     store := MarkUsed_store;
@@ -4351,6 +4385,16 @@ BEGIN
     END;
 END MarkUsed_case_jump;
 
+<*NOWARN*>PROCEDURE MarkUsed_invoke_direct(self: MarkUsed_t; <*UNUSED*>proc: M3CG.Proc; <*UNUSED*>type: CGType; <*UNUSED*>next: Label; handler: Label) =
+BEGIN
+    MarkUsed_label(self, handler);
+END MarkUsed_invoke_direct;
+
+<*NOWARN*>PROCEDURE MarkUsed_invoke_indirect(self: MarkUsed_t; <*UNUSED*>type: CGType; <*UNUSED*>cc: CallingConvention; <*UNUSED*>next: Label; handler: Label) =
+BEGIN
+    MarkUsed_label(self, handler);
+END MarkUsed_invoke_indirect;
+
 PROCEDURE CountUsedLabels_case_jump(self: CountUsedLabels_t; <*UNUSED*>itype: IType; READONLY labels: ARRAY OF Label) =
 BEGIN
     INC(self.count, NUMBER(labels));
@@ -4365,8 +4409,8 @@ PROCEDURE MarkUsed(self: Multipass_t) =
 TYPE Op = M3CG_Binary.Op;
 CONST LabelOps = ARRAY OF Op{
     (* operands that goto a label -- marking the label as used
-       Except for case_jump, these ops use one label each.
-       case_jump requires more specific analysis *)
+       Except for case_jump, invoke_direct, invoke_indirect, these ops use one label each.
+       case_jump uses an array; invoke_direct and invoke_indirect each use two labels. *)
         Op.jump,
         Op.if_true,
         Op.if_false,
@@ -4403,6 +4447,10 @@ BEGIN
     self.Replay(count_pass, index, self.op_data[Op.case_jump]);
     INC(pass.index, count_pass.count);
 
+    (* invoke_direct and invoke_indirect each use 2 labels (next and handler). *)
+    INC(pass.index, 2 * self.op_counts[Op.invoke_direct]);
+    INC(pass.index, 2 * self.op_counts[Op.invoke_indirect]);
+
     IF pass.index # 0 THEN
         pass.labels := NEW(REF ARRAY OF Label, pass.index);
         pass.index := 0;
@@ -4410,6 +4458,10 @@ BEGIN
             index := 0;
             self.Replay(pass, index, self.op_data[LabelOps[i]]);
         END;
+        index := 0;
+        self.Replay(pass, index, self.op_data[Op.invoke_direct]);
+        index := 0;
+        self.Replay(pass, index, self.op_data[Op.invoke_indirect]);
         x.labels := NEW(REF ARRAY OF BOOLEAN, pass.labels_max - pass.labels_min + 1);
         x.labels_min := pass.labels_min;
         x.labels_max := pass.labels_max;
@@ -4759,23 +4811,60 @@ BEGIN
 END HelperFunctions_min;
 
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
-CONST text = ARRAY ConvertOp OF TEXT{
-
-    "#ifndef m3_round\n#define m3_round m3_round\n"
-    & "#ifdef _WIN32 /* temporary workaround */\n"
-    & "static INT64 __stdcall m3_round(EXTENDED f) { return (INT64)f; }\n"
-    & "#else\n"
-    & "INT64 __cdecl llroundl(long double);\nstatic INT64 __stdcall m3_round(EXTENDED f) { return (INT64)llroundl(f); }\n"
-    & "#endif\n"
-    & "#endif",
-
-    "#ifndef m3_trunc\n#define m3_trunc m3_trunc\nstatic INT64 __stdcall m3_trunc(EXTENDED f) { return (INT64)f; }\n#endif\n",
-
-    "#ifndef m3_floor\n#define m3_floor m3_floor\ndouble __cdecl floor(double);\nstatic INT64 __stdcall m3_floor(EXTENDED f) { return floor(f); } /* math.h */\n#endif\n",
-
-    "#ifndef m3_ceil\n#define m3_ceil m3_ceil\ndouble __cdecl ceil(double);\nstatic INT64 __stdcall m3_ceil(EXTENDED f) { return ceil(f); } /* math.h */\n#endif\n"
-    };
+VAR text : ARRAY ConvertOp OF TEXT;
 BEGIN
+    IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      text[ConvertOp.Round] :=
+        "#ifndef m3_round\n#define m3_round m3_round\n" &
+        "INT64 __cdecl llroundq(_Float128);\n" &
+        "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " return (INT64)llroundq(f); }\n" &
+        "#endif";
+      text[ConvertOp.Trunc] :=
+        "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
+        "_Float128 __cdecl truncq(_Float128);\n" &
+        "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
+        " return (INT64)truncq(f); }\n" &
+        "#endif";
+      text[ConvertOp.Floor] :=
+        "#ifndef m3_floor\n#define m3_floor m3_floor\n" &
+        "_Float128 __cdecl floorq(_Float128);\n" &
+        "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
+        " return (INT64)floorq(f); }\n" &
+        "#endif";
+      text[ConvertOp.Ceiling] :=
+        "#ifndef m3_ceil\n#define m3_ceil m3_ceil\n" &
+        "_Float128 __cdecl ceilq(_Float128);\n" &
+        "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
+        " return (INT64)ceilq(f); }\n" &
+        "#endif";
+    ELSE
+      text[ConvertOp.Round] :=
+        "#ifndef m3_round\n#define m3_round m3_round\n" &
+        "double __cdecl round(double);\n" &
+        "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " return (INT64)round(f); }\n" &
+        "#endif";
+      text[ConvertOp.Trunc] :=
+        "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
+        "double __cdecl trunc(double);\n" &
+        "static INT64 __stdcall m3_trunc(EXTENDED f) {\n" &
+        " return (INT64)trunc(f); }\n" &
+        "#endif";
+      text[ConvertOp.Floor] :=
+        "#ifndef m3_floor\n#define m3_floor m3_floor\n" &
+        "double __cdecl floor(double);\n" &
+        "static INT64 __stdcall m3_floor(EXTENDED f) {\n" &
+        " return (INT64)floor(f); }\n" &
+        "#endif";
+      text[ConvertOp.Ceiling] :=
+        "#ifndef m3_ceil\n#define m3_ceil m3_ceil\n" &
+        "double __cdecl ceil(double);\n" &
+        "static INT64 __stdcall m3_ceil(EXTENDED f) {\n" &
+        " return (INT64)ceil(f); }\n" &
+        "#endif";
+    END;
+
     HelperFunctions_helper_with_boolean(self, self.data.cvt_int[op], text[op]);
 END HelperFunctions_cvt_int;
 
@@ -5926,7 +6015,7 @@ VAR suffix := '\000';
 BEGIN
 (* 1.2e3 => 1.2e3F float/REAL
    1.2d3 => 1.2e3  double/LONGREAL
-   1.2x3 => 1.2e3L long double/EXTENDED
+   1.2x3 => 1.2e3Q _Float128/EXTENDED
 *)
     FOR i := 0 TO len - 1 DO
         ch := modulaBuf[i];
@@ -5937,8 +6026,11 @@ BEGIN
             ch := 'e';
         ELSIF ch = 'x' OR ch = 'X' THEN
             (* suffix := 'L'; if actually using long double *)
-            suffix := '\000';
-            ch := 'e';
+            (* suffix := 'Q'; if actually using _Float128 *)
+          IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+            suffix := 'Q';
+          END;
+          ch := 'e';
         END;
         cBuf[j] := ch;
         INC(j);
@@ -5998,6 +6090,9 @@ BEGIN
 
     IF name = self.RTHooks_ReportFault_id THEN
         self.RTHooks_ReportFault_imported_or_declared := TRUE;
+        no_return(self);
+    ELSIF name = self.RTStack_ThrowM3Exc_id THEN
+        proc.no_return := TRUE;
         no_return(self);
     END;
     SuppressLineDirective(self, parameter_count, "import_procedure parameter_count");
@@ -6185,17 +6280,9 @@ BEGIN
                  * m3fronts reads before write.
                  *)
                 print(self, local.Declare());
-                IF local.initAll THEN
-                  print(self, "={0};//initAll\n");
-                ELSIF local.cgtype = CGType.Struct THEN
-                  print(self, "={0};//struct\n");
-                ELSIF local.type # NIL AND local.type.isPacked() THEN
-                  print(self, "={0};//packed\n");
-                ELSIF local.loadBeforeStore THEN
-                  print(self, "={0};//loadBeforeStore\n");
-                ELSE
-                  print(self, ";\n"); (* ideal *)
-                END;
+                (* Always initialize all locals to avoid uninitialized variable issues in Release builds.
+                   In Release mode (-O2/-O3), uninitialized locals cause undefined behavior. *)
+                print(self, "={0};//always-init\n");
             END;
         END;
     END;
@@ -6403,7 +6490,8 @@ BEGIN
     self.comment("exit_proc");
     <* ASSERT self.in_proc *>
     <* ASSERT proc # NIL *>
-    <* ASSERT NOT proc.is_RTException_Raise *>
+    (* is_RTException_Raise implies no_return; the no_return path below
+       handles it correctly by skipping return-statement emission. *)
     IF proc.no_return THEN
         <* ASSERT proc.exit_proc_skipped = 0 *>
         <* ASSERT type = CGType.Void  *>
@@ -6536,7 +6624,8 @@ BEGIN
         expr := AddressOf(expr);
         IF offset # 0 THEN
             expr := cast(expr, type := CGType.Addr);
-            expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+            (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
         END;
         expr := cast(expr, type := CGType.Addr, type_text := cgtypeToText[in_mtype] & "*");
         expr := Deref(expr);
@@ -6584,7 +6673,8 @@ BEGIN
     expr := AddressOf(Variable(self, var));
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr);
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
     END;
     push(self, CGType.Addr, expr);
 END load_address;
@@ -6605,7 +6695,8 @@ BEGIN
     pop(self);
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr); (* might be redundant *)
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
     END;
     expr := CastAndDeref(expr, type := CGType.Addr, type_text := cgtypeToText[mtype] & "*"); (* cast might be redundant *)
     IF mtype # ztype THEN
@@ -6706,7 +6797,7 @@ BEGIN
     IF debug THEN
       self.comment("load_float");
     END;
-    (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double *)
+    (* FloatLiteral includes suffixes like "F" for float, "" for double, "L" for long double "Q" for _Float128 *)
     push(self, type, cast(CTextToExpr(FloatLiteral(float)), type));
 END load_float;
 
@@ -7935,33 +8026,62 @@ BEGIN
 END call_indirect;
 
 PROCEDURE start_try (self : T) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("start_try");
     END;
+    IF self.try_handler_stack = NIL THEN
+      self.try_handler_stack := NEW(RefSeq.T).init();
+    END;
+    r := NEW(LabelRef); r^ := FIRST(Label); (* sentinel: no handler label yet *)
+    self.try_handler_stack.addhi(r);
+    print(self, "try {\n");
   END start_try;
 
 PROCEDURE end_try (self : T) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("end_try");
     END;
+    <*ASSERT self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0*>
+    r := NARROW(self.try_handler_stack.remhi(), LabelRef);
+    IF r^ = FIRST(Label) THEN
+      (* No invoke_direct seen — try body had no calls; use a re-throw catch *)
+      print(self, "} catch (...) { throw; }\n");
+    ELSE
+      print(self, "} catch (_M3Exc& _m3exc) { _m3_caught = _m3exc.act; goto L" 
+                & LabelToHex(r^) & "; }\n");
+    END;
   END end_try;
 
 <*NOWARN*>PROCEDURE invoke_direct (self : T; p : M3CG.Proc; t : CGType; next,handler : Label) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("invoke_direct");
     END;
-    self.call_direct(p,t);
+    (* Record the handler label for the enclosing start_try/end_try pair *)
+    IF self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0 THEN
+      r := NARROW(self.try_handler_stack.gethi(), LabelRef);
+      IF r^ = FIRST(Label) THEN r^ := handler END;
+    END;
+    self.call_direct(p, t);
   END invoke_direct;
 
 <*NOWARN*>PROCEDURE invoke_indirect (self : T; t : CGType; cc : CallingConvention; next,handler : Label) =
+  VAR r: LabelRef;
   BEGIN
     IF debug THEN
       self.comment("invoke_indirect");
     END;
-    self.call_indirect(t,cc);
+    (* Record the handler label for the enclosing start_try/end_try pair *)
+    IF self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0 THEN
+      r := NARROW(self.try_handler_stack.gethi(), LabelRef);
+      IF r^ = FIRST(Label) THEN r^ := handler END;
+    END;
+    self.call_indirect(t, cc);
   END invoke_indirect;
 
 
@@ -7970,7 +8090,9 @@ PROCEDURE end_try (self : T) =
     IF debug THEN
       self.comment("landing_pad");
     END;
-    push(self, CGType.Addr, CTextToExpr("0"));
+    (* The catch block in end_try already stored the activation in _m3_caught.
+       Push it onto the expression stack so Store_addr(info) can save it. *)
+    push(self, CGType.Addr, CTextToExpr("_m3_caught"));
   END landing_pad;
 
 (*------------------------------------------- procedure and closure types ---*)
@@ -8156,4 +8278,5 @@ BEGIN
     debug := debug OR debug_verbose OR debug_types OR RTParams.IsPresent ("m3c-debug");
     debug_comment_stdio := debug_comment_stdio OR RTParams.IsPresent ("m3c-debug-comment-stdio");
     debug_comment := debug_comment OR debug_comment_stdio OR debug_types OR debug OR debug_verbose OR RTParams.IsPresent ("m3c-debug-comment");
+
 END M3C.

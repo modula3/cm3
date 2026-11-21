@@ -52,12 +52,12 @@ CONST
   NonPolymorphicResult = AllFunc - PolymorphicResult;
 
   OneParameter =
-      ProcFuncSet{T.Dispose, T.Abs, T.Floor, T.Ceiling,
-          T.Round, T.Trunc, T.Ord, T.Number, T.First, T.Last, T.TypeCode,
-          T.BitSize, T.ByteSize, T.AdrSize, T.Adr};
+      ProcFuncSet{T.Dispose, T.Abs, T.Ord, T.Number, T.First, T.Last,
+                  T.TypeCode, T.BitSize, T.ByteSize, T.AdrSize, T.Adr};
   TwoParameters =
       ProcFuncSet{T.Max, T.Min, T.Val, T.Narrow, T.IsType, T.Loophole};
-  OneOrTwoParameters = ProcFuncSet{T.Inc, T.Dec, T.Float};
+  OneOrTwoParameters = ProcFuncSet{T.Inc, T.Dec, T.Float,
+                                   T.Floor, T.Ceiling, T.Round, T.Trunc};
   ThreeParameters = ProcFuncSet{T.Subarray};
   VariableParameters = ProcFuncSet{T.New};
 

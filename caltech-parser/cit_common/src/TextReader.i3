@@ -107,9 +107,13 @@ TYPE
 
     save() : Continuation;
     continue(from : Continuation);
-(* permits parsing and returning to an old state *)
+    (* permits parsing and returning to an old state *)
   END;
-
+   
+  Skips <: Public;
+  (* Skips is like a T, but skipNulls is treated as TRUE no matter
+     what is passed (it is ignored) *)  
+  
 TYPE Continuation <: ROOT;
 
 CONST Brand = "TextReader";

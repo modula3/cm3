@@ -46,8 +46,4 @@ PROCEDURE RegisterTypePickle(READONLY typeCodes : ARRAY OF [-1..LAST(RT0.Typecod
   (* pickle is a Scheme list of the type descriptors for each of the
      types listed *)
 
-(* will implementation attempt to map runtime errors to exception? *)
-PROCEDURE GetMapRuntimeErrors() : BOOLEAN;
-PROCEDURE SetMapRuntimeErrors(to : BOOLEAN);
-
 END SchemeProcedureStubs.

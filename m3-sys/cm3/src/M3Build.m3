@@ -398,10 +398,6 @@ CONST
     Builtin {"build_shared",                  DoShared,          0, FALSE},
     Builtin {"build_standalone",              DoStandalone,      0, FALSE},
 
-    (* derived files *)
-    Builtin {"m3_compile_only",               DoCompileOnly,     0, FALSE},
-    Builtin {"m3_finish_up",                  DoFinishUp,        0, FALSE},
-
     (* predefined system libraries *)
     Builtin {"import_sys_lib",                DoImportSysLib,    1, FALSE},
 
@@ -927,36 +923,6 @@ PROCEDURE DoStandalone (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) =
   BEGIN
     t.build_shared := FALSE;
   END DoStandalone;
-
-PROCEDURE DoCompileOnly (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
-  RAISES {Quake.Error} =
-  VAR t := Self (m);
-  BEGIN
-    GenM3Exports (t, "%% compile only");
-    IF (t.mode = MM.Build) THEN
-      Builder.JustCompile (t.units, SysLibs (t), t);
-      InstallDerived (t, M3Web);
-      InstallSources (t);
-    END;
-    DeleteDeriveds (t, M3Web, NoExtension);
-    InitGlobals (t);  (* forget about the accumulated sources... *)
-  END DoCompileOnly;
-
-PROCEDURE DoFinishUp (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
-  RAISES {Quake.Error} =
-  VAR t := Self (m);
-  BEGIN
-    IF (t.units.head # NIL) THEN
-      GenM3Exports (t, "%% finish up");
-      IF (t.mode = MM.Build) THEN
-        Builder.JustCompile (t.units, SysLibs (t), t);
-        InstallDerived (t, M3Web);
-        InstallSources (t);
-      END;
-      DeleteDeriveds (t, M3Web, NoExtension);
-      InitGlobals (t);  (* forget about the accumulated sources... *)
-    END;
-  END DoFinishUp;
 
 (*-------------------------------------------- predefined system libraries --*)
 
@@ -2370,7 +2336,8 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
 
 (*------------------------------------------------------------- "-T" files --*)
 (* We don't need -T files any more.  This function is just here
-   for backward compatibility with m3tk tools like stablegen... *)
+   for backward compatibility with m3tk tools like stablegen, network objects,
+   and the language server... So sort of important. *)
 
 PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {} =

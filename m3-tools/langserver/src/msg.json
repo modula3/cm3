@@ -55,15 +55,8 @@
   },
   "initreply": {
     "capabilities": {
-      "textDocumentSync": 1,
-      "completionProvider": {
-        "triggerCharacters": [
-          ":",
-          ".",
-          "\u003e",
-          "@"
-        ]
-      },
+      "textDocumentSync": 2,
+      "completionProvider": false,
       "signatureHelpProvider": {
         "triggerCharacters": [
           "(",
@@ -87,11 +80,11 @@
       "semanticTokensProvider": {
         "legend": {
           "tokenTypes": [
-            "namespace",
-            "type",
-            "class",
-            "enum",
-            "interface",
+            "MODULE",
+            "TYPE",
+            "OBJECT",
+            "SET",
+            "INTERFACE",
             "struct",
             "typeParameter",
             "parameter",

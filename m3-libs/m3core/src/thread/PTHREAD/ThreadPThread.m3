@@ -574,13 +574,13 @@ VAR (* LL=activeMu *)
 PROCEDURE DisposeStacks(act : Activation) =
   VAR
     p := act.stacks;
+    nxt : StackState;
   BEGIN
     IF NOT CoroutineSupported () THEN RETURN END;
     WHILE p # NIL DO
-      WITH nxt = p.next DO
-        DISPOSE(p);
-        p := nxt
-      END
+      nxt := p.next;
+      DISPOSE(p);
+      p := nxt
     END
   END DisposeStacks;
   

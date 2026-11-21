@@ -65,7 +65,8 @@ C
 C     The above settings provide a partition of W for subroutine NEWUOB.
 C     The partition requires the first NPT*(NPT+N)+5*N*(N+3)/2 elements of
 C     W plus the space that is needed by the last array of NEWUOB.
-C
+C     
+      FTARGET=-1e12
       CALL NEWUOB (N,NPT,X,RHOBEG,RHOEND,IPRINT,MAXFUN,W(IXB),
      1  W(IXO),W(IXN),W(IXP),W(IFV),W(IGQ),W(IHQ),W(IPQ),W(IBMAT),
      2     W(IZMAT),NDIM,W(ID),W(IVL),W(IW), F, INFO, FTARGET, CALFUN,

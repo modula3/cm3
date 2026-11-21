@@ -1,0 +1,76 @@
+name: ARM64_DARWIN
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: macos-latest
+        required: false
+        type: string
+      release:
+        default: https://github.com/modula3/cm3/releases/download/d5.12.0
+        required: false
+        type: string
+      bootstrap:
+        default: cm3-boot-ARM64_DARWIN-d5.12.0.tar.xz
+        required: false
+        type: string
+
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 80
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Only C: concierge builds the gcc and llvm back ends only where
+        # they are supported, and on Darwin falls back to C, so those jobs
+        # repeated this one.
+        backend: [c]
+
+    env:
+      CM3_TARGET: ARM64_DARWIN
+
+    steps:
+    - name: Install prerequisites
+      run: |
+        brew update
+        brew install libxaw libxft ninja xquartz llvm@22
+        brew link llvm@22
+
+    - name: Define install location
+      run: |
+        echo CM3_INSTALL="$(pwd)/../install" >> $GITHUB_ENV
+
+    - name: Install bootstrap release
+      run: |
+        mkdir ../bootstrap ../build
+        curl --location --silent "${{ inputs.release }}/${{ inputs.bootstrap }}" | gtar Jxf - --directory=../bootstrap --strip-components=1
+        cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}"
+        cmake --build ../build
+        cmake --install ../build
+        echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
+
+    - name: Fetch sources
+      uses: actions/checkout@v4
+
+    - name: Build everything
+      run: |
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" headless -m3gdb
+
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: |
+        cm3 -DHTML
+      working-directory: m3-sys/m3tests
+
+    - name: Generate test report
+      uses: dorny/test-reporter@v2
+      with:
+        name: ${{ format('m3tests ({0}, {1})', env.CM3_TARGET, matrix.backend) }}
+        fail-on-error: false
+        max-annotations: 49
+        path: m3-sys/m3tests/m3tests-results.xml
+        reporter: java-junit
+

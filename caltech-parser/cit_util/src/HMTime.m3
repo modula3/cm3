@@ -3,7 +3,7 @@
 MODULE HMTime;
 IMPORT TextReader, Scan, Lex, FloatMode, Date, Fmt;
 IMPORT FinDate, Word;
-IMPORT Text, TextUtils;
+IMPORT Text, CitTextUtils AS TextUtils;
 
 CONST TE = Text.Equal;
 

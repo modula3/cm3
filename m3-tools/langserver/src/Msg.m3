@@ -92,6 +92,17 @@ PROCEDURE BuildInitReply(id : INTEGER) : TEXT =
     RETURN msg;
   END BuildInitReply;
 
+PROCEDURE GetIncrCap() : BOOLEAN =
+  VAR
+    node : Json.T;
+    capInt : INTEGER;
+  BEGIN
+    node := msgs.initreply.copy();
+    node := node.find("capabilities/textDocumentSync");
+    capInt := node.getInt();
+    IF capInt = 2 THEN RETURN TRUE; ELSE RETURN FALSE; END;
+  END GetIncrCap;
+
 PROCEDURE BuildRegistration(id,method : TEXT) : TEXT =
   VAR
     res : Json.T;
@@ -218,6 +229,7 @@ PROCEDURE BuildHoverReply(id : INTEGER; hover : TEXT;
     p.updateInt("range/end/character", col + len);
 
     IF hover # NIL THEN
+      hover := Escape(hover);
       p.updateText("contents/0",hover);
       EVAL hoverMsg.addObj("result",p); <*NOWARN*>
     END;
@@ -241,6 +253,7 @@ PROCEDURE BuildDeclarationReply(id : INTEGER; uri : TEXT;
     p.updateInt("range/end/character", col + len);
 
     IF uri # NIL THEN
+      uri := Escape(uri);
       uri := "file://" & uri;
       p.updateText("uri",uri);
       EVAL declMsg.addObj("result",p); <*NOWARN*>

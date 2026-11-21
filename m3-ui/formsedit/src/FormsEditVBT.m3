@@ -79,7 +79,7 @@ TYPE                             (* in alphabetical order *)
   Editor = FormsVBT.T OBJECT
              (* The components to which we need fast access *)
              buffer    : TextEditVBT.T;
-             stderr    : TextEditVBT.T;
+             stdErr    : TextEditVBT.T;
              errorPopup: ZChassisVBT.T;
              (* The internals of the buffer *)
              textport: EPort;
@@ -593,7 +593,7 @@ PROCEDURE EditorInit (ed: Editor; frame: T): Editor RAISES {FormsVBT.Error} =
       Manpage.Init (ed, HelpFile, NEW (ER, ed := ed), helpcase := NIL,
                     path := formseditPath);
       ed.buffer := FormsVBT.GetVBT (ed, "buffer");
-      ed.stderr := FormsVBT.GetVBT (ed, "stderr");
+      ed.stdErr := FormsVBT.GetVBT (ed, "stderr");
       ed.errorPopup := FormsVBT.GetVBT (ed, "errorPopup");
       ed.textport := ed.buffer.tp;
       ed.vtext := TextPort.GetVText (ed.textport);
@@ -987,7 +987,7 @@ PROCEDURE Gripe (ed: Editor; fmt: TEXT; a, b, c, d, e: TEXT := NIL) =
   <* LL = VBT.mu *>
   BEGIN
     IF a # NIL THEN fmt := Fmt.F (fmt, a, b, c, d, e) END;
-    TextPort.SetText (ed.stderr.tp, fmt);
+    TextPort.SetText (ed.stdErr.tp, fmt);
     ZChildVBT.Pop (ed.errorPopup);
     EVAL Thread.Fork (NEW (Edown, stackSize := 3000, ed := ed))
   END Gripe;
@@ -1012,7 +1012,7 @@ PROCEDURE ClearError (ed: Editor) =
   <* FATAL FormsVBT.Error *>(* "errorPopup" exists. *)
   BEGIN
     FormsVBT.PopDown (ed, "errorPopup");
-    TextPort.SetText (ed.stderr.tp, "")
+    TextPort.SetText (ed.stdErr.tp, "")
   END ClearError;
 
 PROCEDURE NoteModification (eport: EPort) =

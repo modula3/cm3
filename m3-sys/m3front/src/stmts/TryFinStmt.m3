@@ -147,6 +147,15 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     Marker.PopFinally (returnSeen, exitSeen);
 
     CG.Jump (lab+2);
+
+    (* End the try block before the landing pad so that the finally handler
+       code (which follows at lab+2) is OUTSIDE the inner try region.  This
+       prevents exceptions raised inside the finally clause (e.g. by
+       ResumeRaiseEx) from being re-caught by this same catch, which would
+       create an infinite loop.  Any such exceptions propagate naturally to
+       an enclosing outer try block instead. *)
+    CG.End_try ();
+
     CG.Set_label (lab+1);
     CG.Landing_pad(lab+1, catches);
     CG.Store_addr (info);
@@ -199,7 +208,6 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 
     (* restore the "Compiler.ThisException()" globals *)
     TryStmt.PopHandler ();
-    CG.End_try ();
 
     o := Stmt.Outcomes {};
     IF Outcome.FallThrough IN xc THEN o := oc END;

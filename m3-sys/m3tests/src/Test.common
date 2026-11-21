@@ -103,7 +103,14 @@ readonly proc RunTest () is
         exec (M3TestsNoEcho () & "-." & SL & f & runopts & " >stdout.pgm.raw 2>&1")
         > "stderr.pgm" in write("") end
       else
-        exec (M3TestsNoEcho () & "-." & SL & f & runopts & " >stdout.pgm.raw 2>stderr.pgm.raw")
+        local prefix = ""
+        if equal (TARGET_OS, "NT")
+          prefix = "-" & f
+        else
+          prefix = "-." & SL & f
+        end
+        %exec (M3TestsNoEcho () & "-." & SL & f & runopts & " >stdout.pgm.raw 2>stderr.pgm.raw")
+        exec (M3TestsNoEcho () & prefix & runopts & " >stdout.pgm.raw 2>stderr.pgm.raw")
         NormalizeFile ("stderr.pgm")
       end
       NormalizeFile ("stdout.pgm")

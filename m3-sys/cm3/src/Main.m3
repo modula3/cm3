@@ -12,6 +12,8 @@ IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
 (* IMPORT Fmt, Time; only needed for key and expiration check *)
 (* IMPORT Version; *)
 
+<*FATAL ANY*>
+
 VAR
   config    : TEXT          := NIL;
   makefile  : TEXT          := NIL;

@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: m3makefile,v 1.7 2002/11/12 02:04:31 kp Exp $ */
 /*m3_option("-g")*/
 /*m3_option("-times")*/
 /*m3_option("-X2@-pg@")*/

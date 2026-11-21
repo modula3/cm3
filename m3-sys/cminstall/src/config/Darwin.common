@@ -138,7 +138,7 @@ OPENGL_FRAMEWORK = "/System/Library/Frameworks/OpenGL.framework"
 LIBGL_DYLIB = OPENGL_FRAMEWORK & "/Versions/A/Libraries/libGL.dylib"
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-lSystem" ],
+% "LIBC"       : [ "-lSystem" ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
   "TCP"        : [ ]
@@ -255,7 +255,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     % build the shared library
     ret_code = try_exec (
         "@" & SYSTEM_CC_LD, "-dynamiclib",
-        "-multiply_defined error",
+        %"-multiply_defined error",
         "-twolevel_namespace",
         "-compatibility_version", vmaj,
         "-current_version", version,
@@ -336,8 +336,8 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     objects,
     imported_libs,
 %   "-allow_stack_execute",
-    "-multiply_defined suppress", % unfortunately needed for __cxa_atexit?
-    "-bind_at_load",
+%   "-multiply_defined suppress", % unfortunately needed for __cxa_atexit?
+%   "-bind_at_load",
     "-shared-libgcc",
     % "-pie", % requires 10.5
     "-dead_strip",

@@ -4,7 +4,7 @@ MODULE FrameBuffer EXPORTS FrameBuffer, FrameBufferOutput;
 IMPORT FrameBufferOutput;
 IMPORT Word, MagLayer AS Layer, PaintLayer, PaintLayerClass, BaseLayerList, BaseLayer, TextMagLayerTbl AS TextLayerTbl, LayerIntTbl;
 IMPORT MagRect, MagPoint;
-IMPORT Debug, Fmt, TextUtils;
+IMPORT Debug, Fmt, CitTextUtils AS TextUtils;
 IMPORT FramePixel;
 IMPORT AlphaBlend, Tint;
 

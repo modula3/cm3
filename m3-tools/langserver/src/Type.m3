@@ -15,9 +15,9 @@ IMPORT Atom, Fmt, Text, Value, ValueProc;
 
 TYPE
   Foo = OBJECT
-          name    : Qid;
-          visited         := FALSE;
-          brandsOK        := TRUE;
+          name      : Qid;
+          visited   := FALSE;
+          brandsOK  := TRUE;
         END;
 
 REVEAL T =  Foo BRANDED OBJECT END;
@@ -27,6 +27,7 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
   BEGIN
     IF t = NIL THEN RETURN "" END;
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
+    t.visited := TRUE;
     TYPECASE t OF
     | Char => RETURN "CHAR"
     | WideChar => RETURN "WIDECHAR"
@@ -95,7 +96,7 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
    for a newline *)
           RETURN ToText(o.super) & " " & text & "OBJECT  \\n" &
                  FieldsToText(o, o.fields) &
-                 " METHODS " & MethodsToText(t, o.methods) & " END";
+                 "  \\nMETHODS  \\n" & MethodsToText(t, o.methods) & "  \\nEND";
         | Ref (r) => 
           IF NOT r.traced THEN text := "UNTRACED " & text END;
           RETURN text & "REF " & ToText(r.target, TRUE);
@@ -134,13 +135,11 @@ PROCEDURE SigToText (t : T; sig: Signature): TEXT =
     raises: TEXT;
   BEGIN
     IF sig.result # NIL THEN
-      (* kludge preventing infinite recursion between sig, method and totext *)
-      IF ISTYPE(t,Object) THEN
-        result := ":::";
-      ELSE
+      IF NOT sig.result.visited THEN
         result := ": " & ToText(sig.result);
+      ELSE
+        result := ":::";
       END;
-
     ELSE
       result := "";
     END;
@@ -166,14 +165,16 @@ PROCEDURE FieldsToText (p : T; f: REF ARRAY OF Field): TEXT =
     FOR i := 0 TO LAST(f^) DO
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
-      IF p # f[i].type THEN
-        text := text & Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
+      IF NOT f[i].type.visited THEN
+        text := text & Atom.ToText(f[i].name)  & ": " & ToText(f[i].type);
       ELSE
-        text := text & Atom.ToText(f[i].name) (*& QidToText(f[i].type.name)*) & " DELME OR FIXME";
+        text := text & Atom.ToText(f[i].name);
+ (* recursive type just display name & QidToText(f[i].type.name) *)
       END;
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
+      text := text & "  \\n";
     END;
     RETURN text;
   END FieldsToText;
@@ -213,6 +214,7 @@ PROCEDURE FormalsToText (f: REF ARRAY OF Formal): TEXT =
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
       IF f[i].outOnly THEN outPrag := "<*OUT*> " ELSE outPrag := "" END;
+      (* check it formals can be recursive types *)
       text := text & modeName[f[i].mode] & " " & outPrag &
                 Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
       IF f[i].default # NIL THEN

@@ -2072,7 +2072,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
         BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=FALSE);
       | RTTipe.Kind.Longint =>  
         BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=TRUE);  
-      | RTTipe.Kind.Extended, RTTipe.Kind.Longreal =>
+      | RTTipe.Kind.Longreal =>
         <* ASSERT toTipe.size = 64 *> 
         <* ASSERT fromTipe.size = 64 *> 
         CASE self.wordKind OF
@@ -2080,6 +2080,27 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
 	  self.addCopy(64);
 	| CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
 	  self.addSwap64(64);
+        ELSE <* ASSERT FALSE *> 
+	END;
+      | RTTipe.Kind.Extended =>
+        <* ASSERT toTipe.size = 64 OR toTipe.size = 128 *> 
+        <* ASSERT fromTipe.size = 64 OR fromTipe.size = 128 *>
+        (* EXTENDED only valid on same sized target *) 
+        CASE self.wordKind OF
+	| CPKind.Copy, CPKind.Copy32to64, CPKind.Copy64to32 =>
+          IF toTipe.size = 64 AND fromTipe.size = 64 THEN
+	    self.addCopy(64);
+          ELSIF toTipe.size = 128 AND fromTipe.size = 128 THEN
+	    self.addCopy(128);
+          ELSE <* ASSERT FALSE *> 
+          END;
+	| CPKind.Swap, CPKind.Swap32to64, CPKind.Swap64to32 =>
+          IF toTipe.size = 64 AND fromTipe.size = 64 THEN
+	    self.addSwap64(64);
+          ELSIF toTipe.size = 128 AND fromTipe.size = 128 THEN
+	    self.addSwap64(128);
+          ELSE <* ASSERT FALSE *> 
+          END;
         ELSE <* ASSERT FALSE *> 
 	END;
       | RTTipe.Kind.Real => 

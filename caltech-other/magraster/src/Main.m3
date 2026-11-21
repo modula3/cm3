@@ -13,7 +13,7 @@ IMPORT FileRd, OSError;
 IMPORT MagRect, MagLayer AS Layer, MagPoint;
 IMPORT PaintLayer, PaintLayerClass;
 IMPORT Fmt;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 IMPORT Wr, FileWr;
 FROM Tint IMPORT Channel;
 IMPORT Tint;

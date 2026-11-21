@@ -33,6 +33,9 @@ PROCEDURE Get(t : T; READONLY k : ARRAY OF Key.T) : Value.T =
   VAR
     p := 0;
   BEGIN
+    IF NUMBER(k) = 0 THEN
+      RETURN t.defValue
+    END;
     FOR i := FIRST(k) TO LAST(k) DO
       WITH next = t.tab[p][k[i]].next DO
         IF next = 0 THEN 

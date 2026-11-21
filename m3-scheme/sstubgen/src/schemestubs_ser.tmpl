@@ -1,13 +1,9 @@
-/* $Id$ */
+/* $Id: schemestubs_ser.tmpl,v 1.1 2011/04/02 20:22:50 mika Exp $ */
 
 /* m3build/cm3 Quake for building Scheme stubs */
 
+if not (defined("CM3_VERSION") and defined ("PARALLEL_SSTUBGEN"))
 
-_SSTUBGEN    = TOP & "/mscheme/sstubgen/program/" & BUILD_DIR & "/sstubgen"
-_SSTUBGENSCM = TOP & "/mscheme/sstubgen/program/src/sstubgen.scm"
-_SEXIT       = "exit"
-
-_EXPORTSSPECIAL = "__SCHEMEEXPORTS__"
 
 intfs=""
 
@@ -82,22 +78,4 @@ readonly proc importSchemeStubs() is
 	derived_implementation("SchemeStubs")
 end
 
-readonly proc smodule(nam) is
-  module(nam)
-  SchemeStubs(nam)
-end
-
-readonly proc Smodule(nam) is
-  Module(nam)
-  SchemeStubs(nam)
-end
-
-readonly proc sinterface(nam) is
-  interface(nam)
-  SchemeStubs(nam)
-end
-
-readonly proc Sinterface(nam) is
-  Interface(nam)
-  SchemeStubs(nam)
 end

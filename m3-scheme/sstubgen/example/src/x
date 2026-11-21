@@ -1,0 +1,1 @@
+/home/mika/t/mscheme/sstubgen/program/FreeBSD4/sstubgen  -si Example Bubble -T.M3IMPTAB -scm /home/mika/t/mscheme/sstubgen/program/src/sstubgen.scm build1.scm 

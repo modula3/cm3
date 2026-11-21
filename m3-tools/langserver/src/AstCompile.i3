@@ -12,11 +12,13 @@ TYPE
   WorkerClosure <: WorkerClosurePublic;
   WorkerClosurePublic = M3ToolFrame.Worker OBJECT
     rootPath : TEXT;
+    rootUri : TEXT;
   METHODS
     init() : WorkerClosure;
     getContext() : M3Context.T; 
     fileName() : TEXT;
     path(uri : TEXT) : TEXT;
+    getTargetDir(uri : TEXT) : TEXT;
     getUnit(uri : TEXT) : TEXT;
     compile(uri, text : TEXT) : RefSeq.T;
   END;

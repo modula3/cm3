@@ -1,0 +1,419 @@
+$Id: SSTUBGEN.TXT,v 1.6 2009/01/14 11:06:16 mika Exp $
+
+The latest version of this file can always be found by going to the
+top level of the repository and running "cvs update -d ."...
+
+Basic design of Scheme/Modula-3 stub generator
+==============================================
+
+At this point, we have a Scheme interpreter coded in Modula-3.  It exists
+in the GC repository under "mscheme".  The organization of the source is
+as follows:
+
+mscheme/src             Basic interpreter sources
+mscheme/schemesig       Signal handling for interactive interpreter
+mscheme/interactive     Interactive Scheme interpreter using normal Unix I/O
+mscheme/interactive_r   As above, but with "readline" editing
+mscheme/schemereadline  Support code for interactive_r
+mscheme/doc             Documentation directory
+mscheme/sstubgen        This program
+mscheme/modula3scheme   Modula-3 interfacing
+
+The Scheme interpreter is documented (work in progress) at
+mscheme/doc/mscheme.{ps,pdf}.
+
+What's important for us here is that the mscheme interpreter is coded
+in straightforward Modula-3 and all Scheme types map straightforwardly
+to Modula-3 types.  In particular, SchemeObject.T is exactly the same
+as a Modula-3 REFANY (reference to any traced, i.e., garbage collected,
+type).  This means that any reference types from Modula-3 can be passed
+into Scheme as opaque objects without further ado.  [Note that the full
+mapping of mscheme types to Modula-3 types is specified in the file
+mscheme/src/TYPES.]
+
+
+Running a Scheme interpreter
+----------------------------
+
+~/t/mscheme/interactive_r/FreeBSD4/mscheme
+
+This will bring up the interactive Scheme prompt.
+
+
+Basic Idea
+----------
+
+The basic idea is that we want to be able to "write Modula-3 code in
+Scheme."  That is, anything that can be coded in Modula-3 one should
+be able to code in Scheme, and this in particular includes using
+Modula-3 library code.  
+
+There may be some restrictions on things that are not possible or easy
+to do in Scheme, at least to begin with.  Things that come to mind are
+UNSAFE operations.  Note that in many cases types of Scheme objects
+will have to be inferred, since Scheme has fewer types than Modula-3.
+For instance, Scheme only has a single (user visible) numerical type.
+The stubs will need to convert this one type to one of the appropriate
+Modula-3 numerical types (LONGREAL, INTEGER, REAL, etc.)
+
+One way in which we envision using the Modula-Scheme system is by
+writing the "Main program" for a large application in Scheme.
+Currently, most medium and large sized Modula-3 applications are
+written as a simple Main that imports libraries that implement the
+functionality of the application.  The simple Main is responsible for
+parsing command-line arguments (generally, interacting with the user)
+and "tying together" the libraries.  The underlying idea of Modula-Scheme
+is to move this tying together into the hands of the end user by giving
+him access to this part of the program.
+
+
+Another View on the Basic Idea
+------------------------------
+
+A Modula-3 program consists of a number of modules, broken into
+interface modules ("header files" in C(++)) and implementation
+modules.  These are often referred to as INTERFACEs and MODULEs,
+respectively.  (They were originally called "INTERFACE MODULE" and
+"IMPLEMENTATION MODULE" but the words "MODULE" and "IMPLEMENTATION"
+were subsequently dropped.)  The structure is explained in section 2.5
+of the Modula-3 definition.
+
+What matters is that code is present in the implementation MODULEs.
+Each such MODULE we say IMPORTs zero or more INTERFACEs.
+
+Let's now state the design problem as follows.  Given a Scheme
+interpreter, written in Modula-3, provide it with the facilities
+needed such that we can write any Modula-3 implementation MODULE in
+Scheme instead.  What does this imply?
+
+* We may assume that Scheme and Modula-3 can "do the same things": so
+  statements, expressions, etc., are not changed in Scheme.
+
+* This leaves only the problems of "using" other Modula-3 INTERFACEs
+  in the way that a Modula-3 implementation MODULE can.
+
+Using an INTERFACE implies several things.  We need to be able to do
+the following:
+
+* Allocate objects of a type declared in an INTERFACE
+
+* Call PROCEDUREs declared in an INTERFACE
+
+  ** This implies we need to be able to pack the procedure arguments,
+     which can be of arbitrary Modula-3 types, as well as unpack the
+     procedure returns
+
+  ** And perhaps map exceptions
+
+* Access constants or variables declared in an INTERFACE
+
+* And (to some extent?) subtype (subclass) types declared in the INTERFACE
+
+Of all these things, most likely the most difficult part is packing and
+unpacking Modula-3 types into Scheme objects, as it has to work for
+more or less arbitrary M3 types.
+
+
+Modula-3 Type System
+--------------------
+
+Modula-3 is a statically typed language, and this means that at
+runtime, we cannot straightforwardly define new types.  We are limited
+to the types defined at compile time.  This property defines how
+mscheme and the basic Modula-3 system must interact.  Namely, mscheme
+should be able to handle any Modula-3 types.  However, unlike Java,
+Modula-3 does not have very extensive support for runtime
+"introspection".  Modula-3 runtime introspection is limited to the
+following:
+
+1. Testing whether a reference is to an object of a certain type (or its
+   subtypes [subtype = subclass in M3 terminology]).
+
+2. Extracting the TYPECODE of a certain reference.  Each type is known 
+   to the compiler at compile time and has a unique TYPECODE in the running
+   instance of the program.  (The TYPECODE can be converted to a "type
+   fingerprint", which is a cryptographic hash that is guaranteed to be
+   the same between all programs that declare the same type, but we 
+   probably don't need to worry about that much here.)
+
+3. Checking whether one TYPECODE corresponds to a super- or subtype 
+   of another.
+
+Since Modula-3's types cannot change at runtime, the straightforward
+way of combining Modula-3 and Scheme is to process the Modula-3 sources
+at compile time and export information about the available types to
+Scheme.  The Scheme further needs to be provided with "hooks" so that it
+is possible to call Modula-3 routines from Scheme.  
+
+Modula-3 is cleanly separated into two types of files: INTERFACE ("header")
+and MODULE ("code") files.  We should only need to look at the INTERFACEs.
+
+
+Text Example
+------------
+
+To take a simple example, let's consider the file Text.i3, which defines
+the interface to Modula-3 TEXTs (strings).  Here is a part of this file:
+
+
+
+INTERFACE Text;
+
+IMPORT Word;
+
+TYPE T = TEXT;
+
+CONST Brand = "Text-1.0";
+
+PROCEDURE Cat(t, u: T): T;
+(* Return the concatenation of "t" and "u". *)
+
+PROCEDURE Equal(t, u: T): BOOLEAN;
+(* Return "TRUE" if "t" and "u" have the same length and
+   (case-sensitive) contents. *)
+
+PROCEDURE GetChar(t: T; i: CARDINAL): CHAR;
+(* Return character "i" of "t".  It is a checked runtime error if "i
+   >= Length(t)". *)
+
+PROCEDURE Length(t: T): CARDINAL;
+(* Return the number of characters in "t". *)
+
+
+In Scheme, one might want to be able to call each of these routines.
+For instance,
+
+(call-m3-procedure Text.Cat t u)
+
+Should call the given Modula-3 procedure, which should fail if t and u
+are not of type Text.T (=TEXT).  (It should fail, but not crash.  As
+an option, one might want to be able to specify that pointers should
+also be non-NIL.)  If it passes the type test, it should then return
+the result of running Text.Cat(t,u).  Since TEXT is a Modula-3 reference
+type, it is, by design of mscheme, also of type Scheme.Object and can
+be stored in lists, etc.
+
+
+Precedent: SchemeAutoTbl
+------------------------
+
+An example of what a Scheme/Modula-3 interface looks like is provided by the
+generic SchemeAutoTbl.ig/SchemeAutoTbl.mg in the mscheme/modula3scheme
+package directory.  This system works as follows:
+
+SchemeM3TableOps   -- allows operations to be registered for a given  
+                      Modula-3 TYPECODE.
+
+For instance, let's say we have Modula-3 type M3Type:
+
+TYPE M3Type = ...
+
+If M3Type is a reference type (an OBJECT or a REF to something), we can
+call 
+
+SchemeM3TableOps.Register(TYPECODE(M3Type), "op-name", OpProc)
+
+and after this, if the user of the Scheme interpreter calls the following
+routine AND ref is of type M3Type 
+
+(modula-3-op ref 'op-name args)
+
+[where args is optional], then the Modula-3 procedure OpProc will be called
+as follows:
+
+OpProc(ref, args, "op-name")
+
+where "op-name" is of type SchemeSymbol.T (which is the same as the
+Modula-3 type Atom.T).
+
+The SchemeAutoTbl system uses several advanced Modula-3 features that
+probably won't be necessary for a fully automated stub generator.  These
+features are used simply to reduce the amount of typing the programmer
+has to do, which doesn't matter to an automatic stub generator.  But
+for completeness, the way it works is this:
+
+In order to use SchemeAutoTbl, provide it with a type that is an OBJECT
+type ("class" in C++/Java).  Normally the type should be an instance
+of Modula-3's GENERIC Table (Table.ig), but this actually isn't necessary,
+as long as it declares the same methods so that the uses of the Table
+methods in SchemeAutoTbl.mg are syntactically correct. 
+
+The way this is all done in practice is by adding a single line to the
+m3makefile, for instance:
+
+SchemeAutoTbl("TextRef", "TextRefTbl", "M3toSTextString", "M3toSRefany")
+
+which calls the code (in "quake") in schemeautotbl.tmpl, 
+
+readonly proc SchemeAutoTbl(nm, tbl, k, v) is
+  Build_generic_module(nm & "SchemeAutoTbl", "SchemeAutoTbl", [tbl, k, v], [tbl, k, v])
+end
+
+Which instantiates the SchemeAutoTbl.ig GENERIC INTERFACE with arguments
+TextRefTbl, M3toSTextSTring, M3toSRefany and the SchemeAutoTbl.mg GENERIC
+MODULE with the same arguments.  In other words, in order to "register" a new
+table type with this M3/Scheme interfacing code, all the programmer need do
+is add the abovementioned line
+
+SchemeAutoTbl("TextRef", "TextRefTbl", "M3toSTextString", "M3toSRefany")
+
+to his m3makefile.
+
+
+Modula-3 Types that Need to be Handled
+--------------------------------------
+
+Ideally, all the normal types in Modula-3 should be handled by the
+system.  That is, all normal stack-allocatable types, such as INTEGER,
+CARDINAL, CHAR, Types that aren't reference types will have to be
+wrapped in references.  It's inefficient, but all of Scheme is
+relatively inefficient.  But types like LONGREAL and INTEGER can be
+converted directly from Scheme, after performing appropriate range and
+precision checks.  Perhaps Modula-3 ARRAYs can always be represented
+by Scheme vectors; etc.
+
+So this may be the biggest part of the job: defining a mapping from
+every conceivable Modula-3 type to legal Scheme code for the
+interface.  All of Modula-3's types are defined in Section 2 of the
+Modula-3 Report, pp. 2--17 (see references section below).  The only
+types that one can really reject completely are types used in UNSAFE
+modules, that is, ADDRESS and UNTRACED types.  There really aren't
+that many types in Modula-3...
+
+For each type a number of things should be provided, if relevant.  For
+instance, for all reference types, Modula-3's NEW should be provided.
+For OBJECT types, it should be possible to call each method available
+in the INTERFACEs.  [Should one have to do something analogous to
+IMPORT?  Maybe.  Something like this perhaps:
+
+(define (text-cat u v)
+  (let ((Text (import-modula-3-interface "Text")))
+	  (Text "Cat" u v)))
+
+]
+
+For ordinal types, FIRST, LAST, and NUMBER can be provided, as well as 
+ORD and VAL.
+
+Since Scheme is an interactive system, the stubs should try hard to
+avoid runtime errors, which crash the entire runtime.  Perhaps it should
+be possible (and very easy) to define additional code to do further checking
+on parameters.
+
+
+Methods
+-------
+
+It should be possible to override methods in Modula-3 OBJECTs with
+Scheme procedures!  To do this efficiently there might have to be
+two types declared for every visible OBJECT type:
+
+Given:
+
+INTERFACE O;
+
+TYPE T <: OBJECT 
+  METHODS
+    x();
+  END;
+
+We might want to be able to do the following in Scheme: either:
+
+(O 'NEW)
+
+or
+
+(O 'NEWOVERRIDABLE)
+
+where the result of the latter could have its methods overridden, e.g.,
+
+(define o (O 'NEWOVERRIDABLE))
+
+(o 'OVERRIDES 'x (lambda(self) ...))
+
+Note that the use of the keywords NEW and OVERRIDES guarantees we don't
+hide any Modula-3 names, since these are reserved words in M3.
+
+There is furthermore no reason to limit the overrides in Scheme to the
+instantiation time of the object, since Scheme is dynamic enough that
+we can easily change methods at runtime, unlike M3 or Java, but like
+Self(?) or JavaScript(?)
+
+
+Existing Stub Generator Code
+----------------------------
+
+Several stub generators have already been built for various purposes,
+see below.
+
+
+References and Tricks
+---------------------
+
+Most Modula-3 interfaces can easily be found on the Web by typing things
+like "Text.i3 Modula-3" into Google.  Otherwise, on pluto, they are under
+/usr/local/lib/m3/pkg, e.g., at the pluto Unix prompt,
+
+> find /usr/local/lib/m3/pkg -name Text.i3
+/usr/local/lib/m3/pkg/m3core/src/text/Text.i3
+>
+
+
+The Modula-3 report is DECSRC Research Report 52, available from (among
+many other places),
+
+http://gatekeeper.dec.com/pub/DEC/SRC/research-reports/abstracts/src-rr-052.html
+
+(Report 31 is the original spec, now superseded.)
+
+This might be a good (better, more up to date?) source, too:
+
+http://www.fh-jena.de/~kleine/history/languages/Cardelli-Modula3.pdf
+
+Network Objects are specified in DECSRC 115,
+
+http://gatekeeper.dec.com/pub/DEC/SRC/research-reports/abstracts/src-rr-115.html
+
+They are also available in the DECSRC directory in the repository.
+
+Documentation on the Modula-3 Toolkit is a little harder to come by.  In
+the repository, we have
+
+calarm/smalltalk/doc/p66-jordan.pdf
+
+which describes the toolkit.
+
+The Modula-3 Toolkit tutorial is also available in
+
+calarm/smalltalk/m3tk-tutorial
+
+For instance, run it as follows:
+
+> cd calarm/smalltalk/m3tk-tutorial/m3astcontent/src
+> m3build -O
+> ../FreeBSD4/m3astcontent Main.m3
+... lots of scrolling output from m3astcontent ...
+
+which is an example of how to run the Modula-3 tools.
+
+A more relevant example (it goes through similar steps to the proposed
+Scheme stub generator) is the Network Objects stub generator, "stubgen".
+It is available, together with the rest of the Network Objects system,
+by untarring the file (on pluto) ~mika/m3-comm.tgz.  It may not compile
+with m3build, because of the new type LONGINT in the newer compiler that
+it supports.
+
+The best reference on Scheme is probably the 6.001 book, 
+
+http://mitpress.mit.edu/sicp/full-text/book/book.html
+
+but it's not quite complete.  There's a lot of stuff on the Web, but we
+don't really need to concern ourselves with details.  One interesting
+object-oriented system, however, is "Tiny-CLOS".. here's an intro:
+
+
+http://home.adelphi.edu/sbloch/class/archive/272/spring1997/tclos/tutorial.shtml
+
+Tiny-CLOS itself is available from PARC:
+
+http://www2.parc.com/csl/groups/sda/projects/oi/software.html

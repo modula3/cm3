@@ -1,0 +1,31 @@
+#! /usr/bin/env python
+
+import os, sys
+
+PossibleExecutables = [
+    "/usr/bin/CC",
+    "/opt/developerstudio12.6/bin/CC",
+    "/opt/developerstudio12.5/bin/CC",
+    "/opt/solarisstudio12.4/bin/CC",
+    "/opt/solarisstudio12.3/bin/CC",
+    "/opt/solstudio12.2/bin/CC",
+    "/opt/studio/SOS12/SUNWspro/bin/CC",
+    "/opt/studio/SOS11/SUNWspro/bin/CC",
+    # Good idea but mind the Sun cc switches.
+    #"/usr/bin/c++",
+    #"/usr/bin/g++",
+    #"/usr/sfw/bin/g++",
+    #"/opt/csw/gcc4/bin/g++",
+    #"/usr/bin/clang++",
+    ]
+
+for Executable in PossibleExecutables:
+    if os.access(Executable, os.X_OK):
+        break;
+if not os.access(Executable, os.X_OK):
+  sys.stderr.write(Executable + " not executable\n")
+  sys.exit(1)
+
+sys.argv[0] = Executable
+print(" ".join(sys.argv)) # won't show quotes, ok
+os.execvp(Executable, sys.argv)

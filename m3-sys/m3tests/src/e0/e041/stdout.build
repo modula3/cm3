@@ -1,0 +1,6 @@
+"../One.m3", line 12: illegal recursive supertype (2.4.8).
+1 error encountered
+"../Two.m3", line 12: illegal recursive supertype (2.4.8).
+1 error encountered
+missing "Main" module
+

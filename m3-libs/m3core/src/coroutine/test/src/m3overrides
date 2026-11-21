@@ -1,0 +1,2 @@
+/* $Id: m3overrides,v 1.2 2000/11/12 20:06:45 mika Exp $ */
+include("../../m3overrides")

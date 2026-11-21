@@ -1,6 +1,6 @@
 GENERIC MODULE SetUtils(Elem);
 IMPORT TextList;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 
 PROCEDURE Format(set: T; postDelim:=" "; skipLastDelim:=TRUE): TEXT =
   VAR
