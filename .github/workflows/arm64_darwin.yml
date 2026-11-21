@@ -24,7 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc, llvm]
+        # Only C: concierge builds the gcc and llvm back ends only where
+        # they are supported, and on Darwin falls back to C, so those jobs
+        # repeated this one.
+        backend: [c]
 
     env:
       CM3_TARGET: ARM64_DARWIN
