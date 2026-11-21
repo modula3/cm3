@@ -5,6 +5,8 @@
 /*      modified on Tue May 18 13:21:11 PDT 1993 by muller     */
 /*      modified on Tue Jan 19 15:20:48 PST 1993 by burrows    */
 
+#error This file is no longer used. See ../common/RTStackC.c
+
 /* This file implements the stack walking functions of
    the RTStack interface. */
 
@@ -41,13 +43,12 @@ extern "C" {
 void * __m3_personality_v0();
 
 /* External M3 allocator — avoids a memory leak in CurFrame. */
-extern char * RTException__AllocBuf(int size);
+char * RTException__AllocBuf (INTEGER size);
 
 /*
   FrameInfo = RECORD
     pc  : ADDRESS;
     sp  : ADDRESS;
-    bp  : ADDRESS;        (* base pointer — unused *)
     lock: INTEGER;        (* sentinel to detect cursor overrun *)
     excRef  : ADDRESS;    (* ref to the exception activation *)
     tTypeIndex : INTEGER; (* tTypeIndex from exception table *)
@@ -65,7 +66,6 @@ extern char * RTException__AllocBuf(int size);
 typedef struct {
   unsigned long pc;
   unsigned long sp;
-  unsigned long bp;
   long lock;
   unsigned long exceptionRef;
   long tTypeIndex;
@@ -151,8 +151,8 @@ void RTStack__CurFrame (Frame *f)
   unw_word_t ip, sp = 0;
 
   /* Allocate from the M3 heap so the cursor lifetime is managed there. */
-  uc     = (unw_context_t *) RTException__AllocBuf(sizeof(unw_context_t));
-  cursor = (unw_cursor_t *)  RTException__AllocBuf(sizeof(unw_cursor_t));
+  uc     = (unw_context_t *) RTException__AllocBuf (sizeof(unw_context_t));
+  cursor = (unw_cursor_t *)  RTException__AllocBuf (sizeof(unw_cursor_t));
 
   f->lock = FrameLock;
   unw_getcontext(uc);

@@ -7,6 +7,8 @@
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
 
+This file is no longer used. See ../../common/RTMachine.i3.
+
 INTERFACE RTMachine;
 
 IMPORT Csetjmp, Usignal;

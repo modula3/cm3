@@ -8,6 +8,8 @@
 /* This file implements the stack walking functions of
    the RTStack interface. */
 
+#error This file is very much deprecated. Things work but not this way.
+
 #include <excpt.h>
 #include <sym.h>
 
