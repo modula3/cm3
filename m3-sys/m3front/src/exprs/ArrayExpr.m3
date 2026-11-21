@@ -3052,6 +3052,23 @@ VAR
   constArraysUnit : MSIR.Module := NIL;
 
 (* EXPORTED: *)
+PROCEDURE ConstDopeMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value =
+  VAR p := ArrayConstrExpr (constExpr);  elts: MSIR.Value;  dopeT: MSIR.T;
+  BEGIN
+    IF p = NIL OR OpenArrayType.OpenDepth (Expr.TypeOf (constExpr)) # 1 THEN
+      RETURN NIL;
+    END;
+    elts := ConstArrayMSIR (key, constExpr);
+    IF elts = NIL THEN RETURN NIL END;
+    dopeT := MSIR.TStruct ("", ARRAY OF MSIR.Field {
+               MSIR.Field {"data", MSIR.TPtr (MSIR.TVoid ())},
+               MSIR.Field {"n", MSIR.TI (Target.Integer.size)} });
+    RETURN MSIRBuilder.ConstArrayGlobal (dopeT, ARRAY OF MSIR.Value {
+             MSIR.ConstStruct (dopeT, ARRAY OF MSIR.Value {
+               elts, MSIR.ConstInt (MSIR.TI (Target.Integer.size),
+                                    NUMBER (p.args^)) }) });
+  END ConstDopeMSIR;
+
 PROCEDURE ConstArrayMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value =
   VAR
     p        := ArrayConstrExpr (constExpr);

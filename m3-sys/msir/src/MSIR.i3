@@ -488,15 +488,7 @@ PROCEDURE GlobalIsPrivate  (g: Global): BOOLEAN;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)
-(* An external global whose storage is a unit's data rather than a linker
-   symbol of its own: the exported interface variables a module references,
-   which live in the interface unit's data at byteOff, reached through the
-   import record for binder (e.g. "Leaf_I3").  MSIRToLLVM references them
-   through the alias symbol the interface unit defines; a lowering without
-   such aliases (MSIRToM3CG) uses the home.  NIL binder: none. *)
-PROCEDURE GlobalSetHome    (g: Global;  binder: TEXT;  byteOff: INTEGER);
-PROCEDURE GlobalHomeBinder (g: Global): TEXT;
-PROCEDURE GlobalHomeOffset (g: Global): INTEGER;
+
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value);
 PROCEDURE GlobalValue(g: Global): Value;
 PROCEDURE GlobalSetBackingBytes(g: Global;  n: INTEGER); (* indirect: set [n x i8] backing size *)
@@ -532,6 +524,13 @@ PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
    MSIR's dense packing, so cross-module importers agree). *)
 PROCEDURE ModuleNoteGlobal(m: Module;  endByteOff: INTEGER);
 PROCEDURE ModuleGlobalStructSize(m: Module): INTEGER;
+
+(* Mark m as not describing all of its unit's data: some part the unit
+   lays out (for other units to read) has no MSIR form yet.  A backend that
+   must reproduce the unit's data exactly (MSIRToM3CG) then declines it.
+   The first reason is kept; NIL from ModuleIncomplete means complete. *)
+PROCEDURE ModuleSetIncomplete(m: Module;  reason: TEXT);
+PROCEDURE ModuleIncomplete(m: Module): TEXT;
 (* Total byte size of the module struct = MI_SIZE + embedded user globals. *)
 PROCEDURE ModuleGlobalCount(m: Module): INTEGER;
 PROCEDURE ModuleGlobal(m: Module;  i: INTEGER): Global;

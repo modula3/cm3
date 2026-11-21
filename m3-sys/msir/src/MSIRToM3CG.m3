@@ -372,6 +372,21 @@ PROCEDURE B (bits: INTEGER): INTEGER =
     RETURN bits DIV Target.Byte;
   END B;
 
+(* The byte offset of field i of struct t: the natural layout MSIRToLLVM's
+   struct types get from LLVM.  (MSIR.Field.offset is debug information,
+   set only for structs translated from M3 records.) *)
+PROCEDURE FieldOffset (t: MSIR.T;  i: INTEGER): INTEGER =
+  VAR off := 0;  a, sz: INTEGER;
+  BEGIN
+    t := Base (t);
+    FOR k := 0 TO i DO
+      sz := Size (MSIR.StructField (t, k).type, a);
+      off := RoundUp (off, a);
+      IF k < i THEN INC (off, sz) END;
+    END;
+    RETURN off;
+  END FieldOffset;
+
 PROCEDURE RoundUp (n, a: INTEGER): INTEGER =
   BEGIN
     IF a <= 1 THEN RETURN n END;
@@ -404,13 +419,14 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
         IF sz < 0 THEN RETURN -1 END;
         RETURN sz * MSIR.FixedArrayLen (t);
     | TypeKind.Struct =>
+        (* natural layout, as LLVM gives MSIRToLLVM's struct types *)
         end := 0;
         FOR i := 0 TO MSIR.StructFieldCount (t) - 1 DO
           f := MSIR.StructField (t, i);
           sz := Size (f.type, a);
-          IF sz < 0 OR f.offset MOD 8 # 0 THEN RETURN -1 END;
+          IF sz < 0 THEN RETURN -1 END;
           align := MAX (align, a);
-          end := MAX (end, f.offset DIV 8 + sz);
+          end := RoundUp (end, a) + sz;
         END;
         RETURN RoundUp (end, align);
     | TypeKind.OpenArray =>
@@ -643,6 +659,9 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       p: MSIR.Proc;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
     Setup (m);
+    IF MSIR.ModuleIncomplete (m) # NIL THEN
+      Fail (w, "incomplete: " & MSIR.ModuleIncomplete (m));
+    END;
     FOR i := 0 TO MSIR.ModuleConstArrayCount (m) - 1 DO
       VAR ca := MSIR.ModuleConstArray (m, i);  a: INTEGER;
       BEGIN
@@ -672,18 +691,17 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       END;
     END;
     FOR i := 0 TO MSIR.ModuleGlobalCount (m) - 1 DO
-      VAR g := MSIR.ModuleGlobal (m, i);  a: INTEGER;
+      VAR g := MSIR.ModuleGlobal (m, i);
       BEGIN
         IF NOT MSIR.GlobalIsExternal (g) THEN
           IF MSIR.GlobalByteOffset (g) < 0 THEN
             Fail (w, "standalone global " & MSIR.GlobalName (g));
           END;
-        ELSIF MSIR.GlobalHomeBinder (g) # NIL THEN
-          IF ImportIndex (MSIR.GlobalHomeBinder (g)) < 0 THEN
-            Fail (w, "home of " & MSIR.GlobalName (g) & " not imported");
-          END;
-        ELSIF Size (MSIR.GlobalType (g), a) < 0 THEN
-          Fail (w, "external global of unsized type");
+        ELSE
+          (* MSIR does not say whether an external global is a C variable
+             or an exported interface variable (which is not a linker
+             symbol in M3C's output), so fall back on either. *)
+          Fail (w, "external global " & MSIR.GlobalName (g));
         END;
       END;
     END;
@@ -931,15 +949,6 @@ PROCEDURE Bytes (b: MSIR.GcMapBytes): INTEGER =
     RETURN Alloc (cseg, NUMBER (b^), 1, NEW (BytesItem, b := b));
   END Bytes;
 
-(* The index of binder among the unit's import records, or -1. *)
-PROCEDURE ImportIndex (binder: TEXT): INTEGER =
-  BEGIN
-    FOR k := 0 TO MSIR.ModuleImportBinderCount (mod) - 1 DO
-      IF Text.Equal (MSIR.ModuleImportBinder (mod, k), binder) THEN RETURN k END;
-    END;
-    RETURN -1;
-  END ImportIndex;
-
 PROCEDURE FindGlobal (name: TEXT): MSIR.Global =
   VAR g: MSIR.Global;
   BEGIN
@@ -950,46 +959,7 @@ PROCEDURE FindGlobal (name: TEXT): MSIR.Global =
     RETURN NIL;
   END FindGlobal;
 
-(* External globals with no home are C variables, imported by name. *)
-VAR externs: TextRefTbl.T;
 
-TYPE VarRef = REF RECORD v: M3CG.Var END;
-
-PROCEDURE ImportGlobals () =
-  VAR g: MSIR.Global;  a, sz: INTEGER;  t: M3CG.Type;
-  BEGIN
-    externs := NEW (TextRefTbl.Default).init ();
-    FOR i := 0 TO MSIR.ModuleGlobalCount (mod) - 1 DO
-      g := MSIR.ModuleGlobal (mod, i);
-      IF MSIR.GlobalIsExternal (g) AND MSIR.GlobalHomeBinder (g) = NIL THEN
-        sz := Size (MSIR.GlobalType (g), a);
-        IF IsScalar (MSIR.GlobalType (g))
-          THEN t := MType (MSIR.GlobalType (g));
-          ELSE t := M3CG.Type.Struct;
-        END;
-        EVAL externs.put (MSIR.GlobalName (g), NEW (VarRef,
-               v := cg.import_global (ID (MSIR.GlobalName (g)), sz, a, t, 0)));
-      END;
-    END;
-  END ImportGlobals;
-
-(* Push the address of the external global g. *)
-PROCEDURE PushGlobal (g: MSIR.Global) =
-  VAR r: REFANY;
-  BEGIN
-    IF MSIR.GlobalHomeBinder (g) # NIL THEN
-      (* the home unit's data, through this unit's import record for it *)
-      EVAL syms.get (modName & "_M3_imp."
-                       & Fmt.Int (ImportIndex (MSIR.GlobalHomeBinder (g))), r);
-      cg.load (dseg.var, NARROW (r, Loc).off + B (M3RT.II_import), Addr, Addr);
-      IF MSIR.GlobalHomeOffset (g) # 0 THEN
-        cg.add_offset (MSIR.GlobalHomeOffset (g));
-      END;
-    ELSE
-      EVAL externs.get (MSIR.GlobalName (g), r);
-      cg.load_address (NARROW (r, VarRef).v, 0);
-    END;
-  END PushGlobal;
 
 PROCEDURE TextLitBytes (uid: INTEGER): INTEGER =
   VAR cnt := MSIR.ModuleTextLitCnt (mod, uid);  w := 1;
@@ -1148,7 +1118,7 @@ PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
         FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
           VAR fld := MSIR.StructField (t, i);
           BEGIN
-            InitConst (off + fld.offset DIV 8, MSIR.GetConstStructField (v, i),
+            InitConst (off + FieldOffset (t, i), MSIR.GetConstStructField (v, i),
                        fld.type);
           END;
         END;
@@ -1554,7 +1524,6 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
     FOR k := 0 TO MSIR.ModuleImportBinderCount (m) - 1 DO
       EVAL ImportBinder (MSIR.ModuleImportBinder (m, k));
     END;
-    ImportGlobals ();
 
     GenBinder (modeVar);
     FOR i := 0 TO MSIR.ModuleProcCount (m) - 1 DO
@@ -1702,7 +1671,7 @@ PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
         FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
           VAR fld := MSIR.StructField (t, i);
           BEGIN
-            StoreConstAt (addr, off + fld.offset DIV 8,
+            StoreConstAt (addr, off + FieldOffset (t, i),
                           MSIR.GetConstStructField (v, i), fld.type);
           END;
         END;
@@ -1788,7 +1757,6 @@ PROCEDURE Push (v: MSIR.Value) =
         EVAL syms.get ("textlit_" & Fmt.Int (MSIR.GetTextLitUID (v)), r);
         PushAddr (NARROW (r, Loc).s.var,
                   NARROW (r, Loc).off + Target.Address.bytes);
-    | ValueKind.GlobalRef => PushGlobal (FindGlobal (name));
     | ValueKind.StructFieldRef =>
         EVAL syms.get (Text.Sub (name, 1), r);
         PushAddr (NARROW (r, Loc).s.var,
@@ -2088,7 +2056,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           IF IsPtr (t) THEN t := MSIR.EltType (Base (t)) END;
           FOR k := 0 TO MSIR.StructFieldCount (t) - 1 DO
             f := MSIR.StructField (t, k);
-            IF Text.Equal (f.name, fname) THEN off := f.offset DIV 8;  EXIT END;
+            IF Text.Equal (f.name, fname) THEN off := FieldOffset (t, k);  EXIT END;
           END;
           Push (MSIR.InsnOperand (i, 0));
           IF off # 0 THEN cg.add_offset (off) END;

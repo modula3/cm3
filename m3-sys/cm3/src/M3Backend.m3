@@ -123,6 +123,26 @@ PROCEDURE Open (library (* or program *): TEXT;
     RETURN M3CG_BinWr.New (target_wr);
   END Open;
 
+(* @M3msircgskip=A,B,...: never lower units A, B, ... (to find which
+   lowered unit breaks a program). *)
+PROCEDURE Skipped (unit: TEXT): BOOLEAN =
+  VAR list := RTParams.Value ("msircgskip");
+  BEGIN
+    IF list = NIL THEN RETURN FALSE END;
+    list := "," & list & ",";
+    RETURN Text.FindChar (list, ',') >= 0
+       AND TextUtils_Find (list, "," & unit & ",");
+  END Skipped;
+
+PROCEDURE TextUtils_Find (t, sub: TEXT): BOOLEAN =
+  VAR n := Text.Length (t);  k := Text.Length (sub);
+  BEGIN
+    FOR i := 0 TO n - k DO
+      IF Text.Equal (Text.Sub (t, i, k), sub) THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END TextUtils_Find;
+
 (* EXPORTED: *)
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
   VAR m: MSIR.Module;  index: INTEGER;  why: Wr.T := NIL;
@@ -130,6 +150,7 @@ PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
     IF msir_rec # NIL THEN
       m := MSIREmit.LastModule ();
       IF RTParams.IsPresent ("msircgverbose") THEN why := Stdio.stderr END;
+      IF m # NIL AND Skipped (MSIR.ModuleName (m)) THEN m := NIL END;
       IF m # NIL AND MSIRToM3CG.Lowerable (m, why) THEN
         IF text_wr # NIL THEN
           msir_c := M3CG_Tee.New (msir_c, M3CG_Wr.New (text_wr));

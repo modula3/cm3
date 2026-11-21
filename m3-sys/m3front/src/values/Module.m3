@@ -13,7 +13,7 @@ IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
 IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 IMPORT Jmpbufs;
-IMPORT MSIR, MSIREmit, MSIRBuilder, Text;
+IMPORT MSIR, MSIREmit, MSIRBuilder, Text, Constant;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -1082,6 +1082,10 @@ PROCEDURE DeclareGlobalsMSIR (t: T) =
                owner's import chain. *)
           ELSE
             Variable.DeclareGlobalMSIR (v);
+          END;
+      | Constant.T (c) =>
+          IF NOT Value.IsExternal (sv) AND NOT Value.IsImported (sv) THEN
+            Constant.DeclareGlobalMSIR (c);
           END;
       ELSE
           IF Value.ClassOf (sv) = Value.Class.Exception

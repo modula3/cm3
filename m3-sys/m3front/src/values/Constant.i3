@@ -19,6 +19,12 @@ PROCEDURE Declare (name: TEXT;  value: Expr.T;  reserved: BOOLEAN): T;
 (* Declare in the current scope. *)
 
 PROCEDURE DeclareGlobal (name: TEXT;  valExpr: Expr.T;  reserved := FALSE): T;
+
+PROCEDURE DeclareGlobalMSIR (t: T);
+(* For a structured constant this unit declares: the global slot holding
+   its address, which importing units read (see ConstInit), initialised to
+   the constant's MSIR image.  Marks the MSIR module incomplete if the
+   constant has no MSIR image. *)
 (* Declare in the global scope. *)
 
 END Constant.

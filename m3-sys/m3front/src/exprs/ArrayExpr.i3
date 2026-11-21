@@ -79,4 +79,9 @@ PROCEDURE ConstArrayMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value;
    the current MSIR unit; one global per CONST and unit.  Returns a pointer
    to it, suitable as an lvalue, or NIL after Abandon. *)
 
+PROCEDURE ConstDopeMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value;
+(* For a one-dimensional open-array constant: a constant global holding its
+   dope {ADR(elements), NUMBER}, as CG lays out the constant's contents;
+   NIL if it has no MSIR form. *)
+
 END ArrayExpr.

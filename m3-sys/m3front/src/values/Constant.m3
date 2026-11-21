@@ -10,7 +10,7 @@ MODULE Constant;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Expr, Scope, Error;
 IMPORT Token, AssignStmt, Scanner, UserProc, Target, M3Buf;
 IMPORT Decl, ProcType, Procedure, OpenArrayType, Module, ErrType;
-IMPORT ArrayExpr, ExprRep;
+IMPORT ArrayExpr, ExprRep, MSIR, MSIREmit, MSIRBuilder, MSIRType;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 REVEAL
@@ -262,6 +262,34 @@ PROCEDURE Declarer (t: T): BOOLEAN =
 
     RETURN TRUE;
   END Declarer;
+
+PROCEDURE DeclareGlobalMSIR (t: T) =
+  VAR m := MSIREmit.CurrentModule ();  image: MSIR.Value := NIL;  mt: MSIR.T;
+  BEGIN
+    IF m = NIL OR NOT t.structured OR t.imported THEN RETURN END;
+    SetGlobals (t);
+    IF OpenArrayType.OpenDepth (t.tipe) > 0 THEN
+      image := ArrayExpr.ConstDopeMSIR (t, t.valExpr);
+    ELSIF ArrayExpr.ArrayConstrExpr (t.valExpr) # NIL THEN
+      image := ArrayExpr.ConstArrayMSIR (t, t.valExpr);
+    ELSE
+      mt := MSIRType.Translate (t.tipe);
+      IF mt # NIL THEN
+        VAR v := Expr.ConstLiteralMSIR (t.valExpr, mt);
+        BEGIN
+          IF v # NIL THEN
+            image := MSIRBuilder.ConstArrayGlobal (mt, ARRAY OF MSIR.Value {v});
+          END;
+        END;
+      END;
+    END;
+    IF image = NIL THEN
+      MSIR.ModuleSetIncomplete (m, "no MSIR image of constant " & t.qualName);
+      RETURN;
+    END;
+    MSIR.ModuleNoteGlobal (m, (t.offset + Target.Address.size) DIV Target.Byte);
+    MSIR.ModuleAddGlobalInit (m, t.offset DIV Target.Byte, image);
+  END DeclareGlobalMSIR;
 
 (* Externally dispatched-to: *)
 PROCEDURE ConstInit (t: T) =

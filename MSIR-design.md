@@ -1309,6 +1309,55 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - Clutter (session transcripts, a test binary, editor backups) removed in
   `77a724b298`.
 
+**Progress (2026-11-21): D25 step 2 spike, full lowering with per-module
+fallback** (Tony chose full lowering over a hybrid that kept CG's data).
+- `MSIRToM3CG` (msir package) lowers a whole unit to M3CG for the C
+  backend, using CG's data conventions so lowered and CG-compiled units link:
+  one data segment (ModuleInfo, user globals at the front end's offsets,
+  ImportInfo records, typecells, type links, revelations, exception
+  descriptors) and one constant segment (proc names and ProcInfo, file name,
+  GC maps, brands, names, method suites, TEXT literals, constant arrays).
+  `Lowerable` falls back to the front end's own stream for anything not yet
+  lowered.  Driver: `@M3m3front-msir @M3msircg`; `@M3m3cgtext` dumps the
+  stream M3C sees; `@M3msircensus` reports per-procedure blockers.
+- m3core: 240 of 291 units lower; a threaded program linked against that
+  m3core runs.  m3tests with every test unit lowered where possible: no
+  failure caused by the lowering (the six that differ from the baseline
+  differ under `@M3m3front-msir` alone: warnings reported twice, verifier
+  messages).  Remaining fallbacks: TRY/LOCK (`invoke`/`landingpad`, step 3),
+  external globals, multi-word sets (`IWide`), TYPECASE,
+  FLOOR/CEILING/ROUND, indirect (large) globals.
+- **Answer to the spike's question:** M3C needs *no* type declarations from
+  the lowering.  Locals take typeid 0; CG passes by-value records as
+  addresses (the callee copies) and large results through a hidden
+  `_result` address, so `pop_struct`'s typeid is never needed.
+- **CG compatibility is not a goal** (Tony, 2026-11-21).  Lowered units
+  follow CG's conventions only so per-module fallback can mix them with
+  CG-compiled units during the spike; nothing is added to MSIR for it.  No
+  hand-written C in the tree reads unit data by CG's layout: RTBuiltin.c
+  and RTLinkerC.c use only RT0 records, which every backend must match.
+  Consequences: a unit referencing an external global falls back, since
+  MSIR does not distinguish a C variable from an exported interface
+  variable (an alias symbol in MSIRToLLVM's output, interface data in
+  CG's).
+- **Front-end completeness fix:** a structured constant declared in a unit
+  has a global slot holding its address, which importing units read; the
+  MSIR path now emits it (`Constant.DeclareGlobalMSIR`, a global
+  initialiser to the constant's MSIR image).  `MSIR.ModuleSetIncomplete`
+  marks a module whose data the front end could not fully describe; the
+  M3CG lowering then declines it.
+- **Struct layout:** MSIR struct types have natural (LLVM) layout;
+  `Field.offset` is debug information, set only for structs translated
+  from M3 records.  The lowering lays structs out naturally.
+- **Gaps found, not changed:** MSIR carries no linker names (both backends
+  reconstruct them, `CSymbol` copies `LLSymbol`'s rules); narrow ordinals
+  such as `[0..255]` translate to signed `i8` where CG declares `Word8`,
+  which matters at separately compiled procedure boundaries.
+- M3C bug found and fixed (also on master, with m3test p302):
+  `address + offset` was rendered unparenthesised, so a comparison macro's
+  cast split it into a sum of two pointers; `p = ADR (z)` for a module global
+  did not compile even through CG.
+
 **Progress (2026-11-20).**
 - **D24 done** (`db7908eb1d`).  `MSIRToLLVM` checks once per run that its
   Typecell, ObjectTypecell, ArrayTypecell, ModuleInfo and ExceptionDesc

@@ -478,17 +478,6 @@ PROCEDURE RegisterExternMSIR (t: T) =
        the external symbol to its own GC map. *)
     eltType  := mt;
     g := MSIR.NewGlobal(nm, eltType, isTraced := FALSE, isExternal := TRUE);
-    IF NOT t.external THEN
-      (* An exported interface variable: its storage is the interface unit's
-         data, at the variable's offset. *)
-      VAR unit := Scope.ToUnit (t);
-      BEGIN
-        IF unit # NIL THEN
-          MSIR.GlobalSetHome (g, M3ID.ToText (Module.Name (NARROW (unit, Module.T)))
-                                   & "_I3", t.offset DIV Target.Char.size);
-        END;
-      END;
-    END;
     MSIRBuilder.GlobalMapAdd(t, g, m);
   END RegisterExternMSIR;
 
