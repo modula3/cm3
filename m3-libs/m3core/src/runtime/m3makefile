@@ -55,6 +55,10 @@ if defined("M3_USE_STACK_WALKER")
   else
     include_dir("ex_frame")
   end
-else
-  include_dir("ex_frame")
+else if equal (M3_BACKEND_MODE, "C")
+    include_dir("ex_stack")
+    %import_sys_lib ("UNWIND")
+  else
+    include_dir("ex_frame")
+  end
 end

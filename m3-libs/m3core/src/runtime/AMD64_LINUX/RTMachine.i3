@@ -5,6 +5,8 @@
 (* Last modified on Sat Nov  9 19:20:08 PST 1996 by heydon  *)
 (*      modified on Tue May  2 11:40:32 PDT 1995 by kalsow  *)
 
+This file is no longer used. See ../common/RTMachine.i3.
+
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
 
@@ -22,7 +24,6 @@ TYPE
   FrameInfo = RECORD
     pc  : ADDRESS;
     sp  : ADDRESS;
-    bp  : ADDRESS;        (* base pointer *)
     lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
     excRef  : ADDRESS;    (* ref to the exception activation *)
     tTypeIndex : INTEGER; (* tTypeIndex from the unwinder *)

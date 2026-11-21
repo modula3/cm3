@@ -3,6 +3,8 @@
 /* See the file COPYRIGHT for a full description.              */
 /* Last modified on Thu May  4 09:13:59 PDT 1995 by kalsow     */
 
+#error This file is no longer used. See ../common/RTStackC.c
+
 /* This file implements the default stack walking functions of
    the RTStack interface for platforms that don't support stack
    walking. */
