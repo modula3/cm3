@@ -1303,3 +1303,8 @@ M3_SPLIT_LIBNAMES = FALSE
 
 % M3_MAIN_IN_C = TRUE
 % --- generate the Modula-3 main program as C code
+
+% No libunwind on Windows.
+% We might wrap RtlVirtualUnwind, but really just not needed, except
+% to satisfy other m3makefiles.
+SYSTEM_LIBS{"UNWIND"} = []
