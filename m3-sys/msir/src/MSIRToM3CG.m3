@@ -2847,8 +2847,17 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           Def (res);
           cg.set_label (done);
         END;
-    | Op.IRotL => Binop (i);  cg.rotate_left (Word64);  Def (res);
-    | Op.IRotR => Binop (i);  cg.rotate_right (Word64);  Def (res);
+    | Op.IRotL =>
+        (* Word.Rotate's signed count, as the CG path uses: rotate_left's
+           count is a word, so a negative constant count is a huge
+           unsigned one, which M3C's C rejects.  Rotations are mod 64. *)
+        Binop (i);  cg.rotate (Word64);  Def (res);
+    | Op.IRotR =>
+        Push (MSIR.InsnOperand (i, 0));
+        Push (MSIR.InsnOperand (i, 1));
+        cg.negate (Int64);
+        cg.rotate (Word64);
+        Def (res);
     | Op.Select =>
         VAR else := cg.next_label ();  done := cg.next_label ();
         BEGIN

@@ -1565,6 +1565,11 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   `set_compare`, and an iN constant (0 or -1) onto a filled temporary.
   m3core: 260 units lower; ASCII and TextConv no longer fall back for
   sets (ASCII's module still does for its exported variables).
+  m3tests, lowered: the five warning-duplication differences only.  p136,
+  newly lowered, exposed `Word.Rotate` lowered through `rotate_left`,
+  whose word-typed count turned a negative constant into a huge one that
+  M3C's C rejects; rotations now use `rotate` (signed count), negated
+  for right rotations.
 - Found on the way, on master's C backend (fixed separately): for
   multi-word sets M3C's `set_compare` passed `<=`/`<`/`>=`/`>` operands
   in reverse, read memcmp the wrong way round for `=`/`#`, and did not
@@ -1584,9 +1589,11 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   struct, never loaded or stored directly.
 - Results: m3core 259 of 290 units lower; besides external globals only
   ASCII and TextConv (multi-word sets, next: D19 set intrinsics) fall back.
-  m3tests with every unit lowered where possible: no differences from the
-  baseline beyond its own failures; p019, p020, p023, p104 and p272, which
-  failed under the lowering, now pass.
+  m3tests with every unit lowered where possible: the same differences
+  as before (p019, p020, p023, p104, p272: warnings printed twice).
+  *Corrected:* this note first said those five now passed; that run had
+  used the installed compiler, not the lowering (`run.sh` resolved its
+  wrapper relative to the directory it was started from).
 - **Divergence found, not changed here:** the report breaks `ROUND` ties by
   `FloatMode.RoundDefault`, NearestElseEven.  MSIR's `fpround` (roundeven)
   does; M3C's `m3_round` used C's `round` (halves away from zero), and the
