@@ -31,10 +31,15 @@ jobs:
       CM3_TARGET: AMD64_DARWIN
 
     steps:
+    # Homebrew no longer has bottles for Intel macOS, so a brew install here
+    # compiled ~17 formulae from source (40 minutes).  This job builds
+    # headless and takes CMake and Ninja from PyPI wheels; the GUI packages
+    # are built on ARM64_DARWIN, where bottles exist.
     - name: Install prerequisites
       run: |
-        brew update
-        brew install libxaw libxft ninja xquartz
+        python3 -m venv "$RUNNER_TEMP/tools"
+        "$RUNNER_TEMP/tools/bin/pip" install --quiet cmake ninja
+        echo "$RUNNER_TEMP/tools/bin" >> $GITHUB_PATH
 
     - name: Define install location
       run: |
@@ -54,7 +59,7 @@ jobs:
 
     - name: Build everything
       run: |
-        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all -caltech-other -caltech-parser -m3-scheme
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" headless -m3gdb
 
     - name: Run compiler validation suite
       continue-on-error: true
