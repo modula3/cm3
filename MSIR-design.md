@@ -1590,7 +1590,12 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - Results: m3core 259 of 290 units lower; besides external globals only
   ASCII and TextConv (multi-word sets, next: D19 set intrinsics) fall back.
   m3tests with every unit lowered where possible: the same differences
-  as before (p019, p020, p023, p104, p272: warnings printed twice).
+  as before (p019, p020, p023, p104, p272: warnings printed twice).  These
+  come from running the CG and MSIR passes side by side, each reporting
+  the unit's warnings; they go with D25's single lowering.  Not worth
+  suppressing meanwhile: several goldens (p104, p268, p270, p272, p273,
+  p304) legitimately repeat a warning at one position, so deduplicating
+  in `Error` would change them.
   *Corrected:* this note first said those five now passed; that run had
   used the installed compiler, not the lowering (`run.sh` resolved its
   wrapper relative to the directory it was started from).
