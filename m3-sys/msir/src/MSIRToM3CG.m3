@@ -214,11 +214,15 @@ CONST
 
 (*--------------------------------------------------------------- reasons *)
 
-TYPE Why = OBJECT wr: Wr.T;  ok := TRUE;  mod: TEXT END;
+TYPE Why = OBJECT wr: Wr.T;  ok := TRUE;  mod: TEXT;  seen: Features END;
 
 PROCEDURE Fail (w: Why;  what: TEXT) =
+  VAR n: INTEGER;
   BEGIN
-    IF w.ok AND w.wr # NIL THEN
+    IF w.seen = NIL THEN w.seen := NEW (Features) END;
+    n := w.seen.n;
+    Note (w.seen, what);
+    IF w.seen.n > n AND w.wr # NIL THEN
       TRY
         Wr.PutText (w.wr, "msir-cg: " & w.mod & " fallback: " & what & "\n");
       EXCEPT Wr.Failure, Thread.Alerted =>
@@ -259,6 +263,20 @@ PROCEDURE IsFloat (t: MSIR.T): BOOLEAN =
     t := Base (t);
     RETURN t # NIL AND MSIR.IsFloat (MSIR.Kind (t));
   END IsFloat;
+
+(* Aggregates live in memory; their SSA values are addresses of temps. *)
+PROCEDURE IsAgg (t: MSIR.T): BOOLEAN =
+  BEGIN
+    t := Base (t);
+    RETURN t # NIL AND MSIR.Kind (t) IN SET OF TypeKind {
+             TypeKind.Struct, TypeKind.FixedArray, TypeKind.OpenArray };
+  END IsAgg;
+
+PROCEDURE IsValue (t: MSIR.T): BOOLEAN =
+  VAR a: INTEGER;
+  BEGIN
+    RETURN IsScalar (t) OR IsAgg (t) AND Size (t, a) >= 0;
+  END IsValue;
 
 PROCEDURE IsScalar (t: MSIR.T): BOOLEAN =
   BEGIN
@@ -317,8 +335,36 @@ PROCEDURE SigType (t: MSIR.T): M3CG.Type =
     IF t = NIL OR MSIR.Kind (t) = TypeKind.Void THEN
       RETURN M3CG.Type.Void
     END;
+    IF IsAgg (t) THEN RETURN Addr END;
     RETURN MType (t);
   END SigType;
+
+(* The declared result type: CG returns aggregates through a hidden
+   "_result" address parameter, and the procedure returns nothing. *)
+PROCEDURE RetType (t: MSIR.T): M3CG.Type =
+  BEGIN
+    IF t # NIL AND IsAgg (t) THEN RETURN M3CG.Type.Void END;
+    RETURN SigType (t);
+  END RetType;
+
+PROCEDURE HasAggResult (p: MSIR.Proc): BOOLEAN =
+  VAR t := MSIR.ProcResultType (p);
+  BEGIN
+    RETURN t # NIL AND IsAgg (t);
+  END HasAggResult;
+
+(* Where the hidden result parameter goes, as CG's DeclareFormals. *)
+PROCEDURE ResultFirst (): BOOLEAN =
+  BEGIN
+    RETURN Target.DefaultCall.results_on_left;
+  END ResultFirst;
+
+(* The size and alignment a parameter of type t is declared with. *)
+PROCEDURE ParamSize (t: MSIR.T;  VAR a: INTEGER): INTEGER =
+  BEGIN
+    IF IsAgg (t) THEN a := Target.Address.bytes;  RETURN a END;
+    RETURN Size (t, a);
+  END ParamSize;
 
 (* M3RT's layout constants are in bits. *)
 PROCEDURE B (bits: INTEGER): INTEGER =
@@ -463,12 +509,13 @@ CONST
     Op.Call, Op.CallIndirect,
     Op.Convert, Op.SIToFP, Op.FPToSI, Op.FPExt, Op.FPTrunc,
     Op.ZExt, Op.SExt, Op.Trunc,
-    Op.PtrAdd, Op.GepByte, Op.ArrayElemAddr };
+    Op.PtrAdd, Op.GepByte, Op.ArrayElemAddr,
+    Op.OpenArraySize, Op.OpenArrayElemAddr };
 
 PROCEDURE CheckSigType (w: Why;  what: TEXT;  t: MSIR.T) =
   BEGIN
     IF t = NIL OR MSIR.Kind (t) = TypeKind.Void THEN RETURN END;
-    IF NOT IsScalar (t) THEN
+    IF NOT IsValue (t) THEN
       Fail (w, what & " " & KindText[MSIR.Kind (Base (t))]);
     END;
   END CheckSigType;
@@ -503,9 +550,10 @@ PROCEDURE CheckValue (w: Why;  v: MSIR.Value) =
     | ValueKind.GlobalRef =>
         IF FindGlobal (name) = NIL THEN Fail (w, "global " & name) END;
     | ValueKind.ConstTextLit =>
-    ELSE Fail (w, "constant aggregate");
+    | ValueKind.ConstStruct, ValueKind.ConstAggArray =>
+        IF NOT IsInitConst (v) THEN Fail (w, "constant aggregate") END;
     END;
-    IF NOT IsScalar (MSIR.ValueType (v)) THEN
+    IF NOT IsValue (MSIR.ValueType (v)) THEN
       Fail (w, "value " & KindText[MSIR.Kind (Base (MSIR.ValueType (v)))]);
     END;
   END CheckValue;
@@ -518,12 +566,27 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
       Fail (w, "op " & MSIRPrinter.OpText (op));
       RETURN;
     END;
-    IF res # NIL AND op # Op.Alloca AND NOT IsScalar (MSIR.ValueType (res)) THEN
-      Fail (w, MSIRPrinter.OpText (op) & " result "
-                 & KindText[MSIR.Kind (Base (MSIR.ValueType (res)))]);
+    IF res # NIL AND op # Op.Alloca THEN
+      t := MSIR.ValueType (res);
+      IF NOT IsScalar (t) AND NOT (IsAgg (t) AND IsValue (t) AND op IN SET OF Op {
+               Op.Load, Op.Call, Op.CallIndirect, Op.Select }) THEN
+        Fail (w, MSIRPrinter.OpText (op) & " result "
+                   & KindText[MSIR.Kind (Base (t))]);
+      END;
     END;
     FOR k := 0 TO MSIR.InsnOperandCount (i) - 1 DO
-      CheckValue (w, MSIR.InsnOperand (i, k));
+      VAR v := MSIR.InsnOperand (i, k);
+      BEGIN
+        CheckValue (w, v);
+        (* constant aggregates only as a value to store *)
+        IF v # NIL AND IsAgg (MSIR.ValueType (v))
+           AND MSIR.GetValueKind (v) IN SET OF ValueKind {
+                 ValueKind.ConstNil, ValueKind.ConstStruct,
+                 ValueKind.ConstAggArray }
+           AND NOT (op = Op.Store AND k = 0) THEN
+          Fail (w, "constant aggregate operand of " & MSIRPrinter.OpText (op));
+        END;
+      END;
     END;
     CASE op OF
     | Op.Br, Op.CondBr =>
@@ -1377,18 +1440,38 @@ PROCEDURE ProcFor (p: MSIR.Proc): M3CG.Proc =
   END ProcFor;
 
 PROCEDURE ImportProc (sym: TEXT;  p: MSIR.Proc): M3CG.Proc =
-  VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;  t: MSIR.T;  a: INTEGER;
+  VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;
   BEGIN
-    q := cg.import_procedure (ID (sym), n, SigType (MSIR.ProcResultType (p)),
+    q := cg.import_procedure (ID (sym), n + ORD (HasAggResult (p)),
+                              RetType (MSIR.ProcResultType (p)),
                               Target.DefaultCall);
-    FOR k := 0 TO n - 1 DO
-      t := MSIR.ValueType (MSIR.ProcParam (p, k));
-      EVAL cg.declare_param (ID (ParamName (p, k)), Size (t, a), a,
-                             SigType (t), 0, FALSE, FALSE, M3CG.Maybe);
-    END;
+    EVAL DeclareParams (p);
     EVAL procs.put (sym, NEW (ProcRef, p := q));
     RETURN q;
   END ImportProc;
+
+(* Declare p's parameters, including CG's hidden result parameter; return
+   the formals' Vars, and the result parameter's in the last element. *)
+PROCEDURE DeclareParams (p: MSIR.Proc): REF ARRAY OF M3CG.Var =
+  VAR n := MSIR.ProcParamCount (p);  t: MSIR.T;  a: INTEGER;
+      pv := NEW (REF ARRAY OF M3CG.Var, n + 1);
+      ptr := Target.Address.bytes;
+  BEGIN
+    IF HasAggResult (p) AND ResultFirst () THEN
+      pv[n] := cg.declare_param (ID ("_result"), ptr, ptr, Addr, 0, FALSE,
+                                 FALSE, M3CG.Maybe);
+    END;
+    FOR k := 0 TO n - 1 DO
+      t := MSIR.ValueType (MSIR.ProcParam (p, k));
+      pv[k] := cg.declare_param (ID (ParamName (p, k)), ParamSize (t, a), a,
+                                 SigType (t), 0, FALSE, FALSE, M3CG.Maybe);
+    END;
+    IF HasAggResult (p) AND NOT ResultFirst () THEN
+      pv[n] := cg.declare_param (ID ("_result"), ptr, ptr, Addr, 0, FALSE,
+                                 FALSE, M3CG.Maybe);
+    END;
+    RETURN pv;
+  END DeclareParams;
 
 (* A binder: PROCEDURE (mode: INTEGER): ADDRESS. *)
 PROCEDURE ImportBinder (sym: TEXT): M3CG.Proc =
@@ -1518,25 +1601,19 @@ PROCEDURE Generated (p: MSIR.Proc): BOOLEAN =
   END Generated;
 
 PROCEDURE DeclareProc (p: MSIR.Proc) =
-  VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;  t: MSIR.T;  a: INTEGER;
+  VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;
       sym := CSymbol (p);  r: REFANY;
   BEGIN
     IF procs.get (sym, r) THEN RETURN END;
-    q := cg.declare_procedure (ID (sym), n, SigType (MSIR.ProcResultType (p)),
+    q := cg.declare_procedure (ID (sym), n + ORD (HasAggResult (p)),
+                               RetType (MSIR.ProcResultType (p)),
                                0, Target.DefaultCall, TRUE, NIL);
     EVAL procs.put (sym, NEW (ProcRef, p := q));
-    VAR pv := NEW (REF ARRAY OF M3CG.Var, n);
-    BEGIN
-      FOR k := 0 TO n - 1 DO
-        t := MSIR.ValueType (MSIR.ProcParam (p, k));
-        pv[k] := cg.declare_param (ID (ParamName (p, k)), Size (t, a), a,
-                                   SigType (t), 0, FALSE, FALSE, M3CG.Maybe);
-      END;
-      EVAL paramVars.put (sym, pv);
-    END;
+    EVAL paramVars.put (sym, DeclareParams (p));
   END DeclareProc;
 
 VAR paramVars: TextRefTbl.T;
+    resultVar: M3CG.Var;  (* the current procedure's "_result", or NIL *)
 
 PROCEDURE GenBinder (modeVar: M3CG.Var) =
   VAR done: M3CG.Label;  body := BodyProc ();  q: M3CG.Proc;
@@ -1577,10 +1654,76 @@ PROCEDURE Loc0 (v: MSIR.Value): ValLoc =
   BEGIN
     IF vals.get (name, r) THEN RETURN r END;
     l := NEW (ValLoc, kind := ValKind.Temp, t := MSIR.ValueType (v));
-    l.var := TempFor (l.t);
+    IF IsAgg (l.t) THEN
+      l.kind := ValKind.AddrOf;
+      l.var := AggTemp (l.t);
+    ELSE
+      l.var := TempFor (l.t);
+    END;
     EVAL vals.put (name, l);
     RETURN l;
   END Loc0;
+
+PROCEDURE AggTemp (t: MSIR.T): M3CG.Var =
+  VAR a: INTEGER;  sz := Size (t, a);
+  BEGIN
+    RETURN cg.declare_local (M3ID.NoID, RoundUp (MAX (sz, 1), a), a,
+                             M3CG.Type.Struct, 0, TRUE, FALSE, M3CG.Maybe);
+  END AggTemp;
+
+(* Copy an aggregate of type t: s1 is the destination, s0 the source. *)
+PROCEDURE CopyAgg (t: MSIR.T) =
+  VAR a: INTEGER;  sz := Size (t, a);
+  BEGIN
+    IF a >= 8 AND sz MOD 8 = 0 THEN cg.copy (sz DIV 8, Int64, FALSE)
+    ELSIF a >= 4 AND sz MOD 4 = 0 THEN cg.copy (sz DIV 4, M3CG.Type.Int32, FALSE)
+    ELSE cg.copy (sz, M3CG.Type.Word8, FALSE)
+    END;
+  END CopyAgg;
+
+(* Store the constant aggregate v at the address on the stack. *)
+PROCEDURE StoreConstAgg (v: MSIR.Value;  t: MSIR.T;  addr: MSIR.Value) =
+  VAR a: INTEGER;  sz := Size (t, a);
+  BEGIN
+    Push (addr);
+    cg.zero (sz, M3CG.Type.Word8);
+    IF MSIR.GetValueKind (v) # ValueKind.ConstNil THEN
+      StoreConstAt (addr, 0, v, t);
+    END;
+  END StoreConstAgg;
+
+PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
+                        t: MSIR.T) =
+  BEGIN
+    CASE MSIR.GetValueKind (v) OF
+    | ValueKind.ConstNil =>
+    | ValueKind.ConstStruct =>
+        t := Base (t);
+        FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
+          VAR fld := MSIR.StructField (t, i);
+          BEGIN
+            StoreConstAt (addr, off + fld.offset DIV 8,
+                          MSIR.GetConstStructField (v, i), fld.type);
+          END;
+        END;
+    | ValueKind.ConstAggArray =>
+        VAR elt := MSIR.FixedArrayElt (Base (t));  a: INTEGER;
+            sz := Size (elt, a);
+        BEGIN
+          FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
+            StoreConstAt (addr, off + i * sz, MSIR.GetConstStructField (v, i), elt);
+          END;
+        END;
+    ELSE
+      IF MSIR.GetValueKind (v) = ValueKind.ConstInt AND MSIR.GetIntVal (v) = 0 THEN
+        RETURN;  (* already zeroed *)
+      END;
+      Push (addr);
+      IF off # 0 THEN cg.add_offset (off) END;
+      Push (v);
+      cg.store_indirect (0, ZType (t), MType (t));
+    END;
+  END StoreConstAt;
 
 PROCEDURE PushInt (v: INTEGER;  t: M3CG.IType := Int64) =
   VAR i: Target.Int;
@@ -1676,6 +1819,19 @@ PROCEDURE Push (v: MSIR.Value) =
 PROCEDURE Def (v: MSIR.Value) =
   VAR l := Loc0 (v);
   BEGIN
+    IF l.kind = ValKind.AddrOf THEN
+      (* an aggregate: the stack holds the address of its new value *)
+      VAR src := cg.declare_temp (Target.Address.bytes, Target.Address.bytes,
+                                  Addr, FALSE);
+      BEGIN
+        cg.store (src, 0, Addr, Addr);
+        cg.load_address (l.var, 0);
+        cg.load (src, 0, Addr, Addr);
+        CopyAgg (l.t);
+        cg.free_temp (src);
+      END;
+      RETURN;
+    END;
     cg.store (l.var, 0, ZType (l.t), ZType (l.t));
   END Def;
 
@@ -1701,12 +1857,22 @@ PROCEDURE GenProc (p: MSIR.Proc) =
     EVAL paramVars.get (sym, r);
     pv := r;
     cg.begin_procedure (q);
+    resultVar := pv[MSIR.ProcParamCount (p)];
     FOR k := 0 TO MSIR.ProcParamCount (p) - 1 DO
-      VAR v := MSIR.ProcParam (p, k);
+      VAR v := MSIR.ProcParam (p, k);  t := MSIR.ValueType (v);
       BEGIN
-        EVAL vals.put (MSIR.ValueName (v),
-                       NEW (ValLoc, kind := ValKind.Param, var := pv[k],
-                            t := MSIR.ValueType (v)));
+        IF IsAgg (t) THEN
+          (* passed by address: the callee copies, as CG's do *)
+          VAR l := Loc0 (v);
+          BEGIN
+            cg.load_address (l.var, 0);
+            cg.load (pv[k], 0, Addr, Addr);
+            CopyAgg (t);
+          END;
+        ELSE
+          EVAL vals.put (MSIR.ValueName (v),
+                         NEW (ValLoc, kind := ValKind.Param, var := pv[k], t := t));
+        END;
       END;
     END;
     (* Allocas become in-memory locals, wherever they occur. *)
@@ -1856,6 +2022,13 @@ PROCEDURE ReadBarrier (v: MSIR.Value) =
     cg.set_label (skip);
   END ReadBarrier;
 
+(* Pass the address of res's temp as the hidden result parameter. *)
+PROCEDURE PassResult (res: MSIR.Value) =
+  BEGIN
+    cg.load_address (Loc0 (res).var, 0);
+    cg.pop_param (Addr);
+  END PassResult;
+
 PROCEDURE LineOf (i: MSIR.Insn) =
   VAR line := MSIR.InsnSrcLine (i);
   BEGIN
@@ -1875,9 +2048,15 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.Alloca => (* declared in GenProc *)
 
     | Op.Load =>
-        Push (MSIR.InsnOperand (i, 0));
-        cg.load_indirect (0, MType (rt), ZType (rt));
-        Def (res);
+        IF IsAgg (rt) THEN
+          cg.load_address (Loc0 (res).var, 0);
+          Push (MSIR.InsnOperand (i, 0));
+          CopyAgg (rt);
+        ELSE
+          Push (MSIR.InsnOperand (i, 0));
+          cg.load_indirect (0, MType (rt), ZType (rt));
+          Def (res);
+        END;
     | Op.GcLoad =>
         Push (MSIR.InsnOperand (i, 0));
         cg.load_indirect (0, Addr, Addr);
@@ -1889,9 +2068,19 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           IF op = Op.GcStore AND nOps = 3 THEN
             WriteBarrier (MSIR.InsnOperand (i, 2));
           END;
-          Push (MSIR.InsnOperand (i, 1));
-          Push (val);
-          cg.store_indirect (0, ZType (vt), MType (vt));
+          IF NOT IsAgg (vt) THEN
+            Push (MSIR.InsnOperand (i, 1));
+            Push (val);
+            cg.store_indirect (0, ZType (vt), MType (vt));
+          ELSIF MSIR.GetValueKind (val) IN SET OF ValueKind {
+                  ValueKind.ConstNil, ValueKind.ConstStruct,
+                  ValueKind.ConstAggArray } THEN
+            StoreConstAgg (val, vt, MSIR.InsnOperand (i, 1));
+          ELSE
+            Push (MSIR.InsnOperand (i, 1));
+            Push (val);
+            CopyAgg (vt);
+          END;
         END;
     | Op.GcDirty =>
         WriteBarrier (MSIR.InsnOperand (i, 0));
@@ -1916,6 +2105,31 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           Push (MSIR.InsnOperand (i, 0));
           Push (MSIR.InsnOperand (i, 1));
           cg.index_address (Int64, Size (MSIR.FixedArrayElt (t), a));
+          Def (res);
+        END;
+    | Op.OpenArraySize =>
+        Push (MSIR.InsnOperand (i, 0));
+        cg.load_indirect (Target.Address.bytes
+                            + MSIR.GetIntVal (MSIR.InsnOperand (i, 1))
+                              * Target.Integer.bytes, Int64, Int64);
+        Def (res);
+    | Op.OpenArrayElemAddr =>
+        (* data + ((i0*n1 + i1)*n2 + ...) * sizeof(elt), over the row-major
+           data the open-array dope describes *)
+        VAR oa := MSIR.InsnOperand (i, 0);  t := Base (MSIR.ValueType (oa));
+        BEGIN
+          Push (oa);
+          cg.load_indirect (0, Addr, Addr);
+          Push (MSIR.InsnOperand (i, 1));
+          FOR k := 1 TO MSIR.OpenArrayRank (t) - 1 DO
+            Push (oa);
+            cg.load_indirect (Target.Address.bytes + k * Target.Integer.bytes,
+                              Int64, Int64);
+            cg.multiply (Int64);
+            Push (MSIR.InsnOperand (i, 1 + k));
+            cg.add (Int64);
+          END;
+          cg.index_address (Int64, Size (MSIR.OpenArrayElt (t), a));
           Def (res);
         END;
     | Op.PtrAdd =>
@@ -1954,16 +2168,34 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.IXor => Binop (i);  cg.xor (Int64);  Def (res);
     | Op.IShl =>
         Binop (i);  cg.shift_left (Word64);  Canon (rt);  Def (res);
-    | Op.ILShr, Op.IAShr =>
-        (* extract (x, n, 64 - n), sign-extended for ashr *)
+    | Op.ILShr =>
         Push (MSIR.InsnOperand (i, 0));
-        IF op = Op.ILShr THEN Mask (rt) END;
+        Mask (rt);
         Push (MSIR.InsnOperand (i, 1));
-        PushInt (64);
-        Push (MSIR.InsnOperand (i, 1));
-        cg.subtract (Int64);
-        cg.extract (Int64, op = Op.IAShr);
+        cg.shift_right (Word64);
         Canon (rt);  Def (res);
+    | Op.IAShr =>
+        (* x < 0: NOT (NOT x >> n); else x >> n.  The value is sign-extended,
+           so this is correct for every width. *)
+        VAR neg := cg.next_label ();  done := cg.next_label ();
+        BEGIN
+          Push (MSIR.InsnOperand (i, 0));
+          PushInt (0);
+          cg.if_compare (Int64, M3CG.CompareOp.LT, neg, M3CG.Maybe);
+          Push (MSIR.InsnOperand (i, 0));
+          Push (MSIR.InsnOperand (i, 1));
+          cg.shift_right (Word64);
+          Def (res);
+          cg.jump (done);
+          cg.set_label (neg);
+          Push (MSIR.InsnOperand (i, 0));
+          cg.not (Int64);
+          Push (MSIR.InsnOperand (i, 1));
+          cg.shift_right (Word64);
+          cg.not (Int64);
+          Def (res);
+          cg.set_label (done);
+        END;
     | Op.IRotL => Binop (i);  cg.rotate_left (Word64);  Def (res);
     | Op.IRotR => Binop (i);  cg.rotate_right (Word64);  Def (res);
     | Op.Select =>
@@ -2035,10 +2267,17 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         IF nOps = 0 THEN
           cg.exit_proc (M3CG.Type.Void);
         ELSE
-          VAR v := MSIR.InsnOperand (i, 0);
+          VAR v := MSIR.InsnOperand (i, 0);  t := MSIR.ValueType (v);
           BEGIN
-            Push (v);
-            cg.exit_proc (SigType (MSIR.ValueType (v)));
+            IF IsAgg (t) THEN
+              cg.load (resultVar, 0, Addr, Addr);
+              Push (v);
+              CopyAgg (t);
+              cg.exit_proc (M3CG.Type.Void);
+            ELSE
+              Push (v);
+              cg.exit_proc (SigType (t));
+            END;
           END;
         END;
     | Op.Unreachable =>
@@ -2046,23 +2285,32 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
 
     | Op.Call =>
         VAR callee := MSIR.InsnCallee (i);  q := ProcFor (callee);
-            rtype := SigType (MSIR.ProcResultType (callee));
+            rtype := RetType (MSIR.ProcResultType (callee));
+            agg := HasAggResult (callee);
         BEGIN
           cg.start_call_direct (q, 0, rtype);
+          IF agg AND ResultFirst () THEN PassResult (res) END;
           FOR k := 0 TO nOps - 1 DO
             Push (MSIR.InsnOperand (i, k));
             cg.pop_param (SigType (MSIR.ValueType (MSIR.ProcParam (callee, k))));
           END;
+          IF agg AND NOT ResultFirst () THEN PassResult (res) END;
           cg.call_direct (q, rtype);
-          IF res # NIL THEN
+          IF agg THEN
+            (* the result is already in place *)
+          ELSIF res # NIL THEN
             IF IsInt (rt) THEN Canon (rt) END;
             Def (res);
+          ELSIF rtype # M3CG.Type.Void THEN
+            cg.pop (rtype);
           END;
         END;
     | Op.CallIndirect =>
-        VAR rtype := SigType (MSIR.InsnTargetType (i));
+        VAR rt0 := MSIR.InsnTargetType (i);  rtype := RetType (rt0);
+            agg := rt0 # NIL AND IsAgg (rt0);
         BEGIN
           cg.start_call_indirect (rtype, Target.DefaultCall);
+          IF agg AND ResultFirst () THEN PassResult (res) END;
           FOR k := 1 TO nOps - 1 DO
             VAR v := MSIR.InsnOperand (i, k);
             BEGIN
@@ -2070,9 +2318,11 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
               cg.pop_param (SigType (MSIR.ValueType (v)));
             END;
           END;
+          IF agg AND NOT ResultFirst () THEN PassResult (res) END;
           Push (MSIR.InsnOperand (i, 0));
           cg.call_indirect (rtype, Target.DefaultCall);
-          IF res # NIL THEN
+          IF agg THEN
+          ELSIF res # NIL THEN
             IF IsInt (rt) THEN Canon (rt) END;
             Def (res);
           ELSIF rtype # M3CG.Type.Void THEN
