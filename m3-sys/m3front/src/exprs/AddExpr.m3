@@ -179,6 +179,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFAdd (blk, "", a, b);
     | Class.cSET =>
+        IF MSIRBuilder.IsWideSet (MSIR.ValueType (a)) THEN
+          RETURN MSIR.BuildSetUnion (blk, "", a, b);
+        END;
         RETURN MSIR.BuildIOr (blk, "", a, b);
     | Class.cADDR =>
         (* ADDRESS + INTEGER: advance pointer by b bytes *)

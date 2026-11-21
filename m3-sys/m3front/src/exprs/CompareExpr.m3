@@ -297,10 +297,14 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
         (* LT = proper subset: (lv | rv) == rv AND lv != rv
            GT = proper superset: (lv | rv) == lv AND lv != rv
            Works for any set width (single-word or multi-word iN). *)
-        VAR lorv   := MSIR.BuildIOr  (blk, "", lv, rv);
+        VAR lorv   : MSIR.Value;
             cmpRef : MSIR.Value;
             sub, neq : MSIR.Value;
         BEGIN
+          IF MSIRBuilder.IsWideSet (MSIR.ValueType (lv))
+            THEN lorv := MSIR.BuildSetUnion (blk, "", lv, rv);
+            ELSE lorv := MSIR.BuildIOr (blk, "", lv, rv);
+          END;
           IF p.op = Op.LT THEN cmpRef := rv ELSE cmpRef := lv END;
           sub := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, lorv, cmpRef);
           neq := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, lv, rv);
@@ -310,9 +314,13 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
         (* LE = subset: (lv & rv) == lv
            GE = superset: (lv & rv) == rv
            Works for any set width. *)
-        VAR landv  := MSIR.BuildIAnd (blk, "", lv, rv);
+        VAR landv  : MSIR.Value;
             cmpRef : MSIR.Value;
         BEGIN
+          IF MSIRBuilder.IsWideSet (MSIR.ValueType (lv))
+            THEN landv := MSIR.BuildSetIntersect (blk, "", lv, rv);
+            ELSE landv := MSIR.BuildIAnd (blk, "", lv, rv);
+          END;
           IF p.op = Op.LE THEN cmpRef := lv ELSE cmpRef := rv END;
           RETURN MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, landv, cmpRef);
         END;

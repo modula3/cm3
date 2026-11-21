@@ -373,6 +373,15 @@ PROCEDURE BuildMemcmp(b: MSIR.Block;  a, bb: MSIR.Value;
 PROCEDURE OpenArrayToFixedStore(lhsPtr, rhsVal: MSIR.Value;
                                 lhsType: Type.T): BOOLEAN;
 
+(* TRUE if t, a set's MSIR type, is wider than a word.  Such sets use the
+   D19 set intrinsics (MSIR.BuildSetUnion etc.); a single-word set uses
+   integer operations. *)
+PROCEDURE IsWideSet(t: MSIR.T): BOOLEAN;
+
+(* v, an element of a set, as the i64 bit index of a set intrinsic: v
+   widened to INTEGER, less the set's first element minOrd. *)
+PROCEDURE SetIndex(blk: MSIR.Block;  v: MSIR.Value;  minOrd: INTEGER): MSIR.Value;
+
 (* Sign-aware integer extension/truncation used by arithmetic operators.
    Widens v from its current bit-width to rt's bit-width (SExt for I-kind
    signed types, ZExt for W-kind unsigned types) or truncates if narrower.

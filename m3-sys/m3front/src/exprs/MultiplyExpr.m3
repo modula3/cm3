@@ -164,6 +164,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     | cREAL, cLONG, cEXTND =>
         RETURN MSIR.BuildFMul (blk, "", a, b);
     | cSET =>
+        IF MSIRBuilder.IsWideSet (MSIR.ValueType (a)) THEN
+          RETURN MSIR.BuildSetIntersect (blk, "", a, b);
+        END;
         RETURN MSIR.BuildIAnd (blk, "", a, b);
     ELSE
       MSIRBuilder.Abandon ("unsupported '*' class");

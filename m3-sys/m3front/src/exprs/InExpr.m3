@@ -208,6 +208,24 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
       elt := MSIR.RetypeValue (elt, MSIR.TI (MSIR.BitWidth (MSIR.ValueType (elt))));
     END;
 
+    IF MSIRBuilder.IsWideSet (MSIR.ValueType (setVal)) THEN
+      (* A multi-word set: set_member on the element's bit index, which
+         must lie in the set's domain (D19); outside it the answer is FALSE. *)
+      VAR iT  := MSIR.TI (Target.Integer.size);
+          adj := MSIRBuilder.SetIndex (blk, elt, minOrd);
+          inRange, member: MSIR.Value;
+      BEGIN
+        IF NOT needRangeCheck THEN
+          RETURN MSIR.BuildSetMember (blk, "", setVal, adj);
+        END;
+        inRange := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ule, adj,
+                                   MSIR.ConstInt (iT, maxOrd - minOrd));
+        adj := MSIR.BuildSelect (blk, "", inRange, adj, MSIR.ConstZero (iT));
+        member := MSIR.BuildSetMember (blk, "", setVal, adj);
+        RETURN MSIR.BuildIAnd (blk, "", inRange, member);
+      END;
+    END;
+
     (* Work in the wider of the set type and the element type so that all
        operands to binary instructions have the same type.  setVal is
        zero-extended (set bits stay in the low bits); elt is sign-extended

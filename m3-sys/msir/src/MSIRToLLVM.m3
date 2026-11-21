@@ -801,6 +801,86 @@ PROCEDURE EmitBinop(wr: Wr.T;  llop: TEXT;  res, a, b: MSIR.Value) =
     Wr.PutText(wr, "\n");
   END EmitBinop;
 
+(* The i64 element index v of a set intrinsic, as an operand of the set's
+   integer type t (name.suffix if it needs a conversion). *)
+PROCEDURE SetIndex(wr: Wr.T;  v: MSIR.Value;  t: MSIR.T;
+                   name, suffix: TEXT): TEXT =
+  VAR n := MSIR.BitWidth(t);  tmp := name & suffix;  op: TEXT;
+  BEGIN
+    IF n = 64 THEN
+      VAR w := TextWr.New();
+      BEGIN LLOpVal(w, v);  RETURN TextWr.ToText(w) END;
+    END;
+    IF n > 64 THEN op := "zext" ELSE op := "trunc" END;
+    Wr.PutText(wr, "  " & tmp & " = " & op & " i64 ");
+    LLOpVal(wr, v);
+    Wr.PutText(wr, " to ");
+    LLType(wr, t);
+    Wr.PutText(wr, "\n");
+    RETURN tmp;
+  END SetIndex;
+
+(* The set intrinsics (D19) on a set of integer type iN. *)
+PROCEDURE EmitSetOp(wr: Wr.T;  i: MSIR.Insn) =
+  VAR res := MSIR.InsnResult(i);  r := MSIR.ValueName(res);
+      t: MSIR.T;  ts: TEXT;
+  PROCEDURE T(): TEXT =
+    VAR w := TextWr.New();
+    BEGIN LLType(w, t);  RETURN TextWr.ToText(w) END T;
+  PROCEDURE V(v: MSIR.Value): TEXT =
+    VAR w := TextWr.New();
+    BEGIN LLOpVal(w, v);  RETURN TextWr.ToText(w) END V;
+  BEGIN
+    CASE MSIR.InsnOp(i) OF
+    | MSIR.Op.SetUnion =>
+        EmitBinop(wr, "or", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.SetIntersect =>
+        EmitBinop(wr, "and", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.SetSymDifference =>
+        EmitBinop(wr, "xor", res, MSIR.InsnOperand(i,0), MSIR.InsnOperand(i,1));
+    | MSIR.Op.SetDifference =>
+        t := MSIR.ValueType(res);  ts := T();
+        Wr.PutText(wr, "  " & r & ".n = xor " & ts & " "
+                       & V(MSIR.InsnOperand(i,1)) & ", -1\n");
+        Wr.PutText(wr, "  " & r & " = and " & ts & " "
+                       & V(MSIR.InsnOperand(i,0)) & ", " & r & ".n\n");
+    | MSIR.Op.SetMember =>
+        t := MSIR.ValueType(MSIR.InsnOperand(i,0));  ts := T();
+        VAR k := SetIndex(wr, MSIR.InsnOperand(i,1), t, r, ".k");
+        BEGIN
+          Wr.PutText(wr, "  " & r & ".s = lshr " & ts & " "
+                         & V(MSIR.InsnOperand(i,0)) & ", " & k & "\n");
+          Wr.PutText(wr, "  " & r & " = trunc " & ts & " " & r & ".s to i1\n");
+        END;
+    | MSIR.Op.SetSingleton =>
+        t := MSIR.InsnTargetType(i);  ts := T();
+        VAR k := SetIndex(wr, MSIR.InsnOperand(i,0), t, r, ".k");
+        BEGIN
+          Wr.PutText(wr, "  " & r & " = shl " & ts & " 1, " & k & "\n");
+        END;
+    | MSIR.Op.SetRange =>
+        (* bits lo..hi: (-1 lshr (N-1-hi)) and (-1 shl lo); empty if lo > hi,
+           where the shifts may be poison but select does not take them *)
+        t := MSIR.InsnTargetType(i);  ts := T();
+        VAR lo := SetIndex(wr, MSIR.InsnOperand(i,0), t, r, ".lo");
+            hi := SetIndex(wr, MSIR.InsnOperand(i,1), t, r, ".hi");
+        BEGIN
+          Wr.PutText(wr, "  " & r & ".c = sub " & ts & " "
+                         & Fmt.Int(MSIR.BitWidth(t) - 1) & ", " & hi & "\n");
+          Wr.PutText(wr, "  " & r & ".u = lshr " & ts & " -1, " & r & ".c\n");
+          Wr.PutText(wr, "  " & r & ".l = shl " & ts & " -1, " & lo & "\n");
+          Wr.PutText(wr, "  " & r & ".m = and " & ts & " " & r & ".u, "
+                         & r & ".l\n");
+          Wr.PutText(wr, "  " & r & ".e = icmp sgt i64 "
+                         & V(MSIR.InsnOperand(i,0)) & ", "
+                         & V(MSIR.InsnOperand(i,1)) & "\n");
+          Wr.PutText(wr, "  " & r & " = select i1 " & r & ".e, " & ts & " 0, "
+                         & ts & " " & r & ".m\n");
+        END;
+    ELSE <* ASSERT FALSE *>
+    END;
+  END EmitSetOp;
+
 PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
   VAR
     op     := MSIR.InsnOp(i);
@@ -932,6 +1012,11 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           LLTypedVal(wr, n);
           Wr.PutText(wr, ")\n");
         END;
+
+    | MSIR.Op.SetUnion, MSIR.Op.SetIntersect, MSIR.Op.SetDifference,
+      MSIR.Op.SetSymDifference, MSIR.Op.SetMember, MSIR.Op.SetSingleton,
+      MSIR.Op.SetRange =>
+        EmitSetOp(wr, i);
 
     | MSIR.Op.Select =>
         VAR

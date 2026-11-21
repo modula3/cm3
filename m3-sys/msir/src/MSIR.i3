@@ -641,8 +641,9 @@ TYPE Op = {
   FPCeil,     (* ceil(x):  round toward +inf; lowers to llvm.ceil.* *)
   FPRound,    (* round-half-to-even (FloatMode.RoundDefault=NearestElseEven); lowers to llvm.roundeven.* *)
   FPAbs,      (* fabs(x): floating-point absolute value; lowers to llvm.fabs.* *)
-  (* sets *)
+  (* sets (D19), on multi-word sets typed iN *)
   SetUnion, SetIntersect, SetDifference, SetMember,
+  SetSymDifference, SetSingleton, SetRange,
   (* indirect dispatch *)
   PtrAdd,         (* getelementptr ptr, ptr %base, i64 N  — vtable slot address *)
   GepByte,        (* getelementptr i8, ptr %base, i64 %offset — dynamic byte-offset ptr arith *)
@@ -944,12 +945,22 @@ PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value);
 PROCEDURE BuildConvert(b: Block;  name: TEXT;
                        value: Value;  targetType: T): Value;
 
+(* Set intrinsics (D19).  m3front uses them for sets wider than a word,
+   whose type is an integer iN (bit i is element FIRST + i).  An element
+   operand is an i64 bit index, already biased by FIRST and checked by the
+   front end: 0 <= i < N.  A set_range is empty when lo > hi; otherwise
+   0 <= lo <= hi < N. *)
 PROCEDURE BuildSetUnion     (b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildSetIntersect (b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildSetDifference(b: Block;  name: TEXT;  x, y: Value): Value;
+PROCEDURE BuildSetSymDifference(b: Block;  name: TEXT;  x, y: Value): Value;
 PROCEDURE BuildSetMember    (b: Block;  name: TEXT;
                              set: Value;  elt: Value): Value;
                              (* result: i1 *)
+PROCEDURE BuildSetSingleton (b: Block;  name: TEXT;  t: T;  elt: Value): Value;
+                             (* {elt}, of set type t *)
+PROCEDURE BuildSetRange     (b: Block;  name: TEXT;  t: T;  lo, hi: Value): Value;
+                             (* {lo..hi}, of set type t *)
 
 (*----------------------------------------------- indirect dispatch *)
 

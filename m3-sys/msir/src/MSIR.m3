@@ -2606,7 +2606,7 @@ PROCEDURE buildSetBin(b: Block;  op: Op;  name: TEXT;  x, y: Value): Value =
   BEGIN
     <* ASSERT Equal(x.type, y.type),
        "set binary op: operand type mismatch" *>
-    <* ASSERT Kind(x.type) = TypeKind.Set,
+    <* ASSERT IsSetRep(x.type),
        "set binary op: operands must have set type" *>
     i.op := op;
     ops[0] := x;  ops[1] := y;
@@ -2615,6 +2615,43 @@ PROCEDURE buildSetBin(b: Block;  op: Op;  name: TEXT;  x, y: Value): Value =
     addInsn(b, i);
     RETURN i.result;
   END buildSetBin;
+
+(* A set's representation: a set type, or the integer iN m3front uses. *)
+PROCEDURE IsSetRep(t: T): BOOLEAN =
+  BEGIN
+    RETURN t # NIL AND t.kind IN SET OF TypeKind {
+             TypeKind.Set, TypeKind.IWide, TypeKind.I8, TypeKind.I16,
+             TypeKind.I32, TypeKind.I64 };
+  END IsSetRep;
+
+PROCEDURE BuildSetSymDifference(b: Block;  name: TEXT;  x, y: Value): Value =
+  BEGIN RETURN buildSetBin(b, Op.SetSymDifference, name, x, y) END BuildSetSymDifference;
+
+PROCEDURE BuildSetSingleton(b: Block;  name: TEXT;  t: T;  elt: Value): Value =
+  VAR i := NEW(Insn);  ops := NEW(REF ARRAY OF Value, 1);
+  BEGIN
+    <* ASSERT IsSetRep(t), "BuildSetSingleton: not a set type" *>
+    i.op := Op.SetSingleton;
+    i.targetType := t;
+    ops[0] := elt;
+    i.operands := ops;
+    i.result := makeResult(b, t, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildSetSingleton;
+
+PROCEDURE BuildSetRange(b: Block;  name: TEXT;  t: T;  lo, hi: Value): Value =
+  VAR i := NEW(Insn);  ops := NEW(REF ARRAY OF Value, 2);
+  BEGIN
+    <* ASSERT IsSetRep(t), "BuildSetRange: not a set type" *>
+    i.op := Op.SetRange;
+    i.targetType := t;
+    ops[0] := lo;  ops[1] := hi;
+    i.operands := ops;
+    i.result := makeResult(b, t, name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildSetRange;
 
 PROCEDURE BuildSetUnion(b: Block;  name: TEXT;  x, y: Value): Value =
   BEGIN RETURN buildSetBin(b, Op.SetUnion, name, x, y) END BuildSetUnion;
@@ -2629,7 +2666,7 @@ PROCEDURE BuildSetMember(b: Block;  name: TEXT;
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
   BEGIN
-    <* ASSERT Kind(set.type) = TypeKind.Set,
+    <* ASSERT IsSetRep(set.type),
        "BuildSetMember: first operand must be set" *>
     i.op := Op.SetMember;
     ops[0] := set;  ops[1] := elt;

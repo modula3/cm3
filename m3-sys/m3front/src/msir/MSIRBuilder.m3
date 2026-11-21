@@ -2046,6 +2046,20 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
     RETURN TRUE;
   END OpenArrayToFixedStore;
 
+PROCEDURE IsWideSet(t: MSIR.T): BOOLEAN =
+  BEGIN
+    RETURN t # NIL AND MSIR.Kind(t) = MSIR.TypeKind.IWide
+       AND MSIR.BitWidth(t) > Target.Word.size;
+  END IsWideSet;
+
+PROCEDURE SetIndex(blk: MSIR.Block;  v: MSIR.Value;  minOrd: INTEGER): MSIR.Value =
+  VAR iT := MSIR.TI(Target.Integer.size);
+  BEGIN
+    v := CoerceToMSIR(blk, v, iT);
+    IF minOrd # 0 THEN v := MSIR.BuildISub(blk, "", v, MSIR.ConstInt(iT, minOrd)) END;
+    RETURN v;
+  END SetIndex;
+
 PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value =
   (* Sign-aware widening/truncation for arithmetic operators.
      SExt for signed I-kind (I8, I16, I32, I64 — signed subranges like [-20..20]).

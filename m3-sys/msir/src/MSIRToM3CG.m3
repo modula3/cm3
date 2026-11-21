@@ -15,6 +15,8 @@ CONST
     Op.Select,
     Op.FAdd, Op.FSub, Op.FMul, Op.FDiv, Op.FNeg, Op.FPAbs,
     Op.FPFloor, Op.FPCeil, Op.FPRound, Op.Typecase,
+    Op.SetUnion, Op.SetIntersect, Op.SetDifference, Op.SetSymDifference,
+    Op.SetMember, Op.SetSingleton, Op.SetRange,
     Op.ICmp, Op.FCmp,
     Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
     Op.Call, Op.CallIndirect, Op.Dispatch,
@@ -281,9 +283,25 @@ PROCEDURE IsFloat (t: MSIR.T): BOOLEAN =
 PROCEDURE IsAgg (t: MSIR.T): BOOLEAN =
   BEGIN
     t := Base (t);
-    RETURN t # NIL AND MSIR.Kind (t) IN SET OF TypeKind {
-             TypeKind.Struct, TypeKind.FixedArray, TypeKind.OpenArray };
+    RETURN t # NIL AND (MSIR.Kind (t) IN SET OF TypeKind {
+             TypeKind.Struct, TypeKind.FixedArray, TypeKind.OpenArray }
+             OR IsWideSet (t));
   END IsAgg;
+
+(* A set wider than a word: m3front types it as an integer iN and works on
+   it with the set intrinsics (D19).  Here it is an aggregate of N/64 words,
+   word-aligned as CG lays sets out, operated on by M3CG's set_* ops. *)
+PROCEDURE IsWideSet (t: MSIR.T): BOOLEAN =
+  BEGIN
+    t := Base (t);
+    RETURN t # NIL AND MSIR.Kind (t) = TypeKind.IWide
+       AND MSIR.BitWidth (t) > 64;
+  END IsWideSet;
+
+PROCEDURE SetBytes (t: MSIR.T): INTEGER =
+  BEGIN
+    RETURN RoundUp (MSIR.BitWidth (Base (t)), 64) DIV 8;
+  END SetBytes;
 
 PROCEDURE IsValue (t: MSIR.T): BOOLEAN =
   VAR a: INTEGER;
@@ -424,6 +442,7 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
       END;
       RETURN align;
     END;
+    IF IsWideSet (t) THEN align := 8;  RETURN SetBytes (t) END;
     IF IsOddInt (t) THEN
       (* LLVM's allocation size: the next power-of-two number of bytes *)
       align := 1;
@@ -553,6 +572,8 @@ CONST
     Op.Select,
     Op.FAdd, Op.FSub, Op.FMul, Op.FDiv, Op.FNeg, Op.FPAbs,
     Op.FPFloor, Op.FPCeil, Op.FPRound, Op.Typecase,
+    Op.SetUnion, Op.SetIntersect, Op.SetDifference, Op.SetSymDifference,
+    Op.SetMember, Op.SetSingleton, Op.SetRange,
     Op.ICmp, Op.FCmp,
     Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
     Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally, Op.HandlerActivation,
@@ -619,7 +640,9 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
     IF res # NIL AND op # Op.Alloca THEN
       t := MSIR.ValueType (res);
       IF NOT IsScalar (t) AND NOT (IsAgg (t) AND IsValue (t) AND op IN SET OF Op {
-               Op.Load, Op.Call, Op.CallIndirect, Op.Select }) THEN
+               Op.Load, Op.Call, Op.CallIndirect, Op.Select,
+               Op.SetUnion, Op.SetIntersect, Op.SetDifference,
+               Op.SetSymDifference, Op.SetSingleton, Op.SetRange }) THEN
         Fail (w, MSIRPrinter.OpText (op) & " result "
                    & KindText[MSIR.Kind (Base (t))]);
       END;
@@ -644,6 +667,12 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
           FOR j := 0 TO MSIR.InsnBrArgCount (i, k) - 1 DO
             CheckValue (w, MSIR.InsnBrArg (i, k, j));
           END;
+        END;
+    | Op.ICmp =>
+        IF IsWideSet (MSIR.ValueType (MSIR.InsnOperand (i, 0)))
+           AND NOT MSIR.InsnCmpPred (i) IN SET OF MSIR.CmpPred {
+                     MSIR.CmpPred.Eq, MSIR.CmpPred.Ne } THEN
+          Fail (w, "ordered icmp on a multi-word set");
         END;
     | Op.Typecase =>
         IF MSIR.ModuleScanTypecase (mod) = NIL THEN
@@ -1228,7 +1257,13 @@ PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
   BEGIN
     CASE MSIR.GetValueKind (v) OF
     | ValueKind.ConstInt =>
-        IF IsPtr (t) THEN
+        IF IsWideSet (t) THEN
+          FOR k := 0 TO SetBytes (t) DIV 8 - 1 DO
+            IF WideWord (MSIR.GetIntVal (v), k) # 0 THEN
+              InitInt (off + k * 8, WideWord (MSIR.GetIntVal (v), k), Int64);
+            END;
+          END;
+        ELSIF IsPtr (t) THEN
           InitInt (off, MSIR.GetIntVal (v), Addr);
         ELSE
           InitInt (off, CanonInt (MSIR.GetIntVal (v), IntBits (t)), MType (t));
@@ -1893,6 +1928,26 @@ PROCEDURE CanonInt (v, bits: INTEGER): INTEGER =
     RETURN v;
   END CanonInt;
 
+(* A multi-word set constant: the integer v of type iN, i.e. v in the low
+   word and its sign in the others (m3front uses 0 and -1). *)
+PROCEDURE WideWord (v, k: INTEGER): INTEGER =
+  BEGIN
+    IF k = 0 THEN RETURN v END;
+    IF v < 0 THEN RETURN -1 END;
+    RETURN 0;
+  END WideWord;
+
+(* Push the address of a fresh temporary holding the constant v of type t. *)
+PROCEDURE PushWideConst (v: INTEGER;  t: MSIR.T) =
+  VAR tmp := AggTemp (t);
+  BEGIN
+    FOR k := 0 TO SetBytes (t) DIV 8 - 1 DO
+      PushInt (WideWord (v, k));
+      cg.store (tmp, k * 8, Int64, Int64);
+    END;
+    cg.load_address (tmp, 0);
+  END PushWideConst;
+
 PROCEDURE PushAddr (v: M3CG.Var;  off: INTEGER) =
   BEGIN
     cg.load_address (v, off);
@@ -1904,7 +1959,9 @@ PROCEDURE Push (v: MSIR.Value) =
   BEGIN
     CASE MSIR.GetValueKind (v) OF
     | ValueKind.ConstInt =>
-        IF IsPtr (t) THEN
+        IF IsWideSet (t) THEN
+          PushWideConst (MSIR.GetIntVal (v), t);
+        ELSIF IsPtr (t) THEN
           IF MSIR.GetIntVal (v) = 0 THEN cg.load_nil ()
           ELSE PushInt (MSIR.GetIntVal (v));  cg.loophole (Int64, Addr)
           END;
@@ -2818,6 +2875,12 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         Def (res);
 
     | Op.ICmp =>
+      IF IsWideSet (MSIR.ValueType (MSIR.InsnOperand (i, 0))) THEN
+        Binop (i);
+        cg.set_compare (SetBytes (MSIR.ValueType (MSIR.InsnOperand (i, 0))),
+                        CmpOp (MSIR.InsnCmpPred (i)), Int64);
+        Def (res);
+      ELSE
         VAR pred := MSIR.InsnCmpPred (i);
             t := MSIR.ValueType (MSIR.InsnOperand (i, 0));
             unsigned := pred IN SET OF MSIR.CmpPred {
@@ -2839,11 +2902,46 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           cg.compare (z, Int64, CmpOp (pred));
           Def (res);
         END;
+      END;
     | Op.FCmp =>
         Binop (i);
         cg.compare (RType (MSIR.ValueType (MSIR.InsnOperand (i, 0))), Int64,
                     FCmpOp (MSIR.InsnFCmpPred (i)));
         Def (res);
+
+    (* Set intrinsics (D19) on a multi-word set: the result is the address
+       of its temporary, filled by M3CG's set_* ops. *)
+    | Op.SetUnion, Op.SetIntersect, Op.SetDifference, Op.SetSymDifference =>
+        VAR n := SetBytes (rt);
+        BEGIN
+          cg.load_address (Loc0 (res).var, 0);
+          Binop (i);
+          CASE op OF
+          | Op.SetUnion         => cg.set_union (n);
+          | Op.SetIntersect     => cg.set_intersection (n);
+          | Op.SetDifference    => cg.set_difference (n);
+          | Op.SetSymDifference => cg.set_sym_difference (n);
+          ELSE <* ASSERT FALSE *>
+          END;
+        END;
+    | Op.SetMember =>
+        Binop (i);
+        cg.set_member (SetBytes (MSIR.ValueType (MSIR.InsnOperand (i, 0))), Int64);
+        Def (res);
+    | Op.SetSingleton, Op.SetRange =>
+        VAR n := SetBytes (rt);  var := Loc0 (res).var;
+        BEGIN
+          cg.load_address (var, 0);
+          cg.zero (n DIV 8, Int64);
+          cg.load_address (var, 0);
+          Push (MSIR.InsnOperand (i, 0));
+          IF op = Op.SetSingleton THEN
+            cg.set_singleton (n, Int64);
+          ELSE
+            Push (MSIR.InsnOperand (i, 1));
+            cg.set_range (n, Int64);
+          END;
+        END;
 
     | Op.Br =>
         VAR target := MSIR.InsnBrTarget (i, 0);

@@ -1064,27 +1064,27 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         result := MSIR.ConstInt (ti, v);
       END;
     ELSE
-      (* Multi-word set: build constant part by iterating the range tree.
-         For each range [n.min..n.max] set bits [lo_bit..hi_bit] using:
-           range_mask = lshr(ones, N-1-hi) AND shl(ones, lo)
-         LLVM constant-folds these when shift amounts are constants. *)
-      VAR n     := p.tree;
-          ones  := MSIR.ConstInt (ti, -1);   (* iN with all bits set *)
-          nbits := info.size;
+      (* Multi-word set: the constant ranges of the tree, as set intrinsics
+         (D19): set_range of bits [n.min-minOrd .. n.max-minOrd], or
+         set_singleton for one element. *)
+      VAR n  := p.tree;
+          iT := MSIR.TI (Target.Integer.size);
+          rng : MSIR.Value;
       BEGIN
         result := MSIR.ConstInt (ti, 0);
         blk    := MSIRBuilder.CurrentBlock ();
         WHILE n # NIL DO
-          VAR lo_bit := n.min - minOrd;
-              hi_bit := n.max - minOrd;
-              upper, lower, rng : MSIR.Value;
-          BEGIN
-            upper := MSIR.BuildILShr (blk, "", ones,
-                       MSIR.ConstInt (ti, nbits - 1 - hi_bit));
-            lower := MSIR.BuildIShl  (blk, "", ones,
-                       MSIR.ConstInt (ti, lo_bit));
-            rng   := MSIR.BuildIAnd (blk, "", upper, lower);
-            result := MSIR.BuildIOr (blk, "", result, rng);
+          IF n.min = n.max THEN
+            rng := MSIR.BuildSetSingleton (blk, "", ti,
+                     MSIR.ConstInt (iT, n.min - minOrd));
+          ELSE
+            rng := MSIR.BuildSetRange (blk, "", ti,
+                     MSIR.ConstInt (iT, n.min - minOrd),
+                     MSIR.ConstInt (iT, n.max - minOrd));
+          END;
+          IF n = p.tree
+            THEN result := rng;
+            ELSE result := MSIR.BuildSetUnion (blk, "", result, rng);
           END;
           n := n.next;
         END;
@@ -1104,6 +1104,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             loV := Expr.CompileMSIR (lo);  IF loV = NIL THEN RETURN NIL END;
             hiV := Expr.CompileMSIR (hi);  IF hiV = NIL THEN RETURN NIL END;
             blk := MSIRBuilder.CurrentBlock ();
+            IF MSIRBuilder.IsWideSet (ti) THEN
+              (* set_range on the bounds' bit indices; empty if lo > hi *)
+              rng := MSIR.BuildSetRange (blk, "", ti,
+                       MSIRBuilder.SetIndex (blk, loV, minOrd),
+                       MSIRBuilder.SetIndex (blk, hiV, minOrd));
+              result := MSIR.BuildSetUnion (blk, "", result, rng);
+            ELSE
             IF MSIR.BitWidth (MSIR.ValueType (loV)) < info.size THEN
               loV := MSIR.BuildZExt (blk, "", loV, ti);
             ELSIF MSIR.BitWidth (MSIR.ValueType (loV)) > info.size THEN
@@ -1137,11 +1144,35 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             lower := MSIR.BuildIShl (blk, "", ones, loV);
             rng   := MSIR.BuildIAnd (blk, "", upper, lower);
             result := MSIR.BuildIOr (blk, "", result, rng);
+            END;
           END;
         ELSE
           elt := Expr.CompileMSIR (p.others[i]);
           IF elt = NIL THEN RETURN NIL END;
           blk := MSIRBuilder.CurrentBlock ();
+          IF MSIRBuilder.IsWideSet (ti) THEN
+            (* set_singleton of the element's bit index, after the same
+               domain check as below, done on the INTEGER value *)
+            VAR iT := MSIR.TI (Target.Integer.size);
+                e  := MSIRBuilder.SetIndex (blk, elt, 0);
+            BEGIN
+              MSIRBuilder.EmitReportFault (
+                MSIR.BuildICmp (blk, "", MSIR.CmpPred.Slt, e,
+                                MSIR.ConstInt (iT, p.minI)),
+                ORD (CG.RuntimeError.ValueOutOfRange));
+              blk := MSIRBuilder.CurrentBlock ();
+              MSIRBuilder.EmitReportFault (
+                MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt, e,
+                                MSIR.ConstInt (iT, p.maxI)),
+                ORD (CG.RuntimeError.ValueOutOfRange));
+              blk := MSIRBuilder.CurrentBlock ();
+              IF minOrd # 0 THEN
+                e := MSIR.BuildISub (blk, "", e, MSIR.ConstInt (iT, minOrd));
+              END;
+              result := MSIR.BuildSetUnion (blk, "", result,
+                          MSIR.BuildSetSingleton (blk, "", ti, e));
+            END;
+          ELSE
           IF MSIR.BitWidth (MSIR.ValueType (elt)) < info.size THEN
             elt := MSIR.BuildZExt (blk, "", elt, ti);
           ELSIF MSIR.BitWidth (MSIR.ValueType (elt)) > info.size THEN
@@ -1169,6 +1200,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           END;
           bit    := MSIR.BuildIShl (blk, "", MSIR.ConstInt (ti, 1), elt);
           result := MSIR.BuildIOr  (blk, "", result, bit);
+          END;
         END;
       END;
     END;

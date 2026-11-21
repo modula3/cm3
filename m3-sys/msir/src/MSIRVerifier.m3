@@ -97,6 +97,20 @@ PROCEDURE CheckBinaryArith(c: Ctx;  i: MSIR.Insn) =
     END;
   END CheckBinaryArith;
 
+(* Operands k.. of a set intrinsic are i64 bit indices (D19). *)
+PROCEDURE CheckSetIndices(c: Ctx;  i: MSIR.Insn;  from, n: INTEGER) =
+  BEGIN
+    IF MSIR.InsnOperandCount(i) # from + n THEN
+      Err(c, "set op: wrong operand count");
+      RETURN;
+    END;
+    FOR k := from TO from + n - 1 DO
+      IF MSIR.BitWidth(MSIR.ValueType(MSIR.InsnOperand(i, k))) # 64 THEN
+        Err(c, "set op: element index must be i64");
+      END;
+    END;
+  END CheckSetIndices;
+
 PROCEDURE IsPointerLike(t: MSIR.T): BOOLEAN =
   VAR k := MSIR.Kind(t);
   BEGIN
@@ -389,6 +403,12 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckBinaryArith(c, i);
     | MSIR.Op.FAdd, MSIR.Op.FSub, MSIR.Op.FMul, MSIR.Op.FDiv =>
         CheckBinaryArith(c, i);
+    | MSIR.Op.SetUnion, MSIR.Op.SetIntersect, MSIR.Op.SetDifference,
+      MSIR.Op.SetSymDifference =>
+        CheckBinaryArith(c, i);
+    | MSIR.Op.SetMember    => CheckSetIndices(c, i, 1, 1);
+    | MSIR.Op.SetSingleton => CheckSetIndices(c, i, 0, 1);
+    | MSIR.Op.SetRange     => CheckSetIndices(c, i, 0, 2);
     | MSIR.Op.FNeg =>
         (* single float operand, same type result — treated like unary arith *)
     | MSIR.Op.ICmp =>

@@ -271,6 +271,9 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.SetIntersect       => RETURN "set_intersect";
     | MSIR.Op.SetDifference      => RETURN "set_difference";
     | MSIR.Op.SetMember          => RETURN "set_member";
+    | MSIR.Op.SetSymDifference   => RETURN "set_sym_difference";
+    | MSIR.Op.SetSingleton       => RETURN "set_singleton";
+    | MSIR.Op.SetRange           => RETURN "set_range";
     | MSIR.Op.OpenArrayNew       => RETURN "openarray.new";
     | MSIR.Op.OpenArrayDeref     => RETURN "openarray.deref";
     | MSIR.Op.ArrayElemAddr      => RETURN "array.elem_addr";
@@ -542,11 +545,18 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, " to ");
         Type(wr, MSIR.ValueType(MSIR.InsnResult(i)));
     | MSIR.Op.SetUnion, MSIR.Op.SetIntersect,
-      MSIR.Op.SetDifference, MSIR.Op.SetMember =>
+      MSIR.Op.SetDifference, MSIR.Op.SetSymDifference, MSIR.Op.SetMember =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
+    | MSIR.Op.SetSingleton, MSIR.Op.SetRange =>
+        Wr.PutText(wr, " ");
+        Type(wr, MSIR.InsnTargetType(i));
+        FOR k := 0 TO MSIR.InsnOperandCount(i) - 1 DO
+          Wr.PutText(wr, ", ");
+          NameRef(wr, MSIR.InsnOperand(i, k));
+        END;
     | MSIR.Op.OpenArrayNew =>
         Wr.PutText(wr, " <element=");
         Type(wr, MSIR.InsnTargetType(i));

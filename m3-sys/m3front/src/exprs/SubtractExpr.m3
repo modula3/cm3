@@ -208,6 +208,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         RETURN MSIR.BuildFSub (blk, "", a, b);
     | Class.cSET =>
+        IF MSIRBuilder.IsWideSet (MSIR.ValueType (a)) THEN
+          RETURN MSIR.BuildSetDifference (blk, "", a, b);
+        END;
         (* A - B = A AND NOT B *)
         VAR notB := MSIR.BuildIXor (blk, "", b, MSIR.ConstInt (MSIR.ValueType (b), -1));
         BEGIN

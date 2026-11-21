@@ -1547,6 +1547,29 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     sizes before building MSIR, so MSIR is per-target like the C it
     replaces.
 
+**Progress (2026-11-21): D19 set intrinsics for multi-word sets.**
+- m3front emits the set intrinsics for sets wider than a word (still typed
+  iN): `set_union`, `set_intersect`, `set_difference` and new
+  `set_sym_difference` for `+ * - /`; `set_member` for IN (the element's
+  i64 bit index, biased by FIRST, guarded when the element's range exceeds
+  the set's); new `set_singleton` and `set_range` for constructors, constant
+  and runtime; subsets as `set_union`/`set_intersect` then `icmp eq`.
+  Single-word sets keep integer operations.  `MSIRBuilder.IsWideSet` and
+  `SetIndex` decide and convert from the MSIR types alone.
+- MSIRToLLVM expands each intrinsic to the `iN` code it emitted before
+  (`set_range` selects 0 when lo > hi, so its shifts may be poison).
+- MSIRToM3CG treats a multi-word set as an aggregate of N/64 words, word
+  aligned as CG lays sets out, and maps the intrinsics onto M3CG's
+  `set_union`/`set_intersection`/`set_difference`/`set_sym_difference`/
+  `set_member`/`set_singleton`/`set_range`, `icmp eq/ne` onto
+  `set_compare`, and an iN constant (0 or -1) onto a filled temporary.
+  m3core: 260 units lower; ASCII and TextConv no longer fall back for
+  sets (ASCII's module still does for its exported variables).
+- Found on the way, on master's C backend (fixed separately): for
+  multi-word sets M3C's `set_compare` passed `<=`/`<`/`>=`/`>` operands
+  in reverse, read memcmp the wrong way round for `=`/`#`, and did not
+  declare `SET` when a comparison was a unit's only set operation.
+
 **Progress (2026-11-21): MSIR to M3CG, small gaps.**
 - TYPECASE: a `RTHooks.TypecaseCell` table per `typecase` in the data
   segment (uids; defn filled lazily by `ScanTypecase`), the hook call, and a

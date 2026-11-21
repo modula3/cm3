@@ -158,6 +158,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     b := Expr.CompileMSIR (p.b);  IF b = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
     IF p.class = cSET THEN
+      IF MSIRBuilder.IsWideSet (MSIR.ValueType (a)) THEN
+        RETURN MSIR.BuildSetSymDifference (blk, "", a, b);
+      END;
       RETURN MSIR.BuildIXor (blk, "", a, b);
     END;
     RETURN MSIR.BuildFDiv (blk, "", a, b);
