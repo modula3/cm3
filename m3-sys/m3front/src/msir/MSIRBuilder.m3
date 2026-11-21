@@ -888,6 +888,7 @@ PROCEDURE CurrentBlock(): MSIR.Block =
                                 ARRAY OF MSIR.BlockParam{});
       BEGIN
         MSIR.ProcAddBlock(curProc, dead);
+        IF curScope # NIL THEN MSIR.BlockSetScope(dead, curScope) END;
         curBlock := dead;
       END;
     END;

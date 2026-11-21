@@ -15,7 +15,7 @@ PROCEDURE Parse (body: Stmt.T; ): Stmt.T;
 PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
                            midx: INTEGER);
 (* MSIR for TRY body FINALLY ... END as EH scopes (D26).  The FINALLY code
-   is 'finally', or if that is NIL a call of method slot midx of obj (LOCK's
-   release). *)
+   is a call of method slot midx of obj (LOCK's release) if obj # NIL, else
+   'finally' (NIL when empty). *)
 
 END TryFinStmt.

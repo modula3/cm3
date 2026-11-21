@@ -443,11 +443,11 @@ PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
     MSIR.ScopeSetEntry(fs, fin);
     MSIR.ScopeSetFinally(s, fin);
     MSIRBuilder.SetCurrentBlock(fin);
-    IF finally # NIL THEN
-      Stmt.CompileMSIR(finally);
-    ELSE
+    IF obj # NIL THEN
       EVAL MSIRBuilder.EmitMethodCall("", obj, midx, MSIR.TVoid(),
                                       ARRAY OF MSIR.Value{});
+    ELSE
+      Stmt.CompileMSIR(finally);  (* NIL for an empty FINALLY *)
     END;
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIR.BuildEndFinally(MSIRBuilder.CurrentBlock());
