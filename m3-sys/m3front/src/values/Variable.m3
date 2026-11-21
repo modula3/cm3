@@ -64,6 +64,8 @@ REVEAL
         initPending : M3.Flag   := FALSE; (* Initialization is postponed. *)
         msirInitDone: M3.Flag   := FALSE; (* MSIR init has been emitted. *)
         msirLangDone: M3.Flag   := FALSE; (* MSIR language init emitted *)
+        cgInitDone  : M3.Flag   := FALSE; (* initDone set by the CG walk's
+                                             UserInit, not at declaration *)
         initStatic  : M3.Flag   := FALSE; (* Needs RT initialization to a value
                                              from the static constant area. *)
         allocated     : M3.Flag := FALSE;
@@ -1279,6 +1281,14 @@ PROCEDURE UserInitVisit (v: Value.T) =
     END;
   END UserInitVisit;
 
+(* initDone was set when t was declared (a formal, a global whose static
+   storage or constant initializer is its value, ...), not by the CG walk,
+   which also sets it: t needs no initialization at run time. *)
+PROCEDURE DoneAtDeclaration (t: T): BOOLEAN =
+  BEGIN
+    RETURN t.initDone AND NOT t.cgInitDone;
+  END DoneAtDeclaration;
+
 (* MSIR counterpart of LangInit: the local's alloca, and the language-defined
    initial value unless a user initializer will supply one. *)
 PROCEDURE LangInitMSIR (t: T) =
@@ -1291,6 +1301,7 @@ PROCEDURE LangInitMSIR (t: T) =
     IF NOT t.global THEN
       IF NOT AddLocalMSIR (t, MSIRBuilder.CurrentBlock ()) THEN RETURN END;
     END;
+    IF DoneAtDeclaration (t) THEN RETURN END;
     IF ((t.initExpr = NIL) OR t.up_level)
        AND Type.InitCost (t.type, FALSE) > 0 THEN
       addr := MSIRBuilder.LookupVarAddr (t);
@@ -1303,6 +1314,7 @@ PROCEDURE UserInitMSIR (t: T) =
   VAR addr: MSIR.Value;
   BEGIN
     IF (t.initExpr = NIL) OR t.imported OR t.msirInitDone THEN RETURN END;
+    IF DoneAtDeclaration (t) THEN RETURN END;
     t.msirInitDone := TRUE;
     addr := MSIRBuilder.LookupVarAddr (t);
     IF addr = NIL THEN RETURN END;
@@ -1530,6 +1542,7 @@ PROCEDURE UserInit (t: T) =
         END;
       END;
       t.initDone := TRUE;
+      t.cgInitDone := TRUE;
       Tracer.Schedule (t.trace);
     END;
     (* NOTE: module-global CONSTANT initializers are NOT emitted here.  In MSIRObj
