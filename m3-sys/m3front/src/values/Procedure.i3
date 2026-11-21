@@ -52,6 +52,10 @@ PROCEDURE EmitCall (t: T);
 PROCEDURE Reset ();
 
 PROCEDURE PreRegisterScopeCapturesMSIR (scope: Scope.T);
+
+PROCEDURE CompileNestedMSIR (v: Value.T);
+(* If v is a nested procedure, compile its MSIR body inline in the enclosing
+   procedure's MSIR context (Variable.InitValuesMSIR). *)
 (* Pre-register (to a fixpoint) the capture list of every nested procedure
    declared in `scope`, before any of their bodies are compiled, so a proc used
    as a value by an earlier-compiled sibling gets a closure shim with the right

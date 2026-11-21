@@ -130,7 +130,8 @@ PROCEDURE CompileMSIR (p: P) =
          gets a closure shim with the correct capture args (p035 group O: a
          block-local `bar` capturing `i`, used as a value by `foo`). *)
       Procedure.PreRegisterScopeCapturesMSIR (p.scope);
-      Scope.InitValues (p.scope);
+      (* the MSIR walk's own initialization, at this point of the body *)
+      Variable.InitValuesMSIR (p.scope);
     END;
     Stmt.CompileMSIR (p.body);
   END CompileMSIR;

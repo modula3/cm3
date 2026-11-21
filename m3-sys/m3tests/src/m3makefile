@@ -531,6 +531,7 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+p_test ("p2", "p303", "Block-local initialization in nested procedures and loops")
 p_test ("p2", "p302", "Address of a global at an offset, compared directly")
 p_test ("p2", "p301", "Method and indirect call results passed READONLY")
 p_test ("p2", "p300", "Brands of REF and OBJECT types at runtime")

@@ -594,13 +594,8 @@ PROCEDURE LangInit (t: T) =
       GenBody (t);
     ELSE
       CG.Note_procedure_origin (t.cg_proc);
-      (* MSIR: compile nested proc's MSIR body inline in outer proc's context.
-         With the C backend, inline_nested_procs=FALSE (unfold_nested_procs is set),
-         so CG defers nested procs to ProcBody.  MSIR needs them compiled inline
-         while the outer proc's frame/varMap context is still live. *)
-      IF MSIRBuilder.InProc () THEN
-        GenBodyMSIR (t);
-      END;
+      (* MSIR compiles nested procedures inline from its own walk
+         (Variable.InitValuesMSIR -> CompileNestedMSIR). *)
     END;
   END LangInit;
 
@@ -720,13 +715,16 @@ PROCEDURE PreRegisterScopeCapturesMSIR (syms: Scope.T) =
    procedure declared in an enclosing proc's scope.  Non-procedure values
    (formals) and bodyless procs (external/imported) are skipped.  GenBodyMSIR's
    own ProcMapContains guard prevents recompiling an already-emitted body. *)
-PROCEDURE CompileNestedBodyMSIR (v: Value.T) =
+PROCEDURE CompileNestedMSIR (v: Value.T) =
   BEGIN
     TYPECASE v OF
-    | T (p) => IF p.body # NIL THEN GenBodyMSIR (p) END;
+    | T (p) =>
+        IF p.body # NIL AND p.body.level > 0 AND MSIRBuilder.InProc () THEN
+          GenBodyMSIR (p);
+        END;
     ELSE (* not a procedure *)
     END;
-  END CompileNestedBodyMSIR;
+  END CompileNestedMSIR;
 
 PROCEDURE GenBodyMSIR (p: T) =
   VAR ca := CaptureAnalysis.New ();
@@ -780,13 +778,8 @@ PROCEDURE GenBodyMSIR (p: T) =
        UserProc.Capture adds Dump0's captures to P0_0's set on this second round,
        now that round 1 has populated captureMap); pass 3 compiles the bodies. *)
     PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
-    Scope.ForEachValue (p.syms, CompileNestedBodyMSIR);
-    (* Initialize local variables (VAR declarations in p.syms).
-       The CG path handles this via GenBody → Scope.InitValues(p.syms).
-       In the MSIR inline path the CG's GenBody runs later (msirSkip=TRUE,
-       InProc=FALSE), so MSIR allocas and initializers are never emitted.
-       We call Variable.InitMSIR for each local var NOW with InProc=TRUE. *)
-    Scope.ForEachValue (p.syms, Variable.InitMSIR);
+    (* p's nested procedures, then its locals' initialization. *)
+    Variable.InitValuesMSIR (p.syms);
     TRY
       Stmt.CompileMSIR (p.block);
     EXCEPT ELSE
@@ -935,13 +928,10 @@ PROCEDURE GenBody (p: T) =
         END;
       Marker.Pop ();
     END;
-    (* MSIRObj mode: the CG path above was skipped (p.cg_proc = NIL), so
-       Scope.InitValues(p.syms) was never called.  Nested procs live in p.syms
-       and require LangInit (→ GenBodyMSIR) to be triggered before the MSIR
-       body is compiled below.  In normal C-mode the call at line 783 handles
-       this; here we do it explicitly for the MSIR-only path. *)
-    IF p.cg_proc = NIL AND NOT msirSkip AND MSIRBuilder.InProc () THEN
-      Scope.InitValues (p.syms);
+    (* The MSIR walk's own initialization of p's scope: nested procedures'
+       bodies and locals' initial values.  The CG walk above emits only CG. *)
+    IF NOT msirSkip AND MSIRBuilder.InProc () THEN
+      Variable.InitValuesMSIR (p.syms);
     END;
     Scope.Exit (p.syms);
 
