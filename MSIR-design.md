@@ -1436,6 +1436,57 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     lists), the first draft of this decision.  Tree-shaped storage
     contradicts D20 and would force every block-walking pass to recurse.
 
+- **D27. C is a lowering, not the definition of Modula-3** (Tony,
+  2026-11-21).  The language's semantics belong to the report, the front
+  end and MSIR.  The C backend, and any portable C distribution, are
+  lowerings that must implement those semantics, not shape them.
+  - **Why.**  C has been defining Modula-3 by default:
+    - `ROUND` took C's `round()` tie-breaking (halves away from zero)
+      against the report's `FloatMode.RoundDefault` (NearestElseEven), until
+      `m3_round` was fixed.
+    - `EXTENDED` is whatever C type a platform has: `_Float128` on
+      AMD64_LINUX, `double` elsewhere.
+    - Exceptions under `ex_stack` are C++ exceptions (`throw _M3Exc`), and
+      MSIR's LLVM path uses `__gxx_personality_v0`.  A backend that cannot
+      emit C++ `try` (the integrated x86 backend) cannot use `ex_stack`.
+    - Runtime source bends to C's limits: object-header bitfields became
+      `Word` operations behind out-of-line `RT0` procedures (#992), so every
+      header test in the collector's loops is a cross-unit call the C
+      backend cannot inline; interfaces avoid data (for `dllimport`);
+      platform constants become calls, so they cannot be CASE labels or be
+      folded.
+    - Proposals for one portable C bootstrap would make the generated C
+      the canonical form, so every feature would be judged by whether it
+      survives as portable C.
+  - **Decision.**
+    1. *Semantics.*  The report decides; where it leaves a choice, a
+       D-entry here does.  C helpers (`m3_round` and the like) implement
+       those semantics.  A disagreement between backends is a bug in the
+       one that departs from the report.
+    2. *Runtime source is written for Modula-3.*  C interop and platform
+       specifics (Mach thread primitives on Darwin, signals on Linux, OS
+       structs and constants) live in thin `#ifdef`'d C files behind
+       interfaces that are the same on every platform.  A change that costs
+       Modula-3 expressiveness or performance only for the sake of C
+       portability needs a measured case, and a hot-path abstraction must
+       stay inlinable (defined in the unit that uses it, or `static inline`
+       in `m3core.h`).
+    3. *The bootstrap is an artifact, not a design driver.*  Per-target
+       bootstrap tarballs built by CI are an acceptable cost.  If one
+       portable artifact is wanted, it is generated from MSIR by a lowering,
+       so C's limits stay in that lowering.  A portable bootstrap fixes the
+       generated code's target parameters (64-bit, little-endian, one
+       `EXTENDED` size, C++ EH); a target's native rebuild then uses its own.
+    4. *Layout has one source* (D24 extended).  The object header's bit
+       layout used by the compiler (TYPECODE, NARROW, ISTYPE) and by `RT0`
+       comes from `M3RT`, not from offsets duplicated in both.
+  - **Longer term, not scheduled.**  An EH personality owned by Modula-3
+    (its own unwinder personality and tables, not C++'s) would separate
+    exceptions from the C++ runtime.  A portable IR bootstrap would need
+    MSIR with symbolic, target-neutral layout; today the front end resolves
+    sizes before building MSIR, so MSIR is per-target like the C it
+    replaces.
+
 **Progress (2026-11-21): MSIR to M3CG, small gaps.**
 - TYPECASE: a `RTHooks.TypecaseCell` table per `typecase` in the data
   segment (uids; defn filled lazily by `ScanTypecase`), the hook call, and a
