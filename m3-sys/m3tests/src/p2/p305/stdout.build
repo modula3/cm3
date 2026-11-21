@@ -1,0 +1,11 @@
+"../Main.m3", line 12: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 13: warning: exception is never raised: <ANY>
+"../Main.m3", line 20: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 21: warning: exception is never raised: <ANY>
+"../Main.m3", line 32: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 33: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 46: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 47: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 49: warning: RETURN will be caught by TRY EXCEPT ELSE clause
+"../Main.m3", line 62: warning: EXIT will be caught by TRY EXCEPT ELSE clause
+10 warnings encountered
