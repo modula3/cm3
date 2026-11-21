@@ -10,7 +10,10 @@ extern "C" {
 
 INTEGER __cdecl RTStack_Has_walker (void)
 {
-#if AMD64_DARWIN || ARM64_DARWIN || AMD64_LINUX
+    /* Systems with tested libunwind. TODO: Test and expand broadly.
+     * And wrap Windows RtlVirtualUnwind.
+     */
+#if M3_HOST_AMD64_DARWIN || M3_HOST_ARM64_DARWIN || M3_HOST_ARM64_LINUX
     return TRUE;
 #else
     return FALSE;
