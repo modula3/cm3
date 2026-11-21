@@ -599,9 +599,11 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   memOrder2: MemOrder    := MemOrder.SeqCst;   (* AtomicCmpXchg failure ordering *)
   atomicOp:  AtomicRMWOp := AtomicRMWOp.Xchg; (* AtomicRMW op code *)
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
+  exc:       ExcDesc     := NIL;               (* Raise *)
 END;
 
 PROCEDURE InsnOp(i: Insn): Op = BEGIN RETURN i.op END InsnOp;
+PROCEDURE InsnExcDesc(i: Insn): ExcDesc = BEGIN RETURN i.exc END InsnExcDesc;
 PROCEDURE InsnResult(i: Insn): Value = BEGIN RETURN i.result END InsnResult;
 PROCEDURE InsnOperandCount(i: Insn): INTEGER =
   BEGIN
@@ -656,6 +658,7 @@ REVEAL Block = BRANDED "MSIR.Block" REF RECORD
   paramValues: REF ARRAY OF Value      := NIL;
   insns:       RefSeq.T;                          (* elements: Insn *)
   proc:        Proc := NIL;
+  scope:       Scope := NIL;                      (* NIL: the proc's root *)
 END;
 
 PROCEDURE pctName(name: TEXT): TEXT =
@@ -714,7 +717,8 @@ REVEAL Proc = BRANDED "MSIR.Proc" REF RECORD
   params:      REF ARRAY OF Param := NIL;
   paramValues: REF ARRAY OF Value := NIL;
   result:      T := NIL;
-  items:       RefSeq.T;                          (* elements: Block or Envelope *)
+  items:       RefSeq.T;                          (* elements: Block *)
+  scopes:      RefSeq.T;                          (* elements: Scope; 0 = root *)
   nameCounter: INTEGER := 0;
   raises:      REF ARRAY OF TEXT := NIL;
   noReturn:    BOOLEAN := FALSE;
@@ -724,52 +728,70 @@ REVEAL Proc = BRANDED "MSIR.Proc" REF RECORD
   srcLine:     INTEGER := 0;     (* 1-based line number; 0 = no location *)
 END;
 
-(*--------------------------------------------------------------- Envelope *)
+(*-------------------------------------------------------------- EH scopes *)
 
-REVEAL Envelope = BRANDED "MSIR.Envelope" REF RECORD
-  isFinally: BOOLEAN := FALSE;
-  body:      Block := NIL;
-  handlers:  REF ARRAY OF Handler := NIL;          (* try-except *)
-  finally:   Block := NIL;                         (* try-finally *)
+REVEAL Scope = BRANDED "MSIR.Scope" REF RECORD
+  kind:     ScopeKind;
+  parent:   Scope := NIL;
+  index:    INTEGER := 0;
+  entry:    Block := NIL;
+  handlers: RefSeq.T := NIL;                      (* elements: REF Handler *)
+  finally:  Block := NIL;
 END;
 
-PROCEDURE NewTryExcept(body: Block;
-                       READONLY handlers: ARRAY OF Handler): Envelope =
-  VAR
-    e := NEW(Envelope);
-    n := NUMBER(handlers);
-    hs := NEW(REF ARRAY OF Handler, n);
-  BEGIN
-    e.isFinally := FALSE;
-    e.body      := body;
-    FOR i := 0 TO n - 1 DO hs[i] := handlers[i] END;
-    e.handlers := hs;
-    RETURN e;
-  END NewTryExcept;
+TYPE HandlerRef = REF Handler;
 
-PROCEDURE NewTryFinally(body: Block;  finallyBlock: Block): Envelope =
-  VAR e := NEW(Envelope);
-  BEGIN
-    e.isFinally := TRUE;
-    e.body      := body;
-    e.finally   := finallyBlock;
-    RETURN e;
-  END NewTryFinally;
+PROCEDURE ProcScope(p: Proc): Scope =
+  BEGIN RETURN p.scopes.get(0) END ProcScope;
 
-PROCEDURE IsTryExcept(e: Envelope): BOOLEAN =
-  BEGIN RETURN NOT e.isFinally END IsTryExcept;
-PROCEDURE IsTryFinally(e: Envelope): BOOLEAN =
-  BEGIN RETURN e.isFinally END IsTryFinally;
-PROCEDURE EnvelopeBody(e: Envelope): Block = BEGIN RETURN e.body END EnvelopeBody;
-PROCEDURE EnvelopeHandlerCount(e: Envelope): INTEGER =
+PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope): Scope =
+  VAR s := NEW(Scope, kind := kind, parent := parent,
+               index := p.scopes.size(), handlers := NEW(RefSeq.T).init());
   BEGIN
-    IF e.handlers = NIL THEN RETURN 0 END;
-    RETURN NUMBER(e.handlers^);
-  END EnvelopeHandlerCount;
-PROCEDURE EnvelopeHandler(e: Envelope;  i: INTEGER): Handler =
-  BEGIN RETURN e.handlers[i] END EnvelopeHandler;
-PROCEDURE EnvelopeFinally(e: Envelope): Block =
-  BEGIN RETURN e.finally END EnvelopeFinally;
+    <* ASSERT kind # ScopeKind.Proc AND parent # NIL *>
+    p.scopes.addhi(s);
+    RETURN s;
+  END NewScope;
+
+PROCEDURE ProcScopeCount(p: Proc): INTEGER =
+  BEGIN RETURN p.scopes.size() END ProcScopeCount;
+PROCEDURE ProcScopeAt(p: Proc;  i: INTEGER): Scope =
+  BEGIN RETURN p.scopes.get(i) END ProcScopeAt;
+
+PROCEDURE ScopeKindOf(s: Scope): ScopeKind = BEGIN RETURN s.kind END ScopeKindOf;
+PROCEDURE ScopeParent(s: Scope): Scope = BEGIN RETURN s.parent END ScopeParent;
+PROCEDURE ScopeIndex(s: Scope): INTEGER = BEGIN RETURN s.index END ScopeIndex;
+PROCEDURE ScopeSetEntry(s: Scope;  b: Block) = BEGIN s.entry := b END ScopeSetEntry;
+PROCEDURE ScopeEntry(s: Scope): Block = BEGIN RETURN s.entry END ScopeEntry;
+
+PROCEDURE ScopeAddHandler(s: Scope;  exc: ExcDesc;  entry: Block) =
+  BEGIN
+    s.handlers.addhi(NEW(HandlerRef, exc := exc, entry := entry));
+  END ScopeAddHandler;
+PROCEDURE ScopeHandlerCount(s: Scope): INTEGER =
+  BEGIN RETURN s.handlers.size() END ScopeHandlerCount;
+PROCEDURE ScopeHandler(s: Scope;  i: INTEGER): Handler =
+  BEGIN RETURN NARROW(s.handlers.get(i), HandlerRef)^ END ScopeHandler;
+
+PROCEDURE ScopeSetFinally(s: Scope;  entry: Block) =
+  BEGIN s.finally := entry END ScopeSetFinally;
+PROCEDURE ScopeFinally(s: Scope): Block = BEGIN RETURN s.finally END ScopeFinally;
+
+PROCEDURE ScopeIsAncestor(a, s: Scope): BOOLEAN =
+  BEGIN
+    WHILE s # NIL DO
+      IF s = a THEN RETURN TRUE END;
+      s := s.parent;
+    END;
+    RETURN FALSE;
+  END ScopeIsAncestor;
+
+PROCEDURE BlockScope(b: Block): Scope =
+  BEGIN
+    IF b.scope = NIL AND b.proc # NIL THEN RETURN ProcScope(b.proc) END;
+    RETURN b.scope;
+  END BlockScope;
+PROCEDURE BlockSetScope(b: Block;  s: Scope) = BEGIN b.scope := s END BlockSetScope;
 
 PROCEDURE NewProc(name: TEXT;
                   READONLY params: ARRAY OF Param;
@@ -783,6 +805,9 @@ PROCEDURE NewProc(name: TEXT;
     p.name   := name;
     p.result := result;
     p.items  := NEW(RefSeq.T).init();
+    p.scopes := NEW(RefSeq.T).init();
+    p.scopes.addhi(NEW(Scope, kind := ScopeKind.Proc, index := 0,
+                       handlers := NEW(RefSeq.T).init()));
     FOR i := 0 TO n - 1 DO
       ps[i] := params[i];
       VAR v := NEW(Value);
@@ -838,34 +863,14 @@ PROCEDURE ProcParamMode(p: Proc; i: INTEGER): ParamMode =
   BEGIN RETURN p.params[i].mode END ProcParamMode;
 PROCEDURE ProcResultType(p: Proc): T = BEGIN RETURN p.result END ProcResultType;
 PROCEDURE ProcEntry(p: Proc): Block =
-  VAR x: REFANY;
   BEGIN
-    <* ASSERT p.items.size() > 0, "ProcEntry: no items" *>
-    x := p.items.get(0);
-    <* ASSERT ISTYPE(x, Block), "ProcEntry: first item is not a block" *>
-    RETURN NARROW(x, Block);
+    <* ASSERT p.items.size() > 0, "ProcEntry: no blocks" *>
+    RETURN p.items.get(0);
   END ProcEntry;
 PROCEDURE ProcBlockCount(p: Proc): INTEGER =
-  VAR n: INTEGER := 0;
-  BEGIN
-    FOR i := 0 TO p.items.size() - 1 DO
-      IF ISTYPE(p.items.get(i), Block) THEN INC(n) END;
-    END;
-    RETURN n;
-  END ProcBlockCount;
+  BEGIN RETURN p.items.size() END ProcBlockCount;
 PROCEDURE ProcBlock(p: Proc; i: INTEGER): Block =
-  VAR seen: INTEGER := 0;  x: REFANY;
-  BEGIN
-    FOR k := 0 TO p.items.size() - 1 DO
-      x := p.items.get(k);
-      IF ISTYPE(x, Block) THEN
-        IF seen = i THEN RETURN NARROW(x, Block) END;
-        INC(seen);
-      END;
-    END;
-    <* ASSERT FALSE, "ProcBlock: index out of range" *>
-    RETURN NIL;
-  END ProcBlock;
+  BEGIN RETURN p.items.get(i) END ProcBlock;
 PROCEDURE ProcAddBlock(p: Proc; b: Block) =
   BEGIN
     b.proc := p;
@@ -909,27 +914,6 @@ PROCEDURE ProcSrcFile(p: Proc): TEXT =
 PROCEDURE ProcSrcLine(p: Proc): INTEGER =
   BEGIN RETURN p.srcLine END ProcSrcLine;
 
-PROCEDURE ProcAddEnvelope(p: Proc;  e: Envelope) =
-  BEGIN
-    (* Tag interior blocks with their containing proc so name generation
-       and so on work consistently. *)
-    e.body.proc := p;
-    IF e.handlers # NIL THEN
-      FOR k := 0 TO LAST(e.handlers^) DO
-        e.handlers[k].block.proc := p;
-      END;
-    END;
-    IF e.finally # NIL THEN e.finally.proc := p END;
-    p.items.addhi(e);
-  END ProcAddEnvelope;
-PROCEDURE ProcItemCount(p: Proc): INTEGER =
-  BEGIN RETURN p.items.size() END ProcItemCount;
-PROCEDURE ProcItem(p: Proc; i: INTEGER): REFANY =
-  BEGIN RETURN p.items.get(i) END ProcItem;
-PROCEDURE ProcItemIsBlock(p: Proc; i: INTEGER): BOOLEAN =
-  BEGIN RETURN ISTYPE(p.items.get(i), Block) END ProcItemIsBlock;
-PROCEDURE ProcItemIsEnvelope(p: Proc; i: INTEGER): BOOLEAN =
-  BEGIN RETURN ISTYPE(p.items.get(i), Envelope) END ProcItemIsEnvelope;
 
 (*--------------------------------------------------------------- Module *)
 
@@ -1222,11 +1206,14 @@ REVEAL ExcDesc = BRANDED "MSIR.ExcDesc" REF RECORD
   uid     : INTEGER;
   display : TEXT := NIL;  (* human-readable qualified name, e.g. "Main.a" *)
   ptrVal  : Value := NIL;  (* cached ptr value *)
+  argType : T := NIL;      (* the argument's type; NIL if none *)
 END;
 
-PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL): ExcDesc =
+PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL;
+                     argType: T := NIL): ExcDesc =
   VAR d := NEW(ExcDesc);  v := NEW(Value);
   BEGIN
+    d.argType := argType;
     d.name    := name;
     d.uid     := uid;
     d.display := display;
@@ -1243,6 +1230,7 @@ PROCEDURE ExcDescName (d: ExcDesc): TEXT    = BEGIN RETURN d.name   END ExcDescN
 PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER = BEGIN RETURN d.uid    END ExcDescUID;
 PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT = BEGIN RETURN d.display END ExcDescDisplay;
 PROCEDURE ExcDescValue(d: ExcDesc): Value   = BEGIN RETURN d.ptrVal END ExcDescValue;
+PROCEDURE ExcDescArgType(d: ExcDesc): T     = BEGIN RETURN d.argType END ExcDescArgType;
 
 PROCEDURE ModuleAddExcDesc  (m: Module;  d: ExcDesc) = BEGIN m.excDescs.addhi(d) END ModuleAddExcDesc;
 PROCEDURE ModuleExcDescCount(m: Module): INTEGER     = BEGIN RETURN m.excDescs.size() END ModuleExcDescCount;
@@ -2372,14 +2360,14 @@ PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
     RETURN i.result;
   END BuildInvokeIndirect;
 
-PROCEDURE BuildRaise(b: Block;  exceptionSym: TEXT;  value: Value) =
+PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value) =
   VAR i := NEW(Insn);
   BEGIN
     i.op := Op.Raise;
-    i.selector := exceptionSym;
-    IF value # NIL THEN
+    i.exc := exc;
+    IF arg # NIL THEN
       i.operands := NEW(REF ARRAY OF Value, 1);
-      i.operands[0] := value;
+      i.operands[0] := arg;
     END;
     addInsn(b, i);
   END BuildRaise;

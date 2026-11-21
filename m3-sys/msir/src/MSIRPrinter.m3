@@ -477,7 +477,10 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         END;
     | MSIR.Op.Raise =>
         Wr.PutText(wr, " ");
-        Wr.PutText(wr, MSIR.InsnSelector(i));
+        IF MSIR.InsnExcDesc(i) # NIL
+          THEN Wr.PutText(wr, MSIR.ExcDescName(MSIR.InsnExcDesc(i)));
+          ELSE Wr.PutText(wr, "<nil>");
+        END;
         IF nOps > 0 THEN
           Wr.PutText(wr, ", ");
           NameRef(wr, MSIR.InsnOperand(i, 0));
@@ -653,6 +656,12 @@ PROCEDURE Block(wr: Wr.T;  b: MSIR.Block) =
       END;
       Wr.PutText(wr, ")");
     END;
+    VAR s := MSIR.BlockScope(b);
+    BEGIN
+      IF s # NIL AND MSIR.ScopeIndex(s) # 0 THEN
+        Wr.PutText(wr, " [s" & Fmt.Int(MSIR.ScopeIndex(s)) & "]");
+      END;
+    END;
     Wr.PutText(wr, ":\n");
     FOR k := 0 TO MSIR.BlockInsnCount(b) - 1 DO
       Insn(wr, MSIR.BlockInsn(b, k));
@@ -668,30 +677,45 @@ PROCEDURE ParamModeText(m: MSIR.ParamMode): TEXT =
     END;
   END ParamModeText;
 
-PROCEDURE Envelope(wr: Wr.T;  e: MSIR.Envelope) =
+(* The procedure's EH scopes other than the root, one per line:
+     scope s1: except in s0, entry L; Exc -> H1, else -> H2
+     scope s2: finally in s1, entry L; finally F *)
+PROCEDURE Scopes(wr: Wr.T;  p: MSIR.Proc) =
+  VAR s: MSIR.Scope;
   BEGIN
-    IF MSIR.IsTryFinally(e) THEN
-      Wr.PutText(wr, "try_finally {\n");
-      Block(wr, MSIR.EnvelopeBody(e));
-      Wr.PutText(wr, "} finally {\n");
-      Block(wr, MSIR.EnvelopeFinally(e));
-      Wr.PutText(wr, "}\n");
-    ELSE
-      Wr.PutText(wr, "try {\n");
-      Block(wr, MSIR.EnvelopeBody(e));
-      Wr.PutText(wr, "} except {\n");
-      FOR k := 0 TO MSIR.EnvelopeHandlerCount(e) - 1 DO
-        VAR h := MSIR.EnvelopeHandler(e, k);
-        BEGIN
-          Wr.PutText(wr, "  | ");
-          Wr.PutText(wr, h.exceptionSym);
-          Wr.PutText(wr, " => ");
-          Block(wr, h.block);
+    FOR k := 1 TO MSIR.ProcScopeCount(p) - 1 DO
+      s := MSIR.ProcScopeAt(p, k);
+      Wr.PutText(wr, "  scope s" & Fmt.Int(k));
+      IF MSIR.ScopeKindOf(s) = MSIR.ScopeKind.Finally
+        THEN Wr.PutText(wr, ": finally in s");
+        ELSE Wr.PutText(wr, ": except in s");
+      END;
+      Wr.PutText(wr, Fmt.Int(MSIR.ScopeIndex(MSIR.ScopeParent(s))));
+      Wr.PutText(wr, ", entry " & LabelOf(MSIR.ScopeEntry(s)) & ";");
+      IF MSIR.ScopeKindOf(s) = MSIR.ScopeKind.Finally THEN
+        Wr.PutText(wr, " finally " & LabelOf(MSIR.ScopeFinally(s)));
+      ELSE
+        FOR h := 0 TO MSIR.ScopeHandlerCount(s) - 1 DO
+          VAR hd := MSIR.ScopeHandler(s, h);
+          BEGIN
+            IF h > 0 THEN Wr.PutText(wr, ",") END;
+            IF hd.exc = NIL
+              THEN Wr.PutText(wr, " else");
+              ELSE Wr.PutText(wr, " " & MSIR.ExcDescName(hd.exc));
+            END;
+            Wr.PutText(wr, " -> " & LabelOf(hd.entry));
+          END;
         END;
       END;
-      Wr.PutText(wr, "}\n");
+      Wr.PutText(wr, "\n");
     END;
-  END Envelope;
+  END Scopes;
+
+PROCEDURE LabelOf(b: MSIR.Block): TEXT =
+  BEGIN
+    IF b = NIL THEN RETURN "<nil>" END;
+    RETURN MSIR.BlockLabel(b);
+  END LabelOf;
 
 PROCEDURE CcText(cc: MSIR.CallingConvention): TEXT =
   BEGIN
@@ -766,15 +790,9 @@ PROCEDURE Proc(wr: Wr.T;  p: MSIR.Proc) =
     Type(wr, MSIR.ProcResultType(p));
     Wr.PutText(wr, "\n");
     ProcAttrs(wr, p);
-    FOR k := 0 TO MSIR.ProcItemCount(p) - 1 DO
-      VAR item := MSIR.ProcItem(p, k);
-      BEGIN
-        IF MSIR.ProcItemIsBlock(p, k) THEN
-          Block(wr, NARROW(item, MSIR.Block));
-        ELSE
-          Envelope(wr, NARROW(item, MSIR.Envelope));
-        END;
-      END;
+    Scopes(wr, p);
+    FOR k := 0 TO MSIR.ProcBlockCount(p) - 1 DO
+      Block(wr, MSIR.ProcBlock(p, k));
     END;
     Wr.PutText(wr, "\n");
   END Proc;

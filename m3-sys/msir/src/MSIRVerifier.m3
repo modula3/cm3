@@ -485,37 +485,142 @@ PROCEDURE CheckBlock(c: Ctx;  b: MSIR.Block;  resultT: MSIR.T;
     END;
   END CheckBlock;
 
-PROCEDURE CheckEnvelope(c: Ctx;  e: MSIR.Envelope;  resultT: MSIR.T) =
+(*------------------------------------------------- EH scopes (D26, D8) *)
+
+PROCEDURE ScopeName(s: MSIR.Scope): TEXT =
   BEGIN
-    IF MSIR.EnvelopeBody(e) = NIL THEN
-      ErrAt(c, "envelope", "body is NIL");
+    RETURN "s" & Fmt.Int(MSIR.ScopeIndex(s));
+  END ScopeName;
+
+(* The scope tree is well formed and handler parameters match their
+   exceptions' arguments. *)
+PROCEDURE CheckScopes(c: Ctx;  p: MSIR.Proc) =
+  VAR s, parent: MSIR.Scope;  where: TEXT;
+  BEGIN
+    FOR k := 1 TO MSIR.ProcScopeCount(p) - 1 DO
+      s := MSIR.ProcScopeAt(p, k);
+      parent := MSIR.ScopeParent(s);
+      where := "scope " & ScopeName(s);
+      IF parent = NIL OR MSIR.ScopeIndex(parent) >= k THEN
+        ErrAt(c, where, "parent must be an earlier scope");
+        RETURN;
+      END;
+      IF MSIR.ScopeEntry(s) = NIL THEN
+        ErrAt(c, where, "no entry block");
+      ELSIF MSIR.BlockScope(MSIR.ScopeEntry(s)) # s THEN
+        ErrAt(c, where, "entry block " & MSIR.BlockLabel(MSIR.ScopeEntry(s))
+                          & " is not in the scope");
+      END;
+      CASE MSIR.ScopeKindOf(s) OF
+      | MSIR.ScopeKind.Finally =>
+          VAR f := MSIR.ScopeFinally(s);
+          BEGIN
+            IF f = NIL THEN
+              ErrAt(c, where, "no FINALLY block");
+            ELSIF MSIR.BlockScope(f) # parent THEN
+              ErrAt(c, where, "FINALLY block " & MSIR.BlockLabel(f)
+                                & " must be in the parent scope");
+            ELSIF MSIR.BlockParamCount(f) # 0 THEN
+              ErrAt(c, where, "FINALLY block takes no parameters");
+            END;
+          END;
+      | MSIR.ScopeKind.Except =>
+          IF MSIR.ScopeHandlerCount(s) = 0 THEN ErrAt(c, where, "no handlers") END;
+          FOR h := 0 TO MSIR.ScopeHandlerCount(s) - 1 DO
+            CheckHandler(c, where, parent, MSIR.ScopeHandler(s, h),
+                         h = MSIR.ScopeHandlerCount(s) - 1);
+          END;
+      | MSIR.ScopeKind.Proc =>
+          ErrAt(c, where, "only the root scope may be of kind Proc");
+      END;
+    END;
+  END CheckScopes;
+
+PROCEDURE CheckHandler(c: Ctx;  where: TEXT;  parent: MSIR.Scope;
+                       READONLY h: MSIR.Handler;  last: BOOLEAN) =
+  VAR argT: MSIR.T := NIL;  name := "else";
+  BEGIN
+    IF h.exc # NIL THEN
+      argT := MSIR.ExcDescArgType(h.exc);
+      name := MSIR.ExcDescName(h.exc);
+    ELSIF NOT last THEN
+      ErrAt(c, where, "the ELSE handler must be the last");
+    END;
+    IF h.entry = NIL THEN
+      ErrAt(c, where, "handler " & name & " has no entry block");
       RETURN;
     END;
-    CheckBlock(c, MSIR.EnvelopeBody(e), resultT, FALSE);
-    IF MSIR.IsTryFinally(e) THEN
-      IF MSIR.EnvelopeFinally(e) = NIL THEN
-        ErrAt(c, "envelope", "try_finally has no finally block");
-      ELSE
-        (* Finally blocks are allowed to lack a terminator in v0. *)
-        CheckBlock(c, MSIR.EnvelopeFinally(e), resultT, TRUE);
+    IF MSIR.BlockScope(h.entry) # parent THEN
+      ErrAt(c, where, "handler " & name & " must be in the parent scope");
+    END;
+    IF argT = NIL THEN
+      IF MSIR.BlockParamCount(h.entry) # 0 THEN
+        ErrAt(c, where, "handler " & name & " takes no parameters");
       END;
-    ELSE
-      IF MSIR.EnvelopeHandlerCount(e) = 0 THEN
-        ErrAt(c, "envelope", "try_except has no handlers");
+    ELSIF MSIR.BlockParamCount(h.entry) # 1 THEN
+      ErrAt(c, where, "handler " & name & " takes the exception's argument");
+    ELSIF NOT MSIR.Equal(MSIR.ValueType(MSIR.BlockParamValue(h.entry, 0)), argT) THEN
+      ErrAt(c, where, "handler " & name & ": parameter type is not the argument's");
+    END;
+  END CheckHandler;
+
+(* D8: an edge from b to target stays in b's scope or enters a child scope
+   through its entry; anything else must be unwind_to, which may only leave
+   scopes. *)
+PROCEDURE CheckEdge(c: Ctx;  b, target: MSIR.Block;  unwind: BOOLEAN) =
+  VAR from, to: MSIR.Scope;
+  BEGIN
+    IF target = NIL THEN RETURN END;
+    from := MSIR.BlockScope(b);
+    to := MSIR.BlockScope(target);
+    IF unwind THEN
+      IF to = from OR NOT MSIR.ScopeIsAncestor(to, from) THEN
+        Err(c, "unwind_to " & MSIR.BlockLabel(target)
+                 & " must leave scopes (from " & ScopeName(from) & " to "
+                 & ScopeName(to) & ")");
       END;
-      FOR k := 0 TO MSIR.EnvelopeHandlerCount(e) - 1 DO
-        VAR h := MSIR.EnvelopeHandler(e, k);
+    ELSIF to # from
+          AND NOT (MSIR.ScopeParent(to) = from AND MSIR.ScopeEntry(to) = target) THEN
+      Err(c, "branch to " & MSIR.BlockLabel(target) & " crosses scopes (from "
+               & ScopeName(from) & " to " & ScopeName(to) & "); use unwind_to");
+    END;
+  END CheckEdge;
+
+PROCEDURE CheckBlockScope(c: Ctx;  b: MSIR.Block) =
+  VAR n := MSIR.BlockInsnCount(b);  i: MSIR.Insn;
+      inScope := MSIR.ScopeIndex(MSIR.BlockScope(b)) # 0;
+  BEGIN
+    IF n = 0 THEN RETURN END;
+    c.blockLabel := MSIR.BlockLabel(b);
+    c.insnIndex := n - 1;
+    i := MSIR.BlockInsn(b, n - 1);
+    CASE MSIR.InsnOp(i) OF
+    | MSIR.Op.Br => CheckEdge(c, b, MSIR.InsnBrTarget(i, 0), FALSE);
+    | MSIR.Op.CondBr =>
+        CheckEdge(c, b, MSIR.InsnBrTarget(i, 0), FALSE);
+        CheckEdge(c, b, MSIR.InsnBrTarget(i, 1), FALSE);
+    | MSIR.Op.Typecase =>
+        FOR k := 0 TO MSIR.InsnTypecaseClauseCount(i) - 1 DO
+          CheckEdge(c, b, MSIR.InsnTypecaseClause(i, k).block, FALSE);
+        END;
+    | MSIR.Op.UnwindTo => CheckEdge(c, b, MSIR.InsnBrTarget(i, 0), TRUE);
+    | MSIR.Op.Ret =>
+        IF inScope THEN Err(c, "ret inside an EH scope; use ret_through_envelope") END;
+    | MSIR.Op.RetThroughEnvelope =>
+        IF NOT inScope THEN Err(c, "ret_through_envelope outside any EH scope") END;
+    | MSIR.Op.Raise =>
+        VAR exc := MSIR.InsnExcDesc(i);
         BEGIN
-          IF h.block = NIL THEN
-            ErrAt(c, "envelope",
-                  "handler " & Fmt.Int(k) & " has NIL block");
-          ELSE
-            CheckBlock(c, h.block, resultT, FALSE);
+          IF exc = NIL THEN
+            Err(c, "raise without an exception");
+          ELSIF (MSIR.ExcDescArgType(exc) # NIL) # (MSIR.InsnOperandCount(i) = 1) THEN
+            Err(c, "raise " & MSIR.ExcDescName(exc)
+                     & ": argument does not match the exception");
           END;
         END;
-      END;
+    ELSE
     END;
-  END CheckEnvelope;
+  END CheckBlockScope;
 
 (*------------------------------------------ procedure / module entries *)
 
@@ -528,20 +633,13 @@ PROCEDURE VerifyProc(p: MSIR.Proc): REF ARRAY OF TEXT =
     resultT := MSIR.ProcResultType(p);
     c.errors := NEW(RefSeq.T).init();
     c.procName := MSIR.ProcName(p);
-    IF MSIR.ProcItemCount(p) = 0 THEN
+    IF MSIR.ProcBlockCount(p) = 0 THEN
       (* zero-block procedure = forward declaration; nothing to verify *)
     ELSE
-      IF NOT MSIR.ProcItemIsBlock(p, 0) THEN
-        c.errors.addhi(c.procName & ": first item must be a block");
-      END;
-      FOR k := 0 TO MSIR.ProcItemCount(p) - 1 DO
-        IF MSIR.ProcItemIsBlock(p, k) THEN
-          CheckBlock(c, NARROW(MSIR.ProcItem(p, k), MSIR.Block),
-                     resultT, FALSE);
-        ELSE
-          CheckEnvelope(c, NARROW(MSIR.ProcItem(p, k), MSIR.Envelope),
-                        resultT);
-        END;
+      CheckScopes(c, p);
+      FOR k := 0 TO MSIR.ProcBlockCount(p) - 1 DO
+        CheckBlock(c, MSIR.ProcBlock(p, k), resultT, FALSE);
+        CheckBlockScope(c, MSIR.ProcBlock(p, k));
       END;
     END;
     RETURN ResultArray(c.errors);

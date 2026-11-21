@@ -135,9 +135,7 @@ PROCEDURE Census (wr: Wr.T;  m: MSIR.Module) =
       p := MSIR.ModuleProc (m, pi);
       IF MSIR.ProcBlockCount (p) > 0 THEN  (* skip bodyless declarations *)
         f := NEW (Features);
-        IF MSIR.ProcItemCount (p) # MSIR.ProcBlockCount (p) THEN
-          Note (f, "envelope");
-        END;
+        IF MSIR.ProcScopeCount (p) > 1 THEN Note (f, "eh-scope") END;
         NoteType (f, "result:", MSIR.ProcResultType (p));
         FOR k := 0 TO MSIR.ProcParamCount (p) - 1 DO
           NoteType (f, "param:", MSIR.ValueType (MSIR.ProcParam (p, k)));
@@ -712,9 +710,7 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
     FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
       p := MSIR.ModuleProc (m, pi);
       IF MSIR.ProcBlockCount (p) > 0 THEN
-        IF MSIR.ProcItemCount (p) # MSIR.ProcBlockCount (p) THEN
-          Fail (w, "envelope");
-        END;
+        IF MSIR.ProcScopeCount (p) > 1 THEN Fail (w, "EH scopes") END;
         CheckProcSig (w, p);
         FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
           b := MSIR.ProcBlock (p, bi);

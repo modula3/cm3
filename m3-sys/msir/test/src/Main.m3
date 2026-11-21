@@ -143,84 +143,114 @@ PROCEDURE BuildMaybeArea(m: MSIR.Module) =
   END BuildMaybeArea;
 
 PROCEDURE BuildWithLog(m: MSIR.Module) =
+  (* PROCEDURE WithLog(key: INTEGER): INTEGER =
+       BEGIN
+         TRY RETURN Lookup(key)
+         EXCEPT
+         | NotFound => RETURN -1
+         | Bad(msg) => RETURN -2
+         END
+       END WithLog;
+     The body is an Except scope (D26): Lookup's normal result leaves the
+     scope by unwind_to; the handlers are in the root scope. *)
   VAR
-    i64 := MSIR.TI(64);
+    i64    := MSIR.TI(64);
+    msgT   := MSIR.TPtr(MSIR.TVoid());
+    notFound := MSIR.NewExcDesc("Main__NotFound", 1, "Main.NotFound");
+    bad      := MSIR.NewExcDesc("Main__Bad", 2, "Main.Bad", argType := msgT);
 
-    (* External Lookup procedure (declaration only); raises NotFound or Bad. *)
-    lookup := MSIR.NewProc(
-        "@Lookup",
-        ARRAY OF MSIR.Param { MSIR.Param{"key", i64, MSIR.ParamMode.ByValue} },
-        i64);
+    lookup := MSIR.NewProc("Lookup",
+                ARRAY OF MSIR.Param{
+                  MSIR.Param{"k", i64, MSIR.ParamMode.ByValue}
+                }, i64);
 
-    p     := MSIR.NewProc(
-        "@WithLog",
-        ARRAY OF MSIR.Param { MSIR.Param{"key", i64, MSIR.ParamMode.ByValue} },
-        i64);
-    key   := MSIR.ProcParam(p, 0);
+    p := MSIR.NewProc("WithLog",
+           ARRAY OF MSIR.Param{
+             MSIR.Param{"key", i64, MSIR.ParamMode.ByValue}
+           }, i64);
+    key := MSIR.ProcParam(p, 0);
 
     entry := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
     body  := MSIR.NewBlock("body",  ARRAY OF MSIR.BlockParam{});
-    h1    := MSIR.NewBlock("h1",    ARRAY OF MSIR.BlockParam{});
-    h2    := MSIR.NewBlock("h2",
-                ARRAY OF MSIR.BlockParam {
-                  MSIR.BlockParam{"msg", i64}
-                });
+    h1    := MSIR.NewBlock("h_notfound", ARRAY OF MSIR.BlockParam{});
+    h2    := MSIR.NewBlock("h_bad", ARRAY OF MSIR.BlockParam{
+                MSIR.BlockParam{"msg", msgT} });
     merge := MSIR.NewBlock("merge",
-                ARRAY OF MSIR.BlockParam {
+                ARRAY OF MSIR.BlockParam{
                   MSIR.BlockParam{"n", i64}
                 });
-
-    cont  := MSIR.NewBlock("cont", ARRAY OF MSIR.BlockParam{});
-    lp    := MSIR.NewBlock("lp",   ARRAY OF MSIR.BlockParam{});
-
-    v, n, lp_val, negOne, negTwo : MSIR.Value;
-    env     : MSIR.Envelope;
+    s : MSIR.Scope;
+    v, n : MSIR.Value;
   BEGIN
-    MSIR.ProcSetRaises(lookup, ARRAY OF TEXT{"@NotFound", "@Bad"});
+    MSIR.ProcSetRaises(lookup, ARRAY OF TEXT{"@Main__NotFound", "@Main__Bad"});
     MSIR.ModuleAddProc(m, lookup);
+    MSIR.ModuleAddExcDesc(m, notFound);
+    MSIR.ModuleAddExcDesc(m, bad);
 
-    negOne := MSIR.ConstInt(i64, -1);
-    negTwo := MSIR.ConstInt(i64, -2);
+    MSIR.ProcAddBlock(p, entry);
+    MSIR.ProcAddBlock(p, body);
+    MSIR.ProcAddBlock(p, h1);
+    MSIR.ProcAddBlock(p, h2);
+    MSIR.ProcAddBlock(p, merge);
+
+    s := MSIR.NewScope(p, MSIR.ScopeKind.Except, MSIR.ProcScope(p));
+    MSIR.BlockSetScope(body, s);
+    MSIR.ScopeSetEntry(s, body);
+    MSIR.ScopeAddHandler(s, notFound, h1);
+    MSIR.ScopeAddHandler(s, bad, h2);
 
     (* entry: br body *)
     MSIR.BuildBr(entry, body, ARRAY OF MSIR.Value{});
 
-    (* body: %v = invoke @Lookup(key), normal->cont, unwind->lp *)
-    v := MSIR.BuildInvoke(body, "v", lookup, ARRAY OF MSIR.Value{key}, cont, lp);
+    (* body: %v = call Lookup(key); unwind_to merge(%v) *)
+    v := MSIR.BuildCall(body, "v", lookup, ARRAY OF MSIR.Value{key});
+    MSIR.BuildUnwindTo(body, merge, ARRAY OF MSIR.Value{v});
 
-    (* cont (normal return): br merge(%v) *)
-    MSIR.BuildBr(cont, merge, ARRAY OF MSIR.Value{v});
-
-    (* lp (landing pad): re-raise *)
-    lp_val := MSIR.BuildLandingPad(lp, "lp", FALSE);
-    MSIR.BuildResume(lp, lp_val);
-
-    (* h1 (NotFound): br merge(-1) *)
-    MSIR.BuildBr(h1, merge, ARRAY OF MSIR.Value{negOne});
-
-    (* h2 (Bad(msg)): br merge(-2) *)
-    MSIR.BuildBr(h2, merge, ARRAY OF MSIR.Value{negTwo});
+    (* handlers *)
+    MSIR.BuildBr(h1, merge, ARRAY OF MSIR.Value{MSIR.ConstInt(i64, -1)});
+    MSIR.BuildBr(h2, merge, ARRAY OF MSIR.Value{MSIR.ConstInt(i64, -2)});
 
     (* merge: ret %n *)
     n := MSIR.BlockParamValue(merge, 0);
     MSIR.BuildRet(merge, n);
 
-    env := MSIR.NewTryExcept(body,
-        ARRAY OF MSIR.Handler {
-          MSIR.Handler{"@NotFound", h1},
-          MSIR.Handler{"@Bad",      h2}
-        });
-
-    MSIR.ProcAddBlock(p, entry);
-    MSIR.ProcAddEnvelope(p, env);
-    MSIR.ProcAddBlock(p, cont);
-    MSIR.ProcAddBlock(p, lp);
-    MSIR.ProcAddBlock(p, h1);
-    MSIR.ProcAddBlock(p, h2);
-    MSIR.ProcAddBlock(p, merge);
-
     MSIR.ModuleAddProc(m, p);
   END BuildWithLog;
+
+PROCEDURE BuildBadScopes(m: MSIR.Module) =
+  (* Deliberate D8 violations, each of which the verifier must report:
+     a br out of a Finally scope, a ret inside it, an unwind_to into it,
+     and a handler-less Except scope. *)
+  VAR
+    i64   := MSIR.TI(64);
+    p     := MSIR.NewProc("BadScopes", ARRAY OF MSIR.Param{}, i64);
+    entry := MSIR.NewBlock("entry", ARRAY OF MSIR.BlockParam{});
+    inner := MSIR.NewBlock("inner", ARRAY OF MSIR.BlockParam{});
+    inner2 := MSIR.NewBlock("inner2", ARRAY OF MSIR.BlockParam{});
+    fin   := MSIR.NewBlock("fin", ARRAY OF MSIR.BlockParam{});
+    out   := MSIR.NewBlock("out", ARRAY OF MSIR.BlockParam{});
+    s, e  : MSIR.Scope;
+  BEGIN
+    MSIR.ProcAddBlock(p, entry);
+    MSIR.ProcAddBlock(p, inner);
+    MSIR.ProcAddBlock(p, inner2);
+    MSIR.ProcAddBlock(p, fin);
+    MSIR.ProcAddBlock(p, out);
+    s := MSIR.NewScope(p, MSIR.ScopeKind.Finally, MSIR.ProcScope(p));
+    MSIR.ScopeSetEntry(s, inner);
+    MSIR.ScopeSetFinally(s, fin);
+    MSIR.BlockSetScope(inner, s);
+    MSIR.BlockSetScope(inner2, s);
+    e := MSIR.NewScope(p, MSIR.ScopeKind.Except, MSIR.ProcScope(p));
+    MSIR.ScopeSetEntry(e, out);  (* not in e: reported *)
+
+    MSIR.BuildUnwindTo(entry, inner2, ARRAY OF MSIR.Value{});  (* into a scope *)
+    MSIR.BuildBr(inner, out, ARRAY OF MSIR.Value{});           (* crosses *)
+    MSIR.BuildRet(inner2, MSIR.ConstInt(i64, 0));              (* ret in scope *)
+    MSIR.BuildBr(fin, out, ARRAY OF MSIR.Value{});
+    MSIR.BuildRet(out, MSIR.ConstInt(i64, 1));
+    MSIR.ModuleAddProc(m, p);
+  END BuildBadScopes;
 
 PROCEDURE BuildOpenArraySum(m: MSIR.Module) =
   (* PROCEDURE Sum(a: ARRAY OF INTEGER): INTEGER =
@@ -499,6 +529,7 @@ BEGIN
     BuildSum0ToN(m);
     BuildMaybeArea(m);
     BuildWithLog(m);
+    BuildBadScopes(m);
     BuildOpenArraySum(m);
     BuildClamp(m);
     BuildSetCombine(m);

@@ -217,17 +217,10 @@ PROCEDURE ProcParam    (p: Proc;  i: INTEGER): Value;
 PROCEDURE ProcParamName(p: Proc;  i: INTEGER): TEXT;
 PROCEDURE ProcParamMode(p: Proc;  i: INTEGER): ParamMode;
 PROCEDURE ProcResultType(p: Proc): T;
-PROCEDURE ProcEntry(p: Proc): Block;
-PROCEDURE ProcBlockCount(p: Proc): INTEGER;          (* counts blocks only *)
-PROCEDURE ProcBlock(p: Proc;  i: INTEGER): Block;    (* i-th block, skipping envelopes *)
+PROCEDURE ProcEntry(p: Proc): Block;               (* the first block *)
+PROCEDURE ProcBlockCount(p: Proc): INTEGER;
+PROCEDURE ProcBlock(p: Proc;  i: INTEGER): Block;
 PROCEDURE ProcAddBlock(p: Proc;  b: Block);
-PROCEDURE ProcAddEnvelope(p: Proc;  e: Envelope);
-
-(* Top-level region: ordered list of blocks and envelopes. *)
-PROCEDURE ProcItemCount(p: Proc): INTEGER;
-PROCEDURE ProcItem(p: Proc;  i: INTEGER): REFANY;    (* Block or Envelope *)
-PROCEDURE ProcItemIsBlock(p: Proc;  i: INTEGER): BOOLEAN;
-PROCEDURE ProcItemIsEnvelope(p: Proc;  i: INTEGER): BOOLEAN;
 
 (*------------------------------------------------------------------ Block *)
 
@@ -243,25 +236,51 @@ PROCEDURE BlockInsn(b: Block;  i: INTEGER): Insn;
 PROCEDURE BlockIsTerminated(b: Block): BOOLEAN;
                                              (* TRUE if last insn is a terminator *)
 
-(*--------------------------------------------------------------- Envelope *)
+(* The EH scope b belongs to; a block not given one is in its procedure's
+   root scope. *)
+PROCEDURE BlockScope(b: Block): Scope;
+PROCEDURE BlockSetScope(b: Block;  s: Scope);
 
-TYPE Envelope <: REFANY;
+(*-------------------------------------------------------------- EH scopes *)
 
+(* D26.  The blocks of a procedure stay a flat list; each belongs to one EH
+   scope, and the scopes form a tree rooted at the procedure's scope.
+   - An Except scope (TRY/EXCEPT) protects its blocks; it has handlers, each
+     an exception (NIL: ELSE) and the handler's entry block, which takes the
+     exception's argument as its one parameter if the exception has one.
+   - A Finally scope (TRY/FINALLY, LOCK) protects its blocks; it has the
+     entry block of its FINALLY code.
+   Handler and FINALLY blocks belong to the scope's PARENT: they are not
+   protected by their own TRY.  Control enters a scope only by a branch from
+   its parent scope to its entry block; any other edge between scopes leaves
+   scopes and must be unwind_to or ret_through_envelope (D8).  When FINALLY
+   code completes, the outcome that entered it resumes; one it produces
+   itself (EXIT, RETURN or a raise) replaces it. *)
+
+TYPE Scope <: REFANY;
+TYPE ScopeKind = {Proc, Except, Finally};
 TYPE Handler = RECORD
-  exceptionSym: TEXT;        (* M3 exception identity, e.g. "@NotFound" *)
-  block:        Block;       (* parameterized for value-binding clauses *)
+  exc:   ExcDesc;   (* NIL: the ELSE handler *)
+  entry: Block;
 END;
 
-PROCEDURE NewTryExcept(body: Block;
-                       READONLY handlers: ARRAY OF Handler): Envelope;
-PROCEDURE NewTryFinally(body: Block;  finallyBlock: Block): Envelope;
+PROCEDURE ProcScope(p: Proc): Scope;                (* the root, kind Proc *)
+PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope): Scope;
+                                             (* kind Except or Finally *)
+PROCEDURE ProcScopeCount(p: Proc): INTEGER;         (* including the root *)
+PROCEDURE ProcScopeAt(p: Proc;  i: INTEGER): Scope; (* 0 is the root *)
 
-PROCEDURE IsTryExcept(e: Envelope): BOOLEAN;
-PROCEDURE IsTryFinally(e: Envelope): BOOLEAN;
-PROCEDURE EnvelopeBody(e: Envelope): Block;
-PROCEDURE EnvelopeHandlerCount(e: Envelope): INTEGER;  (* TryExcept only *)
-PROCEDURE EnvelopeHandler(e: Envelope;  i: INTEGER): Handler;
-PROCEDURE EnvelopeFinally(e: Envelope): Block;        (* TryFinally only *)
+PROCEDURE ScopeKindOf(s: Scope): ScopeKind;
+PROCEDURE ScopeParent(s: Scope): Scope;             (* NIL for the root *)
+PROCEDURE ScopeIndex(s: Scope): INTEGER;            (* its ProcScopeAt index *)
+PROCEDURE ScopeSetEntry(s: Scope;  b: Block);       (* the first protected block *)
+PROCEDURE ScopeEntry(s: Scope): Block;
+PROCEDURE ScopeAddHandler(s: Scope;  exc: ExcDesc;  entry: Block);
+PROCEDURE ScopeHandlerCount(s: Scope): INTEGER;
+PROCEDURE ScopeHandler(s: Scope;  i: INTEGER): Handler;
+PROCEDURE ScopeSetFinally(s: Scope;  entry: Block);
+PROCEDURE ScopeFinally(s: Scope): Block;            (* NIL unless Finally *)
+PROCEDURE ScopeIsAncestor(a, s: Scope): BOOLEAN;    (* a = s or encloses s *)
 
 (*--------------------------------------------------------------- Module *)
 
@@ -305,7 +324,9 @@ PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
    directly as the 'ex' argument to RTHooks__Raise. *)
 TYPE ExcDesc <: REFANY;
 
-PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL): ExcDesc;
+PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL;
+                     argType: T := NIL): ExcDesc;
+PROCEDURE ExcDescArgType (d: ExcDesc): T;    (* the argument's type; NIL if none *)
 PROCEDURE ExcDescName (d: ExcDesc): TEXT;    (* LLVM global symbol *)
 PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER;
 PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT; (* qualified name, e.g. "Main.a"; NIL if none *)
@@ -825,17 +846,20 @@ PROCEDURE BuildExtractValue(b: Block;  name: TEXT;
    TLandingPad().  Terminator. *)
 PROCEDURE BuildResume(b: Block;  lp: Value);
 
-(* `raise` raises an M3 exception by identity symbol, with optional value.
-   Pass NIL value for exceptions that carry no payload. *)
-PROCEDURE BuildRaise(b: Block;  exceptionSym: TEXT;  value: Value);
+(* `raise exc, arg` raises the exception exc (terminator).  arg is NIL for
+   an exception without an argument. *)
+PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value);
+PROCEDURE InsnExcDesc(i: Insn): ExcDesc;     (* Raise only *)
 
-(* `unwind_to` is the only legal way to br out of an envelope to a block
-   in an outer scope (running enclosing FINALLYs). *)
+(* `unwind_to target(args)` leaves one or more EH scopes for target, in an
+   enclosing scope, running the FINALLY code of every Finally scope left
+   (D8, D26).  The only way out of a scope other than ret_through_envelope
+   and raising. *)
 PROCEDURE BuildUnwindTo(b: Block;  target: Block;
                         READONLY args: ARRAY OF Value);
 
-(* `ret_through_envelope` is the only legal way to ret from inside an
-   envelope (running enclosing FINALLYs). *)
+(* `ret_through_envelope v` returns from inside EH scopes, running the
+   FINALLY code of every Finally scope left (D8, D26). *)
 PROCEDURE BuildRetThroughEnvelope(b: Block;  value: Value);
 
 (*-------------------------------------- Open arrays / runtime-check builders *)

@@ -10,7 +10,7 @@ PROCEDURE Proc    (wr: Wr.T;  p: MSIR.Proc);
 PROCEDURE Type    (wr: Wr.T;  t: MSIR.T);
 PROCEDURE Value   (wr: Wr.T;  v: MSIR.Value);
 PROCEDURE Insn    (wr: Wr.T;  i: MSIR.Insn);
-PROCEDURE Envelope(wr: Wr.T;  e: MSIR.Envelope);
+PROCEDURE Scopes  (wr: Wr.T;  p: MSIR.Proc);  (* EH scope table, D26 *)
 PROCEDURE OpText  (op: MSIR.Op): TEXT;    (* e.g. "iadd", "gc.load" *)
 
 END MSIRPrinter.
