@@ -1,6 +1,6 @@
 MODULE MSIRToM3CG;
 
-IMPORT MSIR, MSIRPrinter, M3CG, M3CG_Ops, M3ID, M3RT, Target, TInt, TextRefTbl, Fmt,
+IMPORT MSIR, MSIRPrinter, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
        Text, Word, Wr, Thread;
 
 FROM MSIR IMPORT Op, TypeKind, ValueKind;
@@ -182,7 +182,7 @@ PROCEDURE Census (wr: Wr.T;  m: MSIR.Module) =
    computed at 64 bits and re-canonicalised. *)
 
 TYPE
-  Loc = REF RECORD seg: M3CG.Var;  off: INTEGER END;
+  Loc = REF RECORD off: INTEGER;  s: Seg END;
 
   ValKind = {Temp, AddrOf, Param};
   ValLoc = REF RECORD
@@ -200,8 +200,6 @@ VAR
   mod       : MSIR.Module;
   modName   : TEXT;
   isIface   : BOOLEAN;
-  constSeg  : M3CG.Var;
-  dataSeg   : M3CG.Var;
   syms      : TextRefTbl.T;   (* symbol (no '@') -> Loc *)
   procs     : TextRefTbl.T;   (* C symbol -> ProcRef *)
   vals      : TextRefTbl.T;   (* SSA name -> ValLoc, per procedure *)
@@ -252,7 +250,8 @@ PROCEDURE IsPtr (t: MSIR.T): BOOLEAN =
   BEGIN
     t := Base (t);
     RETURN t # NIL AND MSIR.Kind (t) IN SET OF TypeKind {
-             TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot, TypeKind.ProcType };
+             TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot, TypeKind.ProcType,
+             TypeKind.Object, TypeKind.HeapArray };
   END IsPtr;
 
 PROCEDURE IsFloat (t: MSIR.T): BOOLEAN =
@@ -368,6 +367,10 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
           end := MAX (end, f.offset DIV 8 + sz);
         END;
         RETURN RoundUp (end, align);
+    | TypeKind.OpenArray =>
+        align := Target.Address.bytes;
+        RETURN Target.Address.bytes
+                 + MSIR.OpenArrayRank (t) * Target.Integer.bytes;
     ELSE
       n := -1;
     END;
@@ -497,8 +500,9 @@ PROCEDURE CheckValue (w: Why;  v: MSIR.Value) =
             END;
           END;
         END;
-    | ValueKind.GlobalRef => Fail (w, "global " & name);
-    | ValueKind.ConstTextLit => Fail (w, "text literal");
+    | ValueKind.GlobalRef =>
+        IF FindGlobal (name) = NIL THEN Fail (w, "global " & name) END;
+    | ValueKind.ConstTextLit =>
     ELSE Fail (w, "constant aggregate");
     END;
     IF NOT IsScalar (MSIR.ValueType (v)) THEN
@@ -576,27 +580,53 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       p: MSIR.Proc;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
     Setup (m);
-    IF MSIR.ModuleTypeDescCount (m) > 0 THEN Fail (w, "typecells") END;
-    IF MSIR.ModuleTypeLinkCount (m) > 0 THEN Fail (w, "type links") END;
-    IF MSIR.ModuleRevelationCount (m) > 0 THEN Fail (w, "revelations") END;
-    IF MSIR.ModuleExcDescCount (m) > 0 THEN Fail (w, "exceptions") END;
-    IF MSIR.ModuleTextLitCount (m) > 0 THEN Fail (w, "text literals") END;
-    IF MSIR.ModuleConstArrayCount (m) > 0 THEN Fail (w, "constant arrays") END;
-    FOR i := 0 TO MSIR.ModuleGlobalCount (m) - 1 DO
-      VAR g := MSIR.ModuleGlobal (m, i);
+    FOR i := 0 TO MSIR.ModuleConstArrayCount (m) - 1 DO
+      VAR ca := MSIR.ModuleConstArray (m, i);  a: INTEGER;
       BEGIN
-        IF MSIR.GlobalIsExternal (g) OR MSIR.GlobalByteOffset (g) < 0 THEN
-          Fail (w, "global " & MSIR.GlobalName (g));
+        IF Size (MSIR.ConstArrayEltType (ca), a) < 0 THEN
+          Fail (w, "constant array of unsized type");
+        END;
+        FOR j := 0 TO MSIR.ConstArrayEltCount (ca) - 1 DO
+          IF NOT IsInitConst (MSIR.ConstArrayElt (ca, j)) THEN
+            Fail (w, "constant array element");
+          END;
+        END;
+      END;
+    END;
+    FOR i := 0 TO MSIR.ModuleTypeDescCount (m) - 1 DO
+      VAR d := MSIR.ModuleTypeDesc (m, i);  r: REFANY;
+      BEGIN
+        IF MSIR.TypeDescKind (d) = TK_Obj
+           AND MethodMode (d) = LinkMode.Inits THEN
+          FOR j := 0 TO MSIR.TypeDescMethodInitCount (d) - 1 DO
+            IF NOT MSIR.TypeDescMethodInitBaseKnown (d, j)
+               AND NOT syms.get ("tl_obj_" & Fmt.Int (
+                         MSIR.TypeDescMethodInitDeclUID (d, j)), r) THEN
+              Fail (w, "method of unlinked type");
+            END;
+          END;
+        END;
+      END;
+    END;
+    FOR i := 0 TO MSIR.ModuleGlobalCount (m) - 1 DO
+      VAR g := MSIR.ModuleGlobal (m, i);  a: INTEGER;
+      BEGIN
+        IF NOT MSIR.GlobalIsExternal (g) THEN
+          IF MSIR.GlobalByteOffset (g) < 0 THEN
+            Fail (w, "standalone global " & MSIR.GlobalName (g));
+          END;
+        ELSIF MSIR.GlobalHomeBinder (g) # NIL THEN
+          IF ImportIndex (MSIR.GlobalHomeBinder (g)) < 0 THEN
+            Fail (w, "home of " & MSIR.GlobalName (g) & " not imported");
+          END;
+        ELSIF Size (MSIR.GlobalType (g), a) < 0 THEN
+          Fail (w, "external global of unsized type");
         END;
       END;
     END;
     FOR i := 0 TO MSIR.ModuleGlobalInitCount (m) - 1 DO
       v := MSIR.ModuleGlobalInitValue (m, i);
-      IF NOT MSIR.GetValueKind (v) IN SET OF ValueKind {
-               ValueKind.ConstInt, ValueKind.ConstFloat, ValueKind.ConstNil,
-               ValueKind.ConstProc } THEN
-        Fail (w, "global initializer");
-      END;
+      IF NOT IsInitConst (v) THEN Fail (w, "global initializer") END;
     END;
     FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
       p := MSIR.ModuleProc (m, pi);
@@ -627,49 +657,283 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
 
 (*---------------------------------------------------------------- layout *)
 
+(* Each segment is a list of items at increasing offsets; an item emits its
+   own init_* calls when the segment is generated. *)
+
+TYPE
+  Seg = REF RECORD
+    var   : M3CG.Var := NIL;
+    size  : INTEGER := 0;
+    items : RefSeq.T;
+  END;
+
+  Item = OBJECT
+    off : INTEGER;
+  METHODS
+    emit ();
+  END;
+
 VAR
-  dataSize, constSize: INTEGER;
-  impOff, fileOff, procInfoOff, gcMapOff: INTEGER;
-  nameOff: REF ARRAY OF INTEGER;
+  cseg, dseg: Seg;   (* constant and data segments *)
+  procInfoOff, gcMapOff, fileOff: INTEGER;
+  firstTC, lastTL, fullRevOff: INTEGER;
+
+PROCEDURE Alloc (s: Seg;  size, align: INTEGER;  it: Item): INTEGER =
+  BEGIN
+    it.off := RoundUp (s.size, MAX (align, 1));
+    s.size := it.off + size;
+    s.items.addhi (it);
+    RETURN it.off;
+  END Alloc;
+
+PROCEDURE NewSym (name: TEXT;  s: Seg;  off: INTEGER) =
+  BEGIN
+    EVAL syms.put (name, NEW (Loc, off := off, s := s));
+  END NewSym;
+
+(*----- items *)
+
+TYPE
+  CharsItem = Item OBJECT chars: TEXT OVERRIDES emit := EmitChars END;
+  BytesItem = Item OBJECT b: MSIR.GcMapBytes OVERRIDES emit := EmitBytes END;
+  ProcInfoItem = Item OBJECT names: REF ARRAY OF INTEGER
+                 OVERRIDES emit := EmitProcInfo END;
+  ModuleInfoItem = Item OBJECT OVERRIDES emit := EmitModuleInfo END;
+  GlobalsItem = Item OBJECT OVERRIDES emit := EmitGlobalInits END;
+  ImportsItem = Item OBJECT OVERRIDES emit := EmitImports END;
+  TypecellItem = Item OBJECT
+    d: MSIR.TypeDesc;
+    next, name, typeMap, gcMap, desc, brand, methods := -1;
+    linkProc: M3CG.Proc := NIL;
+  OVERRIDES emit := EmitTypecell END;
+  BrandItem = Item OBJECT d: MSIR.TypeDesc OVERRIDES emit := EmitBrand END;
+  MethodsItem = Item OBJECT d: MSIR.TypeDesc OVERRIDES emit := EmitMethods END;
+  TypeLinkItem = Item OBJECT tl: MSIR.TypeLink;  prev := -1
+                 OVERRIDES emit := EmitTypeLink END;
+  RevItem = Item OBJECT OVERRIDES emit := EmitRevs END;
+  ExcItem = Item OBJECT d: MSIR.ExcDesc;  name := -1
+            OVERRIDES emit := EmitExc END;
+  TextMethodsItem = Item OBJECT OVERRIDES emit := EmitTextMethods END;
+  TextLitItem = Item OBJECT uid: INTEGER;  methods: INTEGER
+                OVERRIDES emit := EmitTextLit END;
+  ConstArrayItem = Item OBJECT ca: MSIR.ConstArray
+                   OVERRIDES emit := EmitConstArray END;
+
+CONST TEXT_typecode = 1;
 
 (* Choose the module's symbols and segment offsets. *)
 PROCEDURE Setup (m: MSIR.Module) =
-  VAR nImports, nProcs: INTEGER;  gm: MSIR.GcMapBytes;  src: TEXT;
+  VAR nImports, nProcs, nTC, nTL, k: INTEGER;  src: TEXT;
+      ptr := Target.Address.bytes;
+      tcs: REF ARRAY OF TypecellItem;
   BEGIN
     mod := m;
     modName := MSIR.ModuleName (m);
     isIface := MSIR.ModuleIsInterface (m);
     syms := NEW (TextRefTbl.Default).init ();
+    cseg := NEW (Seg, items := NEW (RefSeq.T).init ());
+    dseg := NEW (Seg, items := NEW (RefSeq.T).init ());
     nImports := MSIR.ModuleImportBinderCount (m);
     nProcs := MSIR.ModuleProcCount (m);
+    nTC := MSIR.ModuleTypeDescCount (m);
+    nTL := MSIR.ModuleTypeLinkCount (m);
 
-    dataSize := MAX (B (M3RT.MI_SIZE), MSIR.ModuleGlobalStructSize (m));
-    impOff := RoundUp (dataSize, Target.Address.bytes);
-    dataSize := impOff + nImports * B (M3RT.II_SIZE);
-    EVAL syms.put (MSIR.ModuleInfoName (m), NEW (Loc, off := 0));
-    FOR k := 0 TO nImports - 1 DO
-      EVAL syms.put (modName & "_M3_imp." & Fmt.Int (k),
-                     NEW (Loc, off := impOff + k * B (M3RT.II_SIZE)));
+    (* data: ModuleInfo, user globals, imports *)
+    NewSym (MSIR.ModuleInfoName (m), dseg,
+            Alloc (dseg, B (M3RT.MI_SIZE), ptr, NEW (ModuleInfoItem)));
+    VAR n := MSIR.ModuleGlobalStructSize (m) - B (M3RT.MI_SIZE);
+    BEGIN
+      IF n > 0 THEN EVAL Alloc (dseg, n, 1, NEW (GlobalsItem)) END;
+    END;
+    IF nImports > 0 THEN
+      k := Alloc (dseg, nImports * B (M3RT.II_SIZE), ptr, NEW (ImportsItem));
+      FOR i := 0 TO nImports - 1 DO
+        NewSym (modName & "_M3_imp." & Fmt.Int (i), dseg,
+                k + i * B (M3RT.II_SIZE));
+      END;
     END;
 
-    constSize := 0;
-    nameOff := NEW (REF ARRAY OF INTEGER, nProcs);
-    FOR i := 0 TO nProcs - 1 DO
-      nameOff[i] := constSize;
-      INC (constSize, Text.Length (MSIR.ProcName (MSIR.ModuleProc (m, i))) + 1);
+    (* constants: procedure names and table, file name, global GC map *)
+    VAR names := NEW (REF ARRAY OF INTEGER, nProcs);
+    BEGIN
+      FOR i := 0 TO nProcs - 1 DO
+        VAR n := MSIR.ProcName (MSIR.ModuleProc (m, i));
+        BEGIN
+          names[i] := Alloc (cseg, Text.Length (n) + 1, 1,
+                             NEW (CharsItem, chars := n));
+        END;
+      END;
+      procInfoOff := -1;
+      IF nProcs > 0 THEN
+        procInfoOff := Alloc (cseg, (nProcs + 1) * B (M3RT.PI_SIZE), ptr,
+                              NEW (ProcInfoItem, names := names));
+      END;
     END;
-    procInfoOff := RoundUp (constSize, Target.Address.bytes);
-    constSize := procInfoOff + (nProcs + 1) * B (M3RT.PI_SIZE);
-    fileOff := constSize;
     src := SourceFile ();
-    INC (constSize, Text.Length (src) + 1);
-    gm := MSIR.ModuleGcMap (m);
-    gcMapOff := -1;
-    IF gm # NIL AND NUMBER (gm^) > 0 THEN
-      gcMapOff := constSize;
-      INC (constSize, NUMBER (gm^));
+    fileOff := Alloc (cseg, Text.Length (src) + 1, 1, NEW (CharsItem, chars := src));
+    gcMapOff := Bytes (MSIR.ModuleGcMap (m));
+
+    (* typecells *)
+    tcs := NEW (REF ARRAY OF TypecellItem, nTC);
+    firstTC := -1;
+    FOR i := 0 TO nTC - 1 DO
+      VAR d := MSIR.ModuleTypeDesc (m, i);  sz: INTEGER;
+          it := NEW (TypecellItem, d := d);
+      BEGIN
+        CASE MSIR.TypeDescKind (d) OF
+        | TK_Obj => sz := B (M3RT.OTC_SIZE);
+        | TK_Array => sz := B (M3RT.ATC_SIZE);
+        ELSE sz := B (M3RT.TC_SIZE);
+        END;
+        tcs[i] := it;
+        NewSym (MSIR.TypeDescName (d), dseg, Alloc (dseg, sz, ptr, it));
+        IF i = 0 THEN firstTC := it.off END;
+        IF i > 0 THEN tcs[i-1].next := it.off END;
+        IF MSIR.TypeDescUserName (d) # NIL THEN
+          it.name := Alloc (cseg, Text.Length (MSIR.TypeDescUserName (d)) + 1,
+                            1, NEW (CharsItem, chars := MSIR.TypeDescUserName (d)));
+        END;
+        it.typeMap := Bytes (MSIR.TypeDescTypeMap (d));
+        it.gcMap := Bytes (MSIR.TypeDescGcMap (d));
+        it.desc := Bytes (MSIR.TypeDescPickleDesc (d));
+        VAR cb: INTEGER;  chars := MSIR.TypeDescBrand (d, cb);
+        BEGIN
+          IF chars # NIL THEN
+            it.brand := Alloc (cseg, Target.Integer.bytes + NUMBER (chars^) + cb,
+                               ptr, NEW (BrandItem, d := d));
+          END;
+        END;
+        IF MSIR.TypeDescKind (d) = TK_Obj AND MethodMode (d) = LinkMode.Table THEN
+          it.methods := Alloc (cseg, MSIR.TypeDescMethodCount (d) * ptr, ptr,
+                               NEW (MethodsItem, d := d));
+        END;
+      END;
+    END;
+
+    (* type links, chained through defn *)
+    lastTL := -1;
+    FOR i := 0 TO nTL - 1 DO
+      VAR tl := MSIR.ModuleTypeLink (m, i);
+          it := NEW (TypeLinkItem, tl := tl, prev := lastTL);
+      BEGIN
+        lastTL := Alloc (dseg, 2 * ptr, ptr, it);
+        NewSym (MSIR.TypeLinkName (tl), dseg, lastTL);
+      END;
+    END;
+
+    fullRevOff := -1;
+    IF MSIR.ModuleRevelationCount (m) > 0 THEN
+      fullRevOff := Alloc (dseg, (MSIR.ModuleRevelationCount (m) + 1)
+                                   * B (M3RT.RV_SIZE), ptr, NEW (RevItem));
+    END;
+
+    FOR i := 0 TO MSIR.ModuleExcDescCount (m) - 1 DO
+      VAR d := MSIR.ModuleExcDesc (m, i);  it := NEW (ExcItem, d := d);
+          disp := MSIR.ExcDescDisplay (d);
+      BEGIN
+        IF disp # NIL AND NOT Text.Equal (disp, "") THEN
+          it.name := Alloc (cseg, Text.Length (disp) + 1, 1,
+                            NEW (CharsItem, chars := disp));
+        END;
+        NewSym (MSIR.ExcDescName (d), dseg,
+                Alloc (dseg, B (M3RT.ED_SIZE), ptr, it));
+      END;
+    END;
+
+    IF MSIR.ModuleTextLitCount (m) > 0 THEN
+      k := Alloc (cseg, 5 * ptr, ptr, NEW (TextMethodsItem));
+      FOR uid := 0 TO MSIR.ModuleTextLitCount (m) - 1 DO
+        NewSym ("textlit_" & Fmt.Int (uid), cseg,
+                Alloc (cseg, 3 * ptr + TextLitBytes (uid), ptr,
+                       NEW (TextLitItem, uid := uid, methods := k)));
+      END;
+    END;
+
+    FOR i := 0 TO MSIR.ModuleConstArrayCount (m) - 1 DO
+      VAR ca := MSIR.ModuleConstArray (m, i);  a: INTEGER;
+          sz := Size (MSIR.ConstArrayEltType (ca), a);
+      BEGIN
+        NewSym (MSIR.ConstArrayName (ca), cseg,
+                Alloc (cseg, MAX (sz, 0) * MSIR.ConstArrayEltCount (ca),
+                       MAX (a, ptr), NEW (ConstArrayItem, ca := ca)));
+      END;
     END;
   END Setup;
+
+CONST TK_Obj = 2;  TK_Array = 3;
+
+PROCEDURE Bytes (b: MSIR.GcMapBytes): INTEGER =
+  BEGIN
+    IF b = NIL OR NUMBER (b^) = 0 THEN RETURN -1 END;
+    RETURN Alloc (cseg, NUMBER (b^), 1, NEW (BytesItem, b := b));
+  END Bytes;
+
+(* The index of binder among the unit's import records, or -1. *)
+PROCEDURE ImportIndex (binder: TEXT): INTEGER =
+  BEGIN
+    FOR k := 0 TO MSIR.ModuleImportBinderCount (mod) - 1 DO
+      IF Text.Equal (MSIR.ModuleImportBinder (mod, k), binder) THEN RETURN k END;
+    END;
+    RETURN -1;
+  END ImportIndex;
+
+PROCEDURE FindGlobal (name: TEXT): MSIR.Global =
+  VAR g: MSIR.Global;
+  BEGIN
+    FOR i := 0 TO MSIR.ModuleGlobalCount (mod) - 1 DO
+      g := MSIR.ModuleGlobal (mod, i);
+      IF Text.Equal (MSIR.GlobalName (g), name) THEN RETURN g END;
+    END;
+    RETURN NIL;
+  END FindGlobal;
+
+(* External globals with no home are C variables, imported by name. *)
+VAR externs: TextRefTbl.T;
+
+TYPE VarRef = REF RECORD v: M3CG.Var END;
+
+PROCEDURE ImportGlobals () =
+  VAR g: MSIR.Global;  a, sz: INTEGER;  t: M3CG.Type;
+  BEGIN
+    externs := NEW (TextRefTbl.Default).init ();
+    FOR i := 0 TO MSIR.ModuleGlobalCount (mod) - 1 DO
+      g := MSIR.ModuleGlobal (mod, i);
+      IF MSIR.GlobalIsExternal (g) AND MSIR.GlobalHomeBinder (g) = NIL THEN
+        sz := Size (MSIR.GlobalType (g), a);
+        IF IsScalar (MSIR.GlobalType (g))
+          THEN t := MType (MSIR.GlobalType (g));
+          ELSE t := M3CG.Type.Struct;
+        END;
+        EVAL externs.put (MSIR.GlobalName (g), NEW (VarRef,
+               v := cg.import_global (ID (MSIR.GlobalName (g)), sz, a, t, 0)));
+      END;
+    END;
+  END ImportGlobals;
+
+(* Push the address of the external global g. *)
+PROCEDURE PushGlobal (g: MSIR.Global) =
+  VAR r: REFANY;
+  BEGIN
+    IF MSIR.GlobalHomeBinder (g) # NIL THEN
+      (* the home unit's data, through this unit's import record for it *)
+      EVAL syms.get (modName & "_M3_imp."
+                       & Fmt.Int (ImportIndex (MSIR.GlobalHomeBinder (g))), r);
+      cg.load (dseg.var, NARROW (r, Loc).off + B (M3RT.II_import), Addr, Addr);
+      IF MSIR.GlobalHomeOffset (g) # 0 THEN
+        cg.add_offset (MSIR.GlobalHomeOffset (g));
+      END;
+    ELSE
+      EVAL externs.get (MSIR.GlobalName (g), r);
+      cg.load_address (NARROW (r, VarRef).v, 0);
+    END;
+  END PushGlobal;
+
+PROCEDURE TextLitBytes (uid: INTEGER): INTEGER =
+  VAR cnt := MSIR.ModuleTextLitCnt (mod, uid);  w := 1;
+  BEGIN
+    IF cnt < 0 THEN w := Target.WideCharSize () DIV Target.Char.size END;
+    RETURN (ABS (cnt) + 1) * w;
+  END TextLitBytes;
 
 PROCEDURE SourceFile (): TEXT =
   VAR src := MSIR.ModuleSrcFile (mod);
@@ -677,6 +941,431 @@ PROCEDURE SourceFile (): TEXT =
     IF src = NIL OR Text.Equal (src, "") THEN src := modName END;
     RETURN src;
   END SourceFile;
+
+(*----- emission *)
+
+PROCEDURE GenSeg (s: Seg) =
+  BEGIN
+    cg.bind_segment (s.var, RoundUp (MAX (s.size, 1), 16), 16,
+                     M3CG.Type.Struct, FALSE, TRUE);
+    cg.begin_init (s.var);
+    FOR i := 0 TO s.items.size () - 1 DO
+      NARROW (s.items.get (i), Item).emit ();
+    END;
+    cg.end_init (s.var);
+  END GenSeg;
+
+PROCEDURE InitInt (off, v: INTEGER;  t: M3CG.Type) =
+  VAR i: Target.Int;
+  BEGIN
+    IF v = 0 THEN RETURN END;
+    EVAL TInt.FromInt (v, i);
+    cg.init_int (off, i, t);
+  END InitInt;
+
+PROCEDURE InitPtr (off: INTEGER;  s: Seg;  target: INTEGER) =
+  BEGIN
+    IF target >= 0 THEN cg.init_var (off, s.var, target) END;
+  END InitPtr;
+
+PROCEDURE EmitChars (it: CharsItem) =
+  VAR printable := TRUE;  c: CHAR;
+  BEGIN
+    FOR i := 0 TO Text.Length (it.chars) - 1 DO
+      c := Text.GetChar (it.chars, i);
+      IF c < ' ' OR c > '~' THEN printable := FALSE END;
+    END;
+    IF printable THEN
+      cg.init_chars (it.off, it.chars);
+    ELSE
+      FOR i := 0 TO Text.Length (it.chars) - 1 DO
+        InitInt (it.off + i, ORD (Text.GetChar (it.chars, i)), M3CG.Type.Word8);
+      END;
+    END;
+  END EmitChars;
+
+PROCEDURE EmitBytes (it: BytesItem) =
+  BEGIN
+    FOR k := 0 TO LAST (it.b^) DO
+      InitInt (it.off + k, it.b[k], M3CG.Type.Word8);
+    END;
+  END EmitBytes;
+
+PROCEDURE EmitProcInfo (it: ProcInfoItem) =
+  VAR off := it.off;
+  BEGIN
+    FOR i := 0 TO MSIR.ModuleProcCount (mod) - 1 DO
+      VAR p := MSIR.ModuleProc (mod, i);
+      BEGIN
+        IF MSIR.ProcBlockCount (p) > 0 THEN
+          cg.init_proc (off + B (M3RT.PI_proc), InfoProc (p));
+          InitPtr (off + B (M3RT.PI_name), cseg, it.names[i]);
+          INC (off, B (M3RT.PI_SIZE));
+        END;
+      END;
+    END;
+  END EmitProcInfo;
+
+(* The procedure a ProcInfo entry names: the binder for the unit's body. *)
+PROCEDURE InfoProc (p: MSIR.Proc): M3CG.Proc =
+  BEGIN
+    IF p = BodyProc () THEN RETURN binder END;
+    RETURN ProcFor (p);
+  END InfoProc;
+
+PROCEDURE EmitModuleInfo (it: ModuleInfoItem) =
+  BEGIN
+    InitPtr (it.off + B (M3RT.MI_file), cseg, fileOff);
+    InitPtr (it.off + B (M3RT.MI_type_cells), dseg, firstTC);
+    InitPtr (it.off + B (M3RT.MI_type_cell_ptrs), dseg, lastTL);
+    InitPtr (it.off + B (M3RT.MI_full_rev), dseg, fullRevOff);
+    InitPtr (it.off + B (M3RT.MI_proc_info), cseg, procInfoOff);
+    InitPtr (it.off + B (M3RT.MI_var_map), cseg, gcMapOff);
+    InitPtr (it.off + B (M3RT.MI_gc_map), cseg, gcMapOff);
+    IF MSIR.ModuleImportBinderCount (mod) > 0 THEN
+      VAR r: REFANY;
+      BEGIN
+        EVAL syms.get (modName & "_M3_imp.0", r);
+        InitPtr (it.off + B (M3RT.MI_imports), dseg, NARROW (r, Loc).off);
+      END;
+    END;
+    cg.init_proc (it.off + B (M3RT.MI_binder), binder);
+    InitInt (it.off + B (M3RT.MI_gc_flags), 3, Int64);
+  END EmitModuleInfo;
+
+TYPE GInit = RECORD off: INTEGER;  v: MSIR.Value END;
+
+(* Initial values of user globals, in offset order. *)
+PROCEDURE EmitGlobalInits (<*UNUSED*> it: GlobalsItem) =
+  VAR nInits := MSIR.ModuleGlobalInitCount (mod);
+      inits := NEW (REF ARRAY OF GInit, nInits);  tmp: GInit;
+  BEGIN
+    FOR i := 0 TO nInits - 1 DO
+      inits[i].off := MSIR.ModuleGlobalInitOffset (mod, i);
+      inits[i].v := MSIR.ModuleGlobalInitValue (mod, i);
+    END;
+    FOR i := 1 TO nInits - 1 DO
+      tmp := inits[i];
+      VAR j := i;
+      BEGIN
+        WHILE j > 0 AND inits[j-1].off > tmp.off DO
+          inits[j] := inits[j-1];  DEC (j);
+        END;
+        inits[j] := tmp;
+      END;
+    END;
+    FOR i := 0 TO nInits - 1 DO
+      InitConst (inits[i].off, inits[i].v, MSIR.ValueType (inits[i].v));
+    END;
+  END EmitGlobalInits;
+
+(* Initialise the bytes at off in the segment being generated to the
+   constant v of type t. *)
+PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
+  VAR f: Target.Float;  r: REFANY;  name := MSIR.ValueName (v);
+  BEGIN
+    CASE MSIR.GetValueKind (v) OF
+    | ValueKind.ConstInt =>
+        IF IsPtr (t) THEN
+          InitInt (off, MSIR.GetIntVal (v), Addr);
+        ELSE
+          InitInt (off, CanonInt (MSIR.GetIntVal (v), IntBits (t)), MType (t));
+        END;
+    | ValueKind.ConstFloat =>
+        MSIR.GetFloatVal (v, f);
+        cg.init_float (off, f);
+    | ValueKind.ConstNil =>
+    | ValueKind.ConstProc =>
+        cg.init_proc (off, ProcFor (MSIR.GetConstProc (v)));
+    | ValueKind.ConstTextLit =>
+        EVAL syms.get ("textlit_" & Fmt.Int (MSIR.GetTextLitUID (v)), r);
+        InitPtr (off, NARROW (r, Loc).s, NARROW (r, Loc).off + Target.Address.bytes);
+    | ValueKind.ConstStruct =>
+        t := Base (t);
+        FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
+          VAR fld := MSIR.StructField (t, i);
+          BEGIN
+            InitConst (off + fld.offset DIV 8, MSIR.GetConstStructField (v, i),
+                       fld.type);
+          END;
+        END;
+    | ValueKind.ConstAggArray =>
+        VAR elt := MSIR.FixedArrayElt (Base (t));  a: INTEGER;
+            sz := Size (elt, a);
+        BEGIN
+          FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
+            InitConst (off + i * sz, MSIR.GetConstStructField (v, i), elt);
+          END;
+        END;
+    | ValueKind.StructFieldRef =>
+        EVAL syms.get (Text.Sub (name, 1), r);
+        InitPtr (off, NARROW (r, Loc).s,
+                 NARROW (r, Loc).off + MSIR.GetStructFieldOffset (v));
+    ELSE
+      IF name # NIL AND HasPrefix (name, "@")
+         AND syms.get (Text.Sub (name, 1), r) THEN
+        InitPtr (off, NARROW (r, Loc).s, NARROW (r, Loc).off);
+      END;
+    END;
+  END InitConst;
+
+(* TRUE if InitConst can lay out v. *)
+PROCEDURE IsInitConst (v: MSIR.Value): BOOLEAN =
+  VAR r: REFANY;  name := MSIR.ValueName (v);
+  BEGIN
+    CASE MSIR.GetValueKind (v) OF
+    | ValueKind.ConstInt, ValueKind.ConstFloat, ValueKind.ConstNil,
+      ValueKind.ConstProc, ValueKind.ConstTextLit => RETURN TRUE;
+    | ValueKind.ConstStruct, ValueKind.ConstAggArray =>
+        FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
+          IF NOT IsInitConst (MSIR.GetConstStructField (v, i)) THEN
+            RETURN FALSE;
+          END;
+        END;
+        RETURN TRUE;
+    ELSE
+      RETURN name # NIL AND HasPrefix (name, "@")
+             AND syms.get (Text.Sub (name, 1), r);
+    END;
+  END IsInitConst;
+
+PROCEDURE EmitImports (it: ImportsItem) =
+  VAR off := it.off;  n := MSIR.ModuleImportBinderCount (mod);
+  BEGIN
+    FOR k := 0 TO n - 1 DO
+      cg.init_proc (off + B (M3RT.II_binder),
+                    ImportBinder (MSIR.ModuleImportBinder (mod, k)));
+      IF k < n - 1 THEN
+        InitPtr (off + B (M3RT.II_next), dseg, off + B (M3RT.II_SIZE));
+      END;
+      INC (off, B (M3RT.II_SIZE));
+    END;
+  END EmitImports;
+
+PROCEDURE EmitTypecell (it: TypecellItem) =
+  VAR d := it.d;  o := it.off;  ipName := MSIR.TypeDescInitProcName (d);
+  BEGIN
+    InitInt (o + B (M3RT.TC_selfID), MSIR.TypeDescUID (d), Int64);
+    FOR i := 0 TO 7 DO
+      InitInt (o + B (M3RT.TC_fp) + i, MSIR.TypeDescFPByte (d, i),
+               M3CG.Type.Word8);
+    END;
+    InitInt (o + B (M3RT.TC_traced), ORD (MSIR.TypeDescTraced (d)),
+             M3CG.Type.Word8);
+    InitInt (o + B (M3RT.TC_kind), MSIR.TypeDescKind (d), M3CG.Type.Word8);
+    InitInt (o + B (M3RT.TC_dataAlignment), MSIR.TypeDescAlign (d),
+             M3CG.Type.Word8);
+    InitInt (o + B (M3RT.TC_dataSize), MSIR.TypeDescSize (d), Int64);
+    InitPtr (o + B (M3RT.TC_type_map), cseg, it.typeMap);
+    InitPtr (o + B (M3RT.TC_gc_map), cseg, it.gcMap);
+    InitPtr (o + B (M3RT.TC_type_desc), cseg, it.desc);
+    IF ipName # NIL THEN
+      cg.init_proc (o + B (M3RT.TC_initProc), ProcByName (ipName));
+    END;
+    InitPtr (o + B (M3RT.TC_brand), cseg, it.brand);
+    InitPtr (o + B (M3RT.TC_name), cseg, it.name);
+    InitPtr (o + B (M3RT.TC_next), dseg, it.next);
+    CASE MSIR.TypeDescKind (d) OF
+    | TK_Obj =>
+        InitInt (o + B (M3RT.OTC_parentID), MSIR.TypeDescParentUID (d), Int64);
+        IF it.linkProc # NIL THEN
+          cg.init_proc (o + B (M3RT.OTC_linkProc), it.linkProc);
+        END;
+        InitInt (o + B (M3RT.OTC_methodSize), MSIR.TypeDescMethodBytes (d), Int64);
+        InitPtr (o + B (M3RT.OTC_defaultMethods), cseg, it.methods);
+    | TK_Array =>
+        InitInt (o + B (M3RT.ATC_nDimensions), MSIR.TypeDescNDimensions (d), Int64);
+        InitInt (o + B (M3RT.ATC_elementSize), MSIR.TypeDescElementSize (d), Int64);
+    ELSE
+    END;
+  END EmitTypecell;
+
+(* The RT0 brand record, as Brand.Compile lays it out: an INTEGER count of
+   the characters' bytes, then the characters and a NUL character. *)
+PROCEDURE EmitBrand (it: BrandItem) =
+  VAR cb: INTEGER;  chars := MSIR.TypeDescBrand (it.d, cb);
+  BEGIN
+    InitInt (it.off, NUMBER (chars^), Int64);
+    FOR i := 0 TO LAST (chars^) DO
+      InitInt (it.off + Target.Integer.bytes + i, chars[i], M3CG.Type.Word8);
+    END;
+  END EmitBrand;
+
+PROCEDURE EmitMethods (it: MethodsItem) =
+  BEGIN
+    FOR j := 0 TO MSIR.TypeDescMethodCount (it.d) - 1 DO
+      cg.init_proc (it.off + j * Target.Address.bytes,
+                    ProcByName (MSIR.TypeDescMethod (it.d, j)));
+    END;
+  END EmitMethods;
+
+PROCEDURE EmitTypeLink (it: TypeLinkItem) =
+  BEGIN
+    InitPtr (it.off, dseg, it.prev);
+    InitInt (it.off + Target.Address.bytes, MSIR.TypeLinkUID (it.tl), Int64);
+  END EmitTypeLink;
+
+PROCEDURE EmitRevs (it: RevItem) =
+  VAR off := it.off;
+  BEGIN
+    FOR i := 0 TO MSIR.ModuleRevelationCount (mod) - 1 DO
+      VAR r := MSIR.ModuleRevelation (mod, i);
+      BEGIN
+        InitInt (off + B (M3RT.RV_lhs_id), MSIR.RevelationLhsUID (r), Int64);
+        InitInt (off + B (M3RT.RV_rhs_id), MSIR.RevelationRhsUID (r), Int64);
+        INC (off, B (M3RT.RV_SIZE));
+      END;
+    END;
+  END EmitRevs;
+
+PROCEDURE EmitExc (it: ExcItem) =
+  BEGIN
+    InitInt (it.off + B (M3RT.ED_uid), MSIR.ExcDescUID (it.d), Int64);
+    InitPtr (it.off + B (M3RT.ED_name), cseg, it.name);
+  END EmitExc;
+
+PROCEDURE EmitTextMethods (it: TextMethodsItem) =
+  BEGIN
+    FOR i := 0 TO 4 DO
+      cg.init_proc (it.off + i * Target.Address.bytes,
+                    ProcFor (MSIR.ModuleGetTextLitHook (mod, i)));
+    END;
+  END EmitTextMethods;
+
+PROCEDURE EmitTextLit (it: TextLitItem) =
+  VAR ptr := Target.Address.bytes;
+      chars := MSIR.ModuleTextLitChars (mod, it.uid);
+      cnt := MSIR.ModuleTextLitCnt (mod, it.uid);
+  BEGIN
+    InitInt (it.off, Word.Shift (TEXT_typecode, M3RT.RH_typecode_offset), Int64);
+    InitPtr (it.off + ptr, cseg, it.methods);
+    InitInt (it.off + 2 * ptr, cnt, Int64);
+    EmitChars (NEW (CharsItem, off := it.off + 3 * ptr, chars := chars));
+  END EmitTextLit;
+
+PROCEDURE EmitConstArray (it: ConstArrayItem) =
+  VAR ca := it.ca;  t := MSIR.ConstArrayEltType (ca);  a: INTEGER;
+      sz := Size (t, a);
+  BEGIN
+    FOR j := 0 TO MSIR.ConstArrayEltCount (ca) - 1 DO
+      InitConst (it.off + j * sz, MSIR.ConstArrayElt (ca, j), t);
+    END;
+  END EmitConstArray;
+
+(*------------------------------------------------------------ link procs *)
+
+TYPE LinkMode = {None, Inits, Dynamic, Slots, Table};
+
+(* How an object typecell's methods reach its method suite, as in
+   MSIRToLLVM.EmitTypeCells. *)
+PROCEDURE MethodMode (d: MSIR.TypeDesc): LinkMode =
+  VAR n := MSIR.TypeDescMethodCount (d);
+  BEGIN
+    IF MSIR.TypeDescUseLinkProc (d) AND MSIR.TypeDescMethodInitCount (d) > 0 THEN
+      RETURN LinkMode.Inits;
+    ELSIF n = 0 THEN
+      RETURN LinkMode.None;
+    ELSIF MSIR.TypeDescDynamicMethOff (d) THEN
+      RETURN LinkMode.Dynamic;
+    END;
+    FOR j := 0 TO n - 1 DO
+      IF MSIR.TypeDescMethod (d, j) = NIL THEN RETURN LinkMode.Slots END;
+    END;
+    RETURN LinkMode.Table;
+  END MethodMode;
+
+(* Generate the link procedures of the unit's object typecells.  Each
+   stores method procedures into the vtable RTLinker allocated:
+   PROCEDURE (tp: ADDRESS (* the typecell *)). *)
+PROCEDURE GenLinkProcs () =
+  VAR ptr := Target.Address.bytes;
+  BEGIN
+    FOR i := 0 TO dseg.items.size () - 1 DO
+      TYPECASE dseg.items.get (i) OF
+      | TypecellItem (it) =>
+          VAR d := it.d;  mode := LinkMode.None;  q: M3CG.Proc;  tp: M3CG.Var;
+          BEGIN
+            IF MSIR.TypeDescKind (d) = TK_Obj THEN mode := MethodMode (d) END;
+            IF mode IN SET OF LinkMode {LinkMode.Inits, LinkMode.Dynamic,
+                                        LinkMode.Slots} THEN
+              q := cg.declare_procedure (
+                     ID (MSIR.TypeDescName (d) & "_linkproc"), 1,
+                     M3CG.Type.Void, 0, Target.DefaultCall, FALSE, NIL);
+              tp := cg.declare_param (ID ("tp"), ptr, ptr, Addr, 0, FALSE,
+                                      FALSE, M3CG.Always);
+              it.linkProc := q;
+              cg.begin_procedure (q);
+              CASE mode OF
+              | LinkMode.Inits =>
+                  FOR j := 0 TO MSIR.TypeDescMethodInitCount (d) - 1 DO
+                    VAR mname := MSIR.TypeDescMethodInitProc (d, j);
+                        off := MSIR.TypeDescMethodInitOff (d, j);
+                        r: REFANY;
+                    BEGIN
+                      IF mname # NIL THEN
+                        PushMethods (tp);
+                        IF MSIR.TypeDescMethodInitBaseKnown (d, j) THEN
+                          cg.add_offset (MSIR.TypeDescMethodInitBase (d, j) + off);
+                        ELSE
+                          (* + the declaring type's OTC_methodOffset *)
+                          EVAL syms.get ("tl_obj_" & Fmt.Int (
+                                 MSIR.TypeDescMethodInitDeclUID (d, j)), r);
+                          cg.load_address (NARROW (r, Loc).s.var, NARROW (r, Loc).off);
+                          cg.load_indirect (0, Addr, Addr);
+                          cg.load_indirect (B (M3RT.OTC_methodOffset), Int64, Int64);
+                          cg.index_address (Int64, 1);
+                          cg.add_offset (off);
+                        END;
+                        cg.load_procedure (ProcByName (mname));
+                        cg.store_indirect (0, Addr, Addr);
+                      END;
+                    END;
+                  END;
+              | LinkMode.Dynamic, LinkMode.Slots =>
+                  FOR j := 0 TO MSIR.TypeDescMethodCount (d) - 1 DO
+                    VAR mname := MSIR.TypeDescMethod (d, j);
+                    BEGIN
+                      IF mname # NIL THEN
+                        PushMethods (tp);
+                        IF mode = LinkMode.Dynamic THEN
+                          cg.load (tp, 0, Addr, Addr);
+                          cg.load_indirect (B (M3RT.OTC_methodOffset), Int64, Int64);
+                          cg.index_address (Int64, 1);
+                        END;
+                        cg.add_offset (j * ptr);
+                        cg.load_procedure (ProcByName (mname));
+                        cg.store_indirect (0, Addr, Addr);
+                      END;
+                    END;
+                  END;
+              ELSE
+              END;
+              cg.exit_proc (M3CG.Type.Void);
+              cg.end_procedure (q);
+            END;
+          END;
+      ELSE
+      END;
+    END;
+  END GenLinkProcs;
+
+(* Push tp.defaultMethods, the vtable. *)
+PROCEDURE PushMethods (tp: M3CG.Var) =
+  BEGIN
+    cg.load (tp, 0, Addr, Addr);
+    cg.load_indirect (B (M3RT.OTC_defaultMethods), Addr, Addr);
+  END PushMethods;
+
+(* The procedure with linker name sym: the unit's own, or imported as
+   PROCEDURE () if not already known. *)
+PROCEDURE ProcByName (sym: TEXT): M3CG.Proc =
+  VAR r: REFANY;  q: M3CG.Proc;
+  BEGIN
+    IF procs.get (sym, r) THEN RETURN NARROW (r, ProcRef).p END;
+    q := cg.import_procedure (ID (sym), 0, M3CG.Type.Void, Target.DefaultCall);
+    EVAL procs.put (sym, NEW (ProcRef, p := q));
+    RETURN q;
+  END ProcByName;
 
 (*------------------------------------------------------------ procedures *)
 
@@ -746,19 +1435,17 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
     Setup (m);
     cg := c;  (* M3CG.T's methods are revealed by M3CG_Ops *)
     procs := NEW (TextRefTbl.Default).init ();
+    paramVars := NEW (TextRefTbl.Default).init ();
+    generated := NEW (TextRefTbl.Default).init ();
     curLine := -1;
 
     cg.begin_unit (0);
     cg.widechar_size (Target.WideCharSize ());
     cg.set_source_file (SourceFile ());
-    constSeg := cg.declare_segment (M3ID.NoID, -1, TRUE);
+    cseg.var := cg.declare_segment (M3ID.NoID, -1, TRUE);
     IF isIface
-      THEN dataSeg := cg.declare_segment (ID ("I_" & modName), -1, FALSE);
-      ELSE dataSeg := cg.declare_segment (ID ("M_" & modName), -1, FALSE);
-    END;
-    VAR it := syms.iterate ();  k: TEXT;  r: REFANY;
-    BEGIN
-      WHILE it.next (k, r) DO NARROW (r, Loc).seg := dataSeg END;
+      THEN dseg.var := cg.declare_segment (ID ("I_" & modName), -1, FALSE);
+      ELSE dseg.var := cg.declare_segment (ID ("M_" & modName), -1, FALSE);
     END;
 
     (* The unit's binder. *)
@@ -772,37 +1459,72 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
                                  M3CG.Always);
     EVAL procs.put (binderName, NEW (ProcRef, p := binder));
 
-    (* The unit's own procedures. *)
+    (* The unit's own procedures, then everything they call, so each
+       import carries its real signature. *)
     FOR i := 0 TO MSIR.ModuleProcCount (m) - 1 DO
       p := MSIR.ModuleProc (m, i);
       IF MSIR.ProcBlockCount (p) > 0 THEN DeclareProc (p) END;
     END;
+    FOR i := 0 TO MSIR.ModuleProcCount (m) - 1 DO
+      ImportCallees (MSIR.ModuleProc (m, i));
+    END;
     FOR k := 0 TO MSIR.ModuleImportBinderCount (m) - 1 DO
       EVAL ImportBinder (MSIR.ModuleImportBinder (m, k));
     END;
+    ImportGlobals ();
 
     GenBinder (modeVar);
     FOR i := 0 TO MSIR.ModuleProcCount (m) - 1 DO
       p := MSIR.ModuleProc (m, i);
-      IF MSIR.ProcBlockCount (p) > 0 THEN GenProc (p) END;
+      IF MSIR.ProcBlockCount (p) > 0 AND NOT Generated (p) THEN GenProc (p) END;
     END;
+    GenLinkProcs ();
 
-    GenConstSeg ();
-    GenDataSeg ();
+    GenSeg (cseg);
+    GenSeg (dseg);
     cg.end_unit ();
     cg := NIL;
     mod := NIL;
   END Lower;
 
+PROCEDURE ImportCallees (p: MSIR.Proc) =
+  VAR b: MSIR.Block;  i: MSIR.Insn;  v: MSIR.Value;
+  BEGIN
+    FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+      b := MSIR.ProcBlock (p, bi);
+      FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+        i := MSIR.BlockInsn (b, ii);
+        IF MSIR.InsnOp (i) = Op.Call THEN EVAL ProcFor (MSIR.InsnCallee (i)) END;
+        FOR k := 0 TO MSIR.InsnOperandCount (i) - 1 DO
+          v := MSIR.InsnOperand (i, k);
+          IF v # NIL AND MSIR.GetValueKind (v) = ValueKind.ConstProc THEN
+            EVAL ProcFor (MSIR.GetConstProc (v));
+          END;
+        END;
+      END;
+    END;
+  END ImportCallees;
+
+(* The unit may list a procedure twice (a hook both compiled here and
+   looked up again); generate it once. *)
+VAR generated: TextRefTbl.T;
+
+PROCEDURE Generated (p: MSIR.Proc): BOOLEAN =
+  VAR r: REFANY;
+  BEGIN
+    IF generated.get (CSymbol (p), r) THEN RETURN TRUE END;
+    EVAL generated.put (CSymbol (p), p);
+    RETURN FALSE;
+  END Generated;
+
 PROCEDURE DeclareProc (p: MSIR.Proc) =
   VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;  t: MSIR.T;  a: INTEGER;
-      sym := CSymbol (p);
+      sym := CSymbol (p);  r: REFANY;
   BEGIN
+    IF procs.get (sym, r) THEN RETURN END;
     q := cg.declare_procedure (ID (sym), n, SigType (MSIR.ProcResultType (p)),
                                0, Target.DefaultCall, TRUE, NIL);
     EVAL procs.put (sym, NEW (ProcRef, p := q));
-    (* The params' Vars are recorded when the body is generated: M3CG
-       declares them here, so keep them in a per-proc table. *)
     VAR pv := NEW (REF ARRAY OF M3CG.Var, n);
     BEGIN
       FOR k := 0 TO n - 1 DO
@@ -814,7 +1536,7 @@ PROCEDURE DeclareProc (p: MSIR.Proc) =
     END;
   END DeclareProc;
 
-VAR paramVars := NEW (TextRefTbl.Default).init ();
+VAR paramVars: TextRefTbl.T;
 
 PROCEDURE GenBinder (modeVar: M3CG.Var) =
   VAR done: M3CG.Label;  body := BodyProc ();  q: M3CG.Proc;
@@ -829,118 +1551,10 @@ PROCEDURE GenBinder (modeVar: M3CG.Var) =
       cg.call_direct (q, M3CG.Type.Void);
       cg.set_label (done);
     END;
-    cg.load_address (dataSeg, 0);
+    cg.load_address (dseg.var, 0);
     cg.exit_proc (Addr);
     cg.end_procedure (binder);
   END GenBinder;
-
-(*---------------------------------------------------------- the segments *)
-
-PROCEDURE InitInt (off, v: INTEGER;  t: M3CG.Type) =
-  VAR i: Target.Int;
-  BEGIN
-    EVAL TInt.FromInt (v, i);
-    cg.init_int (off, i, t);
-  END InitInt;
-
-PROCEDURE GenConstSeg () =
-  VAR nProcs := MSIR.ModuleProcCount (mod);  p: MSIR.Proc;
-      gm := MSIR.ModuleGcMap (mod);  off: INTEGER;
-  BEGIN
-    cg.bind_segment (constSeg, RoundUp (MAX (constSize, 1), 16), 16,
-                     M3CG.Type.Struct, FALSE, TRUE);
-    cg.begin_init (constSeg);
-    FOR i := 0 TO nProcs - 1 DO
-      cg.init_chars (nameOff[i], MSIR.ProcName (MSIR.ModuleProc (mod, i)));
-    END;
-    off := procInfoOff;
-    FOR i := 0 TO nProcs - 1 DO
-      p := MSIR.ModuleProc (mod, i);
-      cg.init_proc (off + B (M3RT.PI_proc), InfoProc (p));
-      cg.init_var (off + B (M3RT.PI_name), constSeg, nameOff[i]);
-      INC (off, B (M3RT.PI_SIZE));
-    END;
-    cg.init_chars (fileOff, SourceFile ());
-    IF gcMapOff >= 0 THEN
-      FOR k := 0 TO LAST (gm^) DO
-        InitInt (gcMapOff + k, gm[k], M3CG.Type.Word8);
-      END;
-    END;
-    cg.end_init (constSeg);
-  END GenConstSeg;
-
-(* The procedure a ProcInfo entry names: the binder for the unit's body. *)
-PROCEDURE InfoProc (p: MSIR.Proc): M3CG.Proc =
-  BEGIN
-    IF p = BodyProc () THEN RETURN binder END;
-    RETURN ProcFor (p);
-  END InfoProc;
-
-TYPE GInit = RECORD off: INTEGER;  v: MSIR.Value END;
-
-PROCEDURE GenDataSeg () =
-  VAR nImports := MSIR.ModuleImportBinderCount (mod);
-      nInits := MSIR.ModuleGlobalInitCount (mod);
-      inits := NEW (REF ARRAY OF GInit, nInits);
-      tmp: GInit;  off: INTEGER;  f: Target.Float;
-  BEGIN
-    cg.bind_segment (dataSeg, RoundUp (dataSize, 16), 16, M3CG.Type.Struct,
-                     FALSE, TRUE);
-    cg.begin_init (dataSeg);
-    cg.init_var (B (M3RT.MI_file), constSeg, fileOff);
-    IF MSIR.ModuleProcCount (mod) > 0 THEN
-      cg.init_var (B (M3RT.MI_proc_info), constSeg, procInfoOff);
-    END;
-    IF gcMapOff >= 0 THEN
-      cg.init_var (B (M3RT.MI_var_map), constSeg, gcMapOff);
-      cg.init_var (B (M3RT.MI_gc_map), constSeg, gcMapOff);
-    END;
-    IF nImports > 0 THEN cg.init_var (B (M3RT.MI_imports), dataSeg, impOff) END;
-    cg.init_proc (B (M3RT.MI_binder), binder);
-    InitInt (B (M3RT.MI_gc_flags), 3, Int64);
-
-    (* Initial values of user globals, in offset order. *)
-    FOR i := 0 TO nInits - 1 DO
-      inits[i].off := MSIR.ModuleGlobalInitOffset (mod, i);
-      inits[i].v := MSIR.ModuleGlobalInitValue (mod, i);
-    END;
-    FOR i := 1 TO nInits - 1 DO
-      tmp := inits[i];
-      VAR j := i;
-      BEGIN
-        WHILE j > 0 AND inits[j-1].off > tmp.off DO
-          inits[j] := inits[j-1];  DEC (j);
-        END;
-        inits[j] := tmp;
-      END;
-    END;
-    FOR i := 0 TO nInits - 1 DO
-      VAR v := inits[i].v;
-      BEGIN
-        CASE MSIR.GetValueKind (v) OF
-        | ValueKind.ConstInt =>
-            InitInt (inits[i].off, MSIR.GetIntVal (v), MType (MSIR.ValueType (v)));
-        | ValueKind.ConstFloat =>
-            MSIR.GetFloatVal (v, f);
-            cg.init_float (inits[i].off, f);
-        | ValueKind.ConstProc =>
-            cg.init_proc (inits[i].off, ProcFor (MSIR.GetConstProc (v)));
-        ELSE (* NIL: zero *)
-        END;
-      END;
-    END;
-
-    off := impOff;
-    FOR k := 0 TO nImports - 1 DO
-      cg.init_proc (off + B (M3RT.II_binder),
-                    ImportBinder (MSIR.ModuleImportBinder (mod, k)));
-      IF k < nImports - 1 THEN
-        cg.init_var (off + B (M3RT.II_next), dataSeg, off + B (M3RT.II_SIZE));
-      END;
-      INC (off, B (M3RT.II_SIZE));
-    END;
-    cg.end_init (dataSeg);
-  END GenDataSeg;
 
 (*--------------------------------------------------------------- values *)
 
@@ -1004,6 +1618,15 @@ PROCEDURE CanonInt (v, bits: INTEGER): INTEGER =
     RETURN v;
   END CanonInt;
 
+(* Push the address v+off.  M3C renders load_address(v, off) as an
+   unparenthesised "off+(ADDRESS)&v", which a comparison macro's cast then
+   splits; add_offset does not. *)
+PROCEDURE PushAddr (v: M3CG.Var;  off: INTEGER) =
+  BEGIN
+    cg.load_address (v, 0);
+    IF off # 0 THEN cg.add_offset (off) END;
+  END PushAddr;
+
 PROCEDURE Push (v: MSIR.Value) =
   VAR t := MSIR.ValueType (v);  r: REFANY;  f: Target.Float;
       name := MSIR.ValueName (v);
@@ -1022,14 +1645,19 @@ PROCEDURE Push (v: MSIR.Value) =
         cg.load_float (RType (t), f);
     | ValueKind.ConstNil => cg.load_nil ();
     | ValueKind.ConstProc => cg.load_procedure (ProcFor (MSIR.GetConstProc (v)));
+    | ValueKind.ConstTextLit =>
+        EVAL syms.get ("textlit_" & Fmt.Int (MSIR.GetTextLitUID (v)), r);
+        PushAddr (NARROW (r, Loc).s.var,
+                  NARROW (r, Loc).off + Target.Address.bytes);
+    | ValueKind.GlobalRef => PushGlobal (FindGlobal (name));
     | ValueKind.StructFieldRef =>
         EVAL syms.get (Text.Sub (name, 1), r);
-        cg.load_address (NARROW (r, Loc).seg,
-                         NARROW (r, Loc).off + MSIR.GetStructFieldOffset (v));
+        PushAddr (NARROW (r, Loc).s.var,
+                  NARROW (r, Loc).off + MSIR.GetStructFieldOffset (v));
     ELSE
       IF MSIR.ValueDefInsn (v) = NIL AND name # NIL AND HasPrefix (name, "@")
          AND syms.get (Text.Sub (name, 1), r) THEN
-        cg.load_address (NARROW (r, Loc).seg, NARROW (r, Loc).off);
+        PushAddr (NARROW (r, Loc).s.var, NARROW (r, Loc).off);
         RETURN;
       END;
       VAR l := Loc0 (v);

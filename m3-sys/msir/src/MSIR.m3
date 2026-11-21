@@ -988,6 +988,8 @@ REVEAL Global = BRANDED "MSIR.Global" REF RECORD
                                       private globals stay strong (FALSE). *)
   isPrivate:    BOOLEAN  := FALSE; (* TRUE => internal linkage: compiler-
                                       generated per-unit data. *)
+  homeBinder:   TEXT     := NIL;   (* see GlobalSetHome *)
+  homeOffset:   INTEGER  := -1;
 END;
 
 PROCEDURE NewGlobal(name: TEXT;  type: T;  isTraced: BOOLEAN;
@@ -1019,6 +1021,13 @@ PROCEDURE GlobalSetPrivate (g: Global) = BEGIN g.isPrivate := TRUE END GlobalSet
 PROCEDURE GlobalIsPrivate  (g: Global): BOOLEAN = BEGIN RETURN g.isPrivate END GlobalIsPrivate;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN = BEGIN RETURN g.isTraced   END GlobalIsTraced;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN = BEGIN RETURN g.isExternal    END GlobalIsExternal;
+PROCEDURE GlobalSetHome (g: Global;  binder: TEXT;  byteOff: INTEGER) =
+  BEGIN
+    g.homeBinder := binder;
+    g.homeOffset := byteOff;
+  END GlobalSetHome;
+PROCEDURE GlobalHomeBinder (g: Global): TEXT = BEGIN RETURN g.homeBinder END GlobalHomeBinder;
+PROCEDURE GlobalHomeOffset (g: Global): INTEGER = BEGIN RETURN g.homeOffset END GlobalHomeOffset;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER = BEGIN RETURN g.byteOffset END GlobalByteOffset;
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value) =
   BEGIN g.byteOffset := byteOff; g.refValue := ref END GlobalSetStructField;

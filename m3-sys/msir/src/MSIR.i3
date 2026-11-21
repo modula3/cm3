@@ -488,6 +488,15 @@ PROCEDURE GlobalIsPrivate  (g: Global): BOOLEAN;
 PROCEDURE GlobalIsTraced   (g: Global): BOOLEAN;
 PROCEDURE GlobalIsExternal    (g: Global): BOOLEAN;
 PROCEDURE GlobalByteOffset    (g: Global): INTEGER; (* -1 for external/standalone *)
+(* An external global whose storage is a unit's data rather than a linker
+   symbol of its own: the exported interface variables a module references,
+   which live in the interface unit's data at byteOff, reached through the
+   import record for binder (e.g. "Leaf_I3").  MSIRToLLVM references them
+   through the alias symbol the interface unit defines; a lowering without
+   such aliases (MSIRToM3CG) uses the home.  NIL binder: none. *)
+PROCEDURE GlobalSetHome    (g: Global;  binder: TEXT;  byteOff: INTEGER);
+PROCEDURE GlobalHomeBinder (g: Global): TEXT;
+PROCEDURE GlobalHomeOffset (g: Global): INTEGER;
 PROCEDURE GlobalSetStructField(g: Global;  byteOff: INTEGER;  ref: Value);
 PROCEDURE GlobalValue(g: Global): Value;
 PROCEDURE GlobalSetBackingBytes(g: Global;  n: INTEGER); (* indirect: set [n x i8] backing size *)
