@@ -2392,7 +2392,7 @@ HandleComments(firstTime, initNPS, doBreak)
 		    /* Emit the word. */
 		    while (!IsWhite(*s) && *s != 0)
 			P(*s++);
-		    sentenceBreak = index(".!?", s[-1]) != 0;
+		    sentenceBreak = strchr(".!?", s[-1]) != 0;
 		}
 	    }
 	    Formatter__SetFont(formatter, fonts->body);
