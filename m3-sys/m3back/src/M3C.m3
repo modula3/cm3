@@ -4618,6 +4618,10 @@ VAR x := self.self;
 BEGIN
     x.comment("begin: helper functions");
 
+    IF self.op_counts[Op.set_compare] > 0 THEN
+        print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T) * 8)\n");
+        setAny := TRUE;
+    END;
     FOR i := FIRST(setData) TO LAST(setData) DO
         IF self.op_counts[setData[i].op] > 0 THEN
             IF NOT setAny THEN
@@ -7146,7 +7150,7 @@ VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
     s0 := cast(get(self, ORD(swap)), CGType.Addr, "SET");
     s1 := cast(get(self, ORD(NOT swap)), CGType.Addr, "SET");
     target_word_bytes := Target.Word.bytes;
-    eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
+    eq := ARRAY BOOLEAN OF TEXT{"!=0", "==0"}[op = CompareOp.EQ]; (* memcmp *)
 BEGIN
     IF debug THEN
       self.comment("set_compare");
@@ -7162,7 +7166,9 @@ BEGIN
     END;
     IF op IN SET OF CompareOp{CompareOp.LT, CompareOp.LE} THEN
         byte_size := byte_size DIV target_word_bytes;
-        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
+        (* m3_set_le (n, b, a) is a <= b, as in m3core's hand.c: the right
+           operand s0 comes first. *)
+        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s0.CText() & ",\n " & s1.CText() & ")"), type));
     ELSE
         <* ASSERT op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} *>
         push(self, type, cast(CTextToExpr("m3_memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));
