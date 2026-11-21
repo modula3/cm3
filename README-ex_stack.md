@@ -87,21 +87,9 @@ libunwind (part of `libSystem.B.dylib`; no extra link flags needed):
 - `RTStack__PrevFrame` — steps one frame up the stack.
 - `RTStack__Unwind` — resumes execution at a specific landing pad
   (used in the manual-unwind path; not used by the C++ throw path).
-- `RTStack__ThrowM3Exc(void* act)` — the key entry point.  Defined
-  outside `extern "C"` so the C++ compiler's full EH machinery is
-  engaged:
-
-  ```c
-  struct _M3Exc { void* act; };
-
-  extern "C" void RTStack__ThrowM3Exc(void* act) {
-      throw _M3Exc{act};
-  }
-  ```
-
-  The `_M3Exc` struct must be declared in the same translation unit
-  that contains the `catch (_M3Exc& …)` clauses.  `M3C.m3` emits the
-  struct definition at the top of every generated `.c` file.
+The throw entry point is target-independent and lives in
+`src/runtime/ex_stack/RTExStackC.c` (below); the stack-walking
+primitives are used only for stack dumps.
 
 #### `src/runtime/AMD64_DARWIN/RTMachine.i3`
 The `AMD64_DARWIN` port adds the corresponding x86_64 macOS runtime
@@ -109,8 +97,7 @@ description.  Like the ARM64 version, it declares `Has_stack_walker =
 TRUE` and uses the same `FrameInfo` layout for libunwind state.
 
 #### `src/runtime/AMD64_DARWIN/RTStackC.c`
-Implements the same stack-walking primitives and `RTStack__ThrowM3Exc`
-entry point for `AMD64_DARWIN`.
+Implements the same stack-walking primitives for `AMD64_DARWIN`.
 
 The implementation is effectively identical to the ARM64 file: Apple's
 libunwind API on x86_64 macOS is the same interface used on arm64, and
@@ -136,20 +123,42 @@ Implements `RTException.Raise` and `RTException.ResumeRaise` for the
 - `RTStack.ThrowM3Exc` never returns; the call to `InvokeBackstop`
   below it is an unreachable safety net only.
 
-- The assertion `<*ASSERT RTStack.Has_walker*>` at module
-  initialisation verifies that `ex_stack` is never accidentally linked
-  into a build that has `Has_stack_walker = FALSE`.
+- A stack walker is not required: raising is a C++ throw.  Only the
+  stack dump (`PrintStack`, under `@M3stackdump` / `@M3debugex`) uses
+  one, and it reports that none is available on a target without.
+
+#### `src/runtime/ex_stack/RTExStackC.c`
+The target-independent C++ part, shared by every `ex_stack` target:
+
+```c
+struct _M3Exc { void* act; };
+
+extern "C" void RTStack__ThrowM3Exc(void* act) {
+    throw _M3Exc{act};
+}
+```
+
+`RTStack__ThrowM3Exc` is defined outside `extern "C"` so the C++
+compiler's full EH machinery is engaged.  The `_M3Exc` struct must be
+declared in the same translation unit that contains the
+`catch (_M3Exc& …)` clauses; `M3C.m3` emits the struct definition at
+the top of every generated `.c` file.  The file must be compiled as
+C++ (`SYSTEM_CC` with `-x c++`).
 
 #### `src/runtime/AMD64_LINUX/RTStackC.c`
-Previously had the libunwind frame-walking primitives but was missing
-the C++ throw entry point.  Added `struct _M3Exc { void* act; }`
-(outside the `extern "C"` block) and `RTStack__ThrowM3Exc` (after the
-closing `extern "C"` brace), identical in structure to the Darwin
-versions.
+The libunwind frame-walking primitives for `AMD64_LINUX`.
 
 #### `src/runtime/m3makefile`
-The `HAS_STACK_WALKER` quake table controls which targets can use
-`ex_stack`:
+`ex_stack` is selected when the platform config sets
+`M3_USE_STACK_WALKER = TRUE` **and** `M3_BACKEND_MODE = "C"` (the
+generated C++ carries the try/catch); otherwise `ex_frame`.  No
+target list is involved, so another C-backend target can switch by
+setting the config variable (with the two-phase bootstrap below, and
+`SYSTEM_CC` compiling C as C++).
+
+The `HAS_STACK_WALKER` quake table lists only the targets with a
+libunwind stack walker (`RTStackC.c` and `RTMachine.i3` in the target's
+directory), used for stack dumps:
 
 ```quake
 readonly HAS_STACK_WALKER = {
@@ -159,10 +168,10 @@ readonly HAS_STACK_WALKER = {
 }
 ```
 
-When `M3_USE_STACK_WALKER = TRUE` is set in the platform config
-**and** the target appears in `HAS_STACK_WALKER`,
-`include_dir("ex_stack")` and `include_dir(TARGET)` are used instead
-of `include_dir("ex_frame")`.
+Under `ex_stack` such a target also gets `include_dir(TARGET)` and the
+`UNWIND` system library.  Every other build uses `no_walker` (stub
+RTStack routines) and the common `RTMachine` (`Has_stack_walker =
+FALSE`).
 
 ---
 

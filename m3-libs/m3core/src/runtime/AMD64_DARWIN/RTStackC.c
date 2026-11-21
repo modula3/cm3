@@ -14,16 +14,6 @@
 #include <libunwind.h>
 
 
-/* _M3Exc is the C++ exception type thrown by RTStack__ThrowM3Exc and caught
-   by the "catch (_M3Exc& _m3exc)" clauses that M3C.m3 generates in each
-   translation unit.  It must be a proper C++ struct (not inside extern "C")
-   so that C++ EH type-matching works correctly.  The identical definition
-   appears in the M3C.m3 preamble for generated translation units; ODR is
-   satisfied because the layout is the same everywhere. */
-#ifdef __cplusplus
-struct _M3Exc { void* act; };
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -236,13 +226,3 @@ void RTStack__Unwind (Frame *target)
 } /* extern "C" */
 #endif
 
-#ifdef __cplusplus
-/* RTStack__ThrowM3Exc is defined outside the extern "C" block so that the
-   C++ compiler's exception-handling machinery is fully engaged (the throw
-   expression needs C++ EH unwinding, not C abort semantics).  The
-   extern "C" on the definition gives the symbol C linkage so that M3
-   code can call it via the EXTERNAL pragma in RTStack.i3. */
-extern "C" void RTStack__ThrowM3Exc(void* act) {
-  throw _M3Exc{act};
-}
-#endif
