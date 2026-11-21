@@ -1284,7 +1284,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
        builds its C types from 19 `declare_*` methods (`declare_record`,
        `declare_field`, …) fed by m3front's type modules, which the
        lowering would have to regenerate from MSIR types.
-    3. TRY/EXCEPT, TRY/FINALLY and LOCK onto envelopes, with
+    3. TRY/EXCEPT, TRY/FINALLY and LOCK onto EH scopes (D26), with
        `invoke`/`landingpad`/`resume` produced only in `MSIRToLLVM`; the
        verifier checks D8.  Done before the lowering so the lowering's
        EH is written once, for both `ex_stack` and `ex_frame`.
@@ -1308,6 +1308,88 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
        change.
 - Clutter (session transcripts, a test binary, editor backups) removed in
   `77a724b298`.
+
+- **D26. Exception scopes: a flat CFG with a per-block EH scope**
+  (proposed 2026-11-21, for review; D25 step 3).  Replaces the unused
+  envelope API (`NewTryExcept`, `NewTryFinally`), whose single-block body
+  cannot hold a TRY body, with a representation that keeps D20's flat CFG.
+  - **Representation.**  A procedure keeps its flat list of blocks.  It also
+    has a tree of *EH scopes*; every block belongs to exactly one scope (the
+    procedure's outermost scope if no TRY encloses it).  A scope records:
+    - its kind: `Except` (TRY/EXCEPT) or `Finally` (TRY/FINALLY);
+    - its parent scope;
+    - for `Except`, its handlers: an exception (an `ExcDesc`) or ELSE, and
+      the handler's entry block, which takes the exception's argument as
+      its one block parameter when the exception has one;
+    - for `Finally`, the entry block of the FINALLY code.
+
+    Handler and FINALLY blocks belong to the *parent* scope: they are not
+    protected by the TRY they belong to, but are by any enclosing one.
+    Nothing is nested in storage, so passes that walk blocks are unchanged;
+    the scope tree is consulted only where EH matters.
+  - **Control (D8).**  An edge whose target is in the same scope, or enters
+    a child scope's protected blocks through that scope's entry, is an
+    ordinary `br`/`cond_br`.  Any other edge leaves one or more scopes and
+    must be explicit: `unwind_to target(args)` (EXIT, normal completion, or
+    a branch out of a handler or FINALLY into an outer scope) or
+    `ret_through_envelope v` (RETURN).  This holds for normal completion of
+    a TRY/EXCEPT too.  Under `ex_stack` leaving an `Except` scope needs no
+    code, but under `ex_frame` it pops the scope's setjmp frame, so the exit
+    must be visible to the lowering.
+  - **Raising.**  `raise exc, arg` is a terminator; the lowering calls the
+    runtime's raise hook (`RTHooks.RaiseEx` today).  Calls in protected
+    blocks stay plain `call` / `call_indirect`: the lowering decides which
+    may raise.  D10's `raises` attribute covers direct calls only, so in
+    practice every call in a protected block is treated as possibly raising
+    (indirect calls, methods and runtime hooks such as `ReportFault`, which
+    raises runtime errors), as today.  A fault that is not a call (a signal
+    converted to an exception) is not covered, by this or by either current
+    backend.
+  - **FINALLY.**  The front end emits the FINALLY code once.  Each lowering
+    chooses between duplicating it per exit path (D9) and dispatching on a
+    selector; MSIRToLLVM keeps today's selector scheme.  Semantics the
+    lowering must keep:
+    - FINALLY runs on normal completion, on every explicit exit leaving the
+      scope, and on an exception propagating out of the protected blocks;
+    - afterwards the pending outcome resumes: the exit continues, the
+      RETURN returns, or the exception is re-raised;
+    - if the FINALLY code itself leaves by EXIT or RETURN, or raises, that
+      outcome *replaces* the pending one.
+  - **LOCK.**  The front end emits the acquire, then a `Finally` scope whose
+    FINALLY code releases the mutex.  No new op.
+  - **RAISES checking.**  A procedure whose RAISES clause excludes some
+    exceptions must turn any other into a `BlockedException` runtime error.
+    That stays a procedure attribute (`ProcSetRaises`, D10), and each
+    lowering generates what its scheme needs, as CG's `StartRaises` does
+    (`ex_frame`: a `RaisesNone` or `Raises` frame; `ex_stack`: only the
+    frame save CG emits today).
+  - **Exception arguments.**  `ExcDesc` gains the argument's MSIR type (NIL
+    if none), so the verifier can check a handler's block parameter and
+    the lowering knows whether the activation carries the argument by value
+    or by reference.
+  - **The C++ EH logic moves into MSIRToLLVM verbatim.**  The front end's
+    current `TryStmt`, `TryFinStmt` and `LockStmt` MSIR code builds
+    catch-all landing pads (not cleanups, so phase 1 of the Itanium search
+    stops in this frame), only peeks at the activation without
+    `__cxa_begin_catch`, and re-raises through `ResumeRaiseEx`.  Each of
+    those choices fixed a failing test (p004, p140); the lowering must copy
+    them unchanged, checked against the EH m3tests before anything else
+    changes.
+  - **Verifier.**  Checks that the scope tree is well formed, that every
+    block has a scope, D8 as above, and that handler parameters match their
+    exceptions' argument types.
+  - **Order.**  (1) MSIR API, printer and verifier; (2) MSIRToLLVM lowering
+    of scopes, reproducing today's output semantics; (3) TryStmt,
+    TryFinStmt, LockStmt, ReturnStmt and ExitStmt emit scopes (ladder,
+    m3tests under MSIRObj); (4) MSIRToM3CG lowers scopes, first CG's
+    `ex_stack` scheme, then `ex_frame`.
+  - **Why ex_frame still matters.**  If every C-backend target moves to
+    `ex_stack` (Discussion #1266), `ex_frame` remains for the M3CG consumers
+    that have no invoke: m3cc and the integrated x86 backend, which are
+    what MSIR→M3CG would feed.
+  - **Considered and rejected:** nested regions (envelopes holding block
+    lists), the first draft of this decision.  Tree-shaped storage
+    contradicts D20 and would force every block-walking pass to recurse.
 
 **Progress (2026-11-21): D25 step 2 spike, full lowering with per-module
 fallback** (Tony chose full lowering over a hybrid that kept CG's data).
