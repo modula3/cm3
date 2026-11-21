@@ -452,6 +452,17 @@ PROCEDURE ContainsDunder (n: TEXT): BOOLEAN =
     RETURN FALSE;
   END ContainsDunder;
 
+(* "tc_obj_-123" -> "tc_obj_m123": an LLVM symbol made a C identifier. *)
+PROCEDURE MinusToM (n: TEXT): TEXT =
+  VAR i := Text.FindChar (n, '-');
+  BEGIN
+    WHILE i >= 0 DO
+      n := Text.Sub (n, 0, i) & "m" & Text.Sub (n, i + 1);
+      i := Text.FindChar (n, '-', i + 1);
+    END;
+    RETURN n;
+  END MinusToM;
+
 PROCEDURE DotsToUnderscore (n: TEXT): TEXT =
   VAR result := "";  start, dot: INTEGER;
   BEGIN
@@ -521,6 +532,7 @@ CONST
     Op.FAdd, Op.FSub, Op.FMul, Op.FDiv, Op.FNeg, Op.FPAbs,
     Op.ICmp, Op.FCmp,
     Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
+    Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally, Op.HandlerActivation,
     Op.Call, Op.CallIndirect,
     Op.Convert, Op.SIToFP, Op.FPToSI, Op.FPExt, Op.FPTrunc,
     Op.ZExt, Op.SExt, Op.Trunc,
@@ -604,7 +616,7 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
       END;
     END;
     CASE op OF
-    | Op.Br, Op.CondBr =>
+    | Op.Br, Op.CondBr, Op.UnwindTo =>
         FOR k := 0 TO ORD (op = Op.CondBr) DO
           FOR j := 0 TO MSIR.InsnBrArgCount (i, k) - 1 DO
             CheckValue (w, MSIR.InsnBrArg (i, k, j));
@@ -652,6 +664,40 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
     ELSE
     END;
   END CheckInsn;
+
+(* Scopes are lowered to CG's ex_stack scheme only. *)
+PROCEDURE CheckScopes (w: Why;  m: MSIR.Module;  p: MSIR.Proc) =
+  VAR s: MSIR.Scope;  h: MSIR.Handler;  b: MSIR.Block;  i: MSIR.Insn;
+  BEGIN
+    IF NOT Target.Has_stack_walker THEN Fail (w, "EH scopes (ex_frame)") END;
+    IF MSIR.ModuleResumeRaise (m) = NIL THEN
+      Fail (w, "EH scopes: no re-raise hook");
+    END;
+    FOR k := 0 TO MSIR.ProcScopeCount (p) - 1 DO
+      s := MSIR.ProcScopeAt (p, k);
+      IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Except THEN
+        FOR j := 0 TO MSIR.ScopeHandlerCount (s) - 1 DO
+          h := MSIR.ScopeHandler (s, j);
+          IF MSIR.BlockParamCount (h.entry) = 1
+             AND NOT MSIR.ExcDescArgByRef (h.exc)
+             AND IsFloat (MSIR.ValueType (MSIR.BlockParamValue (h.entry, 0))) THEN
+            Fail (w, "exception argument: float by value");
+          END;
+        END;
+      END;
+    END;
+    FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+      b := MSIR.ProcBlock (p, bi);
+      FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+        i := MSIR.BlockInsn (b, ii);
+        IF MSIR.InsnOp (i) = Op.UnwindTo AND MSIR.InsnBrArgCount (i, 0) > 0
+           AND FirstFinally (MSIR.BlockScope (b), MSIR.InsnBrTarget (i, 0),
+                             FALSE) # NIL THEN
+          Fail (w, "unwind_to with arguments through FINALLY");
+        END;
+      END;
+    END;
+  END CheckScopes;
 
 PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
   VAR w := NEW (Why, wr := why, mod := MSIR.ModuleName (m));
@@ -711,7 +757,7 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
     FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
       p := MSIR.ModuleProc (m, pi);
       IF MSIR.ProcBlockCount (p) > 0 THEN
-        IF MSIR.ProcScopeCount (p) > 1 THEN Fail (w, "EH scopes") END;
+        IF MSIR.ProcScopeCount (p) > 1 THEN CheckScopes (w, m, p) END;
         CheckProcSig (w, p);
         FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
           b := MSIR.ProcBlock (p, bi);
@@ -1319,7 +1365,7 @@ PROCEDURE GenLinkProcs () =
             IF mode IN SET OF LinkMode {LinkMode.Inits, LinkMode.Dynamic,
                                         LinkMode.Slots} THEN
               q := cg.declare_procedure (
-                     ID (MSIR.TypeDescName (d) & "_linkproc"), 1,
+                     ID (MinusToM (MSIR.TypeDescName (d)) & "_linkproc"), 1,
                      M3CG.Type.Void, 0, Target.DefaultCall, FALSE, NIL);
               tp := cg.declare_param (ID ("tp"), ptr, ptr, Addr, 0, FALSE,
                                       FALSE, M3CG.Always);
@@ -1539,6 +1585,9 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
 PROCEDURE ImportCallees (p: MSIR.Proc) =
   VAR b: MSIR.Block;  i: MSIR.Insn;  v: MSIR.Value;
   BEGIN
+    IF MSIR.ProcScopeCount (p) > 1 THEN
+      EVAL ProcFor (MSIR.ModuleResumeRaise (mod));
+    END;
     FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
       b := MSIR.ProcBlock (p, bi);
       FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
@@ -1580,6 +1629,7 @@ PROCEDURE DeclareProc (p: MSIR.Proc) =
 
 VAR paramVars: TextRefTbl.T;
     resultVar: M3CG.Var;  (* the current procedure's "_result", or NIL *)
+    curProc: MSIR.Proc;   (* the procedure being generated *)
 
 PROCEDURE GenBinder (modeVar: M3CG.Var) =
   VAR done: M3CG.Label;  body := BodyProc ();  q: M3CG.Proc;
@@ -1809,12 +1859,458 @@ PROCEDURE LabelOf (b: MSIR.Block): M3CG.Label =
 
 (*------------------------------------------------------------ procedures *)
 
+(*------------------------------------------------- EH scopes (ex_stack) *)
+
+(* D26 scopes are lowered to CG's ex_stack scheme, as TryStmt.Compile1 and
+   TryFinStmt.Compile1 emit it: each protected scope's blocks go between
+   start_try and end_try, entered only through its entry; calls in them
+   are invokes naming the scope's landing pad, which follows end_try.
+   M3C turns these into a C++ try block whose catch jumps to the landing
+   pad with the activation, so handler and FINALLY code, emitted outside
+   the try block, run after the C++ catch has finished.  Leaving a scope
+   needs code only for a Finally scope: record the outcome in its selector
+   and run its FINALLY code, whose end_finally continues the outcome. *)
+
+CONST
+  Sel_Exc     = 1;
+  Sel_Return  = 2;
+  FirstTarget = 3;              (* + k: the k-th distinct unwind_to target *)
+
+TYPE
+  EHScope = REF RECORD
+    s       : MSIR.Scope;
+    pad     : M3CG.Label := M3CG.No_label;  (* protected scopes *)
+    act     : M3CG.Var := NIL;              (* protected: the activation *)
+    sel     : M3CG.Var := NIL;              (* Finally: the outcome *)
+    targets : RefSeq.T := NIL;              (* Finally: MSIR.Block per code *)
+    returns := FALSE;                       (* Finally: a RETURN passes it *)
+    placed  := FALSE;                       (* its blocks have been emitted *)
+  END;
+
+VAR
+  eh        : REF ARRAY OF EHScope := NIL;  (* per scope; NIL: no scopes *)
+  curScope  : MSIR.Scope;                   (* the block being emitted's *)
+  curPad    : M3CG.Label := M3CG.No_label;  (* its invokes' landing pad *)
+  retSlot   : M3CG.Var := NIL;              (* a RETURN's scalar result *)
+  placedBlk : REF ARRAY OF BOOLEAN;
+
+PROCEDURE EHOf (s: MSIR.Scope): EHScope =
+  BEGIN
+    RETURN eh[MSIR.ScopeIndex (s)];
+  END EHOf;
+
+PROCEDURE IsProtected (s: MSIR.Scope): BOOLEAN =
+  BEGIN
+    RETURN MSIR.ScopeKindOf (s) IN SET OF MSIR.ScopeKind {
+             MSIR.ScopeKind.Except, MSIR.ScopeKind.Finally };
+  END IsProtected;
+
+(* The landing pad an exception raised in scope s goes to, or No_label. *)
+PROCEDURE PadOf (s: MSIR.Scope): M3CG.Label =
+  BEGIN
+    WHILE s # NIL DO
+      IF IsProtected (s) THEN RETURN EHOf (s).pad END;
+      s := MSIR.ScopeParent (s);
+    END;
+    RETURN M3CG.No_label;
+  END PadOf;
+
+(* The Except scope whose handler code s is in. *)
+PROCEDURE HandlerOwner (s: MSIR.Scope): MSIR.Scope =
+  BEGIN
+    WHILE s # NIL DO
+      IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Handler THEN
+        RETURN MSIR.ScopeOwner (s);
+      END;
+      s := MSIR.ScopeParent (s);
+    END;
+    RETURN NIL;
+  END HandlerOwner;
+
+PROCEDURE Depth (s: MSIR.Scope): INTEGER =
+  VAR d := 0;
+  BEGIN
+    WHILE s # NIL DO INC (d);  s := MSIR.ScopeParent (s) END;
+    RETURN d;
+  END Depth;
+
+(* The Finally scope that leaving 'from' for target (or returning) enters
+   first, or NIL if the exit leaves no Finally scope. *)
+PROCEDURE FirstFinally (from: MSIR.Scope;  target: MSIR.Block;
+                        isReturn: BOOLEAN): MSIR.Scope =
+  VAR s := from;
+  BEGIN
+    LOOP
+      IF s = NIL THEN RETURN NIL END;
+      IF NOT isReturn AND s = MSIR.BlockScope (target) THEN RETURN NIL END;
+      IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Finally THEN RETURN s END;
+      s := MSIR.ScopeParent (s);
+    END;
+  END FirstFinally;
+
+PROCEDURE TargetCode (f: EHScope;  target: MSIR.Block): INTEGER =
+  BEGIN
+    FOR k := 0 TO f.targets.size () - 1 DO
+      IF f.targets.get (k) = target THEN RETURN FirstTarget + k END;
+    END;
+    f.targets.addhi (target);
+    RETURN FirstTarget + f.targets.size () - 1;
+  END TargetCode;
+
+PROCEDURE NoteExit (from: MSIR.Scope;  target: MSIR.Block;  isReturn: BOOLEAN) =
+  VAR s := FirstFinally (from, target, isReturn);
+  BEGIN
+    IF s = NIL THEN RETURN END;
+    IF isReturn THEN EHOf (s).returns := TRUE
+    ELSE EVAL TargetCode (EHOf (s), target)
+    END;
+  END NoteExit;
+
+(* Before emitting anything: every outcome each Finally scope's end_finally
+   must continue, inner FINALLYs first, since continuing an outcome from an
+   inner one can add outcomes to an outer one. *)
+PROCEDURE PlanExits (p: MSIR.Proc) =
+  VAR b: MSIR.Block;  i: MSIR.Insn;  codes := NEW (RefSeq.T).init ();
+  BEGIN
+    FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+      b := MSIR.ProcBlock (p, bi);
+      FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+        i := MSIR.BlockInsn (b, ii);
+        CASE MSIR.InsnOp (i) OF
+        | Op.UnwindTo =>
+            NoteExit (MSIR.BlockScope (b), MSIR.InsnBrTarget (i, 0), FALSE);
+        | Op.RetThroughEnvelope => NoteExit (MSIR.BlockScope (b), NIL, TRUE);
+        | Op.EndFinally => codes.addhi (MSIR.BlockScope (b));
+        ELSE
+        END;
+      END;
+    END;
+    VAR n := codes.size ();  a := NEW (REF ARRAY OF MSIR.Scope, n);
+        t: MSIR.Scope;  f: EHScope;  out: MSIR.Scope;
+    BEGIN
+      FOR k := 0 TO n - 1 DO a[k] := codes.get (k) END;
+      FOR k := 1 TO n - 1 DO
+        t := a[k];
+        VAR j := k;
+        BEGIN
+          WHILE j > 0 AND Depth (a[j-1]) < Depth (t) DO a[j] := a[j-1];  DEC (j) END;
+          a[j] := t;
+        END;
+      END;
+      FOR k := 0 TO n - 1 DO
+        f := EHOf (MSIR.ScopeOwner (a[k]));
+        out := MSIR.ScopeParent (f.s);
+        FOR j := 0 TO f.targets.size () - 1 DO
+          NoteExit (out, f.targets.get (j), FALSE);
+        END;
+        IF f.returns THEN NoteExit (out, NIL, TRUE) END;
+      END;
+    END;
+  END PlanExits;
+
+(* Set up the scopes of p for GenProc; FALSE if it has none. *)
+PROCEDURE SetupScopes (p: MSIR.Proc): BOOLEAN =
+  VAR n := MSIR.ProcScopeCount (p);  s: MSIR.Scope;  e: EHScope;
+      rt := MSIR.ProcResultType (p);  returns := FALSE;
+  BEGIN
+    eh := NIL;  retSlot := NIL;  curPad := M3CG.No_label;
+    IF n <= 1 THEN RETURN FALSE END;
+    eh := NEW (REF ARRAY OF EHScope, n);
+    FOR k := 0 TO n - 1 DO
+      s := MSIR.ProcScopeAt (p, k);
+      e := NEW (EHScope, s := s);
+      eh[k] := e;
+      IF IsProtected (s) THEN
+        e.pad := cg.next_label ();
+        e.act := cg.declare_local (M3ID.NoID, Target.Address.bytes,
+                                   Target.Address.bytes, Addr, 0, TRUE,
+                                   FALSE, M3CG.Never);
+      END;
+      IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Finally THEN
+        e.sel := cg.declare_local (M3ID.NoID, Target.Integer.bytes,
+                                   Target.Integer.bytes, Int64, 0, TRUE,
+                                   FALSE, M3CG.Never);
+        e.targets := NEW (RefSeq.T).init ();
+      END;
+    END;
+    PlanExits (p);
+    FOR k := 0 TO n - 1 DO returns := returns OR eh[k].returns END;
+    IF returns AND rt # NIL AND MSIR.Kind (rt) # TypeKind.Void
+       AND NOT IsAgg (rt) THEN
+      retSlot := TempFor (rt);
+    END;
+    placedBlk := NEW (REF ARRAY OF BOOLEAN, MSIR.ProcBlockCount (p));
+    FOR k := 0 TO LAST (placedBlk^) DO placedBlk[k] := FALSE END;
+    RETURN TRUE;
+  END SetupScopes;
+
+(* Emit the blocks of scope s in their original order, each child scope's
+   blocks together where its first block falls. *)
+PROCEDURE PlaceScope (p: MSIR.Proc;  s: MSIR.Scope) =
+  VAR b: MSIR.Block;  bs, c: MSIR.Scope;
+  BEGIN
+    FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+      IF NOT placedBlk[bi] THEN
+        b := MSIR.ProcBlock (p, bi);
+        bs := MSIR.BlockScope (b);
+        IF bs = s THEN
+          PlaceBlock (p, bi);
+        ELSIF MSIR.ScopeIsAncestor (s, bs) THEN
+          c := bs;
+          WHILE MSIR.ScopeParent (c) # s DO c := MSIR.ScopeParent (c) END;
+          IF NOT EHOf (c).placed THEN PlaceChild (p, c) END;
+        END;
+      END;
+    END;
+  END PlaceScope;
+
+PROCEDURE PlaceChild (p: MSIR.Proc;  c: MSIR.Scope) =
+  VAR e := EHOf (c);  entry: MSIR.Block;
+  BEGIN
+    e.placed := TRUE;
+    IF NOT IsProtected (c) THEN PlaceScope (p, c);  RETURN END;
+    (* The try block is entered only by falling into it; branches to the
+       entry go to a label before it. *)
+    entry := MSIR.ScopeEntry (c);
+    cg.set_label (LabelOf (entry), barrier := TRUE);
+    cg.start_try ();
+    PlaceBlock (p, BlockIndex (p, entry), label := FALSE);
+    PlaceScope (p, c);
+    cg.end_try ();
+    curScope := MSIR.ScopeParent (c);
+    curPad := PadOf (curScope);
+    cg.set_label (e.pad, barrier := TRUE);
+    IF MSIR.ScopeKindOf (c) = MSIR.ScopeKind.Except
+      THEN ExceptPad (e);
+      ELSE FinallyPad (e);
+    END;
+  END PlaceChild;
+
+PROCEDURE BlockIndex (p: MSIR.Proc;  b: MSIR.Block): INTEGER =
+  BEGIN
+    FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+      IF MSIR.ProcBlock (p, bi) = b THEN RETURN bi END;
+    END;
+    <* ASSERT FALSE *>
+  END BlockIndex;
+
+PROCEDURE PlaceBlock (p: MSIR.Proc;  bi: INTEGER;  label := TRUE) =
+  VAR b := MSIR.ProcBlock (p, bi);
+  BEGIN
+    placedBlk[bi] := TRUE;
+    IF label AND bi > 0 THEN cg.set_label (LabelOf (b)) END;
+    curScope := MSIR.BlockScope (b);
+    curPad := PadOf (curScope);
+    FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+      GenInsn (MSIR.BlockInsn (b, ii));
+    END;
+  END PlaceBlock;
+
+(* The landing pad of a Finally scope: save the activation, select Sel_Exc,
+   run the FINALLY code. *)
+PROCEDURE FinallyPad (e: EHScope) =
+  VAR catches := ARRAY [0..0] OF M3CG.TypeUID {0};
+  BEGIN
+    cg.landing_pad (Addr, e.pad, catches);
+    cg.store (e.act, 0, Addr, Addr);
+    SetSel (e, Sel_Exc);
+    cg.jump (LabelOf (MSIR.ScopeFinally (e.s)));
+  END FinallyPad;
+
+(* The landing pad of an Except scope: find the handler by the exception's
+   uid, or re-raise. *)
+PROCEDURE ExceptPad (e: EHScope) =
+  VAR n := MSIR.ScopeHandlerCount (e.s);  h: MSIR.Handler;  skip: M3CG.Label;
+      catches := NEW (REF ARRAY OF M3CG.TypeUID, n);  nc := 0;
+  BEGIN
+    FOR k := 0 TO n - 1 DO
+      h := MSIR.ScopeHandler (e.s, k);
+      IF h.exc # NIL THEN catches[nc] := MSIR.ExcDescUID (h.exc);  INC (nc) END;
+    END;
+    cg.landing_pad (Addr, e.pad, SUBARRAY (catches^, 0, nc));
+    cg.store (e.act, 0, Addr, Addr);
+    FOR k := 0 TO n - 1 DO
+      h := MSIR.ScopeHandler (e.s, k);
+      IF h.exc = NIL THEN ToHandler (e, h);  RETURN END;
+      skip := cg.next_label ();
+      cg.load (e.act, 0, Addr, Addr);
+      cg.load_indirect (B (M3RT.EA_exception), Addr, Addr);
+      cg.load_indirect (0, Int64, Int64);
+      PushInt (MSIR.ExcDescUID (h.exc));
+      cg.if_compare (Int64, M3CG.CompareOp.NE, skip, M3CG.Maybe);
+      ToHandler (e, h);
+      cg.set_label (skip);
+    END;
+    Reraise (e);
+  END ExceptPad;
+
+(* Go to handler h's code, passing the exception's argument, read from the
+   activation's argument word (by value or by reference). *)
+PROCEDURE ToHandler (e: EHScope;  READONLY h: MSIR.Handler) =
+  VAR v: MSIR.Value;  t: MSIR.T;
+  BEGIN
+    IF MSIR.BlockParamCount (h.entry) = 1 THEN
+      v := MSIR.BlockParamValue (h.entry, 0);
+      t := MSIR.ValueType (v);
+      IF IsAgg (t) THEN
+        cg.load_address (Loc0 (v).var, 0);
+        PushArgWord (e);
+        CopyAgg (t);
+      ELSE
+        PushArgWord (e);
+        IF MSIR.ExcDescArgByRef (h.exc) THEN
+          cg.load_indirect (0, MType (t), ZType (t));
+        ELSIF NOT IsPtr (t) THEN
+          cg.loophole (Addr, ZType (t));
+        END;
+        IF IsInt (t) THEN Canon (t) END;
+        Def (v);
+      END;
+    END;
+    cg.jump (LabelOf (h.entry));
+  END ToHandler;
+
+PROCEDURE PushArgWord (e: EHScope) =
+  BEGIN
+    cg.load (e.act, 0, Addr, Addr);
+    cg.load_indirect (B (M3RT.EA_arg), Addr, Addr);
+  END PushArgWord;
+
+(* Re-raise the activation of e through the runtime's hook; an invoke if
+   the code is itself protected. *)
+PROCEDURE Reraise (e: EHScope) =
+  VAR q := ProcFor (MSIR.ModuleResumeRaise (mod));
+  BEGIN
+    cg.start_call_direct (q, 0, M3CG.Type.Void);
+    cg.load (e.act, 0, Addr, Addr);
+    cg.pop_param (Addr);
+    CallDirect (q, M3CG.Type.Void);
+    cg.abort (M3CG.RuntimeError.UnhandledException);
+  END Reraise;
+
+PROCEDURE SetSel (e: EHScope;  code: INTEGER) =
+  BEGIN
+    PushInt (code);
+    cg.store (e.sel, 0, Int64, Int64);
+  END SetSel;
+
+(* Leave scopes from 'from': for a branch to target (with the arguments of
+   unwind_to i), or a return of v (NIL: already in retSlot or the result
+   area).  The first Finally scope left takes the outcome. *)
+PROCEDURE Leave (from: MSIR.Scope;  target: MSIR.Block;  i: MSIR.Insn;
+                 isReturn: BOOLEAN;  v: MSIR.Value) =
+  VAR s := FirstFinally (from, target, isReturn);  f: EHScope;
+  BEGIN
+    IF s = NIL THEN
+      IF isReturn THEN
+        IF v # NIL THEN GenRet (v) ELSE RetFromSlot () END;
+      ELSE
+        IF i # NIL THEN PassArgs (i, 0, target) END;
+        cg.jump (LabelOf (target));
+      END;
+      RETURN;
+    END;
+    f := EHOf (s);
+    IF isReturn THEN
+      IF v # NIL THEN SaveResult (v) END;
+      SetSel (f, Sel_Return);
+    ELSE
+      <* ASSERT i = NIL OR MSIR.InsnBrArgCount (i, 0) = 0 *>
+      SetSel (f, TargetCode (f, target));
+    END;
+    cg.jump (LabelOf (MSIR.ScopeFinally (s)));
+  END Leave;
+
+(* Keep a RETURN's value while FINALLY code runs. *)
+PROCEDURE SaveResult (v: MSIR.Value) =
+  VAR t := MSIR.ValueType (v);
+  BEGIN
+    IF IsAgg (t) THEN
+      cg.load (resultVar, 0, Addr, Addr);
+      Push (v);
+      CopyAgg (t);
+    ELSIF retSlot # NIL THEN
+      Push (v);
+      cg.store (retSlot, 0, ZType (t), ZType (t));
+    END;
+  END SaveResult;
+
+PROCEDURE RetFromSlot () =
+  BEGIN
+    IF retSlot = NIL THEN
+      cg.exit_proc (M3CG.Type.Void);
+    ELSE
+      VAR t := MSIR.ProcResultType (curProc);
+      BEGIN
+        cg.load (retSlot, 0, ZType (t), ZType (t));
+        cg.exit_proc (SigType (t));
+      END;
+    END;
+  END RetFromSlot;
+
+(* After FINALLY code: continue the outcome its selector records. *)
+PROCEDURE EndFinally (code: MSIR.Scope) =
+  VAR f := EHOf (MSIR.ScopeOwner (code));  out := MSIR.ScopeParent (f.s);
+      next: M3CG.Label;
+  BEGIN
+    next := cg.next_label ();
+    TestSel (f, Sel_Exc, next);
+    Reraise (f);
+    cg.set_label (next);
+    FOR k := 0 TO f.targets.size () - 1 DO
+      next := cg.next_label ();
+      TestSel (f, FirstTarget + k, next);
+      Leave (out, f.targets.get (k), NIL, FALSE, NIL);
+      cg.set_label (next);
+    END;
+    IF f.returns
+      THEN Leave (out, NIL, NIL, TRUE, NIL);
+      ELSE cg.abort (M3CG.RuntimeError.UnhandledException);
+    END;
+  END EndFinally;
+
+(* Go to 'skip' unless e's selector is code. *)
+PROCEDURE TestSel (e: EHScope;  code: INTEGER;  skip: M3CG.Label) =
+  BEGIN
+    cg.load (e.sel, 0, Int64, Int64);
+    PushInt (code);
+    cg.if_compare (Int64, M3CG.CompareOp.NE, skip, M3CG.Maybe);
+  END TestSel;
+
+(* A call: an invoke naming the landing pad if the code is protected. *)
+PROCEDURE CallDirect (q: M3CG.Proc;  t: M3CG.Type) =
+  BEGIN
+    IF curPad = M3CG.No_label THEN
+      cg.call_direct (q, t);
+    ELSE
+      VAR next := cg.next_label ();
+      BEGIN
+        cg.invoke_direct (q, t, next, curPad);
+        cg.set_label (next);
+      END;
+    END;
+  END CallDirect;
+
+PROCEDURE CallIndirect (t: M3CG.Type) =
+  BEGIN
+    IF curPad = M3CG.No_label THEN
+      cg.call_indirect (t, Target.DefaultCall);
+    ELSE
+      VAR next := cg.next_label ();
+      BEGIN
+        cg.invoke_indirect (t, Target.DefaultCall, next, curPad);
+        cg.set_label (next);
+      END;
+    END;
+  END CallIndirect;
+
 PROCEDURE GenProc (p: MSIR.Proc) =
   VAR sym := CSymbol (p);  r: REFANY;  pv: REF ARRAY OF M3CG.Var;
       q := ProcFor (p);  b: MSIR.Block;  i: MSIR.Insn;
   BEGIN
     vals := NEW (TextRefTbl.Default).init ();
     blocks := NEW (TextRefTbl.Default).init ();
+    curProc := p;
     EVAL paramVars.get (sym, r);
     pv := r;
     cg.begin_procedure (q);
@@ -1856,16 +2352,23 @@ PROCEDURE GenProc (p: MSIR.Proc) =
         END;
       END;
     END;
-    FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
-      b := MSIR.ProcBlock (p, bi);
-      IF bi > 0 THEN cg.set_label (LabelOf (b)) END;
-      FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
-        GenInsn (MSIR.BlockInsn (b, ii));
+    IF SetupScopes (p) THEN
+      <* ASSERT MSIR.BlockScope (MSIR.ProcBlock (p, 0)) = MSIR.ProcScope (p) *>
+      PlaceScope (p, MSIR.ProcScope (p));
+    ELSE
+      FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+        b := MSIR.ProcBlock (p, bi);
+        IF bi > 0 THEN cg.set_label (LabelOf (b)) END;
+        FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+          GenInsn (MSIR.BlockInsn (b, ii));
+        END;
       END;
     END;
     cg.end_procedure (q);
     vals := NIL;
     blocks := NIL;
+    eh := NIL;  placedBlk := NIL;  retSlot := NIL;
+    curScope := NIL;  curPad := M3CG.No_label;  curProc := NIL;
   END GenProc;
 
 (* "%x.slot" -> "x". *)
@@ -1998,6 +2501,20 @@ PROCEDURE LineOf (i: MSIR.Insn) =
       curLine := line;
     END;
   END LineOf;
+
+PROCEDURE GenRet (v: MSIR.Value) =
+  VAR t := MSIR.ValueType (v);
+  BEGIN
+    IF IsAgg (t) THEN
+      cg.load (resultVar, 0, Addr, Addr);
+      Push (v);
+      CopyAgg (t);
+      cg.exit_proc (M3CG.Type.Void);
+    ELSE
+      Push (v);
+      cg.exit_proc (SigType (t));
+    END;
+  END GenRet;
 
 PROCEDURE GenInsn (i: MSIR.Insn) =
   VAR op := MSIR.InsnOp (i);  res := MSIR.InsnResult (i);
@@ -2225,22 +2742,19 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           cg.jump (LabelOf (f));
         END;
     | Op.Ret =>
-        IF nOps = 0 THEN
-          cg.exit_proc (M3CG.Type.Void);
-        ELSE
-          VAR v := MSIR.InsnOperand (i, 0);  t := MSIR.ValueType (v);
-          BEGIN
-            IF IsAgg (t) THEN
-              cg.load (resultVar, 0, Addr, Addr);
-              Push (v);
-              CopyAgg (t);
-              cg.exit_proc (M3CG.Type.Void);
-            ELSE
-              Push (v);
-              cg.exit_proc (SigType (t));
-            END;
-          END;
+        IF nOps = 0 THEN cg.exit_proc (M3CG.Type.Void);
+        ELSE GenRet (MSIR.InsnOperand (i, 0));
         END;
+    | Op.UnwindTo =>
+        Leave (curScope, MSIR.InsnBrTarget (i, 0), i, FALSE, NIL);
+    | Op.RetThroughEnvelope =>
+        IF nOps = 0 THEN Leave (curScope, NIL, NIL, TRUE, NIL);
+        ELSE Leave (curScope, NIL, NIL, TRUE, MSIR.InsnOperand (i, 0));
+        END;
+    | Op.EndFinally => EndFinally (curScope);
+    | Op.HandlerActivation =>
+        cg.load (EHOf (HandlerOwner (curScope)).act, 0, Addr, Addr);
+        Def (res);
     | Op.Unreachable =>
         cg.abort (M3CG.RuntimeError.UnhandledException);
 
@@ -2256,7 +2770,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
             cg.pop_param (SigType (MSIR.ValueType (MSIR.ProcParam (callee, k))));
           END;
           IF agg AND NOT ResultFirst () THEN PassResult (res) END;
-          cg.call_direct (q, rtype);
+          CallDirect (q, rtype);
           IF agg THEN
             (* the result is already in place *)
           ELSIF res # NIL THEN
@@ -2281,7 +2795,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           END;
           IF agg AND NOT ResultFirst () THEN PassResult (res) END;
           Push (MSIR.InsnOperand (i, 0));
-          cg.call_indirect (rtype, Target.DefaultCall);
+          CallIndirect (rtype);
           IF agg THEN
           ELSIF res # NIL THEN
             IF IsInt (rt) THEN Canon (rt) END;

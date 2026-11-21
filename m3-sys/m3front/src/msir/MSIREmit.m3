@@ -65,6 +65,11 @@ PROCEDURE BeginUnit(name: M3ID.T;  isInterface: BOOLEAN := FALSE) =
     MSIRBuilder.BeginModule();
   END BeginUnit;
 
+VAR driverLowers := FALSE;
+
+PROCEDURE SetDriverLowers(on: BOOLEAN) =
+  BEGIN driverLowers := on END SetDriverLowers;
+
 PROCEDURE LastModule(): MSIR.Module =
   VAR m := lastModule;
   BEGIN
@@ -225,6 +230,13 @@ PROCEDURE EndUnit() =
       END;
     END;
     IF errs = NIL THEN lastModule := curModule ELSE lastModule := NIL END;
+    IF driverLowers AND lastModule # NIL THEN
+      IF llOutPath = NIL AND NOT MSIR.ModuleIsInterface(curModule) THEN
+        RecordEmittedModule(MSIR.ModuleName(curModule));
+      END;
+      curModule := NIL;  llOutPath := NIL;
+      RETURN;
+    END;
     IF llOutPath # NIL THEN
       path := llOutPath;
     ELSE

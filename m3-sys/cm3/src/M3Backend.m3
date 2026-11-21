@@ -72,6 +72,7 @@ PROCEDURE Open (library (* or program *): TEXT;
         (* The text dump is written in Close: M3CG_Tee's labels come from
            next_label, which a replay does not call. *)
         msir_c := cg;
+        MSIREmit.SetDriverLowers (TRUE);
         msir_rec := NEW (M3CG_MultiPass.T).Init ();
         cg := msir_rec;
       ELSIF text_wr # NIL THEN

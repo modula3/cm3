@@ -1436,6 +1436,35 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     lists), the first draft of this decision.  Tree-shaped storage
     contradicts D20 and would force every block-walking pass to recurse.
 
+**Progress (2026-11-21): D26 step 4, EH scopes lowered to M3CG (ex_stack).**
+- `MSIRToM3CG` lowers scopes to CG's `ex_stack` scheme, as
+  `TryStmt.Compile1` and `TryFinStmt.Compile1` emit it.  A protected scope's
+  blocks are placed together between `start_try` and `end_try`, entered
+  only by falling in (branches to its entry go to a label before
+  `start_try`; C++ forbids a jump into a try block); its calls are
+  `invoke`s naming its landing pad, which follows `end_try` with the
+  dispatch.  Handler and FINALLY code are placed with the TRY's parent
+  scope, so outside the try block.  Leaving a `Finally` scope stores a
+  selector and runs the FINALLY code; `end_finally` continues the outcome
+  (re-raise through `ResumeRaiseEx`, an exit, or the return, whose scalar
+  value waits in one slot per procedure).  The outcomes each `end_finally`
+  continues are found before emission, inner FINALLYs first.  `ex_frame`
+  targets still fall back for any unit with scopes.
+- In combined mode `MSIRToLLVM` ran first and rewrote the module's scopes in
+  place (`MSIREH`), so the lowering saw `invoke`/`landingpad`.  When the
+  driver lowers (`@M3msircg`) it now calls `MSIREmit.SetDriverLowers`, and
+  `EndUnit` writes no `.ll` for a verified module.
+- Results: m3core 246 of 290 units lower, none falling back for EH (most of
+  the rest for external globals).  m3tests with every unit lowered where
+  possible: the same five differences as `@M3m3front-msir` alone; p268 and
+  p270 now pass where the baseline fails.  New m3test p304.  A link
+  procedure's name with a negative uid (`tc_obj_-1621784506_linkproc`) is
+  now a valid C name.
+- **Bug found on master's CG path, not changed:** under `ex_stack`, a TRY
+  with a named handler and an ELSE crashes when its body does RETURN or
+  EXIT; `TryStmt.Compile1` sends the RETURN to the handler tests, which
+  read the return marker as an exception.  The MSIR path is correct.
+
 **Progress (2026-11-21): D25 step 2 spike, full lowering with per-module
 fallback** (Tony chose full lowering over a hybrid that kept CG's data).
 - `MSIRToM3CG` (msir package) lowers a whole unit to M3CG for the C
@@ -1451,8 +1480,8 @@ fallback** (Tony chose full lowering over a hybrid that kept CG's data).
   m3core runs.  m3tests with every test unit lowered where possible: no
   failure caused by the lowering (the six that differ from the baseline
   differ under `@M3m3front-msir` alone: warnings reported twice, verifier
-  messages).  Remaining fallbacks: TRY/LOCK (`invoke`/`landingpad`, step 3),
-  external globals, multi-word sets (`IWide`), TYPECASE,
+  messages).  Remaining fallbacks: TRY/LOCK (`invoke`/`landingpad`, step 3;
+  lowered since, see above), external globals, multi-word sets (`IWide`), TYPECASE,
   FLOOR/CEILING/ROUND, indirect (large) globals.
 - **Answer to the spike's question:** M3C needs *no* type declarations from
   the lowering.  Locals take typeid 0; CG passes by-value records as

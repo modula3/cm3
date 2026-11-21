@@ -46,6 +46,11 @@ PROCEDURE SetLLOutPath(path: TEXT);
    No-op if not enabled. *)
 PROCEDURE EndUnit();
 
+(* The driver lowers each unit's module itself (MSIR -> M3CG, D25): EndUnit
+   then leaves a verified module unchanged for LastModule and writes no
+   LLVM IR for it, since MSIRToLLVM rewrites a module's EH scopes in place. *)
+PROCEDURE SetDriverLowers(on: BOOLEAN);
+
 (* The module of the unit EndUnit last finished, if it passed the verifier;
    else NIL.  Clears it, so each unit's module is taken at most once.  Used
    by the cm3 driver to lower the unit through MSIR -> M3CG (D25). *)
