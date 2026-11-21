@@ -4814,15 +4814,22 @@ BEGIN
     HelperFunctions_helper_with_type(self, "min", type, self.data.min, text);
 END HelperFunctions_min;
 
+(* ROUND breaks ties by FloatMode.RoundDefault, NearestElseEven on the
+   targets the C backend serves, so halves go to the even neighbour; C's
+   round() would take them away from zero.  f - trunc(f) and f / 2 are
+   exact, so the tie test is too. *)
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 VAR text : ARRAY ConvertOp OF TEXT;
 BEGIN
     IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
       text[ConvertOp.Round] :=
         "#ifndef m3_round\n#define m3_round m3_round\n" &
-        "INT64 __cdecl llroundq(_Float128);\n" &
+        "_Float128 __cdecl roundq(_Float128);\n" &
+        "_Float128 __cdecl truncq(_Float128);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
-        " return (INT64)llroundq(f); }\n" &
+        " EXTENDED d = f - truncq(f);\n" &
+        " if (d == 0.5 || d == -0.5) return (INT64)(2 * roundq(f / 2));\n" &
+        " return (INT64)roundq(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
         "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
@@ -4846,7 +4853,10 @@ BEGIN
       text[ConvertOp.Round] :=
         "#ifndef m3_round\n#define m3_round m3_round\n" &
         "double __cdecl round(double);\n" &
+        "double __cdecl trunc(double);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " EXTENDED d = f - trunc(f);\n" &
+        " if (d == 0.5 || d == -0.5) return (INT64)(2 * round(f / 2));\n" &
         " return (INT64)round(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
