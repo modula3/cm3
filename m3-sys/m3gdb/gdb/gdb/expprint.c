@@ -36,11 +36,27 @@
 #include <ctype.h>
 #endif
 
+static void
+print_expression_restore_language (void *arg)
+{
+  current_language = (const struct language_defn *) arg;
+}
+
 void
 print_expression (struct expression *exp, struct ui_file *stream)
 {
   int pc = 0;
+  /* m3gdb: print the expression in the language it was parsed in
+     (e.g. a Modula-3 breakpoint condition shown by "info breakpoints"
+     while the current language is C), as constants inside it are
+     printed with the current language's value printer.  */
+  struct cleanup *old_chain
+    = make_cleanup (print_expression_restore_language,
+		    (void *) current_language);
+  if (exp->language_defn != NULL)
+    current_language = exp->language_defn;
   print_subexp (exp, &pc, stream, PREC_NULL);
+  do_cleanups (old_chain);
 }
 
 /* Print the subexpression of EXP that starts in position POS, on STREAM.
