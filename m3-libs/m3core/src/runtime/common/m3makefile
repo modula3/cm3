@@ -63,6 +63,7 @@ Interface ("RTHeapEvent")
 Interface ("RTProcedureSRC")
 Interface ("RTSignal")
 Interface ("RTStack")
+c_source  ("RTStackCommon")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 
@@ -81,4 +82,3 @@ end
 if not defined("M3_USE_STACK_WALKER")
   interface      ("RTMachine")   
 end  
-
