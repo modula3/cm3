@@ -1590,6 +1590,35 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `import_global`.  m3core: all 291 units lower, none falling back; the
     lowered m3core links and runs the test programs unchanged.
 
+**Progress (2026-11-22): MSIR to M3CG, ex_frame EH and memcpy/memset.**
+- On a target without ex_stack, MSIRToM3CG lowers D26 scopes to CG's
+  ex_frame scheme (TryStmt.Compile2, TryFinStmt.Compile3).  Each protected
+  scope has an EF1 frame and a jmp_buf allocated at the procedure's entry
+  (`alloca(m3_jmpbuf_size)`).  Entering it sets the frame's class (Except,
+  ExceptElse, Finally), for Except the address of its NIL-terminated uid
+  list in the constant segment, links it with RTHooks.PushEFrame and calls
+  setjmp, whose nonzero return goes to the scope's pad.  There the
+  activation is the frame's info field (the runtime has already unlinked
+  the frame); dispatch, the Finally selector and end_finally are as for
+  ex_stack.  Leaving protected scopes normally makes one RTHooks.PopEFrame
+  call, restoring the handler stack past the outermost frame left.  Calls
+  are plain calls.  m3front records the frame hooks in the MSIR module
+  (`MSIR.SetModuleFrameHooks`) on such targets.
+- Not done: the frames CG pushes for a restricted RAISES clause (classes
+  Raises and RaisesNone) under ex_frame.  MSIR does not record a
+  procedure's RAISES set (D10's `ProcSetRaises` has no caller), so a
+  RAISES violation is not reported in lowered code on ex_frame targets.
+- memcpy/memset: MSIRBuilder's calls to the C library (aggregate copies;
+  zeroing, always fill 0 and a constant size) are lowered to M3CG
+  `copy_n` and `zero`, as the CG path does, instead of being declared as
+  procedures, whose C prototypes gcc reports as clashing with its
+  built-ins (22 m3tests failed on Linux for those warnings alone).
+  (M3C deliberately does not implement `zero_n`.)
+- Results on AMD64_LINUX (ex_frame, magpie): m3core lowers completely, 291
+  of 291 units, and p304, a runtime test and TextConv run unchanged against
+  it; m3tests with every unit lowered differ from the baseline only in the
+  five doubled-warning tests.  ARM64_DARWIN (ex_stack): unchanged.
+
 **Progress (2026-11-21): D19 set intrinsics for multi-word sets.**
 - m3front emits the set intrinsics for sets wider than a word (still typed
   iN): `set_union`, `set_intersect`, `set_difference` and new

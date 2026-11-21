@@ -950,6 +950,8 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
      fallback hardcoded names in the LLVM emitter. *)
   gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
   resumeRaiseProc : Proc := NIL;   (* RTHooks.ResumeRaiseEx, for EH lowering *)
+  pushEFrameProc  : Proc := NIL;   (* RTHooks.PushEFrame, for ex_frame lowering *)
+  popEFrameProc   : Proc := NIL;   (* RTHooks.PopEFrame *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
   textLitHooks : ARRAY [0..4] OF Proc;
@@ -1565,6 +1567,12 @@ PROCEDURE SetModuleResumeRaise(m: Module;  p: Proc) =
   BEGIN m.resumeRaiseProc := p END SetModuleResumeRaise;
 PROCEDURE ModuleResumeRaise(m: Module): Proc =
   BEGIN RETURN m.resumeRaiseProc END ModuleResumeRaise;
+PROCEDURE SetModuleFrameHooks(m: Module;  push, pop: Proc) =
+  BEGIN m.pushEFrameProc := push;  m.popEFrameProc := pop END SetModuleFrameHooks;
+PROCEDURE ModulePushEFrame(m: Module): Proc =
+  BEGIN RETURN m.pushEFrameProc END ModulePushEFrame;
+PROCEDURE ModulePopEFrame(m: Module): Proc =
+  BEGIN RETURN m.popEFrameProc END ModulePopEFrame;
 PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
   BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
 PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =

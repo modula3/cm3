@@ -694,7 +694,22 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
         IF Size (MSIR.InsnTargetType (i), a) < 0 THEN
           Fail (w, "alloca of unsized type");
         END;
-    | Op.Call => CheckProcSig (w, MSIR.InsnCallee (i));
+    | Op.Call =>
+        IF MemOp (MSIR.InsnCallee (i)) = Mem.Zero THEN
+          VAR c := MSIR.InsnOperand (i, 1);
+          BEGIN
+            IF MSIR.GetValueKind (c) # ValueKind.ConstInt
+               OR MSIR.GetIntVal (c) # 0 THEN
+              Fail (w, "memset with a non-zero fill");
+            END;
+            c := MSIR.InsnOperand (i, 2);
+            IF MSIR.GetValueKind (c) # ValueKind.ConstInt THEN
+              Fail (w, "memset of a non-constant size");
+            END;
+          END;
+        ELSIF MemOp (MSIR.InsnCallee (i)) = Mem.None THEN
+          CheckProcSig (w, MSIR.InsnCallee (i));
+        END;
     | Op.CallIndirect => CheckSigType (w, "result", MSIR.InsnTargetType (i));
     | Op.FieldAddr =>
         t := MSIR.ValueType (MSIR.InsnOperand (i, 0));
@@ -733,11 +748,15 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
     END;
   END CheckInsn;
 
-(* Scopes are lowered to CG's ex_stack scheme only. *)
+(* Scopes are lowered to CG's ex_stack scheme, or to its ex_frame scheme on
+   a target without a stack walker. *)
 PROCEDURE CheckScopes (w: Why;  m: MSIR.Module;  p: MSIR.Proc) =
   VAR s: MSIR.Scope;  h: MSIR.Handler;  b: MSIR.Block;  i: MSIR.Insn;
   BEGIN
-    IF NOT Target.Has_stack_walker THEN Fail (w, "EH scopes (ex_frame)") END;
+    IF NOT Target.Has_stack_walker
+       AND (MSIR.ModulePushEFrame (m) = NIL OR MSIR.ModulePopEFrame (m) = NIL) THEN
+      Fail (w, "EH scopes (ex_frame): no frame hooks");
+    END;
     IF MSIR.ModuleResumeRaise (m) = NIL THEN
       Fail (w, "EH scopes: no re-raise hook");
     END;
@@ -930,6 +949,10 @@ TYPE
      ScanTypecase), uid; the ELSE clause's uid 0 ends it. *)
   TypecaseItem = Item OBJECT insn: MSIR.Insn
                  OVERRIDES emit := EmitTypecase END;
+  (* ex_frame: the exceptions an Except scope handles, as the frame's
+     NIL-terminated list of uids (ESet's layout). *)
+  HandlesItem = Item OBJECT s: MSIR.Scope;  uids: REF ARRAY OF INTEGER
+                OVERRIDES emit := EmitHandles END;
 
 CONST TEXT_typecode = 1;
 
@@ -1084,6 +1107,36 @@ PROCEDURE Setup (m: MSIR.Module) =
                                  items := NEW (RefSeq.T).init ()));
           backing.addhi (bs);
           NewSym (bs.name, bs.seg, 0);
+        END;
+      END;
+    END;
+
+    exFrame := NOT Target.Has_stack_walker;
+    allocaProc := NIL;  setjmpProc := NIL;  jmpbufSize := NIL;
+    handlesLists := NEW (RefSeq.T).init ();
+    IF exFrame THEN
+      FOR pi := 0 TO nProcs - 1 DO
+        VAR p := MSIR.ModuleProc (m, pi);  sc: MSIR.Scope;  n: INTEGER;
+            it: HandlesItem;  hasElse: BOOLEAN;
+        BEGIN
+          FOR k := 0 TO MSIR.ProcScopeCount (p) - 1 DO
+            sc := MSIR.ProcScopeAt (p, k);
+            IF MSIR.ScopeKindOf (sc) = MSIR.ScopeKind.Except THEN
+              n := MSIR.ScopeHandlerCount (sc);  hasElse := FALSE;
+              FOR j := 0 TO n - 1 DO
+                IF MSIR.ScopeHandler (sc, j).exc = NIL THEN hasElse := TRUE END;
+              END;
+              IF NOT hasElse THEN
+                it := NEW (HandlesItem, s := sc,
+                           uids := NEW (REF ARRAY OF INTEGER, n));
+                FOR j := 0 TO n - 1 DO
+                  it.uids[j] := MSIR.ExcDescUID (MSIR.ScopeHandler (sc, j).exc);
+                END;
+                EVAL Alloc (cseg, (n + 1) * Target.Integer.bytes, ptr, it);
+                handlesLists.addhi (it);
+              END;
+            END;
+          END;
         END;
       END;
     END;
@@ -1433,6 +1486,23 @@ PROCEDURE EmitTypecase (it: TypecaseItem) =
     END;
   END EmitTypecase;
 
+PROCEDURE EmitHandles (it: HandlesItem) =
+  BEGIN
+    FOR k := 0 TO LAST (it.uids^) DO
+      InitInt (it.off + k * Target.Integer.bytes, it.uids[k], Int64);
+    END;
+  END EmitHandles;
+
+PROCEDURE HandlesOff (sc: MSIR.Scope): INTEGER =
+  BEGIN
+    FOR k := 0 TO handlesLists.size () - 1 DO
+      WITH it = NARROW (handlesLists.get (k), HandlesItem) DO
+        IF it.s = sc THEN RETURN it.off END;
+      END;
+    END;
+    <* ASSERT FALSE *>
+  END HandlesOff;
+
 PROCEDURE TypecaseOff (i: MSIR.Insn): INTEGER =
   BEGIN
     FOR k := 0 TO typecases.size () - 1 DO
@@ -1711,6 +1781,13 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
       THEN dseg.var := cg.declare_segment (ID ("I_" & modName), -1, FALSE);
       ELSE dseg.var := cg.declare_segment (ID ("M_" & modName), -1, FALSE);
     END;
+    IF exFrame THEN
+      FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
+        IF MSIR.ProcScopeCount (MSIR.ModuleProc (m, pi)) > 1 THEN
+          DeclareFrameImports ();
+        END;
+      END;
+    END;
     FOR k := 0 TO backing.size () - 1 DO
       WITH bs = NARROW (backing.get (k), Backing) DO
         IF bs.external THEN
@@ -1766,12 +1843,18 @@ PROCEDURE ImportCallees (p: MSIR.Proc) =
   BEGIN
     IF MSIR.ProcScopeCount (p) > 1 THEN
       EVAL ProcFor (MSIR.ModuleResumeRaise (mod));
+      IF exFrame THEN
+        EVAL ProcFor (MSIR.ModulePushEFrame (mod));
+        EVAL ProcFor (MSIR.ModulePopEFrame (mod));
+      END;
     END;
     FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
       b := MSIR.ProcBlock (p, bi);
       FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
         i := MSIR.BlockInsn (b, ii);
-        IF MSIR.InsnOp (i) = Op.Call THEN EVAL ProcFor (MSIR.InsnCallee (i)) END;
+        IF MSIR.InsnOp (i) = Op.Call AND MemOp (MSIR.InsnCallee (i)) = Mem.None THEN
+          EVAL ProcFor (MSIR.InsnCallee (i));
+        END;
         IF MSIR.InsnOp (i) = Op.Typecase THEN
           EVAL ProcFor (MSIR.ModuleScanTypecase (mod));
         END;
@@ -2098,7 +2181,26 @@ TYPE
     targets : RefSeq.T := NIL;              (* Finally: MSIR.Block per code *)
     returns := FALSE;                       (* Finally: a RETURN passes it *)
     placed  := FALSE;                       (* its blocks have been emitted *)
+    frame   : M3CG.Var := NIL;              (* ex_frame: its EF1 frame *)
+    jbuf    : M3CG.Var := NIL;              (* ex_frame: its jmp_buf's address *)
   END;
+
+(* On a target without ex_stack (Target.Has_stack_walker FALSE) the scopes
+   are lowered to CG's ex_frame scheme instead, as TryStmt.Compile2 and
+   TryFinStmt.Compile3 emit it: entering a protected scope links an EF1
+   frame (class Except, ExceptElse or Finally) with RTHooks.PushEFrame and
+   calls setjmp on a jmp_buf allocated at the procedure's entry; a raise
+   longjmps back, the runtime having already unlinked the frame, to the
+   scope's "pad" label, where the activation is the frame's info field.
+   Calls are plain calls.  Leaving a protected scope normally unlinks its
+   frame with RTHooks.PopEFrame; the rest (handler dispatch, the Finally
+   selector, end_finally) is as for ex_stack. *)
+
+VAR
+  exFrame   := FALSE;                       (* lowering to ex_frame *)
+  allocaProc, setjmpProc: M3CG.Proc := NIL; (* ex_frame imports, per unit *)
+  jmpbufSize: M3CG.Var := NIL;
+  handlesLists: RefSeq.T := NIL;            (* HandlesItem, per Except scope *)
 
 VAR
   eh        : REF ARRAY OF EHScope := NIL;  (* per scope; NIL: no scopes *)
@@ -2121,6 +2223,7 @@ PROCEDURE IsProtected (s: MSIR.Scope): BOOLEAN =
 (* The landing pad an exception raised in scope s goes to, or No_label. *)
 PROCEDURE PadOf (s: MSIR.Scope): M3CG.Label =
   BEGIN
+    IF exFrame THEN RETURN M3CG.No_label END;
     WHILE s # NIL DO
       IF IsProtected (s) THEN RETURN EHOf (s).pad END;
       s := MSIR.ScopeParent (s);
@@ -2238,6 +2341,15 @@ PROCEDURE SetupScopes (p: MSIR.Proc): BOOLEAN =
         e.act := cg.declare_local (M3ID.NoID, Target.Address.bytes,
                                    Target.Address.bytes, Addr, 0, TRUE,
                                    FALSE, M3CG.Never);
+        IF exFrame THEN
+          e.frame := cg.declare_local (M3ID.NoID, B (M3RT.EF1_SIZE),
+                                       Target.Address.bytes,
+                                       M3CG.Type.Struct, 0, TRUE, FALSE,
+                                       M3CG.Never);
+          e.jbuf := cg.declare_local (M3ID.NoID, Target.Address.bytes,
+                                      Target.Address.bytes, Addr, 0, TRUE,
+                                      FALSE, M3CG.Never);
+        END;
       END;
       IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Finally THEN
         e.sel := cg.declare_local (M3ID.NoID, Target.Integer.bytes,
@@ -2286,16 +2398,30 @@ PROCEDURE PlaceChild (p: MSIR.Proc;  c: MSIR.Scope) =
        entry go to a label before it. *)
     entry := MSIR.ScopeEntry (c);
     cg.set_label (LabelOf (entry), barrier := TRUE);
-    cg.start_try ();
+    IF exFrame THEN
+      LinkFrame (e);
+    ELSE
+      cg.start_try ();
+    END;
     PlaceBlock (p, BlockIndex (p, entry), label := FALSE);
     PlaceScope (p, c);
-    cg.end_try ();
+    IF NOT exFrame THEN cg.end_try () END;
     curScope := MSIR.ScopeParent (c);
     curPad := PadOf (curScope);
     cg.set_label (e.pad, barrier := TRUE);
-    IF MSIR.ScopeKindOf (c) = MSIR.ScopeKind.Except
-      THEN ExceptPad (e);
-      ELSE FinallyPad (e);
+    IF exFrame THEN
+      (* reached by longjmp: the activation is the frame's info field *)
+      cg.load_address (e.frame, B (M3RT.EF1_info));
+      cg.store (e.act, 0, Addr, Addr);
+      IF MSIR.ScopeKindOf (c) = MSIR.ScopeKind.Except
+        THEN Dispatch (e);
+        ELSE SetSel (e, Sel_Exc);
+             cg.jump (LabelOf (MSIR.ScopeFinally (e.s)));
+      END;
+    ELSIF MSIR.ScopeKindOf (c) = MSIR.ScopeKind.Except THEN
+      ExceptPad (e);
+    ELSE
+      FinallyPad (e);
     END;
   END PlaceChild;
 
@@ -2319,6 +2445,106 @@ PROCEDURE PlaceBlock (p: MSIR.Proc;  bi: INTEGER;  label := TRUE) =
     END;
   END PlaceBlock;
 
+(*----- ex_frame *)
+
+(* The imports the ex_frame scheme calls, as Module.GetAlloca, GetSetjmp
+   and GetJmpbufSize declare them for the CG path. *)
+PROCEDURE DeclareFrameImports () =
+  BEGIN
+    IF allocaProc # NIL THEN RETURN END;
+    allocaProc := cg.import_procedure (ID ("alloca"), 1, Addr,
+                                       Target.DefaultCall);
+    EVAL cg.declare_param (M3ID.NoID, Target.Word.bytes, Target.Word.bytes,
+                           Word64, 0, FALSE, FALSE, M3CG.Always);
+    setjmpProc := cg.import_procedure (ID (Target.Setjmp),
+                                       1 + ORD (Target.Sigsetjmp), Int64,
+                                       Target.DefaultCall);
+    EVAL cg.declare_param (ID ("jmpbuf"), Target.Address.bytes,
+                           Target.Address.bytes, Addr, 0, FALSE, FALSE,
+                           M3CG.Always);
+    IF Target.Sigsetjmp THEN
+      EVAL cg.declare_param (ID ("save_mask"), 4, 4, M3CG.Type.Int32, 0,
+                             FALSE, FALSE, M3CG.Always);
+    END;
+    jmpbufSize := cg.import_global (ID ("m3_jmpbuf_size"), Target.Word.bytes,
+                                    Target.Word.bytes, Word64, 0,
+                                    ID ("const_INTEGER"));
+  END DeclareFrameImports;
+
+(* At the procedure's entry: a jmp_buf for each protected scope, as
+   Jmpbufs.CompileProcAllocateJmpbufs allocates them. *)
+PROCEDURE AllocJmpbufs () =
+  BEGIN
+    FOR k := 0 TO LAST (eh^) DO
+      IF eh[k].frame # NIL THEN
+        cg.start_call_direct (allocaProc, 0, Addr);
+        cg.load (jmpbufSize, 0, Word64, Word64);
+        cg.pop_param (Word64);
+        cg.call_direct (allocaProc, Addr);
+        cg.store (eh[k].jbuf, 0, Addr, Addr);
+      END;
+    END;
+  END AllocJmpbufs;
+
+(* Entering protected scope e: link its frame and capture the machine state;
+   a raise comes back from setjmp to e's pad. *)
+PROCEDURE LinkFrame (e: EHScope) =
+  VAR class: M3RT.HandlerClass;  hasElse := FALSE;
+      q := ProcFor (MSIR.ModulePushEFrame (mod));
+  BEGIN
+    IF MSIR.ScopeKindOf (e.s) = MSIR.ScopeKind.Finally THEN
+      class := M3RT.HandlerClass.Finally;
+      cg.load_nil ();
+      cg.store (e.frame, B (M3RT.EF1_info) + B (M3RT.EA_exception), Addr, Addr);
+    ELSE
+      FOR k := 0 TO MSIR.ScopeHandlerCount (e.s) - 1 DO
+        IF MSIR.ScopeHandler (e.s, k).exc = NIL THEN hasElse := TRUE END;
+      END;
+      IF hasElse THEN
+        class := M3RT.HandlerClass.ExceptElse;
+      ELSE
+        class := M3RT.HandlerClass.Except;
+        cg.load_address (cseg.var, HandlesOff (e.s));
+        cg.store (e.frame, B (M3RT.EF1_handles), Addr, Addr);
+      END;
+    END;
+    PushInt (ORD (class));
+    cg.store (e.frame, B (M3RT.EF_class), Int64, Int64);
+    cg.start_call_direct (q, 0, M3CG.Type.Void);
+    cg.load_address (e.frame, 0);
+    cg.pop_param (Addr);
+    cg.call_direct (q, M3CG.Type.Void);
+    cg.load (e.jbuf, 0, Addr, Addr);
+    cg.store (e.frame, B (M3RT.EF1_jmpbuf), Addr, Addr);
+    cg.start_call_direct (setjmpProc, 0, Int64);
+    cg.load (e.jbuf, 0, Addr, Addr);
+    cg.pop_param (Addr);
+    IF Target.Sigsetjmp THEN
+      PushInt (0, M3CG.Type.Int32);
+      cg.pop_param (M3CG.Type.Int32);
+    END;
+    cg.call_direct (setjmpProc, Int64);
+    cg.if_true (Int64, e.pad, M3CG.Never);
+  END LinkFrame;
+
+(* Leaving scope 'from' for scope 'stop' (NIL: the procedure): unlink the
+   frames of the protected scopes left, all at once, by restoring the
+   handler stack to the outermost one's predecessor. *)
+PROCEDURE PopFrames (from, stop: MSIR.Scope) =
+  VAR x := from;  outer: EHScope := NIL;  q: M3CG.Proc;
+  BEGIN
+    WHILE x # NIL AND x # stop DO
+      IF IsProtected (x) THEN outer := EHOf (x) END;
+      x := MSIR.ScopeParent (x);
+    END;
+    IF outer = NIL THEN RETURN END;
+    q := ProcFor (MSIR.ModulePopEFrame (mod));
+    cg.start_call_direct (q, 0, M3CG.Type.Void);
+    cg.load (outer.frame, B (M3RT.EF_next), Addr, Addr);
+    cg.pop_param (Addr);
+    cg.call_direct (q, M3CG.Type.Void);
+  END PopFrames;
+
 (* The landing pad of a Finally scope: save the activation, select Sel_Exc,
    run the FINALLY code. *)
 PROCEDURE FinallyPad (e: EHScope) =
@@ -2333,7 +2559,7 @@ PROCEDURE FinallyPad (e: EHScope) =
 (* The landing pad of an Except scope: find the handler by the exception's
    uid, or re-raise. *)
 PROCEDURE ExceptPad (e: EHScope) =
-  VAR n := MSIR.ScopeHandlerCount (e.s);  h: MSIR.Handler;  skip: M3CG.Label;
+  VAR n := MSIR.ScopeHandlerCount (e.s);  h: MSIR.Handler;
       catches := NEW (REF ARRAY OF M3CG.TypeUID, n);  nc := 0;
   BEGIN
     FOR k := 0 TO n - 1 DO
@@ -2342,6 +2568,14 @@ PROCEDURE ExceptPad (e: EHScope) =
     END;
     cg.landing_pad (Addr, e.pad, SUBARRAY (catches^, 0, nc));
     cg.store (e.act, 0, Addr, Addr);
+    Dispatch (e);
+  END ExceptPad;
+
+(* Find the handler of Except scope e by the uid of the exception in its
+   activation, or re-raise. *)
+PROCEDURE Dispatch (e: EHScope) =
+  VAR n := MSIR.ScopeHandlerCount (e.s);  h: MSIR.Handler;  skip: M3CG.Label;
+  BEGIN
     FOR k := 0 TO n - 1 DO
       h := MSIR.ScopeHandler (e.s, k);
       IF h.exc = NIL THEN ToHandler (e, h);  RETURN END;
@@ -2355,7 +2589,7 @@ PROCEDURE ExceptPad (e: EHScope) =
       cg.set_label (skip);
     END;
     Reraise (e);
-  END ExceptPad;
+  END Dispatch;
 
 (* Go to handler h's code, passing the exception's argument, read from the
    activation's argument word (by value or by reference). *)
@@ -2414,6 +2648,12 @@ PROCEDURE Leave (from: MSIR.Scope;  target: MSIR.Block;  i: MSIR.Insn;
                  isReturn: BOOLEAN;  v: MSIR.Value) =
   VAR s := FirstFinally (from, target, isReturn);  f: EHScope;
   BEGIN
+    IF exFrame THEN
+      IF s # NIL THEN PopFrames (from, MSIR.ScopeParent (s))
+      ELSIF isReturn THEN PopFrames (from, NIL)
+      ELSE PopFrames (from, MSIR.BlockScope (target))
+      END;
+    END;
     IF s = NIL THEN
       IF isReturn THEN
         IF v # NIL THEN GenRet (v) ELSE RetFromSlot () END;
@@ -2567,6 +2807,7 @@ PROCEDURE GenProc (p: MSIR.Proc) =
     END;
     IF SetupScopes (p) THEN
       <* ASSERT MSIR.BlockScope (MSIR.ProcBlock (p, 0)) = MSIR.ProcScope (p) *>
+      IF exFrame THEN AllocJmpbufs () END;
       PlaceScope (p, MSIR.ProcScope (p));
     ELSE
       FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
@@ -2714,6 +2955,42 @@ PROCEDURE LineOf (i: MSIR.Insn) =
       curLine := line;
     END;
   END LineOf;
+
+(* m3front's MSIRBuilder calls the C library's memcpy and memset (always
+   with fill 0 and a constant size) for aggregate copies and zeroing.
+   Declaring them as procedures gives C prototypes that clash with the
+   compiler's built-ins (gcc warns), so they become M3CG's copy_n and zero,
+   as the CG path would emit; the call's result, the destination, is the
+   first operand. *)
+TYPE Mem = {None, Copy, Move, Zero};
+
+PROCEDURE MemOp (p: MSIR.Proc): Mem =
+  VAR n := MSIR.ProcName (p);
+  BEGIN
+    IF MSIR.ProcBlockCount (p) > 0 OR n = NIL THEN RETURN Mem.None END;
+    IF Text.Equal (n, "memcpy") THEN RETURN Mem.Copy END;
+    IF Text.Equal (n, "memmove") THEN RETURN Mem.Move END;
+    IF Text.Equal (n, "memset") THEN RETURN Mem.Zero END;
+    RETURN Mem.None;
+  END MemOp;
+
+PROCEDURE GenMemCall (i: MSIR.Insn;  m: Mem) =
+  VAR res := MSIR.InsnResult (i);
+  BEGIN
+    Push (MSIR.InsnOperand (i, 0));
+    IF m = Mem.Zero THEN
+      (* a constant count (the census checks): M3C has no zero_n *)
+      cg.zero (MSIR.GetIntVal (MSIR.InsnOperand (i, 2)), M3CG.Type.Word8);
+    ELSE
+      Push (MSIR.InsnOperand (i, 1));
+      Push (MSIR.InsnOperand (i, 2));
+      cg.copy_n (Int64, M3CG.Type.Word8, m = Mem.Move);
+    END;
+    IF res # NIL THEN
+      Push (MSIR.InsnOperand (i, 0));
+      Def (res);
+    END;
+  END GenMemCall;
 
 PROCEDURE GenRet (v: MSIR.Value) =
   VAR t := MSIR.ValueType (v);
@@ -3052,6 +3329,9 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         cg.abort (M3CG.RuntimeError.UnhandledException);
 
     | Op.Call =>
+      IF MemOp (MSIR.InsnCallee (i)) # Mem.None THEN
+        GenMemCall (i, MemOp (MSIR.InsnCallee (i)));
+      ELSE
         VAR callee := MSIR.InsnCallee (i);  q := ProcFor (callee);
             rtype := RetType (MSIR.ProcResultType (callee));
             agg := HasAggResult (callee);
@@ -3073,6 +3353,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
             cg.pop (rtype);
           END;
         END;
+      END;
     | Op.CallIndirect =>
         VAR rt0 := MSIR.InsnTargetType (i);  rtype := RetType (rt0);
             agg := rt0 # NIL AND IsAgg (rt0);

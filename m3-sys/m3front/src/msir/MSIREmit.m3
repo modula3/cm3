@@ -130,6 +130,12 @@ PROCEDURE EndUnit() =
       IF scoped THEN
         MSIR.SetModuleResumeRaise(curModule,
           MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx));
+        IF NOT Target.Has_stack_walker THEN
+          (* setjmp frames, for lowering to M3CG's ex_frame scheme *)
+          MSIR.SetModuleFrameHooks(curModule,
+            MSIRBuilder.HookProc(RunTyme.Hook.PushEFrame),
+            MSIRBuilder.HookProc(RunTyme.Hook.PopEFrame));
+        END;
       END;
     END;
     (* Populate text literals from TextExpr's per-module registry.

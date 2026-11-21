@@ -315,6 +315,12 @@ PROCEDURE ModuleGCLoadBarrier  (m: Module): Proc;
 (* The runtime's re-raise hook (RTHooks.ResumeRaiseEx), for EH lowering. *)
 PROCEDURE SetModuleResumeRaise(m: Module;  p: Proc);
 PROCEDURE ModuleResumeRaise   (m: Module): Proc;
+
+(* The runtime's handler-frame hooks (RTHooks.PushEFrame, PopEFrame), for
+   lowering EH scopes to setjmp frames on targets without ex_stack. *)
+PROCEDURE SetModuleFrameHooks(m: Module;  push, pop: Proc);
+PROCEDURE ModulePushEFrame   (m: Module): Proc;
+PROCEDURE ModulePopEFrame    (m: Module): Proc;
 PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
 PROCEDURE ModuleScanTypecase   (m: Module): Proc;
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
