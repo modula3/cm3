@@ -1761,13 +1761,9 @@ PROCEDURE CanonInt (v, bits: INTEGER): INTEGER =
     RETURN v;
   END CanonInt;
 
-(* Push the address v+off.  M3C renders load_address(v, off) as an
-   unparenthesised "off+(ADDRESS)&v", which a comparison macro's cast then
-   splits; add_offset does not. *)
 PROCEDURE PushAddr (v: M3CG.Var;  off: INTEGER) =
   BEGIN
-    cg.load_address (v, 0);
-    IF off # 0 THEN cg.add_offset (off) END;
+    cg.load_address (v, off);
   END PushAddr;
 
 PROCEDURE Push (v: MSIR.Value) =

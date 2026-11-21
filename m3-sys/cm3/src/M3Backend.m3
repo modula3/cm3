@@ -26,7 +26,8 @@ VAR
   (* MSIR -> M3CG (D25), enabled by @M3msircg together with @M3m3front-msir:
      the front end's M3CG stream is recorded, and Close either lowers the
      unit's MSIR module into the C backend or replays the recording
-     (per-module fallback). *)
+     (per-module fallback).  @M3msircgverbose reports each unit's outcome
+     on stderr. *)
   msir_rec : M3CG_MultiPass.T := NIL;
   msir_c   : M3CG.T           := NIL;
   (* @M3m3cgtext: also write the stream the C backend sees, as text, to
@@ -124,11 +125,12 @@ PROCEDURE Open (library (* or program *): TEXT;
 
 (* EXPORTED: *)
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
-  VAR m: MSIR.Module;  index: INTEGER;
+  VAR m: MSIR.Module;  index: INTEGER;  why: Wr.T := NIL;
   BEGIN
     IF msir_rec # NIL THEN
       m := MSIREmit.LastModule ();
-      IF m # NIL AND MSIRToM3CG.Lowerable (m, Stdio.stderr) THEN
+      IF RTParams.IsPresent ("msircgverbose") THEN why := Stdio.stderr END;
+      IF m # NIL AND MSIRToM3CG.Lowerable (m, why) THEN
         IF text_wr # NIL THEN
           msir_c := M3CG_Tee.New (msir_c, M3CG_Wr.New (text_wr));
         END;
