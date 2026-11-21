@@ -7,3 +7,7 @@
 % exception mechanism.
 
 c_source ("RTStackC")
+
+if equal(TARGET_OS, "NT") or defined("M3_BOOTSTRAP")
+  c_source ("m3unwind")
+end

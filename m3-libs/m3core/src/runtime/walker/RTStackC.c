@@ -13,7 +13,7 @@
 #include <string.h>
 #include <setjmp.h>
 #include <signal.h>
-#include <libunwind.h>
+#include "m3unwind.h"
 #include "m3core.h"
 
 #ifdef __cplusplus
@@ -186,6 +186,15 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
 
 void RTStack__Unwind (Frame *target)
 {
+#if _WIN64
+  /* see C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\crt\src\vcruntime:
+   * frame.cpp, rischandler.cpp, riscctrl.cpp, trnsctrl.cpp, etc.
+   * personality routine would get DISPATCHER_CONTEXT and call
+   * RtlUnwindEx(TargetFrame (EstablisherFrame), TargetIp (landingPad?),
+   * ExceptionRecord (holding EHObjRegNo, tTypeIndex), ExceptionCode, Context, HistoryTable).
+   */
+  abort ();
+#else
   int res;
 
   if (!target->cursor)           abort();
@@ -210,32 +219,8 @@ void RTStack__Unwind (Frame *target)
     printf("RTStack__Unwind - unw_resume error\n");
     abort();
   }
+#endif
 }
-
-/*
-//a test of generating a backtrace with libunwind.
-//
-void show_backtrace (void) {
-  unw_cursor_t cursor; unw_context_t uc;
-  unw_word_t ip, sp;
-
-  int ret;
-  char name[50];
-  size_t name_len = 50;
-  unw_word_t ofp;
-
-  unw_getcontext(&uc);
-  unw_init_local(&cursor, &uc);
-  while (unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    printf ("ip = %llx, sp = %llx\n", (long long) ip, (long long) sp);
-
-    ret = unw_get_proc_name(&cursor, name, name_len, &ofp);
-    printf("name %s\n",name);
-  }
-}
-*/
 
 #ifdef __cplusplus
 } /* extern "C" */
