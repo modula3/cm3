@@ -6624,7 +6624,8 @@ BEGIN
         expr := AddressOf(expr);
         IF offset # 0 THEN
             expr := cast(expr, type := CGType.Addr);
-            expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+            (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
         END;
         expr := cast(expr, type := CGType.Addr, type_text := cgtypeToText[in_mtype] & "*");
         expr := Deref(expr);
@@ -6672,7 +6673,8 @@ BEGIN
     expr := AddressOf(Variable(self, var));
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr);
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
     END;
     push(self, CGType.Addr, expr);
 END load_address;
@@ -6693,7 +6695,8 @@ BEGIN
     pop(self);
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr); (* might be redundant *)
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
     END;
     expr := CastAndDeref(expr, type := CGType.Addr, type_text := cgtypeToText[mtype] & "*"); (* cast might be redundant *)
     IF mtype # ztype THEN
