@@ -1599,6 +1599,24 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `import_global`.  m3core: all 291 units lower, none falling back; the
     lowered m3core links and runs the test programs unchanged.
 
+**Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
+- PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
+  `Swap.Int32 = BITS 32 FOR [-2^31 .. 2^31-1]`: MSIR widens the subrange
+  to i64 before converting it to f32.  A float/integer convert of
+  different widths is defined as in MSIRToLLVM (the integer truncated or
+  zero-extended to the float's width, then a bitcast), and MSIRToM3CG now
+  lowers it so (`cccd2b94a9`).  A test of the same pattern lowers and
+  runs correctly; a full ladder rerun, to confirm no unit of the base
+  packages falls back, is still to do.
+- Master's C backend gets the same LOOPHOLE wrong: the subrange's stack
+  type is Int64, so `LoopholeExpr.Compile` asked for `Loophole (Reel,
+  Int64)` and M3C emitted a value conversion (`LOOPHOLE (1.5, Swap.Int32)`
+  was 1).  PickleStubs.SwapReal is broken on master as a result.  Fixed
+  for CG in PR #1300 (through the memory type Int32/Word32), with m3test
+  p308; both MSIR lowerings already get p308 right.
+- Master also lacks the ex_stack terminate backstop (see the correction
+  below); being ported in its own PR.
+
 **Progress (2026-11-22, later): D25 step 4 on the whole compiler; five MSIR bugs.**
 - MSIR -> M3CG ladder (ARM64_DARWIN, `ex_stack`), from a C-built cm3 at
   msir HEAD.  Stage 1 builds the 13 base packages (m3core, libm3, set,
@@ -1608,8 +1626,13 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   lowered, does the same (stage 2), and so does its output (stage 3).
   **Fixpoint: the generated C is identical across the three stages, 1414
   files.**  m3tests under the stage-2 cm3 (C backend): 299 tests, 12
-  errors, exactly the tests master's own C build fails on ARM64_DARWIN
-  (p047 p109 p126 p137 p201 p227 p268 p269 p270 p277 p280).  The smoke
+  errors (p047 p109 p126 p137 p201 p227 p268 p269 p270 p277 p280), all of
+  which master's own C build also fails on ARM64_DARWIN.  Master fails 16:
+  r001 r003 r004 r005 as well, because an unhandled exception under
+  ex_stack reaches std::terminate ("terminating due to uncaught exception
+  of type _M3Exc"); the terminate backstop that reports it (f096d61405)
+  is on msir only.  (Corrected 2026-11-22: this entry first said the 12
+  were exactly master's failures.)  The smoke
   test passes built lowered; built with CG against the lowered libm3 it
   fails (IO.Error raised by lowered code is not caught by the CG unit), a
   lowered/CG boundary like the closure one below, which per Tony
