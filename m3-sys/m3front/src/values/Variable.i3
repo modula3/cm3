@@ -54,16 +54,6 @@ PROCEDURE BindFormalMSIR     (t: T;  p: MSIR.Proc;  b: MSIR.Block);
    NamedExpr.CompileMSIR to respect initialization order (p026: f := j before
    j := 4 would leave f = 0 without this). *)
 PROCEDURE ForceInitMSIR (t: T);
-PROCEDURE InitValuesMSIR (s: Scope.T);
-(* The MSIR walk's initialization of scope s's values at the current point:
-   locals' allocas and language-defined values, nested procedure bodies,
-   then user initializers.  The CG's Scope.InitValues emits only CG. *)
-(* MSIR-only LangInit + UserInit for non-formal local variables in a
-   procedure's p.syms scope.  Called from GenBodyMSIR to initialize
-   VAR declarations when the CG's Scope.InitValues runs too late
-   (msirSkip=TRUE → InProc=FALSE when the CG finally calls it).
-   Does NOT run CG code — safe to call while inside another proc's
-   CG compilation context. *)
 PROCEDURE BitSize (t: T): INTEGER;  (* t.size in bits; used by EmitIndirectGlobalInit *)
 PROCEDURE HasClosure (t: T): BOOLEAN;
 

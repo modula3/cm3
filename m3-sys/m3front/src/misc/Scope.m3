@@ -271,6 +271,16 @@ PROCEDURE InitValues (t: T) =
     Tracer.EmitPending ();
   END InitValues;
 
+PROCEDURE InitValuesMSIR (t: T) =
+  VAR v: Value.T;
+  BEGIN
+    IF t = NIL THEN RETURN END;
+    v := t.head;
+    WHILE v # NIL DO  Value.LangInitMSIR (v);  v := v.next;  END;
+    v := t.head;
+    WHILE v # NIL DO  Value.UserInitMSIR (v);  v := v.next;  END;
+  END InitValuesMSIR;
+
 PROCEDURE ForEachValue (t: T;  visit: ValueVisitor) =
   VAR v: Value.T;
   BEGIN

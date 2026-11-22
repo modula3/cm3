@@ -81,6 +81,8 @@ REVEAL
         need_init   := NeedInit;
         lang_init   := LangInit;
         user_init   := UserInit;
+        lang_init_msir := LangInitMethodMSIR;
+        user_init_msir := UserInitMethodMSIR;
         toExpr      := ValueRep.NoExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
@@ -1253,33 +1255,17 @@ PROCEDURE BitSize (t: T): INTEGER =
 
 (*--------------------------------------------------- MSIR initialization *)
 
-(* The MSIR walk's initialization of a scope's values, mirroring the CG's
-   Scope.InitValues at the same point of the walk: language-defined
-   initialization (and nested procedure bodies) for every value first, then
-   user initializers.  LangInit/UserInit emit only CG; the two walks run at
-   different times, so each must emit its own code. *)
-PROCEDURE InitValuesMSIR (s: Scope.T) =
+(* lang_init_msir and user_init_msir: the MSIR walk's initialization of t,
+   at the point of the walk where Scope.InitValuesMSIR reaches it. *)
+PROCEDURE LangInitMethodMSIR (t: T) =
   BEGIN
-    IF s = NIL OR NOT MSIRBuilder.InProc () THEN RETURN END;
-    Scope.ForEachValue (s, LangInitVisit);
-    Scope.ForEachValue (s, UserInitVisit);
-  END InitValuesMSIR;
+    IF MSIRBuilder.InProc () THEN LangInitMSIR (t) END;
+  END LangInitMethodMSIR;
 
-PROCEDURE LangInitVisit (v: Value.T) =
+PROCEDURE UserInitMethodMSIR (t: T) =
   BEGIN
-    TYPECASE Value.Base (v) OF
-    | T (t) => LangInitMSIR (t);
-    ELSE Procedure.CompileNestedMSIR (v);
-    END;
-  END LangInitVisit;
-
-PROCEDURE UserInitVisit (v: Value.T) =
-  BEGIN
-    TYPECASE Value.Base (v) OF
-    | T (t) => UserInitMSIR (t);
-    ELSE
-    END;
-  END UserInitVisit;
+    IF MSIRBuilder.InProc () THEN UserInitMSIR (t) END;
+  END UserInitMethodMSIR;
 
 (* initDone was set when t was declared (a formal, a global whose static
    storage or constant initializer is its value, ...), not by the CG walk,

@@ -43,6 +43,10 @@ PROCEDURE WarnUnused (t: T);
 
 PROCEDURE Enter      (t: T);
 PROCEDURE InitValues (t: T);
+PROCEDURE InitValuesMSIR (t: T);
+(* The MSIR walk's InitValues: Value.LangInitMSIR for every value of t
+   (locals' allocas and language-defined values, nested procedure bodies),
+   then Value.UserInitMSIR. *)
 PROCEDURE Exit       (t: T);
 
 TYPE ValueVisitor = PROCEDURE (v: Value.T);

@@ -52,6 +52,7 @@ REVEAL
         need_init   := NeedInit;
         lang_init   := LangInit;
         user_init   := ValueRep.NoInit;
+        lang_init_msir := LangInitMSIR;
         toExpr      := ToExpr;
         toType      := ValueRep.NoType;
         typeOf      := TypeOf;
@@ -595,7 +596,7 @@ PROCEDURE LangInit (t: T) =
     ELSE
       CG.Note_procedure_origin (t.cg_proc);
       (* MSIR compiles nested procedures inline from its own walk
-         (Variable.InitValuesMSIR -> CompileNestedMSIR). *)
+         (Scope.InitValuesMSIR -> lang_init_msir). *)
     END;
   END LangInit;
 
@@ -715,16 +716,14 @@ PROCEDURE PreRegisterScopeCapturesMSIR (syms: Scope.T) =
    procedure declared in an enclosing proc's scope.  Non-procedure values
    (formals) and bodyless procs (external/imported) are skipped.  GenBodyMSIR's
    own ProcMapContains guard prevents recompiling an already-emitted body. *)
-PROCEDURE CompileNestedMSIR (v: Value.T) =
+(* lang_init_msir: a nested procedure's MSIR body is compiled inline, in the
+   enclosing procedure's MSIR context, when Scope.InitValuesMSIR reaches it. *)
+PROCEDURE LangInitMSIR (p: T) =
   BEGIN
-    TYPECASE v OF
-    | T (p) =>
-        IF p.body # NIL AND p.body.level > 0 AND MSIRBuilder.InProc () THEN
-          GenBodyMSIR (p);
-        END;
-    ELSE (* not a procedure *)
+    IF p.body # NIL AND p.body.level > 0 AND MSIRBuilder.InProc () THEN
+      GenBodyMSIR (p);
     END;
-  END CompileNestedMSIR;
+  END LangInitMSIR;
 
 PROCEDURE GenBodyMSIR (p: T) =
   VAR ca := CaptureAnalysis.New ();
@@ -780,7 +779,7 @@ PROCEDURE GenBodyMSIR (p: T) =
        now that round 1 has populated captureMap); pass 3 compiles the bodies. *)
     PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     (* p's nested procedures, then its locals' initialization. *)
-    Variable.InitValuesMSIR (p.syms);
+    Scope.InitValuesMSIR (p.syms);
     TRY
       Stmt.CompileMSIR (p.block);
     EXCEPT ELSE
@@ -933,7 +932,7 @@ PROCEDURE GenBody (p: T) =
     (* The MSIR walk's own initialization of p's scope: nested procedures'
        bodies and locals' initial values.  The CG walk above emits only CG. *)
     IF NOT msirSkip AND MSIRBuilder.InProc () THEN
-      Variable.InitValuesMSIR (p.syms);
+      Scope.InitValuesMSIR (p.syms);
     END;
     Scope.Exit (p.syms);
 

@@ -48,6 +48,11 @@ PROCEDURE LangInit (t: T);
 PROCEDURE UserInit (t: T);
 (* generate the user specified initialization for t *)
 
+PROCEDURE LangInitMSIR (t: T);
+PROCEDURE UserInitMSIR (t: T);
+(* The MSIR walk's counterparts of LangInit and UserInit, dispatched to each
+   value class (lang_init_msir, user_init_msir); no-ops by default. *)
+
 
 PROCEDURE ClassOf          (t: T): Class;
 PROCEDURE IsExternal       (t: T): BOOLEAN;

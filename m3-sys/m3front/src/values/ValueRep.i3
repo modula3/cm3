@@ -50,6 +50,8 @@ REVEAL
     need_init   (): BOOLEAN               := Never;
     lang_init   ()                        := NoInit;
     user_init   ()                        := NoInit;
+    lang_init_msir ()                     := NoInit;  (* MSIR walk's lang_init *)
+    user_init_msir ()                     := NoInit;  (* MSIR walk's user_init *)
     toExpr      (): M3.Expr               := NoExpr;
     toType      (): M3.Type               := NoType;
     typeOf      (): M3.Type               := NoType;

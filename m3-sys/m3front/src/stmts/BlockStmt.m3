@@ -131,7 +131,7 @@ PROCEDURE CompileMSIR (p: P) =
          block-local `bar` capturing `i`, used as a value by `foo`). *)
       Procedure.PreRegisterScopeCapturesMSIR (p.scope);
       (* the MSIR walk's own initialization, at this point of the body *)
-      Variable.InitValuesMSIR (p.scope);
+      Scope.InitValuesMSIR (p.scope);
     END;
     Stmt.CompileMSIR (p.body);
   END CompileMSIR;

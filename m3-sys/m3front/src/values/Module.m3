@@ -1289,8 +1289,8 @@ PROCEDURE EmitBody (x: InitBody) =
 
     IF msirOk THEN
       (* The MSIR walk's own initialization of the unit's scopes. *)
-      Variable.InitValuesMSIR (t.importScope);
-      Variable.InitValuesMSIR (t.localScope);
+      Scope.InitValuesMSIR (t.importScope);
+      Scope.InitValuesMSIR (t.localScope);
       TRY
         Stmt.CompileMSIR (t.block);
       EXCEPT ELSE

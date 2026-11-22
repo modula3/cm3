@@ -47,6 +47,8 @@ TYPE
     need_init   := NeedInit;
     lang_init   := LangInit;
     user_init   := UserInit;
+    lang_init_msir := LangInitMSIR;
+    user_init_msir := UserInitMSIR;
     toExpr      := ToExpr;
     toType      := ToType;
     typeOf      := TypeOf;
@@ -440,6 +442,16 @@ PROCEDURE UserInit  (t: T) =
   BEGIN
     Value.UserInit (t.obj);
   END UserInit;
+
+PROCEDURE LangInitMSIR (t: T) =
+  BEGIN
+    Value.LangInitMSIR (t.obj);
+  END LangInitMSIR;
+
+PROCEDURE UserInitMSIR (t: T) =
+  BEGIN
+    Value.UserInitMSIR (t.obj);
+  END UserInitMSIR;
 
 PROCEDURE ToExpr (t: T): Expr.T =
   BEGIN

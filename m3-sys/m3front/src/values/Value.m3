@@ -278,6 +278,16 @@ PROCEDURE UserInit (t: T) =
     Scanner.offset := save;
   END UserInit;
 
+PROCEDURE LangInitMSIR (t: T) =
+  BEGIN
+    IF (t # NIL) THEN t.lang_init_msir () END;
+  END LangInitMSIR;
+
+PROCEDURE UserInitMSIR (t: T) =
+  BEGIN
+    IF (t # NIL) THEN t.user_init_msir () END;
+  END UserInitMSIR;
+
 
 VAR all: T;  (* all values in the current module *)
 
