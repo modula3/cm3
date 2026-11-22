@@ -1548,7 +1548,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
     IF MSIR.IsFloat (lvKind) THEN
       CASE p.op OF
       | Op.EQ => fpred := MSIR.FCmpPred.OEq;
-      | Op.NE => fpred := MSIR.FCmpPred.ONe;
+      | Op.NE => fpred := MSIR.FCmpPred.UNe;  (* NOT (a = b): TRUE for a NaN *)
       END;
       RETURN MSIR.BuildFCmp (blk, "", fpred, lv, rv);
     ELSE
