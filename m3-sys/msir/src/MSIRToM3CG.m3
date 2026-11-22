@@ -747,13 +747,15 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
             d := MSIR.InsnTargetType (i);
         BEGIN
           IF d = NIL THEN d := MSIR.ValueType (res) END;
-          (* A float <-> integer convert is a bitcast; M3CG's loophole
-             reinterprets only between a float and an integer of its size
-             (Reel/Int32, LReel/Int64), so the widths must match. *)
+          (* A float <-> integer convert is a bitcast, the integer resized
+             (truncated or zero-extended) to the float's width, as in
+             MSIRToLLVM.  M3CG's loophole reinterprets only between a float
+             and an integer of its size (Reel/Int32, LReel/Int64), so the
+             float must be 32 or 64 bits. *)
           IF IsFloat (s) # IsFloat (d) AND (IsPtr (s) OR IsPtr (d)
-             OR (IsFloat (s) AND FloatBits (s) # IntBits (d))
-             OR (IsFloat (d) AND FloatBits (d) # IntBits (s))) THEN
-            Fail (w, "convert between float and integer of another size");
+             OR (IsFloat (s) AND NOT FloatBits (s) IN SET OF [0..64] {32, 64})
+             OR (IsFloat (d) AND NOT FloatBits (d) IN SET OF [0..64] {32, 64})) THEN
+            Fail (w, "convert between float and integer: float of 128 bits");
           END;
         END;
     ELSE
@@ -3506,15 +3508,20 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
             IF RType (st) # RType (dt) THEN cg.cvt_float (RType (st), RType (dt)) END;
           ELSIF IsFloat (st) THEN
             (* bitcast: reinterpret as the integer of the float's size, then
-               widen to the stack's Int64 *)
+               widen to the stack's Int64, zero-extending if the result is
+               wider than the float *)
             IF FloatBits (st) = 32 THEN
               cg.loophole (RType (st), M3CG.Type.Int32);
               cg.loophole (M3CG.Type.Int32, Int64);
+              IF IntBits (dt) > 32 THEN cg.extract_mn (Int64, FALSE, 0, 32) END;
             ELSE
               cg.loophole (RType (st), Int64);
             END;
             Canon (dt);
           ELSIF IsFloat (dt) THEN
+            (* an integer narrower than the float is zero-extended to it; a
+               wider one is truncated (by the Int64 -> Int32 loophole) *)
+            IF IntBits (st) < FloatBits (dt) THEN Mask (st) END;
             IF FloatBits (dt) = 32 THEN
               cg.loophole (Int64, M3CG.Type.Int32);
               cg.loophole (M3CG.Type.Int32, RType (dt));
