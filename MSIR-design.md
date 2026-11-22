@@ -915,6 +915,46 @@ What MSIR takes from it, by static reading of the `*MSIR` procedures
   offsets (type check).  No `*MSIR` procedure reads an offset the CG walk
   allocates (strings, constants, exception descriptors, typecells).
 
+**Scoping (2026-11-22).**  A second reading confirms (A) to (D) and adds
+one hidden dependency inside (B):
+
+- **`used` marks.**  An imported value gets a version stamp, and a CG
+  import declaration, only if it is marked `used`: `Value.Declare` returns
+  early for an imported value that is not.  The marks come from two
+  places.  `Scope.LookUp` sets `used` for any lookup made while
+  `Scanner.in_main`.  That holds at type check (`Module.TypeCheck` sets
+  it); whether it still holds during code generation is to check, as it
+  decides whether runtime hooks are marked when looked up then.  MSIR
+  reaches the hooks the same way as CG (`RunTyme.LookUpProc`, via
+  `MSIRBuilder.HookProc`), so either way the two walks agree on them.
+  But the CG load
+  paths for variables also set it (`Variable.Load`, `LoadLValue`,
+  `SetLValue`, `LocalCGName`), and their MSIR counterparts do not.  If the
+  CG walk ever marks a variable that no lookup did, an MSIR-only walk
+  would drop that import's version stamp, and the linker's consistency
+  check would no longer cover it.  Probably rare (a variable reached
+  without a name lookup), but not yet measured.
+- Consequence for B: `Value.Declare` does two jobs, the link note
+  (`note_version_stamp`) and the CG import declaration.  Decoupling needs
+  them split, with the link note driven by `used` marks that both walks
+  set the same way.
+
+**Proposed first step (an experiment, not a change):**
+1. Instrument the CG variable load paths to log each imported variable
+   whose `used` mark they set for the first time (and log `in_main` at
+   code generation); build the base packages and count.  Zero means the MSIR walk loses nothing; otherwise the
+   cases show what the MSIR load paths must mark.
+2. Behind a debug switch, skip the module-level CG walk in MSIRObj mode,
+   keeping the link notes of (B), and compare the `.m3x`/`.M3EXPORTS`
+   files and the `.msir` output byte for byte with the current build over
+   the base packages.  This confirms or corrects the survey's static
+   reading of (D).
+3. Only then estimate A to C.  If both checks are clean, A and C are
+   mainly driver work in `Module.Compile`/`Procedure.GenBody`, and B is
+   the `Value.Declare` split plus moving the other `note_*` calls out of
+   the CG-side procedures.  Not yet measured: how much compile time the
+   module-level walk costs.
+
 Plan: see D25.
 
 ### O18. Closure-call lowering reads the procedure's first word.
