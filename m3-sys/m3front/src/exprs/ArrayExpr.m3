@@ -3070,27 +3070,40 @@ PROCEDURE ConstDopeMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value =
         ep     : T;
         t, indexT, eltT: Type.T;
         n      : INTEGER;
+        total  : INTEGER := 1;
     BEGIN
       FOR k := 0 TO depth - 1 DO
-        (* e: an element at level k (the constant itself at level 0) *)
-        ep := ArrayConstrExpr (e);
-        t  := Expr.TypeOf (e);
-        IF NOT OpenArrayType.Is (t) AND ArrayType.Split (t, indexT, eltT)
-           AND TInt.ToInt (Type.Number (indexT), n) THEN
-          (* a concrete fixed array at this level *)
-        ELSIF ep # NIL THEN
-          n := NUMBER (ep.args^);
+        IF total = 0 THEN
+          n := 0;  (* below an empty level: no element to measure *)
         ELSE
-          RETURN NIL;  (* an open level of unknown length *)
+          (* e: an element at level k (the constant itself at level 0) *)
+          ep := ArrayConstrExpr (e);
+          t  := Expr.TypeOf (e);
+          IF NOT OpenArrayType.Is (t) AND ArrayType.Split (t, indexT, eltT)
+             AND TInt.ToInt (Type.Number (indexT), n) THEN
+            (* a concrete fixed array at this level *)
+          ELSIF ep # NIL THEN
+            n := NUMBER (ep.args^);
+          ELSE
+            RETURN NIL;  (* an open level of unknown length *)
+          END;
         END;
         fields[k + 1] := MSIR.Field {"n" & Fmt.Int (k), intT};
         vals[k + 1]   := MSIR.ConstInt (intT, n);
-        IF k < depth - 1 THEN
+        total := total * n;
+        IF k < depth - 1 AND total # 0 THEN
           IF ep = NIL OR NUMBER (ep.args^) = 0 THEN RETURN NIL END;
           e := ep.args^[0];
         END;
       END;
-      elts := ConstArrayMSIR (key, constExpr);
+      IF total = 0 THEN
+        (* no elements (A2 = ARRAY OF ARRAY OF INTEGER {ARRAY OF INTEGER {}},
+           p281): the data is never read, but point it at storage, not NIL *)
+        elts := MSIRBuilder.ConstArrayGlobal (intT,
+                  ARRAY OF MSIR.Value {MSIR.ConstInt (intT, 0)});
+      ELSE
+        elts := ConstArrayMSIR (key, constExpr);
+      END;
       IF elts = NIL THEN RETURN NIL END;
       fields[0] := MSIR.Field {"data", MSIR.TPtr (MSIR.TVoid ())};
       vals[0]   := elts;
