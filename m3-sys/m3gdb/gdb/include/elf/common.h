@@ -329,6 +329,7 @@
 #define SHT_PREINIT_ARRAY 16		/* Array of ptrs to pre-init funcs */
 #define SHT_GROUP	  17		/* Section contains a section group */
 #define SHT_SYMTAB_SHNDX  18		/* Indicies for SHN_XINDEX entries */
+#define SHT_RELR	  19		/* Relative relocations, compressed */
 
 #define SHT_LOOS	0x60000000	/* First of OS specific semantics */
 #define SHT_HIOS	0x6fffffff	/* Last of OS specific semantics */

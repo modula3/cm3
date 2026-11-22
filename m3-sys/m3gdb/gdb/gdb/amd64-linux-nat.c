@@ -305,8 +305,8 @@ amd64_linux_dr_get_status (void)
    a request for a thread's local storage address.  */
 
 ps_err_e
-ps_get_thread_area (const struct ps_prochandle *ph,
-                    lwpid_t lwpid, int idx, void **base)
+ps_get_thread_area (struct ps_prochandle *ph,
+                    lwpid_t lwpid, int idx, psaddr_t *base)
 {
   if (gdbarch_ptr_bit (current_gdbarch) == 32)
     {
