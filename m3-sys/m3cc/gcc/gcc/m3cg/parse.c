@@ -1014,9 +1014,6 @@ static GTY (()) tree bytes_per_integer_tree;
 #define memmove_proc builtin_decl_explicit (BUILT_IN_MEMMOVE)
 #define memset_proc builtin_decl_explicit (BUILT_IN_MEMSET)
 #define memcmp_proc builtin_decl_explicit (BUILT_IN_MEMCMP)
-#define lroundf_proc  builtin_decl_explicit (BUILT_IN_LROUNDF)
-#define lround_proc  builtin_decl_explicit (BUILT_IN_LROUND)
-#define lroundq_proc  builtin_decl_explicit (BUILT_IN_LROUNDL)
 static GTY (()) tree set_union_proc;
 static GTY (()) tree set_diff_proc;
 static GTY (()) tree set_inter_proc;
@@ -5146,56 +5143,51 @@ M3CG_HANDLER (MAX) { m3_minmax (type, 0); }
 
 M3CG_HANDLER (ROUND)
 {
-  //Use the builtins for rounding.
-  tree dt;
-  m3_start_call ();
-  m3_pop_param (src_t);
-
- if (LONG_TYPE_SIZE == 32)
-    dt = t_int_32;
-  else
-    dt = t_int_64;
-  if (src_T == T_reel) {
-    m3_call_direct (lroundf_proc, dt);
-  } else if (src_T == T_lreel) {
-    m3_call_direct (lround_proc, dt);
-  } else if (src_T == T_xreel) {
-    if (LONG_DOUBLE_TYPE_SIZE == 64) {
-      m3_call_direct (lround_proc, dt);
-    } else {
-      m3_call_direct (lroundq_proc, dt);
-    }
-  }
-
-/*
-  the original code, which produces erroneous results for reel
-  on 64 bit architectures for all odd integers-as-floats beyond about 2^16.
-  In those cases this code rounds up when it should leave untouched,
-  as there is no fractional part.  See test p126.
-*/
-
-/*
+  /* The report: ROUND (x) is the nearest integer to x, ties broken by
+     FloatMode.RoundDefault, NearestElseEven: halves go to the even
+     neighbour.  lround (used before) takes them away from zero.
+     ti = TRUNC (x) and frac = x - FLOAT (ti) are exact, so no x + 0.5 is
+     ever rounded (the trouble with large odd REALs, test p126), and the
+     tie test is exact too.  */
   REAL_VALUE_TYPE r;
 
-  memset (&r, 0, sizeof(r));
   tree arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
+  tree ti = declare_temp (dst_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, dst_t, ti,
+                       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
+
+  tree frac = declare_temp (src_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, src_t, frac,
+                       m3_build2 (MINUS_EXPR, src_t, arg,
+                                  m3_build1 (FLOAT_EXPR, src_t, ti))));
+
+  memset (&r, 0, sizeof (r));
   real_from_string (&r, "0.5");
-  tree pos = build_real (src_t, r);
-
+  tree half = build_real (src_t, r);
+  memset (&r, 0, sizeof (r));
   real_from_string (&r, "-0.5");
-  tree neg = build_real (src_t, r);
+  tree neg_half = build_real (src_t, r);
 
-  tree cond = m3_build2 (GT_EXPR, boolean_type_node, arg,
-                         build_real_from_int_cst (src_t, v_zero));
+  tree one = build_int_cst (dst_t, 1);
+  tree odd = m3_build2 (BIT_AND_EXPR, dst_t, ti, one);
 
-  EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t,
-                             m3_build2 (PLUS_EXPR, src_t, arg,
-                                        m3_build3 (COND_EXPR, src_t,
-                                                   cond, pos, neg)));
-*/
+  EXPR_REF (-1) =
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (GT_EXPR, boolean_type_node, frac, half),
+               m3_build2 (PLUS_EXPR, dst_t, ti, one),
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (LT_EXPR, boolean_type_node, frac, neg_half),
+               m3_build2 (MINUS_EXPR, dst_t, ti, one),
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (EQ_EXPR, boolean_type_node, frac, half),
+               m3_build2 (PLUS_EXPR, dst_t, ti, odd),
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (EQ_EXPR, boolean_type_node, frac, neg_half),
+               m3_build2 (MINUS_EXPR, dst_t, ti, odd),
+               ti))));
 }
 
 M3CG_HANDLER (TRUNC)
