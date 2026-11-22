@@ -25,6 +25,11 @@ SYSTEM_LIBS =
 {
   "LIBC" : [ "-liphlpapi", "-lrpcrt4", "-lcomctl32", "-lws2_32", "-lgdi32", "-luser32", "-ladvapi32" ],
   "TCP" : [ ],
+
+  % No libunwind on Windows.
+  % There is RtlVirtualUnwind and Cygwin libunwind but
+  % we only need to avoid error building m3core.
+  "UNWIND" : [ ],
 }
 
 SYSTEM_LIBORDER = [ "LIBC" ]

@@ -40,7 +40,8 @@ SYSTEM_LIBS = {
     "OPENGL"     : ["-L/opt/graphics/OpenGL/lib", "-lGLU", "-lGL", "-lXext"],
     "MOTIF"      : ["-lXm"],
     "X11"        : ["-lXext", "-lXt", "-lX11"],
-    "TCP"        : [ ]
+    "TCP"        : [ ],
+    "UNWIND"     : [ ], % No libunwind, at least not needed, but to build m3core.
 }
 
 SYSTEM_LIBORDER = ["OPENGL", "MOTIF", "X11", "TCP", "LEX-YACC", "LIBC"]

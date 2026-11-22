@@ -7,8 +7,9 @@ M3_PARALLEL_BACK = 20
 
 SYSTEM_LIBS =
 {
-  "LIBC" : [ "-lnetwork" ],
-  "TCP" : [ ],
+  "LIBC"   : [ "-lnetwork" ],
+  "TCP"    : [ ],
+  "UNWIND" : [ ], % No libunwind, at least not needed, but to build m3core.
 }
 
 SYSTEM_LIBORDER = ["TCP", "LIBC"]

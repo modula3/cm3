@@ -363,6 +363,11 @@ SYSTEM_LIBS_MS =
     "ODBC" : [LibIn("odbc32")],
     "OPENGL" : [LibIn("opengl32"), LibIn("glu32")],
     "TCP" : [ ],
+
+    % No libunwind on Windows.
+    % There is RtlVirtualUnwind and Cygwin libunwind but
+    % we only need to avoid error building m3core.
+    "UNWIND" : [ ],
 }
 
 %------------------------------------------------------------------------------
@@ -409,7 +414,8 @@ SYSTEM_LIBS_GNU =
               LibIn("ICE"),
               LibIn("X11") ],
 
-   "Z" : [ "-lz" ],
+    "Z" : [ "-lz" ],
+    "UNWIND" : [ ],
 }
 
 SYSTEM_LIBS = { "WIN32" : SYSTEM_LIBS_MS, "POSIX" : SYSTEM_LIBS_GNU }{OS_TYPE}
@@ -1303,8 +1309,3 @@ M3_SPLIT_LIBNAMES = FALSE
 
 % M3_MAIN_IN_C = TRUE
 % --- generate the Modula-3 main program as C code
-
-% No libunwind on Windows.
-% We might wrap RtlVirtualUnwind, but really just not needed, except
-% to satisfy other m3makefiles.
-SYSTEM_LIBS{"UNWIND"} = []
