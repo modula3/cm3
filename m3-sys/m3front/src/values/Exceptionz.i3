@@ -8,13 +8,21 @@
 
 INTERFACE Exceptionz;
 
-IMPORT M3, Type, Value, Decl, Expr;
+IMPORT CG, M3, Type, Value, Decl, Expr;
 
 PROCEDURE ParseDecl (READONLY att: Decl.Attributes);
 
 PROCEDURE ArgType (t: Value.T): Type.T;
 
 PROCEDURE ArgByReference (type: Type.T): BOOLEAN;
+
+PROCEDURE ArgToWord (t: CG.Type);
+PROCEDURE ArgFromWord (t: CG.Type);
+(* An argument passed by value travels in the activation's argument word.
+   ArgToWord turns the argument on the stack, of stack type t, into that
+   word; ArgFromWord turns the word back into a value of type t.  A float
+   goes through an integer of its own size, so its bits are carried, not
+   its value converted. *)
 
 PROCEDURE EmitRaise (t: Value.T;  arg: Expr.T);
 
