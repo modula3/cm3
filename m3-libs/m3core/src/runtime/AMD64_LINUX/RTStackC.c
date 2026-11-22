@@ -222,7 +222,7 @@ void show_backtrace (void) {
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
+    printf ("ip = %llx, sp = %llx\n", (long long) ip, (long long) sp);
 
     ret = unw_get_proc_name(&cursor, name, name_len, &ofp);
     printf("name %s\n",name);
