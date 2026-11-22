@@ -51,7 +51,7 @@ AS_CASE([$host],
                                        [CXXFLAGS="$CXXFLAGS -xarch=v8plus -xcode=pic32 -xregs=no%appl -mt"])])
 
 # Specify likely required compiler/linker flags where defaults
-# do not likely suffice or really are not great (e.g. HPUX null deref, Alpha arounding mode).
+# do not likely suffice or really are not great (e.g. HPUX null deref, Alpha rounding mode).
 
 AS_CASE([$host],
     [alpha*], # Set Alpha rounding mode etc.

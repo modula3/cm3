@@ -8,7 +8,12 @@ on:
   pull_request: {branches: master}
   push: {branches: master}
 
-concurrency: ci
+# One queue per branch or PR (it was one for the whole repository, so any
+# push cancelled every pending run elsewhere).  A newer push supersedes a
+# run on the same branch, except on master, where every commit is checked.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   AMD64_DARWIN:

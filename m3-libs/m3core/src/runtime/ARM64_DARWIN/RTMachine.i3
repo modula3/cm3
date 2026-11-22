@@ -19,7 +19,6 @@ TYPE
   FrameInfo = RECORD
     pc  : ADDRESS;
     sp  : ADDRESS;
-    bp  : ADDRESS;        (* base pointer *)
     lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
     excRef  : ADDRESS;    (* ref to the exception activation *)
     tTypeIndex : INTEGER; (* tTypeIndex from the unwinder *)

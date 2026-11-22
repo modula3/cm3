@@ -87,6 +87,13 @@ PROCEDURE PrintStack (uid : INTEGER) =
     here, f: RTStack.Frame;
     name: RTProcedureSRC.Name;
   BEGIN
+    IF NOT RTStack.Has_walker () THEN
+      (* Raising needs no stack walker (a raise is a C++ throw); only this
+         dump does, and this target has none. *)
+      RTIO.PutText ("(no stack dump: this target has no stack walker)\n");
+      RTIO.Flush ();
+      RETURN;
+    END;
     RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
@@ -97,10 +104,10 @@ PROCEDURE PrintStack (uid : INTEGER) =
 
     WHILE (f.pc # NIL) DO
 
-      IF f.lsda # NIL THEN
-        IF uid # 0 THEN
-        (* fixme - scan and print the dwarf eh scopes found by the unwinder *)
-        END;
+      IF uid # 0 THEN
+      (* fixme - scan and print the dwarf eh scopes found by the unwinder
+        IF f.lsda # NIL THEN
+        END; *)
       END;
 
       (* print the procedure's frame *)
@@ -158,5 +165,4 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
 BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
   dump_enabled := RTParams.IsPresent ("stackdump");
-  <*ASSERT RTStack.Has_walker*>
 END RTExStack.

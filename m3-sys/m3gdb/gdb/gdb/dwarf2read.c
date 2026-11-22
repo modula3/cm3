@@ -1394,6 +1394,7 @@ dwarf2_build_psymtabs_hard (struct objfile *objfile, int mainline)
   struct partial_symtab *pst;
   struct cleanup *back_to;
   CORE_ADDR lowpc, highpc, baseaddr;
+  int warned_unsupported = 0;
 
   info_ptr = dwarf2_per_objfile->info_buffer;
 
@@ -1426,6 +1427,30 @@ dwarf2_build_psymtabs_hard (struct objfile *objfile, int mainline)
       struct dwarf2_per_cu_data *this_cu;
 
       beg_of_comp_unit = info_ptr;
+
+      /* m3gdb: this reader understands DWARF 2 (and, partially, 4; see
+	 partial_read_comp_unit_head).  Current compilers default to
+	 DWARF 5, e.g. for the C parts of libm3core, which end up in the
+	 same objfile as Modula-3 stabs or DWARF 2 code (always so for a
+	 statically linked program).  Skip units with an unsupported
+	 version instead of giving up on the whole objfile.  */
+      {
+	struct comp_unit_head h;
+	unsigned int len_bytes;
+	memset (&h, 0, sizeof (h));
+	h.length = read_initial_length (abfd, info_ptr, &h, &len_bytes);
+	h.version = read_2_bytes (abfd, info_ptr + len_bytes);
+	if (h.version != 2 && h.version != 4)
+	  {
+	    if (!warned_unsupported)
+	      warning (_("skipping DWARF %d compilation units in %s "
+			 "(unsupported version)"),
+		       h.version, objfile->name);
+	    warned_unsupported = 1;
+	    info_ptr = beg_of_comp_unit + h.length + h.initial_length_size;
+	    continue;
+	  }
+      }
 
       memset (&cu, 0, sizeof (cu));
 

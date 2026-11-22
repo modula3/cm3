@@ -1,0 +1,6 @@
+a<=b T a<b T a>=b F a>b F
+b<=a F b<a F b>=a T b>a T
+a<=a T a<a F a>=a T a>a F
+a<=c F c<=a F e<=a T e<a T a<=e F
+a=a T a=b F a#b T e=e T
+if a=a T if a=b F if a#b T if a#a F

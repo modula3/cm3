@@ -5,6 +5,8 @@
 (* Last modified on Fri Nov 18 16:24:36 PST 1994 by kalsow *)
 (*      modified on Thu Dec 24 15:36:37 PST 1992 by jdd    *)
 
+This file is no longer used. Things do work, but not like this.
+
 MODULE RTHeapDep;
 
 (* VM protection is currently unimplemented on this architecture.  If

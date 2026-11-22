@@ -3,7 +3,7 @@
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RT0, RTMachInfo, RTError, RTException, RTProcess, RuntimeError;
+IMPORT RT0, RTMachInfo, RTError, RTException, RTProcess, RuntimeError, RTSignalC;
 IMPORT WinBase, WinCon, WinDef, WinNT, ThreadContext, Thread, RTThread;
 
 TYPE
@@ -89,6 +89,11 @@ PROCEDURE Raise (rte: RTE;  err, pc: INTEGER;
   VAR f: UNTRACED REF Frame;
   BEGIN
     IF (ctxt = NIL) THEN RETURN FALSE; END;
+
+    IF RTSignalC.Arch() # RTSignalC.i386() THEN
+      SystemError (ORD (rte), err, LOOPHOLE (pc, ADDRESS));
+      RETURN TRUE;
+    END;
 
     f := LOOPHOLE (ctxt.Esp - ADRSIZE (Frame), UNTRACED REF Frame);
     IF WinBase.IsBadWritePtr (f, BYTESIZE(f^)) # 0 THEN

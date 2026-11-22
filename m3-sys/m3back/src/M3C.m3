@@ -2317,6 +2317,7 @@ TYPE Proc_t = M3CG.Proc OBJECT
     block_stack: RefSeq.T := NIL; (* Block_t *)
     current_block: Block_t := NIL;
     needs_return := FALSE; (* Is this a non-void function without a return yet? *)
+    has_try := FALSE; (* ex_stack: contains try/landing_pad, so declares _m3_caught *)
 
     METHODS
         Locals_Size(): INTEGER := Proc_Locals_Size;
@@ -2622,11 +2623,6 @@ CONST Prefix = ARRAY OF TEXT {
 "int  __cdecl m3_memcmp(const void* a, const void* b, size_t n);",
 "} /* extern \"C\" */",
 "struct _M3Exc { void* act; };",
-"#ifdef _MSC_VER",
-"static __declspec(thread) void* _m3_caught;",
-"#else",
-"static __thread void* _m3_caught __attribute__((unused));",
-"#endif",
 "extern \"C\" {",
 
 ""};
@@ -4827,15 +4823,22 @@ BEGIN
     HelperFunctions_helper_with_type(self, "min", type, self.data.min, text);
 END HelperFunctions_min;
 
+(* ROUND breaks ties by FloatMode.RoundDefault, NearestElseEven on the
+   targets the C backend serves, so halves go to the even neighbour; C's
+   round() would take them away from zero.  f - trunc(f) and f / 2 are
+   exact, so the tie test is too. *)
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 VAR text : ARRAY ConvertOp OF TEXT;
 BEGIN
     IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
       text[ConvertOp.Round] :=
         "#ifndef m3_round\n#define m3_round m3_round\n" &
-        "INT64 __cdecl llroundq(_Float128);\n" &
+        "_Float128 __cdecl roundq(_Float128);\n" &
+        "_Float128 __cdecl truncq(_Float128);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
-        " return (INT64)llroundq(f); }\n" &
+        " EXTENDED d = f - truncq(f);\n" &
+        " if (d == 0.5 || d == -0.5) return (INT64)(2 * roundq(f / 2));\n" &
+        " return (INT64)roundq(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
         "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
@@ -4859,7 +4862,10 @@ BEGIN
       text[ConvertOp.Round] :=
         "#ifndef m3_round\n#define m3_round m3_round\n" &
         "double __cdecl round(double);\n" &
+        "double __cdecl trunc(double);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " EXTENDED d = f - trunc(f);\n" &
+        " if (d == 0.5 || d == -0.5) return (INT64)(2 * round(f / 2));\n" &
         " return (INT64)round(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
@@ -4997,6 +5003,8 @@ OVERRIDES
     begin_block := Locals_begin_block;   (* FUTURE: for unions in frame struct *)
     end_block := Locals_end_block;       (* FUTURE: for unions in frame struct *)
     pop_static_link := Locals_pop_static_link;  (* pop_static_link is needed because it calls declare_temp *)
+    start_try := Locals_start_try;      (* to declare _m3_caught *)
+    landing_pad := Locals_landing_pad;  (* to declare _m3_caught *)
 
     check_lo := AllocateTemps_check_lo;
     check_hi := AllocateTemps_check_hi;
@@ -6243,6 +6251,17 @@ BEGIN
     <* ASSERT self.current_proc = proc *>
 END Locals_begin_procedure;
 
+PROCEDURE Locals_start_try (locals: Locals_t) =
+BEGIN
+    locals.self.current_proc.has_try := TRUE;
+END Locals_start_try;
+
+<*NOWARN*>PROCEDURE Locals_landing_pad (locals: Locals_t; t: ZType; handler: Label;
+                                     READONLY catches: ARRAY OF TypeUID) =
+BEGIN
+    locals.self.current_proc.has_try := TRUE;
+END Locals_landing_pad;
+
 PROCEDURE Locals_end_procedure (locals: Locals_t; p: M3CG.Proc) =
 VAR self := locals.self;
 BEGIN
@@ -6324,6 +6343,14 @@ BEGIN
                 print(self, "={0};//always-init\n");
             END;
         END;
+    END;
+
+    (* ex_stack: the activation a catch clause hands to its landing pad.
+       The catch stores it and jumps to the handler label, where landing_pad
+       reads it, all within this function. *)
+
+    IF proc.has_try THEN
+        print(self, "void* _m3_caught=0;\n");
     END;
 
     (* declare and zero non-uplevel struct param values (uplevels are in the frame struct) *)
@@ -8131,7 +8158,8 @@ PROCEDURE end_try (self : T) =
     IF debug THEN
       self.comment("landing_pad");
     END;
-    (* The catch block in end_try already stored the activation in _m3_caught.
+    (* The catch block in end_try already stored the activation in the
+       procedure's local _m3_caught (declared by begin_procedure).
        Push it onto the expression stack so Store_addr(info) can save it. *)
     push(self, CGType.Addr, CTextToExpr("_m3_caught"));
   END landing_pad;

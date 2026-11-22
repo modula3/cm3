@@ -74,6 +74,8 @@ def Boot():
 
     # TODO: This is all misplaced. It belongs in autotools, or cmake, or
     # worst case, our own code at bootstrap runtime, not in bootstrap formation.
+    #
+    # Compile as C++, for portable efficient exception handling.
 
     if alpha32vms:
         CCompiler = "c++"
@@ -115,11 +117,11 @@ def Boot():
         # -fPIC breaks Interix and is not needed on Cygwin/Mingw.
         if not nt:
             CCompilerFlags = {
-                "I386_INTERIX"  : " -g ", # gcc -fPIC generates incorrect code on Interix
-                "AMD64_MINGW"   : " -g ", # No need for -pthread
-                "IA64_HPUX32"   : " -g ", # -pthread is not allowed
-                "IA64_HPUX64"   : " -g ", # -pthread is not allowed
-                }.get(Config) or " -pthread -g "
+                "I386_INTERIX"  : " -g -x c++ ", # gcc -fPIC generates incorrect code on Interix
+                "AMD64_MINGW"   : " -g -x c++ ", # No need for -pthread
+                "IA64_HPUX32"   : " -g -x c++ ", # -pthread is not allowed
+                "IA64_HPUX64"   : " -g -x c++ ", # -pthread is not allowed
+                }.get(Config) or " -pthread -g -x c++ "
 
     CCompilerFlags = CCompilerFlags + ({
         "AMD64_LINUX"     : " -m64 ",
@@ -159,7 +161,9 @@ def Boot():
     # TODO: All this logic should be in the Makefile so we can make one distribution.
     # See BootAutoTools.
 
-    LinkFlags = ""
+    LinkFlags = ({
+        "AMD64_LINUX"     : " -lunwind-x86_64 -lunwind ",
+        }.get(Config) or " ")
 
     if darwin:
         pass
@@ -193,11 +197,11 @@ def Boot():
         # ARM64_NT maybe has problems too. Testing every combination is tedious and
         # time consuming.
         if Target == "ARM32_NT":
-            CCompilerFlags = " -MT "
+            CCompilerFlags = " -MT -EHs -TP "
         elif Target == "ARM64_NT":
-            CCompilerFlags = " -Z7 -MT -Gy -O1 "
+            CCompilerFlags = " -Z7 -MT -Gy -O1 -EHs -TP "
         else:
-             CCompilerFlags = " -Z7 -MD -Gy -O2 -GL "
+             CCompilerFlags = " -Z7 -MD -Gy -O2 -GL -EHs -TP "
         Link = "link /incremental:no /debug /pdb:$(@R).pdb "
         # LinkFlags esp. .libs go at the end to avoid ARM32 link crash
         LinkFlags = "LinkFlags=-delayload:gdi32.dll -delayload:user32.dll -delayload:iphlpapi.dll -delayload:advapi32.dll -delayload:ws2_32.dll "

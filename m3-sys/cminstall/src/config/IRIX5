@@ -184,7 +184,8 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                                        "-lXt", "-lX11" ],
-  "TCP"        : [ ]
+  "TCP"    : [ ],
+  "UNWIND" : [ ], % No libunwind, at least not needed, but to build m3core.
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be

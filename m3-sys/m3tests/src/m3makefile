@@ -531,6 +531,10 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+p_test ("p2", "p305", "TRY EXCEPT ELSE catches EXIT and RETURN past named handlers")
+p_test ("p2", "p306", "ROUND breaks ties to even (FloatMode.RoundDefault)")
+p_test ("p2", "p307", "Subset comparisons of multi-word sets (C back end operand order)")
+p_test ("p2", "p308", "LOOPHOLE between REAL and a 32-bit packed subrange")
 p_test ("p2", "p304", "Exception scopes: RETURN, EXIT and exceptions through FINALLY, ELSE, LOCK")
 p_test ("p2", "p303", "Block-local initialization in nested procedures and loops")
 p_test ("p2", "p302", "Address of a global at an offset, compared directly")

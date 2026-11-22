@@ -4,6 +4,8 @@
 
 /* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking    */
 
+#error This file is no longer used. Things do work, but not like this.
+
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif

@@ -24,7 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc, llvm]
+        # Only C: concierge builds the gcc and llvm back ends only where
+        # they are supported, and on Darwin falls back to C, so those jobs
+        # repeated this one.
+        backend: [c]
 
     env:
       CM3_TARGET: ARM64_DARWIN
@@ -54,7 +57,7 @@ jobs:
 
     - name: Build everything
       run: |
-        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" headless -m3gdb
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all -caltech-other -caltech-parser -m3-scheme -m3gdb
 
     - name: Run compiler validation suite
       continue-on-error: true

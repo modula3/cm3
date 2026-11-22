@@ -363,6 +363,11 @@ SYSTEM_LIBS_MS =
     "ODBC" : [LibIn("odbc32")],
     "OPENGL" : [LibIn("opengl32"), LibIn("glu32")],
     "TCP" : [ ],
+
+    % No libunwind on Windows.
+    % There is RtlVirtualUnwind and Cygwin libunwind but
+    % we only need to avoid error building m3core.
+    "UNWIND" : [ ],
 }
 
 %------------------------------------------------------------------------------
@@ -409,7 +414,8 @@ SYSTEM_LIBS_GNU =
               LibIn("ICE"),
               LibIn("X11") ],
 
-   "Z" : [ "-lz" ],
+    "Z" : [ "-lz" ],
+    "UNWIND" : [ ],
 }
 
 SYSTEM_LIBS = { "WIN32" : SYSTEM_LIBS_MS, "POSIX" : SYSTEM_LIBS_GNU }{OS_TYPE}
@@ -662,6 +668,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     args += ["-Z7"]
 
     args += ["-TP"] % compile as C++
+    args += ["-EHs"] % with exception handling support
 
     if USE_MSVCRT
         % Use msvcrt.lib and define _MT and _DLL.

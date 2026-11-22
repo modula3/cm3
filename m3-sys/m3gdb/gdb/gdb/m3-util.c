@@ -1100,7 +1100,7 @@ m3_ascertain_compiler_kind ( void )
                 either code generator. */
         if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_pm3;
-             error ("Detected compiler kind PM3 (m3_link_info).");
+             printf_filtered ("Detected compiler kind PM3 (m3_link_info).\n");
              return;
            }
 
@@ -1110,7 +1110,7 @@ m3_ascertain_compiler_kind ( void )
             code only. */
         if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_cm3;
-             error ("Detected compiler kind: CM3 (MM__m3main).");
+             printf_filtered ("Detected compiler kind: CM3 (MM__m3main).\n");
              return;
            }
 
@@ -1120,34 +1120,34 @@ m3_ascertain_compiler_kind ( void )
                 code, m3cc backend. */
         if ( sym != NULL )
            { m3_compiler_kind_value = m3_ck_cm3;
-             error ("Detected compiler kind: CM3 (INTEGER, m3cc).");
+             printf_filtered ("Detected compiler kind: CM3 (INTEGER, m3cc).\n");
              return;
            }
 
         minsym = lookup_minimal_symbol ( "m3_link_info", NULL, NULL);
         if ( minsym != NULL )
            { m3_compiler_kind_value = m3_ck_pm3;
-             error ("Detected compiler kind PM3 (m3_link_info).");
+             printf_filtered ("Detected compiler kind PM3 (m3_link_info).\n");
              return;
            }
 
         minsym = lookup_minimal_symbol ( "MM__m3main", NULL, NULL);
         if ( minsym != NULL )
            { m3_compiler_kind_value = m3_ck_cm3;
-             error ("Detected compiler kind: CM3 (MM__m3main).");
+             printf_filtered ("Detected compiler kind: CM3 (MM__m3main).\n");
              return;
            }
 
         minsym = lookup_minimal_symbol ( "INTEGER", NULL, NULL);
         if ( minsym != NULL )
            { m3_compiler_kind_value = m3_ck_cm3;
-             error ("Detected compiler kind: CM3 (INTEGER, m3cc).");
+             printf_filtered ("Detected compiler kind: CM3 (INTEGER, m3cc).\n");
              return;
            }
 
         /* Didn't find a compiler kind clue. */
-        error ( "Can't detect compiler kind, assuming CM3." );
         m3_compiler_kind_value = m3_ck_cm3;
+        printf_filtered ("Can't detect compiler kind, assuming CM3.\n");
         return;
         /* ^Temp, while stabs is undermined for _m3main.c */
         m3_compiler_kind_value = m3_ck_not_m3;
