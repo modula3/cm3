@@ -35,7 +35,7 @@ typedef struct {
   long lock;
 } Frame;
 
-#define FrameLock 0x1234567890
+#define FrameLock ((long)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 typedef struct runtime_pdr *Proc;
 

@@ -46,7 +46,7 @@ typedef struct {
   unw_word_t landingPad;
 } Frame;
 
-#define FrameLock 0x1234567890
+#define FrameLock ((long)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 void * __m3_personality_v0() {
   printf("m3 personality\n");

@@ -41,7 +41,7 @@ typedef struct {
   int lock;
 } Frame;
 
-#define FrameLock 0x12345678
+#define FrameLock ((long)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame)
