@@ -1032,7 +1032,58 @@ one hidden dependency inside (B):
    mainly driver work in `Module.Compile`/`Procedure.GenBody`, and B is
    the `Value.Declare` split plus moving the other `note_*` calls out of
    the CG-side procedures.  Not yet measured: how much compile time the
-   module-level walk costs.
+   module-level walk costs.  (Superseded for B by the decision above.)
+
+**Link info today (2026-11-22).**  The `.m3x` of m3middle built in
+MSIRObj mode (CG bodies already skipped) against the same tree in C mode:
+same 49 units; no variable stamp is missing, exported or imported
+(TargetMap's own interface variables included), so the CG-only used marks
+of experiment 1 do not in fact lose stamps.  The only differences are
+runtime-hook imports: 2 missing (`RTHooks.ReportFault` in M3CG,
+`RTHooks.CheckIsType` in M3CG_Tee, hooks only the CG code calls there)
+and 122 extra (MSIR registers `CheckLoadTracedRef`, `CheckStoreTraced`
+and `ScanTypecase` in every unit).  Import stamps that follow the code
+actually emitted are harmless to the linker's checks.  Still to repeat
+over all base packages.
+
+**A: the plan (proposed 2026-11-22).**  With B decided, A is smaller than
+the survey suggested, because in MSIRObj mode the per-body CG walk is
+already off: `CG.Declare_procedure` returns NIL from `M3CG_DoNothing`, so
+`Procedure.GenBody` and `Module.EmitBody` run only their MSIR halves, and
+the CG-only bodies in the `ProcBody` queue (`Exceptionz` raisers,
+`TryFinStmt` handler procedures) are scheduled only from CG statement code
+that no longer runs.  What A still has to do:
+
+1. *The `ProcBody` queue stays the driver.*  It is filled by the
+   declaration walk, which B keeps, and it already reaches the MSIR bodies
+   (`gen_body`).  No new walk is needed; A is the removal of CG work
+   around it.
+2. *Module init body.*  `EmitBody` still runs `Scope.InitValues` (CG
+   compiles of module-global initializers, into `DoNothing`) and
+   `External.InitGlobals` (which emits nothing: 0 times over the base
+   packages).  Guard both on `x.cg_proc # NIL`, as the body already is,
+   after checking that `Scope.InitValues` makes no link note the MSIR walk
+   lacks (the inventory shows 27 stamps and 16 type notes there).
+3. *Module-level CG tables.*  `ProcBody.EmitAll`'s procedure-name and
+   proc-info tables, `Variable.GenGlobalMap`, `Coverage.GenerateTables`,
+   `DeclareGlobalData` and the CG part of `GenLinkerInfo` produce only
+   `DoNothing` output in MSIRObj mode.  Skip them there, keeping
+   `GenLinkerInfo`'s link notes (`opaque_magic`, version stamps), which
+   B needs.
+4. *Nested procedures.*  With `inline_nested_procs` (the default), MSIR
+   compiles nested bodies inline from `LangInit` (`GenBodyMSIR`), and the
+   `msirSkip`/`ProcMapContains` guard in `GenBody` keeps the queue from
+   emitting them again.  In MSIRObj mode that guard becomes the rule
+   rather than a patch; the non-default `-inline_nested_procs` off path
+   can stay as is.
+5. *Validation.*  Both ladders; the `.m3x` comparison over all base
+   packages (no lost stamps); and the compile-time measurement that C
+   needs, before and after (MSIRObj, the base packages).
+
+Size: a handful of guarded call sites in `Module`, `ProcBody` and
+`Procedure`, none in the per-node `CompileMSIR` code.  The delicate part
+is 4, and 2 needs the link-note check first.  C (skipping the discarded
+work) is mostly delivered by 2 and 3.
 
 Plan: see D25.
 
