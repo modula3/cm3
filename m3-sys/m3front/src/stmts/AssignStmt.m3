@@ -1087,12 +1087,37 @@ PROCEDURE CompileMSIR (p: P) =
                         ("open array assignment: rhs dope has extra dims but no address");
                       RETURN;
                     END;
-                    FOR k := rhsRank TO rhsM3Depth - 1 DO
-                      blk2 := MSIRBuilder.CurrentBlock ();
-                      totalElts := MSIR.BuildIMul (blk2, "", totalElts,
-                                     MSIR.BuildLoad (blk2, "", intT,
-                                       MSIRBuilder.BuildPtrByteOff (blk2, "", rhsDopePtr,
-                                                                     shapeB + k * ipB)));
+                    (* An extra dimension the MSIR element type fixes (a
+                       constructor's known shape: openarray<3> [3][2]T for
+                       5 open levels) is a constant; only the others are in
+                       the dope.  Loading a fixed one read past a rank-N
+                       dope's end (p269: the copy's size came from stack
+                       garbage). *)
+                    VAR wt := MSIR.OpenArrayElt (rhsT);
+                    BEGIN
+                      FOR k := rhsRank TO rhsM3Depth - 1 DO
+                        blk2 := MSIRBuilder.CurrentBlock ();
+                        IF wt # NIL AND MSIR.Kind (wt) = MSIR.TypeKind.FixedArray THEN
+                          VAR len  := MSIR.FixedArrayLen (wt);
+                              pack := OpenArrayType.EltPack (Expr.TypeOf (p.rhs));
+                          BEGIN
+                            IF k = rhsM3Depth - 1 AND pack < Target.Byte THEN
+                              (* sub-byte deepest level: a byte array, so
+                                 FixedArrayLen is its byte count *)
+                              len := len * Target.Byte DIV pack;
+                            END;
+                            totalElts := MSIR.BuildIMul (blk2, "", totalElts,
+                                           MSIR.ConstInt (intT, len));
+                          END;
+                          wt := MSIR.FixedArrayElt (wt);
+                        ELSE
+                          totalElts := MSIR.BuildIMul (blk2, "", totalElts,
+                                         MSIR.BuildLoad (blk2, "", intT,
+                                           MSIRBuilder.BuildPtrByteOff (blk2, "", rhsDopePtr,
+                                                                         shapeB + k * ipB)));
+                          wt := NIL;
+                        END;
+                      END;
                     END;
                   END;
                 END;
