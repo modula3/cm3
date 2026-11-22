@@ -184,6 +184,16 @@ GENERIC INTERFACE VarArray ( Subscript , Element , Ranges )
        Otherwise O(1). 
   *)     
 
+; PROCEDURE Append ( Array : T ; Value : ElemTyp  )
+  (* Assign Value to element touched(array).Hi+1, or to element 0 if touched is empty.
+     Concrete view and Performance: same as Assign.
+  *) 
+
+; PROCEDURE Prepend ( Array : T ; Value : ElemTyp  )
+  (* Assign Value to element touched(array).Lo-1, or to element 0 if touched is empty.
+     Concrete view and Performance: same as Assign.
+  *) 
+
 ; PROCEDURE Fetch ( Array : T ; Ss : SsTyp ) : ElemTyp  
   (* PRE: Array # NIL *) 
   (* Abstract view: Return Array[Ss]. 

@@ -2,7 +2,7 @@
 (* -----------------------------------------------------------------------1- *)
 (* File Ranges.mg                                                            *)
 (* Modula-3 source code.                                                     *)
-(* Copyright 2013, Rodney M. Bates.                                          *)
+(* Copyright 2013, 2024 Rodney M. Bates.                                     *)
 (* rodney.m.bates@acm.org                                                    *)
 (* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
@@ -23,7 +23,7 @@ GENERIC MODULE Ranges ( )
 
 ; IMPORT Word 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE RangeIsEmpty ( R : RangeTyp ) : BOOLEAN 
   (* Need I belabor this one?  But note that EmptyRange is not the only
      range that is empty. 
@@ -33,7 +33,7 @@ GENERIC MODULE Ranges ( )
       RETURN ORD ( R . Lo ) > ORD ( R . Hi ) 
     END RangeIsEmpty 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE CanonicalRange ( R : RangeTyp ) : RangeTyp 
   (* Equivalent to IF RangeIsEmpty ( R ) THEN EmptyRange ELSE R. *) 
 
@@ -44,7 +44,7 @@ GENERIC MODULE Ranges ( )
       END (* IF *) 
     END CanonicalRange 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE InRange ( Val : BaseTyp ; Range : RangeTyp ) : BOOLEAN 
   (* Val is a member of Range. *) 
 
@@ -56,7 +56,7 @@ GENERIC MODULE Ranges ( )
       END (* IF *) 
     END InRange 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE IsSubrange ( Left , Right : RangeTyp ) : BOOLEAN 
   (* Left is a subrange of Right. *) 
 
@@ -71,7 +71,7 @@ GENERIC MODULE Ranges ( )
       END (* IF *) 
     END IsSubrange 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE RangeIsMaxRepresentable ( R : RangeTyp ) : BOOLEAN 
   (* R is the maximum internally representable range, 
      i.e., ORD ( R . Lo ) = FIRST ( INTEGER ) 
@@ -83,7 +83,7 @@ GENERIC MODULE Ranges ( )
              AND ORD ( R . Hi ) = LAST ( INTEGER )
     END RangeIsMaxRepresentable  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE NumberOfRange ( R : RangeTyp ) : Word . T 
   (* Number of values in R.  Treat as unsigned. 
      WARNING: If RangeIsMaxRepresentable(R), the correct result of 
@@ -104,7 +104,7 @@ GENERIC MODULE Ranges ( )
       END (* IF *) 
     END NumberOfRange 
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE IntersectionRange ( R1 , R2 : RangeTyp ) : RangeTyp 
   (* The range of values that each belong to both R1 and R2. *)  
  
@@ -128,7 +128,7 @@ GENERIC MODULE Ranges ( )
       END 
     END IntersectionRange  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE EnclosingRange ( R1 , R2 : RangeTyp ) : RangeTyp 
   (* Smallest range that contains all members of R1 and all members of R2. *) 
  
@@ -151,7 +151,7 @@ GENERIC MODULE Ranges ( )
       END 
     END EnclosingRange  
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE HiOfLoPlusNumber ( Lo : BaseTyp ; Number : Word . T ) : BaseTyp 
   (* Upper bound of a range with lower bound Lo and Number values.
      WARNING: This procedure treats Number as UNSIGNED.  
@@ -173,7 +173,7 @@ GENERIC MODULE Ranges ( )
        END (* IF *) 
     END HiOfLoPlusNumber
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE RangeOfLoPlusNumber 
     ( Lo : BaseTyp ; Number : Word . T ) : RangeTyp 
   (* Range with lower bound Lo and Number values. 
@@ -194,7 +194,7 @@ GENERIC MODULE Ranges ( )
     ; RETURN LResult 
     END RangeOfLoPlusNumber
 
-(* VISIBLE: *) 
+(* EXPORTED: *) 
 ; PROCEDURE RangeIsAllocatable ( R : RangeTyp ) : BOOLEAN 
   (* NumberOfRange(R) does not exceed LAST(CARDINAL) 
      (Which would mean an open array of this size is impossible. *) 

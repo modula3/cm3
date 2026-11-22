@@ -680,7 +680,43 @@ GENERIC MODULE VarArray ( Ranges )
       AllocateAndTouchRange ( Array , LSsI , LSsI , DoInit := FALSE ) 
     ; LBiasedSsW := Word . Minus ( LSsI , Array . BiasI )   
     ; Array . Elems ^ [ LBiasedSsW ] := Value   
-    END Assign  
+    END Assign
+
+(*EXPORTED.*)
+; PROCEDURE Append ( Array : T ; Value : ElemTyp  )
+  (* Assign Value to element touched(array).Hi+1, or to element 0 if touched is empty.
+     Concrete view and Performance: same as Assign.
+  *) 
+
+  = VAR LTouchedRange : RangeTyp
+  ; VAR LSsW : Word . T  
+
+  ; BEGIN (*Append*)
+      LTouchedRange := TouchedRange ( Array )
+    ; IF RangeIsEmpty ( LTouchedRange )
+      THEN LSsW := 0  
+      ELSE LSsW := Word . Plus ( ORD ( LTouchedRange . Hi ) , 1 )
+      END (*IF*)
+    ; Assign ( Array , VAL ( LSsW , SsTyp ) , Value ) 
+    END Append
+
+(*EXPORTED.*)
+; PROCEDURE Prepend ( Array : T ; Value : ElemTyp  )
+  (* Assign Value to element touched(array).Lo-1, or to element 0 if touched is empty.
+     Concrete view and Performance: same as Assign.
+  *) 
+
+  = VAR LTouchedRange : RangeTyp
+  ; VAR LSsW : Word . T  
+
+  ; BEGIN (*Prepend*)
+      LTouchedRange := TouchedRange ( Array )
+    ; IF RangeIsEmpty ( LTouchedRange )
+      THEN LSsW := 0  
+      ELSE LSsW := Word . Minus ( ORD ( LTouchedRange . Lo ) , 1 )
+      END (*IF*)
+    ; Assign ( Array , VAL ( LSsW , SsTyp ) , Value ) 
+    END Prepend
 
 (* EXPORTED: *) 
 ; PROCEDURE Fetch ( Array : T ; Ss : SsTyp ) : ElemTyp  
