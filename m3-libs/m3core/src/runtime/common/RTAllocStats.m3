@@ -35,7 +35,7 @@ VAR
 
 PROCEDURE EnableTrace (tc: Typecode) =
   BEGIN
-    IF NOT RTStack.Has_walker THEN RETURN END;
+    IF NOT RTStack.Has_walker () THEN RETURN END;
     IF NOT RTType.IsTraced (tc) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;

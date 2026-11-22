@@ -300,7 +300,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
 
 PROCEDURE Compile1 (p: P): Stmt.Outcomes =
   VAR
-    oc: Stmt.Outcomes;
+    oc, exits: Stmt.Outcomes;
     l, next_handler, handler_body: CG.Label;
     info, next_info: CG.Var;
     h: Handler;
@@ -318,7 +318,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     CG.Store_addr (info, M3RT.EA_exception);
 
     (* compile the body *)
-    l := CG.Next_label (4);
+    l := CG.Next_label (5);
     CG.Set_label (l, barrier := TRUE);
     CG.Start_try ();
     IF (p.hasElse)
@@ -340,9 +340,11 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
        (if any), not by this one — avoiding the infinite-loop problem. *)
     CG.End_try ();
 
+    exits := Stmt.Outcomes {};
     IF (p.hasElse) THEN
       (* EXITs and RETURNs from the body are caught by the ELSE clause *)
-      oc := oc - Stmt.Outcomes {Stmt.Outcome.Returns, Stmt.Outcome.Exits};
+      exits := oc * Stmt.Outcomes {Stmt.Outcome.Returns, Stmt.Outcome.Exits};
+      oc := oc - exits;
     END;
 
     (* check for enclosing handlers *)
@@ -363,6 +365,22 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     (* set the body label *)
     CG.Set_label (l+2);
 
+    (* An EXIT or RETURN from the body arrives here with a Marker code,
+       not an activation, in info.  Send it straight to the ELSE clause:
+       the handler tests below would dereference it. *)
+    IF (p.handles # NIL) THEN
+      IF (Stmt.Outcome.Exits IN exits) THEN
+        CG.Load_int (Target.Integer.cg_type, info);
+        CG.Load_intt (Marker.Exit_exception);
+        CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, l+4, CG.Maybe);
+      END;
+      IF (Stmt.Outcome.Returns IN exits) THEN
+        CG.Load_int (Target.Integer.cg_type, info);
+        CG.Load_intt (Marker.Return_exception);
+        CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, l+4, CG.Maybe);
+      END;
+    END;
+
     (* compile each of the handlers.
        In C++ EH (ex_stack), we always emit the type check for every handler,
        including the last one.  The C++ catch(_M3Exc&) catches ALL M3 exceptions
@@ -375,6 +393,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
     END;
 
     IF (p.hasElse) THEN
+      CG.Set_label (l+4);
       oc := oc + Stmt.Compile (p.elseBody);
     ELSIF another THEN
       (* we didn't eat this exception => mark and invoke the next handler *)

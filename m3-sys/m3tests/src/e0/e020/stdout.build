@@ -1,0 +1,6 @@
+"../Main.m3", line 12: illegal recursive type declaration
+"../Main.m3", line 11: right-hand side must be a branded type expression (V)
+"../Main.m3", line 16: unknown qualification '.' (a)
+"../Main.m3", line 17: unknown qualification '.' (b)
+4 errors encountered
+Fatal Error: package build failed

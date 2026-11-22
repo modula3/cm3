@@ -3149,6 +3149,11 @@ BEGIN
         print(self, Prefix[i] & "\n");
     END;
     IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
+      (* g++ < 13 and clang++ have no _Float128 in C++; __float128 is the
+         same IEEE binary128 type on x86-64, and libquadmath's own type. *)
+      print(self, "#if defined(__cplusplus)\n" &
+                  "#define _Float128 __float128\n" &
+                  "#endif\n");
       print(self, "typedef _Float128 EXTENDED;\n");
     ELSE
       print(self,"typedef double EXTENDED;\n");
@@ -4613,6 +4618,10 @@ VAR x := self.self;
 BEGIN
     x.comment("begin: helper functions");
 
+    IF self.op_counts[Op.set_compare] > 0 THEN
+        print(x, "typedef WORD_T* SET;\n#define SET_GRAIN (sizeof(WORD_T) * 8)\n");
+        setAny := TRUE;
+    END;
     FOR i := FIRST(setData) TO LAST(setData) DO
         IF self.op_counts[setData[i].op] > 0 THEN
             IF NOT setAny THEN
@@ -4805,15 +4814,22 @@ BEGIN
     HelperFunctions_helper_with_type(self, "min", type, self.data.min, text);
 END HelperFunctions_min;
 
+(* ROUND breaks ties by FloatMode.RoundDefault, NearestElseEven on the
+   targets the C backend serves, so halves go to the even neighbour; C's
+   round() would take them away from zero.  f - trunc(f) and f / 2 are
+   exact, so the tie test is too. *)
 PROCEDURE HelperFunctions_cvt_int(self: HelperFunctions_t; <*UNUSED*>rtype: RType; <*UNUSED*>itype: IType; op: ConvertOp) =
 VAR text : ARRAY ConvertOp OF TEXT;
 BEGIN
     IF Text.Equal(Target.System_name, "AMD64_LINUX") THEN
       text[ConvertOp.Round] :=
         "#ifndef m3_round\n#define m3_round m3_round\n" &
-        "INT64 __cdecl llroundq(_Float128);\n" &
+        "_Float128 __cdecl roundq(_Float128);\n" &
+        "_Float128 __cdecl truncq(_Float128);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
-        " return (INT64)llroundq(f); }\n" &
+        " EXTENDED d = f - truncq(f);\n" &
+        " if (d == 0.5 || d == -0.5) return (INT64)(2 * roundq(f / 2));\n" &
+        " return (INT64)roundq(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
         "#ifndef m3_trunc\n#define m3_trunc m3_trunc\n" &
@@ -4837,7 +4853,10 @@ BEGIN
       text[ConvertOp.Round] :=
         "#ifndef m3_round\n#define m3_round m3_round\n" &
         "double __cdecl round(double);\n" &
+        "double __cdecl trunc(double);\n" &
         "static INT64 __stdcall m3_round(EXTENDED f) {\n" &
+        " EXTENDED d = f - trunc(f);\n" &
+        " if (d == 0.5 || d == -0.5) return (INT64)(2 * round(f / 2));\n" &
         " return (INT64)round(f); }\n" &
         "#endif";
       text[ConvertOp.Trunc] :=
@@ -6619,7 +6638,8 @@ BEGIN
         expr := AddressOf(expr);
         IF offset # 0 THEN
             expr := cast(expr, type := CGType.Addr);
-            expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+            (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
         END;
         expr := cast(expr, type := CGType.Addr, type_text := cgtypeToText[in_mtype] & "*");
         expr := Deref(expr);
@@ -6667,7 +6687,8 @@ BEGIN
     expr := AddressOf(Variable(self, var));
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr);
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
     END;
     push(self, CGType.Addr, expr);
 END load_address;
@@ -6688,7 +6709,8 @@ BEGIN
     pop(self);
     IF offset # 0 THEN
         expr := cast(expr, type := CGType.Addr); (* might be redundant *)
-        expr := NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+");
+        (* parenthesised: a caller may cast the sum, and a cast binds tighter than + *)
+        expr := paren(NEW(Expr_t, right := expr, left := IntToExpr(self, offset), c_binop_text := "+"));
     END;
     expr := CastAndDeref(expr, type := CGType.Addr, type_text := cgtypeToText[mtype] & "*"); (* cast might be redundant *)
     IF mtype # ztype THEN
@@ -7138,7 +7160,7 @@ VAR swap := (op IN SET OF CompareOp{CompareOp.GT, CompareOp.GE});
     s0 := cast(get(self, ORD(swap)), CGType.Addr, "SET");
     s1 := cast(get(self, ORD(NOT swap)), CGType.Addr, "SET");
     target_word_bytes := Target.Word.bytes;
-    eq := ARRAY BOOLEAN OF TEXT{"==0", "!=0"}[op = CompareOp.EQ];
+    eq := ARRAY BOOLEAN OF TEXT{"!=0", "==0"}[op = CompareOp.EQ]; (* memcmp *)
 BEGIN
     IF debug THEN
       self.comment("set_compare");
@@ -7154,7 +7176,9 @@ BEGIN
     END;
     IF op IN SET OF CompareOp{CompareOp.LT, CompareOp.LE} THEN
         byte_size := byte_size DIV target_word_bytes;
-        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s1.CText() & ",\n " & s0.CText() & ")"), type));
+        (* m3_set_le (n, b, a) is a <= b, as in m3core's hand.c: the right
+           operand s0 comes first. *)
+        push(self, type, cast(CTextToExpr("m3_set_" & CompareOpName[op] & "(\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ",\n " & s0.CText() & ",\n " & s1.CText() & ")"), type));
     ELSE
         <* ASSERT op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} *>
         push(self, type, cast(CTextToExpr("m3_memcmp(" & s1.CText() & ",\n " & s0.CText() & ",\n " & IntLiteral(self, Target.Word.cg_type, byte_size) & ")" & eq), type));

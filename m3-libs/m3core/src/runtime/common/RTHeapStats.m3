@@ -565,8 +565,8 @@ PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
     proc_start: RTProcedure.Proc;
     file, proc_name: RTProcedureSRC.Name;
   BEGIN
-    have_frames := RTStack.Has_walker;
-    IF RTStack.Has_walker THEN
+    have_frames := RTStack.Has_walker ();
+    IF RTStack.Has_walker () THEN
       IF (ti.id = self_id) THEN
         RTStack.CurrentFrame (cur);
       ELSE

@@ -379,6 +379,55 @@ PROCEDURE Check (p: P) =
           Error.Msg ("illegal recursive supertype (2.4.8).");
           super := NIL;
           p.superType := NIL;
+        ELSE
+          (* Also catch multi-step cycles through opaque revelations
+             (e020: REVEAL V = W OBJECT...; W = V OBJECT... — V's chain is
+             W -> revealed W = V-object -> V -> ... back to p).  Walk the
+             revealed super chain; re-encountering p (or exhausting a sane
+             bound) is the same error.  Without this the C backend fails
+             only by accident (broken generated code) and the MSIR backend
+             compiled the cycle into a crashing executable. *)
+          VAR s := super;  steps := 0;
+          BEGIN
+            LOOP
+              IF s = NIL OR steps >= 1000 THEN
+                IF steps >= 1000 THEN
+                  Error.Msg ("illegal recursive supertype (2.4.8).");
+                  super := NIL;
+                  p.superType := NIL;
+                END;
+                EXIT;
+              END;
+              s := Type.Strip (s);
+              TYPECASE s OF
+              | NULL => EXIT;
+              | P (sp) =>
+                  IF sp = p THEN
+                    Error.Msg ("illegal recursive supertype (2.4.8).");
+                    super := NIL;
+                    p.superType := NIL;
+                    EXIT;
+                  END;
+                  s := sp.superType;
+              ELSE
+                  IF OpaqueType.Is (s) THEN
+                    (* Follow the REVELATION when one is visible — the cycle
+                       runs through it; the declared bound (<: ROOT) would
+                       end the walk without seeing it. *)
+                    VAR r := Revelation.LookUp (s);
+                    BEGIN
+                      IF r # NIL
+                        THEN s := r;
+                        ELSE s := OpaqueType.Super (s);
+                      END;
+                    END;
+                  ELSE
+                    EXIT;
+                  END;
+              END;
+              INC (steps);
+            END;
+          END;
         END;
       ELSE
         (* super type isn't an object! *)
@@ -1103,7 +1152,7 @@ PROCEDURE GetSizes (p: P) =
   END GetSizes;
 
 PROCEDURE GetOffsets (p: P;  use_magic: BOOLEAN) =
-  VAR super: P;  d_size, m_size: INTEGER;
+  VAR super: P;  d_size, m_size, super_id, save: INTEGER;
   BEGIN
     IF (p.fieldOffset >= 0) THEN
       (* already done *)
@@ -1141,24 +1190,51 @@ PROCEDURE GetOffsets (p: P;  use_magic: BOOLEAN) =
           p.fieldOffset  := RecordType.RoundUp (p.fieldOffset, p.fieldAlign);
           p.methodOffset := super.methodOffset + super.methodSize;
         END;
-      ELSIF (use_magic)
-        AND FindMagic (Type.GlobalUID (p.superType), d_size, m_size) THEN
-        p.fieldOffset  := RecordType.RoundUp (d_size, p.fieldAlign);
-        p.methodOffset := m_size;
+      ELSIF (use_magic) THEN
+        super_id := Type.GlobalUID (p.superType);
+        IF HasMagicCycle (super_id) THEN
+          save := Scanner.offset;
+          Scanner.offset := p.origin;
+          Error.Msg ("illegal recursive supertype (2.4.8).");
+          Scanner.offset := save;
+        ELSIF FindMagic (super_id, d_size, m_size) THEN
+          p.fieldOffset  := RecordType.RoundUp (d_size, p.fieldAlign);
+          p.methodOffset := m_size;
+        END;
       END;
     END;
   END GetOffsets;
 
-PROCEDURE FindMagic (t_id: INTEGER;  VAR d_size, m_size: INTEGER): BOOLEAN =
-  VAR super, my_d_size, my_d_align, my_m_size, s_d_size, s_m_size: INTEGER;
+PROCEDURE IsMagicRoot (t_id: INTEGER): BOOLEAN =
   BEGIN
     IF (NIL_ID = 0) THEN
       NIL_ID   := Type.GlobalUID (NIL);
       ROOT_ID  := Type.GlobalUID (ObjectRef.T);
       UROOT_ID := Type.GlobalUID (ObjectAdr.T);
     END;
+    RETURN (t_id = NIL_ID) OR (t_id = ROOT_ID) OR (t_id = UROOT_ID);
+  END IsMagicRoot;
 
-    IF (t_id = NIL_ID) OR (t_id = ROOT_ID) OR (t_id = UROOT_ID) THEN
+PROCEDURE HasMagicCycle (t_id: INTEGER): BOOLEAN =
+  (* Brent's cycle detection on the supertype chain, which can loop when
+     revelations in separate units make opaque types each other's supertype. *)
+  VAR mark := t_id;  steps := 0;  limit := 1;  d_size, d_align, m_size: INTEGER;
+  BEGIN
+    LOOP
+      IF IsMagicRoot (t_id)
+        OR NOT Host.env.find_opaque_magic (t_id, t_id, d_size, d_align, m_size)
+        THEN RETURN FALSE;
+      END;
+      IF (t_id = mark) THEN RETURN TRUE END;
+      INC (steps);
+      IF (steps = limit) THEN mark := t_id;  limit := limit * 2;  steps := 0 END;
+    END;
+  END HasMagicCycle;
+
+PROCEDURE FindMagic (t_id: INTEGER;  VAR d_size, m_size: INTEGER): BOOLEAN =
+  VAR super, my_d_size, my_d_align, my_m_size, s_d_size, s_m_size: INTEGER;
+  BEGIN
+    IF IsMagicRoot (t_id) THEN
       d_size := Target.Address.size;
       m_size := 0;
       RETURN TRUE;

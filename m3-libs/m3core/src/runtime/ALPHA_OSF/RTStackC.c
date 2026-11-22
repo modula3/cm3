@@ -5,6 +5,8 @@
 /*      modified on Tue May 18 13:21:11 PDT 1993 by muller     */
 /*      modified on Tue Jan 19 15:20:48 PST 1993 by burrows    */
 
+#error This file is no longer used. Things do work, but not like this.
+
 /* This file implements the stack walking functions of
    the RTStack interface. */
 

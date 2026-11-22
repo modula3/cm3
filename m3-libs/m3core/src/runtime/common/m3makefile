@@ -63,6 +63,7 @@ Interface ("RTHeapEvent")
 Interface ("RTProcedureSRC")
 Interface ("RTSignal")
 Interface ("RTStack")
+c_source  ("RTStackCommon")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 
@@ -78,7 +79,7 @@ if     not FileExists(path() & "/../" & TARGET & "/RTMachine.i3")
   interface      ("RTMachine")   
 end
 */
-if not defined("M3_USE_STACK_WALKER")
-  interface      ("RTMachine")   
-end  
-
+% A target with a stack walker provides its own RTMachine (runtime/m3makefile).
+if not M3CORE_TARGET_WALKER
+  interface      ("RTMachine")
+end

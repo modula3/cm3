@@ -2,11 +2,18 @@
 name: integration
 # Build and test starting from latest bootstrap release.
 
+# Pushes run only on master: a branch with an open PR is tested by its
+# pull_request run, and a push run of the same code doubled the load.
 on:
   pull_request: {branches: master}
-  push:
+  push: {branches: master}
 
-concurrency: ci
+# One queue per branch or PR (it was one for the whole repository, so any
+# push cancelled every pending run elsewhere).  A newer push supersedes a
+# run on the same branch, except on master, where every commit is checked.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   AMD64_DARWIN:

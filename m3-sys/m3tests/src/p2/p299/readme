@@ -1,0 +1,4 @@
+Language-defined initial values and field defaults in packed (sub-byte)
+fields, subranges that exclude zero, arrays of such records (inline and
+looped), open arrays from NEW, and OBJECT fields with no default whose
+type still needs initializing.

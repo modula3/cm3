@@ -2,6 +2,8 @@
 
 import os, sys
 
+# Use a C++ compiler, for portable efficient exception handling.
+
 PossibleExecutables = [
     "/usr/bin/CC",
     "/opt/developerstudio12.6/bin/CC",
