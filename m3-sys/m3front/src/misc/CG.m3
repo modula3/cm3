@@ -3168,7 +3168,6 @@ PROCEDURE Copy_n (s: Size;  overlap: BOOLEAN) =
 (* Mem[s2.A:s0.I*s] := Mem[s1.A:s0.I*s]; pop(3)
    -- s2.A & s1.A must have byte value-alignment and must have been
    ForceStacked by caller.  Copied data need not end on a byte boundary. *) 
-  CONST GMaskToShift = TInt.Int {16_00, 16_FF, ..}; 
   
   VAR t: MType;  z: Size;
   VAR a: INTEGER;
@@ -3252,7 +3251,16 @@ PROCEDURE Copy_n (s: Size;  overlap: BOOLEAN) =
                                              (* fB         ; fB *) 
 
       (* Compute bit mask for extracting elements. *)
-      cg.load_integer (Target.Word.cg_type, GMaskToShift);
+      (* 16_FF..FF00 at the target's word size.  A Target.Int written as
+         bytes {16_00, 16_FF, ..} filled every byte, the one above the word
+         too, so it was the signed -256, which the C backend rejects as a
+         Word literal. *)
+      VAR ff, maskToShift: Target.Int;
+      BEGIN
+        EVAL TInt.FromInt (16_FF, ff);
+        TWord.Subtract (Target.Word.max, ff, maskToShift);
+        cg.load_integer (Target.Word.cg_type, maskToShift);
+      END;
                                              (* fB         ; ms, fB *) 
       Push (ec); ForceStacked ();            (* ec, fB     ; ec, ms, fB *) 
       cg_load_word (ecmask);                 (* ec, fB     ; ecm, ec, ms, fB *)
