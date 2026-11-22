@@ -7,16 +7,16 @@
 
 % This package contains Modula-3 bindings to the llvm infrastructure,
 % You should have installed the llvm libraries in the appropriate place
-% for this version of the bindings ie llvm version 22 
+% for this version of the bindings ie llvm version 22
 
 import ("m3core")
 
-Interface ("LLVMTypes") 
-Interface ("DwarfConst") 
-Module    ("LLVMRaw") 
-Module    ("LLVM") 
-Module    ("M3DebugInfoRaw") 
-Module    ("M3DebugInfo") 
+Interface ("LLVMTypes")
+Interface ("DwarfConst")
+Module    ("LLVMRaw")
+Module    ("LLVM")
+Module    ("M3DebugInfoRaw")
+Module    ("M3DebugInfo")
 
 % The version of this binding. Should agree with users installed version.
 VER = "22"
@@ -35,18 +35,30 @@ if equal (OS_TYPE, "POSIX")
     LIB_DIR1 = "/usr/lib/gcc/x86_64-linux-gnu/14"
     LIB_DIR2 = "/usr/lib/x86_64-linux-gnu"
   else
-  % Lib location for dynamic posix libraries. Again this is for linux so
-  % other architectures will need to check their paths.
-    LIB_DIR1 = "/lib"
-    LIB_DIR2 = "/lib"
+    if equal (TARGET_OS, "LINUX")
+      % Lib location for dynamic posix libraries. Again this is for linux so
+      % other architectures will need to check their paths.
+      LIB_DIR1     = "/lib"
+      LIB_DIR2     = "/lib"
+      LIB_STDC_DIR = "/lib"
+      LIB_Z_DIR    = "/lib"
+      LIB_ZSTD_DIR = "/lib"
+    end
+    if equal (TARGET_OS, "DARWIN")
+      LIB_DIR1     = "/usr/local/lib"
+      LIB_DIR2     = "/usr/local/lib"
+      LIB_STDC_DIR = "/usr/local/lib"
+      LIB_Z_DIR    = "/usr/lib"
+      LIB_ZSTD_DIR = "/usr/local/lib"
+   end
   end
 
   % llvm needs the stdc++ lib and the compression libs z and zstd.
-  import_lib("stdc++",LIB_DIR1)
+  import_lib("stdc++",LIB_STDC_DIR)
   % apt-get install libz-dev
-  import_lib("z",LIB_DIR2)
+  import_lib("z",LIB_Z_DIR)
   % apt-get install libzstd-dev
-  import_lib("zstd",LIB_DIR2)
+  import_lib("zstd",LIB_ZSTD_DIR)
 
 %  these should not be needed
 %  import_lib("dl",LIB_DIR1)
@@ -63,16 +75,16 @@ else
   import_lib("ole32"        ,LIB_DIR)
   import_lib("msvcprt"      ,LIB_DIR)
   import_lib("oldnames"     ,LIB_DIR)
- 
+
 % may need these in future
 %  import_lib("psapi"        ,LIB_DIR)
 %  import_lib("oleaut32"     ,LIB_DIR)
-%  import_lib("uuid"         ,LIB_DIR)  
+%  import_lib("uuid"         ,LIB_DIR)
 %  import_lib("libvcruntime" ,LIB_DIR)
-%  import_lib("libcmt"       ,LIB_DIR)  
+%  import_lib("libcmt"       ,LIB_DIR)
 end
 
-/* 
+/*
   Import the LLVM libraries using llvm-config.
   LLVM library order is important and hard to get correct with
   such a large number of libs and new libraries added with
@@ -131,4 +143,3 @@ llvmver()
 llvmlibs()
 
 Library ("llvm22bindings")
-
