@@ -1599,6 +1599,59 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `import_global`.  m3core: all 291 units lower, none falling back; the
     lowered m3core links and runs the test programs unchanged.
 
+**Progress (2026-11-22, later): D25 step 4 on the whole compiler; five MSIR bugs.**
+- MSIR -> M3CG ladder (ARM64_DARWIN, `ex_stack`), from a C-built cm3 at
+  msir HEAD.  Stage 1 builds the 13 base packages (m3core, libm3, set,
+  sysutils, tcp and the compiler) with `@M3m3front-msir @M3msircg`:
+  1376 units lowered, 1 falling back (libm3's PickleStubs: a float/integer
+  bitcast of different widths).  The resulting cm3, whose own code is all
+  lowered, does the same (stage 2), and so does its output (stage 3).
+  **Fixpoint: the generated C is identical across the three stages, 1414
+  files.**  m3tests under the stage-2 cm3 (C backend): 299 tests, 12
+  errors, exactly the tests master's own C build fails on ARM64_DARWIN
+  (p047 p109 p126 p137 p201 p227 p268 p269 p270 p277 p280).  The smoke
+  test passes built lowered; built with CG against the lowered libm3 it
+  fails (IO.Error raised by lowered code is not caught by the CG unit), a
+  lowered/CG boundary like the closure one below, which per Tony
+  (2026-11-21) is not to be bridged.
+- Bugs found on the way (each its own commit):
+  - *Packed reads wider than four bytes* (`MSIRBuilder.ExtractBitField`):
+    a field with bitInByte + bitWidth > 32 was read through an i32, losing
+    its high bits (RTHeapRep.Desc.link: 2^31 read back as 0).  Both
+    lowerings.
+  - *Imported procedures' READONLY scalars* (`LookupOrCreateProc`, closure
+    shims) were declared by value, though definitions and calls pass a
+    pointer.  MSIR -> LLVM did not notice; MSIR -> M3CG's C prototype
+    did (M3File's call of FS.SetModificationTime).
+  - *Floating-point `#`* was `ONe`, FALSE for a NaN; it is `UNe`, as
+    `NOT (a = b)` and the C backend have it.  Both lowerings.
+  - *Enumerations stored at 8 bytes* (`Type.ScalarStorageMSIR` did not
+    list the Enum kind): a default like FIRST(M3CG.ZType) = 4 was stored
+    as an i64 into a 1-byte field.  M3CG_MultiPass.load_t's initializer
+    thus wrote 7 bytes past the object; at a page boundary that cleared
+    the next free page's descriptor.  This is why an MSIR -> LLVM-built
+    cm3 corrupted its heap as soon as it ran the M3CG code (the lowering,
+    or the C backend with `@M3nogc`), which the LLVM ladder never does:
+    its m3tests run in MSIRObj mode.  Both lowerings.
+  - *Fallbacks removed* (`MSIRToM3CG`): Formal's constant-dope globals
+    get data-segment space; REAL <-> 32-bit bitcasts go through Int32.
+    Fallback was not only a coverage gap: a lowered unit calls a closure
+    with its environment first (MSIR's shims), a CG nested procedure takes
+    its static link last, so Utils.WriteFile (lowered) calling
+    M3Build.InstallFile.Emit (CG) crashed the stage-2 cm3.
+- LLVM ladder with these fixes (`074567661a`): m3tests 298/299 under the
+  MSIR-built cm3, smoke, IR fixpoint 1419 files; that cm3 now lowers all
+  291 m3core units through MSIR -> M3CG, with and without `@M3nogc`.  The
+  one error, p006, is a runtime deadlock, not a code-generation fault:
+  the first collection builds RTHeapMap's global map (`NEW` of an
+  untraced array, so `calloc`) while the other threads are stopped, and
+  the main thread was stopped inside `calloc` (Thread.Join -> InitMutex)
+  holding malloc's lock.  Shared by every backend: in 200 runs each, the
+  MSIR-built p006 hung 0 times and master's C-backend p006 twice.
+  Belongs with #1287.
+- Next (D25 step 4, remaining): the same ladder on an `ex_frame` target
+  (magpie); PickleStubs' bitcast; then step 5 (decoupling, O17).
+
 **Progress (2026-11-22): MSIR to M3CG, ex_frame EH and memcpy/memset.**
 - On a target without ex_stack, MSIRToM3CG lowers D26 scopes to CG's
   ex_frame scheme (TryStmt.Compile2, TryFinStmt.Compile3).  Each protected
