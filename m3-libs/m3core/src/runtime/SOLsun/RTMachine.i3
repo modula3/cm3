@@ -5,6 +5,8 @@
 (* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking *)
 (*      modified on Tue May  2 11:43:35 PDT 1995 by kalsow  *)
 
+This file is no longer used. Things do work, but not like this.
+
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
 
