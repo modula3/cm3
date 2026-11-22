@@ -983,15 +983,21 @@ one hidden dependency inside (B):
    Every one is a variable of an interface that the compiling module
    exports (`TargetMap.CG_Size` in TargetMap.m3, `RTHeapRep.align` in
    RTCollector.m3, `Date.UTC` in DatePosix.m3), never a true import: the
-   same variables as D28.  `LoadLValue` dominating fits the exporter's
-   initialization of its interface's variables (`External.InitGlobals` ->
-   `Variable.InitGlobal`), which reaches them without a name lookup.  So
+   same variables as D28.  Not from `External.InitGlobals`: interface
+   initializers must be constant, so CG puts an interface variable's
+   initial value in the interface unit's data and the exporter's init
+   procedure emits nothing for it (checked: a `[5..10]` variable exported
+   by two modules).  The likely source is ordinary uses in the exporter's
+   code (`CG_Size[t] := ...` in TargetMap.m3): an unqualified name
+   resolves through the import scope to the `External` wrapper, so the
+   lookup marks the wrapper, and only the CG load marks the variable.  So
    an MSIR-only walk would drop the exporter's version stamps for its own
    interface variables, weakening the linker's check that exporter and
-   importers agree on them.  Fix: the MSIR path that initializes and
-   routes exported interface variables (D28, `DeclareGlobalsMSIR` and
-   `InitValuesMSIR`) marks them used, as the CG path does; then rerun this
-   experiment with the CG walk off (step 2) to confirm.
+   importers agree on them.  Fix, as part of B: the MSIR load paths mark
+   the variable used, as the CG ones do; it has no effect until version
+   stamps come from a link-notes pass rather than from `Value.Declare`,
+   which records them only when the CG declaration (`t.declare ()`)
+   succeeds.
 3. Only then estimate A to C.  If both checks are clean, A and C are
    mainly driver work in `Module.Compile`/`Procedure.GenBody`, and B is
    the `Value.Declare` split plus moving the other `note_*` calls out of
