@@ -747,15 +747,25 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
             d := MSIR.InsnTargetType (i);
         BEGIN
           IF d = NIL THEN d := MSIR.ValueType (res) END;
-          (* A float <-> integer convert is a bitcast, the integer resized
-             (truncated or zero-extended) to the float's width, as in
-             MSIRToLLVM.  M3CG's loophole reinterprets only between a float
-             and an integer of its size (Reel/Int32, LReel/Int64), so the
-             float must be 32 or 64 bits. *)
-          IF IsFloat (s) # IsFloat (d) AND (IsPtr (s) OR IsPtr (d)
-             OR (IsFloat (s) AND NOT FloatBits (s) IN SET OF [0..64] {32, 64})
-             OR (IsFloat (d) AND NOT FloatBits (d) IN SET OF [0..64] {32, 64})) THEN
-            Fail (w, "convert between float and integer: float of 128 bits");
+          (* A float <-> integer or float <-> pointer convert is a bitcast,
+             the integer or address resized (truncated or zero-extended) to
+             the float's width, as in MSIRToLLVM.  M3CG's loophole
+             reinterprets only between a float and an integer of its size
+             (Reel/Int32, LReel/Int64), so the float must be 32 or 64 bits:
+             not EXTENDED where it is 128 (AMD64_LINUX). *)
+          IF IsFloat (s) # IsFloat (d) THEN
+            VAR f := s;
+            BEGIN
+              IF IsFloat (d) THEN f := d END;
+              IF NOT FloatBits (f) IN SET OF [0..128] {32, 64} THEN
+                IF IsPtr (s) OR IsPtr (d)
+                  THEN Fail (w, "convert between float and pointer: float of "
+                                  & Fmt.Int (FloatBits (f)) & " bits");
+                  ELSE Fail (w, "convert between float and integer: float of "
+                                  & Fmt.Int (FloatBits (f)) & " bits");
+                END;
+              END;
+            END;
           END;
         END;
     ELSE
@@ -781,8 +791,13 @@ PROCEDURE CheckScopes (w: Why;  m: MSIR.Module;  p: MSIR.Proc) =
           h := MSIR.ScopeHandler (s, j);
           IF MSIR.BlockParamCount (h.entry) = 1
              AND NOT MSIR.ExcDescArgByRef (h.exc)
-             AND IsFloat (MSIR.ValueType (MSIR.BlockParamValue (h.entry, 0))) THEN
-            Fail (w, "exception argument: float by value");
+             AND IsFloat (MSIR.ValueType (MSIR.BlockParamValue (h.entry, 0)))
+             AND NOT FloatBits (MSIR.ValueType (MSIR.BlockParamValue (h.entry, 0)))
+                       IN SET OF [0..128] {32, 64} THEN
+            Fail (w, "exception argument: float of "
+                       & Fmt.Int (FloatBits (MSIR.ValueType (
+                                    MSIR.BlockParamValue (h.entry, 0))))
+                       & " bits by value");
           END;
         END;
       END;
@@ -2075,6 +2090,34 @@ PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
     END;
   END StoreConstAt;
 
+(* Reinterpret the address on the stack as the float t (32 or 64 bits): its
+   low bits, as MSIRToLLVM's ptrtoint to i<bits> then bitcast. *)
+PROCEDURE AddrToFloat (t: MSIR.T) =
+  BEGIN
+    cg.loophole (Addr, Int64);
+    IF FloatBits (t) = 32 THEN
+      cg.loophole (Int64, M3CG.Type.Int32);
+      cg.loophole (M3CG.Type.Int32, RType (t));
+    ELSE
+      cg.loophole (Int64, RType (t));
+    END;
+  END AddrToFloat;
+
+(* Reinterpret the float t on the stack as an address: its bits,
+   zero-extended to a word, as MSIRToLLVM's bitcast to i<bits> then
+   inttoptr. *)
+PROCEDURE FloatToAddr (t: MSIR.T) =
+  BEGIN
+    IF FloatBits (t) = 32 THEN
+      cg.loophole (RType (t), M3CG.Type.Int32);
+      cg.loophole (M3CG.Type.Int32, Int64);
+      cg.extract_mn (Int64, FALSE, 0, 32);
+    ELSE
+      cg.loophole (RType (t), Int64);
+    END;
+    cg.loophole (Int64, Addr);
+  END FloatToAddr;
+
 PROCEDURE PushInt (v: INTEGER;  t: M3CG.IType := Int64) =
   VAR i: Target.Int;
   BEGIN
@@ -2743,6 +2786,8 @@ PROCEDURE ToHandler (e: EHScope;  READONLY h: MSIR.Handler) =
         PushArgWord (e);
         IF MSIR.ExcDescArgByRef (h.exc) THEN
           cg.load_indirect (0, MType (t), ZType (t));
+        ELSIF IsFloat (t) THEN
+          AddrToFloat (t);
         ELSIF NOT IsPtr (t) THEN
           cg.loophole (Addr, ZType (t));
         END;
@@ -3539,6 +3584,10 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           Push (src);
           IF IsPtr (st) AND IsPtr (dt) THEN
             (* nothing *)
+          ELSIF IsPtr (st) AND IsFloat (dt) THEN
+            AddrToFloat (dt);
+          ELSIF IsFloat (st) AND IsPtr (dt) THEN
+            FloatToAddr (st);
           ELSIF IsPtr (st) THEN
             cg.loophole (Addr, Int64);  Canon (dt);
           ELSIF IsPtr (dt) THEN
