@@ -1146,15 +1146,11 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
             params[1 + i].mode := MSIR.ParamMode.Var;
             params[1 + i].type := MSIR.TPtr(pt);
         | Formal.Mode.mREADONLY =>
+            (* Every READONLY formal is a pointer, as in BeginProc and at
+               the call (Formal.EmitArgMSIR); a scalar by value here made an
+               imported procedure's signature disagree with its definition. *)
             params[1 + i].mode := MSIR.ParamMode.Readonly;
-            CASE MSIR.Kind(pt) OF
-            | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
-              MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
-              MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
-                params[1 + i].type := MSIR.TPtr(pt);
-            ELSE
-                params[1 + i].type := pt;
-            END;
+            params[1 + i].type := MSIR.TPtr(pt);
         END;
         f := f.next;
       END;
@@ -1880,15 +1876,11 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
           | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
                                      params[i].type := MSIR.TPtr(pt);
           | Formal.Mode.mREADONLY =>
+              (* Every READONLY formal is a pointer, as in BeginProc and at
+                 the call (Formal.EmitArgMSIR); a scalar by value here made an
+                 imported procedure's signature disagree with its definition. *)
               params[i].mode := MSIR.ParamMode.Readonly;
-              CASE MSIR.Kind(pt) OF
-              | MSIR.TypeKind.Struct,    MSIR.TypeKind.FixedArray,
-                MSIR.TypeKind.OpenArray, MSIR.TypeKind.HeapArray,
-                MSIR.TypeKind.Object,    MSIR.TypeKind.Set =>
-                  params[i].type := MSIR.TPtr(pt);
-              ELSE
-                  params[i].type := pt;
-              END;
+              params[i].type := MSIR.TPtr(pt);
           END;
         END;
         f := f.next;
