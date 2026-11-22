@@ -141,7 +141,10 @@ SYSTEM_LIBS = {
 % "LIBC"       : [ "-lSystem" ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
-  "TCP"        : [ ]
+  "TCP"        : [ ],
+  % libunwind is always available in libSystem.B.dylib on macOS, no extra link flags needed.
+  % Tested only on AMD64 and ARM64 (not I386, PPC, PPC64, ARM).
+  "UNWIND"     : [ ],
 % below: X11, ODBC, POSTGRES95, MOTIF. OPENGL
 }
 

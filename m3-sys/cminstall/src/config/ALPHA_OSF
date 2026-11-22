@@ -33,7 +33,8 @@ SYSTEM_LIBS = {
   %"DECPEX"     : [ "-ldecpex" ],
   "MOTIF"       : [ "-lXm" ],
   "X11"         : [  "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
-  "TCP"         : [ ]
+  "TCP"         : [ ],
+  "UNWIND"      : [ ],
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
