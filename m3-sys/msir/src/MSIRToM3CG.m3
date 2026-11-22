@@ -330,6 +330,16 @@ PROCEDURE IntBits (t: MSIR.T): INTEGER =
     END;
   END IntBits;
 
+(* The width of a float type, in bits. *)
+PROCEDURE FloatBits (t: MSIR.T): INTEGER =
+  BEGIN
+    CASE MSIR.Kind (Base (t)) OF
+    | TypeKind.F32 => RETURN 32;
+    | TypeKind.F64 => RETURN 64;
+    ELSE RETURN Target.Extended.size;
+    END;
+  END FloatBits;
+
 PROCEDURE RType (t: MSIR.T): M3CG.RType =
   BEGIN
     CASE MSIR.Kind (Base (t)) OF
@@ -737,11 +747,13 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
             d := MSIR.InsnTargetType (i);
         BEGIN
           IF d = NIL THEN d := MSIR.ValueType (res) END;
+          (* A float <-> integer convert is a bitcast; M3CG's loophole
+             reinterprets only between a float and an integer of its size
+             (Reel/Int32, LReel/Int64), so the widths must match. *)
           IF IsFloat (s) # IsFloat (d) AND (IsPtr (s) OR IsPtr (d)
-             OR IntBits (s) # 64 OR IntBits (d) # 64
-             OR MSIR.Kind (Base (s)) = TypeKind.F32
-             OR MSIR.Kind (Base (d)) = TypeKind.F32) THEN
-            Fail (w, "convert between float and non-64-bit");
+             OR (IsFloat (s) AND FloatBits (s) # IntBits (d))
+             OR (IsFloat (d) AND FloatBits (d) # IntBits (s))) THEN
+            Fail (w, "convert between float and integer of another size");
           END;
         END;
     ELSE
@@ -826,7 +838,8 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       VAR g := MSIR.ModuleGlobal (m, i);
       BEGIN
         IF NOT MSIR.GlobalIsExternal (g) THEN
-          IF MSIR.GlobalByteOffset (g) < 0 AND NOT IsBacking (g) THEN
+          IF MSIR.GlobalByteOffset (g) < 0 AND NOT IsBacking (g)
+             AND NOT IsStandalone (g) THEN
             Fail (w, "standalone global " & MSIR.GlobalName (g));
           END;
         ELSE
@@ -932,6 +945,7 @@ TYPE
                  OVERRIDES emit := EmitProcInfo END;
   ModuleInfoItem = Item OBJECT OVERRIDES emit := EmitModuleInfo END;
   GlobalsItem = Item OBJECT OVERRIDES emit := EmitGlobalInits END;
+  SpaceItem = Item OBJECT OVERRIDES emit := EmitNothing END;
   ImportsItem = Item OBJECT OVERRIDES emit := EmitImports END;
   TypecellItem = Item OBJECT
     d: MSIR.TypeDesc;
@@ -1115,6 +1129,12 @@ PROCEDURE Setup (m: MSIR.Module) =
                                  items := NEW (RefSeq.T).init ()));
           backing.addhi (bs);
           NewSym (bs.name, bs.seg, 0);
+        ELSIF IsStandalone (g) THEN
+          VAR sz := Size (MSIR.GlobalType (g), a);
+          BEGIN
+            NewSym (MSIR.GlobalName (g), dseg,
+                    Alloc (dseg, sz, MAX (a, 1), NEW (SpaceItem)));
+          END;
         END;
       END;
     END;
@@ -1191,6 +1211,17 @@ PROCEDURE Setup (m: MSIR.Module) =
   END Setup;
 
 CONST TK_Obj = 2;  TK_Array = 3;
+
+(* A private, untraced global with no place in the module's global struct
+   and no backing storage of its own (Formal's constdope_N): it gets space
+   in the data segment. *)
+PROCEDURE IsStandalone (g: MSIR.Global): BOOLEAN =
+  VAR a: INTEGER;
+  BEGIN
+    RETURN NOT MSIR.GlobalIsExternal (g) AND MSIR.GlobalByteOffset (g) < 0
+       AND NOT IsBacking (g) AND NOT MSIR.GlobalIsTraced (g)
+       AND Size (MSIR.GlobalType (g), a) > 0;
+  END IsStandalone;
 
 PROCEDURE IsBacking (g: MSIR.Global): BOOLEAN =
   BEGIN
@@ -1324,6 +1355,12 @@ PROCEDURE EmitModuleInfo (it: ModuleInfoItem) =
 TYPE GInit = RECORD off: INTEGER;  v: MSIR.Value END;
 
 (* Initial values of user globals, in offset order. *)
+(* Zero-filled space: a standalone private global the code initializes
+   itself (e.g. Formal's constdope_N, a constant open array's dope). *)
+PROCEDURE EmitNothing (<*UNUSED*> it: SpaceItem) =
+  BEGIN
+  END EmitNothing;
+
 PROCEDURE EmitGlobalInits (<*UNUSED*> it: GlobalsItem) =
   VAR nInits := MSIR.ModuleGlobalInitCount (mod);
       inits := NEW (REF ARRAY OF GInit, nInits);  tmp: GInit;
@@ -3468,9 +3505,22 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           ELSIF IsFloat (st) AND IsFloat (dt) THEN
             IF RType (st) # RType (dt) THEN cg.cvt_float (RType (st), RType (dt)) END;
           ELSIF IsFloat (st) THEN
-            cg.loophole (RType (st), Int64);
+            (* bitcast: reinterpret as the integer of the float's size, then
+               widen to the stack's Int64 *)
+            IF FloatBits (st) = 32 THEN
+              cg.loophole (RType (st), M3CG.Type.Int32);
+              cg.loophole (M3CG.Type.Int32, Int64);
+            ELSE
+              cg.loophole (RType (st), Int64);
+            END;
+            Canon (dt);
           ELSIF IsFloat (dt) THEN
-            cg.loophole (Int64, RType (dt));
+            IF FloatBits (dt) = 32 THEN
+              cg.loophole (Int64, M3CG.Type.Int32);
+              cg.loophole (M3CG.Type.Int32, RType (dt));
+            ELSE
+              cg.loophole (Int64, RType (dt));
+            END;
           ELSIF IntBits (dt) < IntBits (st) THEN
             Canon (dt);
           END;
