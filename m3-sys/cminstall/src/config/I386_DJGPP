@@ -12,7 +12,8 @@ readonly NOPTHREAD = 1 % user threads
 % No networking, no gui.
 SYSTEM_LIBS =
 {
-  "LIBC" : [ ],
+  "LIBC"   : [ ],
+  "UNWIND" : [ ], % No libunwind, at least not needed, but to build m3core.
 }
 
 SYSTEM_LIBORDER = [ "LIBC" ]

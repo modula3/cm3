@@ -7,6 +7,7 @@
 UNSAFE MODULE OSUtilsPosix EXPORTS OSUtils;
 
 IMPORT File, FilePosix, FileRd, FS, M3toC, OSError, OSErrorPosix, Unix;
+IMPORT Ustat;
 
 (* *)
 (* DupRd *)
@@ -32,10 +33,11 @@ PROCEDURE MyFileRdInit(rd: FileRd.T;
 VAR pFifo: TEXT := NIL;
 
 PROCEDURE CreateFifo(p: TEXT) RAISES {OSError.E} =
-  CONST Mode = Unix.fifo_special + Unix.MROWNER + Unix.MWOWNER;
+  VAR Mode := Ustat.S_IFIFO;
+             (* Fixme. Shouldnt these be ored + Unix.MROWNER + Unix.MWOWNER;*)
   BEGIN
     <* ASSERT pFifo=NIL *>
-    IF Unix.mknod(M3toC.TtoS(p), Mode, 0) < 0 THEN
+    IF Unix.mknod(M3toC.SharedTtoS(p), Mode, 0L) < 0 THEN
       OSErrorPosix.Raise();
     END;
     pFifo := p;

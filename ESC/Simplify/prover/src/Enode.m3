@@ -40,7 +40,7 @@ CONST
   IsPredTermProp = SET OF Prop{Prop.HasPredTerm, Prop.HasSelPredMapTerm};
 
 TYPE
-  Card32 = BITS 32 FOR [0..LastCard];
+  Card32 = (*BITS 32 FOR*) [0..LastCard];
   Prop = { Active, HasOrdTerm,
            IsPredSym, HasPredTerm, HasPredMapTerm, HasSelPredMapTerm,
            DiffFromTrue,

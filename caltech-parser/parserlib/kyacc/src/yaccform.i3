@@ -17,6 +17,7 @@ TYPE
   Public = OBJECT
   METHODS
     setLex(lex: %tok.Lexer): T;
+    getLex(): %tok.Lexer;
     parse(exhaustInput: BOOLEAN := TRUE): StartType;
 
     (* rules *)
@@ -36,4 +37,9 @@ TYPE
   (* ... and without importing the original token *)
 %tokOrig\
 
+(* generics stuff *)
+CONST
+  Brand = "%yacc";
+PROCEDURE Hash(a: T): INTEGER;
+PROCEDURE Equal(a,b:T): BOOLEAN;
 END %yacc.

@@ -12,6 +12,7 @@
 MODULE MenuBtnVBT;
 
 IMPORT VBT, Filter, ButtonVBT, BtnVBTClass, TextVBT;
+IMPORT EventTypes, Evt;
 
 FROM VBT IMPORT ClickType;
 
@@ -46,7 +47,8 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
       THEN
         IF NOT v.ready THEN v.pre() END;
         v.action(v, cd);
-        v.post()
+        v.post();
+        EVAL Evt.Send( NEW(EventTypes.MenuEvent, sender := 1) );
       ELSIF v.ready THEN
         v.cancel()
       END;

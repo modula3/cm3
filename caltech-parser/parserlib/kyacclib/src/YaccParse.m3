@@ -1,6 +1,6 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: YaccParse.m3,v 1.2 2001-09-19 15:31:35 wagner Exp $ *)
+(* $Id: YaccParse.m3,v 1.2 2001/07/29 21:58:03 kp Exp $ *)
 
 MODULE YaccParse;
 IMPORT Pragma, PragmaRead;
@@ -24,7 +24,10 @@ IMPORT TokSpec;
 IMPORT Rd, Thread, Process;
 IMPORT Wr, Fmt;
 FROM Stdio IMPORT stderr;
+IMPORT Debug;
 <*FATAL Rd.EndOfFile, Rd.Failure, Wr.Failure, Thread.Alerted *>
+
+VAR doDebug := Debug.DebugThis("YACCPARSE");
 
 REVEAL
   T = Public BRANDED OBJECT
@@ -109,6 +112,7 @@ PROCEDURE ParseRule(p: SelfPragma; rd: Rd.T) =
     peekLine := Rd.GetLine(rd);
     i := Text.FindChar(peekLine, ':');
   BEGIN
+    IF doDebug THEN Debug.Out("YaccParse.ParseRule: peekLine = " & peekLine) END;
     IF i = -1 OR NOT Text.GetChar(peekLine, i-1) IN CharRange.AlphaNum THEN
       IF p.returnSym = NIL THEN
         FileRdErr.E(rd, "Missing return symbol");
@@ -137,6 +141,7 @@ PROCEDURE ParseText(self: T) =
       prag.add(parsePrec, pragName);
     END PrecType;
   BEGIN
+    IF doDebug THEN Debug.Out("YaccParse.ParseText") END;
     prag.add(parseStart, "%start");
     prag.add(parseRule, "%rule");
     prag.add(parseRule, "");

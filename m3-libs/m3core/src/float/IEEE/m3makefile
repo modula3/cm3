@@ -7,8 +7,13 @@
 
 Interface ("Real")
 Interface ("LongReal")
-Interface ("Extended")
 
 implementation ("RealFloat")
 implementation ("LongFloat")
-implementation ("ExtendedFloat")
+
+%Extended interface and ExtendedFloat implementation 
+if equal (TARGET, "AMD64_LINUX")
+  include_dir ("ext128")
+else
+  include_dir ("ext64")
+end

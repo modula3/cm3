@@ -21,7 +21,7 @@ INTERFACE Target;
     boundary (i.e. (size + align - 1) DIV align * align).
 *)
 
-IMPORT TInt, TWord;
+IMPORT TInt, TWord, Ext;
 
 CONST MaxAlign = 64;
   (* We 64-bit align certain 64-bit operands (e.g. LONGINT, LONGREAL, EXTENDED),
@@ -273,12 +273,16 @@ VAR (*CONST*)
   (* The following differ only in alignment. *) 
   Longint   := Int64;
   Long      := Word64;
-  Longreal  := Float_type{CGType.LReel, Precision.Long, 64, 64, 8, Float{Precision.Long, 0, -1.79769313486231570x+308}, Float{Precision.Long, 0, 1.79769313486231570x+308}};
-VAR
-  Extended  := Float_type{CGType.XReel, Precision.Extended, 64, 64, 8, Float{Precision.Extended, 0, -1.79769313486231570x+308}, Float{Precision.Extended, 0, 1.79769313486231570x+308}};
+  Longreal  := Float_type{CGType.LReel, Precision.Long, 64, 64, 8,
+                 Float{Precision.Long, 0, -1.79769313486231570x+308},
+                 Float{Precision.Long, 0, 1.79769313486231570x+308}};
+  Extended  := Float_type{CGType.XReel, Precision.Extended,
+                          Ext.BitSize, Ext.BitAlign, Ext.ByteSize,
+                 Float{Precision.Extended, 0, Ext.Min},
+                 Float{Precision.Extended, 0, Ext.Max}};
 
 CONST
-  (*                   cg_type, size, align, pack, bytes, min, max *)
+  (*                   cg_type,   size, align, pack, bytes, min, max *)
   Addr32    = Int_type{CGType.Addr,   32, 32, 32, 4, TInt.Zero, TWord.Max32};
   Addr64    = Int_type{CGType.Addr,   64, 64, 64, 8, TInt.Zero, TWord.Max64};
   Int8      = Int_type{CGType.Int8,    8,  8,  8, 1, TInt.Min8, TInt.Max8};
@@ -291,10 +295,12 @@ CONST
   Word64    = Int_type{CGType.Word64, 64, 64, 64, 8, TInt.Zero, TWord.Max64};
   Char      = Word8;
   Void      = Int_type{CGType.Void,  0,  8,  0, 0, TInt.Zero, TInt.Zero};
-  Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4, Float{Precision.Short, 0, -3.40282346638528860x+38}, Float{Precision.Short, 0, 3.40282346638528860x+38}};
+  Real      = Float_type{CGType.Reel, Precision.Short, 32, 32, 4,
+                Float{Precision.Short, 0, -3.40282346638528860x+38},
+                Float{Precision.Short, 0, 3.40282346638528860x+38}};
 
 CONST (* sorted list of supported machine alignments *)
-  Alignments = ARRAY [0..3] OF CARDINAL{8, 16, 32, 64};
+  Alignments = ARRAY [0..4] OF CARDINAL{8, 16, 32, 64, 128};
 
 (*------------------------------------------------------- procedure calls ---*)
 

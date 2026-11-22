@@ -13,7 +13,7 @@ FROM Ctypes IMPORT int;
 PROCEDURE FreeDiskSpace(fn: FN) : CARDINAL RAISES {OSError.E} =
   VAR
     status: int;
-    p := M3toC.TtoS(fn);
+    p := M3toC.CopyTtoS(fn);
     fs: Umount.struct_statfs;
   BEGIN
     status := Umount.statfs (

@@ -1,7 +1,7 @@
-(* $Id$ *)
+(* $Id: AdGridQ.m3,v 1.1 2002/03/28 21:06:35 mika Exp $ *)
 
 MODULE AdGridQ;
-IMPORT LongrealType, Word;
+IMPORT LongReal AS LongrealType, Word;
 IMPORT AdGridChild AS Child;
 
 PROCEDURE Equal(a, b : T) : BOOLEAN = BEGIN RETURN a = b END Equal;

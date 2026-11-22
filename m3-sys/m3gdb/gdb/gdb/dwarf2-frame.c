@@ -108,6 +108,16 @@ struct dwarf2_frame_state
 
     /* Used to implement DW_CFA_remember_state.  */
     struct dwarf2_frame_state_reg_info *prev;
+
+    /* m3gdb: the CFA rule is part of the state saved by
+       DW_CFA_remember_state (DWARF 3, 6.4.2.4); these fields hold it in
+       the saved copies.  Without this, the common
+       remember_state / epilogue / restore_state sequence left the CFA
+       at the epilogue's value and unwinding went wrong.  */
+    LONGEST saved_cfa_offset;
+    ULONGEST saved_cfa_reg;
+    gdb_byte *saved_cfa_exp;
+    int saved_cfa_how;
   } regs;
 
   LONGEST cfa_offset;
@@ -373,6 +383,10 @@ register %s (#%d) at 0x%s"),
 
 		new_rs = XMALLOC (struct dwarf2_frame_state_reg_info);
 		*new_rs = fs->regs;
+		new_rs->saved_cfa_offset = fs->cfa_offset;
+		new_rs->saved_cfa_reg = fs->cfa_reg;
+		new_rs->saved_cfa_exp = fs->cfa_exp;
+		new_rs->saved_cfa_how = fs->cfa_how;
 		fs->regs.reg = dwarf2_frame_state_copy_regs (&fs->regs);
 		fs->regs.prev = new_rs;
 	      }
@@ -391,6 +405,10 @@ bad CFI data; mismatched DW_CFA_restore_state at 0x%s"), paddr (fs->pc));
 		  {
 		    xfree (fs->regs.reg);
 		    fs->regs = *old_rs;
+		    fs->cfa_offset = old_rs->saved_cfa_offset;
+		    fs->cfa_reg = old_rs->saved_cfa_reg;
+		    fs->cfa_exp = old_rs->saved_cfa_exp;
+		    fs->cfa_how = old_rs->saved_cfa_how;
 		    xfree (old_rs);
 		  }
 	      }

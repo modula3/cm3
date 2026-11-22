@@ -20,6 +20,12 @@ TYPE
   (* ... and without importing the original token *)
 %tokOrig\
 %tkimp\
+
+(* generics stuff *)
+CONST
+  Brand = "%name";
+  Hash = %meth.Hash;
+  Equal = %meth.Equal;
 END %name.
 ~\\
 PROCEDURE Proc_%name(self: T;

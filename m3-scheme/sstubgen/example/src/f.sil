@@ -1,0 +1,107 @@
+#
+# (define f (lambda(x)
+#   (define g (lambda(y)
+#     (define h (lambda(z)
+#       (define i (lambda(t)
+#         (g 3) )
+#       )
+#    ))
+#  ))
+#))
+#
+
+make-local f
+set-local f lambda1
+return
+
+begin lambda1 
+depth 1 
+params (x) 
+debug-name "f"
+make-local g
+set-local g lambda2
+return
+end lambda1
+
+begin lambda2 2 (y) "g"
+make-local h
+set-local h lambda3
+return
+end lambda2
+
+begin lambda3 3 (z) "h"
+make-local i
+set-local i lambda4
+return
+end lambda3
+
+begin lambda4 4 (t) "i"
+push-constant 3
+push-call (2 . 1) # g; no. of frames to ignore: depth(i) - depth(g) = 2
+return
+end lambda4
+
+# if g is a procedure, it has a depth, and calling point has a depth.
+# call to g calculates depth-difference and uses that to resolve linkage
+# to lexical scope.
+
+#
+# (define f (lambda (n)
+#    (if (= 0 n)   
+#	       0
+#        (* n (f (- n 1))))))
+#
+# converts to
+#
+# (define f (lambda (n)
+#    (cond ((= 0 n)   0
+#          (else (* n (f (- n 1))))))))
+#
+#
+
+make-local f
+set-local f lambda5
+return
+
+begin lambda5 1 (n) "f"
+push-constant 0
+push-value (0 . 1) # n
+call-primitive =
+if-true
+  push-constant 0
+  return
+end-if-true
+push-value (0 . 1) # n
+push-constant 1
+call-primitive -
+push-call (0 . 0) # f
+push-value (0 . 1) # n
+tail-call-primitive *
+end lambda5
+
+# (cond (v => car))
+
+push-value XXX # v
+peek-if-true
+  tail-call-primitive car
+end-if-true
+
+#
+# (define (f x)
+#    (lambda (y) (set! x y) x))
+#
+
+make-local f
+set-local f lambda6
+return
+
+begin lambda6 1 (x) "f"
+push lambda7
+return
+end lambda6
+
+begin lambda7 2 (y) '()
+push (0 . 1) # y
+set-variable (1 . 1) # set! x ...
+return
+end lambda7

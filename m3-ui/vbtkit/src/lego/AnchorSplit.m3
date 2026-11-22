@@ -10,6 +10,7 @@ MODULE AnchorSplit;
 
 IMPORT AnchorBtnVBT, FeedbackVBT, Filter, MultiClass,
        MultiFilter, SwitchVBT, VBT;
+FROM AnchorBtnVBT IMPORT Style;
 
 (* The first child (anchor) is MultiFilter.Child (Filter.Child (v)).
    The second child (menu)  is MultiFilter.Child (v.menu).
@@ -47,7 +48,7 @@ PROCEDURE Init (v             : T;
     <* ASSERT MultiFilter.Child (feedback) = NIL *>
     <* ASSERT MultiFilter.Child (menuFrame) = NIL *>
     EVAL AnchorBtnVBT.T.init (
-           v, feedback, menuFrame, n, anchorParent, hfudge, vfudge);
+           v, feedback, menuFrame, n, Style.New, anchorParent, hfudge, vfudge);
     MultiClass.Be (v, NEW (MC));
     RETURN v
   END Init;

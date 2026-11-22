@@ -5,36 +5,41 @@ on:
   workflow_call:
     inputs:
       os:
-        default: macos-latest
+        default: macos-15-intel
         required: false
         type: string
       release:
-        default: https://github.com/modula3/cm3/releases/download/d5.11.4
+        default: https://github.com/modula3/cm3/releases/download/d5.12.0
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-AMD64_LINUX-d5.11.4.tar.xz
+        default: cm3-boot-AMD64_DARWIN-d5.12.0.tar.xz
         required: false
         type: string
 
 jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
-    timeout-minutes: 45
+    timeout-minutes: 120
 
     strategy:
       fail-fast: false
       matrix:
-        backend: [c, gcc]
+        backend: [c]
 
     env:
       CM3_TARGET: AMD64_DARWIN
 
     steps:
+    # Homebrew no longer has bottles for Intel macOS, so a brew install here
+    # compiled ~17 formulae from source (40 minutes).  This job builds
+    # headless and takes CMake and Ninja from PyPI wheels; the GUI packages
+    # are built on ARM64_DARWIN, where bottles exist.
     - name: Install prerequisites
       run: |
-        brew update
-        brew install libxaw libxft ninja xquartz
+        python3 -m venv "$RUNNER_TEMP/tools"
+        "$RUNNER_TEMP/tools/bin/pip" install --quiet cmake ninja
+        echo "$RUNNER_TEMP/tools/bin" >> $GITHUB_PATH
 
     - name: Define install location
       run: |
@@ -50,11 +55,11 @@ jobs:
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
-    - name: Build all the things
+    - name: Build everything
       run: |
-        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" all
+        scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" headless -m3gdb
 
     - name: Run compiler validation suite
       continue-on-error: true
@@ -63,7 +68,7 @@ jobs:
       working-directory: m3-sys/m3tests
 
     - name: Generate test report
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v2
       with:
         name: ${{ format('m3tests ({0}, {1})', env.CM3_TARGET, matrix.backend) }}
         fail-on-error: false

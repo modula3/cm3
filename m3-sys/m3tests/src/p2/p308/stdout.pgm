@@ -1,0 +1,5 @@
+REAL -> Int32  3fc00000 -40400000
+REAL -> Word32 3fc00000 bfc00000
+Int32 -> REAL  3.1415927
+Word32 -> REAL -2
+SwapReal       c03f 1.5 -1.5

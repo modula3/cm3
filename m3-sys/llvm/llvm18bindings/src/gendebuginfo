@@ -1,0 +1,24 @@
+# swig build script for llvm debug bindings DebugInfo.h
+
+#the base directory for include files for llvm
+Base="/usr/local/include"
+
+#The include files for swig are in the c bindings dir 
+INC="${Base}/llvm-c"
+
+# DebugInfo C interface
+swig -I$INC -doxygen -modula3 M3DebugInfo.i
+
+#this generates an ignores list suppress warning 850 which is
+#no raw typemap defined
+#swig -I$INC -modula3 -w850 -generateignores M3DebugInfo.i
+
+#Optionally pretty print the output
+
+m3pp M3DebugInfo.i3 > xxx ; mv xxx M3DebugInfo.i3
+m3pp M3DebugInfo.m3 > xxx ; mv xxx M3DebugInfo.m3
+m3pp M3DebugInfoRaw.i3 > xxx ; mv xxx M3DebugInfoRaw.i3
+
+#Just build it
+
+cm3

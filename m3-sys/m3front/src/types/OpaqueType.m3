@@ -14,7 +14,7 @@ IMPORT Revelation, Scope, M3Buf, Textt, Value, Host;
 TYPE
   P = Type.T OBJECT
         declared   : Value.T;
-        super      : Type.T;
+        super      : Type.T (*RHS of <: *);
         id         : M3ID.T;
         isTraced   : BOOLEAN;
       OVERRIDES
@@ -49,6 +49,7 @@ PROCEDURE Reduce (t: Type.T): P =
   END Reduce;
 
 PROCEDURE Is (t: Type.T): BOOLEAN =
+  (* RHS of <: *)
   BEGIN
     RETURN (Reduce (t) # NIL);
   END Is;

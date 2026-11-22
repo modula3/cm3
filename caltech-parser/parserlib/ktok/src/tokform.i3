@@ -16,7 +16,8 @@ TYPE
        required after last token when parsing without exhausting input *)
 
     error(message: TEXT);
-    (* might print file name, line number, and message, and exit *)
+    (* might print file name, line number, and message, and exit.
+       for generated lexers, defaults to SeekRd.E *)
   END;
 
   RdLexer = Lexer OBJECT METHODS

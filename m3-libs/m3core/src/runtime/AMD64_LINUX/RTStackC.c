@@ -14,49 +14,37 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <libunwind.h>
-
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-//Define the exception handling register number. 0 should be safe
-//across most architectures.
+INTEGER __cdecl RTStack_Has_walker (void)
+{
+    return TRUE;
+}
+
+/* Exception handling register numbers per the System V AMD64 ABI.
+   Register 0 carries the exception object pointer; register 1 the
+   selector (tTypeIndex).  __builtin_eh_return_data_regno() maps these
+   abstract indices to the concrete DWARF register numbers for the target. */
 #define EHObjRegNo  0
 #define EHTypeRegNo 1
 
-//declare a personality function
+/* Personality function stub, the real dispatch is done in RTEHScan. */
 void * __m3_personality_v0();
 
-//external M3 alloc memory
-extern char * RTException__AllocBuf(int size);
+/* External M3 allocator, avoids a memory leak in CurFrame. */
+char * RTException__AllocBuf (INTEGER size);
 
-/*
-  FrameInfo = RECORD
-    pc  : ADDRESS;
-    sp  : ADDRESS;
-    bp  : ADDRESS;        (* base pointer *)
-    lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
-    excRef  : ADDRESS;    (* ref to the exception activation *)
-    tTypeIndex : INTEGER; (* tTypeIndex from exception table *)
-    cursor : ADDRESS;     (* libunwind cursor to cur frame *)
-    startIP : ADDRESS;    (* libunwind start ip of current proc *)
-    endIP : ADDRESS;      (* libunwind end ip of current proc *)
-    lsda : ADDRESS;       (* libunwind lsda *)
-    persFn : ADDRESS;     (* libunwind handler pers fn *)
-    landingPad : ADDRESS; (* libunwind landing pad *)
-  END;
- * The typedef below must agree with the definition replicated here
- * and defined in RTMachine.i3
- */
-
+/* Frame must match RTMachine.FrameInfo. */
 typedef struct {
-  unsigned long pc;
-  unsigned long sp;
-  unsigned long bp; //not used
-  long lock;
-  unsigned long exceptionRef;
-  long tTypeIndex;
+  WORD_T pc;
+  WORD_T sp;
+  INTEGER lock;
+  WORD_T exceptionRef;
+  INTEGER tTypeIndex;
   unw_cursor_t *cursor;
   unw_word_t start_ip;
   unw_word_t end_ip;
@@ -65,7 +53,7 @@ typedef struct {
   unw_word_t landingPad;
 } Frame;
 
-#define FrameLock 0x1234567890
+#define FrameLock ((INTEGER)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 void * __m3_personality_v0() {
   printf("m3 personality\n");
@@ -74,10 +62,8 @@ void * __m3_personality_v0() {
 
 /*---------------------------------------------------------------------------*/
 /*
- * Get the procedure info for this frame including the personality function
- * and language specific data
- *
- * The unw_get_proc_info() routine returns auxiliary information about the procedure that created the stack frame identified by argument cp. The pip argument is a pointer to a structure of type unw_proc_info_t which is used to return the information. 
+ * Populate proc_info fields (start_ip, end_ip, lsda, persFn) for the
+ * frame identified by the libunwind cursor in *f.
  */
 
 void RTStack__GetProcInfo(Frame *f) {
@@ -90,9 +76,9 @@ void RTStack__GetProcInfo(Frame *f) {
     abort();
   }
   f->start_ip = info.start_ip;
-  f->end_ip = info.end_ip;
-  f->lsda = info.lsda;
-  f->persFn = info.handler;
+  f->end_ip   = info.end_ip;
+  f->lsda     = info.lsda;
+  f->persFn   = info.handler;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -108,16 +94,15 @@ char* RTStack__ProcName (Frame *f)
   long name_len = 50;
   unw_word_t ofp;
 
-  name = (char *) malloc(name_len);
-  //there is a small mem leak here but as it is only called
-  //during debugex of the stack unwinder it should be fine.
+  /* Small leak is acceptable, only called for debug/diagnostic output. */
+  name = (char *) calloc (1, name_len);
 
-  res = unw_get_proc_name(f->cursor, name, name_len, &ofp);
-  if (res == 0) {
+  res = unw_get_proc_name (f->cursor, name, name_len, &ofp);
+  if (res == 0)
     return name;
-  } else {
-    return 0;
-  }
+
+  free (name);
+  return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -127,13 +112,13 @@ char* RTStack__ProcName (Frame *f)
 
 void RTStack__GetThreadFrame (Frame *f, char *start, int len)
 {
-  // not implemented 
+  /* Not implemented. */
   abort();
 }
 
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame)
- * returns the frame that corresponds to its caller. */
+ * Returns the frame that corresponds to the caller of this function. */
 
 void RTStack__CurFrame (Frame *f)
 {
@@ -141,28 +126,26 @@ void RTStack__CurFrame (Frame *f)
   unw_cursor_t *cursor;
   unw_word_t ip, sp = 0;
 
-  //we alloc in m3 otherwise a serious memory leak 
-  //uc = (unw_context_t *) malloc(sizeof(unw_context_t));
-  //cursor = (unw_cursor_t *) malloc(sizeof(unw_cursor_t));
-  uc = (unw_context_t *) RTException__AllocBuf(sizeof(unw_context_t));
-  cursor = (unw_cursor_t *) RTException__AllocBuf(sizeof(unw_cursor_t));
+  /* Allocate from the M3 heap so the cursor lifetime is managed there. */
+  uc     = (unw_context_t *) RTException__AllocBuf(sizeof(unw_context_t));
+  cursor = (unw_cursor_t *)  RTException__AllocBuf(sizeof(unw_cursor_t));
 
   f->lock = FrameLock;
   unw_getcontext(uc);
   unw_init_local(cursor, uc);
   unw_get_reg(cursor, UNW_REG_IP, &ip);
   unw_get_reg(cursor, UNW_REG_SP, &sp);
-  
+
   f->cursor = cursor;
-  f->pc = ip;
-  f->sp = sp;
+  f->pc     = ip;
+  f->sp     = sp;
   RTStack__GetProcInfo(f);
 
-  if (f->lock != FrameLock) abort ();
+  if (f->lock != FrameLock) abort();
 }
 
 /*---------------------------------------------------------------------------*/
-/* PROCEDURE PreviousFrame (READONLY callee: Frame;  VAR(*OUT*)caller: Frame)
+/* PROCEDURE PreviousFrame (READONLY callee: Frame;  VAR(*OUT*) caller: Frame)
    Return the stack frame that called "callee".  Returns with pc = NIL if
    "callee" is the first frame on the stack or its predecessor is ill-formed.
    */
@@ -172,25 +155,25 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   unw_word_t ip, sp = 0;
   int res;
 
-  if (!callee->cursor) abort();
+  if (!callee->cursor)           abort();
+  if (callee->lock != FrameLock) abort();
 
-  if (callee->lock != FrameLock) abort ();
   *caller = *callee;
 
   res = unw_step(caller->cursor);
   if (res > 0) {
     unw_get_reg(caller->cursor, UNW_REG_IP, &ip);
     unw_get_reg(caller->cursor, UNW_REG_SP, &sp);
-    
+
     caller->pc = ip;
     caller->sp = sp;
     RTStack__GetProcInfo(caller);
-
   } else {
     caller->pc = 0;
     caller->sp = 0;
   }
-  if (caller->lock != FrameLock) abort ();
+
+  if (caller->lock != FrameLock) abort();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -203,24 +186,24 @@ void RTStack__Unwind (Frame *target)
 {
   int res;
 
-  if (!target->cursor) abort();
-  if (target->lock != FrameLock) abort ();
-  
-  //set the IP to landingPad 
+  if (!target->cursor)           abort();
+  if (target->lock != FrameLock) abort();
+
+  /* Set IP to the landing pad computed by RTEHScan.ScanEHTable. */
   unw_set_reg(target->cursor, UNW_REG_IP, target->landingPad);
-  
-  //set the eh register zero to return the exception object
+
+  /* Pass the exception object pointer in EH data register 0. */
   unw_set_reg(target->cursor,
-	      __builtin_eh_return_data_regno(EHObjRegNo),
-	      target->exceptionRef);
- 
-  //set the eh register one to the tTypeIndex for gcc
+              __builtin_eh_return_data_regno(EHObjRegNo),
+              target->exceptionRef);
+
+  /* Pass the tTypeIndex (exception selector) in EH data register 1. */
   unw_set_reg(target->cursor,
-	      __builtin_eh_return_data_regno(EHTypeRegNo),
-	      target->tTypeIndex);
+              __builtin_eh_return_data_regno(EHTypeRegNo),
+              target->tTypeIndex);
 
   res = unw_resume(target->cursor);
-  //success means unreachable from here
+  /* unw_resume only returns on error. */
   if (res < 0) {
     printf("RTStack__Unwind - unw_resume error\n");
     abort();
@@ -244,7 +227,7 @@ void show_backtrace (void) {
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
+    printf ("ip = %llx, sp = %llx\n", (long long) ip, (long long) sp);
 
     ret = unw_get_proc_name(&cursor, name, name_len, &ofp);
     printf("name %s\n",name);
@@ -255,3 +238,4 @@ void show_backtrace (void) {
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+

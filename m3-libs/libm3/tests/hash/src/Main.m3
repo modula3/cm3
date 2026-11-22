@@ -33,8 +33,9 @@ BEGIN
 
   res := SHA256.FromText("The quick brown fox jumps over the lazy dog");
   IO.Put(res & "\n");
-  <*ASSERT Text.Equal(res, "d7a8fbb37d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592") *>
+  <*ASSERT Text.Equal(res, "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592") *>
 
   res := SHA256.FromFile(rd);
   IO.Put(res & "\n");
+
 END Main.

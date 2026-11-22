@@ -1,0 +1,16 @@
+To be coded:
+
+boot1.py c
+cat cm3-boot<tab>/m3core.h cm3-boot<tab>/*.c cm3-boot<tab>/cm3.d/*.c > cm3-boot-unix64le.cpp
+
+This makes a single file release that builds cm3 with:
+ g++ -g -pthread -c cm3-boot-unix64le.cpp
+ g++ -g -pthread -o cm3 cm3-boot-unix64le.o
+ mkdir -p /cm3/bin
+ mv cm3 /cm3/bin
+ ./boot2min.py c
+ edit config file:
+   readonly M3_BACKEND_MODE = "C"
+
+Todo:
+ 32bit, big endian, Windows, or at least Windows

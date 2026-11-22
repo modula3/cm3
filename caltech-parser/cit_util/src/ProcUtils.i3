@@ -1,9 +1,11 @@
-(* $Id$ *)
+(* $Id: ProcUtils.i3,v 1.10 2009/03/20 03:58:20 mika Exp $ *)
 
 INTERFACE ProcUtils;
 IMPORT Rd, Wr, Pathname;
 IMPORT AtomList;
 IMPORT OSError;
+IMPORT Time;
+IMPORT Process;
 
 TYPE
   T = TEXT;
@@ -15,6 +17,7 @@ TYPE
 (* run the command(s) and return their output text *)
 
 EXCEPTION ErrorExit(Error);
+EXCEPTION Timeout;          
 
 TYPE Error = OBJECT error : TEXT END; 
      (* generic errors, e.g., Rd.Failure *)
@@ -31,7 +34,9 @@ PROCEDURE FormatError(e : Error) : TEXT;
 PROCEDURE ToText(source: T;
                  stderr: Writer := NIL;
                  stdin: Reader := NIL;
-                 wd0: Pathname.T := NIL): TEXT RAISES { Rd.Failure, ErrorExit, OSError.E } ;
+                 wd0: Pathname.T := NIL;
+                 timeout := LAST(Time.T)): TEXT
+  RAISES { Rd.Failure, ErrorExit, OSError.E, Timeout } ;
 
 PROCEDURE RdToRd(source: Rd.T;
                  stderr: Writer := NIL;
@@ -39,25 +44,57 @@ PROCEDURE RdToRd(source: Rd.T;
                  wd0: Pathname.T := NIL;
                  VAR rd: Rd.T): Completion RAISES { OSError.E } ;
 
-TYPE Completion = OBJECT METHODS wait() RAISES { ErrorExit }; END;
+  TYPE
+    State = {
+              (* NORMAL EXECUTION SEQUENCE *)
+              New,                (* created object                 *)
+              Parsing,            (* parsing args                   *)
+              Starting,           (* starting job                   *)
+              Created,            (* job has been created           *)
+              Running,            (* subprocess is running          *)
+              CleaningUp,         (* cleaning up post-exit          *)
+              Done,               (* job is complete                *)
+
+              (* ABNORMAL EXITS *)
+              ErrorExit,          (* subprocesses exited with error *)
+              OsErrorExit,        (* OSError.E on create            *)
+              RdFailureExit       (* Rd.Failure, probably on output *)
+    };
+    
+
+  Completion = OBJECT METHODS
+    wait() RAISES { ErrorExit };
+
+    waitTimeout(timeo : LONGREAL) RAISES { ErrorExit, Timeout };
+
+    abort();
+
+    getState() : State;
+
+    getPID() : Process.ID;
+  END;
      (* starting a process returns a Completion.  When it is desired to
         join the fork, call completion.wait(), which will raise ErrorExit
         if the process in question has exited or does exit with an error *)
+
+  Env = REF ARRAY OF TEXT;
 
 (* for more control over i/o: *)
 (* these procedures used to raise ErrorExit, but this was folded into
    Completion, to permit asynchronous delivery of errors, rather than
    crashing the program *)
 
-PROCEDURE Run(source: Rd.T;
-              stdout,stderr: Writer := NIL;
-              stdin: Reader := NIL;
-              wd0: Pathname.T := NIL): Completion;
+PROCEDURE Run(source        : Rd.T;
+              stdout,stderr : Writer     := NIL;
+              stdin         : Reader     := NIL;
+              wd0           : Pathname.T := NIL;
+              env           : Env        := NIL): Completion;
 
-PROCEDURE RunText(source: TEXT;
-              stdout,stderr: Writer := NIL;
-              stdin: Reader := NIL;
-              wd0: Pathname.T := NIL): Completion;
+PROCEDURE RunText(source        : TEXT;
+                  stdout,stderr : Writer     := NIL;
+                  stdin         : Reader     := NIL;
+                  wd0           : Pathname.T := NIL;
+                  env           : Env        := NIL): Completion;
 
 (* the following are helpers for Reader/Writer threads *)
 TYPE

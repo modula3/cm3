@@ -3,7 +3,7 @@
 
 UNSAFE MODULE Json;
 
-IMPORT IO, Fmt, Lex, FloatMode, Scan, Rd, Wr, Text, Thread;
+IMPORT Stdio, IO, Fmt, Lex, FloatMode, Scan, Rd, Wr, Text, Thread;
 IMPORT TextUtils, TextSeq, ASCII;
 IMPORT SortedTextRefTbl AS Tbl;
 IMPORT JsonScanner AS SK;
@@ -90,13 +90,13 @@ VAR
 
 PROCEDURE Error (self: T; n: INTEGER) RAISES {E} =
   BEGIN
-    IO.Put("Error " & Fmt.Int(n) & " ");
+    IO.Put("Error " & Fmt.Int(n) & " ", Stdio.stderr);
     IF self.tok # NIL THEN
       IF self.tok.token = SK.TK_Error THEN
-        IO.Put(" : token error " & self.tok.msg & " ");
+        IO.Put(" : token error " & self.tok.msg & " ", Stdio.stderr);
       END;
       IO.Put(" - line " & Fmt.Int(self.tok.line) & " offset "
-             & Fmt.Int(self.tok.offset) & Wr.EOL);
+             & Fmt.Int(self.tok.offset) & Wr.EOL, Stdio.stderr);
     END;
     RAISE E;
   END Error;
@@ -767,16 +767,16 @@ PROCEDURE Next(self : DefaultIterator; VAR name : TEXT; VAR value : T) : BOOLEAN
 (* debug procs *)
 PROCEDURE Dump(node : T) =
   BEGIN
-    IO.Put("Dump-\n" & node.nodeName & "\n");
-    IO.Put("depth ");
-    IO.PutInt(node.depth);
-    IO.Put("\nkind ");
-    IO.PutInt(ORD(node.nodeKind));
-    IO.Put("\nvalue ");
-    IO.Put(node.nodeValue & "\n");
-    IO.Put("parent ");
-    IO.PutInt(LOOPHOLE(node.parent,INTEGER));
-    IO.Put("\n");
+    IO.Put("Dump-\n" & node.nodeName & "\n", Stdio.stderr);
+    IO.Put("depth ", Stdio.stderr);
+    IO.PutInt(node.depth, Stdio.stderr);
+    IO.Put("\nkind ", Stdio.stderr);
+    IO.PutInt(ORD(node.nodeKind), Stdio.stderr);
+    IO.Put("\nvalue ", Stdio.stderr);
+    IO.Put(node.nodeValue & "\n", Stdio.stderr);
+    IO.Put("parent ", Stdio.stderr);
+    IO.PutInt(LOOPHOLE(node.parent,INTEGER), Stdio.stderr);
+    IO.Put("\n", Stdio.stderr);
   END Dump;
 
 PROCEDURE Validate(self : T) =
@@ -787,7 +787,7 @@ PROCEDURE Validate(self : T) =
   BEGIN
     IF self = NIL THEN RETURN; END;
     Dump(self);
-    IF self.list = NIL THEN IO.Put("No children\n"); RETURN; END;
+    IF self.list = NIL THEN IO.Put("No children\n", Stdio.stderr); RETURN; END;
     iter := self.list.iterateOrdered(TRUE);
     WHILE iter.next(key,val) DO
       Validate(val);

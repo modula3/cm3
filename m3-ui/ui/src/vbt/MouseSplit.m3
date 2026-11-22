@@ -15,6 +15,7 @@
 MODULE MouseSplit;
 
 IMPORT VBT, VBTClass, ScrnCursor, Rect, VBTRep;
+IMPORT Evt,EventTypes;
 
 REVEAL MouseRef = BRANDED REF RECORD
    (* All fields protected by VBT.mu; mouseFocus, current, cache, and
@@ -273,6 +274,7 @@ PROCEDURE Mouse(v: VBT.Split; READONLY cd: VBT.MouseRec) RAISES {} =
     END;
     (* reset the mouseFocus *)
     IF cd.clickType = VBT.ClickType.FirstDown THEN
+      EVAL Evt.Send(NEW(EventTypes.MenuEvent, sender := 2)); 
       BecomeMF(v, ch)
     ELSIF cd.clickType = VBT.ClickType.LastUp THEN
       BecomeMF(v, NIL)

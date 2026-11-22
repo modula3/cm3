@@ -762,10 +762,13 @@ attach_thread (ptid_t ptid, const td_thrhandle_t *th_p,
 #endif
 
   /* Enable thread event reporting for this thread.  */
+  /* m3gdb: modern glibc's libthread_db returns TD_NOCAPAB here; the
+     process-wide event mask set in enable_thread_event_reporting is
+     sufficient, so a per-thread failure is not fatal.  */
   err = td_thr_event_enable_p (th_p, 1);
-  if (err != TD_OK)
-    error (_("Cannot enable thread event reporting for %s: %s"),
-	   target_pid_to_str (ptid), thread_db_err_str (err));
+  if (err != TD_OK && err != TD_NOCAPAB)
+    warning (_("Cannot enable thread event reporting for %s: %s"),
+	     target_pid_to_str (ptid), thread_db_err_str (err));
 }
 
 static void

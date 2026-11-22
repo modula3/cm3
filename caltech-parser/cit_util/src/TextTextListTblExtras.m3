@@ -1,7 +1,7 @@
 MODULE TextTextListTblExtras;
 IMPORT TextRd;
 IMPORT Rd;
-IMPORT TextUtils;
+IMPORT CitTextUtils AS TextUtils;
 IMPORT TextTextListTbl;
 IMPORT Thread;
 

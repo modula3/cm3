@@ -1,4 +1,4 @@
-(* $Id$ *)
+(* $Id: Compress.m3,v 1.3 2001/10/10 07:39:55 mika Exp $ *)
 
 MODULE Compress;
 IMPORT Bracket;
@@ -6,46 +6,66 @@ IMPORT LRScalarField;
 IMPORT LRVector;
 IMPORT LRFunction;
 
-CONST Tol = 2.0d-8;
+TYPE
+  Func = LRFunction.Default OBJECT
+    pcom, xicom : LRVector.T;
+    nrfunc      : LRScalarField.T;
+  OVERRIDES
+    eval     := EvalF1;
+    evalHint := EvalHintF1;
+  END;
 
-(* mutex and therewith protected globals *)
-VAR mu := NEW(MUTEX);
-VAR pcom, xicom : LRVector.T; 
-VAR nrfunc : LRScalarField.T;
-
-PROCEDURE F1Dim(x : LONGREAL) : LONGREAL =
+PROCEDURE EvalF1(f : Func; x : LONGREAL) : LONGREAL =
   VAR
-    xt := NEW(LRVector.T, NUMBER(pcom^));
+    xt := NEW(LRVector.T, NUMBER(f.pcom^));
   BEGIN
-    FOR j := FIRST(pcom^) TO LAST(pcom^) DO xt[j] := pcom[j] + x*xicom[j] END;
-    RETURN nrfunc.eval(xt);
-  END F1Dim;
+    FOR j := FIRST(f.pcom^) TO LAST(f.pcom^) DO
+      xt[j] := f.pcom[j] + x*f.xicom[j]
+    END;
+    RETURN f.nrfunc.eval(xt);
+  END EvalF1;
+  
+PROCEDURE EvalHintF1(f : Func; x : LONGREAL) =
+  VAR
+    xt := NEW(LRVector.T, NUMBER(f.pcom^));
+  BEGIN
+    FOR j := FIRST(f.pcom^) TO LAST(f.pcom^) DO
+      xt[j] := f.pcom[j] + x*f.xicom[j]
+    END;
+    f.nrfunc.evalHint(xt);
+  END EvalHintF1;
+  
+PROCEDURE LinMin(p     : LRVector.T; (* initial and final point *)
+                 xi    : LRVector.T; (* search direction, 
+                                     replaced with change in p *)
+                 func  : LRScalarField.T;
+                 scale : LONGREAL;
+                 tol   : LONGREAL) : LONGREAL (* returns min. value *) =
 
-PROCEDURE LinMin(VAR p : LRVector.T; (* initial and final point *)
-                 VAR xi : LRVector.T; (* search direction, 
-                                            replaced with change in p *)
-                 func : LRScalarField.T) : LONGREAL (* returns min. value *) =
+    
   VAR
     xmin : LONGREAL;
-    bracket := Bracket.Trio { 0.0d0, 1.0d0, 2.0d0 };
+    bracket := Bracket.Trio { -scale, 0.0d0, +scale };
     fret : LONGREAL;
-  BEGIN
-    LOCK mu DO
-      pcom := NEW(LRVector.T, NUMBER(p^));
-      xicom := NEW(LRVector.T, NUMBER(p^));
-      nrfunc := func;
+    pcom, xicom : LRVector.T;
+    f : Func;
 
-      <* ASSERT NUMBER(p^) = NUMBER(xi^) AND FIRST(p^) = 0 AND FIRST(xi^) = 0 *>
-      FOR j := FIRST(p^) TO LAST(p^) DO
-        pcom[j] := p[j]; xicom[j] := xi[j]
-      END;
-      EVAL Bracket.Initial(bracket, NEW(LRFunction.Default).wrap(F1Dim));
-      fret := Bracket.Brent(bracket, NEW(LRFunction.Default).wrap(F1Dim), Tol, xmin);
-      FOR j := FIRST(p^) TO LAST(p^) DO
-        xi[j] := xi[j] * xmin;
-        p[j] := p[j] + xi[j];
-      END
-    END; (* LOCK mu ... *)
+  BEGIN
+    <* ASSERT NUMBER(p^) = NUMBER(xi^) AND FIRST(p^) = 0 AND FIRST(xi^) = 0 *>
+
+    pcom  := LRVector.Copy(p);
+    xicom := LRVector.Copy(xi);
+
+    f := NEW(Func, pcom := pcom, xicom := xicom, nrfunc := func);
+    
+    EVAL Bracket.Initial(bracket, f);
+    
+    fret := Bracket.Brent(bracket, f, tol, xmin);
+    
+    FOR j := FIRST(p^) TO LAST(p^) DO
+      xi[j] := xi[j] * xmin;
+      p[j]  := p[j] + xi[j];
+    END;
     RETURN fret
   END LinMin;
 

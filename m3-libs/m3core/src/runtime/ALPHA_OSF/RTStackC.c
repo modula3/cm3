@@ -5,6 +5,8 @@
 /*      modified on Tue May 18 13:21:11 PDT 1993 by muller     */
 /*      modified on Tue Jan 19 15:20:48 PST 1993 by burrows    */
 
+#error This file is no longer used. Things do work, but not like this.
+
 /* This file implements the stack walking functions of
    the RTStack interface. */
 
@@ -33,7 +35,7 @@ typedef struct {
   long lock;
 } Frame;
 
-#define FrameLock 0x1234567890
+#define FrameLock ((long)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 typedef struct runtime_pdr *Proc;
 

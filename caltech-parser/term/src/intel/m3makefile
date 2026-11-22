@@ -1,0 +1,35 @@
+
+import("libm3")
+import("cit_util")
+
+
+% system header glue  -- why was it here?
+
+/* h_source("termios") */
+interface("Termios")
+Interface("TermHooks")
+
+
+% terminal interfaces
+
+Module("Term")
+Module("TermIO")
+implementation("TermObject")
+
+
+% command line utilities
+
+Module("Cooker")
+Module("CommandLoop")
+Gmodule("CommandLoop")
+implementation("CommandLoopDefaultCommand")
+Interface("BrandedCommand")
+Table("TextCommand", "Text", "BrandedCommand")
+QueueTbl("TextCommand", "TextCommandTbl", "Text",
+	"BrandedCommand", "TextRefTbl")
+Module("ScalarVar")
+
+if equal(TARGET,"NT386GNU")
+  c_source("termiosNTextra")
+end
+library("term")

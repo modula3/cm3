@@ -1,0 +1,2 @@
+#!/bin/sh
+../FreeBSD3/test <testfile

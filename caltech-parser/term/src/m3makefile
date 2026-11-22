@@ -1,9 +1,29 @@
 import("libm3")
+import("cit_util")
 interface("Termios")
 c_source("Termios")
+Interface("TermHooks")
+
 Module("Term")
 interface("TermC")
 c_source("TermC")
 h_source("TermC")
 Module("TermIO")
+
+implementation("TermObject")
+
+
+% command line utilities
+
+Module("Cooker")
+Module("CommandLoop")
+Gmodule("CommandLoop")
+implementation("CommandLoopDefaultCommand")
+Interface("BrandedCommand")
+Table("TextCommand", "Text", "BrandedCommand")
+QueueTbl("TextCommand", "TextCommandTbl", "Text",
+	"BrandedCommand", "TextRefTbl")
+Module("ScalarVar")
+
+
 Library("term")

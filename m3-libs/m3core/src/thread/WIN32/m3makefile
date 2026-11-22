@@ -1,8 +1,15 @@
 % Copyright (C) 1992, Digital Equipment Corporation
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
-
-interface ("ThreadContext")
+readonly USE_I386_NT_CONTEXT = {
+ "I386_NT"     : TRUE,
+ "I386_MINGW"  : TRUE,
+ "I386_CYGWIN" : TRUE,
+ "NT386"       : TRUE,
+}
+if USE_I386_NT_CONTEXT contains TARGET
+  interface ("ThreadContext")
+end
 module ("ThreadWin32")
 c_source("ThreadWin32C")
 if equal (OS_TYPE, "POSIX")   

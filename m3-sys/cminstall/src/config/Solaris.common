@@ -203,7 +203,8 @@ SYSTEM_LIBS = {
     "MOTIF"      : [ "-lXm" ],
     "X11"        : [ "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
     "Z"          : [ "-lz" ],
-    "TCP"        : [ ]
+    "TCP"        : [ ],
+    "UNWIND"     : [ ],
 }
 
 proc internal_configure_system_lib(name, known, args) is

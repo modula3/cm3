@@ -41,7 +41,12 @@
    the appropriate target configuration file. */
 
 #ifndef DEFAULT_DEMANGLING_STYLE
-#define DEFAULT_DEMANGLING_STYLE AUTO_DEMANGLING_STYLE_STRING
+/* m3gdb: default to the g++ >= 3.0 ABI instead of "auto".  "auto" also
+   tries the g++ 2.x scheme, which misreads Modula-3 names produced by
+   the C backend: e.g. Main__Fib parses as "Main(int, bool)", so the
+   procedure showed up as "Main".  Use "set demangle-style auto" to get
+   the old behaviour.  */
+#define DEFAULT_DEMANGLING_STYLE GNU_V3_DEMANGLING_STYLE_STRING
 #endif
 
 extern void _initialize_demangler (void);

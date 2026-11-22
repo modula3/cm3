@@ -4,11 +4,22 @@
 
 /* Last modified on Tue May  4 10:17:51 PDT 1993 by mjordan                  */
 
-include_dir ("Common")
-
 % FreeBSD 4 or earlier might not have a viable pthreads,
 % in which case make a separate config file and set NOPTHREAD = TRUE or such.
-%
+
+include_dir ("Common")
+
+readonly USE_AMD64_NT_CONTEXT = {
+ "AMD64_NT"       : TRUE,
+ "AMD64_MINGW"    : TRUE,
+ "AMD64_CYGWIN"   : TRUE,
+ "ARM64EC_NT"     : TRUE,
+ "ARM64EC_MINGW"  : TRUE,
+ "ARM64EC_CYGWIN" : TRUE,
+}
+if USE_AMD64_NT_CONTEXT contains TARGET
+  include_dir ("AMD64_NT")
+end
 if equal (OS_TYPE, "WIN32") or equal (TARGET_OS, "CYGWIN")
   include_dir ("WIN32")
 else

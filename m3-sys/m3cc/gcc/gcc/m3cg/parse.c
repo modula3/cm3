@@ -279,6 +279,28 @@ static bool M3_TYPES_REQUIRE_ALL_FIELD_TYPES = false;
 static bool M3_LOOPHOLE_VIEW_CONVERT = false;
 static int M3_EXC_ID = 0;
 
+#ifndef FLOAT_TYPE_SIZE
+#define FLOAT_TYPE_SIZE 32
+#endif
+#ifndef DOUBLE_TYPE_SIZE
+#define DOUBLE_TYPE_SIZE 64
+#endif
+
+//declared in m3-parse.h
+//historically long_double was equated with double. For 128 bit quad
+//precision we permit it to be itself.
+#ifdef LONG_DOUBLE_SIZE
+#undef LONG_DOUBLE_TYPE_SIZE
+#define LONG_DOUBLE_TYPE_SIZE LONG_DOUBLE_SIZE
+#else
+#undef LONG_DOUBLE_TYPE_SIZE
+#define LONG_DOUBLE_TYPE_SIZE DOUBLE_TYPE_SIZE
+#endif
+
+#ifndef MAX
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+#endif
+
 #if GCC45
 
 /* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
@@ -624,11 +646,13 @@ static GTY (()) tree t_int;
 #define t_longint t_int_64
 #define t_reel float_type_node
 #define t_lreel double_type_node
-#if 0
+
+#if LONG_DOUBLE_TYPE_SIZE == 128
   /* XXX The M3 front end (m3middle/src/Target.m3) seems to treat extended
      reals the same as LONGREAL.  That may be due to limitations in other
      parts of the front end.  I don't know yet.  For now we likewise treat
-     the xreel type as if it were lreel. */
+     the xreel type as if it were lreel.
+      Addendum: Parameterize the type so we can use 128 bit long_double */
 #define t_xreel long_double_type_node
 #else
 #define t_xreel double_type_node
@@ -1905,7 +1929,8 @@ m3_init_decl_processing (void)
   build_common_tree_nodes (false /* unsigned char */);
 #else
   build_common_tree_nodes (false /* unsigned char */,
-                           false /* unsigned size_type or short_double */);
+                           false /* unsigned size_type or short_double */,
+			   LONG_DOUBLE_TYPE_SIZE);
 #endif
 
   if (BITS_PER_INTEGER == 32)
@@ -2130,26 +2155,6 @@ m3_init_decl_processing (void)
 }
 
 /*========================================================== DECLARATIONS ===*/
-
-#ifndef FLOAT_TYPE_SIZE
-#define FLOAT_TYPE_SIZE 32
-#endif
-#ifndef DOUBLE_TYPE_SIZE
-#define DOUBLE_TYPE_SIZE 64
-#endif
-
-#if modula3_was_fully_implemented
-#ifndef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE 64
-#endif
-#else
-#undef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE DOUBLE_TYPE_SIZE
-#endif
-
-#ifndef MAX
-#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
-#endif
 
 /* Variable arrays of trees. */
 
@@ -2511,15 +2516,24 @@ scan_float (UINT *out_Kind)
   /* real_from_target_fmt wants floats stored in an array of longs, 32 bits
      per long, even if long can hold more.  So for example a 64 bit double on
      a system with 64 bit long will have 32 bits of zeros in the middle. */
-  long Longs[2] = { 0, 0 };
+
+  long Longs[4] = { 0, 0, 0, 0 };
   UCHAR * const Bytes = (UCHAR*)Longs;
+  const struct real_format* long_double_format;
+  if (LONG_DOUBLE_TYPE_SIZE == 64) {
+    long_double_format = &ieee_double_format;
+  } else {
+    //128 bit quad
+    long_double_format = &ieee_quad_format;
+  }
+
   static const struct {
     tree* Tree;
     UINT Size;
     const struct real_format* format;
-  } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
+  } Map[] = { { &t_reel , (FLOAT_TYPE_SIZE / 8),  &ieee_single_format },
               { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
-              { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
+              { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), long_double_format }};
   REAL_VALUE_TYPE val;
 
   memset (&val, 0, sizeof(val));
@@ -2527,19 +2541,17 @@ scan_float (UINT *out_Kind)
   gcc_assert (sizeof(double) == 8);
   gcc_assert (FLOAT_TYPE_SIZE == 32);
   gcc_assert (DOUBLE_TYPE_SIZE == 64);
-  gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
+  gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64 || LONG_DOUBLE_TYPE_SIZE == 128);
   gcc_assert (sizeof(long) == 4 || sizeof(long) == 8);
 
   UINT Kind = (UINT)get_byte ();
-  if (Kind >= (sizeof(Map) / sizeof(Map[0])))
-    {
-      fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %u",
-                   Kind, m3cg_lineno);
-    }
+  if (Kind >= (sizeof(Map) / sizeof(Map[0]))) {
+      fatal_error (" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %u", Kind, m3cg_lineno);
+  }
   *out_Kind = Kind;
   UINT Size = Map[Kind].Size;
 
-  gcc_assert (Size == 4 || Size == 8);
+  gcc_assert (Size == 4 || Size == 8 || Size == 16);
 
   /* read the value's bytes; each long holds 32 bits, even if long is larger
      than 32 bits always read the bytes in increasing address, independent of
@@ -2549,11 +2561,19 @@ scan_float (UINT *out_Kind)
 
   /* When crossing and host/target different endian, swap the longs. */
 
-  if ((Size == 8) && (IsHostBigEndian () != FLOAT_WORDS_BIG_ENDIAN))
-  {
+  if (IsHostBigEndian () != FLOAT_WORDS_BIG_ENDIAN) {
+    if (Size == 8) {
       long t = Longs[0];
       Longs[0] = Longs[1];
       Longs[1] = t;
+    } else if (Size == 16) {
+      long t = Longs[0];
+      Longs[0] = Longs[3];
+      Longs[3] = t;
+      t = Longs[1];
+      Longs[1] = Longs[2];
+      Longs[2] = t;
+    }
   }
 
   /* finally, assemble a floating point value */
@@ -5123,26 +5143,51 @@ M3CG_HANDLER (MAX) { m3_minmax (type, 0); }
 
 M3CG_HANDLER (ROUND)
 {
+  /* The report: ROUND (x) is the nearest integer to x, ties broken by
+     FloatMode.RoundDefault, NearestElseEven: halves go to the even
+     neighbour.  lround (used before) takes them away from zero.
+     ti = TRUNC (x) and frac = x - FLOAT (ti) are exact, so no x + 0.5 is
+     ever rounded (the trouble with large odd REALs, test p126), and the
+     tie test is exact too.  */
   REAL_VALUE_TYPE r;
 
-  memset (&r, 0, sizeof(r));
   tree arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
                        m3_cast (src_t, EXPR_REF (-1))));
 
+  tree ti = declare_temp (dst_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, dst_t, ti,
+                       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
+
+  tree frac = declare_temp (src_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, src_t, frac,
+                       m3_build2 (MINUS_EXPR, src_t, arg,
+                                  m3_build1 (FLOAT_EXPR, src_t, ti))));
+
+  memset (&r, 0, sizeof (r));
   real_from_string (&r, "0.5");
-  tree pos = build_real (src_t, r);
-
+  tree half = build_real (src_t, r);
+  memset (&r, 0, sizeof (r));
   real_from_string (&r, "-0.5");
-  tree neg = build_real (src_t, r);
+  tree neg_half = build_real (src_t, r);
 
-  tree cond = m3_build2 (GT_EXPR, boolean_type_node, arg,
-                         build_real_from_int_cst (src_t, v_zero));
+  tree one = build_int_cst (dst_t, 1);
+  tree odd = m3_build2 (BIT_AND_EXPR, dst_t, ti, one);
 
-  EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t,
-                             m3_build2 (PLUS_EXPR, src_t, arg,
-                                        m3_build3 (COND_EXPR, src_t,
-                                                   cond, pos, neg)));
+  EXPR_REF (-1) =
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (GT_EXPR, boolean_type_node, frac, half),
+               m3_build2 (PLUS_EXPR, dst_t, ti, one),
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (LT_EXPR, boolean_type_node, frac, neg_half),
+               m3_build2 (MINUS_EXPR, dst_t, ti, one),
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (EQ_EXPR, boolean_type_node, frac, half),
+               m3_build2 (PLUS_EXPR, dst_t, ti, odd),
+    m3_build3 (COND_EXPR, dst_t,
+               m3_build2 (EQ_EXPR, boolean_type_node, frac, neg_half),
+               m3_build2 (MINUS_EXPR, dst_t, ti, odd),
+               ti))));
 }
 
 M3CG_HANDLER (TRUNC)
@@ -6545,6 +6590,7 @@ m3_init (void)
       fprintf (stderr, "Unable to open input file %s\n", input_filename);
       exit (1);
     }
+
 
   /* Read the entire file */
   m3_read_entire_file (finput, &input_buffer, &input_len);

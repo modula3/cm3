@@ -1,0 +1,1 @@
+LOOPHOLE between REAL and a 32-bit packed subrange (C back end converted the value)

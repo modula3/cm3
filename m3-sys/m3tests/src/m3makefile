@@ -44,7 +44,9 @@ end
 proc FileRemoveRecursive(a) is
 % fs_rmrec might not work
   if equal ($OS, "Windows_NT")
-    exec("@-rmdir /q/s ", subst_chars(a, "/", "\\"))
+    if fs_exists(a)
+      exec("@-rmdir /q/s ", subst_chars(a, "/", "\\"))
+    end
   else
     exec("@rm -rf ", a)
   end
@@ -159,6 +161,7 @@ proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
   end
 
   exec (diff, ExpectedPath, OutputPath, head)
+
   if defined("HTML")
     exec (diff, ExpectedPath, OutputPath, ">>", report)
     if equal(OS_TYPE, "POSIX")
@@ -166,6 +169,7 @@ proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
       jux (d)
     end
   end
+
 end
 
 if defined ("LOG_CMPS")
@@ -383,10 +387,11 @@ html(["      <tbody>", CR])
 cm3opts = ""
 runopts = ""
 if equal(M3_BACKEND_MODE, "StAloneLlvmAsm")
-% llvm debug mode not tested
-  cm3opts = cm3opts & "-g0 "
-% llvm optimisations if required
-%  cm3opts = cm3opts & "-O2 "
+   or equal(M3_BACKEND_MODE, "StAloneLlvmObj")
+% turn off llvm debug mode if required 
+%  cm3opts = cm3opts & "-g0 "
+% llvm optimisations if required - each compile runs opt -O3 and llc -O3
+  cm3opts = cm3opts & "-O3 "
 end
 
 readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is  local dir = "../src/" & group & "/" & uid
@@ -526,6 +531,13 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+p_test ("p2", "p305", "TRY EXCEPT ELSE catches EXIT and RETURN past named handlers")
+p_test ("p2", "p306", "ROUND breaks ties to even (FloatMode.RoundDefault)")
+p_test ("p2", "p307", "Subset comparisons of multi-word sets (C back end operand order)")
+p_test ("p2", "p308", "LOOPHOLE between REAL and a 32-bit packed subrange")
+p_test ("p2", "p302", "Address of a global at an offset, compared directly")
+p_test ("p2", "p299", "Initial values of packed fields, arrays and object fields")
+p_test ("p2", "p295", "Integrated backend crash in typecase")
 p_test ("p2", "p293", "Mutex unlocked in event of exception within LOCK")
 p_test ("p2", "p292", "Correct CG type of struct for record temps")
 p_test ("p2", "p291", "No internal folding of non-constant record constructors")
@@ -841,6 +853,7 @@ readonly proc e_test (group, uid, comment) is
   run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+e_test ("e0", "e041", "Illegal mutually recursive revealed opaque types in separate units")
 e_test ("e0", "e040", "Bad SUBARRAY actuals")
 e_test ("e0", "e035", "illegal recursive declaration")
 e_test ("e0", "e034", "structural equivalence of records")
@@ -1066,7 +1079,6 @@ c_test ("c0", "c004", "declaration of REF INTEGER")
 c_test ("c0", "c003", "a program with two statements")
 c_test ("c0", "c002", "empty unsafe program")
 c_test ("c0", "c001", "empty program")
-
 
 
 % Finalize HTML report.

@@ -1,6 +1,6 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: SymListParse.m3,v 1.2 2001-09-19 15:31:35 wagner Exp $ *)
+(* $Id: SymListParse.m3,v 1.2 2001/07/29 21:58:03 kp Exp $ *)
 
 MODULE SymListParse;
 IMPORT FileRdErr;
@@ -9,9 +9,14 @@ IMPORT CharRange;
 IMPORT CharCodes;
 IMPORT Thread;
 IMPORT Sym;
+IMPORT Debug, Text;
+FROM Fmt IMPORT Int, F;
 (* IMPORT Text;
    IMPORT Term; *)
 <*FATAL Rd.Failure, Thread.Alerted*>
+
+VAR
+  doDebug := Debug.DebugThis("SYMLISTPARSE");
 
 PROCEDURE BackGetName(rd: Rd.T): TEXT =
   VAR
@@ -36,17 +41,22 @@ PROCEDURE Parse(rd: Rd.T;
   VAR
     sym: Sym.T;
     syms: SymList.T;
-    c: CHAR;
+    c, cc: CHAR;
   BEGIN
-(*    Term.WrLn("Enter Parse."); *)
+    IF doDebug THEN Debug.Out("SymListParse.Parse") END;
     TRY
       WHILE TRUE DO
-(*        Term.WrLn("Next Item."); *)
+        IF doDebug THEN Debug.Out("SymListParse next item") END;
         WHILE Rd.GetChar(rd) IN CharRange.WhiteSpace DO
-(*          Term.WrLn("Skip blank."); *)
+          IF doDebug THEN Debug.Out("SymListParse skip blank") END;
         END;
         Rd.UnGetChar(rd);
-        CASE Rd.GetChar(rd) OF
+        IF doDebug THEN Debug.Out("SymListParse UnGetChar") END;
+        cc := Rd.GetChar(rd);
+        IF doDebug THEN Debug.Out(F("SymListParse GetChar %s %s",
+                                    Int(ORD(cc)), Text.FromChar(cc))) END;
+
+        CASE cc OF
         | '\047' =>
           c := CharCodes.GetChar(rd);
           IF NOT c IN allowedChars THEN

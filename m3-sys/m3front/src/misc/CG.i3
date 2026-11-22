@@ -123,7 +123,8 @@ PROCEDURE Declare_formal (n: Name;  t: TypeUID; <*UNUSED*>typename := M3ID.NoID)
 PROCEDURE Declare_raises (n: Name);
 
 PROCEDURE Declare_object (t, super: TypeUID;  brand: TEXT;  traced: BOOLEAN;
-                 n_fields, n_methods, n_overrides: INTEGER;  field_size: Size);
+                 n_fields, n_methods, n_overrides: INTEGER;  field_size: Size;
+                 field_offset, method_offset : INTEGER);
 PROCEDURE Declare_method (n: Name;  signature: TypeUID;  dfault: M3.Expr);
 PROCEDURE Declare_override (n: Name;  dfault: M3.Expr);
 PROCEDURE Declare_opaque (t, super: TypeUID);
@@ -745,6 +746,11 @@ PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL
 (* annotate the output with a&b&c&d as a comment *)
 
 (*--------------------------------------------------------------- atomics ---*)
+
+(* REVIEW: These need verification that s0.x = StackType[t].
+           Otherwise, s0.x needs to be passed in as an additional
+           parameter and used in place of StackType[t].
+           If neither, CG errors will fly. *)
 
 PROCEDURE Store_ordered (t: MType;  order: MemoryOrder);
 PROCEDURE Load_ordered (t: MType;  order: MemoryOrder);

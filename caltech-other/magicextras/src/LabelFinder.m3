@@ -7,7 +7,7 @@ IMPORT MagCell, MagCellExtendable, TextSet, MagLabelList AS LabelList,
 IMPORT Debug;
 IMPORT NodeNameSplitter;
 IMPORT Text;
-FROM TextUtils IMPORT ReplaceChar;
+FROM CitTextUtils IMPORT ReplaceChar;
 
 PROCEDURE TransformLabelList(l : LabelList.T; t : MagTransform.T) : LabelList.T=
   VAR

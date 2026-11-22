@@ -1,7 +1,7 @@
 MODULE Main;
 
 IMPORT Text,Stdio,Rd,Scan,Params;
-IMPORT LSP;
+IMPORT LSP,Utils;
 
 VAR
   HeaderLen : CARDINAL; (* const *)
@@ -41,6 +41,7 @@ PROCEDURE Run() =
   END Run;
 
 BEGIN
+  Utils.Msg("Modula3 language server started\n");
   HeaderLen := Text.Length("Content-Length:");
   IF Params.Count <= 1 THEN
     Run();

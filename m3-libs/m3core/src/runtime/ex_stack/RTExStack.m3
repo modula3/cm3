@@ -4,17 +4,16 @@
 
 UNSAFE MODULE RTExStack EXPORTS RTException;
 
-IMPORT RT0, RTOS, RTError, RTIO, RTStack, RTParams, RTEHScan;
-IMPORT RTProcedureSRC, Cstring;
+IMPORT RT0, RTOS, RTIO, RTStack, RTParams;
+IMPORT RTProcedureSRC;
 FROM RT0 IMPORT RaiseActivation;
+(*
+IMPORT Cstring;
+*)
 
 
 VAR
   DEBUG := FALSE;
-  dump_enabled := FALSE;
-
-EXCEPTION
-  OUCH; (* to keep the compiler from complaining *)
 
 TYPE
   CharArr = REF ARRAY OF CHAR;
@@ -29,79 +28,47 @@ PROCEDURE AllocBuf(size : INTEGER) : ADDRESS =
   END AllocBuf;
 
 PROCEDURE Raise (VAR act: RaiseActivation) RAISES ANY =
-  VAR
-    here, f: RTStack.Frame;
-    excRef : REF RaiseActivation;
-    scan : BOOLEAN;
+  VAR excRef: REF RaiseActivation;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RAISE", act);
       PrintStack (act.exception.uid);
     END;
-
-    RTStack.CurrentFrame (here);
-    RTStack.PreviousFrame (here, f); (* skip self *)
-    LOOP
-      IF (f.pc = NIL) THEN
-        (* we're at the end of the stack (or we got lost along the way!) *)
-        InvokeBackstop (act, raises := FALSE);
-      END;
-
-      IF f.lsda # NIL THEN
-        (* scan the dwarf eh scopes found by the unwinder *)
-        scan := RTEHScan.ScanEHTable(f, act.exception.uid);
-        IF scan THEN
-          excRef := NEW(REF RaiseActivation);
-          excRef^ := act;
-          ResumeRaise (excRef^)
-        END;
-      END;
-
-      (* try the previous frame *)
-      RTStack.PreviousFrame (f, f);
-    END; (* loop *)
+    (* Copy the activation to the M3 heap so the pointer remains valid
+       across stack unwinding.  ThrowM3Exc carries ADR(excRef^) as
+       _M3Exc.act; the generated catch clauses store that into _m3_caught
+       so that CompileHandler1's Load_addr(info) chain retrieves the
+       correct exception descriptor and argument. *)
+    excRef := NEW(REF RaiseActivation);
+    excRef^ := act;
+    RTStack.ThrowM3Exc(ADR(excRef^));
+    (* ThrowM3Exc never returns; this is an unreachable safety net. *)
+    InvokeBackstop (act, raises := FALSE);
   END Raise;
 
 PROCEDURE ResumeRaise (VAR a: RaiseActivation) RAISES ANY =
-  VAR
-    here, f: RTStack.Frame;
-    scan : BOOLEAN;
   BEGIN
     IF DEBUG THEN
       PutExcept ("RERAISE", a);
       PrintStack (a.exception.uid);
     END;
-
-    RTStack.CurrentFrame (here);
-    RTStack.PreviousFrame (here, f); (* skip self *)
-    LOOP
-      IF (f.pc = NIL) THEN
-        (* we're at the end of the stack (most likely unhandled exception) *)
-        InvokeBackstop (a, raises := FALSE);
-      END;
-
-      IF f.lsda # NIL THEN
-        (* scan the dwarf eh scopes found by the unwinder *)
-        scan := RTEHScan.ScanEHTable(f, a.exception.uid);
-        IF scan THEN
-          (* landingpad set in scan *)
-          f.excRef := ADR(a);
-          RTStack.Unwind (f);
-          RTError.MsgPC (LOOPHOLE (f.pc, INTEGER), "Unwind returned!");
-          RAISE OUCH;
-        END;
-      END;
-
-      (* try the previous frame *)
-      RTStack.PreviousFrame (f, f);
-    END;
+    (* Re-throw via native C++ so the unwinder dispatches to the correct
+       enclosing TRY/EXCEPT or TRY/FINALLY handler.  ADR(a) is a heap
+       pointer because Raise always copies the activation to the M3 heap
+       before throwing; ThrowM3Exc passes that address through as
+       _M3Exc.act, which the catch clause stores into _m3_caught. *)
+    RTStack.ThrowM3Exc(ADR(a));
+    (* ThrowM3Exc never returns; this is an unreachable safety net. *)
+    InvokeBackstop (a, raises := FALSE);
   END ResumeRaise;
 
 
 (*----------------------------------------------------------- diagnostics ---*)
 
+(*
 VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
                                      'p','r','o','c','e','d','u','r','e'};
+*)
 
 PROCEDURE DumpStack () =
   BEGIN
@@ -113,37 +80,47 @@ PROCEDURE PrintStack (uid : INTEGER) =
   VAR
     here, f: RTStack.Frame;
     name: RTProcedureSRC.Name;
-    scan : BOOLEAN;
   BEGIN
-    IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
-
+    IF NOT RTStack.Has_walker () THEN
+      (* Raising needs no stack walker (a raise is a C++ throw); only this
+         dump does, and this target has none. *)
+      RTIO.PutText ("(no stack dump: this target has no stack walker)\n");
+      RTIO.Flush ();
+      RETURN;
+    END;
     RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
-    RTIO.PutText ("----PC----      ----SP----  \n");
+    RTIO.PutText ("----PC----      ----SP----      --------Procedure--------\n");
 
     RTStack.CurrentFrame (here);
     RTStack.PreviousFrame (here, f); (* skip self *)
 
     WHILE (f.pc # NIL) DO
 
-      IF f.lsda # NIL THEN
-        (* scan the dwarf eh scopes found by the unwinder *)
-        scan := RTEHScan.ScanEHTable(f, uid);
-        RTIO.PutText ("\n");
+      IF uid # 0 THEN
+      (* fixme - scan and print the dwarf eh scopes found by the unwinder
+        IF f.lsda # NIL THEN
+        END; *)
       END;
 
       (* print the procedure's frame *)
+      (* This is only approximate. The pc will be the one after the call that
+         results in the chain leading to crash (which prints this trace).
+         And call instructions can vary in size. *)
       RTIO.PutAddr (f.pc - CallInstructionSize, 10);
       RTIO.PutText ("  ");
       RTIO.PutAddr (f.sp, 10);
 
       name := RTStack.ProcName (f);
+      RTIO.PutText ("  [");
       IF (name # NIL)
-        AND Cstring.memcmp (name, ADR(NoName), NUMBER(NoName)) # 0 THEN
-        RTIO.PutText ("  [");  RTIO.PutString (name);  RTIO.PutText ("]");
+        (* not sure why they were checking for "static procedure" probably
+           an artifact of an old architecture/os *)
+        (* AND Cstring.memcmp (name, ADR(NoName), NUMBER(NoName)) # 0 *) THEN
+        RTIO.PutString (name);
       END;
-      RTIO.PutText ("\n");
+      RTIO.PutText ("]\n");
 
       (* try the previous frame *)
       RTStack.PreviousFrame (f, f);
@@ -180,7 +157,5 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
   END PutExcept;
 
 BEGIN
-  dump_enabled := RTParams.IsPresent ("stackdump");
   DEBUG := RTParams.IsPresent ("debugex");
-  <*ASSERT RTStack.Has_walker*>
 END RTExStack.

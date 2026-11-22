@@ -78,6 +78,7 @@ TYPE
     methods : REF ARRAY OF Method;
     (* Note that fields and methods contain only the identifiers 
        declared for this type, and not those of supertypes *)
+    overrides : REF ARRAY OF Override;
   END;
 
   Ref = Reference OBJECT
@@ -132,6 +133,11 @@ TYPE
     default : MethodDefault;
   END;
 
+  Override = REF RECORD
+    name    : Atom.T;
+    default : MethodDefault;
+  END;
+
   MethodDefault = BRANDED OBJECT END;
 
   MethodDefault1 = MethodDefault OBJECT qid: Qid  END;
@@ -142,7 +148,6 @@ TYPE
     method: Atom.T
   END;
   (*  represents obType.method *)
-
 
   Signature = RECORD
     formals : REF ARRAY OF Formal;

@@ -1,0 +1,59 @@
+/* $Id: m3makefile,v 1.17 2011/02/19 20:49:28 mika Exp $ */
+import ("cit_util")
+import ("mscheme")
+import ("modula3scheme")
+import ("libm3")
+import ("netobj")
+import ("m3readline")
+import ("schemereadline")
+import ("sstubgen")
+
+Module("Example")
+Interface("Example2")
+%Interface("Type")
+%Interface("Value")
+Module("Bubble")
+Module("Crash")
+
+Interface("ExampleRef")
+
+Interface("Blah")
+
+SchemeStubs("Bubble")
+SchemeStubs("Crash")
+SchemeStubs("Example")
+SchemeStubs("Example2")
+SchemeStubs("ExampleRef")
+
+SchemeStubs("Fmt")
+SchemeStubs("Wr")
+SchemeStubs("Text")
+SchemeStubs("TextWr")
+SchemeStubs("TextRd")
+SchemeStubs("FileWr")
+SchemeStubs("Rd")
+SchemeStubs("FileRd")
+SchemeStubs("Pickle")
+
+SchemeStubs("TextSet")
+SchemeStubs("TextSetDef")
+
+SchemeStubs("SchemeClosure")
+SchemeStubs("SchemeClosureClass")
+
+SchemeStubs("RTType")
+
+SchemeStubs("SchemeEnvironment")
+
+SchemeStubs("Blah")
+%SchemeStubs("FS")
+
+%SchemeStubs("TextRefTbl") % doesnt work yet
+
+ExportSchemeStubs("stubexample") % export OUR scheme stubs
+
+importSchemeStubs()              % import ALL scheme stubs
+
+implementation("Main")
+
+program ("stubexample")

@@ -1014,6 +1014,17 @@ PROCEDURE VarParamOK_C(ts: M3AST_AS.TYPE_SPEC): BOOLEAN RAISES {}=
     RETURN ts.sm_align MOD minAlignment = 0;
   END VarParamOK_C;
 
+PROCEDURE CompIntLong(e1 : Longint_value; e2 : Integer_value) : INTEGER =
+  BEGIN
+    IF e1.sm_value = VAL(e2.sm_value,LONGINT) THEN
+      RETURN 0
+    ELSIF e1.sm_value < VAL(e2.sm_value,LONGINT) THEN
+      RETURN -1
+    ELSE
+      RETURN 1
+    END; (* if *)
+  END CompIntLong;
+
 PROCEDURE Compare_C(e1, e2: M3AST_SM.Exp_value): INTEGER RAISES {}=
   BEGIN
     TYPECASE e1 OF
@@ -1050,6 +1061,9 @@ PROCEDURE Compare_C(e1, e2: M3AST_SM.Exp_value): INTEGER RAISES {}=
               RETURN 1
             END; (* if *)
         | Integer_value(eiv2) =>
+            (* workaround to bug in integrated backend *)
+            RETURN CompIntLong(eiv1, eiv2);
+(*
             IF eiv1.sm_value = VAL(eiv2.sm_value,LONGINT) THEN
               RETURN 0
             ELSIF eiv1.sm_value < VAL(eiv2.sm_value,LONGINT) THEN
@@ -1057,10 +1071,10 @@ PROCEDURE Compare_C(e1, e2: M3AST_SM.Exp_value): INTEGER RAISES {}=
             ELSE
               RETURN 1
             END; (* if *)
+*)
         ELSE
           RETURN 1;
         END;
-
     | Set_constructor_value(cv1) =>
         TYPECASE e2 OF
         | Set_constructor_value(cv2) =>

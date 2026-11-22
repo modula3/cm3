@@ -1,5 +1,9 @@
 #include <limits.h>
 
+/* this define is generated in the m3makefile and prepended to parse.c
+#define LONG_DOUBLE_TYPE_SIZE == 128 or == 64
+*/
+
 #if UCHAR_MAX == 0x0FFUL
 typedef   signed char        INT8;
 typedef unsigned char       UINT8;

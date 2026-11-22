@@ -7,6 +7,10 @@
 
 GENERIC INTERFACE ArrayModes ( Actuals , Formals )  
 
+(* Actuals and Formals each declare:
+   Label:     TEXT (* used to identify what is tested. *)
+*)
+
 ; CONST Label = "Open depths Actual: " & Actuals . Label
                 & ", Formal: " & Formals . Label 
 

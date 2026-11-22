@@ -1,8 +1,9 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: Main.m3,v 1.2 2001-09-19 15:04:45 wagner Exp $ *)
+(* $Id: Main.m3,v 1.3 2002/12/11 08:54:53 kp Exp $ *)
 
 MODULE Main;
+IMPORT Debug;
 IMPORT tokformBundle, Bundle;
 IMPORT TokParams;
 IMPORT TokSpec;
@@ -14,7 +15,7 @@ IMPORT Pathname;
 IMPORT Fmt;
 IMPORT FmtTable;
 (* IMPORT Term; *)
-<* FATAL Thread.Alerted, Wr.Failure, OSError.E *>
+<* FATAL Thread.Alerted, Wr.Failure *>
 
 VAR
   Form := tokformBundle.Get();
@@ -82,16 +83,33 @@ PROCEDURE Subs(tok: TokSpec.T; name: TEXT): TextSubs.T =
 
 
 VAR
-  tp := TokParams.Get("tok", ".t", "Tok.i3", FALSE);
-  tok := TokParams.ReadTokens(tp);
-  subs := Subs(tok, tp.outBase);
+  tp: TokParams.T;
+  tok: TokSpec.T;
+  subs: TextSubs.T;
   wr: Wr.T;
 BEGIN
-  wr := FileWr.Open(tp.out);
+  Debug.S("WELCOME!");
+  tp := TokParams.Get("tok", ".t", "Tok.i3", FALSE);
+  Debug.S("GOT TOKPARAMS!");
+  tok := TokParams.ReadTokens(tp);
+  Debug.S("GOT TOKENS");
+  subs := Subs(tok, tp.outBase);
+  Debug.S("GOT SUBS!");
+  TRY
+    wr := FileWr.Open(tp.out);
+  EXCEPT OSError.E =>
+    Debug.Error("Cannot open tok interface output file: " & tp.out);
+  END;
+
   Wr.PutText(wr, subs.apply(Bundle.Get(Form, "tokform.i3")));
   Wr.Close(wr);
 
-  wr := FileWr.Open(Pathname.ReplaceExt(tp.out, "m3"));
+  TRY
+    wr := FileWr.Open(Pathname.ReplaceExt(tp.out, "m3"));
+  EXCEPT OSError.E =>
+    Debug.Error("Cannot open tok implementation output file: " &
+      Pathname.ReplaceExt(tp.out, "m3"));
+  END;
   Wr.PutText(wr, subs.apply(Bundle.Get(Form, "tokform.m3")));
   Wr.Close(wr);
 END Main.

@@ -12,6 +12,7 @@ IMPORT SchemeSymbol;
 IMPORT SchemeVector;
 IMPORT Pathname;
 IMPORT Rd, Wr;
+IMPORT Pickle;
 
 EXCEPTION E(TEXT);
  (* This declaration is, unfortunately, a source of trouble.
@@ -120,6 +121,26 @@ TYPE
     setRTErrorMapping(to : BOOLEAN);
     (* set the above (default TRUE) *)
 
+
+    (* XXX I don't think the copy() routines will work because they 
+           mess up existing closures!!!! *)
+    copy() : T; (* XXX *)
+    (* deep copy *)
+
+    initCopy(t : T); (* XXX *)
+    (* used to implement copy() -- implementers should provide this *)
+
+    clearErrorEnvironment() : SchemeEnvironmentSuper.T;
+    (* get the first environment an error occurred since the last
+       time clearErrorEnvironment was called -- allows the environment
+       in which the error occurred to be inspected for debugging *)
+
+    getErrorEvalX() : Object;
+    (* get object last evaluated to create an error *)
+
+    pickleGlobalEnv(to : Wr.T) RAISES { Pickle.Error, Wr.Failure } ;
+
+    unpickleGlobalEnv(from : Rd.T) RAISES { Pickle.Error, Rd.Failure, Rd.EndOfFile };
   END;
 
 TYPE Interrupter = OBJECT METHODS interrupt() : BOOLEAN; END;

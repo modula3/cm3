@@ -9,7 +9,7 @@ UNSAFE MODULE RTPacking;
 IMPORT FloatMode, Word;
 
 CONST
-  Bits = ARRAY [0..3] OF INTEGER { 8, 16, 32, 64 };
+  Bits = ARRAY [0..4] OF INTEGER { 8, 16, 32, 64, 128 };
 
 VAR
   init_done := FALSE;

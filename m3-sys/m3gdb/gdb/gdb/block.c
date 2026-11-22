@@ -289,6 +289,7 @@ allocate_block (struct obstack *obstack)
   BLOCK_SUPERBLOCK (bl) = NULL;
   BLOCK_DICT (bl) = NULL;
   BLOCK_NAMESPACE (bl) = NULL;
+  bl->language_specific.m3_specific.body_block = NULL;
   BLOCK_GCC_COMPILED (bl) = 0;
 
   return bl;

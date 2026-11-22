@@ -1,0 +1,10 @@
+/* $Id$ */
+
+if SYSTEM_LIBS contains "READLINE"
+  import ("libm3")
+  import_sys_lib ("READLINE")
+
+  c_source ("program")
+
+  C_program("readlinefe")
+end

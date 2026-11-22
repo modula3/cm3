@@ -71,8 +71,9 @@
 # otherwise instructed the concierge will build only the C and
 # integrated backends (only on I386_NT) and will not build GCC.
 #
-# Developers can specify `-gcc` or `--backend gcc` the build the GCC
+# Developers can specify `-gcc` or `--backend gcc` to build the GCC
 # backend.
+# Or could specify `-llvm` or `--backend llvm` to build the LLVM backend
 #
 # GCC is not included in the distribution tarball and is not available
 # on new system installs, it must be built from source using
@@ -101,7 +102,6 @@ HEADLESS = "headless"
 # Operating system classifications.
 POSIX = "POSIX"
 WIN32 = "WIN32"
-
 
 # Setup logging to `concierge.log`
 
@@ -224,9 +224,9 @@ COMPILER_DEFINE = -D<name> | -D<name>=<value>
 
 Select the backend to use for compliation.  Breaking from tradition,
 the "c" backend is used as the default if nothing is specified, and
-the gcc backend is only built when explicitly requested.
+the gcc or llvm backend is only built when explicitly requested.
 
-BACKEND_OPTION = --backend (c|gcc|integrated) | -c | -gcc | -integrated
+BACKEND_OPTION = --backend (c|gcc|integrated|llvm) | -c | -gcc | -integrated | -llvm
 
 Select the compile target.  The command-line "--target" takes
 precedence over the "CM3_TARGET" environment variable, which takes
@@ -352,6 +352,13 @@ class Platform:
         "The integrated backend supports only 32-bit Windows"
         return self.name() in ["NT386", "I386_NT"]
 
+    def has_llvm_backend(self):
+        "The llvm backend only supported on Linux at present"
+        if re.search(r"LINUX", self.name()):
+            return True
+        else:
+            return False
+
     def has_serial(self):
         return self.is_win32()
 
@@ -418,6 +425,7 @@ class Cm3:
         self._keep_going = False
         self._list_only  = False
         self._no_action  = False
+        self._no_buffering  = False
 
     def backend(self):
         "The compiler backend to use when building packages"
@@ -430,12 +438,16 @@ class Cm3:
         if self._backend == "integrated" and not self.target().has_integrated_backend():
             self._backend = "c"
 
-        assert self._backend in ["c", "gcc", "integrated"]
+        # Don't try to use the llvm backend when not available.
+        if self._backend == "llvm" and not self.target().has_llvm_backend():
+            self._backend = "c"
+
+        assert self._backend in ["c", "gcc", "integrated", "llvm"]
         return self._backend
 
     def build(self, *paths):
         "Relative to root of current build directory"
-        return self.source(*paths) / self.build_dir()
+        return Path(self.source(*paths)) / Path(self.build_dir())
 
     def build_dir(self):
         "Basename of build directory"
@@ -566,13 +578,17 @@ class Cm3:
         "Perform a dry-run, do not make any changes to the system"
         return self._no_action
 
+    def no_buffering(self):
+        "Let cm3 child process not buffer its output"
+        return self._no_buffering
+
     def script(self):
         "The script is used to locate the source directory"
         return Path(self._script).resolve()
 
     def set_options(self, namespace):
         "Inform CM3 of options detected in argument parsing"
-        for attr in ["_keep_going", "_list_only", "_no_action"]:
+        for attr in ["_keep_going", "_list_only", "_no_action", "_no_buffering"]:
             if hasattr(namespace, attr):
                 setattr(self, attr, getattr(namespace, attr))
 
@@ -581,7 +597,7 @@ class Cm3:
         script_path = self.script()
         script_dir  = script_path.parent
         source_dir  = script_dir.parent
-        return source_dir.joinpath(*paths)
+        return source_dir.joinpath(*paths).as_posix()
 
     def target(self):
         "Compilation target, passed to CM3"
@@ -610,6 +626,15 @@ class Cm3:
     def use_gcc_backend(self):
         return self.backend() == "gcc"
 
+    def use_llvm_backend(self):
+        return self.backend() == "llvm"
+
+    def get_backend(self):
+        return self._backend
+
+    def set_backend(self, be):
+        self._backend = be
+
 
 class WithCm3:
     "Provides access to cm3 build context"
@@ -632,10 +657,14 @@ class WithCm3:
             "keep_going",
             "list_only",
             "no_action",
+            "no_buffering",
             "source",
             "target",
             "use_c_backend",
-            "use_gcc_backend"
+            "get_backend",
+            "set_backend",
+            "use_gcc_backend",
+            "use_llvm_backend"
         ]
         if method_name not in forwards:
             raise AttributeError
@@ -646,7 +675,7 @@ class WithCm3:
 
     def rmdir(self, dir):
         "Recursively remove a directory"
-        if dir.is_dir():
+        if Path(dir).is_dir():
             print("rm", "-Rf", dir)
             if not self.no_action():
                 shutil.rmtree(dir)
@@ -752,7 +781,6 @@ class PackageDatabase(WithCm3):
         "Do we try to build this package?"
         if os.environ.get("CM3_ALL"):
             return True
-
         if name == "X11R4":  return self.target().is_posix()
         if name == "m3cc":   return self.use_gcc_backend()
         if name == "m3gdb":  return self.use_gcc_backend() and self.target().has_gdb()
@@ -852,21 +880,31 @@ class PackageAction(WithCm3):
         "Execute a cm3 child process"
         cwd  = self.source(package_path)
         args = [str(self.exe())] + args + self.defines() + self.flags()
-        print("cd", cwd)
-        print(*args)
+        print("\ncd", cwd, "\n", flush = True)
+        print(*args, flush = True)
 
         if self.no_action():
             return
 
-        proc = subprocess.run(
-            args,
-            cwd=cwd,
-            env=self.env(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            errors="ignore"
-        )
-        sys.stdout.write(proc.stdout)
+        #if noBuffering the cm3 process sends output direct which aids debug
+        if self.no_buffering():
+            proc = subprocess.run(
+                args,
+                cwd=cwd,
+                env=self.env(),
+                errors="ignore"
+            )
+        else:
+            proc = subprocess.run(
+                args,
+                cwd=cwd,
+                env=self.env(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                errors="ignore"
+            )
+            sys.stdout.write(proc.stdout)
+
         proc.check_returncode()
 
     def success(self):
@@ -888,6 +926,12 @@ class PackageAction(WithCm3):
         # to be specified.
         if self.use_c_backend():
             defines.append(f"-DM3_BACKEND_MODE=C")
+
+        if self.use_gcc_backend():
+            defines.append(f"-DM3_BACKEND_MODE=ExternalAssembly")
+
+        if self.use_llvm_backend():
+            defines.append(f"-DM3_BACKEND_MODE=StAloneLlvmObj")
 
         # Include any defines given on the command-line.
         return defines + self.cm3().defines()
@@ -1068,7 +1112,7 @@ class WithPackageActions(WithPackageDb):
             action = constructor(self.cm3())
             def executor(packages):
                 paths = self.get_package_paths(packages)
-                print(method_name, *paths)
+                print(method_name, *paths, flush = True)
                 action.execute(paths)
             return executor
         except KeyError:
@@ -1098,6 +1142,7 @@ class ConciergeCommand(WithPackageActions):
         keep_going = False
         list_only  = False
         no_action  = False
+        no_buffering  = False
 
         for option in ["-k", "--keep-going"]:
             while option in args:
@@ -1114,9 +1159,15 @@ class ConciergeCommand(WithPackageActions):
                 args.remove(option)
                 no_action = True
 
+        for option in ["-b", "--no-buffering"]:
+            while option in args:
+                args.remove(option)
+                no_buffering = True
+
         setattr(namespace, "_keep_going", keep_going)
         setattr(namespace, "_list_only",  list_only)
         setattr(namespace, "_no_action",  no_action)
+        setattr(namespace, "_no_buffering",  no_buffering)
 
     @classmethod
     def _parse_compiler_options(cls, args, namespace):
@@ -1143,12 +1194,12 @@ class ConciergeCommand(WithPackageActions):
                 backend = tail.pop(0)
             elif head.startswith("--backend="):
                 backend = head[10:]
-            elif head in ["-c", "-gcc", "-integrated"]:
+            elif head in ["-c", "-gcc", "-integrated", "-llvm"]:
                 backend = head[1:]
             else:
                 args.append(head)
 
-        if backend not in ["c", "gcc", "integrated"]:
+        if backend not in ["c", "gcc", "integrated", "llvm"]:
             raise UsageError(f"{backend} is not a recognized backend")
 
         setattr(namespace, "_backend", backend)
@@ -1173,7 +1224,9 @@ class ConciergeCommand(WithPackageActions):
             "-times",      # produce a dump of elapsed times
             "-trace",      # trace quake code execution
             "-verbose",    # list internal steps as they are performed
-            "-why"         # explain why code is being recompiled
+            "-why",        # explain why code is being recompiled
+            "-g0",         # turn off debug generation in backends
+            "-O3"          # turn on full optimisation in backends
         ]
         flags   = [arg for arg in args if arg in cm3flags]
         args[:] = [arg for arg in args if arg not in flags]
@@ -1218,15 +1271,15 @@ class ConciergeCommand(WithPackageActions):
     def cp(self, src, dst):
         "Copy a file"
         if src.is_file():
-            print("cp", "-P", src, dst)
+            print("\ncp", "-P", src, dst, "\n")
             if not self.no_action():
                 shutil.copy(src, dst)
 
     def mkdir(self, dir):
         "Create a directory"
-        print("mkdir", "-p", dir)
+        print("\nmkdir", "-p", dir, "\n")
         if not self.no_action():
-            dir.mkdir(parents=True, exist_ok=True)
+            Path(dir).mkdir(parents=True, exist_ok=True)
 
     def rm(self, file):
         "Remove a file"
@@ -1290,27 +1343,183 @@ class UpgradeCommand(ConciergeCommand):
     "Upgrade compiler and core system"
 
     def execute(self):
-        base_packages = ["+front", "+m3bundle", "-m3cc"]
+        #reset the config files - we are doing an upgrade, so need a clean slate
+        self._install_config()
 
-        # Guarantee a basic config if we're on a clean system.
-        if not self.install("bin/cm3.cfg").is_file():
-            self._install_config()
+        if self.use_gcc_backend():
+            self._doGcc()
+        elif self.use_llvm_backend():
+            self._doLLVM()
+        else:
+            self._doCandIntegrated()
 
-        # Build GCC first if we will need it.
-        if self.use_gcc_backend() and not self.install("bin/cm3cg").is_file():
+    def _doGcc(self):
+        "Do the gcc backend"
+
+        if not self.install("bin/cm3cg").is_file():
+            #assume CI/CD or corruption and build m3cc from scratch
+            #and front using C backend
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+            #after setting the backend we have to ensure the
+            #cm3.cfg installed config file has no M3_BACKEND_MODE
+            #setting as it overrides the one we place on the command line.
+
+            #test not building the compiler with c backend first
+            #self.set_backend("c")
+            #self._resetCfg()
+
+            #self.realclean(base_packages)
+            #self.buildship(base_packages)
+            #self._ship_front()
+
+            #set backend back to gcc
+            self.set_backend("gcc")
+            self._resetCfg()
+
+            #build gcc backend and ship
+            self.realclean(["m3cc"])
             self.buildship(["m3cc"])
             self._ship_back()
 
-        # Then ensure we don't use an outdated GCC.
-        self._clean()
+            #build compiler with gcc backend
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
 
-        # Build the compiler using the installed version of the system.
-        self._run_pass(base_packages)
+            #and once more
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+        else:
+            #build using installed gcc backend
+            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
+            runtime_packages = ["+m3core", "+libm3"]
 
-        # Use the new compiler to build the core system.  There is no
-        # need to rebuild GCC in the second pass.
-        self._install_config()
-        self._run_pass(base_packages, build_gcc = False)
+            #we follow the design of upgrade.sh and not build the runtime first
+            #since the runtime could have been changed wrt to front end
+            #but this has problems when the runtime was previously built with
+            #the C backend. In this case one option is to manually
+            #compile and ship the runtime using the gcc backend
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #force build of cm3cg
+            self.realclean(["m3cc"])
+            self.buildship(["m3cc"])
+            self._ship_back()
+
+            #second pass build runtime and base
+            self.realclean(runtime_packages)
+            self.buildship(runtime_packages)
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+    def _doCandIntegrated(self):
+        "Do the C and integrated backends"
+
+        #assume front contains m3core and libm3 as first packages
+        base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+        #first build
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
+        #second build
+        self.realclean(base_packages)
+        self.buildship(base_packages)
+        self._ship_front()
+
+    def _doLLVM(self):
+        "Do the LLVM backend"
+
+        if not self.install("bin/m3llvm").is_file():
+
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+            #after setting the backend we have to ensure the
+            #cm3.cfg installed config file has no M3_BACKEND_MODE
+            #setting as it overrides the one we place on the command line.
+
+            #set backend back to gcc
+            self.set_backend("gcc")
+            self._resetCfg()
+
+            #build gcc backend and ship
+            self.realclean(["m3cc"])
+            self.buildship(["m3cc"])
+            self._ship_back()
+
+            #build compiler with gcc backend
+            #have to build llvm backed with compiler built with gcc backend
+            #because of incompatible c issues dealing with procs
+            #returning structs
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #now do the llvm build
+            #base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
+
+            #force build of llvm using gcc backend 
+            self.realclean(["+llvm"])
+            self.buildship(["+llvm"])
+
+            #set backend to llvm
+            self.set_backend("llvm")
+            self._resetCfg()
+
+            #llvm not in front
+            base_packages = ["+front", "+m3bundle", "-m3cc"]
+
+            #build compiler with llvm backend
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #second build with llvm can be skipped
+            #self.realclean(base_packages)
+            #self.buildship(base_packages)
+            #self._ship_front()
+        else:
+            #build using installed llvm backend
+            base_packages = ["+front", "+m3bundle", "-m3cc", "-m3core", "-libm3"]
+            runtime_packages = ["+m3core", "+libm3"]
+
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+            #force build of llvm 
+            self.realclean(["+llvm"])
+            self.buildship(["+llvm"])
+
+            #second pass build runtime and base
+            self.realclean(runtime_packages)
+            self.buildship(runtime_packages)
+            self.realclean(base_packages)
+            self.buildship(base_packages)
+            self._ship_front()
+
+    def _resetCfg(self):
+        "reset the cm3.cfg file"
+        backend = ''
+        cross_compile = ''
+        if self.config() == "I386_LINUX":
+            cross_compile = 'SYSTEM_CC = SYSTEM_CC & " -I/usr/i686-linux-gnu/include"\n'
+
+        self.install("bin/cm3.cfg").write_text(
+            f"""{backend}if not defined("SL") SL = "/" end
+if not defined("HOST") HOST = "{self.config()}" end
+if not defined("TARGET") TARGET = HOST end
+INSTALL_ROOT = (path() & SL & "..")
+include(path() & SL & "config" & SL & TARGET)
+{cross_compile}"""
+        )
+
 
     def _clean(self):
         "Delete lingering cm3cg so we can't accidentally use an old version"
@@ -1370,7 +1579,7 @@ class UpgradeCommand(ConciergeCommand):
     def _install_config(self):
         "Copy config for distribution"
 
-        src = self.source("m3-sys/cminstall/src/config")
+        src = Path(self.source("m3-sys/cminstall/src/config"))
         dst = self.install("bin/config")
 
         # Delete the old config files.
@@ -1380,7 +1589,7 @@ class UpgradeCommand(ConciergeCommand):
         self.mkdir(dst)
 
         # Copy all files from src to dst.
-        for config in src.iterdir():
+        for config in Path(src).iterdir():
             self.cp(config, dst)
 
         # Write new cm3.cfg
@@ -1389,7 +1598,14 @@ class UpgradeCommand(ConciergeCommand):
 
         backend = ''
         if self.use_c_backend():
-            backend = 'readonly M3_BACKEND_MODE = "C"\n'
+            #backend = 'readonly M3_BACKEND_MODE = "C"\n'
+            backend = ' M3_BACKEND_MODE = "C"\n'
+
+        if self.use_gcc_backend():
+            backend = ' M3_BACKEND_MODE = "ExternalAssembly"\n'
+
+        if self.use_llvm_backend():
+            backend = ' M3_BACKEND_MODE = "StAloneLlvmObj"\n'
 
         cross_compile = ''
         if self.config() == "I386_LINUX":
@@ -1418,10 +1634,12 @@ class FullUpgradeCommand(UpgradeCommand):
         super().execute()
 
         # Clean, but again there is no point in rebuilding GCC.
-        self.realclean([ALL, "-m3cc"])
+        self.realclean([ALL, "-m3cc", "-llvm"])
 
         # Reinstall all packages.
-        self.buildship(self.packages())
+        #fixme - should exclude the compiler at this point we have upgraded it
+        #self.buildship([ALL, "-m3cc", "-llvm"]) does not work on NT
+        self.buildship(self.packages() + ["-llvm"] + ["-m3cc"] + ["-front"])
 
     def packages(self):
         "Return the packages requested on the command-line"
@@ -1553,8 +1771,8 @@ class InstallCommand(ConciergeCommand):
         build   = ["cmake", "--build",   build_dir]
         install = ["cmake", "--install", build_dir]
         if self.target().is_nt():
-            build   = build + ["--config", "Debug"]
-            install = install + ["--config", "Debug"]
+            build   = build + ["--config", "Release"]
+            install = install + ["--config", "Release"]
 
         # Execute cmake steps.
         for command in [setup, build, install]:
@@ -1600,22 +1818,24 @@ class MakeBootstrapCommand(ConciergeCommand):
         # Copy generated C files to bootstrap.
         package_dirs = []
         for package_path in self.get_package_paths(packages):
-            cmakelists = Path(package_path) / "CMakeLists.txt"
+            cmakelists = self.source() / Path(package_path) / "CMakeLists.txt"
             if not cmakelists.is_file():
                 continue
-            package_dir = bootstrap_dir / Path(package_path).name
+            package_dir = Path(bootstrap_dir) / Path(package_path).name
+
             self.mkdir(package_dir)
             self.cp(cmakelists, package_dir)
-            package_dirs.append(package_dir.name)
+            package_dirs.append(Path(package_dir).name)
 
             package_sources = []
             if not self.no_action():
-                for file in self.build(package_path).iterdir():
+
+                for file in Path(self.build(package_path)).iterdir():
                     if file.suffix in [".c", ".cpp", ".h"]:
                         self.cp(file, package_dir)
                         package_sources.append(file.name)
 
-                with open(package_dir / "sources.lst", "w") as sources:
+                with open(Path(package_dir) / "sources.lst", "w") as sources:
                     sources.write("set(cm3_SOURCES\n")
                     for filename in sorted(package_sources):
                         sources.write(f"{filename}\n")
@@ -1628,15 +1848,16 @@ project(cm3 LANGUAGES C CXX)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
    set(CMAKE_INSTALL_PREFIX "{cmake_install_prefix}" CACHE PATH "..." FORCE)
 endif()
+set(M3Target "{self.target().name()}")
 include(GNUInstallDirs)
 include(bootstrap.cmake)
 """
         if not self.no_action():
-            with open(bootstrap_dir / "CMakeLists.txt", "w") as cmake:
+            with open(Path(bootstrap_dir) / "CMakeLists.txt", "w") as cmake:
                 cmake.write(cmake_header)
                 for dir in sorted(package_dirs):
                     cmake.write(f"add_subdirectory({dir})\n")
-        self.cp(self.source("scripts/bootstrap.cmake"), bootstrap_dir)
+        self.cp(Path(self.source("scripts/bootstrap.cmake")), Path(bootstrap_dir))
 
         # Generate tarballs.
         distname = f"cm3-boot-{self.config()}-{self.version()}"
@@ -1661,7 +1882,8 @@ include(bootstrap.cmake)
 
     def tar(self, tarfile, args):
         self.rm(Path(tarfile))
-        command = ["tar", "acf", tarfile, "--warning=no-file-changed"] + args
+        tar_cmd = "gtar" if shutil.which("gtar") else "tar"
+        command = [tar_cmd, "acf", tarfile, "--warning=no-file-changed"] + args
 
         print(*command)
         if not self.no_action():
@@ -1674,7 +1896,7 @@ include(bootstrap.cmake)
     def tag(self):
         "Get the version from the current tag"
         try:
-            return subprocess.check_output(["git", "describe", "--abbrev=0"], errors="ignore").rstrip()
+            return subprocess.check_output(["git", "describe", "--abbrev=0", "--tags"], errors="ignore").rstrip()
         except:
             return None
 
@@ -1690,14 +1912,15 @@ class MakeDistributionCommand(MakeBootstrapCommand):
 
         # Generate tarball.
         distname = f"cm3-dist-{self.config()}-{self.version()}"
-        parent   = str(self.source().parent)
-        source   = self.source().name
+        source_path = Path(self.source())
+        parent   = str(source_path.parent)
+        source   = source_path.name
 
         if self.target().is_win32():
             self.zip(f"{source}/{distname}.7z", [f"-xr@{source}/.gitignore", f"-xr@{source}/scripts/7z.exclude", f"{source}"], cwd=parent)
             self.zip(f"{source}/{distname}.7z", [f"{source}/bootstrap"], cwd=parent, noclean=True)
         else:
-            parent  = str(self.source().parent)
+            parent  = str(source_path.parent)
             command = [
                 "--directory", parent,
                 "--exclude=*.7z",
@@ -1736,6 +1959,7 @@ class Concierge:
         self._keep_going = False
         self._list_only  = False
         self._no_action  = False
+        self._no_buffering  = False
 
         # Package defaults.
         self._actions  = []

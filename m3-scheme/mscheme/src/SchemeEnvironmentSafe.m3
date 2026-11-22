@@ -14,8 +14,28 @@ REVEAL
     getLocalNames :=  SafeGetLocalNames;
     put           :=  SafePut;
     get           :=  SafeGet;
+    copy          :=  Copy;
+    initCopy      :=  InitCopy;
   END;
 
+PROCEDURE Copy(t : Safe) : T =
+  BEGIN
+    WITH res = NEW(Safe) DO
+      res.initCopy(t);
+      RETURN res
+    END
+  END Copy;
+
+PROCEDURE InitCopy(t : Safe; newA : T) =
+  VAR
+    new : Safe := newA;
+  BEGIN
+    Unsafe.initCopy(t, new);
+    IF t.mu # NIL THEN
+      new.mu := NEW(MUTEX)
+    END
+  END InitCopy;
+  
 PROCEDURE SafeGetLocalNames(x : Safe) : AtomList.T =
   BEGIN 
     LOCK x.mu DO RETURN Unsafe.getLocalNames(x) END 

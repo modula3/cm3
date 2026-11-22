@@ -1,5 +1,5 @@
 ;;
-;; $Id$
+;; $Id: m3.scm,v 1.3 2009/12/09 08:33:41 mika Exp $
 ;;
 
 ;; set up Scheme - Modula-3 bindings
@@ -17,10 +17,10 @@
 
 ;; basic support for wrapping objects, only to do methods
 (define (obj-method-wrap obj type)
-   (lambda args
-      (if (eq? (car args) '*get-base*) 
-          obj
-          (modula-type-op type 'call-method obj (car args) (cdr args)))))
+  (lambda args
+    (if (eq? (car args) '*m3*)
+        obj
+        (modula-type-op type 'call-method obj (car args) (cdr args)))))
 
 ;; does this type have any type ops registered?
 (define (have-type-ops? tc) (not (null?  (list-modula-type-ops tc))))

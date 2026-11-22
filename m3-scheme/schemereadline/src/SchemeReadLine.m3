@@ -1,4 +1,4 @@
-(* $Id$ *)
+(* $Id: SchemeReadLine.m3,v 1.12 2011/03/14 00:58:57 mika Exp $ *)
 
 MODULE SchemeReadLine;
 IMPORT Scheme, Csighandler;
@@ -120,6 +120,8 @@ PROCEDURE MainLoop(rl : ReadLine.T; scm : Scheme.T) RAISES { NetObj.Error,
   VAR
     sip : SchemeInputPort.T;
     doReadLine := rl # NIL;
+    LastEE := SchemeSymbol.Symbol("*last-error-environment*");
+    LastEX := SchemeSymbol.Symbol("*last-error-object*");
   BEGIN
     Csighandler.install_int_handler();
     IF doReadLine THEN
@@ -134,6 +136,9 @@ PROCEDURE MainLoop(rl : ReadLine.T; scm : Scheme.T) RAISES { NetObj.Error,
     scm.setInterrupter(NEW(Interrupter));
 
     scm.bind(SchemeSymbol.Symbol("bang-bang"), NIL);
+
+    scm.bind(LastEE, NIL);
+    scm.bind(LastEX, NIL);
 
     LOOP
       IF doReadLine THEN
@@ -152,6 +157,12 @@ PROCEDURE MainLoop(rl : ReadLine.T; scm : Scheme.T) RAISES { NetObj.Error,
               
               IF DebugALL THEN Debug.Out("Eval!") END;
               Csighandler.clear_signal();
+              WITH ee = scm.clearErrorEnvironment() DO
+                IF ee # NIL THEN
+                  scm.setInGlobalEnv(LastEE, ee);
+                  scm.setInGlobalEnv(LastEX, scm.getErrorEvalX())
+                END
+              END;
               WITH res = scm.evalInGlobalEnv(x) DO
                 IF doReadLine THEN
                   WITH wr = NEW(TextWr.T).init() DO

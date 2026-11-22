@@ -284,12 +284,17 @@ BEGIN
 END Test_AtomicRefany_IsLockFree;
 
 PROCEDURE Test_AtomicRefany_LoadStore() =
-VAR refanyC: Refany.T;
+TYPE
+  AA = REF INTEGER;
+VAR
+   refanyC: Refany.T;
+  xxx := NEW(AA);
 BEGIN
+  xxx^ := 23;
   refanyB := AtomicRefany.Load(atomicRefanyA);
-  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(1 + 2 + 3, REFANY));
+  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(xxx, REFANY));
   refanyB := AtomicRefany.Load(atomicRefanyA);
-  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(1 + 2 + 3, REFANY));
+  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(xxx, REFANY));
 
   refanyC := AtomicRefany.Load(atomicRefanyA);
   refanyC := AtomicRefany.Load(atomicRefanyA);
@@ -402,6 +407,7 @@ END Test_AtomicInteger_Fence;
 PROCEDURE Test_AtomicInteger_CompareSwap() =
 BEGIN
   bool := AtomicInteger.CompareSwap(atomicIntegerA, integerB, integerC);
+  integerC := AtomicInteger.Swap(atomicIntegerA, integerB);
 END Test_AtomicInteger_CompareSwap;
 
 PROCEDURE Test_AtomicInteger_FetchAnd() =

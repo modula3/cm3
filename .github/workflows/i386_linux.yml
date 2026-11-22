@@ -10,11 +10,11 @@ on:
         required: false
         type: string
       release:
-        default: https://github.com/modula3/cm3/releases/download/d5.11.4
+        default: https://github.com/modula3/cm3/releases/download/d5.12.0
         required: false
         type: string
       bootstrap:
-        default: cm3-boot-I386_LINUX-d5.11.4.tar.xz
+        default: cm3-boot-I386_LINUX-d5.12.0.tar.xz
         required: false
         type: string
 
@@ -37,27 +37,31 @@ jobs:
         sudo apt-get update --quiet
         sudo apt-get install --quiet --assume-yes g++-multilib
         sudo apt-get install --quiet --assume-yes g++-multilib-i686-linux-gnu
-        sudo apt-get install --quiet --assume-yes ninja-build
+        sudo apt-get install --quiet --assume-yes ninja-build binutils-gold
 
     - name: Define install location
       run: |
         echo CM3_INSTALL="$(pwd)/../install" >> $GITHUB_ENV
 
     - name: Fetch sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v6
 
     - name: Install bootstrap release
       env:
-        CMAKE_TOOLCHAIN_FILE: scripts/i686-linux-gnu.toolchain.cmake
+        # Not CMAKE_TOOLCHAIN_FILE: CMake (4.5 on) also reads that from the
+        # environment, and in try_compile's nested project this relative
+        # path finds no file, so the compiler checks fail with
+        # "CMAKE_C_COMPILER not set, after EnableLanguage".
+        M3_TOOLCHAIN_FILE: scripts/i686-linux-gnu.toolchain.cmake
       run: |
         mkdir ../bootstrap ../build
         curl --location --silent "${{ inputs.release }}/${{ inputs.bootstrap }}" | tar Jxf - --directory=../bootstrap --strip-components=1
-        cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}" -DCMAKE_TOOLCHAIN_FILE="$(pwd)/${CMAKE_TOOLCHAIN_FILE}"
+        cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}" -DCMAKE_TOOLCHAIN_FILE="$(pwd)/${M3_TOOLCHAIN_FILE}"
         cmake --build ../build
         cmake --install ../build
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
-    - name: Build all the things
+    - name: Build everything
       run: |
         scripts/concierge.py full-upgrade --backend "${{ matrix.backend }}" -DM3CC_TARGET=I386_LINUX headless -m3gdb
 
@@ -68,7 +72,7 @@ jobs:
       working-directory: m3-sys/m3tests
 
     - name: Generate test report
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v2
       with:
         name: ${{ format('m3tests ({0}, {1})', env.CM3_TARGET, matrix.backend) }}
         fail-on-error: false

@@ -9166,7 +9166,7 @@ make_or_reuse_accum_type (unsigned size, int unsignedp, int satp)
    as float.  */
 
 void
-build_common_tree_nodes (bool signed_char, bool short_double)
+build_common_tree_nodes (bool signed_char, bool short_double, int double_size)
 {
   error_mark_node = make_node (ERROR_MARK);
   TREE_TYPE (error_mark_node) = error_mark_node;
@@ -9288,8 +9288,11 @@ build_common_tree_nodes (bool signed_char, bool short_double)
     TYPE_PRECISION (double_type_node) = DOUBLE_TYPE_SIZE;
   layout_type (double_type_node);
 
+  gcc_assert (double_size == 64 || double_size == 128);
+
   long_double_type_node = make_node (REAL_TYPE);
-  TYPE_PRECISION (long_double_type_node) = LONG_DOUBLE_TYPE_SIZE;
+  //long_double can be either 64 or 128 bit depending on parameter
+  TYPE_PRECISION (long_double_type_node) = double_size;
   layout_type (long_double_type_node);
 
   float_ptr_type_node = build_pointer_type (float_type_node);
@@ -9446,6 +9449,30 @@ build_common_builtin_nodes (void)
 					size_type_node, NULL_TREE);
       local_define_builtin ("__builtin_memset", ftype, BUILT_IN_MEMSET,
 			    "memset", ECF_NOTHROW | ECF_LEAF);
+    }
+
+  if (!builtin_decl_explicit_p (BUILT_IN_LROUNDF))
+    {
+      ftype = build_function_type_list (long_integer_type_node, float_type_node,
+				        NULL_TREE);
+      local_define_builtin ("__builtin_lroundf", ftype, BUILT_IN_LROUNDF,
+			    "lroundf", ECF_NOTHROW | ECF_LEAF);
+    }
+
+  if (!builtin_decl_explicit_p (BUILT_IN_LROUND))
+    {
+      ftype = build_function_type_list (long_integer_type_node, double_type_node,
+				        NULL_TREE);
+      local_define_builtin ("__builtin_lround", ftype, BUILT_IN_LROUND,
+			    "lround", ECF_NOTHROW | ECF_LEAF);
+    }
+
+  if (!builtin_decl_explicit_p (BUILT_IN_LROUNDL))
+    {
+      ftype = build_function_type_list (long_integer_type_node, long_double_type_node,
+				        NULL_TREE);
+      local_define_builtin ("__builtin_lroundq", ftype, BUILT_IN_LROUNDL,
+			    "lroundq", ECF_NOTHROW | ECF_LEAF);
     }
 
   if (!builtin_decl_explicit_p (BUILT_IN_ALLOCA))

@@ -8,10 +8,15 @@ FROM Scheme IMPORT Object, Symbol, E;
 IMPORT AtomList;
 FROM SchemeUtils IMPORT Warn, StringifyT, Error, Stringify;
 IMPORT SchemeEnvironmentBinding;
+IMPORT Atom;
+IMPORT Debug;
+FROM Fmt IMPORT F, Int;
 
 TYPE Binding = SchemeEnvironmentBinding.T;
-
+     
 REVEAL
+  Instance <: SchemeEnvironmentInstanceRep.Rep;
+  
   Unsafe = Instance BRANDED Brand & " Unsafe" OBJECT OVERRIDES
     init          := Init;
     initEmpty     := InitEmptyUnsafe;
@@ -19,8 +24,64 @@ REVEAL
     get           := UnsafeGet;
     getLocalNames := GetLocalNames;
     bind          := GetBinding;
+    copy          := Copy;
+    initCopy      := InitCopy;
   END;
+  
+PROCEDURE Copy(t : Unsafe) : T =
+  BEGIN
+    WITH new = NEW(Unsafe) DO
+      t.initCopy(new);
+      RETURN new
+    END
+  END Copy;
 
+PROCEDURE CopyDictionary(dict : AtomRefTbl.T) : AtomRefTbl.T =
+  VAR
+    res := NEW(AtomRefTbl.Default).init();
+    k : Atom.T;
+    v : REFANY;
+    iter := dict.iterate();
+  BEGIN
+    WHILE iter.next(k,v) DO
+      EVAL res.put(k,v)
+    END;
+    RETURN res
+  END CopyDictionary;
+
+PROCEDURE QuickN(t : Unsafe) : CARDINAL =
+  VAR
+    res : CARDINAL := 0;
+  BEGIN
+    FOR i := FIRST(t.quick) TO LAST(t.quick) DO
+      IF t.quick[i].var # NIL THEN
+        INC(res)
+      END
+    END;
+    RETURN res
+  END QuickN;
+  
+PROCEDURE InitCopy(t : Unsafe; newA : T) =
+  VAR
+    new : Unsafe := newA;
+  BEGIN
+    IF t.dictionary = NIL THEN
+      Debug.Out("SchemeEnvironmentUnsafe.InitCopy : t.dictionary = NIL");
+      new.dictionary := NIL
+    ELSE
+      new.dictionary := CopyDictionary(t.dictionary);
+
+      Debug.Out(F("SchemeEnvironmentUnsafe.InitCopy : t.dictionary.size() = %s ; new.dictionary.size() = %s",
+                  Int(t.dictionary.size()), Int(new.dictionary.size())));
+
+    END;
+    new.quick      := t.quick;
+    Debug.Out(F("SchemeEnvironmentUnsafe.InitCopy : t.quick = %s ; new.quick = %s", Int(QuickN(t)), Int(QuickN(new))));
+
+    new.parent     := t.parent;
+    new.dead       := t.dead
+  END InitCopy;
+  
 PROCEDURE InitEmptyUnsafe(t : Unsafe; parent : T) : Instance =
   BEGIN 
     t.dictionary := NIL;

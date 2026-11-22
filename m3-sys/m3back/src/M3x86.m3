@@ -598,6 +598,7 @@ PROCEDURE declare_object (u: U;  type, super: TypeUID;
                           brand: TEXT;  traced: BOOLEAN;
                           n_fields, n_methods: INTEGER;
                           field_size: BitSize;
+                          field_offset, method_offset : INTEGER;
                           <*UNUSED*>super_typename: Name) =
   BEGIN
     IF u.debug THEN
@@ -609,6 +610,8 @@ PROCEDURE declare_object (u: U;  type, super: TypeUID;
       u.wr.Int  (n_fields);
       u.wr.Int  (n_methods);
       u.wr.BInt (field_size);
+      u.wr.Int  (field_offset);
+      u.wr.Int  (method_offset);
       u.wr.NL   ();
     END
   END declare_object;

@@ -1,0 +1,6 @@
+# this builds extras.c which gets a quad const into m3
+# plus the funtiontype intrinsic call
+# todo: get these incorporated into llvm
+
+g++ -c -g -std=c++17 -I/usr/local/include/llvm-c extras.c 
+

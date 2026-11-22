@@ -182,6 +182,7 @@ PROCEDURE Check (t: T): T =
     IF (NOT t.checked) THEN
       IF (t.checkDepth = recursionDepth) THEN
         IllegalRecursion (t);
+        RETURN ErrType.T;
       ELSE
         (* this node is not currently being checked at the current depth *)
         save_offset := Scanner.offset;

@@ -1,4 +1,4 @@
-(* $Id$ *)
+(* $Id: SchemeM3.m3,v 1.25 2011/03/03 09:08:29 mika Exp $ *)
 
 MODULE SchemeM3;
 
@@ -33,12 +33,31 @@ IMPORT SchemeCommandRunner;
 
 REVEAL
   T = Public BRANDED Brand OBJECT
-    jailBreak : SchemeJailBreak.T := NIL;
+    jailBreak  : SchemeJailBreak.T := NIL;
     m3TableOps : SchemeM3TableOps.T := NIL;
   OVERRIDES
-    init := Init;
-    setTableOps       :=  SetTableOps;
+    init              := Init;
+    setTableOps       := SetTableOps;
+    copy              := Copy;
+    initCopy          := InitCopy;
   END;
+
+PROCEDURE Copy(t : T) : Scheme.T =
+  BEGIN
+    WITH new = NEW(T) DO
+      t.initCopy(new);
+      RETURN new
+    END
+  END Copy;
+
+PROCEDURE InitCopy(t : T; newA : Scheme.T) =
+  VAR
+    new : T := newA;
+  BEGIN
+    Scheme.T.initCopy(t, new);
+    new.jailBreak := t.jailBreak;
+    new.m3TableOps := t.m3TableOps;
+  END InitCopy;
 
 PROCEDURE SetTableOps(t : T; to : SchemeM3TableOps.T) =
   BEGIN t.m3TableOps := to END SetTableOps;

@@ -14,13 +14,14 @@ IMPORT SchemeLongReal;
 IMPORT SchemeBoolean, SchemeSymbol;
 IMPORT CharSeq;
 IMPORT Text;
-IMPORT Scan, FloatMode, Lex, TextUtils;
+IMPORT Scan, FloatMode, Lex, CitTextUtils AS TextUtils;
 FROM SchemeChar IMPORT IChr, Character, Delims, White, NumberChars;
 IMPORT Thread;
 IMPORT SchemeString;
 IMPORT SchemePair, SchemeUtils;
 IMPORT SchemeInputPortClass;
 IMPORT Fmt;
+IMPORT BigInt;
 (*IMPORT Debug;*)
 
 REVEAL RdClass.Private <: MUTEX; (* see cryptic SRC comments *)
@@ -40,12 +41,18 @@ REVEAL
     helpfulText : TEXT := NIL;
   METHODS
 
-    nextToken(wx : Wx := NIL) : Object RAISES { E } := NextToken;
+    nextToken(bigInt     : BOOLEAN;
+              bigIntBase : BigInt.PrintBase;
+              wx         : Wx                := NIL) : Object
+      RAISES { E } := NextToken;
 
-    readTail(wx : Wx) : Object RAISES { E } := ReadTail2;
+    readTail(bigInt     : BOOLEAN;
+             bigIntBase : BigInt.PrintBase;
+             wx         : Wx) : Object RAISES { E } := ReadTail2;
 
     warn(msg : TEXT) RAISES { E } := MyWarn;
 
+    doRead(bigInt : BOOLEAN; bigIntBase : BigInt.PrintBase) : Object RAISES { E } := DoRead;
   OVERRIDES
     fastGetCh := FastGetCh;
     lock      := Lock;
@@ -59,6 +66,7 @@ REVEAL
     popChar  :=  PopChar;
     peekCh   :=  PeekCh;
     read     :=  Read;
+    readBigInt := ReadBigInt;
     close    :=  Close;
   END;
 
@@ -166,7 +174,7 @@ PROCEDURE PeekCh(t : T) : INTEGER RAISES { E } =
 *)
   END PeekCh;
 
-PROCEDURE Read(t : T) : Object RAISES { E } =
+PROCEDURE DoRead(t : T; bigInt : BOOLEAN; bigIntBase : BigInt.PrintBase := 10) : Object RAISES { E } =
 
   CONST Symbol = SchemeSymbol.Symbol;
 
@@ -175,21 +183,21 @@ PROCEDURE Read(t : T) : Object RAISES { E } =
 (*
     TRY
 *)
-      WITH token = t.nextToken(wx) DO
+      WITH token = t.nextToken(bigInt, bigIntBase, wx) DO
         IF    token = LP THEN
-          RETURN t.readTail(wx)
+          RETURN t.readTail(bigInt, bigIntBase, wx)
         ELSIF token = RP THEN
-          t.warn("Extra ) ignored"); RETURN t.read()
+          t.warn("Extra ) ignored"); RETURN t.doRead(bigInt, bigIntBase)
         ELSIF token = DOT THEN
-          t.warn("Extra . ignored"); RETURN t.read()
+          t.warn("Extra . ignored"); RETURN t.doRead(bigInt, bigIntBase)
         ELSIF token = SQ THEN
-          RETURN List2(Symbol("quote"), t.read())
+          RETURN List2(Symbol("quote"), t.doRead(bigInt, bigIntBase))
         ELSIF token = BQ THEN
-          RETURN List2(Symbol("quasiquote"), t.read())
+          RETURN List2(Symbol("quasiquote"), t.doRead(bigInt, bigIntBase))
         ELSIF token = COM THEN
-          RETURN List2(Symbol("unquote"), t.read())
+          RETURN List2(Symbol("unquote"), t.doRead(bigInt, bigIntBase))
         ELSIF token = COMAT THEN
-          RETURN List2(Symbol("unquote-splicing"), t.read())
+          RETURN List2(Symbol("unquote-splicing"), t.doRead(bigInt, bigIntBase))
         ELSE
           RETURN token
         END
@@ -201,7 +209,7 @@ PROCEDURE Read(t : T) : Object RAISES { E } =
         RETURN EOF
     END
 *)
-  END Read;
+  END DoRead;
 
 PROCEDURE Close(t : T) : Boolean RAISES { E } =
   BEGIN
@@ -213,11 +221,20 @@ PROCEDURE Close(t : T) : Boolean RAISES { E } =
     END
   END Close;
 
+PROCEDURE Read(t : T) : Object RAISES { E } =
+  BEGIN RETURN DoRead(t, FALSE) END Read;
+
+PROCEDURE ReadBigInt(t : T) : Object RAISES { E } =
+  BEGIN RETURN DoRead(t, TRUE, 10) END ReadBigInt;
+
 PROCEDURE IsEOF(x : Object) : BOOLEAN = BEGIN RETURN x = EOF END IsEOF;
 
-PROCEDURE ReadTail2(t : T; 
-                   wx : Wx) : Object RAISES { E } =
-  VAR token := t.nextToken(wx);
+PROCEDURE ReadTail2(t          : T; 
+                    bigInt     : BOOLEAN;
+                    bigIntBase : BigInt.PrintBase;
+                    wx         : Wx) : Object
+  RAISES { E } =
+  VAR token := t.nextToken(bigInt, bigIntBase, wx);
       res : SchemePair.T := NIL;
       ret : Object;
   BEGIN
@@ -227,8 +244,8 @@ PROCEDURE ReadTail2(t : T;
     ELSIF token = RP THEN
       ret := NIL ; EXIT
     ELSIF token = DOT THEN
-      WITH result = t.read() DO
-        token := t.nextToken();
+      WITH result = t.doRead(bigInt, bigIntBase) DO
+        token := t.nextToken(bigInt, bigIntBase);
         IF token # RP THEN
           t.warn("Where's the ')'?  Got " & Stringify(token) &
             " after .")
@@ -238,7 +255,7 @@ PROCEDURE ReadTail2(t : T;
     ELSE
       t.isPushedToken := TRUE;
       t.pushedToken := token;
-      res:= Cons(t.read(), res) ; token := t.nextToken(wx)
+      res:= Cons(t.doRead(bigInt, bigIntBase), res) ; token := t.nextToken(bigInt, bigIntBase, wx)
     END
     END;
 
@@ -265,17 +282,21 @@ PROCEDURE ReverseD(p : SchemePair.T) : SchemePair.T =
     RETURN q
   END ReverseD;
 
-PROCEDURE ReadTail(t : T; 
-                   wx : Wx) : Object RAISES { E } =
-  VAR token := t.nextToken(wx);
+<*UNUSED*>
+PROCEDURE ReadTail(t          : T;
+                   bigInt     : BOOLEAN;
+                   bigIntBase : BigInt.PrintBase;
+                   wx         : Wx) : Object RAISES { E } =
+  VAR
+    token := t.nextToken(bigInt, bigIntBase, wx);
   BEGIN
     IF    token = EOF THEN
       RETURN Error("EOF during read.")
     ELSIF token = RP THEN
       RETURN NIL
     ELSIF token = DOT THEN
-      WITH result = t.read() DO
-        token := t.nextToken();
+      WITH result = t.doRead(bigInt, bigIntBase) DO
+        token := t.nextToken(bigInt, bigIntBase);
         IF token # RP THEN
           t.warn("Where's the ')'?  Got " & Stringify(token) &
             " after . ")
@@ -285,11 +306,14 @@ PROCEDURE ReadTail(t : T;
     ELSE
       t.isPushedToken := TRUE;
       t.pushedToken := token;
-      RETURN Cons(t.read(), t.readTail(wx))
+      RETURN Cons(t.doRead(bigInt, bigIntBase), t.readTail(bigInt, bigIntBase, wx))
     END
   END ReadTail;
 
-PROCEDURE NextToken(t : T; wx : Wx) : Object RAISES { E } =
+PROCEDURE NextToken(t          : T;
+                    bigInt     : BOOLEAN;
+                    bigIntBase : BigInt.PrintBase;
+                    wx         : Wx) : Object RAISES { E } =
 
   CONST Symbol = SchemeSymbol.Symbol;
 
@@ -339,7 +363,7 @@ PROCEDURE NextToken(t : T; wx : Wx) : Object RAISES { E } =
         FINALLY
           t.unlock()
         END;
-        RETURN t.nextToken()
+        RETURN t.nextToken(bigInt, bigIntBase)
     |
       ORD(QMC) =>
         WITH buff = NEW(CharSeq.T).init() DO
@@ -370,13 +394,13 @@ PROCEDURE NextToken(t : T; wx : Wx) : Object RAISES { E } =
         |
           ORD('(') =>
             EVAL t.pushChar(ch);
-            RETURN ListToVector(t.read())
+            RETURN ListToVector(t.doRead(bigInt, bigIntBase))
         | 
           ORD(BSC) =>
             ch := t.getCh();
             IF VAL(ch,CHAR) IN SET OF CHAR { 's', 'S', 'n', 'N' } THEN
               EVAL t.pushChar(ch);
-              WITH token = t.nextToken() DO
+              WITH token = t.nextToken(bigInt, bigIntBase) DO
                 IF    token = SPACE THEN RETURN Character(' ') 
                 ELSIF token = NEWLINE THEN RETURN Character('\n')
                 ELSE
@@ -402,16 +426,16 @@ PROCEDURE NextToken(t : T; wx : Wx) : Object RAISES { E } =
               RETURN IChr(ch)
             END
         |
-          ORD('e'), ORD('i'), ORD('d') => RETURN t.nextToken()
+          ORD('e'), ORD('i'), ORD('d') => RETURN t.nextToken(bigInt, bigIntBase)
         |
           ORD('b'), ORD('o'), ORD('x') =>
             t.warn("#" & Text.FromChar(VAL(ch,CHAR)) & 
                       " not implemented, ignored");
-            RETURN t.nextToken()
+            RETURN t.nextToken(bigInt, bigIntBase)
         ELSE
           t.warn("#" & Text.FromChar(VAL(ch,CHAR)) & 
                     " not recognized, ignored");
-          RETURN t.nextToken()
+          RETURN t.nextToken(bigInt, bigIntBase)
         END
     ELSE
       WITH c  = VAL(ch,CHAR) DO
@@ -438,14 +462,18 @@ PROCEDURE NextToken(t : T; wx : Wx) : Object RAISES { E } =
             (* note we are stricter than Modula-3 here.
                we allow only "e" as the exponent marker.  Not E, d, D, x, or X. *)
 
-            IF HaveAlphasOtherThane(txt) THEN
-            ELSE
+            IF bigInt OR NOT HaveAlphasOtherThane(txt) THEN
+              (* attempt to parse as a decimal number..! *)
               EVAL WxReset(wx);
               TRY
-                WITH lr = Scan.LongReal(txt), 
-                     lrp = NEW(SchemeLongReal.T) DO
-                  lrp^ := lr;
-                  RETURN lrp
+                IF bigInt THEN
+                  RETURN BigInt.ScanBased(txt, defaultBase := 10)
+                ELSE
+                  WITH lr = Scan.LongReal(txt), 
+                       lrp = NEW(SchemeLongReal.T) DO
+                    lrp^ := lr;
+                    RETURN lrp
+                  END
                 END
               EXCEPT
                 Lex.Error, FloatMode.Trap => 

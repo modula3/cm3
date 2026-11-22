@@ -45,6 +45,14 @@ _TRE
 </TABLE>
 <P>
 
+If a precedence is assigned to a rule using _TT(ruleName_returnType),
+then any precedence assigned to that rule by assigning precedence to
+one of its symbols is overridden. Each symbol can be assigned only one
+precedence; hence if for example two rules (involving binary and unary
+minus) must have different precedences, then only one can be assigned
+a precedence by assigning a precedence to the _TT('-') symbol.
+<P>
+
 The set of valid grammar symbols consists of whatever tokens were
 declared in the _TI, plus whatever reduction method return types are
 declared as above.
@@ -100,5 +108,5 @@ S. C. Johnson, _IT(Yacc - Yet Another Compiler Compiler)
 <P>
 
 PL_END
-$Id: kyacc.html,v 1.2 2001-09-19 15:31:35 wagner Exp $
+$Id: kyacc.html,v 1.5 2001/11/10 01:06:08 kp Exp $
 HTML_END

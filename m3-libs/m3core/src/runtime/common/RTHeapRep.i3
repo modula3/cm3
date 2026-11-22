@@ -60,8 +60,9 @@ FROM RT0 IMPORT Typecode;
 *)
 
 CONST
-  BytesPerPage    = 65536;
-  LogBytesPerPage = 16;
+  LogBytesPerPage = 18;
+  (*16 -> 65536, 18 -> 262144, 20 -> 1048576*)
+  BytesPerPage    = Word.LeftShift(1, LogBytesPerPage);
   AdrPerPage      = BytesPerPage;
   LogAdrPerPage   = LogBytesPerPage;
 
@@ -187,8 +188,8 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
-CONST MaxAlignment  = 8;
-CONST MaxAlignMask  = 2_0111;     (* bit mask to capture MaxAlignment *)
+CONST MaxAlignment  = 16;
+CONST MaxAlignMask  = 2_1111;     (* bit mask to capture MaxAlignment *)
 TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
 
 VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;

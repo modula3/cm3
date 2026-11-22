@@ -199,7 +199,8 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG, "-lXaw",
                                      "-lXmu", "-lXext", "-lXt", "-lX11" ],
-  "TCP"        : [ ]
+  "TCP"        : [ ],
+  "UNWIND"     : [ ],
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be

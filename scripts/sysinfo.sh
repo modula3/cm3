@@ -244,6 +244,12 @@ if [ "x$CM3_TARGET" = "x" ] ; then
           else
             CM3_TARGET=I386_DARWIN
           fi;;
+        arm)
+          if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+            CM3_TARGET=ARM64_DARWIN
+          else
+            CM3_TARGET=ARM_DARWIN
+          fi;;
       esac;;
 
     SunOS)
@@ -271,7 +277,7 @@ if [ "x$CM3_TARGET" = "x" ] ; then
         ppc64)   CM3_TARGET=PPC_LINUX;; # ?
         x86_64)  CM3_TARGET=AMD64_LINUX;;
         sparc64) CM3_TARGET=SPARC32_LINUX;;
-        arm*)    CM3_TARGET=ARM_LINUX;; # Raspberry Pi and BeagleBone Black 
+        arm*)    CM3_TARGET=ARM32_LINUX;; # Raspberry Pi and BeagleBone Black 
         i*86)    CM3_TARGET=I386_LINUX;;
       esac;;
   

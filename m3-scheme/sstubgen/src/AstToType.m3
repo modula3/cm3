@@ -31,6 +31,8 @@ IMPORT Debug;
 IMPORT CM3Extensions;
 IMPORT Text;
 
+VAR doDebug := Debug.DebugThis("AstToType");
+
 REVEAL 
   Handle = Public BRANDED OBJECT
     wrTypeSpec: M3AST_AS.TYPE_SPEC := NIL;
@@ -93,10 +95,12 @@ PROCEDURE GetNames(c : M3Context.T;
 
   PROCEDURE ProcessUnit() =
     BEGIN
-      Debug.Out("AstToType.GetNames : cu is " & RTBrand.GetName(TYPECODE(cu)));
-      Debug.Out("AstToType.GetNames : cu.as_root is " & 
-        RTBrand.GetName(TYPECODE(cu.as_root)));
-
+      IF doDebug THEN
+        Debug.Out("AstToType.GetNames : cu is " & RTBrand.GetName(TYPECODE(cu)));
+        Debug.Out("AstToType.GetNames : cu.as_root is " & 
+          RTBrand.GetName(TYPECODE(cu.as_root)));
+      END;
+      
       DoFileNames(NARROW(cu.fe_uid,M3CUnit.Uid).filename);
 
       WITH syms = M3ASTScopeNames.Names(cu.as_root.as_id.vSCOPE) DO
@@ -116,7 +120,9 @@ PROCEDURE GetNames(c : M3Context.T;
   VAR cu : M3AST_AS.Compilation_Unit;
       res : RefSeq.T := NIL;
   BEGIN
-    Debug.Out("GetNames processing " & Atom.ToText(qid.intf));
+    IF doDebug THEN
+      Debug.Out("GetNames processing " & Atom.ToText(qid.intf));
+    END;
 
     (* the following code is a bit fishy..
 
@@ -174,19 +180,28 @@ PROCEDURE OneStubScm(c: M3Context.T; qid: Type.Qid; wr: Wr.T): INTEGER =
          named qid. *)
       def_id := M3ASTScope.Lookup(cu.as_root.as_id.vSCOPE, used_id);
       IF def_id = NIL THEN
-        Debug.Out(Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item) &
-          " not defined.");
+        IF doDebug THEN
+          Debug.Out(Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item) &
+            " not defined.");
+        END;
         RETURN 1;
       END;
-      Debug.Out("OneStub : " & Atom.ToText(qid.intf) & "." &
-        Atom.ToText(qid.item) & 
-        " : def_id is " & RTBrand.GetName(TYPECODE(def_id)));
+
+      IF doDebug THEN
+        Debug.Out("OneStub : " & Atom.ToText(qid.intf) & "." &
+          Atom.ToText(qid.item) & 
+          " : def_id is " & RTBrand.GetName(TYPECODE(def_id)));
+      END;
+      
       IF    ISTYPE(def_id, M3AST_AS.Interface_id) OR 
             ISTYPE(def_id, M3AST_AS.Interface_AS_id) THEN
         (* we don't remember interfaces, no need to, since they're 
            all factored out *)
-        Debug.Out("OneStub found an interface, skipping "  & 
-          Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item))
+        
+        IF doDebug THEN
+          Debug.Out("OneStub found an interface, skipping "  & 
+            Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item))
+        END
       ELSIF ISTYPE(def_id, M3AST_AS.Exc_id) THEN
         VAR exception : Type.Exception;
         BEGIN
@@ -220,7 +235,9 @@ PROCEDURE OneStubScm(c: M3Context.T; qid: Type.Qid; wr: Wr.T): INTEGER =
                             Cons(valueSYM,scmValue)))
             END
           ELSE
-            Debug.Out("Not Proc/Var/Const, must be a type");
+            IF doDebug THEN
+              Debug.Out("Not Proc/Var/Const, must be a type");
+            END;
             
             (* ok this is all a bit screwy.  The type returned from the
                toolkit may use a base name, or some other "canonical" name.
@@ -264,8 +281,10 @@ PROCEDURE OneStubScm(c: M3Context.T; qid: Type.Qid; wr: Wr.T): INTEGER =
       cu : M3AST_AS.Compilation_Unit;
       ts: M3AST_AS.TYPE_SPEC; 
   BEGIN
-    Debug.Out("OneStub processing " & Atom.ToText(qid.intf) & "." &
-      Atom.ToText(qid.item) );
+    IF doDebug THEN
+      Debug.Out("OneStub processing " & Atom.ToText(qid.intf) & "." &
+        Atom.ToText(qid.item) );
+    END;
 
     used_id.lx_symrep := M3CId.Enter(Atom.ToText(qid.item));
     IF M3Context.FindExact(c, Atom.ToText(qid.intf), 
@@ -297,10 +316,14 @@ PROCEDURE ProcessScmObj(h: Handle;
                         qid: Type.Qid) : Type.T =
   CONST Msg = StubUtils.Message;
   BEGIN
-    Debug.Out("Processing " & Atom.ToText(qid.intf) & "." &
-      Atom.ToText(qid.item) );
+    IF doDebug THEN
+      Debug.Out("Processing " & Atom.ToText(qid.intf) & "." &
+        Atom.ToText(qid.item) );
+    END;
     WITH res = ProcessM3Type(h, ts) DO
-      Debug.Out("Type-type is " & RTBrand.GetName(TYPECODE(res)));
+      IF doDebug THEN
+        Debug.Out("Type-type is " & RTBrand.GetName(TYPECODE(res)));
+      END;
       RETURN res
     END
   END ProcessScmObj;
@@ -425,10 +448,10 @@ PROCEDURE ProcessTypeSpec(h: Handle; ts: M3AST_AS.TYPE_SPEC): Type.T =
         
 
         IF formalParam.as_default # NIL THEN
-          Debug.Out("formal type: " &
-            RTBrand.GetName(TYPECODE(formalParam)));
-          Debug.Out("formal name: " &
-            Atom.ToText(formals[i].name));
+          IF doDebug THEN
+            Debug.Out("formal type: " &
+              RTBrand.GetName(TYPECODE(formalParam)));
+          END;
           formals[i].default := AstToVal.ProcessExp(
                                     h,
                                     NARROW(formalParam, 
@@ -436,19 +459,21 @@ PROCEDURE ProcessTypeSpec(h: Handle; ts: M3AST_AS.TYPE_SPEC): Type.T =
           .as_default);
 
           WITH def = NARROW(formalParam, M3AST_AS.Formal_param).as_default DO
-            Debug.Out("formal.as_default type : "&
-              RTBrand.GetName(TYPECODE(def)));
+            IF doDebug THEN
+              Debug.Out("formal.as_default type : "&
+                RTBrand.GetName(TYPECODE(def)));
 
-            Debug.Out("formal.as_default.sm_exp_value type : " &
-              RTBrand.GetName(TYPECODE(def.sm_exp_value)));
+              Debug.Out("formal.as_default.sm_exp_value type : " &
+                RTBrand.GetName(TYPECODE(def.sm_exp_value)));
             
-            Debug.Out("formal.as_default.sm_exp_type_spec type : " &
-              RTBrand.GetName(TYPECODE(def.sm_exp_type_spec)));
+              Debug.Out("formal.as_default.sm_exp_type_spec type : " &
+                RTBrand.GetName(TYPECODE(def.sm_exp_type_spec)));
 (*
-            Debug.Out("formal.as_default.as_callexp type : " &
-              RTBrand.GetName(TYPECODE(def.as_callexp)));
+              Debug.Out("formal.as_default.as_callexp type : " &
+                RTBrand.GetName(TYPECODE(def.as_callexp)));
 *)
-            
+
+            END
             
           END
 

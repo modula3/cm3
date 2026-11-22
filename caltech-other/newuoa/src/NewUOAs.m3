@@ -359,24 +359,33 @@ PROCEDURE Minimize(x0             : LRVector.T;
                    rhobeg, rhoend : LONGREAL;
                    ftarget     := FIRST(LONGREAL)) : Output =
   VAR
-    n := NUMBER(x0^);
-    maxsubspacedim := MIN(3, n);
-    maxfun := 100*n;
-    maxiter := 50;
-    x := CopyV(x0);
-    fx := fun.eval(x);
-    nf := 1;
-    fhist : FHist := NEW(FHist).init();
-    output : Output;
-    h, normd : LONGREAL;
-    D, B : REF M;
-    g : REF V;
-    halt : BOOLEAN;
-    npt : CARDINAL;
-    smalld : CARDINAL;
-    dim : CARDINAL;
+    n                     := NUMBER(x0^);       (* number of dims in space *)
+
+    maxsubspacedim        := MIN(3, n);
+    maxfun                := 100*n;             (* max func evals *)
+    maxiter               := 50;                (* max iterations *)
+ 
+    x                     := CopyV(x0);         (* the current point *)
+    fx        : LONGREAL;                       (* the current evaluation *)
+    nf                    := 1;                 (* number of evaluations *)
+    
+    fhist     : FHist     := NEW(FHist).init(); (* function history *)
+    
+    output    : Output;
+    h, normd  : LONGREAL;
+    D, B      : REF M;
+    g         : REF V;
+    halt      : BOOLEAN;
+    npt       : CARDINAL;
+    smalld    : CARDINAL;
+    dim       : CARDINAL;
     submaxfun : CARDINAL;
   BEGIN
+    fun.evalHint(x);
+    LaunchHints(fun, x, rhobeg); (* this is the first set of hints coming up
+                                    in DefSubspace *)
+    
+    fx := fun.eval(x);      
     fhist.addhi(fx);
     IF doDebug THEN
       Debug.Out(F("A. fx=%s ftarget=%s", LongReal(fx), LongReal(ftarget)))
@@ -390,7 +399,7 @@ PROCEDURE Minimize(x0             : LRVector.T;
       maxiter := 0
     END;
 
-    h := rhobeg;
+    h     := rhobeg;
     normd := rhobeg;
 
     D := NewM(Dim {n,0});
@@ -470,7 +479,7 @@ PROCEDURE Minimize(x0             : LRVector.T;
         ELSE
           newuoa_options.npt := 2*dim + 1
         END;
-        newuoa_options.maxfun := MIN(500*dim, maxfun-nf);
+        newuoa_options.maxfun := MIN(500*dim, MAX(maxfun - nf, 0));
         WITH min = MIN(rhoend,1.0d0/pow(2.0d0,FLOAT(iter,LR))) DO
           newuoa_options.rhoend := MAX(Eps, 
                                        MAX(min,
@@ -486,7 +495,11 @@ PROCEDURE Minimize(x0             : LRVector.T;
              f         = newuoaRes.f,
              normd     = Norm(dopt) DO
           IF f > fx OR normd > 0.0d0 AND f = fx THEN
-            Debug.Error("NewUOAs:NewUOA failed to solve the subproblem")
+            Debug.Error(F("NewUOAs:NewUOA failed to solve the subproblem f=%s fx=%s normd=%s f(x)=%s",
+                          LongReal(f),
+                          LongReal(fx),
+                          LongReal(normd),
+                          LongReal(fun.eval(x))))
           END;
           IF normd > 0.0d0 THEN
             dx := ZeroV(n);
@@ -546,11 +559,13 @@ PROCEDURE Minimize(x0             : LRVector.T;
           IF maxsubspacedim = 3 THEN
             D := AppendCols(dx, NIL, NIL)
           ELSE
+            <*ASSERT maxsubspacedim >= 4 *>
             WITH neg = ZeroV(dim) DO
               MulSV(-1.0d0, g^, neg^);
               D := AppendCols(dx,
                               neg,
-                              CutbackCols(D, MIN(Size(D,1), maxsubspacedim-4)))
+                              CutbackCols(D, MIN(Size(D,1),
+                                                 maxsubspacedim - 4)))
             END
           END
         END
@@ -592,6 +607,24 @@ PROCEDURE AddToRow(READONLY m : M; r : CARDINAL; v : LONGREAL) : REF M =
     RETURN res
   END AddToRow;
   
+PROCEDURE LaunchHints(f       : LRScalarField.T;
+                      x       : LRVector.T; 
+                      h       : LONGREAL) =
+  VAR
+    n := NUMBER(x^);
+  BEGIN
+    FOR i := 0 TO n - 1 DO
+      VAR xtmp := CopyV(x); BEGIN
+        xtmp[i] := x[i] + h;
+        IF doDebug THEN Debug.Out("hint at " & FormatV(xtmp^)) END;
+        f.evalHint(xtmp);
+        xtmp[i] := x[i] - h;
+        IF doDebug THEN Debug.Out("hint at " & FormatV(xtmp^)) END;
+        f.evalHint(xtmp);
+      END
+    END
+  END LaunchHints;
+ 
 PROCEDURE DefSubspace(f       : LRScalarField.T;
                       x       : LRVector.T;
                       fx      : LONGREAL;
@@ -621,16 +654,7 @@ PROCEDURE DefSubspace(f       : LRScalarField.T;
       IF doDebug THEN
         Debug.Out("NewUOAs.DefSubspace : launching hints")
       END;
-      FOR i := 0 TO n-1 DO
-        VAR xtmp := CopyV(x); BEGIN
-          xtmp[i] := x[i] + h;
-          IF doDebug THEN Debug.Out("hint at " & FormatV(xtmp^)) END;
-          f.evalHint(xtmp);
-          xtmp[i] := x[i] - h;
-          IF doDebug THEN Debug.Out("hint at " & FormatV(xtmp^)) END;
-          f.evalHint(xtmp);
-        END
-      END;
+      LaunchHints(f, x, h);
       IF doDebug THEN
         Debug.Out("NewUOAs.DefSubspace : done launching hints")
       END;

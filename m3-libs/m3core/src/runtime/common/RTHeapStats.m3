@@ -75,14 +75,6 @@ VAR
 PROCEDURE ReportReachable () =
   CONST MByte = 1024 * 1024;
   BEGIN
-    (* allocate space for the stats *)
-    outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
-    innerVisitor := NEW (RTHeapMap.Visitor, apply := InnerVisit);
-    rootVisitor  := NEW (RTHeapMap.Visitor, apply := VisitRoot);
-    visit_stack  := NEW (UNTRACED REF VisitStack);
-    map := NEW (UNTRACED REF ARRAY OF Word.T,
-                 (RTHeapRep.p1 - RTHeapRep.p0) * MapWordsPerHeapPage);
-
     (* initialize the globals *)
     units.count       := 0;
     unit_roots.count  := 0;
@@ -97,6 +89,14 @@ PROCEDURE ReportReachable () =
     RTCollector.Disable ();
     RTOS.LockHeap (); (* freeze the heap *)
     RTThread.SuspendOthers ();
+
+    (* allocate space for the stats *)
+    outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
+    innerVisitor := NEW (RTHeapMap.Visitor, apply := InnerVisit);
+    rootVisitor  := NEW (RTHeapMap.Visitor, apply := VisitRoot);
+    visit_stack  := NEW (UNTRACED REF VisitStack);
+    map := NEW (UNTRACED REF ARRAY OF Word.T,
+                 (RTHeapRep.p1 - RTHeapRep.p0) * MapWordsPerHeapPage);
 
     (* capture the heap limits *)
     heap_min  := LOOPHOLE (RTHeapRep.p0 * RTHeapRep.BytesPerPage, ADDRESS);
@@ -202,7 +202,8 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
     IF (heap_min <= ref) AND (ref < heap_max)
       AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0) THEN
       typecode := RT0.GetTypecode (header);
-      IF (0 < typecode) AND (typecode < n_types) THEN
+      IF (0 < typecode) AND (typecode < n_types) AND
+         (typecode # RT0.TextLitTypecode) THEN
         cell := (ref - heap_min) DIV MapGrain;
         word := cell DIV BITSIZE (Word.T);
         bit  := cell - word * BITSIZE (Word.T);
@@ -564,8 +565,8 @@ PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
     proc_start: RTProcedure.Proc;
     file, proc_name: RTProcedureSRC.Name;
   BEGIN
-    have_frames := RTStack.Has_walker;
-    IF RTStack.Has_walker THEN
+    have_frames := RTStack.Has_walker ();
+    IF RTStack.Has_walker () THEN
       IF (ti.id = self_id) THEN
         RTStack.CurrentFrame (cur);
       ELSE

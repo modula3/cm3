@@ -92,7 +92,7 @@ TYPE declare_indirect_t = op_t OBJECT typeid, target_typeid: typeid_t; target_ty
 TYPE declare_proctype_t = op_t OBJECT typeid: typeid_t; n_formals: INTEGER; return_typeid: typeid_t; n_raises: INTEGER; callingConvention: CallingConvention; result_typename := M3ID.NoID; OVERRIDES replay := replay_declare_proctype END;
 TYPE declare_formal_t = op_t OBJECT name: Name; typeid: typeid_t; typename := M3ID.NoID; OVERRIDES replay := replay_declare_formal END;
 TYPE declare_raises_t = op_t OBJECT name: Name; OVERRIDES replay := replay_declare_raises END;
-TYPE declare_object_t = op_t OBJECT typeid, super_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; OVERRIDES replay := replay_declare_object END;
+TYPE declare_object_t = op_t OBJECT typeid, super_typeid: typeid_t; brand: TEXT; traced: BOOLEAN; n_fields, n_methods: INTEGER; fields_bit_size: BitSize; field_offset, method_offset : INTEGER; OVERRIDES replay := replay_declare_object END;
 TYPE declare_method_t = op_t OBJECT name: Name; signature: typeid_t; OVERRIDES replay := replay_declare_method END;
 TYPE declare_opaque_t = op_t OBJECT typeid, super_typeid: typeid_t; OVERRIDES replay := replay_declare_opaque END;
 TYPE reveal_opaque_t = op_t OBJECT lhs_typeid, rhs_typeid: typeid_t; OVERRIDES replay := replay_reveal_opaque END;

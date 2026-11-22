@@ -5,13 +5,33 @@
 % Last modified on Tue Jan 24 08:32:45 PST 1995 by kalsow 
 %      modified on Fri Apr 30 11:31:44 PDT 1993 by mjordan
 
+% Exception handling: ex_stack (native C++ EH) when the config asks for it
+% (M3_USE_STACK_WALKER) and the backend is C, whose generated C++ carries the
+% try/catch; otherwise ex_frame (setjmp/longjmp).  Raising under ex_stack is
+% a C++ throw and needs nothing target-specific.
+M3CORE_EX_STACK = FALSE
+if defined ("M3_USE_STACK_WALKER")
+  if M3_USE_STACK_WALKER and defined ("M3_BACKEND_MODE")
+    if equal (M3_BACKEND_MODE, "C")
+      M3CORE_EX_STACK = TRUE
+    end
+  end
+end
+
+% Targets with a libunwind stack walker (RTStackC.c in the
+% target's directory), used only for stack dumps under ex_stack.  Elsewhere,
+% and with ex_frame, the RTStack routines are stubs (no_walker) and
+% RTMachine is common's (Has_stack_walker = FALSE).
 readonly HAS_STACK_WALKER = {
 % "ALPHA_OSF"  : TRUE,
 % "DS3100"     : TRUE,
 % "SOLgnu"     : TRUE,
 % "SOLsun"     : TRUE,
- "AMD64_LINUX" : TRUE,
+ "AMD64_LINUX"   : TRUE,
+ "AMD64_DARWIN"  : TRUE,
+ "ARM64_DARWIN"  : TRUE,
 }
+M3CORE_TARGET_WALKER = M3CORE_EX_STACK and HAS_STACK_WALKER contains TARGET
 
 include_dir ("common")
 
@@ -41,18 +61,14 @@ end
 %    end
 %end
 
-if defined("M3_USE_STACK_WALKER")
-  if M3_USE_STACK_WALKER and HAS_STACK_WALKER contains TARGET
-    if HAS_STACK_WALKER{TARGET}
-      include_dir("ex_stack")
-      include_dir(TARGET)
-      import_sys_lib ("UNWIND")
-    else
-      include_dir("ex_frame")
-    end
-  else
-    include_dir("ex_frame")
-  end
+if M3CORE_EX_STACK
+  include_dir ("ex_stack")
 else
-  include_dir("ex_frame")
+  include_dir ("ex_frame")
+end
+if M3CORE_TARGET_WALKER
+  include_dir (TARGET)
+  import_sys_lib ("UNWIND")
+else
+  include_dir ("no_walker")
 end

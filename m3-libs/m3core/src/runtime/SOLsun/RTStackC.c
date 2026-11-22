@@ -4,6 +4,8 @@
 
 /* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking    */
 
+#error This file is no longer used. Things do work, but not like this.
+
 #ifndef INCLUDED_M3CORE_H
 #include "m3core.h"
 #endif
@@ -39,7 +41,7 @@ typedef struct {
   int lock;
 } Frame;
 
-#define FrameLock 0x12345678
+#define FrameLock ((long)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame)

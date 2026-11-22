@@ -101,22 +101,25 @@ Here's the source code:
 ----------------------------------------------------------------------------*)
 (* bug in alerting thread on exit? *)
 
-MODULE Bug26 EXPORTS Main;
-IMPORT Fmt, List, Rd, RTMisc, Text, Thread, Wr;
+MODULE Main;
+IMPORT Fmt, TextList, Rd, RTProcess, Text, Thread, Wr;
 FROM Stdio IMPORT stderr, stdin, stdout;
 
 
 (* Queue of user input events: listener thread produces, command loop consumes
 *)
 
-VAR eventMu := Thread.NewMutex();
-    events: List.T := NIL; (* TEXT for user input *)
-    eventNonempty := Thread.NewCondition();
+VAR eventMu := NEW(MUTEX); (*Thread.NewMutex();*)
+    events: TextList.T := NIL; (* TEXT for user input *)
+    eventNonempty := NEW(Thread.Condition); (*Thread.NewCondition();*)
 
 PROCEDURE AddEvent(data: REFANY := NIL) =
 BEGIN
   LOCK eventMu DO
+(*
     events := List.New(data,events);
+*)
+    events := TextList.Append(events,data);
     Thread.Signal(eventNonempty);
   END;
 END AddEvent;
@@ -153,7 +156,7 @@ VAR lthread: Thread.T; (* will be assigned to input listener *)
 
 (* procedure to alert listener when it's time to exit *)
 
-PROCEDURE AlertListener(<*UNUSED*>n:INTEGER) =
+PROCEDURE AlertListener((* <*UNUSED*>n:INTEGER *)) =
 BEGIN
   Thread.Alert(lthread);
   Wr.PutText(stderr, "called Thread.Alert(lthread);\n");
@@ -171,11 +174,11 @@ PROCEDURE CommandLoop(cl:Thread.Closure):REFANY RAISES {} =
 VAR e : TEXT;
 BEGIN
   lthread := Thread.Fork(NEW(Listener, rd := stdin));
-  EVAL RTMisc.RegisterExitor(AlertListener);
+  RTProcess.RegisterExitor(AlertListener);
   LOOP
     LOCK eventMu DO
       WHILE events = NIL DO Thread.Wait(eventMu, eventNonempty); END;
-      e := NARROW(events.first, TEXT);
+      e := NARROW(events.head, TEXT);
       events := events.tail;
     END;
     IF Text.Equal(e, "quit") THEN
@@ -187,7 +190,7 @@ BEGIN
   END;
 
   Wr.PutText(stderr, "about to Call RTMisc.Exit(0)\n"); Wr.Flush(stderr);
-  RTMisc.Exit(0);
+  RTProcess.Exit(0);
   Wr.PutText(stderr, "this can\'t happen -- command loop returned\n"); Wr.Flush
 (stderr);
   RETURN NIL;
@@ -198,5 +201,5 @@ END CommandLoop;
 BEGIN
   EVAL Thread.Join(Thread.Fork(NEW(Thread.Closure, apply := CommandLoop)));
   Wr.PutText(stderr, "Main program joined; will exit\n"); Wr.Flush(stderr);
-END Bug26.
+END Main.
 
