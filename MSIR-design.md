@@ -998,6 +998,32 @@ one hidden dependency inside (B):
    stamps come from a link-notes pass rather than from `Value.Declare`,
    which records them only when the CG declaration (`t.declare ()`)
    succeeds.
+   *Step 2, revised (2026-11-22):* skipping the module-level CG walk would
+   also break MSIR output (`Variable.Declare` calls `DeclareGlobalMSIR`;
+   `ProcBody.EmitAll` and `EmitBody` drive MSIR bodies), so instead every
+   link note was logged with the compile phase that produced it, over the
+   13 base packages with MSIR emission on (C mode).  Results:
+   - `InitGlobal` emitted code 0 times: exporters never initialize
+     interface variables at run time.  The 359 CG-only used marks come
+     from procedure bodies (304) and module bodies (55).
+   - `interface_use` (`GenLinkInfo`, `Interface.export`), `revelation`
+     (`Revelation.Declare` only), `opaque_magic` (`GenLinkerInfo`,
+     `Revelation.Declare`) and `generic_use` come from a few fixed places
+     that do no code generation: easy to move.
+   - Version stamps and type notes are a by-product of declaring values
+     and types, recorded once per unit by whichever walk declares first,
+     spread over about 12 phases (`Scope.Enter` 22k stamps,
+     `ProcBody.EmitAll` 20k, `GenImports` 6k, `EndUnitMSIR` 3.5k, ...).
+     The MSIR phases produce some of them already (`DeclareGlobalsMSIR`,
+     `EndUnitMSIR`), because MSIR code calls `Value.Declare` and
+     `Type.Compile`: the coupling runs both ways.
+   - Limitation: first-declaration-wins means the log shows what B must
+     cover, not what an MSIR-only walk would lose.
+   Suggested direction for B: keep the declaration walk (`Scope.Enter`,
+   `Type.CompileAll`, `Revelation.Declare`, the link-info calls) running
+   against `M3CG_DoNothing`, as MSIRObj already does, rather than split
+   `Value.Declare`; decouple only the code walk (A), so C is about
+   procedure and module bodies.
 3. Only then estimate A to C.  If both checks are clean, A and C are
    mainly driver work in `Module.Compile`/`Procedure.GenBody`, and B is
    the `Value.Declare` split plus moving the other `note_*` calls out of
