@@ -18,7 +18,7 @@ if defined ("M3_USE_STACK_WALKER")
   end
 end
 
-% Targets with a libunwind stack walker (RTStackC.c and RTMachine.i3 in the
+% Targets with a libunwind stack walker (RTStackC.c in the
 % target's directory), used only for stack dumps under ex_stack.  Elsewhere,
 % and with ex_frame, the RTStack routines are stubs (no_walker) and
 % RTMachine is common's (Has_stack_walker = FALSE).
