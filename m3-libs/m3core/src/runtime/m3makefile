@@ -6,13 +6,17 @@
 %      modified on Fri Apr 30 11:31:44 PDT 1993 by mjordan
 
 % Exception handling: ex_stack (native C++ EH) when the config asks for it
-% (M3_USE_STACK_WALKER) and the backend is C, whose generated C++ carries the
-% try/catch; otherwise ex_frame (setjmp/longjmp).  Raising under ex_stack is
+% (M3_USE_STACK_WALKER) and the backend emits C++ EH: the C backend, whose
+% generated C++ carries the try/catch, or MSIR's LLVM lowering (MSIRObj,
+% MSIRAsm: invoke/landingpad with __gxx_personality_v0, which supports only
+% ex_stack); otherwise ex_frame (setjmp/longjmp).  Raising under ex_stack is
 % a C++ throw and needs nothing target-specific.
 M3CORE_EX_STACK = FALSE
 if defined ("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and defined ("M3_BACKEND_MODE")
     if equal (M3_BACKEND_MODE, "C")
+       or equal (M3_BACKEND_MODE, "MSIRObj")
+       or equal (M3_BACKEND_MODE, "MSIRAsm")
       M3CORE_EX_STACK = TRUE
     end
   end
