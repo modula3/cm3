@@ -591,7 +591,7 @@ CONST
     Op.Convert, Op.SIToFP, Op.FPToSI, Op.FPExt, Op.FPTrunc,
     Op.ZExt, Op.SExt, Op.Trunc,
     Op.PtrAdd, Op.GepByte, Op.ArrayElemAddr,
-    Op.OpenArraySize, Op.OpenArrayElemAddr };
+    Op.OpenArraySize, Op.OpenArrayElemAddr, Op.AllocaDyn };
 
 PROCEDURE CheckSigType (w: Why;  what: TEXT;  t: MSIR.T) =
   BEGIN
@@ -1855,6 +1855,7 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
         END;
       END;
     END;
+    IF UsesAllocaDyn (m) THEN DeclareAllocaImport () END;
     FOR k := 0 TO backing.size () - 1 DO
       WITH bs = NARROW (backing.get (k), Backing) DO
         IF bs.external THEN
@@ -2520,11 +2521,8 @@ PROCEDURE PlaceBlock (p: MSIR.Proc;  bi: INTEGER;  label := TRUE) =
    and GetJmpbufSize declare them for the CG path. *)
 PROCEDURE DeclareFrameImports () =
   BEGIN
-    IF allocaProc # NIL THEN RETURN END;
-    allocaProc := cg.import_procedure (ID ("alloca"), 1, Addr,
-                                       Target.DefaultCall);
-    EVAL cg.declare_param (M3ID.NoID, Target.Word.bytes, Target.Word.bytes,
-                           Word64, 0, FALSE, FALSE, M3CG.Always);
+    IF setjmpProc # NIL THEN RETURN END;
+    DeclareAllocaImport ();
     setjmpProc := cg.import_procedure (ID (Target.Setjmp),
                                        1 + ORD (Target.Sigsetjmp), Int64,
                                        Target.DefaultCall);
@@ -2539,6 +2537,36 @@ PROCEDURE DeclareFrameImports () =
                                     Target.Word.bytes, Word64, 0,
                                     ID ("const_INTEGER"));
   END DeclareFrameImports;
+
+(* The C library's alloca, for ex_frame's jmp_bufs and for alloca.dyn, as
+   Module.GetAlloca declares it for the CG path. *)
+PROCEDURE DeclareAllocaImport () =
+  BEGIN
+    IF allocaProc # NIL THEN RETURN END;
+    allocaProc := cg.import_procedure (ID ("alloca"), 1, Addr,
+                                       Target.DefaultCall);
+    EVAL cg.declare_param (M3ID.NoID, Target.Word.bytes, Target.Word.bytes,
+                           Word64, 0, FALSE, FALSE, M3CG.Always);
+  END DeclareAllocaImport;
+
+(* TRUE if some procedure of m allocates on the stack a byte count known
+   only at run time (open array temporaries, D13). *)
+PROCEDURE UsesAllocaDyn (m: MSIR.Module): BOOLEAN =
+  VAR p: MSIR.Proc;  b: MSIR.Block;
+  BEGIN
+    FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
+      p := MSIR.ModuleProc (m, pi);
+      FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+        b := MSIR.ProcBlock (p, bi);
+        FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+          IF MSIR.InsnOp (MSIR.BlockInsn (b, ii)) = Op.AllocaDyn THEN
+            RETURN TRUE;
+          END;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END UsesAllocaDyn;
 
 (* At the procedure's entry: a jmp_buf for each protected scope, as
    Jmpbufs.CompileProcAllocateJmpbufs allocates them. *)
@@ -3127,6 +3155,17 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     IF res # NIL THEN rt := MSIR.ValueType (res) END;
     CASE op OF
     | Op.Alloca => (* declared in GenProc *)
+
+    | Op.AllocaDyn =>
+        (* The C library's alloca: like LLVM's alloca with a run-time count,
+           the memory lives until the procedure returns, and the
+           conservative stack scan sees any traced references in it. *)
+        cg.start_call_direct (allocaProc, 0, Addr);
+        Push (MSIR.InsnOperand (i, 0));
+        cg.loophole (Int64, Word64);
+        cg.pop_param (Word64);
+        cg.call_direct (allocaProc, Addr);
+        Def (res);
 
     | Op.Load =>
         IF IsAgg (rt) THEN
