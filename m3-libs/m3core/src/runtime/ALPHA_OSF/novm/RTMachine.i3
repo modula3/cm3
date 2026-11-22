@@ -4,6 +4,8 @@
 (*                                                          *)
 (* Last modified on Tue May  2 11:40:32 PDT 1995 by kalsow  *)
 
+This file is no longer used. Things do work, but not like this.
+
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
 
