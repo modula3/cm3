@@ -28,6 +28,7 @@ VAR
   count   := ARRAY Level OF INTEGER {0, ..};
   spare   : M3Buf.T    := NIL;
   ignores : IgnoreCell := NIL;
+  muted   : INTEGER    := 0;
 
 PROCEDURE Msg (msg: TEXT) =
   VAR wr := Header ();
@@ -174,10 +175,22 @@ PROCEDURE IgnoreWarning (offset: INTEGER) =
     END;
   END IgnoreWarning;
 
+PROCEDURE MuteWarnings () =
+  BEGIN
+    INC (muted);
+  END MuteWarnings;
+
+PROCEDURE UnmuteWarnings () =
+  BEGIN
+    <*ASSERT muted > 0*>
+    DEC (muted);
+  END UnmuteWarnings;
+
 PROCEDURE Toss (level: INTEGER): BOOLEAN =
   VAR i: IgnoreCell;  here: INTEGER;
   BEGIN
     IF (level < Host.warnings) THEN RETURN TRUE END;
+    IF (muted > 0) AND (level < LAST (Level)) THEN RETURN TRUE END;
     here := Scanner.offset;
     i := ignores;
     WHILE (i # NIL) DO
@@ -190,6 +203,7 @@ PROCEDURE Toss (level: INTEGER): BOOLEAN =
 PROCEDURE Reset () =
   BEGIN
     ignores := NIL;
+    muted := 0;
     FOR i := FIRST (count) TO LAST (count) DO count[i] := 0 END;
   END Reset;
 

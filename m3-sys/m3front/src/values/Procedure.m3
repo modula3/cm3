@@ -779,11 +779,16 @@ PROCEDURE GenBodyMSIR (p: T) =
        now that round 1 has populated captureMap); pass 3 compiles the bodies. *)
     PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     (* p's nested procedures, then its locals' initialization. *)
-    Scope.InitValuesMSIR (p.syms);
+    IF p.cg_proc # NIL THEN Error.MuteWarnings () END;  (* see GenBody *)
     TRY
-      Stmt.CompileMSIR (p.block);
-    EXCEPT ELSE
-      MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
+      Scope.InitValuesMSIR (p.syms);
+      TRY
+        Stmt.CompileMSIR (p.block);
+      EXCEPT ELSE
+        MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
+      END;
+    FINALLY
+      IF p.cg_proc # NIL THEN Error.UnmuteWarnings () END;
     END;
     MSIRBuilder.EndProc ();
   END GenBodyMSIR;
@@ -838,6 +843,7 @@ PROCEDURE GenBody (p: T) =
     cconv    : CG.CallingConvention;
     msirSkip : BOOLEAN;
     msirCa   : CaptureAnalysis.T;
+    cgCompiled := (p.cg_proc # NIL);  (* the CG walk compiles this body *)
   BEGIN
     IF (Host.inline_nested_procs)
       AND (p.body # NIL) AND (p.body.level > 0) THEN
@@ -930,18 +936,25 @@ PROCEDURE GenBody (p: T) =
       Marker.Pop ();
     END;
     (* The MSIR walk's own initialization of p's scope: nested procedures'
-       bodies and locals' initial values.  The CG walk above emits only CG. *)
-    IF NOT msirSkip AND MSIRBuilder.InProc () THEN
-      Scope.InitValuesMSIR (p.syms);
-    END;
-    Scope.Exit (p.syms);
-
-    IF NOT msirSkip AND MSIRBuilder.InProc () THEN
-      TRY
-        Stmt.CompileMSIR (p.block);
-      EXCEPT ELSE
-        MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
+       bodies and locals' initial values.  The CG walk above emits only CG.
+       Where it compiled this body it has reported the warnings, so the MSIR
+       walk's are muted. *)
+    IF cgCompiled THEN Error.MuteWarnings () END;
+    TRY
+      IF NOT msirSkip AND MSIRBuilder.InProc () THEN
+        Scope.InitValuesMSIR (p.syms);
       END;
+      Scope.Exit (p.syms);
+
+      IF NOT msirSkip AND MSIRBuilder.InProc () THEN
+        TRY
+          Stmt.CompileMSIR (p.block);
+        EXCEPT ELSE
+          MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
+        END;
+      END;
+    FINALLY
+      IF cgCompiled THEN Error.UnmuteWarnings () END;
     END;
     IF NOT msirSkip THEN
       MSIRBuilder.EndProc ();

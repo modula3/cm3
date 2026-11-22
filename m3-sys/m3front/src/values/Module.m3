@@ -1288,13 +1288,20 @@ PROCEDURE EmitBody (x: InitBody) =
     END;
 
     IF msirOk THEN
-      (* The MSIR walk's own initialization of the unit's scopes. *)
-      Scope.InitValuesMSIR (t.importScope);
-      Scope.InitValuesMSIR (t.localScope);
+      (* The MSIR walk's own initialization of the unit's scopes.  Where the
+         CG walk compiled the body it has reported the warnings, so the MSIR
+         walk's are muted (Procedure.GenBody). *)
+      IF x.cg_proc # NIL THEN Error.MuteWarnings () END;
       TRY
-        Stmt.CompileMSIR (t.block);
-      EXCEPT ELSE
-        MSIRBuilder.Abandon ("uncaught exception in module body MSIR compilation");
+        Scope.InitValuesMSIR (t.importScope);
+        Scope.InitValuesMSIR (t.localScope);
+        TRY
+          Stmt.CompileMSIR (t.block);
+        EXCEPT ELSE
+          MSIRBuilder.Abandon ("uncaught exception in module body MSIR compilation");
+        END;
+      FINALLY
+        IF x.cg_proc # NIL THEN Error.UnmuteWarnings () END;
       END;
       MSIRBuilder.EndProc ();
     END;

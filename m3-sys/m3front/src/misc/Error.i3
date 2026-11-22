@@ -23,6 +23,13 @@ PROCEDURE WarnID (level: INTEGER;  id: M3ID.T;  msg: TEXT);
 
 PROCEDURE IgnoreWarning (offset: INTEGER);
 
+PROCEDURE MuteWarnings ();
+PROCEDURE UnmuteWarnings ();
+(* Between MuteWarnings and the matching UnmuteWarnings (they nest),
+   warnings below error level are not reported.  The MSIR walk mutes them
+   while compiling a body that the CG walk has also compiled, since the CG
+   walk has reported them already. *)
+
 (* Info, InfoInt are both implicitly level 0. *)
 PROCEDURE Info (msg: TEXT);
 PROCEDURE InfoInt (n: INTEGER;  msg: TEXT);
