@@ -380,6 +380,15 @@ attribute. m3front already computes it.
 **Consequence:** Every cross-procedure call inside a `try` envelope can
 be classified locally. No global EH analysis.
 
+**Amended (2026-11-22):** what is implemented is the RAISES *check*.
+`ProcSetRaises` takes the allowed exceptions' descriptors (`ExcDesc`), and
+is called only when the front end decides the clause must be enforced, on
+the same conditions as CG's `Procedure.StartRaises` (`doRaisesChk`, the
+body may raise something else, not RAISES ANY); `ProcChecksRaises` says
+whether it was.  Using the set for the call-versus-invoke choice is not
+done: every call in a protected block is still treated as possibly
+raising (see D26).  Tony to review the representation.
+
 ### D11. Stack-precise GC is not on the MVP critical path.
 
 **Why:** Existing collector is conservative-on-stack by design; the
@@ -1604,10 +1613,19 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   call, restoring the handler stack past the outermost frame left.  Calls
   are plain calls.  m3front records the frame hooks in the MSIR module
   (`MSIR.SetModuleFrameHooks`) on such targets.
-- Not done: the frames CG pushes for a restricted RAISES clause (classes
-  Raises and RaisesNone) under ex_frame.  MSIR does not record a
-  procedure's RAISES set (D10's `ProcSetRaises` has no caller), so a
-  RAISES violation is not reported in lowered code on ex_frame targets.
+- RAISES checks (added later the same day): m3front records an enforced
+  RAISES clause on the MSIR procedure (D10, amended).  Under ex_frame the
+  lowering pushes a RaisesNone frame, or a Raises frame pointing at the
+  clause's NIL-terminated uid list, at the procedure's entry and pops it
+  before every return; a RETURN out of protected scopes needs only that
+  pop.  The runtime reports an exception that reaches the frame and is not
+  in the list ("not in RAISES list").  MSIREmit registers the frame hooks
+  for a module with checks even if it has no TRY.  Under ex_stack nothing
+  is emitted, as for CG.  Note that CG under ex_stack does not enforce
+  RAISES clauses at all: Marker.SaveFrame records the scope, but the scope
+  table (`Marker.EmitScopeTable`) is no longer emitted, so a blocked
+  exception propagates and is reported as unhandled, or is caught by an
+  outer handler.  That is a gap on master, not in MSIR.
 - memcpy/memset: MSIRBuilder's calls to the C library (aggregate copies;
   zeroing, always fill 0 and a constant size) are lowered to M3CG
   `copy_n` and `zero`, as the CG path does, instead of being declared as
