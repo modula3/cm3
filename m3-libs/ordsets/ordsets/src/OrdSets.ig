@@ -1,7 +1,7 @@
   
 (* -----------------------------------------------------------------------1- *)
 (* File OrdSets.ig  Modula-3 source code.                                    *)
-(* Copyright 2010 .. 2016, Rodney M. Bates.                                  *)
+(* Copyright 2010 .. 2025, Rodney M. Bates.                                  *)
 (* rodney.m.bates@acm.org                                                    *)
 (* Licensed under the MIT License.                                           *) 
 (* -----------------------------------------------------------------------2- *)
@@ -87,7 +87,7 @@ GENERIC INTERFACE OrdSets ( Element )
 ; TYPE ValidElemT = Element . ValidElemT 
 ; CONST NullElem = Element . NullElem 
 
-; TYPE ProcOfValidElem = PROCEDURE ( Elem : ValidElemT ) RAISES ANY 
+; TYPE ProcOfElem = PROCEDURE ( Elem : ElemT ) RAISES ANY 
 
 ; PROCEDURE Empty ( ) : T 
   (* Empty set. *) 
@@ -199,7 +199,7 @@ GENERIC INTERFACE OrdSets ( Element )
 
 ; PROCEDURE IsElement ( Elem : ElemT ; Set : T ) : BOOLEAN
 
-; PROCEDURE ForAllDo ( Set : T ; Proc : ProcOfValidElem ) 
+; PROCEDURE ForAllDo ( Set : T ; Proc : ProcOfElem ) 
   RAISES ANY
   (* Callback Proc(m) for every member m of T, in ascending order of ORD(m) *) 
 
@@ -219,7 +219,7 @@ GENERIC INTERFACE OrdSets ( Element )
   (* Return a new Iterator, initialized to iterate over members m of T.
      Set the current member to the m with least ORD(m). *)  
 
-; TYPE ElemImageFuncTyp = PROCEDURE ( Elem : ValidElemT ) : TEXT 
+; TYPE ElemImageFuncTyp = PROCEDURE ( Elem : ElemT ) : TEXT 
 
 ; PROCEDURE Image 
     ( Set : T 
