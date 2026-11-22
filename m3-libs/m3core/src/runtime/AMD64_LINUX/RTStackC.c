@@ -14,6 +14,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <libunwind.h>
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {
