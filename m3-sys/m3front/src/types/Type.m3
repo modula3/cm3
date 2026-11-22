@@ -1010,6 +1010,11 @@ PROCEDURE ScalarStorageMSIR (t: T): MSIR.T =
       MSIR.TypeKind.W16, MSIR.TypeKind.W32, MSIR.TypeKind.W64 =>
         IF MSIR.BitWidth (mt) # size THEN RETURN MSIR.TI (size) END;
         RETURN mt;
+    | MSIR.TypeKind.Enum =>
+        (* An enumeration (or a subrange of one) is stored at its own size.
+           Returning NIL here stored a default such as FIRST(M3CG.ZType) = 4
+           as the i64 constant it was built as, 7 bytes past a 1-byte field. *)
+        RETURN MSIR.TW (size);
     | MSIR.TypeKind.F32, MSIR.TypeKind.F64, MSIR.TypeKind.F128,
       MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
         RETURN mt;
