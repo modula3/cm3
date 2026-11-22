@@ -1061,7 +1061,15 @@ that no longer runs.  What A still has to do:
 2. *Module init body.*  `EmitBody` still runs `Scope.InitValues` (CG
    compiles of module-global initializers, into `DoNothing`) and
    `External.InitGlobals` (which emits nothing: 0 times over the base
-   packages).  Guard both on `x.cg_proc # NIL`, as the body already is,
+   packages).  Neither is needed for MSIR: its half of `EmitBody` already
+   runs its own `Variable.InitValuesMSIR` (`LangInitMSIR`,
+   `UserInitMSIR`, nested procedures) on the same scopes, and
+   `InitGlobals` has no counterpart because there is nothing to do:
+   interface initializers are constant, so interface variables are
+   initialized in the interface unit's data, by CG and MSIR alike
+   (`InitGlobal` finds `initDone` set).  `InitGlobals`/`InitGlobal` may be
+   dead on master too; to confirm beyond the base packages before removing
+   them with step 6.  Guard both on `x.cg_proc # NIL`, as the body already is,
    after checking that `Scope.InitValues` makes no link note the MSIR walk
    lacks (the inventory shows 27 stamps and 16 type notes there).
 3. *Module-level CG tables.*  `ProcBody.EmitAll`'s procedure-name and
