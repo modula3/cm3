@@ -9,7 +9,7 @@
 MODULE LoopholeExpr;
 
 IMPORT M3Buf, CG, Expr, ExprRep, Type, Error, OpenArrayType;
-IMPORT M3, M3ID, M3RT, Target, TInt, Fmt;
+IMPORT M3, M3ID, M3RT, Target, TargetMap, TInt, Fmt;
 FROM Target IMPORT FloatType;
 
 TYPE
@@ -278,13 +278,13 @@ PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
     u  := Expr.TypeOf (e);
     t  := p.tipe;
     sz, t_align, u_align, z_align: INTEGER;
-    t_stk_type, u_stk_type: CG.Type;
+    t_stk_type: CG.Type;
     u_info, t_info: Type.Info;
   BEGIN
     u := Type.CheckInfo (u, u_info);
     t := Type.CheckInfo (t, t_info);
     t_stk_type := t_info.stk_type;  t_align := t_info.alignment;
-    u_stk_type := u_info.stk_type;  u_align := u_info.alignment;
+    u_align := u_info.alignment;
     sz := u_info.size;
     Type.Compile (t);
     Type.Compile (u);
@@ -308,7 +308,7 @@ PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
         PushTmp (p, z_align);
     | Kind.D_to_V =>
         Expr.Compile (e);
-        CG.Loophole (u_stk_type, t_stk_type);
+        LoopholeValue (u_info, t_info, sz);
         (*** back-ends have problems with this because floating-point
            variables may be in floating-point registers...
         Expr.PrepLValue (e);
@@ -322,9 +322,35 @@ PROCEDURE Compile (p: P; <*UNUSED*> StaticOnly: BOOLEAN) =
         CG.Load_indirect (t_stk_type, 0, sz, t_align);
     | Kind.V_to_V =>
         Expr.Compile (e);
-        CG.Loophole (u_stk_type, t_stk_type);
+        LoopholeValue (u_info, t_info, sz);
     END;
   END Compile;
+
+(* Reinterpret the sz-bit value on the stack, of type u, as a t.  The back
+   ends reinterpret the bits between a float and an integer only when the
+   two are the same size, and otherwise convert the value.  An integer of
+   sz bits may have a wider stack type (a BITS 32 FOR subrange of INTEGER
+   is an Int64 on a 64-bit target), so go through its memory type. *)
+PROCEDURE LoopholeValue (READONLY u_info, t_info: Type.Info;  sz: INTEGER) =
+  VAR u := u_info.stk_type;  t := t_info.stk_type;
+  BEGIN
+    IF IsFloat (u) AND NOT IsFloat (t) AND TargetMap.CG_Size[t] # sz
+       AND TargetMap.CG_Size[t_info.mem_type] = sz THEN
+      CG.Loophole (u, t_info.mem_type);
+      CG.Loophole (t_info.mem_type, t);
+    ELSIF IsFloat (t) AND NOT IsFloat (u) AND TargetMap.CG_Size[u] # sz
+       AND TargetMap.CG_Size[u_info.mem_type] = sz THEN
+      CG.Loophole (u, u_info.mem_type);
+      CG.Loophole (u_info.mem_type, t);
+    ELSE
+      CG.Loophole (u, t);
+    END;
+  END LoopholeValue;
+
+PROCEDURE IsFloat (t: CG.Type): BOOLEAN =
+  BEGIN
+    RETURN t IN SET OF CG.Type {CG.Type.Reel, CG.Type.LReel, CG.Type.XReel};
+  END IsFloat;
 
 PROCEDURE PushTmp (p: P;  align: INTEGER) =
   BEGIN
