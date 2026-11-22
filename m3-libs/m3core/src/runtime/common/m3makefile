@@ -63,7 +63,6 @@ Interface ("RTHeapEvent")
 Interface ("RTProcedureSRC")
 Interface ("RTSignal")
 Interface ("RTStack")
-c_source  ("RTStackCommon")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 

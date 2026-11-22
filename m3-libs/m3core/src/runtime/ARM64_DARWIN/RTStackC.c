@@ -18,6 +18,11 @@
 extern "C" {
 #endif
 
+INTEGER __cdecl RTStack_Has_walker (void)
+{
+    return TRUE;
+}
+
 /* Exception handling register numbers per the AArch64 DWARF ABI.
    Register 0 carries the exception object pointer; register 1 the
    selector (tTypeIndex).  __builtin_eh_return_data_regno() maps these
