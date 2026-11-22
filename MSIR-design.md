@@ -1043,8 +1043,16 @@ runtime-hook imports: 2 missing (`RTHooks.ReportFault` in M3CG,
 `RTHooks.CheckIsType` in M3CG_Tee, hooks only the CG code calls there)
 and 122 extra (MSIR registers `CheckLoadTracedRef`, `CheckStoreTraced`
 and `ScanTypecase` in every unit).  Import stamps that follow the code
-actually emitted are harmless to the linker's checks.  Still to repeat
-over all base packages.
+actually emitted are harmless to the linker's checks.  Repeated over all
+13 base packages (same tree, same compiler): no variable stamp is missing
+anywhere.  Every missing stamp is an import of something only the CG code
+refers to: runtime hooks (mostly `RTHooks.ReportFault`, `CheckIsType`,
+also `AllocateOpenArray`), `Long.*` in Convert and DragonInt,
+`Integer.Compare` in M3C, `CallExpr.BuiltinAlignDefault` (a procedure
+used as a field default) in m3front's builtins, the constant
+`M3x86Rep.NoStore`, and two anonymous types.  (Some MSIRObj builds then
+fail to link against the C-built libraries of that install, by design of
+the ABI guard; the `.m3x` is written before the link.)
 
 **A: the plan (proposed 2026-11-22).**  With B decided, A is smaller than
 the survey suggested, because in MSIRObj mode the per-body CG walk is
