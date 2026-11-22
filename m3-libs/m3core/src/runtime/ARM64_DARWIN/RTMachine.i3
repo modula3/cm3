@@ -10,11 +10,6 @@ INTERFACE RTMachine;
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
-CONST
-  Has_stack_walker = TRUE;
-  (* Indicates whether this platform supports the stack walking functions
-     defined in the "RTStack" interface. *)
-
 TYPE
   FrameInfo = RECORD
     pc  : ADDRESS;
