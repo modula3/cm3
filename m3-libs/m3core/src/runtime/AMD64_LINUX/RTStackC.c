@@ -35,11 +35,11 @@ char * RTException__AllocBuf (INTEGER size);
 
 /* Frame must match RTMachine.FrameInfo. */
 typedef struct {
-  unsigned long pc;
-  unsigned long sp;
-  long lock;
-  unsigned long exceptionRef;
-  long tTypeIndex;
+  WORD_T pc;
+  WORD_T sp;
+  INTEGER lock;
+  WORD_T exceptionRef;
+  INTEGER tTypeIndex;
   unw_cursor_t *cursor;
   unw_word_t start_ip;
   unw_word_t end_ip;
@@ -48,7 +48,7 @@ typedef struct {
   unw_word_t landingPad;
 } Frame;
 
-#define FrameLock ((long)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
+#define FrameLock ((INTEGER)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 void * __m3_personality_v0() {
   printf("m3 personality\n");
