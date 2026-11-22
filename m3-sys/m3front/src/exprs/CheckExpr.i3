@@ -44,4 +44,12 @@ PROCEDURE EmitChecksMSIR (v: MSIR.Value;  e: Expr.T;
    bounds that 'e's static range can violate, gated by Host.doRangeChk).
    Returns v unchanged.  No-op for non-integer values or outside a proc. *)
 
+PROCEDURE EmitBoundsMSIR (v: MSIR.Value;  READONLY min, max: Target.Int;
+                          doLo, doHi: BOOLEAN;  err: CG.RuntimeError);
+(* Guard v, a signed INTEGER- or LONGINT-width value, against min (if doLo)
+   and max (if doHi) with signed comparisons, whatever v's static range: the
+   MSIR analogue of the Check_lo/Check_hi/Check_range that INC and DEC emit
+   for the updated value.  The caller decides doLo/doHi (and Host.doRangeChk).
+   No-op for non-integer values or outside a proc. *)
+
 END CheckExpr.

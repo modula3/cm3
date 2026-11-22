@@ -12,7 +12,7 @@ IMPORT CG, Expr, ExprRep, ArrayType, Error, Type, Int, LInt;
 IMPORT ArrayExpr, OpenArrayType, Host, EnumExpr;
 IMPORT CheckExpr, SubtractExpr, IntegerExpr, ErrType;
 IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
-IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
@@ -53,7 +53,7 @@ TYPE
         captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
-        storeMSIR         := SubByteStoreElemMSIR;
+        bitLocMSIR        := BitLocElemMSIR;
       END;
 
 (* EXPORTED: *) 
@@ -516,6 +516,14 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       oaBase_outer : MSIR.Value := NIL;  (* heap ptr for OA, for depth-2 fix *)
       heapBase := FALSE;
   BEGIN
+    (* A sub-byte element of a packed array has no byte address
+       (BitLocElemMSIR locates it).  Decide before evaluating anything, so a
+       caller that then asks for the bit location evaluates once (B8). *)
+    IF (p.lhsOpenDepth = 0 AND ArrayType.EltsAreBitAddressed (p.taBase))
+       OR (p.lhsOpenDepth = 1
+           AND OpenArrayType.EltsAreBitAddressed (p.taBase)) THEN
+      RETURN NIL;
+    END;
     idxVal := Expr.CompileMSIR (p.biased_b);
     IF idxVal = NIL THEN RETURN NIL END;
     (* GEP indices are sign-extended by LLVM; narrow types (e.g. i1 for
@@ -648,8 +656,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         END;
       END;
       (* Final dimension.  Sub-byte packed elements have no element ADDRESS —
-         return NIL (recoverable, NOT Abandon) so CompileMSIR reads through
-         ExtractBitFieldDyn and AssignStmt stores through SubByteStoreElemMSIR. *)
+         return NIL (recoverable, NOT Abandon); BitLocElemMSIR locates them. *)
       IF OpenArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN NIL END;
       VAR slot := MSIR.BuildOpenArrayElemAddr (blk, "", oa,
                                                ARRAY OF MSIR.Value{idxVal});
@@ -767,19 +774,6 @@ PROCEDURE GetPackedElemBase (p: P;  VAR idxVal: MSIR.Value;
     RETURN arrBase;
   END GetPackedElemBase;
 
-PROCEDURE CompilePackedElemMSIR (p: P): MSIR.Value =
-(* Read a sub-byte element from a ByteArrayFallback packed array. *)
-  VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
-      info: Type.Info;
-  BEGIN
-    arrBase := GetPackedElemBase (p, idxVal, eltPack);
-    IF arrBase = NIL THEN RETURN NIL END;
-    (* Pass the container size so ExtractBitFieldDyn can handle non-power-of-2
-       eltPack (e.g. BITS 16 FOR ARRAY[0..1] OF SixBit where eltPack=6). *)
-    EVAL Type.CheckInfo (p.taBase, info);
-    RETURN MSIRBuilder.ExtractBitFieldDyn (arrBase, eltPack, info.size, idxVal, p.type);
-  END CompilePackedElemMSIR;
-
 PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
                              VAR eltPack: INTEGER): MSIR.Value =
 (* Shared helper for sub-byte packed OPEN-array element access (final open
@@ -834,47 +828,36 @@ PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
     END;
   END GetOpenPackedBase;
 
-PROCEDURE CompileOpenPackedElemMSIR (p: P): MSIR.Value =
-(* Read a sub-byte element from the final dimension of a packed open array
-   (flat nibble/bit-packed data, matching CG's NonopenEltPack layout). *)
-  VAR dataPtr, idxVal: MSIR.Value;  eltPack: INTEGER;
-  BEGIN
-    dataPtr := GetOpenPackedBase (p, idxVal, eltPack);
-    IF dataPtr = NIL THEN
-      MSIRBuilder.Abandon ("packed open-array element read not representable");
-      RETURN NIL;
-    END;
-    (* containerBits = 0: open-array packs are powers of two (byte path). *)
-    RETURN MSIRBuilder.ExtractBitFieldDyn (dataPtr, eltPack, 0, idxVal, p.type);
-  END CompileOpenPackedElemMSIR;
-
-PROCEDURE SubByteStoreElemMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
-(* storeMSIR: write a sub-byte element of a packed array (read-modify-write).
-   FALSE, with no side effects, for byte-addressed elements. *)
+PROCEDURE BitLocElemMSIR (p: P;  VAR loc: MSIRBitLoc.T): BOOLEAN =
+(* bitLocMSIR: the location of a sub-byte element of a packed array, with the
+   array and index evaluated once.  FALSE, emitting nothing, for
+   byte-addressed elements. *)
+  VAR base, idxVal: MSIR.Value;  eltPack: INTEGER;  info: Type.Info;
   BEGIN
     IF p.lhsOpenDepth = 1
        AND OpenArrayType.EltsAreBitAddressed (p.taBase) THEN
       (* Final dimension of a packed open array: flat bit-packed data. *)
-      VAR dataPtr, idxVal: MSIR.Value;  eltPack: INTEGER;
-      BEGIN
-        dataPtr := GetOpenPackedBase (p, idxVal, eltPack);
-        IF dataPtr = NIL THEN RETURN FALSE END;
-        MSIRBuilder.InsertBitFieldDyn (dataPtr, eltPack, 0, idxVal, rhs);
-        RETURN TRUE;
+      base := GetOpenPackedBase (p, idxVal, eltPack);
+      IF base = NIL THEN
+        MSIRBuilder.Abandon ("packed open-array element not representable");
+        RETURN FALSE;
       END;
-    END;
-    IF p.lhsOpenDepth # 0 THEN RETURN FALSE END;
-    IF NOT ArrayType.EltsAreBitAddressed (p.taBase) THEN RETURN FALSE END;
-    VAR arrBase: MSIR.Value;  idxVal: MSIR.Value;  eltPack: INTEGER;
-        info: Type.Info;
-    BEGIN
-      arrBase := GetPackedElemBase (p, idxVal, eltPack);
-      IF arrBase = NIL THEN RETURN FALSE END;
+      info.size := 0;  (* open-array packs are powers of two (byte path) *)
+    ELSIF p.lhsOpenDepth = 0
+          AND ArrayType.EltsAreBitAddressed (p.taBase) THEN
+      base := GetPackedElemBase (p, idxVal, eltPack);
+      IF base = NIL THEN
+        MSIRBuilder.Abandon ("packed array element: array has no address");
+        RETURN FALSE;
+      END;
       EVAL Type.CheckInfo (p.taBase, info);
-      MSIRBuilder.InsertBitFieldDyn (arrBase, eltPack, info.size, idxVal, rhs);
-      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
     END;
-  END SubByteStoreElemMSIR;
+    loc := MSIRBitLoc.T {base := base,  width := eltPack,  type := p.type,
+                         idx := idxVal,  containerBits := info.size};
+    RETURN TRUE;
+  END BitLocElemMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR addr    : MSIR.Value;
@@ -891,14 +874,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       doSExt  : BOOLEAN;
   BEGIN
     (* Packed-element fixed array: ByteArrayFallback [N x i1] sentinel. *)
-    IF p.lhsOpenDepth = 0 AND ArrayType.EltsAreBitAddressed (p.taBase) THEN
-      RETURN CompilePackedElemMSIR (p);
-    END;
-    (* Final dimension of a packed OPEN array: flat bit-packed data, no
-       element address — read via ExtractBitFieldDyn (p277, p269 EI4). *)
-    IF p.lhsOpenDepth = 1
-       AND OpenArrayType.EltsAreBitAddressed (p.taBase) THEN
-      RETURN CompileOpenPackedElemMSIR (p);
+    (* Packed fixed array, or the final dimension of a packed OPEN array
+       (flat bit-packed data, p277, p269 EI4): no element address. *)
+    VAR loc: MSIRBitLoc.T;
+    BEGIN
+      IF BitLocElemMSIR (p, loc) THEN RETURN MSIRBuilder.ExtractBitLoc (loc) END;
+      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
     END;
     addr := LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;

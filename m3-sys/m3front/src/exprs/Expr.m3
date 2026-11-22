@@ -15,7 +15,7 @@ IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Constant;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis;
 
 (********************************************************************)
 
@@ -134,11 +134,11 @@ PROCEDURE DefaultCheckUseFailureMSIR (<*UNUSED*>e: M3.Expr): BOOLEAN =
   END DefaultCheckUseFailureMSIR;
 
 (* EXPORTED: (ExprRep)*)
-PROCEDURE NoStoreMSIR (<*UNUSED*> e: M3.Expr;
-                       <*UNUSED*> rhs: MSIR.Value): BOOLEAN =
+PROCEDURE NoBitLocMSIR (<*UNUSED*> e: M3.Expr;
+                        <*UNUSED*> VAR loc: MSIRBitLoc.T): BOOLEAN =
   BEGIN
     RETURN FALSE;
-  END NoStoreMSIR;
+  END NoBitLocMSIR;
 
 (* EXPORTED: *)
 PROCEDURE TypeCheck (t: T;  VAR cs: CheckState) =
@@ -650,11 +650,11 @@ PROCEDURE LValueMSIR (t: T): MSIR.Value =
     RETURN t.compileLValueMSIR ();
   END LValueMSIR;
 
-PROCEDURE StoreMSIR (t: T;  rhs: MSIR.Value): BOOLEAN =
+PROCEDURE BitLocMSIR (t: T;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   BEGIN
-    IF (t = NIL) OR (rhs = NIL) THEN RETURN FALSE END;
-    RETURN t.storeMSIR (rhs);
-  END StoreMSIR;
+    IF (t = NIL) THEN RETURN FALSE END;
+    RETURN t.bitLocMSIR (loc);
+  END BitLocMSIR;
 
 PROCEDURE CheckUseFailureMSIR (t: T): BOOLEAN =
   (* Same stripping as CheckUseFailure. *)

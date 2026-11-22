@@ -7,7 +7,7 @@
 
 INTERFACE Expr;
 
-IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value, MSIR, CaptureAnalysis;
+IMPORT M3, M3Buf, M3ID, CG, Target, Type, Value, MSIR, MSIRBitLoc, CaptureAnalysis;
 
 TYPE
   T    = M3.Expr;
@@ -121,9 +121,12 @@ PROCEDURE CompileMSIR (t: T): MSIR.Value;
    NIL on unsupported (the enclosing proc will be dropped). *)
 PROCEDURE LValueMSIR (t: T): MSIR.Value;
 (* Return the MSIR address (pointer) for lvalue t. NIL on unsupported. *)
-PROCEDURE StoreMSIR (t: T;  rhs: MSIR.Value): BOOLEAN;
-(* Store rhs into designator t when t has no plain lvalue (a sub-byte field
-   or element, a bit-field WITH alias).  FALSE if t is not of that kind. *)
+PROCEDURE BitLocMSIR (t: T;  VAR loc: MSIRBitLoc.T): BOOLEAN;
+(* If designator t has no byte address (a sub-byte field or element, or a
+   bit-field WITH alias), evaluate its base once, set loc, and return TRUE;
+   reads and writes then go through MSIRBuilder.ExtractBitLoc/InsertBitLoc.
+   Otherwise return FALSE having emitted nothing, unless the base could not
+   be compiled, in which case MSIRBuilder.Abandon has been called. *)
 (* Emit code to evaluate the expression onto the top of stack. For some
    types, this could be an address (arrays, records, bit sets).
    StaticOnly means construct static data but do not evaluate. *)

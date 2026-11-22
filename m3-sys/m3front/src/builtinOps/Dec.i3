@@ -8,10 +8,13 @@
 
 INTERFACE Dec;
 
-IMPORT CallExpr, Expr;
+IMPORT CallExpr, Expr, MSIR;
 
 PROCEDURE Initialize ();
 
 PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;  VAR cs: Expr.CheckState);
+
+PROCEDURE UpdateMSIR (ce: CallExpr.T;  dec: BOOLEAN): MSIR.Value;
+(* MSIR for INC (dec = FALSE) or DEC (dec = TRUE). *)
 
 END Dec.

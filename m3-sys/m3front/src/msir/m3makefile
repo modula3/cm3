@@ -1,6 +1,7 @@
 % MSIR emission backend for m3front.
 % See repo-root MSIR.md and MSIR-design.md.
 
+Interface ("MSIRBitLoc")
 Module ("MSIRType")
 Module ("MSIRBuilder")
 Module ("MSIREmit")

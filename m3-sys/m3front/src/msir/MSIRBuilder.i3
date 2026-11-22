@@ -13,7 +13,7 @@
 
 INTERFACE MSIRBuilder;
 
-IMPORT MSIR, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis, Target;
+IMPORT MSIR, MSIRBitLoc, Type, Value, Scope, Variable, RunTyme, CaptureAnalysis, Target;
 
 (* BeginProc: create a fresh MSIR.Proc with the given name and signature.
    formals is the head of the formal-list returned by ProcType.Formals.
@@ -60,15 +60,15 @@ PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
    object (the pending container its LValueMSIR set) — re-armed on every
    LookupVarAddr so stores through the alias carry the write barrier. *)
 
-(* Bind a WITH alias over a sub-byte/bit-field designator (`WITH s = rec.bitf`)
-   as a bit-field VIEW: `base` is the containing storage's pointer, captured once.
-   LookupVar(v) reads via ExtractBitField; TryBitFieldStore(v,rhs) writes via
-   InsertBitField; LookupVarAddr(v) returns NIL (no plain lvalue).  Matches the
-   C backend's by-reference alias (writes propagate to the field). *)
-PROCEDURE BindVarBitField(v: Variable.T; base: MSIR.Value;
-                          bitOff, width: INTEGER; ftype: Type.T);
+(* Bind a WITH alias over a designator with no byte address (`WITH s =
+   rec.bitf`, `WITH e = packed[i]`) to its bit location, whose base was
+   evaluated once at WITH entry.  LookupVar(v) reads through ExtractBitLoc;
+   LookupVarAddr(v) returns NIL; BitLocOfVar gives the location for writes.
+   Matches the C backend's by-reference alias (writes reach the field). *)
+PROCEDURE BindVarBitField(v: Variable.T; READONLY loc: MSIRBitLoc.T);
 PROCEDURE IsBitFieldVar(v: Variable.T): BOOLEAN;
-PROCEDURE TryBitFieldStore(v: Variable.T; rhs: MSIR.Value): BOOLEAN;
+PROCEDURE BitLocOfVar(v: Variable.T; VAR loc: MSIRBitLoc.T): BOOLEAN;
+(* TRUE, with v's location in loc, if v is bound by BindVarBitField. *)
 
 (* EndProc finalizes the current proc. If unsupported was ever
    asserted, the proc is dropped; otherwise it is appended to the
@@ -325,6 +325,11 @@ PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
 PROCEDURE InsertBitFieldDyn  (base: MSIR.Value;  eltPack: INTEGER;
                                containerBits: INTEGER := 0;
                                idx: MSIR.Value;  rhs: MSIR.Value);
+
+(* Read or write the designator at loc (static or packed-array element).
+   InsertBitLoc abandons for a read-only location. *)
+PROCEDURE ExtractBitLoc (READONLY loc: MSIRBitLoc.T): MSIR.Value;
+PROCEDURE InsertBitLoc  (READONLY loc: MSIRBitLoc.T;  rhs: MSIR.Value);
 
 (*------------------------------------------------------------- Module globals *)
 

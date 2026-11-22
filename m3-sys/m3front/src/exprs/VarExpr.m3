@@ -9,7 +9,7 @@
 MODULE VarExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Type, Value, Variable;
-IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   P = Expr.T OBJECT
@@ -38,7 +38,7 @@ TYPE
         capture  := Capture;
         captureLV := CaptureLV;
         compileMSIR  := CompileMSIR;
-        storeMSIR    := BitFieldStoreMSIR;
+        bitLocMSIR   := BitLocMSIR;
       END;
 
 PROCEDURE New (t: Type.T;  name: M3ID.T): Expr.T =
@@ -124,12 +124,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN v;
   END CompileMSIR;
 
-(* storeMSIR: if p is a bit-field WITH alias, write rhs through it
-   (InsertBitField). *)
-PROCEDURE BitFieldStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
+(* bitLocMSIR: a bit-field WITH alias's location, bound at WITH entry. *)
+PROCEDURE BitLocMSIR (p: P;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   BEGIN
-    RETURN MSIRBuilder.TryBitFieldStore (p.v, rhs);
-  END BitFieldStoreMSIR;
+    RETURN MSIRBuilder.BitLocOfVar (p.v, loc);
+  END BitLocMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

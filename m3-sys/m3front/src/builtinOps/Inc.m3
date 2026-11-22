@@ -9,7 +9,7 @@
 MODULE Inc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Dec, Target, TInt;
-IMPORT IntegerExpr, Host, Int, LInt, MSIR, MSIRBuilder, MSIRType;
+IMPORT IntegerExpr, Host, Int, LInt, MSIR;
 IMPORT CaptureAnalysis;
 
 VAR Z: CallExpr.MethodList;
@@ -86,91 +86,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
-  VAR
-    lhsExpr := ce.args[0];
-    addr    := Expr.LValueMSIR (lhsExpr);
-    mt      : MSIR.T;
-    old, delta, updated : MSIR.Value;
-    blk     := MSIRBuilder.CurrentBlock ();
   BEGIN
-    IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
-    IF addr = NIL THEN
-      (* Packed sub-byte field/element: no lvalue.  Read-modify-write via
-         ExtractBitField (Expr.CompileMSIR read) and InsertBitField (SubByte
-         store), mirroring AssignStmt.CompileMSIR's sub-byte path. *)
-      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
-      old := Expr.CompileMSIR (lhsExpr);
-      IF old = NIL THEN
-        MSIRBuilder.Abandon ("INC: cannot get lvalue in MSIR");  RETURN NIL;
-      END;
-      blk := MSIRBuilder.CurrentBlock ();
-      VAR oldT := MSIR.ValueType (old);
-      BEGIN
-        IF NUMBER (ce.args^) > 1 THEN
-          delta := Expr.CompileMSIR (ce.args[1]);
-          IF delta = NIL THEN RETURN NIL END;
-          blk := MSIRBuilder.CurrentBlock ();
-          delta := MSIRBuilder.CoerceToMSIR (blk, delta, oldT);
-        ELSE
-          delta := MSIR.ConstInt (oldT, 1);
-        END;
-        updated := MSIR.BuildIAdd (blk, "", old, delta);
-      END;
-      IF Expr.StoreMSIR (lhsExpr, updated) THEN
-        Expr.NoteWrite (lhsExpr);  RETURN NIL;
-      END;
-      MSIRBuilder.Abandon ("INC: cannot get lvalue in MSIR");
-      RETURN NIL;
-    END;
-    mt := MSIRType.Translate (Expr.TypeOf (lhsExpr));
-    IF mt = NIL THEN
-      MSIRBuilder.Abandon ("INC: unsupported variable type");
-      RETURN NIL;
-    END;
-    (* AddLocalMSIR widens ordinal allocas to i64 so loop counters don't wrap.
-       Use the actual alloca element type for load/store to match. *)
-    VAR addrT := MSIR.ValueType (addr);
-    BEGIN
-      IF MSIR.Kind (addrT) = MSIR.TypeKind.Ptr THEN
-        mt := MSIR.EltType (addrT);
-      END;
-    END;
-    old := MSIR.BuildLoad (blk, "", mt, addr);
-    IF NUMBER (ce.args^) > 1 THEN
-      delta := Expr.CompileMSIR (ce.args[1]);
-      IF delta = NIL THEN RETURN NIL END;
-      blk := MSIRBuilder.CurrentBlock ();  (* delta may have emitted an invoke *)
-      IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-        (* ADDRESS arithmetic: widen the byte-count delta to Integer width so
-           GepByte gets a full i64 offset (e.g. INC(adr, aByte) delta is i8). *)
-        delta := MSIRBuilder.CoerceToMSIR (blk, delta, MSIR.TI (Target.Integer.size));
-      ELSE
-        (* Widen delta to match destination type (e.g. IByte arg to INTEGER INC) *)
-        VAR mtBits := MSIR.BitWidth (mt);
-            dBits  := MSIR.BitWidth (MSIR.ValueType (delta));
-        BEGIN
-          IF mtBits > 0 AND dBits > 0 AND mtBits # dBits THEN
-            IF dBits < mtBits
-              THEN delta := MSIR.BuildZExt (blk, "", delta, mt)
-              ELSE delta := MSIR.BuildTrunc (blk, "", delta, mt)
-            END
-          END
-        END
-      END;
-    ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-      delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1);
-    ELSE
-      delta := MSIR.ConstInt (MSIR.ValueType (old), 1);
-    END;
-    IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-      (* ADDRESS arithmetic: getelementptr i8 — delta is byte count *)
-      updated := MSIR.BuildGepByte (blk, "", old, delta);
-    ELSE
-      updated := MSIR.BuildIAdd (blk, "", old, delta);
-    END;
-    MSIR.BuildStore (blk, updated, addr);
-    Expr.NoteWrite (lhsExpr);
-    RETURN NIL;
+    RETURN Dec.UpdateMSIR (ce, dec := FALSE);
   END CompileMSIR;
 
 PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =

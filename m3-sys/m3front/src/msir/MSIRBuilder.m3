@@ -1,6 +1,6 @@
 MODULE MSIRBuilder;
 
-IMPORT MSIR, MSIRType, MSIREmit;
+IMPORT MSIR, MSIRType, MSIREmit, MSIRBitLoc;
 IMPORT M3ID, Type, Value, Formal, Variable, Scope, ProcType, Fmt, Target, Text;
 IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
@@ -28,16 +28,13 @@ TYPE VarEntry = RECORD
   storageType: MSIR.T;     (* MType: narrow memory type; NIL => by-value formal *)
   wideType:    MSIR.T;     (* ZType: computation type; = TI64 for narrow ordinals *)
   signedWiden: BOOLEAN;    (* TRUE → SExt on widen; FALSE → ZExt (lo >= 0 or BOOLEAN) *)
-  (* Bit-field VIEW binding (WITH alias over a packed/sub-byte designator, e.g.
-     `WITH s = rec.bitfield`).  `val` holds the containing storage's base pointer
-     (captured once at WITH entry); reads go through ExtractBitField and writes
-     through InsertBitField, matching the C backend's by-reference alias.  This
-     mirrors how a direct `rec.bitfield` read/write is compiled — the alias just
-     pins the base so the designator expression is evaluated exactly once. *)
+  (* Bit-field VIEW binding: a WITH alias over a designator with no byte
+     address (`WITH s = rec.bitfield`, `WITH e = packed[i]`).  bfLoc holds
+     its location, the base captured once at WITH entry; reads go through
+     ExtractBitLoc and writes through InsertBitLoc, matching the C backend's
+     by-reference alias. *)
   isBitField:  BOOLEAN := FALSE;
-  bfBitOff:    INTEGER := 0;
-  bfWidth:     INTEGER := 0;
-  bfType:      Type.T  := NIL;   (* raw field type: drives Extract's ZExt/SExt *)
+  bfLoc:       MSIRBitLoc.T;
   (* WITH designator alias over a HEAP lvalue: the containing heap object,
      captured at bind time (the pending container the designator's LValueMSIR
      set).  Re-armed by LookupVarAddr so a store THROUGH the alias carries the
@@ -474,8 +471,7 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
       IF varMap[i].key = v THEN
         IF varMap[i].isBitField THEN
           (* Bit-field WITH alias: extract from the captured base each read. *)
-          RETURN ExtractBitField(varMap[i].val, varMap[i].bfBitOff,
-                                 varMap[i].bfWidth, varMap[i].bfType);
+          RETURN ExtractBitLoc(varMap[i].bfLoc);
         ELSIF varMap[i].storageType = NIL THEN
           RETURN varMap[i].val;   (* by-value formal: return param directly *)
         ELSE
@@ -596,8 +592,8 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
     FOR i := 0 TO varMapN - 1 DO
       IF varMap[i].key = v THEN
         IF varMap[i].isBitField THEN
-          (* Bit-field WITH alias has no plain lvalue; the caller (AssignStmt)
-             detects the NIL and routes the write through TryBitFieldStore. *)
+          (* Bit-field WITH alias has no plain lvalue; writes go through
+             BitLocOfVar (Expr.BitLocMSIR) and InsertBitLoc. *)
           RETURN NIL;
         END;
         IF varMap[i].storageType = NIL THEN
@@ -732,26 +728,20 @@ PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
     INC(varMapN);
   END BindVarAddr;
 
-PROCEDURE BindVarBitField(v: Variable.T;  base: MSIR.Value;
-                          bitOff, width: INTEGER;  ftype: Type.T) =
-  (* WITH alias over a sub-byte/bit-field designator: `base` is the containing
-     storage's pointer (evaluated once at WITH entry).  Reads → ExtractBitField,
-     writes → InsertBitField (see LookupVarRaw / TryBitFieldStore). *)
+PROCEDURE BindVarBitField(v: Variable.T;  READONLY loc: MSIRBitLoc.T) =
   BEGIN
     IF varMapN >= MaxVarMap THEN
       Abandon("too many variables in proc");
       RETURN;
     END;
     varMap[varMapN].key         := v;
-    varMap[varMapN].val         := base;
+    varMap[varMapN].val         := loc.base;
     varMap[varMapN].storageType := NIL;
     varMap[varMapN].wideType    := NIL;
     varMap[varMapN].signedWiden := FALSE;
     varMap[varMapN].container   := NIL;
     varMap[varMapN].isBitField  := TRUE;
-    varMap[varMapN].bfBitOff    := bitOff;
-    varMap[varMapN].bfWidth     := width;
-    varMap[varMapN].bfType      := ftype;
+    varMap[varMapN].bfLoc       := loc;
     INC(varMapN);
   END BindVarBitField;
 
@@ -763,19 +753,17 @@ PROCEDURE IsBitFieldVar(v: Variable.T): BOOLEAN =
     RETURN FALSE;
   END IsBitFieldVar;
 
-PROCEDURE TryBitFieldStore(v: Variable.T;  rhs: MSIR.Value): BOOLEAN =
-  (* Write through a bit-field WITH alias (read-modify-write of the storage
-     unit, preserving neighbouring fields).  Returns FALSE if v is not a
-     bit-field-bound alias, so callers can fall through to the normal store. *)
+PROCEDURE BitLocOfVar(v: Variable.T;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   BEGIN
     FOR i := 0 TO varMapN - 1 DO
-      IF varMap[i].key = v AND varMap[i].isBitField THEN
-        InsertBitField(varMap[i].val, varMap[i].bfBitOff, varMap[i].bfWidth, rhs);
+      IF varMap[i].key = v THEN
+        IF NOT varMap[i].isBitField THEN RETURN FALSE END;
+        loc := varMap[i].bfLoc;
         RETURN TRUE;
       END;
     END;
     RETURN FALSE;
-  END TryBitFieldStore;
+  END BitLocOfVar;
 
 PROCEDURE EndProc() =
   VAR resultT: MSIR.T;
@@ -2888,6 +2876,27 @@ PROCEDURE InsertBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
       END;
     END;
   END InsertBitFieldDyn;
+
+PROCEDURE ExtractBitLoc (READONLY loc: MSIRBitLoc.T): MSIR.Value =
+  BEGIN
+    IF loc.idx = NIL THEN
+      RETURN ExtractBitField (loc.base, loc.bitOff, loc.width, loc.type);
+    ELSE
+      RETURN ExtractBitFieldDyn (loc.base, loc.width, loc.containerBits,
+                                 loc.idx, loc.type);
+    END;
+  END ExtractBitLoc;
+
+PROCEDURE InsertBitLoc (READONLY loc: MSIRBitLoc.T;  rhs: MSIR.Value) =
+  BEGIN
+    IF loc.readOnly THEN
+      Abandon ("store into a bit field of a value with no address");
+    ELSIF loc.idx = NIL THEN
+      InsertBitField (loc.base, loc.bitOff, loc.width, rhs);
+    ELSE
+      InsertBitFieldDyn (loc.base, loc.width, loc.containerBits, loc.idx, rhs);
+    END;
+  END InsertBitLoc;
 
 PROCEDURE GenLocation() =
   VAR f: TEXT;  l: INTEGER;

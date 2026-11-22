@@ -9,8 +9,8 @@
 MODULE Dec;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, Int, LInt, Module;
-IMPORT M3ID, Addr, Target, TInt, IntegerExpr, Host, NamedExpr, MSIR, MSIRBuilder, MSIRType;
-IMPORT CaptureAnalysis;
+IMPORT M3ID, Addr, Target, TInt, IntegerExpr, Host, NamedExpr, MSIR, MSIRBitLoc, MSIRBuilder, MSIRType;
+IMPORT CaptureAnalysis, CheckExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -119,47 +119,40 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
+  BEGIN
+    RETURN UpdateMSIR (ce, dec := TRUE);
+  END CompileMSIR;
+
+PROCEDURE UpdateMSIR (ce: CallExpr.T;  dec: BOOLEAN): MSIR.Value =
   VAR
     lhsExpr := ce.args[0];
-    addr    := Expr.LValueMSIR (lhsExpr);
+    name    := ARRAY BOOLEAN OF TEXT {"INC", "DEC"}[dec];
+    addr, old, delta, updated : MSIR.Value;
     mt      : MSIR.T;
-    old, delta, updated : MSIR.Value;
-    blk     := MSIRBuilder.CurrentBlock ();
+    blk     : MSIR.Block;
+    loc     : MSIRBitLoc.T;
   BEGIN
     IF NOT MSIRBuilder.InProc () THEN RETURN NIL END;
+    IF Expr.BitLocMSIR (lhsExpr, loc) THEN
+      (* Packed sub-byte field or element: read-modify-write at its bit
+         location, whose base is evaluated once (B8). *)
+      old := MSIRBuilder.ExtractBitLoc (loc);
+      IF old = NIL THEN RETURN NIL END;
+      updated := Arith (ce, old, dec);
+      IF updated = NIL THEN RETURN NIL END;
+      MSIRBuilder.InsertBitLoc (loc, updated);
+      Expr.NoteWrite (lhsExpr);
+      RETURN NIL;
+    END;
+    IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
+    addr := Expr.LValueMSIR (lhsExpr);
     IF addr = NIL THEN
-      (* Packed sub-byte field/element: no lvalue.  Read-modify-write via
-         ExtractBitField (Expr.CompileMSIR read) and InsertBitField (SubByte
-         store), mirroring AssignStmt.CompileMSIR's sub-byte path.  Fixes DEC(x.f)
-         where f is a BITS-N field — e.g. RealFloat/LongFloat.NextAfter's DEC on
-         the IEEE exponent bitfield. *)
-      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
-      old := Expr.CompileMSIR (lhsExpr);
-      IF old = NIL THEN
-        MSIRBuilder.Abandon ("DEC: cannot get lvalue in MSIR");  RETURN NIL;
-      END;
-      blk := MSIRBuilder.CurrentBlock ();
-      VAR oldT := MSIR.ValueType (old);
-      BEGIN
-        IF NUMBER (ce.args^) > 1 THEN
-          delta := Expr.CompileMSIR (ce.args[1]);
-          IF delta = NIL THEN RETURN NIL END;
-          blk := MSIRBuilder.CurrentBlock ();
-          delta := MSIRBuilder.CoerceToMSIR (blk, delta, oldT);
-        ELSE
-          delta := MSIR.ConstInt (oldT, 1);
-        END;
-        updated := MSIR.BuildISub (blk, "", old, delta);
-      END;
-      IF Expr.StoreMSIR (lhsExpr, updated) THEN
-        Expr.NoteWrite (lhsExpr);  RETURN NIL;
-      END;
-      MSIRBuilder.Abandon ("DEC: cannot get lvalue in MSIR");
+      MSIRBuilder.Abandon (name & ": cannot get lvalue in MSIR");
       RETURN NIL;
     END;
     mt := MSIRType.Translate (Expr.TypeOf (lhsExpr));
     IF mt = NIL THEN
-      MSIRBuilder.Abandon ("DEC: unsupported variable type");
+      MSIRBuilder.Abandon (name & ": unsupported variable type");
       RETURN NIL;
     END;
     (* AddLocalMSIR widens ordinal allocas to i64 so loop counters don't wrap.
@@ -170,49 +163,104 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
         mt := MSIR.EltType (addrT);
       END;
     END;
+    blk := MSIRBuilder.CurrentBlock ();
     old := MSIR.BuildLoad (blk, "", mt, addr);
+    IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
+      (* ADDRESS arithmetic: the delta is a byte count at Integer width (so
+         DEC's negation and GepByte see a full-width value, not, say, the i8
+         of DEC (adr, aByte)).  No range check, as on the CG path. *)
+      VAR intT := MSIR.TI (Target.Integer.size);
+      BEGIN
+        IF NUMBER (ce.args^) > 1 THEN
+          delta := Expr.CompileMSIR (ce.args[1]);
+          IF delta = NIL THEN RETURN NIL END;
+          blk := MSIRBuilder.CurrentBlock ();
+          delta := MSIRBuilder.CoerceToMSIR (blk, delta, intT);
+        ELSE
+          delta := MSIR.ConstInt (intT, 1);
+        END;
+        IF dec THEN
+          delta := MSIR.BuildISub (blk, "", MSIR.ConstInt (intT, 0), delta);
+        END;
+        updated := MSIR.BuildGepByte (blk, "", old, delta);
+      END;
+    ELSE
+      updated := Arith (ce, old, dec);
+      IF updated = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
+      updated := ToType (blk, updated, mt);
+    END;
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), updated, addr);
+    Expr.NoteWrite (lhsExpr);
+    RETURN NIL;
+  END UpdateMSIR;
+
+PROCEDURE ToType (blk: MSIR.Block;  v: MSIR.Value;  t: MSIR.T): MSIR.Value =
+(* v as an integer of type t: extended by v's own signedness, truncated, or
+   (same width, other signedness) relabelled, as binary ops need operands of
+   identical type. *)
+  BEGIN
+    v := MSIRBuilder.CoerceToMSIR (blk, v, t);
+    IF NOT MSIR.Equal (MSIR.ValueType (v), t) THEN
+      v := MSIR.RetypeValue (v, t);
+    END;
+    RETURN v;
+  END ToType;
+
+PROCEDURE Arith (ce: CallExpr.T;  old: MSIR.Value;  dec: BOOLEAN): MSIR.Value =
+(* old +/- the delta, computed at INTEGER (or LONGINT) width, and checked
+   against the designator's bounds where they are narrower than that type,
+   as the CG path does.  old is widened by the designator's sign, not by its
+   MSIR storage type, which can be a signed i8 for a [0..255] field. *)
+  VAR
+    lhsExpr := ce.args[0];
+    long    := Type.IsSubtype (Expr.TypeOf (lhsExpr), LInt.T);
+    wt      : MSIR.T;
+    blk     := MSIRBuilder.CurrentBlock ();
+    delta, r: MSIR.Value;
+    bmin, bmax: Target.Int;
+    oldBits : INTEGER;
+  BEGIN
+    IF long
+      THEN wt := MSIR.TI (Target.Longint.size);
+      ELSE wt := MSIR.TI (Target.Integer.size);
+    END;
+    Expr.GetBounds (lhsExpr, bmin, bmax);
+    oldBits := MSIR.BitWidth (MSIR.ValueType (old));
+    IF oldBits > 0 AND oldBits < MSIR.BitWidth (wt) THEN
+      IF TInt.LT (bmin, TInt.Zero)
+        THEN old := MSIR.BuildSExt (blk, "", old, wt);
+        ELSE old := MSIR.BuildZExt (blk, "", old, wt);
+      END;
+    END;
+    old := ToType (blk, old, wt);
     IF NUMBER (ce.args^) > 1 THEN
       delta := Expr.CompileMSIR (ce.args[1]);
       IF delta = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();  (* delta may have emitted an invoke *)
-      IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-        (* ADDRESS arithmetic: the delta is a byte count; widen it to Integer
-           width so the negation (BuildISub, below) and GepByte see a full-width
-           i64 rather than a narrow ordinal (e.g. DEC(adr, aByte) where the byte
-           delta is i8 — BuildISub(i64 0, i8) would fail binOpType's
-           same-type assertion). *)
-        delta := MSIRBuilder.CoerceToMSIR (blk, delta, MSIR.TI (Target.Integer.size));
-      ELSE
-        (* Widen delta to match destination type (e.g. IByte arg to INTEGER DEC) *)
-        VAR mtBits := MSIR.BitWidth (mt);
-            dBits  := MSIR.BitWidth (MSIR.ValueType (delta));
-        BEGIN
-          IF mtBits > 0 AND dBits > 0 AND mtBits # dBits THEN
-            IF dBits < mtBits
-              THEN delta := MSIR.BuildZExt (blk, "", delta, mt)
-              ELSE delta := MSIR.BuildTrunc (blk, "", delta, mt)
-            END
-          END
-        END
-      END;
-    ELSIF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-      delta := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 1);
+      delta := ToType (blk, delta, wt);
     ELSE
-      delta := MSIR.ConstInt (MSIR.ValueType (old), 1);
+      delta := MSIR.ConstInt (wt, 1);
     END;
-    IF MSIR.Kind (mt) = MSIR.TypeKind.Ptr THEN
-      (* ADDRESS arithmetic: negate delta, then GepByte *)
-      VAR negDelta := MSIR.BuildISub (blk, "", MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0), delta);
+    IF dec
+      THEN r := MSIR.BuildISub (blk, "", old, delta);
+      ELSE r := MSIR.BuildIAdd (blk, "", old, delta);
+    END;
+    IF Host.doRangeChk THEN
+      VAR tmin, tmax: Target.Int;
       BEGIN
-        updated := MSIR.BuildGepByte (blk, "", old, negDelta);
+        IF long
+          THEN tmin := Target.Longint.min;  tmax := Target.Longint.max;
+          ELSE tmin := Target.Integer.min;  tmax := Target.Integer.max;
+        END;
+        CheckExpr.EmitBoundsMSIR (r, bmin, bmax,
+                                  doLo := TInt.LT (tmin, bmin),
+                                  doHi := TInt.LT (bmax, tmax),
+                                  err  := CG.RuntimeError.ValueOutOfRange);
       END;
-    ELSE
-      updated := MSIR.BuildISub (blk, "", old, delta);
     END;
-    MSIR.BuildStore (blk, updated, addr);
-    Expr.NoteWrite (lhsExpr);
-    RETURN NIL;
-  END CompileMSIR;
+    RETURN r;
+  END Arith;
 
 PROCEDURE Capture (ce: CallExpr.T;  ca: CaptureAnalysis.T) =
   (* DEC writes its first argument; any decrement expression is a read. *)

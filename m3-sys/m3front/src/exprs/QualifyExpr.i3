@@ -41,11 +41,4 @@ PROCEDURE FieldByteAddrMSIR (e: Expr.T): MSIR.Value;
    which has a well-defined address but no loadable/storable lvalue.
    Returns NIL when e is not such an access. *)
 
-(* If e is a sub-byte/bit-field rec/obj field, return its containing storage
-   base pointer (evaluated once) + bit offset/width/raw type; else FALSE.  Used
-   to bind a bit-field WITH alias by reference. *)
-PROCEDURE BitFieldBaseMSIR (e: Expr.T;  VAR base: MSIR.Value;
-                            VAR bitOff, width: INTEGER;
-                            VAR ftype: Type.T): BOOLEAN;
-
 END QualifyExpr.

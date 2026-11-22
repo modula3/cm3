@@ -11,7 +11,7 @@ MODULE NamedExpr;
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
 IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis;
 IMPORT ArrayExpr;
 
 TYPE
@@ -51,7 +51,7 @@ TYPE
         captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
-        storeMSIR         := BitFieldStoreMSIR;
+        bitLocMSIR        := BitLocMSIR;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -274,9 +274,8 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
     | Variable.T(vv) =>
-        (* Bit-field WITH alias has no plain lvalue; return NIL so AssignStmt
-           routes the write through MSIRBuilder.TryBitFieldStore (InsertBitField)
-           instead of Abandoning. *)
+        (* Bit-field WITH alias has no plain lvalue; callers reach it
+           through Expr.BitLocMSIR first. *)
         IF MSIRBuilder.IsBitFieldVar (vv) THEN RETURN NIL END;
         VAR addr := MSIRBuilder.LookupVarAddr (vv);
         BEGIN
@@ -333,16 +332,15 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
     END;
   END LValueMSIR;
 
-(* storeMSIR: if p names a bit-field WITH alias, write rhs through it
-   (InsertBitField). *)
-PROCEDURE BitFieldStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
+(* bitLocMSIR: a bit-field WITH alias's location, bound at WITH entry. *)
+PROCEDURE BitLocMSIR (p: P;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   BEGIN
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
-    | Variable.T (vv) => RETURN MSIRBuilder.TryBitFieldStore (vv, rhs);
+    | Variable.T (vv) => RETURN MSIRBuilder.BitLocOfVar (vv, loc);
     ELSE                 RETURN FALSE;
     END;
-  END BitFieldStoreMSIR;
+  END BitLocMSIR;
 
 PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN

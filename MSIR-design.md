@@ -2130,12 +2130,13 @@ most serious findings spot-checked against the code.  Nothing built.
 | B5 | `MSIRBuilder.m3` maps (`2028, 2071, 2685, 2750, 2770`) | Fixed-size tables (`varMap[512]`, `globalMap[256]`, ...) silently drop entries when full instead of abandoning. |
 | B6 | `WithStmt.m3:243` | Unsupported case returns without `Abandon`: WITH body silently omitted. |
 | B7 | `Tracer.m3:90` | `EmitPendingMSIR` drains the shared trace queue and does nothing (no `msir_apply` override exists): traces lost. |
-| B8 | `QualifyExpr` `LValueMSIR` + `SubByteStoreMSIR` | Base designator evaluated twice for sub-byte stores (three times under INC): `a[f()].bits := x` may call `f` twice. Read-only finding; not yet confirmed by a test. |
+| B8 | `QualifyExpr` `LValueMSIR` + `SubByteStoreMSIR` | **Fixed.** Base designator evaluated twice for sub-byte stores (three times under INC): `a[f()].bits := x` called `f` twice (confirmed by test, also for packed array elements and bit-field WITH). Designators with no byte address now have one visitor, `bitLocMSIR` (replacing `storeMSIR` and the exported `QualifyExpr.BitFieldBaseMSIR`), which evaluates the base once and returns an `MSIRBitLoc.T`; assignment, INC/DEC, reads and WITH all go through `MSIRBuilder.ExtractBitLoc`/`InsertBitLoc`. `LValueMSIR` now decides "no byte address" before evaluating anything. Nested packed records (`a[i].f.b`, `f: BITS 13 FOR RECORD`) and WITH over packed elements work as a result. |
 | B9 | m3core `runtime/common/m3makefile:75` | ABI guard keys on `"MSIRObj"` only; an MSIRAsm-built m3core cannot link. |
 | B10 | `Variable.m3` (5 copies of compile/trunc/zext/store) | Zero-extension is wrong for negative subranges. |
 | B11 | `Variable.m3:496` | MSIR sets `t.indirect := FALSE`, which CG's `Split`/`LoadLValue` read; nested MSIR bodies run during the outer CG pass. (Adjudicate: is this reachable in `@M3m3front-msir` C-authoritative mode?) |
 | B12 | `Procedure.m3:875` vs `:731` | Two capture computations; the GenBody fallback omits `CaptureOwnScopeInits`. |
 | B13 | `BlockStmt.GetScope` / `Procedure.FilterOwnScope` | Only the outermost block's locals are filtered from captures; inner-scope locals aren't, contrary to `BlockStmt.Capture`'s comment. |
+| B14 | `Inc.m3`/`Dec.m3` `CompileMSIR`, `AssignStmt` sub-byte path | **Fixed.** No range check on INC/DEC (any designator) or on a sub-byte assignment, where the CG path checks the new value against the designator's bounds. INC and DEC now share `Dec.UpdateMSIR`, which computes at INTEGER/LONGINT width (widening by the designator's sign, since a `[0..255]` field's storage type can be a signed i8) and calls `CheckExpr.EmitBoundsMSIR` exactly where CG emits `Check_lo`/`Check_hi`. |
 
 #### 2. Abstraction violations by theme
 

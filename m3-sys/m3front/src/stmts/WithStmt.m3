@@ -11,9 +11,9 @@ MODULE WithStmt;
 
 IMPORT M3ID, CG, Expr, Scope, Value, Variable, OpenArrayType;
 IMPORT Type, Stmt, StmtRep, Token, M3RT, Target, Tracer, AssignStmt;
-IMPORT ArrayExpr, QualifyExpr;
+IMPORT ArrayExpr;
 FROM Scanner IMPORT Match, MatchID, GetToken, cur;
-IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   Kind = {designator, openarray, structure, other};
@@ -186,52 +186,49 @@ PROCEDURE CompileMSIR (p: P) =
     t:                  Type.T;
     global, indirect,
     lhs:                BOOLEAN;
+    bfLoc:              MSIRBitLoc.T;
   BEGIN
     CASE p.kind OF
     | Kind.designator =>
-        (* Clear any stale pending container, then capture the one this
-           designator's LValueMSIR sets: it identifies the heap object that
-           stores THROUGH the alias must dirty (write barrier).  Passed to
-           BindVarAddr and re-armed by LookupVarAddr at each alias use. *)
-        EVAL MSIRBuilder.TakePendingContainer ();
-        addr := Expr.LValueMSIR (p.expr);
-        IF addr = NIL THEN
-          (* The designator has no lvalue.  Two cases:
-             (a) a packed sub-byte / bit-field designator (QualifyExpr.LValueMSIR
-                 returns NIL): bind the alias as a bit-field VIEW by reference —
-                 base captured once, reads via ExtractBitField, writes via
-                 InsertBitField — matching the C backend (writes propagate to the
-                 field).  Fixes RTCollector.RebuildFreelist's
-                 `WITH space = page.desc.space`.
-             (b) any other no-lvalue designator (enum literal, method ref, ...):
-                 these are not assignable, so a read-only by-value copy is
-                 semantically correct. *)
-          IF MSIRBuilder.IsAbandoned () THEN RETURN END;
-          VAR bfBase: MSIR.Value;  bfOff, bfW: INTEGER;  bfT: Type.T;
-          BEGIN
-            IF QualifyExpr.BitFieldBaseMSIR (p.expr, bfBase, bfOff, bfW, bfT) THEN
-              MSIRBuilder.BindVarBitField (p.var, bfBase, bfOff, bfW, bfT);
-            ELSE
-              val := Expr.CompileMSIR (p.expr);
-              IF val = NIL THEN RETURN END;
-              IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock (),
-                                            force := TRUE) THEN
-                RETURN
-              END;
-              addr := MSIRBuilder.LookupVarAddr (p.var);
-              IF addr = NIL THEN RETURN END;
-              MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
-            END;
-          END;
+        (* A designator with no byte address (packed sub-byte field or
+           element): bind the alias as a bit-field VIEW by reference, its
+           base evaluated once, reads via ExtractBitLoc and writes via
+           InsertBitLoc, matching the C backend (writes reach the field).
+           Fixes RTCollector.RebuildFreelist's `WITH space = page.desc.space`. *)
+        IF Expr.BitLocMSIR (p.expr, bfLoc) THEN
+          MSIRBuilder.BindVarBitField (p.var, bfLoc);
+        ELSIF MSIRBuilder.IsAbandoned () THEN
+          RETURN;
         ELSE
-          Variable.Split (p.var, t, global, indirect, lhs);
-          mt := MSIRType.Translate (t);
-          IF mt = NIL THEN
-            MSIRBuilder.Abandon ("WITH designator: unsupported type");
-            RETURN;
+          (* Clear any stale pending container, then capture the one this
+             designator's LValueMSIR sets: it identifies the heap object that
+             stores THROUGH the alias must dirty (write barrier).  Passed to
+             BindVarAddr and re-armed by LookupVarAddr at each alias use. *)
+          EVAL MSIRBuilder.TakePendingContainer ();
+          addr := Expr.LValueMSIR (p.expr);
+          IF addr = NIL THEN
+            (* Any other no-lvalue designator (enum literal, method ref, ...):
+               not assignable, so a read-only by-value copy is correct. *)
+            IF MSIRBuilder.IsAbandoned () THEN RETURN END;
+            val := Expr.CompileMSIR (p.expr);
+            IF val = NIL THEN RETURN END;
+            IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock (),
+                                          force := TRUE) THEN
+              RETURN
+            END;
+            addr := MSIRBuilder.LookupVarAddr (p.var);
+            IF addr = NIL THEN RETURN END;
+            MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
+          ELSE
+            Variable.Split (p.var, t, global, indirect, lhs);
+            mt := MSIRType.Translate (t);
+            IF mt = NIL THEN
+              MSIRBuilder.Abandon ("WITH designator: unsupported type");
+              RETURN;
+            END;
+            MSIRBuilder.BindVarAddr (p.var, addr, mt,
+                                     MSIRBuilder.TakePendingContainer ());
           END;
-          MSIRBuilder.BindVarAddr (p.var, addr, mt,
-                                   MSIRBuilder.TakePendingContainer ());
         END;
 
     | Kind.openarray =>

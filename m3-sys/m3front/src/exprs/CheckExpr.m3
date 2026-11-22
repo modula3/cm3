@@ -211,15 +211,31 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
 PROCEDURE DoCheckMSIR (v: MSIR.Value;  e: Expr.T;
                        READONLY min, max: Target.Int;
                        doLo, doHi: BOOLEAN;  err: CG.RuntimeError) =
+  VAR lo, hi: Target.Int;
+  BEGIN
+    Guard (v, min, max, doLo, doHi, err,
+           unsigned := Type.GetBounds (Type.StripPacked (Expr.TypeOf (e)), lo, hi)
+                       AND NOT TInt.LT (lo, TInt.Zero));
+  END DoCheckMSIR;
+
+PROCEDURE EmitBoundsMSIR (v: MSIR.Value;  READONLY min, max: Target.Int;
+                          doLo, doHi: BOOLEAN;  err: CG.RuntimeError) =
+  BEGIN
+    IF Checkable (v) THEN
+      Guard (v, min, max, doLo, doHi, err, unsigned := FALSE);
+    END;
+  END EmitBoundsMSIR;
+
+PROCEDURE Guard (v: MSIR.Value;  READONLY min, max: Target.Int;
+                 doLo, doHi: BOOLEAN;  err: CG.RuntimeError;
+                 unsigned: BOOLEAN) =
   VAR
     vt  := MSIR.ValueType (v);
-    lo, hi: Target.Int;
     bI  : INTEGER;
     ltPred, gtPred: MSIR.CmpPred;
     cmp : MSIR.Value;
   BEGIN
-    IF Type.GetBounds (Type.StripPacked (Expr.TypeOf (e)), lo, hi)
-       AND NOT TInt.LT (lo, TInt.Zero) THEN
+    IF unsigned THEN
       ltPred := MSIR.CmpPred.Ult;  gtPred := MSIR.CmpPred.Ugt;
     ELSE
       ltPred := MSIR.CmpPred.Slt;  gtPred := MSIR.CmpPred.Sgt;
@@ -234,7 +250,7 @@ PROCEDURE DoCheckMSIR (v: MSIR.Value;  e: Expr.T;
                              v, MSIR.ConstInt (vt, bI));        (* v > max *)
       MSIRBuilder.EmitReportFault (cmp, ORD (err));
     END;
-  END DoCheckMSIR;
+  END Guard;
 
 PROCEDURE Checkable (v: MSIR.Value): BOOLEAN =
 (* v is an integer-kind value inside a proc, so a ReportFault guard applies. *)

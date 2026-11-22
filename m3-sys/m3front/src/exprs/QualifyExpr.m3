@@ -13,7 +13,7 @@ IMPORT RecordType, ObjectType, OpaqueType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
 IMPORT Method, Field, Target, M3RT, Host, RunTyme;
-IMPORT MSIR, MSIRBuilder, MSIRType, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, MSIRType, CaptureAnalysis;
 
 TYPE
   Class = { importDecl    (* <importedInterface>.<anyId> *),
@@ -68,7 +68,7 @@ TYPE
         captureLV := CaptureLV;
         compileMSIR       := CompileMSIR;
         compileLValueMSIR := LValueMSIR;
-        storeMSIR         := SubByteStoreMSIR;
+        bitLocMSIR        := BitLocMSIR;
       END;
 
 PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
@@ -840,13 +840,19 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           END;
         END;
     | Class.recField =>
-        baseAddr := Expr.LValueMSIR (p.lhsExpr);
-        IF baseAddr = NIL THEN RETURN NIL END;
         Field.Split (p.rhsValue, fieldInfo);
-        (* Sub-byte field: no lvalue — CompileMSIR handles via ExtractBitField. *)
+        (* Sub-byte field: no byte address; Expr.BitLocMSIR locates it.
+           Decide before evaluating the base, so a caller that then asks
+           for the bit location doesn't evaluate the base twice (B8). *)
         IF fieldInfo.offset MOD Target.Byte # 0 THEN
           RETURN NIL;
         END;
+        VAR fti0: Type.Info; BEGIN
+          EVAL Type.CheckInfo (fieldInfo.type, fti0);
+          IF fti0.size MOD Target.Byte # 0 THEN RETURN NIL END;
+        END;
+        baseAddr := Expr.LValueMSIR (p.lhsExpr);
+        IF baseAddr = NIL THEN RETURN NIL END;
         byteOff := fieldInfo.offset DIV 8;
         VAR
           b      := MSIRBuilder.CurrentBlock ();
@@ -855,10 +861,6 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           slot   : MSIR.Value;
         BEGIN
           EVAL Type.CheckInfo (fieldInfo.type, fti);
-          (* Sub-byte field: no lvalue — CompileMSIR handles via ExtractBitField. *)
-          IF fti.size MOD Target.Byte # 0 THEN
-            RETURN NIL;
-          END;
           (* When actual storage width differs from natural MSIR type (e.g.
              [0..255] stored as i8 but Translate gives i64), use TI(size) so
              the pointer element type matches the real field width. *)
@@ -892,6 +894,11 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         IF fieldInfo.offset MOD Target.Byte # 0 THEN
           MSIRBuilder.Abandon ("sub-byte object field offset not supported in MSIR");
           RETURN NIL;
+        END;
+        (* Sub-byte object field: no byte address (Expr.BitLocMSIR). *)
+        VAR fti0: Type.Info; BEGIN
+          EVAL Type.CheckInfo (fieldInfo.type, fti0);
+          IF fti0.size MOD Target.Byte # 0 THEN RETURN NIL END;
         END;
         baseAddr := Expr.CompileMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
@@ -929,10 +936,6 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
               fti : Type.Info;
           BEGIN
             EVAL Type.CheckInfo(fieldInfo.type, fti);
-            (* Sub-byte object field: no lvalue — CompileMSIR handles via ExtractBitField. *)
-            IF ft # NIL AND fti.size MOD Target.Byte # 0 THEN
-              RETURN NIL;
-            END;
             IF ft # NIL AND fti.size > 0 AND MSIR.BitWidth(ft) > 0
                         AND fti.size # MSIR.BitWidth(ft) THEN
               ft := MSIR.TI(fti.size);
@@ -1052,79 +1055,60 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
     RETURN TRUE;
   END CompileMethodCallMSIR;
 
-(* storeMSIR: a sub-byte field gets a read-modify-write bit insertion. *)
-PROCEDURE SubByteStoreMSIR (p: P;  rhs: MSIR.Value): BOOLEAN =
+(* bitLocMSIR: the location of a sub-byte record or object field, or of
+   any field of a record that itself has no byte address (a BITS n FOR
+   RECORD field at a bit offset).  The base is evaluated once.  FALSE,
+   emitting nothing, for byte-addressed fields. *)
+PROCEDURE BitLocMSIR (p: P;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   VAR
     fieldInfo : Field.Info;
     fti       : Type.Info;
-    bitOff    : INTEGER;
+    inner     : MSIRBitLoc.T;
   BEGIN
     Resolve (p);
     CASE p.class OF
     | Class.recField =>
         Field.Split (p.rhsValue, fieldInfo);
         EVAL Type.CheckInfo (fieldInfo.type, fti);
-        IF fti.size MOD Target.Byte = 0 AND fieldInfo.offset MOD Target.Byte = 0 THEN
-          RETURN FALSE;
-        END;
-        VAR baseAddr := Expr.LValueMSIR (p.lhsExpr);
-        BEGIN
-          IF baseAddr = NIL THEN RETURN FALSE END;
-          MSIRBuilder.InsertBitField (baseAddr, fieldInfo.offset, fti.size, rhs);
-          RETURN TRUE;
-        END;
-    | Class.objField =>
-        Field.Split (p.rhsValue, fieldInfo);
-        VAR objOff, objAlign : INTEGER;
-        BEGIN
-          ObjectType.GetFieldsOffsetAndAlign (p.holder, objOff, objAlign);
-          IF objOff < 0 THEN RETURN FALSE END;
-          bitOff := objOff + fieldInfo.offset;
-          EVAL Type.CheckInfo (fieldInfo.type, fti);
-          IF fti.size MOD Target.Byte = 0 AND bitOff MOD Target.Byte = 0 THEN
+        IF Expr.BitLocMSIR (p.lhsExpr, inner) THEN
+          (* The record is itself a bit field: offset into its location. *)
+          IF inner.idx # NIL THEN
+            MSIRBuilder.Abandon ("field of a bit-packed array element");
             RETURN FALSE;
           END;
-          VAR baseAddr := Expr.CompileMSIR (p.lhsExpr);
-          BEGIN
-            IF baseAddr = NIL THEN RETURN FALSE END;
-            MSIRBuilder.InsertBitField (baseAddr, bitOff, fti.size, rhs);
-            RETURN TRUE;
-          END;
+          loc := inner;
+          INC (loc.bitOff, fieldInfo.offset);
+          loc.width := fti.size;
+          loc.type  := fieldInfo.type;
+          RETURN TRUE;
         END;
-    ELSE
-      RETURN FALSE;
-    END;
-  END SubByteStoreMSIR;
-
-(* If e is a sub-byte/bit-field record or object field designator, compute the
-   containing storage's base pointer (evaluated ONCE) and return the field's bit
-   offset, width, and raw type.  Used by WithStmt to bind a bit-field WITH alias
-   by reference (base captured once; reads/writes route through Extract/Insert).
-   Returns FALSE for byte-aligned fields (they have an ordinary lvalue) and for
-   anything that is not a rec/obj field. *)
-PROCEDURE BitFieldBaseMSIR (e: Expr.T;  VAR base: MSIR.Value;
-                            VAR bitOff, width: INTEGER;
-                            VAR ftype: Type.T): BOOLEAN =
-  VAR
-    p         : P;
-    fieldInfo : Field.Info;
-    fti       : Type.Info;
-  BEGIN
-    TYPECASE e OF
-    | P (pp) => p := pp;
-    ELSE        RETURN FALSE;
-    END;
-    Resolve (p);
-    CASE p.class OF
-    | Class.recField =>
-        Field.Split (p.rhsValue, fieldInfo);
-        EVAL Type.CheckInfo (fieldInfo.type, fti);
-        IF fti.size MOD Target.Byte = 0 AND fieldInfo.offset MOD Target.Byte = 0 THEN
+        IF MSIRBuilder.IsAbandoned () THEN RETURN FALSE END;
+        IF fti.size MOD Target.Byte = 0
+           AND fieldInfo.offset MOD Target.Byte = 0 THEN
           RETURN FALSE;
         END;
-        base := Expr.LValueMSIR (p.lhsExpr);
-        IF base = NIL THEN RETURN FALSE END;
-        bitOff := fieldInfo.offset;  width := fti.size;  ftype := fieldInfo.type;
+        loc := MSIRBitLoc.T {};
+        loc.base := Expr.LValueMSIR (p.lhsExpr);
+        IF loc.base = NIL THEN
+          (* The record has no address (e.g. a function result): read the
+             field from a copy of its value.  Writes to it abandon. *)
+          IF MSIRBuilder.IsAbandoned () THEN RETURN FALSE END;
+          VAR bv := Expr.CompileMSIR (p.lhsExpr);  blk: MSIR.Block;
+          BEGIN
+            IF bv = NIL THEN
+              MSIRBuilder.Abandon
+                ("recField: packed base has neither lvalue nor value");
+              RETURN FALSE;
+            END;
+            blk := MSIRBuilder.CurrentBlock ();
+            loc.base := MSIR.BuildAlloca (blk, "", MSIR.ValueType (bv));
+            MSIR.BuildStore (blk, bv, loc.base);
+            loc.readOnly := TRUE;
+          END;
+        END;
+        loc.bitOff := fieldInfo.offset;
+        loc.width  := fti.size;
+        loc.type   := fieldInfo.type;
         RETURN TRUE;
     | Class.objField =>
         Field.Split (p.rhsValue, fieldInfo);
@@ -1132,20 +1116,23 @@ PROCEDURE BitFieldBaseMSIR (e: Expr.T;  VAR base: MSIR.Value;
         BEGIN
           ObjectType.GetFieldsOffsetAndAlign (p.holder, objOff, objAlign);
           IF objOff < 0 THEN RETURN FALSE END;
-          bitOff := objOff + fieldInfo.offset;
           EVAL Type.CheckInfo (fieldInfo.type, fti);
-          IF fti.size MOD Target.Byte = 0 AND bitOff MOD Target.Byte = 0 THEN
+          IF fti.size MOD Target.Byte = 0
+             AND (objOff + fieldInfo.offset) MOD Target.Byte = 0 THEN
             RETURN FALSE;
           END;
-          base := Expr.CompileMSIR (p.lhsExpr);
-          IF base = NIL THEN RETURN FALSE END;
-          width := fti.size;  ftype := fieldInfo.type;
+          loc := MSIRBitLoc.T {};
+          loc.base := Expr.CompileMSIR (p.lhsExpr);
+          IF loc.base = NIL THEN RETURN FALSE END;
+          loc.bitOff := objOff + fieldInfo.offset;
+          loc.width  := fti.size;
+          loc.type   := fieldInfo.type;
           RETURN TRUE;
         END;
     ELSE
       RETURN FALSE;
     END;
-  END BitFieldBaseMSIR;
+  END BitLocMSIR;
 
 PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
                           rawFieldType: Type.T): MSIR.Value =
@@ -1244,42 +1231,16 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           END;
         END;
         IF folded # NIL THEN RETURN Expr.CompileMSIR (folded) END;
-        (* Sub-byte field: extract via shift+mask from the byte array. *)
-        Field.Split (p.rhsValue, fieldInfo);
-        VAR ftiRec: Type.Info;
+        (* No byte address (a sub-byte field, or a field of a bit-packed
+           record): extract it from its bit location. *)
+        VAR loc: MSIRBitLoc.T;
         BEGIN
-          EVAL Type.CheckInfo (fieldInfo.type, ftiRec);
-          IF ftiRec.size MOD Target.Byte # 0 OR fieldInfo.offset MOD Target.Byte # 0 THEN
-            VAR baseAddr := Expr.LValueMSIR (p.lhsExpr);
-            BEGIN
-              IF baseAddr = NIL THEN
-                (* The base itself has no byte lvalue — it is a bit-packed
-                   field (e.g. srr.f.a where f is BITS 17 FOR a record).
-                   Compile the base VALUE, spill it to a temp, and extract
-                   this field from the spill.  Returning NIL here silently
-                   dropped the whole enclosing expression (p280 short
-                   aggregate reads: Concat(nil,...) SIGSEGV). *)
-                VAR bv := Expr.CompileMSIR (p.lhsExpr);
-                BEGIN
-                  IF bv = NIL THEN
-                    MSIRBuilder.Abandon
-                      ("recField: packed base has neither lvalue nor value");
-                    RETURN NIL;
-                  END;
-                  VAR blk := MSIRBuilder.CurrentBlock ();
-                      tmp := MSIR.BuildAlloca (blk, "", MSIR.ValueType (bv));
-                  BEGIN
-                    MSIR.BuildStore (blk, bv, tmp);
-                    RETURN MSIRBuilder.ExtractBitField
-                             (tmp, fieldInfo.offset, ftiRec.size, fieldInfo.type);
-                  END;
-                END;
-              END;
-              RETURN MSIRBuilder.ExtractBitField (baseAddr, fieldInfo.offset, ftiRec.size,
-                                      fieldInfo.type);
-            END;
+          IF BitLocMSIR (p, loc) THEN
+            RETURN MSIRBuilder.ExtractBitLoc (loc);
           END;
+          IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
         END;
+        Field.Split (p.rhsValue, fieldInfo);
         addr := LValueMSIR (p);
         IF addr = NIL THEN RETURN NIL END;
         fieldType := MSIRType.Translate (fieldInfo.type);
@@ -1294,26 +1255,13 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         END;
         RETURN LoadFieldValue (addr, fieldType, fieldInfo.type);
     | Class.objField =>
-        (* Sub-byte object field: extract via shift+mask. *)
-        Field.Split (p.rhsValue, fieldInfo);
-        VAR objOff2, objAlign2 : INTEGER;
-            ftiObj : Type.Info;
+        (* Sub-byte object field: extract it from its bit location. *)
+        VAR loc: MSIRBitLoc.T;
         BEGIN
-          ObjectType.GetFieldsOffsetAndAlign (p.holder, objOff2, objAlign2);
-          IF objOff2 >= 0 THEN
-            EVAL Type.CheckInfo (fieldInfo.type, ftiObj);
-            VAR totalBitOff := objOff2 + fieldInfo.offset;
-            BEGIN
-              IF ftiObj.size MOD Target.Byte # 0 OR totalBitOff MOD Target.Byte # 0 THEN
-                VAR baseAddr := Expr.CompileMSIR (p.lhsExpr);
-                BEGIN
-                  IF baseAddr = NIL THEN RETURN NIL END;
-                  RETURN MSIRBuilder.ExtractBitField (baseAddr, totalBitOff, ftiObj.size,
-                                          fieldInfo.type);
-                END;
-              END;
-            END;
+          IF BitLocMSIR (p, loc) THEN
+            RETURN MSIRBuilder.ExtractBitLoc (loc);
           END;
+          IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
         END;
         (* Byte-aligned object field: normal LValueMSIR→load path. *)
         addr := LValueMSIR (p);

@@ -15,7 +15,7 @@ IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
 IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
 IMPORT Variable, Procedure, OpenArrayType;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis, M3RT;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis, M3RT;
 
 TYPE P = Stmt.T OBJECT
         lhs     : Expr.T;
@@ -865,25 +865,36 @@ PROCEDURE CompileMSIR (p: P) =
     lhsPtr    : MSIR.Value;
     rhsVal    : MSIR.Value;
     container : MSIR.Value;
+    loc       : MSIRBitLoc.T;
   BEGIN
     (* Discard any stale pending container from prior sub-expression evaluation
        (e.g. QualifyExpr.CompileMSIR calls LValueMSIR as a side effect, which
        leaves a container set even for pure value reads). *)
     EVAL MSIRBuilder.TakePendingContainer ();
+    IF Expr.BitLocMSIR (p.lhs, loc) THEN
+      (* Sub-byte field or element, or a bit-field WITH alias (`WITH s =
+         rec.bitf DO s := v`): no byte address; read-modify-write at its bit
+         location, whose base is evaluated once (B8). *)
+      rhsVal := Expr.CompileMSIR (p.rhs);
+      IF rhsVal = NIL THEN RETURN END;
+      (* Range-check as for a byte-addressed ordinal (below). *)
+      VAR lmin, lmax: Target.Int;
+      BEGIN
+        IF Type.GetBounds (Expr.TypeOf (p.lhs), lmin, lmax) THEN
+          EVAL CheckExpr.EmitChecksMSIR (rhsVal, p.rhs, lmin, lmax,
+                                         CG.RuntimeError.ValueOutOfRange);
+        END;
+      END;
+      MSIRBuilder.InsertBitLoc (loc, rhsVal);
+      Expr.NoteWrite (p.lhs);
+      RETURN;
+    END;
+    IF MSIRBuilder.IsAbandoned () THEN RETURN END;
     lhsPtr := Expr.LValueMSIR (p.lhs);
     (* Collect container set as side-effect by LValueMSIR (heap field stores). *)
     container := MSIRBuilder.TakePendingContainer ();
     IF lhsPtr = NIL THEN
-      (* Sub-byte field/element write: no lvalue; use read-modify-write. *)
-      rhsVal := Expr.CompileMSIR (p.rhs);
-      IF rhsVal = NIL THEN RETURN END;
-      (* Sub-byte field or element, or a bit-field WITH alias
-         (`WITH s = rec.bitf DO s := v`): the designator stores it. *)
-      IF NOT Expr.StoreMSIR (p.lhs, rhsVal) THEN
-        MSIRBuilder.Abandon ("assignment: designator has no lvalue");
-        RETURN;
-      END;
-      Expr.NoteWrite (p.lhs);
+      MSIRBuilder.Abandon ("assignment: designator has no lvalue");
       RETURN;
     END;
     rhsVal := Expr.CompileMSIR (p.rhs);
