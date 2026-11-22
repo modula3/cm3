@@ -976,6 +976,22 @@ one hidden dependency inside (B):
    files and the `.msir` output byte for byte with the current build over
    the base packages.  This confirms or corrects the survey's static
    reading of (D).
+   *Result (2026-11-22):* not zero.  Over the 13 base packages (plain C
+   build at msir `27687db226`) the CG load paths are the first to mark 357
+   distinct imported variables (`LoadLValue` 320, `Load` 38), all with
+   `in_main` set, so `Scope.LookUp` does mark during code generation too.
+   Every one is a variable of an interface that the compiling module
+   exports (`TargetMap.CG_Size` in TargetMap.m3, `RTHeapRep.align` in
+   RTCollector.m3, `Date.UTC` in DatePosix.m3), never a true import: the
+   same variables as D28.  `LoadLValue` dominating fits the exporter's
+   initialization of its interface's variables (`External.InitGlobals` ->
+   `Variable.InitGlobal`), which reaches them without a name lookup.  So
+   an MSIR-only walk would drop the exporter's version stamps for its own
+   interface variables, weakening the linker's check that exporter and
+   importers agree on them.  Fix: the MSIR path that initializes and
+   routes exported interface variables (D28, `DeclareGlobalsMSIR` and
+   `InitValuesMSIR`) marks them used, as the CG path does; then rerun this
+   experiment with the CG walk off (step 2) to confirm.
 3. Only then estimate A to C.  If both checks are clean, A and C are
    mainly driver work in `Module.Compile`/`Procedure.GenBody`, and B is
    the `Value.Declare` split plus moving the other `note_*` calls out of
