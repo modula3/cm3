@@ -35,7 +35,6 @@ extern char * RTException__AllocBuf(int size);
   FrameInfo = RECORD
     pc  : ADDRESS;
     sp  : ADDRESS;
-    bp  : ADDRESS;        (* base pointer — unused *)
     lock: INTEGER;        (* sentinel to detect cursor overrun *)
     excRef  : ADDRESS;    (* ref to the exception activation *)
     tTypeIndex : INTEGER; (* tTypeIndex from exception table *)
