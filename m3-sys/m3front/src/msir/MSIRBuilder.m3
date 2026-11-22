@@ -2354,6 +2354,38 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
                   MSIR.BuildIShl (b, "", b2w, MSIR.ConstInt (i32, 16)));
       END;
       wordBits := 32;
+    ELSIF bitInByte + bitWidth > 32 THEN
+      (* Field spans five to nine bytes (e.g. RTHeapRep.Desc.link, 46 bits at
+         bit 10): stitch the first min(8, n) bytes as i64.  A ninth byte
+         (a 64-bit field not starting on a byte boundary) supplies the bits
+         above 64 - bitInByte, ORed in after the shift below. *)
+      VAR i64 := MSIR.TI (64);
+          n   := (bitInByte + bitWidth + 7) DIV 8;
+      BEGIN
+        word := MSIR.BuildZExt (b, "", b0, i64);
+        FOR k := 1 TO MIN (n, 8) - 1 DO
+          word := MSIR.BuildIOr (b, "", word,
+                    MSIR.BuildIShl (b, "",
+                      MSIR.BuildZExt (b, "",
+                        MSIR.BuildLoad (b, "", MSIR.TI (8),
+                          MSIR.BuildPtrAdd (b, "", base, byteStart + k)),
+                        i64),
+                      MSIR.ConstInt (i64, 8 * k)));
+        END;
+        IF n > 8 THEN
+          word := MSIR.BuildIOr (b, "",
+                    MSIR.BuildILShr (b, "", word,
+                      MSIR.ConstInt (i64, bitInByte)),
+                    MSIR.BuildIShl (b, "",
+                      MSIR.BuildZExt (b, "",
+                        MSIR.BuildLoad (b, "", MSIR.TI (8),
+                          MSIR.BuildPtrAdd (b, "", base, byteStart + 8)),
+                        i64),
+                      MSIR.ConstInt (i64, 64 - bitInByte)));
+          bitInByte := 0;  (* already shifted into place *)
+        END;
+      END;
+      wordBits := 64;
     ELSE
       (* Field spans four bytes: stitch four bytes as i32 *)
       VAR p1  := MSIR.BuildPtrAdd (b, "", base, byteStart + 1);
@@ -2384,8 +2416,12 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
       maskVal  : INTEGER := 1;
       extracted: MSIR.Value;
     BEGIN
-      FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
-      maskVal := maskVal - 1;
+      IF bitWidth >= BITSIZE (INTEGER) THEN
+        maskVal := -1;
+      ELSE
+        FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
+        maskVal := maskVal - 1;
+      END;
       extracted := MSIR.BuildIAnd (b, "", shifted, MSIR.ConstInt (wordT, maskVal));
       (* Aggregate field (a misaligned {i8,i8}/[3 x i8] record/array field read
          via Misaligned.TheField): the extracted bits are not a scalar ordinal —
