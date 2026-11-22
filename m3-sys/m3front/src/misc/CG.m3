@@ -2288,10 +2288,7 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
     oddRTBits : Var;
     save_bits_is_temp : BOOLEAN := FALSE;
 
-
-sss: CHAR;
   BEGIN (*Store_indirect*)
-sss := 'x';
     Swap ();
     ForceAddr2SAP (addedOffset);
     (* Address wherein to store is now Stacked, Absolute, or Pointer. *)
