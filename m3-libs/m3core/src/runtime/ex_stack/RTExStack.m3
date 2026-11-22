@@ -81,6 +81,13 @@ PROCEDURE PrintStack (uid : INTEGER) =
     here, f: RTStack.Frame;
     name: RTProcedureSRC.Name;
   BEGIN
+    IF NOT RTStack.Has_walker () THEN
+      (* Raising needs no stack walker (a raise is a C++ throw); only this
+         dump does, and this target has none. *)
+      RTIO.PutText ("(no stack dump: this target has no stack walker)\n");
+      RTIO.Flush ();
+      RETURN;
+    END;
     RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
@@ -151,5 +158,4 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
 
 BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
-  (* commented out ASSERT RTStack.Has_walker () *)
 END RTExStack.
