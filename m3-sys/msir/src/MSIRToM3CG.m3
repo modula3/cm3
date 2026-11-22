@@ -849,6 +849,11 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       p := MSIR.ModuleProc (m, pi);
       IF MSIR.ProcBlockCount (p) > 0 THEN
         IF MSIR.ProcScopeCount (p) > 1 THEN CheckScopes (w, m, p) END;
+        IF MSIR.ProcChecksRaises (p) AND NOT Target.Has_stack_walker
+           AND (MSIR.ModulePushEFrame (m) = NIL
+                OR MSIR.ModulePopEFrame (m) = NIL) THEN
+          Fail (w, "RAISES check (ex_frame): no frame hooks");
+        END;
         CheckProcSig (w, p);
         FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
           b := MSIR.ProcBlock (p, bi);
@@ -949,9 +954,12 @@ TYPE
      ScanTypecase), uid; the ELSE clause's uid 0 ends it. *)
   TypecaseItem = Item OBJECT insn: MSIR.Insn
                  OVERRIDES emit := EmitTypecase END;
-  (* ex_frame: the exceptions an Except scope handles, as the frame's
-     NIL-terminated list of uids (ESet's layout). *)
-  HandlesItem = Item OBJECT s: MSIR.Scope;  uids: REF ARRAY OF INTEGER
+  (* ex_frame: the exceptions an Except scope handles (s), or that a
+     procedure's RAISES clause allows (p), as the frame's NIL-terminated list
+     of uids (ESet's layout). *)
+  HandlesItem = Item OBJECT
+                  s: MSIR.Scope := NIL;  p: MSIR.Proc := NIL;
+                  uids: REF ARRAY OF INTEGER
                 OVERRIDES emit := EmitHandles END;
 
 CONST TEXT_typecode = 1;
@@ -1119,6 +1127,16 @@ PROCEDURE Setup (m: MSIR.Module) =
         VAR p := MSIR.ModuleProc (m, pi);  sc: MSIR.Scope;  n: INTEGER;
             it: HandlesItem;  hasElse: BOOLEAN;
         BEGIN
+          n := MSIR.ProcRaisesCount (p);
+          IF MSIR.ProcChecksRaises (p) AND n > 0 THEN
+            it := NEW (HandlesItem, p := p,
+                       uids := NEW (REF ARRAY OF INTEGER, n));
+            FOR j := 0 TO n - 1 DO
+              it.uids[j] := MSIR.ExcDescUID (MSIR.ProcRaises (p, j));
+            END;
+            EVAL Alloc (cseg, (n + 1) * Target.Integer.bytes, ptr, it);
+            handlesLists.addhi (it);
+          END;
           FOR k := 0 TO MSIR.ProcScopeCount (p) - 1 DO
             sc := MSIR.ProcScopeAt (p, k);
             IF MSIR.ScopeKindOf (sc) = MSIR.ScopeKind.Except THEN
@@ -1497,11 +1515,21 @@ PROCEDURE HandlesOff (sc: MSIR.Scope): INTEGER =
   BEGIN
     FOR k := 0 TO handlesLists.size () - 1 DO
       WITH it = NARROW (handlesLists.get (k), HandlesItem) DO
-        IF it.s = sc THEN RETURN it.off END;
+        IF it.s = sc AND sc # NIL THEN RETURN it.off END;
       END;
     END;
     <* ASSERT FALSE *>
   END HandlesOff;
+
+PROCEDURE RaisesOff (p: MSIR.Proc): INTEGER =
+  BEGIN
+    FOR k := 0 TO handlesLists.size () - 1 DO
+      WITH it = NARROW (handlesLists.get (k), HandlesItem) DO
+        IF it.p = p THEN RETURN it.off END;
+      END;
+    END;
+    <* ASSERT FALSE *>
+  END RaisesOff;
 
 PROCEDURE TypecaseOff (i: MSIR.Insn): INTEGER =
   BEGIN
@@ -1843,10 +1871,11 @@ PROCEDURE ImportCallees (p: MSIR.Proc) =
   BEGIN
     IF MSIR.ProcScopeCount (p) > 1 THEN
       EVAL ProcFor (MSIR.ModuleResumeRaise (mod));
-      IF exFrame THEN
-        EVAL ProcFor (MSIR.ModulePushEFrame (mod));
-        EVAL ProcFor (MSIR.ModulePopEFrame (mod));
-      END;
+    END;
+    IF exFrame
+       AND (MSIR.ProcScopeCount (p) > 1 OR MSIR.ProcChecksRaises (p)) THEN
+      EVAL ProcFor (MSIR.ModulePushEFrame (mod));
+      EVAL ProcFor (MSIR.ModulePopEFrame (mod));
     END;
     FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
       b := MSIR.ProcBlock (p, bi);
@@ -2200,7 +2229,8 @@ VAR
   exFrame   := FALSE;                       (* lowering to ex_frame *)
   allocaProc, setjmpProc: M3CG.Proc := NIL; (* ex_frame imports, per unit *)
   jmpbufSize: M3CG.Var := NIL;
-  handlesLists: RefSeq.T := NIL;            (* HandlesItem, per Except scope *)
+  handlesLists: RefSeq.T := NIL;  (* HandlesItem, per Except scope or RAISES *)
+  raisesFrame: M3CG.Var := NIL;   (* ex_frame: the procedure's RAISES frame *)
 
 VAR
   eh        : REF ARRAY OF EHScope := NIL;  (* per scope; NIL: no scopes *)
@@ -2545,6 +2575,45 @@ PROCEDURE PopFrames (from, stop: MSIR.Scope) =
     cg.call_direct (q, M3CG.Type.Void);
   END PopFrames;
 
+(* At p's entry: the frame that enforces its RAISES clause, as CG's
+   Procedure.StartRaises pushes it.  RAISES {} needs only the class; otherwise
+   the frame points at the clause's uids.  An exception that reaches the
+   frame and is not in the list is reported as blocked by the runtime. *)
+PROCEDURE PushRaisesFrame (p: MSIR.Proc) =
+  VAR q := ProcFor (MSIR.ModulePushEFrame (mod));
+      class := M3RT.HandlerClass.Raises;  size := M3RT.EF3_SIZE;
+  BEGIN
+    IF MSIR.ProcRaisesCount (p) = 0 THEN
+      class := M3RT.HandlerClass.RaisesNone;  size := M3RT.EF_SIZE;
+    END;
+    raisesFrame := cg.declare_local (M3ID.NoID, B (size), Target.Address.bytes,
+                                     M3CG.Type.Struct, 0, TRUE, FALSE,
+                                     M3CG.Never);
+    IF class = M3RT.HandlerClass.Raises THEN
+      cg.load_address (cseg.var, RaisesOff (p));
+      cg.store (raisesFrame, B (M3RT.EF3_raises), Addr, Addr);
+    END;
+    PushInt (ORD (class));
+    cg.store (raisesFrame, B (M3RT.EF_class), Int64, Int64);
+    cg.start_call_direct (q, 0, M3CG.Type.Void);
+    cg.load_address (raisesFrame, 0);
+    cg.pop_param (Addr);
+    cg.call_direct (q, M3CG.Type.Void);
+  END PushRaisesFrame;
+
+(* Before each return: unlink the RAISES frame, and so every frame the
+   procedure pushed after it. *)
+PROCEDURE PopRaisesFrame () =
+  VAR q: M3CG.Proc;
+  BEGIN
+    IF raisesFrame = NIL THEN RETURN END;
+    q := ProcFor (MSIR.ModulePopEFrame (mod));
+    cg.start_call_direct (q, 0, M3CG.Type.Void);
+    cg.load (raisesFrame, B (M3RT.EF_next), Addr, Addr);
+    cg.pop_param (Addr);
+    cg.call_direct (q, M3CG.Type.Void);
+  END PopRaisesFrame;
+
 (* The landing pad of a Finally scope: save the activation, select Sel_Exc,
    run the FINALLY code. *)
 PROCEDURE FinallyPad (e: EHScope) =
@@ -2650,7 +2719,9 @@ PROCEDURE Leave (from: MSIR.Scope;  target: MSIR.Block;  i: MSIR.Insn;
   BEGIN
     IF exFrame THEN
       IF s # NIL THEN PopFrames (from, MSIR.ScopeParent (s))
-      ELSIF isReturn THEN PopFrames (from, NIL)
+      ELSIF isReturn THEN
+        (* the return pops the RAISES frame, and every frame above it *)
+        IF raisesFrame = NIL THEN PopFrames (from, NIL) END
       ELSE PopFrames (from, MSIR.BlockScope (target))
       END;
     END;
@@ -2690,6 +2761,7 @@ PROCEDURE SaveResult (v: MSIR.Value) =
 
 PROCEDURE RetFromSlot () =
   BEGIN
+    PopRaisesFrame ();
     IF retSlot = NIL THEN
       cg.exit_proc (M3CG.Type.Void);
     ELSE
@@ -2805,6 +2877,7 @@ PROCEDURE GenProc (p: MSIR.Proc) =
         END;
       END;
     END;
+    IF exFrame AND MSIR.ProcChecksRaises (p) THEN PushRaisesFrame (p) END;
     IF SetupScopes (p) THEN
       <* ASSERT MSIR.BlockScope (MSIR.ProcBlock (p, 0)) = MSIR.ProcScope (p) *>
       IF exFrame THEN AllocJmpbufs () END;
@@ -2821,7 +2894,7 @@ PROCEDURE GenProc (p: MSIR.Proc) =
     cg.end_procedure (q);
     vals := NIL;
     blocks := NIL;
-    eh := NIL;  placedBlk := NIL;  retSlot := NIL;
+    eh := NIL;  placedBlk := NIL;  retSlot := NIL;  raisesFrame := NIL;
     curScope := NIL;  curPad := M3CG.No_label;  curProc := NIL;
   END GenProc;
 
@@ -2995,6 +3068,7 @@ PROCEDURE GenMemCall (i: MSIR.Insn;  m: Mem) =
 PROCEDURE GenRet (v: MSIR.Value) =
   VAR t := MSIR.ValueType (v);
   BEGIN
+    PopRaisesFrame ();
     IF IsAgg (t) THEN
       cg.load (resultVar, 0, Addr, Addr);
       Push (v);
@@ -3288,7 +3362,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           cg.jump (LabelOf (f));
         END;
     | Op.Ret =>
-        IF nOps = 0 THEN cg.exit_proc (M3CG.Type.Void);
+        IF nOps = 0 THEN PopRaisesFrame ();  cg.exit_proc (M3CG.Type.Void);
         ELSE GenRet (MSIR.InsnOperand (i, 0));
         END;
     | Op.Typecase =>

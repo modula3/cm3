@@ -185,11 +185,19 @@ PROCEDURE ProcSetParams(p: Proc;  READONLY params: ARRAY OF Param);
 TYPE CallingConvention = {M3, C, WinAPI};
 TYPE Linkage           = {External, Internal};
 
-(* Default attributes after NewProc: empty raises, not noreturn,
+(* Default attributes after NewProc: no RAISES check, not noreturn,
    External linkage, M3 calling convention. *)
-PROCEDURE ProcSetRaises(p: Proc;  READONLY exceptionSyms: ARRAY OF TEXT);
+
+(* The procedure's RAISES clause, to be enforced (D10): an exception that
+   would escape p and is not one of excs becomes a BlockedException runtime
+   error.  The front end decides when a check is needed, as for CG (not for
+   RAISES ANY, nor when no other exception can escape the body); if it is
+   never called, p has no check.  Each lowering generates what its EH scheme
+   needs. *)
+PROCEDURE ProcSetRaises(p: Proc;  READONLY excs: ARRAY OF ExcDesc);
+PROCEDURE ProcChecksRaises(p: Proc): BOOLEAN;
 PROCEDURE ProcRaisesCount(p: Proc): INTEGER;
-PROCEDURE ProcRaises(p: Proc;  i: INTEGER): TEXT;
+PROCEDURE ProcRaises(p: Proc;  i: INTEGER): ExcDesc;
 
 PROCEDURE ProcSetNoReturn(p: Proc;  v: BOOLEAN);
 PROCEDURE ProcIsNoReturn(p: Proc): BOOLEAN;

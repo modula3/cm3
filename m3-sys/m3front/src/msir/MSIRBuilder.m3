@@ -1651,6 +1651,17 @@ PROCEDURE ExcDescFor (v: Value.T): MSIR.ExcDesc =
     RETURN desc;
   END ExcDescFor;
 
+PROCEDURE SetProcRaises (READONLY excs: ARRAY OF Value.T) =
+  VAR ds := NEW (REF ARRAY OF MSIR.ExcDesc, NUMBER (excs));
+  BEGIN
+    IF curProc = NIL THEN RETURN END;
+    FOR i := 0 TO LAST (excs) DO
+      ds[i] := ExcDescFor (excs[i]);
+      IF ds[i] = NIL THEN RETURN END;
+    END;
+    MSIR.ProcSetRaises (curProc, ds^);
+  END SetProcRaises;
+
 PROCEDURE TypeLinkValueForRef(t: Type.T): MSIR.Value =
   VAR m    := MSIREmit.CurrentModule();
       (* Resolve opaque types to their revealed REF type so the TypeLink UID

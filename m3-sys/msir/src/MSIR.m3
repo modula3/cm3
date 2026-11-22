@@ -720,7 +720,7 @@ REVEAL Proc = BRANDED "MSIR.Proc" REF RECORD
   items:       RefSeq.T;                          (* elements: Block *)
   scopes:      RefSeq.T;                          (* elements: Scope; 0 = root *)
   nameCounter: INTEGER := 0;
-  raises:      REF ARRAY OF TEXT := NIL;
+  raises:      REF ARRAY OF ExcDesc := NIL;  (* NIL: no RAISES check *)
   noReturn:    BOOLEAN := FALSE;
   linkage:     Linkage := Linkage.External;
   cc:          CallingConvention := CallingConvention.M3;
@@ -879,12 +879,15 @@ PROCEDURE ProcAddBlock(p: Proc; b: Block) =
     b.proc := p;
     p.items.addhi(b);
   END ProcAddBlock;
-PROCEDURE ProcSetRaises(p: Proc;  READONLY exceptionSyms: ARRAY OF TEXT) =
-  VAR n := NUMBER(exceptionSyms);  rs := NEW(REF ARRAY OF TEXT, n);
+PROCEDURE ProcSetRaises(p: Proc;  READONLY excs: ARRAY OF ExcDesc) =
+  VAR n := NUMBER(excs);  rs := NEW(REF ARRAY OF ExcDesc, n);
   BEGIN
-    FOR i := 0 TO n - 1 DO rs[i] := exceptionSyms[i] END;
+    FOR i := 0 TO n - 1 DO rs[i] := excs[i] END;
     p.raises := rs;
   END ProcSetRaises;
+
+PROCEDURE ProcChecksRaises(p: Proc): BOOLEAN =
+  BEGIN RETURN p.raises # NIL END ProcChecksRaises;
 
 PROCEDURE ProcRaisesCount(p: Proc): INTEGER =
   BEGIN
@@ -892,7 +895,7 @@ PROCEDURE ProcRaisesCount(p: Proc): INTEGER =
     RETURN NUMBER(p.raises^);
   END ProcRaisesCount;
 
-PROCEDURE ProcRaises(p: Proc;  i: INTEGER): TEXT =
+PROCEDURE ProcRaises(p: Proc;  i: INTEGER): ExcDesc =
   BEGIN RETURN p.raises[i] END ProcRaises;
 
 PROCEDURE ProcSetNoReturn(p: Proc;  v: BOOLEAN) =

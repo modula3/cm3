@@ -762,6 +762,7 @@ PROCEDURE GenBodyMSIR (p: T) =
               captures := ca) THEN RETURN END;
     MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
                                CaptureAnalysis.GetCaptures (ca));
+    NoteRaisesMSIR (p);
     (* Compile p's OWN nested procedures inline first.  Nested procs live in
        p.syms (the procedure scope), not p.block's scope; for a top-level proc
        GenBody unfolds them via Scope.InitValues -> LangInit -> GenBodyMSIR.
@@ -889,6 +890,7 @@ PROCEDURE GenBody (p: T) =
         ELSE
           MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
         END;
+        NoteRaisesMSIR (p);
       END;
     END;
     Scope.Enter (p.syms);
@@ -949,6 +951,24 @@ PROCEDURE GenBody (p: T) =
 
     Scope.Pop (zz);
   END GenBody;
+
+(* MSIR: p's RAISES clause is enforced when StartRaises would push a
+   frame for it, under ex_frame or ex_stack alike; the lowering decides
+   what that takes. *)
+PROCEDURE NoteRaisesMSIR (t: T) =
+  VAR raises: ESet.T;  l: ESet.EList;  n := 0;
+      excs: REF ARRAY OF Value.T;
+  BEGIN
+    IF (NOT Host.doRaisesChk) OR (NOT t.needs_raises) THEN RETURN END;
+    raises := ProcType.Raises (t.signature);
+    IF ESet.RaisesAny (raises) THEN RETURN END;
+    l := ESet.ListE (raises);
+    WHILE l # NIL DO INC (n);  l := l.next END;
+    excs := NEW (REF ARRAY OF Value.T, n);
+    l := ESet.ListE (raises);
+    FOR i := 0 TO n - 1 DO excs[i] := l.e;  l := l.next END;
+    MSIRBuilder.SetProcRaises (excs^);
+  END NoteRaisesMSIR;
 
 PROCEDURE StartRaises (t: T;  VAR(*OUT*)l: CG.Label; VAR(*OUT*)frame: CG.Var) =
   VAR raises: ESet.T;  eset: CG.Var;  eoffset: INTEGER;  frame_size : INTEGER;

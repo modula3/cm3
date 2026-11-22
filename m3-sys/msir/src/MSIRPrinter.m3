@@ -763,11 +763,11 @@ PROCEDURE ProcAttrs(wr: Wr.T;  p: MSIR.Proc) =
   VAR
     nRaises := MSIR.ProcRaisesCount(p);
   BEGIN
-    IF nRaises > 0 THEN
+    IF MSIR.ProcChecksRaises(p) THEN
       Wr.PutText(wr, "  raises {");
       FOR i := 0 TO nRaises - 1 DO
         IF i > 0 THEN Wr.PutText(wr, ", ") END;
-        Wr.PutText(wr, MSIR.ProcRaises(p, i));
+        Wr.PutText(wr, MSIR.ExcDescName(MSIR.ProcRaises(p, i)));
       END;
       Wr.PutText(wr, "}\n");
     END;

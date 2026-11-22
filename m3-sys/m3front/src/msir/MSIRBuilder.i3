@@ -286,6 +286,10 @@ PROCEDURE ExcDescValue (v: Value.T): MSIR.Value;
 (* The module's descriptor for exception v, with its argument's type. *)
 PROCEDURE ExcDescFor (v: Value.T): MSIR.ExcDesc;
 
+(* The current procedure's RAISES clause is to be enforced, and excs are the
+   exceptions it allows (MSIR.ProcSetRaises). *)
+PROCEDURE SetProcRaises (READONLY excs: ARRAY OF Value.T);
+
 (* Analog of Type.LoadInfo: create a TypeLink entry in MI_type_cell_ptrs and
    emit a load of TypeLink.defn in the current block.  After RTLinker resolves
    the TypeLink, the loaded value is the TypeCell pointer.

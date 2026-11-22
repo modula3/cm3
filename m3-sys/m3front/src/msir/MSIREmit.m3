@@ -120,22 +120,23 @@ PROCEDURE EndUnit() =
       MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced),
       MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase));
     (* EH lowering (MSIREH) re-raises through RTHooks.ResumeRaiseEx. *)
-    VAR scoped := FALSE;
+    VAR scoped, checked := FALSE;  p: MSIR.Proc;
     BEGIN
       FOR i := 0 TO MSIR.ModuleProcCount(curModule) - 1 DO
-        IF MSIR.ProcScopeCount(MSIR.ModuleProc(curModule, i)) > 1 THEN
-          scoped := TRUE;
-        END;
+        p := MSIR.ModuleProc(curModule, i);
+        IF MSIR.ProcScopeCount(p) > 1 THEN scoped := TRUE END;
+        IF MSIR.ProcChecksRaises(p) THEN checked := TRUE END;
       END;
       IF scoped THEN
         MSIR.SetModuleResumeRaise(curModule,
           MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx));
-        IF NOT Target.Has_stack_walker THEN
-          (* setjmp frames, for lowering to M3CG's ex_frame scheme *)
-          MSIR.SetModuleFrameHooks(curModule,
-            MSIRBuilder.HookProc(RunTyme.Hook.PushEFrame),
-            MSIRBuilder.HookProc(RunTyme.Hook.PopEFrame));
-        END;
+      END;
+      IF (scoped OR checked) AND NOT Target.Has_stack_walker THEN
+        (* setjmp frames, and the frames that enforce RAISES clauses, for
+           lowering to M3CG's ex_frame scheme *)
+        MSIR.SetModuleFrameHooks(curModule,
+          MSIRBuilder.HookProc(RunTyme.Hook.PushEFrame),
+          MSIRBuilder.HookProc(RunTyme.Hook.PopEFrame));
       END;
     END;
     (* Populate text literals from TextExpr's per-module registry.
