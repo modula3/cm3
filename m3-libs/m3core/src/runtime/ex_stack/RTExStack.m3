@@ -14,6 +14,7 @@ IMPORT Cstring;
 
 VAR
   DEBUG := FALSE;
+  dump_enabled := FALSE;
 
 TYPE
   CharArr = REF ARRAY OF CHAR;
@@ -72,6 +73,9 @@ VAR NoName := ARRAY [0..15] OF CHAR {'s','t','a','t','i','c',' ',
 
 PROCEDURE DumpStack () =
   BEGIN
+    (* As under ex_frame, the stack dump is a diagnostic aid, off unless
+       @M3stackdump or @M3debugex is given. *)
+    IF NOT DEBUG AND NOT dump_enabled THEN RETURN END;
     PrintStack(0);
   END DumpStack;
 
@@ -158,4 +162,6 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
 
 BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
+  dump_enabled := RTParams.IsPresent ("stackdump");
+  RTStack.InstallTerminateHandler ();
 END RTExStack.
