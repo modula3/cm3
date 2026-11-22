@@ -1024,6 +1024,10 @@ one hidden dependency inside (B):
    against `M3CG_DoNothing`, as MSIRObj already does, rather than split
    `Value.Declare`; decouple only the code walk (A), so C is about
    procedure and module bodies.
+   **Decided (Tony, 2026-11-22):** do not split `Value.Declare`.  Its link
+   note and CG declaration are integrated by an explicit, long-standing
+   decision; B keeps the declaration walk against `M3CG_DoNothing`, and
+   the CG pieces are excised later (with step 6 of D25).
 3. Only then estimate A to C.  If both checks are clean, A and C are
    mainly driver work in `Module.Compile`/`Procedure.GenBody`, and B is
    the `Value.Declare` split plus moving the other `note_*` calls out of
