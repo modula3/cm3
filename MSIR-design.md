@@ -654,6 +654,33 @@ untraced pointer) are passed by value instead of by pointer, giving LLVM's alias
 analysis better information; GcRef captures always pass by pointer so the
 conservative GC scanner keeps them on the stack.
 
+**Static links on the C path (2026-11-22).**  Lambda-lifting happens once,
+in m3front while the MSIR is built, not in the lowering to LLVM.  Both
+lowerings therefore receive lifted procedures, and the MSIR route to C
+(MSIR -> M3CG -> M3C) needs no static link either:
+
+- `MSIRToM3CG` declares every procedure at level 0
+  (`cg.declare_procedure (..., 0, ...)`) and calls a lifted procedure as
+  an ordinary call with its captures.  It emits none of M3CG's static-link
+  operations or frame structs; in the lowered compiler's generated C, the
+  only occurrences of "static_link" are the names of m3front's own
+  procedures (`CG.Pop_static_link` and the like).
+- Static links remain on the direct CG route (m3front -> M3CG -> M3C, as
+  on master), with their frame structs and the undefined static link that
+  #1243 hit at `-O2`.  They go only when step 6 of D25 makes MSIR -> M3CG
+  the default and deletes the per-node CG methods.
+- Until then the two conventions coexist and do not interoperate: a
+  lowered unit calls a closure as `shim(env, args...)`, a CG nested
+  procedure takes its static link last.  Per Tony (2026-11-21) this
+  lowered/CG boundary is not bridged, so a build must be all lowered or
+  all CG (a mixed build crashed in `Utils.WriteFile` calling
+  `M3Build.InstallFile.Emit`).
+- Costs: a procedure gains one parameter per capture.  LLVM removes most
+  of that after inlining; a C compiler may recover less, not yet measured.
+  O16 (grouping captures into a frame struct) is the fallback for hot
+  paths that are not inlined.  Indirect calls keep the `CL_marker` test,
+  which reads a code word (O18).
+
 ### D14. Module descriptors are first-class MSIR entities.
 
 **Why:** Init order, root registration, type registration, and
