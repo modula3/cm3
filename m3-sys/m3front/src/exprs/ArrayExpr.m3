@@ -3053,20 +3053,51 @@ VAR
 
 (* EXPORTED: *)
 PROCEDURE ConstDopeMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value =
+(* The dope of an open-array constant, {data, n0, .., n(depth-1)}, as
+   Constant.SetGlobals lays it out for CG, with the data ConstArrayMSIR
+   builds (the elements flattened, as ArrayExpr.GenLiteral does).  n0 is the
+   number of elements; an inner size is the length of the first element's
+   concrete type at that level, or, where that level is open too, the
+   number of elements of its constructor. *)
   VAR p := ArrayConstrExpr (constExpr);  elts: MSIR.Value;  dopeT: MSIR.T;
+      depth := OpenArrayType.OpenDepth (Expr.TypeOf (constExpr));
+      intT  := MSIR.TI (Target.Integer.size);
   BEGIN
-    IF p = NIL OR OpenArrayType.OpenDepth (Expr.TypeOf (constExpr)) # 1 THEN
-      RETURN NIL;
+    IF p = NIL OR depth < 1 THEN RETURN NIL END;
+    VAR fields := NEW (REF ARRAY OF MSIR.Field, depth + 1);
+        vals   := NEW (REF ARRAY OF MSIR.Value, depth + 1);
+        e      : Expr.T := constExpr;
+        ep     : T;
+        t, indexT, eltT: Type.T;
+        n      : INTEGER;
+    BEGIN
+      FOR k := 0 TO depth - 1 DO
+        (* e: an element at level k (the constant itself at level 0) *)
+        ep := ArrayConstrExpr (e);
+        t  := Expr.TypeOf (e);
+        IF NOT OpenArrayType.Is (t) AND ArrayType.Split (t, indexT, eltT)
+           AND TInt.ToInt (Type.Number (indexT), n) THEN
+          (* a concrete fixed array at this level *)
+        ELSIF ep # NIL THEN
+          n := NUMBER (ep.args^);
+        ELSE
+          RETURN NIL;  (* an open level of unknown length *)
+        END;
+        fields[k + 1] := MSIR.Field {"n" & Fmt.Int (k), intT};
+        vals[k + 1]   := MSIR.ConstInt (intT, n);
+        IF k < depth - 1 THEN
+          IF ep = NIL OR NUMBER (ep.args^) = 0 THEN RETURN NIL END;
+          e := ep.args^[0];
+        END;
+      END;
+      elts := ConstArrayMSIR (key, constExpr);
+      IF elts = NIL THEN RETURN NIL END;
+      fields[0] := MSIR.Field {"data", MSIR.TPtr (MSIR.TVoid ())};
+      vals[0]   := elts;
+      dopeT := MSIR.TStruct ("", fields^);
+      RETURN MSIRBuilder.ConstArrayGlobal (dopeT, ARRAY OF MSIR.Value {
+               MSIR.ConstStruct (dopeT, vals^) });
     END;
-    elts := ConstArrayMSIR (key, constExpr);
-    IF elts = NIL THEN RETURN NIL END;
-    dopeT := MSIR.TStruct ("", ARRAY OF MSIR.Field {
-               MSIR.Field {"data", MSIR.TPtr (MSIR.TVoid ())},
-               MSIR.Field {"n", MSIR.TI (Target.Integer.size)} });
-    RETURN MSIRBuilder.ConstArrayGlobal (dopeT, ARRAY OF MSIR.Value {
-             MSIR.ConstStruct (dopeT, ARRAY OF MSIR.Value {
-               elts, MSIR.ConstInt (MSIR.TI (Target.Integer.size),
-                                    NUMBER (p.args^)) }) });
   END ConstDopeMSIR;
 
 PROCEDURE ConstArrayMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value =
