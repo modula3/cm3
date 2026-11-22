@@ -163,4 +163,5 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RaiseActivation) =
 BEGIN
   DEBUG := RTParams.IsPresent ("debugex");
   dump_enabled := RTParams.IsPresent ("stackdump");
+  RTStack.InstallTerminateHandler ();
 END RTExStack.
