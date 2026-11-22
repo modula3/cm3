@@ -13,7 +13,6 @@
 #include <signal.h>
 #include <libunwind.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,34 +24,16 @@ extern "C" {
 #define EHObjRegNo  0
 #define EHTypeRegNo 1
 
-/* Personality function stub — the real dispatch is done in RTEHScan. */
+/* Personality function stub, the real dispatch is done in RTEHScan. */
 void * __m3_personality_v0();
 
-/* External M3 allocator — avoids a memory leak in CurFrame. */
-extern char * RTException__AllocBuf(int size);
+/* External M3 allocator, avoids a memory leak in CurFrame. */
+char * RTException__AllocBuf (INTEGER size);
 
-/*
-  FrameInfo = RECORD
-    pc  : ADDRESS;
-    sp  : ADDRESS;
-    lock: INTEGER;        (* sentinel to detect cursor overrun *)
-    excRef  : ADDRESS;    (* ref to the exception activation *)
-    tTypeIndex : INTEGER; (* tTypeIndex from exception table *)
-    cursor : ADDRESS;     (* libunwind cursor to cur frame *)
-    startIP : ADDRESS;    (* libunwind start ip of current proc *)
-    endIP : ADDRESS;      (* libunwind end ip of current proc *)
-    lsda : ADDRESS;       (* libunwind lsda *)
-    persFn : ADDRESS;     (* libunwind handler pers fn *)
-    landingPad : ADDRESS; (* libunwind landing pad *)
-  END;
- * The typedef below must agree with the definition above
- * and in RTMachine.i3.
- */
-
+/* Frame must match RTMachine.FrameInfo. */
 typedef struct {
   unsigned long pc;
   unsigned long sp;
-  unsigned long bp;
   long lock;
   unsigned long exceptionRef;
   long tTypeIndex;
@@ -105,15 +86,15 @@ char* RTStack__ProcName (Frame *f)
   long name_len = 50;
   unw_word_t ofp;
 
-  /* Small leak is acceptable — only called for debug/diagnostic output. */
-  name = (char *) malloc(name_len);
+  /* Small leak is acceptable, only called for debug/diagnostic output. */
+  name = (char *) calloc (1, name_len);
 
-  res = unw_get_proc_name(f->cursor, name, name_len, &ofp);
-  if (res == 0) {
+  res = unw_get_proc_name (f->cursor, name, name_len, &ofp);
+  if (res == 0)
     return name;
-  } else {
-    return 0;
-  }
+
+  free (name);
+  return 0;
 }
 
 /*---------------------------------------------------------------------------*/
