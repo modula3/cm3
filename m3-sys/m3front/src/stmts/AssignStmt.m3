@@ -850,6 +850,16 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
   END GetOutcome;
 
+(* The address v was loaded from, or NIL if v is not the result of a load. *)
+PROCEDURE LoadedFrom (v: MSIR.Value): MSIR.Value =
+  VAR i: MSIR.Insn;
+  BEGIN
+    IF MSIR.GetValueKind (v) # MSIR.ValueKind.InsnResult THEN RETURN NIL END;
+    i := MSIR.ValueDefInsn (v);
+    IF i = NIL OR MSIR.InsnOp (i) # MSIR.Op.Load THEN RETURN NIL END;
+    RETURN MSIR.InsnOperand (i, 0);
+  END LoadedFrom;
+
 PROCEDURE CompileMSIR (p: P) =
   VAR
     lhsPtr    : MSIR.Value;
@@ -1063,20 +1073,26 @@ PROCEDURE CompileMSIR (p: P) =
                    all dims at { ptr, dim0, dim1, ... }.  Load extras from the
                    raw rhs dope pointer (offset shapeB + k * ipB for dim_k). *)
                 IF rhsM3Depth > rhsRank THEN
-                  VAR rhsDopePtr := Expr.LValueMSIR (p.rhs);
-                      shapeB        := M3RT.OA_sizes DIV Target.Byte;
+                  (* The dope rhsVal was loaded from holds the extra dims.  Use
+                     that address rather than compiling p.rhs a second time,
+                     which duplicated the rhs's code and side effects (a
+                     constructor was built twice) and left blk2 stale: the
+                     second compile could split the block (p269). *)
+                  VAR rhsDopePtr := LoadedFrom (rhsVal);
+                      shapeB     := M3RT.OA_sizes DIV Target.Byte;
                       ipB        := Target.Integer.size DIV Target.Byte;
                   BEGIN
-                    IF rhsDopePtr # NIL THEN
-                      FOR k := rhsRank TO rhsM3Depth - 1 DO
-                        VAR dimK := MSIR.BuildLoad (blk2, "", intT,
-                                      MSIRBuilder.BuildPtrByteOff (blk2, "", rhsDopePtr,
-                                                                    shapeB + k * ipB));
-                        BEGIN
-                          blk2 := MSIRBuilder.CurrentBlock ();
-                          totalElts := MSIR.BuildIMul (blk2, "", totalElts, dimK);
-                        END;
-                      END;
+                    IF rhsDopePtr = NIL THEN
+                      MSIRBuilder.Abandon
+                        ("open array assignment: rhs dope has extra dims but no address");
+                      RETURN;
+                    END;
+                    FOR k := rhsRank TO rhsM3Depth - 1 DO
+                      blk2 := MSIRBuilder.CurrentBlock ();
+                      totalElts := MSIR.BuildIMul (blk2, "", totalElts,
+                                     MSIR.BuildLoad (blk2, "", intT,
+                                       MSIRBuilder.BuildPtrByteOff (blk2, "", rhsDopePtr,
+                                                                     shapeB + k * ipB)));
                     END;
                   END;
                 END;
