@@ -694,12 +694,6 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
         IF MSIR.ModuleScanTypecase (mod) = NIL THEN
           Fail (w, "typecase without the ScanTypecase hook");
         END;
-    | Op.Load =>
-        IF IsOddInt (MSIR.ValueType (res)) THEN Fail (w, "load of odd width") END;
-    | Op.Store =>
-        IF IsOddInt (MSIR.ValueType (MSIR.InsnOperand (i, 0))) THEN
-          Fail (w, "store of odd width");
-        END;
     | Op.Alloca =>
         IF Size (MSIR.InsnTargetType (i), a) < 0 THEN
           Fail (w, "alloca of unsized type");
@@ -2136,6 +2130,51 @@ PROCEDURE Canon (t: MSIR.T) =
     END;
   END Canon;
 
+(* An odd-width integer (i24, i11, ...) has no M3CG memory type.  Like
+   LLVM, load and store its (bits + 7) DIV 8 bytes, one byte at a time in
+   the target's byte order; a loaded value is then sign-extended, as every
+   integer on the stack is. *)
+PROCEDURE OddIntBytes (t: MSIR.T): INTEGER =
+  BEGIN
+    RETURN (IntBits (t) + 7) DIV 8;
+  END OddIntBytes;
+
+(* The bit position, within the value, of the byte at offset k of n. *)
+PROCEDURE OddIntShift (k, n: INTEGER): INTEGER =
+  BEGIN
+    IF Target.endian = Target.Endian.Big THEN RETURN (n - 1 - k) * 8 END;
+    RETURN k * 8;
+  END OddIntShift;
+
+PROCEDURE LoadOddInt (addr: MSIR.Value;  t: MSIR.T) =
+  VAR n := OddIntBytes (t);
+  BEGIN
+    FOR k := 0 TO n - 1 DO
+      Push (addr);
+      cg.load_indirect (k, M3CG.Type.Word8, Int64);
+      IF OddIntShift (k, n) # 0 THEN
+        PushInt (OddIntShift (k, n));
+        cg.shift_left (Word64);
+      END;
+      IF k > 0 THEN cg.or (Int64) END;
+    END;
+    Canon (t);
+  END LoadOddInt;
+
+PROCEDURE StoreOddInt (val: MSIR.Value;  t: MSIR.T;  addr: MSIR.Value) =
+  VAR n := OddIntBytes (t);
+  BEGIN
+    FOR k := 0 TO n - 1 DO
+      Push (addr);
+      Push (val);
+      IF OddIntShift (k, n) # 0 THEN
+        PushInt (OddIntShift (k, n));
+        cg.shift_right (Word64);
+      END;
+      cg.store_indirect (k, Int64, M3CG.Type.Word8);
+    END;
+  END StoreOddInt;
+
 (* Zero-extend the integer on the stack from its width in t. *)
 PROCEDURE Mask (t: MSIR.T) =
   VAR bits := IntBits (t);
@@ -3217,6 +3256,9 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           cg.load_address (Loc0 (res).var, 0);
           Push (MSIR.InsnOperand (i, 0));
           CopyAgg (rt);
+        ELSIF IsOddInt (rt) THEN
+          LoadOddInt (MSIR.InsnOperand (i, 0), rt);
+          Def (res);
         ELSE
           Push (MSIR.InsnOperand (i, 0));
           cg.load_indirect (0, MType (rt), ZType (rt));
@@ -3233,7 +3275,9 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           IF op = Op.GcStore AND nOps = 3 THEN
             WriteBarrier (MSIR.InsnOperand (i, 2));
           END;
-          IF NOT IsAgg (vt) THEN
+          IF IsOddInt (vt) THEN
+            StoreOddInt (val, vt, MSIR.InsnOperand (i, 1));
+          ELSIF NOT IsAgg (vt) THEN
             Push (MSIR.InsnOperand (i, 1));
             Push (val);
             cg.store_indirect (0, ZType (vt), MType (vt));
