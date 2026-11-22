@@ -18,6 +18,26 @@ if defined ("M3_USE_STACK_WALKER")
   end
 end
 
+%
+% Targets requiring libunwind, for use only to dump stacks.
+% No target uses libunwind for exception handling.
+% ex_frame uses setjmp/longjmp and a thread local linked list for exception handling.
+% ex_stack uses C++ exceptions for exception handling.
+% "ex" means, a variant of exception handling (they each implement RTException).
+% "stack" means "stack walk", the machine stack, driven by metadata, and zero cost try,
+% except to produce metadata and possible optimization inhibition.
+% Not that it does not really mean stack walk. It means, whateve C++ does.
+% For example NT/x86 C++ EH is frame based, not stack walk, with a highly optimized
+% thread local linked list.
+%
+% TODO: Windows locally can provide libunwind over RtlVirtualUnwind,
+% or rather CaptureStackBackTrace for this narrow use.
+% ARM64|ARM64_DARWIN provides libunwind "builtin" (libSystem).
+%
+readonly HAS_LIBUNWIND = {
+  "AMD64_LINUX"   : TRUE,
+}
+
 % Targets with a libunwind stack walker (RTStackC.c in the
 % target's directory), used only for stack dumps under ex_stack.  Elsewhere,
 % and with ex_frame, the RTStack routines are stubs (no_walker) and
@@ -67,8 +87,10 @@ else
   include_dir ("ex_frame")
 end
 if M3CORE_TARGET_WALKER
-  include_dir (TARGET)
-  import_sys_lib ("UNWIND")
+  if HAS_LIBUNWIND contains TARGET
+    import_sys_lib ("UNWIND")
+  end
+  include_dir ("walker")
 else
   include_dir ("no_walker")
 end
