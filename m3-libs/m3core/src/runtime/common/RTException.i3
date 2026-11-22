@@ -25,6 +25,13 @@ PROCEDURE InvokeBackstop (VAR a: RT0.RaiseActivation;
                           raises: BOOLEAN) RAISES ANY;
 (* Invokes the current backstop. *)
 
+PROCEDURE ReportUnhandled (act: ADDRESS);
+(* Report the unhandled exception described by the RaiseActivation at "act"
+   (the "act" field of a thrown _M3Exc) and terminate the process.  Unlike
+   InvokeBackstop this does not re-raise, so it is safe to call from a C++
+   std::terminate handler when an exception escapes with no handler under
+   ex_stack. *)
+
 TYPE Backstop = PROCEDURE (VAR a: RT0.RaiseActivation;
                            raises: BOOLEAN) RAISES ANY;
 

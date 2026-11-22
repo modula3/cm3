@@ -48,6 +48,20 @@ PROCEDURE DefaultBackstop (VAR a: RT0.RaiseActivation;
     END;
   END DefaultBackstop;
 
+PROCEDURE ReportUnhandled (act: ADDRESS) =
+  (* Called from the std::terminate handler in RTExStackC.c.  Record the
+     failing exception as un_except/un_arg, as DefaultBackstop does, and
+     report it through Crash without re-raising: a throw from inside
+     terminate would recurse. *)
+  VAR
+    a := LOOPHOLE (act, UNTRACED REF RT0.RaiseActivation)^;
+    err := RuntimeError.Self ();
+  BEGIN
+    a.un_except := a.exception;
+    a.un_arg    := a.arg;
+    Crash (a, raises := FALSE, rte := err);
+  END ReportUnhandled;
+
 PROCEDURE Crash (VAR a: RT0.RaiseActivation;  raises: BOOLEAN;  rte: ADDRESS) =
   CONST
     Pre  = ARRAY BOOLEAN OF TEXT { "Unhandled exception: ",  "Exception \"" };
