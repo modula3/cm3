@@ -1181,6 +1181,22 @@ walks.  At D25 step 6 the C halves go and the driver is unchanged.
      C half.  (Timing those steps was dropped: step 6 removes them, so
      guarding them meanwhile would be wasted work.  A compile-time baseline,
      MSIRObj against C, is deferred.)
+     *Result (2026-11-23):* the MSIR walk still depends on them.  Skipping
+     `DeclareGlobalData`, the module body's C declaration, `EmitBody`'s
+     `Scope.InitValues`/`External.InitGlobals`, `Coverage.GenerateTables`,
+     `Variable.GenGlobalMap` and `GenLinkerInfo` over the 13 base packages:
+     - `.m3x`: only m3linker unchanged.  Every package loses object-layout
+       records (`O`/`o`, 313 in libm3: `ObjectType.NoteOffsets`, reached from
+       `GenLinkerInfo`'s `Type.GenCells`), a few `C` and gains `w` records;
+       m3front also loses 588 imported types and 837 imported version
+       stamps.
+     - `.msir`: 56 of 775 files change.  Object types the unit only sees
+       through a revelation translate to `gc_ref void` instead of their
+       struct (e.g. `AtomSetDef.T`): MSIR's type translation relies on the
+       C walk having compiled the revealed types.
+     So before step 6 drops the C halves, the MSIR half has to compile
+     revealed object types and make the object-layout and import notes
+     itself.  Next: attribute each group to the step that produces it.
 - **Dropped: moving MSIR registrations out of the declaration walk.**  A
   few procedures of the declaration walk register things with MSIR as they
   go (`Module.BuildImportLink` → `MSIREmit.RegisterImport`,
