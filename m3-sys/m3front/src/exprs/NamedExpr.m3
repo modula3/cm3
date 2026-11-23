@@ -242,6 +242,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     ELSE
       CASE Value.ClassOf (p.value) OF
       | Value.Class.Expr =>
+          Value.NoteUsedMSIR (p.value);  (* as Compile's Value.Load *)
           constExpr := Value.ToExpr (p.value);
           IF constExpr # NIL THEN
             (* For CONST arrays, try LValueMSIR (→ ArrayExpr.ConstArrayMSIR) first so
@@ -297,6 +298,7 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
       IF Value.ClassOf (p.value) = Value.Class.Expr THEN
         VAR constExpr := Value.ToExpr (p.value);
         BEGIN
+          Value.NoteUsedMSIR (p.value);  (* as Compile's Value.Load *)
           IF constExpr # NIL THEN
             (* CONST ARRAY OF T — materialise as a private constant global. *)
             IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN

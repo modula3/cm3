@@ -74,6 +74,13 @@ PROCEDURE Load (t: T) =
     t.load ();
   END Load;
 
+PROCEDURE NoteUsedMSIR (t: T) =
+  BEGIN
+    IF (t = NIL) THEN RETURN END;
+    <* ASSERT t.checked *>
+    t.used := TRUE;
+  END NoteUsedMSIR;
+
 PROCEDURE ToExpr (t: T): Expr.T =
   VAR e: Expr.T;
   BEGIN

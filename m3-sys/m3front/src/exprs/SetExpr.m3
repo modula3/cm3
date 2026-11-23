@@ -1031,6 +1031,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     lo, hi : Expr.T;
   BEGIN
     EVAL Type.CheckInfo (p.type, info);
+    IF info.size <= Target.Word.size THEN
+      Type.Compile (p.tipe);  (* as Compile's CompileSmall *)
+    END;
     ti     := MSIR.TI (info.size);
     (* MSIR compilation skips Prep, so BuildMap may not have been called yet.
        Populate p.tree (constant ranges) and p.others (runtime elements) here. *)

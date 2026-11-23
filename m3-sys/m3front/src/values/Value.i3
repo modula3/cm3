@@ -32,6 +32,10 @@ PROCEDURE SetGlobals (t: T);
 PROCEDURE Load (t: T);
 (* generate code to load 't' on the evaluation stack *)
 
+PROCEDURE NoteUsedMSIR (t: T);
+(* As Load, minus the code: note that 't' is used, so the unit declares it
+   (and an imported 't' gets its version stamp). *)
+
 PROCEDURE Declare (t: T);
 (* generate the C declaration for t *)
 
