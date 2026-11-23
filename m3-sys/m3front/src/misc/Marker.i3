@@ -27,14 +27,19 @@ PROCEDURE SaveFrame ();
    global table of scopes *)
 
 (* TRY-EXCEPT *)
-PROCEDURE PushTry     (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ESet.T); 
+PROCEDURE PushTry     (l_start, l_stop, l_stopBody: CG.Label := CG.No_label;
+                       info: CG.Var := NIL;  ex: ESet.T := NIL;
+                       msirScope: MSIR.Scope := NIL);
 PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label := CG.No_label;
-                       info: CG.Var := NIL;  msirElse: MSIR.Block := NIL);
+                       info: CG.Var := NIL;  msirElse: MSIR.Block := NIL;
+                       msirScope: MSIR.Scope := NIL);
 (* The C walk passes the labels and info; the MSIR walk passes the ELSE
-   code, where an EXIT or RETURN in the protected body goes. *)
+   code, where an EXIT or RETURN in the protected body goes, and the EH
+   scope of the protected body (as for PushTry and PushFinally). *)
 
 (* TRY-FINALLY *)
-PROCEDURE PushFinally     (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var);
+PROCEDURE PushFinally     (l_start, l_stop, l_stopBody: CG.Label := CG.No_label;
+                           info: CG.Var := NIL;  msirScope: MSIR.Scope := NIL);
 PROCEDURE PushFinallyProc (l_start, l_stop: CG.Label;  info: CG.Var;
                            handler: CG.Proc;  h_level: INTEGER);
 PROCEDURE PopFinally      (VAR(*OUT*) returnSeen, exitSeen: BOOLEAN);

@@ -669,9 +669,13 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), body, ARRAY OF MSIR.Value{});
     END;
     MSIRBuilder.SetCurrentBlock(body);
-    IF p.hasElse THEN Marker.PushTryElse(msirElse := elseCode) END;
+    (* As Compile: the protected body's frame on Marker (D29a). *)
+    IF p.hasElse
+      THEN Marker.PushTryElse(msirElse := elseCode, msirScope := s);
+      ELSE Marker.PushTry(ex := p.handled, msirScope := s);
+    END;
     Stmt.CompileMSIR(p.body);
-    IF p.hasElse THEN Marker.Pop() END;
+    Marker.Pop();
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIRBuilder.EmitGoto(merge, ARRAY OF MSIR.Value{});
     END;

@@ -39,6 +39,7 @@ TYPE
     handler    : CG.Proc;
     h_level    : INTEGER;
     msirExit   : MSIR.Block; (* kind = EXIT: exit block; TRYELSE: ELSE code *)
+    msirScope  : MSIR.Scope; (* kind = TRY, TRYELSE, FINALLY: the EH scope *)
   END;
 
 CONST jmpbufAlign = 128; 
@@ -90,11 +91,13 @@ PROCEDURE SaveFrame () =
     <*ASSERT save_depth >= 0*>
   END Pop;
 
-PROCEDURE PushFinally (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var) =
+PROCEDURE PushFinally (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;
+                       msirScope: MSIR.Scope) =
   BEGIN
     Push (Kind.zFINALLY, l_start, l_stop, info);
     WITH z = stack[tos - 1] DO
-      z.stopBody := l_stopBody
+      z.stopBody  := l_stopBody;
+      z.msirScope := msirScope;
     END;
   END PushFinally;
 
@@ -120,21 +123,24 @@ PROCEDURE PushLock (l_start, l_stop: CG.Label;  mutex: CG.Var) =
     Push (Kind.zLOCK, l_start, l_stop, mutex);
   END PushLock;
 
-PROCEDURE PushTry (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ESet.T) =
+PROCEDURE PushTry (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ESet.T;
+                   msirScope: MSIR.Scope) =
   BEGIN
     Push (Kind.zTRY, l_start, l_stop, info, ex);
     WITH z = stack[tos - 1] DO
-      z.stopBody := l_stopBody
+      z.stopBody  := l_stopBody;
+      z.msirScope := msirScope;
     END;
   END PushTry;
 
 PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;
-                       msirElse: MSIR.Block) =
+                       msirElse: MSIR.Block;  msirScope: MSIR.Scope) =
   BEGIN
     Push (Kind.zTRYELSE, l_start, l_stop, info);
     WITH z = stack[tos - 1] DO
-      z.stopBody := l_stopBody;
-      z.msirExit := msirElse;
+      z.stopBody  := l_stopBody;
+      z.msirExit  := msirElse;
+      z.msirScope := msirScope;
     END;
   END PushTryElse;
 
@@ -185,6 +191,7 @@ PROCEDURE Push (k: Kind;  l_start, l_stop: CG.Label := CG.No_label;
       z.handler    := NIL;
       z.h_level    := 0;
       z.msirExit   := NIL;
+      z.msirScope  := NIL;
     END;
     INC (tos);
   END Push;

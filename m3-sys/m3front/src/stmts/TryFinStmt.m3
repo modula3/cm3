@@ -432,7 +432,11 @@ PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), try, ARRAY OF MSIR.Value{});
     END;
     MSIRBuilder.SetCurrentBlock(try);
+    (* As Compile, under ex_stack for LOCK too: the protected body's frame
+       on Marker (D29a). *)
+    Marker.PushFinally(msirScope := s);
     Stmt.CompileMSIR(body);
+    Marker.Pop();
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIRBuilder.EmitGoto(merge, ARRAY OF MSIR.Value{});
     END;
