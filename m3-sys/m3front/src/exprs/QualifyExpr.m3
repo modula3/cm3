@@ -916,7 +916,14 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
             slotAddr := MSIRBuilder.BuildPtrByteOff(MSIRBuilder.CurrentBlock(), "", baseAddr, byteOff);
           ELSE
             (* Non-static: load dataOffset from the runtime type cell (OTC_dataOffset),
-               then GepByte(objBase, dataOffset) + fieldByteOff. *)
+               then GepByte(objBase, dataOffset) + fieldByteOff.  The offset
+               may be large, so check for NIL first, as Compile does. *)
+            IF Host.doNilChk THEN
+              MSIRBuilder.EmitReportFault (
+                MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Eq,
+                                baseAddr, MSIR.ConstNil (MSIR.ValueType (baseAddr))),
+                ORD (CG.RuntimeError.BadMemoryReference));
+            END;
             VAR b        := MSIRBuilder.CurrentBlock();
                 tcPtr    := MSIRBuilder.TypeLinkValueForObject(p.holder);
                 otcByte  := M3RT.OTC_dataOffset DIV Target.Byte;

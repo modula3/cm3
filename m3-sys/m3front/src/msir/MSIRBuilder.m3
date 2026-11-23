@@ -6,7 +6,7 @@ IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
-IMPORT RefType, Exceptionz;
+IMPORT RefType, Exceptionz, Host, M3CG;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 CONST MaxExitStack = 16;
@@ -1357,6 +1357,10 @@ PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     closureRes : MSIR.Value;
     directRes  : MSIR.Value;
   BEGIN
+    (* A NIL procedure is no closure; its call faults (CG.If_closure, then
+       CG.Gen_Call_indirect's check).  Check before reading the marker. *)
+    CheckCallee(fn);
+    b := CurrentBlock();
     isVoid := (rtype = NIL) OR (MSIR.Kind(rtype) = MSIR.TypeKind.Void);
     IF NOT isVoid THEN
       resultSlot := MSIR.BuildAlloca(b, "", rtype);
@@ -1427,10 +1431,24 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     normalB: MSIR.Block;
     result:  MSIR.Value;
   BEGIN
+    CheckCallee(fn);
     b      := CurrentBlock();
     result := MSIR.BuildCallIndirect(b, name, fn, rtype, args);
     RETURN result;
   END EmitCallIndirect;
+
+PROCEDURE CheckCallee(fn: MSIR.Value) =
+  (* As CG.Gen_Call_indirect: with Host.doProcChk, calling a NIL procedure
+     faults with BadMemoryReference before the call. *)
+  VAR k := MSIR.Kind(MSIR.ValueType(fn));
+  BEGIN
+    IF NOT Host.doProcChk THEN RETURN END;
+    IF k # MSIR.TypeKind.Ptr AND k # MSIR.TypeKind.GcRef THEN RETURN END;
+    EmitReportFault(
+      MSIR.BuildICmp(CurrentBlock(), "", MSIR.CmpPred.Eq,
+                     fn, MSIR.ConstNil(MSIR.ValueType(fn))),
+      ORD(M3CG.RuntimeError.BadMemoryReference));
+  END CheckCallee;
 
 PROCEDURE CurrentModuleInfoRef(): MSIR.Value =
   VAR m := MSIREmit.CurrentModule();
@@ -1568,8 +1586,9 @@ PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
     allArgs[0] := obj;
     FOR k := 0 TO nArgs - 1 DO allArgs[1 + k] := args[k] END;
 
-    (* 5. Indirect call. *)
-    result := MSIR.BuildCallIndirect(b, name, fn, rtype, allArgs^);
+    (* 5. Indirect call, after the check Gen_Call_indirect makes. *)
+    CheckCallee(fn);
+    result := MSIR.BuildCallIndirect(CurrentBlock(), name, fn, rtype, allArgs^);
     RETURN result;
   END EmitMethodCall;
 
