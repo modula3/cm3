@@ -1129,6 +1129,62 @@ MSIR walk reaches each of those entry points itself, as it now does for
 module-level CG walk is no longer needed in MSIRObj mode, and the parity
 check confirms nothing was lost.
 
+**A under D29: one driver, two payloads (decided, Tony, 2026-11-23).**
+D29 rules out a separate MSIR walk with its own shape, so (A) is not "an
+MSIR-only driver" in the sense of new code alongside master's.  It is
+master's driver (`Module.Compile` → `CompileModule`/`CompileInterface` →
+`ProcBody.EmitAll` → `Procedure.GenBody`/`Module.EmitBody`), each step doing
+its C work, its MSIR work, or both, the way D29a made `Marker` serve both
+walks.  At D25 step 6 the C halves go and the driver is unchanged.
+
+- **Where things stand.**  In MSIRObj/MSIRAsm the per-body C walk is already
+  off (`M3CG_DoNothing`), so `GenBody` and `EmitBody` run only their MSIR
+  halves.  Since 2026-11-23 the module's MSIR declarations run where the C
+  scope walk is, after `Revelation.Declare`, and `Variable.Declare` no
+  longer calls into MSIR; EXIT and RETURN route through `Marker` in both
+  walks; the `.m3x` matches C's in every base package except where a
+  difference is decided (m3core's backend-selected units and `WINAPI`
+  fingerprints; B31's empty constructor).
+- **Decided: no mode predicate.**  The driver's C-only work
+  (`DeclareGlobalData`, `Scope.InitValues` in `EmitBody`, `ProcBody`'s
+  tables, `Variable.GenGlobalMap`, `Coverage.GenerateTables`, the CG part of
+  `GenLinkerInfo`) keeps running into `DoNothing` in MSIR modes until D25
+  step 6.  Guards would scatter transitional mode tests through master's
+  code, and that work's side effects on front-end state (used marks, type
+  compilation, link notes) are part of why the `.m3x` matches.  A step is
+  guarded only if the measurement (step 3) shows it costs something.
+- **Steps** (each checked by byte-identical `.msir` for libm3, m3quake and
+  m3front, the `.m3x` comparison, then both ladders):
+  1. *Nested procedures, a rule of the MSIR half.*  MSIR always compiles a
+     nested body inline, from the MSIR walk of its parent's scope
+     (`LangInitMSIR` → `GenBodyMSIR`; D29).  So the MSIR half of `GenBody`
+     never compiles a nested procedure.  **Done**: this replaces the
+     `ProcMapContains` guard and `GenBody`'s second, nested-only path (its
+     own capture analysis for a nested body), whichever way
+     `inline_nested_procs` is set.  MSIRObj output of libm3 and m3front is
+     byte-identical (MSIRObj already went only through `GenBodyMSIR`); in
+     the dual mode nested bodies are now emitted when MSIRObj emits them.
+     `msirInitDone` stays: it is the MSIR walk's counterpart of
+     `initDone`, not an ordering patch.
+  2. *D29a step 3* (TRY EXCEPT, TRY FINALLY and LOCK frames on `Marker` in
+     the MSIR walk), so `Marker` describes the MSIR walk fully.  **Done**:
+     `PushTry`, `PushTryElse` and `PushFinally` take the protected body's EH
+     scope (`msirScope`); TryStmt pushes TRY or TRY ELSE, and
+     `EmitFinallyMSIR` pushes FINALLY for TRY FINALLY and LOCK alike, as C
+     does under ex_stack.  The MSIR emitters pass over these frames (the EH
+     scopes run the FINALLY and LOCK code).  MSIRObj output unchanged.
+  3. *Measure* MSIRObj compile time over the base packages, including what
+     the C-only steps cost against `DoNothing`.
+- **Dropped: moving MSIR registrations out of the declaration walk.**  A
+  few procedures of the declaration walk register things with MSIR as they
+  go (`Module.BuildImportLink` → `MSIREmit.RegisterImport`,
+  `Revelation.GenList` → `MSIRBuilder.AddRevelation`).  With no mode
+  predicate that walk runs in every mode, so these are a step doing both
+  walks' work, as `Marker` does, and stay.
+- **Not in (A).**  The dual mode (the C backend with `@M3m3front-msir`,
+  which the MSIR -> M3CG ladder and the msircg fallback use) runs both
+  halves until D25 step 6.
+
 ### O18. Closure-call lowering reads the procedure's first word.
 
 **Open.**  `MSIRBuilder.EmitClosureCall` tells a closure from a plain
@@ -1903,7 +1959,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     3. TRY EXCEPT, TRY FINALLY, LOCK: their frames carry the EH scope.  The
        MSIR emitters already skip them (the EH scopes run FINALLY and LOCK
        code), so this step is for `Marker` to describe the MSIR walk's
-       nesting fully, not for routing.
+       nesting fully, not for routing.  **Done** with O17 (A).
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
