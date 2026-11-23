@@ -107,17 +107,56 @@ PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
     EXCEPT ELSE END;
   END NoteSkipped;
 
+PROCEDURE UsedBarriers (m: MSIR.Module;  VAR loads, stores, typecases: BOOLEAN) =
+  (* Does m contain a traced load (read barrier: CheckLoadTracedRef), a
+     barriered store or dirty (write barrier: CheckStoreTraced), or a
+     TYPECASE (ScanTypecase)? *)
+  VAR p: MSIR.Proc;  b: MSIR.Block;  i: MSIR.Insn;
+  BEGIN
+    FOR pi := 0 TO MSIR.ModuleProcCount(m) - 1 DO
+      p := MSIR.ModuleProc(m, pi);
+      FOR bi := 0 TO MSIR.ProcBlockCount(p) - 1 DO
+        b := MSIR.ProcBlock(p, bi);
+        FOR ii := 0 TO MSIR.BlockInsnCount(b) - 1 DO
+          i := MSIR.BlockInsn(b, ii);
+          CASE MSIR.InsnOp(i) OF
+          | MSIR.Op.GcLoad   => loads := TRUE;
+          | MSIR.Op.GcDirty  => stores := TRUE;
+          | MSIR.Op.GcStore  =>
+              IF MSIR.InsnOperandCount(i) = 3 THEN stores := TRUE END;
+          | MSIR.Op.Typecase => typecases := TRUE;
+          ELSE
+          END;
+        END;
+      END;
+    END;
+  END UsedBarriers;
+
 PROCEDURE EndUnit() =
   VAR wr: Wr.T;  path: TEXT;  errs: REF ARRAY OF TEXT;
   BEGIN
     IF curModule = NIL THEN RETURN END;
     (* Register hook procs now — RTHooks is available after full compilation
        of the unit (imports resolved).  BeginUnit is too early: the Assert
-       in RunTyme.LookUpProc fires if hooks = NIL (RTHooks not yet seen). *)
-    MSIR.SetModuleHooks(curModule,
-      MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef),
-      MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced),
-      MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase));
+       in RunTyme.LookUpProc fires if hooks = NIL (RTHooks not yet seen).
+       Only the hooks the unit's code calls: looking a hook up declares it,
+       which records an import of it in the unit's link information, as the
+       C walk does only where it emits a call. *)
+    VAR loads, stores, typecases := FALSE;
+        gcLoad, gcStore, scanTC: MSIR.Proc := NIL;
+    BEGIN
+      UsedBarriers (curModule, loads, stores, typecases);
+      IF loads THEN
+        gcLoad := MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef);
+      END;
+      IF stores THEN
+        gcStore := MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced);
+      END;
+      IF typecases THEN
+        scanTC := MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase);
+      END;
+      MSIR.SetModuleHooks(curModule, gcLoad, gcStore, scanTC);
+    END;
     (* EH lowering (MSIREH) re-raises through RTHooks.ResumeRaiseEx. *)
     VAR scoped, checked := FALSE;  p: MSIR.Proc;
     BEGIN
