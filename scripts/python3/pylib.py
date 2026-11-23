@@ -1954,7 +1954,8 @@ of this software.
                 state.id += 1
                 CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
 
-    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
+    for root, dirs, files in os.walk(os.path.join(Root, "caltech-parser")):
+        Callback(state, root, files)
 
 def GetStage():
     global STAGE

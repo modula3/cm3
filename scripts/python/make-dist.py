@@ -68,7 +68,7 @@ def MakeArchive(PackageSetName, Command, Extension):
     # move .pdb files into the symbols directory
     # TBD: use strip and --add-gnu-debuglink
     #
-    def Callback(Arg, Directory, Names):
+    def Callback(Directory, Names):
         if GetLastPathElement(Directory).endswith("-symbols"):
             return
         for Name in Names:
@@ -77,7 +77,8 @@ def MakeArchive(PackageSetName, Command, Extension):
                 MoveFile(os.path.join(Directory, Name), SymbolsRoot)
 
     CreateDirectory(SymbolsRoot)
-    os.path.walk(InstallRoot, Callback, None)
+    for root, dirs, files in os.walk(InstallRoot):
+        Callback(root, dirs + files)
 
     os.chdir(os.path.dirname(InstallRoot))
 
