@@ -1093,6 +1093,11 @@ def _FilterPackage(Package):
 
 def FilterPackages(Packages):
     Packages = filter(_FilterPackage, Packages)
+    if TargetOS == "WIN32":
+        g1 = PackageSets["caltech-parser"]
+        g2 = PackageSets["caltech-other"]
+        g3 = PackageSets["m3-scheme"]
+        Packages = filter(lambda p: not (p in g1 or p in g2 or p in g3), Packages)
     return Packages
 
 def GroupsToPackages(Packages):
