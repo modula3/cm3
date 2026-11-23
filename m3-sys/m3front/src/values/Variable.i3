@@ -58,6 +58,12 @@ PROCEDURE CopyOpenArray (tipe: Type.T;  ref: Type.T);
 (* PRE: Pointer to array dope is on TOS. *)
 (* POST: TOS replaced by pointer to dope of copy. *) 
 
+PROCEDURE CopyOpenArrayMSIR (ref: Type.T;  READONLY dims: ARRAY OF MSIR.Value;
+                             src, bytes: MSIR.Value): MSIR.Value;
+(* As CopyOpenArray, for MSIR: allocate on the traced heap an open array of
+   ref's referent with shape dims, copy 'bytes' bytes of elements to it from
+   src, and return the address of its dope; NIL if abandoned. *)
+
 PROCEDURE SetBounds (t: T;  READONLY min, max: Target.Int);
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
 

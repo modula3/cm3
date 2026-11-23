@@ -1687,24 +1687,11 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
                                  MSIR.ConstInt (intT, Target.Byte - 1)),
                                MSIR.ConstInt (intT, 3));
           END;
-          VAR copyPtr := MSIR.BuildAllocaDyn (b2, "", totalBytesDyn);
-          BEGIN
-            MSIRBuilder.EmitMemcpyDyn (copyPtr, srcDataPtr, totalBytesDyn);
-            flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
-            flds[0] := MSIR.Field {name := "", type := ptrT};
-            FOR k := 0 TO formDepth - 1 DO
-              flds[1 + k] := MSIR.Field {name := "", type := intT};
-            END;
-            b2 := MSIRBuilder.CurrentBlock ();
-            dopeA := MSIR.BuildAlloca (b2, "", MSIR.TStruct ("", flds^));
-            MSIR.BuildStore (b2, copyPtr, MSIRBuilder.BuildPtrByteOff (b2, "", dopeA, 0));
-            FOR k := 0 TO formDepth - 1 DO
-              MSIR.BuildStore (b2, dims[k],
-                               MSIRBuilder.BuildPtrByteOff (b2, "", dopeA,
-                                                            szB + ipB * k));
-            END;
-            RETURN dopeA;
-          END;
+          (* As PrepArg: a dynamic-sized copy goes on the heap
+             (Variable.CopyOpenArray), not the stack, whose size is
+             unbounded here and whose threads' stacks are small. *)
+          RETURN Variable.CopyOpenArrayMSIR (form.refType, dims^, srcDataPtr,
+                                             totalBytesDyn);
         END;
       END;
     END;
