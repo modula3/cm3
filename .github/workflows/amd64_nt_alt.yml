@@ -1,0 +1,61 @@
+---
+name: AMD64_NT_ALT
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        type: string
+      release:
+        default: https://github.com/modula3/cm3/releases/download/20210312
+        type: string
+      # Inputs cannot reference inputs?
+      bootstrap_version:
+        default: d5.11.0-20210312
+        type: string
+      bootstrap_archive:
+        default: cm3-boot-win64-d5.11.0-20210312.zip
+        type: string
+      bootstrap_dir:
+        default: cm3-boot-AMD64_NT-d5.11.0-20210312
+        type: string
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 35
+    env:
+      CM3_TARGET: AMD64_NT
+    steps:
+    - name: Environment
+      shell: cmd
+      run: |
+        call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 || goto :eof
+        echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
+        echo INCLUDE=%INCLUDE%>>%GITHUB_ENV%
+        echo LIB=%LIB%>>%GITHUB_ENV%
+        echo PATH=%PATH%>>%GITHUB_ENV%
+
+    - name: bootstrap download, build, install.
+      shell: cmd
+      run: |
+        curl -fLO ${{inputs.release}}/${{inputs.bootstrap_archive}} || goto :eof
+        tar xf ${{inputs.bootstrap_archive}} || goto :eof
+        del ${{inputs.bootstrap_archive}}
+        cd ${{inputs.bootstrap_dir}} || goto :eof
+        nmake || goto :eof
+        mkdir %CM3_INSTALL%\bin
+        copy cm3.exe %CM3_INSTALL%\bin || goto :eof
+        copy mklib.exe %CM3_INSTALL%\bin || goto :eof
+        echo %CM3_INSTALL%\bin>>%GITHUB_PATH%
+
+    - name: Fetch sources
+      uses: actions/checkout@v7
+
+    - name: Build everything
+      working-directory: scripts/python3
+      run: python ./boot2.py
+
+    - name: Run compiler validation suite
+      continue-on-error: true
+      run: cm3 -DHTML
+      working-directory: m3-sys/m3tests
