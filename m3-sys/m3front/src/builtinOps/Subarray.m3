@@ -10,7 +10,7 @@ MODULE Subarray;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, ArrayType, Card;
 IMPORT OpenArrayType, CheckExpr, Host, Target, TInt, M3RT, IntegerExpr;
-IMPORT ErrType;
+IMPORT ErrType, ArrayExpr;
 IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
@@ -472,6 +472,44 @@ PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> traced: BOOLEAN) =
     ce.tmp := NIL;
   END CompileLV;
 
+PROCEDURE CheckRangeMSIR (base: Expr.T;  array: Type.T;
+                          dopeAddr, startVal, lenVal: MSIR.Value) =
+  (* As PrepLV: with Host.doRangeChk, fault (ValueOutOfRange) when
+     start + len exceeds the length of the source's first dimension.  Check
+     has already made start and len non-negative.  The source's length is
+     dimension 0 of its dope, its index type's number for a fixed array, or
+     its constructor's for a constant open array. *)
+  VAR intT := MSIR.TI (Target.Integer.size);
+      blk  := MSIRBuilder.CurrentBlock ();
+      index, element: Type.T;
+      n, min, max: Target.Int;  i_n: INTEGER;
+      nVal: MSIR.Value;
+  BEGIN
+    IF NOT Host.doRangeChk THEN RETURN END;
+    IF dopeAddr # NIL THEN
+      nVal := MSIR.BuildLoad (blk, "", intT,
+                MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr,
+                                             M3RT.OA_sizes DIV Target.Byte));
+    ELSIF OpenArrayType.OpenDepth (array) = 0 THEN
+      EVAL ArrayType.Split (array, index, element);
+      IF NOT TInt.ToInt (Type.Number (index), i_n) THEN RETURN END;
+      nVal := MSIR.ConstInt (intT, i_n);
+    ELSE
+      (* A constant open array: its constructor gives the length. *)
+      IF NOT ArrayExpr.GetBounds (Expr.ConstValue (base), min, max)
+        OR NOT TInt.Subtract (max, min, n)
+        OR NOT TInt.ToInt (n, i_n) THEN
+        RETURN;
+      END;
+      nVal := MSIR.ConstInt (intT, i_n + 1);
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+    MSIRBuilder.EmitReportFault (
+      MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt,
+                      MSIR.BuildIAdd (blk, "", startVal, lenVal), nVal),
+      ORD (CG.RuntimeError.ValueOutOfRange));
+  END CheckRangeMSIR;
+
 PROCEDURE LValueMSIR (ce: CallExpr.T;  VAR container: MSIR.Value): MSIR.Value =
   VAR
     base      := ce.args[0];
@@ -526,6 +564,7 @@ PROCEDURE LValueMSIR (ce: CallExpr.T;  VAR container: MSIR.Value): MSIR.Value =
       basePtr := MSIR.BuildLoad (blk, "", ptrT,
                    MSIRBuilder.BuildPtrByteOff (blk, "", dopeAddr, 0));
     END;
+    CheckRangeMSIR (base, array, dopeAddr, startVal, lenVal);
     blk := MSIRBuilder.CurrentBlock ();
 
     (* Byte offset = start * stride.

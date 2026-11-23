@@ -510,6 +510,29 @@ PROCEDURE NoteWrites (p: P) =
 
 (* MSIR support: fixed (non-open) 1-D subscript only for v0. The index is
    already biased to 0..N-1 in p.biased_b. *)
+PROCEDURE CheckIndexMSIR (idx, oa: MSIR.Value) =
+  (* As Compile's CG.Check_index: with Host.doRangeChk, fault unless idx is
+     below the length of dimension 0 of oa, an open array (or a constant one
+     compiled to a fixed array).  Unsigned, so a negative idx faults too. *)
+  VAR blk := MSIRBuilder.CurrentBlock ();
+      intT := MSIR.TI (Target.Integer.size);
+      len, i: MSIR.Value;
+  BEGIN
+    IF NOT Host.doRangeChk OR idx = NIL THEN RETURN END;
+    CASE MSIR.Kind (MSIR.ValueType (oa)) OF
+    | MSIR.TypeKind.OpenArray =>
+        len := MSIR.BuildOpenArraySize (blk, "", oa, 0);
+    | MSIR.TypeKind.FixedArray =>
+        len := MSIR.ConstInt (intT, MSIR.FixedArrayLen (MSIR.ValueType (oa)));
+    ELSE
+      RETURN;
+    END;
+    i := MSIRBuilder.CoerceToMSIR (blk, idx, MSIR.ValueType (len));
+    MSIRBuilder.EmitReportFault (
+      MSIR.BuildICmp (blk, "", MSIR.CmpPred.Uge, i, len),
+      ORD (CG.RuntimeError.SubscriptOutOfRange));
+  END CheckIndexMSIR;
+
 PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   VAR blk: MSIR.Block;
       arrAddr, idxVal, oa: MSIR.Value;
@@ -580,6 +603,9 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
         END;
       END;
       IF oa = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
+      (* The subscript indexes dimension 0 of what is left of the array. *)
+      CheckIndexMSIR (idxVal, oa);
       blk := MSIRBuilder.CurrentBlock ();
       (* CONST open arrays may compile to FixedArray in MSIR (size known at
          compile time).  Spill to an alloca and use BuildArrayElemAddr so the
@@ -811,6 +837,7 @@ PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
     IF MSIR.Kind (MSIR.ValueType (oa)) # MSIR.TypeKind.OpenArray THEN
       RETURN NIL;
     END;
+    CheckIndexMSIR (idxVal, oa);
     blk := MSIRBuilder.CurrentBlock ();
     VAR zero := MSIR.ConstInt (MSIR.TI (Target.Integer.size), 0);
     BEGIN
