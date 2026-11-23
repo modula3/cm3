@@ -474,6 +474,7 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
              when acquired and stacks are scanned conservatively. *)
           IF MSIR.Kind(varMap[i].storageType) = MSIR.TypeKind.GcRef THEN
             VAR isLocalSlot := FALSE;
+                vt: Type.T;  vg, vi, vlhs: BOOLEAN;
             BEGIN
               IF MSIR.GetValueKind(varMap[i].val) = MSIR.ValueKind.InsnResult THEN
                 VAR d := MSIR.ValueDefInsn(varMap[i].val);
@@ -481,7 +482,12 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
                   isLocalSlot := d # NIL AND MSIR.InsnOp(d) = MSIR.Op.Alloca;
                 END;
               END;
-              IF NOT isLocalSlot THEN
+              (* As NamedExpr.Compile: only a global or indirect variable
+                 needs the barrier.  A captured local of an enclosing
+                 procedure, reached through its capture pointer, is stack
+                 storage like the C walk's static-link access. *)
+              Variable.Split(varMap[i].key, vt, vg, vi, vlhs);
+              IF NOT isLocalSlot AND (vg OR vi) THEN
                 RETURN MSIR.BuildGcLoad(curBlock, "",
                          MSIR.RetypeValue(varMap[i].val,
                            MSIR.TGcSlot(MSIR.EltType(varMap[i].storageType))));

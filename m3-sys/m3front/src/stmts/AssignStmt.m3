@@ -888,6 +888,13 @@ PROCEDURE CompileMSIR (p: P) =
     IF MSIRBuilder.IsAbandoned () THEN RETURN END;
     (* container: the heap object holding the lhs, for the write barrier *)
     lhsPtr := Expr.HeapLValueMSIR (p.lhs, container);
+    (* As Compile (traced := rhs_info.isTraced): no barrier unless the value
+       stored can hold a traced reference; storing NIL creates none. *)
+    VAR rInfo: Type.Info;
+    BEGIN
+      EVAL Type.CheckInfo (Expr.TypeOf (p.rhs), rInfo);
+      IF NOT rInfo.isTraced THEN container := NIL END;
+    END;
     IF lhsPtr = NIL THEN
       MSIRBuilder.Abandon ("assignment: designator has no lvalue");
       RETURN;
