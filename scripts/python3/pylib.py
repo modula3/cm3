@@ -360,9 +360,9 @@ for a in sys.argv:
     if a.startswith("@M3"):
         CM3_FLAGS = CM3_FLAGS + " " + a
 
-def PassThroughDefines():
+def PassThroughDefines(argv = sys.argv):
     result = " "
-    for a in sys.argv:
+    for a in argv:
         if a.startswith("-D"):
             result = result + " " + a
     return result
