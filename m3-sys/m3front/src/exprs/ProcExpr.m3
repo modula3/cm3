@@ -128,6 +128,7 @@ PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR procType := Type.Base (Expr.TypeOf (p));
   BEGIN
+    Procedure.NoteUsedMSIR (p.proc);  (* as Compile's Value.Load *)
     IF Procedure.IsNested (p.proc) THEN
       RETURN MSIRBuilder.BuildClosureValue (p.proc, procType,
                                             Procedure.Captures (p.proc));

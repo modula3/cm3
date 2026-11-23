@@ -414,6 +414,14 @@ PROCEDURE Load (t: T) =
     END; 
   END Load;
 
+PROCEDURE NoteUsedMSIR (v: Value.T) =
+  VAR t: T := v;
+  BEGIN
+    IF (t.impl_peer # NIL) THEN t := t.impl_peer; END;
+    t.used := TRUE;
+    Value.Declare (t);
+  END NoteUsedMSIR;
+
 PROCEDURE LoadStaticLink (t: T) =
  BEGIN
     IF (t.builtin) THEN

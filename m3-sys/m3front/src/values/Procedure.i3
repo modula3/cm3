@@ -51,6 +51,11 @@ PROCEDURE EmitCall (t: T);
    
 PROCEDURE Reset ();
 
+PROCEDURE NoteUsedMSIR (t: Value.T);
+(* As Load, minus the code: mark t (or its implementation peer) used and
+   declare it, so an imported procedure used as a value gets its version
+   stamp. *)
+
 PROCEDURE PreRegisterScopeCapturesMSIR (scope: Scope.T);
 
 (* Pre-register (to a fixpoint) the capture list of every nested procedure
