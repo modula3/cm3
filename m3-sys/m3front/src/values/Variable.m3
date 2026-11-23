@@ -54,6 +54,10 @@ REVEAL
         mem_type    : BITS (*4*)8 FOR CG.Type := FIRST (CG.Type);
         stk_type    : BITS (*4*)8 FOR CG.Type := FIRST (CG.Type);
         indirect    : M3.Flag   := FALSE;
+        bit_offset  : INTEGER   := 0;    (* indirect: static bits past the address *)
+        bit_align   : INTEGER   := 0;    (* indirect, bit alias: the address's alignment *)
+        packed_rep  : M3.Flag   := FALSE; (* repType set by SetRepType, kept packed *)
+        bit_var     : CG.Var    := NIL;  (* indirect: holds dynamic bits, or NIL *)
         open_ok     : M3.Flag   := FALSE;
         need_addr   : M3.Flag   := FALSE;
         no_type     : M3.Flag   := FALSE; (* Type not explicitly coded. *)
@@ -280,6 +284,13 @@ PROCEDURE TypeOf (t: T): Type.T =
     RETURN t.type;
   END TypeOf;
 
+(* EXPORTED *)
+PROCEDURE SetRepType (t: T;  rep: Type.T) =
+  BEGIN
+    t.repType    := rep;
+    t.packed_rep := TRUE;
+  END SetRepType;
+
 (* Externally dispatched-to *)
 PROCEDURE RepTypeOf (t: T): Type.T =
   VAR semType: Type.T;
@@ -297,7 +308,10 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       type: Type.T := NIL;
   BEGIN
     type := Type.CheckInfo (TypeOf (t), info);
-    t.repType  := Type.Check (Type.StripPacked (type));
+    IF t.packed_rep
+      THEN t.repType := Type.Check (t.repType);
+      ELSE t.repType := Type.Check (Type.StripPacked (type));
+    END;
     t.size     := info.size;
     t.align    := info.alignment;
     t.mem_type := info.mem_type;
@@ -408,13 +422,17 @@ PROCEDURE Load (t: T) =
         Module.LoadGlobalAddr (Scope.ToUnit (t), t.offset, is_const := FALSE);
         CG.Boost_addr_alignment (t.cg_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset, t.cg_align);
+        CG.Load_addr (t.cg_var, t.offset, AddrAlign (t, t.cg_align));
         (* ^Misleading name.  Actually load value and label as an address. *)
+        AddBits (t);
       ELSE
         CG.Load_addr_of (t.cg_var, t.offset, CG.GCD(t.cg_align, t.offset));
       END;
     ELSE (* simple scalar *)
-      EVAL Type.CheckInfo (t.type, type_info);
+      IF t.packed_rep  (* a WITH alias of a packed field or element *)
+        THEN EVAL Type.CheckInfo (RepTypeOf (t), type_info);
+        ELSE EVAL Type.CheckInfo (t.type, type_info);
+      END;
       IF (t.bss_var # NIL) THEN
         CG.Load
           (t.bss_var, 0, t.size, t.cg_align, type_info.alignment, t.stk_type);
@@ -426,8 +444,9 @@ PROCEDURE Load (t: T) =
         CG.Boost_addr_alignment (type_info.alignment);
         CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align);
       ELSIF (t.indirect) THEN
-        CG.Load_addr (t.cg_var, t.offset, type_info.alignment);
+        CG.Load_addr (t.cg_var, t.offset, AddrAlign (t, type_info.alignment));
         (* ^Misleading name.  Actually load value and label as an address. *)
+        AddBits (t);
      (* CG.Load_indirect (t.stk_type, 0, t.size, type_info.addr_align); *)
         CG.Load_indirect
           (type_info.stk_type, 0, type_info.size, type_info.addr_align);
@@ -455,14 +474,56 @@ PROCEDURE LoadLValue (t: T) =
         CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size);
       END;
     ELSIF (t.indirect) THEN
-      CG.Load_addr (t.cg_var, t.offset, type_info.alignment);
+      CG.Load_addr (t.cg_var, t.offset, AddrAlign (t, type_info.alignment));
       (* ^Misleading name.  Actually load value and label as an address. *)
+      AddBits (t);
     ELSE
       CG.Load_addr_of
         (t.cg_var, t.offset, CG.GCD (type_info.alignment, t.offset));
     END;
-    CG.Boost_addr_alignment (t.cg_align);
+    IF NOT IsBitAlias (t) THEN CG.Boost_addr_alignment (t.cg_align) END;
   END LoadLValue;
+
+PROCEDURE IsBitAlias (t: T): BOOLEAN =
+  BEGIN
+    RETURN (t.bit_offset # 0) OR (t.bit_var # NIL);
+  END IsBitAlias;
+
+PROCEDURE AddrAlign (t: T;  a: INTEGER): INTEGER =
+  (* The alignment of the address an indirect t holds: a, except that a bit
+     alias holds the base of a packed designator, with its own alignment. *)
+  BEGIN
+    IF IsBitAlias (t) THEN RETURN t.bit_align END;
+    RETURN a;
+  END AddrAlign;
+
+PROCEDURE AddBits (t: T) =
+  (* s0.A is the address an indirect t holds: add its bits (SetBitLValue). *)
+  BEGIN
+    IF (t.bit_offset # 0) THEN CG.Add_offset (t.bit_offset) END;
+    IF (t.bit_var # NIL) THEN
+      CG.Load_int (Target.Integer.cg_type, t.bit_var);
+      CG.Index_bits ();
+    END;
+  END AddBits;
+
+(* EXPORTED *)
+PROCEDURE SetBitLValue (t: T;  static_bits, base_align: INTEGER;
+                        dynamic_bits: BOOLEAN) =
+  BEGIN
+    <*ASSERT t.indirect AND t.cg_var # NIL *>
+    t.bit_offset := static_bits;
+    t.bit_align  := base_align;
+    IF dynamic_bits THEN
+      t.bit_var := CG.Declare_local (M3ID.NoID, Target.Integer.size,
+                                     Target.Integer.align,
+                                     Target.Integer.cg_type,
+                                     Type.GlobalUID (Int.T),
+                                     in_memory := t.up_level,
+                                     up_level := t.up_level, f := CG.Maybe);
+      CG.Store_int (Target.Integer.cg_type, t.bit_var);
+    END;
+  END SetBitLValue;
 
 (* EXPORTED *)
 PROCEDURE SetLValue (t: T) =

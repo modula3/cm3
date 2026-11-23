@@ -535,6 +535,7 @@ p_test ("p2", "p305", "TRY EXCEPT ELSE catches EXIT and RETURN past named handle
 p_test ("p2", "p306", "ROUND breaks ties to even (FloatMode.RoundDefault)")
 p_test ("p2", "p307", "Subset comparisons of multi-word sets (C back end operand order)")
 p_test ("p2", "p308", "LOOPHOLE between REAL and a 32-bit packed subrange")
+p_test ("p2", "p314", "WITH over packed fields and elements not starting on a byte")
 p_test ("p2", "p302", "Address of a global at an offset, compared directly")
 p_test ("p2", "p299", "Initial values of packed fields, arrays and object fields")
 p_test ("p2", "p295", "Integrated backend crash in typecase")

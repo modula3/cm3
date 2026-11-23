@@ -3484,6 +3484,49 @@ PROCEDURE Check_byte_aligned () =
 
 (*---------------------------------------------------- address arithmetic ---*)
 
+PROCEDURE Split_bit_address (VAR static_bits: INTEGER;
+                             VAR base_align: Alignment): BOOLEAN =
+  VAR extra_bits: Var;  extra_is_temp: BOOLEAN;
+  BEGIN
+    static_bits := 0;
+    WITH x = stack [SCheck (1, "Split_bit_address")] DO
+      base_align := x.addr_align;
+      IF x.type # Type.Addr THEN
+        Err ("Split_bit_address called for non-address.");
+        RETURN FALSE;
+      END;
+      IF (x.bits = NIL)
+         AND (x.addr_align MOD Target.Byte) = 0
+         AND (x.offset MOD Target.Byte) = 0 THEN
+        (* byte aligned *)
+        Check_byte_aligned ();
+        base_align := x.addr_align;
+        RETURN FALSE;
+      END;
+      (* Dynamic bits are kept even if addr_align is a whole byte, since
+         only their run-time value says whether the address is (see
+         Check_byte_aligned's run-time check). *)
+      (* Keep the base as it is, with its alignment, so that the packed
+         loads and stores through the rebuilt address choose the same
+         containers as through the original one. *)
+      static_bits   := x.offset;
+      x.offset      := 0;
+      extra_bits    := x.bits;   extra_is_temp := x.temp_bits;
+      x.bits        := NIL;      x.temp_bits   := FALSE;
+      x.addr_align  := x.base_value_align;
+      base_align    := x.base_value_align;
+      IF (base_align MOD Target.Byte) # 0 THEN
+        Err ("Split_bit_address: base is not byte aligned.");
+      END;
+      IF (extra_bits = NIL) THEN RETURN FALSE END;
+    END;
+    (* Push the dynamic bits. *)
+    cg.load (extra_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
+    SPush (Target.Integer.cg_type);
+    IF (extra_is_temp) THEN Free_temp (extra_bits); END;
+    RETURN TRUE;
+  END Split_bit_address;
+
 PROCEDURE Add_offset (i: INTEGER) =
 (* s0.A := s0.A + i bits *)
   BEGIN
