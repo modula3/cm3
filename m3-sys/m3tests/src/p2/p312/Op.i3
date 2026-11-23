@@ -1,0 +1,3 @@
+INTERFACE Op;
+TYPE T <: ROOT;
+END Op.

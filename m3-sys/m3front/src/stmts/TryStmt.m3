@@ -473,7 +473,7 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
           CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
           CG.Boost_addr_alignment (Target.Address.align);
           CG.Load_indirect (CG.Type.Addr, M3RT.EA_arg, Target.Address.size);
-          CG.Loophole (CG.Type.Addr, t_info.stk_type);
+          Exceptionz.ArgFromWord (t_info.stk_type);
           CG.Store_indirect (t_info.stk_type, 0, t_info.size);
         END;
         Variable.ScheduleTrace (h.var);
@@ -615,7 +615,7 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
         ELSE
           CG.Load_addr
             (frame, M3RT.EF1_info + M3RT.EA_arg, Target.Address.align);
-          CG.Loophole (CG.Type.Addr, t_info.stk_type);
+          Exceptionz.ArgFromWord (t_info.stk_type);
           CG.Store_indirect (t_info.stk_type, 0, t_info.size);
         END;
         Variable.ScheduleTrace (h.var);
