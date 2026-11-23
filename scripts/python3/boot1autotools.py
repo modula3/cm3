@@ -35,7 +35,7 @@ def BootAutoTools():
     #RemoveDirectoryRecursive(BootDir)
     CreateDirectory(BootDir)
 
-    P = FilterPackages(["m3core", "libm3", "sysutils", "set", "m3middle", "m3quake", "m3objfile", "m3linker", "m3back", "m3front"])
+    P = list(FilterPackages(["m3core", "libm3", "sysutils", "set", "m3middle", "m3quake", "m3objfile", "m3linker", "m3back", "m3front"]))
     main_packages = ["cm3"]
 
     P += main_packages
