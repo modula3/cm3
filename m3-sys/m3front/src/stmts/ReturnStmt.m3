@@ -10,11 +10,14 @@ MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
 IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr, Target, TInt;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis, CheckExpr, CG;
 
 TYPE
   P = Stmt.T OBJECT
         expr    : Expr.T;
+        result  : Type.T := NIL;
+        (* ^the procedure's result type, noted by Check for CompileMSIR (the
+           Marker stack Compile uses is not set up in an MSIR-only walk) *)
       OVERRIDES
         check       := Check;
         compile     := Compile;
@@ -53,6 +56,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
       (* ^Marker.EmitReturn will either build result value directly or
          provide a temp. *)
       AssignStmt.Check (t, p.expr, cs);
+      p.result := t;
     END;
   END Check;
 
@@ -75,6 +79,17 @@ PROCEDURE CompileMSIR (p: P) =
     IF p.expr # NIL THEN
       v := Expr.CompileMSIR (p.expr);
       IF v = NIL THEN RETURN END;
+      (* The result is assigned to the procedure's result: range-check it
+         against the result type, as Compile does (Marker.EmitReturn ->
+         AssignStmt.DoEmit). *)
+      VAR min, max: Target.Int;
+      BEGIN
+        IF p.result # NIL AND Type.GetBounds (p.result, min, max) THEN
+          v := CheckExpr.EmitChecksMSIR (v, p.expr, min, max,
+                                         CG.RuntimeError.ValueOutOfRange);
+          IF v = NIL THEN RETURN END;
+        END;
+      END;
       (* Coerce the return value to match the declared procedure result type when
          M3 subtyping allows assignment but MSIR requires exact kind match:
          - NIL constant → any non-void result type (e.g. RETURN NIL from ADDRESS proc)
