@@ -50,6 +50,7 @@ CONST
     "A NIL-valued method was invoked.",
     "A privileged machine instruction was attempted.",
     "A low-level OS or machine error occurred.",
+    "Two different types have the same type UID.",
     "A runtime error occurred."
   };
 

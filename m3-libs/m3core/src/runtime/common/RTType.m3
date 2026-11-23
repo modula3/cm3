@@ -190,6 +190,12 @@ PROCEDURE NoteDuplicate (in: InfoPtr;  new: RT0.TypeDefn;
     IF (new.brand_ptr # NIL) THEN
       Fail (RTE.DuplicateBrand, new_mod, new, old);
     END;
+    IF (new.fp # old.fp) THEN
+      (* Type UIDs are a 32-bit fold of the 64-bit fingerprint, so two
+         different types can share one.  Merging them would make the two
+         types one typecode. *)
+      Fail (RTE.TypeUIDCollision, new_mod, new, old);
+    END;
     IF (old.link_state # 0) THEN UpdateCell (old, new); END;
   END NoteDuplicate;
 
