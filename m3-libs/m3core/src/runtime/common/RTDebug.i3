@@ -20,7 +20,9 @@ PROCEDURE Init();
    a traced reference points to.  They return NUL-terminated C strings in
    static storage, valid until the next call; they do not allocate, take
    no locks, and accept any address, returning NIL for one that is not a
-   traced reference they can recognise. *)
+   reference they can recognise: a traced reference or an untraced object.
+   A plain UNTRACED REF's referent has no header to identify it; a debugger
+   shows it through its static type. *)
 
 PROCEDURE TypeName (r: ADDRESS): ADDRESS;
 (* The name of the dynamic type of "r^", as its typecell gives it. *)

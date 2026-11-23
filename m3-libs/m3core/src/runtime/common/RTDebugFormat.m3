@@ -14,14 +14,20 @@ VAR
   len : CARDINAL := 0;
 
 PROCEDURE TypecodeOf (r: ADDRESS;  VAR tc: INTEGER): BOOLEAN =
+  VAR def: RT0.TypeDefn;
   BEGIN
     IF (r = NIL)
       OR (Word.And (LOOPHOLE (r, Word.T), ADRSIZE (ADDRESS) - 1) # 0) THEN
       RETURN FALSE;
     END;
     tc := TYPECODE (LOOPHOLE (r, REFANY));
-    RETURN (0 <= tc) AND (tc <= RTType.MaxTypecode ())
-             AND (RTType.Get (tc) # NIL);
+    IF (tc < 0) OR (RTType.MaxTypecode () < tc) THEN RETURN FALSE; END;
+    def := RTType.Get (tc);
+    (* Only traced referents and untraced objects have a header: a plain
+       UNTRACED REF's referent is a bare block, and what precedes it is not
+       a typecode, so a "header" naming such a type is not one. *)
+    RETURN (def # NIL)
+             AND ((def.traced # 0) OR (def.kind = ORD (RT0.TypeKind.Obj)));
   END TypecodeOf;
 
 PROCEDURE TypeName (r: ADDRESS): ADDRESS =

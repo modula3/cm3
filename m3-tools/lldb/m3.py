@@ -8,9 +8,11 @@ It asks the stopped program's own runtime (RTDebug.Format, in m3core) to
 describe traced references, so it works for programs built with either the
 C or the LLVM (MSIR) backend.  It adds:
 
-    m3 <expression>    describe the traced reference the expression yields:
-                       a TEXT's contents, an open array's type and shape,
-                       or an object's dynamic type
+    m3 <expression>    describe the reference the expression yields: a
+                       TEXT's contents, an open array's type and shape, or
+                       an object's dynamic type and fields (traced or
+                       untraced); a plain UNTRACED REF, which has no
+                       header, through its static type
 
 and summaries for values of type TEXT and REFANY, so `frame variable` shows
 a TEXT's contents and what a REFANY refers to.  The runtime calls need a live process; for a core file only the
@@ -82,7 +84,13 @@ def m3_command(debugger, command, result, internal_dict):
     addr = v.GetValueAsUnsigned(0)
     s = _format(target, frame, addr)
     if s is None:
-        result.SetError("0x%x is not a traced reference" % addr)
+        # Not one the runtime can identify: a plain UNTRACED REF has no
+        # header.  Show the referent through the static type instead.
+        t = v.GetType().GetCanonicalType()
+        if addr and t.IsPointerType() and t.GetPointeeType().GetByteSize() > 0:
+            result.AppendMessage("untraced 0x%x: %s" % (addr, v.Dereference()))
+        else:
+            result.SetError("0x%x is not a reference the runtime knows" % addr)
         return
     result.AppendMessage(s)
     # An object's fields, under its dynamic type.
