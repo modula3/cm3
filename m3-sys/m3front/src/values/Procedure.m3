@@ -752,7 +752,7 @@ PROCEDURE PreRegisterScopeCapturesMSIR (syms: Scope.T) =
 (* Scope.ForEachValue visitor (pass 2): compile the MSIR body of a nested
    procedure declared in an enclosing proc's scope.  Non-procedure values
    (formals) and bodyless procs (external/imported) are skipped.  GenBodyMSIR's
-   own ProcMapContains guard prevents recompiling an already-emitted body. *)
+   own ProcMapHasBody guard prevents recompiling an already-emitted body. *)
 (* lang_init_msir: a nested procedure's MSIR body is compiled inline, in the
    enclosing procedure's MSIR context, when Scope.InitValuesMSIR reaches it. *)
 PROCEDURE LangInitMSIR (p: T) =
@@ -884,7 +884,6 @@ PROCEDURE GenBody (p: T) =
     frame    : CG.Var;
     cconv    : CG.CallingConvention;
     msirSkip : BOOLEAN;
-    msirCa   : CaptureAnalysis.T;
     cgCompiled := (p.cg_proc # NIL);  (* the CG walk compiles this body *)
   BEGIN
     IF (Host.inline_nested_procs)
@@ -894,11 +893,11 @@ PROCEDURE GenBody (p: T) =
       Tracer.EmitPending ();
     END;
 
-    (* If inline_nested_procs is FALSE, GenBodyMSIR compiled this nested proc's
-       MSIR inline already (from LangInit).  Skip MSIR here to avoid double-emit. *)
-    msirSkip := (NOT Host.inline_nested_procs)
-                AND (p.body # NIL) AND (p.body.level > 0)
-                AND MSIRBuilder.ProcMapContains (p);
+    (* MSIR compiles a nested procedure inline, from the MSIR walk of its
+       parent's scope (LangInitMSIR -> GenBodyMSIR; D29), whatever
+       inline_nested_procs says for the C walk.  So this MSIR half never
+       compiles one. *)
+    msirSkip := (p.body # NIL) AND (p.body.level > 0);
 
     Scanner.offset := p.origin;
     zz := Scope.Push (p.syms);
@@ -908,31 +907,13 @@ PROCEDURE GenBody (p: T) =
     CG.Gen_location (p.origin);
     CG.Begin_procedure (p.cg_proc);
     IF NOT msirSkip THEN
-      IF (p.body # NIL) AND (p.body.level > 0) THEN
-        (* Nested proc: redo capture analysis so BeginProc receives the right
-           capture params.  GenBodyMSIR (called from LangInit) may have failed
-           or abandoned and left the proc out of procMap; we must not lose the
-           capture bindings on this second attempt. *)
-        msirCa := NestedCaptures (p);
-        EVAL MSIRBuilder.BeginProc (Value.GlobalName (p, dots := FALSE, with_module := TRUE),
-                                    ProcType.Formals (p.signature),
-                                    p.syms,
-                                    tresult,
-                                    isExternal := TRUE,
-                                    captures := msirCa);
-      ELSE
-        msirCa := NIL;
-        EVAL MSIRBuilder.BeginProc (Value.GlobalName (p, dots := FALSE, with_module := TRUE),
-                                    ProcType.Formals (p.signature),
-                                    p.syms,
-                                    tresult,
-                                    isExternal := TRUE);
-      END;
+      EVAL MSIRBuilder.BeginProc (Value.GlobalName (p, dots := FALSE, with_module := TRUE),
+                                  ProcType.Formals (p.signature),
+                                  p.syms,
+                                  tresult,
+                                  isExternal := TRUE);
       IF MSIRBuilder.InProc () THEN
         MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
-        IF msirCa # NIL THEN
-          SetCaptures (p, CaptureAnalysis.GetCaptures (msirCa));
-        END;
         NoteRaisesMSIR (p);
       END;
     END;
@@ -944,7 +925,7 @@ PROCEDURE GenBody (p: T) =
        UserProc.Capture adds the callee's captures to the caller's set on round 2
        now that round 1 has set the captures.  Must run before Scope.InitValues
        which triggers LangInit → GenBodyMSIR for each nested proc. *)
-    IF MSIRBuilder.InProc () THEN
+    IF NOT msirSkip AND MSIRBuilder.InProc () THEN
       PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     END;
     (* CG path: skip when cg_proc=NIL (M3CG_DoNothing / MSIRObj mode) *)

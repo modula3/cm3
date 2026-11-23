@@ -141,10 +141,6 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
    any parameter or result type is unsupported. *)
 PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc;
 
-(* TRUE if v is already registered in the proc map.
-   Used to skip re-emitting MSIR for nested procs compiled inline via GenBodyMSIR. *)
-PROCEDURE ProcMapContains(v: Value.T): BOOLEAN;
-
 (* TRUE only if v is registered AND its MSIR proc already has a compiled body
    (>= 1 block).  A bodyless forward stub returns FALSE so GenBodyMSIR fills it
    in rather than skipping (used with capture pre-registration to compile a

@@ -1651,14 +1651,6 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
     INC(procMapN);
   END RegisterProc;
 
-PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
-  BEGIN
-    FOR i := 0 TO procMapN - 1 DO
-      IF procMap[i].key = v THEN RETURN TRUE END;
-    END;
-    RETURN FALSE;
-  END ProcMapContains;
-
 PROCEDURE ProcMapHasBody(v: Value.T): BOOLEAN =
 (* TRUE only if v's MSIR proc already has a compiled body (>= 1 block).  A
    bodyless forward stub (created when v is CALLED before its body is compiled,
