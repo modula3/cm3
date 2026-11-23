@@ -1651,7 +1651,7 @@ PROCEDURE InnerPrep (top: T) =
          emitted.  Also, we gen code to store address of heap-allocated temp
          therein, so GC will leave it alone. *)
       name
-        := M3ID.Add ("Heap temp ptr, line " & Fmt.Int (top.origin MOD 100000));
+        := M3ID.Add ("HeapTempPtr_line_" & Fmt.Int (top.origin MOD 100000));
       top.heapTempPtrVar
         := CG.Declare_local
              (name, Target.Address.size, Target.Address.align, CG.Type.Addr,
