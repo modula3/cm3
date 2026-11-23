@@ -549,6 +549,19 @@ PROCEDURE CollapseTree (t: Tree): Tree =
     RETURN t;
   END CollapseTree;
 
+PROCEDURE SortedCopy (t, tail: Tree): Tree =
+  (* Fresh nodes for t's ranges in label order, linked by greater and followed
+     by tail.  t may be the parsed search tree or an already flattened list. *)
+  VAR n: Tree;
+  BEGIN
+    IF (t = NIL) THEN RETURN tail END;
+    n := NEW (Tree);
+    n^ := t^;
+    n.less := NIL;
+    n.greater := SortedCopy (t.greater, tail);
+    RETURN SortedCopy (t.less, n);
+  END SortedCopy;
+
 PROCEDURE CompileMSIR (p: P) =
   VAR
     selVal:     MSIR.Value;
@@ -563,9 +576,12 @@ PROCEDURE CompileMSIR (p: P) =
     bodyBlks:   REF ARRAY OF MSIR.Block;
     elseBlk:    MSIR.Block;
     mergeBlk:   MSIR.Block;
+    ranges:     Tree;
   BEGIN
-    p.tree := FlattenTree (p.tree, NIL);
-    p.tree := CollapseTree (p.tree);
+    (* The labels in order, adjacent ranges with the same body merged.  A copy:
+       the C walk owns p.tree (in the parallel mode it may compile this CASE
+       after the MSIR walk, for a nested procedure). *)
+    ranges := CollapseTree (SortedCopy (p.tree, NIL));
 
     selType := MSIRType.Translate (Expr.TypeOf (p.expr));
     IF selType = NIL THEN
@@ -584,10 +600,10 @@ PROCEDURE CompileMSIR (p: P) =
     elseBlk  := MSIRBuilder.NewBlock ("case.else");
     mergeBlk := MSIRBuilder.NewBlock ("case.merge");
 
-    IF p.tree = NIL THEN
+    IF ranges = NIL THEN
       MSIR.BuildBr (MSIRBuilder.CurrentBlock (), elseBlk, ARRAY OF MSIR.Value{});
     ELSE
-      t := p.tree;
+      t := ranges;
       WHILE t # NIL DO
         IF NOT TInt.ToInt (t.min, minI) OR NOT TInt.ToInt (t.max, maxI) THEN
           MSIRBuilder.Abandon ("CASE label out of INTEGER range");
