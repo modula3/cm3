@@ -1196,7 +1196,21 @@ walks.  At D25 step 6 the C halves go and the driver is unchanged.
        C walk having compiled the revealed types.
      So before step 6 drops the C halves, the MSIR half has to compile
      revealed object types and make the object-layout and import notes
-     itself.  Next: attribute each group to the step that produces it.
+     itself.
+     *Attribution:* each step skipped alone (set and m3front): only
+     `GenLinkerInfo` matters, and within it only `Type.GenCells`, a
+     two-payload step already (`InitTypecell` and `InitTypecellMSIR` per
+     cell).  Skipping only its C payload, `RefType`/`ObjectType.InitTypecell`
+     (with `GenCellPtrs`), reproduces every `.m3x` difference and most of the
+     `.msir` ones (7 files in set, 4 in m3front).  `ObjectType.InitTypecell`
+     calls `NoteOffsets` (`note_opaque_magic`: the `O` records), and its
+     `GenMethodList`/`GenInitProc`/`GenLinkProc` compile method defaults and
+     field initializers (m3front's imported types and stamps); MSIR's named
+     object types depend on that compilation too.  So step 6 is, here, the
+     C content of `InitTypecell` becoming `InitTypecellMSIR`'s: the notes and
+     the compilation stay in `InitTypecell`'s MSIR half.  The other C-only
+     steps (`DeclareGlobalData`, `EmitBody`'s initialization,
+     `Coverage.GenerateTables`, `Variable.GenGlobalMap`) change nothing.
 - **Dropped: moving MSIR registrations out of the declaration walk.**  A
   few procedures of the declaration walk register things with MSIR as they
   go (`Module.BuildImportLink` → `MSIREmit.RegisterImport`,
