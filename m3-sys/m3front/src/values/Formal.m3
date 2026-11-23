@@ -1534,6 +1534,17 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
           END;
         END;
       END;
+      (* A VALUE ordinal is assigned to the formal: range-check it against
+         the formal's type, as GenOrdinal does. *)
+      IF actVal # NIL AND NOT form.hasError THEN
+        VAR min, max: Target.Int;
+        BEGIN
+          IF Type.GetBounds (form.type, min, max) THEN
+            actVal := CheckExpr.EmitChecksMSIR (actVal, actual, min, max,
+                                                CG.RuntimeError.ValueOutOfRange);
+          END;
+        END;
+      END;
       RETURN CoerceScalarArgMSIR (form, actual, actVal);
     END;
   END EmitArgMSIR;
