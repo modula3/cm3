@@ -1345,18 +1345,12 @@ PROCEDURE StoreInitMSIR (t: T;  addr, initVal: MSIR.Value) =
     IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
       MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
     ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
-      VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
-          blk   := MSIRBuilder.CurrentBlock ();
-          srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
-          dstW  := MSIR.BitWidth (slotT);
+      (* Fit the value to the slot, extending by the value's own sign. *)
+      VAR blk := MSIRBuilder.CurrentBlock ();
       BEGIN
-        IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
-          IF srcW > dstW
-            THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
-            ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
-          END;
-        END;
-        MSIR.BuildStore (blk, initVal, addr);
+        MSIR.BuildStore (blk, MSIRBuilder.CoerceToMSIR (
+                           blk, initVal, MSIR.EltType (MSIR.ValueType (addr))),
+                         addr);
       END;
     END;
   END StoreInitMSIR;
@@ -1386,27 +1380,10 @@ PROCEDURE ForceInitMSIR (t: T) =
        MSIR store still needs to be emitted.  So we check msirInitDone (which
        we just set) rather than initDone. *)
     IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
-      VAR initVal := Expr.CompileMSIR (t.initExpr);
-          addr    := MSIRBuilder.LookupVarAddr (t);
+      VAR addr := MSIRBuilder.LookupVarAddr (t);
       BEGIN
-        IF initVal # NIL AND addr # NIL THEN
-          IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
-            MSIR.BuildGcStore (MSIRBuilder.CurrentBlock (), addr, initVal);
-          ELSIF NOT MSIRBuilder.OpenArrayToFixedStore (addr, initVal, t.type) THEN
-            VAR slotT := MSIR.EltType (MSIR.ValueType (addr));
-                blk   := MSIRBuilder.CurrentBlock ();
-                srcW  := MSIR.BitWidth (MSIR.ValueType (initVal));
-                dstW  := MSIR.BitWidth (slotT);
-            BEGIN
-              IF srcW > 0 AND dstW > 0 AND srcW # dstW THEN
-                IF srcW > dstW
-                  THEN initVal := MSIR.BuildTrunc (blk, "", initVal, slotT);
-                  ELSE initVal := MSIR.BuildZExt  (blk, "", initVal, slotT);
-                END;
-              END;
-              MSIR.BuildStore (blk, initVal, addr);
-            END;
-          END;
+        IF addr # NIL THEN
+          StoreInitMSIR (t, addr, Expr.CompileMSIR (t.initExpr));
         END;
       END;
     END;
