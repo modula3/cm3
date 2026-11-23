@@ -598,6 +598,8 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   memOrder:  MemOrder    := MemOrder.SeqCst;   (* atomic ops *)
   memOrder2: MemOrder    := MemOrder.SeqCst;   (* AtomicCmpXchg failure ordering *)
   atomicOp:  AtomicRMWOp := AtomicRMWOp.Xchg; (* AtomicRMW op code *)
+  dbgType:   DbgT := NIL;         (* Alloca: the variable's debug type *)
+  dbgArg:    INTEGER := 0;        (* Alloca: VALUE formal's 1-based number *)
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
   exc:       ExcDesc     := NIL;               (* Raise *)
 END;
@@ -726,7 +728,97 @@ REVEAL Proc = BRANDED "MSIR.Proc" REF RECORD
   cc:          CallingConvention := CallingConvention.M3;
   srcFile:     TEXT    := NIL;   (* source filename; NIL = no location *)
   srcLine:     INTEGER := 0;     (* 1-based line number; 0 = no location *)
+  paramDbg:    REF ARRAY OF DbgT := NIL;  (* by-reference formals' debug types *)
 END;
+
+(*------------------------------------------------------------ Debug types *)
+
+REVEAL DbgT = BRANDED "MSIR.DbgT" REF RECORD
+  kind:   DbgKind;
+  name:   TEXT := NIL;
+  enc:    DbgEncoding := DbgEncoding.Signed;
+  bits:   INTEGER := 0;
+  base:   DbgT := NIL;
+  labels: REF ARRAY OF TEXT := NIL;
+  fields: REF ARRAY OF DbgField := NIL;
+  lo, count: INTEGER := 0;
+  msirT:  T := NIL;
+END;
+
+PROCEDURE DbgBasic (name: TEXT;  enc: DbgEncoding;  bits: INTEGER): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.Basic, name := name, enc := enc, bits := bits) END DbgBasic;
+
+PROCEDURE DbgEnum (name: TEXT;  bits: INTEGER;  READONLY labels: ARRAY OF TEXT): DbgT =
+  VAR d := NEW (DbgT, kind := DbgKind.Enum, name := name, bits := bits,
+                labels := NEW (REF ARRAY OF TEXT, NUMBER (labels)));
+  BEGIN d.labels^ := labels;  RETURN d END DbgEnum;
+
+PROCEDURE DbgAlias (name: TEXT;  base: DbgT): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.Alias, name := name, base := base) END DbgAlias;
+
+PROCEDURE DbgPointer (name: TEXT;  target: DbgT): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.Pointer, name := name, base := target) END DbgPointer;
+
+PROCEDURE DbgStruct (name: TEXT;  bits: INTEGER): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.Struct, name := name, bits := bits) END DbgStruct;
+
+PROCEDURE DbgStructSetFields (d: DbgT;  READONLY fields: ARRAY OF DbgField) =
+  BEGIN
+    d.fields := NEW (REF ARRAY OF DbgField, NUMBER (fields));
+    d.fields^ := fields;
+  END DbgStructSetFields;
+
+PROCEDURE DbgSetBase (d: DbgT;  base: DbgT) = BEGIN d.base := base END DbgSetBase;
+PROCEDURE DbgSetName (d: DbgT;  name: TEXT) = BEGIN d.name := name END DbgSetName;
+
+PROCEDURE DbgArray (elt: DbgT;  lo, count: INTEGER): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.Array, base := elt, lo := lo, count := count) END DbgArray;
+
+PROCEDURE DbgProc (name: TEXT): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.Proc, name := name) END DbgProc;
+
+PROCEDURE DbgFromType (t: T): DbgT =
+  BEGIN RETURN NEW (DbgT, kind := DbgKind.FromType, msirT := t) END DbgFromType;
+
+PROCEDURE DbgKindOf (d: DbgT): DbgKind = BEGIN RETURN d.kind END DbgKindOf;
+PROCEDURE DbgName (d: DbgT): TEXT = BEGIN RETURN d.name END DbgName;
+PROCEDURE DbgEnc (d: DbgT): DbgEncoding = BEGIN RETURN d.enc END DbgEnc;
+PROCEDURE DbgBits (d: DbgT): INTEGER = BEGIN RETURN d.bits END DbgBits;
+PROCEDURE DbgBase (d: DbgT): DbgT = BEGIN RETURN d.base END DbgBase;
+PROCEDURE DbgLabelCount (d: DbgT): INTEGER =
+  BEGIN IF d.labels = NIL THEN RETURN 0 END;  RETURN NUMBER (d.labels^) END DbgLabelCount;
+PROCEDURE DbgLabel (d: DbgT;  i: INTEGER): TEXT = BEGIN RETURN d.labels[i] END DbgLabel;
+PROCEDURE DbgFieldCount (d: DbgT): INTEGER =
+  BEGIN IF d.fields = NIL THEN RETURN 0 END;  RETURN NUMBER (d.fields^) END DbgFieldCount;
+PROCEDURE DbgFieldAt (d: DbgT;  i: INTEGER): DbgField = BEGIN RETURN d.fields[i] END DbgFieldAt;
+PROCEDURE DbgArrayLo (d: DbgT): INTEGER = BEGIN RETURN d.lo END DbgArrayLo;
+PROCEDURE DbgArrayCount (d: DbgT): INTEGER = BEGIN RETURN d.count END DbgArrayCount;
+PROCEDURE DbgMSIRType (d: DbgT): T = BEGIN RETURN d.msirT END DbgMSIRType;
+
+PROCEDURE SetAllocaDbg (alloca: Value;  d: DbgT;  argNo: INTEGER := 0) =
+  BEGIN
+    IF alloca = NIL OR alloca.insn = NIL OR alloca.insn.op # Op.Alloca THEN RETURN END;
+    alloca.insn.dbgType := d;
+    alloca.insn.dbgArg := argNo;
+  END SetAllocaDbg;
+
+PROCEDURE AllocaDbgType (i: Insn): DbgT = BEGIN RETURN i.dbgType END AllocaDbgType;
+PROCEDURE AllocaDbgArg (i: Insn): INTEGER = BEGIN RETURN i.dbgArg END AllocaDbgArg;
+
+PROCEDURE SetParamDbgType (p: Proc;  i: INTEGER;  d: DbgT) =
+  BEGIN
+    IF p = NIL OR p.params = NIL OR i < 0 OR i > LAST (p.params^) THEN RETURN END;
+    IF p.paramDbg = NIL THEN
+      p.paramDbg := NEW (REF ARRAY OF DbgT, NUMBER (p.params^));
+    END;
+    p.paramDbg[i] := d;
+  END SetParamDbgType;
+
+PROCEDURE ParamDbgType (p: Proc;  i: INTEGER): DbgT =
+  BEGIN
+    IF p.paramDbg = NIL OR i < 0 OR i > LAST (p.paramDbg^) THEN RETURN NIL END;
+    RETURN p.paramDbg[i];
+  END ParamDbgType;
 
 (*-------------------------------------------------------------- EH scopes *)
 

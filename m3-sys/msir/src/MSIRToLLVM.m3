@@ -46,6 +46,7 @@ TYPE DbgVarEntry  = RECORD
   typeMetaIdx: INTEGER;     (* DWARF type metadata index (-1 to skip) *)
   metaIdx:     INTEGER;     (* !DILocalVariable metadata index *)
   isParam:     BOOLEAN;     (* TRUE => allocaVal is a param value, not alloca *)
+  argNo:       INTEGER;     (* > 0: a formal parameter's 1-based number *)
 END;
 (* Phase 4: composite type (Struct / FixedArray) DWARF nodes. *)
 TYPE DbgTypeEntry = RECORD
@@ -53,7 +54,14 @@ TYPE DbgTypeEntry = RECORD
   metaIdx:       INTEGER;   (* !DICompositeType node index *)
   elemsTupleIdx: INTEGER;   (* !{child1, child2, ...} tuple node index *)
   baseTypeRef:   INTEGER;   (* FixedArray: element type metaIdx; Struct: -1 *)
-  kind:          INTEGER;   (* 0 = Struct, 1 = FixedArray, 2 = Enum *)
+  kind:          INTEGER;   (* 0 = Struct, 1 = FixedArray, 2 = Enum,
+                               3 = open-array dope, 4 = object body,
+                               5 = object pointer; from an MSIR.DbgT also
+                               6 = basic, 7 = typedef, 8 = pointer,
+                               9 = procedure pointer *)
+  dbg:           MSIR.DbgT; (* the debug type an entry was built from, or NIL *)
+  name:          TEXT;      (* its name, overriding the MSIR type's *)
+  enc:           TEXT;      (* kind 6: the DW_ATE_ encoding *)
   childBase:     INTEGER;   (* first index in dbgChildren[] *)
   childCount:    INTEGER;
   totalBits:     INTEGER;   (* total size in bits *)
@@ -72,6 +80,7 @@ TYPE DbgChildEntry = RECORD
   value:   INTEGER;      (* ordinal value *)
   (* shared: *)
   metaIdx: INTEGER;
+  bitField: BOOLEAN;     (* member narrower than its type: a bit field *)
 END;
 
 VAR
@@ -2189,6 +2198,137 @@ PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     END;
   END GetDbgTypeRef;
 
+(* A fresh type entry, with the fields every kind shares cleared: the
+   tables are reused from module to module. *)
+PROCEDURE NewDbgType(kind: INTEGER;  d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
+  VAR eidx := dbgTypeN;
+  BEGIN
+    INC(dbgTypeN);
+    dbgTypes[eidx] := DbgTypeEntry{msirType := NIL, metaIdx := metaN,
+                                   elemsTupleIdx := -1, baseTypeRef := -1,
+                                   kind := kind, childBase := dbgChildN,
+                                   childCount := 0, totalBits := 0,
+                                   dbg := d, name := NIL, enc := NIL};
+    INC(metaN);
+    IF d # NIL THEN dbgTypes[eidx].name := MSIR.DbgName(d) END;
+    RETURN eidx;
+  END NewDbgType;
+
+CONST DbgEncName = ARRAY MSIR.DbgEncoding OF TEXT {
+  "DW_ATE_signed", "DW_ATE_unsigned", "DW_ATE_boolean", "DW_ATE_float",
+  "DW_ATE_unsigned_char", "DW_ATE_address" };
+
+(* The metadata index of the DWARF type for a front end's debug type d,
+   built on demand.  An entry is registered before its parts are built, so
+   recursive types (a record holding a REF to itself) terminate. *)
+PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
+  VAR eidx: INTEGER;
+  BEGIN
+    IF d = NIL OR dbgBtBase < 0 THEN RETURN -1 END;
+    IF MSIR.DbgKindOf(d) = MSIR.DbgKind.FromType THEN
+      RETURN GetDbgTypeRef(MSIR.DbgMSIRType(d), metaN);
+    END;
+    FOR k := 0 TO dbgTypeN - 1 DO
+      IF dbgTypes[k].dbg = d THEN RETURN dbgTypes[k].metaIdx END;
+    END;
+    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    CASE MSIR.DbgKindOf(d) OF
+    | MSIR.DbgKind.Basic =>
+        eidx := NewDbgType(6, d, metaN);
+        dbgTypes[eidx].enc := DbgEncName[MSIR.DbgEnc(d)];
+        dbgTypes[eidx].totalBits := MSIR.DbgBits(d);
+    | MSIR.DbgKind.Alias =>
+        eidx := NewDbgType(7, d, metaN);
+        dbgTypes[eidx].baseTypeRef := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+    | MSIR.DbgKind.Pointer =>
+        eidx := NewDbgType(8, d, metaN);
+        dbgTypes[eidx].baseTypeRef := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+    | MSIR.DbgKind.Proc =>
+        eidx := NewDbgType(9, d, metaN);
+    | MSIR.DbgKind.Enum =>
+        eidx := NewDbgType(2, d, metaN);
+        dbgTypes[eidx].elemsTupleIdx := metaN;  INC(metaN);
+        dbgTypes[eidx].totalBits := MSIR.DbgBits(d);
+        dbgTypes[eidx].childBase := dbgChildN;
+        FOR i := 0 TO MSIR.DbgLabelCount(d) - 1 DO
+          IF dbgChildN < MaxDbgChildren THEN
+            dbgChildren[dbgChildN] := DbgChildEntry{kind := 2,
+                name := MSIR.DbgLabel(d, i), typeRef := -1, size := 0,
+                offset := 0, count := 0, value := i, metaIdx := metaN,
+                bitField := FALSE};
+            INC(dbgChildN);  INC(metaN);  INC(dbgTypes[eidx].childCount);
+          END;
+        END;
+    | MSIR.DbgKind.Array =>
+        eidx := NewDbgType(1, d, metaN);
+        dbgTypes[eidx].elemsTupleIdx := metaN;  INC(metaN);
+        dbgTypes[eidx].baseTypeRef := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        dbgTypes[eidx].totalBits :=
+          MSIR.DbgArrayCount(d) * DbgTotalBits(MSIR.DbgBase(d));
+        dbgTypes[eidx].childBase := dbgChildN;
+        IF dbgChildN < MaxDbgChildren THEN
+          dbgChildren[dbgChildN] := DbgChildEntry{kind := 1, name := NIL,
+              typeRef := -1, size := 0, offset := MSIR.DbgArrayLo(d),
+              count := MSIR.DbgArrayCount(d), value := 0, metaIdx := metaN,
+              bitField := FALSE};
+          INC(dbgChildN);  INC(metaN);
+          dbgTypes[eidx].childCount := 1;
+        END;
+    | MSIR.DbgKind.Struct =>
+        eidx := NewDbgType(0, d, metaN);
+        dbgTypes[eidx].elemsTupleIdx := metaN;  INC(metaN);
+        dbgTypes[eidx].totalBits := MSIR.DbgBits(d);
+        VAR n := MSIR.DbgFieldCount(d);
+            trefs := NEW(REF ARRAY OF INTEGER, n);
+            f: MSIR.DbgField;
+        BEGIN
+          (* field types first: their own children must not interleave *)
+          FOR i := 0 TO n - 1 DO
+            trefs[i] := GetDbgTypeRefD(MSIR.DbgFieldAt(d, i).type, metaN);
+          END;
+          dbgTypes[eidx].childBase := dbgChildN;
+          FOR i := 0 TO n - 1 DO
+            IF dbgChildN < MaxDbgChildren THEN
+              f := MSIR.DbgFieldAt(d, i);
+              dbgChildren[dbgChildN] := DbgChildEntry{kind := 0,
+                  name := f.name, typeRef := trefs[i], size := f.bitSize,
+                  offset := f.bitOffset, count := 0, value := 0,
+                  metaIdx := metaN,
+                  bitField := f.bitSize # DbgTotalBits(f.type)};
+              INC(dbgChildN);  INC(metaN);  INC(dbgTypes[eidx].childCount);
+            END;
+          END;
+        END;
+    ELSE
+        RETURN dbgBtBase + 8;
+    END;
+    RETURN dbgTypes[eidx].metaIdx;
+  END GetDbgTypeRefD;
+
+(* The size in bits of a front end's debug type (0 if unknown). *)
+PROCEDURE DbgTotalBits(d: MSIR.DbgT): INTEGER =
+  BEGIN
+    IF d = NIL THEN RETURN 0 END;
+    CASE MSIR.DbgKindOf(d) OF
+    | MSIR.DbgKind.Basic, MSIR.DbgKind.Enum, MSIR.DbgKind.Struct =>
+        RETURN MSIR.DbgBits(d);
+    | MSIR.DbgKind.Alias => RETURN DbgTotalBits(MSIR.DbgBase(d));
+    | MSIR.DbgKind.Pointer, MSIR.DbgKind.Proc => RETURN Target.Address.size;
+    | MSIR.DbgKind.Array =>
+        RETURN MSIR.DbgArrayCount(d) * DbgTotalBits(MSIR.DbgBase(d));
+    | MSIR.DbgKind.FromType => RETURN TotalBitsOf(MSIR.DbgMSIRType(d));
+    END;
+  END DbgTotalBits;
+
+(* A parameter's display name: without the "a." the lowering gives it. *)
+PROCEDURE ParamDisplayName(nm: TEXT): TEXT =
+  BEGIN
+    IF Text.Length(nm) > 2 AND Text.Equal(Text.Sub(nm, 0, 2), "a.") THEN
+      RETURN Text.Sub(nm, 2);
+    END;
+    RETURN nm;
+  END ParamDisplayName;
+
 PROCEDURE SameStructType(a, b: MSIR.T): BOOLEAN =
   VAR na := MSIR.StructName(a);  nb := MSIR.StructName(b);
   BEGIN
@@ -2444,6 +2584,11 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     dbgNlIdx    := -1;
     dbgStIdx    := -1;
     dbgBtBase   := -1;
+    (* The tables are reused: clear the fields the older builders leave. *)
+    FOR k := 0 TO MaxDbgTypes - 1 DO
+      dbgTypes[k].dbg := NIL;  dbgTypes[k].name := NIL;  dbgTypes[k].enc := NIL;
+    END;
+    FOR k := 0 TO MaxDbgChildren - 1 DO dbgChildren[k].bitField := FALSE END;
 
     (* First pass: collect unique source files. *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
@@ -2501,8 +2646,15 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                     VAR res         := MSIR.InsnResult(insn);
                         nm          := MSIR.ValueName(res);
                         elt         := MSIR.InsnTargetType(insn);
-                        typeMetaIdx := GetDbgTypeRef(elt, metaN);
+                        dt          := MSIR.AllocaDbgType(insn);
+                        typeMetaIdx : INTEGER;
                     BEGIN
+                      (* The front end's debug type when it gave one, else
+                         one derived from the MSIR type. *)
+                      IF dt # NIL
+                        THEN typeMetaIdx := GetDbgTypeRefD(dt, metaN);
+                        ELSE typeMetaIdx := GetDbgTypeRef(elt, metaN);
+                      END;
                       (* Only track allocas with a known DWARF type.
                          A DILocalVariable without type: crashes LLVM 22's
                          DWARF emitter when paired with @llvm.dbg.declare. *)
@@ -2518,6 +2670,7 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                         dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
                         dbgVars[dbgVarN].metaIdx     := metaN;
                         dbgVars[dbgVarN].isParam     := FALSE;
+                        dbgVars[dbgVarN].argNo       := MSIR.AllocaDbgArg(insn);
                         INC(dbgVarN);
                         INC(metaN);
                       END;
@@ -2550,6 +2703,24 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                 typeMetaIdx: INTEGER;
             BEGIN
               IF NOT IsInternalVarName("%" & nm)
+                 AND MSIR.ParamDbgType(p, pi) # NIL
+                 AND MSIR.Kind(ptype) = MSIR.TypeKind.Ptr
+                 AND dbgVarN < MaxDbgVars
+              THEN
+                (* A formal passed by reference: declare the variable it
+                   points to, with the front end's debug type. *)
+                typeMetaIdx := GetDbgTypeRefD(MSIR.ParamDbgType(p, pi), metaN);
+                dbgVars[dbgVarN].allocaVal   := pval;
+                dbgVars[dbgVarN].varName     := ParamDisplayName(nm);
+                dbgVars[dbgVarN].spIdx       := spIdx;
+                dbgVars[dbgVarN].fileIdx     := fileIdx;
+                dbgVars[dbgVarN].line        := pline;
+                dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
+                dbgVars[dbgVarN].metaIdx     := metaN;
+                dbgVars[dbgVarN].isParam     := TRUE;
+                dbgVars[dbgVarN].argNo       := pi + 1;
+                INC(dbgVarN);  INC(metaN);
+              ELSIF NOT IsInternalVarName("%" & nm)
                  AND (pmode = MSIR.ParamMode.Readonly OR pmode = MSIR.ParamMode.Var)
                  AND MSIR.Kind(ptype) = MSIR.TypeKind.Ptr
                  AND MSIR.Kind(MSIR.EltType(ptype)) = MSIR.TypeKind.OpenArray
@@ -2558,13 +2729,14 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                 dvT         := MSIR.EltType(ptype);
                 typeMetaIdx := GetOrBuildOpenArrayDvType(MSIR.OpenArrayRank(dvT), metaN);
                 dbgVars[dbgVarN].allocaVal   := pval;
-                dbgVars[dbgVarN].varName     := nm;
+                dbgVars[dbgVarN].varName     := ParamDisplayName(nm);
                 dbgVars[dbgVarN].spIdx       := spIdx;
                 dbgVars[dbgVarN].fileIdx     := fileIdx;
                 dbgVars[dbgVarN].line        := pline;
                 dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
                 dbgVars[dbgVarN].metaIdx     := metaN;
                 dbgVars[dbgVarN].isParam     := TRUE;
+                dbgVars[dbgVarN].argNo       := pi + 1;
                 INC(dbgVarN);  INC(metaN);
               END;
             END;
@@ -2661,8 +2833,9 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           & "\", scope: !"                   & Fmt.Int(e.spIdx)
           & ", file: !"                      & Fmt.Int(e.fileIdx)
           & ", line: "                       & Fmt.Int(e.line)
-          & ", type: !"                      & Fmt.Int(e.typeMetaIdx)
-          & ")\n");
+          & ", type: !"                      & Fmt.Int(e.typeMetaIdx));
+        IF e.argNo > 0 THEN Wr.PutText(wr, ", arg: " & Fmt.Int(e.argNo)) END;
+        Wr.PutText(wr, ")\n");
       END;
     END;
 
@@ -2671,7 +2844,9 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
       VAR e  := dbgTypes[k];
           nm : TEXT := NIL;
       BEGIN
-        IF dbgTypes[k].msirType # NIL THEN
+        IF e.name # NIL THEN
+          nm := e.name;
+        ELSIF dbgTypes[k].msirType # NIL THEN
           nm := MSIR.StructName(dbgTypes[k].msirType);
         END;
         IF nm = NIL THEN nm := "" END;
@@ -2702,7 +2877,14 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
                 Wr.PutText(wr, ", baseType: !" & Fmt.Int(ch.typeRef));
               END;
               Wr.PutText(wr, ", size: "   & Fmt.Int(ch.size)
-                & ", offset: " & Fmt.Int(ch.offset) & ")\n");
+                & ", offset: " & Fmt.Int(ch.offset));
+              IF ch.bitField THEN
+                (* extraData: the start of the word holding the field *)
+                Wr.PutText(wr, ", flags: DIFlagBitField, extraData: i64 "
+                  & Fmt.Int((ch.offset DIV Target.Integer.size)
+                              * Target.Integer.size));
+              END;
+              Wr.PutText(wr, ")\n");
             END;
           END;
         ELSIF e.kind = 1 THEN
@@ -2815,6 +2997,38 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
             & " = !DIDerivedType(tag: DW_TAG_pointer_type"
             & ", baseType: !" & Fmt.Int(e.baseTypeRef)
             & ", size: "      & Fmt.Int(Target.Address.size) & ")\n");
+        ELSIF e.kind = 6 THEN
+          (* kind = 6: a named basic type (BOOLEAN, CHAR, a set's word) *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DIBasicType(name: \"" & nm & "\""
+            & ", size: " & Fmt.Int(e.totalBits)
+            & ", encoding: " & e.enc & ")\n");
+        ELSIF e.kind = 7 THEN
+          (* kind = 7: a named type or subrange, as a typedef of its base *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DIDerivedType(tag: DW_TAG_typedef, name: \"" & nm & "\"");
+          IF e.baseTypeRef >= 0 THEN
+            Wr.PutText(wr, ", baseType: !" & Fmt.Int(e.baseTypeRef));
+          END;
+          Wr.PutText(wr, ")\n");
+        ELSIF e.kind = 8 THEN
+          (* kind = 8: a reference: DW_TAG_pointer_type to its referent *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DIDerivedType(tag: DW_TAG_pointer_type");
+          IF Text.Length(nm) > 0 THEN Wr.PutText(wr, ", name: \"" & nm & "\"") END;
+          IF e.baseTypeRef >= 0 THEN
+            Wr.PutText(wr, ", baseType: !" & Fmt.Int(e.baseTypeRef));
+          ELSE
+            Wr.PutText(wr, ", baseType: null");
+          END;
+          Wr.PutText(wr, ", size: " & Fmt.Int(Target.Address.size) & ")\n");
+        ELSIF e.kind = 9 THEN
+          (* kind = 9: a procedure value: pointer to a subroutine type *)
+          Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
+            & " = !DIDerivedType(tag: DW_TAG_pointer_type");
+          IF Text.Length(nm) > 0 THEN Wr.PutText(wr, ", name: \"" & nm & "\"") END;
+          Wr.PutText(wr, ", baseType: !" & Fmt.Int(dbgStIdx)
+            & ", size: " & Fmt.Int(Target.Address.size) & ")\n");
         END;
       END;
     END;

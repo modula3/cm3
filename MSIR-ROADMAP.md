@@ -587,8 +587,20 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      from it, reusing the record/enumeration/object/open-array builders
      above and adding set, subrange, REF, procedure and packed types; emit
      parameters as formal parameters, VAR/READONLY ones through their
-     pointer, without the `a.` prefix.  Real per-variable declaration lines
-     are still to do;
+     pointer, without the `a.` prefix.  **Done (2026-11-24):** the front
+     end attaches an `MSIR.DbgT` (DWARF-shaped, language-neutral) to each
+     local's and VALUE formal's slot and to each by-reference formal
+     (`MSIRType.DbgType`, which only reads the type system), and
+     `MSIRToLLVM` builds the DWARF type from it.  In the probe every
+     variable now has its type: records, enumerations, subranges, sets,
+     REF and procedure types, TEXT, VAR/READONLY records; parameters are
+     formal parameters.  Remaining: an enumeration or record reached only
+     through an inferred type stays unnamed; real per-variable declaration
+     lines are still to do.
+     *Found on the way:* Apple's lldb, having no Modula-3 plugin, shows no
+     variables at all for `DW_LANG_Modula3` code ("Inspection of frame
+     variables will be limited"); the same object tagged `DW_LANG_C99`
+     shows everything, in C's names.  Which tag to emit is open;
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
      that MSIR's m3tests run at `-O3`.
 2. *Modula-3 formats its own values*, in the spirit of Ramsey and

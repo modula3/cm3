@@ -4,7 +4,7 @@ IMPORT MSIR, Type, Int, LInt, Bool, Target;
 IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
 IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType, TInt;
 IMPORT OpenArrayType;
-IMPORT EnumType, ObjectType;
+IMPORT EnumType, ObjectType, Fmt, NamedType, M3;
 
 (* Per-module translation cache: maps base Type.T pointer → MSIR.T.
    Ensures repeated calls for the same M3 type return the same MSIR.T
@@ -14,8 +14,14 @@ TYPE CacheEntry = RECORD key: Type.T;  val: MSIR.T END;
 VAR cache : ARRAY [0..MaxTypeCache-1] OF CacheEntry;
     cacheN: INTEGER := 0;
 
+(* Per-module debug-type cache: Type.T -> MSIR.DbgT. *)
+CONST MaxDbgCache = 1024;
+TYPE DbgCacheEntry = RECORD key: Type.T;  val: MSIR.DbgT END;
+VAR dcache : ARRAY [0..MaxDbgCache-1] OF DbgCacheEntry;
+    dcacheN: INTEGER := 0;
+
 PROCEDURE Reset() =
-  BEGIN cacheN := 0 END Reset;
+  BEGIN cacheN := 0;  dcacheN := 0 END Reset;
 
 PROCEDURE StripModulePrefix(raw: TEXT): TEXT =
   (* Given "Module__Name", return "Name".  Returns raw unchanged if no "__". *)
@@ -515,6 +521,215 @@ PROCEDURE TranslateResult(t: Type.T): MSIR.T =
     END;
     RETURN Translate(t);
   END TranslateResult;
+
+(*------------------------------------------------------------ debug types *)
+
+PROCEDURE DbgCached (t: Type.T): MSIR.DbgT =
+  BEGIN
+    FOR k := 0 TO dcacheN - 1 DO
+      IF dcache[k].key = t THEN RETURN dcache[k].val END;
+    END;
+    RETURN NIL;
+  END DbgCached;
+
+PROCEDURE DbgRemember (t: Type.T;  d: MSIR.DbgT) =
+  BEGIN
+    IF dcacheN < MaxDbgCache THEN
+      dcache[dcacheN].key := t;  dcache[dcacheN].val := d;  INC(dcacheN);
+    END;
+  END DbgRemember;
+
+(* A translation already made for t or its base, or NIL: never a new one,
+   so that describing a type has no side effects. *)
+PROCEDURE TranslatedAlready (t: Type.T): MSIR.T =
+  VAR b := Type.Base(t);
+  BEGIN
+    FOR k := 0 TO cacheN - 1 DO
+      IF cache[k].key = t OR cache[k].key = b THEN RETURN cache[k].val END;
+    END;
+    RETURN NIL;
+  END TranslatedAlready;
+
+PROCEDURE NameOf (t: Type.T;  default: TEXT): TEXT =
+  (* The name a user's named type was declared with, or a builtin's, which
+     Tipe.Define records in the type itself.  (For user types that record
+     is made only when the target asks for type names, as the C backend
+     does, so they are named from the NamedType node.) *)
+  VAR qid: M3.QID;  id: M3ID.T;
+  BEGIN
+    IF NamedType.Split(t, qid) AND qid.item # M3ID.NoID THEN
+      RETURN M3ID.ToText(qid.item);
+    END;
+    Type.Typename(t, id);
+    IF id # M3ID.NoID THEN RETURN StripModulePrefix(M3ID.ToText(id)) END;
+    RETURN default;
+  END NameOf;
+
+PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
+  VAR d: MSIR.DbgT;  u, b: Type.T;  info: Type.Info;  name: TEXT;
+  BEGIN
+    IF t = NIL THEN RETURN NIL END;
+    d := DbgCached(t);
+    IF d # NIL THEN RETURN d END;
+    u := Type.StripPacked(t);     (* renaming and packing, not subranges *)
+    u := Type.CheckInfo(u, info);
+    name := NameOf(t, NIL);
+    IF info.class = Type.Class.Record OR info.class = Type.Class.Enum THEN
+      (* One description however the type is reached, named or not; a name
+         seen on any route is kept. *)
+      d := DbgCached(u);
+      IF d # NIL THEN
+        IF name # NIL AND Text.Length(MSIR.DbgName(d)) = 0 THEN
+          MSIR.DbgSetName(d, name);
+        END;
+        DbgRemember(t, d);
+        RETURN d;
+      END;
+    END;
+    CASE info.class OF
+    | Type.Class.Integer =>
+        d := MSIR.DbgBasic(Pick(name, "INTEGER"), MSIR.DbgEncoding.Signed, info.size);
+    | Type.Class.Longint =>
+        d := MSIR.DbgBasic(Pick(name, "LONGINT"), MSIR.DbgEncoding.Signed, info.size);
+    | Type.Class.Real =>
+        d := MSIR.DbgBasic(Pick(name, "REAL"), MSIR.DbgEncoding.Float, info.size);
+    | Type.Class.Longreal =>
+        d := MSIR.DbgBasic(Pick(name, "LONGREAL"), MSIR.DbgEncoding.Float, info.size);
+    | Type.Class.Extended =>
+        d := MSIR.DbgBasic(Pick(name, "EXTENDED"), MSIR.DbgEncoding.Float, info.size);
+    | Type.Class.Subrange =>
+        VAR lo, hi: Target.Int;  ok := Type.GetBounds(u, lo, hi);
+            enc := MSIR.DbgEncoding.Signed;
+        BEGIN
+          b := Type.Base(u);
+          IF ok AND TInt.LE(TInt.Zero, lo) THEN enc := MSIR.DbgEncoding.Unsigned END;
+          IF b = Int.T OR b = LInt.T THEN
+            d := MSIR.DbgBasic(Pick(name, Bounds(ok, lo, hi)), enc, info.size);
+          ELSE  (* a subrange of an enumeration or CHAR *)
+            d := MSIR.DbgAlias(Pick(name, Bounds(ok, lo, hi)), DbgType(b));
+          END;
+        END;
+    | Type.Class.Enum =>
+        IF u = Bool.T THEN
+          d := MSIR.DbgBasic("BOOLEAN", MSIR.DbgEncoding.Boolean, info.size);
+        ELSIF u = Charr.T THEN
+          d := MSIR.DbgBasic("CHAR", MSIR.DbgEncoding.Char, info.size);
+        ELSIF u = WCharr.T THEN
+          d := MSIR.DbgBasic("WIDECHAR", MSIR.DbgEncoding.Unsigned, info.size);
+        ELSE
+          VAR n := EnumType.NumElts(u);
+              ls := NEW(REF ARRAY OF TEXT, MAX(n, 0));
+              v := EnumType.EltList(u);
+              i := 0;
+          BEGIN
+            WHILE v # NIL AND i < n DO
+              ls[i] := M3ID.ToText(Value.CName(v));  v := v.next;  INC(i);
+            END;
+            d := MSIR.DbgEnum(Pick(name, ""), info.size, ls^);
+            IF u # t THEN DbgRemember(u, d) END;
+          END;
+        END;
+    | Type.Class.Record =>
+        VAR fields: Value.T;  v: Value.T;  n := 0;  finfo: Field.Info;
+            fti: Type.Info;
+        BEGIN
+          d := MSIR.DbgStruct(Pick(name, ""), info.size);
+          DbgRemember(t, d);       (* before the fields: recursive types *)
+          IF u # t THEN DbgRemember(u, d) END;
+          IF RecordType.Split(u, fields) THEN
+            v := fields;
+            WHILE v # NIL DO INC(n);  v := v.next END;
+            VAR fs := NEW(REF ARRAY OF MSIR.DbgField, n);
+            BEGIN
+              v := fields;
+              FOR i := 0 TO n - 1 DO
+                Field.Split(v, finfo);
+                EVAL Type.CheckInfo(finfo.type, fti);
+                fs[i].name := M3ID.ToText(finfo.name);
+                IF fs[i].name = NIL THEN fs[i].name := "" END;
+                fs[i].type := DbgType(finfo.type);
+                fs[i].bitOffset := finfo.offset;
+                fs[i].bitSize := fti.size;
+                v := v.next;
+              END;
+              MSIR.DbgStructSetFields(d, fs^);
+            END;
+          END;
+          RETURN d;
+        END;
+    | Type.Class.Array =>
+        VAR index, elt: Type.T;  lo, hi: Target.Int;  loI, n: INTEGER;
+        BEGIN
+          IF ArrayType.Split(u, index, elt) AND index # NIL
+             AND Type.GetBounds(index, lo, hi)
+             AND TInt.ToInt(lo, loI) AND TInt.ToInt(Type.Number(index), n) THEN
+            d := MSIR.DbgArray(DbgType(elt), loI, n);
+            IF name # NIL THEN d := MSIR.DbgAlias(name, d) END;
+          ELSE
+            d := MSIR.DbgPointer(Pick(name, ""), NIL);
+          END;
+        END;
+    | Type.Class.OpenArray =>
+        (* the lowering's dope type needs only the rank *)
+        d := MSIR.DbgFromType(MSIR.TOpenArray(OpenArrayType.OpenDepth(u),
+                                              MSIR.TVoid()));
+    | Type.Class.Object =>
+        (* a reference to the object type's translation, if there is one *)
+        VAR mt := TranslatedAlready(u);
+        BEGIN
+          IF mt # NIL AND MSIR.Kind(mt) = MSIR.TypeKind.Object THEN
+            d := MSIR.DbgFromType(MSIR.TGcRef(mt));
+          ELSIF mt # NIL THEN
+            d := MSIR.DbgFromType(mt);
+          ELSE
+            d := MSIR.DbgPointer(Pick(name, ""), NIL);
+          END;
+        END;
+    | Type.Class.Ref =>
+        VAR target: Type.T;
+        BEGIN
+          d := MSIR.DbgPointer(Pick(name, ""), NIL);
+          DbgRemember(t, d);       (* before the target: recursive types *)
+          IF RefType.Split(u, target) AND target # NIL THEN
+            MSIR.DbgSetBase(d, DbgType(target));
+          END;
+          RETURN d;
+        END;
+    | Type.Class.Opaque =>
+        (* its revelation is not looked up: that would mark it used *)
+        d := MSIR.DbgPointer(Pick(name, ""), NIL);
+    | Type.Class.Procedure =>
+        d := MSIR.DbgProc(Pick(name, ""));
+    | Type.Class.Set =>
+        IF info.size <= Target.Integer.size THEN
+          d := MSIR.DbgBasic(Pick(name, "SET"), MSIR.DbgEncoding.Unsigned, info.size);
+        ELSE
+          d := MSIR.DbgArray(MSIR.DbgBasic("SET", MSIR.DbgEncoding.Unsigned,
+                                           Target.Byte),
+                             0, info.size DIV Target.Byte);
+          IF name # NIL THEN d := MSIR.DbgAlias(name, d) END;
+        END;
+    ELSE
+        RETURN NIL;
+    END;
+    DbgRemember(t, d);
+    RETURN d;
+  END DbgType;
+
+PROCEDURE Pick (name, default: TEXT): TEXT =
+  BEGIN
+    IF name # NIL THEN RETURN name END;
+    RETURN default;
+  END Pick;
+
+PROCEDURE Bounds (ok: BOOLEAN;  READONLY lo, hi: Target.Int): TEXT =
+  VAR l, h: INTEGER;
+  BEGIN
+    IF ok AND TInt.ToInt(lo, l) AND TInt.ToInt(hi, h) THEN
+      RETURN "[" & Fmt.Int(l) & ".." & Fmt.Int(h) & "]";
+    END;
+    RETURN "INTEGER";
+  END Bounds;
 
 BEGIN
 END MSIRType.

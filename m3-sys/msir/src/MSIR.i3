@@ -165,6 +165,54 @@ PROCEDURE GetIntVal(v: Value): INTEGER;            (* for ConstInt only *)
 
 TYPE ParamMode = {ByValue, Var, Readonly};
 TYPE Param      = RECORD name: TEXT;  type: T;  mode: ParamMode  END;
+
+(*------------------------------------------------------------ Debug types *)
+
+(* A variable's type as a debugger should show it.  Several source types
+   share one MSIR type (BOOLEAN, CHAR and an enumeration are all integers),
+   so the front end describes the source type separately, DWARF-shaped but
+   language-neutral, and attaches it to the variable's storage.  Debug
+   types are debugger metadata only: they change no semantics, and only
+   the LLVM lowering reads them. *)
+TYPE DbgT <: REFANY;
+TYPE DbgKind = {Basic, Enum, Alias, Pointer, Struct, Array, Proc, FromType};
+TYPE DbgEncoding = {Signed, Unsigned, Boolean, Float, Char, Address};
+TYPE DbgField = RECORD name: TEXT;  type: DbgT;  bitOffset, bitSize: INTEGER END;
+
+PROCEDURE DbgBasic   (name: TEXT;  enc: DbgEncoding;  bits: INTEGER): DbgT;
+PROCEDURE DbgEnum    (name: TEXT;  bits: INTEGER;  READONLY labels: ARRAY OF TEXT): DbgT;
+PROCEDURE DbgAlias   (name: TEXT;  base: DbgT): DbgT;    (* a named type, a subrange *)
+PROCEDURE DbgPointer (name: TEXT;  target: DbgT): DbgT;  (* target NIL: untyped *)
+PROCEDURE DbgStruct  (name: TEXT;  bits: INTEGER): DbgT; (* fields set next *)
+PROCEDURE DbgStructSetFields (d: DbgT;  READONLY fields: ARRAY OF DbgField);
+PROCEDURE DbgSetBase (d: DbgT;  base: DbgT);  (* a Pointer's target, set late *)
+PROCEDURE DbgSetName (d: DbgT;  name: TEXT);  (* a name learned late *)
+PROCEDURE DbgArray   (elt: DbgT;  lo, count: INTEGER): DbgT;
+PROCEDURE DbgProc    (name: TEXT): DbgT;                 (* a procedure value *)
+PROCEDURE DbgFromType (t: T): DbgT;  (* as the lowering derives it from t *)
+
+PROCEDURE DbgKindOf (d: DbgT): DbgKind;
+PROCEDURE DbgName (d: DbgT): TEXT;
+PROCEDURE DbgEnc (d: DbgT): DbgEncoding;
+PROCEDURE DbgBits (d: DbgT): INTEGER;
+PROCEDURE DbgBase (d: DbgT): DbgT;             (* Alias, Pointer, Array *)
+PROCEDURE DbgLabelCount (d: DbgT): INTEGER;
+PROCEDURE DbgLabel (d: DbgT;  i: INTEGER): TEXT;
+PROCEDURE DbgFieldCount (d: DbgT): INTEGER;
+PROCEDURE DbgFieldAt (d: DbgT;  i: INTEGER): DbgField;
+PROCEDURE DbgArrayLo (d: DbgT): INTEGER;
+PROCEDURE DbgArrayCount (d: DbgT): INTEGER;
+PROCEDURE DbgMSIRType (d: DbgT): T;            (* FromType *)
+
+(* The variable an alloca holds: its debug type, and its parameter number
+   (1-based) when it is a VALUE formal's copy, 0 for a local. *)
+PROCEDURE SetAllocaDbg (alloca: Value;  d: DbgT;  argNo: INTEGER := 0);
+PROCEDURE AllocaDbgType (i: Insn): DbgT;
+PROCEDURE AllocaDbgArg (i: Insn): INTEGER;
+(* A formal passed by reference (VAR, READONLY): the type of the variable
+   the parameter points to. *)
+PROCEDURE SetParamDbgType (p: Proc;  i: INTEGER;  d: DbgT);
+PROCEDURE ParamDbgType (p: Proc;  i: INTEGER): DbgT;
 TYPE BlockParam = RECORD name: TEXT;  type: T  END;
 
 (*-------------------------------------------------------------- Procedure *)

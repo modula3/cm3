@@ -25,6 +25,13 @@ PROCEDURE ComputeType(t: Type.T): MSIR.T;
    produced by a memory read (deref/field/subscript/global) or literal is
    uniform machine width, eliminating per-operation operand-width coercions. *)
 
+PROCEDURE DbgType(t: Type.T): MSIR.DbgT;
+(* t as a debugger should show it (MSIR.DbgT): its name, enumeration
+   labels, record fields, referent, and so on, which the MSIR type alone
+   does not carry.  Reads the type system only: objects and open arrays
+   reuse a translation already made, and are otherwise described as
+   untyped pointers. *)
+
 PROCEDURE Reset();
 (* Clear the per-module type-translation cache.  Must be called at the
    start of each module so stale MSIR.T pointers from a prior module

@@ -529,6 +529,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
                   MSIRBuilder.UniqueLocalName(
                     Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), allocType);
     IF slotAddr = NIL THEN RETURN FALSE END;
+    MSIR.SetAllocaDbg (slotAddr, MSIRType.DbgType (t.type));
     MSIRBuilder.VarMapAdd (t, slotAddr, allocType);
     (* Zero-initialize non-solid structured allocas so that padding bytes
        (e.g. after a CHAR field in a RECORD, or in ARRAY elements of records)
@@ -622,6 +623,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
              t.indirect guards VALUE formals of pointer type (e.g. p: IntPtr) from
              being misclassified here.  TPtr(TVoid()) falls to the else branch. *)
           MSIRBuilder.VarMapAdd (t, paramVal, MSIR.EltType(mt));
+          MSIR.SetParamDbgType (p, i, MSIRType.DbgType (t.type));
         ELSE
           (* VALUE, or READONLY scalar/proc-ref: spill to alloca so ADR works
              and the body can assign (VALUE) or take address (READONLY).
@@ -651,6 +653,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
                           Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot",
                           allocType);
             BEGIN
+              MSIR.SetAllocaDbg (slot, MSIRType.DbgType (t.type), i + 1);
               MSIR.BuildStore (b, storeVal, slot);
               MSIRBuilder.VarMapAdd (t, slot, allocType);
             END;
