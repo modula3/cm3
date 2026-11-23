@@ -1115,8 +1115,19 @@ walk calls `Type.Compile` where the C walk does (lvalues, literals, locals,
 formals, NEW, TYPECASE, `T.m`'s holder and object type).  The comparison
 also found real bugs: B21 (RETURN range check), B22/B23 (NIL checks), B24
 (VALUE argument range check), plus needless checks and barriers (B25, B26).
-Remaining for (B): the same comparison across all packages, then B3 (move
-the note calls out of the CG-side procedures).
+Remaining for (B): the same comparison across all packages.
+
+**B3 folds into (A) under D29.**  The plan was to move the note calls out of
+the CG-side procedures into a backend-neutral pass.  D29 says otherwise: the
+procedures that make the notes (`Type.Compile`, `Value.Declare`,
+`Revelation.DeclareRevelation`, `OpaqueType`'s compiler,
+`ObjectType.NoteOffsets`, `External.GenInitLinks`, `Module.Compile`) are
+master's entry points, which stay; at D25 step 6 their CG content becomes
+MSIR's.  So the notes stay where they are, and what (B) needs is that the
+MSIR walk reaches each of those entry points itself, as it now does for
+`Type.Compile`.  That is (A): once the MSIR walk drives the unit, the
+module-level CG walk is no longer needed in MSIRObj mode, and the parity
+check confirms nothing was lost.
 
 ### O18. Closure-call lowering reads the procedure's first word.
 
