@@ -610,6 +610,13 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      knows `DW_LANG_Modula2` but not `DW_LANG_Modula3`, so the tag gains
      it nothing either.  Still to check: gdb on a stopped program, on
      AMD64_LINUX;
+   - *Type UIDs in the DWARF (done 2026-11-24):* records, enumerations,
+     REF and named types carry an `m3.uid` annotation (LLVM's
+     `annotations:`, emitted as `DW_TAG_LLVM_annotation`), so a tool can
+     map a DWARF type back to the runtime's typecell
+     (`RTTypeSRC.FindType`).  lldb ignores it.  Debugger scripting APIs do
+     not expose such children, so the formatter of item 2 still identifies
+     references by their typecode.
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
      that MSIR's m3tests run at `-O3`.  **Done (2026-11-24),** but not as
      planned: LLVM itself turns `dbg.declare` into `dbg.value` when it

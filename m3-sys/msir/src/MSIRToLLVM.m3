@@ -63,6 +63,7 @@ TYPE DbgTypeEntry = RECORD
   dbg:           MSIR.DbgT; (* the debug type an entry was built from, or NIL *)
   name:          TEXT;      (* its name, overriding the MSIR type's *)
   enc:           TEXT;      (* kind 6: the DW_ATE_ encoding *)
+  annIdx:        INTEGER;   (* the annotations tuple (m3.uid), or -1 *)
   childBase:     INTEGER;   (* first index in dbgChildren[] *)
   childCount:    INTEGER;
   totalBits:     INTEGER;   (* total size in bits *)
@@ -2266,9 +2267,18 @@ PROCEDURE NewDbgType(kind: INTEGER;  d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER
                                    elemsTupleIdx := -1, baseTypeRef := -1,
                                    kind := kind, childBase := dbgChildN,
                                    childCount := 0, totalBits := 0,
-                                   dbg := d, name := NIL, enc := NIL};
+                                   dbg := d, name := NIL, enc := NIL,
+                                   annIdx := -1};
     INC(metaN);
-    IF d # NIL THEN dbgTypes[eidx].name := MSIR.DbgName(d) END;
+    IF d # NIL THEN
+      dbgTypes[eidx].name := MSIR.DbgName(d);
+      (* The source type's UID as an m3.uid annotation (DW_TAG_LLVM_annotation)
+         on the types that can carry one, so tools can map a DWARF type back
+         to the runtime's typecell (RTTypeSRC.FindType). *)
+      IF MSIR.DbgUID(d) # 0 AND kind IN SET OF [0..15]{0, 2, 7, 8} THEN
+        dbgTypes[eidx].annIdx := metaN;  INC(metaN, 2);
+      END;
+    END;
     RETURN eidx;
   END NewDbgType;
 
@@ -2362,6 +2372,21 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
     END;
     RETURN dbgTypes[eidx].metaIdx;
   END GetDbgTypeRefD;
+
+(* A type entry's annotations field, and its nodes. *)
+PROCEDURE Annotations(READONLY e: DbgTypeEntry): TEXT =
+  BEGIN
+    IF e.annIdx < 0 THEN RETURN "" END;
+    RETURN ", annotations: !" & Fmt.Int(e.annIdx);
+  END Annotations;
+
+PROCEDURE EmitAnnotations(wr: Wr.T;  READONLY e: DbgTypeEntry) =
+  BEGIN
+    IF e.annIdx < 0 THEN RETURN END;
+    Wr.PutText(wr, "!" & Fmt.Int(e.annIdx) & " = !{!" & Fmt.Int(e.annIdx + 1) & "}\n");
+    Wr.PutText(wr, "!" & Fmt.Int(e.annIdx + 1) & " = !{!\"m3.uid\", !\"0x"
+      & Fmt.Unsigned(Word.And(MSIR.DbgUID(e.dbg), 16_FFFFFFFF)) & "\"}\n");
+  END EmitAnnotations;
 
 (* The size in bits of a front end's debug type (0 if unknown). *)
 PROCEDURE DbgTotalBits(d: MSIR.DbgT): INTEGER =
@@ -2646,6 +2671,7 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     (* The tables are reused: clear the fields the older builders leave. *)
     FOR k := 0 TO MaxDbgTypes - 1 DO
       dbgTypes[k].dbg := NIL;  dbgTypes[k].name := NIL;  dbgTypes[k].enc := NIL;
+      dbgTypes[k].annIdx := -1;
     END;
     FOR k := 0 TO MaxDbgChildren - 1 DO dbgChildren[k].bitField := FALSE END;
 
@@ -2927,7 +2953,9 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
             & " = !DICompositeType(tag: DW_TAG_structure_type"
             & ", name: \""  & nm & "\""
             & ", size: "    & Fmt.Int(e.totalBits)
-            & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
+            & ", elements: !" & Fmt.Int(e.elemsTupleIdx)
+            & Annotations(e) & ")\n");
+          EmitAnnotations(wr, e);
           (* elements tuple *)
           Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
           FOR c := 0 TO e.childCount - 1 DO
@@ -2991,7 +3019,9 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
             & " = !DICompositeType(tag: DW_TAG_enumeration_type"
             & ", name: \""    & nm & "\""
             & ", size: "      & Fmt.Int(e.totalBits)
-            & ", elements: !" & Fmt.Int(e.elemsTupleIdx) & ")\n");
+            & ", elements: !" & Fmt.Int(e.elemsTupleIdx)
+            & Annotations(e) & ")\n");
+          EmitAnnotations(wr, e);
           Wr.PutText(wr, "!" & Fmt.Int(e.elemsTupleIdx) & " = !{");
           FOR c := 0 TO e.childCount - 1 DO
             IF c > 0 THEN Wr.PutText(wr, ", ") END;
@@ -3081,7 +3111,8 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           IF e.baseTypeRef >= 0 THEN
             Wr.PutText(wr, ", baseType: !" & Fmt.Int(e.baseTypeRef));
           END;
-          Wr.PutText(wr, ")\n");
+          Wr.PutText(wr, Annotations(e) & ")\n");
+          EmitAnnotations(wr, e);
         ELSIF e.kind = 8 THEN
           (* kind = 8: a reference: DW_TAG_pointer_type to its referent *)
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)
@@ -3092,7 +3123,9 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
           ELSE
             Wr.PutText(wr, ", baseType: null");
           END;
-          Wr.PutText(wr, ", size: " & Fmt.Int(Target.Address.size) & ")\n");
+          Wr.PutText(wr, ", size: " & Fmt.Int(Target.Address.size)
+            & Annotations(e) & ")\n");
+          EmitAnnotations(wr, e);
         ELSIF e.kind = 9 THEN
           (* kind = 9: a procedure value: pointer to a subroutine type *)
           Wr.PutText(wr, "!" & Fmt.Int(e.metaIdx)

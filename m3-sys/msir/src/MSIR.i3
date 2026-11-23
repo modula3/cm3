@@ -187,6 +187,8 @@ PROCEDURE DbgStruct  (name: TEXT;  bits: INTEGER): DbgT; (* fields set next *)
 PROCEDURE DbgStructSetFields (d: DbgT;  READONLY fields: ARRAY OF DbgField);
 PROCEDURE DbgSetBase (d: DbgT;  base: DbgT);  (* a Pointer's target, set late *)
 PROCEDURE DbgSetName (d: DbgT;  name: TEXT);  (* a name learned late *)
+PROCEDURE DbgSetUID (d: DbgT;  uid: INTEGER);  (* the source type's UID, 0: none *)
+PROCEDURE DbgUID (d: DbgT): INTEGER;
 PROCEDURE DbgArray   (elt: DbgT;  lo, count: INTEGER): DbgT;
 PROCEDURE DbgProc    (name: TEXT): DbgT;                 (* a procedure value *)
 PROCEDURE DbgFromType (t: T): DbgT;  (* as the lowering derives it from t *)

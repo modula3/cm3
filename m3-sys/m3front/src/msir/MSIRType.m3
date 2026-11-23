@@ -655,6 +655,7 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
               MSIR.DbgStructSetFields(d, fs^);
             END;
           END;
+          NoteUID(d, t);
           RETURN d;
         END;
     | Type.Class.Array =>
@@ -693,6 +694,7 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
           IF RefType.Split(u, target) AND target # NIL THEN
             MSIR.DbgSetBase(d, DbgType(target));
           END;
+          NoteUID(d, t);
           RETURN d;
         END;
     | Type.Class.Opaque =>
@@ -713,8 +715,17 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
         RETURN NIL;
     END;
     DbgRemember(t, d);
+    NoteUID(d, t);
     RETURN d;
   END DbgType;
+
+(* The UID of the type d describes, for the m3.uid annotation. *)
+PROCEDURE NoteUID (d: MSIR.DbgT;  t: Type.T) =
+  BEGIN
+    IF d # NIL AND MSIR.DbgUID(d) = 0 THEN
+      MSIR.DbgSetUID(d, Type.GlobalUID(t));
+    END;
+  END NoteUID;
 
 PROCEDURE Pick (name, default: TEXT): TEXT =
   BEGIN

@@ -745,6 +745,7 @@ REVEAL DbgT = BRANDED "MSIR.DbgT" REF RECORD
   fields: REF ARRAY OF DbgField := NIL;
   lo, count: INTEGER := 0;
   msirT:  T := NIL;
+  uid:    INTEGER := 0;
 END;
 
 PROCEDURE DbgBasic (name: TEXT;  enc: DbgEncoding;  bits: INTEGER): DbgT =
@@ -772,6 +773,8 @@ PROCEDURE DbgStructSetFields (d: DbgT;  READONLY fields: ARRAY OF DbgField) =
 
 PROCEDURE DbgSetBase (d: DbgT;  base: DbgT) = BEGIN d.base := base END DbgSetBase;
 PROCEDURE DbgSetName (d: DbgT;  name: TEXT) = BEGIN d.name := name END DbgSetName;
+PROCEDURE DbgSetUID (d: DbgT;  uid: INTEGER) = BEGIN d.uid := uid END DbgSetUID;
+PROCEDURE DbgUID (d: DbgT): INTEGER = BEGIN RETURN d.uid END DbgUID;
 
 PROCEDURE DbgArray (elt: DbgT;  lo, count: INTEGER): DbgT =
   BEGIN RETURN NEW (DbgT, kind := DbgKind.Array, base := elt, lo := lo, count := count) END DbgArray;
