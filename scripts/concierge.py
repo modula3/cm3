@@ -1730,7 +1730,7 @@ class InstallCommand(ConciergeCommand):
 
         # Check that bootstrap sources are available.
         bootstrap_dir = self.source("bootstrap")
-        if not (Path(str(bootstrap_dir)) / "CMakeLists.txt").is_file():
+        if not (Path(bootstrap_dir) / "CMakeLists.txt").is_file():
             raise FatalError("missing bootstrap directory")
 
         # Run an out-of-tree build with cmake.
