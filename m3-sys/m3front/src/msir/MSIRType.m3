@@ -698,8 +698,18 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
           RETURN d;
         END;
     | Type.Class.Opaque =>
-        (* its revelation is not looked up: that would mark it used *)
-        d := MSIR.DbgPointer(Pick(name, ""), NIL);
+        (* Its revelation is not looked up: that would mark it used.  A
+           typedef keeps its name visible to debuggers, which ignore a name
+           on a pointer type.  An alias of a builtin (Text.T) takes the
+           builtin's name, TEXT, which the debugger shims recognise. *)
+        VAR id: M3ID.T;
+        BEGIN
+          (* a builtin's own name (TEXT for Text.T) *)
+          Type.Typename(u, id);
+          IF id # M3ID.NoID THEN name := StripModulePrefix(M3ID.ToText(id)) END;
+        END;
+        d := MSIR.DbgPointer("", NIL);
+        IF name # NIL THEN d := MSIR.DbgAlias(name, d) END;
     | Type.Class.Procedure =>
         d := MSIR.DbgProc(Pick(name, ""));
     | Type.Class.Set =>

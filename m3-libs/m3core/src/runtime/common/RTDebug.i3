@@ -15,6 +15,20 @@ TYPE
 
 PROCEDURE Init();
 
+(* Formatting for debuggers.  A debugger stopped in a Modula-3 program
+   calls these (as "RTDebug__TypeName" and "RTDebug__Format") to learn what
+   a traced reference points to.  They return NUL-terminated C strings in
+   static storage, valid until the next call; they do not allocate, take
+   no locks, and accept any address, returning NIL for one that is not a
+   traced reference they can recognise. *)
+
+PROCEDURE TypeName (r: ADDRESS): ADDRESS;
+(* The name of the dynamic type of "r^", as its typecell gives it. *)
+
+PROCEDURE Format (r: ADDRESS): ADDRESS;
+(* A one-line description of "r^": a TEXT's contents, an open array's
+   type and shape, or otherwise its type, typecode and size. *)
+
 (* These functions are like Windows functions of the same name. *)
 <*EXTERNAL RTDebug__IsDebuggerPresent*>PROCEDURE IsDebuggerPresent():BOOLEAN;
 <*EXTERNAL RTDebug__DebugBreak*>PROCEDURE DebugBreak();

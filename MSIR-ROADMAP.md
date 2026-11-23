@@ -646,6 +646,20 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    live process, so plain DWARF printing (with Python formatters if needed)
    stays the fallback for core files.  A full ldb-style debugger in
    Modula-3, talking to a nub, is not planned.
+   **First step done (2026-11-24).**  `RTDebug.TypeName` and
+   `RTDebug.Format` (m3core, `RTDebugFormat.m3`) describe a traced
+   reference into a static buffer, without allocating or locking: a TEXT's
+   contents, an open array's type and shape, otherwise the dynamic type,
+   typecode and size.  `m3-tools/lldb/m3.py` adds an `m3 <expr>` command
+   and a summary that shows a TEXT's contents in `frame variable`; both
+   work on C- and MSIR-built programs (lldb unwinds a call on a bad
+   address).  For that summary, a named opaque type is now a DWARF typedef
+   (an alias of a builtin takes the builtin's name, so `Text.T` is `TEXT`).
+   Next: an object's fields under its *dynamic* type.  The typecell's name
+   is qualified (`Main.Pt3`) but DWARF names are not (`Pt3`), and matching
+   on the last component finds the wrong type (`Text8.T` matched
+   `RTPacking.T`); qualifying DWARF type names would make the match exact.
+   Also, global variables have no DWARF on the MSIR path yet.
 3. *A Modula-3 language plugin for lldb: find a path.*  `DW_LANG_C99` is
    a workaround.  With a plugin (an lldb `TypeSystem` and expression
    parser for Modula-3, upstream in LLVM or shipped with cm3), lldb would
