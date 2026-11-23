@@ -43,6 +43,24 @@ def _call(target, frame, fn, addr):
     return s if err.Success() else None
 
 
+def _dynamic_type(target, name):
+    """The DWARF structure for a referent whose typecell is called name.
+
+    MSIR's DWARF names types as their typecells do ("Main.T"), so the match
+    is exact.  None if the program's DWARF has no such structure (a type no
+    variable is declared with), or for a REF type, whose referent is
+    reached through the static type instead."""
+    types = target.FindTypes(name)
+    for i in range(types.GetSize()):
+        t = types.GetTypeAtIndex(i)
+        if t.GetName() != name:
+            continue
+        t = t.GetCanonicalType()
+        if t.GetTypeClass() in (lldb.eTypeClassStruct, lldb.eTypeClassClass):
+            return t
+    return None
+
+
 def _format(target, frame, addr):
     """RTDebug.Format(addr) in the target, or None."""
     if addr == 0:
@@ -67,6 +85,16 @@ def m3_command(debugger, command, result, internal_dict):
         result.SetError("0x%x is not a traced reference" % addr)
         return
     result.AppendMessage(s)
+    # An object's fields, under its dynamic type.
+    name = _call(target, frame, "RTDebug__TypeName", addr) if addr else None
+    t = _dynamic_type(target, name) if name else None
+    if t is not None:
+        obj = target.CreateValueFromAddress("*", lldb.SBAddress(addr, target), t)
+        for i in range(obj.GetNumChildren()):
+            c = obj.GetChildAtIndex(i)
+            if c.GetName() != "__vtable":
+                result.AppendMessage("  %s = %s" % (
+                    c.GetName(), c.GetSummary() or c.GetValue() or ""))
 
 
 def text_summary(valobj, internal_dict):

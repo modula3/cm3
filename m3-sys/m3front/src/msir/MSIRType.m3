@@ -4,7 +4,7 @@ IMPORT MSIR, Type, Int, LInt, Bool, Target;
 IMPORT Addr, Reff, Charr, WCharr, Reel, LReel, EReel;
 IMPORT RecordType, Field, M3ID, Value, Text, RefType, ArrayType, TInt;
 IMPORT OpenArrayType;
-IMPORT EnumType, ObjectType, Fmt, NamedType, M3;
+IMPORT EnumType, ObjectType, Fmt, NamedType;
 
 (* Per-module translation cache: maps base Type.T pointer → MSIR.T.
    Ensures repeated calls for the same M3 type return the same MSIR.T
@@ -23,39 +23,16 @@ VAR dcache : ARRAY [0..MaxDbgCache-1] OF DbgCacheEntry;
 PROCEDURE Reset() =
   BEGIN cacheN := 0;  dcacheN := 0 END Reset;
 
-PROCEDURE StripModulePrefix(raw: TEXT): TEXT =
-  (* Given "Module__Name", return "Name".  Returns raw unchanged if no "__". *)
-  VAR n := Text.Length(raw);  i := 0;
-  BEGIN
-    WHILE i + 1 < n DO
-      IF Text.GetChar(raw, i) = '_'
-         AND Text.GetChar(raw, i + 1) = '_' THEN
-        RETURN Text.Sub(raw, i + 2);
-      END;
-      INC(i);
-    END;
-    RETURN raw;
-  END StripModulePrefix;
-
-PROCEDURE ObjectShortName(t: Type.T;  hint: TEXT): TEXT =
-  (* Returns the user-visible short name for an object base type.
-     Uses hint if non-empty, otherwise falls back to ObjectType.UserName.
-     ObjectType.UserName uses GlobalName(dots=TRUE,with_module=TRUE) which
-     returns "Module.Name"; strip the "Module." prefix at the last dot. *)
-  VAR raw: TEXT;  n: INTEGER;  last: INTEGER;
+PROCEDURE ObjectName(t: Type.T;  hint: TEXT): TEXT =
+  (* The qualified name of an object base type ("Module.Name", as its
+     typecell names it): hint if non-empty, otherwise ObjectType.UserName. *)
+  VAR raw: TEXT;
   BEGIN
     IF hint # NIL AND Text.Length(hint) > 0 THEN RETURN hint END;
     raw := ObjectType.UserName(t);
     IF raw = NIL THEN RETURN "" END;
-    (* Find the last '.' and return everything after it. *)
-    n := Text.Length(raw);
-    last := -1;
-    FOR i := 0 TO n - 1 DO
-      IF Text.GetChar(raw, i) = '.' THEN last := i END;
-    END;
-    IF last >= 0 THEN RETURN Text.Sub(raw, last + 1) END;
     RETURN raw;
-  END ObjectShortName;
+  END ObjectName;
 
 PROCEDURE Translate(t: Type.T): MSIR.T =
   VAR base: Type.T;  info: Type.Info;  nameId: M3ID.T;  typeName: TEXT;
@@ -68,11 +45,11 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
        correct bitwidth. *)
     EVAL Type.CheckInfo(t, origInfo);
     (* Capture the human-readable name BEFORE stripping the Named wrapper.
-       Type.Typename returns "Module__Name"; strip the "Module__" prefix. *)
+       Type.Typename returns "Module__Name"; make it "Module.Name". *)
     Type.Typename(t, nameId);
     IF nameId = M3ID.NoID
       THEN typeName := ""
-      ELSE typeName := StripModulePrefix(M3ID.ToText(nameId))
+      ELSE typeName := Dotted(M3ID.ToText(nameId))
     END;
     base := Type.Base(t);  (* strips Named, Packed, Subrange layers *)
 
@@ -164,7 +141,7 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
         (* Build a typed object ref so DWARF can show fields.
            typeName may be empty when the base type has no Named wrapper;
            fall back to the user_name recorded by NoteRefName. *)
-        VAR mt := TranslateObject(base, ObjectShortName(base, typeName));
+        VAR mt := TranslateObject(base, ObjectName(base, typeName));
         BEGIN
           IF mt = NIL THEN
             IF info.isTraced THEN RETURN MSIR.TGcRef(MSIR.TVoid())
@@ -249,7 +226,7 @@ PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
        so the MSIR.TObject gets a proper name regardless of call order. *)
     super := ObjectType.Super(t);
     IF super # NIL THEN
-      superM := TranslateObject(super, ObjectShortName(super, ""));
+      superM := TranslateObject(super, ObjectName(super, ""));
     END;
     (* Build own-field array with absolute bit offsets. *)
     VAR msirFs := NEW(REF ARRAY OF MSIR.Field, n);
@@ -551,19 +528,34 @@ PROCEDURE TranslatedAlready (t: Type.T): MSIR.T =
   END TranslatedAlready;
 
 PROCEDURE NameOf (t: Type.T;  default: TEXT): TEXT =
-  (* The name a user's named type was declared with, or a builtin's, which
-     Tipe.Define records in the type itself.  (For user types that record
-     is made only when the target asks for type names, as the C backend
-     does, so they are named from the NamedType node.) *)
-  VAR qid: M3.QID;  id: M3ID.T;
+  (* The qualified name a user's named type was declared with
+     ("Main.T", as its typecell names it, so a debugger can map one to
+     the other), or a builtin's, which Tipe.Define records in the type
+     itself.  (For user types that record is made only when the target
+     asks for type names, as the C backend does, so they are named from
+     the NamedType node.) *)
+  VAR v: Value.T;  id: M3ID.T;
   BEGIN
-    IF NamedType.Split(t, qid) AND qid.item # M3ID.NoID THEN
-      RETURN M3ID.ToText(qid.item);
+    IF NamedType.SplitV(t, v) AND v # NIL THEN
+      RETURN Value.GlobalName(v, dots := TRUE);
     END;
     Type.Typename(t, id);
-    IF id # M3ID.NoID THEN RETURN StripModulePrefix(M3ID.ToText(id)) END;
+    IF id # M3ID.NoID THEN RETURN Dotted(M3ID.ToText(id)) END;
     RETURN default;
   END NameOf;
+
+PROCEDURE Dotted (raw: TEXT): TEXT =
+  (* "Module__Name" as "Module.Name" *)
+  VAR i := 0;  n := Text.Length(raw);
+  BEGIN
+    WHILE i + 1 < n DO
+      IF Text.GetChar(raw, i) = '_' AND Text.GetChar(raw, i + 1) = '_' THEN
+        RETURN Text.Sub(raw, 0, i) & "." & Text.Sub(raw, i + 2);
+      END;
+      INC(i);
+    END;
+    RETURN raw;
+  END Dotted;
 
 PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
   VAR d: MSIR.DbgT;  u, b: Type.T;  info: Type.Info;  name: TEXT;
@@ -706,7 +698,7 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
         BEGIN
           (* a builtin's own name (TEXT for Text.T) *)
           Type.Typename(u, id);
-          IF id # M3ID.NoID THEN name := StripModulePrefix(M3ID.ToText(id)) END;
+          IF id # M3ID.NoID THEN name := Dotted(M3ID.ToText(id)) END;
         END;
         d := MSIR.DbgPointer("", NIL);
         IF name # NIL THEN d := MSIR.DbgAlias(name, d) END;

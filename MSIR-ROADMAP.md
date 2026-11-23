@@ -655,10 +655,12 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    work on C- and MSIR-built programs (lldb unwinds a call on a bad
    address).  For that summary, a named opaque type is now a DWARF typedef
    (an alias of a builtin takes the builtin's name, so `Text.T` is `TEXT`).
-   Next: an object's fields under its *dynamic* type.  The typecell's name
-   is qualified (`Main.Pt3`) but DWARF names are not (`Pt3`), and matching
-   on the last component finds the wrong type (`Text8.T` matched
-   `RTPacking.T`); qualifying DWARF type names would make the match exact.
+   DWARF type names are now qualified as typecells name them (`Main.Pt`;
+   decided, Tony, 2026-11-24), so `m3 o` also lists an object's fields
+   under its *dynamic* type, found in DWARF by its exact name.  That needs
+   the dynamic type to be in the DWARF, which today means some variable
+   was declared with it; emitting every object type that has a typecell
+   would close the gap.
    Also, global variables have no DWARF on the MSIR path yet.
 3. *A Modula-3 language plugin for lldb: find a path.*  `DW_LANG_C99` is
    a workaround.  With a plugin (an lldb `TypeSystem` and expression
