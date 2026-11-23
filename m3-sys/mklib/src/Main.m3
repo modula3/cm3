@@ -833,7 +833,9 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
     "_ftol2_sse",
     "_vfprintf_l",
     "__ftol2_sse",
-    "__vfprintf_l"
+    "__vfprintf_l",
+    "_Avx2WmemEnabledWeakValue",
+    "__Avx2WmemEnabledWeakValue"
     };
   VAR len := Text.Length (sym);
   BEGIN
