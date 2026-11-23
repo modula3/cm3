@@ -655,7 +655,7 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
           IF RequiresFetch (formVal, actExpr)
              OR SetType.IsSmallSet (formVal.repType)
              OR NOT OpenArrayType.Is (formVal.repType)
-             OR actStaticSize > 0
+             OR actStaticSize >= 0 (* static, if empty *)
           THEN (* Static size. *)
           ELSE (* Must make a dynamic-sized copy in a heap-allocated temp. *)
             actRepType := Expr.RepTypeOf (actExpr);
@@ -1101,9 +1101,9 @@ PROCEDURE GenStruct
 
               ELSE (* Formal is open array. *)
                 actStaticSize := Expr.StaticSize (actExpr);
-                IF actStaticSize > 0
+                IF actStaticSize >= 0
                 THEN (* Formal is open array.  Actual could be open, but still
-                        gives static size for the copy.  *)
+                        gives static size for the copy (none if empty). *)
                   <* ASSERT formVal.tempCGVal = NIL *>
                   Expr.Compile (actExpr);
                   RedepthArray (formVal.repType, actRepType, actStaticSize);
