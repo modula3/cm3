@@ -510,6 +510,13 @@ PROCEDURE SetTypeDescBrand (d: TypeDesc;  chars: GcMapBytes;  charBytes: INTEGER
 PROCEDURE TypeDescBrand    (d: TypeDesc;  VAR charBytes: INTEGER): GcMapBytes;
 
 PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc);
+
+(* Debug types the module's debug info must keep though no variable uses
+   them (DICompileUnit retainedTypes): an object type with a typecell here,
+   so a debugger can show an object under its dynamic type. *)
+PROCEDURE ModuleRetainDbgType      (m: Module;  d: DbgT);
+PROCEDURE ModuleRetainedDbgTypeCount(m: Module): INTEGER;
+PROCEDURE ModuleRetainedDbgType    (m: Module;  i: INTEGER): DbgT;
 PROCEDURE ModuleTypeDescCount(m: Module): INTEGER;
 PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc;
 

@@ -32,6 +32,12 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT;
    reuse a translation already made, and are otherwise described as
    untyped pointers. *)
 
+PROCEDURE DbgObject(t: Type.T): MSIR.DbgT;
+(* The structure of object type t, from its translation, for its typecell:
+   a debugger can then show an object's fields under its dynamic type even
+   when no variable is declared with that type.  NIL if t does not
+   translate to an object. *)
+
 PROCEDURE Reset();
 (* Clear the per-module type-translation cache.  Must be called at the
    start of each module so stale MSIR.T pointers from a prior module

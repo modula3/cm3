@@ -1067,6 +1067,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   excDescs:      RefSeq.T;                         (* elements: ExcDesc *)
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
+  retainedDbg:   RefSeq.T;                         (* elements: DbgT *)
   textLiterals:  RefSeq.T;                         (* elements: TextLit *)
   textLitIndex:  TextIntTbl.T;                     (* LitKey -> uid *)
   constArrays:   RefSeq.T;                         (* elements: ConstArray *)
@@ -1512,6 +1513,12 @@ PROCEDURE TypeCellRef (name: TEXT): Value =
   END TypeCellRef;
 
 PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc) = BEGIN m.typeDescs.addhi(d) END ModuleAddTypeDesc;
+PROCEDURE ModuleRetainDbgType (m: Module;  d: DbgT) =
+  BEGIN m.retainedDbg.addhi(d) END ModuleRetainDbgType;
+PROCEDURE ModuleRetainedDbgTypeCount (m: Module): INTEGER =
+  BEGIN RETURN m.retainedDbg.size() END ModuleRetainedDbgTypeCount;
+PROCEDURE ModuleRetainedDbgType (m: Module;  i: INTEGER): DbgT =
+  BEGIN RETURN m.retainedDbg.get(i) END ModuleRetainedDbgType;
 PROCEDURE ModuleTypeDescCount(m: Module): INTEGER      = BEGIN RETURN m.typeDescs.size() END ModuleTypeDescCount;
 PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc =
   BEGIN RETURN m.typeDescs.get(i) END ModuleTypeDesc;
@@ -1653,6 +1660,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.excDescs      := NEW(RefSeq.T).init();
     m.importBinders := NEW(RefSeq.T).init();
     m.typeDescs      := NEW(RefSeq.T).init();
+    m.retainedDbg    := NEW(RefSeq.T).init();
     m.textLiterals   := NEW(RefSeq.T).init();
     m.textLitIndex   := NEW(TextIntTbl.Default).init();
     m.constArrays    := NEW(RefSeq.T).init();

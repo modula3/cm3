@@ -657,10 +657,10 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    (an alias of a builtin takes the builtin's name, so `Text.T` is `TEXT`).
    DWARF type names are now qualified as typecells name them (`Main.Pt`;
    decided, Tony, 2026-11-24), so `m3 o` also lists an object's fields
-   under its *dynamic* type, found in DWARF by its exact name.  That needs
-   the dynamic type to be in the DWARF, which today means some variable
-   was declared with it; emitting every object type that has a typecell
-   would close the gap.
+   under its *dynamic* type, found in DWARF by its exact name.  Every
+   object type with a typecell in a unit is in that unit's DWARF
+   (`DICompileUnit` `retainedTypes`, from `ObjectType.InitTypecellMSIR`),
+   so the dynamic type is there even when no variable is declared with it.
    Also, global variables have no DWARF on the MSIR path yet.
 3. *A Modula-3 language plugin for lldb: find a path.*  `DW_LANG_C99` is
    a workaround.  With a plugin (an lldb `TypeSystem` and expression

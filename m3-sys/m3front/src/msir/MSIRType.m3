@@ -527,6 +527,19 @@ PROCEDURE TranslatedAlready (t: Type.T): MSIR.T =
     RETURN NIL;
   END TranslatedAlready;
 
+PROCEDURE DbgObject (t: Type.T): MSIR.DbgT =
+  (* A reference to the structure: the lowering builds an object's
+     structure as the referent of a reference. *)
+  VAR r := Translate(t);
+  BEGIN
+    IF r # NIL AND MSIR.Kind(r) IN SET OF MSIR.TypeKind{MSIR.TypeKind.Ptr,
+                                                       MSIR.TypeKind.GcRef} THEN
+      r := MSIR.EltType(r);
+    END;
+    IF r = NIL OR MSIR.Kind(r) # MSIR.TypeKind.Object THEN RETURN NIL END;
+    RETURN MSIR.DbgFromType(MSIR.TGcRef(r));
+  END DbgObject;
+
 PROCEDURE NameOf (t: Type.T;  default: TEXT): TEXT =
   (* The qualified name a user's named type was declared with
      ("Main.T", as its typecell names it, so a debugger can map one to

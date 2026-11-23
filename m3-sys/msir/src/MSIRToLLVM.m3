@@ -106,6 +106,10 @@ VAR
   dbgNlIdx:      INTEGER := -1;    (* null-list !{null} *)
   dbgStIdx:      INTEGER := -1;    (* shared DISubroutineType *)
   dbgBtBase:     INTEGER := -1;    (* first DIBasicType (slots 0..NBT-1) *)
+  (* the module's retained types (MSIR.ModuleRetainedDbgType): *)
+  dbgRetained:   REF ARRAY OF INTEGER := NIL;  (* their metadata indices *)
+  dbgRetainedN:  INTEGER := 0;
+  dbgRetainedIdx: INTEGER := -1;   (* the tuple of them, or -1 *)
 
 VAR
   auxN:          INTEGER     := 0;
@@ -2668,6 +2672,8 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     dbgNlIdx    := -1;
     dbgStIdx    := -1;
     dbgBtBase   := -1;
+    dbgRetainedN := 0;
+    dbgRetainedIdx := -1;
     (* The tables are reused: clear the fields the older builders leave. *)
     FOR k := 0 TO MaxDbgTypes - 1 DO
       dbgTypes[k].dbg := NIL;  dbgTypes[k].name := NIL;  dbgTypes[k].enc := NIL;
@@ -2858,6 +2864,27 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
             END;
           END;
         END;
+      END;
+    END;
+
+    (* Types kept though no variable uses them: object types with a
+       typecell here, so a debugger can show an object under its dynamic
+       type.  They go in the compile unit's retainedTypes. *)
+    VAR n := MSIR.ModuleRetainedDbgTypeCount(m);  r: INTEGER;  dup: BOOLEAN;
+    BEGIN
+      IF n > 0 THEN
+        dbgRetained := NEW(REF ARRAY OF INTEGER, n);
+        FOR i := 0 TO n - 1 DO
+          r := GetDbgTypeRefD(MSIR.ModuleRetainedDbgType(m, i), metaN);
+          dup := r < 0 OR (dbgBtBase <= r AND r < dbgBtBase + NBT);
+          FOR j := 0 TO dbgRetainedN - 1 DO
+            IF dbgRetained[j] = r THEN dup := TRUE END;
+          END;
+          IF NOT dup THEN
+            dbgRetained[dbgRetainedN] := r;  INC(dbgRetainedN);
+          END;
+        END;
+        IF dbgRetainedN > 0 THEN dbgRetainedIdx := metaN;  INC(metaN) END;
       END;
     END;
   END BuildDebugInfo;
@@ -3178,10 +3205,22 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
        variables for DW_LANG_Modula3 code, and C mode shows them all
        (MSIR-ROADMAP.md §3).  @M3msirdwarfm3 restores DW_LANG_Modula3, for
        a debugger that understands it. *)
-    Wr.PutText(wr, "!2 = distinct !DICompileUnit("
-      & "language: " & DwarfLanguage() & ", file: !" & Fmt.Int(cuFileIdx)
-      & ", producer: \"CM3 MSIR\", isOptimized: false"
-      & ", runtimeVersion: 0, emissionKind: FullDebug)\n");
+    VAR retained := "";
+    BEGIN
+      IF dbgRetainedIdx >= 0 THEN
+        retained := ", retainedTypes: !" & Fmt.Int(dbgRetainedIdx);
+        Wr.PutText(wr, "!" & Fmt.Int(dbgRetainedIdx) & " = !{");
+        FOR j := 0 TO dbgRetainedN - 1 DO
+          IF j > 0 THEN Wr.PutText(wr, ", ") END;
+          Wr.PutText(wr, "!" & Fmt.Int(dbgRetained[j]));
+        END;
+        Wr.PutText(wr, "}\n");
+      END;
+      Wr.PutText(wr, "!2 = distinct !DICompileUnit("
+        & "language: " & DwarfLanguage() & ", file: !" & Fmt.Int(cuFileIdx)
+        & ", producer: \"CM3 MSIR\", isOptimized: false"
+        & ", runtimeVersion: 0, emissionKind: FullDebug" & retained & ")\n");
+    END;
     Wr.PutText(wr, "!0 = !{i32 2, !\"Dwarf Version\", i32 4}\n");
     Wr.PutText(wr, "!1 = !{i32 2, !\"Debug Info Version\", i32 3}\n");
     Wr.PutText(wr, "!llvm.module.flags = !{!0, !1}\n");

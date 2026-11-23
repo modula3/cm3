@@ -14,7 +14,7 @@ IMPORT Value, Error, RecordType, ProcType, OpaqueType, Revelation;
 IMPORT Field, Reff, Addr, Word, M3Buf, ErrType, Procedure, AddressExpr;
 IMPORT ObjectAdr, ObjectRef, Token, Module, Method, Brand;
 IMPORT AssignStmt, M3RT, Scanner, TipeMap, TipeDesc, TypeFP, Target;
-IMPORT MSIR, MSIREmit, MSIRBuilder, Fmt, Text, Typecell;
+IMPORT MSIR, MSIREmit, MSIRBuilder, MSIRType, Fmt, Text, Typecell;
 FROM Scanner IMPORT Match, GetToken, cur;
 
 CONST
@@ -1019,6 +1019,12 @@ PROCEDURE InitTypecellMSIR (t: Type.T) =
       MSIR.SetTypeDescBrand (desc, Brand.Image (d.brand, cb), cb);
     END;
     MSIR.ModuleAddTypeDesc (m, desc);
+    (* Its fields in the debug info, for a debugger that finds an object's
+       dynamic type by its typecell. *)
+    VAR dbg := MSIRType.DbgObject (t);
+    BEGIN
+      IF dbg # NIL THEN MSIR.ModuleRetainDbgType (m, dbg) END;
+    END;
     (* Register the supertype's typecell too, so RTLinker can resolve this
        type's parentID (FinishTypecell -> FindType).  The C backend compiles the
        whole super chain via Type.Compile; MSIR must likewise materialise every
