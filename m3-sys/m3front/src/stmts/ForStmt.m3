@@ -574,10 +574,10 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Body. *)
     MSIRBuilder.SetCurrentBlock (bodyBlk);
-    MSIRBuilder.PushExitBlock (exitBlk);
+    Marker.PushExit (msirExit := exitBlk);
     Variable.ScheduleTrace (p.var);
     Stmt.CompileMSIR (p.body);
-    MSIRBuilder.PopExitBlock ();
+    Marker.Pop ();
 
     (* Increment: load, add step, store back to alloca, branch to header. *)
     IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN

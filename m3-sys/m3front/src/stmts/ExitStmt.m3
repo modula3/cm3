@@ -52,7 +52,7 @@ PROCEDURE CompileMSIR (<*UNUSED*> p: P) =
   BEGIN
     (* To the innermost loop's exit block (unwind_to if that leaves EH
        scopes, running FINALLY code), or an enclosing EXCEPT ELSE. *)
-    MSIRBuilder.EmitExitMSIR ();
+    Marker.EmitExitMSIR ();
     (* Instructions after EXIT are dead; switch to a fresh block. *)
     deadBlock := MSIRBuilder.NewBlock ("exit.dead");
     MSIRBuilder.SetCurrentBlock (deadBlock);

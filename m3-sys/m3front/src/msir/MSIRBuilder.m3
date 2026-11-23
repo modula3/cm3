@@ -9,8 +9,6 @@ IMPORT Scanner;
 IMPORT RefType, Exceptionz, Host, M3CG;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
-CONST MaxExitStack = 16;
-CONST MaxCleanup   = 64;   (* unified loop/finally cleanup-frame stack *)
 (* Initial sizes of the module-wide maps, which grow on demand: a module has
    no procedure to abandon, so an entry must never be dropped. *)
 CONST InitProcMap   = 256;
@@ -45,15 +43,6 @@ TYPE VarEntry = RECORD
   container:   MSIR.Value := NIL;
 END;
 
-(* One frame of the EXIT/RETURN routing stack: a loop, or the protected
-   body of a TRY with an ELSE (whose ELSE catches EXIT and RETURN). *)
-TYPE CleanupKind = {Loop, Else};
-TYPE CleanupFrame = RECORD
-  kind:       CleanupKind;
-  exitBlock:  MSIR.Block := NIL;   (* Loop: branch target for EXIT;
-                                      Else: the ELSE code *)
-END;
-
 (* Saved state for one level of proc context (for nested proc compilation). *)
 TYPE ProcContext = RECORD
   proc:          MSIR.Proc;
@@ -62,9 +51,7 @@ TYPE ProcContext = RECORD
   blockSeq:      INTEGER;
   varMapN:       INTEGER;
   varMap:        ARRAY [0..MaxVarMap-1] OF VarEntry;
-  exitDepth:     INTEGER;
   scope:         MSIR.Scope;   (* curScope *)
-  cleanupDepth:  INTEGER;
 END;
 
 TYPE ProcEntry   = RECORD
@@ -94,16 +81,9 @@ VAR
   varMap:  ARRAY [0..MaxVarMap-1]  OF VarEntry;
   varMapN: INTEGER := 0;
 
-  exitStack: ARRAY [0..MaxExitStack-1] OF MSIR.Block;
-  exitDepth: INTEGER := 0;
 
   (* The EH scope new blocks go in (D26); NIL: the proc's root. *)
   curScope: MSIR.Scope := NIL;
-
-  (* EXIT/RETURN routing frames in nesting order: loops (PushExitBlock) and
-     the protected bodies of TRYs with an ELSE (PushElseFrame). *)
-  cleanupStack: ARRAY [0..MaxCleanup-1] OF CleanupFrame;
-  cleanupDepth: INTEGER := 0;
 
   procMap:  REF ARRAY OF ProcEntry := NEW (REF ARRAY OF ProcEntry, InitProcMap);
   procMapN: INTEGER := 0;
@@ -152,9 +132,7 @@ PROCEDURE PopBeginContext() =
       abandoned        := ctx.abandoned;
       blockSeq         := ctx.blockSeq;
       varMapN          := ctx.varMapN;
-      exitDepth        := ctx.exitDepth;
       curScope         := ctx.scope;
-      cleanupDepth     := ctx.cleanupDepth;
       FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
     END;
   END PopBeginContext;
@@ -189,9 +167,7 @@ PROCEDURE BeginProc(name: TEXT;
         ctx.abandoned  := abandoned;
         ctx.blockSeq   := blockSeq;
         ctx.varMapN    := varMapN;
-        ctx.exitDepth  := exitDepth;
         ctx.scope      := curScope;
-        ctx.cleanupDepth := cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
@@ -204,9 +180,7 @@ PROCEDURE BeginProc(name: TEXT;
     END;
     abandoned      := FALSE;
     varMapN        := 0;
-    exitDepth      := 0;
     curScope       := NIL;
-    cleanupDepth   := 0;
     blockSeq       := 0;
 
     resultT := MSIRType.TranslateResult(result);
@@ -787,9 +761,7 @@ PROCEDURE EndProc() =
         abandoned        := ctx.abandoned;
         blockSeq         := ctx.blockSeq;
         varMapN          := ctx.varMapN;
-        exitDepth        := ctx.exitDepth;
         curScope         := ctx.scope;
-        cleanupDepth     := ctx.cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
       END;
     ELSE
@@ -797,9 +769,7 @@ PROCEDURE EndProc() =
       curBlock         := NIL;
       abandoned        := FALSE;
       varMapN          := 0;
-      exitDepth        := 0;
       curScope         := NIL;
-      cleanupDepth     := 0;
       MSIR.SetCurrentSrcLine(0);
     END;
   END EndProc;
@@ -922,41 +892,6 @@ PROCEDURE CurrentBlockTerminated(): BOOLEAN =
     RETURN MSIR.BlockIsTerminated(curBlock);
   END CurrentBlockTerminated;
 
-PROCEDURE PushExitBlock(b: MSIR.Block) =
-  BEGIN
-    IF exitDepth < MaxExitStack THEN
-      exitStack[exitDepth] := b;
-      INC(exitDepth);
-    ELSE
-      Abandon("exit block stack overflow");
-    END;
-    (* Also record a Loop frame on the unified cleanup stack so a non-local
-       EXIT runs intervening finallys before reaching this loop's exit. *)
-    IF cleanupDepth < MaxCleanup THEN
-      cleanupStack[cleanupDepth] :=
-        CleanupFrame{kind := CleanupKind.Loop, exitBlock := b};
-      INC(cleanupDepth);
-    ELSE
-      Abandon("cleanup stack overflow");
-    END;
-  END PushExitBlock;
-
-PROCEDURE PopExitBlock() =
-  BEGIN
-    IF exitDepth > 0 THEN DEC(exitDepth) END;
-    (* Pop the matching Loop frame (any finallys inside this loop were already
-       popped, so the top of the cleanup stack is this loop's frame). *)
-    IF cleanupDepth > 0 AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Loop
-      THEN DEC(cleanupDepth)
-    END;
-  END PopExitBlock;
-
-PROCEDURE CurrentExitBlock(): MSIR.Block =
-  BEGIN
-    IF exitDepth = 0 THEN RETURN NIL END;
-    RETURN exitStack[exitDepth - 1];
-  END CurrentExitBlock;
-
 (*----------------------------------------------------------- EH scopes *)
 
 PROCEDURE CurrentScope(): MSIR.Scope =
@@ -987,48 +922,14 @@ PROCEDURE EmitGoto(target: MSIR.Block;  READONLY args: ARRAY OF MSIR.Value) =
     END;
   END EmitGoto;
 
-PROCEDURE PushElseFrame(target: MSIR.Block) =
+PROCEDURE EmitRet(v: MSIR.Value) =
   BEGIN
-    IF cleanupDepth < MaxCleanup THEN
-      cleanupStack[cleanupDepth] :=
-        CleanupFrame{kind := CleanupKind.Else, exitBlock := target};
-      INC(cleanupDepth);
-    ELSE
-      Abandon("cleanup stack overflow");
-    END;
-  END PushElseFrame;
-
-PROCEDURE PopElseFrame() =
-  BEGIN
-    IF cleanupDepth > 0 AND cleanupStack[cleanupDepth-1].kind = CleanupKind.Else
-      THEN DEC(cleanupDepth)
-    END;
-  END PopElseFrame;
-
-PROCEDURE EmitExitMSIR() =
-  BEGIN
-    IF cleanupDepth = 0 THEN
-      Abandon("EXIT not inside a loop in MSIR");
-      RETURN;
-    END;
-    EmitGoto(cleanupStack[cleanupDepth-1].exitBlock, ARRAY OF MSIR.Value{});
-  END EmitExitMSIR;
-
-PROCEDURE EmitReturnMSIR(v: MSIR.Value) =
-  BEGIN
-    FOR k := cleanupDepth - 1 TO 0 BY -1 DO
-      IF cleanupStack[k].kind = CleanupKind.Else THEN
-        (* the ELSE catches the RETURN; its value is dropped *)
-        EmitGoto(cleanupStack[k].exitBlock, ARRAY OF MSIR.Value{});
-        RETURN;
-      END;
-    END;
     IF MSIR.ScopeIndex(CurrentScope()) = 0 THEN
       MSIR.BuildRet(CurrentBlock(), v);
     ELSE
       MSIR.BuildRetThroughEnvelope(CurrentBlock(), v);
     END;
-  END EmitReturnMSIR;
+  END EmitRet;
 
 PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
                          caps: REF ARRAY OF CaptureAnalysis.Capture;
@@ -1146,9 +1047,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         ctx.abandoned  := abandoned;
         ctx.blockSeq   := blockSeq;
         ctx.varMapN    := varMapN;
-        ctx.exitDepth  := exitDepth;
         ctx.scope      := curScope;
-        ctx.cleanupDepth := cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO ctx.varMap[i] := varMap[i] END;
       END;
       INC(procContextDepth);
@@ -1156,9 +1055,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
 
     abandoned      := FALSE;
     varMapN        := 0;
-    exitDepth      := 0;
     curScope       := NIL;
-    cleanupDepth   := 0;
     blockSeq       := 0;
 
     shimProc := MSIR.NewProc(shimName, params^, resultT);
@@ -1217,9 +1114,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         abandoned        := ctx.abandoned;
         blockSeq         := ctx.blockSeq;
         varMapN          := ctx.varMapN;
-        exitDepth        := ctx.exitDepth;
         curScope         := ctx.scope;
-        cleanupDepth     := ctx.cleanupDepth;
         FOR i := 0 TO varMapN - 1 DO varMap[i] := ctx.varMap[i] END;
       END;
     ELSE
@@ -2243,7 +2138,6 @@ PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
     <* ASSERT curProc = NIL *>
     abandoned := FALSE;
     varMapN   := 0;
-    exitDepth := 0;
     curScope  := NIL;
     blockSeq  := 0;
     resultT   := MSIR.TVoid();

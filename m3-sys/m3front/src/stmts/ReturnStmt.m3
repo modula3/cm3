@@ -174,7 +174,7 @@ PROCEDURE CompileMSIR (p: P) =
     (* Inside EH scopes the RETURN is ret_through_envelope, which runs any
        FINALLY code it leaves (D26); an enclosing EXCEPT ELSE catches it.
        Results (large or small) are returned by value. *)
-    MSIRBuilder.EmitReturnMSIR (v);
+    Marker.EmitReturnMSIR (v);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

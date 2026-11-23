@@ -112,11 +112,6 @@ PROCEDURE SetCurrentBlock(b: MSIR.Block);
 (* TRUE if curBlock has a terminator as its last instruction. *)
 PROCEDURE CurrentBlockTerminated(): BOOLEAN;
 
-(* Loop-exit block stack for EXIT statement translation. *)
-PROCEDURE PushExitBlock(b: MSIR.Block);
-PROCEDURE PopExitBlock();
-PROCEDURE CurrentExitBlock(): MSIR.Block;  (* NIL if not inside a loop *)
-
 (* EH scopes (D26).  New blocks go in the current scope; TryStmt,
    TryFinStmt and LockStmt switch it around a TRY's parts and restore it. *)
 PROCEDURE CurrentScope(): MSIR.Scope;        (* the proc's root if none *)
@@ -129,20 +124,10 @@ PROCEDURE NewScope(kind: MSIR.ScopeKind;  parent: MSIR.Scope;
 PROCEDURE EmitGoto(target: MSIR.Block;
                    READONLY args: ARRAY OF MSIR.Value);
 
-(* Modula-3's EXIT and RETURN are exceptions, so EXCEPT ELSE catches them
-   (D26).  TryStmt pushes an ELSE frame around the protected body of a TRY
-   with an ELSE: an EXIT or RETURN inside it goes to target, the ELSE code,
-   instead.  Loops (PushExitBlock) and ELSE frames nest in one stack. *)
-PROCEDURE PushElseFrame(target: MSIR.Block);
-PROCEDURE PopElseFrame();
-
-(* EXIT: to the innermost loop's exit block, or the innermost ELSE frame's
-   target if nearer. *)
-PROCEDURE EmitExitMSIR();
-
-(* RETURN v (NIL for none): to the innermost ELSE frame's target if any;
-   else ret, or ret_through_envelope inside EH scopes. *)
-PROCEDURE EmitReturnMSIR(v: MSIR.Value);
+(* Return v (NIL for none) from the current procedure: ret, or
+   ret_through_envelope inside EH scopes.  Marker.EmitReturnMSIR decides
+   where a RETURN goes. *)
+PROCEDURE EmitRet(v: MSIR.Value);
 
 (*-------------------------------------------------------------- Proc registry *)
 

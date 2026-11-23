@@ -1891,9 +1891,19 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     1. procedure frames: `PushProcedure` in the MSIR walk, `ReturnVar` for
        RETURN.  **Done**: `GenBodyMSIR` and `GenBody`'s MSIR half push
        the frame around the body; libm3's MSIR is byte-identical;
-    2. loops and EXIT: `PushExit` with an exit block, `EmitExitMSIR`;
-    3. TRY ELSE, TRY FINALLY, LOCK: their frames carry the EH scope, and
-       the builder's cleanup stack goes.
+    2. loops and EXIT: `PushExit` with an exit block, `EmitExitMSIR`.
+       **Done**, together with TRY ELSE's frame: an EXIT or RETURN in a
+       TRY ELSE's body goes to the ELSE code, so the loop and ELSE frames
+       have to share one stack, and moving only the loops would have split
+       it.  Loops push `Marker.PushExit (msirExit := ...)`, TRY ELSE
+       `Marker.PushTryElse (msirElse := ...)`; `Marker.EmitExitMSIR` and
+       `EmitReturnMSIR` walk the frames; MSIRBuilder's exit and cleanup
+       stacks are gone, leaving it `EmitGoto` and `EmitRet`.  MSIR output
+       of libm3, m3quake and m3front is byte-identical;
+    3. TRY EXCEPT, TRY FINALLY, LOCK: their frames carry the EH scope.  The
+       MSIR emitters already skip them (the EH scopes run FINALLY and LOCK
+       code), so this step is for `Marker` to describe the MSIR walk's
+       nesting fully, not for routing.
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with

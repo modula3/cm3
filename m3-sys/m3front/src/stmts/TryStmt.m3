@@ -641,7 +641,7 @@ PROCEDURE CompileMSIR (p: P) =
      body is an Except scope; each handler's code is a Handler scope it owns;
      the lowering (MSIREH) builds landing pads and dispatch.  Modula-3's EXIT
      and RETURN are exceptions, so with an ELSE, an EXIT or RETURN in the body
-     goes to the ELSE code too (PushElseFrame); the exception path reaches it
+     goes to the ELSE code too (Marker.PushTryElse); the exception path reaches it
      through the ELSE handler. *)
   VAR
     outer, s, hs : MSIR.Scope;
@@ -669,9 +669,9 @@ PROCEDURE CompileMSIR (p: P) =
       MSIR.BuildBr(MSIRBuilder.CurrentBlock(), body, ARRAY OF MSIR.Value{});
     END;
     MSIRBuilder.SetCurrentBlock(body);
-    IF p.hasElse THEN MSIRBuilder.PushElseFrame(elseCode) END;
+    IF p.hasElse THEN Marker.PushTryElse(msirElse := elseCode) END;
     Stmt.CompileMSIR(p.body);
-    IF p.hasElse THEN MSIRBuilder.PopElseFrame() END;
+    IF p.hasElse THEN Marker.Pop() END;
     IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
       MSIRBuilder.EmitGoto(merge, ARRAY OF MSIR.Value{});
     END;

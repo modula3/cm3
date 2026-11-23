@@ -103,9 +103,9 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Loop body. *)
     MSIRBuilder.SetCurrentBlock (bodyBlock);
-    MSIRBuilder.PushExitBlock (exitBlock);
+    Marker.PushExit (msirExit := exitBlock);
     Stmt.CompileMSIR (p.body);
-    MSIRBuilder.PopExitBlock ();
+    Marker.Pop ();
     IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
       MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlock,
                     ARRAY OF MSIR.Value{});

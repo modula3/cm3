@@ -9,7 +9,7 @@
 
 INTERFACE Marker;
 
-IMPORT CG, Type, Variable, ESet, Expr, M3RT;
+IMPORT CG, Type, Variable, ESet, Expr, M3RT, MSIR;
 
 CONST
   Return_exception = -1;
@@ -28,7 +28,10 @@ PROCEDURE SaveFrame ();
 
 (* TRY-EXCEPT *)
 PROCEDURE PushTry     (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ESet.T); 
-PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var);
+PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label := CG.No_label;
+                       info: CG.Var := NIL;  msirElse: MSIR.Block := NIL);
+(* The C walk passes the labels and info; the MSIR walk passes the ELSE
+   code, where an EXIT or RETURN in the protected body goes. *)
 
 (* TRY-FINALLY *)
 PROCEDURE PushFinally     (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var);
@@ -40,7 +43,9 @@ PROCEDURE PopFinally      (VAR(*OUT*) returnSeen, exitSeen: BOOLEAN);
 PROCEDURE PushLock (l_start, l_stop: CG.Label;  mutex: CG.Var);
 
 (* LOOP-EXIT *)
-PROCEDURE PushExit (l_stop: CG.Label);
+PROCEDURE PushExit (l_stop: CG.Label := CG.No_label;
+                    msirExit: MSIR.Block := NIL);
+(* The C walk passes the loop's exit label; the MSIR walk its exit block. *)
 PROCEDURE ExitOK   (): BOOLEAN;
 
 (* TRY-PASSING (RAISES) *)
@@ -53,6 +58,14 @@ PROCEDURE ReturnOK      (): BOOLEAN;
 
 (* code generation *)
 PROCEDURE EmitExit ();
+PROCEDURE EmitExitMSIR ();
+(* As EmitExit, for the MSIR walk: to the innermost loop's exit block, or
+   an enclosing TRY EXCEPT ELSE's ELSE code if nearer.  FINALLY and LOCK
+   code on the way runs through the EH scopes (D26). *)
+PROCEDURE EmitReturnMSIR (v: MSIR.Value);
+(* As EmitReturn, for the MSIR walk, with v the result (NIL for none): to an
+   enclosing TRY EXCEPT ELSE's ELSE code, which drops v, or out of the
+   procedure. *)
 PROCEDURE AllocReturnTemp ();
 PROCEDURE EmitReturn (expr: Expr.T;  fromFinally: BOOLEAN);
 PROCEDURE EmitScopeTable (doEmit : BOOLEAN := FALSE): INTEGER;

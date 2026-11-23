@@ -11,6 +11,7 @@ MODULE Marker;
 
 IMPORT CG, Error, Type, Variable, ProcType, ESet, Expr, AssignStmt;
 IMPORT M3ID, M3RT, Target, Module, RunTyme, Procedure, Host;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   Kind = { zFINALLY, zFINALLYPROC, zLOCK, zEXIT, zTRY, zTRYELSE,
@@ -37,6 +38,7 @@ TYPE
     callConv   : CG.CallingConvention;
     handler    : CG.Proc;
     h_level    : INTEGER;
+    msirExit   : MSIR.Block; (* kind = EXIT: exit block; TRYELSE: ELSE code *)
   END;
 
 CONST jmpbufAlign = 128; 
@@ -126,19 +128,22 @@ PROCEDURE PushTry (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;  ex: ES
     END;
   END PushTry;
 
-PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var) =
+PROCEDURE PushTryElse (l_start, l_stop, l_stopBody: CG.Label;  info: CG.Var;
+                       msirElse: MSIR.Block) =
   BEGIN
     Push (Kind.zTRYELSE, l_start, l_stop, info);
     WITH z = stack[tos - 1] DO
-      z.stopBody := l_stopBody
+      z.stopBody := l_stopBody;
+      z.msirExit := msirElse;
     END;
   END PushTryElse;
 
-PROCEDURE PushExit (l_stop: CG.Label) =
+PROCEDURE PushExit (l_stop: CG.Label;  msirExit: MSIR.Block) =
   BEGIN
     Push (Kind.zEXIT, l_stop := l_stop);
     WITH z = stack[tos - 1] DO
-      z.stopBody := l_stop
+      z.stopBody := l_stop;
+      z.msirExit := msirExit;
     END;
   END PushExit;
 
@@ -179,6 +184,7 @@ PROCEDURE Push (k: Kind;  l_start, l_stop: CG.Label := CG.No_label;
       z.callConv   := NIL;
       z.handler    := NIL;
       z.h_level    := 0;
+      z.msirExit   := NIL;
     END;
     INC (tos);
   END Push;
@@ -360,6 +366,41 @@ PROCEDURE EmitExit () =
       ELSE EmitExit2 ();
     END;
   END EmitExit;
+
+PROCEDURE EmitExitMSIR () =
+  BEGIN
+    FOR i := tos - 1 TO 0 BY -1 DO
+      WITH z = stack[i] DO
+        CASE z.kind OF
+        | Kind.zEXIT, Kind.zTRYELSE =>
+            MSIRBuilder.EmitGoto (z.msirExit, ARRAY OF MSIR.Value {});
+            RETURN;
+        | Kind.zPROC =>
+            EXIT;
+        ELSE (* FINALLY, LOCK, TRY, RAISES: the EH scopes see to them *)
+        END;
+      END;
+    END;
+    MSIRBuilder.Abandon ("EXIT not inside a loop in MSIR");
+  END EmitExitMSIR;
+
+PROCEDURE EmitReturnMSIR (v: MSIR.Value) =
+  BEGIN
+    FOR i := tos - 1 TO 0 BY -1 DO
+      WITH z = stack[i] DO
+        CASE z.kind OF
+        | Kind.zTRYELSE =>
+            (* the ELSE catches the RETURN; its value is dropped *)
+            MSIRBuilder.EmitGoto (z.msirExit, ARRAY OF MSIR.Value {});
+            RETURN;
+        | Kind.zPROC =>
+            EXIT;
+        ELSE (* the EH scopes see to FINALLY and LOCK *)
+        END;
+      END;
+    END;
+    MSIRBuilder.EmitRet (v);
+  END EmitReturnMSIR;
 
 PROCEDURE EmitExit1 () =
   VAR i: INTEGER;
