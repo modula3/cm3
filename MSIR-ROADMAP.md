@@ -564,6 +564,29 @@ bypasses Clang entirely.  A Python data-formatter script auto-loaded at
 LLDB startup can pretty-print M3-specific `DW_TAG_structure_type` nodes
 (e.g. open-array dope vectors, REF fields) — deferred post-MVP tooling.
 
+**Debugger strategy and m3gdb (decided, Tony, 2026-11-23).**
+m3gdb (gdb 6.4 with Modula-3 extensions; revived on Linux in #1250) gets its
+Modula-3 knowledge from the GCC backend's stabs.  Those are not on the MSIR
+path, and m3gdb cannot read DWARF 5 or run on Apple Silicon, so once MSIR is
+the only lowering m3gdb would see little more than any old gdb.  So:
+
+1. *Stock debuggers through DWARF.*  lldb on macOS and current gdb on
+   Linux, from the DWARF the phases above emit.  Remaining work:
+   - an audit of the types not covered above (sets, subranges, REF and
+     procedure types, VAR/READONLY aggregate parameters) and of real
+     per-variable declaration lines;
+   - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
+     that MSIR's m3tests run at `-O3`.
+2. *Modula-3 knowledge through debugger scripting*, shipped with cm3:
+   lldb data formatters and gdb Python pretty-printers for TEXT, open-array
+   dopes, an object's dynamic type (typecode to name through RT0) and
+   REFANY.  This recovers most of m3gdb's printing without a forked
+   debugger.
+3. *m3gdb stays as it is* for GCC-backend users while that backend exists;
+   no new work.  What stock debuggers lack is m3gdb's Modula-3 expression
+   evaluator (they parse expressions as C).  Ask m3gdb's users (Mika) which
+   of its features they rely on before the GCC backend goes.
+
 ### 4. Dynamic procMap
 
 `MaxProcMap = 2048` in `MSIRBuilder.m3` is a fixed-size array. Replacing

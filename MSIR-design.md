@@ -1152,7 +1152,7 @@ walks.  At D25 step 6 the C halves go and the driver is unchanged.
   step 6.  Guards would scatter transitional mode tests through master's
   code, and that work's side effects on front-end state (used marks, type
   compilation, link notes) are part of why the `.m3x` matches.  A step is
-  guarded only if the measurement (step 3) shows it costs something.
+  dropped at step 6, so it is not guarded meanwhile.
 - **Steps** (each checked by byte-identical `.msir` for libm3, m3quake and
   m3front, the `.m3x` comparison, then both ladders):
   1. *Nested procedures, a rule of the MSIR half.*  MSIR always compiles a
@@ -1173,8 +1173,14 @@ walks.  At D25 step 6 the C halves go and the driver is unchanged.
      `EmitFinallyMSIR` pushes FINALLY for TRY FINALLY and LOCK alike, as C
      does under ex_stack.  The MSIR emitters pass over these frames (the EH
      scopes run the FINALLY and LOCK code).  MSIRObj output unchanged.
-  3. *Measure* MSIRObj compile time over the base packages, including what
-     the C-only steps cost against `DoNothing`.
+  3. *Rehearse D25 step 6.*  Build the base packages in MSIRObj mode with
+     the C-only steps skipped (a throwaway switch, not committed) and
+     compare the `.msir` and `.m3x` with a normal build.  Each difference is
+     a side effect of a C-only step (a used mark, a `Type.Compile`, a link
+     note) that the MSIR half must make itself before step 6 can drop the
+     C half.  (Timing those steps was dropped: step 6 removes them, so
+     guarding them meanwhile would be wasted work.  A compile-time baseline,
+     MSIRObj against C, is deferred.)
 - **Dropped: moving MSIR registrations out of the declaration walk.**  A
   few procedures of the declaration walk register things with MSIR as they
   go (`Module.BuildImportLink` → `MSIREmit.RegisterImport`,
@@ -2447,7 +2453,7 @@ unless otherwise noted.
   formDepth`): rare; abandons gracefully.
 - **NEW(REF record with keyword args)**: abandons when `NUMBER(ce.args^) > 1`.
 - **Tracers** (`<*TRACE*>` pragma): CG-only; MSIR silently omits callbacks.
-- **Debug symbols (Phase 2 complete):** `DICompileUnit` / `DIFile` /
+- **Debug symbols:** *(superseded: phases 3 and 4, composite types and objects, are complete, and the debugger strategy is decided; see `MSIR-ROADMAP.md` §3.)*  Phase 2 summary: `DICompileUnit` / `DIFile` /
   `DISubprogram` per proc with `DW_LANG_Modula3`, `DINamespace` per module,
   `name`/`linkageName` split in DISubprogram, nine `DIBasicType` nodes
   (INTEGER…ADDRESS), `DILocalVariable` + `@llvm.dbg.declare` for alloca-backed
