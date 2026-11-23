@@ -67,13 +67,15 @@ c_source  ("RTStackCommon")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 
-% ABI link-guard markers.  An MSIRObj-built m3core defines `m3_abi_msir_v1`
-% (referenced by every MSIR object); any other build defines `m3_abi_cg_v1`
+% ABI link-guard markers.  An MSIR-built (MSIRObj or MSIRAsm) m3core defines
+% `m3_abi_msir_v1` (referenced by every MSIR object); any other build defines
+% `m3_abi_cg_v1`
 % (referenced by every C-backend object on the MSIR-capable targets).  So an
 % object built under one ABI cannot link against a runtime built under the
 % other (undefined symbol) instead of silently miscompiling cross-ABI calls.
 % See RTAbiMSIR.c / MSIRToLLVM.Module and RTAbiCG.c / M3C.m3 Prefix_Print.
-if defined("M3_BACKEND_MODE") and equal(M3_BACKEND_MODE, "MSIRObj")
+if defined("M3_BACKEND_MODE")
+   and (equal(M3_BACKEND_MODE, "MSIRObj") or equal(M3_BACKEND_MODE, "MSIRAsm"))
   c_source ("RTAbiMSIR")
 else
   c_source ("RTAbiCG")
