@@ -572,9 +572,23 @@ the only lowering m3gdb would see little more than any old gdb.  So:
 
 1. *Stock debuggers through DWARF.*  lldb on macOS and current gdb on
    Linux, from the DWARF the phases above emit.  Remaining work:
-   - an audit of the types not covered above (sets, subranges, REF and
-     procedure types, VAR/READONLY aggregate parameters) and of real
-     per-variable declaration lines;
+   - the type audit (done 2026-11-24, ARM64_DARWIN, a probe with one
+     local or parameter of each kind): only objects, LONGREAL and open
+     arrays are right.  BOOLEAN, CHAR, CARDINAL, LONGINT, enumerations and
+     subranges all come out as `INTEGER`; REF, procedure and TEXT values as
+     `ADDRESS`; a set as `ADDRESS` and a packed record as `ADDRESS[1]`; a
+     VALUE record as an unnamed structure.  VAR and READONLY record
+     parameters are missing, parameters are `DW_TAG_variable` rather than
+     `DW_TAG_formal_parameter` (so gdb's `info args` is empty), and an
+     open-array parameter keeps its internal name (`a.oa`).  The common
+     cause: a variable's DWARF type is chosen from its MSIR type (an `i64`
+     slot, a pointer), never from its Modula-3 type.  Fix: carry the
+     Modula-3 type to `BuildDebugInfo` and build each variable's DWARF type
+     from it, reusing the record/enumeration/object/open-array builders
+     above and adding set, subrange, REF, procedure and packed types; emit
+     parameters as formal parameters, VAR/READONLY ones through their
+     pointer, without the `a.` prefix.  Real per-variable declaration lines
+     are still to do;
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
      that MSIR's m3tests run at `-O3`.
 2. *Modula-3 formats its own values*, in the spirit of Ramsey and
