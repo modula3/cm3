@@ -110,6 +110,17 @@ VAR
   dbgRetained:   REF ARRAY OF INTEGER := NIL;  (* their metadata indices *)
   dbgRetainedN:  INTEGER := 0;
   dbgRetainedIdx: INTEGER := -1;   (* the tuple of them, or -1 *)
+  (* the module's global variables (MSIR.ModuleDbgGlobal): *)
+  dbgGlobals:    REF ARRAY OF DbgGlobalEntry := NIL;
+  dbgGlobalN:    INTEGER := 0;
+  dbgGlobalsIdx: INTEGER := -1;    (* the tuple of their expressions, or -1 *)
+
+TYPE
+  DbgGlobalEntry = RECORD
+    name, sym: TEXT;
+    line, byteOff, typeRef: INTEGER;
+    gveIdx: INTEGER;                (* DIGlobalVariableExpression; +1 the variable *)
+  END;
 
 VAR
   auxN:          INTEGER     := 0;
@@ -2674,6 +2685,8 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     dbgBtBase   := -1;
     dbgRetainedN := 0;
     dbgRetainedIdx := -1;
+    dbgGlobalN := 0;
+    dbgGlobalsIdx := -1;
     (* The tables are reused: clear the fields the older builders leave. *)
     FOR k := 0 TO MaxDbgTypes - 1 DO
       dbgTypes[k].dbg := NIL;  dbgTypes[k].name := NIL;  dbgTypes[k].enc := NIL;
@@ -2887,7 +2900,44 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
         IF dbgRetainedN > 0 THEN dbgRetainedIdx := metaN;  INC(metaN) END;
       END;
     END;
+
+    (* Global variables: a DIGlobalVariable each, located by an expression
+       on the LLVM global that holds it (the module's info struct, at the
+       variable's offset, or a global of its own). *)
+    VAR n := MSIR.ModuleDbgGlobalCount(m);  e: DbgGlobalEntry;  d: MSIR.DbgT;
+        dup: BOOLEAN;
+    BEGIN
+      IF n > 0 THEN
+        dbgGlobals := NEW(REF ARRAY OF DbgGlobalEntry, n);
+        FOR i := 0 TO n - 1 DO
+          MSIR.ModuleDbgGlobal(m, i, e.name, d, e.line, e.sym, e.byteOff);
+          e.typeRef := GetDbgTypeRefD(d, metaN);
+          dup := e.typeRef < 0 OR e.name = NIL OR e.sym = NIL;
+          FOR j := 0 TO dbgGlobalN - 1 DO
+            IF Text.Equal(dbgGlobals[j].sym, e.sym)
+               AND dbgGlobals[j].byteOff = e.byteOff THEN dup := TRUE END;
+          END;
+          IF NOT dup THEN
+            e.gveIdx := metaN;  INC(metaN, 2);
+            dbgGlobals[dbgGlobalN] := e;  INC(dbgGlobalN);
+          END;
+        END;
+        IF dbgGlobalN > 0 THEN dbgGlobalsIdx := metaN;  INC(metaN) END;
+      END;
+    END;
   END BuildDebugInfo;
+
+(* The !dbg attachments for the global variables held in the LLVM global
+   sym (without its "@"). *)
+PROCEDURE EmitGlobalDbg(wr: Wr.T;  sym: TEXT) =
+  BEGIN
+    IF NOT dbgEnabled THEN RETURN END;
+    FOR j := 0 TO dbgGlobalN - 1 DO
+      IF Text.Equal(dbgGlobals[j].sym, sym) THEN
+        Wr.PutText(wr, ", !dbg !" & Fmt.Int(dbgGlobals[j].gveIdx));
+      END;
+    END;
+  END EmitGlobalDbg;
 
 PROCEDURE DwarfLanguage(): TEXT =
   BEGIN
@@ -3207,8 +3257,36 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
        a debugger that understands it. *)
     VAR retained := "";
     BEGIN
+      FOR j := 0 TO dbgGlobalN - 1 DO
+        WITH e = dbgGlobals[j] DO
+          Wr.PutText(wr, "!" & Fmt.Int(e.gveIdx)
+            & " = !DIGlobalVariableExpression(var: !" & Fmt.Int(e.gveIdx + 1));
+          IF e.byteOff # 0 THEN
+            Wr.PutText(wr, ", expr: !DIExpression(DW_OP_plus_uconst, "
+                           & Fmt.Int(e.byteOff) & "))\n");
+          ELSE
+            Wr.PutText(wr, ", expr: !DIExpression())\n");
+          END;
+          Wr.PutText(wr, "!" & Fmt.Int(e.gveIdx + 1)
+            & " = distinct !DIGlobalVariable(name: \"" & e.name
+            & "\", scope: !" & Fmt.Int(dbgNsIdx)
+            & ", file: !" & Fmt.Int(cuFileIdx)
+            & ", line: " & Fmt.Int(e.line)
+            & ", type: !" & Fmt.Int(e.typeRef)
+            & ", isLocal: false, isDefinition: true)\n");
+        END;
+      END;
+      IF dbgGlobalsIdx >= 0 THEN
+        retained := ", globals: !" & Fmt.Int(dbgGlobalsIdx);
+        Wr.PutText(wr, "!" & Fmt.Int(dbgGlobalsIdx) & " = !{");
+        FOR j := 0 TO dbgGlobalN - 1 DO
+          IF j > 0 THEN Wr.PutText(wr, ", ") END;
+          Wr.PutText(wr, "!" & Fmt.Int(dbgGlobals[j].gveIdx));
+        END;
+        Wr.PutText(wr, "}\n");
+      END;
       IF dbgRetainedIdx >= 0 THEN
-        retained := ", retainedTypes: !" & Fmt.Int(dbgRetainedIdx);
+        retained := retained & ", retainedTypes: !" & Fmt.Int(dbgRetainedIdx);
         Wr.PutText(wr, "!" & Fmt.Int(dbgRetainedIdx) & " = !{");
         FOR j := 0 TO dbgRetainedN - 1 DO
           IF j > 0 THEN Wr.PutText(wr, ", ") END;
@@ -3399,6 +3477,7 @@ PROCEDURE EmitGlobal(wr: Wr.T;  g: MSIR.Global;  m: MSIR.Module) =
         END;
       END;
     END;
+    IF NOT MSIR.GlobalIsExternal(g) THEN EmitGlobalDbg(wr, MSIR.GlobalName(g)) END;
     Wr.PutText(wr, "\n");
   END EmitGlobal;
 
@@ -4869,7 +4948,9 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                        & "  ; user globals (" & Fmt.Int(embBytes) & " bytes)\n");
       END;
     END;
-    Wr.PutText(wr, "}\n");
+    Wr.PutText(wr, "}");
+    EmitGlobalDbg(wr, MSIR.ModuleInfoName(m));
+    Wr.PutText(wr, "\n");
 
     (* Emit aliases for struct-embedded globals so C/CG code can find them
        by their mangled names (e.g. @Main__gCounter). *)
@@ -5152,6 +5233,10 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
       END;
     END;
 
+    (* Pre-assign DWARF metadata indices before emitting any global or
+       define lines, so that forward !dbg references are correct. *)
+    BuildDebugInfo(m);
+
     (* globals *)
     FOR i := 0 TO MSIR.ModuleGlobalCount(m) - 1 DO
       EmitGlobal(wr, MSIR.ModuleGlobal(m, i), m);
@@ -5173,9 +5258,6 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
       END;
     END;
 
-    (* Pre-assign DWARF metadata indices before emitting any define lines
-       so that forward !dbg references are correct. *)
-    BuildDebugInfo(m);
 
     (* Declare the llvm.dbg.declare intrinsic when variable debug info is present. *)
     IF dbgEnabled AND dbgVarN > 0 THEN

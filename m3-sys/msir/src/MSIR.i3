@@ -515,6 +515,16 @@ PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc);
    them (DICompileUnit retainedTypes): an object type with a typecell here,
    so a debugger can show an object under its dynamic type. *)
 PROCEDURE ModuleRetainDbgType      (m: Module;  d: DbgT);
+
+(* A global variable's debug info: its source name (without the module,
+   which is its DWARF scope), its type and declaration line, and where it
+   lives: byteOff bytes into the LLVM global sym. *)
+PROCEDURE ModuleAddDbgGlobal (m: Module;  name: TEXT;  d: DbgT;
+                              line: INTEGER;  sym: TEXT;  byteOff: INTEGER);
+PROCEDURE ModuleDbgGlobalCount (m: Module): INTEGER;
+PROCEDURE ModuleDbgGlobal (m: Module;  i: INTEGER;
+                           VAR name: TEXT;  VAR d: DbgT;  VAR line: INTEGER;
+                           VAR sym: TEXT;  VAR byteOff: INTEGER);
 PROCEDURE ModuleRetainedDbgTypeCount(m: Module): INTEGER;
 PROCEDURE ModuleRetainedDbgType    (m: Module;  i: INTEGER): DbgT;
 PROCEDURE ModuleTypeDescCount(m: Module): INTEGER;

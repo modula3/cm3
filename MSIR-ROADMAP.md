@@ -661,7 +661,12 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    object type with a typecell in a unit is in that unit's DWARF
    (`DICompileUnit` `retainedTypes`, from `ObjectType.InitTypecellMSIR`),
    so the dynamic type is there even when no variable is declared with it.
-   Also, global variables have no DWARF on the MSIR path yet.
+   Global variables are in the DWARF too (2026-11-24): a
+   `DIGlobalVariable` each, in the module's namespace (`target variable`,
+   `Main::p`), located by an offset into the module's info struct or at a
+   large global's own storage.  A named REF or open-array type is a typedef,
+   so it shows by name (`Main.R`, `Main.OA`, `REFANY`), and the lldb shim
+   summarises a REFANY by its referent's dynamic type.
 3. *A Modula-3 language plugin for lldb: find a path.*  `DW_LANG_C99` is
    a workaround.  With a plugin (an lldb `TypeSystem` and expression
    parser for Modula-3, upstream in LLVM or shipped with cm3), lldb would

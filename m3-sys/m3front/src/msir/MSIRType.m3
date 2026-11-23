@@ -509,6 +509,14 @@ PROCEDURE DbgCached (t: Type.T): MSIR.DbgT =
     RETURN NIL;
   END DbgCached;
 
+PROCEDURE DbgReplace (t: Type.T;  d: MSIR.DbgT) =
+  BEGIN
+    FOR k := 0 TO dcacheN - 1 DO
+      IF dcache[k].key = t THEN dcache[k].val := d;  RETURN END;
+    END;
+    DbgRemember(t, d);
+  END DbgReplace;
+
 PROCEDURE DbgRemember (t: Type.T;  d: MSIR.DbgT) =
   BEGIN
     IF dcacheN < MaxDbgCache THEN
@@ -679,6 +687,7 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
         (* the lowering's dope type needs only the rank *)
         d := MSIR.DbgFromType(MSIR.TOpenArray(OpenArrayType.OpenDepth(u),
                                               MSIR.TVoid()));
+        IF name # NIL THEN d := MSIR.DbgAlias(name, d) END;
     | Type.Class.Object =>
         (* a reference to the object type's translation, if there is one *)
         VAR mt := TranslatedAlready(u);
@@ -700,6 +709,12 @@ PROCEDURE DbgType(t: Type.T): MSIR.DbgT =
             MSIR.DbgSetBase(d, DbgType(target));
           END;
           NoteUID(d, t);
+          IF name # NIL THEN
+            (* debuggers ignore a name on a pointer type: a typedef keeps it *)
+            d := MSIR.DbgAlias(name, d);
+            NoteUID(d, t);
+            DbgReplace(t, d);
+          END;
           RETURN d;
         END;
     | Type.Class.Opaque =>

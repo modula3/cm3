@@ -331,6 +331,8 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
       END;
       MSIR.ModuleAddGlobal(m, g);
       MSIRBuilder.GlobalMapAdd(t, g, m);
+      MSIR.ModuleAddDbgGlobal(m, M3ID.ToText(t.name), MSIRType.DbgType(t.type),
+                              DeclLine(t), MSIR.GlobalName(g), 0);
       (* The OWNER accesses this indirect global via the backing address directly
          (above), but an IMPORTER reads it through the RT0 import chain, which
          loads the pointer from this module's info struct at t.offset
@@ -378,6 +380,8 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
                   ELSE fieldType := MSIR.TPtr(eltType) END;
       MSIRBuilder.GlobalMapAddStruct(t, g, m, infoName, byteOff, fieldType);
     END;
+    MSIR.ModuleAddDbgGlobal(m, M3ID.ToText(t.name), MSIRType.DbgType(t.type),
+                            DeclLine(t), infoName, byteOff);
     (* Record a compile-time-constant record initializer so an early global
        constructor can apply it (the info-struct user region is a zero blob, and
        globals such as RTType's InfoMap tables — uids/types/brands — are read

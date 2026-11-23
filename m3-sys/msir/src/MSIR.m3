@@ -1068,6 +1068,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
   retainedDbg:   RefSeq.T;                         (* elements: DbgT *)
+  dbgGlobals:    RefSeq.T;                         (* elements: DbgGlobal *)
   textLiterals:  RefSeq.T;                         (* elements: TextLit *)
   textLitIndex:  TextIntTbl.T;                     (* LitKey -> uid *)
   constArrays:   RefSeq.T;                         (* elements: ConstArray *)
@@ -1515,6 +1516,29 @@ PROCEDURE TypeCellRef (name: TEXT): Value =
 PROCEDURE ModuleAddTypeDesc  (m: Module;  d: TypeDesc) = BEGIN m.typeDescs.addhi(d) END ModuleAddTypeDesc;
 PROCEDURE ModuleRetainDbgType (m: Module;  d: DbgT) =
   BEGIN m.retainedDbg.addhi(d) END ModuleRetainDbgType;
+TYPE DbgGlobal = REF RECORD
+    name: TEXT;  d: DbgT;  line: INTEGER;  sym: TEXT;  byteOff: INTEGER;
+  END;
+
+PROCEDURE ModuleAddDbgGlobal (m: Module;  name: TEXT;  d: DbgT;
+                              line: INTEGER;  sym: TEXT;  byteOff: INTEGER) =
+  BEGIN
+    m.dbgGlobals.addhi(NEW(DbgGlobal, name := name, d := d, line := line,
+                           sym := sym, byteOff := byteOff));
+  END ModuleAddDbgGlobal;
+
+PROCEDURE ModuleDbgGlobalCount (m: Module): INTEGER =
+  BEGIN RETURN m.dbgGlobals.size() END ModuleDbgGlobalCount;
+
+PROCEDURE ModuleDbgGlobal (m: Module;  i: INTEGER;
+                           VAR name: TEXT;  VAR d: DbgT;  VAR line: INTEGER;
+                           VAR sym: TEXT;  VAR byteOff: INTEGER) =
+  VAR g: DbgGlobal := m.dbgGlobals.get(i);
+  BEGIN
+    name := g.name;  d := g.d;  line := g.line;  sym := g.sym;
+    byteOff := g.byteOff;
+  END ModuleDbgGlobal;
+
 PROCEDURE ModuleRetainedDbgTypeCount (m: Module): INTEGER =
   BEGIN RETURN m.retainedDbg.size() END ModuleRetainedDbgTypeCount;
 PROCEDURE ModuleRetainedDbgType (m: Module;  i: INTEGER): DbgT =
@@ -1661,6 +1685,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.importBinders := NEW(RefSeq.T).init();
     m.typeDescs      := NEW(RefSeq.T).init();
     m.retainedDbg    := NEW(RefSeq.T).init();
+    m.dbgGlobals     := NEW(RefSeq.T).init();
     m.textLiterals   := NEW(RefSeq.T).init();
     m.textLitIndex   := NEW(TextIntTbl.Default).init();
     m.constArrays    := NEW(RefSeq.T).init();

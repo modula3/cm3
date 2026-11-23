@@ -12,8 +12,8 @@ C or the LLVM (MSIR) backend.  It adds:
                        a TEXT's contents, an open array's type and shape,
                        or an object's dynamic type
 
-and a summary for values of type TEXT, so `frame variable` shows a TEXT's
-contents.  The runtime calls need a live process; for a core file only the
+and summaries for values of type TEXT and REFANY, so `frame variable` shows
+a TEXT's contents and what a REFANY refers to.  The runtime calls need a live process; for a core file only the
 DWARF view is available.
 """
 
@@ -97,7 +97,7 @@ def m3_command(debugger, command, result, internal_dict):
                     c.GetName(), c.GetSummary() or c.GetValue() or ""))
 
 
-def text_summary(valobj, internal_dict):
+def ref_summary(valobj, internal_dict):
     addr = valobj.GetValueAsUnsigned(0)
     target = valobj.GetTarget()
     frame = valobj.GetFrame()
@@ -108,6 +108,7 @@ def text_summary(valobj, internal_dict):
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand(
         "command script add -o -f %s.m3_command m3" % __name__)
-    debugger.HandleCommand(
-        "type summary add -w modula3 -F %s.text_summary TEXT" % __name__)
+    for t in ("TEXT", "REFANY"):
+        debugger.HandleCommand(
+            "type summary add -w modula3 -F %s.ref_summary %s" % (__name__, t))
     debugger.HandleCommand("type category enable modula3")
