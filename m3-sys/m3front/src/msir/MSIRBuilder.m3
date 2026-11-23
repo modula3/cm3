@@ -845,6 +845,14 @@ PROCEDURE Abandon(reason: TEXT) =
       IF Target.BackendMode IN Target.BackendMSIRSet THEN
         Error.Msg ("MSIR cannot compile " & pname & ": " & reason);
       END;
+      (* The module now holds an `unreachable` stub for this procedure (see
+         EndProc), so it must not be lowered as the unit's code: @M3msircg
+         would otherwise report it lowered and run the stub.  Marking the
+         module incomplete makes MSIRToM3CG.Lowerable fall back to C. *)
+      IF MSIREmit.CurrentModule () # NIL THEN
+        MSIR.ModuleSetIncomplete (MSIREmit.CurrentModule (),
+                                  "abandoned " & pname & ": " & reason);
+      END;
       abandoned := TRUE;
     END;
   END Abandon;
