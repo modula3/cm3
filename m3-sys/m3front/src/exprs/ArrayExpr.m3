@@ -2668,6 +2668,21 @@ BEGIN
       RETURN DynOpenConstructorMSIR (p, innerT, e0);
     END;
   END;
+  (* An empty constructor of open arrays (ARRAY OF ARRAY OF T {}) has no
+     elements to give its inner levels a length: they have length zero, as
+     ArrayExpr's representation gives them.  So it is a zero-length fixed
+     array, one level for each open level of its elements. *)
+  IF innerT # NIL AND OpenArrayType.Is (innerT) AND p.eltCt = 0 THEN
+    eltT := MSIRType.Translate (OpenArrayType.NonopenEltType (innerT));
+    IF eltT = NIL THEN
+      MSIRBuilder.Abandon ("ArrayExpr: unsupported element type");
+      RETURN NIL;
+    END;
+    FOR k := 0 TO OpenArrayType.OpenDepth (innerT) DO
+      eltT := MSIRBuilder.TFixedArrayI (0, eltT);
+    END;
+    RETURN MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", eltT);
+  END;
   eltT := MSIRType.Translate (innerT);
   IF eltT = NIL THEN
     MSIRBuilder.Abandon ("ArrayExpr: unsupported element type");
