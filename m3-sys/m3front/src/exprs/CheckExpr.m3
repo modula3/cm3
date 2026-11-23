@@ -277,13 +277,21 @@ PROCEDURE EmitChecksMSIR (v: MSIR.Value;  e: Expr.T;
   VAR minE, maxE: Target.Int;  doLo, doHi: BOOLEAN;  x: Expr.T;
   BEGIN
     IF NOT Host.doRangeChk OR NOT Checkable (v) THEN RETURN v END;
-    (* As EmitChecks: a constant's bounds are its value (RETURN -1 needs no
-       check against [-1..1]). *)
-    x := Expr.ConstValue (e);
-    IF (x # NIL) THEN e := x END;
     Expr.GetBounds (e, minE, maxE);
     doLo := TInt.LT (minE, min);   (* e's range can fall below min *)
     doHi := TInt.LT (max, maxE);   (* e's range can rise above max *)
+    IF doLo OR doHi THEN
+      (* As EmitChecks: a constant's bounds are its value (RETURN -1 needs no
+         check against [-1..1]).  Folded only when a check is otherwise
+         needed: folding a name looks it up again, which repeats its
+         <*OBSOLETE*> warning (p104). *)
+      x := Expr.ConstValue (e);
+      IF (x # NIL) THEN
+        Expr.GetBounds (x, minE, maxE);
+        doLo := TInt.LT (minE, min);
+        doHi := TInt.LT (max, maxE);
+      END;
+    END;
     IF doLo OR doHi THEN
       DoCheckMSIR (v, e, min, max, doLo, doHi, err);
     END;
