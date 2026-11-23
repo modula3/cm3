@@ -11,7 +11,7 @@ MODULE IsType;
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr, Reff, RefType;
 IMPORT Procedure, Bool, ObjectType, Null, Value, M3RT, Target, RunTyme;
 IMPORT TInt;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, Narrow;
 
 VAR Z: CallExpr.MethodList;
 
@@ -233,6 +233,11 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       RETURN MSIR.BuildICmp (blk, "istype.nil", MSIR.CmpPred.Eq,
                refVal, MSIR.ConstNil (MSIR.ValueType (refVal)));
     END;
+    IF RefType.Is (t) THEN
+      (* As Prep: test the typecode inline. *)
+      RETURN Narrow.TypeTestMSIR (refVal, t);
+    END;
+    (* an object or opaque type: the runtime decides *)
     IF ObjectType.Is (t) THEN
       tc := MSIRBuilder.TypeLinkValueForObject (t);
     ELSE

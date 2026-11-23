@@ -10,11 +10,10 @@ MODULE Narrow;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr;
 IMPORT Procedure, ObjectType, Reff, Null, M3RT, RefType;
-IMPORT Target, RunTyme, TInt, Fmt;
+IMPORT Target, RunTyme, TInt, Word;
 IMPORT MSIR, MSIRBuilder, MSIRType;
 
 VAR Z: CallExpr.MethodList;
-    narrowSeq: INTEGER := 0;
 
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   VAR t: Type.T;
@@ -179,71 +178,116 @@ PROCEDURE NoteWrites (ce: CallExpr.T) =
     Expr.NoteWrite (ce.args[0]);
   END NoteWrites;
 
-PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
+PROCEDURE TypeTestMSIR (refVal: MSIR.Value;  t: Type.T): MSIR.Value =
   VAR
-    lhs_info              : Type.Info;
-    tc, checkVal          : MSIR.Value;
-    hook                  : MSIR.Proc;
-    okBlk, failBlk        : MSIR.Block;
-    sfx                   : TEXT;
+    intT  := MSIR.TI (Target.Integer.size);
+    i1    := MSIR.TI1 ();
+    blk   := MSIRBuilder.CurrentBlock ();
+    res   := MSIR.BuildAlloca (blk, "", i1);
+    yes   := MSIRBuilder.NewBlock ("");
+    no    := MSIRBuilder.NewBlock ("");
+    done  := MSIRBuilder.NewBlock ("");
+    notNil, untagged, tagged, other: MSIR.Block;
+    cell, tc, word, hdr, rtc, raw: MSIR.Value;
+    hook: MSIR.Proc;
+  BEGIN
+    IF ObjectType.Is (t) THEN
+      cell := MSIRBuilder.TypeLinkValueForObject (t);
+    ELSE
+      cell := MSIRBuilder.TypeLinkValueForRef (t);
+    END;
+    IF cell = NIL THEN
+      MSIRBuilder.Abandon ("NARROW: cannot get typecell");  RETURN NIL;
+    END;
+    hook := NIL;
+    IF NOT RefType.Is (t) THEN
+      (* an object, or an opaque type: the runtime decides *)
+      hook := MSIRBuilder.HookProc (RunTyme.Hook.CheckIsType);
+      IF hook = NIL THEN
+        MSIRBuilder.Abandon ("NARROW: CheckIsType hook missing");  RETURN NIL;
+      END;
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+    tc  := MSIR.BuildLoad (blk, "", intT, cell);  (* byte 0: TC_typecode *)
+
+    (* NIL is of every reference type *)
+    notNil := MSIRBuilder.NewBlock ("");
+    MSIR.BuildCondBr (blk, MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, refVal,
+                                           MSIR.ConstNil (MSIR.ValueType (refVal))),
+                      yes, ARRAY OF MSIR.Value {}, notNil, ARRAY OF MSIR.Value {});
+
+    (* a tagged reference (low bit set) has typecode REFANY_typecode *)
+    tagged   := MSIRBuilder.NewBlock ("");
+    untagged := MSIRBuilder.NewBlock ("");
+    word := MSIR.BuildConvert (notNil, "", refVal, intT);
+    MSIR.BuildCondBr (notNil,
+      MSIR.BuildICmp (notNil, "", MSIR.CmpPred.Ne,
+                      MSIR.BuildIAnd (notNil, "", word, MSIR.ConstInt (intT, 1)),
+                      MSIR.ConstInt (intT, 0)),
+      tagged, ARRAY OF MSIR.Value {}, untagged, ARRAY OF MSIR.Value {});
+    MSIR.BuildCondBr (tagged,
+      MSIR.BuildICmp (tagged, "", MSIR.CmpPred.Eq,
+                      MSIR.ConstInt (intT, M3RT.REFANY_typecode), tc),
+      yes, ARRAY OF MSIR.Value {}, no, ARRAY OF MSIR.Value {});
+
+    (* the typecode in the header, one word before the referent *)
+    hdr := MSIR.BuildLoad (untagged, "", intT,
+             MSIRBuilder.BuildPtrByteOff (untagged, "", refVal,
+                                          -(Target.Address.size DIV Target.Byte)));
+    rtc := MSIR.BuildIAnd (untagged, "",
+             MSIR.BuildILShr (untagged, "", hdr,
+                              MSIR.ConstInt (intT, M3RT.RH_typecode_offset)),
+             MSIR.ConstInt (intT, Word.LeftShift (1, M3RT.RH_typecode_size) - 1));
+    IF hook = NIL THEN
+      other := no;
+    ELSE
+      other := MSIRBuilder.NewBlock ("");
+    END;
+    MSIR.BuildCondBr (untagged,
+      MSIR.BuildICmp (untagged, "", MSIR.CmpPred.Eq, rtc, tc),
+      yes, ARRAY OF MSIR.Value {}, other, ARRAY OF MSIR.Value {});
+
+    IF hook # NIL THEN
+      MSIRBuilder.SetCurrentBlock (other);
+      raw := MSIRBuilder.EmitCall ("", hook, ARRAY OF MSIR.Value {refVal, cell});
+      IF raw = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
+      MSIR.BuildCondBr (blk,
+        MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, raw,
+                        MSIR.ConstInt (MSIR.ValueType (raw), 0)),
+        yes, ARRAY OF MSIR.Value {}, no, ARRAY OF MSIR.Value {});
+    END;
+
+    MSIR.BuildStore (yes, MSIR.ConstInt (i1, 1), res);
+    MSIR.BuildBr (yes, done, ARRAY OF MSIR.Value {});
+    MSIR.BuildStore (no, MSIR.ConstInt (i1, 0), res);
+    MSIR.BuildBr (no, done, ARRAY OF MSIR.Value {});
+    MSIRBuilder.SetCurrentBlock (done);
+    RETURN MSIR.BuildLoad (done, "", i1, res);
+  END TypeTestMSIR;
+
+PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
+  (* As Emit (EmitCore). *)
+  VAR lhs_info: Type.Info;  blk: MSIR.Block;  cond: MSIR.Value;
   BEGIN
     EVAL Type.CheckInfo (tlhs, lhs_info);
-
-    (* Static: trhs <: tlhs → no check needed *)
     IF Type.IsSubtype (trhs, tlhs) THEN RETURN refVal END;
-
-    (* Untraced, non-object → cast only, no runtime check *)
     IF (NOT ObjectType.Is (tlhs)) AND (NOT lhs_info.isTraced) THEN
       RETURN refVal;
     END;
-
-    (* General: call RTHooks__CheckIsType(ref, typecell) *)
-    IF ObjectType.Is (tlhs) THEN
-      tc := MSIRBuilder.TypeLinkValueForObject (tlhs);
+    blk := MSIRBuilder.CurrentBlock ();
+    IF Type.IsEqual (tlhs, Null.T, NIL) THEN
+      (* only NIL narrows to NULL *)
+      cond := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, refVal,
+                              MSIR.ConstNil (MSIR.ValueType (refVal)));
     ELSE
-      tc := MSIRBuilder.TypeLinkValueForRef (tlhs);
+      cond := TypeTestMSIR (refVal, Type.Base (tlhs));
+      IF cond = NIL THEN RETURN NIL END;
+      blk := MSIRBuilder.CurrentBlock ();
+      cond := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Eq, cond,
+                              MSIR.ConstInt (MSIR.TI1 (), 0));
     END;
-    IF tc = NIL THEN
-      MSIRBuilder.Abandon ("NARROW: cannot get typecell");  RETURN NIL;
-    END;
-    hook := MSIRBuilder.HookProc (RunTyme.Hook.CheckIsType);
-    IF hook = NIL THEN
-      MSIRBuilder.Abandon ("NARROW: CheckIsType hook missing");  RETURN NIL;
-    END;
-    (* Use a unique suffix so multiple NARROW ops in the same function
-       produce distinct LLVM SSA names (LLVM requires unique names per function). *)
-    sfx := Fmt.Int (narrowSeq);  INC (narrowSeq);
-    checkVal := MSIRBuilder.EmitCall ("narrow.chk." & sfx, hook,
-                                      ARRAY OF MSIR.Value {refVal, tc});
-    IF checkVal = NIL THEN RETURN NIL END;
-
-    (* CheckIsType returns INTEGER; convert to i1 for conditional branch. *)
-    VAR cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "narrow.cond." & sfx,
-                                MSIR.CmpPred.Ne,
-                                checkVal,
-                                MSIR.ConstInt (MSIR.ValueType (checkVal), 0));
-    BEGIN
-      okBlk   := MSIRBuilder.NewBlock ("narrow.ok." & sfx);
-      failBlk := MSIRBuilder.NewBlock ("narrow.fail." & sfx);
-      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), cond,
-                        okBlk,   ARRAY OF MSIR.Value {},
-                        failBlk, ARRAY OF MSIR.Value {});
-    END;
-
-    (* Abort branch: RTHooks__ReportFault(NIL, NarrowFailed=5) + unreachable *)
-    MSIRBuilder.SetCurrentBlock (failBlk);
-    VAR faultHook := MSIRBuilder.HookProc (RunTyme.Hook.Abort);
-    BEGIN
-      IF faultHook # NIL THEN
-        EVAL MSIRBuilder.EmitCall ("", faultHook,
-               ARRAY OF MSIR.Value {
-                 MSIR.ConstNil (MSIR.TPtr (MSIR.TVoid ())),
-                 MSIR.ConstInt (MSIR.TI (Target.Integer.size), 5)});
-      END;
-    END;
-    MSIR.BuildUnreachable (MSIRBuilder.CurrentBlock ());
-
-    MSIRBuilder.SetCurrentBlock (okBlk);
+    MSIRBuilder.EmitReportFault (cond, ORD (CG.RuntimeError.NarrowFailed));
     (* Retype refVal to the destination type so assignment type-checks pass. *)
     VAR lhsT := MSIRType.Translate (tlhs);
     BEGIN
