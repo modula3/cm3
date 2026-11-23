@@ -11,7 +11,7 @@ MODULE Procedure;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Scope, Error, Host;
 IMPORT ProcType, Stmt, BlockStmt, Marker, Coverage, M3RT;
-IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTParams;
+IMPORT CallExpr, Token, Variable, ProcExpr, Tracer, RTIO, RTIOld, RTParams;
 IMPORT Scanner, Decl, ESet, ProcBody, Target, Expr, Formal, Jmpbufs;
 IMPORT Module;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
@@ -128,9 +128,9 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes;
       RTIO.PutText ("ParseDecl id:");
       RTIO.PutText (M3ID.ToText (id));
       RTIO.PutText (" t:");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText (" signature:");
-      RTIO.PutRef (t.signature);
+      RTIOld.PutRef (t.signature);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
@@ -254,9 +254,9 @@ PROCEDURE DefinePredefined
       RTIO.PutText ("DefinePredefined name:");
       RTIO.PutText (name);
       RTIO.PutText (" t:");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText (" signature:");
-      RTIO.PutRef (t.signature);
+      RTIOld.PutRef (t.signature);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
@@ -433,7 +433,7 @@ PROCEDURE ImportProc (p: T;  name: TEXT;  n_formals: INTEGER;
 
     IF debug THEN
       RTIO.PutText ("ImportProc:");
-      RTIO.PutRef (p);
+      RTIOld.PutRef (p);
       RTIO.PutText (" name:");
       RTIO.PutText (name);
       RTIO.PutText (":");
@@ -533,13 +533,13 @@ PROCEDURE Declarer (p: T): BOOLEAN =
 
     IF debug THEN
       RTIO.PutText ("Procedure.Declarer p:");
-      RTIO.PutRef (p);
+      RTIOld.PutRef (p);
       RTIO.PutText (" name:");
       RTIO.PutText (name);
       RTIO.PutText (" p.signature:");
-      RTIO.PutRef (p.signature);
+      RTIOld.PutRef (p.signature);
       RTIO.PutText (" result:");
-      RTIO.PutRef (result);
+      RTIOld.PutRef (result);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
