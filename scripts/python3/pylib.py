@@ -1072,6 +1072,8 @@ if _Program != "make-msi.py":
 
 def _FilterPackage(Package):
     PackageConditions = {
+        "llvm22": False, # TODO: Need to handle LLVM automatically.
+        "llvm22bindings": False, # TODO: Need to handle LLVM automatically.
         "m3gdb": (M3GDB or CM3_GDB) and
                     {"FreeBSD4": True,
                     "LINUXLIBC6" : True,
