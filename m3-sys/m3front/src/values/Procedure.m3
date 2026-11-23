@@ -637,34 +637,34 @@ PROCEDURE CaptureOwnScopeInits (p: T;  ca: CaptureAnalysis.T) =
   END CaptureOwnScopeInits;
 
 PROCEDURE FilterOwnScope (p: T;  ca: CaptureAnalysis.T) =
-  (* Remove from ca any variables that are p's own formals or block-level
-     locals.  A nested proc can set up_level=TRUE on p's own formals/locals
-     (because it crosses p's proc-frame boundary when referencing them), but
-     those variables are NOT captures of p itself — they live in p's own frame
-     and must not appear in p's lambda-lifted capture parameter list. *)
-  VAR sv    : Value.T;
-      bscope: Scope.T;
+  (* Keep only the variables declared in a scope enclosing p.  A variable
+     declared anywhere inside p (a formal, a local, or a local of an inner
+     block, FOR, WITH, TYPECASE or handler) lives in p's own frame.  A
+     procedure nested in p that uses it sets its up_level, but it is not a
+     capture of p and must not become one of p's capture parameters. *)
+  VAR caps := CaptureAnalysis.GetCaptures (ca);
   BEGIN
-    sv := Scope.ToList (p.syms);
-    WHILE sv # NIL DO
-      TYPECASE sv OF
-      | Variable.T(v) => CaptureAnalysis.Remove (ca, v);
-      ELSE
-      END;
-      sv := sv.next;
-    END;
-    bscope := BlockStmt.GetScope (p.block);
-    IF bscope # NIL THEN
-      sv := Scope.ToList (bscope);
-      WHILE sv # NIL DO
-        TYPECASE sv OF
-        | Variable.T(v) => CaptureAnalysis.Remove (ca, v);
-        ELSE
+    FOR i := 0 TO LAST (caps^) DO
+      WITH v = caps[i].var DO
+        IF NOT Scope.Encloses (v.scope, p.syms) THEN
+          CaptureAnalysis.Remove (ca, v);
         END;
-        sv := sv.next;
       END;
     END;
   END FilterOwnScope;
+
+PROCEDURE NestedCaptures (p: T): CaptureAnalysis.T =
+  (* The variables of enclosing procedures that nested procedure p uses: its
+     lambda-lifted capture parameters.  The one computation behind
+     PreRegisterNestedCaptures, GenBodyMSIR and GenBody's MSIR retry, so all
+     three agree on p's signature. *)
+  VAR ca := CaptureAnalysis.New ();
+  BEGIN
+    Stmt.Capture (p.block, ca);
+    CaptureOwnScopeInits (p, ca);
+    FilterOwnScope (p, ca);
+    RETURN ca;
+  END NestedCaptures;
 
 (* Compile only the MSIR part of a nested proc's body, inline within the
    enclosing proc's MSIR context.  Called from LangInit when inline_nested_procs
@@ -672,19 +672,14 @@ PROCEDURE FilterOwnScope (p: T;  ca: CaptureAnalysis.T) =
 (* Scope.ForEachValue visitor (pass 1): pre-register a nested procedure's
    capture list BEFORE any sibling body is compiled, so a call to a not-yet-
    compiled sibling passes the right capture args.  Pure analysis — no MSIR
-   emission.  Mirrors the capture computation at the head of GenBodyMSIR. *)
+   emission. *)
 PROCEDURE PreRegisterNestedCaptures (v: Value.T) =
   BEGIN
     TYPECASE v OF
     | T (p) =>
         IF p.body # NIL THEN
-          VAR ca := CaptureAnalysis.New ();
-          BEGIN
-            Stmt.Capture (p.block, ca);
-            CaptureOwnScopeInits (p, ca);
-            FilterOwnScope (p, ca);
-            MSIRBuilder.RegisterCaptures (p, CaptureAnalysis.GetCaptures (ca));
-          END;
+          MSIRBuilder.RegisterCaptures (
+            p, CaptureAnalysis.GetCaptures (NestedCaptures (p)));
         END;
     ELSE (* not a procedure *)
     END;
@@ -726,7 +721,7 @@ PROCEDURE LangInitMSIR (p: T) =
   END LangInitMSIR;
 
 PROCEDURE GenBodyMSIR (p: T) =
-  VAR ca := CaptureAnalysis.New ();
+  VAR ca: CaptureAnalysis.T;  outerTraces: Tracer.Saved;
   BEGIN
     (* Guard against double-compilation: Scope.InitValues is called by both
        BlockStmt.Compile (CG path) and BlockStmt.CompileMSIR (MSIR path), so
@@ -742,9 +737,7 @@ PROCEDURE GenBodyMSIR (p: T) =
     (* Scan the nested proc body to collect up-level variable captures, then
        remove p's own formals/locals whose up_level flag was set by nested procs
        referencing them — they live in p's own frame and are not captures of p. *)
-    Stmt.Capture (p.block, ca);
-    CaptureOwnScopeInits (p, ca);
-    FilterOwnScope (p, ca);
+    ca := NestedCaptures (p);
     (* Use the canonical Value.GlobalName — the SAME name the call site uses via
        MSIRBuilder.LookupOrCreateProc (Value.GlobalName(v, dots:=FALSE)).  It is
        already fully qualified (module + enclosing procs + a scope number that
@@ -762,6 +755,8 @@ PROCEDURE GenBodyMSIR (p: T) =
     MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
                                CaptureAnalysis.GetCaptures (ca));
     NoteRaisesMSIR (p);
+    (* The enclosing procedure's <*TRACE*> calls stay with it. *)
+    outerTraces := Tracer.Suspend ();
     (* Compile p's OWN nested procedures inline first.  Nested procs live in
        p.syms (the procedure scope), not p.block's scope; for a top-level proc
        GenBody unfolds them via Scope.InitValues -> LangInit -> GenBodyMSIR.
@@ -790,6 +785,7 @@ PROCEDURE GenBodyMSIR (p: T) =
     FINALLY
       IF p.cg_proc # NIL THEN Error.UnmuteWarnings () END;
     END;
+    Tracer.Resume (outerTraces);
     MSIRBuilder.EndProc ();
   END GenBodyMSIR;
 
@@ -871,9 +867,7 @@ PROCEDURE GenBody (p: T) =
            capture params.  GenBodyMSIR (called from LangInit) may have failed
            or abandoned and left the proc out of procMap; we must not lose the
            capture bindings on this second attempt. *)
-        msirCa := CaptureAnalysis.New ();
-        Stmt.Capture (p.block, msirCa);
-        FilterOwnScope (p, msirCa);
+        msirCa := NestedCaptures (p);
         EVAL MSIRBuilder.BeginProc (Value.GlobalName (p, dots := FALSE, with_module := TRUE),
                                     ProcType.Formals (p.signature),
                                     p.syms,

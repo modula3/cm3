@@ -133,12 +133,15 @@ PROCEDURE CompileMSIR (p: P) =
       (* the MSIR walk's own initialization, at this point of the body *)
       Scope.InitValuesMSIR (p.scope);
     END;
+    Tracer.Push (p.trace);
     Stmt.CompileMSIR (p.body);
+    Tracer.Pop (p.trace);
   END CompileMSIR;
 
 (*------------------------------------------------------- tracing support ---*)
 
-TYPE TraceNode = Tracer.T OBJECT body: Stmt.T OVERRIDES apply := DoTrace END;
+TYPE TraceNode = Tracer.T OBJECT body: Stmt.T
+                 OVERRIDES apply := DoTrace;  msir_apply := DoTraceMSIR END;
 
 PROCEDURE ParseTrace (): Tracer.T =
   TYPE TK = Token.T;
@@ -156,6 +159,11 @@ PROCEDURE DoTrace (x: TraceNode) =
   BEGIN
     EVAL Stmt.Compile (x.body);
   END DoTrace;
+
+PROCEDURE DoTraceMSIR (x: TraceNode) =
+  BEGIN
+    Stmt.CompileMSIR (x.body);
+  END DoTraceMSIR;
 
 PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Stmt.CheckState) =
   VAR x: TraceNode := tt;

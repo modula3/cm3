@@ -102,6 +102,17 @@ PROCEDURE Top (): T =
     RETURN t;
   END Top;
 
+PROCEDURE Encloses (outer, t: T): BOOLEAN =
+  BEGIN
+    IF (outer = NIL) OR (t = NIL) THEN RETURN FALSE END;
+    t := t.parent;
+    WHILE (t # NIL) DO
+      IF (t = outer) THEN RETURN TRUE END;
+      t := t.parent;
+    END;
+    RETURN FALSE;
+  END Encloses;
+
 PROCEDURE OuterMost (t: T) : BOOLEAN =
   BEGIN
     RETURN (t # NIL) AND (t.module);
@@ -277,8 +288,10 @@ PROCEDURE InitValuesMSIR (t: T) =
     IF t = NIL THEN RETURN END;
     v := t.head;
     WHILE v # NIL DO  Value.LangInitMSIR (v);  v := v.next;  END;
+    Tracer.EmitPendingMSIR ();
     v := t.head;
     WHILE v # NIL DO  Value.UserInitMSIR (v);  v := v.next;  END;
+    Tracer.EmitPendingMSIR ();
   END InitValuesMSIR;
 
 PROCEDURE ForEachValue (t: T;  visit: ValueVisitor) =

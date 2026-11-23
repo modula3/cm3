@@ -30,6 +30,15 @@ PROCEDURE EmitPending ();
 PROCEDURE EmitPendingMSIR ();
 (* generate all pending MSIR trace calls (mirrors EmitPending for the MSIR pass) *)
 
+TYPE Saved = RECORD pending, stack: T := NIL END;
+
+PROCEDURE Suspend (): Saved;
+PROCEDURE Resume (READONLY s: Saved);
+(* Suspend sets the pending and persistent traces aside, and Resume restores
+   them.  The MSIR walk compiles a nested procedure's body in the middle of its
+   enclosing procedure's, so it brackets that body with these: the enclosing
+   procedure's traces belong to it and are not emitted into the nested one. *)
+
 PROCEDURE Reset ();
 
 END Tracer.

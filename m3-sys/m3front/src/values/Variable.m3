@@ -1282,8 +1282,12 @@ PROCEDURE LangInitMSIR (t: T) =
   BEGIN
     IF t.msirLangDone THEN RETURN END;
     t.msirLangDone := TRUE;
-    IF t.imported OR t.external OR (t.formal # NIL) THEN RETURN END;
-    IF t.indirect AND NOT t.global THEN RETURN END;  (* WITH alias *)
+    IF t.imported OR t.external THEN RETURN END;
+    IF (t.formal # NIL) OR (t.indirect AND NOT t.global) THEN
+      (* a formal, or a WITH alias: initialized already, so trace it now *)
+      Tracer.Schedule (t.trace);
+      RETURN;
+    END;
     IF NOT t.global THEN
       IF NOT AddLocalMSIR (t, MSIRBuilder.CurrentBlock ()) THEN RETURN END;
     END;
@@ -1293,6 +1297,8 @@ PROCEDURE LangInitMSIR (t: T) =
       addr := MSIRBuilder.LookupVarAddr (t);
       IF addr # NIL THEN Type.InitValueMSIR (t.type, addr, 0, FALSE) END;
     END;
+    (* no user initializer: trace the language-defined value now *)
+    IF t.initExpr = NIL THEN Tracer.Schedule (t.trace) END;
   END LangInitMSIR;
 
 (* MSIR counterpart of UserInit: store the user's initializer. *)
@@ -1302,6 +1308,7 @@ PROCEDURE UserInitMSIR (t: T) =
     IF (t.initExpr = NIL) OR t.imported OR t.msirInitDone THEN RETURN END;
     IF DoneAtDeclaration (t) THEN RETURN END;
     t.msirInitDone := TRUE;
+    Tracer.Schedule (t.trace);  (* emitted after the scope's initializers *)
     addr := MSIRBuilder.LookupVarAddr (t);
     IF addr = NIL THEN RETURN END;
     IF t.initZero THEN
@@ -1624,7 +1631,8 @@ TYPE TraceNode = Tracer.T OBJECT
                    handler : Expr.T := NIL;
                    call    : Expr.T := NIL;
                  OVERRIDES
-                   apply := DoTrace;
+                   apply      := DoTrace;
+                   msir_apply := DoTraceMSIR;
                  END;
 
 (* EXPORTED *)
@@ -1670,6 +1678,11 @@ PROCEDURE DoTrace (x: TraceNode) =
     Expr.Prep (x.call);
     Expr.Compile (x.call);
   END DoTrace;
+
+PROCEDURE DoTraceMSIR (x: TraceNode) =
+  BEGIN
+    EVAL Expr.CompileMSIR (x.call);
+  END DoTraceMSIR;
 
 (* EXPORTED *)
 PROCEDURE CheckTrace (tt: Tracer.T;  VAR cs: Value.CheckState) =

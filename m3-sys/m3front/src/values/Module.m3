@@ -1295,11 +1295,13 @@ PROCEDURE EmitBody (x: InitBody) =
       TRY
         Scope.InitValuesMSIR (t.importScope);
         Scope.InitValuesMSIR (t.localScope);
+        Tracer.Push (t.trace);
         TRY
           Stmt.CompileMSIR (t.block);
         EXCEPT ELSE
           MSIRBuilder.Abandon ("uncaught exception in module body MSIR compilation");
         END;
+        Tracer.Pop (t.trace);
       FINALLY
         IF x.cg_proc # NIL THEN Error.UnmuteWarnings () END;
       END;

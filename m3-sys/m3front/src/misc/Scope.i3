@@ -38,6 +38,8 @@ PROCEDURE LookUpQID (t: T;  READONLY q: QID): Value.T;
 
 PROCEDURE ToList     (t: T): Value.T;
 PROCEDURE OuterMost  (t: T): BOOLEAN;
+PROCEDURE Encloses   (outer, t: T): BOOLEAN;
+(* TRUE iff outer is a proper ancestor of t. *)
 PROCEDURE TypeCheck  (t: T;  VAR cs: Value.CheckState);
 PROCEDURE WarnUnused (t: T);
 

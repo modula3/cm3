@@ -111,6 +111,20 @@ PROCEDURE EmitPendingMSIR () =
     emitting := FALSE;
   END EmitPendingMSIR;
 
+PROCEDURE Suspend (): Saved =
+  VAR s := Saved {pending := pending, stack := stack};
+  BEGIN
+    pending := NIL;
+    stack   := NIL;
+    RETURN s;
+  END Suspend;
+
+PROCEDURE Resume (READONLY s: Saved) =
+  BEGIN
+    pending := s.pending;
+    stack   := s.stack;
+  END Resume;
+
 PROCEDURE Reset () =
   BEGIN
     emitting := FALSE;
