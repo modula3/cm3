@@ -600,6 +600,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   atomicOp:  AtomicRMWOp := AtomicRMWOp.Xchg; (* AtomicRMW op code *)
   dbgType:   DbgT := NIL;         (* Alloca: the variable's debug type *)
   dbgArg:    INTEGER := 0;        (* Alloca: VALUE formal's 1-based number *)
+  dbgLine:   INTEGER := 0;        (* Alloca: the variable's declaration line *)
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
   exc:       ExcDesc     := NIL;               (* Raise *)
 END;
@@ -729,6 +730,7 @@ REVEAL Proc = BRANDED "MSIR.Proc" REF RECORD
   srcFile:     TEXT    := NIL;   (* source filename; NIL = no location *)
   srcLine:     INTEGER := 0;     (* 1-based line number; 0 = no location *)
   paramDbg:    REF ARRAY OF DbgT := NIL;  (* by-reference formals' debug types *)
+  paramDbgLine: REF ARRAY OF INTEGER := NIL;  (* ... and declaration lines *)
 END;
 
 (*------------------------------------------------------------ Debug types *)
@@ -795,24 +797,37 @@ PROCEDURE DbgArrayLo (d: DbgT): INTEGER = BEGIN RETURN d.lo END DbgArrayLo;
 PROCEDURE DbgArrayCount (d: DbgT): INTEGER = BEGIN RETURN d.count END DbgArrayCount;
 PROCEDURE DbgMSIRType (d: DbgT): T = BEGIN RETURN d.msirT END DbgMSIRType;
 
-PROCEDURE SetAllocaDbg (alloca: Value;  d: DbgT;  argNo: INTEGER := 0) =
+PROCEDURE SetAllocaDbg (alloca: Value;  d: DbgT;  argNo: INTEGER := 0;
+                        line: INTEGER := 0) =
   BEGIN
     IF alloca = NIL OR alloca.insn = NIL OR alloca.insn.op # Op.Alloca THEN RETURN END;
     alloca.insn.dbgType := d;
     alloca.insn.dbgArg := argNo;
+    alloca.insn.dbgLine := line;
   END SetAllocaDbg;
+
+PROCEDURE AllocaDbgLine (i: Insn): INTEGER = BEGIN RETURN i.dbgLine END AllocaDbgLine;
 
 PROCEDURE AllocaDbgType (i: Insn): DbgT = BEGIN RETURN i.dbgType END AllocaDbgType;
 PROCEDURE AllocaDbgArg (i: Insn): INTEGER = BEGIN RETURN i.dbgArg END AllocaDbgArg;
 
-PROCEDURE SetParamDbgType (p: Proc;  i: INTEGER;  d: DbgT) =
+PROCEDURE SetParamDbgType (p: Proc;  i: INTEGER;  d: DbgT;  line: INTEGER := 0) =
   BEGIN
     IF p = NIL OR p.params = NIL OR i < 0 OR i > LAST (p.params^) THEN RETURN END;
     IF p.paramDbg = NIL THEN
       p.paramDbg := NEW (REF ARRAY OF DbgT, NUMBER (p.params^));
+      p.paramDbgLine := NEW (REF ARRAY OF INTEGER, NUMBER (p.params^));
+      FOR k := 0 TO LAST (p.paramDbgLine^) DO p.paramDbgLine[k] := 0 END;
     END;
     p.paramDbg[i] := d;
+    p.paramDbgLine[i] := line;
   END SetParamDbgType;
+
+PROCEDURE ParamDbgLine (p: Proc;  i: INTEGER): INTEGER =
+  BEGIN
+    IF p.paramDbgLine = NIL OR i < 0 OR i > LAST (p.paramDbgLine^) THEN RETURN 0 END;
+    RETURN p.paramDbgLine[i];
+  END ParamDbgLine;
 
 PROCEDURE ParamDbgType (p: Proc;  i: INTEGER): DbgT =
   BEGIN

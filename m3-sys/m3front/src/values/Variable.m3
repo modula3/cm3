@@ -17,7 +17,7 @@ IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
 IMPORT RTIO, RTParams, MSIR, MSIRBuilder, MSIRType, MSIREmit;
-IMPORT Text;
+IMPORT Text, Scanner;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 VAR debug := FALSE;
@@ -529,7 +529,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
                   MSIRBuilder.UniqueLocalName(
                     Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot"), allocType);
     IF slotAddr = NIL THEN RETURN FALSE END;
-    MSIR.SetAllocaDbg (slotAddr, MSIRType.DbgType (t.type));
+    MSIR.SetAllocaDbg (slotAddr, MSIRType.DbgType (t.type), line := DeclLine (t));
     MSIRBuilder.VarMapAdd (t, slotAddr, allocType);
     (* Zero-initialize non-solid structured allocas so that padding bytes
        (e.g. after a CHAR field in a RECORD, or in ARRAY elements of records)
@@ -604,6 +604,16 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
     RETURN TRUE;
   END AddLocalMSIR;
 
+(* The line t is declared on, for its debug information. *)
+PROCEDURE DeclLine (t: T): INTEGER =
+  VAR save := Scanner.offset;  file: TEXT;  line: INTEGER;
+  BEGIN
+    Scanner.offset := t.origin;
+    Scanner.Here (file, line);
+    Scanner.offset := save;
+    RETURN line;
+  END DeclLine;
+
 PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
   VAR fName   := M3ID.ToText (t.name);  (* direct field access *)
       n       := MSIR.ProcParamCount (p);
@@ -623,7 +633,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
              t.indirect guards VALUE formals of pointer type (e.g. p: IntPtr) from
              being misclassified here.  TPtr(TVoid()) falls to the else branch. *)
           MSIRBuilder.VarMapAdd (t, paramVal, MSIR.EltType(mt));
-          MSIR.SetParamDbgType (p, i, MSIRType.DbgType (t.type));
+          MSIR.SetParamDbgType (p, i, MSIRType.DbgType (t.type), DeclLine (t));
         ELSE
           (* VALUE, or READONLY scalar/proc-ref: spill to alloca so ADR works
              and the body can assign (VALUE) or take address (READONLY).
@@ -653,7 +663,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
                           Value.GlobalName(t, dots:=FALSE, with_module:=FALSE) & ".slot",
                           allocType);
             BEGIN
-              MSIR.SetAllocaDbg (slot, MSIRType.DbgType (t.type), i + 1);
+              MSIR.SetAllocaDbg (slot, MSIRType.DbgType (t.type), i + 1, DeclLine (t));
               MSIR.BuildStore (b, storeVal, slot);
               MSIRBuilder.VarMapAdd (t, slot, allocType);
             END;

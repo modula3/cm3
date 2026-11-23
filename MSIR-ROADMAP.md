@@ -595,8 +595,8 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      variable now has its type: records, enumerations, subranges, sets,
      REF and procedure types, TEXT, VAR/READONLY records; parameters are
      formal parameters.  Remaining: an enumeration or record reached only
-     through an inferred type stays unnamed; real per-variable declaration
-     lines are still to do.
+     through an inferred type stays unnamed.  Variables also carry their own
+     declaration lines now (the front end passes each variable's origin).
      *Found on the way:* Apple's lldb, having no Modula-3 plugin, shows no
      variables at all for `DW_LANG_Modula3` code ("Inspection of frame
      variables will be limited"); the same object tagged `DW_LANG_C99`

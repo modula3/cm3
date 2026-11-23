@@ -206,13 +206,17 @@ PROCEDURE DbgMSIRType (d: DbgT): T;            (* FromType *)
 
 (* The variable an alloca holds: its debug type, and its parameter number
    (1-based) when it is a VALUE formal's copy, 0 for a local. *)
-PROCEDURE SetAllocaDbg (alloca: Value;  d: DbgT;  argNo: INTEGER := 0);
+PROCEDURE SetAllocaDbg (alloca: Value;  d: DbgT;  argNo: INTEGER := 0;
+                        line: INTEGER := 0);
+(* line: where the variable is declared (0: unknown, its procedure's) *)
 PROCEDURE AllocaDbgType (i: Insn): DbgT;
 PROCEDURE AllocaDbgArg (i: Insn): INTEGER;
+PROCEDURE AllocaDbgLine (i: Insn): INTEGER;
 (* A formal passed by reference (VAR, READONLY): the type of the variable
    the parameter points to. *)
-PROCEDURE SetParamDbgType (p: Proc;  i: INTEGER;  d: DbgT);
+PROCEDURE SetParamDbgType (p: Proc;  i: INTEGER;  d: DbgT;  line: INTEGER := 0);
 PROCEDURE ParamDbgType (p: Proc;  i: INTEGER): DbgT;
+PROCEDURE ParamDbgLine (p: Proc;  i: INTEGER): INTEGER;
 TYPE BlockParam = RECORD name: TEXT;  type: T  END;
 
 (*-------------------------------------------------------------- Procedure *)

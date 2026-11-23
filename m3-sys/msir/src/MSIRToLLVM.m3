@@ -2668,6 +2668,9 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                         dbgVars[dbgVarN].spIdx       := spIdx;
                         dbgVars[dbgVarN].fileIdx     := fileIdx;
                         dbgVars[dbgVarN].line        := pline;
+                        IF MSIR.AllocaDbgLine(insn) > 0 THEN
+                          dbgVars[dbgVarN].line := MSIR.AllocaDbgLine(insn);
+                        END;
                         dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
                         dbgVars[dbgVarN].metaIdx     := metaN;
                         dbgVars[dbgVarN].isParam     := FALSE;
@@ -2716,6 +2719,9 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                 dbgVars[dbgVarN].spIdx       := spIdx;
                 dbgVars[dbgVarN].fileIdx     := fileIdx;
                 dbgVars[dbgVarN].line        := pline;
+                IF MSIR.ParamDbgLine(p, pi) > 0 THEN
+                  dbgVars[dbgVarN].line := MSIR.ParamDbgLine(p, pi);
+                END;
                 dbgVars[dbgVarN].typeMetaIdx := typeMetaIdx;
                 dbgVars[dbgVarN].metaIdx     := metaN;
                 dbgVars[dbgVarN].isParam     := TRUE;
