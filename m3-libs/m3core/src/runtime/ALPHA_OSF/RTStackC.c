@@ -138,19 +138,6 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller->lock != FrameLock) abort ();
 }
 
-
-/*---------------------------------------------------------------------------*/
-/* PROCEDURE Unwind (READONLY f: Frame);
-   Restore the machine state back to the frame "f".  All callee-saved
-   registers must be restored to the state they were in when frame "f"
-   made its last call. */
-
-void RTStack__Unwind (Frame *target)
-{
-  if (target->lock != FrameLock) abort ();
-  exc_resume (& target->cxt);	/* longjmp doesn't unwind through signals */
-}
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
