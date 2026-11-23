@@ -2155,7 +2155,8 @@ most serious findings spot-checked against the code.  Nothing built.
   iterates the CG literal table via `LiteralCount`/`LiteralExpr`.
 - Sub-byte stores dispatched by probing four modules in turn (`AssignStmt`, `Inc`,
   `Dec`) instead of an Expr method; `EmitUseFailureMSIR` likewise.  Fix: ExprRep
-  methods `storeMSIR`, `checkUseFailureMSIR`.  **Done.**
+  methods `storeMSIR`, `checkUseFailureMSIR`.  **Done**; `storeMSIR` has since
+  become `bitLocMSIR` (B8), which also serves reads, INC/DEC and WITH.
 - `RecordExpr.TryConstFieldMSIR` / `TryCompileConstMSIR` duplicate `genLiteralMSIR`.  **Done.**
 
 ##### 2b. Per-type behaviour re-implemented outside TypeRep (types/values)
@@ -2201,6 +2202,9 @@ most serious findings spot-checked against the code.  Nothing built.
   exception descriptor `{i64, ptr, i64}` (`:4602`); open-array dope in
   `Formal.m3:1557,1772`, `RefType.m3:429`; method dispatch in `UserProc:331`.
 - `M3C.m3:3163` third copy of the stack-walker target list (use `Target.Has_stack_walker`).
+- **Done** under D24 (`db7908eb1d`): the field tables are checked against `M3RT`
+  once per run, the remaining offsets and sizes come from `M3RT`, and M3C uses
+  `Target.Has_stack_walker`.
 
 #### 3. Clutter on the public branch
 
