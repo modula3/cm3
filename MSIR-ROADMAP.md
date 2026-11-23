@@ -603,7 +603,13 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      shows everything, in C's names.  **Decided (Tony, 2026-11-24):**
      `DW_LANG_C99` by default; `@M3msirdwarfm3` restores
      `DW_LANG_Modula3`.  Debugging is then in C's terms: C's names for
-     basic types, C syntax in `expr`;
+     basic types, C syntax in `expr`.  gdb (18.1, reading the object
+     statically; it has no arm64 macOS target to run on) reads the probe's
+     variables and procedure types identically under either tag: unlike
+     lldb it does not refuse an unknown language.  m3gdb's DWARF reader
+     knows `DW_LANG_Modula2` but not `DW_LANG_Modula3`, so the tag gains
+     it nothing either.  Still to check: gdb on a stopped program, on
+     AMD64_LINUX;
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
      that MSIR's m3tests run at `-O3`.
 2. *Modula-3 formats its own values*, in the spirit of Ramsey and
