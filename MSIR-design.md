@@ -1805,7 +1805,8 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     | Control frames | `Marker` | exit and cleanup stacks in MSIRBuilder | Converge: D29a below |
     | Variable storage | `cg_var` on `Variable.T` | `varMap` in MSIRBuilder, keyed by `Variable.T` | Converge: an MSIR handle on the node, as `cg_var` |
     | Procedures | `cg_proc` on `Procedure.T` | `procMap` and `shimMap` in MSIRBuilder | Converge: an MSIR handle on the node |
-    | Nested procedures | compiled after the parent; up-level access through the static link | compiled inline in the parent; captures lambda-lifted into parameters, closure shims | **Keep** (Tony, 2026-11-23): lambda lifting is a deliberate choice for the best LLVM code, the one justified divergence here |
+    | Nested procedures: when compiled | after the parent by default; inline in the parent under `Host.inline_nested_procs`, an existing mode | always inline, through its own route (`GenBodyMSIR`, reached from `LangInit`, with its own guard against compiling a body twice) | Converge: MSIR uses master's inline path (`inline_nested_procs`) rather than a separate one |
+| Nested procedures: up-level access | static link to the parent's frame | captures lambda-lifted into parameters, closure shims | **Keep** (Tony, 2026-11-23): lambda lifting is a deliberate choice for the best LLVM code, the one justified divergence here |
     | Initialization | `LangInit`/`UserInit`, `initPending`/`initDone` | `LangInitMSIR`/`UserInitMSIR`, `msirLangDone`/`msirInitDone` | Converge at D25 step 6, when the CG routines go |
     | Unit driver | `CG.Begin_unit`/`End_unit` from `Module.Compile` | `MSIREmit.BeginUnit`/`EndUnit`, plus hooks inside CG emission (review 2d) | Converge with O17 (A) |
     | Globals and typecells | `Module` global segments, `Type.compile` | `DeclareGlobalsMSIR`, `GenCellsMSIR` | Converge with O17 (C) |
