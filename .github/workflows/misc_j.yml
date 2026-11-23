@@ -1,0 +1,189 @@
+---
+name: AMD64_NT_j
+#
+# Historical automation.
+#
+# Bootstrap cm3 from an old C backend release, which was done manually at the time.
+# The release is cm3/mklib only.
+# Download the m3core/libm3 source from same day and build that with the old compiler.
+# Use HEAD config (could try the old config).
+#
+# Caveat: The compiler has several known bugs, none of which appear to surface here.
+#
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        type: string
+      bootstrap_compiler_url_base:
+        default: https://github.com/modula3/cm3/releases/download/20210312
+        type: string
+      # Inputs cannot reference inputs?
+      bootstrap_version:
+        default: d5.11.0-20210312
+        type: string
+      bootstrap_compiler_archive:
+        default: cm3-boot-win64-d5.11.0-20210312.zip
+        type: string
+      bootstrap_compiler_dir:
+        default: cm3-boot-AMD64_NT-d5.11.0-20210312
+        type: string
+      bootstrap_library_url:
+        default: https://github.com/modula3/cm3/archive/refs/tags/20210312.tar.gz
+        type: string
+      bootstrap_library_archive:
+        default: 20210312.tar.gz
+        type: string
+      bootstrap_library_dir:
+        default: cm3-20210312
+        type: string
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 35
+    env:
+      CM3_TARGET: AMD64_NT
+    steps:
+    - name: environment
+      shell: pwsh
+      run: |
+        $env:PATH = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64;$env:PATH"
+        $env:LIB = ""
+        $env:INCLUDE = ""
+        $env:LIB += ";C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
+        $env:LIB += ";C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64"
+        $env:LIB += ";C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.29.30133\lib\x64"
+        $env:INCLUDE += ";C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.29.30133\include"
+        $env:INCLUDE += ";C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt"
+        $env:INCLUDE += ";C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um"
+        "PATH=$env:PATH" >> $env:GITHUB_ENV
+        "INCLUDE=$env:INCLUDE" >> $env:GITHUB_ENV
+        "LIB=$env:LIB" >> $env:GITHUB_ENV
+
+        $env:CM3_INSTALL = "$PWD/../install/cm3"
+        mkdir "$env:CM3_INSTALL/bin/config"
+        "CM3_INSTALL=$env:CM3_INSTALL" >> $env:GITHUB_ENV
+        "$env:CM3_INSTALL/bin" >> $env:GITHUB_PATH
+        "EXE=.exe" >> $env:GITHUB_ENV
+        $env:GIT_REVISION = $env:GITHUB_SHA.Substring(0, 7)
+        $env:BUILD_DATETIME = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd")
+        "GIT_REVISION=$env:GIT_REVISION" >> $env:GITHUB_ENV
+        "BUILD_DATETIME=$env:BUILD_DATETIME" >> $env:GITHUB_ENV
+
+# Some steps run in ".." in order to not conflict with get_source.
+
+    - parallel:
+      - name: bootstrap compiler
+        background: true
+        shell: pwsh
+        working-directory: ..
+        run: |
+          Set-PSDebug -Trace 1
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          # Piping curl to tar reliably partially fails, misses some files.
+          curl -fLO ${{inputs.bootstrap_compiler_url_base}}/${{inputs.bootstrap_compiler_archive}}
+          tar xf ${{inputs.bootstrap_compiler_archive}}
+          rm ${{inputs.bootstrap_compiler_archive}}
+          cd ${{inputs.bootstrap_compiler_dir}}
+          nmake >>make.log
+          copy cm3* $env:CM3_INSTALL/bin
+          copy mklib* $env:CM3_INSTALL/bin
+
+      # The bootstrap archive is only the compiler.
+      # While m3core/libm3 have proven very compatible through time,
+      # depending on this is not great. Future bootstraps
+      # will maybe include m3core, libm3, and config.
+      # This is an old git checkout, avoid scripts?
+      - name: bootstrap library download
+        background: true
+        shell: pwsh
+        working-directory: ..
+        run: |
+          Set-PSDebug -Trace 1
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          # Piping curl to tar reliably partially fails, misses some files.
+          curl -fLO ${{inputs.bootstrap_library_url}}
+          tar xf ${{inputs.bootstrap_library_archive}}
+          rm ${{inputs.bootstrap_library_archive}}
+
+      - name: get source
+        uses: actions/checkout@v7
+        background: true
+
+    # TODO: Use old config.
+    - name: install current config for old compiler
+      run: python3 scripts/python3/make-dist-cfg.py
+
+    - name: bootstrap library build
+      shell: pwsh
+      working-directory: ..
+      run: |
+        Set-PSDebug -Trace 1
+        $ErrorActionPreference = "Stop"
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        cd ${{inputs.bootstrap_library_dir}}
+        cd m3-libs/m3core
+        cm3 -build -DM3BOOT2 -no-m3ship-resolution -group-writable
+        cm3 -ship -DM3BOOT2 -no-m3ship-resolution -group-writable
+        cd  ../libm3
+        cm3 -build -DM3BOOT2 -no-m3ship-resolution -group-writable
+        cm3 -ship -DM3BOOT2 -no-m3ship-resolution -group-writable
+
+    - name: Patch RTIO.PutRef
+      run: python3 scripts/python3/patch_RTIO_PutRef.py m3-sys/m3front
+
+    - name: build new compiler with old (M3BOOT2)
+      run: python3 scripts/python3/upgrade.py skip_runtime pass1
+
+    - name: Unpatch RTIO.PutRef
+      run: git checkout m3-sys/m3front
+
+    - name: build new compiler with itself
+      run: python3 scripts/python3/upgrade.py skip_runtime pass2
+
+    - name: Run compiler validation suite
+      id: test
+      background: true
+      continue-on-error: true
+      run: cm3 -DHTML
+      working-directory: m3-sys/m3tests
+
+    - name: archive min
+      run: tar cfzv cm3-min-$env:CM3_TARGET-$env:BUILD_DATETIME-$env:GIT_REVISION.tar.gz $env:CM3_INSTALL
+
+    - name: build all
+      run: python3 scripts/python3/do-cm3-all.py buildship skipgcc c
+
+    - name: archive all
+      background: true
+      run: tar cfzv cm3-all-$env:CM3_TARGET-$env:BUILD_DATETIME-$env:GIT_REVISION.tar.gz $env:CM3_INSTALL
+
+    - name: wait-test-then-testreport
+      wait: test
+
+    - name: Generate test report
+      uses: dorny/test-reporter@v3
+      with:
+        name: ${{ format('m3tests ({0})', env.CM3_TARGET) }}
+        fail-on-error: false
+        max-annotations: 49
+        path: m3-sys/m3tests/m3tests-results.xml
+        reporter: java-junit
+
+    # TODO: make boot1 (Windows), boot1autotools (Unix)
+
+    - name: wait-all-testreport-then-artifacts
+      wait-all:
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: |
+          *.tar.gz
