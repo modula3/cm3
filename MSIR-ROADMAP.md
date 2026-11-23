@@ -600,7 +600,10 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      *Found on the way:* Apple's lldb, having no Modula-3 plugin, shows no
      variables at all for `DW_LANG_Modula3` code ("Inspection of frame
      variables will be limited"); the same object tagged `DW_LANG_C99`
-     shows everything, in C's names.  Which tag to emit is open;
+     shows everything, in C's names.  **Decided (Tony, 2026-11-24):**
+     `DW_LANG_C99` by default; `@M3msirdwarfm3` restores
+     `DW_LANG_Modula3`.  Debugging is then in C's terms: C's names for
+     basic types, C syntax in `expr`;
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
      that MSIR's m3tests run at `-O3`.
 2. *Modula-3 formats its own values*, in the spirit of Ramsey and
@@ -619,7 +622,17 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    live process, so plain DWARF printing (with Python formatters if needed)
    stays the fallback for core files.  A full ldb-style debugger in
    Modula-3, talking to a nub, is not planned.
-3. *m3gdb stays as it is* for GCC-backend users while that backend exists;
+3. *A Modula-3 language plugin for lldb: find a path.*  `DW_LANG_C99` is
+   a workaround.  With a plugin (an lldb `TypeSystem` and expression
+   parser for Modula-3, upstream in LLVM or shipped with cm3), lldb would
+   show Modula-3 names and accept Modula-3 expressions, and
+   `DW_LANG_Modula3` could become the default again.  To find out: what
+   lldb requires of a language plugin today (a `TypeSystem`, a language
+   runtime, an expression evaluator), whether one can be loaded out of
+   tree or must be upstream, and how other languages without upstream
+   support (Rust's, Swift's fork, Zig's choice of C) went about it.  The
+   Modula-3 formatter of item 2 is useful either way.
+4. *m3gdb stays as it is* for GCC-backend users while that backend exists;
    no new work.  What stock debuggers lack is m3gdb's Modula-3 expression
    evaluator (they parse expressions as C).  Ask m3gdb's users (Mika) which
    of its features they rely on before the GCC backend goes.

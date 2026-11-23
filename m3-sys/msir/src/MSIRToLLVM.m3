@@ -1,5 +1,6 @@
 MODULE MSIRToLLVM;
 
+IMPORT RTParams;
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
 IMPORT Target, TFloat, M3RT, Process, MSIREH;
 <*FATAL Thread.Alerted, Wr.Failure*>
@@ -2771,6 +2772,12 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     END;
   END BuildDebugInfo;
 
+PROCEDURE DwarfLanguage(): TEXT =
+  BEGIN
+    IF RTParams.IsPresent("msirdwarfm3") THEN RETURN "DW_LANG_Modula3" END;
+    RETURN "DW_LANG_C99";
+  END DwarfLanguage;
+
 (* Emit all DWARF metadata nodes at the end of the module .ll output. *)
 PROCEDURE EmitDebugMetadata(wr: Wr.T) =
   CONST
@@ -3070,8 +3077,12 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
     END;
 
     (* Compile unit and module-level flags. *)
+    (* DW_LANG_C99 by default: lldb, having no Modula-3 plugin, shows no
+       variables for DW_LANG_Modula3 code, and C mode shows them all
+       (MSIR-ROADMAP.md §3).  @M3msirdwarfm3 restores DW_LANG_Modula3, for
+       a debugger that understands it. *)
     Wr.PutText(wr, "!2 = distinct !DICompileUnit("
-      & "language: DW_LANG_Modula3, file: !" & Fmt.Int(cuFileIdx)
+      & "language: " & DwarfLanguage() & ", file: !" & Fmt.Int(cuFileIdx)
       & ", producer: \"CM3 MSIR\", isOptimized: false"
       & ", runtimeVersion: 0, emissionKind: FullDebug)\n");
     Wr.PutText(wr, "!0 = !{i32 2, !\"Dwarf Version\", i32 4}\n");
