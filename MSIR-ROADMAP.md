@@ -661,6 +661,10 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    object type with a typecell in a unit is in that unit's DWARF
    (`DICompileUnit` `retainedTypes`, from `ObjectType.InitTypecellMSIR`),
    so the dynamic type is there even when no variable is declared with it.
+   Untraced objects carry a typecode header too and are handled alike; a
+   plain UNTRACED REF's referent has none, so `RTDebug.Format` refuses a
+   "header" that names such a type, and the shim shows the referent
+   through its static type.
    Global variables are in the DWARF too (2026-11-24): a
    `DIGlobalVariable` each, in the module's namespace (`target variable`,
    `Main::p`), located by an offset into the module's info struct or at a
@@ -684,9 +688,10 @@ the only lowering m3gdb would see little more than any old gdb.  So:
 
 ### 4. Dynamic procMap
 
-`MaxProcMap = 2048` in `MSIRBuilder.m3` is a fixed-size array. Replacing
-it with a heap-allocated table removes a latent overflow risk for large
-modules with many unique external callees. Mechanical change; no IR impact.
+**Done.**  `procMap` grows on demand, and so now (2026-11-24) do the
+DWARF tables in `MSIRToLLVM` and `MSIRType`'s translation and debug-type
+caches, which used to drop entries silently when full (a type became
+`ADDRESS`; one m3back module outgrew the 1024-entry debug-type cache).
 
 ### 5. LLVM optimizer integration
 

@@ -86,17 +86,17 @@ TYPE DbgChildEntry = RECORD
 END;
 
 VAR
-  dbgFiles:      ARRAY [0..MaxDbgFiles-1]    OF DbgFileEntry;
+  dbgFiles:      REF ARRAY OF DbgFileEntry := NEW(REF ARRAY OF DbgFileEntry, MaxDbgFiles);
   dbgFileN:      INTEGER := 0;
-  dbgEntries:    ARRAY [0..MaxDbgEntries-1]  OF DbgEntry;
+  dbgEntries:    REF ARRAY OF DbgEntry := NEW(REF ARRAY OF DbgEntry, MaxDbgEntries);
   dbgEntryN:     INTEGER := 0;
-  dbgVars:       ARRAY [0..MaxDbgVars-1]     OF DbgVarEntry;
+  dbgVars:       REF ARRAY OF DbgVarEntry := NEW(REF ARRAY OF DbgVarEntry, MaxDbgVars);
   dbgVarN:       INTEGER := 0;
-  dbgLocs:       ARRAY [0..MaxDbgLocs-1]     OF DbgLocEntry;
+  dbgLocs:       REF ARRAY OF DbgLocEntry := NEW(REF ARRAY OF DbgLocEntry, MaxDbgLocs);
   dbgLocN:       INTEGER := 0;
-  dbgTypes:      ARRAY [0..MaxDbgTypes-1]    OF DbgTypeEntry;
+  dbgTypes:      REF ARRAY OF DbgTypeEntry := NEW(REF ARRAY OF DbgTypeEntry, MaxDbgTypes);
   dbgTypeN:      INTEGER := 0;
-  dbgChildren:   ARRAY [0..MaxDbgChildren-1] OF DbgChildEntry;
+  dbgChildren:   REF ARRAY OF DbgChildEntry := NEW(REF ARRAY OF DbgChildEntry, MaxDbgChildren);
   dbgChildN:     INTEGER := 0;
   dbgEnabled:    BOOLEAN := FALSE;
   curDbgLocIdx:  INTEGER := -1;    (* line:0 loc index for current proc *)
@@ -129,6 +129,81 @@ VAR
   pendingTC:     RefSeq.T    := NIL;   (* TCEntry list, built during EmitInsn *)
 
 (*------------------------------------------------------ auxiliary naming *)
+
+(* The debug tables grow as a module needs: the RoomFor procedures make
+   room for one more entry, so a large module's debug info is complete. *)
+
+PROCEDURE RoomForFile(): BOOLEAN =
+  BEGIN
+    IF dbgFileN >= NUMBER(dbgFiles^) THEN
+      VAR new := NEW(REF ARRAY OF DbgFileEntry, 2 * NUMBER(dbgFiles^));
+      BEGIN
+        SUBARRAY(new^, 0, NUMBER(dbgFiles^)) := dbgFiles^;
+        dbgFiles := new;
+      END;
+    END;
+    RETURN TRUE;
+  END RoomForFile;
+
+PROCEDURE RoomForEntry(): BOOLEAN =
+  BEGIN
+    IF dbgEntryN >= NUMBER(dbgEntries^) THEN
+      VAR new := NEW(REF ARRAY OF DbgEntry, 2 * NUMBER(dbgEntries^));
+      BEGIN
+        SUBARRAY(new^, 0, NUMBER(dbgEntries^)) := dbgEntries^;
+        dbgEntries := new;
+      END;
+    END;
+    RETURN TRUE;
+  END RoomForEntry;
+
+PROCEDURE RoomForVar(): BOOLEAN =
+  BEGIN
+    IF dbgVarN >= NUMBER(dbgVars^) THEN
+      VAR new := NEW(REF ARRAY OF DbgVarEntry, 2 * NUMBER(dbgVars^));
+      BEGIN
+        SUBARRAY(new^, 0, NUMBER(dbgVars^)) := dbgVars^;
+        dbgVars := new;
+      END;
+    END;
+    RETURN TRUE;
+  END RoomForVar;
+
+PROCEDURE RoomForLoc(): BOOLEAN =
+  BEGIN
+    IF dbgLocN >= NUMBER(dbgLocs^) THEN
+      VAR new := NEW(REF ARRAY OF DbgLocEntry, 2 * NUMBER(dbgLocs^));
+      BEGIN
+        SUBARRAY(new^, 0, NUMBER(dbgLocs^)) := dbgLocs^;
+        dbgLocs := new;
+      END;
+    END;
+    RETURN TRUE;
+  END RoomForLoc;
+
+PROCEDURE RoomForType(): BOOLEAN =
+  BEGIN
+    IF dbgTypeN >= NUMBER(dbgTypes^) THEN
+      VAR new := NEW(REF ARRAY OF DbgTypeEntry, 2 * NUMBER(dbgTypes^));
+      BEGIN
+        SUBARRAY(new^, 0, NUMBER(dbgTypes^)) := dbgTypes^;
+        dbgTypes := new;
+      END;
+    END;
+    RETURN TRUE;
+  END RoomForType;
+
+PROCEDURE RoomForChild(): BOOLEAN =
+  BEGIN
+    IF dbgChildN >= NUMBER(dbgChildren^) THEN
+      VAR new := NEW(REF ARRAY OF DbgChildEntry, 2 * NUMBER(dbgChildren^));
+      BEGIN
+        SUBARRAY(new^, 0, NUMBER(dbgChildren^)) := dbgChildren^;
+        dbgChildren := new;
+      END;
+    END;
+    RETURN TRUE;
+  END RoomForChild;
 
 PROCEDURE NewAux(): TEXT =
   BEGIN INC(auxN); RETURN "%__ll" & Fmt.Int(auxN) END NewAux;
@@ -1932,7 +2007,7 @@ PROCEDURE GetOrAddDbgLoc(spIdx, line: INTEGER;  VAR metaN: INTEGER): INTEGER =
         RETURN dbgLocs[k].metaIdx;
       END;
     END;
-    IF dbgLocN >= MaxDbgLocs THEN RETURN -1 END;
+    IF NOT RoomForLoc() THEN RETURN -1 END;
     VAR idx := metaN;
     BEGIN
       dbgLocs[dbgLocN].spIdx   := spIdx;
@@ -2092,7 +2167,7 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
         RETURN dbgTypes[k].metaIdx;
       END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN addrRef END;
+    IF NOT RoomForType() THEN RETURN addrRef END;
     eidx := dbgTypeN;  INC(dbgTypeN);
     dbgTypes[eidx].msirType      := NIL;
     dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
@@ -2103,7 +2178,7 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
     dbgTypes[eidx].totalBits     := totalBits;
     nEmitted := 0;
     (* Field 0: data pointer *)
-    IF dbgChildN < MaxDbgChildren THEN
+    IF RoomForChild() THEN
       dbgChildren[dbgChildN].kind    := 0;   (* member *)
       dbgChildren[dbgChildN].name    := "data";
       dbgChildren[dbgChildN].typeRef := addrRef;
@@ -2114,7 +2189,7 @@ PROCEDURE GetOrBuildOpenArrayDvType(rank: INTEGER; VAR metaN: INTEGER): INTEGER 
     END;
     (* Fields 1..rank: element counts *)
     FOR k := 0 TO rank - 1 DO
-      IF dbgChildN < MaxDbgChildren THEN
+      IF RoomForChild() THEN
         IF rank = 1 THEN cname := "count"
         ELSE cname := "count" & Fmt.Int(k)
         END;
@@ -2148,7 +2223,7 @@ PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
         RETURN dbgTypes[k].metaIdx;
       END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN addrRef END;
+    IF NOT RoomForType() THEN RETURN addrRef END;
     eidx := dbgTypeN;  INC(dbgTypeN);
     dbgTypes[eidx].msirType      := t;
     dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
@@ -2187,7 +2262,7 @@ PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       END;
       (* Pass 2: set childBase after nested types, then add vtable + field members. *)
       dbgTypes[eidx].childBase := dbgChildN;
-      IF dbgChildN < MaxDbgChildren THEN
+      IF RoomForChild() THEN
         dbgChildren[dbgChildN].kind    := 0;   (* member *)
         dbgChildren[dbgChildN].name    := "__vtable";
         dbgChildren[dbgChildN].typeRef := addrRef;
@@ -2202,7 +2277,7 @@ PROCEDURE GetOrBuildObjectStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
         FOR i := 0 TO MSIR.ObjectFieldCount(cur) - 1 DO
           VAR f := MSIR.ObjectField(cur, i);
           BEGIN
-            IF fi < MaxF AND dbgChildN < MaxDbgChildren THEN
+            IF fi < MaxF AND RoomForChild() THEN
               dbgChildren[dbgChildN].kind    := 0;
               dbgChildren[dbgChildN].name    := f.name;
               dbgChildren[dbgChildN].typeRef := trefs[fi];
@@ -2233,7 +2308,7 @@ PROCEDURE GetOrBuildObjectPtrType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
         RETURN dbgTypes[k].metaIdx;
       END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    IF NOT RoomForType() THEN RETURN dbgBtBase + 8 END;
     eidx := dbgTypeN;  INC(dbgTypeN);
     dbgTypes[eidx].msirType      := t;
     dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
@@ -2275,8 +2350,10 @@ PROCEDURE GetDbgTypeRef(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
 (* A fresh type entry, with the fields every kind shares cleared: the
    tables are reused from module to module. *)
 PROCEDURE NewDbgType(kind: INTEGER;  d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
-  VAR eidx := dbgTypeN;
+  VAR eidx: INTEGER;
   BEGIN
+    EVAL RoomForType();
+    eidx := dbgTypeN;
     INC(dbgTypeN);
     dbgTypes[eidx] := DbgTypeEntry{msirType := NIL, metaIdx := metaN,
                                    elemsTupleIdx := -1, baseTypeRef := -1,
@@ -2314,7 +2391,7 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
     FOR k := 0 TO dbgTypeN - 1 DO
       IF dbgTypes[k].dbg = d THEN RETURN dbgTypes[k].metaIdx END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    IF NOT RoomForType() THEN RETURN dbgBtBase + 8 END;
     CASE MSIR.DbgKindOf(d) OF
     | MSIR.DbgKind.Basic =>
         eidx := NewDbgType(6, d, metaN);
@@ -2322,10 +2399,14 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
         dbgTypes[eidx].totalBits := MSIR.DbgBits(d);
     | MSIR.DbgKind.Alias =>
         eidx := NewDbgType(7, d, metaN);
-        dbgTypes[eidx].baseTypeRef := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        (* through a temporary: the call may grow dbgTypes *)
+        VAR r := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        BEGIN dbgTypes[eidx].baseTypeRef := r END;
     | MSIR.DbgKind.Pointer =>
         eidx := NewDbgType(8, d, metaN);
-        dbgTypes[eidx].baseTypeRef := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        (* through a temporary: the call may grow dbgTypes *)
+        VAR r := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        BEGIN dbgTypes[eidx].baseTypeRef := r END;
     | MSIR.DbgKind.Proc =>
         eidx := NewDbgType(9, d, metaN);
     | MSIR.DbgKind.Enum =>
@@ -2334,7 +2415,7 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
         dbgTypes[eidx].totalBits := MSIR.DbgBits(d);
         dbgTypes[eidx].childBase := dbgChildN;
         FOR i := 0 TO MSIR.DbgLabelCount(d) - 1 DO
-          IF dbgChildN < MaxDbgChildren THEN
+          IF RoomForChild() THEN
             dbgChildren[dbgChildN] := DbgChildEntry{kind := 2,
                 name := MSIR.DbgLabel(d, i), typeRef := -1, size := 0,
                 offset := 0, count := 0, value := i, metaIdx := metaN,
@@ -2345,11 +2426,13 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
     | MSIR.DbgKind.Array =>
         eidx := NewDbgType(1, d, metaN);
         dbgTypes[eidx].elemsTupleIdx := metaN;  INC(metaN);
-        dbgTypes[eidx].baseTypeRef := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        (* through a temporary: the call may grow dbgTypes *)
+        VAR r := GetDbgTypeRefD(MSIR.DbgBase(d), metaN);
+        BEGIN dbgTypes[eidx].baseTypeRef := r END;
         dbgTypes[eidx].totalBits :=
           MSIR.DbgArrayCount(d) * DbgTotalBits(MSIR.DbgBase(d));
         dbgTypes[eidx].childBase := dbgChildN;
-        IF dbgChildN < MaxDbgChildren THEN
+        IF RoomForChild() THEN
           dbgChildren[dbgChildN] := DbgChildEntry{kind := 1, name := NIL,
               typeRef := -1, size := 0, offset := MSIR.DbgArrayLo(d),
               count := MSIR.DbgArrayCount(d), value := 0, metaIdx := metaN,
@@ -2371,7 +2454,7 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
           END;
           dbgTypes[eidx].childBase := dbgChildN;
           FOR i := 0 TO n - 1 DO
-            IF dbgChildN < MaxDbgChildren THEN
+            IF RoomForChild() THEN
               f := MSIR.DbgFieldAt(d, i);
               dbgChildren[dbgChildN] := DbgChildEntry{kind := 0,
                   name := f.name, typeRef := trefs[i], size := f.bitSize,
@@ -2449,7 +2532,7 @@ PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
         RETURN dbgTypes[k].metaIdx
       END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    IF NOT RoomForType() THEN RETURN dbgBtBase + 8 END;
     eidx := dbgTypeN;  INC(dbgTypeN);
     dbgTypes[eidx].msirType      := t;
     dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
@@ -2475,7 +2558,7 @@ PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       (* Pass 2: set childBase after nested types, then add DIDerivedType members. *)
       dbgTypes[eidx].childBase := dbgChildN;
       FOR i := 0 TO nf - 1 DO
-        IF dbgChildN < MaxDbgChildren THEN
+        IF RoomForChild() THEN
           VAR f := MSIR.StructField(t, i);
           BEGIN
             dbgChildren[dbgChildN].kind    := 0;   (* member *)
@@ -2518,7 +2601,7 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
         END;
       END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    IF NOT RoomForType() THEN RETURN dbgBtBase + 8 END;
     eidx := dbgTypeN;  INC(dbgTypeN);
     dbgTypes[eidx].msirType      := t;
     dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
@@ -2528,7 +2611,7 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     dbgTypes[eidx].baseTypeRef   := eltRef;  (* must not land in our [childBase..] range *)
     dbgTypes[eidx].childBase     := dbgChildN;
     (* One DISubrange child: count = len, lowerBound in offset field. *)
-    IF dbgChildN < MaxDbgChildren THEN
+    IF RoomForChild() THEN
       dbgChildren[dbgChildN].kind    := 1;   (* subrange *)
       dbgChildren[dbgChildN].count   := len;
       dbgChildren[dbgChildN].offset  := lo;  (* lower bound of index type *)
@@ -2561,7 +2644,7 @@ PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
         END;
       END;
     END;
-    IF dbgTypeN >= MaxDbgTypes THEN RETURN dbgBtBase + 8 END;
+    IF NOT RoomForType() THEN RETURN dbgBtBase + 8 END;
     eidx := dbgTypeN;  INC(dbgTypeN);
     dbgTypes[eidx].msirType      := t;
     dbgTypes[eidx].metaIdx       := metaN;   INC(metaN);
@@ -2572,7 +2655,7 @@ PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
     VAR nEmitted := 0;
     BEGIN
       FOR i := 0 TO n - 1 DO
-        IF dbgChildN < MaxDbgChildren THEN
+        IF RoomForChild() THEN
           dbgChildren[dbgChildN].kind    := 2;   (* enumerator *)
           dbgChildren[dbgChildN].name    := MSIR.EnumLabel(t, i);
           dbgChildren[dbgChildN].value   := i;   (* ordinal = position *)
@@ -2611,7 +2694,7 @@ PROCEDURE GetOrAddDbgFile(file: TEXT;  VAR nextMetaN: INTEGER): INTEGER =
         RETURN dbgFiles[i].metaIdx;
       END;
     END;
-    IF dbgFileN >= MaxDbgFiles THEN RETURN -1 END;
+    IF NOT RoomForFile() THEN RETURN -1 END;
     VAR idx := nextMetaN;
     BEGIN
       dbgFiles[dbgFileN].name    := file;
@@ -2688,11 +2771,11 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
     dbgGlobalN := 0;
     dbgGlobalsIdx := -1;
     (* The tables are reused: clear the fields the older builders leave. *)
-    FOR k := 0 TO MaxDbgTypes - 1 DO
+    FOR k := 0 TO LAST(dbgTypes^) DO
       dbgTypes[k].dbg := NIL;  dbgTypes[k].name := NIL;  dbgTypes[k].enc := NIL;
       dbgTypes[k].annIdx := -1;
     END;
-    FOR k := 0 TO MaxDbgChildren - 1 DO dbgChildren[k].bitField := FALSE END;
+    FOR k := 0 TO LAST(dbgChildren^) DO dbgChildren[k].bitField := FALSE END;
 
     (* First pass: collect unique source files. *)
     FOR i := 0 TO MSIR.ModuleProcCount(m) - 1 DO
@@ -2720,7 +2803,7 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
           f := MSIR.ProcSrcFile(p);
           l := MSIR.ProcSrcLine(p);
       BEGIN
-        IF f # NIL AND l > 0 AND dbgEntryN < MaxDbgEntries THEN
+        IF f # NIL AND l > 0 AND RoomForEntry() THEN
           dbgEntries[dbgEntryN].proc    := p;
           dbgEntries[dbgEntryN].metaIdx := metaN;  INC(metaN);
           dbgEntries[dbgEntryN].locIdx  := metaN;  INC(metaN);
@@ -2764,7 +2847,7 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                          DWARF emitter when paired with @llvm.dbg.declare. *)
                       IF NOT IsInternalVarName(nm)
                          AND typeMetaIdx >= 0
-                         AND dbgVarN < MaxDbgVars
+                         AND RoomForVar()
                       THEN
                         dbgVars[dbgVarN].allocaVal   := res;
                         dbgVars[dbgVarN].varName     := StripVarName(nm);
@@ -2812,7 +2895,7 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
               IF NOT IsInternalVarName("%" & nm)
                  AND MSIR.ParamDbgType(p, pi) # NIL
                  AND MSIR.Kind(ptype) = MSIR.TypeKind.Ptr
-                 AND dbgVarN < MaxDbgVars
+                 AND RoomForVar()
               THEN
                 (* A formal passed by reference: declare the variable it
                    points to, with the front end's debug type. *)
@@ -2834,7 +2917,7 @@ PROCEDURE BuildDebugInfo(m: MSIR.Module) =
                  AND (pmode = MSIR.ParamMode.Readonly OR pmode = MSIR.ParamMode.Var)
                  AND MSIR.Kind(ptype) = MSIR.TypeKind.Ptr
                  AND MSIR.Kind(MSIR.EltType(ptype)) = MSIR.TypeKind.OpenArray
-                 AND dbgVarN < MaxDbgVars
+                 AND RoomForVar()
               THEN
                 dvT         := MSIR.EltType(ptype);
                 typeMetaIdx := GetOrBuildOpenArrayDvType(MSIR.OpenArrayRank(dvT), metaN);

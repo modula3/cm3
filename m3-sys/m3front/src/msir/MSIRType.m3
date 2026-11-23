@@ -11,17 +11,38 @@ IMPORT EnumType, ObjectType, Fmt, NamedType;
    object so that pointer-identity checks in MSIRToLLVM dedup correctly. *)
 CONST MaxTypeCache = 512;
 TYPE CacheEntry = RECORD key: Type.T;  val: MSIR.T END;
-VAR cache : ARRAY [0..MaxTypeCache-1] OF CacheEntry;
+VAR cache : REF ARRAY OF CacheEntry := NEW(REF ARRAY OF CacheEntry, MaxTypeCache);
     cacheN: INTEGER := 0;
 
 (* Per-module debug-type cache: Type.T -> MSIR.DbgT. *)
 CONST MaxDbgCache = 1024;
 TYPE DbgCacheEntry = RECORD key: Type.T;  val: MSIR.DbgT END;
-VAR dcache : ARRAY [0..MaxDbgCache-1] OF DbgCacheEntry;
+VAR dcache : REF ARRAY OF DbgCacheEntry := NEW(REF ARRAY OF DbgCacheEntry, MaxDbgCache);
     dcacheN: INTEGER := 0;
 
 PROCEDURE Reset() =
   BEGIN cacheN := 0;  dcacheN := 0 END Reset;
+
+(* The caches grow as a module needs (MaxTypeCache and MaxDbgCache are
+   only their first sizes): a translation that missed the cache would be
+   a second, distinct MSIR type for the same Modula-3 type. *)
+PROCEDURE RoomInCache (): BOOLEAN =
+  BEGIN
+    IF cacheN >= NUMBER(cache^) THEN
+      VAR new := NEW(REF ARRAY OF CacheEntry, 2 * NUMBER(cache^));
+      BEGIN SUBARRAY(new^, 0, NUMBER(cache^)) := cache^;  cache := new END;
+    END;
+    RETURN TRUE;
+  END RoomInCache;
+
+PROCEDURE RoomInDbgCache (): BOOLEAN =
+  BEGIN
+    IF dcacheN >= NUMBER(dcache^) THEN
+      VAR new := NEW(REF ARRAY OF DbgCacheEntry, 2 * NUMBER(dcache^));
+      BEGIN SUBARRAY(new^, 0, NUMBER(dcache^)) := dcache^;  dcache := new END;
+    END;
+    RETURN TRUE;
+  END RoomInDbgCache;
 
 PROCEDURE ObjectName(t: Type.T;  hint: TEXT): TEXT =
   (* The qualified name of an object base type ("Module.Name", as its
@@ -213,7 +234,7 @@ PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
     ObjectType.GetFieldsOffsetAndAlign(t, bitOff, align);
     IF bitOff < 0 THEN RETURN NIL END;  (* opaque — offsets unknown *)
     (* Pre-register NIL to break self-referential cycles. *)
-    IF cacheN < MaxTypeCache THEN
+    IF RoomInCache() THEN
       selfIdx := cacheN;
       cache[cacheN].key := t;
       cache[cacheN].val := NIL;
@@ -286,7 +307,7 @@ PROCEDURE TranslateEnum(t: Type.T;  name: TEXT;  bits: INTEGER): MSIR.T =
       v := v.next;  INC(i);
     END;
     result := MSIR.TEnum(name, bits, ls^);
-    IF cacheN < MaxTypeCache THEN
+    IF RoomInCache() THEN
       cache[cacheN].key := t;
       cache[cacheN].val := result;
       INC(cacheN);
@@ -348,7 +369,7 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
       VAR result := MSIR.TStruct(name, msirFields^);
       BEGIN
         MSIR.SetTypeUID(result, Type.GlobalUID(t));
-        IF cacheN < MaxTypeCache THEN
+        IF RoomInCache() THEN
           cache[cacheN].key := t;  cache[cacheN].val := result;
           INC(cacheN);
         END;
@@ -454,7 +475,7 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     BEGIN
       MSIR.SetTypeUID(result, Type.GlobalUID(t));
       IF loI # 0 THEN MSIR.SetFixedArrayLo(result, loI) END;
-      IF cacheN < MaxTypeCache THEN
+      IF RoomInCache() THEN
         cache[cacheN].key := t;  cache[cacheN].val := result;
         INC(cacheN);
       END;
@@ -519,7 +540,7 @@ PROCEDURE DbgReplace (t: Type.T;  d: MSIR.DbgT) =
 
 PROCEDURE DbgRemember (t: Type.T;  d: MSIR.DbgT) =
   BEGIN
-    IF dcacheN < MaxDbgCache THEN
+    IF RoomInDbgCache() THEN
       dcache[dcacheN].key := t;  dcache[dcacheN].val := d;  INC(dcacheN);
     END;
   END DbgRemember;
