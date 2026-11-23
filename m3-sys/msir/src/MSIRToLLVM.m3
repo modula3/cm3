@@ -184,9 +184,16 @@ PROCEDURE RoomForLoc(): BOOLEAN =
 PROCEDURE RoomForType(): BOOLEAN =
   BEGIN
     IF dbgTypeN >= NUMBER(dbgTypes^) THEN
-      VAR new := NEW(REF ARRAY OF DbgTypeEntry, 2 * NUMBER(dbgTypes^));
+      VAR old := NUMBER(dbgTypes^);
+          new := NEW(REF ARRAY OF DbgTypeEntry, 2 * old);
       BEGIN
-        SUBARRAY(new^, 0, NUMBER(dbgTypes^)) := dbgTypes^;
+        SUBARRAY(new^, 0, old) := dbgTypes^;
+        (* As BuildDebugInfo clears the table: the older builders set only
+           their own fields, and a zero annIdx would claim an annotation. *)
+        FOR k := old TO LAST(new^) DO
+          new[k].dbg := NIL;  new[k].name := NIL;  new[k].enc := NIL;
+          new[k].annIdx := -1;
+        END;
         dbgTypes := new;
       END;
     END;
@@ -2474,13 +2481,13 @@ PROCEDURE GetDbgTypeRefD(d: MSIR.DbgT;  VAR metaN: INTEGER): INTEGER =
 (* A type entry's annotations field, and its nodes. *)
 PROCEDURE Annotations(READONLY e: DbgTypeEntry): TEXT =
   BEGIN
-    IF e.annIdx < 0 THEN RETURN "" END;
+    IF e.annIdx < 0 OR e.dbg = NIL THEN RETURN "" END;
     RETURN ", annotations: !" & Fmt.Int(e.annIdx);
   END Annotations;
 
 PROCEDURE EmitAnnotations(wr: Wr.T;  READONLY e: DbgTypeEntry) =
   BEGIN
-    IF e.annIdx < 0 THEN RETURN END;
+    IF e.annIdx < 0 OR e.dbg = NIL THEN RETURN END;
     Wr.PutText(wr, "!" & Fmt.Int(e.annIdx) & " = !{!" & Fmt.Int(e.annIdx + 1) & "}\n");
     Wr.PutText(wr, "!" & Fmt.Int(e.annIdx + 1) & " = !{!\"m3.uid\", !\"0x"
       & Fmt.Unsigned(Word.And(MSIR.DbgUID(e.dbg), 16_FFFFFFFF)) & "\"}\n");
