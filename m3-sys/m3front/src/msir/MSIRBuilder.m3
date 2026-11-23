@@ -2344,7 +2344,8 @@ PROCEDURE AggByteSize (t: MSIR.T): INTEGER =
               eb := AggByteSize (f.type);
           BEGIN
             IF eb <= 0 THEN RETURN -1 END;
-            RETURN f.offset + eb;
+            (* f.offset is in bits (MSIR.Field) *)
+            RETURN (f.offset + eb * Target.Byte + Target.Byte - 1) DIV Target.Byte;
           END;
         END;
     | MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
