@@ -1785,6 +1785,69 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `import_global`.  m3core: all 291 units lower, none falling back; the
     lowered m3core links and runs the test programs unchanged.
 
+- **D29. One Marker stack for both walks** (proposed 2026-11-23, for review;
+  goes with O17 (A)).
+  - **Goal** (Tony, 2026-11-23).  The MSIR-only front end should keep the
+    structure of the pre-MSIR one, so that maintainers who know the C walk
+    find the same modules, stacks and procedure shapes, not a second
+    architecture.  `Marker` is the first place this matters.
+  - **Today.**  `Marker` is a stack of control frames (procedure, loop,
+    TRY, TRY ELSE, TRY FINALLY, LOCK, RAISES).  It is pushed twice over:
+    - by type checking, with no labels, for `ExitOK`, `ReturnOK` and
+      `ReturnVar` (e.g. `LoopStmt.Check`, `Procedure.Check`);
+    - by the C walk, with CG labels, the setjmp frame variables and the
+      result temp, for `EmitExit` and `EmitReturn` (which run the
+      intervening FINALLY and LOCK code).
+
+    The MSIR walk pushes neither.  It keeps its own equivalents in
+    MSIRBuilder: an exit stack and a cleanup stack (`PushExitBlock`,
+    `PushElseFrame`, `CleanupKind`), with `EmitExitMSIR` and
+    `EmitReturnMSIR`, and the EH scopes of D26 for TRY/FINALLY and LOCK.
+    Where an MSIR statement needs a fact that `Marker` holds, it records it
+    some other way: `ReturnStmt` notes its procedure's result type during
+    checking (B21), because `Marker.ReturnVar` is valid only in the C walk.
+  - **Decision.**  Both walks push the same `Marker` frames, through the
+    same procedures, and `Marker` alone answers "where does EXIT or RETURN
+    go from here".
+    - A frame has a part common to both walks (kind, result type and
+      variable, exception set) and a part for each walk: CG labels and
+      variables for the C walk, and for MSIR the exit block, the ELSE
+      target and the EH scope.
+    - The push procedures take both payloads, with defaults, so that call
+      sites look the same in both walks:
+      `Marker.PushExit (l_stop := CG.No_label;  msirExit: MSIR.Block := NIL)`.
+      The C walk passes labels as today; the MSIR walk passes blocks.  Step
+      6 of D25 then drops the CG parameters without touching call sites'
+      shape.  (Not chosen: parallel names such as `PushExitMSIR`, which
+      would keep two vocabularies alive.)
+    - `EmitExit` and `EmitReturn` get MSIR counterparts in `Marker`
+      (`EmitExitMSIR`, `EmitReturnMSIR`) that walk the same frames and
+      call MSIRBuilder for the IR: an ordinary branch within a scope,
+      `unwind_to` or `ret_through_envelope` out of one (D26).  MSIRBuilder
+      keeps only IR construction (D23): its exit and cleanup stacks move
+      into `Marker`.
+    - `Marker.ReturnVar` serves both walks; `ReturnStmt.result` goes.
+  - **Nested procedures.**  MSIR compiles a nested procedure's body inline,
+    in the middle of its parent's.  It pushes a procedure frame first, and
+    `ExitOK`, `ReturnOK` and the emitters already stop at a procedure frame,
+    so the parent's frames are not visible to the nested body.  The
+    builder's per-procedure context (current block, abandon state) is
+    unaffected.  Until (A) gives MSIR its own walk, a nested body can also
+    be compiled from `LangInit` in the middle of the C walk's parent body;
+    the same procedure-frame boundary separates the two, provided pushes
+    and pops balance.
+  - **Order of work.**  Each step is a refactor, checked by MSIR output being
+    byte-identical before and after (libm3, m3quake, m3front), then the
+    ladders:
+    1. procedure frames: `PushProcedure` in the MSIR walk, `ReturnVar` for
+       RETURN;
+    2. loops and EXIT: `PushExit` with an exit block, `EmitExitMSIR`;
+    3. TRY ELSE, TRY FINALLY, LOCK: their frames carry the EH scope, and
+       the builder's cleanup stack goes.
+  - **For review.**  (1) One `Marker`, frames with a payload per walk, as
+    above?  (2) Both payloads on one push procedure, rather than parallel
+    MSIR names?
+
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
   `Swap.Int32 = BITS 32 FOR [-2^31 .. 2^31-1]`: MSIR widens the subrange
@@ -2143,7 +2206,7 @@ most serious findings spot-checked against the code.  Nothing built.
 | B18 | `CaseStmt.CompileMSIR` | **Fixed.** MSIR flattened and collapsed `p.tree` in place; in the parallel mode the C walk could then compile a nested procedure's CASE from the rewritten tree. MSIR now works on its own sorted, collapsed copy (`SortedCopy`). |
 | B19 | write-barrier container | **Fixed** (with review 2c). The global pending container leaked between designators: `SUBARRAY(pq.heap^, 1, n) := e` (libm3 `PQueue.mg:94`) dirtied `pq` (left over from evaluating `pq.heap`) instead of the array receiving the references, a missed barrier; and a store through `p^` for a traced `p` dirtied nothing (e.g. `SUBARRAY(new_sp^, ...) := ...` in Pickle). `DerefExpr` now reports `p` as the container, as the C path's `PrepLV` does. Across libm3, only `gc.dirty` operands change (11 modules). |
 | B20 | `SubscriptExpr` (3 sites) `ClearAbandoned` | **Fixed.** These tried the base as an lvalue and, if that abandoned, cleared the abandon and retried it as a value; since B17 the module was already marked incomplete, and one site returned a silent NIL when the base had no lvalue. Now a NIL lvalue falls back to the value path, an abandon propagates, and `ClearAbandoned` is gone: an abandon is final. |
-| B21 | `ReturnStmt.CompileMSIR` | **Fixed.** `RETURN e` did not range-check `e` against a subrange or enumeration result type: `RETURN hi - lo` from a `CARDINAL` procedure returned a negative number where the C path faults (Compile checks via `Marker.EmitReturn` -> `AssignStmt.DoEmit`). Found by comparing link information (O17 (B)). `Check` now records the result type on the statement and `CompileMSIR` checks against it. |
+| B21 | `ReturnStmt.CompileMSIR` | **Fixed.** `RETURN e` did not range-check `e` against a subrange or enumeration result type: `RETURN hi - lo` from a `CARDINAL` procedure returned a negative number where the C path faults (Compile checks via `Marker.EmitReturn` -> `AssignStmt.DoEmit`). Found by comparing link information (O17 (B)). `Check` now records the result type on the statement and `CompileMSIR` checks against it; a stopgap until D29 makes `Marker.ReturnVar` valid in the MSIR walk. |
 
 #### 2. Abstraction violations by theme
 
