@@ -2141,6 +2141,7 @@ most serious findings spot-checked against the code.  Nothing built.
 | B16 | `QualifyExpr` / `MethodExpr` | **Fixed.** A method used as a procedure value (`T.m`, a qualify expression, or its folded `MethodExpr`) was unsupported, so the procedure abandoned. `MethodExpr.LoadMSIR` now loads T's binding from its typecell's defaultMethods table, as `Compile` does, including an opaque holder's run-time method offset; `MethodExpr.compileMSIR`, `QualifyExpr.CompileMSIR` and the static-call path share it. |
 | B17 | `MSIRBuilder.Abandon` / `MSIRToM3CG.Lowerable` | **Fixed.** An abandoned procedure is emitted as an `unreachable` stub, and `@M3msircg` still lowered the unit, so the program failed at run time where the C code was correct, and the ladder counted the unit as lowered. Abandon now marks the module incomplete, so the unit falls back to C. |
 | B18 | `CaseStmt.CompileMSIR` | **Fixed.** MSIR flattened and collapsed `p.tree` in place; in the parallel mode the C walk could then compile a nested procedure's CASE from the rewritten tree. MSIR now works on its own sorted, collapsed copy (`SortedCopy`). |
+| B19 | write-barrier container | **Fixed** (with review 2c). The global pending container leaked between designators: `SUBARRAY(pq.heap^, 1, n) := e` (libm3 `PQueue.mg:94`) dirtied `pq` (left over from evaluating `pq.heap`) instead of the array receiving the references, a missed barrier; and a store through `p^` for a traced `p` dirtied nothing (e.g. `SUBARRAY(new_sp^, ...) := ...` in Pickle). `DerefExpr` now reports `p` as the container, as the C path's `PrepLV` does. Across libm3, only `gc.dirty` operands change (11 modules). |
 
 #### 2. Abstraction violations by theme
 
@@ -2180,7 +2181,11 @@ most serious findings spot-checked against the code.  Nothing built.
 - `MSIRBuilder.SetRefInitProcGen` callback guards a cycle that doesn't exist
   (MSIRBuilder already imports RefType).  **Gone** with 2b.
 - Global side channel `SetPendingContainer`/`TakePendingContainer` between lvalues
-  and Assign/With.
+  and Assign/With.  **Done**: `compileLValueMSIR (VAR container)` returns the
+  heap object holding the lvalue, `Expr.HeapLValueMSIR` hands it to the stores
+  that need it (assignment, VAR arguments, atomics, WITH), a WITH alias's comes
+  from `MSIRBuilder.VarContainer`, and the global with its save/restore and
+  "discard stale" calls is gone.  Fixed B19 on the way.
 
 ##### 2d. MSIR depends on the CG pass (overlaps O17)
 - `BlockStmt.CompileMSIR` calls `Scope.InitValues`, re-running `LangInit`/`UserInit`

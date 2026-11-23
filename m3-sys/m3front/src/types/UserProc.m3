@@ -413,7 +413,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
     END;
   END CompileMSIR;
 
-PROCEDURE LValueMSIR (p: CallExpr.T): MSIR.Value =
+PROCEDURE LValueMSIR (p: CallExpr.T;  <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
   (* Return the address of the call result so it can be passed READONLY by-ref.
      Only direct (non-nested, non-virtual) calls are supported. *)
   VAR

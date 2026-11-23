@@ -479,7 +479,7 @@ PROCEDURE CompileMSIR (p: T): MSIR.Value =
     RETURN p.methods.compileMSIR(p);
   END CompileMSIR;
 
-PROCEDURE LValueMSIR_CE (p: T): MSIR.Value =
+PROCEDURE LValueMSIR_CE (p: T;  VAR container: MSIR.Value): MSIR.Value =
   BEGIN
     IF p.methods = NIL OR p.methods.lvalueMSIR = NIL THEN
       (* Builtin has no lvalue — return NIL so callers that try lvalue first
@@ -487,7 +487,7 @@ PROCEDURE LValueMSIR_CE (p: T): MSIR.Value =
          CompileMSIR.  Abandon here would poison the whole procedure. *)
       RETURN NIL;
     END;
-    RETURN p.methods.lvalueMSIR (p);
+    RETURN p.methods.lvalueMSIR (p, container);
   END LValueMSIR_CE;
 
 PROCEDURE SetMethodLValueMSIR (ml: MethodList;  c: CompilerLValueMSIR) =

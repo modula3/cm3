@@ -121,6 +121,10 @@ PROCEDURE CompileMSIR (t: T): MSIR.Value;
    NIL on unsupported (the enclosing proc will be dropped). *)
 PROCEDURE LValueMSIR (t: T): MSIR.Value;
 (* Return the MSIR address (pointer) for lvalue t. NIL on unsupported. *)
+PROCEDURE HeapLValueMSIR (t: T;  VAR container: MSIR.Value): MSIR.Value;
+(* LValueMSIR, also returning the heap object that holds the lvalue (NIL if
+   none): a store through the address must dirty it.  For assignments, VAR
+   arguments, atomic stores and WITH bindings. *)
 PROCEDURE BitLocMSIR (t: T;  VAR loc: MSIRBitLoc.T): BOOLEAN;
 (* If designator t has no byte address (a sub-byte field or element, or a
    bit-field WITH alias), evaluate its base once, set loc, and return TRUE;

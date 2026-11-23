@@ -284,14 +284,14 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
     END;
   END Capture;
 
-PROCEDURE LValueMSIR_Cons (p: P): MSIR.Value =
+PROCEDURE LValueMSIR_Cons (p: P;  VAR container: MSIR.Value): MSIR.Value =
   BEGIN
     InnerSeal (p);
     IF p.base = NIL THEN
       MSIRBuilder.Abandon ("ConsExpr: base not set for LValueMSIR");
       RETURN NIL;
     END;
-    RETURN Expr.LValueMSIR (p.base);
+    RETURN Expr.HeapLValueMSIR (p.base, container);
   END LValueMSIR_Cons;
 
 PROCEDURE CompileMSIR_Cons (p: P): MSIR.Value =

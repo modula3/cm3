@@ -57,8 +57,8 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN;
 PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
                       container: MSIR.Value := NIL);
 (* container: for a WITH alias over a heap designator, the containing heap
-   object (the pending container its LValueMSIR set) — re-armed on every
-   LookupVarAddr so stores through the alias carry the write barrier. *)
+   object (the designator's Expr.HeapLValueMSIR container); VarContainer
+   returns it, so stores through the alias carry the write barrier. *)
 
 (* Bind a WITH alias over a designator with no byte address (`WITH s =
    rec.bitf`, `WITH e = packed[i]`) to its bit location, whose base was
@@ -95,13 +95,9 @@ PROCEDURE InProc(): BOOLEAN;
 PROCEDURE IsAbandoned(): BOOLEAN;
 PROCEDURE ClearAbandoned();
 
-(* GC write barrier container side-channel.
-   LValueMSIR for heap object fields calls SetPendingContainer with the
-   object pointer (the GC container) before returning the slot address.
-   AssignStmt.CompileMSIR calls TakePendingContainer to retrieve it —
-   returns NIL (and clears) if not set (e.g. for globals or locals). *)
-PROCEDURE SetPendingContainer(v: MSIR.Value);
-PROCEDURE TakePendingContainer(): MSIR.Value;
+(* The heap object holding the designator a WITH alias v is bound to (see
+   BindVarAddr), which a store through v must dirty; NIL if none. *)
+PROCEDURE VarContainer(v: Variable.T): MSIR.Value;
 
 (* Accessors for body translators. NIL outside a supported in-progress proc. *)
 PROCEDURE CurrentProc(): MSIR.Proc;

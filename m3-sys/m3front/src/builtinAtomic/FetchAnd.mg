@@ -73,7 +73,6 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     order : Target.Int;  t: Type.T;  z: INTEGER;  ord: MSIR.MemOrder;
     old   : MSIR.Value;
   BEGIN
-    EVAL MSIRBuilder.TakePendingContainer ();
     IF ptr = NIL OR val = NIL THEN RETURN NIL END;
     elemT := MSIR.ValueType(val);
     atomT := elemT;

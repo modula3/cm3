@@ -333,7 +333,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN MSIR.ConstTextLit (uid, chars, cnt);
   END CompileMSIR;
 
-PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
+PROCEDURE CompileLValueMSIR (p: P;  <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
   (* A text literal has no addressable storage, but READONLY formal passing
      requires a pointer.  Spill the literal reference into a local alloca
      and return that address. *)

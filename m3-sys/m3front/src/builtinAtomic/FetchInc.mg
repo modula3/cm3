@@ -80,7 +80,6 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     order : Target.Int;  t: Type.T;  z: INTEGER;  ord: MSIR.MemOrder;
     old   : MSIR.Value;
   BEGIN
-    EVAL MSIRBuilder.TakePendingContainer ();
     IF ptr = NIL OR incr = NIL THEN RETURN NIL END;
     IF MSIR.BitWidth(elemT) > 0 AND MSIR.BitWidth(elemT) < 8 THEN atomT := MSIR.TI(8) END;
     (* Convert incr (Integer.T = i64) to atomT *)

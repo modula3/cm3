@@ -248,7 +248,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
                open-typed nested array constants (b = ARRAY OF ARRAY OF INTEGER {c,...})
                produce const globals rather than abandoning.  p081. *)
             IF ArrayExpr.ArrayConstrExpr (constExpr) # NIL THEN
-              VAR lv := LValueMSIR (p);
+              VAR lv := Expr.LValueMSIR (p);
               BEGIN
                 IF lv # NIL THEN
                   RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "",
@@ -269,7 +269,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
   END CompileMSIR;
 
-PROCEDURE LValueMSIR (p: P): MSIR.Value =
+PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   BEGIN
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
@@ -288,6 +288,9 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
                                  & Value.GlobalName (vv));
             RETURN NIL;
           END;
+          (* a WITH alias over a heap designator keeps that designator's
+             container, so a store through the alias dirties the object *)
+          container := MSIRBuilder.VarContainer (vv);
           RETURN addr;
         END;
     ELSE

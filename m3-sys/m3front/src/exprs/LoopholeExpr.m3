@@ -733,7 +733,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   END CompileMSIR;
 
 (* MSIR: lvalue LOOPHOLE — the inner designator through a different type *)
-PROCEDURE LValueMSIR (p: P): MSIR.Value =
+PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   VAR
     blk   : MSIR.Block;
     src   : Type.T;
@@ -759,7 +759,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
            already matches, RetypeValue is a harmless relabel.  Only pointer
            addresses are retyped; a GcSlot source keeps its slot (a loophole
            preserving ref-ness). *)
-        VAR addr := Expr.LValueMSIR (p.expr);
+        VAR addr := Expr.HeapLValueMSIR (p.expr, container);
             dstT := MSIRType.Translate (p.tipe);
         BEGIN
           IF addr = NIL THEN RETURN NIL END;
@@ -789,7 +789,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         intT := MSIR.TI (Target.Integer.size);
         blk  := MSIRBuilder.CurrentBlock ();
         IF p.kind = Kind.D_to_A THEN
-          elemPtr := Expr.LValueMSIR (p.expr);
+          elemPtr := Expr.HeapLValueMSIR (p.expr, container);
         ELSE
           (* S_to_A / V_to_A: spill the value into a temp to obtain an address. *)
           VAR srcMsirT := MSIRType.Translate (src);

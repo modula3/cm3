@@ -190,6 +190,7 @@ PROCEDURE CompileMSIR (p: P) =
     global, indirect,
     lhs:                BOOLEAN;
     bfLoc:              MSIRBitLoc.T;
+    container:          MSIR.Value;   (* heap object holding the designator *)
   BEGIN
     CASE p.kind OF
     | Kind.designator =>
@@ -203,12 +204,9 @@ PROCEDURE CompileMSIR (p: P) =
         ELSIF MSIRBuilder.IsAbandoned () THEN
           RETURN;
         ELSE
-          (* Clear any stale pending container, then capture the one this
-             designator's LValueMSIR sets: it identifies the heap object that
-             stores THROUGH the alias must dirty (write barrier).  Passed to
-             BindVarAddr and re-armed by LookupVarAddr at each alias use. *)
-          EVAL MSIRBuilder.TakePendingContainer ();
-          addr := Expr.LValueMSIR (p.expr);
+          (* container: the heap object that stores THROUGH the alias must
+             dirty (write barrier); BindVarAddr records it for the alias. *)
+          addr := Expr.HeapLValueMSIR (p.expr, container);
           IF addr = NIL THEN
             (* Any other no-lvalue designator (enum literal, method ref, ...):
                not assignable, so a read-only by-value copy is correct. *)
@@ -233,8 +231,7 @@ PROCEDURE CompileMSIR (p: P) =
               MSIRBuilder.Abandon ("WITH designator: unsupported type");
               RETURN;
             END;
-            MSIRBuilder.BindVarAddr (p.var, addr, mt,
-                                     MSIRBuilder.TakePendingContainer ());
+            MSIRBuilder.BindVarAddr (p.var, addr, mt, container);
           END;
         END;
 
@@ -242,8 +239,7 @@ PROCEDURE CompileMSIR (p: P) =
         (* Bind the alias variable to the lvalue address (dope vector pointer).
            For open-array constructors that cannot be materialized in MSIR
            (e.g. packed sub-byte arrays), abandon the procedure. *)
-        EVAL MSIRBuilder.TakePendingContainer ();
-        addr := Expr.LValueMSIR (p.expr);
+        addr := Expr.HeapLValueMSIR (p.expr, container);
         IF addr = NIL THEN
           MSIRBuilder.Abandon ("WITH open array: no lvalue");  RETURN
         END;
@@ -252,8 +248,7 @@ PROCEDURE CompileMSIR (p: P) =
         IF mt = NIL THEN
           MSIRBuilder.Abandon ("WITH open array: unsupported type");  RETURN
         END;
-        MSIRBuilder.BindVarAddr (p.var, addr, mt,
-                                 MSIRBuilder.TakePendingContainer ());
+        MSIRBuilder.BindVarAddr (p.var, addr, mt, container);
 
     | Kind.other, Kind.structure =>
         (* Rvalue (scalar or aggregate): compile into a fresh alloca and bind

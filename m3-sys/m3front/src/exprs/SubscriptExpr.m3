@@ -510,7 +510,7 @@ PROCEDURE NoteWrites (p: P) =
 
 (* MSIR support: fixed (non-open) 1-D subscript only for v0. The index is
    already biased to 0..N-1 in p.biased_b. *)
-PROCEDURE LValueMSIR (p: P): MSIR.Value =
+PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   VAR blk: MSIR.Block;
       arrAddr, idxVal, oa: MSIR.Value;
       oaBase_outer : MSIR.Value := NIL;  (* heap ptr for OA, for depth-2 fix *)
@@ -551,14 +551,14 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
       VAR oaBase     : MSIR.Value;
           preAbandOA := MSIRBuilder.IsAbandoned ();
       BEGIN
-        oaBase := Expr.LValueMSIR (p.a);
+        oaBase := Expr.HeapLValueMSIR (p.a, container);
         oaBase_outer := oaBase;  (* save for depth-2+ fix *)
         IF oaBase # NIL THEN
           VAR oaBaseT := MSIR.ValueType (oaBase);
           BEGIN
             IF MSIR.Kind (oaBaseT) = MSIR.TypeKind.GcRef THEN
               heapBase := TRUE;
-              MSIRBuilder.SetPendingContainer (oaBase);
+              container := oaBase;  (* a heap open array *)
             END;
             (* Load the dope vector through the pointer (ptr or gc_ref).
                When oaBase came from a capture param (TPtr(TVoid())), EltType
@@ -574,6 +574,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           END;
         ELSE
           (* LValueMSIR failed — fall back: CompileMSIR returns the dope VALUE. *)
+          container := NIL;
           IF NOT preAbandOA AND MSIRBuilder.IsAbandoned () THEN
             MSIRBuilder.ClearAbandoned ();
           END;
@@ -678,10 +679,11 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
        call expressions that return fixed arrays. *)
     VAR preAbandoned := MSIRBuilder.IsAbandoned ();
     BEGIN
-      arrAddr := Expr.LValueMSIR (p.a);
+      arrAddr := Expr.HeapLValueMSIR (p.a, container);
       IF arrAddr = NIL AND NOT preAbandoned AND MSIRBuilder.IsAbandoned () THEN
         (* LValueMSIR abandoned — try rvalue materialization. *)
         MSIRBuilder.ClearAbandoned ();
+        container := NIL;
         VAR arrVal := Expr.CompileMSIR (p.a);
             arrT2  : MSIR.T;
         BEGIN
@@ -731,7 +733,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         RETURN NIL;
       END;
       IF heapBase THEN
-        MSIRBuilder.SetPendingContainer (arrAddr);
+        container := arrAddr;  (* a heap fixed array *)
         arrAddr := MSIR.RetypeValue (arrAddr, MSIR.TPtr (arrayT));
       END;
     END;
@@ -800,9 +802,6 @@ PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
     oaBase := Expr.LValueMSIR (p.a);
     IF oaBase # NIL THEN
       blk := MSIRBuilder.CurrentBlock ();
-      IF MSIR.Kind (MSIR.ValueType (oaBase)) = MSIR.TypeKind.GcRef THEN
-        MSIRBuilder.SetPendingContainer (oaBase);
-      END;
       VAR eltT := MSIR.EltType (MSIR.ValueType (oaBase));
       BEGIN
         IF MSIR.Kind (eltT) = MSIR.TypeKind.Void THEN
@@ -881,7 +880,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       IF BitLocElemMSIR (p, loc) THEN RETURN MSIRBuilder.ExtractBitLoc (loc) END;
       IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
     END;
-    addr := LValueMSIR (p);
+    addr := Expr.LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
     (* Traced ref from a heap array slot: use GcLoad (read barrier). *)
     addrType := MSIR.ValueType (addr);

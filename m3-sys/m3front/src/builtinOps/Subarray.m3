@@ -472,7 +472,7 @@ PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> traced: BOOLEAN) =
     ce.tmp := NIL;
   END CompileLV;
 
-PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
+PROCEDURE LValueMSIR (ce: CallExpr.T;  VAR container: MSIR.Value): MSIR.Value =
   VAR
     base      := ce.args[0];
     start     := ce.args[1];
@@ -516,11 +516,11 @@ PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
 
     IF src_depth = 0 OR Expr.ConstValue (base) # NIL THEN
       (* Fixed array, or CONST open array: lvalue IS the raw data pointer. *)
-      basePtr := Expr.LValueMSIR (base);
+      basePtr := Expr.HeapLValueMSIR (base, container);
       IF basePtr = NIL THEN RETURN NIL END;
     ELSE
       (* Open-array variable: lvalue points to a dope {data_ptr, dim0, ...}. *)
-      dopeAddr := Expr.LValueMSIR (base);
+      dopeAddr := Expr.HeapLValueMSIR (base, container);
       IF dopeAddr = NIL THEN RETURN NIL END;
       blk := MSIRBuilder.CurrentBlock ();
       basePtr := MSIR.BuildLoad (blk, "", ptrT,
@@ -590,7 +590,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     dopeA : MSIR.Value;
     blk   : MSIR.Block;
   BEGIN
-    dopeA := LValueMSIR (ce);
+    dopeA := Expr.LValueMSIR (ce);
     IF dopeA = NIL THEN RETURN NIL END;
     blk := MSIRBuilder.CurrentBlock ();
     RETURN MSIR.BuildLoad (blk, "", MSIR.EltType (MSIR.ValueType (dopeA)), dopeA);

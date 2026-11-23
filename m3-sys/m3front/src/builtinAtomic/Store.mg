@@ -54,8 +54,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
-    ptr       := Expr.LValueMSIR (ce.args[0]);
-    container := MSIRBuilder.TakePendingContainer ();
+    container : MSIR.Value;
+    ptr       := Expr.HeapLValueMSIR (ce.args[0], container);
     val       := Expr.CompileMSIR (ce.args[1]);
     b         := MSIRBuilder.CurrentBlock ();
     elemT     : MSIR.T;  atomT : MSIR.T;

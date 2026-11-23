@@ -801,7 +801,7 @@ PROCEDURE NoteWrites (p: P) =
     END;
   END NoteWrites;
 
-PROCEDURE LValueMSIR (p: P): MSIR.Value =
+PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   VAR
     fieldInfo: Field.Info;
     baseAddr:  MSIR.Value;
@@ -851,7 +851,7 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
           EVAL Type.CheckInfo (fieldInfo.type, fti0);
           IF fti0.size MOD Target.Byte # 0 THEN RETURN NIL END;
         END;
-        baseAddr := Expr.LValueMSIR (p.lhsExpr);
+        baseAddr := Expr.HeapLValueMSIR (p.lhsExpr, container);
         IF baseAddr = NIL THEN RETURN NIL END;
         byteOff := fieldInfo.offset DIV 8;
         VAR
@@ -869,10 +869,11 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
             ft := MSIR.TI (fti.size);
           END;
           slot := MSIRBuilder.BuildPtrByteOff (b, "", baseAddr, byteOff);
-          (* Heap record (GcRef base): set container and retype traced fields
-             as GcSlot so AssignStmt.CompileMSIR fires the write barrier. *)
+          (* Heap record (GcRef base): it is the container; retype traced
+             fields as GcSlot so AssignStmt.CompileMSIR fires the write
+             barrier.  Otherwise the base's own container (if any) stands. *)
           IF MSIR.Kind (MSIR.ValueType (baseAddr)) = MSIR.TypeKind.GcRef THEN
-            MSIRBuilder.SetPendingContainer (baseAddr);
+            container := baseAddr;
             IF ft # NIL AND MSIR.Kind (ft) = MSIR.TypeKind.GcRef THEN
               slot := MSIR.RetypeValue (slot, MSIR.TGcSlot (MSIR.EltType (ft)));
             ELSIF ft # NIL THEN
@@ -902,8 +903,8 @@ PROCEDURE LValueMSIR (p: P): MSIR.Value =
         END;
         baseAddr := Expr.CompileMSIR (p.lhsExpr);
         IF baseAddr = NIL THEN RETURN NIL END;
-        (* Set container for GC write barrier in AssignStmt.CompileMSIR. *)
-        MSIRBuilder.SetPendingContainer (baseAddr);
+        (* the object is the container, for the write barrier *)
+        container := baseAddr;
         VAR slotAddr: MSIR.Value;
         BEGIN
           IF objOff >= 0 THEN
@@ -1229,7 +1230,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
         END;
         Field.Split (p.rhsValue, fieldInfo);
-        addr := LValueMSIR (p);
+        addr := Expr.LValueMSIR (p);
         IF addr = NIL THEN RETURN NIL END;
         fieldType := MSIRType.Translate (fieldInfo.type);
         IF fieldType = NIL THEN
@@ -1252,7 +1253,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
         END;
         (* Byte-aligned object field: normal LValueMSIR→load path. *)
-        addr := LValueMSIR (p);
+        addr := Expr.LValueMSIR (p);
         IF addr = NIL THEN RETURN NIL END;
         Field.Split (p.rhsValue, fieldInfo);
         fieldType := MSIRType.Translate (fieldInfo.type);

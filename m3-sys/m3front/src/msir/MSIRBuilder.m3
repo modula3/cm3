@@ -36,8 +36,8 @@ TYPE VarEntry = RECORD
   isBitField:  BOOLEAN := FALSE;
   bfLoc:       MSIRBitLoc.T;
   (* WITH designator alias over a HEAP lvalue: the containing heap object,
-     captured at bind time (the pending container the designator's LValueMSIR
-     set).  Re-armed by LookupVarAddr so a store THROUGH the alias carries the
+     the designator's container at bind time (Expr.HeapLValueMSIR).  Returned
+     by VarContainer so a store THROUGH the alias carries the
      generational/incremental write barrier — Table.mg Put's
      `WITH first = tbl.buckets[h] DO ... first := NEW(...)` emitted gc.store
      with no container, the young EntryList was missed by the minor GC, and
@@ -60,7 +60,6 @@ TYPE ProcContext = RECORD
   block:         MSIR.Block;
   abandoned:     BOOLEAN;
   blockSeq:      INTEGER;
-  pending:       MSIR.Value;   (* pendingContainer *)
   varMapN:       INTEGER;
   varMap:        ARRAY [0..MaxVarMap-1] OF VarEntry;
   exitDepth:     INTEGER;
@@ -88,7 +87,6 @@ VAR
   curBlock:         MSIR.Block := NIL;
   abandoned:        BOOLEAN    := FALSE;
   blockSeq:         INTEGER    := 0;
-  pendingContainer: MSIR.Value := NIL;
 
   (* Saved contexts for nested proc compilation. *)
   procContextStack: ARRAY [0..MaxNestDepth-1] OF ProcContext;
@@ -169,7 +167,6 @@ PROCEDURE PopBeginContext() =
       curBlock         := ctx.block;
       abandoned        := ctx.abandoned;
       blockSeq         := ctx.blockSeq;
-      pendingContainer := ctx.pending;
       varMapN          := ctx.varMapN;
       exitDepth        := ctx.exitDepth;
       curScope         := ctx.scope;
@@ -207,7 +204,6 @@ PROCEDURE BeginProc(name: TEXT;
         ctx.block      := curBlock;
         ctx.abandoned  := abandoned;
         ctx.blockSeq   := blockSeq;
-        ctx.pending    := pendingContainer;
         ctx.varMapN    := varMapN;
         ctx.exitDepth  := exitDepth;
         ctx.scope      := curScope;
@@ -603,13 +599,6 @@ PROCEDURE LookupVarAddr(v: Variable.T): MSIR.Value =
           Abandon("cannot store to by-value formal in MSIR v0");
           RETURN NIL;
         END;
-        (* WITH alias over a heap designator: re-arm the write-barrier
-           container captured at bind time, so a store through the alias
-           dirties the heap object exactly like the direct designator would.
-           Harmless for reads — consumers pre-discard stale pendings. *)
-        IF varMap[i].container # NIL THEN
-          SetPendingContainer(varMap[i].container);
-        END;
         RETURN varMap[i].val;   (* alloca ptr (typed as ptr(storageType)) *)
       END;
     END;
@@ -807,7 +796,6 @@ PROCEDURE EndProc() =
         curBlock         := ctx.block;
         abandoned        := ctx.abandoned;
         blockSeq         := ctx.blockSeq;
-        pendingContainer := ctx.pending;
         varMapN          := ctx.varMapN;
         exitDepth        := ctx.exitDepth;
         curScope         := ctx.scope;
@@ -822,7 +810,6 @@ PROCEDURE EndProc() =
       exitDepth        := 0;
       curScope         := NIL;
       cleanupDepth     := 0;
-      pendingContainer := NIL;
       MSIR.SetCurrentSrcLine(0);
     END;
   END EndProc;
@@ -868,12 +855,13 @@ PROCEDURE IsAbandoned(): BOOLEAN =
 PROCEDURE ClearAbandoned() =
   BEGIN abandoned := FALSE END ClearAbandoned;
 
-PROCEDURE SetPendingContainer(v: MSIR.Value) =
-  BEGIN pendingContainer := v END SetPendingContainer;
-
-PROCEDURE TakePendingContainer(): MSIR.Value =
-  VAR v := pendingContainer;
-  BEGIN pendingContainer := NIL; RETURN v END TakePendingContainer;
+PROCEDURE VarContainer(v: Variable.T): MSIR.Value =
+  BEGIN
+    FOR i := 0 TO varMapN - 1 DO
+      IF varMap[i].key = v THEN RETURN varMap[i].container END;
+    END;
+    RETURN NIL;
+  END VarContainer;
 
 
 PROCEDURE CurrentProc(): MSIR.Proc =
@@ -1170,7 +1158,6 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         ctx.block      := curBlock;
         ctx.abandoned  := abandoned;
         ctx.blockSeq   := blockSeq;
-        ctx.pending    := pendingContainer;
         ctx.varMapN    := varMapN;
         ctx.exitDepth  := exitDepth;
         ctx.scope      := curScope;
@@ -1242,7 +1229,6 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
         curBlock         := ctx.block;
         abandoned        := ctx.abandoned;
         blockSeq         := ctx.blockSeq;
-        pendingContainer := ctx.pending;
         varMapN          := ctx.varMapN;
         exitDepth        := ctx.exitDepth;
         curScope         := ctx.scope;

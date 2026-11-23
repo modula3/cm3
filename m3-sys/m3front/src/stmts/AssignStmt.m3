@@ -867,10 +867,6 @@ PROCEDURE CompileMSIR (p: P) =
     container : MSIR.Value;
     loc       : MSIRBitLoc.T;
   BEGIN
-    (* Discard any stale pending container from prior sub-expression evaluation
-       (e.g. QualifyExpr.CompileMSIR calls LValueMSIR as a side effect, which
-       leaves a container set even for pure value reads). *)
-    EVAL MSIRBuilder.TakePendingContainer ();
     IF Expr.BitLocMSIR (p.lhs, loc) THEN
       (* Sub-byte field or element, or a bit-field WITH alias (`WITH s =
          rec.bitf DO s := v`): no byte address; read-modify-write at its bit
@@ -890,9 +886,8 @@ PROCEDURE CompileMSIR (p: P) =
       RETURN;
     END;
     IF MSIRBuilder.IsAbandoned () THEN RETURN END;
-    lhsPtr := Expr.LValueMSIR (p.lhs);
-    (* Collect container set as side-effect by LValueMSIR (heap field stores). *)
-    container := MSIRBuilder.TakePendingContainer ();
+    (* container: the heap object holding the lhs, for the write barrier *)
+    lhsPtr := Expr.HeapLValueMSIR (p.lhs, container);
     IF lhsPtr = NIL THEN
       MSIRBuilder.Abandon ("assignment: designator has no lvalue");
       RETURN;

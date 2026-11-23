@@ -92,9 +92,9 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     RETURN Expr.CompileMSIR (ce.args[0]);
   END CompileMSIR;
 
-PROCEDURE LValueMSIR (ce: CallExpr.T): MSIR.Value =
+PROCEDURE LValueMSIR (ce: CallExpr.T;  VAR container: MSIR.Value): MSIR.Value =
   BEGIN
-    RETURN Expr.LValueMSIR (ce.args[0]);
+    RETURN Expr.HeapLValueMSIR (ce.args[0], container);
   END LValueMSIR;
 
 PROCEDURE Initialize () =

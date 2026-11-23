@@ -603,7 +603,7 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
     END;
   END Capture;
 
-PROCEDURE CompileLValueMSIR (p: P): MSIR.Value =
+PROCEDURE CompileLValueMSIR (p: P;  <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
   VAR
     msirT    : MSIR.T;
     slot     : MSIR.Value;
@@ -783,7 +783,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     slot  : MSIR.Value;
     msirT : MSIR.T;
   BEGIN
-    slot := CompileLValueMSIR (p);
+    slot := Expr.LValueMSIR (p);
     IF slot = NIL THEN RETURN NIL END;
     msirT := MSIRType.Translate (p.tipe);
     IF msirT = NIL THEN RETURN NIL END;

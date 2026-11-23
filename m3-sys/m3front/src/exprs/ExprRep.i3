@@ -56,8 +56,14 @@ REVEAL
     (* Emit MSIR for this expression. Returns NIL on unsupported,
        in which case MSIRBuilder.Abandon has been called and the
        enclosing procedure will be dropped. *)
-    compileLValueMSIR (): MSIR.Value               := LValueMSIRDefault;
-    (* Emit MSIR address of this lvalue. Returns NIL on unsupported. *)
+    compileLValueMSIR (VAR container: MSIR.Value): MSIR.Value
+                                                   := LValueMSIRDefault;
+    (* Emit MSIR address of this lvalue. Returns NIL on unsupported.  Sets
+       container to the heap object holding the lvalue, which a store through
+       it must dirty (the GC write barrier), and leaves it NIL otherwise
+       (Expr.HeapLValueMSIR sets it NIL before the call).  A designator built
+       on an inner one passes the inner one's container on unless it has its
+       own. *)
     genLiteralMSIR (ft: MSIR.T): MSIR.Value        := NoLiteralMSIR;
     (* MSIR analogue of genLiteral: return a PURE constant MSIR value for this
        (already-folded) constant expression, suitable for a global/static
@@ -124,7 +130,7 @@ PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
    a translation. *)
 PROCEDURE NoLiteralMSIR  (e: M3.Expr;  ft: MSIR.T): MSIR.Value;
 (* default genLiteralMSIR: NIL (no static-constant form), emitting nothing. *)
-PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;
+PROCEDURE LValueMSIRDefault (e: M3.Expr;  VAR container: MSIR.Value): MSIR.Value;
 (* default lvalue: returns NIL silently. Override in designator/aggregate expressions. *)
 
 PROCEDURE ExprCaptureDefault   (e: M3.Expr;  ca: CaptureAnalysis.T);

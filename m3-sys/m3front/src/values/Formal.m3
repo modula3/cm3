@@ -1450,12 +1450,8 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
   BEGIN
     IF form.mode = Mode.mVAR THEN
       IF form.openArray THEN RETURN GenOpenArgMSIR (form, actual) END;
-      (* Discard any stale pending container left by earlier argument
-         expressions (AssignStmt does the same before its LValueMSIR) —
-         taking one from another block breaks dominance. *)
-      EVAL MSIRBuilder.TakePendingContainer ();
-      VAR lv   := Expr.LValueMSIR (actual);
-          cont := MSIRBuilder.TakePendingContainer ();
+      VAR cont : MSIR.Value;
+          lv   := Expr.HeapLValueMSIR (actual, cont);
           vInfo: Type.Info;
       BEGIN
         (* Passing a traced-content lvalue by VAR: the callee may store refs
@@ -1782,16 +1778,15 @@ PROCEDURE GenOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
       VAR lval     : MSIR.Value;
           lvalT    : MSIR.T;
           lvalEltT : MSIR.T;
+          cont     : MSIR.Value;  (* heap object holding the actual *)
       BEGIN
-        EVAL MSIRBuilder.TakePendingContainer ();  (* discard stale *)
-        lval := Expr.LValueMSIR (actual);
+        lval := Expr.HeapLValueMSIR (actual, cont);
         IF lval = NIL THEN RETURN NIL END;
         (* VAR open-array formal over a heap actual: dirty the container at
            the call site (see EmitArgMSIR's mVAR case) — the callee stores
            elements through the dope with no container in sight. *)
         IF form.mode = Mode.mVAR THEN
-          VAR cont := MSIRBuilder.TakePendingContainer ();
-              vInfo: Type.Info;
+          VAR vInfo: Type.Info;
           BEGIN
             IF cont # NIL THEN
               EVAL Type.CheckInfo (Expr.TypeOf (actual), vInfo);

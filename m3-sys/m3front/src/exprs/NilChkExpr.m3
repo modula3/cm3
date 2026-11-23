@@ -127,9 +127,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     RETURN Expr.CompileMSIR (p.a);
   END CompileMSIR;
 
-PROCEDURE LValueMSIR (p: P): MSIR.Value =
+PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   BEGIN
-    RETURN Expr.LValueMSIR (p.a);
+    RETURN Expr.HeapLValueMSIR (p.a, container);
   END LValueMSIR;
 
 BEGIN

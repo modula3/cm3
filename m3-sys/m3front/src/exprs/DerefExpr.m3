@@ -183,14 +183,19 @@ PROCEDURE NoteWrites (p: P) =
     Expr.NoteWrite (p.a);
   END NoteWrites;
 
-PROCEDURE LValueMSIR (p: P): MSIR.Value =
+PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
   VAR addr: MSIR.Value;  elemT: MSIR.T;
   BEGIN
     addr := Expr.CompileMSIR (p.a);
     IF addr = NIL THEN RETURN NIL END;
-    (* Retype to give callers the element type.  Preserve GcRef wrapper when the
-       ref is traced: QualifyExpr.LValueMSIR checks GcRef to detect heap objects
-       and set the write-barrier container (SetPendingContainer). *)
+    (* A traced reference's referent is a heap object: a store through r^
+       dirties it, as Compile's PrepLV (EmitCheckStoreTraced) does. *)
+    IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcRef THEN
+      container := addr;
+    END;
+    (* Retype to give callers the element type.  Preserve the GcRef wrapper
+       when the ref is traced: QualifyExpr.LValueMSIR checks GcRef to detect a
+       heap record. *)
     elemT := MSIRType.Translate (p.type);
     IF elemT # NIL AND MSIR.Kind (elemT) # MSIR.TypeKind.Void THEN
       IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcRef THEN

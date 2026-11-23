@@ -633,7 +633,8 @@ PROCEDURE ConstLiteralMSIR (t: T;  ft: MSIR.T): MSIR.Value =
     RETURN folded.genLiteralMSIR (ft);
   END ConstLiteralMSIR;
 
-PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T): MSIR.Value =
+PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T;
+                             <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
   BEGIN
     RETURN NIL;
   END LValueMSIRDefault;
@@ -645,10 +646,17 @@ PROCEDURE CompileMSIR (t: T): MSIR.Value =
   END CompileMSIR;
 
 PROCEDURE LValueMSIR (t: T): MSIR.Value =
+  VAR container: MSIR.Value;
   BEGIN
-    IF (t = NIL) THEN RETURN NIL END;
-    RETURN t.compileLValueMSIR ();
+    RETURN HeapLValueMSIR (t, container);
   END LValueMSIR;
+
+PROCEDURE HeapLValueMSIR (t: T;  VAR container: MSIR.Value): MSIR.Value =
+  BEGIN
+    container := NIL;
+    IF (t = NIL) THEN RETURN NIL END;
+    RETURN t.compileLValueMSIR (container);
+  END HeapLValueMSIR;
 
 PROCEDURE BitLocMSIR (t: T;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   BEGIN

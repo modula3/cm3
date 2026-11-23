@@ -45,7 +45,7 @@ TYPE
   BuiltinAlign = PROCEDURE (t: T): Type.BitAlignT;
   Capturer            = PROCEDURE (t: T;  ca: CaptureAnalysis.T);
   CompilerMSIR        = PROCEDURE (t: T): MSIR.Value;
-  CompilerLValueMSIR  = PROCEDURE (t: T): MSIR.Value;
+  CompilerLValueMSIR  = PROCEDURE (t: T;  VAR container: MSIR.Value): MSIR.Value;
 
 PROCEDURE NewMethodList
   (minArgs      : INTEGER;

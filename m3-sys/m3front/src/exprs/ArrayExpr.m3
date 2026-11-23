@@ -2559,7 +2559,7 @@ PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
     END;
   END DynOpenConstructorMSIR;
 
-PROCEDURE LValueMSIR_MSIR (p: T): MSIR.Value =
+PROCEDURE LValueMSIR_MSIR (p: T;  <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
 (* Materialize the array constructor into a fresh alloca and return its address.
    Handles 1-D and multi-D constructors where each element is a simple expression
    or a nested ArrayExpr.  Abandons on keyword/range elements or unsupported types. *)
@@ -2815,7 +2815,7 @@ PROCEDURE GenLiteralMSIR (p: T;  ft: MSIR.T): MSIR.Value =
 PROCEDURE CompileMSIR_MSIR (p: T): MSIR.Value =
   VAR addr: MSIR.Value;  arrT: MSIR.T;
   BEGIN
-    addr := LValueMSIR_MSIR (p);
+    addr := Expr.LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
     arrT := MSIR.EltType (MSIR.ValueType (addr));  (* TFixedArray(n, eltT) *)
     RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", arrT, addr);

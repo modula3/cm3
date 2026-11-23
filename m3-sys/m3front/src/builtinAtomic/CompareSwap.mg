@@ -76,8 +76,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
-    varPtr    := Expr.LValueMSIR (ce.args[0]);
-    container := MSIRBuilder.TakePendingContainer ();
+    container : MSIR.Value;
+    varPtr    := Expr.HeapLValueMSIR (ce.args[0], container);
     expPtr    := Expr.LValueMSIR (ce.args[1]);
     desired   := Expr.CompileMSIR (ce.args[2]);
     b         := MSIRBuilder.CurrentBlock ();
@@ -87,7 +87,6 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     succOrd, failOrd: MSIR.MemOrder;
     desVal    : MSIR.Value;
   BEGIN
-    EVAL MSIRBuilder.TakePendingContainer (); (* clear pending from expPtr eval *)
     IF varPtr = NIL OR expPtr = NIL OR desired = NIL THEN RETURN NIL END;
     IF MSIR.BitWidth(elemT) > 0 AND MSIR.BitWidth(elemT) < 8 THEN
       atomT := MSIR.TI(8);
