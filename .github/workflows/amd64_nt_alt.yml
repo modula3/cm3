@@ -51,11 +51,32 @@ jobs:
     - name: Fetch sources
       uses: actions/checkout@v7
 
-    - name: Build everything
+    - name: build new runtime
       working-directory: scripts/python3
-      run: python ./boot2.py
+      run: python ./do-pkg.py m3core libm3 buildship c
+
+    - name: build compiler with old and new
+      working-directory: scripts/python3
+      run: python ./upgrade.py skipgcc c
+
+    - name: archive min
+      working-directory: ../install
+      run: tar cfz cm3-min.tar.gz cm3
 
     - name: Run compiler validation suite
       continue-on-error: true
       run: cm3 -DHTML
       working-directory: m3-sys/m3tests
+
+    - name: build all
+      working-directory: scripts/python3
+      run: python ./do-cm3-all.py c buildship
+
+    - name: archive all
+      shell: cmd
+      working-directory: ../install
+      run: tar cfz cm3-all.tar.gz cm3
+
+    - name: make and archive boot1
+      working-directory: scripts/python3
+      run: python ./boot1.py c

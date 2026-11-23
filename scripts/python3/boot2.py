@@ -58,7 +58,9 @@ pyexe = ""
 def Posix():
     return os.name == "posix"
 
-if not Posix() and env_OS == "Windows_NT":
+if Posix():
+    pass
+elif env_OS == "Windows_NT":
     pyexe = (pylib.SearchPath("python.exe") or pylib.SearchPath("python3.exe") or pylib.SearchPath("py.exe") or pylib.SearchPath("python2.exe")) + " "
 
 Run(pyexe + "./make-dist-cfg.py")
@@ -66,7 +68,7 @@ Run(pyexe + "./make-dist-cfg.py")
 if not _CBackend and env_OS != "Windows_NT":
     Run(pyexe + "./do-pkg.py m3cc buildship " + c)
 
-defines = pylib.PassThroughDefines() + " -DM3BOOT2"
+defines = pylib.PassThroughDefines()
 Run(pyexe + "./do-cm3-all.py realclean skipgcc " + c + defines)
 Run(pyexe + "./do-pkg.py m3cc m3core libm3 buildship " + c + defines)
 Run(pyexe + "./upgrade.py skipgcc " + c + defines)
