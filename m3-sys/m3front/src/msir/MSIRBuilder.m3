@@ -10,12 +10,12 @@ IMPORT RefType, Exceptionz;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 CONST MaxExitStack = 16;
-CONST MaxTryDepth  = 16;
-CONST MaxCatchDepth = 16;
 CONST MaxCleanup   = 64;   (* unified loop/finally cleanup-frame stack *)
-CONST MaxProcMap   = 2048;
-CONST MaxShimMap   = 256;
-CONST MaxGlobalMap  = 256;
+(* Initial sizes of the module-wide maps, which grow on demand: a module has
+   no procedure to abandon, so an entry must never be dropped. *)
+CONST InitProcMap   = 256;
+CONST InitShimMap   = 64;
+CONST InitGlobalMap = 256;
 (* TRY/FINALLY selector codes Sel_Normal/Sel_Exc/Sel_Exit are exported from the
    MSIRBuilder interface and visible here without redeclaration. *)
 CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
@@ -108,29 +108,32 @@ VAR
   cleanupStack: ARRAY [0..MaxCleanup-1] OF CleanupFrame;
   cleanupDepth: INTEGER := 0;
 
-  procMap:  ARRAY [0..MaxProcMap-1] OF ProcEntry;
+  procMap:  REF ARRAY OF ProcEntry := NEW (REF ARRAY OF ProcEntry, InitProcMap);
   procMapN: INTEGER := 0;
 
   (* Pre-registered captures for nested procs, populated BEFORE any sibling
      body is compiled (Procedure.GenBodyMSIR pass 1), so a call to a not-yet-
      compiled sibling finds the correct capture signature.  GetProcCaptures
      falls back here when procMap has no (or NIL) caps for a proc. *)
-  captureMap:  ARRAY [0..MaxProcMap-1] OF RECORD
-                 key:  Value.T;
-                 caps: REF ARRAY OF CaptureAnalysis.Capture;
-               END;
+  captureMap:  REF ARRAY OF CaptureEntry :=
+                 NEW (REF ARRAY OF CaptureEntry, InitProcMap);
   captureMapN: INTEGER := 0;
   captureRegChanged: BOOLEAN := FALSE;
                (* Set by RegisterCaptures when a proc's capture COUNT grows;
                   lets the pre-registration pass iterate transitive captures to
                   a fixpoint (Procedure.PreRegisterNestedCaptures). *)
 
+TYPE CaptureEntry = RECORD
+  key:  Value.T;
+  caps: REF ARRAY OF CaptureAnalysis.Capture;
+END;
 TYPE ShimEntry = RECORD key: Value.T; val: MSIR.Proc END;
 VAR
-  shimMap:  ARRAY [0..MaxShimMap-1] OF ShimEntry;
+  shimMap:  REF ARRAY OF ShimEntry := NEW (REF ARRAY OF ShimEntry, InitShimMap);
   shimMapN: INTEGER := 0;
 
-VAR globalMap:  ARRAY [0..MaxGlobalMap-1] OF GlobalEntry;
+VAR globalMap:  REF ARRAY OF GlobalEntry :=
+                  NEW (REF ARRAY OF GlobalEntry, InitGlobalMap);
   globalMapN: INTEGER := 0;
 
 VAR
@@ -949,6 +952,8 @@ PROCEDURE PushExitBlock(b: MSIR.Block) =
       cleanupStack[cleanupDepth] :=
         CleanupFrame{kind := CleanupKind.Loop, exitBlock := b};
       INC(cleanupDepth);
+    ELSE
+      Abandon("cleanup stack overflow");
     END;
   END PushExitBlock;
 
@@ -1241,11 +1246,13 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
       curBlock := NIL;
     END;
 
-    IF shimMapN < MaxShimMap THEN
-      shimMap[shimMapN].key := v;
-      shimMap[shimMapN].val := shimProc;
-      INC(shimMapN);
+    IF shimMapN >= NUMBER (shimMap^) THEN
+      VAR n := NEW (REF ARRAY OF ShimEntry, 2 * shimMapN);
+      BEGIN SUBARRAY (n^, 0, shimMapN) := shimMap^;  shimMap := n END;
     END;
+    shimMap[shimMapN].key := v;
+    shimMap[shimMapN].val := shimProc;
+    INC(shimMapN);
     RETURN shimProc;
   END GetOrCreateClosureShim;
 
@@ -1742,7 +1749,10 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
         RETURN;
       END;
     END;
-    IF procMapN >= MaxProcMap THEN RETURN END;
+    IF procMapN >= NUMBER (procMap^) THEN
+      VAR n := NEW (REF ARRAY OF ProcEntry, 2 * procMapN);
+      BEGIN SUBARRAY (n^, 0, procMapN) := procMap^;  procMap := n END;
+    END;
     procMap[procMapN].key  := v;
     procMap[procMapN].val  := p;
     procMap[procMapN].caps := caps;
@@ -1785,7 +1795,10 @@ PROCEDURE RegisterCaptures(v: Value.T;
         captureMap[i].caps := caps;  RETURN;
       END;
     END;
-    IF captureMapN >= MaxProcMap THEN RETURN END;
+    IF captureMapN >= NUMBER (captureMap^) THEN
+      VAR n := NEW (REF ARRAY OF CaptureEntry, 2 * captureMapN);
+      BEGIN SUBARRAY (n^, 0, captureMapN) := captureMap^;  captureMap := n END;
+    END;
     captureMap[captureMapN].key  := v;
     captureMap[captureMapN].caps := caps;
     IF newN > 0 THEN captureRegChanged := TRUE END;
@@ -1884,11 +1897,20 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
     END;
   END LookupOrCreateProc;
 
+PROCEDURE GrowGlobalMap () =
+  BEGIN
+    IF globalMapN >= NUMBER (globalMap^) THEN
+      VAR n := NEW (REF ARRAY OF GlobalEntry, 2 * globalMapN);
+      BEGIN SUBARRAY (n^, 0, globalMapN) := globalMap^;  globalMap := n END;
+    END;
+  END GrowGlobalMap;
+
 PROCEDURE BeginModule() =
   BEGIN
     globalMapN       := 0;
     procMapN         := 0;
     shimMapN         := 0;
+    captureMapN      := 0;
     procContextDepth := 0;
     constArraySeq    := 0;
     memcpyProc       := NIL;
@@ -2116,7 +2138,7 @@ PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module) =
     FOR i := 0 TO globalMapN-1 DO
       IF globalMap[i].key = v THEN RETURN END;
     END;
-    IF globalMapN >= MaxGlobalMap THEN RETURN END;
+    GrowGlobalMap ();
     MSIR.ModuleAddGlobal(m, g);
     globalMap[globalMapN].key         := v;
     globalMap[globalMapN].val         := g;
@@ -2181,7 +2203,7 @@ PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN RETURN END;
     END;
-    IF globalMapN >= MaxGlobalMap THEN RETURN END;
+    GrowGlobalMap ();
     (* No MSIR.ModuleAddGlobal call — import chain entries have no standalone global. *)
     globalMap[globalMapN].key         := v;
     globalMap[globalMapN].val         := NIL;
@@ -2201,7 +2223,7 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
     FOR i := 0 TO globalMapN - 1 DO
       IF globalMap[i].key = v THEN RETURN END;
     END;
-    IF globalMapN >= MaxGlobalMap THEN RETURN END;
+    GrowGlobalMap ();
     (* Patch the global with struct field info and a StructFieldRef value. *)
     MSIR.GlobalSetStructField(g, byteOff,
                               MSIR.StructFieldRef(infoName, byteOff, fieldType));
