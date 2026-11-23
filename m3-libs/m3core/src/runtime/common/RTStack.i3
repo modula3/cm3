@@ -90,4 +90,11 @@ PROCEDURE ThrowM3Exc (act: ADDRESS);
    or TRY/FINALLY handler.  Only meaningful when Has_walker () = TRUE and the
    M3C backend generates C++ try/catch for exception handling. *)
 
+<*EXTERNAL "RTStack__InstallTerminateHandler" *>
+PROCEDURE InstallTerminateHandler ();
+(* Make an _M3Exc that no handler catches report "Unhandled exception" through
+   RTException.ReportUnhandled, instead of terminating in the C++ runtime.
+   Called once, from RTExStack's initialization; ex_stack only, like
+   ThrowM3Exc. *)
+
 END RTStack.

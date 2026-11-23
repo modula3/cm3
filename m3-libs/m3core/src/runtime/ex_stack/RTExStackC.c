@@ -25,10 +25,13 @@ extern "C" void RTStack__ThrowM3Exc(void* act) {
 }
 
 /* An _M3Exc that no handler catches reaches std::terminate, which by default
-   prints "terminating due to uncaught exception of type _M3Exc".  Install a
-   terminate handler that recovers the escaping _M3Exc by re-throwing it and
-   hands its activation to RTException.ReportUnhandled, which prints the usual
-   "Unhandled exception" report and aborts. */
+   prints "terminating due to uncaught exception of type _M3Exc".  RTExStack's
+   module body installs a terminate handler that recovers the escaping _M3Exc
+   by re-throwing it and hands its activation to RTException.ReportUnhandled,
+   which prints the usual "Unhandled exception" report and aborts.  It is
+   installed by an explicit call, not by a C++ static initializer, whose
+   running is less dependable (e.g. under Visual C++ link-time code
+   generation). */
 #include <exception>
 #include <stdlib.h>
 extern "C" void RTException__ReportUnhandled(void* act);
@@ -40,9 +43,6 @@ static void _m3_terminate_handler(void) {
   abort();
 }
 
-namespace {
-  struct _M3TerminateInstaller {
-    _M3TerminateInstaller() { std::set_terminate(_m3_terminate_handler); }
-  };
-  _M3TerminateInstaller _m3_terminate_installer;
+extern "C" void RTStack__InstallTerminateHandler(void) {
+  std::set_terminate(_m3_terminate_handler);
 }

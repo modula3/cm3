@@ -63,7 +63,6 @@ Interface ("RTHeapEvent")
 Interface ("RTProcedureSRC")
 Interface ("RTSignal")
 Interface ("RTStack")
-c_source  ("RTStackCommon")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 
@@ -85,15 +84,4 @@ proc FileExists(a) is
     return not stale (a, a)
 end
 
-/* dont think this has been tested with a target that has
-   a stack walker. As soon as the target exists RTMachine does
-   not get compiled when m3_use_stack_walker is true.
-if     not FileExists(path() & "/../" & TARGET & "/RTMachine.i3")
-    or not FileExists(path() & "/../" & TARGET & "/m3makefile")
-  interface      ("RTMachine")   
-end
-*/
-% A target with a stack walker provides its own RTMachine (runtime/m3makefile).
-if not M3CORE_TARGET_WALKER
-  interface      ("RTMachine")
-end
+interface      ("RTMachine")

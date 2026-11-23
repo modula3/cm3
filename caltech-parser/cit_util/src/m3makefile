@@ -231,8 +231,10 @@ Gmodule("ArrayHash")
 ArrayHash("Int", "Integer")
 
 Module("CITRandom")
-Module("ProcUtils")
-Module("RemoteFileRd")
+if not equal (OS_TYPE, "WIN32")
+  Module("ProcUtils")
+  Module("RemoteFileRd")
+end
 Module("PathnameUtils")
 
 Module("Config")
@@ -276,9 +278,10 @@ ListMultiTbl("TextTextListMultiTbl",
 	"Text", "Text", "TextList", "TextTextListTbl")
 Interface("BrandedWr")
 
-Module("UnixFilter")
-Module("SlowTextCompress")
-
+if not equal (OS_TYPE, "WIN32")
+  Module("UnixFilter")
+  Module("SlowTextCompress")
+end
 Fifo("Text", "Text")
 Fifo("Ref", "Refany")
 Fifo("Char", "Char")
@@ -413,8 +416,10 @@ Table ("TextCard", "Text", "Cardinal")
 
 Table ("LRVectorLR", "LRVector", "LongrealType")
 
-Module ("RepeatMe")
-Module ("Watchdog")
+if not equal (OS_TYPE, "WIN32")
+  Module ("RepeatMe")
+  Module ("Watchdog")
+end
 
 Library("cit_util")
 

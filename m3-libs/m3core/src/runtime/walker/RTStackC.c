@@ -1,10 +1,12 @@
 /* Copyright (C) 1990, Digital Equipment Corporation           */
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
+/* Last modified on Thu May  4 09:34:11 PDT 1995 by kalsow     */
+/*      modified on Tue May 18 13:21:11 PDT 1993 by muller     */
+/*      modified on Tue Jan 19 15:20:48 PST 1993 by burrows    */
 
-/* Stack walking functions for AMD64_DARWIN using Apple's libunwind.
-   Apple's libunwind (part of libSystem.B.dylib) provides a compatible
-   implementation of the nongnu libunwind API; no extra link flags needed. */
+/* This file implements the stack walking functions of
+   the RTStack interface. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,6 +19,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+INTEGER __cdecl RTStack_Has_walker (void)
+{
+    return TRUE;
+}
 
 /* Exception handling register numbers per the System V AMD64 ABI.
    Register 0 carries the exception object pointer; register 1 the
@@ -33,11 +40,11 @@ char * RTException__AllocBuf (INTEGER size);
 
 /* Frame must match RTMachine.FrameInfo. */
 typedef struct {
-  unsigned long pc;
-  unsigned long sp;
-  long lock;
-  unsigned long exceptionRef;
-  long tTypeIndex;
+  WORD_T pc;
+  WORD_T sp;
+  INTEGER lock;
+  WORD_T exceptionRef;
+  INTEGER tTypeIndex;
   unw_cursor_t *cursor;
   unw_word_t start_ip;
   unw_word_t end_ip;
@@ -46,7 +53,7 @@ typedef struct {
   unw_word_t landingPad;
 } Frame;
 
-#define FrameLock 0x1234567890
+#define FrameLock ((INTEGER)((sizeof(size_t) >= 8) ? 0x1234567890 : 0x12345678))
 
 void * __m3_personality_v0() {
   printf("m3 personality\n");
@@ -202,6 +209,31 @@ void RTStack__Unwind (Frame *target)
     abort();
   }
 }
+
+/*
+//a test of generating a backtrace with libunwind.
+//
+void show_backtrace (void) {
+  unw_cursor_t cursor; unw_context_t uc;
+  unw_word_t ip, sp;
+
+  int ret;
+  char name[50];
+  size_t name_len = 50;
+  unw_word_t ofp;
+
+  unw_getcontext(&uc);
+  unw_init_local(&cursor, &uc);
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    printf ("ip = %llx, sp = %llx\n", (long long) ip, (long long) sp);
+
+    ret = unw_get_proc_name(&cursor, name, name_len, &ofp);
+    printf("name %s\n",name);
+  }
+}
+*/
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -21,6 +21,11 @@
 extern "C" {
 #endif
 
+INTEGER __cdecl RTStack_Has_walker (void)
+{
+    return FALSE;
+}
+
 /*---------------------------------------------------------------------------*/
 /* PROCEDURE GetThreadFrame (VAR f: Frame;  start: ADDRESS;  len: INTEGER);
    Return in "f" the frame of the thread whose machine state is in bytes

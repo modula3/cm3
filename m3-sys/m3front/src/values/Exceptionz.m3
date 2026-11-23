@@ -121,17 +121,13 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
         LoadSelf (t);
         CG.Pop_param (CG.Type.Addr);
         CG.Push (tmp);
-        IF (arg_type # CG.Type.Addr) THEN
-          CG.Loophole (arg_type, CG.Type.Addr);
-        END;
+        ArgToWord (arg_type);
         CG.Pop_param (CG.Type.Addr);
         PassLocation ();
       ELSE
         PassLocation ();
         CG.Push (tmp);
-        IF (arg_type # CG.Type.Addr) THEN
-          CG.Loophole (arg_type, CG.Type.Addr);
-        END;
+        ArgToWord (arg_type);
         CG.Pop_param (CG.Type.Addr);
         LoadSelf (t);
         CG.Pop_param (CG.Type.Addr);
@@ -198,6 +194,48 @@ PROCEDURE PassLocation () =
       CG.Pop_param (CG.Type.Addr);
     END;
   END PassLocation;
+
+(* EXPORTED: *)
+PROCEDURE ArgToWord (t: CG.Type) =
+  BEGIN
+    CASE t OF
+    | CG.Type.Addr =>
+    | CG.Type.Reel =>
+        CG.Loophole (t, CG.Type.Int32);
+        IF Target.Integer.cg_type # CG.Type.Int32 THEN
+          CG.Loophole (CG.Type.Int32, Target.Integer.cg_type);
+        END;
+        CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
+    | CG.Type.LReel, CG.Type.XReel =>
+        (* XReel arrives here only where EXTENDED is 64 bits (Darwin,
+           Windows): a larger argument, such as AMD64_LINUX's 128-bit
+           EXTENDED, is passed by reference (ArgByReference, refTipe) and
+           never reaches ArgToWord. *)
+        CG.Loophole (t, CG.Type.Int64);
+        CG.Loophole (CG.Type.Int64, CG.Type.Addr);
+    ELSE
+      CG.Loophole (t, CG.Type.Addr);
+    END;
+  END ArgToWord;
+
+(* EXPORTED: *)
+PROCEDURE ArgFromWord (t: CG.Type) =
+  BEGIN
+    CASE t OF
+    | CG.Type.Addr =>
+    | CG.Type.Reel =>
+        CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+        IF Target.Integer.cg_type # CG.Type.Int32 THEN
+          CG.Loophole (Target.Integer.cg_type, CG.Type.Int32);
+        END;
+        CG.Loophole (CG.Type.Int32, t);
+    | CG.Type.LReel, CG.Type.XReel =>
+        CG.Loophole (CG.Type.Addr, CG.Type.Int64);
+        CG.Loophole (CG.Type.Int64, t);
+    ELSE
+      CG.Loophole (CG.Type.Addr, t);
+    END;
+  END ArgFromWord;
 
 (* EXPORTED: *)
 PROCEDURE ArgByReference (type: Type.T): BOOLEAN =
