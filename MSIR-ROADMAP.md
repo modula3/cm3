@@ -577,11 +577,22 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      per-variable declaration lines;
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
      that MSIR's m3tests run at `-O3`.
-2. *Modula-3 knowledge through debugger scripting*, shipped with cm3:
-   lldb data formatters and gdb Python pretty-printers for TEXT, open-array
-   dopes, an object's dynamic type (typecode to name through RT0) and
-   REFANY.  This recovers most of m3gdb's printing without a forked
-   debugger.
+2. *Modula-3 formats its own values*, in the spirit of Ramsey and
+   Hanson's ldb, where the debugger's language knowledge was data it ran
+   rather than code built into it.  The runtime already knows the types:
+   every traced object has a typecode, and its typecell gives the name, the
+   GC map and, through `RTTipe`, the full structural description pickles
+   use.  So a Modula-3 formatter in m3core (say `RTDebug.Format`) prints
+   any reference completely: TEXT contents, open-array shapes, objects by
+   their dynamic type with every field, recursively.  lldb and gdb reach it
+   through thin shims that call it in the stopped process, so one formatter
+   serves both debuggers and both backends.  DWARF still finds locals and
+   types values not reached through a reference.  The formatter must not
+   allocate on the traced heap or take locks, and must read memory
+   defensively (a corrupt heap, a stop inside the collector).  It needs a
+   live process, so plain DWARF printing (with Python formatters if needed)
+   stays the fallback for core files.  A full ldb-style debugger in
+   Modula-3, talking to a nub, is not planned.
 3. *m3gdb stays as it is* for GCC-backend users while that backend exists;
    no new work.  What stock debuggers lack is m3gdb's Modula-3 expression
    evaluator (they parse expressions as C).  Ask m3gdb's users (Mika) which
