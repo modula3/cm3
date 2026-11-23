@@ -1394,7 +1394,8 @@ PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
     shimArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
     shimArgs[0] := envPtr;
     FOR i := 0 TO nArgs - 1 DO shimArgs[1 + i] := args[i] END;
-    closureRes := EmitCallIndirect(name, shimPtr, rtype, shimArgs^);
+    (* fn was checked above; the shim of a closure is never NIL *)
+    closureRes := MSIR.BuildCallIndirect(CurrentBlock(), name, shimPtr, rtype, shimArgs^);
     IF NOT isVoid THEN
       MSIR.BuildStore(curBlock, closureRes, resultSlot);
     END;
@@ -1402,7 +1403,7 @@ PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
 
     (* Direct path: call fn directly. *)
     SetCurrentBlock(directBlk);
-    directRes := EmitCallIndirect(name, fn, rtype, args);
+    directRes := MSIR.BuildCallIndirect(CurrentBlock(), name, fn, rtype, args);
     IF NOT isVoid THEN
       MSIR.BuildStore(curBlock, directRes, resultSlot);
     END;
