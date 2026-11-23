@@ -489,7 +489,11 @@ PROCEDURE ModuleAddRevelation  (m: Module;  r: Revelation);
 PROCEDURE ModuleRevelationCount(m: Module): INTEGER;
 PROCEDURE ModuleRevelation     (m: Module;  i: INTEGER): Revelation;
 
-(* TEXT literals — populated by MSIREmit.EndUnit from TextExpr.Literal* *)
+(* TEXT literals, added by the front end as it compiles them.  chars holds the
+   characters (for a wide literal, cnt < 0 and chars holds each WIDECHAR as
+   little-endian bytes); cnt is the length.  ModuleAddTextLit returns the
+   literal's uid, its index here; an equal literal added again gets the same
+   uid. *)
 PROCEDURE ModuleAddTextLit  (m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER;
 PROCEDURE ModuleTextLitCount(m: Module): INTEGER;
 PROCEDURE ModuleTextLitChars(m: Module;  uid: INTEGER): TEXT;

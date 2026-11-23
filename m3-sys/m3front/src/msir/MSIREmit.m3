@@ -1,7 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError, Word;
-IMPORT TextExpr, M3String, M3WString;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
 IMPORT RunTyme, Error, Fmt;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
@@ -137,43 +136,6 @@ PROCEDURE EndUnit() =
         MSIR.SetModuleFrameHooks(curModule,
           MSIRBuilder.HookProc(RunTyme.Hook.PushEFrame),
           MSIRBuilder.HookProc(RunTyme.Hook.PopEFrame));
-      END;
-    END;
-    (* Populate text literals from TextExpr's per-module registry.
-       TextExpr.SetUID tracks literals during compilation; we transfer
-       them here so MSIRToLLVM (in the msir package) can emit the LLVM globals
-       without importing TextExpr (which would create a circular dependency).
-       Split8/Split32 on the stored expression give chars and cnt. *)
-    FOR uid := 0 TO TextExpr.LiteralCount() - 1 DO
-      VAR e := TextExpr.LiteralExpr(uid);
-          s8: M3String.T;  s32: M3WString.T;
-          chars: TEXT;  cnt: INTEGER;
-      BEGIN
-        IF TextExpr.Split8(e, s8) THEN
-          chars := M3String.ToText(s8);
-          cnt   := M3String.Length(s8);
-        ELSE
-          (* Wide-char literal: encode each WIDECHAR as little-endian bytes.
-             MSIRToLLVM detects cnt<0 and emits the appropriately-sized struct. *)
-          EVAL TextExpr.Split32(e, s32);
-          VAR wlen      := M3WString.Length(s32);
-              wcharBytes := Target.WideCharSize() DIV Target.Char.size;
-              byteArr    := NEW(REF ARRAY OF CHAR, wlen * wcharBytes);
-          BEGIN
-            FOR k := 0 TO wlen - 1 DO
-              VAR cp := M3WString.GetChar(s32, k);
-              BEGIN
-                FOR b := 0 TO wcharBytes - 1 DO
-                  byteArr[k * wcharBytes + b] :=
-                    VAL(Word.And(Word.RightShift(cp, b * 8), 16_FF), CHAR);
-                END;
-              END;
-            END;
-            chars := Text.FromChars(byteArr^);
-            cnt   := - wlen;
-          END;
-        END;
-        EVAL MSIR.ModuleAddTextLit(curModule, chars, cnt);
       END;
     END;
     (* Register the five TextLiteral vtable method procs so MSIRToLLVM can

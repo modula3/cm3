@@ -2,7 +2,7 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT;
+IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT, TextIntTbl;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -942,6 +942,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   importBinders: RefSeq.T;                         (* elements: TEXT binder names *)
   typeDescs:     RefSeq.T;                         (* elements: TypeDesc *)
   textLiterals:  RefSeq.T;                         (* elements: TextLit *)
+  textLitIndex:  TextIntTbl.T;                     (* LitKey -> uid *)
   constArrays:   RefSeq.T;                         (* elements: ConstArray *)
   nextGlobalOff: INTEGER := 0;  (* byte offset for next embedded user global *)
   moduleGcMap: GcMapBytes := NIL;  (* front-end TipeMap bytes for RT0.ModuleInfo
@@ -1395,10 +1396,13 @@ TYPE TextLit = REF RECORD  (* populated by MSIREmit.EndUnit from TextExpr *)
 END;
 
 PROCEDURE ModuleAddTextLit(m: Module;  chars: TEXT;  cnt: INTEGER): INTEGER =
-  VAR lit: TextLit;  n := m.textLiterals.size();
+  VAR n: INTEGER;
+      key := Fmt.Int(cnt) & ":" & chars;  (* cnt < 0 marks a wide literal *)
   BEGIN
-    lit := NEW(TextLit, chars := chars, cnt := cnt);
-    m.textLiterals.addhi(lit);
+    IF m.textLitIndex.get(key, n) THEN RETURN n END;
+    n := m.textLiterals.size();
+    m.textLiterals.addhi(NEW(TextLit, chars := chars, cnt := cnt));
+    EVAL m.textLitIndex.put(key, n);
     RETURN n;
   END ModuleAddTextLit;
 PROCEDURE ModuleTextLitCount(m: Module): INTEGER =
@@ -1524,6 +1528,7 @@ PROCEDURE NewModule(name: TEXT): Module =
     m.importBinders := NEW(RefSeq.T).init();
     m.typeDescs      := NEW(RefSeq.T).init();
     m.textLiterals   := NEW(RefSeq.T).init();
+    m.textLitIndex   := NEW(TextIntTbl.Default).init();
     m.constArrays    := NEW(RefSeq.T).init();
     m.nextGlobalOff  := 0;  (* lazily initialised to MI_SIZE on first allocation *)
     RETURN m;

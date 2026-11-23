@@ -3056,8 +3056,9 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
   (* Emit TextLiteral.T globals for every string literal in the module.
      Layout of each @textlit_N:
        { i{AP} gc_header, ptr method_list, i{IP} cnt, [len+1 x i8] chars }
-     Literal data comes from TextExpr.LiteralCount/Chars/Cnt — the same
-     per-module registry the CG path uses (SetUID tracking). *)
+     Literal data comes from the module's text literal table (the
+     ModuleTextLit procedures), which the front end fills as it compiles
+     each literal. *)
   VAR
     GcHeader := Word.Shift(TEXT_typecode, RH_typecode_offset);
     ip       := "i" & Fmt.Int(Target.Integer.size);

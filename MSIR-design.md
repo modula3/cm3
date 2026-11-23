@@ -2154,7 +2154,10 @@ most serious findings spot-checked against the code.  Nothing built.
   re-implement "repeat last element" (`MSIRBuilder.m3:2320-2650`).  Fix: move into
   `ArrayExpr.genLiteralMSIR`/`compileLValueMSIR`; drop the accessors.  **Done.**
 - `TextExpr`: MSIR literals call `SetUID` (CG global-data allocation); `MSIREmit`
-  iterates the CG literal table via `LiteralCount`/`LiteralExpr`.
+  iterates the CG literal table via `LiteralCount`/`LiteralExpr`.  **Done**:
+  `TextExpr.CompileMSIR` adds the literal to the MSIR module itself
+  (`MSIR.ModuleAddTextLit`, which now deduplicates equal literals), so the CG
+  table is the C walk's alone; the transfer and the two accessors are gone.
 - Sub-byte stores dispatched by probing four modules in turn (`AssignStmt`, `Inc`,
   `Dec`) instead of an Expr method; `EmitUseFailureMSIR` likewise.  Fix: ExprRep
   methods `storeMSIR`, `checkUseFailureMSIR`.  **Done**; `storeMSIR` has since

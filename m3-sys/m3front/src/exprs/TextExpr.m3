@@ -8,7 +8,7 @@
 
 MODULE TextExpr;
 
-IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf;
+IMPORT M3, CG, Expr, ExprRep, M3String, Textt, Type, M3Buf, Text;
 IMPORT Target, Module, M3RT, M3WString, RunTyme, Procedure, Word;
 IMPORT MSIR, MSIRBuilder, MSIREmit;
 
@@ -316,22 +316,47 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF NOT MSIREmit.IsEnabled () THEN
       RETURN MSIR.ConstNil (MSIR.TGcRef (MSIR.TVoid ()));
     END;
-    (* A text literal is a pure compile-time constant (SetUID + ConstTextLit emit
-       no instructions), so build it even outside a proc — const record
+    (* A text literal is a pure compile-time constant (it emits no
+       instructions), so build it even outside a proc — const record
        initializers of module globals are captured at global-declaration time
-       (Variable.DeclareGlobalMSIR), where InProc is FALSE. *)
-    (* SetUID registers the literal in the CG per-module table (deduplication)
-       and returns the uid used to name the LLVM global @textlit_<uid>. *)
-    uid := SetUID (p);
+       (Variable.DeclareGlobalMSIR), where InProc is FALSE.  It is registered
+       in the MSIR module, which names its global @textlit_<uid>; the CG
+       literal table (SetUID) is the C walk's. *)
+    IF MSIREmit.CurrentModule () = NIL THEN
+      MSIRBuilder.Abandon ("text literal outside a unit");
+      RETURN NIL;
+    END;
     IF p.value8 # NIL THEN
       chars := M3String.ToText (p.value8);
       cnt   := M3String.Length (p.value8);
+      uid   := MSIR.ModuleAddTextLit (MSIREmit.CurrentModule (), chars, cnt);
     ELSE
-      chars := M3WString.ToLiteral (p.value32);
       cnt   := - M3WString.Length (p.value32);
+      uid   := MSIR.ModuleAddTextLit (MSIREmit.CurrentModule (),
+                                      WideBytes (p.value32), cnt);
+      chars := M3WString.ToLiteral (p.value32);  (* for the printer *)
     END;
     RETURN MSIR.ConstTextLit (uid, chars, cnt);
   END CompileMSIR;
+
+PROCEDURE WideBytes (s: M3WString.T): TEXT =
+  (* each WIDECHAR of s as little-endian bytes, as the MSIR module's text
+     literal table holds a wide literal *)
+  VAR wlen       := M3WString.Length (s);
+      wcharBytes := Target.WideCharSize () DIV Target.Char.size;
+      bytes      := NEW (REF ARRAY OF CHAR, wlen * wcharBytes);
+  BEGIN
+    FOR k := 0 TO wlen - 1 DO
+      VAR cp := M3WString.GetChar (s, k);
+      BEGIN
+        FOR b := 0 TO wcharBytes - 1 DO
+          bytes[k * wcharBytes + b] :=
+            VAL (Word.And (Word.RightShift (cp, b * 8), 16_FF), CHAR);
+        END;
+      END;
+    END;
+    RETURN Text.FromChars (bytes^);
+  END WideBytes;
 
 PROCEDURE CompileLValueMSIR (p: P;  <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
   (* A text literal has no addressable storage, but READONLY formal passing
@@ -355,14 +380,6 @@ PROCEDURE CompileLValueMSIR (p: P;  <*UNUSED*> VAR container: MSIR.Value): MSIR.
     RETURN slot;
   END CompileLValueMSIR;
 
-PROCEDURE LiteralCount (): INTEGER =
-  BEGIN RETURN nextUID END LiteralCount;
-
-PROCEDURE LiteralExpr (uid: INTEGER): Expr.T =
-  BEGIN
-    IF literals = NIL OR uid > LAST(literals^) THEN RETURN NIL END;
-    RETURN literals[uid];
-  END LiteralExpr;
 
 BEGIN
 END TextExpr.
