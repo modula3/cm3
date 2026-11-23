@@ -647,10 +647,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         (* Structure → scalar.  If the source expression is a designator
            (local or global variable), take its address and load dstT from it.
            Otherwise spill the struct value to a temporary alloca first. *)
-        blk := MSIRBuilder.CurrentBlock ();
+        (* blk is fetched after the operand is compiled: its checks or calls
+           may have moved emission to a new block. *)
         IF Expr.IsDesignator (p.expr) THEN
           VAR addr := Expr.LValueMSIR (p.expr); BEGIN
             IF addr = NIL THEN RETURN NIL END;
+            blk := MSIRBuilder.CurrentBlock ();
             (* Retype addr to ptr(dstT) so the load's pointee type matches
                its result type (memory reinterpretation). *)
             RETURN MSIR.BuildLoad (blk, "", dstT,
@@ -659,6 +661,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         ELSE
           VAR v := Expr.CompileMSIR (p.expr); BEGIN
             IF v = NIL THEN RETURN NIL END;
+            blk := MSIRBuilder.CurrentBlock ();
             VAR srcT := MSIR.ValueType (v);
                 slot := MSIR.BuildAlloca (blk, "", srcT);
             BEGIN
