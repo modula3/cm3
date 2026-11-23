@@ -1975,8 +1975,9 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    AltConfig = {"NT386":"x86"}.get(Config, Config)
+    AltConfig = {"NT386":"I386_NT"}.get(Config, Config)
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
+    c = a
     if Config == "NT386" or Config.endswith("_NT"):
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     else:
@@ -1988,7 +1989,9 @@ def FormInstallRoot(PackageSetName):
         b = re.sub("[ \r\n]", "", b)
         if len(b) > 0:
             a = a + "-" + b
-    a = a + "-" + time.strftime("%Y%m%d")
+    # undo much of above
+    # TODO: git hash
+    a = c + "-" + time.strftime("%Y%m%d")
     return a
 
 def SearchPathWix():
