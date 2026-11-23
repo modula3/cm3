@@ -1010,6 +1010,8 @@ def _MakeTGZ(a):
     else:
         Tar = SearchPath("gtar") or SearchPath("tar")
     b = Tar + " cfz " + out + " " + a
+    if SearchPath("wsl.exe") or SearchPath("wsl"):
+        b = "wsl " + b
     print(b + "\n")
     os.system(b)
 
@@ -1017,6 +1019,8 @@ def _MakeZip(a):
     out = a + ".zip"
     DeleteFile(out)
     b = "zip -r " + out + "  " + a
+    if SearchPath("wsl.exe") or SearchPath("wsl"):
+        b = "wsl " + b
     print(b + "\n")
     os.system(b)
 
@@ -2259,6 +2263,8 @@ def MakeDebianPackage(input, prefix):
     os.system(command)
 
     command = "gzip ../control.tar"
+    if SearchPath("wsl.exe") or SearchPath("wsl"):
+        command = "wsl " + command
     print(command)
     os.system(command)
 

@@ -1017,6 +1017,8 @@ def _MakeZip(a):
     out = a + ".zip"
     DeleteFile(out)
     b = "zip -r " + out + "  " + a
+    if SearchPath("wsl.exe") or SearchPath("wsl"):
+        b = "wsl " + b
     print(b + "\n")
     os.system(b)
 

@@ -91,6 +91,9 @@ def MakeArchive(PackageSetName, Command, Extension):
 
     Archive = FormInstallRoot(PackageSetName) + "." + Extension
     DeleteFile(Archive)
+    wsl = ""
+    if SearchPath("wsl.exe") or SearchPath("wsl"):
+        wsl = "wsl "
     if Extension.startswith("tar."):
         Compression = GetPathExtension(Extension)
         TarFile = RemovePathExtension(Archive)
@@ -98,9 +101,9 @@ def MakeArchive(PackageSetName, Command, Extension):
         TarCommand = re.sub("[jz]", "", Command)
         Run(TarCommand + " " + TarFile + " " + os.path.basename(InstallRoot))
         Compresser = {"gz" : "gzip", "bz2" : "bzip2"}.get(Compression) or Compression
-        Run(Compresser + " " + TarFile)
+        Run(wsl + Compresser + " " + TarFile)
     else:
-        Run(Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
+        Run(wsl + Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
 
     #
     # Building a self extracting .exe is very easy but not present for now.
