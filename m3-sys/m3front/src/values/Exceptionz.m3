@@ -207,6 +207,10 @@ PROCEDURE ArgToWord (t: CG.Type) =
         END;
         CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
     | CG.Type.LReel, CG.Type.XReel =>
+        (* XReel arrives here only where EXTENDED is 64 bits (Darwin,
+           Windows): a larger argument, such as AMD64_LINUX's 128-bit
+           EXTENDED, is passed by reference (ArgByReference, refTipe) and
+           never reaches ArgToWord. *)
         CG.Loophole (t, CG.Type.Int64);
         CG.Loophole (CG.Type.Int64, CG.Type.Addr);
     ELSE
