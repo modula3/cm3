@@ -662,9 +662,12 @@ the only lowering m3gdb would see little more than any old gdb.  So:
    (`DICompileUnit` `retainedTypes`, from `ObjectType.InitTypecellMSIR`),
    so the dynamic type is there even when no variable is declared with it.
    Untraced objects carry a typecode header too and are handled alike; a
-   plain UNTRACED REF's referent has none, so `RTDebug.Format` refuses a
-   "header" that names such a type, and the shim shows the referent
-   through its static type.
+   plain UNTRACED REF's referent has none, so the shim shows it through its
+   static type.  `RTDebug.Format` believes the word before an address only
+   if it names a type that could have put it there: a traced type in the
+   traced heap (the collector's page lookup), a TEXT literal or an untraced
+   object elsewhere.  A traced object's header forged in front of an
+   untraced block or static data used to pass for one, and no longer does.
    Global variables are in the DWARF too (2026-11-24): a
    `DIGlobalVariable` each, in the module's namespace (`target variable`,
    `Main::p`), located by an offset into the module's info struct or at a

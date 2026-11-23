@@ -2,7 +2,7 @@
 
 UNSAFE MODULE RTDebugFormat EXPORTS RTDebug;
 
-IMPORT RT0, RTType, Text, Word;
+IMPORT RT0, RTType, RTHeapRep, Text, TextLiteral, Word;
 
 CONST
   BufLen  = 1024;
@@ -14,20 +14,34 @@ VAR
   len : CARDINAL := 0;
 
 PROCEDURE TypecodeOf (r: ADDRESS;  VAR tc: INTEGER): BOOLEAN =
-  VAR def: RT0.TypeDefn;
+  (* Whether r is a reference whose header can be trusted, and its
+     typecode.  A traced referent is in the traced heap, except a TEXT
+     literal, which the compiler lays out with a header in static data; an
+     untraced object is anywhere, with a header; a plain UNTRACED REF's
+     referent has no header at all.  So the word before r is believed only
+     if it names a type that could have put it there.  The heap test is the
+     collector's own page lookup (as its conservative stack scan uses):
+     read-only and lock-free. *)
+  VAR def: RT0.TypeDefn;  page: RTHeapRep.RefPage;  inHeap: BOOLEAN;
   BEGIN
     IF (r = NIL)
       OR (Word.And (LOOPHOLE (r, Word.T), ADRSIZE (ADDRESS) - 1) # 0) THEN
       RETURN FALSE;
     END;
+    page := RTHeapRep.AddressToPage (r);
+    inHeap := (page # NIL)
+      AND (page.desc.space IN SET OF RTHeapRep.Space
+             {RTHeapRep.Space.Current, RTHeapRep.Space.Previous});
     tc := TYPECODE (LOOPHOLE (r, REFANY));
     IF (tc < 0) OR (RTType.MaxTypecode () < tc) THEN RETURN FALSE; END;
     def := RTType.Get (tc);
-    (* Only traced referents and untraced objects have a header: a plain
-       UNTRACED REF's referent is a bare block, and what precedes it is not
-       a typecode, so a "header" naming such a type is not one. *)
-    RETURN (def # NIL)
-             AND ((def.traced # 0) OR (def.kind = ORD (RT0.TypeKind.Obj)));
+    IF (def = NIL) THEN RETURN FALSE; END;
+    IF inHeap THEN
+      RETURN (def.traced # 0);
+    ELSE
+      RETURN (tc = TYPECODE (TextLiteral.T))
+               OR ((def.traced = 0) AND (def.kind = ORD (RT0.TypeKind.Obj)));
+    END;
   END TypecodeOf;
 
 PROCEDURE TypeName (r: ADDRESS): ADDRESS =
