@@ -15,7 +15,7 @@ IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
 IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, RTIOld, RTParams;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -124,7 +124,7 @@ PROCEDURE Parse (): T =
       RTIO.PutText ("Type.Parse ");
       RTIO.PutText (case);
       RTIO.PutText (" ");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;

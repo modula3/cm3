@@ -24,6 +24,7 @@ include_dir ("misc")
 include_dir ("stmts")
 include_dir ("types")
 include_dir ("values")
+module ("RTIOld")
 
 build_standalone ()
 Library ("m3front")

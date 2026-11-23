@@ -1,0 +1,144 @@
+---
+name: AMD64_NT_ALT
+#
+# Bootstrap cm3 from an old C backend release, which was done manually at the time.
+# The release is cm3/mklib only.
+# Download the m3core/libm3 source from same day and build that with the old compiler.
+# Use HEAD config (could try the old config).
+#
+# Caveat: The compiler has several known bugs, none of which appear to surface here.
+#
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-latest
+        type: string
+      bootstrap_compiler_url_base:
+        default: https://github.com/modula3/cm3/releases/download/20210312
+        type: string
+      # Inputs cannot reference inputs?
+      bootstrap_version:
+        default: d5.11.0-20210312
+        type: string
+      bootstrap_compiler_archive:
+        default: cm3-boot-win64-d5.11.0-20210312.zip
+        type: string
+      bootstrap_compiler_dir:
+        default: cm3-boot-AMD64_NT-d5.11.0-20210312
+        type: string
+      bootstrap_library_url:
+        default: https://github.com/modula3/cm3/archive/refs/tags/20210312.tar.gz
+        type: string
+      bootstrap_library_archive:
+        default: 20210312.tar.gz
+        type: string
+      bootstrap_library_dir:
+        default: cm3-20210312
+        type: string
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 35
+    env:
+      CM3_TARGET: AMD64_NT
+      PSNativeCommandUseErrorActionPreference: true
+    steps:
+    - name: environment
+      shell: cmd
+      run: |
+        call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+        set CM3_INSTALL=%CD%/../install/cm3
+        mkdir "%CM3_INSTALL%/bin/config"
+        echo CM3_INSTALL=%CM3_INSTALL%>>%GITHUB_ENV%
+        echo %CM3_INSTALL%/bin>>%GITHUB_PATH%
+        echo PATH=%PATH%>>%GITHUB_ENV%
+        echo INCLUDE=%INCLUDE%>>%GITHUB_ENV%
+        echo LIB=%LIB%>>%GITHUB_ENV%
+        echo EXE=.exe>>%GITHUB_ENV%
+
+# Some steps run in ".." in order to not conflict with get_source.
+
+    - parallel:
+      - name: bootstrap compiler
+        background: true
+        shell: pwsh
+        working-directory: ..
+        run: |
+          Set-PSDebug -Trace 1
+          $ErrorActionPreference = "Stop"
+          # Piping curl to tar reliably partially fails, misses some files.
+          curl -fLO ${{inputs.bootstrap_compiler_url_base}}/${{inputs.bootstrap_compiler_archive}}
+          tar xf ${{inputs.bootstrap_compiler_archive}}
+          rm ${{inputs.bootstrap_compiler_archive}}
+          cd ${{inputs.bootstrap_compiler_dir}}
+          nmake >>make.log
+          copy cm3* $env:CM3_INSTALL/bin
+          copy mklib* $env:CM3_INSTALL/bin
+
+      # The bootstrap archive is only the compiler.
+      # While m3core/libm3 have proven very compatible through time,
+      # depending on this is not great. Future bootstraps
+      # will maybe include m3core, libm3, and config.
+      # This is an old git checkout, avoid scripts?
+      - name: bootstrap library download
+        background: true
+        shell: pwsh
+        working-directory: ..
+        run: |
+          Set-PSDebug -Trace 1
+          $ErrorActionPreference = "Stop"
+          # Piping curl to tar reliably partially fails, misses some files.
+          curl -fLO ${{inputs.bootstrap_library_url}}
+          tar xf ${{inputs.bootstrap_library_archive}}
+          rm ${{inputs.bootstrap_library_archive}}
+
+      - name: get source
+        uses: actions/checkout@v7
+        background: true
+
+    # TODO: Use old config.
+    - name: install current config for old compiler
+      working-directory: scripts/python3
+      run: python3 ./make-dist-cfg.py
+
+    - name: bootstrap library build
+      shell: pwsh
+      working-directory: ..
+      run: |
+        Set-PSDebug -Trace 1
+        $ErrorActionPreference = "Stop"
+        cd ${{inputs.bootstrap_library_dir}}
+        cd m3-libs/m3core
+        cm3 -build -DM3BOOT2 -no-m3ship-resolution -group-writable
+        cm3 -ship -DM3BOOT2 -no-m3ship-resolution -group-writable
+        cd  ../libm3
+        cm3 -build -DM3BOOT2 -no-m3ship-resolution -group-writable
+        cm3 -ship -DM3BOOT2 -no-m3ship-resolution -group-writable
+
+    - name: build new compiler with old (M3BOOT2) and then with itself
+      working-directory: scripts/python3
+      run: python3 ./upgrade2.py
+
+    - name: Run compiler validation suite
+      background: true
+      continue-on-error: true
+      run: cm3 -DHTML
+      working-directory: m3-sys/m3tests
+
+    - name: Finish build and make min and all distributions.
+      shell: pwsh
+      run: |
+        Set-PSDebug -Trace 1
+        $ErrorActionPreference = "Stop"
+
+        # TODO: Include git hash and timestamp in archive name, and make it a release optionally.
+        tar cfz cm3-min-$env:CM3_TARGET.tar.gz $env:CM3_INSTALL
+
+        pushd scripts/python3
+        python3 ./do-cm3-all.py buildship skipgcc c
+        popd
+
+        tar cfz cm3-all-$env:CM3_TARGET.tar.gz $env:CM3_INSTALL
+
+    # TODO: make boot1 (Windows), boot1autotools (Unix)
