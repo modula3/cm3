@@ -493,12 +493,14 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
     IF t.indirect THEN
-      (* An indirect designator alias (WITH x = <bitfield>) cannot be held by
-         reference — the source has no lvalue.  force=TRUE turns it into a plain
-         by-value local: the caller stores the extracted rvalue into the slot,
-         and reads go through LookupVar as an ordinary value. *)
+      (* A designator alias (WITH x = d) whose designator has no lvalue
+         cannot be held by reference.  force=TRUE gives it a plain by-value
+         slot: the caller stores the value there, and reads go through the
+         varMap entry as an ordinary local.  t.indirect is left alone: the C
+         walk reads it (Split, LoadLValue), possibly after this one, for a
+         nested procedure compiled later.  The MSIR walk never changes
+         front-end state; the varMap records how MSIR bound the alias. *)
       IF NOT force THEN RETURN FALSE END;
-      t.indirect := FALSE;
     END;
     mt := MSIRType.Translate (t.type);
     IF mt = NIL THEN RETURN FALSE END;
