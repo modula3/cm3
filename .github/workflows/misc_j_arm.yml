@@ -1,0 +1,43 @@
+---
+name: misc_j_arm
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: windows-11-arm
+        type: string
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 35
+    env:
+      CM3_TARGET: ARM32_NT
+    steps:
+    - name: environment(cmd)
+      shell: cmd
+      run: |
+        dir /s/b "c:\program files\cl.exe"
+        dir /s/b "c:\program files\*.bat"
+         call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
+        echo PATH=%PATH%>>%GITHUB_ENV%
+        echo INCLUDE=%INCLUDE%>>%GITHUB_ENV%
+        echo LIB=%LIB%>>%GITHUB_ENV%
+    - name: environment(pwsh)
+      shell: pwsh
+      run: |
+        $env:CM3_INSTALL = "$PWD/../install/cm3"
+        mkdir "$env:CM3_INSTALL/bin/config"
+        "CM3_INSTALL=$env:CM3_INSTALL" >> $env:GITHUB_ENV
+        "$env:CM3_INSTALL/bin" >> $env:GITHUB_PATH
+        "EXE=.exe" >> $env:GITHUB_ENV
+        $env:GIT_REVISION = $env:GITHUB_SHA.Substring(0, 7)
+        $env:BUILD_DATETIME = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd")
+        "GIT_REVISION=$env:GIT_REVISION" >> $env:GITHUB_ENV
+        "BUILD_DATETIME=$env:BUILD_DATETIME" >> $env:GITHUB_ENV
+
+    - name: test1
+      shell: cmd
+      run: |
+        cl
+        cl hello.c
+        .\hello
