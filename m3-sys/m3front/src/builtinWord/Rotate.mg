@@ -147,6 +147,11 @@ PROCEDURE RotateLeftMSIR (ce: CallExpr.T): MSIR.Value =
     wt := MSIR.TI (W);
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    (* As Compile: n is in [0..Size-1], or ValueOutOfRange. *)
+    n := CheckExpr.EmitChecksMSIR (n, ce.args[1], TInt.Zero, max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF n = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
     CoerceWordOperands (b, W, wt, x, n);
     RETURN MSIR.BuildIRotL (b, "", x, n);
   END RotateLeftMSIR;
@@ -160,6 +165,11 @@ PROCEDURE RotateRightMSIR (ce: CallExpr.T): MSIR.Value =
     wt := MSIR.TI (W);
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    (* As Compile: n is in [0..Size-1], or ValueOutOfRange. *)
+    n := CheckExpr.EmitChecksMSIR (n, ce.args[1], TInt.Zero, max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF n = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
     CoerceWordOperands (b, W, wt, x, n);
     RETURN MSIR.BuildIRotR (b, "", x, n);
   END RotateRightMSIR;

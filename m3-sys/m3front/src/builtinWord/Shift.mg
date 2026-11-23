@@ -153,7 +153,7 @@ PROCEDURE ShiftMSIR (ce: CallExpr.T): MSIR.Value =
   END ShiftMSIR;
 
 PROCEDURE ShiftLeftMSIR (ce: CallExpr.T): MSIR.Value =
-  (* LeftShift: 0 <= n < W guaranteed by type; emit shl with safety mask. *)
+  (* LeftShift: n checked to [0..W-1]; emit shl with safety mask. *)
   VAR
     x   := Expr.CompileMSIR (ce.args[0]);
     n   := Expr.CompileMSIR (ce.args[1]);
@@ -163,6 +163,11 @@ PROCEDURE ShiftLeftMSIR (ce: CallExpr.T): MSIR.Value =
     xb, nb : INTEGER;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    (* As Compile: n is in [0..Size-1], or ValueOutOfRange. *)
+    n := CheckExpr.EmitChecksMSIR (n, ce.args[1], TInt.Zero, max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF n = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
     xb := MSIR.BitWidth (MSIR.ValueType (x));
     nb := MSIR.BitWidth (MSIR.ValueType (n));
     IF xb > 0 AND xb # Word_types[rep].size THEN
@@ -179,7 +184,7 @@ PROCEDURE ShiftLeftMSIR (ce: CallExpr.T): MSIR.Value =
   END ShiftLeftMSIR;
 
 PROCEDURE ShiftRightMSIR (ce: CallExpr.T): MSIR.Value =
-  (* RightShift: 0 <= n < W guaranteed by type; emit lshr with safety mask. *)
+  (* RightShift: n checked to [0..W-1]; emit lshr with safety mask. *)
   VAR
     x   := Expr.CompileMSIR (ce.args[0]);
     n   := Expr.CompileMSIR (ce.args[1]);
@@ -189,6 +194,11 @@ PROCEDURE ShiftRightMSIR (ce: CallExpr.T): MSIR.Value =
     xb, nb : INTEGER;
   BEGIN
     IF x = NIL OR n = NIL THEN RETURN NIL END;
+    (* As Compile: n is in [0..Size-1], or ValueOutOfRange. *)
+    n := CheckExpr.EmitChecksMSIR (n, ce.args[1], TInt.Zero, max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF n = NIL THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
     xb := MSIR.BitWidth (MSIR.ValueType (x));
     nb := MSIR.BitWidth (MSIR.ValueType (n));
     IF xb > 0 AND xb # Word_types[rep].size THEN

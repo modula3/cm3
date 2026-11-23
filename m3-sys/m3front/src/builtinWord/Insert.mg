@@ -104,6 +104,29 @@ PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
        AND (0 <= i) AND (i <= Word_types[rep].size);
   END GetBitIndex;
 
+PROCEDURE CheckBitsMSIR (VAR i, n: MSIR.Value;  ie, ne: Expr.T): BOOLEAN =
+  (* As Compile: i and n are CARDINALs, and with Host.doRangeChk, i + n is at
+     most the word size; ValueOutOfRange otherwise.  FALSE if abandoned. *)
+  VAR intT := MSIR.TI (Target.Integer.size);  blk: MSIR.Block;
+  BEGIN
+    i := CheckExpr.EmitChecksMSIR (i, ie, TInt.Zero, Target.Integer.max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF i = NIL THEN RETURN FALSE END;
+    n := CheckExpr.EmitChecksMSIR (n, ne, TInt.Zero, Target.Integer.max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF n = NIL THEN RETURN FALSE END;
+    IF Host.doRangeChk THEN
+      blk := MSIRBuilder.CurrentBlock ();
+      MSIRBuilder.EmitReportFault (
+        MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt,
+          MSIR.BuildIAdd (blk, "", MSIRBuilder.CoerceToMSIR (blk, i, intT),
+                                   MSIRBuilder.CoerceToMSIR (blk, n, intT)),
+          MSIR.ConstInt (intT, Word_types[rep].size)),
+        ORD (CG.RuntimeError.ValueOutOfRange));
+    END;
+    RETURN TRUE;
+  END CheckBitsMSIR;
+
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   (* Insert(x, y, i, n): insert n low-order bits of y into x at position i.
      mask         = lshr(allones, W-n)    -- n-bit mask in LSB
@@ -123,6 +146,8 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     xb, yb, ib, nb : INTEGER;
   BEGIN
     IF x = NIL OR y = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
+    IF NOT CheckBitsMSIR (i, n, ce.args[2], ce.args[3]) THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
     xb := MSIR.BitWidth (MSIR.ValueType (x));
     yb := MSIR.BitWidth (MSIR.ValueType (y));
     ib := MSIR.BitWidth (MSIR.ValueType (i));

@@ -113,6 +113,29 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     RETURN IntegerExpr.New (T, result);
   END Fold;
 
+PROCEDURE CheckBitsMSIR (VAR i, n: MSIR.Value;  ie, ne: Expr.T): BOOLEAN =
+  (* As Compile: i and n are CARDINALs, and with Host.doRangeChk, i + n is at
+     most the word size; ValueOutOfRange otherwise.  FALSE if abandoned. *)
+  VAR intT := MSIR.TI (Target.Integer.size);  blk: MSIR.Block;
+  BEGIN
+    i := CheckExpr.EmitChecksMSIR (i, ie, TInt.Zero, Target.Integer.max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF i = NIL THEN RETURN FALSE END;
+    n := CheckExpr.EmitChecksMSIR (n, ne, TInt.Zero, Target.Integer.max,
+                                   CG.RuntimeError.ValueOutOfRange);
+    IF n = NIL THEN RETURN FALSE END;
+    IF Host.doRangeChk THEN
+      blk := MSIRBuilder.CurrentBlock ();
+      MSIRBuilder.EmitReportFault (
+        MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt,
+          MSIR.BuildIAdd (blk, "", MSIRBuilder.CoerceToMSIR (blk, i, intT),
+                                   MSIRBuilder.CoerceToMSIR (blk, n, intT)),
+          MSIR.ConstInt (intT, Word_types[rep].size)),
+        ORD (CG.RuntimeError.ValueOutOfRange));
+    END;
+    RETURN TRUE;
+  END CheckBitsMSIR;
+
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   (* Extract(x, i, n): (x >> i) & ((1 << n) - 1)
      Mask computed as lshr(allones, W - n); for n = 0 the shift amount is W,
@@ -130,6 +153,8 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     xb, ib, nb : INTEGER;
   BEGIN
     IF x = NIL OR i = NIL OR n = NIL THEN RETURN NIL END;
+    IF NOT CheckBitsMSIR (i, n, ce.args[1], ce.args[2]) THEN RETURN NIL END;
+    b := MSIRBuilder.CurrentBlock ();
     xb := MSIR.BitWidth (MSIR.ValueType (x));
     ib := MSIR.BitWidth (MSIR.ValueType (i));
     nb := MSIR.BitWidth (MSIR.ValueType (n));
