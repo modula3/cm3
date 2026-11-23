@@ -103,9 +103,9 @@ VAR
 
 PROCEDURE IsFloatingPointConstant(sym: TEXT; len: INTEGER): BOOLEAN =
 BEGIN
-    RETURN (len = 4 AND Match (sym, 0, "_xmm"))
-        OR (len = 5 AND (Match (sym, 0, "_real") OR Match (sym, 0, "__xmm")))
-        OR (len = 6 AND (Match (sym, 0, "__real") OR Match (sym, 0, "__mask")));
+    RETURN (len >= 4 AND Match (sym, 0, "_xmm"))
+        OR (len >= 5 AND (Match (sym, 0, "_real") OR Match (sym, 0, "__xmm")))
+        OR (len >= 6 AND (Match (sym, 0, "__real") OR Match (sym, 0, "__mask")));
 END IsFloatingPointConstant;
 
 PROCEDURE HandleArchitecture(machine: INTEGER): BOOLEAN =
@@ -833,7 +833,9 @@ PROCEDURE IsKeeper (sym: TEXT): BOOLEAN =
     "_ftol2_sse",
     "_vfprintf_l",
     "__ftol2_sse",
-    "__vfprintf_l"
+    "__vfprintf_l",
+    "_Avx2WmemEnabledWeakValue",
+    "__Avx2WmemEnabledWeakValue"
     };
   VAR len := Text.Length (sym);
   BEGIN

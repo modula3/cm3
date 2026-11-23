@@ -535,6 +535,7 @@ p_test ("p2", "p305", "TRY EXCEPT ELSE catches EXIT and RETURN past named handle
 p_test ("p2", "p306", "ROUND breaks ties to even (FloatMode.RoundDefault)")
 p_test ("p2", "p307", "Subset comparisons of multi-word sets (C back end operand order)")
 p_test ("p2", "p308", "LOOPHOLE between REAL and a 32-bit packed subrange")
+p_test ("p2", "p309", "Exception arguments of type REAL and LONGREAL")
 p_test ("p2", "p310", "Packed designators: base evaluated once by assignment, INC, DEC, WITH")
 p_test ("p2", "p311", "Procedures in inner blocks of a nested procedure use outer variables")
 p_test ("p2", "p312", "Object type methods as procedure values, including an opaque supertype")
