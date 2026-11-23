@@ -9,7 +9,7 @@
 
 INTERFACE AssignStmt;
 
-IMPORT Expr, Stmt, Target, Type, CG;
+IMPORT Expr, Stmt, Target, Type, CG, MSIR;
 
 PROCEDURE Parse (): Stmt.T;
 
@@ -48,6 +48,13 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhs: Expr.T);
    PRE: TypeOf(rhs) is assignable to tlhs.
    PRE: Expr.Prep(rhs) has been called.
    PRE: 'tlhs' is not an open array type.  *)
+
+PROCEDURE EmitRTCheckMSIR (tlhs: Type.T;  rhs: Expr.T;
+                           rhsVal: MSIR.Value): MSIR.Value;
+(* As EmitRTCheck, for MSIR: given rhsVal, the compiled "rhs", emit the
+   runtime checks needed to assign it to a value of type 'tlhs' (an ordinal's
+   range, a reference's implicit NARROW, a nested procedure's assignability).
+   Return the checked value, or NIL if the procedure was abandoned. *)
 
 PROCEDURE DoGenRTAbort (Code: CG.RuntimeError): BOOLEAN;
 (* Does Code create runtime errors? *)

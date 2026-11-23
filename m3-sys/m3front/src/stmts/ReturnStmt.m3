@@ -10,7 +10,7 @@ MODULE ReturnStmt;
 
 IMPORT Expr, Error, Type, AssignStmt, Token, Scanner;
 IMPORT Variable, Marker, Stmt, StmtRep, ArrayExpr, Target, TInt;
-IMPORT MSIR, MSIRBuilder, CaptureAnalysis, CheckExpr, CG;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
   P = Stmt.T OBJECT
@@ -75,15 +75,14 @@ PROCEDURE CompileMSIR (p: P) =
     IF p.expr # NIL THEN
       v := Expr.CompileMSIR (p.expr);
       IF v = NIL THEN RETURN END;
-      (* The result is assigned to the procedure's result: range-check it
-         against the result type, as Compile does (Marker.EmitReturn ->
-         AssignStmt.DoEmit). *)
-      VAR min, max: Target.Int;  rt: Type.T;  rv: Variable.T;
+      (* The result is assigned to the procedure's result: check it against
+         the result type, as Compile does (Marker.EmitReturn ->
+         AssignStmt.EmitRTCheck). *)
+      VAR rt: Type.T;  rv: Variable.T;
       BEGIN
         Marker.ReturnVar (rt, rv);
-        IF rt # NIL AND Type.GetBounds (rt, min, max) THEN
-          v := CheckExpr.EmitChecksMSIR (v, p.expr, min, max,
-                                         CG.RuntimeError.ValueOutOfRange);
+        IF rt # NIL THEN
+          v := AssignStmt.EmitRTCheckMSIR (rt, p.expr, v);
           IF v = NIL THEN RETURN END;
         END;
       END;

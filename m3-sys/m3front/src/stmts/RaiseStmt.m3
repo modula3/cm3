@@ -182,7 +182,9 @@ PROCEDURE CompileMSIR (p: P) =
             argVal := MSIR.BuildConvert(b, "", heapPtr, ptrT);
           END;
         ELSE
-          argVal := Expr.CompileMSIR(p.arg);
+          (* As Compile (Exceptionz.EmitRaise -> AssignStmt.EmitRTCheck). *)
+          argVal := AssignStmt.EmitRTCheckMSIR(argType, p.arg,
+                                               Expr.CompileMSIR(p.arg));
           IF argVal = NIL THEN RETURN END;
           VAR argT := MSIR.ValueType(argVal); b := MSIRBuilder.CurrentBlock();
           BEGIN

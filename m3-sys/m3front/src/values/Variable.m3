@@ -1336,12 +1336,14 @@ PROCEDURE UserInitMSIR (t: T) =
             MSIRBuilder.EmitMemcpy (addr, lval, byteCount);
           ELSIF lval = NIL
                 AND MSIR.Kind (MSIR.ValueType (addr)) # MSIR.TypeKind.GcSlot THEN
-            StoreInitMSIR (t, addr, Expr.CompileMSIR (t.initExpr));
+            StoreInitMSIR (t, addr, AssignStmt.EmitRTCheckMSIR (
+                         t.type, t.initExpr, Expr.CompileMSIR (t.initExpr)));
           END;
         END;
       END;
     ELSE
-      StoreInitMSIR (t, addr, Expr.CompileMSIR (t.initExpr));
+      StoreInitMSIR (t, addr, AssignStmt.EmitRTCheckMSIR (
+                         t.type, t.initExpr, Expr.CompileMSIR (t.initExpr)));
     END;
   END UserInitMSIR;
 

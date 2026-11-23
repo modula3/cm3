@@ -670,6 +670,44 @@ PROCEDURE EmitRTCheck (tlhs: Type.T;  rhsExpr: Expr.T) =
     END;
   END EmitRTCheck;
 
+PROCEDURE EmitRTCheckMSIR (tlhs: Type.T;  rhsExpr: Expr.T;
+                           rhsVal: MSIR.Value): MSIR.Value =
+  (* As EmitRTCheck's dispatch.  Floats, records and sets need no check;
+     array shapes are checked where MSIR copies arrays. *)
+  VAR
+    t_lhs_base := Type.Base (tlhs); (* strip renaming and packing *)
+    t_lhs_base_info: Type.Info;
+    min, max: Target.Int;
+  BEGIN
+    IF rhsVal = NIL THEN RETURN NIL END;
+    t_lhs_base := Type.CheckInfo (t_lhs_base, t_lhs_base_info);
+    CASE t_lhs_base_info.class OF
+    | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
+      Type.Class.Enum =>
+        IF Type.GetBounds (tlhs, min, max) THEN
+          RETURN CheckExpr.EmitChecksMSIR (rhsVal, rhsExpr, min, max,
+                                           CG.RuntimeError.ValueOutOfRange);
+        END;
+    | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+        IF Host.doNarrowChk THEN
+          RETURN Narrow.EmitMSIR (rhsVal, tlhs, Expr.TypeOf (rhsExpr));
+        END;
+    | Type.Class.Procedure =>
+        CASE ProcRTCheckKind (rhsExpr) OF
+        | RTCheckKind.Fail =>
+            (* Assigning a statically nested procedure faults (2.3.1). *)
+            MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
+                                         ORD (CG.RuntimeError.NarrowFailed));
+        | RTCheckKind.Conditional =>
+            (* A procedure variable that might hold a nested procedure: the
+               runtime closure-marker test is not yet emitted. *)
+        | RTCheckKind.None => (* statically top-level: no check *)
+        END;
+    ELSE (* no check *)
+    END;
+    RETURN rhsVal;
+  END EmitRTCheckMSIR;
+
 PROCEDURE RTCheckOrdinal (tlhs: Type.T;  rhsExpr: Expr.T) =
   VAR min, max : Target.Int;
   BEGIN
@@ -901,43 +939,9 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     rhsVal := Expr.CompileMSIR (p.rhs);
     IF rhsVal = NIL THEN RETURN END;
-    (* Nested-procedure assignability RT check — MSIR analogue of CG's
-       AssignOrRTCheckProcedure (DoEmit, Type.Class.Procedure).  Assigning a
-       statically-nested procedure to a procedure variable must fault at
-       runtime (2.3.1).  The array-constructor path already emits this (via
-       CheckStaticRTErrExec), but a plain `p := NestedProc` — including an open
-       array heap element `r^[i] := NestedProc` (p270) — reached the store below
-       unchecked. *)
-    VAR lhsProcInfo: Type.Info;
-    BEGIN
-      EVAL Type.CheckInfo (Type.Base (Expr.RepTypeOf (p.lhs)), lhsProcInfo);
-      IF lhsProcInfo.class = Type.Class.Procedure THEN
-        CASE ProcRTCheckKind (p.rhs) OF
-        | RTCheckKind.Fail =>
-            (* Unconditional fault — same idiom as the constructor path's
-               static-RT-error emission (ArrayExpr, DoGenRTAbort). *)
-            MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                         ORD (CG.RuntimeError.NarrowFailed));
-        | RTCheckKind.Conditional =>
-            (* Rare: source is a proc variable that might hold a nested proc.
-               A runtime closure-marker test is not yet emitted here (unchanged
-               from before); the common statically-nested case (Fail) is now
-               checked. *)
-        | RTCheckKind.None => (* statically top-level: no check *)
-        END;
-      END;
-    END;
-    (* Range-check a scalar ordinal assignment — the MSIR analogue of the CG
-       path's CheckExpr.EmitChecks in Emit.  EmitChecksMSIR only fires for an
-       integer rhs whose static range can violate the lhs ordinal bounds, and
-       advances the current block (the store below re-reads CurrentBlock). *)
-    VAR lmin, lmax: Target.Int;
-    BEGIN
-      IF Type.GetBounds (Expr.TypeOf (p.lhs), lmin, lmax) THEN
-        EVAL CheckExpr.EmitChecksMSIR (rhsVal, p.rhs, lmin, lmax,
-                                       CG.RuntimeError.ValueOutOfRange);
-      END;
-    END;
+    (* The checks Compile's DoEmit makes for this lhs type. *)
+    rhsVal := EmitRTCheckMSIR (Expr.TypeOf (p.lhs), p.rhs, rhsVal);
+    IF rhsVal = NIL THEN RETURN END;
     (* Coerce nil constant to match the slot's element type for untraced pointer stores.
        NIL compiles as gc_ref void but untraced pointer slots have type ptr T. *)
     IF MSIR.GetValueKind (rhsVal) = MSIR.ValueKind.ConstNil THEN
