@@ -14,7 +14,7 @@ IMPORT Target, TInt, ErrType, Error;
 IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
-IMPORT Constant;
+IMPORT Constant, RTTypeSRC;
 IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis;
 
 (********************************************************************)
@@ -641,9 +641,19 @@ PROCEDURE LValueMSIRDefault (<*UNUSED*> e: T;
   END LValueMSIRDefault;
 
 PROCEDURE CompileMSIR (t: T): MSIR.Value =
+  VAR v: MSIR.Value;
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
-    RETURN t.compileMSIR ();
+    v := t.compileMSIR ();
+    (* No value means the procedure was abandoned (B17), and its unit goes
+       to the C walk.  An expression with a type that yields no value
+       without abandoning would otherwise vanish from the code: its
+       statement is dropped as if abandoned, but the unit is kept. *)
+    IF v = NIL AND TypeOf (t) # NIL
+       AND MSIRBuilder.InProc () AND NOT MSIRBuilder.IsAbandoned () THEN
+      MSIRBuilder.Abandon ("no MSIR value for a " & RTTypeSRC.TypeName (t));
+    END;
+    RETURN v;
   END CompileMSIR;
 
 PROCEDURE LValueMSIR (t: T): MSIR.Value =
