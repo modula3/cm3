@@ -2347,7 +2347,8 @@ PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
   VAR eidx: INTEGER;
   BEGIN
     FOR k := 0 TO dbgTypeN - 1 DO
-      IF dbgTypes[k].kind = 0 AND SameStructType(dbgTypes[k].msirType, t) THEN
+      IF dbgTypes[k].kind = 0 AND dbgTypes[k].dbg = NIL
+         AND SameStructType(dbgTypes[k].msirType, t) THEN
         RETURN dbgTypes[k].metaIdx
       END;
     END;
@@ -2405,7 +2406,7 @@ PROCEDURE GetOrBuildFixedArrayType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       uid   := MSIR.TypeUID(t);
   BEGIN
     FOR k := 0 TO dbgTypeN - 1 DO
-      IF dbgTypes[k].kind = 1 THEN
+      IF dbgTypes[k].kind = 1 AND dbgTypes[k].dbg = NIL THEN
         VAR kt := dbgTypes[k].msirType;
         BEGIN
           IF kt = t THEN RETURN dbgTypes[k].metaIdx END;
@@ -2451,7 +2452,7 @@ PROCEDURE GetOrBuildEnumType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       nm    := MSIR.StructName(t);
   BEGIN
     FOR k := 0 TO dbgTypeN - 1 DO
-      IF dbgTypes[k].kind = 2 THEN
+      IF dbgTypes[k].kind = 2 AND dbgTypes[k].dbg = NIL THEN
         VAR kt := dbgTypes[k].msirType;
         BEGIN
           IF kt = t THEN RETURN dbgTypes[k].metaIdx END;
