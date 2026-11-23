@@ -10,6 +10,7 @@ MODULE MethodExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, ObjectType, M3Buf, Target;
 IMPORT Value, ProcType, Method, Error, M3ID, M3RT;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Expr.T BRANDED "MethodExpr.T" OBJECT
@@ -39,6 +40,7 @@ TYPE
         genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
         exprAlign    := ExprRep.ExprAddrAlign; 
+        compileMSIR  := CompileMSIR;
       END;
 
 PROCEDURE New (object: Type.T;  name: M3ID.T;
@@ -98,6 +100,52 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
     CG.Boost_addr_alignment (CG.ProcAlign ());
   END Compile;
+
+PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  BEGIN
+    RETURN LoadMSIR (p.object, p.method, p.holder);
+  END CompileMSIR;
+
+(* EXPORTED *)
+PROCEDURE LoadMSIR (object: Type.T;  method: Value.T;  holder: Type.T): MSIR.Value =
+  VAR
+    m    : Method.Info;
+    ptrT := MSIR.TPtr (MSIR.TVoid ());
+    intT := MSIR.TI (Target.Integer.size);
+    base := ObjectType.MethodOffset (holder);
+    b    : MSIR.Block;
+    tc, defaults, off, htc: MSIR.Value;
+  BEGIN
+    IF NOT Method.Split (method, m) THEN
+      MSIRBuilder.Abandon ("object type method: not a method");
+      RETURN NIL;
+    END;
+    tc := MSIRBuilder.TypeLinkValueForObject (object);
+    IF tc = NIL THEN
+      MSIRBuilder.Abandon ("object type method: no TypeLink");
+      RETURN NIL;
+    END;
+    b := MSIRBuilder.CurrentBlock ();
+    defaults := MSIR.BuildLoad (b, "", ptrT,
+                  MSIRBuilder.BuildPtrByteOff (b, "", tc,
+                    M3RT.OTC_defaultMethods DIV Target.Char.size));
+    IF base >= 0 THEN
+      off := MSIR.ConstInt (intT, (base + m.offset) DIV Target.Char.size);
+    ELSE
+      (* opaque holder: its methods' offset is known only at run time *)
+      htc := MSIRBuilder.TypeLinkValueForObject (holder);
+      IF htc = NIL THEN
+        MSIRBuilder.Abandon ("object type method: no TypeLink for opaque holder");
+        RETURN NIL;
+      END;
+      off := MSIR.BuildIAdd (b, "",
+               MSIR.BuildLoad (b, "", intT,
+                 MSIRBuilder.BuildPtrByteOff (b, "", htc,
+                   M3RT.OTC_methodOffset DIV Target.Char.size)),
+               MSIR.ConstInt (intT, m.offset DIV Target.Char.size));
+    END;
+    RETURN MSIR.BuildLoad (b, "", ptrT, MSIR.BuildGepByte (b, "", defaults, off));
+  END LoadMSIR;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
   BEGIN

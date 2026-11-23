@@ -994,21 +994,9 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
     base  := ObjectType.MethodOffset (p.holder);
 
     IF p.class = Class.objTypeMethod THEN
-      (* T.m(self, ...): T's binding of m is in T's typecell defaultMethods
-         table; the receiver is the first explicit actual.  As Compile. *)
-      IF base < 0 THEN
-        MSIRBuilder.Abandon ("static method call: runtime method offset (opaque holder)");
-        RETURN TRUE;
-      END;
-      tc := MSIRBuilder.TypeLinkValueForObject (p.objType);
-      IF tc = NIL THEN RETURN TRUE END;
-      b  := MSIRBuilder.CurrentBlock ();
-      fn := MSIR.BuildLoad (b, "", ptrT,
-              MSIR.BuildPtrAdd (b, "",
-                MSIR.BuildLoad (b, "", ptrT,
-                  MSIR.BuildPtrAdd (b, "", tc,
-                    M3RT.OTC_defaultMethods DIV Target.Char.size)),
-                (m.offset + base) DIV Target.Char.size));
+      (* T.m(self, ...): the receiver is the first explicit actual. *)
+      fn := MethodExpr.LoadMSIR (p.objType, p.rhsValue, p.holder);
+      IF fn = NIL THEN RETURN TRUE END;
       explicit := args.compile ();
       IF explicit = NIL THEN RETURN TRUE END;
       result := MSIRBuilder.EmitClosureCall ("", fn, rtype, explicit^);
@@ -1285,6 +1273,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           RETURN NIL;
         END;
         RETURN Expr.CompileMSIR (folded);
+    | Class.objTypeMethod =>
+        RETURN MethodExpr.LoadMSIR (p.objType, p.rhsValue, p.holder);
     ELSE
       MSIRBuilder.Abandon ("unsupported qualify expression");
       RETURN NIL;
