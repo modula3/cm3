@@ -611,7 +611,18 @@ the only lowering m3gdb would see little more than any old gdb.  So:
      it nothing either.  Still to check: gdb on a stopped program, on
      AMD64_LINUX;
    - Phase 5 (`llvm.dbg.value` for optimized builds), more pressing now
-     that MSIR's m3tests run at `-O3`.
+     that MSIR's m3tests run at `-O3`.  **Done (2026-11-24),** but not as
+     planned: LLVM itself turns `dbg.declare` into `dbg.value` when it
+     promotes an alloca.  What optimized debugging lacked was elsewhere:
+     only calls carried a source location (now every instruction does, as
+     master's `#line` covers every C statement), the module body had no
+     DISubprogram (now `NoteModuleSrcFile` gives it one, as master's
+     `Gen_location (body_origin)`), and the body was inlined into the
+     generated binder, which has none (it is now `noinline`).  At `-O3`
+     lldb stops at a line inside an inlined procedure, shows the inlined
+     frame and its caller, and its locals.  (A file:line breakpoint finds
+     inlined copies with `settings set target.inline-breakpoint-strategy
+     always`; lldb's default looks for them only in headers.)
 2. *Modula-3 formats its own values*, in the spirit of Ramsey and
    Hanson's ldb, where the debugger's language knowledge was data it ran
    rather than code built into it.  The runtime already knows the types:

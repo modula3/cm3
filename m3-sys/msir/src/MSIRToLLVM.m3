@@ -1640,7 +1640,7 @@ PROCEDURE EmitBlock(wr: Wr.T;  b: MSIR.Block) =
   BEGIN
     Wr.PutText(wr, MSIR.BlockLabel(b) & ":\n");
     FOR k := 0 TO n - 1 DO
-      EmitInsn(wr, MSIR.BlockInsn(b, k));
+      EmitInsnDbg(wr, MSIR.BlockInsn(b, k));
     END;
     (* Ensure block is terminated (should always be, but guard anyway) *)
     IF n = 0 OR NOT MSIR.BlockIsTerminated(b) THEN
@@ -1941,6 +1941,63 @@ PROCEDURE GetDbgLocMetaIdx(p: MSIR.Proc;  line: INTEGER): INTEGER =
     END;
     RETURN -1;
   END GetDbgLocMetaIdx;
+
+(* Emit insn i with its source location on every instruction it expands
+   to, not only on calls: a line table without holes, so that stepping and
+   breakpoints work by line, and inlined code keeps its lines after
+   optimization.  The location goes at the end of each instruction line;
+   a switch's goes after its closing bracket, and a landingpad, whose
+   clauses follow on lines of their own, is left without one. *)
+PROCEDURE EmitInsnDbg(wr: Wr.T;  i: MSIR.Insn) =
+  VAR loc, txt, line, suffix: TEXT;  tw: TextWr.T;  n, start, e: INTEGER;
+      inSwitch := FALSE;
+  BEGIN
+    IF NOT dbgEnabled OR curDbgLocIdx < 0 THEN EmitInsn(wr, i);  RETURN END;
+    tw := TextWr.New();
+    EmitInsn(tw, i);
+    txt := TextWr.ToText(tw);
+    loc := ", !dbg !" & Fmt.Int(InsnDbgLocIdx(i));
+    n := Text.Length(txt);  start := 0;
+    WHILE start < n DO
+      e := Text.FindChar(txt, '\n', start);
+      IF e < 0 THEN e := n END;
+      line := Text.Sub(txt, start, e - start);
+      suffix := "";
+      IF inSwitch THEN
+        IF Text.Equal(line, "  ]") THEN suffix := loc;  inSwitch := FALSE END;
+      ELSIF Text.Length(line) > 2 AND Text.Equal(Text.Sub(line, 0, 2), "  ")
+            AND Text.GetChar(line, 2) # ' ' AND Text.GetChar(line, 2) # ';'
+            AND Text.FindChar(line, '!') < 0
+            AND NOT HasText(line, " = phi ") THEN
+        IF Text.GetChar(line, Text.Length(line) - 1) = '[' THEN
+          inSwitch := TRUE;
+        ELSIF NOT NextLineContinues(txt, e) THEN
+          suffix := loc;
+        END;
+      END;
+      Wr.PutText(wr, line & suffix);
+      IF e < n THEN Wr.PutChar(wr, '\n') END;
+      start := e + 1;
+    END;
+  END EmitInsnDbg;
+
+(* TRUE if the line after position e (a newline) is a continuation: indented
+   past an instruction's two spaces, as a landingpad's clauses are. *)
+PROCEDURE NextLineContinues(txt: TEXT;  e: INTEGER): BOOLEAN =
+  VAR n := Text.Length(txt);
+  BEGIN
+    RETURN e + 3 < n AND Text.GetChar(txt, e + 1) = ' '
+       AND Text.GetChar(txt, e + 2) = ' ' AND Text.GetChar(txt, e + 3) = ' ';
+  END NextLineContinues;
+
+PROCEDURE HasText(t, sub: TEXT): BOOLEAN =
+  VAR n := Text.Length(t);  m := Text.Length(sub);
+  BEGIN
+    FOR k := 0 TO n - m DO
+      IF Text.Equal(Text.Sub(t, k, m), sub) THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END HasText;
 
 (* Return the best !dbg metadata index for instruction i:
    - per-line DILocation when the instruction has a known srcLine, else
@@ -3121,6 +3178,16 @@ PROCEDURE HasInvoke(p: MSIR.Proc): BOOLEAN =
     RETURN FALSE;
   END HasInvoke;
 
+(* TRUE if p is the current module's body, which its binder calls. *)
+PROCEDURE IsModuleBody(p: MSIR.Proc): BOOLEAN =
+  VAR mn: TEXT;  sym := LLSymbol(p);
+  BEGIN
+    IF curEmitModule = NIL THEN RETURN FALSE END;
+    mn := MSIR.ModuleName(curEmitModule);
+    RETURN Text.Equal(sym, mn & "__" & mn & "_M3")
+        OR Text.Equal(sym, mn & "__" & mn & "_I3");
+  END IsModuleBody;
+
 PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
   VAR
     nb    := MSIR.ProcBlockCount(p);
@@ -3147,6 +3214,10 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
     Wr.PutText(wr, " @");
     Wr.PutText(wr, LLSymbol(p));
     EmitParamList(wr, p);
+    (* The module body runs once, so inlining it into the binder gains
+       nothing, and the binder has no DISubprogram: inlined there, the body
+       and everything inlined into it would lose their debug information. *)
+    IF IsModuleBody(p) THEN Wr.PutText(wr, " noinline") END;
     (* Always emit personality so C++ exceptions can propagate through MSIR
        frames without triggering terminate() in nounwind functions. *)
     Wr.PutText(wr, " personality ptr @__gxx_personality_v0");
@@ -3187,7 +3258,7 @@ PROCEDURE EmitProc(wr: Wr.T;  p: MSIR.Proc) =
         END;
       END;
       FOR k := 0 TO n0 - 1 DO
-        EmitInsn(wr, MSIR.BlockInsn(b0, k));
+        EmitInsnDbg(wr, MSIR.BlockInsn(b0, k));
       END;
       IF n0 = 0 OR NOT MSIR.BlockIsTerminated(b0) THEN
         Wr.PutText(wr, "  unreachable\n");

@@ -2121,6 +2121,13 @@ PROCEDURE NoteModuleSrcFile() =
     IF NOT MSIREmit.IsEnabled() THEN RETURN END;
     Scanner.Here(mf, ml);
     IF mf # NIL THEN MSIR.ModuleSetSrcFile(MSIREmit.CurrentModule(), mf) END;
+    (* The module body's own location, as BeginProc gives a procedure's: a
+       body without one has no DISubprogram, so code inlined into it loses
+       its debug information. *)
+    IF curProc # NIL AND mf # NIL AND ml > 0 THEN
+      MSIR.ProcSetSrcLoc(curProc, mf, ml);
+      MSIR.SetCurrentSrcLine(ml);
+    END;
   END NoteModuleSrcFile;
 
 PROCEDURE BeginModuleInit(name: TEXT): BOOLEAN =
