@@ -294,6 +294,24 @@ PROCEDURE InitValuesMSIR (t: T) =
     Tracer.EmitPendingMSIR ();
   END InitValuesMSIR;
 
+PROCEDURE Within (t: T): List =
+  VAR n := 0;  s: T;  r: List;
+  BEGIN
+    IF t = NIL THEN RETURN NIL END;
+    FOR pass := 0 TO 1 DO
+      IF pass = 1 THEN r := NEW (List, n);  n := 0 END;
+      s := allScopes;
+      WHILE s # NIL DO
+        IF (s = t) OR Encloses (t, s) THEN
+          IF pass = 1 THEN r[n] := s END;
+          INC (n);
+        END;
+        s := s.next;
+      END;
+    END;
+    RETURN r;
+  END Within;
+
 PROCEDURE ForEachValue (t: T;  visit: ValueVisitor) =
   VAR v: Value.T;
   BEGIN

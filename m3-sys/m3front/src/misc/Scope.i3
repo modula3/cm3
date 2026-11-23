@@ -60,6 +60,13 @@ PROCEDURE ForEachValue (t: T;  visit: ValueVisitor);
    directly (GenBodyMSIR) — bypassing Value.LangInit, whose
    CG.Note_procedure_origin side effect would corrupt the parallel C backend. *)
 
+TYPE List = REF ARRAY OF T;
+
+PROCEDURE Within (t: T): List;
+(* t and every scope nested inside it, at any depth: its inner blocks, FOR,
+   WITH and handler scopes, and the scopes of procedures declared in it.
+   NIL if t is NIL. *)
+
 PROCEDURE ModuleName (v: Value.T): M3ID.T;
 PROCEDURE ToUnit     (v: Value.T): M3.Value (* == Module.T *);
 

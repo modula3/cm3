@@ -694,14 +694,23 @@ PROCEDURE PreRegisterNestedCaptures (v: Value.T) =
    mismatch).  Capture sets grow monotonically (rounds only ADD transitive
    captures), so iterate until a round changes nothing; bounded for safety. *)
 PROCEDURE PreRegisterScopeCapturesMSIR (syms: Scope.T) =
+  (* Covers every procedure declared within syms at any depth, not only those
+     declared directly in it: a procedure declared in an inner block of a
+     nested procedure P adds its captures to P's (when P calls it), so it must
+     be registered before P's own captures are computed. *)
   CONST MaxRounds = 64;
-  VAR round := 0;
+  VAR round := 0;  scopes: Scope.List;
   BEGIN
     IF syms = NIL OR NOT MSIRBuilder.InProc () THEN RETURN END;
-    Scope.ForEachValue (syms, PreRegisterNestedCaptures);  (* seed direct caps *)
+    scopes := Scope.Within (syms);
+    FOR i := 0 TO LAST (scopes^) DO  (* seed direct caps *)
+      Scope.ForEachValue (scopes[i], PreRegisterNestedCaptures);
+    END;
     LOOP
       MSIRBuilder.CaptureRegResetChanged ();
-      Scope.ForEachValue (syms, PreRegisterNestedCaptures);
+      FOR i := 0 TO LAST (scopes^) DO
+        Scope.ForEachValue (scopes[i], PreRegisterNestedCaptures);
+      END;
       INC (round);
       IF NOT MSIRBuilder.CaptureRegChanged () OR round >= MaxRounds THEN EXIT END;
     END;
