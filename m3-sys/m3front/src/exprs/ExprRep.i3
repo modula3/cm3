@@ -119,9 +119,11 @@ PROCEDURE PrepNoBranch   (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NoBranch       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE NotWritable    (e: M3.Expr);
 PROCEDURE MSIRDefault    (e: M3.Expr): MSIR.Value;
+(* default compileMSIR: signals "not yet supported" by calling
+   MSIRBuilder.Abandon and returning NIL.  Subclasses override when they have
+   a translation. *)
 PROCEDURE NoLiteralMSIR  (e: M3.Expr;  ft: MSIR.T): MSIR.Value;
-(* default: signals "not yet supported" by calling MSIRBuilder.Abandon
-   and returning NIL. Subclasses override when they have a translation. *)
+(* default genLiteralMSIR: NIL (no static-constant form), emitting nothing. *)
 PROCEDURE LValueMSIRDefault (e: M3.Expr): MSIR.Value;
 (* default lvalue: returns NIL silently. Override in designator/aggregate expressions. *)
 

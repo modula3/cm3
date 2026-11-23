@@ -234,15 +234,6 @@ PROCEDURE Split32 (e: Expr.T;  VAR value: M3WString.T): BOOLEAN =
     END;
   END Split32;
 
-PROCEDURE IsTextExpr (e: Expr.T): BOOLEAN =
-  BEGIN
-    TYPECASE e OF
-    | NULL => RETURN FALSE;
-    | P    => RETURN TRUE;
-    ELSE      RETURN FALSE;
-    END;
-  END IsTextExpr;
-
 PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR sa, sb: M3String.T;  wa, wb: M3WString.T;
   BEGIN

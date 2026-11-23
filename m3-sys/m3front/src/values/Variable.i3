@@ -50,11 +50,6 @@ PROCEDURE RegisterExternMSIR (t: T);
    and clears t.indirect so later reads treat the slot as a value. *)
 PROCEDURE AddLocalMSIR       (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN;
 PROCEDURE BindFormalMSIR     (t: T;  p: MSIR.Proc;  b: MSIR.Block);
-(* If t.initPending is TRUE, force the MSIR initialization of t now.  Used by
-   NamedExpr.CompileMSIR to respect initialization order (p026: f := j before
-   j := 4 would leave f = 0 without this). *)
-PROCEDURE ForceInitMSIR (t: T);
-PROCEDURE BitSize (t: T): INTEGER;  (* t.size in bits; used by EmitIndirectGlobalInit *)
 PROCEDURE HasClosure (t: T): BOOLEAN;
 
 PROCEDURE NeedsAddress (t: T);

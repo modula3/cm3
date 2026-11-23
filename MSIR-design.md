@@ -2132,7 +2132,7 @@ most serious findings spot-checked against the code.  Nothing built.
 | B7 | `Tracer.m3`, `Variable.m3`, `BlockStmt.m3` | **Fixed.** `<*TRACE*>` was ignored under MSIR: no trace node overrode `msir_apply`, the MSIR variable and formal initializers never scheduled a trace, and module and block traces were never pushed. Variable and block trace nodes now compile their call under MSIR; `LangInitMSIR`/`UserInitMSIR` schedule traces where `LangInit`/`UserInit` do; `InitValuesMSIR`, `GenBodyMSIR`, the module body and `BlockStmt.CompileMSIR` emit, push and pop them at the C path's points. |
 | B8 | `QualifyExpr` `LValueMSIR` + `SubByteStoreMSIR` | **Fixed.** Base designator evaluated twice for sub-byte stores (three times under INC): `a[f()].bits := x` called `f` twice (confirmed by test, also for packed array elements and bit-field WITH). Designators with no byte address now have one visitor, `bitLocMSIR` (replacing `storeMSIR` and the exported `QualifyExpr.BitFieldBaseMSIR`), which evaluates the base once and returns an `MSIRBitLoc.T`; assignment, INC/DEC, reads and WITH all go through `MSIRBuilder.ExtractBitLoc`/`InsertBitLoc`. `LValueMSIR` now decides "no byte address" before evaluating anything. Nested packed records (`a[i].f.b`, `f: BITS 13 FOR RECORD`) and WITH over packed elements work as a result. |
 | B9 | m3core `runtime/common/m3makefile` | **Fixed.** The ABI guard keyed on `"MSIRObj"` only, so an MSIRAsm-built m3core defined the CG marker while its objects referenced the MSIR one, and could not link. It now keys on both MSIR modes, matching `Target.BackendMSIRSet`. |
-| B10 | `Variable.m3` `StoreInitMSIR` / `ForceInitMSIR` | **Fixed.** Initializer stores widened a narrower value with ZExt whatever its sign. Not observed in practice (initializer values arrive at machine width), but wrong for a signed value. Both now use `CoerceToMSIR` (SExt for signed kinds), and `ForceInitMSIR` calls `StoreInitMSIR` instead of duplicating it. |
+| B10 | `Variable.m3` `StoreInitMSIR` / `ForceInitMSIR` | **Fixed.** Initializer stores widened a narrower value with ZExt whatever its sign. Not observed in practice (initializer values arrive at machine width), but wrong for a signed value. Now `CoerceToMSIR` (SExt for signed kinds); the duplicate in `ForceInitMSIR` went with that procedure, which had no callers. |
 | B11 | `Variable.AddLocalMSIR` | **Fixed.** MSIR set `t.indirect := FALSE` on a WITH alias it bound by value; the C walk reads that field (`Split`, `LoadLValue`) and compiles nested procedures after the MSIR walk. MSIR no longer writes it: the varMap entry records the by-value binding. Rule (adjudicated): the MSIR walk reads front-end `Value`/`Variable` state but never changes it. |
 | B12 | `Procedure.m3` | **Fixed.** Three copies of the capture computation, and GenBody's retry omitted `CaptureOwnScopeInits`. One `NestedCaptures(p)` now serves `PreRegisterNestedCaptures`, `GenBodyMSIR` and the retry. |
 | B13 | `Procedure.FilterOwnScope` | **Fixed.** Only p's own scope and its outermost block were filtered from p's captures, so a local of an inner block (or a FOR or WITH variable) used by a procedure declared there became a spurious capture parameter of p, and calls to p were miscompiled. The filter now keeps only variables whose scope encloses p (`Scope.Encloses`). |
@@ -2206,12 +2206,17 @@ most serious findings spot-checked against the code.  Nothing built.
 
 - 7 Claude session transcripts (~1.6 MB) at the repo root, `m3-sys/cm3/`,
   `m3-sys/msir/`, `m3-sys/msir/test/` (checked: no emails, credentials, Defence
-  names or mail-tool use; only a generic Claude Code API-key warning).
-- `m3-sys/msir/test/smoke/smoke-realrt` (1.2 MB binary).
-- 33 editor backups `*.~<sha>~` across m3front.
+  names or mail-tool use; only a generic Claude Code API-key warning).  **Done**
+  (no longer tracked).
+- `m3-sys/msir/test/smoke/smoke-realrt` (1.2 MB binary).  **Done** (no longer tracked).
+- 33 editor backups `*.~<sha>~` across m3front.  **Done** (the last tracked one,
+  `m3middle/src/Target.m3.~f10c3866f4~`, removed).
 - Dead code: `Variable.BitSize`, `Variable.ForceInitMSIR`, `ObjectType.FillOwnMethodNames`,
   `SetExpr.GetWordBitMask`, `TextExpr.IsTextExpr`, `Variable.m3:1632` (`IF FALSE AND`),
   `Expr.TaCaptureLV`/`TabCaptureLV`; stale comments (MSIREmit env var, ExprRep note).
+  **Done**, with `MSIRBuilder.EmitIndirectGlobalInit` (a no-op with no callers).
+  `TaCaptureLV`/`TabCaptureLV` stay: they are ExprRep's default `captureLV`
+  methods.
 - `CG.m3:3597` `Index_bits` change and `TFloat` precision change alter the C backend
   and belong in separate, upstreamable commits.
 

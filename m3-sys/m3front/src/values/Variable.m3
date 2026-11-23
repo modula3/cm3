@@ -1251,10 +1251,6 @@ PROCEDURE ForceInit (t: T) =
     Type.InitValue (t.type, FALSE);
   END ForceInit;
 
-(* EXPORTED *)
-PROCEDURE BitSize (t: T): INTEGER =
-  BEGIN RETURN t.size END BitSize;
-
 (*--------------------------------------------------- MSIR initialization *)
 
 (* lang_init_msir and user_init_msir: the MSIR walk's initialization of t,
@@ -1363,40 +1359,6 @@ PROCEDURE StoreInitMSIR (t: T;  addr, initVal: MSIR.Value) =
       END;
     END;
   END StoreInitMSIR;
-
-PROCEDURE ForceInitMSIR (t: T) =
-(* Emit only the MSIR part of the initialization for t, if it has not been
-   emitted yet.  Uses a separate msirInitDone flag (NOT initPending) because
-   the CG path's ForceInit clears initPending BEFORE the MSIR path runs, so
-   a check on initPending would always see FALSE. *)
-  BEGIN
-    IF t.msirInitDone THEN RETURN END;
-    (* Only force-init global variables (module-level VARs with initExpr that
-       depend on other module VARs initialized later).  Local variables and
-       uplevel-captured vars are initialized by their own VAR binding in the
-       proc body — forcing them here would reset them to their initial value
-       every time they are read (e.g., a nested-proc capture resets a loop
-       accumulator on each call). *)
-    IF NOT t.global THEN RETURN END;
-    IF t.initExpr = NIL THEN RETURN END;
-    IF NOT MSIRBuilder.InProc () THEN RETURN END;
-    (* Prevent recursion: mark done before emitting (in case initExpr references t). *)
-    t.msirInitDone := TRUE;
-    (* Compile the init expression and store it.  For dependency-forced init
-       (called from NamedExpr.CompileMSIR when a variable references another
-       variable that hasn't been initialized yet), initDone might already be
-       TRUE (e.g., set by AllocGlobalVarSpace for struct-const inits) while the
-       MSIR store still needs to be emitted.  So we check msirInitDone (which
-       we just set) rather than initDone. *)
-    IF (t.initExpr # NIL) AND (NOT t.initDone) AND (NOT t.imported) THEN
-      VAR addr := MSIRBuilder.LookupVarAddr (t);
-      BEGIN
-        IF addr # NIL THEN
-          StoreInitMSIR (t, addr, Expr.CompileMSIR (t.initExpr));
-        END;
-      END;
-    END;
-  END ForceInitMSIR;
 
 (* EXPORTED *)
 PROCEDURE CopyOpenArray (arrayType: Type.T;  refType: Type.T) =

@@ -1,11 +1,10 @@
 (* MSIREmit — module/unit-level driver for MSIR emission.
 
    Bracketed by Module.Compile (the unit-level entry in m3front).
-   Honors a runtime opt-in: emission is active only when the
-   environment variable M3FRONT_MSIR is set (checked once at
-   process startup via RTParams). When inactive, all entry points
-   are no-ops so this can ship in a production compiler with zero
-   user-visible effect. *)
+   Emission is active when the backend mode is MSIRObj or MSIRAsm, or when
+   the compiler runs with @M3m3front-msir (alongside the C backend); IsEnabled
+   checks once.  When inactive, all entry points are no-ops, so a production
+   compiler is unaffected. *)
 
 INTERFACE MSIREmit;
 
