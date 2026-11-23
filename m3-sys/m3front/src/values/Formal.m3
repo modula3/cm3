@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
 IMPORT Module, Variable, Procedure, UserProc, Target, M3RT;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, RTIOld, RTParams;
 
 VAR debug := FALSE;
 
@@ -88,9 +88,9 @@ PROCEDURE New (READONLY info: Info): Value.T =
 
     IF debug THEN
       RTIO.PutText ("Formal.New:");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText (" type:");
-      RTIO.PutRef(t.type);
+      RTIOld.PutRef(t.type);
       RTIO.PutText (" name:");
       IF t.name # 0 THEN
         RTIO.PutText (M3ID.ToText (t.name));
@@ -135,15 +135,15 @@ PROCEDURE Split (formal: Value.T;  VAR info: Info) =
 
     IF debug THEN
       RTIO.PutText ("Formal.Split:");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText (" name:");
       IF t.name # 0 THEN
         RTIO.PutText (M3ID.ToText (t.name));
       END;
       RTIO.PutText (" type1:");
-      RTIO.PutRef (type1);
+      RTIOld.PutRef (type1);
       RTIO.PutText (" type2:");
-      RTIO.PutRef (info.type);
+      RTIOld.PutRef (info.type);
       RTIO.PutText (" typename:");
       IF info.name # 0 THEN
         RTIO.PutText (M3ID.ToText (info.name));

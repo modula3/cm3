@@ -10,7 +10,7 @@ MODULE ProcType;
 
 IMPORT M3, M3ID, CG, Expr, Type, TypeRep, Value, Scope, Target;
 IMPORT Formal, UserProc, Token, Ident, CallExpr, Word, Error;
-IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType, RTIO;
+IMPORT ESet, TipeMap, TipeDesc, ErrType, M3Buf, Variable, OpenArrayType, RTIO, RTIOld;
 IMPORT RTParams;
 FROM Scanner IMPORT Match, GetToken, cur;
 
@@ -65,7 +65,7 @@ PROCEDURE ParseSignature (name: M3ID.T;  cc: CG.CallingConvention): Type.T =
       RTIO.PutInt (name);
     END;
     RTIO.PutText (" p:");
-    RTIO.PutRef (p);
+    RTIOld.PutRef (p);
     RTIO.PutText ("\n");
     RTIO.Flush ();
   END Debug;
@@ -129,7 +129,7 @@ PROCEDURE ParseFormal (p: P;  ) =
       formal.type := Type.Parse ();
       IF debug THEN
         RTIO.PutText ("formal.type.info.name formal.type:");
-        RTIO.PutRef (formal.type);
+        RTIOld.PutRef (formal.type);
         RTIO.PutText (" ");
         RTIO.PutInt (formal.type.info.name);
         RTIO.PutText ("\n");
@@ -187,7 +187,7 @@ PROCEDURE MethodSigAsProcSig (sig, objType: Type.T): Type.T =
 
     IF debug THEN
       RTIO.PutText ("MethodSigAsProcSig:");
-      RTIO.PutRef (objType);
+      RTIOld.PutRef (objType);
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
@@ -427,14 +427,14 @@ PROCEDURE ResultTypename (t: Type.T): M3ID.T =
 
     IF debug THEN
       RTIO.PutText ("ProcType.ResultTypename t:");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText (" p:");
-      RTIO.PutRef (p);
+      RTIOld.PutRef (p);
       RTIO.PutText (" id:");
       RTIO.PutInt (id);
       IF p # NIL THEN
         RTIO.PutText (" p.result:");
-        RTIO.PutRef (p.result);
+        RTIOld.PutRef (p.result);
         RTIO.PutText (" CGResult (p):");
         RTIO.PutInt (ORD (CGResult (p)));
         RTIO.PutText (" void:");

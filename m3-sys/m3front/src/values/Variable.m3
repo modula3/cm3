@@ -16,7 +16,7 @@ IMPORT Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer;
 IMPORT Expr, IntegerExpr, ArrayExpr, TextExpr, NamedExpr;
 IMPORT Type, OpenArrayType, ErrType, TipeMap;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, RTIOld, RTParams;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 VAR debug := FALSE;
@@ -208,7 +208,7 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
 
     IF debug THEN
       RTIO.PutText ("NewFormal type:");
-      RTIO.PutRef (t.type);
+      RTIOld.PutRef (t.type);
       RTIO.PutText (" name:");
       IF name # 0 THEN
         RTIO.PutText (M3ID.ToText (name));
@@ -590,9 +590,9 @@ PROCEDURE Declare (t: T): BOOLEAN =
 
       IF debug THEN
         RTIO.PutText ("Variable.Declare t:");
-        RTIO.PutRef (t);
+        RTIOld.PutRef (t);
         RTIO.PutText (" t.type:");
-        RTIO.PutRef (t.type);
+        RTIOld.PutRef (t.type);
         RTIO.PutText (" typename:");
         RTIO.PutInt (typename);
         RTIO.PutText ("\n");
@@ -649,7 +649,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
 
       IF debug THEN
         RTIO.PutText ("Variable.Declare" & indirect_text & "param type:");
-        RTIO.PutRef (t.type);
+        RTIOld.PutRef (t.type);
         RTIO.PutText (" name:");
         IF t.name # 0 THEN
           RTIO.PutText (M3ID.ToText (t.name));

@@ -10,7 +10,7 @@ MODULE NamedType;
 
 IMPORT M3, M3ID, Token, Type, TypeRep, Scanner, ObjectType;
 IMPORT Error, Scope, Brand, Value, ErrType, Target;
-IMPORT RTIO, RTParams;
+IMPORT RTIO, RTIOld, RTParams;
 FROM M3 IMPORT QID;
 
 VAR debug := FALSE;
@@ -73,9 +73,9 @@ PROCEDURE Parse (): Type.T =
 
     IF debug THEN
       RTIO.PutText ("NamedType.Parse t:");
-      RTIO.PutRef (t);
+      RTIOld.PutRef (t);
       RTIO.PutText (" p:");
-      RTIO.PutRef (p);
+      RTIOld.PutRef (p);
       RTIO.PutText (" ");
       RTIO.PutInt (case);
       RTIO.PutText (" ");

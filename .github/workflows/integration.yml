@@ -36,3 +36,6 @@ jobs:
 
   I386_NT:
     uses: modula3/cm3/.github/workflows/i386_nt.yml@master
+
+  AMD64_NT_ALT:
+    uses: ./.github/workflows/amd64_nt_alt.yml
