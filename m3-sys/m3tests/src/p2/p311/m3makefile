@@ -1,4 +1,2 @@
-interface ("Op")
-implementation ("Op")
 implementation ("Main")
 include ("../../Test.common")

@@ -1,34 +1,38 @@
-(* An object type's method as a procedure value (T.m): bound by WITH, held in
-   a variable, and called directly, including for a subtype of an opaque type,
-   whose method offsets are known only at run time. *)
+(* Procedures declared in inner blocks of a nested procedure: they use and
+   update variables of the inner block, of their enclosing procedure and of
+   the procedure enclosing that, including a FOR variable. *)
 
 MODULE Main;
-IMPORT IO, Fmt, Op;
+IMPORT IO, Fmt;
 
-TYPE
-  S = Op.T OBJECT k := 4 METHODS
-        n (): INTEGER := N;
-        n2 (x: INTEGER): INTEGER := N2;
+PROCEDURE Outer () =
+  VAR o := 100;
+  PROCEDURE P () =
+    BEGIN
+      VAR x := 1;
+          PROCEDURE Q () = BEGIN INC (x);  INC (o) END Q;
+      BEGIN
+        x := 5;  Q ();
+        IO.Put ("x=" & Fmt.Int (x) & " o=" & Fmt.Int (o) & "\n");
+        VAR y := 10;
+            PROCEDURE R () = BEGIN INC (y, x) END R;
+        BEGIN
+          R ();  IO.Put ("y=" & Fmt.Int (y) & "\n");
+        END;
       END;
-  U = S OBJECT OVERRIDES n := NU END;
-  O = OBJECT v: INTEGER METHODS m (): INTEGER := M END;
-
-PROCEDURE N  (s: S): INTEGER = BEGIN RETURN s.k * 10 END N;
-PROCEDURE N2 (s: S;  x: INTEGER): INTEGER = BEGIN RETURN s.k + x END N2;
-PROCEDURE NU (s: S): INTEGER = BEGIN RETURN s.k * 100 END NU;
-PROCEDURE M  (o: O): INTEGER = BEGIN RETURN o.v END M;
-
-PROCEDURE Run () =
-  VAR s  := NEW (S);  u := NEW (U);  o := NEW (O, v := 3);
-      pm := S.n;
+      FOR i := 1 TO 2 DO
+        VAR s := 0;
+            PROCEDURE S () = BEGIN s := i * 7 END S;
+        BEGIN
+          S ();  IO.Put ("s=" & Fmt.Int (s) & "\n");
+        END;
+      END;
+    END P;
   BEGIN
-    WITH a = S.n, b = U.n, c = U.n2, mm = O.m DO
-      IO.Put (Fmt.Int (a (s)) & " " & Fmt.Int (b (u)) & " "
-              & Fmt.Int (c (u, 3)) & " " & Fmt.Int (mm (o)) & "\n");
-    END;
-    IO.Put (Fmt.Int (pm (u)) & " " & Fmt.Int (S.n (u)) & "\n");
-  END Run;
+    P ();
+    IO.Put ("o=" & Fmt.Int (o) & "\n");
+  END Outer;
 
 BEGIN
-  Run ();
+  Outer ();
 END Main.

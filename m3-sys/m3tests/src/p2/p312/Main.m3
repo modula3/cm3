@@ -1,27 +1,34 @@
-(* <*TRACE*> pragmas on formals, locals with and without initializers, a
-   nested procedure's local, a WITH variable and a FOR variable. *)
+(* An object type's method as a procedure value (T.m): bound by WITH, held in
+   a variable, and called directly, including for a subtype of an opaque type,
+   whose method offsets are known only at run time. *)
 
 MODULE Main;
-IMPORT IO, Fmt;
+IMPORT IO, Fmt, Op;
 
-PROCEDURE T (name: TEXT;  v: INTEGER) =
-  BEGIN
-    IO.Put ("trace " & name & " = " & Fmt.Int (v) & "\n");
-  END T;
+TYPE
+  S = Op.T OBJECT k := 4 METHODS
+        n (): INTEGER := N;
+        n2 (x: INTEGER): INTEGER := N2;
+      END;
+  U = S OBJECT OVERRIDES n := NU END;
+  O = OBJECT v: INTEGER METHODS m (): INTEGER := M END;
 
-PROCEDURE P (f: INTEGER <*TRACE T*>) =
-  VAR a: INTEGER := f + 1 <*TRACE T*>;
-  VAR b: [0..9] <*TRACE T*>;
-  PROCEDURE Q () =
-    VAR c := a * 10 <*TRACE T*>;
-    BEGIN IO.Put ("in Q\n");  EVAL c END Q;
+PROCEDURE N  (s: S): INTEGER = BEGIN RETURN s.k * 10 END N;
+PROCEDURE N2 (s: S;  x: INTEGER): INTEGER = BEGIN RETURN s.k + x END N2;
+PROCEDURE NU (s: S): INTEGER = BEGIN RETURN s.k * 100 END NU;
+PROCEDURE M  (o: O): INTEGER = BEGIN RETURN o.v END M;
+
+PROCEDURE Run () =
+  VAR s  := NEW (S);  u := NEW (U);  o := NEW (O, v := 3);
+      pm := S.n;
   BEGIN
-    IO.Put ("in P\n");
-    Q ();
-    WITH w <*TRACE T*> = a + b DO IO.Put ("in WITH\n");  EVAL w END;
-    FOR i <*TRACE T*> := 1 TO 2 DO IO.Put ("loop\n") END;
-  END P;
+    WITH a = S.n, b = U.n, c = U.n2, mm = O.m DO
+      IO.Put (Fmt.Int (a (s)) & " " & Fmt.Int (b (u)) & " "
+              & Fmt.Int (c (u, 3)) & " " & Fmt.Int (mm (o)) & "\n");
+    END;
+    IO.Put (Fmt.Int (pm (u)) & " " & Fmt.Int (S.n (u)) & "\n");
+  END Run;
 
 BEGIN
-  P (41);
+  Run ();
 END Main.
