@@ -129,7 +129,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR procType := Type.Base (Expr.TypeOf (p));
   BEGIN
     IF Procedure.IsNested (p.proc) THEN
-      RETURN MSIRBuilder.BuildClosureValue (p.proc, procType);
+      RETURN MSIRBuilder.BuildClosureValue (p.proc, procType,
+                                            Procedure.Captures (p.proc));
     END;
     VAR msirProc := MSIRBuilder.LookupOrCreateProc (p.proc, procType);
     BEGIN

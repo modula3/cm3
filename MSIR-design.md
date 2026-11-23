@@ -2182,6 +2182,12 @@ most serious findings spot-checked against the code.  Nothing built.
   by `Variable.T`/`Procedure`.
 - Capture results live in the builder and are read back by front-end analysis
   (`UserProc.Capture` -> `MSIRBuilder.GetProcCaptures`; `NamedExpr.m3:470`).
+  **Done**: a nested procedure's captures live on its `Procedure.T`
+  (`Procedure.Captures`); the front end passes them to
+  `MSIRBuilder.EmitNestedCall` and `BuildClosureValue`, and the builder's
+  `captureMap`, `RegisterCaptures`, `GetProcCaptures` and fixpoint flag are
+  gone.  As before, a procedure's list is fixed once its body is compiled.
+  libm3 and m3quake MSIR are byte-identical before and after.
 - `MSIRBuilder.SetRefInitProcGen` callback guards a cycle that doesn't exist
   (MSIRBuilder already imports RefType).  **Gone** with 2b.
 - Global side channel `SetPendingContainer`/`TakePendingContainer` between lvalues

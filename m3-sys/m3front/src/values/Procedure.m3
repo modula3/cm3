@@ -43,6 +43,8 @@ REVEAL
         next_cg_proc : T;
         end_origin   : INTEGER;
         jmpbufs      : Jmpbufs.Proc;
+        captures     : REF ARRAY OF CaptureAnalysis.Capture := NIL;
+        (* ^MSIR: a nested procedure's capture list (SetCaptures). *)
       OVERRIDES
         typeCheck   := Check;
         set_globals := ValueRep.NoInit;
@@ -677,17 +679,40 @@ PROCEDURE PreRegisterNestedCaptures (v: Value.T) =
   BEGIN
     TYPECASE v OF
     | T (p) =>
-        IF p.body # NIL THEN
-          MSIRBuilder.RegisterCaptures (
-            p, CaptureAnalysis.GetCaptures (NestedCaptures (p)));
+        (* Once p's body is compiled its capture parameters are fixed, and
+           its call sites must keep passing that list. *)
+        IF p.body # NIL AND NOT MSIRBuilder.ProcMapHasBody (p) THEN
+          SetCaptures (p, CaptureAnalysis.GetCaptures (NestedCaptures (p)));
         END;
     ELSE (* not a procedure *)
     END;
   END PreRegisterNestedCaptures;
 
+VAR capturesGrew := FALSE;
+  (* set by SetCaptures when a procedure's capture count changes: another
+     round of PreRegisterScopeCapturesMSIR's fixpoint is needed *)
+
+PROCEDURE SetCaptures (p: T;  caps: REF ARRAY OF CaptureAnalysis.Capture) =
+  VAR oldN, newN := 0;
+  BEGIN
+    IF p.captures # NIL THEN oldN := NUMBER (p.captures^) END;
+    IF caps # NIL THEN newN := NUMBER (caps^) END;
+    IF newN # oldN THEN capturesGrew := TRUE END;
+    p.captures := caps;
+  END SetCaptures;
+
+(* EXPORTED *)
+PROCEDURE Captures (v: Value.T): REF ARRAY OF CaptureAnalysis.Capture =
+  BEGIN
+    TYPECASE v OF
+    | T (p) => RETURN p.captures;
+    ELSE       RETURN NIL;
+    END;
+  END Captures;
+
 (* Pre-register nested-proc captures, iterating to a FIXPOINT.  Transitive
    captures — a sibling call pulling in the callee's own captures (NoteCapture ->
-   GetProcCaptures) — propagate one hop per round, so a chain bar->foo->baz needs
+   Procedure.Captures) — propagate one hop per round, so a chain bar->foo->baz needs
    as many rounds as its depth.  Two fixed rounds handled only 2-hop chains and
    missed p035's coco (a capture reached `bar` only on a later round, so its
    closure shim was built with too few capture args -> msir-verify arg-count
@@ -707,12 +732,12 @@ PROCEDURE PreRegisterScopeCapturesMSIR (syms: Scope.T) =
       Scope.ForEachValue (scopes[i], PreRegisterNestedCaptures);
     END;
     LOOP
-      MSIRBuilder.CaptureRegResetChanged ();
+      capturesGrew := FALSE;
       FOR i := 0 TO LAST (scopes^) DO
         Scope.ForEachValue (scopes[i], PreRegisterNestedCaptures);
       END;
       INC (round);
-      IF NOT MSIRBuilder.CaptureRegChanged () OR round >= MaxRounds THEN EXIT END;
+      IF NOT capturesGrew OR round >= MaxRounds THEN EXIT END;
     END;
   END PreRegisterScopeCapturesMSIR;
 
@@ -761,8 +786,8 @@ PROCEDURE GenBodyMSIR (p: T) =
               p.syms, ProcType.Result (p.signature),
               isExternal := TRUE,
               captures := ca) THEN RETURN END;
-    MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
-                               CaptureAnalysis.GetCaptures (ca));
+    MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+    SetCaptures (p, CaptureAnalysis.GetCaptures (ca));
     NoteRaisesMSIR (p);
     (* The enclosing procedure's <*TRACE*> calls stay with it. *)
     outerTraces := Tracer.Suspend ();
@@ -780,7 +805,7 @@ PROCEDURE GenBodyMSIR (p: T) =
        (mutual/forward references among siblings); pass 2 adds TRANSITIVE captures
        for sibling calls (e.g. P0_0 calling Dump0 which needs P0.LVisitNo —
        UserProc.Capture adds Dump0's captures to P0_0's set on this second round,
-       now that round 1 has populated captureMap); pass 3 compiles the bodies. *)
+       now that round 1 has set the captures); pass 3 compiles the bodies. *)
     PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     (* p's nested procedures, then its locals' initialization. *)
     IF p.cg_proc # NIL THEN Error.MuteWarnings () END;  (* see GenBody *)
@@ -892,11 +917,9 @@ PROCEDURE GenBody (p: T) =
                                     isExternal := TRUE);
       END;
       IF MSIRBuilder.InProc () THEN
+        MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
         IF msirCa # NIL THEN
-          MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc (),
-                                    CaptureAnalysis.GetCaptures (msirCa));
-        ELSE
-          MSIRBuilder.RegisterProc (p, MSIRBuilder.CurrentProc ());
+          SetCaptures (p, CaptureAnalysis.GetCaptures (msirCa));
         END;
         NoteRaisesMSIR (p);
       END;
@@ -907,7 +930,7 @@ PROCEDURE GenBody (p: T) =
        Round 1 builds direct captures; round 2 adds transitive captures needed
        when one sibling calls another (e.g. P0_0 calling Dump0 needing P0.LVisitNo).
        UserProc.Capture adds the callee's captures to the caller's set on round 2
-       now that round 1 has populated captureMap.  Must run before Scope.InitValues
+       now that round 1 has set the captures.  Must run before Scope.InitValues
        which triggers LangInit → GenBodyMSIR for each nested proc. *)
     IF MSIRBuilder.InProc () THEN
       PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)

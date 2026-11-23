@@ -8,7 +8,7 @@
 
 INTERFACE Procedure;
 
-IMPORT CG, Value, Type, CallExpr, Decl, Scope;
+IMPORT CG, Value, Type, CallExpr, Decl, Scope, CaptureAnalysis;
 
 TYPE T <: Value.T;
 
@@ -59,5 +59,10 @@ PROCEDURE PreRegisterScopeCapturesMSIR (scope: Scope.T);
    capture args.  GenBodyMSIR does this for a procedure's own scope; BlockStmt.
    CompileMSIR calls it for a local-procedure block scope (p035 group O: a
    block-local `bar` capturing `i`, used as a value by `foo` compiled first). *)
+
+PROCEDURE Captures (v: Value.T): REF ARRAY OF CaptureAnalysis.Capture;
+(* For a nested procedure v, the variables of enclosing procedures it uses
+   (its lambda-lifted capture parameters under MSIR), as last computed by
+   the MSIR walk; NIL if v is not a procedure or has none. *)
 
 END Procedure.

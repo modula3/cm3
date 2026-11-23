@@ -30,8 +30,8 @@ PROCEDURE BeginProc(name: TEXT;
                     captures: CaptureAnalysis.T := NIL): BOOLEAN;
 (* When captures is non-NIL (nested proc): lambda-lift by generating one
    ptr param per captured variable instead of a single %__env frame pointer.
-   The caller must also pass captures to RegisterProc so call sites can
-   reconstruct the capture args. *)
+   Call sites get the same list from Procedure.Captures to build the
+   capture args. *)
 
 (* Resolve a Variable.T to its current SSA value.
    For formals: returns the MSIR Param value directly.
@@ -148,28 +148,8 @@ PROCEDURE EmitReturnMSIR(v: MSIR.Value);
 
 (* Register a procedure value with its MSIR.Proc so call sites can find it.
    Called from Procedure.m3 after a successful BeginProc. *)
-PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
-                       caps: REF ARRAY OF CaptureAnalysis.Capture := NIL);
-(* Register v → p in the proc map.  caps is the capture list from
-   CaptureAnalysis.GetCaptures; NIL for non-nested procs. *)
-
-PROCEDURE RegisterCaptures(v: Value.T;
-                           caps: REF ARRAY OF CaptureAnalysis.Capture);
-(* Pre-register a nested proc's capture list ahead of compiling any body, so a
-   sibling that calls it (compiled first) passes the correct capture args.
-   GetProcCaptures falls back to this when the proc is not yet in the proc map.
-   Used by Procedure.GenBodyMSIR's capture pre-pass. *)
-
-PROCEDURE CaptureRegResetChanged();
-PROCEDURE CaptureRegChanged(): BOOLEAN;
-(* Support a fixpoint pre-registration loop: ResetChanged before a round of
-   RegisterCaptures calls, then Changed reports whether any proc's capture count
-   grew during that round (i.e. another transitive round is needed). *)
-
-PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture;
-(* Return the capture list stored by RegisterProc for v; NIL if not nested
-   or not yet registered.  Used by EmitNestedCall and call sites to build
-   the capture argument list. *)
+PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc);
+(* Register v -> p in the proc map. *)
 
 (* Look up v in the registry; if not found, build an external stub from
    procType (the m3front ProcType.T).  Returns NIL and calls Abandon if
@@ -226,11 +206,12 @@ PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value);
 PROCEDURE CurrentModuleInfoRef(): MSIR.Value;
 
 (* Like EmitCall but prepends the capture arguments for a lambda-lifted nested
-   proc.  calleeVal is the Value.T for the nested proc (used to look up the
-   capture list registered by RegisterProc).  For each capture, passes
-   LookupVarAddr(cap.var) from the current (outer) proc's varMap.
-   Results (large or small) are returned by value — no hidden result pointer. *)
-PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
+   proc.  caps is the callee's capture list (Procedure.Captures).  For each
+   capture, passes LookupVarAddr(cap.var) from the current (outer) proc's
+   varMap.  Results (large or small) are returned by value — no hidden result
+   pointer. *)
+PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
+                         caps: REF ARRAY OF CaptureAnalysis.Capture;
                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
 (* Emit a virtual method dispatch on a CM3 object reference.
@@ -258,8 +239,10 @@ PROCEDURE EmitClosureCall(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
    value.  v is the nested Procedure.T; procType is its M3 PROCEDURE type.
    Returns a ptr-typed MSIR.Value pointing to the closure struct
    {CL_marker=-1, CL_proc=shim, CL_frame=env}.
+   caps is v's capture list (Procedure.Captures).
    Abandons and returns NIL if captures are unsupported. *)
-PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value;
+PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T;
+                            caps: REF ARRAY OF CaptureAnalysis.Capture): MSIR.Value;
 
 (*---------------------------------------------- RunTyme hook lookup for MSIR *)
 

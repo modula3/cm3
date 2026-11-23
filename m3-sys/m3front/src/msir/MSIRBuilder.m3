@@ -70,7 +70,6 @@ END;
 TYPE ProcEntry   = RECORD
   key:  Value.T;
   val:  MSIR.Proc;
-  caps: REF ARRAY OF CaptureAnalysis.Capture;  (* NIL for non-nested procs *)
 END;
 TYPE GlobalEntry = RECORD
   key:         Variable.T;
@@ -109,22 +108,7 @@ VAR
   procMap:  REF ARRAY OF ProcEntry := NEW (REF ARRAY OF ProcEntry, InitProcMap);
   procMapN: INTEGER := 0;
 
-  (* Pre-registered captures for nested procs, populated BEFORE any sibling
-     body is compiled (Procedure.GenBodyMSIR pass 1), so a call to a not-yet-
-     compiled sibling finds the correct capture signature.  GetProcCaptures
-     falls back here when procMap has no (or NIL) caps for a proc. *)
-  captureMap:  REF ARRAY OF CaptureEntry :=
-                 NEW (REF ARRAY OF CaptureEntry, InitProcMap);
-  captureMapN: INTEGER := 0;
-  captureRegChanged: BOOLEAN := FALSE;
-               (* Set by RegisterCaptures when a proc's capture COUNT grows;
-                  lets the pre-registration pass iterate transitive captures to
-                  a fixpoint (Procedure.PreRegisterNestedCaptures). *)
 
-TYPE CaptureEntry = RECORD
-  key:  Value.T;
-  caps: REF ARRAY OF CaptureAnalysis.Capture;
-END;
 TYPE ShimEntry = RECORD key: Value.T; val: MSIR.Proc END;
 VAR
   shimMap:  REF ARRAY OF ShimEntry := NEW (REF ARRAY OF ShimEntry, InitShimMap);
@@ -1040,19 +1024,18 @@ PROCEDURE EmitReturnMSIR(v: MSIR.Value) =
     END;
   END EmitReturnMSIR;
 
-PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;  calleeVal: Value.T;
-                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
+                         caps: REF ARRAY OF CaptureAnalysis.Capture;
+                         READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   (* Build capture args from the outer proc's varMap, then call.
      Read-only scalar captures are passed by value; others by pointer. *)
   VAR
-    caps    : REF ARRAY OF CaptureAnalysis.Capture;
     nCaps   : INTEGER;
     allArgs : REF ARRAY OF MSIR.Value;
     v       : Variable.T;
     vt      : Type.T;  vg, vi, vlhs: BOOLEAN;
     mt      : MSIR.T;
   BEGIN
-    caps := GetProcCaptures(calleeVal);
     IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
     allArgs := NEW(REF ARRAY OF MSIR.Value, nCaps + NUMBER(args));
     FOR i := 0 TO nCaps - 1 DO
@@ -1248,7 +1231,8 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
     RETURN shimProc;
   END GetOrCreateClosureShim;
 
-PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
+PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T;
+                            caps: REF ARRAY OF CaptureAnalysis.Capture): MSIR.Value =
   VAR
     ptrT     := MSIR.TPtr(MSIR.TVoid());
     intT     := MSIR.TI(Target.Integer.size);
@@ -1257,7 +1241,6 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
     clSize   := IP + AP + AP;
     b        : MSIR.Block;
     msirProc : MSIR.Proc;
-    caps     : REF ARRAY OF CaptureAnalysis.Capture;
     nCaps    : INTEGER;
     shim     : MSIR.Proc;
     envAlloca: MSIR.Value;
@@ -1267,7 +1250,6 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T): MSIR.Value =
     IF NOT InProc() THEN RETURN NIL END;
     msirProc := LookupOrCreateProc(v, procType);
     IF msirProc = NIL THEN RETURN NIL END;
-    caps := GetProcCaptures(v);
     IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
 
     shim := GetOrCreateClosureShim(v, msirProc, caps, procType);
@@ -1730,14 +1712,12 @@ PROCEDURE HookProc (h: RunTyme.Hook): MSIR.Proc =
     RETURN LookupOrCreateProc(proc, Value.TypeOf(proc));
   END HookProc;
 
-PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
-                       caps: REF ARRAY OF CaptureAnalysis.Capture := NIL) =
+PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc) =
   BEGIN
     IF v = NIL OR p = NIL THEN RETURN END;
     FOR i := 0 TO procMapN - 1 DO
       IF procMap[i].key = v THEN
         procMap[i].val  := p;
-        procMap[i].caps := caps;
         RETURN;
       END;
     END;
@@ -1747,61 +1727,8 @@ PROCEDURE RegisterProc(v: Value.T;  p: MSIR.Proc;
     END;
     procMap[procMapN].key  := v;
     procMap[procMapN].val  := p;
-    procMap[procMapN].caps := caps;
     INC(procMapN);
   END RegisterProc;
-
-PROCEDURE GetProcCaptures(v: Value.T): REF ARRAY OF CaptureAnalysis.Capture =
-  BEGIN
-    FOR i := 0 TO procMapN - 1 DO
-      IF procMap[i].key = v AND procMap[i].caps # NIL THEN
-        RETURN procMap[i].caps;
-      END;
-    END;
-    (* Fall back to the pre-registered captures (pass 1): the proc may be a
-       not-yet-compiled sibling whose procMap entry is absent or caps-NIL. *)
-    FOR i := 0 TO captureMapN - 1 DO
-      IF captureMap[i].key = v THEN RETURN captureMap[i].caps END;
-    END;
-    RETURN NIL;
-  END GetProcCaptures;
-
-PROCEDURE RegisterCaptures(v: Value.T;
-                           caps: REF ARRAY OF CaptureAnalysis.Capture) =
-  (* Record a nested proc's capture list ahead of body compilation so sibling
-     call sites can pass the right capture args even when the callee's body has
-     not been compiled yet.  Idempotent: updates an existing entry. *)
-  VAR newN := 0;
-  BEGIN
-    IF v = NIL THEN RETURN END;
-    IF caps # NIL THEN newN := NUMBER(caps^) END;
-    FOR i := 0 TO captureMapN - 1 DO
-      IF captureMap[i].key = v THEN
-        VAR oldN := 0;
-        BEGIN
-          IF captureMap[i].caps # NIL THEN oldN := NUMBER(captureMap[i].caps^) END;
-          (* Capture sets grow monotonically as transitive captures propagate;
-             flag a count increase so the caller can iterate to a fixpoint. *)
-          IF newN # oldN THEN captureRegChanged := TRUE END;
-        END;
-        captureMap[i].caps := caps;  RETURN;
-      END;
-    END;
-    IF captureMapN >= NUMBER (captureMap^) THEN
-      VAR n := NEW (REF ARRAY OF CaptureEntry, 2 * captureMapN);
-      BEGIN SUBARRAY (n^, 0, captureMapN) := captureMap^;  captureMap := n END;
-    END;
-    captureMap[captureMapN].key  := v;
-    captureMap[captureMapN].caps := caps;
-    IF newN > 0 THEN captureRegChanged := TRUE END;
-    INC(captureMapN);
-  END RegisterCaptures;
-
-PROCEDURE CaptureRegResetChanged() =
-  BEGIN captureRegChanged := FALSE END CaptureRegResetChanged;
-
-PROCEDURE CaptureRegChanged(): BOOLEAN =
-  BEGIN RETURN captureRegChanged END CaptureRegChanged;
 
 PROCEDURE ProcMapContains(v: Value.T): BOOLEAN =
   BEGIN
@@ -1902,7 +1829,6 @@ PROCEDURE BeginModule() =
     globalMapN       := 0;
     procMapN         := 0;
     shimMapN         := 0;
-    captureMapN      := 0;
     procContextDepth := 0;
     constArraySeq    := 0;
     memcpyProc       := NIL;

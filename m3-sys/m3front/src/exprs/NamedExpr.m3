@@ -12,7 +12,7 @@ IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
 IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
 IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis;
-IMPORT ArrayExpr;
+IMPORT ArrayExpr, Procedure;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -471,7 +471,7 @@ PROCEDURE NoteCapture (p: P;  ca: CaptureAnalysis.T;  written: BOOLEAN) =
            through LookupVar/LookupVarAddr via globalMap without lambda-lifting.
            Adding them as value captures would shadow globalMap lookups and break
            LookupVarAddr for callers that need write addresses (VAR params). *)
-        VAR procCaps := MSIRBuilder.GetProcCaptures (p.value); BEGIN
+        VAR procCaps := Procedure.Captures (p.value); BEGIN
           IF procCaps # NIL THEN
             FOR k := 0 TO NUMBER (procCaps^) - 1 DO
               VAR sv := procCaps[k].var;
