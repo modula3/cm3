@@ -429,6 +429,7 @@ CONST
     Builtin {"Module",                        DoModuleX,         1, FALSE},
     Builtin {"h_source",                      DoHSource,         1, FALSE},
     Builtin {"c_source",                      DoCSource,         1, FALSE},
+    Builtin {"cpp_source",                    DoCppSource,       1, FALSE},
     Builtin {"s_source",                      DoSSource,         1, FALSE},
     Builtin {"ship_source",                   DoShipSource,      1, FALSE},
 
@@ -1185,6 +1186,17 @@ PROCEDURE DoCSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   BEGIN
     AddSource (t, nm, UK.C, hidden := TRUE);
   END DoCSource;
+
+(* Sometimes it is sufficient to have .c extension and pass
+ * a command line flag to compiler to interpret the file as C++.
+ * Sometimes instead it is desirable to change the extension.
+ *)
+PROCEDURE DoCppSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
+  RAISES {Quake.Error} =
+  VAR t := Self (m);  nm := PopID (t);
+  BEGIN
+    AddSource (t, nm, UK.CPP, hidden := TRUE);
+  END DoCppSource;
 
 PROCEDURE DoSSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =

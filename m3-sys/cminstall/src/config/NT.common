@@ -667,8 +667,38 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     %
     args += ["-Z7"]
 
-    args += ["-TP"] % compile as C++
+    %
+    % Older compilers output C that is not correct C++.
+    % Specifically alloca is declared but not as extern "C" so link fails.
+    % i.e. for ex_frame's jmpbuf, which ought to be implemented
+    % more efficiently without alloca.
+    %
+    % Older compilers do not need C++ exception handling.
+    %
+    % Older compilers do not disable error for function not returning value,
+    % i.e. functions that always throw.
+    %
+    % Ideally we would probe for each behavior.
+    % Including if C++ compiler accepts -wd4716.
+    %
+    % Older compilers should come with their own configuration perhaps.
+    %
+    % Current compilers output .cpp instead of .c, so -TP is redundant.
+    % -EHs would therefore be a no-op, in .c files.
+    %
+    % That is, -TP only makes a difference for hand written C/C++ in m3core and
+    % elsewhere in the Modula-3 system. And does not likely matter -- does not
+    % have a significant good or bad impact. The code is almost all valid C
+    % with the same meaning if interpreted as C++ or not.
+    % An exception is RTExStackC.c that has throw so needs to be C++.
+    % cpp_source handles this, wrapping it in RTExStackCpp.cpp.
+    %
+    % args += ["-TP"] % compile as C++
     args += ["-EHs"] % with exception handling support
+
+    if defined ("M3BOOT2")
+      args += ["-wd4716"] % error C4716: 'FloatMode__GetBehavior': must return a value
+    end
 
     if USE_MSVCRT
         % Use msvcrt.lib and define _MT and _DLL.
