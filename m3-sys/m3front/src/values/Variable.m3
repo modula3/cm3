@@ -311,8 +311,7 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
          LookupVar/LookupVarAddr return its address without any runtime load.
          This avoids the runtime pointer init and matches the real ABI since
          MSIR only accesses the data via LookupVar, never via the module struct.
-         DeclareGlobalMSIR is called twice (AllocGlobalVarSpace + DeclareGlobalsMSIR);
-         skip the second call if the variable is already in the global map. *)
+         Skip a variable already in the global map. *)
       IF MSIRBuilder.LookupVarAddr (t) # NIL THEN RETURN END;
       byteSize  := t.size DIV Target.Char.size;
       byteAlign := MAX(1, t.align DIV Target.Char.size);
@@ -1013,7 +1012,7 @@ PROCEDURE Declare (t: T): BOOLEAN =
     ELSIF (t.global) THEN
       <*ASSERT t.allocated*>
       CG.Declare_global_field (t.name, t.offset, size, typeUID, FALSE);
-      DeclareGlobalMSIR(t);
+      (* MSIR declares it later, in Module.DeclareGlobalsMSIR *)
       IF (t.initZero) THEN t.initDone := TRUE END;
       t.cg_align := align;
       IF (t.indirect) THEN

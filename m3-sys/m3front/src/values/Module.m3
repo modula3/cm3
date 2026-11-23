@@ -933,8 +933,6 @@ PROCEDURE Compile (t: T) =
       CG.Gen_location (t.origin);
       Host.env.note_unit (t.name, t.interface);
       DeclareGlobalData (t);
-      DeclareGlobalsMSIR (t);
-      Type.GenCellsMSIR ();
       IF (t.body # NIL) THEN EmitDecl (t.body); END;
       Type.CompileAll ();
       IF (t.interface)
@@ -986,6 +984,12 @@ PROCEDURE CompileInterface (t: T) =
     (* declare any visible revelations *)
     Revelation.Declare (t.revelations, rev_full, rev_part);
 
+    (* MSIR: the module's globals and type cells, with the scopes entered;
+       after Revelation.Declare, so their type queries do not add to the
+       revelations this unit records, as the C walk's do not *)
+    DeclareGlobalsMSIR (t);
+    Type.GenCellsMSIR ();
+
     (* generate any internal procedures *)
     ProcBody.EmitAll (proc_info);
 
@@ -1011,6 +1015,12 @@ PROCEDURE CompileModule (t: T) =
 
     (* declare any visible revelations *)
     Revelation.Declare (t.revelations, rev_full, rev_part);
+
+    (* MSIR: the module's globals and type cells, with the scopes entered;
+       after Revelation.Declare, so their type queries do not add to the
+       revelations this unit records, as the C walk's do not *)
+    DeclareGlobalsMSIR (t);
+    Type.GenCellsMSIR ();
 
     (* generate the tables for coverage *)
     Coverage.GenerateTables ();
