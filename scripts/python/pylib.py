@@ -1973,8 +1973,8 @@ def FormInstallRoot(PackageSetName):
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     else:
         b = os.popen("uname -sr").read()
-        b = re.sub("Linux 2\.4\..+$", "Linux2.4", b)
-        b = re.sub("Linux 2\.6\..+$", "", b)
+        b = re.sub("Linux 2\\.4\\..+$", "Linux2.4", b)
+        b = re.sub("Linux 2\\.6\\..+$", "", b)
         b = re.sub("-.*$", "", b)
         b = re.sub("SunOS", "Solaris", b)
         b = re.sub("[ \r\n]", "", b)
