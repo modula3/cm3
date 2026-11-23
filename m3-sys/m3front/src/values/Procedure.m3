@@ -809,6 +809,9 @@ PROCEDURE GenBodyMSIR (p: T) =
     PreRegisterScopeCapturesMSIR (p.syms);  (* transitive captures to a fixpoint *)
     (* p's nested procedures, then its locals' initialization. *)
     IF p.cg_proc # NIL THEN Error.MuteWarnings () END;  (* see GenBody *)
+    (* p's procedure frame on Marker, as GenBody pushes it (D29a). *)
+    Marker.PushProcedure (ProcType.Result (p.signature), p.result,
+                          ProcType.CallConv (p.signature));
     TRY
       Scope.InitValuesMSIR (p.syms);
       TRY
@@ -817,6 +820,7 @@ PROCEDURE GenBodyMSIR (p: T) =
         MSIRBuilder.Abandon ("uncaught exception in procedure body MSIR compilation");
       END;
     FINALLY
+      Marker.Pop ();
       IF p.cg_proc # NIL THEN Error.UnmuteWarnings () END;
     END;
     Tracer.Resume (outerTraces);
@@ -966,6 +970,9 @@ PROCEDURE GenBody (p: T) =
        Where it compiled this body it has reported the warnings, so the MSIR
        walk's are muted. *)
     IF cgCompiled THEN Error.MuteWarnings () END;
+    (* The MSIR walk's procedure frame on Marker, as the CG walk's above
+       (D29a). *)
+    Marker.PushProcedure (tresult, p.result, cconv);
     TRY
       IF NOT msirSkip AND MSIRBuilder.InProc () THEN
         Scope.InitValuesMSIR (p.syms);
@@ -980,6 +987,7 @@ PROCEDURE GenBody (p: T) =
         END;
       END;
     FINALLY
+      Marker.Pop ();
       IF cgCompiled THEN Error.UnmuteWarnings () END;
     END;
     IF NOT msirSkip THEN

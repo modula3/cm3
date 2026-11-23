@@ -15,9 +15,6 @@ IMPORT MSIR, MSIRBuilder, CaptureAnalysis, CheckExpr, CG;
 TYPE
   P = Stmt.T OBJECT
         expr    : Expr.T;
-        result  : Type.T := NIL;
-        (* ^the procedure's result type, noted by Check for CompileMSIR (the
-           Marker stack Compile uses is not set up in an MSIR-only walk) *)
       OVERRIDES
         check       := Check;
         compile     := Compile;
@@ -56,7 +53,6 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
       (* ^Marker.EmitReturn will either build result value directly or
          provide a temp. *)
       AssignStmt.Check (t, p.expr, cs);
-      p.result := t;
     END;
   END Check;
 
@@ -82,9 +78,10 @@ PROCEDURE CompileMSIR (p: P) =
       (* The result is assigned to the procedure's result: range-check it
          against the result type, as Compile does (Marker.EmitReturn ->
          AssignStmt.DoEmit). *)
-      VAR min, max: Target.Int;
+      VAR min, max: Target.Int;  rt: Type.T;  rv: Variable.T;
       BEGIN
-        IF p.result # NIL AND Type.GetBounds (p.result, min, max) THEN
+        Marker.ReturnVar (rt, rv);
+        IF rt # NIL AND Type.GetBounds (rt, min, max) THEN
           v := CheckExpr.EmitChecksMSIR (v, p.expr, min, max,
                                          CG.RuntimeError.ValueOutOfRange);
           IF v = NIL THEN RETURN END;
