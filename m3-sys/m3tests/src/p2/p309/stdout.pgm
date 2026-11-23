@@ -1,0 +1,27 @@
+ok assign field
+ok INC field
+ok INC field by
+ok DEC field
+ok assign packed element
+ok INC packed element
+ok WITH packed element
+ok WITH packed element
+ok field b
+ok field c
+ok nested assign a
+ok nested assign b
+ok nested INC b
+ok nested DEC a
+ok nested a
+ok nested b
+ok neighbour x
+ok neighbour y
+ok object assign k
+ok object assign m
+ok object INC m
+ok object k
+ok object m
+ok result a
+ok result read
+ok result b
+ok result y
