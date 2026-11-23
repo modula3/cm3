@@ -1103,6 +1103,21 @@ work) is mostly delivered by 2 and 3.
 
 Plan: see D25.
 
+**Progress (2026-11-23): (B) parity.**  The link information (`.m3x`) of an
+MSIRObj build is compared with the C build's by content
+(`m3xcanon.py`: names and version stamps resolved, per unit).  Parity is
+exact, except that MSIR must import at least the types C does (Tony,
+2026-11-23): imported-type (`t`) records are used only by the linker's
+"missing imported type" check, and C's set is a by-product of where its
+prepare phase calls `PrepLValue`.  libm3 went from 1,279 differing records to
+parity.  On the way: hooks looked up only when used (MSIREmit), and the MSIR
+walk calls `Type.Compile` where the C walk does (lvalues, literals, locals,
+formals, NEW, TYPECASE, `T.m`'s holder and object type).  The comparison
+also found real bugs: B21 (RETURN range check), B22/B23 (NIL checks), B24
+(VALUE argument range check), plus needless checks and barriers (B25, B26).
+Remaining for (B): the same comparison across all packages, then B3 (move
+the note calls out of the CG-side procedures).
+
 ### O18. Closure-call lowering reads the procedure's first word.
 
 **Open.**  `MSIRBuilder.EmitClosureCall` tells a closure from a plain
@@ -2232,6 +2247,7 @@ most serious findings spot-checked against the code.  Nothing built.
 | B24 | `Formal.EmitArgMSIR` (VALUE scalar) | **Fixed.** A VALUE argument was not range-checked against a subrange formal: `Card (-3)` for a `CARDINAL` formal passed -3, where `GenOrdinal` faults (libm3 `LowPerfTool` passes an INTEGER file descriptor to a C `int`). Now checked with `CheckExpr.EmitChecksMSIR`. Found by comparing link information. |
 | B25 | `CheckExpr.EmitChecksMSIR` | **Fixed.** It took the bounds of the unfolded expression, so `RETURN -1` from a `[-1..1]` procedure (libm3 `Point.Compare`) got a needless range check; `EmitChecks` folds first (`Expr.ConstValue`). Harmless (extra checks only), found by comparing link information. |
 | B26 | `AssignStmt.CompileMSIR`, `MSIRBuilder.LookupVarRaw` | **Fixed.** Barriers MSIR emitted where the C path does not: a write barrier on a store whose value cannot hold a traced reference (`wr.buff := NIL`; `Compile` passes `traced := rhs_info.isTraced`), and a read barrier on a captured local of an enclosing procedure (stack storage; `NamedExpr.Compile` barriers only global or indirect variables). Both rules now follow the C path's. Harmless (extra barriers only), found by comparing link information. |
+| B27 | `MSIRBuilder.EmitClosureCall` | **Fixed.** Under `Host.doProcChk` the procedure pointer was NIL-checked twice (once for the closure test, again in the direct path's `EmitCallIndirect`), and the closure path checked its shim pointer, which is never NIL. One check now, before the closure test. |
 
 #### 2. Abstraction violations by theme
 

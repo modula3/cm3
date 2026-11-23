@@ -623,6 +623,7 @@ PROCEDURE NoLiteralMSIR (<*UNUSED*> e: T;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
 
 PROCEDURE GenLiteralMSIR (t: T;  ft: MSIR.T): MSIR.Value =
   BEGIN
+    IF (t # NIL) THEN Type.Compile (t.type) END;  (* as GenLiteral *)
     RETURN t.genLiteralMSIR (ft);
   END GenLiteralMSIR;
 
@@ -655,6 +656,7 @@ PROCEDURE HeapLValueMSIR (t: T;  VAR container: MSIR.Value): MSIR.Value =
   BEGIN
     container := NIL;
     IF (t = NIL) THEN RETURN NIL END;
+    Type.Compile (t.type);  (* as PrepLValue *)
     RETURN t.compileLValueMSIR (container);
   END HeapLValueMSIR;
 

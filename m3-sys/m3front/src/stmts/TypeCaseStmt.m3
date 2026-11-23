@@ -398,6 +398,7 @@ PROCEDURE CompileMSIR (p: P) =
     mt       : MSIR.T;
   BEGIN
     IF NOT MSIRBuilder.InProc () THEN RETURN END;
+    Type.Compile (Type.Base (Expr.TypeOf (p.expr)));  (* as Compile *)
 
     (* Compile the discriminant expression. *)
     refVal := Expr.CompileMSIR (p.expr);

@@ -492,6 +492,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
   BEGIN
     IF b = NIL THEN RETURN FALSE END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN TRUE END;
+    Type.Compile (t.type);  (* as Declare *)
     IF t.indirect THEN
       (* A designator alias (WITH x = d) whose designator has no lvalue
          cannot be held by reference.  force=TRUE gives it a plain by-value
@@ -609,6 +610,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
       paramVal: MSIR.Value;
       mt      : MSIR.T;
   BEGIN
+    Type.Compile (t.type);  (* as Formal.Compile *)
     IF p = NIL OR b = NIL THEN RETURN END;
     IF MSIRBuilder.VarMapContains (t) THEN RETURN END;
     FOR i := 0 TO n - 1 DO

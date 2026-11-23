@@ -116,6 +116,10 @@ PROCEDURE LoadMSIR (object: Type.T;  method: Value.T;  holder: Type.T): MSIR.Val
     b    : MSIR.Block;
     tc, defaults, off, htc: MSIR.Value;
   BEGIN
+    (* As QualifyExpr.Compile: the holder and the object type (compiling a
+       subtype does not compile its supertypes). *)
+    Type.Compile (holder);
+    Type.Compile (object);
     IF NOT Method.Split (method, m) THEN
       MSIRBuilder.Abandon ("object type method: not a method");
       RETURN NIL;

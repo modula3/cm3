@@ -433,6 +433,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
     IF NOT TypeExpr.Split (ce.args[0], t) THEN
       MSIRBuilder.Abandon ("NEW: cannot determine type");  RETURN NIL;
     END;
+    Type.Compile (t);  (* as Gen *)
     t := Type.StripPacked (t);
     IF    RefType.Split    (t, r) THEN
       (* RefType.Split succeeds for a locally-revealed opaque REF, reducing
