@@ -6004,10 +6004,13 @@ BEGIN
         (* There are tests that fail this and m3front allows it, with warnings. *)
         (* ASSERT ok2 *)
     END;
+    (* The minimum is written as -MAX-1, there being no positive literal for
+       its magnitude; parenthesized, or in x * -MAX-1 the C parser would
+       subtract the 1 after multiplying (p227). *)
     IF type = CGType.Int32 AND TInt.EQ(i, TInt.Min32) THEN
-        RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max32) & intLiteralSuffix[type] & "-1";
+        RETURN "(-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max32) & intLiteralSuffix[type] & "-1)";
     ELSIF type = CGType.Int64 AND TInt.EQ(i, TInt.Min64) THEN
-        RETURN "-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max64) & intLiteralSuffix[type] & "-1";
+        RETURN "(-" & intLiteralPrefix[type] & TInt.ToText(TInt.Max64) & intLiteralSuffix[type] & "-1)";
     ELSE
         RETURN intLiteralPrefix[type] & TInt.ToText(i) & intLiteralSuffix[type];
     END;
