@@ -23,26 +23,35 @@ jobs:
   build:
     runs-on: ${{ inputs.os }}
     timeout-minutes: 35
+    defaults:
+      run: {shell: cmd}
     env:
       CM3_TARGET: AMD64_NT
     steps:
     - name: Environment
-      shell: cmd
       run: |
-        call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 || goto :eof
+        call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
         echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
         echo INCLUDE=%INCLUDE%>>%GITHUB_ENV%
         echo LIB=%LIB%>>%GITHUB_ENV%
         echo PATH=%PATH%>>%GITHUB_ENV%
 
-    - name: bootstrap download, build, install.
-      shell: cmd
+    - name: bootstrap download and extract
+      run: curl -fL ${{inputs.release}}/${{inputs.bootstrap_archive}} | tar xf -
+
+    - name: bootstrap dir1
+      run: dir
+
+    - name: bootstrap dir2
+      working-directory: ${{inputs.bootstrap_dir}}
+      run: dir
+
+    - name: bootstrap build
+      working-directory: ${{inputs.bootstrap_dir}}
+      run: nmake
+
+    - name: bootstrap install
       run: |
-        curl -fLO ${{inputs.release}}/${{inputs.bootstrap_archive}} || goto :eof
-        tar xf ${{inputs.bootstrap_archive}} || goto :eof
-        del ${{inputs.bootstrap_archive}}
-        cd ${{inputs.bootstrap_dir}} || goto :eof
-        nmake || goto :eof
         mkdir %CM3_INSTALL%\bin
         copy cm3.exe %CM3_INSTALL%\bin || goto :eof
         copy mklib.exe %CM3_INSTALL%\bin || goto :eof
@@ -51,11 +60,27 @@ jobs:
     - name: Fetch sources
       uses: actions/checkout@v7
 
-    - name: Build everything
+    - name: build compiler with old and new
       working-directory: scripts/python3
-      run: python ./boot2.py
+      run: python ./upgrade.py skipgcc c
+
+    - name: archive min
+      working-directory: ../install
+      run: tar cfz cm3-min.tar.gz cm3
 
     - name: Run compiler validation suite
       continue-on-error: true
       run: cm3 -DHTML
       working-directory: m3-sys/m3tests
+
+    - name: build all
+      working-directory: scripts/python3
+      run: python ./do-cm3-all.py c buildship
+
+    - name: archive all
+      working-directory: ../install
+      run: tar cfz cm3-all.tar.gz cm3
+
+    - name: make and archive boot1
+      working-directory: scripts/python3
+      run: python ./boot1.py c
