@@ -162,7 +162,7 @@ def Boot():
     # See BootAutoTools.
 
     LinkFlags = ({
-        "AMD64_LINUX"     : " -lunwind-x86_64 -lunwind ",
+        "AMD64_LINUX"     : " -lunwind-x86_64 -lunwind -lquadmath ",
         }.get(Config) or " ")
 
     if darwin:
@@ -215,6 +215,12 @@ def Boot():
         Link = Link  +  " -lm -pthread " # TODO: combine with next?
     else:
         Link = Link + " -lm -lpthread -pthread "
+
+    # Except on NT, whose link rule reads $(LinkFlags) from a response
+    # file, the libraries in LinkFlags belong on the link line.
+    if not nt:
+        Link = Link + LinkFlags
+        LinkFlags = ""
 
     # add -c to compiler but not link (i.e. not CCompilerFlags)
 
