@@ -10,7 +10,7 @@ MODULE NilChkExpr;
 
 IMPORT CG, Expr, ExprRep, Type, AddressExpr;
 IMPORT Target, TInt, RefType, Host, OpenArrayType, M3RT;
-IMPORT MSIR;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = ExprRep.Ta BRANDED "NilChkExpr.P" OBJECT
@@ -120,11 +120,25 @@ PROCEDURE NoteWrites (p: P) =
     Expr.NoteWrite (p.a);
   END NoteWrites;
 
-(* MSIR: forward through the nil-check wrapper. The nil check itself is a
-   runtime concern that can be modeled in a later pass. *)
+(* As Compile: an explicit NIL check where the reference's use is at an
+   unknown offset or beyond the first readable page, so dereferencing NIL
+   would not reliably fault in hardware. *)
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
+  VAR EasyCheck := Target.First_readable_addr * Target.Char.size;
+      v := Expr.CompileMSIR (p.a);
+      k: MSIR.TypeKind;
   BEGIN
-    RETURN Expr.CompileMSIR (p.a);
+    IF v = NIL THEN RETURN NIL END;
+    IF (p.offset < 0) OR (EasyCheck <= p.offset) THEN
+      k := MSIR.Kind (MSIR.ValueType (v));
+      IF k = MSIR.TypeKind.Ptr OR k = MSIR.TypeKind.GcRef THEN
+        MSIRBuilder.EmitReportFault (
+          MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Eq,
+                          v, MSIR.ConstNil (MSIR.ValueType (v))),
+          ORD (CG.RuntimeError.BadMemoryReference));
+      END;
+    END;
+    RETURN v;
   END CompileMSIR;
 
 PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
