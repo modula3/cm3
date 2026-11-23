@@ -852,8 +852,6 @@ PROCEDURE InProc(): BOOLEAN =
 PROCEDURE IsAbandoned(): BOOLEAN =
   BEGIN RETURN abandoned END IsAbandoned;
 
-PROCEDURE ClearAbandoned() =
-  BEGIN abandoned := FALSE END ClearAbandoned;
 
 PROCEDURE VarContainer(v: Variable.T): MSIR.Value =
   BEGIN

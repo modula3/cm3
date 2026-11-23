@@ -88,12 +88,9 @@ PROCEDURE EndHelperProc();
    supported? Body translators check this gate before doing anything. *)
 PROCEDURE InProc(): BOOLEAN;
 
-(* Query/clear the abandoned flag.  Used by SubscriptExpr.LValueMSIR to
-   attempt LValueMSIR on a base expression, then fall back to rvalue
-   materialization if LValueMSIR abandoned.  ClearAbandoned must only be
-   called when the caller knows it can handle the failure itself. *)
+(* Has the current procedure been abandoned?  An abandon is final: the
+   module is marked incomplete (see Abandon), so there is no clearing it. *)
 PROCEDURE IsAbandoned(): BOOLEAN;
-PROCEDURE ClearAbandoned();
 
 (* The heap object holding the designator a WITH alias v is bound to (see
    BindVarAddr), which a store through v must dirty; NIL if none. *)

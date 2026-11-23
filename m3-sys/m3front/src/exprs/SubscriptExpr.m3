@@ -544,12 +544,12 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
          - If LValueMSIR succeeds (e.g. Subarray.LValueMSIR → ptr(OAT), or
            DerefExpr.LValueMSIR → gc_ref(OAT)): load the dope vector from the
            result.  For gc_ref(OAT), also set the GC write-barrier container.
-         - If LValueMSIR fails (e.g. VAR formal: LValueMSIRDefault abandons),
-           fall back to CompileMSIR which returns the dope vector value directly.
+         - If the base has no lvalue (NIL without abandoning), fall back to
+           CompileMSIR, which returns the dope vector value directly.  If it
+           abandoned, the procedure is lost: stop.
          This avoids double-emitting code (do NOT call both LValueMSIR and
          CompileMSIR for the same expression). *)
       VAR oaBase     : MSIR.Value;
-          preAbandOA := MSIRBuilder.IsAbandoned ();
       BEGIN
         oaBase := Expr.HeapLValueMSIR (p.a, container);
         oaBase_outer := oaBase;  (* save for depth-2+ fix *)
@@ -573,11 +573,9 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
             END;
           END;
         ELSE
-          (* LValueMSIR failed — fall back: CompileMSIR returns the dope VALUE. *)
+          (* No lvalue: CompileMSIR returns the dope VALUE. *)
+          IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
           container := NIL;
-          IF NOT preAbandOA AND MSIRBuilder.IsAbandoned () THEN
-            MSIRBuilder.ClearAbandoned ();
-          END;
           oa := Expr.CompileMSIR (p.a);
         END;
       END;
@@ -673,16 +671,13 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
         RETURN slot;
       END;
     END;
-    (* Try LValueMSIR on the base (handles VAR designators and CONST arrays).
-       If that fails (LValueMSIRDefault called Abandon), clear the flag and
-       fall back to rvalue materialization into a temp alloca, which handles
-       call expressions that return fixed arrays. *)
-    VAR preAbandoned := MSIRBuilder.IsAbandoned ();
+    (* The base's lvalue (VAR designators, CONST arrays, call results).  If it
+       has none (NIL without abandoning), materialize its value in a temp
+       alloca; if it abandoned, the procedure is lost: stop. *)
     BEGIN
       arrAddr := Expr.HeapLValueMSIR (p.a, container);
-      IF arrAddr = NIL AND NOT preAbandoned AND MSIRBuilder.IsAbandoned () THEN
-        (* LValueMSIR abandoned — try rvalue materialization. *)
-        MSIRBuilder.ClearAbandoned ();
+      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
+      IF arrAddr = NIL THEN
         container := NIL;
         VAR arrVal := Expr.CompileMSIR (p.a);
             arrT2  : MSIR.T;
@@ -786,7 +781,6 @@ PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
    Extract/InsertBitFieldDyn byte path applies and containerBits is unused. *)
   VAR oa, oaBase: MSIR.Value;  blk: MSIR.Block;
       idxBits: INTEGER;
-      preAband := MSIRBuilder.IsAbandoned ();
   BEGIN
     eltPack := OpenArrayType.EltPack (p.taBase);
     IF eltPack <= 0 OR eltPack >= Target.Byte THEN RETURN NIL END;
@@ -810,9 +804,7 @@ PROCEDURE GetOpenPackedBase (p: P;  VAR idxVal: MSIR.Value;
         oa := MSIR.BuildLoad (blk, "", eltT, oaBase);
       END;
     ELSE
-      IF NOT preAband AND MSIRBuilder.IsAbandoned () THEN
-        MSIRBuilder.ClearAbandoned ();
-      END;
+      IF MSIRBuilder.IsAbandoned () THEN RETURN NIL END;
       oa := Expr.CompileMSIR (p.a);
     END;
     IF oa = NIL THEN RETURN NIL END;
