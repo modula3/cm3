@@ -1786,8 +1786,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     lowered m3core links and runs the test programs unchanged.
 
 - **D29. The MSIR front end keeps master's architecture** (Tony,
-  2026-11-23; the principle is decided, the applications below are
-  proposed for review).
+  2026-11-23).  Decided: the principle, D29a, and keeping lambda lifting.
   - **Principle.**  Apart from CG being replaced by MSIR, maintainers should
     see a front end that has not diverged significantly from the one on
     master: the same driver (`Module.Compile`, `Procedure.GenBody`,
@@ -1806,13 +1805,14 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     | Control frames | `Marker` | exit and cleanup stacks in MSIRBuilder | Converge: D29a below |
     | Variable storage | `cg_var` on `Variable.T` | `varMap` in MSIRBuilder, keyed by `Variable.T` | Converge: an MSIR handle on the node, as `cg_var` |
     | Procedures | `cg_proc` on `Procedure.T` | `procMap` and `shimMap` in MSIRBuilder | Converge: an MSIR handle on the node |
-    | Nested procedures | compiled after the parent; up-level access through the static link | compiled inline in the parent; captures lambda-lifted into parameters, closure shims | **Decide**: lambda lifting suits LLVM, but it is the largest structural divergence |
+    | Nested procedures | compiled after the parent; up-level access through the static link | compiled inline in the parent; captures lambda-lifted into parameters, closure shims | **Keep** (Tony, 2026-11-23): lambda lifting is a deliberate choice for the best LLVM code, the one justified divergence here |
     | Initialization | `LangInit`/`UserInit`, `initPending`/`initDone` | `LangInitMSIR`/`UserInitMSIR`, `msirLangDone`/`msirInitDone` | Converge at D25 step 6, when the CG routines go |
     | Unit driver | `CG.Begin_unit`/`End_unit` from `Module.Compile` | `MSIREmit.BeginUnit`/`EndUnit`, plus hooks inside CG emission (review 2d) | Converge with O17 (A) |
     | Globals and typecells | `Module` global segments, `Type.compile` | `DeclareGlobalsMSIR`, `GenCellsMSIR` | Converge with O17 (C) |
     | Node methods | `compile`, `compileLV`, `prep*` | `compileMSIR`, `compileLValueMSIR`, `bitLocMSIR` | Aligned already; renamed at D25 step 7 |
-  - **D29a. One Marker stack for both walks** (proposed, for review; goes
-    with O17 (A)).
+  - **D29a. One Marker stack for both walks** (approved as proposed, Tony,
+    2026-11-23: one `Marker`, frames with a payload per walk, both payloads
+    on one push procedure; goes with O17 (A)).
   - **Today.**  `Marker` is a stack of control frames (procedure, loop,
     TRY, TRY ELSE, TRY FINALLY, LOCK, RAISES).  It is pushed twice over:
     - by type checking, with no labels, for `ExitOK`, `ReturnOK` and
@@ -1866,9 +1866,6 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     2. loops and EXIT: `PushExit` with an exit block, `EmitExitMSIR`;
     3. TRY ELSE, TRY FINALLY, LOCK: their frames carry the EH scope, and
        the builder's cleanup stack goes.
-  - **For review.**  (1) One `Marker`, frames with a payload per walk, as
-    above?  (2) Both payloads on one push procedure, rather than parallel
-    MSIR names?
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
