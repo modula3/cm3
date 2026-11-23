@@ -1148,7 +1148,7 @@ int __cdecl UnixC__pipe (int* files);
 
 #endif
 
-// See RTMachine.i3, RTStack.i3, RTStackC.c
+// See RTStack.i3, RTStackC.c
 // TYPE Frame = RECORD pc, sp: ADDRESS END;
 #define RTStack__Frame RTStack__Frame /* inhibit m3c type */
 STRUCT_TYPEDEF(RTStack__Frame)
