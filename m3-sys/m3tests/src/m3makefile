@@ -388,6 +388,8 @@ cm3opts = ""
 runopts = ""
 if equal(M3_BACKEND_MODE, "StAloneLlvmAsm")
    or equal(M3_BACKEND_MODE, "StAloneLlvmObj")
+   or equal(M3_BACKEND_MODE, "MSIRObj")
+   or equal(M3_BACKEND_MODE, "MSIRAsm")
 % turn off llvm debug mode if required 
 %  cm3opts = cm3opts & "-g0 "
 % llvm optimisations if required - each compile runs opt -O3 and llc -O3
