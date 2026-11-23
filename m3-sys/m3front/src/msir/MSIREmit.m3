@@ -157,29 +157,16 @@ PROCEDURE EndUnit() =
       END;
       MSIR.SetModuleHooks(curModule, gcLoad, gcStore, scanTC);
     END;
-    (* EH lowering (MSIREH) re-raises through RTHooks.ResumeRaiseEx at the
-       end of FINALLY code (TRY FINALLY, LOCK), and may when no handler of a
-       TRY EXCEPT without ELSE matches.  Import it for those, as C does; a
-       TRY EXCEPT ELSE never re-raises. *)
-    VAR scoped, checked, reraises := FALSE;  p: MSIR.Proc;  s: MSIR.Scope;
-        n: INTEGER;
+    (* The EH lowerings (MSIREH, MSIRToM3CG) re-raise through
+       RTHooks.ResumeRaiseEx only in a procedure that MSIR.ProcMayReraise:
+       import it for those, as C does. *)
+    VAR scoped, checked, reraises := FALSE;  p: MSIR.Proc;
     BEGIN
       FOR i := 0 TO MSIR.ModuleProcCount(curModule) - 1 DO
         p := MSIR.ModuleProc(curModule, i);
         IF MSIR.ProcScopeCount(p) > 1 THEN scoped := TRUE END;
         IF MSIR.ProcChecksRaises(p) THEN checked := TRUE END;
-        FOR j := 1 TO MSIR.ProcScopeCount(p) - 1 DO
-          s := MSIR.ProcScopeAt(p, j);
-          CASE MSIR.ScopeKindOf(s) OF
-          | MSIR.ScopeKind.Finally => reraises := TRUE;
-          | MSIR.ScopeKind.Except =>
-              n := MSIR.ScopeHandlerCount(s);
-              IF n = 0 OR MSIR.ScopeHandler(s, n - 1).exc # NIL THEN
-                reraises := TRUE;
-              END;
-          ELSE
-          END;
-        END;
+        IF MSIR.ProcMayReraise(p) THEN reraises := TRUE END;
       END;
       IF reraises THEN
         MSIR.SetModuleResumeRaise(curModule,

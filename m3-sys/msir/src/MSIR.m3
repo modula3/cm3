@@ -757,6 +757,22 @@ PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope;
 
 PROCEDURE ProcScopeCount(p: Proc): INTEGER =
   BEGIN RETURN p.scopes.size() END ProcScopeCount;
+PROCEDURE ProcMayReraise(p: Proc): BOOLEAN =
+  VAR s: Scope;  n: INTEGER;
+  BEGIN
+    FOR k := 1 TO p.scopes.size() - 1 DO
+      s := p.scopes.get(k);
+      CASE s.kind OF
+      | ScopeKind.Finally => RETURN TRUE;
+      | ScopeKind.Except =>
+          n := ScopeHandlerCount(s);
+          IF n = 0 OR ScopeHandler(s, n - 1).exc # NIL THEN RETURN TRUE END;
+      ELSE
+      END;
+    END;
+    RETURN FALSE;
+  END ProcMayReraise;
+
 PROCEDURE ProcScopeAt(p: Proc;  i: INTEGER): Scope =
   BEGIN RETURN p.scopes.get(i) END ProcScopeAt;
 

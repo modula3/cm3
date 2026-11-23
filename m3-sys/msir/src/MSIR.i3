@@ -281,6 +281,10 @@ PROCEDURE NewScope(p: Proc;  kind: ScopeKind;  parent: Scope;
                                              (* not Proc; owner: the TRY scope,
                                                 for Handler and FinallyCode *)
 PROCEDURE ProcScopeCount(p: Proc): INTEGER;         (* including the root *)
+PROCEDURE ProcMayReraise(p: Proc): BOOLEAN;
+(* p can re-raise an exception through the module's re-raise hook: it has a
+   Finally scope (TRY FINALLY, LOCK), or an Except scope with no ELSE
+   handler.  A TRY EXCEPT ELSE never re-raises. *)
 PROCEDURE ProcScopeAt(p: Proc;  i: INTEGER): Scope; (* 0 is the root *)
 
 PROCEDURE ScopeKindOf(s: Scope): ScopeKind;

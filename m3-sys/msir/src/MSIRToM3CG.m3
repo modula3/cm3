@@ -775,7 +775,7 @@ PROCEDURE CheckScopes (w: Why;  m: MSIR.Module;  p: MSIR.Proc) =
        AND (MSIR.ModulePushEFrame (m) = NIL OR MSIR.ModulePopEFrame (m) = NIL) THEN
       Fail (w, "EH scopes (ex_frame): no frame hooks");
     END;
-    IF MSIR.ModuleResumeRaise (m) = NIL THEN
+    IF MSIR.ProcMayReraise (p) AND MSIR.ModuleResumeRaise (m) = NIL THEN
       Fail (w, "EH scopes: no re-raise hook");
     END;
     FOR k := 0 TO MSIR.ProcScopeCount (p) - 1 DO
@@ -1918,7 +1918,7 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
 PROCEDURE ImportCallees (p: MSIR.Proc) =
   VAR b: MSIR.Block;  i: MSIR.Insn;  v: MSIR.Value;
   BEGIN
-    IF MSIR.ProcScopeCount (p) > 1 THEN
+    IF MSIR.ProcMayReraise (p) THEN
       EVAL ProcFor (MSIR.ModuleResumeRaise (mod));
     END;
     IF exFrame
