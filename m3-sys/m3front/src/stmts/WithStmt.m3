@@ -179,6 +179,9 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
   END Compile;
 
 PROCEDURE CompileMSIR (p: P) =
+  (* Every path that cannot bind the alias abandons the procedure; returning
+     quietly would omit the WITH body.  Abandon keeps the first reason, so a
+     callee that already abandoned is the one reported. *)
   VAR
     addr:               MSIR.Value;
     val:                MSIR.Value;
@@ -211,13 +214,17 @@ PROCEDURE CompileMSIR (p: P) =
                not assignable, so a read-only by-value copy is correct. *)
             IF MSIRBuilder.IsAbandoned () THEN RETURN END;
             val := Expr.CompileMSIR (p.expr);
-            IF val = NIL THEN RETURN END;
+            IF val = NIL THEN
+              MSIRBuilder.Abandon ("WITH designator: no value");  RETURN
+            END;
             IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock (),
                                           force := TRUE) THEN
-              RETURN
+              MSIRBuilder.Abandon ("WITH designator: no local slot");  RETURN
             END;
             addr := MSIRBuilder.LookupVarAddr (p.var);
-            IF addr = NIL THEN RETURN END;
+            IF addr = NIL THEN
+              MSIRBuilder.Abandon ("WITH designator: no local slot");  RETURN
+            END;
             MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
           ELSE
             Variable.Split (p.var, t, global, indirect, lhs);
@@ -234,13 +241,17 @@ PROCEDURE CompileMSIR (p: P) =
     | Kind.openarray =>
         (* Bind the alias variable to the lvalue address (dope vector pointer).
            For open-array constructors that cannot be materialized in MSIR
-           (e.g. packed sub-byte arrays), silently skip the WITH body. *)
+           (e.g. packed sub-byte arrays), abandon the procedure. *)
         EVAL MSIRBuilder.TakePendingContainer ();
         addr := Expr.LValueMSIR (p.expr);
-        IF addr = NIL THEN RETURN END;
+        IF addr = NIL THEN
+          MSIRBuilder.Abandon ("WITH open array: no lvalue");  RETURN
+        END;
         Variable.Split (p.var, t, global, indirect, lhs);
         mt := MSIRType.Translate (t);
-        IF mt = NIL THEN RETURN END;
+        IF mt = NIL THEN
+          MSIRBuilder.Abandon ("WITH open array: unsupported type");  RETURN
+        END;
         MSIRBuilder.BindVarAddr (p.var, addr, mt,
                                  MSIRBuilder.TakePendingContainer ());
 
@@ -248,10 +259,16 @@ PROCEDURE CompileMSIR (p: P) =
         (* Rvalue (scalar or aggregate): compile into a fresh alloca and bind
            the alias variable to that slot. *)
         val := Expr.CompileMSIR (p.expr);
-        IF val = NIL THEN RETURN END;
-        IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock()) THEN RETURN END;
+        IF val = NIL THEN
+          MSIRBuilder.Abandon ("WITH value: no value");  RETURN
+        END;
+        IF NOT Variable.AddLocalMSIR (p.var, MSIRBuilder.CurrentBlock()) THEN
+          MSIRBuilder.Abandon ("WITH value: no local slot");  RETURN
+        END;
         addr := MSIRBuilder.LookupVarAddr (p.var);
-        IF addr = NIL THEN RETURN END;
+        IF addr = NIL THEN
+          MSIRBuilder.Abandon ("WITH value: no local slot");  RETURN
+        END;
         MSIR.BuildStore (MSIRBuilder.CurrentBlock (), val, addr);
 
     END; (* CASE p.kind *)
