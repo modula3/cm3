@@ -34,6 +34,7 @@
 #include <malloc.h>
 #include <setjmp.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <windows.h>
 
@@ -70,12 +71,16 @@ extern "C" {
 
 #if defined(_ARM_) || defined(_ARM64_) || defined(_ARM64EC_)
 #define STACK_REGISTER Sp
+#define PC_REGISTER Pc
 #elif defined(_AMD64_)
 #define STACK_REGISTER Rsp
+#define PC_REGISTER Rip
 #elif defined(_X86_)
 #define STACK_REGISTER Esp
+#define PC_REGISTER Eip
 #elif defined(_IA64_)
 #define STACK_REGISTER Rsp
+#define PC_REGISTER StIIP
 #else
 #error unknown architecture
 #endif
@@ -110,7 +115,105 @@ void __cdecl ThreadWin32__DeleteContext(void** p)
 
 /*-------------------------------------------------------------------------*/
 /* process stopped and live stack and registers (garbage collection) */
- 
+
+/* Check that a stopped thread's stack, from its saved stack pointer up to
+   stackEnd, is committed memory of that thread's stack, before the collector
+   scans it.  If not, describe what was found and abort, instead of faulting
+   inside NoteStackLocations with no clue why (#1287). */
+
+static void ThreadWin32__PutText(char** out, const char* s)
+{
+  while (*s)
+    *(*out)++ = *s++;
+}
+
+static void ThreadWin32__PutHex(char** out, UINT_PTR v)
+{
+  int i = { 0 };
+  ThreadWin32__PutText(out, "0x");
+  for (i = (int)sizeof(v) * 8 - 4; i >= 0; i -= 4)
+    *(*out)++ = "0123456789abcdef"[(v >> i) & 15];
+}
+
+static void ThreadWin32__PutField(char** out, const char* name, UINT_PTR v)
+{
+  ThreadWin32__PutText(out, name);
+  ThreadWin32__PutHex(out, v);
+}
+
+static void ThreadWin32__CheckStackRange(
+    char* stackStart,
+    char* stackEnd,
+    char* top,
+    CONTEXT* context)
+{
+  const char* problem = { 0 };
+  char* a = top;
+  MEMORY_BASIC_INFORMATION info = { 0 };
+  char buffer[1024] = { 0 };
+  char* out = buffer;
+  DWORD length = { 0 };
+
+  if (top < stackStart || top > stackEnd)
+    problem = "stack pointer is outside the thread's stack";
+  else
+  {
+    while (a < stackEnd)
+    {
+      ZeroMemory(&info, sizeof(info));
+      if (VirtualQuery(a, &info, sizeof(info)) == 0)
+      {
+        problem = "VirtualQuery failed";
+        break;
+      }
+      if (info.State != MEM_COMMIT)
+      {
+        problem = "range includes uncommitted memory";
+        break;
+      }
+      if (info.Protect & (PAGE_GUARD | PAGE_NOACCESS))
+      {
+        problem = "range includes a guard or no-access page";
+        break;
+      }
+      a = (char*)info.BaseAddress + info.RegionSize;
+    }
+  }
+  if (!problem)
+    return;
+
+  ThreadWin32__PutText(&out, "\n*** ThreadWin32: bad stack range for a stopped thread: ");
+  ThreadWin32__PutText(&out, problem);
+  ThreadWin32__PutField(&out, "\n***   sp ", (UINT_PTR)top);
+  ThreadWin32__PutField(&out, " pc ", (UINT_PTR)context->PC_REGISTER);
+  ThreadWin32__PutField(&out, " ContextFlags ", (UINT_PTR)context->ContextFlags);
+  ThreadWin32__PutField(&out, "\n***   stackStart ", (UINT_PTR)stackStart);
+  ThreadWin32__PutField(&out, " stackEnd ", (UINT_PTR)stackEnd);
+  ThreadWin32__PutField(&out, " collector thread ", (UINT_PTR)GetCurrentThreadId());
+  if (top >= stackStart && top <= stackEnd)
+  {
+    ThreadWin32__PutField(&out, "\n***   region at ", (UINT_PTR)a);
+    ThreadWin32__PutField(&out, ": base ", (UINT_PTR)info.BaseAddress);
+    ThreadWin32__PutField(&out, " size ", (UINT_PTR)info.RegionSize);
+    ThreadWin32__PutField(&out, " allocation ", (UINT_PTR)info.AllocationBase);
+    ThreadWin32__PutField(&out, " state ", (UINT_PTR)info.State);
+    ThreadWin32__PutField(&out, " protect ", (UINT_PTR)info.Protect);
+  }
+  else
+  {
+    ZeroMemory(&info, sizeof(info));
+    VirtualQuery(top, &info, sizeof(info));
+    ThreadWin32__PutField(&out, "\n***   region at sp: base ", (UINT_PTR)info.BaseAddress);
+    ThreadWin32__PutField(&out, " size ", (UINT_PTR)info.RegionSize);
+    ThreadWin32__PutField(&out, " allocation ", (UINT_PTR)info.AllocationBase);
+    ThreadWin32__PutField(&out, " state ", (UINT_PTR)info.State);
+    ThreadWin32__PutField(&out, " protect ", (UINT_PTR)info.Protect);
+  }
+  ThreadWin32__PutText(&out, "\n");
+  WriteFile(GetStdHandle(STD_ERROR_HANDLE), buffer, (DWORD)(out - buffer), &length, 0);
+  abort();
+}
+
 void __cdecl ThreadWin32__ProcessStopped(
     char* stackStart,
     char* stackEnd,
@@ -135,6 +238,7 @@ void __cdecl ThreadWin32__ProcessStopped(
   top = (char*)context->STACK_REGISTER;
   assert(top <= stackEnd);
   assert(top);
+  ThreadWin32__CheckStackRange(stackStart, stackEnd, top, context);
   assertReadable = *(volatile char*)(stackEnd - 1);
   p(top, stackEnd);
 
