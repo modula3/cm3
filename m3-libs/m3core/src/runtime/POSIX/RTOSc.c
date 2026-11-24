@@ -51,6 +51,10 @@ RTOS__GetMemory(INTEGER isize)
     // were then too spread out for the collector's per-page side table.
     // Linux now places successive mmaps next to each other, so the heap
     // stays dense.
+    //
+    // History:
+    // https://github.com/modula3/cm3/commit/518f93e67ed8f3291a5cd5cf0a39d1fefbc79969
+    // https://github.com/modula3/cm3/commit/384b3cc05fcedf4307f077f49cde3d6675b039c6
     // http://modula3.elegosoft.com/cgi-bin/cvsweb.cgi/cm3/m3-libs/m3core/src/runtime/POSIX/RTOS.m3?rev=1.1;content-type=text%2Fplain
     p = sbrk(size);
 
