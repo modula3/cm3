@@ -157,8 +157,7 @@ setting the config variable (with the two-phase bootstrap below, and
 `SYSTEM_CC` compiling C as C++).
 
 The `HAS_STACK_WALKER` quake table lists only the targets with a
-libunwind stack walker (`RTStackC.c` and `RTMachine.i3` in the target's
-directory), used for stack dumps:
+libunwind stack walker (`walker/RTStackC.c`), used for stack dumps:
 
 ```quake
 readonly HAS_STACK_WALKER = {
@@ -170,8 +169,8 @@ readonly HAS_STACK_WALKER = {
 
 Under `ex_stack` such a target also gets `include_dir(TARGET)` and the
 `UNWIND` system library.  Every other build uses `no_walker` (stub
-RTStack routines) and the common `RTMachine` (`Has_stack_walker =
-FALSE`).
+RTStack routines).  `RTStack.Frame` is the same on every target; the
+per-target `RTMachine.i3` files described above are gone.
 
 ---
 

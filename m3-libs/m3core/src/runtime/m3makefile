@@ -68,8 +68,7 @@ readonly HAS_LIBUNWIND = {
 
 % Targets with a libunwind stack walker (RTStackC.c in the
 % target's directory), used only for stack dumps under ex_stack.  Elsewhere,
-% and with ex_frame, the RTStack routines are stubs (no_walker) and
-% RTMachine is common's (Has_stack_walker = FALSE).
+% and with ex_frame, the RTStack routines are stubs (no_walker).
 readonly HAS_STACK_WALKER = {
 % "ALPHA_OSF"  : TRUE,
 % "DS3100"     : TRUE,
