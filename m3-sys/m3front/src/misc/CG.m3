@@ -2009,7 +2009,16 @@ x7 := stack[SCheck(1,"Load_indirect-x7")];
             FinishLoadIndirect (x, t, addr_align);
           ELSE (* bits # NIL *)
             (* Unaligned, partial-word load with RT variable offset. *)
-            fetch_align := MIN (x.addr_align, t_size);
+            (* The container's size comes from the alignment of the base the
+               bits are counted from, not from addr_align: Index_bits folds
+               the bits' own alignment (often 1) into addr_align, which would
+               leave a one-byte container for an element crossing a byte. *)
+            fetch_align := MIN (x.base_value_align, t_size);
+            IF MayFindIntType (t, MAX (s, fetch_align), x.offset MOD fetch_align,
+                               x.base_value_align) = Type.Void THEN
+              (* No container that wide fits the static offset: as before. *)
+              fetch_align := MIN (x.addr_align, t_size);
+            END;
             IF (best_size < fetch_align) THEN
               (* make sure we load the largest possible aligned value,
                  because we can't tell how far the variable bit-offset
@@ -2334,7 +2343,14 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
             Free (tmp);
           ELSE (* bits # NIL *)
             (* Unaligned, partial best_size'd store with RT variable offset. *)
-            addr_align := MIN (x.addr_align, t_size);
+            (* The container's size comes from the base's alignment; see
+               Load_indirect. *)
+            addr_align := MIN (x.base_value_align, t_size);
+            IF MayFindIntType (t, MAX (s, addr_align), x.offset MOD addr_align,
+                               x.base_value_align) = Type.Void THEN
+              (* No container that wide fits the static offset: as before. *)
+              addr_align := MIN (x.addr_align, t_size);
+            END;
             IF (best_size < addr_align) THEN
               (* make sure we load and store the largest possible aligned value,
                  because we can't tell how far the variable bit-offset
@@ -3601,6 +3617,12 @@ PROCEDURE Index_bits (bits_addr_align: Alignment := 1) =
         cg.load (x.bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
         cg.add (Target.Integer.cg_type); 
         cg.store (index.base, 0, Target.Integer.cg_type, Target.Integer.cg_type);
+      END;
+      IF (x.kind = VKind.Direct) THEN
+        (* Materialize the address from the direct variable now; ForceAddr2SAP
+           cannot handle VKind.Direct with a non-NIL bits field. *)
+        ForceStacked ();
+        x.kind := VKind.Stacked;
       END;
       IF (x.kind = VKind.Stacked) THEN x.kind := VKind.Pointer; END;
       x.bits := index.base;
