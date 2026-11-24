@@ -6,6 +6,10 @@
 
 implementation ("RTExStack")
 
+% The code is in RTExStackImpl.h, a header so that a bootstrap export
+% (cm3 -boot) copies it along with whichever source below includes it.
+h_source ("RTExStackImpl")
+
 if defined ("cpp_source")
   cpp_source ("RTExStackCpp")
 else

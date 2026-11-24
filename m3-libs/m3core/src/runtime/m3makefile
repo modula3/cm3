@@ -29,7 +29,7 @@
 %   emits invoke/landingpad), and the C++ compiler emits unwind tables that
 %   say, for each code address, how to recover the caller's frame and where
 %   the landing pads are.  RAISE throws a C++ exception (RTStack__ThrowM3Exc
-%   in ex_stack/RTExStackC.c).  The C++ runtime's unwinder (libunwind in
+%   in ex_stack/RTExStackImpl.h).  The C++ runtime's unwinder (libunwind in
 %   libSystem on macOS; libunwind or libgcc_s on Linux) walks the ordinary
 %   activation-record stack using those tables, and at each landing pad
 %   compiler-generated code asks RTExStack whether the handler matches.
