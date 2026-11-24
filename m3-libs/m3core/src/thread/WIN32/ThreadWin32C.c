@@ -116,10 +116,36 @@ void __cdecl ThreadWin32__DeleteContext(void** p)
 /*-------------------------------------------------------------------------*/
 /* process stopped and live stack and registers (garbage collection) */
 
-/* Check that a stopped thread's stack, from its saved stack pointer up to
-   stackEnd, is committed memory of that thread's stack, before the collector
-   scans it.  If not, describe what was found and abort, instead of faulting
-   inside NoteStackLocations with no clue why (#1287). */
+/* A thread can be stopped while its stack is growing: its stack pointer
+   has already moved into the guard page below the committed stack, but it
+   has not yet touched that page.  Reading the page from the collector would
+   raise the guard-page exception in the collector's thread, and would also
+   disarm the guard, so the stopped thread's stack could no longer grow
+   (#1287).  An armed guard page has never been written, so it holds nothing
+   to scan: start above it.
+
+   Return the first address at or above top that is not in a guard page. */
+
+static char* ThreadWin32__SkipGuardPages(char* top, char* stackEnd)
+{
+  MEMORY_BASIC_INFORMATION info = { 0 };
+
+  while (top < stackEnd)
+  {
+    ZeroMemory(&info, sizeof(info));
+    if (VirtualQuery(top, &info, sizeof(info)) == 0
+        || info.State != MEM_COMMIT
+        || (info.Protect & PAGE_GUARD) == 0)
+      break;
+    top = (char*)info.BaseAddress + info.RegionSize;
+  }
+  return (top < stackEnd) ? top : stackEnd;
+}
+
+/* Check that a stopped thread's stack, from where the scan starts up to
+   stackEnd, is committed memory of that thread's stack.  If not, describe
+   what was found and abort, instead of faulting inside NoteStackLocations
+   with no clue why. */
 
 static void ThreadWin32__PutText(char** out, const char* s)
 {
@@ -184,7 +210,8 @@ static void ThreadWin32__CheckStackRange(
 
   ThreadWin32__PutText(&out, "\n*** ThreadWin32: bad stack range for a stopped thread: ");
   ThreadWin32__PutText(&out, problem);
-  ThreadWin32__PutField(&out, "\n***   sp ", (UINT_PTR)top);
+  ThreadWin32__PutField(&out, "\n***   sp ", (UINT_PTR)context->STACK_REGISTER);
+  ThreadWin32__PutField(&out, " scan from ", (UINT_PTR)top);
   ThreadWin32__PutField(&out, " pc ", (UINT_PTR)context->PC_REGISTER);
   ThreadWin32__PutField(&out, " ContextFlags ", (UINT_PTR)context->ContextFlags);
   ThreadWin32__PutField(&out, "\n***   stackStart ", (UINT_PTR)stackStart);
@@ -238,6 +265,8 @@ void __cdecl ThreadWin32__ProcessStopped(
   top = (char*)context->STACK_REGISTER;
   assert(top <= stackEnd);
   assert(top);
+  if (top >= stackStart)
+    top = ThreadWin32__SkipGuardPages(top, stackEnd);
   ThreadWin32__CheckStackRange(stackStart, stackEnd, top, context);
   assertReadable = *(volatile char*)(stackEnd - 1);
   p(top, stackEnd);
