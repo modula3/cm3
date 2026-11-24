@@ -1,0 +1,128 @@
+---
+name: windows-stress
+# Provoke the Windows GC crash of #1287 (a fault in NoteStackLocations while
+# scanning a stopped thread).  Each job builds the tree as CI does, then
+# rebuilds packages in a loop with the parallel back end and the paranoid
+# collector, keeping the log of every failed build and any crash dumps.
+#
+# Runs on pushes to stress/** branches (a workflow must be on master before
+# it can be dispatched by hand) and, once there, on demand.
+
+on:
+  push: {branches: ['stress/**']}
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: Minutes of rebuilding per job, after the initial build
+        default: '150'
+        type: string
+
+jobs:
+  stress:
+    runs-on: windows-latest
+    timeout-minutes: 240
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [I386_NT, AMD64_NT]
+        shard: [1, 2, 3, 4]
+        include:
+        - {target: I386_NT, arch: x86, cmake_arch: Win32, bootstrap: cm3-boot-I386_NT-d5.12.0.7z}
+        - {target: AMD64_NT, arch: x64, cmake_arch: x64, bootstrap: cm3-boot-AMD64_NT-d5.12.0.7z}
+
+    defaults:
+      run: {shell: cmd}
+
+    env:
+      CM3_TARGET: ${{ matrix.target }}
+      RELEASE: https://github.com/modula3/cm3/releases/download/d5.12.0
+      MINUTES: ${{ inputs.minutes || '150' }}
+
+    steps:
+    - name: Install command-line tools
+      run: |
+        choco install wget
+
+    - name: Keep crash dumps of cm3.exe
+      run: |
+        mkdir D:\dumps
+        reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\cm3.exe" /v DumpFolder /t REG_EXPAND_SZ /d D:\dumps /f
+        reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\cm3.exe" /v DumpType /t REG_DWORD /d 2 /f
+        reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\cm3.exe" /v DumpCount /t REG_DWORD /d 3 /f
+
+    - name: Setup SDK environment
+      uses: egor-tensin/vs-shell@v2
+      with:
+        arch: ${{ matrix.arch }}
+
+    - name: Define install location
+      run: |
+        echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
+
+    - name: Install bootstrap release
+      run: |
+        mkdir ..\build ..\install
+        cd ..\install
+        wget --quiet "%RELEASE%/${{ matrix.bootstrap }}"
+        7z x -o.. "${{ matrix.bootstrap }}"
+        cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A ${{ matrix.cmake_arch }}
+        cmake --build ..\build --config Release
+        cmake --install ..\build --config Release
+        echo %CM3_INSTALL%\bin>>%GITHUB_PATH%
+
+    - name: Fetch sources
+      uses: actions/checkout@v4
+
+    - name: Build everything
+      shell: bash
+      run: |
+        mkdir -p ../stress
+        set -o pipefail
+        python3 scripts/concierge.py full-upgrade --backend c all -caltech-other -caltech-parser -m3-scheme 2>&1 | tee ../stress/full-upgrade.log
+
+    - name: Rebuild packages in a loop
+      shell: bash
+      run: |
+        out=$(cd ../stress && pwd)
+        end=$(( $(date +%s) + MINUTES * 60 ))
+        # Two loops at once over different packages, so the runner's cores
+        # are busy with back-end threads from two collectors.
+        loop() {
+          local name=$1; shift
+          local n=0 bad=0
+          while [ $(date +%s) -lt $end ]; do
+            for pkg in "$@"; do
+              n=$((n + 1))
+              (cd $pkg && rm -rf $CM3_TARGET && cm3 -build -DM3_BACKEND_MODE=C -DM3_PARALLEL_BACK=20 @M3paranoidgc) > $out/$name.log 2>&1
+              rc=$?
+              if [ $rc -ne 0 ] || grep -qE "runtime error|bad stack range" $out/$name.log; then
+                bad=$((bad + 1))
+                cp $out/$name.log $out/fail-$name-$n.log
+                echo "$(date +%T) $name build $n ($pkg) rc=$rc"
+                grep -m6 -E -A3 "runtime error|bad stack range" $out/$name.log
+              fi
+            done
+          done
+          echo "$name: $n builds, $bad failed" | tee $out/summary-$name.txt
+        }
+        loop a m3-libs/sysutils m3-comm/netobj m3-libs/listfuncs &
+        loop b m3-libs/libm3 m3-db/smalldb &
+        wait
+        cat $out/summary-*.txt
+        ! ls $out/fail-* > /dev/null 2>&1
+
+    - name: Collect dumps
+      if: always()
+      shell: bash
+      run: |
+        ls -la /d/dumps || true
+        cp /d/dumps/* ../stress/ 2>/dev/null || true
+
+    - name: Upload logs and dumps
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: stress-${{ matrix.target }}-${{ matrix.shard }}
+        path: ../stress
+        retention-days: 7
