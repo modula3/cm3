@@ -4,10 +4,11 @@
 (*                                                             *)
 (* Last modified on Fri May  5 08:22:31 PDT 1995 by kalsow     *)
 
-(* The code below makes the following NASTY assumption:
-      RTThread.ProcessStacks calls its argument twice for
-      each thread -- the first time for the stack, the
-      second time for its registers. *)
+(* RTThread.ProcessStacks calls its argument once for each area of memory
+   holding a thread's stack or saved registers.  How many areas a thread has
+   depends on the thread package (on Linux, one; on Darwin, the stack plus,
+   for a stopped thread, its registers), so each area is reported on its own
+   as "T.n", rather than grouped into threads. *)
 
 UNSAFE MODULE RTHeapStats;
 
@@ -33,12 +34,10 @@ TYPE
   END;
 
 TYPE
-  ThreadInfo = RECORD
+  ThreadInfo = RECORD   (* one area of a thread's stack or registers *)
     id          : INTEGER;
     stack_start : ADDRESS;
     stack_stop  : ADDRESS;
-    reg_start   : ADDRESS;
-    reg_stop    : ADDRESS;
     dump        : BOOLEAN;
   END;
 
@@ -275,8 +274,7 @@ PROCEDURE VisitRoot (<*UNUSED*> self: RTHeapMap.Visitor;  root: ADDRESS) =
 
 (*--------------------------------------------------------------- threads ---*)
 
-VAR is_registers: BOOLEAN := FALSE;
-    mark_addr: ADDRESS;
+VAR mark_addr: ADDRESS;
 
 PROCEDURE GetThreads () =
   VAR i: INTEGER;
@@ -284,7 +282,7 @@ PROCEDURE GetThreads () =
     self_id := -1;
     mark_addr := ADR (i);
     RTThread.ProcessStacks (GetThread);
-    RTIO.PutText ("Threads: ");
+    RTIO.PutText ("Thread stack and register areas: ");
     RTIO.PutInt (n_threads);
     IF (n_threads > NUMBER (threads)) THEN
       RTIO.PutText ("  (");
@@ -304,14 +302,11 @@ PROCEDURE GetThread (start, stop: ADDRESS) =
       WITH z = threads[n_threads] DO
         z.id := n_threads;
         z.dump := FALSE;
-        IF is_registers
-          THEN z.reg_start   := start;  z.reg_stop   := stop;
-          ELSE z.stack_start := start;  z.stack_stop := stop;
-        END;
+        z.stack_start := start;
+        z.stack_stop  := stop;
       END;
     END;
-    IF (is_registers) THEN INC (n_threads); END;
-    is_registers := NOT is_registers;
+    INC (n_threads);
   END GetThread;
 
 PROCEDURE GetThreadStats (READONLY ti: ThreadInfo) =
@@ -323,15 +318,43 @@ PROCEDURE GetThreadStats (READONLY ti: ThreadInfo) =
 
     ResetVisitCounts ();
     ScanPages (ti.stack_start, ti.stack_stop);
-    ScanPages (ti.reg_start,   ti.reg_stop);
     AddVisit (stacks);
   END GetThreadStats;
 
+PROCEDURE LastWord (start, stop: ADDRESS): ADDRESS =
+  (* The address of the last whole word in [start .. stop), the range a
+     thread's stack or registers occupy; below "start" if there is none.
+     As in RTCollector.NoteStackLocations, so the scans never read past
+     "stop". *)
+  BEGIN
+    IF stop - start < ADRSIZE (ADDRESS) THEN RETURN start - 1; END;
+    RETURN stop - ADRSIZE (ADDRESS);
+  END LastWord;
+
+PROCEDURE ObjectContaining (page: RTHeapRep.RefPage;  a: ADDRESS): ADDRESS =
+  (* The REF of the object on the block starting at "page" whose header or
+     body contains "a", or NIL if "a" lies in no object there (in the page
+     header, say).  Walks the block from its start, as VisitPage does. *)
+  VAR
+    h : RTHeapRep.RefHeader := page + ADRSIZE(RTHeapRep.PageHdr);
+    he: RTHeapRep.RefHeader := page + page.nb * RTHeapRep.BytesPerPage;
+    next: RTHeapRep.RefHeader;
+  BEGIN
+    IF a < h OR a >= he THEN RETURN NIL; END;
+    WHILE h < he DO
+      next := h + ADRSIZE(RTHeapRep.Header) + RTHeapRep.ReferentSize (h);
+      IF a < next THEN RETURN h + ADRSIZE(RTHeapRep.Header); END;
+      h := next;
+    END;
+    RETURN NIL;
+  END ObjectContaining;
+
 PROCEDURE ScanPages (start, stop: ADDRESS) =
   VAR fp: UNTRACED REF ADDRESS := start;
+  VAR last := LastWord (start, stop);
   BEGIN
     (* scan the stack or registers *)
-    WHILE fp < stop DO
+    WHILE fp <= last DO
       WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
         IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
           VisitPage(page);
@@ -347,24 +370,29 @@ PROCEDURE GetThreadRootStats (READONLY ti: ThreadInfo) =
     visit.thread_id  := ti.id;
     visit.location   := NIL;
     visit.ref        := NIL;
-    ScanThreadRoots (ti.stack_start, ti.stack_stop, on_stack := TRUE);
-    ScanThreadRoots (ti.reg_start,   ti.reg_stop,   on_stack := FALSE);
+    ScanThreadRoots (ti.stack_start, ti.stack_stop);
   END GetThreadRootStats;
 
-PROCEDURE ScanThreadRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
+PROCEDURE ScanThreadRoots (start, stop: ADDRESS) =
   VAR fp: UNTRACED REF ADDRESS := start;
+  VAR last := LastWord (start, stop);
+  VAR ref: ADDRESS;
   BEGIN
-    WHILE fp <= stop DO
+    WHILE fp <= last DO
       WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
         IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
-          IF on_stack
-            THEN visit.location := fp;
-            ELSE visit.location := NIL;
+          (* A stack or register word is only an ambiguous root: it may
+             point into the middle of an object, or at no object at all.
+             Visit the object that contains it, if there is one, rather
+             than treating the word as the object's REF. *)
+          ref := ObjectContaining (page, fp^);
+          IF ref # NIL THEN
+            visit.location := fp;
+            visit.ref := ref;
+            ResetVisitCounts ();
+            Visit (NIL, ADR (ref));
+            AddVisit (stack_roots);
           END;
-          visit.ref := fp^;
-          ResetVisitCounts ();
-          Visit (NIL, fp);
-          AddVisit (stack_roots);
         END;
       END;
       INC(fp, RTThread.PointerAlignment);
@@ -377,20 +405,17 @@ PROCEDURE GetThreadPageStats (READONLY ti: ThreadInfo) =
     visit.thread_id  := ti.id;
     visit.location   := NIL;
     visit.ref        := NIL;
-    ScanThreadPageRoots (ti.stack_start, ti.stack_stop, on_stack := TRUE);
-    ScanThreadPageRoots (ti.reg_start,   ti.reg_stop,   on_stack := FALSE);
+    ScanThreadPageRoots (ti.stack_start, ti.stack_stop);
   END GetThreadPageStats;
 
-PROCEDURE ScanThreadPageRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
+PROCEDURE ScanThreadPageRoots (start, stop: ADDRESS) =
   VAR fp: UNTRACED REF ADDRESS := start;
+  VAR last := LastWord (start, stop);
   BEGIN
-    WHILE fp <= stop DO
+    WHILE fp <= last DO
       WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
         IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
-          IF on_stack
-            THEN visit.location := fp;
-            ELSE visit.location := NIL;
-          END;
+          visit.location := fp;
           visit.ref := fp^;
           ResetVisitCounts ();
           VisitPage (page);
@@ -557,7 +582,7 @@ PROCEDURE MinInfoBytes (READONLY s: InfoSet): INTEGER =
 PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
   CONST Max_proc = 4096;  (* good enough for 99% of the procedures *)
   VAR
-    fp: UNTRACED REF ADDRESS; p: ADDRESS;
+    fp: UNTRACED REF ADDRESS; p, last: ADDRESS;
     cons_cnt, cons_bytes : INTEGER;
     opt_cnt, opt_bytes   : INTEGER;
     have_frames : BOOLEAN;
@@ -565,13 +590,12 @@ PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
     proc_start: RTProcedure.Proc;
     file, proc_name: RTProcedureSRC.Name;
   BEGIN
-    have_frames := RTStack.Has_walker ();
-    IF RTStack.Has_walker () THEN
-      IF (ti.id = self_id) THEN
-        RTStack.CurrentFrame (cur);
-      ELSE
-        RTStack.GetThreadFrame (cur, ti.reg_start, ti.reg_stop - ti.reg_start);
-      END;
+    (* Frames are known only for our own stack: no thread package records
+       a stopped thread's registers in a form RTStack.GetThreadFrame takes,
+       and an area here may not hold registers at all. *)
+    have_frames := (ti.id = self_id) AND RTStack.Has_walker ();
+    IF have_frames THEN
+      RTStack.CurrentFrame (cur);
       IF cur.pc = NIL THEN have_frames := FALSE; END;
     END;
 
@@ -587,7 +611,8 @@ PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
     PutText ("offset  #objs # bytes  #objs # bytes  ref\n");
     PutText ("------  ----- -------  ----- -------  ------------\n");
     fp := ti.stack_start;
-    WHILE (fp <= ti.stack_stop) DO
+    last := LastWord (ti.stack_start, ti.stack_stop);
+    WHILE (fp <= last) DO
 
       IF have_frames THEN
         WHILE (cur.sp <= fp) AND (cur.pc # NIL) DO
