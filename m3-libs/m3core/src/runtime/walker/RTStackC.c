@@ -115,7 +115,7 @@ void RTStack__GetThreadFrame (Frame *f, char *start, int len)
   /* Not implemented: report failure as the interface allows, rather than
      aborting.  RTHeapStats.DumpStack calls this for every thread but its
      own, and copes with pc=NIL by omitting the frame annotations. */
-  memset (f, 0, sizeof (*f));
+  ZERO_MEMORY (*f);
 }
 
 /*---------------------------------------------------------------------------*/
