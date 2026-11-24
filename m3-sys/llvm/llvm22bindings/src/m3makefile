@@ -24,29 +24,46 @@ VER = "22"
 % set this to TRUE if you want to build m3llvm standalone in llvm22 dir
 STATIC = FALSE
 
+/*
+  The system libraries LLVM itself needs, as llvm-config reports them.
+  A shared libLLVM (Homebrew, most Linux distributions) carries its own
+  dependencies, so there are none.  Static LLVM libraries need zlib,
+  zstd and so on.  Only "-lname" entries are expected; anything else
+  is reported and skipped.
+*/
+proc llvm_system_libs() is
+      local libdir = skipr (q_exec_get ("llvm-config --libdir")[1])
+      local libs = skipr (q_exec_get ("llvm-config --system-libs")[1])
+      if not equal (libs, "")
+        foreach lib in split (libs, " ")
+          if equal (sub (lib, 0, 2), "-l")
+            import_lib (sub (lib, 2, len (lib)), libdir)
+          else
+            if not equal (lib, "")
+              write ("Warning: ignoring llvm-config --system-libs entry " & lib & "\n")
+            end
+          end
+        end
+      end
+end
+
 if equal (OS_TYPE, "POSIX")
 
-  % Only for linux. Other implementations would need to check and
-  % possibly modify these library paths.
   if STATIC
   % Set the location of the static posix libraries that llvm depends on.
   % You will need these if you try to build the main program standalone
-  % These can change with package upgrades.
+  % These can change with package upgrades.  Linux only.
     LIB_DIR1 = "/usr/lib/gcc/x86_64-linux-gnu/14"
     LIB_DIR2 = "/usr/lib/x86_64-linux-gnu"
+    % llvm needs the stdc++ lib and the compression libs z and zstd.
+    import_lib("stdc++",LIB_DIR1)
+    % apt-get install libz-dev
+    import_lib("z",LIB_DIR2)
+    % apt-get install libzstd-dev
+    import_lib("zstd",LIB_DIR2)
   else
-  % Lib location for dynamic posix libraries. Again this is for linux so
-  % other architectures will need to check their paths.
-    LIB_DIR1 = "/lib"
-    LIB_DIR2 = "/lib"
+    llvm_system_libs()
   end
-
-  % llvm needs the stdc++ lib and the compression libs z and zstd.
-  import_lib("stdc++",LIB_DIR1)
-  % apt-get install libz-dev
-  import_lib("z",LIB_DIR2)
-  % apt-get install libzstd-dev
-  import_lib("zstd",LIB_DIR2)
 
 %  these should not be needed
 %  import_lib("dl",LIB_DIR1)
