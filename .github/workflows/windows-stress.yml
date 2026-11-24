@@ -77,14 +77,14 @@ jobs:
     - name: Build everything
       shell: bash
       run: |
-        mkdir -p ../stress
+        mkdir -p stress-out
         set -o pipefail
-        python3 scripts/concierge.py full-upgrade --backend c all -caltech-other -caltech-parser -m3-scheme 2>&1 | tee ../stress/full-upgrade.log
+        python3 scripts/concierge.py full-upgrade --backend c all -caltech-other -caltech-parser -m3-scheme 2>&1 | tee stress-out/full-upgrade.log
 
     - name: Rebuild packages in a loop
       shell: bash
       run: |
-        out=$(cd ../stress && pwd)
+        out=$(cd stress-out && pwd)
         end=$(( $(date +%s) + MINUTES * 60 ))
         # Two loops at once over different packages, so the runner's cores
         # are busy with back-end threads from two collectors.
@@ -117,12 +117,12 @@ jobs:
       shell: bash
       run: |
         ls -la /d/dumps || true
-        cp /d/dumps/* ../stress/ 2>/dev/null || true
+        cp /d/dumps/* stress-out/ 2>/dev/null || true
 
     - name: Upload logs and dumps
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: stress-${{ matrix.target }}-${{ matrix.shard }}
-        path: ../stress
+        path: stress-out
         retention-days: 7
