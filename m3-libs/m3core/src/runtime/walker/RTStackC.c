@@ -38,7 +38,7 @@ void * __m3_personality_v0();
 /* External M3 allocator, avoids a memory leak in CurFrame. */
 char * RTException__AllocBuf (INTEGER size);
 
-/* Frame must match RTMachine.FrameInfo. */
+/* Frame must match RTStack.Frame. */
 typedef struct {
   WORD_T pc;
   WORD_T sp;

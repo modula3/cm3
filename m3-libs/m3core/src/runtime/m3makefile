@@ -5,10 +5,46 @@
 % Last modified on Tue Jan 24 08:32:45 PST 1995 by kalsow 
 %      modified on Fri Apr 30 11:31:44 PDT 1993 by mjordan
 
-% Exception handling: ex_stack (native C++ EH) when the config asks for it
-% (M3_USE_STACK_WALKER) and the backend is C, whose generated C++ carries the
-% try/catch; otherwise ex_frame (setjmp/longjmp).  Raising under ex_stack is
-% a C++ throw and needs nothing target-specific.
+% Exception handling.  m3core implements RTException in one of two ways;
+% "ex" means a variant of exception handling.  The names are historical:
+% both involve frames, a stack and a walker, so here is what each one is.
+%
+% ex_frame: setjmp/longjmp and a per-thread list of handler frames.
+%   The frames are small records (EF..EF4 in ex_frame/RTExFrame.m3) declared
+%   as locals in the activation record of the procedure containing the
+%   construct; they are not a separate stack.  Compiler-inserted calls to
+%   PushEFrame and PopEFrame link and unlink them in a per-thread list
+%   (RTThread.GetCurrentHandlers).  A frame is pushed only for TRY EXCEPT
+%   (which also does a setjmp, the main cost), TRY FINALLY, LOCK, and a
+%   procedure whose RAISES clause is narrower than ANY and whose body might
+%   raise something outside it.  That cost is paid on entering and leaving
+%   each such construct, whether or not anything is raised.  RAISE walks the
+%   list in two passes: the first finds the handler, checking RAISES clauses
+%   on the way; the second releases locks, enters each FINALLY clause by
+%   longjmp (the clause resumes the raise when it finishes), and longjmps
+%   into the handler.  The walker is RTExFrame, in m3core.
+%
+% ex_stack: C++ exceptions.  No handler list is kept at run time.  The C
+%   backend emits C++ try/catch for the same constructs (MSIR's LLVM lowering
+%   emits invoke/landingpad), and the C++ compiler emits unwind tables that
+%   say, for each code address, how to recover the caller's frame and where
+%   the landing pads are.  RAISE throws a C++ exception (RTStack__ThrowM3Exc
+%   in ex_stack/RTExStackC.c).  The C++ runtime's unwinder (libunwind in
+%   libSystem on macOS; libunwind or libgcc_s on Linux) walks the ordinary
+%   activation-record stack using those tables, and at each landing pad
+%   compiler-generated code asks RTExStack whether the handler matches.
+%   Entering and leaving a protected region costs nothing beyond table space
+%   and some limits on optimization; a raise costs much more than a longjmp.
+%   ("stack" means whatever the C++ implementation does: 32-bit Windows C++
+%   EH, for one, is itself frame-based, with a per-thread list.)
+%
+% In short: ex_frame pays on every protected region and raises cheaply;
+% ex_stack pays nothing until something is raised, then pays a lot.
+%
+% ex_stack is used when the config asks for it (M3_USE_STACK_WALKER) and the
+% backend is C, whose generated C++ carries the try/catch; otherwise
+% ex_frame.  Raising under ex_stack is a C++ throw and needs nothing
+% target-specific.
 M3CORE_EX_STACK = FALSE
 if defined ("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and defined ("M3_BACKEND_MODE")
@@ -20,15 +56,7 @@ end
 
 %
 % Targets requiring libunwind, for use only to dump stacks.
-% No target uses libunwind for exception handling.
-% ex_frame uses setjmp/longjmp and a thread local linked list for exception handling.
-% ex_stack uses C++ exceptions for exception handling.
-% "ex" means, a variant of exception handling (they each implement RTException).
-% "stack" means "stack walk", the machine stack, driven by metadata, and zero cost try,
-% except to produce metadata and possible optimization inhibition.
-% Not that it does not really mean stack walk. It means, whateve C++ does.
-% For example NT/x86 C++ EH is frame based, not stack walk, with a highly optimized
-% thread local linked list.
+% No target uses libunwind directly for exception handling (see above).
 %
 % TODO: Windows locally can provide libunwind over RtlVirtualUnwind,
 % or rather CaptureStackBackTrace for this narrow use.
@@ -40,8 +68,7 @@ readonly HAS_LIBUNWIND = {
 
 % Targets with a libunwind stack walker (RTStackC.c in the
 % target's directory), used only for stack dumps under ex_stack.  Elsewhere,
-% and with ex_frame, the RTStack routines are stubs (no_walker) and
-% RTMachine is common's (Has_stack_walker = FALSE).
+% and with ex_frame, the RTStack routines are stubs (no_walker).
 readonly HAS_STACK_WALKER = {
 % "ALPHA_OSF"  : TRUE,
 % "DS3100"     : TRUE,

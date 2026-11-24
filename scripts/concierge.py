@@ -1464,7 +1464,7 @@ class UpgradeCommand(ConciergeCommand):
             #now do the llvm build
             #base_packages = ["+front", "+m3bundle", "+llvm", "-m3cc"]
 
-            #force build of llvm using gcc backend 
+            #force build of llvm using gcc backend
             self.realclean(["+llvm"])
             self.buildship(["+llvm"])
 
@@ -1493,7 +1493,7 @@ class UpgradeCommand(ConciergeCommand):
             self.buildship(base_packages)
             self._ship_front()
 
-            #force build of llvm 
+            #force build of llvm
             self.realclean(["+llvm"])
             self.buildship(["+llvm"])
 
@@ -1730,7 +1730,7 @@ class InstallCommand(ConciergeCommand):
 
         # Check that bootstrap sources are available.
         bootstrap_dir = self.source("bootstrap")
-        if not (bootstrap_dir / "CMakeLists.txt").is_file():
+        if not (Path(bootstrap_dir) / "CMakeLists.txt").is_file():
             raise FatalError("missing bootstrap directory")
 
         # Run an out-of-tree build with cmake.

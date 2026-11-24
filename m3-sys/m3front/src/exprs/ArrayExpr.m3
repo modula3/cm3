@@ -1032,6 +1032,21 @@ PROCEDURE Represent (top: T) =
       END;
     END;
     
+    (* An empty level has no elements, so the levels inside it get no
+       length from any argument: give them length zero, or a dynamic
+       level's run-time dope would carry no length at all. *)
+    VAR empty := FALSE;
+    BEGIN
+      FOR depth := 0 TO deepestArrayDepth DO
+        WITH levelInfo = top.levels^[depth] DO
+          IF empty AND levelInfo.staticLen = Expr.lengthNonStatic THEN
+            levelInfo.staticLen := 0;
+          END;
+          IF levelInfo.staticLen = 0 THEN empty := TRUE END;
+        END;
+      END;
+    END;
+
     (* Construct the repType for the top-level constructor. *)
     IF top.targetType = NIL
     THEN (* repType comes solely from the array constructor and its semType.
@@ -1636,7 +1651,7 @@ PROCEDURE InnerPrep (top: T) =
          emitted.  Also, we gen code to store address of heap-allocated temp
          therein, so GC will leave it alone. *)
       name
-        := M3ID.Add ("Heap temp ptr, line " & Fmt.Int (top.origin MOD 100000));
+        := M3ID.Add ("HeapTempPtr_line_" & Fmt.Int (top.origin MOD 100000));
       top.heapTempPtrVar
         := CG.Declare_local
              (name, Target.Address.size, Target.Address.align, CG.Type.Addr,
