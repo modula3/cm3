@@ -1148,15 +1148,10 @@ int __cdecl UnixC__pipe (int* files);
 
 #endif
 
-// See RTStack.i3, RTStackC.c
-// TYPE Frame = RECORD pc, sp: ADDRESS END;
+// RTStack.Frame (RTStack.i3).  Hand-written C only passes pointers to it,
+// so it is left incomplete here; walker/RTStackC.c has the full layout.
 #define RTStack__Frame RTStack__Frame /* inhibit m3c type */
 STRUCT_TYPEDEF(RTStack__Frame)
-struct RTStack__Frame
-{
-  ADDRESS pc; // program counter, instruction pointer, etc.
-  ADDRESS sp; // stack pointer
-};
 
 #if 0
 
