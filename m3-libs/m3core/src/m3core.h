@@ -913,6 +913,9 @@ Process__RegisterExitor(void (__cdecl*)(void));
 
 #elif defined(__ppc__) || defined(__ppc64__)
 
+/* TODO: Test MxConfigC__HOST on PPC[64]_DARWIN. There are reports of problems. Until then: M3_HOST_SKIP_UNAME. */
+#define M3_HOST_SKIP_UNAME 1
+
 #if defined(__ppc64__)
 #define M3_HOST_PPC64_DARWIN 1
 #define M3_HOST "PPC64_DARWIN"
