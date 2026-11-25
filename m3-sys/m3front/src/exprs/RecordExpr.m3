@@ -13,7 +13,7 @@ MODULE RecordExpr;
 IMPORT M3, M3ID, CG, Error, Type, RecordType, Module, Target;
 IMPORT Value, Field, AssignStmt, M3Buf;
 IMPORT Expr, ExprRep, KeywordExpr, RangeExpr, ArrayExpr, CaptureAnalysis;
-IMPORT MSIR, MSIRBuilder, MSIRType;
+IMPORT MSIR, MSIRBuilder, MSIRType, Text;
 
 TYPE
   Info = RECORD
@@ -846,15 +846,21 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
       RETURN TryPackedRecordConstMSIR(p, msirT, v);
     END;
     IF MSIR.Kind(msirT) # MSIR.TypeKind.Struct THEN RETURN FALSE END;
-    nf := NUMBER(p.map^);
-    IF nf # MSIR.StructFieldCount(msirT) THEN RETURN FALSE END;
+    nf := MSIR.StructFieldCount(msirT);
     fields := NEW(REF ARRAY OF MSIR.Value, nf);
+    VAR k := 0;  (* the record's field for struct field i *)
+    BEGIN
     FOR i := 0 TO nf - 1 DO
       ft := MSIR.StructField(msirT, i).type;
-      IF p.map^[i].expr = NIL THEN
+      IF Text.Empty(MSIR.StructField(msirT, i).name) THEN
+        (* Padding (MSIRType.TranslateRecord). *)
         fields[i] := MSIR.ConstZero(ft);
+      ELSIF k >= NUMBER(p.map^) THEN
+        RETURN FALSE;
+      ELSIF p.map^[k].expr = NIL THEN
+        fields[i] := MSIR.ConstZero(ft);  INC(k);
       ELSE
-        fv := Expr.ConstLiteralMSIR(p.map^[i].expr, ft);
+        fv := Expr.ConstLiteralMSIR(p.map^[k].expr, ft);  INC(k);
         IF fv = NIL THEN
           (* A pointer/reference field whose constant value we cannot otherwise
              represent (e.g. an ADDRESS field defaulting to NIL, like InfoMap.map)
@@ -870,6 +876,8 @@ PROCEDURE TryCompileConstMSIR(e: Expr.T; VAR v: MSIR.Value): BOOLEAN =
           fields[i] := fv;
         END;
       END;
+    END;
+    IF k # NUMBER(p.map^) THEN RETURN FALSE END;
     END;
     v := MSIR.ConstStruct(msirT, fields^);
     RETURN TRUE;

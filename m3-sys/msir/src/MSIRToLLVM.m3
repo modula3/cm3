@@ -2565,7 +2565,8 @@ PROCEDURE GetOrBuildStructType(t: MSIR.T; VAR metaN: INTEGER): INTEGER =
       (* Pass 2: set childBase after nested types, then add DIDerivedType members. *)
       dbgTypes[eidx].childBase := dbgChildN;
       FOR i := 0 TO nf - 1 DO
-        IF RoomForChild() THEN
+        (* Unnamed fields are padding (MSIRType.TranslateRecord). *)
+        IF NOT Text.Empty(MSIR.StructField(t, i).name) AND RoomForChild() THEN
           VAR f := MSIR.StructField(t, i);
           BEGIN
             dbgChildren[dbgChildN].kind    := 0;   (* member *)

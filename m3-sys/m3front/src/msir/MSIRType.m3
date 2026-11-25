@@ -341,12 +341,32 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
       END;
       v := v.next;
     END;
-    VAR msirFields := NEW(REF ARRAY OF MSIR.Field, n);
+    (* The struct states M3's layout: a field is preceded by explicit
+       padding up to its offset, and the record is padded at the end to its
+       size.  LLVM's implicit padding comes from its own alignments, which
+       for a field it sees as bytes (a packed array, [N x i8]) are smaller
+       than M3's, so without this a later field would sit too low and the
+       record would be too small (p315's small packed arrays). *)
+    VAR msirFields := NEW(REF ARRAY OF MSIR.Field, 2 * n + 1);
+        nOut := 0;  at := 0;  (* bits laid out so far *)
+        rti: Type.Info;
+    PROCEDURE Pad (upTo: INTEGER) =
+      BEGIN
+        IF upTo > at THEN
+          msirFields[nOut].name   := "";
+          msirFields[nOut].type   :=
+              MSIR.TFixedArray((upTo - at) DIV Target.Byte, MSIR.TI(Target.Byte));
+          msirFields[nOut].offset := at;
+          INC(nOut);  at := upTo;
+        END;
+      END Pad;
     BEGIN
+      EVAL Type.CheckInfo(t, rti);
       v := fields;
       FOR i := 0 TO n - 1 DO
         Field.Split(v, finfo);
         EVAL Type.CheckInfo(finfo.type, fti);
+        Pad(finfo.offset);
         VAR ft := Translate(finfo.type);
         BEGIN
           IF ft = NIL THEN RETURN NIL END;
@@ -359,14 +379,17 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
                           AND fti.size # MSIR.BitWidth(ft) THEN
             ft := MSIR.TI(fti.size);
           END;
-          msirFields[i].name   := M3ID.ToText(finfo.name);
-          IF msirFields[i].name = NIL THEN msirFields[i].name := "" END;
-          msirFields[i].type   := ft;
-          msirFields[i].offset := finfo.offset; (* bit offset for DWARF *)
+          msirFields[nOut].name   := M3ID.ToText(finfo.name);
+          IF msirFields[nOut].name = NIL THEN msirFields[nOut].name := "" END;
+          msirFields[nOut].type   := ft;
+          msirFields[nOut].offset := finfo.offset; (* bit offset for DWARF *)
+          INC(nOut);
+          at := finfo.offset + fti.size;
         END;
         v := v.next;
       END;
-      VAR result := MSIR.TStruct(name, msirFields^);
+      Pad(rti.size);
+      VAR result := MSIR.TStruct(name, SUBARRAY(msirFields^, 0, nOut));
       BEGIN
         MSIR.SetTypeUID(result, Type.GlobalUID(t));
         IF RoomInCache() THEN
