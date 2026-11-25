@@ -617,9 +617,12 @@ PROCEDURE Index_bytes (size: INTEGER);
 (* s1.A := s1.A + s0.I * size ; pop.  size is in bits, but must be a multiple
    of Target.Byte. *)
 
-PROCEDURE Index_bits (bits_addr_align: Alignment := 1);
+PROCEDURE Index_bits (bits_addr_align: Alignment := 1;  span: INTEGER := 0);
 (* s1.A := s1.A + s0.I ; pop -- note that s0.I must be less than
-  or equal to the alignment of s1.A, otherwise bad code will be generated. *)
+  or equal to the alignment of s1.A, otherwise bad code will be generated.
+  span > 0 is the size in bits of the packed array that s0.I indexes, which
+  starts at s1.A; a load or store at a run-time bit offset then goes through
+  that array's bytes, as its elements may cross a byte. *)
 
 PROCEDURE Boost_addr_alignment (a: Alignment);
 (* note that the referent of s0.A has an alignment of at least 'a'. *)
