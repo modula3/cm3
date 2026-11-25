@@ -10,7 +10,7 @@ MODULE NamedExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
-IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
+IMPORT Scope, Error, ErrType, TInt, CG, RunTyme;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -44,6 +44,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         checkUseFailure := CheckUseFailure;
+        inFrame      := InFrame;
       END;
 
 VAR cache := ARRAY [0..31] OF P { NIL, .. };
@@ -177,25 +178,23 @@ PROCEDURE NeedsAddress (p: P) =
     END;
   END NeedsAddress;
 
-PROCEDURE Prep (p: P) =
-  VAR
-    t: Type.T; info: Type.Info;
-    global, indirect, lhs: BOOLEAN;
+PROCEDURE InFrame (p: P): BOOLEAN =
+  VAR t: Type.T;  global, indirect, lhs: BOOLEAN;
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
-    IF Host.doIncGC AND Value.ClassOf (p.value) = Value.Class.Var THEN
-      Variable.Split (p.value, t, global, indirect, lhs);
-      EVAL Type.CheckInfo (t, info);
-      IF info.isTraced AND (global OR indirect) THEN
-        CASE info.class OF 
-        | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-          Variable.Load (p.value);
-          RunTyme.EmitCheckLoadTracedRef ();
-          p.tmp := CG.Pop ();
-        ELSE
-          (* no check *)
-        END
-      END
+    IF Value.ClassOf (p.value) # Value.Class.Var THEN RETURN FALSE END;
+    Variable.Split (p.value, t, global, indirect, lhs);
+    RETURN NOT (global OR indirect);
+  END InFrame;
+
+PROCEDURE Prep (p: P) =
+  BEGIN
+    IF (p.value = NIL) THEN Resolve (p) END;
+    IF Value.ClassOf (p.value) = Value.Class.Var
+       AND Expr.LoadNeedsBarrier (p, Value.TypeOf (p.value)) THEN
+      Variable.Load (p.value);
+      RunTyme.EmitCheckLoadTracedRef ();
+      p.tmp := CG.Pop ();
     END
   END Prep;
 

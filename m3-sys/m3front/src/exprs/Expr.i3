@@ -59,6 +59,15 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
 PROCEDURE IsDesignator (t: T): BOOLEAN;
 (* TRUE iff t is a designator *)
 
+PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN;
+(* TRUE iff loading a value of type 'loaded' from storage in 'container'
+   needs a read barrier (RTHooks.CheckLoadTracedRef).  The barrier acts on
+   the reference loaded: it is needed when that reference may be gray,
+   i.e. for a traced reference loaded from a global, heap or indirect
+   location, and not when 'container' is in a procedure's frame or is a
+   constant.  'container' = NIL means heap storage (a dereference or an
+   object field). *)
+
 PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 
