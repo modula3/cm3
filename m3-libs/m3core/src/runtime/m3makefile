@@ -46,10 +46,15 @@
 % ex_frame.  Raising under ex_stack is a C++ throw and needs nothing
 % target-specific.
 M3CORE_EX_STACK = FALSE
+M3CORE_EX_STACK_LLVM = FALSE
 if defined ("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and defined ("M3_BACKEND_MODE")
     if equal (M3_BACKEND_MODE, "C")
       M3CORE_EX_STACK = TRUE
+    end
+    if IsBackendLlvm()
+      M3CORE_EX_STACK = TRUE
+      M3CORE_EX_STACK_LLVM = TRUE
     end
   end
 end
@@ -109,7 +114,11 @@ end
 %end
 
 if M3CORE_EX_STACK
-  include_dir ("ex_stack")
+  if M3CORE_EX_STACK_LLVM
+    include_dir ("ex_stack_llvm")
+  else
+    include_dir ("ex_stack")
+  end
 else
   include_dir ("ex_frame")
 end
