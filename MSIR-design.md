@@ -1211,6 +1211,24 @@ walks.  At D25 step 6 the C halves go and the driver is unchanged.
      the compilation stay in `InitTypecell`'s MSIR half.  The other C-only
      steps (`DeclareGlobalData`, `EmitBody`'s initialization,
      `Coverage.GenerateTables`, `Variable.GenGlobalMap`) change nothing.
+     *Resolved (2026-11-25):* two of `InitTypecell`'s effects were not
+     CG work and are now made outside its C payload.  `NoteOffsets` (the
+     `O`/`o` records, and through `GetOffsets` the offsets MSIR's object
+     types need, hence the `gc_ref void` translations) is a step of
+     `Type.GenCells`, between the two payloads, so it is made once in every
+     mode; it is not idempotent (each call adds an exported object), so it
+     could not simply be repeated in the MSIR payload.  And MSIR's method
+     suite (`FillMethodNames`, `GenLinkProcMSIR`) calls
+     `Procedure.NoteUsedMSIR` for each default procedure where C's
+     (`FillMethods`' `CGName`, `GenLinkProc`'s compile) loads it, as
+     `ProcExpr.CompileMSIR` already does: that is what declares and imports
+     the procedure, so m3front's imported types and stamps follow.  With
+     the C payloads of `RefType`/`ObjectType.InitTypecell` and
+     `GenCellPtrs` skipped (a throwaway `@M3skipc_cell`), all 13 base
+     packages now build to byte-identical `.msir` and identical `.m3x`
+     (`m3xcanon.py`: no record differs); a normal build's output is
+     unchanged (set and libm3 byte-identical).  So at step 6 those C
+     payloads can go as they are.
 - **Dropped: moving MSIR registrations out of the declaration walk.**  A
   few procedures of the declaration walk register things with MSIR as they
   go (`Module.BuildImportLink` → `MSIREmit.RegisterImport`,

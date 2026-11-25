@@ -908,6 +908,9 @@ PROCEDURE GenCells (): INTEGER =
         RefType.InitTypecellMSIR (cell.type);
       ELSE
         ObjectType.InitTypecell     (cell.type, cell.offset, prev);
+        (* The object-layout link note belongs to this step, not to either
+           payload, so it is made once whichever payloads run (D29). *)
+        ObjectType.NoteOffsets      (cell.type, cell.type);
         ObjectType.InitTypecellMSIR (cell.type);
       END;
       prev := cell.offset;

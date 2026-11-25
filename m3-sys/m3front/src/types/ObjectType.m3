@@ -701,8 +701,6 @@ PROCEDURE InitTypecell (t: Type.T;  offset, prev: INTEGER) =
     IF (defaults >= 0) THEN
       CG.Init_var (offset + M3RT.OTC_defaultMethods, consts, defaults, FALSE);
     END;
-
-    NoteOffsets (p, p);
   END InitTypecell;
 
 PROCEDURE GetVtableMSIR (t: Type.T;
@@ -935,6 +933,7 @@ PROCEDURE GenLinkProcMSIR (p: P;  desc: MSIR.TypeDesc): BOOLEAN =
         expr := Expr.ConstValue (method.dfault);
         IF (expr # NIL) AND UserProc.IsProcedureLiteral (expr, proc)
            AND (proc # NIL) THEN
+          Procedure.NoteUsedMSIR (proc);  (* as GenLinkProc's DoEmit *)
           VAR nm := Value.GlobalName (proc, dots := FALSE, with_module := TRUE);
           BEGIN
             IF (nm # NIL) AND LookUp (p, method.name, top, tVis) AND (tVis # NIL) THEN
@@ -1079,6 +1078,7 @@ PROCEDURE FillMethodNames (p: P;  VAR m: ARRAY OF TEXT): BOOLEAN =
         (* abstract or non-constant default — leave slot NIL; a concrete
            subtype's OVERRIDES will fill it in on the next recursion level *)
       ELSIF UserProc.IsProcedureLiteral (expr, proc) THEN
+        Procedure.NoteUsedMSIR (proc);  (* as FillMethods' CGName *)
         m[mOff] := Value.GlobalName (proc, dots := FALSE, with_module := TRUE);
       ELSE
         (* NIL default or unknown expr — leave slot NIL for caller to detect *)
