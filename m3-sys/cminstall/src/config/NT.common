@@ -690,7 +690,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     % elsewhere in the Modula-3 system. And does not likely matter -- does not
     % have a significant good or bad impact. The code is almost all valid C
     % with the same meaning if interpreted as C++ or not.
-    % An exception is RTExStackC.c that has throw so needs to be C++.
+    % An exception is RTExStackImpl.h that has throw so needs to be C++.
     % cpp_source handles this, wrapping it in RTExStackCpp.cpp.
     %
     % args += ["-TP"] % compile as C++

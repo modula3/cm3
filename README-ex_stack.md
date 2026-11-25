@@ -88,7 +88,7 @@ libunwind (part of `libSystem.B.dylib`; no extra link flags needed):
 - `RTStack__Unwind` — resumes execution at a specific landing pad
   (used in the manual-unwind path; not used by the C++ throw path).
 The throw entry point is target-independent and lives in
-`src/runtime/ex_stack/RTExStackC.c` (below); the stack-walking
+`src/runtime/ex_stack/RTExStackImpl.h` (below); the stack-walking
 primitives are used only for stack dumps.
 
 #### `src/runtime/AMD64_DARWIN/RTMachine.i3`
@@ -127,8 +127,11 @@ Implements `RTException.Raise` and `RTException.ResumeRaise` for the
   stack dump (`PrintStack`, under `@M3stackdump` / `@M3debugex`) uses
   one, and it reports that none is available on a target without.
 
-#### `src/runtime/ex_stack/RTExStackC.c`
-The target-independent C++ part, shared by every `ex_stack` target:
+#### `src/runtime/ex_stack/RTExStackImpl.h`
+The target-independent C++ part, shared by every `ex_stack` target.
+It is compiled through `RTExStackCpp.cpp`, or through `RTExStackC.c`
+with a compiler that lacks `cpp_source`; it is a header, registered
+with `h_source`, so that a bootstrap export carries it:
 
 ```c
 struct _M3Exc { void* act; };
