@@ -2014,6 +2014,44 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
        MSIR emitters already skip them (the EH scopes run FINALLY and LOCK
        code), so this step is for `Marker` to describe the MSIR walk's
        nesting fully, not for routing.  **Done** with O17 (A).
+- **D30. The front end decides read barriers, once, for both payloads**
+  (Tony, 2026-11-26).
+  - **What a read barrier is.**  `RTHooks.CheckLoadTracedRef (ref)` acts on
+    the reference *loaded*: if its target is gray it is scanned black, so
+    the mutator never holds a reference to a non-black object (the strong
+    tricolor invariant).  So the question is whether the loaded value can
+    be a gray heap reference.  A load from a global, heap or indirect
+    location can yield one; a load from the mutator's own state (a local,
+    a temporary) cannot, and neither can a compile-time constant (NIL, a
+    TEXT literal: static, never gray; the hook asserts it is never given a
+    TEXT literal).
+  - **Today.**  Each payload decides alone, and differently.
+    - C: in each expression's `Prep`/`Compile` (`SubscriptExpr.Prep`,
+      `NamedExpr`, `QualifyExpr`, `DerefExpr`).  `SubscriptExpr.Prep`
+      looks only at the element type, so it barriers a load from a `CONST`
+      array (http's `StatusReason[StatusType.OK]`) or from a local array,
+      which `NamedExpr` would not barrier for a local scalar.
+    - MSIR: at 14 `BuildGcLoad` sites in m3front, each from the MSIR type
+      of the address (`GcSlot`, or a pointer to `gc_ref`): a proxy for the
+      container, not the rule.  `MSIRVerifier.AuditReadBarriers` audits by
+      the same proxy (a plain load of a `gc_ref` from a non-local address).
+    - Found by the std-package parity run: http's `.m3x` loses
+      `RTHooks.CheckLoadTracedRef` when `InitTypecell`'s C payload is
+      skipped, because only C's needless barrier on the constant imports
+      it.
+  - **Decision.**  One front-end predicate on the designator answers "does
+    loading this traced value need a read barrier?" (under
+    `Host.doIncGC`): yes for a load from a global, heap or indirect
+    location; no for a local or temporary, or a compile-time constant.
+    Both payloads call it: C's emits `EmitCheckLoadTracedRef`, MSIR's
+    emits `gc.load`.  At D25 step 6 only the MSIR call remains (D29: one
+    driver, two payloads).  MSIRBuilder and the lowerings only carry the
+    decision out; `AuditReadBarriers` becomes a check that the IR agrees
+    with the front end, not the definition.
+  - **Master first, as its own PR.**  The predicate and the C payload's use
+    of it go to master (dropping the needless barriers on constants and
+    locals, with an m3test), and are merged into msir; then the MSIR
+    payload's 14 sites move onto the predicate.
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
