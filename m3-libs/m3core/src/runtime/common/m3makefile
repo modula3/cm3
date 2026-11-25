@@ -84,5 +84,3 @@ end
 proc FileExists(a) is
     return not stale (a, a)
 end
-
-interface      ("RTMachine")

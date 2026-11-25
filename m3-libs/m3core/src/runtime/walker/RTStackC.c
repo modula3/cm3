@@ -38,7 +38,7 @@ void * __m3_personality_v0();
 /* External M3 allocator, avoids a memory leak in CurFrame. */
 char * RTException__AllocBuf (INTEGER size);
 
-/* Frame must match RTMachine.FrameInfo. */
+/* Frame must match RTStack.Frame. */
 typedef struct {
   WORD_T pc;
   WORD_T sp;
@@ -112,8 +112,10 @@ char* RTStack__ProcName (Frame *f)
 
 void RTStack__GetThreadFrame (Frame *f, char *start, int len)
 {
-  /* Not implemented. */
-  abort();
+  /* Not implemented: report failure as the interface allows, rather than
+     aborting.  RTHeapStats.DumpStack calls this for every thread but its
+     own, and copes with pc=NIL by omitting the frame annotations. */
+  ZERO_MEMORY (*f);
 }
 
 /*---------------------------------------------------------------------------*/

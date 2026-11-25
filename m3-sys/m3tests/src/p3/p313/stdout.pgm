@@ -1,0 +1,12 @@
+trace Main.P.f = 41
+trace Main.P.b = 0
+trace Main.P.a = 42
+in P
+trace Main.P.Q.c = 420
+in Q
+trace Main.P.1.w = 42
+in WITH
+trace Main.P.2.i = 1
+loop
+trace Main.P.2.i = 2
+loop

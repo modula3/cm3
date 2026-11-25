@@ -7,8 +7,6 @@
 
 UNSAFE INTERFACE RTStack;
 
-IMPORT RTMachine;
-
 (* This interface defines the low-level routines used to traverse
  * the runtime stack.  Not all platforms support these routines.
  *
@@ -51,9 +49,24 @@ PROCEDURE Has_walker (): BOOLEAN;
    is "FALSE", it is a checked runtime error to call any of the routines
    described below. *)
 
-TYPE Frame = RTMachine.FrameInfo;
-(* A machine-dependent type that minimally includes fields named "pc"
-   and "sp". *)
+TYPE
+  Frame = RECORD
+    pc  : ADDRESS;
+    sp  : ADDRESS;
+    lock: INTEGER;        (* to ensure that cxt isn't overrun!! *)
+    excRef  : ADDRESS;    (* ref to the exception activation *)
+    tTypeIndex : INTEGER; (* tTypeIndex from the unwinder *)
+    cursor : ADDRESS;     (* libunwind cursor to cur frame *)
+    startIP : ADDRESS;    (* libunwind start ip of current proc *)
+    endIP : ADDRESS;      (* libunwind end ip of current proc *)
+    lsda : ADDRESS;       (* libunwind lsda *)
+    persFn : ADDRESS;     (* libunwind handler pers fn *)
+    landingPad : ADDRESS; (* libunwind landing pad - the IP of the handler *)
+  END;
+(* A stack frame, as the walker reports it.  Callers use only "pc" and
+   "sp"; the rest is the walker's state.  The layout must match "Frame" in
+   walker/RTStackC.c.  It used to be RTMachine.FrameInfo, from a time when
+   it differed between targets; it no longer does. *)
 
 <*EXTERNAL "RTStack__GetThreadFrame" *>
 PROCEDURE GetThreadFrame (VAR(*OUT*) f: Frame;  start: ADDRESS;  len: INTEGER);

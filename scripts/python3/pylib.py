@@ -1017,6 +1017,8 @@ def _MakeZip(a):
     out = a + ".zip"
     DeleteFile(out)
     b = "zip -r " + out + "  " + a
+    if SearchPath("wsl.exe") or SearchPath("wsl"):
+        b = "wsl " + b
     print(b + "\n")
     os.system(b)
 
@@ -1072,6 +1074,8 @@ if _Program != "make-msi.py":
 
 def _FilterPackage(Package):
     PackageConditions = {
+        "llvm22": False, # TODO: Need to handle LLVM automatically.
+        "llvm22bindings": False, # TODO: Need to handle LLVM automatically.
         "m3gdb": (M3GDB or CM3_GDB) and
                     {"FreeBSD4": True,
                     "LINUXLIBC6" : True,
@@ -1954,7 +1958,8 @@ of this software.
                 state.id += 1
                 CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
 
-    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
+    for root, dirs, files in os.walk(os.path.join(Root, "caltech-parser")):
+        Callback(state, root, files)
 
 def GetStage():
     global STAGE
@@ -1972,8 +1977,9 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    AltConfig = {"NT386":"x86"}.get(Config, Config)
+    AltConfig = {"NT386":"I386_NT"}.get(Config, Config)
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
+    c = a
     if Config == "NT386" or Config.endswith("_NT"):
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     else:
@@ -1985,7 +1991,9 @@ def FormInstallRoot(PackageSetName):
         b = re.sub("[ \r\n]", "", b)
         if len(b) > 0:
             a = a + "-" + b
-    a = a + "-" + time.strftime("%Y%m%d")
+    # undo much of above
+    # TODO: git hash
+    a = c + "-" + time.strftime("%Y%m%d")
     return a
 
 def SearchPathWix():

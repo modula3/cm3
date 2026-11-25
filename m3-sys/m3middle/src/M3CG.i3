@@ -177,7 +177,8 @@ TYPE
     UndefinedMethod,        (* 26 a NIL-valued method was invoked *)
     PrivilegedInstruction,  (* 27 a privileged machine instruction was attempted *)
     SystemError,            (* 28 a low-level OS or machine error occurred *)
-    Unknown                 (* 29 *)
+    TypeUIDCollision,       (* 29 two different types have the same type UID *)
+    Unknown                 (* 30 *)
   (* NOTE: going past 31 requires backend and runtime change *)
   (* NOTE: This enumeration must be kept in synch with the version
      of RuntimeError.T used by the runtime system. *)
