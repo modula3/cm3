@@ -4954,7 +4954,9 @@ BEGIN
 END HelperFunctions_insert_mn;
 
 PROCEDURE HelperFunctions_pop(self: HelperFunctions_t; type: CGType) =
-CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(volatile T a) { }";
+(* The value goes into a volatile local, so that it is still computed (e.g. a
+   load done only for its nil check); C++20 deprecates a volatile parameter. *)
+CONST text = "#define m3_pop_T(T) static void __stdcall m3_pop_##T(T a) { volatile T b = a; (void)b; }";
 BEGIN
     HelperFunctions_helper_with_type(self, "pop", type, self.data.pop, text);
 END HelperFunctions_pop;
