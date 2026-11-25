@@ -2033,6 +2033,39 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - Master also lacks the ex_stack terminate backstop (see the correction
   below); being ported in its own PR.
 
+**Progress (2026-11-25): master merged; packed-array layout; no fallbacks.**
+- Master merged (`0fab3bcad6`, then #1378), with `InitTypecell`'s notes
+  made outside its C payload (D25 step 6 rehearsal: full parity, above).
+- p315 found three bugs in small packed arrays whose elements may cross a
+  byte (element size not a power of two):
+  - *Stores of 3, 5, 6 and 7-bit elements* through a run-time subscript
+    now go through the array's container (`InsertBitFieldDyn`,
+    `536b5e4d57`).
+  - *Record layout* (`MSIRType.TranslateRecord`): a record's struct left
+    padding to LLVM, which aligns a field it sees as bytes ([N x i8], a
+    packed array) to 1 where M3 aligns it to its size.  A field after one
+    sat too low and the record was short, so the last field ran past its
+    alloca; at -O3 LLVM read it as 0 (p315's "direct local 7").  The
+    struct now has explicit padding before each field and at the end
+    (`03003c26d7`); record constants fill it with zero, debug info omits it.
+  - *Alignment*: MSIR record and array types carry M3's alignment
+    (`MSIR.TypeAlign`), which MSIRToLLVM states on an alloca, never below
+    LLVM's, and MSIRToM3CG uses for its aggregate temporaries
+    (`72ec4b0f82`).
+  The C path had the same element bug on master (#1378: a run-time
+  subscript into such an array goes through its bytes).  p134 had been
+  changed in 2008 to expect the C back ends' wrong 54; it expects 46 again.
+- LLVM ladder (run 45596624373, `72ec4b0f82`): m3tests 316/316 on all
+  three targets, smoke, IR fixpoint 1420 files.
+- MSIR -> M3CG ladder (ARM64_DARWIN, `b73458199d`): **no fallback** in any
+  stage (PickleStubs now lowers, closing the bitcast item); generated C
+  identical across three stages, 1415 files; smoke; m3tests with every
+  test lowered too 316/316.  Built by the C backend directly, 7 tests fail
+  (p109 p126 p137 p201 p268 p270 p280), which master's C build also fails
+  on ARM64_DARWIN.
+- Next: the same `.m3x`/`.msir` parity check over the std packages; the
+  MSIR -> M3CG ladder on an `ex_frame` target; then D25 step 6.
+
 **Progress (2026-11-22, later): D25 step 4 on the whole compiler; five MSIR bugs.**
 - MSIR -> M3CG ladder (ARM64_DARWIN, `ex_stack`), from a C-built cm3 at
   msir HEAD.  Stage 1 builds the 13 base packages (m3core, libm3, set,
@@ -2089,7 +2122,8 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   MSIR-built p006 hung 0 times and master's C-backend p006 twice.
   Belongs with #1287.
 - Next (D25 step 4, remaining): the same ladder on an `ex_frame` target
-  (magpie); PickleStubs' bitcast; then step 5 (decoupling, O17).
+  (magpie); PickleStubs' bitcast (done 2026-11-25); then step 5
+  (decoupling, O17).
 
 **Progress (2026-11-22): MSIR to M3CG, ex_frame EH and memcpy/memset.**
 - On a target without ex_stack, MSIRToM3CG lowers D26 scopes to CG's
