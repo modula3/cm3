@@ -248,7 +248,12 @@ PROCEDURE GenIndex (t: Type.T) =
       END;
       IF TRUE
          OR p # NIL (* fixed array*) AND p.total_size <= p.alignment THEN
-        CG.Index_bits ();
+        IF p # NIL AND NOT IsPowerOf2 (elt_pack) THEN
+          (* Its elements may cross a byte: tell CG the array's size. *)
+          CG.Index_bits (span := p.total_size);
+        ELSE
+          CG.Index_bits ();
+        END;
       ELSE
         bit_index := CG.Pop ();
         CG.Push (bit_index);
@@ -263,6 +268,11 @@ PROCEDURE GenIndex (t: Type.T) =
       END;
     END;
   END GenIndex;
+
+PROCEDURE IsPowerOf2 (n: INTEGER): BOOLEAN =
+  BEGIN
+    RETURN n > 0 AND Word.And (n, n - 1) = 0;
+  END IsPowerOf2;
 
 (* Externally dispatched-to: *) 
 PROCEDURE Check (p: P) =

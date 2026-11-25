@@ -81,9 +81,9 @@ BEGIN
   y.a := w.a;
   <*ASSERT y.a *>
   y.c.s := TwelveSum(y.c);
-  Test.checkI (y.c.s, 54);
+  Test.checkI (y.c.s, 46);
   p := y.c.s;
-  Test.checkI (p, 54);
+  Test.checkI (p, 46);
 
   (* not possible in CM3
   pp.x.x := 20;
