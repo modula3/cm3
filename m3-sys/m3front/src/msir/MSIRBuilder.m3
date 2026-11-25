@@ -2657,37 +2657,48 @@ PROCEDURE InsertBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
       i8T  := MSIR.TI (8);
   BEGIN
     IF 8 MOD eltPack # 0 THEN
-      (* Non-power-of-2 eltPack: byte-level read-modify-write matching C backend.
-         The C backend writes exactly one byte per element store, even when the
-         element spans a byte boundary; this replicates that behaviour so that
-         MSIR results match the C reference on split-byte elements. *)
-      VAR idxW     := idx;
-          maskVal  : INTEGER := 1;
+      (* Non-power-of-2 eltPack: an element may cross a byte, so read-modify-
+         write the whole container, as ExtractBitFieldDyn reads it (and as the
+         C backend sizes the container from the base, #1328).  BitOffset(i) =
+         i * eltPack.  As there, containerBits must be a multiple of 8 and
+         <= 64. *)
+      IF containerBits <= 0 OR containerBits MOD 8 # 0 OR containerBits > 64 THEN
+        Abandon ("store into a packed element whose container is not 8..64 bits");
+        RETURN;
+      END;
+      VAR wideT    := MSIR.TI (containerBits);
+          voidBase := MSIR.BuildGepByte (b, "", base, MSIR.ConstInt (intT, 0));
+          loaded   := MSIR.BuildLoad (b, "", wideT, voidBase);
+          idxW     := idx;
+          rhsW     := rhs;
+          maskV    : INTEGER := 1;
+          idxBitsW := MSIR.BitWidth (MSIR.ValueType (idx));
+          rhsBitsW := MSIR.BitWidth (MSIR.ValueType (rhs));
       BEGIN
-        IF MSIR.BitWidth (MSIR.ValueType (idx)) # Target.Integer.size THEN
-          idxW := MSIR.BuildZExt (b, "", idx, intT);
+        IF idxBitsW > containerBits THEN
+          idxW := MSIR.BuildTrunc (b, "", idx, wideT);
+        ELSIF idxBitsW < containerBits THEN
+          idxW := MSIR.BuildZExt (b, "", idx, wideT);
         END;
-        FOR i := 1 TO eltPack DO maskVal := maskVal * 2 END;
-        maskVal := maskVal - 1;   (* (1 << eltPack) - 1 *)
-        VAR bitOff     := MSIR.BuildIMul (b, "", idxW,
-                              MSIR.ConstInt (intT, eltPack));
-            byteOff    := MSIR.BuildILShr (b, "", bitOff,
-                              MSIR.ConstInt (intT, 3));
-            bytePtr    := MSIR.BuildGepByte (b, "", base, byteOff);
-            b0         := MSIR.BuildLoad (b, "", i8T, bytePtr);
-            bitInByteW := MSIR.BuildIAnd (b, "", bitOff,
-                              MSIR.ConstInt (intT, 7));
-            bitInByte8 := MSIR.BuildTrunc (b, "", bitInByteW, i8T);
-            mask8      := MSIR.ConstInt (i8T, maskVal);
-            shiftedMask:= MSIR.BuildIShl  (b, "", mask8, bitInByte8);
-            notMask8   := MSIR.BuildIXor  (b, "", shiftedMask,
-                               MSIR.ConstInt (i8T, 255));
-            val8       := MSIR.BuildTrunc (b, "", rhs, i8T);
-            positioned := MSIR.BuildIShl  (b, "", val8, bitInByte8);
-            cleared    := MSIR.BuildIAnd  (b, "", b0, notMask8);
-            merged     := MSIR.BuildIOr   (b, "", cleared, positioned);
+        IF rhsBitsW > containerBits THEN
+          rhsW := MSIR.BuildTrunc (b, "", rhs, wideT);
+        ELSIF rhsBitsW < containerBits THEN
+          rhsW := MSIR.BuildZExt (b, "", rhs, wideT);
+        END;
+        FOR i := 1 TO eltPack DO maskV := maskV * 2 END;
+        maskV := maskV - 1;   (* (1 << eltPack) - 1 *)
+        VAR shift   := MSIR.BuildIMul (b, "", idxW,
+                         MSIR.ConstInt (wideT, eltPack));
+            maskW   := MSIR.ConstInt (wideT, maskV);
+            notMask := MSIR.BuildIXor (b, "",
+                         MSIR.BuildIShl (b, "", maskW, shift),
+                         MSIR.ConstInt (wideT, -1));
+            valW    := MSIR.BuildIShl (b, "",
+                         MSIR.BuildIAnd (b, "", rhsW, maskW), shift);
+            merged  := MSIR.BuildIOr (b, "",
+                         MSIR.BuildIAnd (b, "", loaded, notMask), valW);
         BEGIN
-          MSIR.BuildStore (b, merged, bytePtr);
+          MSIR.BuildStore (b, merged, voidBase);
         END;
       END;
       RETURN;

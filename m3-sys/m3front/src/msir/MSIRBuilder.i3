@@ -273,8 +273,10 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
 PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
                            rhs: MSIR.Value);
 
-(* Dynamic (runtime index) variants for packed-element arrays.
-   eltPack must divide 8 (i.e. eltPack ∈ {1,2,4}); otherwise Abandon is called.
+(* Dynamic (runtime index) variants for packed-element arrays.  When eltPack
+   divides 8 the byte holding the element is read or written; otherwise an
+   element may cross a byte, and the whole containerBits container (a multiple
+   of 8, at most 64) is.  Outside that, Extract returns NIL and Insert abandons.
    idx is the element index (biased to 0); base points to the ByteArrayFallback. *)
 PROCEDURE ExtractBitFieldDyn (base: MSIR.Value;  eltPack: INTEGER;
                                containerBits: INTEGER := 0;  (* total bits; 0 = power-of-2 only *)
