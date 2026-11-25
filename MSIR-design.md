@@ -2066,6 +2066,51 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 - Next: the same `.m3x`/`.msir` parity check over the std packages; the
   MSIR -> M3CG ladder on an `ex_frame` target; then D25 step 6.
 
+**Progress (2026-11-26): std-package parity; two step 6 blockers; eleven
+MSIR bugs.**  Each of the 155 std packages that a C build ships (beyond the
+13 base packages) was built three ways from `72ec4b0f82` on ARM64_DARWIN:
+by the C backend; in MSIRObj mode; and in MSIRObj mode with the C-only
+steps skipped (the D25 step 6 rehearsal: `DeclareGlobalData` and the body's
+declaration, `EmitBody`'s initialization, `Coverage.GenerateTables`,
+`Variable.GenGlobalMap`, and the C payloads of `InitTypecell`/
+`GenCellPtrs`; throwaway switches, not committed).  `GenLinkerInfo` is not
+skipped: it holds `Type.GenCells`, which makes both payloads.  Dependencies
+came from an install with an MSIR-built runtime and C-built libraries, so
+programs fail to link (`_m3_abi_cg_v1`); the units still compile and write
+their `.msir` and `.m3x`.
+- *Rehearsal.*  139 packages compile.  Their `.msir` is byte-identical with
+  and without the C-only steps.  Their `.m3x` is identical except in two,
+  each losing imports that only the C half notes:
+  - **m3-scheme/mscheme** (12 records): with `Scope.InitValues` skipped,
+    four modules lose their import of `Atom` (`B`, `Atom.FromText`'s `i`,
+    a `t`).  C's compile of a global's initializer makes the import; the
+    MSIR half calls `Atom.FromText` without noting it.
+  - **m3-www/http** (2 records): with `InitTypecell`'s C payload skipped,
+    interface `HTTP` loses `RTHooks.CheckLoadTracedRef` and a `t`.
+  Both must be noted by the MSIR half before step 6 drops the C half (as
+  `NoteUsedMSIR` was for method defaults).
+- *C against MSIR `.m3x`* (packages whose MSIR build compiles): 58
+  identical, 54 programs (no `.m3x`), 9 differing only by extra MSIR
+  imports, 18 otherwise.  The extra imports include version stamps (`i`),
+  e.g. rdwr's `RdClass.CloseDefault`: inherited method defaults in MSIR's
+  method suites.  (B)'s rule allows extra `t` only, so this needs a
+  decision.  In sx, mst, modula3scheme, mscheme, unittest-numeric,
+  sstubgen, http, zeus and vbtkit MSIR is *missing* imports C makes, the
+  pattern of B21-B30; still to examine, as are stable's and sstubgen's
+  `C`/`D`/`o`/`p` differences.  opengl differs only in the `WINAPI`
+  fingerprints (`E`/`T`), as decided.  (`m3xcanon.py` now resolves the name
+  in `o`/`p` records; unresolved, any extra name made false differences.)
+- *MSIR compile failures*, B33-B43 below: a crash (sgml), three
+  unsupported constructs (nested procedure result as an lvalue, in
+  simplegrid and arithmetic; a capture missing from the outer map, magic;
+  an unsupported statement, deepcopy), three verifier errors (udp, cm3ide,
+  webvbt) and four invalid LLVM IR (cit_util, boxes, m3cgcat, m3tk).  The
+  remaining failures are the mixed install's (the scheme and anim3D
+  packages' `bad version stamps` against installed libraries; anim3D's
+  through the `WINAPI` fingerprints).
+- Next: the two step 6 blockers; the sgml crash; B34-B43; the missing
+  imports.
+
 **Progress (2026-11-22, later): D25 step 4 on the whole compiler; five MSIR bugs.**
 - MSIR -> M3CG ladder (ARM64_DARWIN, `ex_stack`), from a C-built cm3 at
   msir HEAD.  Stage 1 builds the 13 base packages (m3core, libm3, set,
@@ -2419,6 +2464,17 @@ most serious findings spot-checked against the code.  Nothing built.
 | B30 | `builtinWord` Extract, Insert, LeftShift/RightShift, LeftRotate/RightRotate | **Fixed.** C range-checks the bit operands of these Word and Long builtins: Extract and Insert need CARDINAL `i` and `n` with `i + n` at most the word size, and the shifts and rotates need `n` in `[0..Size-1]` (ValueOutOfRange). MSIR emitted none of these checks, so an out-of-range operand returned garbage (the shifts masked `n` to its low bits). Found from the `ReportFault` imports of m3core's `Word` and `Long` (O17 parity). `CheckBitsMSIR` (Extract, Insert) and `EmitChecksMSIR` on `n` (shifts, rotates) now make C's checks. |
 | B31 | `Formal.GenValueOpenArgMSIR` | **Fixed** (decided by Tony, 2026-11-23: follow C).  A VALUE open-array argument of run-time size was copied with a dynamic `alloca` at the call site; C copies it to the traced heap (`Variable.CopyOpenArray`, `RTHooks.AllocateOpenArray`).  The stack copy could overflow a forked thread's small stack (4096 words by default), and a dynamic `alloca` is freed only when the caller returns, so a call in a loop grew the stack on every iteration.  `Variable.CopyOpenArrayMSIR` now makes C's heap copy; copies of static size stay on the stack, as in C.  It left one .m3x difference in m3front: C also took the heap path for an *empty* array constructor (`Formal.PrepArg` tested `actStaticSize > 0`), e.g. the default `methods := ARRAY OF TEXT{}` of `MSIR.NewTypeDesc`.  Fixed in C instead (#1342, also on msir): an empty actual is static.  m3front's .m3x now matches C's. |
 | B32 | `MSIRBuilder.AggByteSize` | **Fixed.** Found by running MSIRObj m3tests at `-O3` (p280: records passed by value from misaligned and short packed fields came back as garbage).  Storing a record or array value into a wider packed field (`BITS 23 FOR RECORD c1, c2: CHAR END`) spills it and reassembles its bytes, clamped to the value's size; but `AggByteSize` added a struct's last field offset, which `MSIR.Field` gives in bits, as bytes, so the clamp never applied and the spill was read past its end.  Unoptimised the extra byte was whatever the stack held; at `-O3` LLVM treats the out-of-bounds read as undefined.  The offset is now converted from bits. |
+| B33 | `MSIR.addInsn` (m3-libs/sgml) | **Open.**  The compiler crashes (NIL dereference in `addInsn`) compiling sgml in MSIRObj mode.  Found by the std-package parity run (2026-11-26). |
+| B34 | nested procedure result as an lvalue (caltech-other/simplegrid `SimpleGrid.Rectify`; m3-libs/arithmetic `Interpolation.mg` `CubicHermite.InterpolatePiece`) | **Open.**  "lvalue of nested proc result not yet supported in MSIR". |
+| B35 | `BuildClosureValue` (caltech-other/magic `MagCell.FlatMapAll.Recurse`) | **Open.**  "cap var not in outer proc varMap": a nested procedure's closure captures a variable its outer procedure's map lacks. |
+| B36 | statement in m3-libs/deepcopy `DeepCopy.Copy` | **Open.**  "unsupported statement". |
+| B37 | m3-comm/udp `UDPPosix.Len` | **Open.**  Verifier: `icmp` operand types differ (in a WHILE condition). |
+| B38 | m3-sys/cm3ide `Default.Init` | **Open.**  Verifier: a load's result type differs from its pointer's element type. |
+| B39 | m3-ui/webvbt `HTMLParser` module body | **Open.**  Verifier: a store's value type differs from its pointer's element type. |
+| B40 | caltech-parser/cit_util `LRVector` | **Open.**  `opt` rejects the LLVM IR: `icmp` on non-integer operands (the verifier misses it). |
+| B41 | caltech-other/boxes `GridPointSetRoutines` | **Open.**  `llc`: use of undefined `@GridPoint__ComparX` (not declared). |
+| B42 | m3-sys/m3cgcat `Main` | **Open.**  `llc`: use of undefined `@M3CG_BinRd__Inhale` (not declared). |
+| B43 | m3-tools/m3tk `M3CParse` | **Open.**  `llc`: a struct initializer's element 0 does not match the struct's element type. |
 
 #### 2. Abstraction violations by theme
 
