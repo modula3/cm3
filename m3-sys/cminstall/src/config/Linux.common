@@ -53,3 +53,4 @@ end
 
 %SYSTEM_LIBS{"ODBC"}       = [ "-lodbc" ]
 %SYSTEM_LIBS{"POSTGRES95"} = [ "-L/usr/local/pgsql/lib", "-lpq" ]
+SYSTEM_LIBS{"UNWIND"} = [ "-lunwind" ]

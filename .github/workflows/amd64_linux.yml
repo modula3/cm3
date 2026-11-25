@@ -34,7 +34,7 @@ jobs:
     - name: Install prerequisites
       run: |
         sudo apt-get update --quiet
-        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev binutils-gold
+        sudo apt-get install --quiet --assume-yes libglu1-mesa-dev ninja-build xorg-dev binutils-gold libunwind-dev
         sudo ln -sf /usr/bin/llvm-config-22 /usr/local/bin/llvm-config
         sudo ln -sf /usr/bin/llc-22 /usr/local/bin/llc
         sudo ln -sf /usr/bin/opt-22 /usr/local/bin/opt
