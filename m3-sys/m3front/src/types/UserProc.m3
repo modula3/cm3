@@ -386,6 +386,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
           procResult);
       END;
     END;
+    Procedure.NoteUsedMSIR (v);  (* as Compile's StartCall *)
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
     IF msirCallee = NIL THEN RETURN NIL END;
     isNested := Procedure.IsNested(v);
@@ -452,6 +453,7 @@ PROCEDURE LValueMSIR (p: CallExpr.T;  <*UNUSED*> VAR container: MSIR.Value): MSI
       MSIRBuilder.Abandon("lvalue of nested proc result not yet supported in MSIR");
       RETURN NIL;
     END;
+    Procedure.NoteUsedMSIR (v);  (* as Compile's StartCall *)
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);
     IF msirCallee = NIL THEN RETURN NIL END;
     n := NUMBER(p.args^);
