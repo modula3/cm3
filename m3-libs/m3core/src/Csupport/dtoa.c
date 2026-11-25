@@ -801,7 +801,7 @@ Bigint *Balloc_D2A(int k) {
 #else
     len = (sizeof(Bigint) + (x - 1) * sizeof(ULong) + sizeof(double) - 1) /
           sizeof(double);
-    if (pmem_next - private_mem + len <= PRIVATE_mem) {
+    if ((size_t)(pmem_next - private_mem) + len <= PRIVATE_mem) {
       rv = (Bigint *)pmem_next;
       pmem_next += len;
     } else
@@ -1520,7 +1520,7 @@ char *rv_alloc_D2A(int i) {
   int j, k, *r;
 
   j = sizeof(ULong);
-  for (k = 0; sizeof(Bigint) - sizeof(ULong) - sizeof(int) + j <= i; j <<= 1)
+  for (k = 0; (int)(sizeof(Bigint) - sizeof(ULong) - sizeof(int)) + j <= i; j <<= 1)
     k++;
   r = (int *)Balloc_D2A(k);
   *r = k;
@@ -3879,7 +3879,7 @@ char *g_ffmt(char *buf, float *f, int ndig, unsigned bufsize) {
 
   if (ndig < 0)
     ndig = 0;
-  if (bufsize < ndig + 10)
+  if (bufsize < (unsigned)ndig + 10)
     return 0;
 
   L = (ULong *)f;
@@ -3982,7 +3982,7 @@ char *g_dfmt(char *buf, double *d, int ndig, unsigned bufsize) {
 
   if (ndig < 0)
     ndig = 0;
-  if (bufsize < ndig + 10)
+  if (bufsize < (unsigned)ndig + 10)
     return 0;
 
   L = (ULong *)d;
@@ -4213,7 +4213,7 @@ char *g_Qfmt(char *buf, void *V, int ndig, unsigned bufsize) {
 
   if (ndig < 0)
     ndig = 0;
-  if (bufsize < ndig + 10)
+  if (bufsize < (unsigned)ndig + 10)
     return 0;
 
   L = (ULong *)V;
