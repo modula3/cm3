@@ -467,6 +467,7 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
     | TypeKind.FixedArray =>
         sz := Size (MSIR.FixedArrayElt (t), align);
         IF sz < 0 THEN RETURN -1 END;
+        align := MAX (align, MSIR.TypeAlign (t) DIV 8);  (* M3's *)
         RETURN sz * MSIR.FixedArrayLen (t);
     | TypeKind.Struct =>
         (* natural layout, as LLVM gives MSIRToLLVM's struct types *)
@@ -478,6 +479,7 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
           align := MAX (align, a);
           end := RoundUp (end, a) + sz;
         END;
+        align := MAX (align, MSIR.TypeAlign (t) DIV 8);  (* M3's *)
         RETURN RoundUp (end, align);
     | TypeKind.OpenArray =>
         align := Target.Address.bytes;

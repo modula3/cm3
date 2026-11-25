@@ -389,6 +389,45 @@ CONST HexDigit = ARRAY [0..15] OF CHAR {
    stores then assume 16 and x86_64 emits movaps, which faults on real
    hardware (ARM64 and Rosetta tolerate the misalignment).  State the
    alignment M3 actually guarantees. *)
+(* A record or array the front end translated carries M3's alignment, which
+   for one LLVM sees as bytes ([N x i8], a packed array, or a record of
+   them) exceeds LLVM's own, and the code that accesses it assumes M3's.
+   State it on the alloca, never below LLVM's. *)
+PROCEDURE LLAllocaAlign(wr: Wr.T;  t: MSIR.T) =
+  VAR m3 := MSIR.TypeAlign(t) DIV 8;
+  BEGIN
+    IF m3 > 1 THEN
+      Wr.PutText(wr, ", align " & Fmt.Int(MAX(m3, NaturalAlign(t))));
+    END;
+  END LLAllocaAlign;
+
+(* LLVM's ABI alignment of t in bytes on the 64-bit ex_stack targets. *)
+PROCEDURE NaturalAlign(t: MSIR.T): INTEGER =
+  VAR a, bw: INTEGER;
+  BEGIN
+    IF t = NIL THEN RETURN 1 END;
+    CASE MSIR.Kind(t) OF
+    | MSIR.TypeKind.Struct =>
+        a := 1;
+        FOR i := 0 TO MSIR.StructFieldCount(t) - 1 DO
+          a := MAX(a, NaturalAlign(MSIR.StructField(t, i).type));
+        END;
+        RETURN a;
+    | MSIR.TypeKind.FixedArray => RETURN NaturalAlign(MSIR.FixedArrayElt(t));
+    | MSIR.TypeKind.Subrange   => RETURN NaturalAlign(MSIR.SubrangeParent(t));
+    | MSIR.TypeKind.I1         => RETURN 1;
+    | MSIR.TypeKind.F32        => RETURN 4;
+    | MSIR.TypeKind.F64        => RETURN 8;
+    | MSIR.TypeKind.F128       => RETURN 16;
+    ELSE
+      bw := MSIR.BitWidth(t);
+      IF bw <= 0 THEN RETURN Target.Address.bytes END;  (* pointers etc. *)
+      a := 1;
+      WHILE a * 8 < bw AND a < 16 DO a := a * 2 END;
+      RETURN a;
+    END;
+  END NaturalAlign;
+
 PROCEDURE LLAlign(wr: Wr.T;  t: MSIR.T) =
   BEGIN
     IF t # NIL AND MSIR.Kind(t) = MSIR.TypeKind.IWide THEN
@@ -1022,6 +1061,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
           IF cnt > 1 THEN
             Wr.PutText(wr, ", " & ip & " " & Fmt.Int(cnt));
           END;
+          LLAllocaAlign(wr, MSIR.InsnTargetType(i));
           Wr.PutText(wr, "\n");
           IF varIdx >= 0 AND locIdx >= 0 THEN
             Wr.PutText(wr, "  call void @llvm.dbg.declare(metadata ptr "

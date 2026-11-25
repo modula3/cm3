@@ -392,6 +392,7 @@ PROCEDURE TranslateRecord(t: Type.T;  name: TEXT): MSIR.T =
       VAR result := MSIR.TStruct(name, SUBARRAY(msirFields^, 0, nOut));
       BEGIN
         MSIR.SetTypeUID(result, Type.GlobalUID(t));
+        MSIR.SetTypeAlign(result, rti.alignment);
         IF RoomInCache() THEN
           cache[cacheN].key := t;  cache[cacheN].val := result;
           INC(cacheN);
@@ -447,7 +448,11 @@ PROCEDURE ByteArrayFallback(t: Type.T): MSIR.T =
     EVAL Type.CheckInfo(t, tinfo);
     nb := (tinfo.size + Target.Byte - 1) DIV Target.Byte;
     IF nb <= 0 THEN RETURN NIL END;
-    RETURN MSIR.TFixedArray(nb, MSIR.TI(Target.Byte));
+    VAR r := MSIR.TFixedArray(nb, MSIR.TI(Target.Byte));
+    BEGIN
+      MSIR.SetTypeAlign(r, tinfo.alignment);
+      RETURN r;
+    END;
   END ByteArrayFallback;
 
 PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
@@ -497,6 +502,11 @@ PROCEDURE TranslateFixedArray(t: Type.T): MSIR.T =
     VAR result := MSIR.TFixedArray(nElts, eltMsir);
     BEGIN
       MSIR.SetTypeUID(result, Type.GlobalUID(t));
+      VAR ainfo: Type.Info;
+      BEGIN
+        EVAL Type.CheckInfo(t, ainfo);
+        MSIR.SetTypeAlign(result, ainfo.alignment);
+      END;
       IF loI # 0 THEN MSIR.SetFixedArrayLo(result, loI) END;
       IF RoomInCache() THEN
         cache[cacheN].key := t;  cache[cacheN].val := result;

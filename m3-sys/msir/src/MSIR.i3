@@ -83,6 +83,11 @@ PROCEDURE IsFloat(k: TypeKind): BOOLEAN;  (* F32, F64 or F128 *)
    pass can deduplicate composite DWARF nodes across procs without pulling
    in m3front's Type module.  0 means "no UID assigned". *)
 PROCEDURE SetTypeUID(t: T; uid: INTEGER);
+PROCEDURE SetTypeAlign(t: T; bits: INTEGER);
+PROCEDURE TypeAlign(t: T): INTEGER;
+(* M3's alignment of a record or array type, in bits (0 if not stated).
+   It can exceed what the type's representation implies: a packed array is
+   [N x i8] but M3 may align it to its size. *)
 PROCEDURE TypeUID(t: T): INTEGER;
 
 PROCEDURE ObjectName(t: T): TEXT;

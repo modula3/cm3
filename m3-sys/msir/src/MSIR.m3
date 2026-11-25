@@ -21,6 +21,7 @@ REVEAL T = BRANDED "MSIR.T" REF RECORD
   arrayLen:         INTEGER              := 0;    (* FixedArray length *)
   subrLo, subrHi:   INTEGER              := 0;    (* Subrange / Set bounds *)
   typeUID:          INTEGER              := 0;    (* CM3 GlobalUID fingerprint; 0 = unset *)
+  align:            INTEGER              := 0;    (* M3's alignment in bits; 0 = unstated *)
   labels:           REF ARRAY OF TEXT   := NIL;  (* Enum label names, index = ordinal *)
 END;
 
@@ -302,6 +303,9 @@ PROCEDURE EnumLabel(t: T;  i: INTEGER): TEXT =
   BEGIN RETURN t.labels[i] END EnumLabel;
 
 PROCEDURE SetTypeUID(t: T; uid: INTEGER) = BEGIN t.typeUID := uid END SetTypeUID;
+PROCEDURE SetTypeAlign(t: T; bits: INTEGER) = BEGIN t.align := bits END SetTypeAlign;
+PROCEDURE TypeAlign(t: T): INTEGER =
+  BEGIN IF t = NIL THEN RETURN 0 END; RETURN t.align END TypeAlign;
 PROCEDURE TypeUID(t: T): INTEGER = BEGIN RETURN t.typeUID END TypeUID;
 
 PROCEDURE ObjectName(t: T): TEXT = BEGIN RETURN t.structName END ObjectName;
