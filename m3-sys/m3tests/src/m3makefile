@@ -379,6 +379,25 @@ html(["        </tr>", CR])
 html(["      </thead>", CR])
 html(["      <tbody>", CR])
 
+%return a tag to identify which backend is running the test
+readonly proc get_backend_tag() is
+  ret = ""
+  if IsBackendLlvm()
+    ret = "L"
+  end
+  if equal (M3_BACKEND_MODE, "C")
+    ret = "C"
+  end
+  if    equal (M3_BACKEND_MODE, "ExternalAssembly")
+     or equal (M3_BACKEND_MODE, "3")
+    ret = "G"
+  end
+  if equal (M3_BACKEND_MODE, "IntegratedObject")
+    ret = "I"
+  end
+     
+  return ret
+end
 
 %------------------------------------------------------------------------------
 % run a test case
@@ -386,12 +405,11 @@ html(["      <tbody>", CR])
 
 cm3opts = ""
 runopts = ""
-if equal(M3_BACKEND_MODE, "StAloneLlvmAsm")
-   or equal(M3_BACKEND_MODE, "StAloneLlvmObj")
+if IsBackendLlvm()
 % turn off llvm debug mode if required 
 %  cm3opts = cm3opts & "-g0 "
 % llvm optimisations if required - each compile runs opt -O3 and llc -O3
-  cm3opts = cm3opts & "-O3 "
+%  cm3opts = cm3opts & "-O3 "
 end
 
 readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is  local dir = "../src/" & group & "/" & uid
@@ -400,8 +418,9 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     tstart = compress (q_exec_get (DATE & " '+%s'")[1]) % second resolution only
   end
 
+  local bt = get_backend_tag()
   if defined ("_all") or defined (class) or defined ("_" & uid)
-    write ("--- ", uid, " --- ", comment, CR)
+    write ("--- ", uid, " -", bt, "- ", comment, CR)
     fs_mkdir (dir & "/" & BUILD_DIR)
     fs_putfile (dir & "/" & BUILD_DIR & "/runopts", runopts)
 
