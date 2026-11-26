@@ -211,20 +211,34 @@ PROCEDURE EmitCheckLoadTracedBlock (t: M3.Type;  n: CG.Val := NIL;
     dst := CG.Pop ();
     proc := LookUpProc (Hook.CheckLoadTracedBlock);
     Procedure.StartCall (proc);
-    CG.Push (dst);
-    CG.Pop_param (CG.Type.Addr);
-    Module.LoadGlobalAddr (Module.Current (), map, is_const := TRUE);
-    CG.Pop_param (CG.Type.Addr);
-    IF n = NIL
-      THEN CG.Load_intt (1);
-      ELSE CG.Push (n);
+    IF Target.DefaultCall.args_left_to_right THEN
+      FOR i := 0 TO 3 DO PassBlockParam (i, dst, map, n, stride) END;
+    ELSE
+      FOR i := 3 TO 0 BY -1 DO PassBlockParam (i, dst, map, n, stride) END;
     END;
-    CG.Pop_param (Target.Integer.cg_type);
-    CG.Load_intt (stride);
-    CG.Pop_param (Target.Integer.cg_type);
     Procedure.EmitCall (proc);
     CG.Free (dst);
   END EmitCheckLoadTracedBlock;
+
+PROCEDURE PassBlockParam (i: [0..3];  dst: CG.Val;  map: INTEGER;  n: CG.Val;
+                          stride: INTEGER) =
+  (* Pass parameter 'i' of RTHooks.CheckLoadTracedBlock (dst, map, n,
+     stride). *)
+  BEGIN
+    CASE i OF
+    | 0 => CG.Push (dst);
+           CG.Pop_param (CG.Type.Addr);
+    | 1 => Module.LoadGlobalAddr (Module.Current (), map, is_const := TRUE);
+           CG.Pop_param (CG.Type.Addr);
+    | 2 => IF n = NIL
+             THEN CG.Load_intt (1);
+             ELSE CG.Push (n);
+           END;
+           CG.Pop_param (Target.Integer.cg_type);
+    | 3 => CG.Load_intt (stride);
+           CG.Pop_param (Target.Integer.cg_type);
+    END;
+  END PassBlockParam;
 
 PROCEDURE EmitCopy (t: M3.Type;  size: INTEGER;  overlap, barrier: BOOLEAN) =
   VAR src, dst: CG.Val;
