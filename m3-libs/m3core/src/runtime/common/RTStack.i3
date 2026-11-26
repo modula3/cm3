@@ -83,13 +83,6 @@ PROCEDURE PreviousFrame (READONLY callee: Frame;  VAR(*OUT*)caller: Frame);
    Returns with pc = NIL if  "callee" is the first frame on
    the stack or its predecessor is ill-formed. *)
 
-<*EXTERNAL "RTStack__Unwind" *>
-PROCEDURE Unwind (READONLY f: Frame);
-(* Restore the machine state back to the frame "f".  All callee-saved
-   registers must be restored to the state they were in when frame "f"
-   made its last call.  Note that if the unwind operation encounters a
-   signal handler frame, it must also restore the caller-saved registers. *)
-
 <*EXTERNAL "RTStack__ProcName" *>
 PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
 (* Return the null-terminated constant string that names the procedure

@@ -54,16 +54,6 @@ void __cdecl RTStack__PrevFrame (RTStack__Frame* callee, RTStack__Frame* caller)
 }
 
 /*---------------------------------------------------------------------------*/
-/* PROCEDURE Unwind (READONLY f: Frame);
-   Restore the machine state back to the frame "f".  All callee-saved
-   registers must be restored to the state they were in when frame "f"
-   made its last call. */
-void __cdecl RTStack__Unwind (RTStack__Frame* target)
-{
-  abort ();
-}
-
-/*---------------------------------------------------------------------------*/
 /* PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
    Return the null-terminated constant string that names the procedure
    corresponding to the stack frame "f".  Returns NIL if no name is

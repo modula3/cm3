@@ -124,20 +124,6 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller->lock != FrameLock) abort();
 }
 
-void RTStack__Unwind (Frame* target)
-{
-  greg_t *reg = target->ctxt.uc_mcontext.gregs;
-
-  RTStack__SaveRegsInStack();
-
-  if (target->lock != FrameLock) abort();
-  reg[REG_PC] = (greg_t)target->pc + 8;/* for return address */
-  reg[REG_nPC] = reg[REG_PC] + 4;
-  reg[REG_SP] = (greg_t)target->sp;
-  reg[REG_O7] = target->sp->fr_savpc;
-  setcontext(&target->ctxt);
-}
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
