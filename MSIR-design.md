@@ -2146,7 +2146,27 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     already got right: a failed check in a TRY body with no call escaped
     its handler (M3C's catch re-threw; #1401, m3test p328), and
     Word.Extract/Insert of the full word width shifted by the width
-    (m3test p329).
+    (#1402, m3test p329).
+
+- **D33. ISTYPE and NARROW are type-test ops** (2026-11-27; the second
+  conversion under D31; proposed, for Tony's review).
+  - **Ops.**  `istype v, cell` (an i1) and `narrow v, cell` (a check op
+    with no result: it faults with NarrowFailed unless the test passes; the
+    front end then retypes v, as before).  The typecell is an operand, as a
+    TYPECASE clause's type is part of that op, and the type's GlobalUID
+    goes with it for reading the IR and for analysis.  Three kinds:
+    `exact` for a REF type (its typecode; a tagged reference has REFANY's),
+    `subtype` for an object or opaque type (the typecode first, then
+    `RTHooks.CheckIsType`, the module's type-test hook), and `null` for
+    NULL (only NIL; no typecell).  NIL is of every reference type.
+  - **Lowering.**  MSIRChecks.Expand expands both, before EH lowering, into
+    the code the C backend emits for NARROW (Narrow.EmitCore); the answer
+    goes through one i1 slot at the head of the entry, as the lowerings
+    take no block arguments.  ISTYPE of an object now also tries the
+    typecode before calling the runtime, as NARROW always did.
+  - **Note.**  Neither front end checks `NARROW (x, NULL)` (NULL counts as
+    untraced in Narrow.Emit), so a non-NIL x passes; the null kind is
+    there for when that is fixed on master.
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with

@@ -228,8 +228,7 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
     e          := ce.args[0];
     t, u       : Type.T;
-    refVal, tc : MSIR.Value;
-    hook       : MSIR.Proc;
+    refVal     : MSIR.Value;
     blk        : MSIR.Block;
   BEGIN
     IF NOT TypeExpr.Split (ce.args[1], t) THEN t := Expr.TypeOf (e) END;
@@ -243,35 +242,10 @@ PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
       RETURN MSIR.ConstInt (MSIR.TI1 (), 1);
     END;
     IF Type.IsEqual (t, Null.T, NIL) THEN
-      RETURN MSIR.BuildICmp (blk, "istype.nil", MSIR.CmpPred.Eq,
-               refVal, MSIR.ConstNil (MSIR.ValueType (refVal)));
+      RETURN MSIR.BuildIstype (blk, "", refVal, NIL, MSIR.TypeTest.Null,
+                               Type.GlobalUID (t));
     END;
-    IF RefType.Is (t) THEN
-      (* As Prep: test the typecode inline. *)
-      RETURN Narrow.TypeTestMSIR (refVal, t);
-    END;
-    (* an object or opaque type: the runtime decides *)
-    IF ObjectType.Is (t) THEN
-      tc := MSIRBuilder.TypeLinkValueForObject (t);
-    ELSE
-      tc := MSIRBuilder.TypeLinkValueForRef (t);
-    END;
-    IF tc = NIL THEN
-      MSIRBuilder.Abandon ("ISTYPE: cannot get typecell");  RETURN NIL;
-    END;
-    hook := MSIRBuilder.HookProc (RunTyme.Hook.CheckIsType);
-    IF hook = NIL THEN
-      MSIRBuilder.Abandon ("ISTYPE: CheckIsType hook missing");  RETURN NIL;
-    END;
-    (* CheckIsType returns INTEGER; convert to i1 (Bool.T) for ISTYPE result. *)
-    VAR raw := MSIRBuilder.EmitCall ("", hook,
-                                     ARRAY OF MSIR.Value {refVal, tc});
-    BEGIN
-      IF raw = NIL THEN RETURN NIL END;
-      RETURN MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "",
-                             MSIR.CmpPred.Ne,
-                             raw, MSIR.ConstInt (MSIR.ValueType (raw), 0));
-    END;
+    RETURN Narrow.TypeTestMSIR (refVal, t);
   END CompileMSIR;
 
 PROCEDURE Initialize () =

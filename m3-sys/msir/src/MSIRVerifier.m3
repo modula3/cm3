@@ -438,6 +438,19 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
                                              MSIR.TypeKind.GcRef} THEN
           Err(c, "nil_check: operand must be a ptr or gc_ref");
         END;
+    | MSIR.Op.Istype, MSIR.Op.Narrow =>
+        (* D33: a reference, and its type's typecell unless NULL *)
+        VAR want := 2;
+        BEGIN
+          IF MSIR.InsnTypeTest(i) = MSIR.TypeTest.Null THEN want := 1 END;
+          IF MSIR.InsnOperandCount(i) # want THEN
+            Err(c, "istype/narrow: wrong operand count");
+          ELSIF NOT MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, 0)))
+                      IN SET OF MSIR.TypeKind {MSIR.TypeKind.Ptr,
+                                               MSIR.TypeKind.GcRef} THEN
+            Err(c, "istype/narrow: operand must be a ptr or gc_ref");
+          END;
+        END;
     | MSIR.Op.Fault =>
         IF MSIR.InsnOperandCount(i) # 0 THEN
           Err(c, "fault takes no operands");

@@ -16,9 +16,8 @@ PROCEDURE Emit (tlhs, trhs: Type.T);
    may include a procedure call. *)
 
 PROCEDURE TypeTestMSIR (refVal: MSIR.Value;  t: Type.T): MSIR.Value;
-(* An i1: refVal is NIL, or of type t.  As Emit and ISTYPE: inline tests of
-   the reference's typecode, then, unless t is a REF type, a call to
-   RTHooks.CheckIsType.  t is a base type, not NULL. *)
+(* An istype op (D33): refVal is NIL, or of type t; exact for a REF type,
+   else a subtype test.  t is a base type, not NULL. *)
 
 PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value;
 (* MSIR equivalent of Emit: checks refVal against tlhs at runtime,

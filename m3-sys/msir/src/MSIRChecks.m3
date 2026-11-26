@@ -1,24 +1,34 @@
 MODULE MSIRChecks;
 
-IMPORT MSIR, Fmt, Target, Word;
+IMPORT MSIR, Fmt, Target, Word, M3RT;
 FROM MSIR IMPORT Op;
 
 CONST
   LtPred = ARRAY BOOLEAN OF MSIR.CmpPred {MSIR.CmpPred.Slt, MSIR.CmpPred.Ult};
   GtPred = ARRAY BOOLEAN OF MSIR.CmpPred {MSIR.CmpPred.Sgt, MSIR.CmpPred.Ugt};
 
-VAR seq := 0;  (* for unique block labels *)
+VAR
+  seq := 0;                  (* for unique block labels *)
+  slot: MSIR.Value := NIL;   (* the current proc's type-test answer *)
+
+CONST NoArgs = ARRAY OF MSIR.Value {};
 
 PROCEDURE IsCheck (op: Op): BOOLEAN =
   BEGIN
     RETURN op IN SET OF Op {Op.NilCheck, Op.RangeCheck, Op.SubscriptCheck,
-                            Op.Fault, Op.ShapeCheck};
+                            Op.Fault, Op.ShapeCheck, Op.Narrow};
   END IsCheck;
+
+(* Does Expand replace op? *)
+PROCEDURE Expands (op: Op): BOOLEAN =
+  BEGIN
+    RETURN IsCheck (op) OR op = Op.Istype;
+  END Expands;
 
 PROCEDURE HasCheck (b: MSIR.Block): BOOLEAN =
   BEGIN
     FOR j := 0 TO MSIR.BlockInsnCount (b) - 1 DO
-      IF IsCheck (MSIR.InsnOp (MSIR.BlockInsn (b, j))) THEN RETURN TRUE END;
+      IF Expands (MSIR.InsnOp (MSIR.BlockInsn (b, j))) THEN RETURN TRUE END;
     END;
     RETURN FALSE;
   END HasCheck;
@@ -56,11 +66,99 @@ PROCEDURE Extreme (c: MSIR.Value;  lo, unsigned: BOOLEAN;  w: INTEGER): BOOLEAN 
     RETURN x = e;
   END Extreme;
 
-(* The condition under which check i fails, built in block b. *)
-PROCEDURE FailCond (b: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
-  VAR v := MSIR.InsnOperand (i, 0);
+(* Is the reference v of the type tested by i (istype or narrow)?  Built
+   from block cur, which may end; cur is then where the answer is known.
+   The code the C backend emits for NARROW (Narrow.EmitCore). *)
+PROCEDURE TypeTest (m: MSIR.Module;  p: MSIR.Proc;  like: MSIR.Block;
+                    VAR cur: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
+  VAR
+    v    := MSIR.InsnOperand (i, 0);
+    intT := MSIR.TI (Target.Integer.size);
+    i1   := MSIR.TI1 ();
+    cell, tc, word, hdr, rtc, raw: MSIR.Value;
+    yes, no, join, notNil, tagged, untagged, other: MSIR.Block;
+  BEGIN
+    IF MSIR.InsnTypeTest (i) = MSIR.TypeTest.Null THEN
+      RETURN MSIR.BuildICmp (cur, "", MSIR.CmpPred.Eq, v,
+                             MSIR.ConstNil (MSIR.ValueType (v)));
+    END;
+    cell := MSIR.InsnOperand (i, 1);
+    yes  := NewBlk (p, like, "tt.yes");
+    no   := NewBlk (p, like, "tt.no");
+    join := NewBlk (p, like, "tt.join");
+    notNil   := NewBlk (p, like, "tt.notnil");
+    tagged   := NewBlk (p, like, "tt.tagged");
+    untagged := NewBlk (p, like, "tt.untagged");
+    tc := MSIR.BuildLoad (cur, "", intT, cell);  (* TC_typecode, at 0 *)
+
+    (* NIL is of every reference type *)
+    MSIR.BuildCondBr (cur, MSIR.BuildICmp (cur, "", MSIR.CmpPred.Eq, v,
+                                           MSIR.ConstNil (MSIR.ValueType (v))),
+                      yes, NoArgs, notNil, NoArgs);
+
+    (* a tagged reference (low bit set) has REFANY's typecode *)
+    word := MSIR.BuildConvert (notNil, "", v, intT);
+    MSIR.BuildCondBr (notNil,
+      MSIR.BuildICmp (notNil, "", MSIR.CmpPred.Ne,
+                      MSIR.BuildIAnd (notNil, "", word, MSIR.ConstInt (intT, 1)),
+                      MSIR.ConstInt (intT, 0)),
+      tagged, NoArgs, untagged, NoArgs);
+    MSIR.BuildCondBr (tagged,
+      MSIR.BuildICmp (tagged, "", MSIR.CmpPred.Eq,
+                      MSIR.ConstInt (intT, M3RT.REFANY_typecode), tc),
+      yes, NoArgs, no, NoArgs);
+
+    (* the typecode in the header, one word before the referent *)
+    hdr := MSIR.BuildLoad (untagged, "", intT,
+             MSIR.BuildPtrAdd (untagged, "", v,
+                               -(Target.Address.size DIV Target.Byte)));
+    rtc := MSIR.BuildIAnd (untagged, "",
+             MSIR.BuildILShr (untagged, "", hdr,
+                              MSIR.ConstInt (intT, M3RT.RH_typecode_offset)),
+             MSIR.ConstInt (intT, Word.LeftShift (1, M3RT.RH_typecode_size) - 1));
+    IF MSIR.InsnTypeTest (i) = MSIR.TypeTest.Subtype THEN
+      other := NewBlk (p, like, "tt.subtype");
+    ELSE
+      other := no;
+    END;
+    MSIR.BuildCondBr (untagged,
+      MSIR.BuildICmp (untagged, "", MSIR.CmpPred.Eq, rtc, tc),
+      yes, NoArgs, other, NoArgs);
+
+    (* an object or opaque type: the runtime decides *)
+    IF other # no THEN
+      <* ASSERT MSIR.ModuleIsTypeHook (m) # NIL *>
+      raw := MSIR.BuildCall (other, "", MSIR.ModuleIsTypeHook (m),
+                             ARRAY OF MSIR.Value {v, cell});
+      MSIR.BuildCondBr (other,
+        MSIR.BuildICmp (other, "", MSIR.CmpPred.Ne, raw,
+                        MSIR.ConstInt (MSIR.ValueType (raw), 0)),
+        yes, NoArgs, no, NoArgs);
+    END;
+
+    (* the answer goes through the proc's slot: the lowerings do not take
+       block arguments *)
+    MSIR.BuildStore (yes, MSIR.ConstInt (i1, 1), slot);
+    MSIR.BuildBr (yes, join, NoArgs);
+    MSIR.BuildStore (no, MSIR.ConstInt (i1, 0), slot);
+    MSIR.BuildBr (no, join, NoArgs);
+    cur := join;
+    RETURN MSIR.BuildLoad (join, "", i1, slot);
+  END TypeTest;
+
+(* The condition under which check i fails, built from block cur (which
+   a narrow's type test moves on). *)
+PROCEDURE FailCond (m: MSIR.Module;  p: MSIR.Proc;  like: MSIR.Block;
+                    VAR cur: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
+  VAR v := MSIR.InsnOperand (i, 0);  b := cur;
   BEGIN
     CASE MSIR.InsnOp (i) OF
+    | Op.Narrow =>
+        VAR is := TypeTest (m, p, like, cur, i);
+        BEGIN
+          RETURN MSIR.BuildICmp (cur, "", MSIR.CmpPred.Eq, is,
+                                 MSIR.ConstInt (MSIR.TI1 (), 0));
+        END;
     | Op.NilCheck =>
         RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Eq, v,
                                MSIR.ConstNil (MSIR.ValueType (v)));
@@ -102,6 +200,7 @@ PROCEDURE CallHook (m: MSIR.Module;  b: MSIR.Block;  i: MSIR.Insn) =
     ptrT := MSIR.TPtr (MSIR.TVoid ());
     intT := MSIR.TI (Target.Integer.size);
   BEGIN
+    <* ASSERT MSIR.ModuleFaultHook (m) # NIL *>
     EVAL MSIR.BuildCall (b, "", MSIR.ModuleFaultHook (m),
            ARRAY OF MSIR.Value {
              MSIR.StructFieldRef (MSIR.ModuleInfoName (m), 0, ptrT),
@@ -110,17 +209,42 @@ PROCEDURE CallHook (m: MSIR.Module;  b: MSIR.Block;  i: MSIR.Insn) =
     MSIR.BuildUnreachable (b);
   END CallHook;
 
+(* Does p test a type by its typecell (needing the answer slot)? *)
+PROCEDURE NeedsSlot (p: MSIR.Proc): BOOLEAN =
+  VAR b: MSIR.Block;  i: MSIR.Insn;
+  BEGIN
+    FOR k := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+      b := MSIR.ProcBlock (p, k);
+      FOR j := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+        i := MSIR.BlockInsn (b, j);
+        IF MSIR.InsnOp (i) IN SET OF Op {Op.Istype, Op.Narrow}
+           AND MSIR.InsnTypeTest (i) # MSIR.TypeTest.Null THEN
+          RETURN TRUE;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END NeedsSlot;
+
 PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
   VAR
-    hook := MSIR.ModuleFaultHook (m);
     k := 0;
   BEGIN
+    slot := NIL;
+    IF NeedsSlot (p) THEN
+      (* an i1 alloca at the head of the entry *)
+      VAR entry := MSIR.ProcEntry (p);
+          insns := MSIR.BlockTakeInsns (entry);
+      BEGIN
+        slot := MSIR.BuildAlloca (entry, "", MSIR.TI1 ());
+        FOR j := 0 TO LAST (insns^) DO MSIR.BlockAppendInsn (entry, insns[j]) END;
+      END;
+    END;
     (* New continuation blocks are appended and examined in turn. *)
     WHILE k < MSIR.ProcBlockCount (p) DO
       VAR b := MSIR.ProcBlock (p, k);
       BEGIN
         IF HasCheck (b) THEN
-          <* ASSERT hook # NIL *>
           VAR insns := MSIR.BlockTakeInsns (b);  cur := b;
           BEGIN
             FOR j := 0 TO LAST (insns^) DO
@@ -129,11 +253,16 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                 IF MSIR.InsnOp (i) = Op.Fault THEN
                   (* a terminator: the call and unreachable end the block *)
                   CallHook (m, cur, i);
+                ELSIF MSIR.InsnOp (i) = Op.Istype THEN
+                  (* the test's answer replaces i's result *)
+                  MSIR.InsnMakeCopy (i, TypeTest (m, p, b, cur, i));
+                  MSIR.BlockAppendInsn (cur, i);
                 ELSIF IsCheck (MSIR.InsnOp (i)) THEN
-                  VAR fault := NewBlk (p, b, "fault");
+                  VAR fail  := FailCond (m, p, b, cur, i);
+                      fault := NewBlk (p, b, "fault");
                       cont  := NewBlk (p, b, "cont");
                   BEGIN
-                    MSIR.BuildCondBr (cur, FailCond (cur, i),
+                    MSIR.BuildCondBr (cur, fail,
                                       fault, ARRAY OF MSIR.Value {},
                                       cont,  ARRAY OF MSIR.Value {});
                     CallHook (m, fault, i);

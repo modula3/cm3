@@ -412,6 +412,9 @@ PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
    gc.load_block. *)
 PROCEDURE SetModuleFaultHook(m: Module;  p: Proc);
 PROCEDURE ModuleFaultHook(m: Module): Proc;
+PROCEDURE SetModuleIsTypeHook(m: Module;  p: Proc);
+PROCEDURE ModuleIsTypeHook(m: Module): Proc;
+(* RTHooks.CheckIsType, for a Subtype istype or narrow (D33). *)
 (* RTHooks.ReportFault, called when a check op fails (D32, MSIRChecks). *)
 PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc);
 PROCEDURE ModuleGCLoadBlockBarrier (m: Module): Proc;
@@ -958,10 +961,21 @@ PROCEDURE BuildDispatch(b: Block;  name: TEXT;
                         obj: Value;  methodName: TEXT;
                         READONLY args: ARRAY OF Value): Value;
 
-PROCEDURE BuildNarrow(b: Block;  name: TEXT;
-                      obj: Value;  targetType: T): Value;
-PROCEDURE BuildIstype(b: Block;  name: TEXT;
-                      obj: Value;  targetType: T): Value;
+(* Type tests (D33).  `istype v, cell` is TRUE if the reference v is of
+   the type whose typecell is cell; `narrow v, cell` faults with code
+   (NarrowFailed) at line unless it is.  NIL is of every reference type.
+   Exact: a REF type, tested by its typecode (a tagged v has REFANY's).
+   Subtype: an object or opaque type, tested by the typecode first, then by
+   RTHooks.CheckIsType (the module's type-test hook).  Null: the type NULL,
+   only NIL; cell is NIL.  uid is the type's Type.GlobalUID, for reading
+   the IR.  MSIRChecks expands both before lowering. *)
+TYPE TypeTest = {Exact, Subtype, Null};
+PROCEDURE BuildIstype(b: Block;  name: TEXT;  v, cell: Value;
+                      test: TypeTest;  uid: INTEGER): Value;
+PROCEDURE BuildNarrow(b: Block;  v, cell: Value;  test: TypeTest;
+                      uid, code, line: INTEGER);
+PROCEDURE InsnTypeTest(i: Insn): TypeTest;
+PROCEDURE InsnTypeUid(i: Insn): INTEGER;
 
 (* TYPECASE is a structured terminator op.  Each clause names a target type
    (or ELSE) and a parameterized block.  ELSE is mandatory at MSIR level.

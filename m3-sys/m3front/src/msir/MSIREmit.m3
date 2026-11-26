@@ -112,7 +112,7 @@ PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
 
 PROCEDURE UsedBarriers (m: MSIR.Module;
                         VAR loads, stores, typecases, loadBlocks,
-                            checks: BOOLEAN) =
+                            checks, isTypes: BOOLEAN) =
   (* Does m contain a traced load (read barrier: CheckLoadTracedRef), a
      barriered store or dirty (write barrier: CheckStoreTraced), a
      TYPECASE (ScanTypecase), or a block read barrier
@@ -134,6 +134,10 @@ PROCEDURE UsedBarriers (m: MSIR.Module;
           | MSIR.Op.Typecase => typecases := TRUE;
           ELSE
             IF MSIRChecks.IsCheck(MSIR.InsnOp(i)) THEN checks := TRUE END;
+            IF MSIR.InsnOp(i) IN SET OF MSIR.Op {MSIR.Op.Istype, MSIR.Op.Narrow}
+               AND MSIR.InsnTypeTest(i) = MSIR.TypeTest.Subtype THEN
+              isTypes := TRUE;
+            END;
           END;
         END;
       END;
@@ -150,10 +154,15 @@ PROCEDURE EndUnit() =
        Only the hooks the unit's code calls: looking a hook up declares it,
        which records an import of it in the unit's link information, as the
        C walk does only where it emits a call. *)
-    VAR loads, stores, typecases, loadBlocks, checks := FALSE;
+    VAR loads, stores, typecases, loadBlocks, checks, isTypes := FALSE;
         gcLoad, gcStore, scanTC: MSIR.Proc := NIL;
     BEGIN
-      UsedBarriers (curModule, loads, stores, typecases, loadBlocks, checks);
+      UsedBarriers (curModule, loads, stores, typecases, loadBlocks, checks,
+                    isTypes);
+      IF isTypes THEN  (* D33: a subtype test's runtime call *)
+        MSIR.SetModuleIsTypeHook(curModule,
+          MSIRBuilder.HookProc(RunTyme.Hook.CheckIsType));
+      END;
       IF checks THEN  (* D32: the check ops' fault call *)
         MSIR.SetModuleFaultHook(curModule,
           MSIRBuilder.HookProc(RunTyme.Hook.Abort));

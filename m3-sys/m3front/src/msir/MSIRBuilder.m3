@@ -1415,6 +1415,15 @@ PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER) =
     MSIR.BuildNilCheck(CurrentBlock(), ref, errCode, line);
   END EmitNilCheck;
 
+PROCEDURE EmitNarrow(v, cell: MSIR.Value;  test: MSIR.TypeTest;
+                     uid, errCode: INTEGER) =
+  VAR f: TEXT;  line: INTEGER;
+  BEGIN
+    IF NOT InProc() OR v = NIL THEN RETURN END;
+    Scanner.Here(f, line);
+    MSIR.BuildNarrow(CurrentBlock(), v, cell, test, uid, errCode, line);
+  END EmitNarrow;
+
 PROCEDURE EmitShapeCheck(n, m: MSIR.Value;  errCode: INTEGER) =
   VAR f: TEXT;  line: INTEGER;
   BEGIN

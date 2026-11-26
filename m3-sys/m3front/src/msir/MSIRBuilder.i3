@@ -332,6 +332,11 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
    current line if ref is NIL. *)
 PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER);
 
+(* narrow v, cell (D33): fault with errCode at the current line unless the
+   reference v passes the type test. *)
+PROCEDURE EmitNarrow(v, cell: MSIR.Value;  test: MSIR.TypeTest;
+                     uid, errCode: INTEGER);
+
 (* shape_check n, m (D32): fault with errCode unless the dimension counts
    n and m are equal, at the current line. *)
 PROCEDURE EmitShapeCheck(n, m: MSIR.Value;  errCode: INTEGER);

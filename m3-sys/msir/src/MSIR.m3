@@ -609,6 +609,8 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   unbarriered: BOOLEAN := FALSE;  (* Load: see BuildUnbarrieredLoad *)
   checkCode:   INTEGER := 0;      (* check ops: M3CG.RuntimeError code *)
   checkUnsigned: BOOLEAN := FALSE; (* range_check: unsigned compare *)
+  typeTest:    TypeTest := TypeTest.Exact; (* istype, narrow *)
+  typeUid:     INTEGER := 0;                (* istype, narrow *)
   blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
   blockStride: INTEGER := 0;      (* GcLoadBlock: element stride, bytes *)
   exc:       ExcDesc     := NIL;               (* Raise *)
@@ -675,6 +677,10 @@ PROCEDURE InsnCheckCode(i: Insn): INTEGER =
   BEGIN RETURN i.checkCode END InsnCheckCode;
 PROCEDURE InsnCheckUnsigned(i: Insn): BOOLEAN =
   BEGIN RETURN i.checkUnsigned END InsnCheckUnsigned;
+PROCEDURE InsnTypeTest(i: Insn): TypeTest =
+  BEGIN RETURN i.typeTest END InsnTypeTest;
+PROCEDURE InsnTypeUid(i: Insn): INTEGER =
+  BEGIN RETURN i.typeUid END InsnTypeUid;
 PROCEDURE InsnBlockMap(i: Insn): GcMapBytes =
   BEGIN RETURN i.blockMap END InsnBlockMap;
 PROCEDURE InsnBlockStride(i: Insn): INTEGER =
@@ -1122,6 +1128,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   gcLoadBlockProc    : Proc := NIL;   (* RTHooks__CheckLoadTracedBlock *)
   faultProc          : Proc := NIL;   (* RTHooks__ReportFault (D32)      *)
+  isTypeProc         : Proc := NIL;   (* RTHooks__CheckIsType (D33)      *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
   textLitHooks : ARRAY [0..4] OF Proc;
   (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
@@ -1789,6 +1796,10 @@ PROCEDURE SetModuleFaultHook(m: Module;  p: Proc) =
   BEGIN m.faultProc := p END SetModuleFaultHook;
 PROCEDURE ModuleFaultHook(m: Module): Proc =
   BEGIN RETURN m.faultProc END ModuleFaultHook;
+PROCEDURE SetModuleIsTypeHook(m: Module;  p: Proc) =
+  BEGIN m.isTypeProc := p END SetModuleIsTypeHook;
+PROCEDURE ModuleIsTypeHook(m: Module): Proc =
+  BEGIN RETURN m.isTypeProc END ModuleIsTypeHook;
 PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc) =
   BEGIN m.gcLoadBlockProc := p END SetModuleLoadBlockHook;
 PROCEDURE ModuleGCLoadBlockBarrier(m: Module): Proc =
@@ -2452,35 +2463,42 @@ PROCEDURE BuildDispatch(b: Block;  name: TEXT;
     RETURN i.result;
   END BuildDispatch;
 
-PROCEDURE BuildNarrow(b: Block;  name: TEXT;
-                      obj: Value;  targetType: T): Value =
-  VAR
-    i := NEW(Insn);
-    ops := NEW(REF ARRAY OF Value, 1);
+PROCEDURE TypeTestOperands(v, cell: Value;  test: TypeTest): REF ARRAY OF Value =
+  VAR ops: REF ARRAY OF Value;
   BEGIN
-    i.op := Op.Narrow;
-    i.targetType := targetType;
-    ops[0] := obj;
-    i.operands := ops;
-    i.result := makeResult(b, TGcRef(targetType), name, i);
-    addInsn(b, i);
-    RETURN i.result;
-  END BuildNarrow;
+    IF test = TypeTest.Null THEN
+      <* ASSERT cell = NIL *>
+      ops := NEW(REF ARRAY OF Value, 1);
+    ELSE
+      <* ASSERT cell # NIL *>
+      ops := NEW(REF ARRAY OF Value, 2);  ops[1] := cell;
+    END;
+    ops[0] := v;
+    RETURN ops;
+  END TypeTestOperands;
 
-PROCEDURE BuildIstype(b: Block;  name: TEXT;
-                      obj: Value;  targetType: T): Value =
-  VAR
-    i := NEW(Insn);
-    ops := NEW(REF ARRAY OF Value, 1);
+PROCEDURE BuildIstype(b: Block;  name: TEXT;  v, cell: Value;
+                      test: TypeTest;  uid: INTEGER): Value =
+  VAR i := NEW(Insn);
   BEGIN
     i.op := Op.Istype;
-    i.targetType := targetType;
-    ops[0] := obj;
-    i.operands := ops;
+    i.typeTest := test;  i.typeUid := uid;
+    i.operands := TypeTestOperands(v, cell, test);
     i.result := makeResult(b, TI1(), name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildIstype;
+
+PROCEDURE BuildNarrow(b: Block;  v, cell: Value;  test: TypeTest;
+                      uid, code, line: INTEGER) =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op := Op.Narrow;
+    i.typeTest := test;  i.typeUid := uid;
+    i.checkCode := code;  i.srcLine := line;
+    i.operands := TypeTestOperands(v, cell, test);
+    addInsn(b, i);
+  END BuildNarrow;
 
 PROCEDURE BuildTypecase(b: Block;  value: Value;
                         clauses: REF ARRAY OF TypecaseClause) =

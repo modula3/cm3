@@ -464,8 +464,19 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.Narrow, MSIR.Op.Istype =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
-        Wr.PutText(wr, ", ");
-        Type(wr, MSIR.InsnTargetType(i));
+        IF MSIR.InsnOperandCount(i) > 1 THEN
+          Wr.PutText(wr, ", ");
+          NameRef(wr, MSIR.InsnOperand(i, 1));
+        END;
+        CASE MSIR.InsnTypeTest(i) OF
+        | MSIR.TypeTest.Exact   => Wr.PutText(wr, ", exact");
+        | MSIR.TypeTest.Subtype => Wr.PutText(wr, ", subtype");
+        | MSIR.TypeTest.Null    => Wr.PutText(wr, ", null");
+        END;
+        Wr.PutText(wr, ", uid 0x" & Fmt.Unsigned(MSIR.InsnTypeUid(i)));
+        IF op = MSIR.Op.Narrow THEN
+          Wr.PutText(wr, ", code " & Fmt.Int(MSIR.InsnCheckCode(i)));
+        END;
     | MSIR.Op.Typecase =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
