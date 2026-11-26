@@ -777,6 +777,18 @@ PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =
           END;
         END;
       END;
+      (* An element of a constant array of multi-word sets is [N x i64] words
+         as data (ArrayExpr.ConstArrayMSIR); its address addresses the set's
+         wide-integer value. *)
+      IF MSIR.Kind (MSIR.EltType (MSIR.ValueType (slot)))
+           = MSIR.TypeKind.FixedArray THEN
+        VAR elemT := MSIRType.Translate (p.type);
+        BEGIN
+          IF elemT # NIL AND MSIR.Kind (elemT) = MSIR.TypeKind.IWide THEN
+            RETURN MSIR.RetypeValue (slot, MSIR.TPtr (elemT));
+          END;
+        END;
+      END;
       RETURN slot;
     END;
   END LValueMSIR;

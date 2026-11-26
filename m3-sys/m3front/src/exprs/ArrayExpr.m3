@@ -28,7 +28,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Error, Type, ArrayType, PackedType;
 IMPORT KeywordExpr, RangeExpr, NamedExpr, OpenArrayType, Module;
 IMPORT IntegerExpr, EnumExpr, ConsExpr, SubrangeType, Target, TInt, Int, M3Buf;
 IMPORT AssignStmt, RefType, M3RT, Procedure, RunTyme, ErrType;
-IMPORT MSIR, MSIRBuilder, MSIRType, MSIREmit, RecordExpr, Value;
+IMPORT MSIR, MSIRBuilder, MSIRType, MSIREmit, RecordExpr, SetExpr, Value;
 
 (* Monitor sequencing of operations: *)
 TYPE StateTyp
@@ -2977,6 +2977,13 @@ PROCEDURE ConstEltMSIR (elt: Expr.T;  eltMsir: MSIR.T): MSIR.Value =
       cv := Expr.GenLiteralMSIR (elt, MSIRType.Translate (Expr.TypeOf (elt)));
       IF cv # NIL THEN RETURN cv END;
     END;
+    IF SetExpr.Is (Expr.ConstValue (elt)) THEN
+      (* A constant set, as data: CompileMSIR builds a multi-word set from
+         set intrinsics, and a global's initializer has no block for them
+         (sgml's SymSet, an array of SET OF Symbol). *)
+      cv := Expr.ConstLiteralMSIR (elt, eltMsir);
+      IF cv # NIL THEN RETURN cv END;
+    END;
     v := Expr.CompileMSIR (elt);
     IF v = NIL THEN RETURN NIL END;  (* e.g. sub-byte packed element *)
     (* Coerce integer constants to the declared element type (IntegerExpr
@@ -3207,6 +3214,14 @@ PROCEDURE ConstArrayMSIR (key: Value.T;  constExpr: Expr.T): MSIR.Value =
       (* Open eltMsir, but the built elements are fixed arrays (see the NOTE
          above): use their concrete type for the outer array.  p081. *)
       IF MSIR.Kind (eltMsir) = MSIR.TypeKind.OpenArray AND n > 0
+         AND MSIR.Kind (MSIR.ValueType (elts[0])) = MSIR.TypeKind.FixedArray THEN
+        eltMsir := MSIR.ValueType (elts[0]);
+      END;
+      (* A multi-word set is one wide integer as a value but [N x i64] words
+         as data (SetExpr.GenLiteralMSIR; Constant.DeclareGlobalMSIR does the
+         same): use the literal's type, which also has M3's stride where the
+         wide integer's alignment would pad it (i192). *)
+      IF MSIR.Kind (eltMsir) = MSIR.TypeKind.IWide AND n > 0
          AND MSIR.Kind (MSIR.ValueType (elts[0])) = MSIR.TypeKind.FixedArray THEN
         eltMsir := MSIR.ValueType (elts[0]);
       END;
