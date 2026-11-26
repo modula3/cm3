@@ -58,7 +58,7 @@ TYPE
         note_write   := NoteWrites;
         exprAlign    := LoopholeExprAlign;
         capture      := Capture;
-        compileMSIR       := CompileMSIR;
+        compileMSIR       := CompileMSIRWide;
         compileLValueMSIR := LValueMSIR;
       END;
 
@@ -549,6 +549,33 @@ PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   END Capture;
 
 (* MSIR: rvalue LOOPHOLE *)
+PROCEDURE CompileMSIRWide (p: P): MSIR.Value =
+  (* An ordinal LOOPHOLE yields its value at the destination's compute width
+     (MSIRType.ComputeType), as every other ordinal expression does: the
+     bits are taken at the destination's storage width (Translate, which
+     fixes the signedness) and then extended.  Loading a designator at its
+     own width gave LOOPHOLE (cstr^, CHAR) an 8-bit value that a comparison
+     with '\000' (machine width) rejected (B37). *)
+  VAR v := CompileMSIR (p);  st, zt, vt: MSIR.T;  blk: MSIR.Block;
+  BEGIN
+    IF v = NIL OR NOT Type.IsOrdinal (p.tipe) THEN RETURN v END;
+    st := MSIRType.Translate (p.tipe);
+    zt := MSIRType.ComputeType (p.tipe);
+    vt := MSIR.ValueType (v);
+    IF st = NIL OR zt = NIL OR MSIR.Equal (vt, zt) THEN RETURN v END;
+    IF MSIR.Kind (st) = MSIR.TypeKind.Enum THEN
+      st := MSIR.TW (MSIR.BitWidth (st));
+    END;
+    IF MSIR.Kind (st) < MSIR.TypeKind.I1 OR MSIR.Kind (st) > MSIR.TypeKind.W64
+       OR MSIR.Kind (vt) < MSIR.TypeKind.I1 OR MSIR.Kind (vt) > MSIR.TypeKind.W64
+       OR MSIR.BitWidth (vt) # MSIR.BitWidth (st) THEN
+      RETURN v;
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+    IF NOT MSIR.Equal (vt, st) THEN v := MSIR.RetypeValue (v, st) END;
+    RETURN MSIRBuilder.CoerceToMSIR (blk, v, zt);
+  END CompileMSIRWide;
+
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR dstT := MSIRType.Translate (p.tipe);
       blk  : MSIR.Block;
