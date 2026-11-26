@@ -4921,10 +4921,17 @@ BEGIN
 END HelperFunctions_rotate_right;
 
 PROCEDURE HelperFunctions_extract(self: HelperFunctions_t; type: IType; sign_extend: BOOLEAN) =
-CONST text = "#define m3_extract(T, value, offset, count) ((((T)(value))>>((WORD_T)(offset)))&~(((~(T)0))<<((WORD_T)(count))))";
+(* A count of the full width (Word.Extract (x, 0, BITSIZE (x))) or an offset
+   of it (count 0) must not become a shift by the width, which C leaves
+   undefined (and hardware takes modulo the width, making the mask 0).  T is
+   unsigned and at most 64 bits wide; the function evaluates each argument
+   once. *)
+CONST text = ARRAY OF TEXT {
+"static UINT64 __stdcall m3_extract_bits(UINT64 v,WORD_T offset,WORD_T count){return count?(v>>offset)&((~(UINT64)0)>>(64-count)):0;}",
+"#define m3_extract(T, value, offset, count) ((T)m3_extract_bits((UINT64)(T)(value),(WORD_T)(offset),(WORD_T)(count)))" };
 CONST text_sign_extend = "#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}";
 BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.extract, text);
+    HelperFunctions_helper_with_boolean_and_array(self, self.data.extract, text);
     IF sign_extend THEN
         HelperFunctions_helper_with_type(self, "sign_extend", type, self.data.sign_extend, text_sign_extend);
     END;
@@ -4941,7 +4948,10 @@ BEGIN
 END HelperFunctions_extract_mn;
 
 PROCEDURE HelperFunctions_insert(self: HelperFunctions_t; type: IType) =
-CONST text = "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}";
+(* As m3_extract: no shift by the full width, for count = BITSIZE (T) or
+   offset = BITSIZE (T) (count 0); the mask is built unsigned, since T may
+   be signed. *)
+CONST text = "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){UINT64 mask;if(!count)return x;mask=((~(UINT64)0)>>(64-count))<<offset;return(T)((((UINT64)y<<offset)&mask)|((UINT64)x&~mask));}";
 BEGIN
     HelperFunctions_helper_with_type(self, "insert", type, self.data.insert, text);
 END HelperFunctions_insert;
