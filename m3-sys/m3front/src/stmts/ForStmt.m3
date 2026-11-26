@@ -419,6 +419,7 @@ PROCEDURE CompileMSIR (p: P) =
     stepDyn:    MSIR.Value;
     stepLoaded: MSIR.Value;
     varAddr:    MSIR.Value;
+    counter:    MSIR.Value;
     cur:        MSIR.Value;
     next:       MSIR.Value;
     cond:       MSIR.Value;
@@ -476,6 +477,17 @@ PROCEDURE CompileMSIR (p: P) =
       MSIRBuilder.Abandon ("FOR variable not mapped in MSIR");
       RETURN;
     END;
+    (* The counter is wide (msirType).  The variable's own slot is wide too,
+       unless its address is taken (e.g. it is passed to a READONLY formal),
+       when AddLocalMSIR keeps it at the type's storage width: then count in
+       a separate wide slot and copy the value into the variable at the top
+       of each iteration, so the counter neither mismatches the slot nor
+       wraps (B39: a FOR over an enumeration whose variable is passed by
+       reference). *)
+    counter := varAddr;
+    IF NOT MSIR.Equal (MSIR.EltType (MSIR.ValueType (varAddr)), msirType) THEN
+      counter := MSIR.BuildAlloca (MSIRBuilder.CurrentBlock (), "", msirType);
+    END;
     (* Compile initial value; widen to msirType if needed; store to alloca. *)
     fromVal := Expr.CompileMSIR (p.from);
     IF fromVal = NIL THEN RETURN END;
@@ -490,7 +502,7 @@ PROCEDURE CompileMSIR (p: P) =
         END;
       END;
     END;
-    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), fromVal, varAddr);
+    MSIR.BuildStore (MSIRBuilder.CurrentBlock (), fromVal, counter);
 
     (* Compile non-constant step once and spill to an alloca. *)
     IF NOT isConst THEN
@@ -529,7 +541,7 @@ PROCEDURE CompileMSIR (p: P) =
     IF alwaysPos OR alwaysNeg THEN
       (* Direction known statically: single comparison in the header. *)
       MSIRBuilder.SetCurrentBlock (headerBlk);
-      cur      := MSIRBuilder.LookupVar (loopVar);
+      cur      := LoadCounter (loopVar, counter, varAddr, msirType);
       limitVal := MSIR.BuildLoad (headerBlk, "", msirType, limitSlot);
       IF alwaysPos
         THEN pred := MSIR.CmpPred.Sle;
@@ -553,7 +565,7 @@ PROCEDURE CompileMSIR (p: P) =
 
       (* Positive branch: idx <= limit → body. *)
       MSIRBuilder.SetCurrentBlock (posHdrBlk);
-      cur      := MSIRBuilder.LookupVar (loopVar);
+      cur      := LoadCounter (loopVar, counter, varAddr, msirType);
       limitVal := MSIR.BuildLoad (posHdrBlk, "", msirType, limitSlot);
       cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sle,
                               cur, limitVal);
@@ -563,7 +575,7 @@ PROCEDURE CompileMSIR (p: P) =
 
       (* Negative branch: idx >= limit → body. *)
       MSIRBuilder.SetCurrentBlock (negHdrBlk);
-      cur      := MSIRBuilder.LookupVar (loopVar);
+      cur      := LoadCounter (loopVar, counter, varAddr, msirType);
       limitVal := MSIR.BuildLoad (negHdrBlk, "", msirType, limitSlot);
       cond := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Sge,
                               cur, limitVal);
@@ -574,6 +586,12 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Body. *)
     MSIRBuilder.SetCurrentBlock (bodyBlk);
+    IF counter # varAddr THEN
+      MSIR.BuildStore (bodyBlk,
+        FitToSlot (MSIR.BuildLoad (bodyBlk, "", msirType, counter),
+                   MSIR.EltType (MSIR.ValueType (varAddr))),
+        varAddr);
+    END;
     Marker.PushExit (msirExit := exitBlk);
     Variable.ScheduleTrace (p.var);
     Stmt.CompileMSIR (p.body);
@@ -581,19 +599,44 @@ PROCEDURE CompileMSIR (p: P) =
 
     (* Increment: load, add step, store back to alloca, branch to header. *)
     IF MSIRBuilder.InProc () AND NOT MSIRBuilder.CurrentBlockTerminated () THEN
-      cur := MSIRBuilder.LookupVar (loopVar);
+      cur := LoadCounter (loopVar, counter, varAddr, msirType);
       IF isConst THEN
         next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepConst);
       ELSE
         stepLoaded := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", msirType, stepSlot);
         next := MSIR.BuildIAdd (MSIRBuilder.CurrentBlock (), "", cur, stepLoaded);
       END;
-      MSIR.BuildStore (MSIRBuilder.CurrentBlock (), next, varAddr);
+      MSIR.BuildStore (MSIRBuilder.CurrentBlock (), next, counter);
       MSIR.BuildBr (MSIRBuilder.CurrentBlock (), headerBlk, ARRAY OF MSIR.Value{});
     END;
 
     MSIRBuilder.SetCurrentBlock (exitBlk);
   END CompileMSIR;
+
+PROCEDURE LoadCounter (v: Variable.T;  counter, varAddr: MSIR.Value;
+                       wideT: MSIR.T): MSIR.Value =
+  (* The FOR counter's current value, at the counter's width. *)
+  BEGIN
+    IF counter = varAddr THEN RETURN MSIRBuilder.LookupVar (v) END;
+    RETURN MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", wideT, counter);
+  END LoadCounter;
+
+PROCEDURE FitToSlot (v: MSIR.Value;  slotT: MSIR.T): MSIR.Value =
+  (* The wide counter value v at the variable's storage type slotT: the
+     integer of its width, retyped if slotT is an enumeration. *)
+  VAR blk := MSIRBuilder.CurrentBlock ();  it := slotT;
+  BEGIN
+    IF MSIR.Kind (slotT) = MSIR.TypeKind.Enum THEN
+      it := MSIR.TW (MSIR.BitWidth (slotT));
+    END;
+    IF MSIR.BitWidth (MSIR.ValueType (v)) > MSIR.BitWidth (it) THEN
+      v := MSIR.BuildTrunc (blk, "", v, it);
+    END;
+    IF NOT MSIR.Equal (MSIR.ValueType (v), slotT) THEN
+      v := MSIR.RetypeValue (v, slotT);
+    END;
+    RETURN v;
+  END FitToSlot;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

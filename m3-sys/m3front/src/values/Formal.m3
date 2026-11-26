@@ -1336,6 +1336,22 @@ PROCEDURE CoerceScalarArgMSIR (form: T;  actual: Expr.T;
     formT := MSIRType.Translate (info.type);
     IF formT = NIL THEN RETURN v END;
     srcT := MSIR.ValueType (v);
+    (* An enumeration formal: fit as an unsigned integer of its width, then
+       retype (B39: a FOR variable over an enumeration, at machine width,
+       passed to READONLY v: Value). *)
+    IF MSIR.Kind (formT) = MSIR.TypeKind.Enum
+       AND MSIR.Kind (srcT) >= MSIR.TypeKind.I1
+       AND MSIR.Kind (srcT) <= MSIR.TypeKind.W64 THEN
+      VAR tw := MSIR.TW (MSIR.BitWidth (formT));
+      BEGIN
+        IF MSIR.BitWidth (srcT) > MSIR.BitWidth (tw) THEN
+          v := MSIR.BuildTrunc (blk, "", v, tw);
+        ELSIF MSIR.BitWidth (srcT) < MSIR.BitWidth (tw) THEN
+          v := MSIR.BuildZExt (blk, "", v, tw);
+        END;
+        RETURN MSIR.RetypeValue (v, formT);
+      END;
+    END;
     IF MSIR.Kind (srcT)  < MSIR.TypeKind.I1 OR MSIR.Kind (srcT)  > MSIR.TypeKind.W64
     OR MSIR.Kind (formT) < MSIR.TypeKind.I1 OR MSIR.Kind (formT) > MSIR.TypeKind.W64
       THEN RETURN v;
