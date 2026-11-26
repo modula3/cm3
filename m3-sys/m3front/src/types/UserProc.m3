@@ -416,8 +416,7 @@ PROCEDURE CompileMSIR (p: CallExpr.T): MSIR.Value =
   END CompileMSIR;
 
 PROCEDURE LValueMSIR (p: CallExpr.T;  <*UNUSED*> VAR container: MSIR.Value): MSIR.Value =
-  (* Return the address of the call result so it can be passed READONLY by-ref.
-     Only direct (non-nested, non-virtual) calls are supported. *)
+  (* Return the address of the call result so it can be passed READONLY by-ref. *)
   VAR
     v         : Value.T;
     procType  : Type.T;
@@ -430,9 +429,10 @@ PROCEDURE LValueMSIR (p: CallExpr.T;  <*UNUSED*> VAR container: MSIR.Value): MSI
       IF t = NIL THEN t := QualifyExpr.MethodType(p.proc) END;
       procType := Type.Base(t);
     END;
-    IF NOT IsProcedureLiteral(p.proc, v) THEN
-      (* Method or indirect call: compile it as a value (arguments by their
-         formals' modes) and spill the result to a fresh alloca. *)
+    IF NOT IsProcedureLiteral(p.proc, v) OR Procedure.IsNested(v) THEN
+      (* Method, indirect or nested call: compile it as a value (arguments by
+         their formals' modes; a nested callee gets its captures, as in
+         CompileMSIR) and spill the result to a fresh alloca. *)
       VAR
         resultMsirT := MSIRType.Translate (ProcType.Result (procType));
         callVal     : MSIR.Value;
@@ -448,10 +448,6 @@ PROCEDURE LValueMSIR (p: CallExpr.T;  <*UNUSED*> VAR container: MSIR.Value): MSI
         MSIR.BuildStore (MSIRBuilder.CurrentBlock (), callVal, slot);
         RETURN slot;
       END;
-    END;
-    IF Procedure.IsNested(v) THEN
-      MSIRBuilder.Abandon("lvalue of nested proc result not yet supported in MSIR");
-      RETURN NIL;
     END;
     Procedure.NoteUsedMSIR (v);  (* as Compile's StartCall *)
     msirCallee := MSIRBuilder.LookupOrCreateProc(v, procType);

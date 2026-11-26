@@ -554,6 +554,7 @@ p_test ("p3", "p305", "TRY EXCEPT ELSE catches EXIT and RETURN past named handle
 p_test ("p3", "p306", "ROUND breaks ties to even (FloatMode.RoundDefault)")
 p_test ("p3", "p307", "Subset comparisons of multi-word sets (C back end operand order)")
 p_test ("p3", "p308", "LOOPHOLE between REAL and a 32-bit packed subrange")
+p_test ("p3", "p320", "Results of nested procedures passed to READONLY formals")
 p_test ("p3", "p319", "Constant arrays of multi-word sets, read by subscript")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p317", "LOOPHOLE of a record value to a scalar after a check")
