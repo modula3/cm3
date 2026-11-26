@@ -10,7 +10,7 @@ MODULE ProcExpr;
 (* A PROCEDURE constant. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Value, Procedure, M3Buf;
-IMPORT Scope, MSIR, MSIRBuilder;
+IMPORT Scope, MSIR, MSIRBuilder, CaptureAnalysis, Variable;
 
 TYPE
   P = Expr.T OBJECT
@@ -38,6 +38,7 @@ TYPE
         genLiteralMSIR := GenLiteralMSIR;
         note_write   := ExprRep.NotWritable;
         compileMSIR  := CompileMSIR;
+        capture      := Capture;
       END;
 
 PROCEDURE New (proc: Value.T): Expr.T =
@@ -124,6 +125,24 @@ PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
     IF cv # NIL AND MSIR.GetValueKind (cv) = MSIR.ValueKind.ConstProc THEN RETURN cv END;
     RETURN NIL;
   END GenLiteralMSIR;
+
+PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
+  (* A nested procedure used as a value: building its closure needs its own
+     captures, so the enclosing procedure captures them too, as for a
+     NamedExpr (NamedExpr.NoteCapture).  Without this, a variable only the
+     inner procedure uses was missing from the enclosing procedure's map
+     (B35: caltech-other/magic MagCell.FlatMapAll.Recurse). *)
+  VAR caps := Procedure.Captures (p.proc);
+      t: Type.T;  global, indirect, lhs: BOOLEAN;
+  BEGIN
+    IF caps = NIL THEN RETURN END;
+    FOR k := 0 TO NUMBER (caps^) - 1 DO
+      Variable.Split (caps[k].var, t, global, indirect, lhs);
+      IF NOT global THEN
+        CaptureAnalysis.Note (ca, caps[k].var, caps[k].written);
+      END;
+    END;
+  END Capture;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =
   VAR procType := Type.Base (Expr.TypeOf (p));
