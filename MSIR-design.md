@@ -2574,9 +2574,10 @@ most serious findings spot-checked against the code.  Nothing built.
 | B40 | caltech-parser/cit_util `LRVector` | **Open.**  `opt` rejects the LLVM IR: `icmp` on non-integer operands (the verifier misses it). |
 | B41 | caltech-other/boxes `GridPointSetRoutines` | **Open.**  `llc`: use of undefined `@GridPoint__ComparX` (not declared). |
 | B42 | m3-sys/m3cgcat `Main` | **Fixed.**  `CONST Inhale = ARRAY OF Inhale_t {M3CG_BinRd.Inhale, M3CG_Rd.Inhale}`: MSIRToLLVM declared external procedures used by calls and global initializers but not those in constant arrays.  `CollectExterns` now scans the module's constant arrays. |
-| B43 | m3-tools/m3tk `M3CParse` | **Open.**  `llc`: a struct initializer's element 0 does not match the struct's element type. |
+| B43 | m3-tools/m3tk `M3CParse` | **Fixed.**  A constant record holding a multi-word set: the struct type declares the field `i256`, but the constant gave it as its `[4 x i64]` words.  MSIRToLLVM writes such a field as one hexadecimal integer literal (`i256 u0x...`). |
 | B44 | `SetExpr.CompileMSIR` (one-word set ranges) | **Fixed.**  Found writing p320.  A one-word set constructor with a non-constant range, `Small {0 .. h}`, ran to the top of the set: its upper mask was an arithmetic shift right of all ones, chosen to match the C back end, which had the same bug (M3C emitted M3CG's logical `shift_right` as C's signed `>>`; fixed on master, #1386, m3test p321).  The mask now uses `ILShr`, as the multi-word path does. |
 | B45 | m3test p034 (aggregate `=` of records with padding) | **Fixed.**  MSIR compared records and arrays byte by byte whatever their layout; field stores never write padding, and LLVM leaves a struct value's padding undefined, so equal records could differ there.  `EqualExpr.EqualBlockMSIR` now does as C's `CompileTest`: `memcmp` for a solid component, field by field and element by element otherwise. |
+| B46 | m3-tools/m3tk `M3CExpValue.Eval` | **Fixed.**  ISTYPE yielded an `i1` where BOOLEAN expressions yield machine width, so comparing it with another BOOLEAN failed verification.  `IsType` widens its result as `=` and `#` do. |
 
 #### 2. Abstraction violations by theme
 

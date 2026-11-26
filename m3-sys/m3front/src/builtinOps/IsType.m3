@@ -211,6 +211,19 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
     END;
   END PrepBR;
 
+PROCEDURE CompileMSIRWide (ce: CallExpr.T): MSIR.Value =
+  (* ISTYPE yields a BOOLEAN: widen its i1 to ZType (machine width), as =, #
+     and the other BOOLEAN-valued expressions do, so that comparing it with
+     another BOOLEAN (an i64) verifies (B46: m3tk M3CExpValue.Eval). *)
+  VAR r := CompileMSIR (ce);
+  BEGIN
+    IF r # NIL AND MSIR.Kind (MSIR.ValueType (r)) = MSIR.TypeKind.I1 THEN
+      r := MSIR.BuildZExt (MSIRBuilder.CurrentBlock (), "", r,
+                           MSIR.TI (Target.Integer.size));
+    END;
+    RETURN r;
+  END CompileMSIRWide;
+
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =
   VAR
     e          := ce.args[0];
@@ -278,7 +291,7 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    CallExpr.SetMethodMSIR (Z, CompileMSIR);
+    CallExpr.SetMethodMSIR (Z, CompileMSIRWide);
     Procedure.DefinePredefined ("ISTYPE", Z, TRUE);
   END Initialize;
 

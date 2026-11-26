@@ -570,13 +570,25 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         Wr.PutText(wr, "@");
         Wr.PutText(wr, MSIR.ValueName(v));
     | MSIR.ValueKind.ConstStruct =>
-        (* Inline constant struct: { field0, field1, ... } *)
+        (* Inline constant struct: { field0, field1, ... }.  A field the
+           struct type declares as a wide integer (a multi-word set) whose
+           constant is its words is written as one integer literal (B43). *)
         VAR n := MSIR.GetConstStructFieldCount(v);
+            st := MSIR.ValueType(v);
+            fv: MSIR.Value;
         BEGIN
           Wr.PutText(wr, "{ ");
           FOR i := 0 TO n - 1 DO
             IF i > 0 THEN Wr.PutText(wr, ", ") END;
-            LLTypedVal(wr, MSIR.GetConstStructField(v, i));
+            fv := MSIR.GetConstStructField(v, i);
+            IF st # NIL AND MSIR.Kind(st) = MSIR.TypeKind.Struct
+               AND i < MSIR.StructFieldCount(st)
+               AND MSIR.Kind(MSIR.StructField(st, i).type) = MSIR.TypeKind.IWide
+               AND MSIR.GetValueKind(fv) = MSIR.ValueKind.ConstAggArray THEN
+              LLWideFromWords(wr, MSIR.StructField(st, i).type, fv);
+            ELSE
+              LLTypedVal(wr, fv);
+            END;
           END;
           Wr.PutText(wr, " }");
         END;
@@ -620,6 +632,19 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
         END;
     END;
   END LLOpVal;
+
+(* Write the wide integer type t and its value given as words, the first
+   the least significant, as an LLVM hexadecimal literal: "i256 u0x...". *)
+PROCEDURE LLWideFromWords(wr: Wr.T;  t: MSIR.T;  words: MSIR.Value) =
+  VAR n := MSIR.GetConstStructFieldCount(words);  w: MSIR.Value;
+  BEGIN
+    Wr.PutText(wr, "i" & Fmt.Int(MSIR.BitWidth(t)) & " u0x");
+    FOR i := n - 1 TO 0 BY -1 DO
+      w := MSIR.GetConstStructField(words, i);
+      Wr.PutText(wr, Fmt.Pad(Fmt.Unsigned(MSIR.GetIntVal(w), 16),
+                             MSIR.BitWidth(MSIR.ValueType(w)) DIV 4, '0'));
+    END;
+  END LLWideFromWords;
 
 (* Emit "type val" — used as the first (type-carrying) operand. *)
 PROCEDURE LLTypedVal(wr: Wr.T;  v: MSIR.Value) =
