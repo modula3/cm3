@@ -196,6 +196,7 @@ PROCEDURE CopyNeedsBarrier (src: T): BOOLEAN =
     <* ASSERT src.checked *>
     EVAL Type.CheckInfo (TypeOf (src), info);
     IF NOT info.isTraced THEN RETURN FALSE END;
+    IF NOT src.isDesignator () THEN RETURN FALSE END;
     RETURN NOT (src.inFrame () OR ConstValue (src) # NIL);
   END CopyNeedsBarrier;
 

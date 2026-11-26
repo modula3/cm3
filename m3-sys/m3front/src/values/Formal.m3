@@ -578,6 +578,29 @@ PROCEDURE ProcName (proc: Expr.T): TEXT =
 
 (*----------------------------------------------------------- caller code ---*)
 
+PROCEDURE PrepBarrieredCopy (formVal: T;  actExpr: Expr.T): CG.Val =
+  (* Copy the structured actual 'actExpr' of a VALUE or by-value READONLY
+     formal, which is not open, into a temporary, with the read barrier on
+     the references the copy loads, and return the temporary's address.
+     The barrier is a call, so the copy is made here, before the call's
+     parameters are passed. *)
+  VAR
+    info: Type.Info;
+    actRepType := Expr.RepTypeOf (actExpr);
+    tmp: CG.Var;
+  BEGIN
+    EVAL Type.CheckInfo (formVal.repType, info);
+    tmp := CG.Declare_temp (info.size, info.alignment, CG.Type.Struct,
+                            in_memory := TRUE);
+    CG.Load_addr_of (tmp, 0, info.alignment);
+    Expr.Compile (actExpr);
+    RedepthArray (formVal.repType, actRepType, 0);
+    RunTyme.EmitCopy (formVal.repType, info.size, overlap := FALSE,
+                      barrier := TRUE);
+    CG.Load_addr_of (tmp, 0, info.alignment);
+    RETURN CG.Pop ();
+  END PrepBarrieredCopy;
+
 (*EXPORTED*)
 PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
   VAR formVal: T := formal;
@@ -593,6 +616,12 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
     CASE formVal.mode OF
     | Mode.mVALUE =>
         Expr.Prep (actExpr);
+        IF Type.IsStructured (formVal.repType)
+           AND NOT OpenArrayType.Is (formVal.repType)
+           AND NOT RequiresFetch (formVal, actExpr)
+           AND Expr.CopyNeedsBarrier (actExpr) THEN
+          formVal.tempCGVal := PrepBarrieredCopy (formVal, actExpr);
+        END;
 
     | Mode.mVAR =>
         (* Pass by reference. *)
@@ -657,6 +686,19 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
              OR NOT OpenArrayType.Is (formVal.repType)
              OR actStaticSize >= 0 (* static, if empty *)
           THEN (* Static size. *)
+            IF NOT RequiresFetch (formVal, actExpr)
+               AND NOT SetType.IsSmallSet (formVal.repType)
+               AND Expr.CopyNeedsBarrier (actExpr) THEN
+              IF NOT OpenArrayType.Is (formVal.repType) THEN
+                formVal.tempCGVal := PrepBarrieredCopy (formVal, actExpr);
+              ELSE
+                actRepType := Expr.RepTypeOf (actExpr);
+                Expr.Compile (actExpr);
+                RedepthArray (formVal.repType, actRepType, actStaticSize,
+                              barrier := TRUE);
+                formVal.tempCGVal := CG.Pop ();
+              END;
+            END;
           ELSE (* Must make a dynamic-sized copy in a heap-allocated temp. *)
             actRepType := Expr.RepTypeOf (actExpr);
             (* ^May be a BITS-FOR, type, but only if actExpr is a field or element. *)
@@ -1015,17 +1057,23 @@ PROCEDURE GenStruct
 
       CASE formVal.mode OF
       | Mode.mVALUE =>
-          <* ASSERT formVal.tempCGVal = NIL *>
-          IF RequiresFetch (formVal, actExpr)
-          THEN (* Actual is bitpacked, which implies not open array.
-                  Formal is never bitpacked, but could be open. *)
-            (* Make a byte-aligned copy of bitpacked struct,
-               and pass it by value. *)
-            CompileNCopyStructWInWord (formVal, actExpr, actRepTypeInfo.size);
-          ELSE (* No bit packing. *)
-            Expr.Compile (actExpr);
+          IF formVal.tempCGVal # NIL THEN
+            (* PrepArg made the copy, with its read barrier. *)
+            CG.Push (formVal.tempCGVal);
+            CG.Free (formVal.tempCGVal);
+            formVal.tempCGVal := NIL;
+          ELSE
+            IF RequiresFetch (formVal, actExpr)
+            THEN (* Actual is bitpacked, which implies not open array.
+                    Formal is never bitpacked, but could be open. *)
+              (* Make a byte-aligned copy of bitpacked struct,
+                 and pass it by value. *)
+              CompileNCopyStructWInWord (formVal, actExpr, actRepTypeInfo.size);
+            ELSE (* No bit packing. *)
+              Expr.Compile (actExpr);
+            END;
+            RedepthArray (formVal.repType, actRepType, 0);
           END;
-          RedepthArray (formVal.repType, actRepType, 0);
           IF formIsOpen
           THEN (* Pass address.  Copy will be made by callee prolog. *)
             CG.Pop_param (CG.Type.Addr);
@@ -1072,7 +1120,14 @@ PROCEDURE GenStruct
             CG.Pop_param (CG.Type.Addr);
 
           ELSE (* Pass by value (2.3.2).  Lo-level, pass a copy by reference. *)
-            IF RequiresFetch (formVal, actExpr)
+            IF formVal.tempCGVal # NIL THEN
+              (* PrepArg made the copy: with its read barrier, or of
+                 dynamic size in the heap. *)
+              CG.Push (formVal.tempCGVal);
+              CG.Free (formVal.tempCGVal);
+              formVal.tempCGVal := NIL;
+              CG.Pop_param (CG.Type.Addr);
+            ELSIF RequiresFetch (formVal, actExpr)
                (* ^Actual is bitpacked, which implies it is not an open array.
                   Formals are never bitpacked. *)
             THEN
@@ -1095,9 +1150,8 @@ PROCEDURE GenStruct
                 CG.Load_addr_of (actTempVar, 0, formRepTypeInfo.alignment);
                 Expr.Compile (actExpr);
                 RedepthArray (formVal.repType, actRepType, 0);
-                RunTyme.EmitCopy (formVal.repType, formRepTypeInfo.size,
-                                  overlap := FALSE,
-                                  barrier := Expr.CopyNeedsBarrier (actExpr));
+                CG.Copy (formRepTypeInfo.size, overlap := FALSE);
+                (* ^No read barrier: PrepArg copies when one is needed. *)
                 CG.Load_addr_of (actTempVar, 0, formRepTypeInfo.alignment);
                 CG.Pop_param (CG.Type.Addr);
 
@@ -1108,8 +1162,7 @@ PROCEDURE GenStruct
                         gives static size for the copy (none if empty). *)
                   <* ASSERT formVal.tempCGVal = NIL *>
                   Expr.Compile (actExpr);
-                  RedepthArray (formVal.repType, actRepType, actStaticSize,
-                                barrier := Expr.CopyNeedsBarrier (actExpr));
+                  RedepthArray (formVal.repType, actRepType, actStaticSize);
                   CG.Pop_param (CG.Type.Addr);
                 ELSE (* No static size available. *)
                   <* ASSERT formVal.tempCGVal # NIL *>

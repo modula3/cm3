@@ -73,9 +73,11 @@ PROCEDURE CopyNeedsBarrier (src: T): BOOLEAN;
    'src' must be followed by the read barrier on the references it copied
    (RunTyme.EmitCopy): the copy loads each of them, and 'src' may be
    global, heap or indirect storage.  FALSE when 'src' holds no traced
-   references, when incremental collection is off, or when 'src' is a
+   references, when incremental collection is off, when 'src' is a
    constant or in a procedure's frame, which refers only to black objects
-   because every reference that enters a frame has had its barrier. *)
+   because every reference that enters a frame has had its barrier, or
+   when 'src' is not a designator (a call's result, a constructor), whose
+   value was built by copies that had their barriers. *)
 
 PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)

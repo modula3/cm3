@@ -140,17 +140,24 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       arg_type := info.stk_type;
       Expr.Prep (arg);
       AssignStmt.EmitRTCheck (t.tipe, arg);
+      IF (arg_type # CG.Type.Addr) AND Expr.CopyNeedsBarrier (arg) THEN
+        (* Copy the argument now, with the read barrier on the references
+           the copy loads: the barrier is a call, so it cannot come among
+           the raise call's parameters. *)
+        Formal.GenCopy (expr_type, barrier := TRUE);
+        arg_type := CG.Type.Addr;  (* copied *)
+      END;
       tmp := CG.Pop ();
       CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
       IF Target.DefaultCall.args_left_to_right THEN
         CG.Push (tmp);
-        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type, barrier := Expr.CopyNeedsBarrier (arg)) END;
+        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type) END;
         CG.Pop_param (CG.Type.Addr);
         PassLocation ();
       ELSE
         PassLocation ();
         CG.Push (tmp);
-        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type, barrier := Expr.CopyNeedsBarrier (arg)) END;
+        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type) END;
         CG.Pop_param (CG.Type.Addr);
       END;
       LoadSelf (t);
