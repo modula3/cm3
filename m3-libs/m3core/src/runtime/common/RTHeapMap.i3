@@ -23,6 +23,11 @@ PROCEDURE DoWalkRef(t: RT0.TypeDefn;  a: ADDRESS;  v: Visitor);
 (* For each traced reference at address 'x' in the object of type 't'
    starting at address 'a', call 'v(x)'. *)
 
+PROCEDURE WalkMap (a, map: ADDRESS;  v: Visitor);
+(* For each traced reference at address 'x' in the value at address 'a'
+   whose layout is given by the garbage collector's map 'map', call
+   'v(x)'. *)
+
 PROCEDURE WalkGlobals (v: Visitor);
 (* For each traced reference at address 'x' in a global var, call 'v(x)'. *)
 

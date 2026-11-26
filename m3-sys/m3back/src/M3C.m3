@@ -7339,12 +7339,22 @@ END shift_left;
 
 PROCEDURE shift_right(self: T; type: IType) =
 (* s1.type := Word.Shift  (s1.type, -s0.type); pop *)
+(* A logical shift for every type, as Word.Shift: C's >> on a signed type is
+   an arithmetic shift, which copies the sign bit in.  So shift a signed
+   value as its unsigned type and cast back (CG.Set_range shifts -1 at
+   INTEGER to make the mask of {0..b}). *)
+VAR s0 := cast(get(self, 0), Target.Word.cg_type);
+    s1 := cast(cast(get(self, 1), type), typeToUnsigned[type]);
 BEGIN
-    (* ASSERT cgtypeIsUnsignedInt[type]
-    shift is unsigned, casts are applied on input and output
-    int i; i << n; => (int) (((unsigned)i) << n)
-    *)
-    shift_left_or_right(self, type, "shift_right", ">>");
+    IF typeToUnsigned[type] = type THEN
+      shift_left_or_right(self, type, "shift_right", ">>");
+      RETURN;
+    END;
+    IF debug THEN
+      self.comment("shift_right");
+    END;
+    pop(self, 2);
+    push(self, type, cast(CTextToExpr(s1.CText() & ">>" & s0.CText()), type));
 END shift_right;
 
 PROCEDURE shift_or_rotate(self: T; type: IType; which: TEXT; count_type: CGType) =

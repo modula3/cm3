@@ -26,6 +26,11 @@ REVEAL
 
 (*------------------------------------------------ walking of single refs ---*)
 
+PROCEDURE WalkMap (a, map: ADDRESS;  v: Visitor) =
+  BEGIN
+    Walk (a, map, v);
+  END WalkMap;
+
 PROCEDURE WalkRef (h: ObjectPtr;  v: Visitor) =
   VAR
     tc: RT0.Typecode := RT0.GetTypecode (h);

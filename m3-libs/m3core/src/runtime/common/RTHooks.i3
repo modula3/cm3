@@ -104,6 +104,12 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT);
 
 PROCEDURE CheckLoadTracedRef (ref: REFANY);
 
+PROCEDURE CheckLoadTracedBlock (dst, map: ADDRESS;  n, stride: INTEGER);
+(* A block copy has just stored traced references at 'dst' that it loaded
+   from global, heap or indirect storage: the read barrier for each of them.
+   'map' is the garbage collector's map of one element of the block; there
+   are 'n' elements, 'stride' bytes apart. *)
+
 PROCEDURE CheckStoreTraced (ref: REFANY);
 
 PROCEDURE NoOp ();
