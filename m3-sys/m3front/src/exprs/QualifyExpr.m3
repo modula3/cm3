@@ -1118,7 +1118,7 @@ PROCEDURE BitLocMSIR (p: P;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   END BitLocMSIR;
 
 PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
-                          rawFieldType: Type.T): MSIR.Value =
+                          rawFieldType: Type.T;  barrier: BOOLEAN): MSIR.Value =
   VAR blk      := MSIRBuilder.CurrentBlock ();
       addrEltT := MSIR.EltType (MSIR.ValueType (addr));
       (* Produce the field's ZType (machine width) so an ordinal field read is a
@@ -1129,18 +1129,17 @@ PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
       zt       := MSIRType.ComputeType (rawFieldType);
   BEGIN
     IF zt = NIL THEN zt := naturalT END;
-    (* Traced ref field read through a NON-GcSlot pointer (byref record
-       parameter, WITH alias, VAR-mode container): still needs the
-       incremental-GC read barrier.  The C backend barriers every traced
-       ref load from a 'global OR indirect' container (NamedExpr /
-       QualifyExpr Prep with doIncGC); without it the mutator acquires
-       GRAY objects and reads stale (forwarded) refs from them — the
-       stage-2 self-hosted compiler crashed dispatching on a stale
-       TextSub.base loaded through a byref QValue record. *)
-    IF MSIR.Kind (addrEltT) = MSIR.TypeKind.GcRef THEN
-      RETURN MSIR.BuildGcLoad (blk, "",
-               MSIR.RetypeValue (addr,
-                 MSIR.TGcSlot (MSIR.EltType (addrEltT))));
+    (* A traced ref field, as the front end decided (D30, 'barrier').
+       Without the barrier where it is needed the mutator acquires GRAY
+       objects and reads stale (forwarded) refs from them: the stage-2
+       self-hosted compiler crashed dispatching on a stale TextSub.base
+       loaded through a byref QValue record. *)
+    IF MSIR.Kind (addrEltT) = MSIR.TypeKind.GcRef
+       OR MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
+      IF MSIR.Kind (addrEltT) # MSIR.TypeKind.GcRef THEN
+        addrEltT := MSIR.TGcRef (addrEltT);
+      END;
+      RETURN MSIRBuilder.LoadTracedRef (addr, addrEltT, barrier);
     END;
     VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
     BEGIN
@@ -1231,12 +1230,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("unsupported record field type");
           RETURN NIL;
         END;
-        (* LValueMSIR retyped traced-ref fields to gc_slot for write-barrier;
-           use BuildGcLoad (read barrier + correct result type) for those. *)
-        IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
-          RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
-        END;
-        RETURN LoadFieldValue (addr, fieldType, fieldInfo.type);
+        (* As the front end decides from the record's storage (D30), as Prep
+           does for the C payload. *)
+        RETURN LoadFieldValue (addr, fieldType, fieldInfo.type,
+                 Expr.LoadNeedsBarrier (p.lhsExpr, fieldInfo.type));
     | Class.objField =>
         (* Sub-byte object field: extract it from its bit location. *)
         VAR loc: MSIRBitLoc.T;
@@ -1255,12 +1252,10 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
           MSIRBuilder.Abandon ("unsupported object field type");
           RETURN NIL;
         END;
-        (* LValueMSIR retyped traced-ref fields to gc_slot for write-barrier;
-           use BuildGcLoad (read barrier + correct result type) for those. *)
-        IF MSIR.Kind (MSIR.ValueType (addr)) = MSIR.TypeKind.GcSlot THEN
-          RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
-        END;
-        RETURN LoadFieldValue (addr, fieldType, fieldInfo.type);
+        (* An object field is heap storage (D30), as Prep does for the C
+           payload. *)
+        RETURN LoadFieldValue (addr, fieldType, fieldInfo.type,
+                 Expr.LoadNeedsBarrier (NIL, fieldInfo.type));
     | Class.enumLit =>
         folded := Fold (p);
         IF folded = NIL THEN

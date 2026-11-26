@@ -14,7 +14,7 @@ IMPORT Target, TInt, ErrType, Error;
 IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
-IMPORT Constant, RTTypeSRC, Host;
+IMPORT Constant, RTTypeSRC, Host, Variable;
 IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis;
 
 (********************************************************************)
@@ -187,19 +187,34 @@ PROCEDURE IsDesignator (t: T): BOOLEAN =
 
 (* EXPORTED: *)
 PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN =
+  BEGIN
+    IF NOT TracedRefLoad (loaded) THEN RETURN FALSE END;
+    IF container = NIL THEN RETURN TRUE END;
+    <* ASSERT container.checked *>
+    RETURN NOT (container.inFrame () OR ConstValue (container) # NIL);
+  END LoadNeedsBarrier;
+
+(* EXPORTED: *)
+PROCEDURE VarLoadNeedsBarrier (v: Value.T): BOOLEAN =
+  BEGIN
+    IF Value.ClassOf (v) # Value.Class.Var THEN RETURN FALSE END;
+    IF NOT TracedRefLoad (Value.TypeOf (v)) THEN RETURN FALSE END;
+    RETURN NOT Variable.InFrame (v);
+  END VarLoadNeedsBarrier;
+
+PROCEDURE TracedRefLoad (loaded: Type.T): BOOLEAN =
+  (* The half of LoadNeedsBarrier that does not depend on the storage: is
+     the loaded value a traced reference, under incremental collection? *)
   VAR info: Type.Info;
   BEGIN
     IF NOT Host.doIncGC THEN RETURN FALSE END;
     EVAL Type.CheckInfo (loaded, info);
     IF NOT info.isTraced THEN RETURN FALSE END;
     CASE info.class OF
-    | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+    | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref => RETURN TRUE;
     ELSE RETURN FALSE;
     END;
-    IF container = NIL THEN RETURN TRUE END;
-    <* ASSERT container.checked *>
-    RETURN NOT (container.inFrame () OR ConstValue (container) # NIL);
-  END LoadNeedsBarrier;
+  END TracedRefLoad;
 
 (* EXPORTED: *)
 PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =

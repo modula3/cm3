@@ -16,7 +16,8 @@ IMPORT MSIR;
    lowering (MSIREH), so invoke, landingpad, extractvalue and resume may
    appear; otherwise they are errors (D26). *)
 PROCEDURE VerifyModule(m: MSIR.Module;  lowered := FALSE): REF ARRAY OF TEXT;
-(* Incremental read-barrier completeness audit (gc.load coverage); returns
+(* Read-barrier consistency audit: every traced load from non-local storage
+   is gc.load or carries the front end's no-barrier decision (D30); returns
    violation descriptions, NIL if none.  Gated by the caller (MSIREmit runs
    it under @M3msirrbaudit). *)
 PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT;

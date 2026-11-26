@@ -1362,7 +1362,7 @@ PROCEDURE EmitModuleInfo (it: ModuleInfoItem) =
       END;
     END;
     cg.init_proc (it.off + B (M3RT.MI_binder), binder);
-    InitInt (it.off + B (M3RT.MI_gc_flags), 3, Int64);
+    InitInt (it.off + B (M3RT.MI_gc_flags), MSIR.ModuleGcFlags (mod), Int64);
   END EmitModuleInfo;
 
 TYPE GInit = RECORD off: INTEGER;  v: MSIR.Value END;

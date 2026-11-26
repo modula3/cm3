@@ -68,6 +68,11 @@ PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN;
    constant.  'container' = NIL means heap storage (a dereference or an
    object field). *)
 
+PROCEDURE VarLoadNeedsBarrier (v: Value.T): BOOLEAN;
+(* LoadNeedsBarrier for reading the variable 'v' itself, with no designator
+   in hand (MSIRBuilder.LookupVar): 'v's storage is the container.  FALSE if
+   'v' is not a variable. *)
+
 PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 

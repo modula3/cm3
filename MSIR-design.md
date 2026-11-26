@@ -2052,6 +2052,21 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     of it go to master (dropping the needless barriers on constants and
     locals, with an m3test), and are merged into msir; then the MSIR
     payload's 14 sites move onto the predicate.
+  - **Done (2026-11-26).**  Master: #1385 (`Expr.LoadNeedsBarrier`, the
+    `inFrame` method, p318), merged into msir.  MSIR: the 12 live
+    `BuildGcLoad` sites (the count of 14 included a stale backup file) take
+    their decision from the predicate and pass it to one helper,
+    `MSIRBuilder.LoadTracedRef (addr, refT, barrier)`, which decides
+    nothing: `gc.load`, or `MSIR.BuildUnbarrieredLoad`, a plain load that
+    records the decision (printed `load unbarriered`).  Variable reads in
+    `LookupVar`, which have no designator, use `Expr.VarLoadNeedsBarrier`,
+    the same predicate with the variable's storage as the container
+    (`Variable.InFrame`, shared with `NamedExpr.InFrame`).
+    `AuditReadBarriers` now reports a plain `gc_ref` load from non-local
+    storage only when it carries no front-end decision.  The module's
+    `gc_flags` come from the front end (`MSIR.SetModuleGcFlags`, as
+    `Module.m3` sets them for C) instead of a constant 3, so `-NoIncGC`
+    stays honest.  p318 under MSIR: 8 `gc.load`s, as C's 8 barrier calls.
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with

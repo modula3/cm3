@@ -746,14 +746,13 @@ PROCEDURE VerifyModule(m: MSIR.Module;  lowered := FALSE): REF ARRAY OF TEXT =
 
 PROCEDURE LocalProvenance(v: MSIR.Value): BOOLEAN =
 (* TRUE iff the address value derives from a function-local alloca through
-   pure address arithmetic — the one case where CG omits the incremental
-   read barrier (locals are roots: the conservative stack scan blackens
-   whole frames at the flip, so refs in local storage point to black
-   objects, and post-flip stores into locals came from barriered loads).
-   Everything else — globals, params used as addresses (byref formals),
-   pointers themselves loaded from memory, open-array element addresses
-   (the data pointer inside a dope names heap storage) — must be read
-   through gc.load. *)
+   pure address arithmetic: storage in the frame, which never needs a read
+   barrier (locals are roots: the conservative stack scan blackens whole
+   frames at the flip, so refs in local storage point to black objects, and
+   post-flip stores into locals came from barriered loads).  A traced load
+   from anywhere else — globals, params used as addresses (byref formals),
+   pointers themselves loaded from memory, open-array element addresses —
+   is gc.load or carries the front end's no-barrier decision (a constant). *)
   VAR steps := 0;
   BEGIN
     LOOP
@@ -782,12 +781,15 @@ PROCEDURE LocalProvenance(v: MSIR.Value): BOOLEAN =
 
 (* EXPORTED *)
 PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT =
-(* Incremental read-barrier completeness audit: report (1) every plain load
-   whose RESULT is a traced ref (gc_ref) from a non-local address — such a
-   load must be gc.load so the mutator gray-checks the acquired reference —
-   and (2) every instruction operand typed gc_ref whose defining insn is a
-   plain load of a NON-ref type from a non-local address (a loaded pointer
-   "laundered" into a traced ref by RetypeValue, bypassing the barrier). *)
+(* Read-barrier consistency audit.  The front end decides each read barrier
+   (D30: Expr.LoadNeedsBarrier) and the IR carries the decision out: gc.load
+   where a barrier is needed, a load built by BuildUnbarrieredLoad where it is
+   not.  Report (1) every plain load whose RESULT is a traced ref (gc_ref)
+   from a non-local address that carries no front-end decision (a load path
+   that bypassed the predicate), and (2) every instruction operand typed
+   gc_ref whose defining insn is a plain load of a NON-ref type from a
+   non-local address (a loaded pointer "laundered" into a traced ref by
+   RetypeValue, bypassing the predicate). *)
   VAR all := NEW(RefSeq.T).init();
   BEGIN
     FOR k := 0 TO MSIR.ModuleProcCount(m) - 1 DO
@@ -805,9 +807,10 @@ PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT =
                 (* (1) plain load producing gc_ref *)
                 IF MSIR.InsnOp(i) = MSIR.Op.Load AND res # NIL
                    AND MSIR.Kind(MSIR.ValueType(res)) = MSIR.TypeKind.GcRef
+                   AND NOT MSIR.InsnUnbarriered(i)
                    AND NOT LocalProvenance(MSIR.InsnOperand(i, 0)) THEN
                   all.addhi(pn & ": block " & MSIR.BlockLabel(b)
-                            & ": plain load of gc_ref from non-local address ("
+                            & ": plain load of gc_ref from non-local address, no front-end decision ("
                             & MSIR.ValueName(res) & ")");
                 END;
                 (* (2) gc_ref operand defined by a plain non-ref load *)

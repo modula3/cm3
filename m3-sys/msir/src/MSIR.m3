@@ -606,6 +606,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   dbgArg:    INTEGER := 0;        (* Alloca: VALUE formal's 1-based number *)
   dbgLine:   INTEGER := 0;        (* Alloca: the variable's declaration line *)
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
+  unbarriered: BOOLEAN := FALSE;  (* Load: see BuildUnbarrieredLoad *)
   exc:       ExcDesc     := NIL;               (* Raise *)
 END;
 
@@ -649,6 +650,8 @@ PROCEDURE SetCurrentSrcLine(line: INTEGER) =
   BEGIN currentSrcLine := line END SetCurrentSrcLine;
 PROCEDURE InsnSrcLine(i: Insn): INTEGER =
   BEGIN RETURN i.srcLine END InsnSrcLine;
+PROCEDURE InsnUnbarriered(i: Insn): BOOLEAN =
+  BEGIN RETURN i.unbarriered END InsnUnbarriered;
 PROCEDURE InsnTypecaseClauseCount(i: Insn): INTEGER =
   BEGIN
     IF i.typecaseClauses = NIL THEN RETURN 0 END;
@@ -1077,6 +1080,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   textLitIndex:  TextIntTbl.T;                     (* LitKey -> uid *)
   constArrays:   RefSeq.T;                         (* elements: ConstArray *)
   nextGlobalOff: INTEGER := 0;  (* byte offset for next embedded user global *)
+  gcFlags: INTEGER := 3;  (* see SetModuleGcFlags *)
   moduleGcMap: GcMapBytes := NIL;  (* front-end TipeMap bytes for RT0.ModuleInfo
      gc_map/var_map — full Type.GenMap descent over the module's traced globals
      (aggregates included, indirect globals via PushPtr/Return), replacing the
@@ -1486,6 +1490,10 @@ PROCEDURE SetModuleGcMap(m: Module; bytes: GcMapBytes) =
   BEGIN m.moduleGcMap := bytes END SetModuleGcMap;
 PROCEDURE ModuleGcMap(m: Module): GcMapBytes =
   BEGIN RETURN m.moduleGcMap END ModuleGcMap;
+PROCEDURE SetModuleGcFlags(m: Module; flags: INTEGER) =
+  BEGIN m.gcFlags := flags END SetModuleGcFlags;
+PROCEDURE ModuleGcFlags(m: Module): INTEGER =
+  BEGIN RETURN m.gcFlags END ModuleGcFlags;
 
 PROCEDURE SetTypeDescGcMap(d: TypeDesc; bytes: GcMapBytes) =
   BEGIN d.gcMap := bytes END SetTypeDescGcMap;
@@ -2066,6 +2074,16 @@ PROCEDURE BuildLoad(b: Block; name: TEXT; type: T; addr: Value): Value =
     addInsn(b, i);
     RETURN i.result;
   END BuildLoad;
+
+PROCEDURE BuildUnbarrieredLoad(b: Block; name: TEXT; type: T; addr: Value)
+  : Value =
+  VAR r := BuildLoad(b, name, type, addr);
+  BEGIN
+    <* ASSERT Kind(type) = TypeKind.GcRef,
+       "BuildUnbarrieredLoad: type must be gc_ref" *>
+    r.insn.unbarriered := TRUE;
+    RETURN r;
+  END BuildUnbarrieredLoad;
 
 PROCEDURE BuildStore(b: Block; value: Value; addr: Value) =
   VAR

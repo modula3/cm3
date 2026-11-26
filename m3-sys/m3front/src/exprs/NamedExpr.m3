@@ -187,12 +187,10 @@ PROCEDURE NeedsAddress (p: P) =
   END NeedsAddress;
 
 PROCEDURE InFrame (p: P): BOOLEAN =
-  VAR t: Type.T;  global, indirect, lhs: BOOLEAN;
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
     IF Value.ClassOf (p.value) # Value.Class.Var THEN RETURN FALSE END;
-    Variable.Split (p.value, t, global, indirect, lhs);
-    RETURN NOT (global OR indirect);
+    RETURN Variable.InFrame (p.value);
   END InFrame;
 
 PROCEDURE Prep (p: P) =

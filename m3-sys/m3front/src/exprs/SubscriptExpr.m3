@@ -909,26 +909,19 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     END;
     addr := Expr.LValueMSIR (p);
     IF addr = NIL THEN RETURN NIL END;
-    (* Traced ref from a heap array slot: use GcLoad (read barrier). *)
     addrType := MSIR.ValueType (addr);
-    IF MSIR.Kind (addrType) = MSIR.TypeKind.GcSlot THEN
-      RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "", addr);
-    END;
-    (* Traced ref element read through a plain pointer (byref open-array
-       parameter, VAR-mode container): same incremental-GC read barrier
-       requirement as above — CG barriers all indirect traced loads. *)
-    IF MSIR.Kind (addrType) = MSIR.TypeKind.Ptr
-       AND MSIR.Kind (MSIR.EltType (addrType)) = MSIR.TypeKind.GcRef THEN
-      RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "",
-               MSIR.RetypeValue (addr,
-                 MSIR.TGcSlot (MSIR.EltType (MSIR.EltType (addrType)))));
-    END;
     (* ZType (machine width) so an ordinal element read is uniform width; the
        load below reads storage width (addrEltT) and widens to ty. *)
     ty := MSIRType.ComputeType (p.type);
     IF ty = NIL THEN
       MSIRBuilder.Abandon ("unsupported subscript element type");
       RETURN NIL;
+    END;
+    (* A traced reference element: as the front end decides (D30), from the
+       array's storage, as Prep does for the C payload. *)
+    IF MSIR.Kind (ty) = MSIR.TypeKind.GcRef THEN
+      RETURN MSIRBuilder.LoadTracedRef (addr, ty,
+               Expr.LoadNeedsBarrier (ElementStorage (p), p.type));
     END;
     blk := MSIRBuilder.CurrentBlock ();
     (* When the array's actual element storage width differs from the natural
@@ -953,15 +946,6 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       ELSE
         RETURN MSIR.BuildTrunc (blk, "", loaded, ty);
       END;
-    END;
-    (* Traced ref element whose address lost element typing (ptr void from
-       openarray.elem_addr — READONLY open-array formals in TextExtras.JoinN
-       were plain gc_ref loads; rb-audit): the earlier GcSlot / Ptr(GcRef)
-       checks miss it, but array storage is potentially heap, so the read
-       barrier is still required. *)
-    IF MSIR.Kind (ty) = MSIR.TypeKind.GcRef THEN
-      RETURN MSIR.BuildGcLoad (blk, "",
-               MSIR.RetypeValue (addr, MSIR.TGcSlot (MSIR.EltType (ty))));
     END;
     RETURN MSIR.BuildLoad (blk, "", ty, addr);
   END CompileMSIR;

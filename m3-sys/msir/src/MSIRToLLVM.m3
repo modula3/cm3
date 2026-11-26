@@ -5039,25 +5039,21 @@ PROCEDURE EmitModuleBinder(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
       | MI_link_state     => fieldType := ip_t; fieldVal := "0";               fieldName := "link_state";
       | MI_binder         => fieldType := "ptr"; fieldVal := "@" & binderName; fieldName := "binder";
       | MI_gc_flags       => fieldType := ip_t;
-                             (* RT0.GC_both = GC_gen (1) | GC_inc (2) = 3:
-                                this module's code carries the GENERATIONAL
-                                write barriers (gc.store + gc.dirty on
-                                aggregate copies, VAR-arg formation, and
-                                WITH-alias stores) AND complete incremental
-                                READ-barrier coverage (gc.load on every
-                                traced-ref acquisition from non-local
-                                storage: globals own+imported, fields,
-                                array elements incl. type-erased open-array
-                                paths, deref referents, byref formals, WITH
-                                aliases).  Completeness is enforced by
-                                MSIRVerifier.AuditReadBarriers
-                                (@M3msirrbaudit): every plain gc_ref load
-                                must have alloca provenance; the only
-                                exemptions are LOOPHOLE'd collector/crash
+                             (* Which barriers the code carries, as the front
+                                end set it (MSIR.SetModuleGcFlags; C: Module.m3):
+                                GC_gen (1) the write barriers (gc.store, and
+                                gc.dirty on aggregate copies, VAR-arg formation
+                                and WITH-alias stores), GC_inc (2) the read
+                                barriers (gc.load wherever the front end's
+                                Expr.LoadNeedsBarrier says so, D30).
+                                AuditReadBarriers (@M3msirrbaudit) checks that
+                                every plain gc_ref load from non-local storage
+                                carries the front end's no-barrier decision;
+                                it reports only the LOOPHOLE'd collector/crash
                                 internals that CG also leaves unbarriered
                                 (RTCollector.PostHandleWeakRefs,
                                 RTException.Crash). *)
-                             fieldVal := "3";                                   fieldName := "gc_flags";
+                             fieldVal := Fmt.Int(MSIR.ModuleGcFlags(m));        fieldName := "gc_flags";
       ELSE                   fieldType := "ptr"; fieldVal := "null";            fieldName := "?";
       END;
       IF k < nFields - 1

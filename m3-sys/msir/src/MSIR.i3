@@ -277,6 +277,8 @@ PROCEDURE SetCurrentSrcLine(line: INTEGER);
 
 (* Return the source line recorded on instruction i; 0 if unknown. *)
 PROCEDURE InsnSrcLine(i: Insn): INTEGER;
+PROCEDURE InsnUnbarriered(i: Insn): BOOLEAN;
+(* TRUE for a load built by BuildUnbarrieredLoad. *)
 
 PROCEDURE ProcName(p: Proc): TEXT;
 PROCEDURE ProcParamCount(p: Proc): INTEGER;
@@ -502,6 +504,11 @@ TYPE GcMapBytes = REF ARRAY OF [0..255];
    gc_map/var_map).  Offsets are module-segment-relative (t.offset). *)
 PROCEDURE SetModuleGcMap (m: Module;  bytes: GcMapBytes);
 PROCEDURE ModuleGcMap    (m: Module): GcMapBytes;
+PROCEDURE SetModuleGcFlags (m: Module;  flags: INTEGER);
+PROCEDURE ModuleGcFlags    (m: Module): INTEGER;
+(* RT0.ModuleInfo.gc_flags: which barriers the module's code carries, set by
+   the front end as for the C payload (Module.m3): GC_gen (1) for the write
+   barriers, GC_inc (2) for the read barriers.  Default 3 (both). *)
 PROCEDURE SetTypeDescGcMap    (d: TypeDesc;  bytes: GcMapBytes);
 PROCEDURE TypeDescGcMap       (d: TypeDesc): GcMapBytes;
 PROCEDURE SetTypeDescTypeMap  (d: TypeDesc;  bytes: GcMapBytes);
@@ -851,6 +858,12 @@ PROCEDURE BuildFPRound    (b: Block;  name: TEXT;  x: Value): Value;
 PROCEDURE BuildFPAbs      (b: Block;  name: TEXT;  x: Value): Value;
 
 PROCEDURE BuildLoad (b: Block;  name: TEXT;  type: T;  addr: Value): Value;
+PROCEDURE BuildUnbarrieredLoad (b: Block;  name: TEXT;  type: T;  addr: Value)
+  : Value;
+(* A load of the traced reference of type `type' (a gc_ref) that the front
+   end decided needs no read barrier (D30: Expr.LoadNeedsBarrier): a plain
+   load that records the decision, for AuditReadBarriers and the printer.
+   Where the front end decides a barrier is needed, it builds BuildGcLoad. *)
 PROCEDURE BuildStore(b: Block;  value: Value;  addr: Value);
 
 PROCEDURE BuildBr(b: Block;  target: Block;

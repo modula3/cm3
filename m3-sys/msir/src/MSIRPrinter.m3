@@ -317,6 +317,7 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     Wr.PutText(wr, OpText(op));
     CASE op OF
     | MSIR.Op.Load =>
+        IF MSIR.InsnUnbarriered(i) THEN Wr.PutText(wr, " unbarriered") END;
         Wr.PutText(wr, " ");
         Type(wr, MSIR.ValueType(res));
         Wr.PutText(wr, ", ");

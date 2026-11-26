@@ -26,6 +26,10 @@ PROCEDURE BindType (t: T;  type: Type.T;
 PROCEDURE Split (t: T;  VAR type: Type.T;
                  VAR global, indirect, lhs: BOOLEAN);
 
+PROCEDURE InFrame (t: T): BOOLEAN;
+(* TRUE iff t's storage is in a procedure's frame: neither global nor
+   indirect (see Expr.LoadNeedsBarrier). *)
+
 PROCEDURE IsFormal   (t: T): BOOLEAN;
 PROCEDURE IsUpLevel  (t: T): BOOLEAN;  (* accessed from a nested procedure *)
 

@@ -1,7 +1,7 @@
 MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
-IMPORT RunTyme, Error, Fmt;
+IMPORT RunTyme, Error, Fmt, Host;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -47,6 +47,9 @@ PROCEDURE BeginUnit(name: M3ID.T;  isInterface: BOOLEAN := FALSE) =
     curModule := MSIR.NewModule(txt);
     lastModule := NIL;
     MSIR.ModuleSetIsInterface(curModule, isInterface);
+    (* RT0.ModuleInfo.gc_flags, as Module.m3 sets it for the C payload. *)
+    MSIR.SetModuleGcFlags(curModule,
+      ORD(Host.doGenGC) * 1 + ORD(Host.doIncGC) * 2);
     triple := NIL;  datalayout := NIL;
     IF Target.System_name # NIL THEN
       IF Text.Equal(Target.System_name, "ARM64_DARWIN") THEN

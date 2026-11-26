@@ -241,6 +241,13 @@ PROCEDURE Split (t: T;  VAR type: Type.T;
   END Split;
 
 (* EXPORTED *)
+PROCEDURE InFrame (t: T): BOOLEAN =
+  BEGIN
+    <* ASSERT t.checked *>
+    RETURN NOT (t.global OR t.indirect);
+  END InFrame;
+
+(* EXPORTED *)
 PROCEDURE BindType (t: T; type: Type.T; 
                     indirect, readonly, open_array_ok, needs_init: BOOLEAN) =
 (* This gets called at parse time, so can't do any Check. *)

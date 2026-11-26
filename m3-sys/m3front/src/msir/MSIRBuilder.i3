@@ -40,6 +40,13 @@ PROCEDURE BeginProc(name: TEXT;
    Returns NIL if not bound; callers should treat NIL as Abandon. *)
 PROCEDURE LookupVar(v: Variable.T): MSIR.Value;
 
+(* Load the traced reference of MSIR type refT (a gc_ref) stored at addr, in
+   the current block, as the front end decided (D30: Expr.LoadNeedsBarrier):
+   gc.load if barrier, else a plain load that records the decision
+   (MSIR.BuildUnbarrieredLoad).  Decides nothing itself. *)
+PROCEDURE LoadTracedRef(addr: MSIR.Value;  refT: MSIR.T;
+                        barrier: BOOLEAN): MSIR.Value;
+
 (* Resolve a Variable.T to its alloca address (for store targets).
    Returns NIL for formals (cannot store to by-value formal in v0)
    and for unbound variables. *)

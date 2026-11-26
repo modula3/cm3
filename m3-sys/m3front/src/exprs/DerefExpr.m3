@@ -208,12 +208,11 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       MSIRBuilder.Abandon ("unsupported deref target type");
       RETURN NIL;
     END;
-    (* Traced ref referent (REF TEXT / REF REFANY etc.): the loaded VALUE
-       needs the incremental-GC read barrier (gray check), like every other
-       traced load from memory the mutator does not own. *)
+    (* Traced ref referent (REF TEXT / REF REFANY etc.): as the front end
+       decides (D30), as Prep does for the C payload. *)
     IF MSIR.Kind (ty) = MSIR.TypeKind.GcRef THEN
-      RETURN MSIR.BuildGcLoad (MSIRBuilder.CurrentBlock (), "",
-               MSIR.RetypeValue (addr, MSIR.TGcSlot (MSIR.EltType (ty))));
+      RETURN MSIRBuilder.LoadTracedRef (addr, ty,
+               Expr.LoadNeedsBarrier (NIL, p.type));
     END;
     (* Load at the referent's MType (storage width), then widen to its ZType
        (machine/computation width) so the produced value is uniform machine
