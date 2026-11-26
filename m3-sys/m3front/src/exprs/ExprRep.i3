@@ -46,7 +46,13 @@ REVEAL
     exprAlign    (): Type.BitAlignT                := ExprAlignDefault;
     staticLength (): Expr.lengthTyp                := StaticLengthDefault;
     usesAssignProtocol (): BOOLEAN                 := UsesAssignProtocolDefault;
-    checkUseFailure (): BOOLEAN                    := DefaultCheckUseFailure
+    checkUseFailure (): BOOLEAN                    := DefaultCheckUseFailure;
+    inFrame      (): BOOLEAN                       := NotInFrame
+    (* ^TRUE iff the designator's storage is in a procedure's frame (a local
+       variable, or a field or fixed-array element of one), so a reference
+       loaded from it is one the mutator already holds: every reference
+       enters a frame through a barrier, a single load's or, for a record
+       or array, a block copy's (Expr.CopyNeedsBarrier). *)
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA  END;
@@ -65,6 +71,7 @@ PROCEDURE Self           (e: M3.Expr): M3.Expr;
 PROCEDURE NoBounds       (e: M3.Expr;  VAR min, max: Target.Int);
 PROCEDURE IsNever        (e: M3.Expr;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE IsAlways       (e: M3.Expr;  lhs: BOOLEAN): BOOLEAN;
+PROCEDURE NotInFrame     (e: M3.Expr): BOOLEAN;
 PROCEDURE NeverEq        (e: M3.Expr; x: M3.Expr; z: M3.EqAssumption): BOOLEAN;
 PROCEDURE NoFPLiteral    (e: M3.Expr;  mbuf: M3Buf.T);
 PROCEDURE NoPrepLiteral  (e: M3.Expr;  type: M3.Type;  is_const: BOOLEAN);

@@ -24,29 +24,60 @@ VER = "22"
 % set this to TRUE if you want to build m3llvm standalone in llvm22 dir
 STATIC = FALSE
 
+/*
+  The system libraries LLVM itself needs, as llvm-config reports them.
+  A shared libLLVM (Homebrew, most Linux distributions) carries its own
+  dependencies, so there are none.  Static LLVM libraries need zlib,
+  zstd and so on.  Entries are "-lname" or, for some builds, the
+  absolute path of a library on the machine where LLVM was built
+  (e.g. /opt/homebrew/lib/libzstd.a in the llvm.org macOS release).
+  A path that exists here is linked from its directory; one that
+  doesn't is linked by name, from the linker's default directories
+  (/usr/local/lib, say).  Anything else is reported and skipped.
+*/
+proc llvm_system_libs() is
+      local libdir = skipr (q_exec_get ("llvm-config --libdir")[1])
+      local libs = skipr (q_exec_get ("llvm-config --system-libs")[1])
+      if not equal (libs, "")
+        foreach lib in split (libs, " ")
+          local base = pn_lastbase (lib)
+          if equal (sub (lib, 0, 2), "-l")
+            import_lib (sub (lib, 2, len (lib)), libdir)
+          else if equal (sub (lib, 0, 1), "/") and equal (sub (base, 0, 3), "lib")
+            local name = sub (base, 3, len (base))
+            if fs_isfile (lib)
+              import_lib (name, pn_prefix (lib))
+            else
+              write ("Note: llvm-config --system-libs names " & lib
+                       & ", which is not here; linking -l" & name & "\n")
+              import_lib (name, libdir)
+            end
+          else
+            if not equal (lib, "")
+              write ("Warning: ignoring llvm-config --system-libs entry " & lib & "\n")
+            end
+          end end
+        end
+      end
+end
+
 if equal (OS_TYPE, "POSIX")
 
-  % Only for linux. Other implementations would need to check and
-  % possibly modify these library paths.
   if STATIC
   % Set the location of the static posix libraries that llvm depends on.
   % You will need these if you try to build the main program standalone
-  % These can change with package upgrades.
+  % These can change with package upgrades.  Linux only.
     LIB_DIR1 = "/usr/lib/gcc/x86_64-linux-gnu/14"
     LIB_DIR2 = "/usr/lib/x86_64-linux-gnu"
+    % llvm needs the stdc++ lib and the compression libs z and zstd.
+    import_lib("stdc++",LIB_DIR1)
+    % apt-get install libz-dev
+    import_lib("z",LIB_DIR2)
+    % apt-get install libzstd-dev
+    import_lib("zstd",LIB_DIR2)
   else
-  % Lib location for dynamic posix libraries. Again this is for linux so
-  % other architectures will need to check their paths.
-    LIB_DIR1 = "/lib"
-    LIB_DIR2 = "/lib"
+    llvm_system_libs()
   end
-
-  % llvm needs the stdc++ lib and the compression libs z and zstd.
-  import_lib("stdc++",LIB_DIR1)
-  % apt-get install libz-dev
-  import_lib("z",LIB_DIR2)
-  % apt-get install libzstd-dev
-  import_lib("zstd",LIB_DIR2)
 
 %  these should not be needed
 %  import_lib("dl",LIB_DIR1)

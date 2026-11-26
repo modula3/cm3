@@ -63,6 +63,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := QualifyExprAlign;
+        inFrame      := InFrame;
       END;
 
 PROCEDURE New (a: Expr.T;  id: M3ID.T): Expr.T =
@@ -367,25 +368,23 @@ PROCEDURE NeedsAddress (p: P) =
     END;
   END NeedsAddress;
 
+PROCEDURE InFrame (p: P): BOOLEAN =
+  BEGIN
+    (* A record field is in a frame iff the record is; an imported variable
+       is global, and an object's fields are in the heap. *)
+    RETURN (p.class = Class.recField) AND p.lhsExpr.inFrame ();
+  END InFrame;
+
 PROCEDURE Prep (p: P) =
-  VAR
-    field: Field.Info;
-    info: Type.Info;
+  VAR field: Field.Info;
   BEGIN
     CASE p.class OF
     | Class.importDecl =>
-        IF Host.doIncGC AND Value.ClassOf (p.rhsValue) = Value.Class.Var THEN
-          EVAL Type.CheckInfo (p.type, info);
-          IF info.isTraced THEN
-            CASE info.class OF 
-            | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-              Variable.Load (p.rhsValue);
-              RunTyme.EmitCheckLoadTracedRef ();
-              p.temp := CG.Pop ();
-            ELSE
-              (* no check *)
-            END
-          END
+        IF Value.ClassOf (p.rhsValue) = Value.Class.Var
+           AND Expr.LoadNeedsBarrier (p, p.type) THEN
+          Variable.Load (p.rhsValue);
+          RunTyme.EmitCheckLoadTracedRef ();
+          p.temp := CG.Pop ();
         END
     | Class.enumLit =>
         (* skip *)
@@ -399,30 +398,18 @@ PROCEDURE Prep (p: P) =
           Expr.Prep (p.lhsExpr);
         END;
         Field.Split (p.rhsValue, field);
-        EVAL Type.CheckInfo (field.type, info);
-        IF Host.doIncGC AND info.isTraced THEN
-          CASE info.class OF
-          | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-            Compile (p, StaticOnly := FALSE);
-            RunTyme.EmitCheckLoadTracedRef ();
-            p.temp := CG.Pop ();
-          ELSE
-            (* no check *)
-          END
+        IF Expr.LoadNeedsBarrier (p.lhsExpr, field.type) THEN
+          Compile (p, StaticOnly := FALSE);
+          RunTyme.EmitCheckLoadTracedRef ();
+          p.temp := CG.Pop ();
         END
     | Class.objField =>
         Expr.Prep (p.lhsExpr);
         Field.Split (p.rhsValue, field);
-        EVAL Type.CheckInfo (field.type, info);
-        IF Host.doIncGC AND info.isTraced THEN
-          CASE info.class OF
-          | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-            Compile (p, StaticOnly := FALSE);
-            RunTyme.EmitCheckLoadTracedRef ();
-            p.temp := CG.Pop ();
-          ELSE
-            (* no check *)
-          END
+        IF Expr.LoadNeedsBarrier (NIL, field.type) THEN
+          Compile (p, StaticOnly := FALSE);
+          RunTyme.EmitCheckLoadTracedRef ();
+          p.temp := CG.Pop ();
         END
     | Class.objMethod =>
         Expr.Prep (p.lhsExpr);

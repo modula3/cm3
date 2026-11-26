@@ -49,7 +49,7 @@ PROCEDURE DefaultBackstop (VAR a: RT0.RaiseActivation;
   END DefaultBackstop;
 
 PROCEDURE ReportUnhandled (act: ADDRESS) =
-  (* Called from the std::terminate handler in RTExStackC.c.  Record the
+  (* Called from the std::terminate handler in RTExStackImpl.h.  Record the
      failing exception as un_except/un_arg, as DefaultBackstop does, and
      report it through Crash without re-raising: a throw from inside
      terminate would recurse. *)

@@ -105,21 +105,12 @@ PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
   END NeedsAddress;
 
 PROCEDURE Prep (p: P) =
-  VAR info: Type.Info;
   BEGIN
     Expr.Prep (p.a);
-    IF Host.doIncGC THEN
-      EVAL Type.CheckInfo (p.type, info);
-      IF info.isTraced THEN
-        CASE info.class OF
-        | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-          Compile (p, StaticOnly := FALSE);
-          RunTyme.EmitCheckLoadTracedRef ();
-          p.tmp := CG.Pop ();
-        ELSE
-          (* no check *)
-        END
-      END
+    IF Expr.LoadNeedsBarrier (NIL, p.type) THEN
+      Compile (p, StaticOnly := FALSE);
+      RunTyme.EmitCheckLoadTracedRef ();
+      p.tmp := CG.Pop ();
     END
   END Prep;
 

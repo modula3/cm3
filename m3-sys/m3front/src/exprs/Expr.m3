@@ -14,7 +14,7 @@ IMPORT Target, TInt, ErrType, Error;
 IMPORT NamedExpr, ConsExpr, OpenArrayType, ArrayType, Value;
 IMPORT Bool, Int;
 IMPORT CallExpr, SetExpr, RecordExpr, ArrayExpr;
-IMPORT Constant;
+IMPORT Constant, Host;
 
 (********************************************************************)
 
@@ -170,6 +170,37 @@ PROCEDURE IsDesignator (t: T): BOOLEAN =
     <* ASSERT t.checked *>
     RETURN t.isDesignator ();
   END IsDesignator;
+
+(* EXPORTED: *)
+PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN =
+  VAR info: Type.Info;
+  BEGIN
+    IF NOT Host.doIncGC THEN RETURN FALSE END;
+    EVAL Type.CheckInfo (loaded, info);
+    IF NOT info.isTraced THEN RETURN FALSE END;
+    CASE info.class OF
+    | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+    ELSE RETURN FALSE;
+    END;
+    IF container = NIL THEN RETURN TRUE END;
+    <* ASSERT container.checked *>
+    RETURN NOT (container.inFrame () OR ConstValue (container) # NIL);
+  END LoadNeedsBarrier;
+
+(* EXPORTED: *)
+PROCEDURE CopyNeedsBarrier (src: T): BOOLEAN =
+  VAR info: Type.Info;  t: Type.T;
+  BEGIN
+    IF NOT Host.doIncGC THEN RETURN FALSE END;
+    IF src = NIL THEN RETURN FALSE END;
+    <* ASSERT src.checked *>
+    t := TypeOf (src);
+    IF NOT Type.IsStructured (t) THEN RETURN FALSE END;
+    EVAL Type.CheckInfo (t, info);
+    IF NOT info.isTraced THEN RETURN FALSE END;
+    IF NOT src.isDesignator () THEN RETURN FALSE END;
+    RETURN NOT (src.inFrame () OR ConstValue (src) # NIL);
+  END CopyNeedsBarrier;
 
 (* EXPORTED: *)
 PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
@@ -515,6 +546,11 @@ PROCEDURE IsNever (<*UNUSED*> t: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN FALSE;
   END IsNever;
+
+PROCEDURE NotInFrame (<*UNUSED*> t: T): BOOLEAN =
+  BEGIN
+    RETURN FALSE;
+  END NotInFrame;
 
 PROCEDURE IsAlways (<*UNUSED*> t: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN

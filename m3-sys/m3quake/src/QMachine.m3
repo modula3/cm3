@@ -2871,19 +2871,21 @@ PROCEDURE CleanUp (t: T) =
     END;
   END CleanUp;
 
+VAR UniqueTempFile_seq := 0;
+
 PROCEDURE UniqueTempFile (t: T): TEXT =
-  VAR root, file: TEXT;  seq := 0;
+  VAR root, file: TEXT;
   BEGIN
-    root := Pathname.Join (t.tmp_dir, "qk", NIL);
-    file := root;
+    (* TODO: GetCurrentThreadId, and on Windows shifted right 2, or uuid, and/or hash contents. *)
+    root := Pathname.Join (t.tmp_dir, "qk" & Fmt.Int (Process.GetMyID ()), NIL);
     LOOP
+      INC (UniqueTempFile_seq);
+      file := root & "_" & Fmt.Int (UniqueTempFile_seq);
       TRY
         EVAL FS.Status (file);
       EXCEPT OSError.E =>
         EXIT;
       END;
-      INC (seq);
-      file := root & "_" & Fmt.Int (seq);
     END;
     IF (t.tmp_files = NIL) THEN t.tmp_files := NEW (TextSeq.T).init(); END;
     t.tmp_files.addhi (file);

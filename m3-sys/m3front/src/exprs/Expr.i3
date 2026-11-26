@@ -59,6 +59,26 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
 PROCEDURE IsDesignator (t: T): BOOLEAN;
 (* TRUE iff t is a designator *)
 
+PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN;
+(* TRUE iff loading a value of type 'loaded' from storage in 'container'
+   needs a read barrier (RTHooks.CheckLoadTracedRef).  The barrier acts on
+   the reference loaded: it is needed when that reference may be gray,
+   i.e. for a traced reference loaded from a global, heap or indirect
+   location, and not when 'container' is in a procedure's frame or is a
+   constant.  'container' = NIL means heap storage (a dereference or an
+   object field). *)
+
+PROCEDURE CopyNeedsBarrier (src: T): BOOLEAN;
+(* PRE: src is checked.  TRUE iff a block copy of the record or array value
+   'src' must be followed by the read barrier on the references it copied
+   (RunTyme.EmitCopy): the copy loads each of them, and 'src' may be
+   global, heap or indirect storage.  FALSE when 'src' holds no traced
+   references, when incremental collection is off, when 'src' is a
+   constant or in a procedure's frame, which refers only to black objects
+   because every reference that enters a frame has had its barrier, or
+   when 'src' is not a designator (a call's result, a constructor), whose
+   value was built by copies that had their barriers. *)
+
 PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 

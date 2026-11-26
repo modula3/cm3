@@ -58,6 +58,11 @@ TYPE
     base      : Var;          (* base address *)
     bits      : Var;          (* non-constant bit offset *)
     offset    : INTEGER;      (* constant bit offset *)
+    bits_span : INTEGER;      (* when bits # NIL and bits_span > 0, the
+                                 bits index a packed array of bits_span bits
+                                 that starts at constant bit offset
+                                 bits_base; set by Index_bits. *)
+    bits_base : INTEGER;
     next      : Val;          (* link for lists *)
     int       : Target.Int;   (* literal integer value *)
     float     : Target.Float; (* literal floating point value *)
@@ -1967,6 +1972,10 @@ a1 := x.addr_align;
 x3 := stack[SCheck(1,"Load_indirect-x3")];
         LoadIndirectSimple (x, t, addr_align);
 
+      ELSIF SpanBytes (x, t) > 0 THEN
+        (* A packed element at a run-time offset that may cross a byte. *)
+        LoadIndirectBytes (t, s, SpanBytes (x, t), addr_align);
+
       ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
             OR (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type)
       THEN
@@ -2282,6 +2291,10 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
         Err ("In Store_indirect, memory size exceeds stack size.");
         IndirectStoreSimple (x, t, t);
 
+      ELSIF SpanBytes (x, t) > 0 THEN
+        (* A packed element at a run-time offset that may cross a byte. *)
+        StoreIndirectBytes (t, s, SpanBytes (x, t));
+
       ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
         OR  (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
         fetch_type := MayFindIntType (t, s, x.offset, x.base_value_align);
@@ -2436,6 +2449,140 @@ PROCEDURE Store_indirect (t: Type; addedOffset: Offset;  s: Size) =
     END;
     SPop (2, "Store_indirect");
   END Store_indirect;
+
+(* A packed array whose element size is not a power of two may have elements
+   that cross a byte, or a larger boundary, wherever the array starts; the
+   front end bounds such an array to a word (2.2.5), but its alignment can be
+   as small as a byte.  So an element at a run-time subscript is loaded and
+   stored through a container made of the array's bytes, each accessed on its
+   own, so that no access is wider than the array's alignment allows. *)
+
+PROCEDURE SpanBytes (READONLY x: ValRec;  t: Type): INTEGER =
+(* If the run-time bits of x index a packed array of known size (see
+   Index_bits) that a word of type t can hold, the number of bytes that hold
+   the array, counting from the byte containing its first bit; else 0. *)
+  VAR odd, n: INTEGER;
+  BEGIN
+    IF x.bits = NIL OR x.bits_span <= 0 THEN RETURN 0 END;
+    IF (t # Target.Word.cg_type) AND (t # Target.Integer.cg_type) THEN
+      RETURN 0;
+    END;
+    odd := x.bits_base MOD Target.Byte;
+    n := (odd + x.bits_span + Target.Byte - 1) DIV Target.Byte;
+    IF n * Target.Byte > Target.Word.size THEN RETURN 0 END;
+    RETURN n;
+  END SpanBytes;
+
+PROCEDURE BytesAddrToTemp (VAR x: ValRec;  VAR bits: Var;
+                           VAR bits_is_temp: BOOLEAN;
+                           VAR rel: INTEGER): Var =
+(* Detach x's run-time bits, leave in a new temp the address of the byte
+   that holds the first bit of x's packed array, and set rel to the constant
+   bit offset of x's element from that byte.  x stays on the CG stack, but no
+   longer on the M3CG stack. *)
+  VAR first: INTEGER;  addr: Var;
+  BEGIN
+    bits := x.bits;  bits_is_temp := x.bits_is_temp;
+    x.bits := NIL;  x.bits_is_temp := FALSE;
+    first := x.bits_base - x.bits_base MOD Target.Byte;
+    rel := x.offset - first;
+    x.offset := first;
+    ForceStacked ();
+    addr := Declare_addr_temp (in_memory := FALSE);
+    cg.store (addr, 0, Type.Addr, Type.Addr);
+    RETURN addr;
+  END BytesAddrToTemp;
+
+PROCEDURE LoadBytes (addr: Var;  n: INTEGER;  st: Type) =
+(* Push, as one st value, the n bytes at addr, in target byte order. *)
+  VAR shift: INTEGER;
+  BEGIN
+    FOR j := 0 TO n - 1 DO
+      cg.load (addr, 0, Type.Addr, Type.Addr);
+      cg.load_indirect (j, Type.Word8, st);
+      IF Target.endian = Target.Endian.Little
+        THEN shift := j * Target.Byte;
+        ELSE shift := (n - 1 - j) * Target.Byte;
+      END;
+      IF shift # 0 THEN
+        cg_load_intt (shift);
+        cg.shift_left (st);
+      END;
+      IF j > 0 THEN cg.or (st) END;
+    END;
+  END LoadBytes;
+
+PROCEDURE LoadBitPos (bits: Var;  rel, n: INTEGER;  s: Size) =
+(* Push the bit position, within the n-byte container, of the s-bit element
+   at run-time bit offset bits plus constant offset rel. *)
+  BEGIN
+    IF Target.endian = Target.Endian.Little THEN
+      cg.load (bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
+      IF rel # 0 THEN
+        cg_load_intt (rel);
+        cg.add (Target.Integer.cg_type);
+      END;
+    ELSE
+      cg_load_intt (n * Target.Byte - rel - s);
+      cg.load (bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
+      cg.subtract (Target.Integer.cg_type);
+    END;
+  END LoadBitPos;
+
+PROCEDURE LoadIndirectBytes (t: Type;  s: Size;  n: INTEGER;
+                             addr_align: Alignment) =
+(* s0.t := Mem [s0.A + s0.bits : s], through the n bytes of s0's array. *)
+  VAR st := StackType[t];  bits, addr: Var;  bits_is_temp: BOOLEAN;
+      rel: INTEGER;
+  BEGIN
+    WITH x = stack [SCheck (1, "LoadIndirectBytes")] DO
+      cg.comment ("LoadIndirectBytes:");
+      addr := BytesAddrToTemp (x, bits, bits_is_temp, rel);
+      LoadBytes (addr, n, st);
+      LoadBitPos (bits, rel, n, s);
+      cg.extract_n (st, Target.SignedType[t], s);
+      FinishLoadIndirect (x, t, addr_align);
+      Free_temp (addr);
+      IF bits_is_temp THEN Free_temp (bits) END;
+    END;
+  END LoadIndirectBytes;
+
+PROCEDURE StoreIndirectBytes (t: Type;  s: Size;  n: INTEGER) =
+(* Mem [s1.A + s1.bits : s] := s0.t, through the n bytes of s1's array.
+   Leaves both operands on the CG stack, for the caller to pop. *)
+  VAR st := StackType[t];  bits, addr, word: Var;  bits_is_temp: BOOLEAN;
+      rel, shift: INTEGER;
+  BEGIN
+    Swap (); (* Address on top. *)
+    WITH x = stack [SCheck (1, "StoreIndirectBytes")] DO
+      cg.comment ("StoreIndirectBytes:");
+      addr := BytesAddrToTemp (x, bits, bits_is_temp, rel);
+    END;
+    (* M3CG stack: value. *)
+    LoadBytes (addr, n, st);                 (* value, container *)
+    cg.swap (st, st);                        (* container, value *)
+    LoadBitPos (bits, rel, n, s);
+    cg.insert_n (st, s);                     (* new container *)
+    word := Declare_temp (Target.Word.size, Target.Word.align, st,
+                          in_memory := FALSE);
+    cg.store (word, 0, st, st);
+    FOR j := 0 TO n - 1 DO
+      cg.load (addr, 0, Type.Addr, Type.Addr);
+      cg.load (word, 0, st, st);
+      IF Target.endian = Target.Endian.Little
+        THEN shift := j * Target.Byte;
+        ELSE shift := (n - 1 - j) * Target.Byte;
+      END;
+      IF shift # 0 THEN
+        cg_load_intt (shift);
+        cg.shift_right (st);
+      END;
+      cg.store_indirect (j, st, Type.Word8);
+    END;
+    Free_temp (word);
+    Free_temp (addr);
+    IF bits_is_temp THEN Free_temp (bits) END;
+  END StoreIndirectBytes;
 
 PROCEDURE IndirectStoreSimple (READONLY x: ValRec; t: ZType; u:MType)=
 (* PRE: x.kind IN {Stacked, Absolute, Pointer}. *)
@@ -3646,7 +3793,7 @@ PROCEDURE Index_bytes (size: INTEGER) =
     END;
   END Index_bytes;
 
-PROCEDURE Index_bits (bits_addr_align: Alignment := 1) =
+PROCEDURE Index_bits (bits_addr_align: Alignment := 1;  span: INTEGER := 0) =
 (* s1.A := s1.A + s0.I ; pop -- note that s0.I must be less than
   or equal to the alignment of s1.A, otherwise bad code will be generated. *)
 (* TODO: Remove this restriction by moving code from ArrayType.GenIndex in here,
@@ -3660,6 +3807,8 @@ PROCEDURE Index_bits (bits_addr_align: Alignment := 1) =
         cg.load (x.bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
         cg.add (Target.Integer.cg_type); 
         cg.store (index.base, 0, Target.Integer.cg_type, Target.Integer.cg_type);
+        (* The bits still count from the enclosing array's start, so its
+           bits_span and bits_base stand. *)
       END;
       IF (x.kind = VKind.Direct) THEN
         (* Materialize the address from the direct variable now; ForceAddr2SAP
@@ -3668,6 +3817,10 @@ PROCEDURE Index_bits (bits_addr_align: Alignment := 1) =
         x.kind := VKind.Stacked;
       END;
       IF (x.kind = VKind.Stacked) THEN x.kind := VKind.Pointer; END;
+      IF x.bits = NIL THEN
+        x.bits_span := span;
+        x.bits_base := x.offset;
+      END;
       x.bits := index.base;
       x.bits_is_temp := TRUE;
       x.addr_align := GCD (x.addr_align, bits_addr_align);

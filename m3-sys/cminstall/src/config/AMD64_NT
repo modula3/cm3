@@ -4,4 +4,13 @@ readonly WORD_SIZE = "64BITS"       % { "32BITS" or "64BITS" }
 
 M3_BACKEND_MODE = "C"
 
+%
+% RTExStackImpl.h must be compiled as C++, to throw, for ex_stack.
+% We cannot use -TP in config, as long as config is used by
+% bootstrap compiler that emits invalid C++ (alloca is not declared extern "C")
+%
+if defined ("cpp_source") and equal (M3_BACKEND_MODE, "C") and not defined ("M3_USE_STACK_WALKER")
+  M3_USE_STACK_WALKER = TRUE
+end
+
 include("NT.common")

@@ -859,6 +859,7 @@ PROCEDURE CollectSomeInStateZero () =
        generation. *)
 
     mover := NEW (Mover);  (* get one in the new space *)
+    blockChecker := NEW (BlockChecker);
 
     (* VAR/READONLY and WITH allow programmers to generate interior pointers
        to heap objects that are not true traced references.  These interior
@@ -2252,6 +2253,58 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
       END;
     END;
   END CheckLoadTracedRef;
+
+PROCEDURE CheckLoadTracedBlock (dst, map: ADDRESS;  n, stride: INTEGER) =
+  (* A block copy (of a record or array) has just stored traced references
+     at 'dst' that it loaded from a global, heap or indirect location.  Give
+     each of them the read barrier, as CheckLoadTracedRef does for a single
+     reference: scan each gray target to make it black, so that a thread's
+     frame never refers to a gray object.
+
+     The barrier follows the copy, as a reference's barrier follows its
+     load: a flip between the two finds the copied references in a frame
+     or object that the thread holds, and so blackens their targets.  For
+     the same reason a stale read of collectorState as Zero is harmless:
+     any flip after the copy has blackened them. *)
+  BEGIN
+    IF collectorState = CollectorState.Zero THEN RETURN END;
+    IF (dst = NIL) OR (map = NIL) OR (n <= 0) THEN RETURN END;
+    TRY
+      RTOS.LockHeap();
+      (* With the heap locked, collectorOn means this thread is the
+         collector, which needs no barrier. *)
+      IF collectorOn THEN RETURN END;
+      FOR i := 0 TO n - 1 DO
+        RTHeapMap.WalkMap (dst + i * stride, map, blockChecker);
+      END;
+    FINALLY
+      RTOS.UnlockHeap();
+    END;
+  END CheckLoadTracedBlock;
+
+TYPE BlockChecker = RTHeapMap.Visitor OBJECT OVERRIDES apply := CheckBlockRef END;
+
+VAR blockChecker: BlockChecker := NIL;
+(* LL >= RTOS.LockHeap.  Allocated at each flip, with mover: a collection
+   in progress means there is one. *)
+
+PROCEDURE CheckBlockRef (<*UNUSED*> self: BlockChecker;  cp: ADDRESS) =
+  (* LL >= RTOS.LockHeap *)
+  VAR ref := LOOPHOLE (cp, UNTRACED REF ADDRESS)^;  p: Word.T;
+  BEGIN
+    IF ref = NIL THEN RETURN END;
+    IF Word.And (LOOPHOLE (ref, Word.T), 1) # 0 THEN RETURN END;
+    WITH h = HeaderOf (LOOPHOLE (ref, RefReferent)) DO
+      IF GetTypecode (h) = RT0.TextLitTypecode THEN RETURN END;
+      IF NOT Gray (h) THEN RETURN END;
+      p := Word.RightShift (LOOPHOLE (ref, Word.T), LogBytesPerPage);
+      WITH page = PageToRef (p) DO
+        CollectorOn();
+        CleanBetween (h, h + ADRSIZE (Header), page.desc.clean);
+        CollectorOff();
+      END;
+    END;
+  END CheckBlockRef;
 
 PROCEDURE CheckStoreTraced (dst: REFANY) =
   (* Store some reference into a target object 'dst'.

@@ -112,8 +112,10 @@ char* RTStack__ProcName (Frame *f)
 
 void RTStack__GetThreadFrame (Frame *f, char *start, int len)
 {
-  /* Not implemented. */
-  abort();
+  /* Not implemented: report failure as the interface allows, rather than
+     aborting.  RTHeapStats.DumpStack calls this for every thread but its
+     own, and copes with pc=NIL by omitting the frame annotations. */
+  ZERO_MEMORY (*f);
 }
 
 /*---------------------------------------------------------------------------*/
