@@ -1,5 +1,9 @@
 #!/bin/sh
 
+#
+# Upgrade compiler and runtime and then build everything.
+#
+
 set -e
 set -x
 

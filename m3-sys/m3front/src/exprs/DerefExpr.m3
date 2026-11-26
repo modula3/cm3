@@ -214,6 +214,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       RETURN MSIRBuilder.LoadTracedRef (addr, ty,
                Expr.LoadNeedsBarrier (NIL, p.type));
     END;
+    (* A record or array referent holding traced references: its copy out
+       of the heap takes the block read barrier (#1388). *)
+    IF Type.IsStructured (p.type) THEN
+      RETURN MSIRBuilder.LoadBlock (addr, ty, p.type,
+                                    Expr.CopyNeedsBarrier (p));
+    END;
     (* Load at the referent's MType (storage width), then widen to its ZType
        (machine/computation width) so the produced value is uniform machine
        width — matching local/formal reads.  For a non-ordinal, ComputeType =

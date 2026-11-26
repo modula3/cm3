@@ -1690,10 +1690,13 @@ PROCEDURE InnerPrep (top: T) =
   END InnerPrep;
 
 PROCEDURE GenCopyOpenArgValueDyn
-  (top, constr: T; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT) =
+  (top, constr: T; argDopeAddrVal: CG.Val; eltAlign: Type.BitAlignT;
+   argRepType: Type.T;  barrier: BOOLEAN) =
 (* PRE: TOS is a CG.Val for address (w/in LHS) to copy to. *)
 (* PRE: top.shallowestDynDepth >= 0 *)
-  VAR staticFlatEltCt: INTEGER;
+(* 'argRepType' is the argument's (open array) type; 'barrier' asks for the
+   read barrier on the references the copy loads. *)
+  VAR staticFlatEltCt, eltBytes: INTEGER;  dst, src, nBytes, n: CG.Val;
   BEGIN
     (* Target address: *)
     CG.ForceStacked ();
@@ -1714,7 +1717,31 @@ PROCEDURE GenCopyOpenArgValueDyn
     END;
 (* TODO: call NoteWrite, as needed. *)
 
+    IF NOT barrier THEN
+      CG.Copy_n (Target.Byte, overlap := FALSE);
+      RETURN;
+    END;
+    eltBytes := OpenArrayType.EltPack (argRepType) DIV Target.Byte;
+    nBytes := CG.Pop ();
+    src := CG.Pop ();
+    dst := CG.Pop ();
+    CG.Push (dst);
+    CG.ForceStacked ();
+    CG.Push (src);
+    CG.ForceStacked ();
+    CG.Push (nBytes);
     CG.Copy_n (Target.Byte, overlap := FALSE);
+    CG.Free (src);
+    CG.Push (nBytes);
+    CG.Load_intt (eltBytes);
+    CG.Div (Target.Integer.cg_type, CG.Sign.Positive, CG.Sign.Positive);
+    n := CG.Pop ();
+    CG.Free (nBytes);
+    CG.Push (dst);
+    CG.Free (dst);
+    RunTyme.EmitCheckLoadTracedBlock
+      (OpenArrayType.NonopenEltType (argRepType), n, eltBytes);
+    CG.Free (n);
   END GenCopyOpenArgValueDyn;
 
 PROCEDURE GenPushLHSEltsAddr
@@ -1891,6 +1918,23 @@ PROCEDURE PrepRecurse
                 CG.Push (argAddrVal);
                 <* ASSERT argLevelInfo.staticLen >= 0 *>
                 CG.Copy (constrEltPack, overlap := FALSE);
+                IF Expr.CopyNeedsBarrier (wArgExpr) THEN
+                  GenPushLHSEltsAddr (top, argFlatOffset, eltAlign);
+                  IF argOpenDepth = 0 THEN
+                    RunTyme.EmitCheckLoadTracedBlock (argRepType);
+                  ELSE
+                    VAR pack := OpenArrayType.EltPack (argRepType);
+                        n: CG.Val;
+                    BEGIN
+                      CG.Load_intt (constrEltPack DIV pack);
+                      n := CG.Pop ();
+                      RunTyme.EmitCheckLoadTracedBlock
+                        (OpenArrayType.NonopenEltType (argRepType), n,
+                         pack DIV Target.Byte);
+                      CG.Free (n);
+                    END;
+                  END;
+                END;
               ELSE
 
               (* The dynamic case.  top.shallowestDynDepth >= 0.
@@ -1972,14 +2016,18 @@ PROCEDURE PrepRecurse
                 GenPushLHSEltsAddr  (top, bitOffset := 0, eltAlign := eltAlign);
                 IF top.dynByteOffsetVal = NIL
                 THEN (* First time. Dynamic offset is zero. *)
-                  GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
+                  GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign,
+                                          argRepType,
+                                          Expr.CopyNeedsBarrier (wArgExpr));
                   PushDynBytesizeVal (top, depth + 1);
                   top.dynByteOffsetVal := CG.Pop ();
                 ELSE
                   CG.ForceStacked ();
                   CG.Push (top.dynByteOffsetVal);
                   CG.Index_bytes (Target.Byte);
-                  GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign);
+                  GenCopyOpenArgValueDyn (top, constr, argAddrVal, eltAlign,
+                                          argRepType,
+                                          Expr.CopyNeedsBarrier (wArgExpr));
                   IF wArgExpr # top.lastArgExpr THEN
                     CG.Push (top.dynByteOffsetVal);
                     PushDynBytesizeVal (top, depth + 1);
@@ -2549,10 +2597,25 @@ PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
           END;
         END;
         blk := MSIRBuilder.CurrentBlock ();
-        MSIRBuilder.EmitMemcpyDyn (
-          MSIR.BuildGepByte (blk, "", flat,
-            MSIR.BuildIMul (blk, "", MSIR.ConstInt (intT, i), elemBytes)),
-          dataI, elemBytes);
+        VAR dstI := MSIR.BuildGepByte (blk, "", flat,
+                      MSIR.BuildIMul (blk, "", MSIR.ConstInt (intT, i),
+                                      elemBytes));
+            arg  := p.args^[MIN (i, LAST (p.args^))];
+        BEGIN
+          MSIRBuilder.EmitMemcpyDyn (dstI, dataI, elemBytes);
+          (* The block read barrier on the element's copy where the front
+             end decides (#1388): its leaf elements, elemBytes apart in all
+             (packBits each). *)
+          IF packBits MOD Target.Byte = 0 AND packBits > 0
+             AND Expr.CopyNeedsBarrier (arg) THEN
+            blk := MSIRBuilder.CurrentBlock ();
+            MSIRBuilder.EmitLoadBlock (
+              dstI, Type.Base (deepest),
+              MSIR.BuildIDiv (blk, "", elemBytes,
+                MSIR.ConstInt (intT, packBits DIV Target.Byte)),
+              packBits DIV Target.Byte);
+          END;
+        END;
       END;
     END;
 
@@ -2795,6 +2858,15 @@ BEGIN
         BEGIN
           IF src = NIL THEN RETURN NIL END;
           MSIRBuilder.EmitMemcpy (elemAddr, src, eltBytes);
+          (* The block read barrier on the element's copy where the front
+             end decides (#1388), as Compile's. *)
+          VAR arg := p.args^[MIN (i, LAST (p.args^))];
+          BEGIN
+            IF NOT OpenArrayType.Is (Expr.TypeOf (arg))
+               AND Expr.CopyNeedsBarrier (arg) THEN
+              MSIRBuilder.EmitLoadBlock (elemAddr, Expr.TypeOf (arg));
+            END;
+          END;
         END;
       ELSE
         IF p.args = NIL OR i > LAST (p.args^) THEN

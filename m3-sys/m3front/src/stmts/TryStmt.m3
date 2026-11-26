@@ -471,7 +471,10 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
           CG.Boost_addr_alignment (Target.Address.align);
           CG.Load_indirect (CG.Type.Addr, M3RT.EA_arg, Target.Address.size);
           CG.Boost_addr_alignment (t_info.alignment);
-          CG.Copy (t_info.size, overlap := FALSE);
+          (* The argument is in the heap: the handler's variable gets the read
+             barrier on each reference copied into it. *)
+          RunTyme.EmitCopy (h.type, t_info.size, overlap := FALSE,
+                            barrier := TRUE);
         ELSE
           CG.Load_addr (info, M3RT.EA_exception, Target.Address.align);
           CG.Boost_addr_alignment (Target.Address.align);
@@ -614,7 +617,10 @@ PROCEDURE CompileHandler2 (h: Handler;  frame: CG.Var;
           CG.Load_addr
             (frame, M3RT.EF1_info + M3RT.EA_arg, Target.Address.align);
           CG.Boost_addr_alignment (t_info.alignment);
-          CG.Copy (t_info.size, overlap := FALSE);
+          (* The argument is in the heap: the handler's variable gets the read
+             barrier on each reference copied into it. *)
+          RunTyme.EmitCopy (h.type, t_info.size, overlap := FALSE,
+                            barrier := TRUE);
         ELSE
           CG.Load_addr
             (frame, M3RT.EF1_info + M3RT.EA_arg, Target.Address.align);
@@ -719,6 +725,15 @@ PROCEDURE CompileMSIR (p: P) =
               END;
             END;
             MSIR.BuildStore(entry, argVal, varAddr);
+            (* The argument comes from the activation in the heap: a record
+               or array holding traced references takes the block read
+               barrier on the handler's copy (#1388), as Compile's does. *)
+            VAR argT := Exceptionz.ArgType(h.tags.obj);
+            BEGIN
+              IF Type.IsStructured(argT) THEN
+                MSIRBuilder.EmitLoadBlock(varAddr, argT);
+              END;
+            END;
           END;
         END;
         Variable.ScheduleTrace(h.var);

@@ -13,7 +13,7 @@ IMPORT CG, Stmt, StmtRep, Expr, Type, Error, Module, Target, TInt;
 IMPORT Token, Scanner, CallStmt, Addr, CheckExpr, ErrType;
 IMPORT M3ID, Value, NamedExpr, ArrayType, ConsExpr;
 IMPORT QualifyExpr, SetExpr, RecordExpr, ArrayExpr;
-IMPORT Variable, Procedure, OpenArrayType;
+IMPORT Variable, Procedure, OpenArrayType, RunTyme;
 IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis, M3RT;
 
@@ -443,10 +443,13 @@ PROCEDURE CompileStruct (expr: Expr.T) =
   END CompileStruct;
 
 PROCEDURE CopyStruct
-  (lhsAlign, rhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN) =
+  (lhsAlign, rhsAlign: Type.BitAlignT; bitSize: INTEGER; overlap: BOOLEAN;
+   t: Type.T;  barrier: BOOLEAN) =
 (* PRE: CGstack: RHS addr on top, LHS addr below. *)
 (* PRE: Using expression protocol. *)
 (*  Will handle a sub-byte-sized suffix. *) 
+(* 't' is the type of the value copied; 'barrier' asks for the read barrier
+   on the references the copy loads (Expr.CopyNeedsBarrier). *)
   BEGIN
     IF lhsAlign < Target.Byte
        OR rhsAlign < Target.Byte
@@ -455,7 +458,7 @@ PROCEDURE CopyStruct
       CG.Load_indirect (Target.Word.cg_type, 0 , bitSize); 
       CG.Store_indirect (Target.Word.cg_type, 0 , bitSize); 
     ELSE
-      CG.Copy (bitSize, overlap);
+      RunTyme.EmitCopy (t, bitSize, overlap, barrier);
       (* Expression protocol means the value is already in a temporary. *)
     END
   END CopyStruct;
@@ -478,7 +481,9 @@ PROCEDURE AssignRecord
       (* RHS is on top of CG stack.  LHS is below.
          Compile will have left LHS alone. *)
       CopyStruct
-        (lhsAlign, rhsAlign, lhsTypeInfo.size, overlap := NOT initializing);
+        (lhsAlign, rhsAlign, lhsTypeInfo.size, overlap := NOT initializing,
+         t := Expr.TypeOf (rhsExpr),
+         barrier := Expr.CopyNeedsBarrier (rhsExpr));
     END;
   END AssignRecord;
 
@@ -512,7 +517,8 @@ PROCEDURE AssignArray
         rhsAlign := Expr.Alignment (rhsExpr);
         (* RHS is on top of CG stack.  LHS is below, unmolested by Compile. *)
         CopyStruct
-          (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing);
+          (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing,
+           t := lhsRepType, barrier := Expr.CopyNeedsBarrier (rhsExpr));
       ELSE (* Something is open. *)
         lhsVal := CG.Pop ();
         CompileStruct (rhsExpr);
@@ -534,21 +540,24 @@ PROCEDURE AssignArray
             CG.Push (rhsVal);
             CG.Open_elt_ptr (Expr.Alignment(rhsExpr));
             CG.ForceStacked ();
-            GenOpenArrayCopy (lhsVal, lhsRepType, rhsRepType);
+            GenOpenArrayCopy (lhsVal, lhsRepType, rhsRepType,
+                              barrier := Expr.CopyNeedsBarrier (rhsExpr));
           ELSE (* LHS is open and RHS is fixed. *) 
             CG.Push (lhsVal);
             CG.Open_elt_ptr (lhsAlign);
             CG.Push (rhsVal);
             EVAL Type.CheckInfo (rhsRepType, rhsRepTypeInfo);
             CopyStruct
-              (lhsAlign, rhsAlign, rhsRepTypeInfo.size, overlap := NOT initializing);
+              (lhsAlign, rhsAlign, rhsRepTypeInfo.size, overlap := NOT initializing,
+               t := rhsRepType, barrier := Expr.CopyNeedsBarrier (rhsExpr));
           END;
         ELSE (* LHS is fixed and RHS is open. *)
           CG.Push (lhsVal);
           CG.Push (rhsVal);
           CG.Open_elt_ptr (Expr.Alignment(rhsExpr));
           CopyStruct
-            (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing);
+            (lhsAlign, rhsAlign, lhsRepTypeInfo.size, overlap := NOT initializing,
+             t := lhsRepType, barrier := Expr.CopyNeedsBarrier (rhsExpr));
         END;
         CG.Free (lhsVal);
         CG.Free (rhsVal);
@@ -601,7 +610,8 @@ PROCEDURE GenOpenArrayRTShapeChecks
     END;
   END GenOpenArrayRTShapeChecks;
 
-PROCEDURE GenOpenArrayCopy (lhsDopeVal: CG.Val;  lhsRepType, rhsRepType: Type.T) =
+PROCEDURE GenOpenArrayCopy (lhsDopeVal: CG.Val;  lhsRepType, rhsRepType: Type.T;
+                           barrier: BOOLEAN) =
 (* PRE: formal lhsDopeVal is the LHS dope.
    PRE: both lhsRepType and rhsRepType are open array types.
    PRE: RHS element ptr on TOS and has been ForceStacked.
@@ -621,8 +631,12 @@ PROCEDURE GenOpenArrayCopy (lhsDopeVal: CG.Val;  lhsRepType, rhsRepType: Type.T)
       IF (i # 0) THEN CG.Multiply (Target.Word.cg_type) END;
     END;
     IF lhsDepth < rhsDepth
-    THEN CG.Copy_n (OpenArrayType.EltPack (lhsRepType), overlap := TRUE);
-    ELSE CG.Copy_n (OpenArrayType.EltPack (rhsRepType), overlap := TRUE);
+    THEN RunTyme.EmitCopy_n (OpenArrayType.NonopenEltType (lhsRepType),
+                             OpenArrayType.EltPack (lhsRepType),
+                             overlap := TRUE, barrier := barrier);
+    ELSE RunTyme.EmitCopy_n (OpenArrayType.NonopenEltType (rhsRepType),
+                             OpenArrayType.EltPack (rhsRepType),
+                             overlap := TRUE, barrier := barrier);
     END;
   END GenOpenArrayCopy;
 
@@ -1020,9 +1034,10 @@ PROCEDURE CompileMSIR (p: P) =
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
                           ARRAY OF MSIR.Value {zero});
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (eltT));
-                arr  := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", eltT, tPtr);
+                arr  := MSIRBuilder.LoadCopied (tPtr, eltT);
             BEGIN
               MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arr, lhsPtr);
+              BarrierAfterCopy (p, lhsPtr);
             END;
           ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray AND
                 MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray THEN
@@ -1045,6 +1060,7 @@ PROCEDURE CompileMSIR (p: P) =
               EVAL Type.CheckInfo (Expr.TypeOf (p.lhs), lhsInfo);
               nBytes := lhsInfo.size DIV Target.Char.size;
               MSIRBuilder.EmitMemcpy (lhsPtr, srcPtr, nBytes);
+              BarrierAfterCopy (p, lhsPtr);
             END;
           ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray AND
                 MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray THEN
@@ -1157,6 +1173,15 @@ PROCEDURE CompileMSIR (p: P) =
                                     MSIR.ConstInt (intT, 3));
                   END;
                   MSIRBuilder.EmitMemcpyDyn (dstDataPtr, srcDataPtr, totalBytes);
+                  (* The elements came from the rhs's storage: the block
+                     read barrier on them (#1388), per element. *)
+                  IF packBits MOD Target.Byte = 0
+                     AND Expr.CopyNeedsBarrier (p.rhs) THEN
+                    MSIRBuilder.EmitLoadBlock (
+                      dstDataPtr,
+                      OpenArrayType.NonopenEltType (Expr.TypeOf (p.rhs)),
+                      totalElts, packBits DIV Target.Byte);
+                  END;
                 END;
               END;
             END;
@@ -1199,6 +1224,18 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     Expr.NoteWrite (p.lhs);
   END CompileMSIR;
+
+PROCEDURE BarrierAfterCopy (p: P;  lhsPtr: MSIR.Value) =
+  (* The fixed-size lhs was filled by a copy straight from the rhs's
+     storage (an open array's elements): the block read barrier on it where
+     the front end decides (#1388).  A fixed-size rhs value needs none here:
+     it was loaded through MSIRBuilder.LoadBlock. *)
+  BEGIN
+    IF OpenArrayType.Is (Expr.TypeOf (p.rhs))
+       AND Expr.CopyNeedsBarrier (p.rhs) THEN
+      MSIRBuilder.EmitLoadBlock (lhsPtr, Expr.TypeOf (p.lhs));
+    END;
+  END BarrierAfterCopy;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

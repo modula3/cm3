@@ -280,6 +280,14 @@ PROCEDURE InsnSrcLine(i: Insn): INTEGER;
 PROCEDURE InsnUnbarriered(i: Insn): BOOLEAN;
 (* TRUE for a load built by BuildUnbarrieredLoad. *)
 
+PROCEDURE HoldsGcRef(t: T): BOOLEAN;
+(* TRUE iff t is a gc_ref, or a struct or fixed array with one inside. *)
+
+PROCEDURE InsnBlockMap(i: Insn): GcMapBytes;
+PROCEDURE InsnBlockStride(i: Insn): INTEGER;
+(* gc.load_block: the gc map of one element, and the bytes between
+   elements; see BuildGcLoadBlock. *)
+
 PROCEDURE ProcName(p: Proc): TEXT;
 PROCEDURE ProcParamCount(p: Proc): INTEGER;
 PROCEDURE ProcParam    (p: Proc;  i: INTEGER): Value;
@@ -395,6 +403,10 @@ PROCEDURE SetModuleFrameHooks(m: Module;  push, pop: Proc);
 PROCEDURE ModulePushEFrame   (m: Module): Proc;
 PROCEDURE ModulePopEFrame    (m: Module): Proc;
 PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
+(* The runtime's block read barrier (RTHooks.CheckLoadTracedBlock), for
+   gc.load_block. *)
+PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc);
+PROCEDURE ModuleGCLoadBlockBarrier (m: Module): Proc;
 PROCEDURE ModuleScanTypecase   (m: Module): Proc;
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
 PROCEDURE ModuleImportCount(m: Module): INTEGER;
@@ -701,7 +713,7 @@ TYPE Op = {
   (* memory *)
   Alloca,    (* static-count stack alloc: alloca T, i64 N    *)
   AllocaDyn, (* dynamic-count stack alloc: alloca i8, i64 %n — byteCount is operand 0 *)
-  Load, Store, GcLoad, GcStore, GcDirty, FieldAddr,
+  Load, Store, GcLoad, GcStore, GcDirty, GcLoadBlock, FieldAddr,
   (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
   IUDiv, IURem,                          (* unsigned divide / remainder *)
@@ -903,6 +915,17 @@ PROCEDURE BuildGcLoad(b: Block;  name: TEXT;  slot: Value): Value;
    copies into heap objects (memcpy/array stores), which cannot go through
    BuildGcStore's single-slot barrier+store. *)
 PROCEDURE BuildGcDirty(b: Block;  container: Value);
+
+(* Read barrier on a block copy (D30, #1388): a copy of a record or array
+   from global, heap or indirect storage has just stored traced references
+   at dst (a ptr); give each of them the read barrier, as gc.load does for
+   one.  The front end decides where it is needed (Expr.CopyNeedsBarrier)
+   and places it after the copy.  'map' is the garbage collector's map of
+   one element (TipeMap, refs only), and the block holds 'n' elements
+   (an integer Value; NIL means 1), 'stride' bytes apart.  The lowerings
+   call RTHooks.CheckLoadTracedBlock (dst, map, n, stride). *)
+PROCEDURE BuildGcLoadBlock(b: Block;  dst: Value;  n: Value;
+                           map: GcMapBytes;  stride: INTEGER);
 
 PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
                         container: Value := NIL);

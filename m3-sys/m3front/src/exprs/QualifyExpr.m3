@@ -1118,7 +1118,8 @@ PROCEDURE BitLocMSIR (p: P;  VAR loc: MSIRBitLoc.T): BOOLEAN =
   END BitLocMSIR;
 
 PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
-                          rawFieldType: Type.T;  barrier: BOOLEAN): MSIR.Value =
+                          rawFieldType: Type.T;  barrier: BOOLEAN;
+                          blockBarrier := FALSE): MSIR.Value =
   VAR blk      := MSIRBuilder.CurrentBlock ();
       addrEltT := MSIR.EltType (MSIR.ValueType (addr));
       (* Produce the field's ZType (machine width) so an ordinal field read is a
@@ -1140,6 +1141,12 @@ PROCEDURE LoadFieldValue (addr: MSIR.Value;  naturalT: MSIR.T;
         addrEltT := MSIR.TGcRef (addrEltT);
       END;
       RETURN MSIRBuilder.LoadTracedRef (addr, addrEltT, barrier);
+    END;
+    (* A record or array field holding traced references: its copy takes
+       the block read barrier where the front end decided (#1388). *)
+    IF Type.IsStructured (rawFieldType) THEN
+      RETURN MSIRBuilder.LoadBlock (addr, addrEltT, rawFieldType,
+                                    blockBarrier);
     END;
     VAR loaded := MSIR.BuildLoad (blk, "", addrEltT, addr);
     BEGIN
@@ -1182,6 +1189,19 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         TYPECASE p.rhsValue OF
         | Variable.T (v) =>
             Variable.RegisterExternMSIR (v);
+            (* An imported record or array variable holding traced
+               references: the block read barrier on its copy (#1388). *)
+            IF Type.IsStructured (Value.TypeOf (v))
+               AND Expr.CopyNeedsBarrier (p) THEN
+              VAR addr2 := MSIRBuilder.LookupVarAddr (v);
+                  ty2   := MSIRType.Translate (Value.TypeOf (v));
+              BEGIN
+                IF addr2 # NIL AND ty2 # NIL THEN
+                  RETURN MSIRBuilder.LoadBlock (addr2, ty2, Value.TypeOf (v),
+                                                TRUE);
+                END;
+              END;
+            END;
             VAR val := MSIRBuilder.LookupVar (v);
             BEGIN
               IF val = NIL THEN
@@ -1233,7 +1253,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         (* As the front end decides from the record's storage (D30), as Prep
            does for the C payload. *)
         RETURN LoadFieldValue (addr, fieldType, fieldInfo.type,
-                 Expr.LoadNeedsBarrier (p.lhsExpr, fieldInfo.type));
+                 Expr.LoadNeedsBarrier (p.lhsExpr, fieldInfo.type),
+                 Expr.CopyNeedsBarrier (p));
     | Class.objField =>
         (* Sub-byte object field: extract it from its bit location. *)
         VAR loc: MSIRBitLoc.T;
@@ -1255,7 +1276,8 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
         (* An object field is heap storage (D30), as Prep does for the C
            payload. *)
         RETURN LoadFieldValue (addr, fieldType, fieldInfo.type,
-                 Expr.LoadNeedsBarrier (NIL, fieldInfo.type));
+                 Expr.LoadNeedsBarrier (NIL, fieldInfo.type),
+                 Expr.CopyNeedsBarrier (p));
     | Class.enumLit =>
         folded := Fold (p);
         IF folded = NIL THEN

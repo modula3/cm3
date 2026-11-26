@@ -607,6 +607,8 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   dbgLine:   INTEGER := 0;        (* Alloca: the variable's declaration line *)
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
   unbarriered: BOOLEAN := FALSE;  (* Load: see BuildUnbarrieredLoad *)
+  blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
+  blockStride: INTEGER := 0;      (* GcLoadBlock: element stride, bytes *)
   exc:       ExcDesc     := NIL;               (* Raise *)
 END;
 
@@ -652,6 +654,25 @@ PROCEDURE InsnSrcLine(i: Insn): INTEGER =
   BEGIN RETURN i.srcLine END InsnSrcLine;
 PROCEDURE InsnUnbarriered(i: Insn): BOOLEAN =
   BEGIN RETURN i.unbarriered END InsnUnbarriered;
+PROCEDURE HoldsGcRef(t: T): BOOLEAN =
+  BEGIN
+    IF t = NIL THEN RETURN FALSE END;
+    CASE Kind(t) OF
+    | TypeKind.GcRef => RETURN TRUE;
+    | TypeKind.FixedArray => RETURN HoldsGcRef(FixedArrayElt(t));
+    | TypeKind.Struct =>
+        FOR k := 0 TO StructFieldCount(t) - 1 DO
+          IF HoldsGcRef(StructField(t, k).type) THEN RETURN TRUE END;
+        END;
+        RETURN FALSE;
+    ELSE RETURN FALSE;
+    END;
+  END HoldsGcRef;
+
+PROCEDURE InsnBlockMap(i: Insn): GcMapBytes =
+  BEGIN RETURN i.blockMap END InsnBlockMap;
+PROCEDURE InsnBlockStride(i: Insn): INTEGER =
+  BEGIN RETURN i.blockStride END InsnBlockStride;
 PROCEDURE InsnTypecaseClauseCount(i: Insn): INTEGER =
   BEGIN
     IF i.typecaseClauses = NIL THEN RETURN 0 END;
@@ -1093,6 +1114,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   pushEFrameProc  : Proc := NIL;   (* RTHooks.PushEFrame, for ex_frame lowering *)
   popEFrameProc   : Proc := NIL;   (* RTHooks.PopEFrame *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
+  gcLoadBlockProc    : Proc := NIL;   (* RTHooks__CheckLoadTracedBlock *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
   textLitHooks : ARRAY [0..4] OF Proc;
   (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
@@ -1756,6 +1778,10 @@ PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
   BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
 PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =
   BEGIN RETURN m.gcStoreBarrierProc END ModuleGCStoreBarrier;
+PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc) =
+  BEGIN m.gcLoadBlockProc := p END SetModuleLoadBlockHook;
+PROCEDURE ModuleGCLoadBlockBarrier(m: Module): Proc =
+  BEGIN RETURN m.gcLoadBlockProc END ModuleGCLoadBlockBarrier;
 PROCEDURE ModuleScanTypecase  (m: Module): Proc =
   BEGIN RETURN m.scanTypecaseProc   END ModuleScanTypecase;
 
@@ -2079,8 +2105,8 @@ PROCEDURE BuildUnbarrieredLoad(b: Block; name: TEXT; type: T; addr: Value)
   : Value =
   VAR r := BuildLoad(b, name, type, addr);
   BEGIN
-    <* ASSERT Kind(type) = TypeKind.GcRef,
-       "BuildUnbarrieredLoad: type must be gc_ref" *>
+    <* ASSERT HoldsGcRef(type),
+       "BuildUnbarrieredLoad: type must be or hold a gc_ref" *>
     r.insn.unbarriered := TRUE;
     RETURN r;
   END BuildUnbarrieredLoad;
@@ -2246,6 +2272,23 @@ PROCEDURE BuildGcDirty(b: Block;  container: Value) =
     i.operands := ops;
     addInsn(b, i);
   END BuildGcDirty;
+
+PROCEDURE BuildGcLoadBlock(b: Block;  dst: Value;  n: Value;
+                           map: GcMapBytes;  stride: INTEGER) =
+  VAR
+    i   := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 2);
+  BEGIN
+    <* ASSERT dst # NIL AND map # NIL AND NUMBER(map^) > 0 *>
+    IF n = NIL THEN n := ConstInt(TI(Target.Integer.size), 1) END;
+    i.op := Op.GcLoadBlock;
+    ops[0] := dst;
+    ops[1] := n;
+    i.operands := ops;
+    i.blockMap := map;
+    i.blockStride := stride;
+    addInsn(b, i);
+  END BuildGcLoadBlock;
 
 PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
                         container: Value := NIL) =
