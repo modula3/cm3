@@ -131,12 +131,26 @@ PROCEDURE Trunc (READONLY a: Float): INTEGER =
   END Trunc;
 
 PROCEDURE Round (READONLY a: Float): INTEGER =
+  (* Ties go to the even neighbour, as FloatMode.RoundDefault
+     (NearestElseEven) says, whatever ROUND does in the compiler that
+     compiled this module: before #1281 the C back end took them away from
+     zero, so a compiler it built folded ROUND (2.5) to 3. *)
+  VAR x, y, d: EXTENDED;  f, g: INTEGER;
   BEGIN
     CASE a.pre OF
-    | Precision.Short    => RETURN ROUND (ToReal (a));
-    | Precision.Long     => RETURN ROUND (ToLongreal (a));
-    | Precision.Extended => RETURN ROUND (ToExtended (a));
+    | Precision.Short    => x := FLOAT (ToReal (a), EXTENDED);
+    | Precision.Long     => x := FLOAT (ToLongreal (a), EXTENDED);
+    | Precision.Extended => x := ToExtended (a);
     END;
+    f := FLOOR (x);
+    IF FLOAT (f, EXTENDED) = x THEN RETURN f END;  (* integral *)
+    (* Round the magnitude: for y >= 0, y - FLOOR (y) is exact (Sterbenz),
+       so a tie is detected exactly. *)
+    y := ABS (x);
+    g := FLOOR (y);
+    d := y - FLOAT (g, EXTENDED);
+    IF d > 0.5x0 OR (d = 0.5x0 AND g MOD 2 # 0) THEN INC (g) END;
+    IF x < 0.0x0 THEN RETURN -g ELSE RETURN g END;
   END Round;
 
 PROCEDURE Floor (READONLY a: Float): INTEGER =
