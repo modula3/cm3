@@ -898,6 +898,89 @@ PROCEDURE FixedSideExtents (e: Expr.T;  v: MSIR.Value;  openRank: INTEGER;
     RETURN exts;
   END FixedSideExtents;
 
+PROCEDURE EqualBlockMSIR (pA, pB: MSIR.Value;  t: Type.T;
+                          failBlk: MSIR.Block): BOOLEAN =
+  (* Compare the values of type t at byte addresses pA and pB as Compile's
+     CompileTest does: bytes where t is solid; field by field for a record
+     and element by element for a fixed array that are not, so that the
+     padding between fields, never written by a field store, is never
+     compared (B45).  Branches to failBlk when they differ and otherwise
+     continues in a new current block.  FALSE if abandoned. *)
+  VAR info: Type.Info;  blk, next: MSIR.Block;  index, elt: Type.T;
+      v: Value.T;
+  BEGIN
+    t := Type.CheckInfo (t, info);
+    IF info.size = 0 THEN RETURN TRUE END;
+    IF info.size < 0 OR info.size MOD Target.Byte # 0 THEN
+      MSIRBuilder.Abandon ("equality: component not byte-sized");
+      RETURN FALSE;
+    END;
+    blk := MSIRBuilder.CurrentBlock ();
+    IF info.isSolid THEN
+      VAR cmp := MSIRBuilder.BuildMemcmp (blk, pA, pB,
+                                          info.size DIV Target.Byte);
+          ne  := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, cmp,
+                                 MSIR.ConstInt (MSIR.TI (32), 0));
+      BEGIN
+        next := MSIRBuilder.NewBlock ("eq.next");
+        MSIR.BuildCondBr (blk, ne, failBlk, ARRAY OF MSIR.Value{},
+                          next, ARRAY OF MSIR.Value{});
+        MSIRBuilder.SetCurrentBlock (next);
+      END;
+      RETURN TRUE;
+    END;
+    t := Type.StripPacked (t);
+    IF RecordType.Split (t, v) THEN
+      VAR field: Field.Info;
+      BEGIN
+        WHILE v # NIL DO
+          Field.Split (v, field);
+          IF field.offset MOD Target.Byte # 0 THEN
+            MSIRBuilder.Abandon ("equality: field not byte-aligned");
+            RETURN FALSE;
+          END;
+          blk := MSIRBuilder.CurrentBlock ();
+          IF NOT EqualBlockMSIR (
+                   MSIRBuilder.BuildPtrByteOff (blk, "", pA,
+                                                field.offset DIV Target.Byte),
+                   MSIRBuilder.BuildPtrByteOff (blk, "", pB,
+                                                field.offset DIV Target.Byte),
+                   field.type, failBlk) THEN
+            RETURN FALSE;
+          END;
+          v := v.next;
+        END;
+      END;
+      RETURN TRUE;
+    ELSIF ArrayType.Split (t, index, elt) AND index # NIL THEN
+      VAR n: INTEGER;  pack := ArrayType.EltPack (t);
+          intT := MSIR.TI (Target.Integer.size);
+          l: MSIRBuilder.CountedLoop;  i, off: MSIR.Value;
+      BEGIN
+        IF NOT TInt.ToInt (Type.Number (index), n)
+           OR pack MOD Target.Byte # 0 THEN
+          MSIRBuilder.Abandon ("equality: array elements not byte-packed");
+          RETURN FALSE;
+        END;
+        IF n <= 0 THEN RETURN TRUE END;
+        i := MSIRBuilder.BeginCountedLoop (MSIR.ConstInt (intT, n), l);
+        IF i = NIL THEN RETURN FALSE END;
+        blk := MSIRBuilder.CurrentBlock ();
+        off := MSIR.BuildIMul (blk, "", i,
+                               MSIR.ConstInt (intT, pack DIV Target.Byte));
+        IF NOT EqualBlockMSIR (MSIR.BuildGepByte (blk, "", pA, off),
+                               MSIR.BuildGepByte (blk, "", pB, off),
+                               elt, failBlk) THEN
+          RETURN FALSE;
+        END;
+        MSIRBuilder.EndCountedLoop (l);
+      END;
+      RETURN TRUE;
+    END;
+    MSIRBuilder.Abandon ("equality: unsupported non-solid type");
+    RETURN FALSE;
+  END EqualBlockMSIR;
+
 PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
   VAR
     lv, rv:  MSIR.Value;
@@ -1199,7 +1282,17 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
              instead (p280 TestArrayMO: ARRAY OF [3 x [3 x i64]]). *)
           VAR eltK := MSIR.Kind (eltMsir);
           BEGIN
-            IF eltK = MSIR.TypeKind.Struct OR eltK = MSIR.TypeKind.FixedArray THEN
+            IF NOT eltInfo.isSolid THEN
+              (* Gaps between fields: compare component by component (B45);
+                 EqualBlockMSIR branches to failBlk itself. *)
+              IF NOT EqualBlockMSIR (
+                       MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff),
+                       MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff),
+                       eltT, failBlk) THEN
+                RETURN NIL;
+              END;
+              bodCond := NIL;
+            ELSIF eltK = MSIR.TypeKind.Struct OR eltK = MSIR.TypeKind.FixedArray THEN
               VAR cmp := MSIRBuilder.BuildMemcmp (loopBodBlk,
                            MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff),
                            MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff),
@@ -1216,9 +1309,14 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
               bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq, eA, eB);
             END;
           END;
-          MSIR.BuildCondBr (loopBodBlk, bodCond,
-                            incrBlk,  ARRAY OF MSIR.Value{},
-                            failBlk,  ARRAY OF MSIR.Value{});
+          IF bodCond = NIL THEN
+            MSIR.BuildBr (MSIRBuilder.CurrentBlock (), incrBlk,
+                          ARRAY OF MSIR.Value{});
+          ELSE
+            MSIR.BuildCondBr (loopBodBlk, bodCond,
+                              incrBlk,  ARRAY OF MSIR.Value{},
+                              failBlk,  ARRAY OF MSIR.Value{});
+          END;
 
           (* increment: advance index, loop back *)
           MSIRBuilder.SetCurrentBlock (incrBlk);
@@ -1309,6 +1407,30 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
                        MSIR.RetypeValue (addrB, MSIR.TPtr (MSIR.TVoid ())));
           END;
           blk := MSIRBuilder.CurrentBlock ();
+          IF NOT taInfo.isSolid THEN
+            (* Gaps between fields: compare component by component, as
+               Compile's CompileTest does (B45). *)
+            resSlot  := MSIR.BuildAlloca (blk, "", MSIR.TI1 ());
+            failBlk  := MSIRBuilder.NewBlock ("rec.eq.fail");
+            mergeBlk := MSIRBuilder.NewBlock ("rec.eq.merge");
+            IF p.op = Op.EQ
+              THEN eqConst  := MSIR.ConstInt (MSIR.TI1 (), 1);
+                   neqConst := MSIR.ConstInt (MSIR.TI1 (), 0);
+              ELSE eqConst  := MSIR.ConstInt (MSIR.TI1 (), 0);
+                   neqConst := MSIR.ConstInt (MSIR.TI1 (), 1);
+            END;
+            MSIR.BuildStore (blk, eqConst, resSlot);
+            IF NOT EqualBlockMSIR (addrA, addrB, ta, failBlk) THEN
+              RETURN NIL;
+            END;
+            MSIR.BuildBr (MSIRBuilder.CurrentBlock (), mergeBlk,
+                          ARRAY OF MSIR.Value{});
+            MSIRBuilder.SetCurrentBlock (failBlk);
+            MSIR.BuildStore (failBlk, neqConst, resSlot);
+            MSIR.BuildBr (failBlk, mergeBlk, ARRAY OF MSIR.Value{});
+            MSIRBuilder.SetCurrentBlock (mergeBlk);
+            RETURN MSIR.BuildLoad (mergeBlk, "", MSIR.TI1 (), resSlot);
+          END;
           idxSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI (Target.Integer.size));
           resSlot    := MSIR.BuildAlloca (blk, "", MSIR.TI1 ());
           loopHdrBlk := MSIRBuilder.NewBlock ("rec.eq.hdr");
