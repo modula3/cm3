@@ -561,6 +561,7 @@ p_test ("p3", "p311", "Procedures in inner blocks of a nested procedure use oute
 p_test ("p3", "p312", "Object type methods as procedure values, including an opaque supertype")
 p_test ("p3", "p313", "<*TRACE*> on formals, locals, WITH and FOR variables")
 p_test ("p3", "p315", "Packed array elements of 1..7 bits through a non-constant subscript")
+p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p302", "Address of a global at an offset, compared directly")
 p_test ("p2", "p299", "Initial values of packed fields, arrays and object fields")
 p_test ("p2", "p295", "Integrated backend crash in typecase")

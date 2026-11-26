@@ -49,6 +49,7 @@ TYPE
         genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
         exprAlign    := SubscriptExprAlign;
+        inFrame      := InFrame;
       END;
 
 (* EXPORTED: *) 
@@ -296,21 +297,28 @@ PROCEDURE SubscriptExprAlign (p: P): Type.BitAlignT =
     RETURN Expr.Alignment (p.a);
   END SubscriptExprAlign;
 
+(* The storage holding the elements: the array itself if it is fixed, or
+   NIL (the heap, or an open array parameter's referent) if it is open. *)
+PROCEDURE ElementStorage (p: P): Expr.T =
+  BEGIN
+    IF OpenArrayType.Is (Expr.TypeOf (p.a)) THEN RETURN NIL END;
+    RETURN p.a;
+  END ElementStorage;
+
+PROCEDURE InFrame (p: P): BOOLEAN =
+  VAR s := ElementStorage (p);
+  BEGIN
+    RETURN (s # NIL) AND s.inFrame ();
+  END InFrame;
+
 (* Externally dispatched-to: *) 
 PROCEDURE Prep (p: P) =
-  VAR info: Type.Info;
   BEGIN
     PrepLV (p, traced := FALSE);
-    EVAL Type.CheckInfo (p.type, info);
-    IF Host.doIncGC AND info.isTraced THEN
-      CASE info.class OF
-      | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
-        Compile (p, StaticOnly := FALSE);
-        RunTyme.EmitCheckLoadTracedRef ();
-        p.tmp := CG.Pop ();
-      ELSE
-        (* no check *)
-      END
+    IF Expr.LoadNeedsBarrier (ElementStorage (p), p.type) THEN
+      Compile (p, StaticOnly := FALSE);
+      RunTyme.EmitCheckLoadTracedRef ();
+      p.tmp := CG.Pop ();
     END
   END Prep;
 
