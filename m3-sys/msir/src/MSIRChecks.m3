@@ -22,8 +22,101 @@ PROCEDURE IsCheck (op: Op): BOOLEAN =
 (* Does Expand replace op? *)
 PROCEDURE Expands (op: Op): BOOLEAN =
   BEGIN
-    RETURN IsCheck (op) OR op = Op.Istype;
+    RETURN IsCheck (op) OR op IN SET OF Op {Op.Istype, Op.New, Op.OpenArrayNew};
   END Expands;
+
+CONST AllocHook = ARRAY MSIR.AllocKind OF MSIR.RtHook {
+  MSIR.RtHook.NewTracedRef, MSIR.RtHook.NewUntracedRef,
+  MSIR.RtHook.NewTracedObj, MSIR.RtHook.NewUntracedObj,
+  MSIR.RtHook.NewTracedArray, MSIR.RtHook.NewUntracedArray };
+
+PROCEDURE Hooks (m: MSIR.Module): SET OF MSIR.RtHook =
+  VAR
+    s := SET OF MSIR.RtHook {};
+    p: MSIR.Proc;  b: MSIR.Block;  i: MSIR.Insn;  op: Op;
+  BEGIN
+    FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
+      p := MSIR.ModuleProc (m, pi);
+      FOR k := 0 TO MSIR.ProcBlockCount (p) - 1 DO
+        b := MSIR.ProcBlock (p, k);
+        FOR j := 0 TO MSIR.BlockInsnCount (b) - 1 DO
+          i := MSIR.BlockInsn (b, j);
+          op := MSIR.InsnOp (i);
+          IF IsCheck (op) THEN
+            s := s + SET OF MSIR.RtHook {MSIR.RtHook.ReportFault};
+          END;
+          IF op IN SET OF Op {Op.Istype, Op.Narrow}
+             AND MSIR.InsnTypeTest (i) = MSIR.TypeTest.Subtype THEN
+            s := s + SET OF MSIR.RtHook {MSIR.RtHook.CheckIsType};
+          ELSIF op IN SET OF Op {Op.New, Op.OpenArrayNew} THEN
+            s := s + SET OF MSIR.RtHook {AllocHook [MSIR.InsnAllocKind (i)]};
+          END;
+        END;
+      END;
+    END;
+    RETURN s;
+  END Hooks;
+
+PROCEDURE Hook (m: MSIR.Module;  h: MSIR.RtHook): MSIR.Proc =
+  VAR p := MSIR.ModuleRtHook (m, h);
+  BEGIN
+    <* ASSERT p # NIL *>  (* the front end binds Hooks (m) *)
+    RETURN p;
+  END Hook;
+
+(* A new alloca of type t at the head of p's entry block. *)
+PROCEDURE EntryAlloca (p: MSIR.Proc;  t: MSIR.T): MSIR.Value =
+  VAR
+    entry := MSIR.ProcEntry (p);
+    insns := MSIR.BlockTakeInsns (entry);
+    a := MSIR.BuildAlloca (entry, "", t);
+  BEGIN
+    FOR j := 0 TO LAST (insns^) DO MSIR.BlockAppendInsn (entry, insns[j]) END;
+    RETURN a;
+  END EntryAlloca;
+
+(* Allocate as i (new or openarray.new) in block b: the allocator's
+   result, as i's type. *)
+PROCEDURE Allocate (m: MSIR.Module;  p: MSIR.Proc;  b: MSIR.Block;
+                    i: MSIR.Insn): MSIR.Value =
+  VAR
+    cell := MSIR.InsnOperand (i, 0);
+    hook := Hook (m, AllocHook [MSIR.InsnAllocKind (i)]);
+    raw: MSIR.Value;
+  BEGIN
+    IF MSIR.InsnOp (i) = Op.New THEN
+      raw := MSIR.BuildCall (b, "", hook, ARRAY OF MSIR.Value {cell});
+    ELSE
+      (* the open-array shape the allocator takes: elt_ptr, then the
+         number of dimensions, then the sizes, at M3RT.OA_elt_ptr and on *)
+      VAR
+        ndims  := MSIR.InsnOperandCount (i) - 1;
+        ptrT   := MSIR.TPtr (MSIR.TVoid ());
+        intT   := MSIR.TI (Target.Integer.size);
+        ipB    := Target.Integer.size DIV Target.Byte;
+        shapeB := M3RT.OA_sizes DIV Target.Byte;
+        flds   := NEW (REF ARRAY OF MSIR.Field, ndims + 2);
+        shape  : MSIR.Value;
+      BEGIN
+        flds[0] := MSIR.Field {name := "", type := ptrT};
+        flds[1] := MSIR.Field {name := "", type := intT};
+        FOR k := 0 TO ndims - 1 DO
+          flds[2 + k] := MSIR.Field {name := "", type := intT};
+        END;
+        shape := EntryAlloca (p, MSIR.TStruct ("__oa_shape", flds^));
+        MSIR.BuildStore (b, MSIR.BuildPtrAdd (b, "", shape, shapeB + ipB),
+                         MSIR.BuildPtrAdd (b, "", shape, 0));
+        MSIR.BuildStore (b, MSIR.ConstInt (intT, ndims),
+                         MSIR.BuildPtrAdd (b, "", shape, shapeB));
+        FOR k := 1 TO ndims DO
+          MSIR.BuildStore (b, MSIR.BuildConvert (b, "", MSIR.InsnOperand (i, k), intT),
+                           MSIR.BuildPtrAdd (b, "", shape, shapeB + ipB * k));
+        END;
+        raw := MSIR.BuildCall (b, "", hook, ARRAY OF MSIR.Value {cell, shape});
+      END;
+    END;
+    RETURN MSIR.BuildConvert (b, "", raw, MSIR.ValueType (MSIR.InsnResult (i)));
+  END Allocate;
 
 PROCEDURE HasCheck (b: MSIR.Block): BOOLEAN =
   BEGIN
@@ -127,8 +220,7 @@ PROCEDURE TypeTest (m: MSIR.Module;  p: MSIR.Proc;  like: MSIR.Block;
 
     (* an object or opaque type: the runtime decides *)
     IF other # no THEN
-      <* ASSERT MSIR.ModuleIsTypeHook (m) # NIL *>
-      raw := MSIR.BuildCall (other, "", MSIR.ModuleIsTypeHook (m),
+      raw := MSIR.BuildCall (other, "", Hook (m, MSIR.RtHook.CheckIsType),
                              ARRAY OF MSIR.Value {v, cell});
       MSIR.BuildCondBr (other,
         MSIR.BuildICmp (other, "", MSIR.CmpPred.Ne, raw,
@@ -200,8 +292,7 @@ PROCEDURE CallHook (m: MSIR.Module;  b: MSIR.Block;  i: MSIR.Insn) =
     ptrT := MSIR.TPtr (MSIR.TVoid ());
     intT := MSIR.TI (Target.Integer.size);
   BEGIN
-    <* ASSERT MSIR.ModuleFaultHook (m) # NIL *>
-    EVAL MSIR.BuildCall (b, "", MSIR.ModuleFaultHook (m),
+    EVAL MSIR.BuildCall (b, "", Hook (m, MSIR.RtHook.ReportFault),
            ARRAY OF MSIR.Value {
              MSIR.StructFieldRef (MSIR.ModuleInfoName (m), 0, ptrT),
              MSIR.ConstInt (intT, MSIR.InsnSrcLine (i) * 32
@@ -232,13 +323,7 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
   BEGIN
     slot := NIL;
     IF NeedsSlot (p) THEN
-      (* an i1 alloca at the head of the entry *)
-      VAR entry := MSIR.ProcEntry (p);
-          insns := MSIR.BlockTakeInsns (entry);
-      BEGIN
-        slot := MSIR.BuildAlloca (entry, "", MSIR.TI1 ());
-        FOR j := 0 TO LAST (insns^) DO MSIR.BlockAppendInsn (entry, insns[j]) END;
-      END;
+      slot := EntryAlloca (p, MSIR.TI1 ());
     END;
     (* New continuation blocks are appended and examined in turn. *)
     WHILE k < MSIR.ProcBlockCount (p) DO
@@ -256,6 +341,9 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                 ELSIF MSIR.InsnOp (i) = Op.Istype THEN
                   (* the test's answer replaces i's result *)
                   MSIR.InsnMakeCopy (i, TypeTest (m, p, b, cur, i));
+                  MSIR.BlockAppendInsn (cur, i);
+                ELSIF MSIR.InsnOp (i) IN SET OF Op {Op.New, Op.OpenArrayNew} THEN
+                  MSIR.InsnMakeCopy (i, Allocate (m, p, cur, i));
                   MSIR.BlockAppendInsn (cur, i);
                 ELSIF IsCheck (MSIR.InsnOp (i)) THEN
                   VAR fail  := FailCond (m, p, b, cur, i);

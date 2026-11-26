@@ -445,9 +445,20 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
-    | MSIR.Op.New =>
+    | MSIR.Op.New, MSIR.Op.OpenArrayNew =>
         Wr.PutText(wr, " ");
-        Type(wr, MSIR.InsnTargetType(i));
+        FOR k := 0 TO nOps - 1 DO
+          IF k > 0 THEN Wr.PutText(wr, ", ") END;
+          NameRef(wr, MSIR.InsnOperand(i, k));
+        END;
+        CASE MSIR.InsnAllocKind(i) OF
+        | MSIR.AllocKind.TracedRef, MSIR.AllocKind.TracedObj,
+          MSIR.AllocKind.TracedArray => Wr.PutText(wr, ", traced");
+        ELSE Wr.PutText(wr, ", untraced");
+        END;
+        Wr.PutText(wr, ", uid 0x" & Fmt.Unsigned(MSIR.InsnTypeUid(i)));
+        Wr.PutText(wr, " -> ");
+        Type(wr, MSIR.ValueType(res));
     | MSIR.Op.Dispatch =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
@@ -589,16 +600,6 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, " ");
         Type(wr, MSIR.InsnTargetType(i));
         FOR k := 0 TO MSIR.InsnOperandCount(i) - 1 DO
-          Wr.PutText(wr, ", ");
-          NameRef(wr, MSIR.InsnOperand(i, k));
-        END;
-    | MSIR.Op.OpenArrayNew =>
-        Wr.PutText(wr, " <element=");
-        Type(wr, MSIR.InsnTargetType(i));
-        Wr.PutText(wr, ", rank=");
-        Wr.PutText(wr, Fmt.Int(nOps));
-        Wr.PutText(wr, ">");
-        FOR k := 0 TO nOps - 1 DO
           Wr.PutText(wr, ", ");
           NameRef(wr, MSIR.InsnOperand(i, k));
         END;

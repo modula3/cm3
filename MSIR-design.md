@@ -2168,6 +2168,26 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     untraced in Narrow.Emit), so a non-NIL x passes; the null kind is
     there for when that is fixed on master.
 
+- **D34. Allocation is an op** (2026-11-27; the third conversion under
+  D31; proposed, for Tony's review).
+  - **Ops.**  `new cell` (a REF to a fixed type, or an object) and
+    `openarray.new cell, n0, n1, ...` (a REF to an open array), traced or
+    untraced, with the type's GlobalUID; the result has the Modula-3
+    type's MSIR type.  The typecell's initProc applies defaults, as in the
+    C backend; NEW's keyword fields are ordinary stores after the op.  The
+    declared-but-unused `new`/`openarray.new` builders are replaced.
+  - **Lowering.**  MSIRChecks.Expand calls the allocator (`RTHooks.New*`);
+    for `openarray.new` it fills an open-array shape (M3RT.OA_*) in an
+    alloca at the head of the entry, where the front end had put it in the
+    current block.
+  - **Runtime hooks.**  The procedures MSIRChecks expands into (ReportFault,
+    CheckIsType, the six allocators) are one table, `MSIR.RtHook`, bound per
+    module: MSIRChecks.Hooks says which a module needs, and MSIREmit binds
+    each to its RunTyme hook.  This replaces a setter per hook.
+  - **Not yet ops.**  The VALUE open-array copy (`NewTracedArray`, in
+    Formal) and RAISE's boxed argument (`NewTracedRef`) still call the
+    allocators directly; they belong with the copy and RAISE conversions.
+
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
   `Swap.Int32 = BITS 32 FOR [-2^31 .. 2^31-1]`: MSIR widens the subrange

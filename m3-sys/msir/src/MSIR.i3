@@ -410,12 +410,15 @@ PROCEDURE ModulePopEFrame    (m: Module): Proc;
 PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
 (* The runtime's block read barrier (RTHooks.CheckLoadTracedBlock), for
    gc.load_block. *)
-PROCEDURE SetModuleFaultHook(m: Module;  p: Proc);
-PROCEDURE ModuleFaultHook(m: Module): Proc;
-PROCEDURE SetModuleIsTypeHook(m: Module;  p: Proc);
-PROCEDURE ModuleIsTypeHook(m: Module): Proc;
-(* RTHooks.CheckIsType, for a Subtype istype or narrow (D33). *)
-(* RTHooks.ReportFault, called when a check op fails (D32, MSIRChecks). *)
+(* The runtime procedures that MSIRChecks expands ops into (D32-D34):
+   ReportFault for a failed check, CheckIsType for a subtype test, the
+   allocators for new and openarray.new.  MSIRChecks.Hooks says which a
+   module needs; the front end binds them to its RTHooks procedures. *)
+TYPE RtHook = {ReportFault, CheckIsType,
+               NewTracedRef, NewUntracedRef, NewTracedObj, NewUntracedObj,
+               NewTracedArray, NewUntracedArray};
+PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc);
+PROCEDURE ModuleRtHook(m: Module;  h: RtHook): Proc;
 PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc);
 PROCEDURE ModuleGCLoadBlockBarrier (m: Module): Proc;
 PROCEDURE ModuleScanTypecase   (m: Module): Proc;
@@ -954,8 +957,16 @@ PROCEDURE BuildFieldAddr(b: Block;  name: TEXT;
 PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;
                              arr: Value;  idx: Value): Value;
 
-PROCEDURE BuildNew(b: Block;  name: TEXT;  type: T): Value;
-                                             (* type must be Object; result: gc_ref type *)
+(* Allocation (D34).  `new cell` allocates a reference or object of the
+   type whose typecell is cell, by kind; the result has type t.  The
+   lowerings call the module's allocator hook (an RTHooks.New proc); the typecell's
+   initProc applies field defaults, as in the C backend.  uid is the type's
+   GlobalUID, for reading the IR. *)
+TYPE AllocKind = {TracedRef, UntracedRef, TracedObj, UntracedObj,
+                  TracedArray, UntracedArray};
+PROCEDURE BuildNew(b: Block;  name: TEXT;  cell: Value;  kind: AllocKind;
+                   uid: INTEGER;  t: T): Value;
+PROCEDURE InsnAllocKind(i: Insn): AllocKind;
 
 PROCEDURE BuildDispatch(b: Block;  name: TEXT;
                         obj: Value;  methodName: TEXT;
@@ -1158,11 +1169,14 @@ PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
 
 (*------------------------------------------------- heap-array builders *)
 
-(* `openarray.new` heap-allocates a `REF ARRAY OF elt` with the given
-   per-dimension sizes. Result type: `gc_ref HeapArray<rank, elt>`. *)
-PROCEDURE BuildOpenArrayNew(b: Block;  name: TEXT;
-                            elt: T;
-                            READONLY sizes: ARRAY OF Value): Value;
+(* `openarray.new cell, n0, n1, ...` allocates a REF to an open array
+   (D34) with the given dimension sizes (integers), traced or not, of the
+   type whose typecell is cell; the result has type t.  The lowerings pass
+   the sizes in an open-array shape (M3RT.OA_) to RTHooks.NewTracedArray
+   or NewUntracedArray. *)
+PROCEDURE BuildOpenArrayNew(b: Block;  name: TEXT;  cell: Value;
+                            traced: BOOLEAN;  uid: INTEGER;
+                            READONLY sizes: ARRAY OF Value;  t: T): Value;
 
 (* `openarray.deref` extracts the fat-pointer view from a heap-array ref.
    Input: gc_ref HeapArray<rank, elt>.  Output: openarray<rank> elt. *)

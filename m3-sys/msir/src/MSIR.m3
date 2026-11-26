@@ -610,7 +610,8 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   checkCode:   INTEGER := 0;      (* check ops: M3CG.RuntimeError code *)
   checkUnsigned: BOOLEAN := FALSE; (* range_check: unsigned compare *)
   typeTest:    TypeTest := TypeTest.Exact; (* istype, narrow *)
-  typeUid:     INTEGER := 0;                (* istype, narrow *)
+  typeUid:     INTEGER := 0;                (* istype, narrow, new *)
+  allocKind:   AllocKind := AllocKind.TracedRef; (* new, openarray.new *)
   blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
   blockStride: INTEGER := 0;      (* GcLoadBlock: element stride, bytes *)
   exc:       ExcDesc     := NIL;               (* Raise *)
@@ -681,6 +682,8 @@ PROCEDURE InsnTypeTest(i: Insn): TypeTest =
   BEGIN RETURN i.typeTest END InsnTypeTest;
 PROCEDURE InsnTypeUid(i: Insn): INTEGER =
   BEGIN RETURN i.typeUid END InsnTypeUid;
+PROCEDURE InsnAllocKind(i: Insn): AllocKind =
+  BEGIN RETURN i.allocKind END InsnAllocKind;
 PROCEDURE InsnBlockMap(i: Insn): GcMapBytes =
   BEGIN RETURN i.blockMap END InsnBlockMap;
 PROCEDURE InsnBlockStride(i: Insn): INTEGER =
@@ -1127,8 +1130,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   popEFrameProc   : Proc := NIL;   (* RTHooks.PopEFrame *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   gcLoadBlockProc    : Proc := NIL;   (* RTHooks__CheckLoadTracedBlock *)
-  faultProc          : Proc := NIL;   (* RTHooks__ReportFault (D32)      *)
-  isTypeProc         : Proc := NIL;   (* RTHooks__CheckIsType (D33)      *)
+  rtHooks            : ARRAY RtHook OF Proc;  (* D32-D34; NIL until bound *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
   textLitHooks : ARRAY [0..4] OF Proc;
   (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
@@ -1792,14 +1794,10 @@ PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
   BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
 PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =
   BEGIN RETURN m.gcStoreBarrierProc END ModuleGCStoreBarrier;
-PROCEDURE SetModuleFaultHook(m: Module;  p: Proc) =
-  BEGIN m.faultProc := p END SetModuleFaultHook;
-PROCEDURE ModuleFaultHook(m: Module): Proc =
-  BEGIN RETURN m.faultProc END ModuleFaultHook;
-PROCEDURE SetModuleIsTypeHook(m: Module;  p: Proc) =
-  BEGIN m.isTypeProc := p END SetModuleIsTypeHook;
-PROCEDURE ModuleIsTypeHook(m: Module): Proc =
-  BEGIN RETURN m.isTypeProc END ModuleIsTypeHook;
+PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc) =
+  BEGIN m.rtHooks[h] := p END SetModuleRtHook;
+PROCEDURE ModuleRtHook(m: Module;  h: RtHook): Proc =
+  BEGIN RETURN m.rtHooks[h] END ModuleRtHook;
 PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc) =
   BEGIN m.gcLoadBlockProc := p END SetModuleLoadBlockHook;
 PROCEDURE ModuleGCLoadBlockBarrier(m: Module): Proc =
@@ -2406,14 +2404,15 @@ PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;
     RETURN i.result;
   END BuildArrayElemAddr;
 
-PROCEDURE BuildNew(b: Block;  name: TEXT;  type: T): Value =
-  VAR i := NEW(Insn);
+PROCEDURE BuildNew(b: Block;  name: TEXT;  cell: Value;  kind: AllocKind;
+                   uid: INTEGER;  t: T): Value =
+  VAR i := NEW(Insn);  ops := NEW(REF ARRAY OF Value, 1);
   BEGIN
-    <* ASSERT Kind(type) = TypeKind.Object,
-       "BuildNew: type must be Object" *>
+    <* ASSERT kind < AllocKind.TracedArray *>
     i.op := Op.New;
-    i.targetType := type;
-    i.result := makeResult(b, TGcRef(type), name, i);
+    i.allocKind := kind;  i.typeUid := uid;
+    ops[0] := cell;  i.operands := ops;
+    i.result := makeResult(b, t, name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildNew;
@@ -2971,21 +2970,25 @@ PROCEDURE BuildSetMember(b: Block;  name: TEXT;
     RETURN i.result;
   END BuildSetMember;
 
-PROCEDURE BuildOpenArrayNew(b: Block;  name: TEXT;
-                            elt: T;
-                            READONLY sizes: ARRAY OF Value): Value =
+PROCEDURE BuildOpenArrayNew(b: Block;  name: TEXT;  cell: Value;
+                            traced: BOOLEAN;  uid: INTEGER;
+                            READONLY sizes: ARRAY OF Value;  t: T): Value =
   VAR
     i    := NEW(Insn);
     n    := NUMBER(sizes);
-    ops  := NEW(REF ARRAY OF Value, n);
-    heap := THeapArray(n, elt);
+    ops  := NEW(REF ARRAY OF Value, n + 1);
   BEGIN
     <* ASSERT n >= 1, "BuildOpenArrayNew: at least one size required" *>
     i.op := Op.OpenArrayNew;
-    i.targetType := elt;                 (* element type for printer *)
-    FOR k := 0 TO n - 1 DO ops[k] := sizes[k] END;
+    IF traced
+      THEN i.allocKind := AllocKind.TracedArray;
+      ELSE i.allocKind := AllocKind.UntracedArray;
+    END;
+    i.typeUid := uid;
+    ops[0] := cell;
+    FOR k := 0 TO n - 1 DO ops[k + 1] := sizes[k] END;
     i.operands := ops;
-    i.result := makeResult(b, TGcRef(heap), name, i);
+    i.result := makeResult(b, t, name, i);
     addInsn(b, i);
     RETURN i.result;
   END BuildOpenArrayNew;

@@ -438,6 +438,14 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
                                              MSIR.TypeKind.GcRef} THEN
           Err(c, "nil_check: operand must be a ptr or gc_ref");
         END;
+    | MSIR.Op.New =>
+        IF MSIR.InsnOperandCount(i) # 1 THEN
+          Err(c, "new takes the typecell");
+        END;
+    | MSIR.Op.OpenArrayNew =>
+        IF MSIR.InsnOperandCount(i) < 2 THEN
+          Err(c, "openarray.new takes the typecell and the sizes");
+        END;
     | MSIR.Op.Istype, MSIR.Op.Narrow =>
         (* D33: a reference, and its type's typecell unless NULL *)
         VAR want := 2;
