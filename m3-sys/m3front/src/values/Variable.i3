@@ -42,6 +42,19 @@ PROCEDURE Load       (t: T);
 PROCEDURE LoadLValue (t: T);
 PROCEDURE SetLValue  (t: T);
 
+PROCEDURE SetRepType (t: T;  rep: Type.T);
+(* t, a WITH alias of a packed designator, is represented as the designator
+   is (rep, a packed type), not stripped of its packing as other variables
+   are: loads and stores through it then cover only the designator's bits. *)
+
+PROCEDURE SetBitLValue (t: T;  static_bits, base_align: INTEGER;
+                        dynamic_bits: BOOLEAN);
+(* After SetLValue: t, a WITH alias, is bound to a bit address: the address
+   SetLValue stored (aligned to base_align), plus static_bits bits, plus the
+   bits s0.I (popped) when dynamic_bits.  See CG.Split_bit_address.  Load and
+   LoadLValue add them back, so the alias reads and writes the packed field
+   or element. *)
+
 PROCEDURE LocalCGName (t: T;  VAR unit: CG.Var;  VAR offset: INTEGER);
 (* return the back-end address of the non-imported variable 't'. *)
 

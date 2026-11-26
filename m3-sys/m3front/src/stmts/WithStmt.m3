@@ -91,6 +91,13 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     Variable.BindType (p.var, t, indirect := (p.kind = Kind.designator),
                        readonly := NOT Expr.IsWritable (p.expr, traced := FALSE),
                        open_array_ok := TRUE,  needs_init := FALSE);
+    IF (p.kind = Kind.designator) THEN
+      (* An alias of a packed field or element keeps its packing. *)
+      VAR rep := Expr.RepTypeOf (p.expr);
+      BEGIN
+        IF Type.StripPacked (rep) # rep THEN Variable.SetRepType (p.var, rep) END;
+      END;
+    END;
 
     Scope.TypeCheck (p.scope, cs);
     zz := Scope.Push (p.scope);
@@ -105,6 +112,9 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     zz: Scope.T;
     info: Type.Info;
     val: CG.Val;
+    bits: CG.Val := NIL;   (* designator: the dynamic bits past its base *)
+    static_bits := 0;      (* designator: the static bits past its base *)
+    base_align  : CG.Alignment;  (* designator: its base's alignment *)
     dope_size: INTEGER;
     t, tlhs: Type.T;
     global, indirect, traced: BOOLEAN;
@@ -117,7 +127,12 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     | Kind.designator =>
         Variable.Split (p.var, tlhs, global, indirect, traced);
         Expr.PrepLValue (p.expr, traced);
-        Expr.CompileAddress (p.expr, traced);
+        (* A packed field or element need not start on a byte: bind the alias
+           to the designator's base and keep the bits past it beside it. *)
+        Expr.CompileLValue (p.expr, traced);
+        IF CG.Split_bit_address (static_bits, base_align) THEN
+          bits := CG.Pop ();
+        END;
         val := CG.Pop ();
     | Kind.structure =>
         tlhs := Value.TypeOf (p.var);
@@ -139,6 +154,11 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
           CG.Push (val);
           Variable.SetLValue (p.var);
           CG.Free (val);
+          IF (bits # NIL) THEN CG.Push (bits) END;
+          IF (static_bits # 0) OR (bits # NIL) THEN
+            Variable.SetBitLValue (p.var, static_bits, base_align, bits # NIL);
+          END;
+          IF (bits # NIL) THEN CG.Free (bits) END;
       | Kind.openarray =>
           (* Copy dope-only into p.var. *)
           dope_size := OpenArrayType.OpenDepth(t) * Target.Integer.pack;

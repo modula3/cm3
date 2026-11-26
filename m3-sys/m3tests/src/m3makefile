@@ -560,6 +560,7 @@ p_test ("p3", "p310", "Packed designators: base evaluated once by assignment, IN
 p_test ("p3", "p311", "Procedures in inner blocks of a nested procedure use outer variables")
 p_test ("p3", "p312", "Object type methods as procedure values, including an opaque supertype")
 p_test ("p3", "p313", "<*TRACE*> on formals, locals, WITH and FOR variables")
+p_test ("p3", "p314", "WITH over packed fields and elements not starting on a byte")
 p_test ("p3", "p315", "Packed array elements of 1..7 bits through a non-constant subscript")
 p_test ("p3", "p322", "Block copies of records and arrays of traced references during an incremental collection")
 p_test ("p3", "p321", "Set constructors of one word with non-constant ranges")
