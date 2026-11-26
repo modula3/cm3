@@ -56,7 +56,11 @@ if defined ("M3_USE_STACK_WALKER")
        or equal (M3_BACKEND_MODE, "MSIRAsm")
       M3CORE_EX_STACK = TRUE
     end
+    % The old LLVM back ends' own EH runtime; not MSIR's lowering, which
+    % IsBackendLlvm also covers but which uses ex_stack (above).
     if IsBackendLlvm()
+       and not equal (M3_BACKEND_MODE, "MSIRObj")
+       and not equal (M3_BACKEND_MODE, "MSIRAsm")
       M3CORE_EX_STACK = TRUE
       M3CORE_EX_STACK_LLVM = TRUE
     end
