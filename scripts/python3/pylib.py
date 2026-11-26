@@ -622,9 +622,9 @@ PyFlags += " " + Target
 # But it does not work yet and that is ok.
 # It probably does not work because cm3 does not implement it.
 #
-_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
+CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
 
-#if _CBackend:
+#if CBackend:
 #    CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
 
 #-----------------------------------------------------------------------------
@@ -632,7 +632,7 @@ _CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBacke
 # GCC_BACKEND if not CBackend.
 #
 
-GCC_BACKEND = not _CBackend
+GCC_BACKEND = not CBackend
 
 #-----------------------------------------------------------------------------
 #
