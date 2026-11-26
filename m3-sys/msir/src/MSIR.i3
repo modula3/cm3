@@ -283,6 +283,10 @@ PROCEDURE InsnUnbarriered(i: Insn): BOOLEAN;
 PROCEDURE HoldsGcRef(t: T): BOOLEAN;
 (* TRUE iff t is a gc_ref, or a struct or fixed array with one inside. *)
 
+PROCEDURE InsnCheckCode(i: Insn): INTEGER;
+(* nil_check, range_check, subscript_check: the M3CG.RuntimeError code
+   reported when the check fails (D32); InsnSrcLine is its line. *)
+
 PROCEDURE InsnBlockMap(i: Insn): GcMapBytes;
 PROCEDURE InsnBlockStride(i: Insn): INTEGER;
 (* gc.load_block: the gc map of one element, and the bytes between
@@ -405,6 +409,9 @@ PROCEDURE ModulePopEFrame    (m: Module): Proc;
 PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
 (* The runtime's block read barrier (RTHooks.CheckLoadTracedBlock), for
    gc.load_block. *)
+PROCEDURE SetModuleFaultHook(m: Module;  p: Proc);
+PROCEDURE ModuleFaultHook(m: Module): Proc;
+(* RTHooks.ReportFault, called when a check op fails (D32, MSIRChecks). *)
 PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc);
 PROCEDURE ModuleGCLoadBlockBarrier (m: Module): Proc;
 PROCEDURE ModuleScanTypecase   (m: Module): Proc;
@@ -1062,14 +1069,16 @@ PROCEDURE BuildSubarray(b: Block;  name: TEXT;
                         oa: Value;  lo, count: Value): Value;
 
 (* `subscript_check idx, bound` — raises if idx not in [0, bound). *)
-PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value);
+PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
+                              code, line: INTEGER);
 
 (* `nil_check ref` — raises if ref is nil. *)
-PROCEDURE BuildNilCheck(b: Block;  ref: Value);
+PROCEDURE BuildNilCheck(b: Block;  ref: Value;  code, line: INTEGER);
 
 (* `range_check value, lo, hi` — raises if value not in [lo..hi].
    lo and hi are typically constants but may be any Value. *)
-PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value);
+PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value;
+                          code, line: INTEGER);
 
 (*--------------------------------------------- Conversion / set builders *)
 

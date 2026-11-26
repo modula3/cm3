@@ -429,6 +429,15 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         IF MSIR.InsnOperandCount(i) # 1 THEN
           Err(c, "gc.dirty requires exactly one operand");
         END;
+    | MSIR.Op.NilCheck =>
+        (* D32: one operand, a reference (ptr or gc_ref) *)
+        IF MSIR.InsnOperandCount(i) # 1 THEN
+          Err(c, "nil_check requires exactly one operand");
+        ELSIF NOT MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, 0)))
+                    IN SET OF MSIR.TypeKind {MSIR.TypeKind.Ptr,
+                                             MSIR.TypeKind.GcRef} THEN
+          Err(c, "nil_check: operand must be a ptr or gc_ref");
+        END;
     | MSIR.Op.GcLoadBlock =>
         (* block read barrier: the copy's destination (ptr) and the
            element count (integer), with a non-empty map *)

@@ -1396,10 +1396,7 @@ PROCEDURE CheckCallee(fn: MSIR.Value) =
   BEGIN
     IF NOT Host.doProcChk THEN RETURN END;
     IF k # MSIR.TypeKind.Ptr AND k # MSIR.TypeKind.GcRef THEN RETURN END;
-    EmitReportFault(
-      MSIR.BuildICmp(CurrentBlock(), "", MSIR.CmpPred.Eq,
-                     fn, MSIR.ConstNil(MSIR.ValueType(fn))),
-      ORD(M3CG.RuntimeError.BadMemoryReference));
+    EmitNilCheck(fn, ORD(M3CG.RuntimeError.BadMemoryReference));
   END CheckCallee;
 
 PROCEDURE CurrentModuleInfoRef(): MSIR.Value =
@@ -1409,6 +1406,14 @@ PROCEDURE CurrentModuleInfoRef(): MSIR.Value =
     RETURN MSIR.StructFieldRef(MSIR.ModuleInfoName(m), 0,
                                MSIR.TPtr(MSIR.TVoid()));
   END CurrentModuleInfoRef;
+
+PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER) =
+  VAR f: TEXT;  line: INTEGER;
+  BEGIN
+    IF NOT InProc() OR ref = NIL THEN RETURN END;
+    Scanner.Here(f, line);
+    MSIR.BuildNilCheck(CurrentBlock(), ref, errCode, line);
+  END EmitNilCheck;
 
 PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
   VAR

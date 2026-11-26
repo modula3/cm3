@@ -2,7 +2,7 @@ MODULE MSIRToLLVM;
 
 IMPORT RTParams;
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT Target, TFloat, M3RT, Process, MSIREH;
+IMPORT Target, TFloat, M3RT, Process, MSIREH, MSIRChecks;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (* RT0.RefHeaderBits bit-field offsets come from M3RT (D24). *)
@@ -5309,7 +5309,9 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     needsGC    : BOOLEAN;
   BEGIN
     IF NOT rtLayoutChecked THEN CheckRTLayouts (); rtLayoutChecked := TRUE END;
-    (* EH scopes (D26) to the invoke / landing-pad form emitted below. *)
+    (* Check ops (D32) to compares and fault calls, then EH scopes (D26) to
+       the invoke / landing-pad form emitted below. *)
+    MSIRChecks.Expand (m);
     MSIREH.LowerModule (m);
     curEmitModule := m;
     auxN          := 0;

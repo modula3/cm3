@@ -328,6 +328,10 @@ PROCEDURE OpenArrayDataPtr(blk: MSIR.Block;  oa: MSIR.Value): MSIR.Value;
    No-op when not inside a proc or already abandoned. *)
 PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 
+(* nil_check ref (D32): fault with errCode (M3CG.RuntimeError) at the
+   current line if ref is NIL. *)
+PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER);
+
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 

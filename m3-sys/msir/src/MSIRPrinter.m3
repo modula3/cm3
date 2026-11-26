@@ -541,6 +541,7 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.NilCheck =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", code " & Fmt.Int(MSIR.InsnCheckCode(i)));
     | MSIR.Op.RangeCheck =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));

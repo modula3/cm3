@@ -607,6 +607,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   dbgLine:   INTEGER := 0;        (* Alloca: the variable's declaration line *)
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
   unbarriered: BOOLEAN := FALSE;  (* Load: see BuildUnbarrieredLoad *)
+  checkCode:   INTEGER := 0;      (* check ops: M3CG.RuntimeError code *)
   blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
   blockStride: INTEGER := 0;      (* GcLoadBlock: element stride, bytes *)
   exc:       ExcDesc     := NIL;               (* Raise *)
@@ -669,6 +670,8 @@ PROCEDURE HoldsGcRef(t: T): BOOLEAN =
     END;
   END HoldsGcRef;
 
+PROCEDURE InsnCheckCode(i: Insn): INTEGER =
+  BEGIN RETURN i.checkCode END InsnCheckCode;
 PROCEDURE InsnBlockMap(i: Insn): GcMapBytes =
   BEGIN RETURN i.blockMap END InsnBlockMap;
 PROCEDURE InsnBlockStride(i: Insn): INTEGER =
@@ -1115,6 +1118,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   popEFrameProc   : Proc := NIL;   (* RTHooks.PopEFrame *)
   gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
   gcLoadBlockProc    : Proc := NIL;   (* RTHooks__CheckLoadTracedBlock *)
+  faultProc          : Proc := NIL;   (* RTHooks__ReportFault (D32)      *)
   scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
   textLitHooks : ARRAY [0..4] OF Proc;
   (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
@@ -1778,6 +1782,10 @@ PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
   BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
 PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =
   BEGIN RETURN m.gcStoreBarrierProc END ModuleGCStoreBarrier;
+PROCEDURE SetModuleFaultHook(m: Module;  p: Proc) =
+  BEGIN m.faultProc := p END SetModuleFaultHook;
+PROCEDURE ModuleFaultHook(m: Module): Proc =
+  BEGIN RETURN m.faultProc END ModuleFaultHook;
 PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc) =
   BEGIN m.gcLoadBlockProc := p END SetModuleLoadBlockHook;
 PROCEDURE ModuleGCLoadBlockBarrier(m: Module): Proc =
@@ -2789,34 +2797,39 @@ PROCEDURE BuildSubarray(b: Block;  name: TEXT;
     RETURN i.result;
   END BuildSubarray;
 
-PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value) =
+PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
+                              code, line: INTEGER) =
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 2);
   BEGIN
     i.op := Op.SubscriptCheck;
+    i.checkCode := code;  i.srcLine := line;
     ops[0] := idx; ops[1] := bound;
     i.operands := ops;
     addInsn(b, i);
   END BuildSubscriptCheck;
 
-PROCEDURE BuildNilCheck(b: Block;  ref: Value) =
+PROCEDURE BuildNilCheck(b: Block;  ref: Value;  code, line: INTEGER) =
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 1);
   BEGIN
     i.op := Op.NilCheck;
+    i.checkCode := code;  i.srcLine := line;
     ops[0] := ref;
     i.operands := ops;
     addInsn(b, i);
   END BuildNilCheck;
 
-PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value) =
+PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value;
+                          code, line: INTEGER) =
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 3);
   BEGIN
     i.op := Op.RangeCheck;
+    i.checkCode := code;  i.srcLine := line;
     ops[0] := value;  ops[1] := lo;  ops[2] := hi;
     i.operands := ops;
     addInsn(b, i);

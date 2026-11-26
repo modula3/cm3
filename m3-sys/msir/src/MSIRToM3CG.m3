@@ -1,6 +1,6 @@
 MODULE MSIRToM3CG;
 
-IMPORT MSIR, MSIRPrinter, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
+IMPORT MSIR, MSIRPrinter, MSIRChecks, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
        Text, Word, Wr, Thread;
 
 FROM MSIR IMPORT Op, TypeKind, ValueKind;
@@ -817,6 +817,7 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
   VAR w := NEW (Why, wr := why, mod := MSIR.ModuleName (m));
       p: MSIR.Proc;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
+    MSIRChecks.Expand (m);  (* D32: the check ops are lowered as code *)
     Setup (m);
     IF MSIR.ModuleIncomplete (m) # NIL THEN
       Fail (w, "incomplete: " & MSIR.ModuleIncomplete (m));
@@ -1846,6 +1847,7 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
   VAR p: MSIR.Proc;  binderName: TEXT;  modeVar: M3CG.Var;
   BEGIN
     <* ASSERT Target.Integer.size = 64 AND Target.Address.size = 64 *>
+    MSIRChecks.Expand (m);  (* D32 *)
     Setup (m);
     cg := c;  (* M3CG.T's methods are revealed by M3CG_Ops *)
     procs := NEW (TextRefTbl.Default).init ();

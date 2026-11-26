@@ -132,10 +132,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF (p.offset < 0) OR (EasyCheck <= p.offset) THEN
       k := MSIR.Kind (MSIR.ValueType (v));
       IF k = MSIR.TypeKind.Ptr OR k = MSIR.TypeKind.GcRef THEN
-        MSIRBuilder.EmitReportFault (
-          MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Eq,
-                          v, MSIR.ConstNil (MSIR.ValueType (v))),
-          ORD (CG.RuntimeError.BadMemoryReference));
+        MSIRBuilder.EmitNilCheck (v, ORD (CG.RuntimeError.BadMemoryReference));
       END;
     END;
     RETURN v;
