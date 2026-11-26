@@ -686,7 +686,8 @@ PROCEDURE PrepArg (formal: Value.T; actExpr: Expr.T) =
              OR NOT OpenArrayType.Is (formVal.repType)
              OR actStaticSize >= 0 (* static, if empty *)
           THEN (* Static size. *)
-            IF NOT RequiresFetch (formVal, actExpr)
+            IF Type.IsStructured (formVal.repType)
+               AND NOT RequiresFetch (formVal, actExpr)
                AND NOT SetType.IsSmallSet (formVal.repType)
                AND Expr.CopyNeedsBarrier (actExpr) THEN
               IF NOT OpenArrayType.Is (formVal.repType) THEN

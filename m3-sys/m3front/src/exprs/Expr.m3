@@ -189,12 +189,14 @@ PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN =
 
 (* EXPORTED: *)
 PROCEDURE CopyNeedsBarrier (src: T): BOOLEAN =
-  VAR info: Type.Info;
+  VAR info: Type.Info;  t: Type.T;
   BEGIN
     IF NOT Host.doIncGC THEN RETURN FALSE END;
     IF src = NIL THEN RETURN FALSE END;
     <* ASSERT src.checked *>
-    EVAL Type.CheckInfo (TypeOf (src), info);
+    t := TypeOf (src);
+    IF NOT Type.IsStructured (t) THEN RETURN FALSE END;
+    EVAL Type.CheckInfo (t, info);
     IF NOT info.isTraced THEN RETURN FALSE END;
     IF NOT src.isDesignator () THEN RETURN FALSE END;
     RETURN NOT (src.inFrame () OR ConstValue (src) # NIL);
