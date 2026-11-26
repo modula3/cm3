@@ -16,23 +16,5 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
-  AMD64_DARWIN:
-    uses: modula3/cm3/.github/workflows/amd64_darwin.yml@master
-
-  ARM64_DARWIN:
-    uses: modula3/cm3/.github/workflows/arm64_darwin.yml@master
-
-  AMD64_LINUX:
-    uses: modula3/cm3/.github/workflows/amd64_linux.yml@master
-
-  AMD64_MINGW:
-    uses: modula3/cm3/.github/workflows/amd64_mingw.yml@master
-
-  AMD64_NT:
-    uses: modula3/cm3/.github/workflows/amd64_nt.yml@master
-
-  I386_LINUX:
-    uses: modula3/cm3/.github/workflows/i386_linux.yml@master
-
-  I386_NT:
-    uses: modula3/cm3/.github/workflows/i386_nt.yml@master
+  misc_j:
+    uses: ./.github/workflows/misc_j.yml
