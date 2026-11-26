@@ -20,7 +20,7 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    timeout-minutes: 35
+    timeout-minutes: 60
 
     defaults:
       run: {shell: cmd}
