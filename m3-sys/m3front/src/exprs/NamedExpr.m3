@@ -11,7 +11,7 @@ MODULE NamedExpr;
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
 IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
 IMPORT Scope, Error, ErrType, TInt, CG, RunTyme;
-IMPORT MSIR, MSIRBitLoc, MSIRBuilder, CaptureAnalysis;
+IMPORT MSIR, MSIRBitLoc, MSIRBuilder, MSIRType, CaptureAnalysis;
 IMPORT ArrayExpr, Procedure;
 
 TYPE
@@ -223,6 +223,22 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF p.value = NIL THEN Resolve (p) END;
     TYPECASE p.value OF
     | Variable.T(vv) =>
+        (* A global or indirect record or array variable holding traced
+           references: the block read barrier on its copy (#1388). *)
+        IF Type.IsStructured (Value.TypeOf (vv))
+           AND Expr.CopyNeedsBarrier (p) THEN
+          VAR addr := MSIRBuilder.LookupVarAddr (vv);
+              ty   := MSIRType.Translate (Value.TypeOf (vv));
+          BEGIN
+            IF addr = NIL THEN
+              Variable.RegisterExternMSIR (vv);
+              addr := MSIRBuilder.LookupVarAddr (vv);
+            END;
+            IF addr # NIL AND ty # NIL THEN
+              RETURN MSIRBuilder.LoadBlock (addr, ty, Value.TypeOf (vv), TRUE);
+            END;
+          END;
+        END;
         VAR v := MSIRBuilder.LookupVar (vv);
         BEGIN
           IF v = NIL THEN

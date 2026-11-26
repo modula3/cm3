@@ -1501,6 +1501,11 @@ PROCEDURE StructRoArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
         b    := MSIRBuilder.CurrentBlock ();
         slot := MSIR.BuildAlloca (b, "", formT);
         MSIRBuilder.EmitMemcpy (slot, lv, formTypeInfo.size DIV Target.Byte);
+        (* The block read barrier on the copy where the front end decides
+           (#1388), as GenStruct's. *)
+        IF Expr.CopyNeedsBarrier (actual) THEN
+          MSIRBuilder.EmitLoadBlock (slot, TypeOf (form));
+        END;
         RETURN slot;
       END;
     END;
@@ -1693,6 +1698,13 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
             MSIR.AllocaSetCount (copyA, totalElts)
           END;
           MSIRBuilder.EmitMemcpy (copyA, lval, totalBytes);
+          IF eltPackBits MOD Target.Byte = 0 AND totalElts > 0
+             AND Expr.CopyNeedsBarrier (actual) THEN
+            MSIRBuilder.EmitLoadBlock (
+              copyA, OpenArrayType.NonopenEltType (formType),
+              MSIR.ConstInt (MSIR.TI (Target.Integer.size), totalElts),
+              eltPackBits DIV Target.Byte);
+          END;
           flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
           flds[0] := MSIR.Field {name := "", type := ptrT};
           FOR k := 0 TO formDepth - 1 DO
@@ -1804,6 +1816,12 @@ PROCEDURE GenValueOpenArgMSIR (form: T;  actual: Expr.T): MSIR.Value =
     copyA := MSIR.BuildAlloca (b, "", eltMsirT);
     IF totalElts > 1 THEN MSIR.AllocaSetCount (copyA, totalElts) END;
     MSIRBuilder.EmitMemcpy (copyA, dataPtr, totalBytes);
+    IF eltPackBits MOD Target.Byte = 0 AND Expr.CopyNeedsBarrier (actual) THEN
+      MSIRBuilder.EmitLoadBlock (
+        copyA, OpenArrayType.NonopenEltType (formType),
+        MSIR.ConstInt (MSIR.TI (Target.Integer.size), totalElts),
+        eltPackBits DIV Target.Byte);
+    END;
 
     flds := NEW (REF ARRAY OF MSIR.Field, 1 + formDepth);
     flds[0] := MSIR.Field {name := "", type := ptrT};

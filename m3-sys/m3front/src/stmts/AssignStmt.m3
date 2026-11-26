@@ -1034,9 +1034,10 @@ PROCEDURE CompileMSIR (p: P) =
                 dPtr := MSIR.BuildOpenArrayElemAddr (blk2, "", rhsVal,
                           ARRAY OF MSIR.Value {zero});
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (eltT));
-                arr  := MSIR.BuildLoad (MSIRBuilder.CurrentBlock (), "", eltT, tPtr);
+                arr  := MSIRBuilder.LoadCopied (tPtr, eltT);
             BEGIN
               MSIR.BuildStore (MSIRBuilder.CurrentBlock (), arr, lhsPtr);
+              BarrierAfterCopy (p, lhsPtr);
             END;
           ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.FixedArray AND
                 MSIR.Kind (rhsT) = MSIR.TypeKind.OpenArray THEN
@@ -1059,6 +1060,7 @@ PROCEDURE CompileMSIR (p: P) =
               EVAL Type.CheckInfo (Expr.TypeOf (p.lhs), lhsInfo);
               nBytes := lhsInfo.size DIV Target.Char.size;
               MSIRBuilder.EmitMemcpy (lhsPtr, srcPtr, nBytes);
+              BarrierAfterCopy (p, lhsPtr);
             END;
           ELSIF MSIR.Kind (eltT) = MSIR.TypeKind.OpenArray AND
                 MSIR.Kind (rhsT) = MSIR.TypeKind.FixedArray THEN
@@ -1171,6 +1173,15 @@ PROCEDURE CompileMSIR (p: P) =
                                     MSIR.ConstInt (intT, 3));
                   END;
                   MSIRBuilder.EmitMemcpyDyn (dstDataPtr, srcDataPtr, totalBytes);
+                  (* The elements came from the rhs's storage: the block
+                     read barrier on them (#1388), per element. *)
+                  IF packBits MOD Target.Byte = 0
+                     AND Expr.CopyNeedsBarrier (p.rhs) THEN
+                    MSIRBuilder.EmitLoadBlock (
+                      dstDataPtr,
+                      OpenArrayType.NonopenEltType (Expr.TypeOf (p.rhs)),
+                      totalElts, packBits DIV Target.Byte);
+                  END;
                 END;
               END;
             END;
@@ -1213,6 +1224,18 @@ PROCEDURE CompileMSIR (p: P) =
     END;
     Expr.NoteWrite (p.lhs);
   END CompileMSIR;
+
+PROCEDURE BarrierAfterCopy (p: P;  lhsPtr: MSIR.Value) =
+  (* The fixed-size lhs was filled by a copy straight from the rhs's
+     storage (an open array's elements): the block read barrier on it where
+     the front end decides (#1388).  A fixed-size rhs value needs none here:
+     it was loaded through MSIRBuilder.LoadBlock. *)
+  BEGIN
+    IF OpenArrayType.Is (Expr.TypeOf (p.rhs))
+       AND Expr.CopyNeedsBarrier (p.rhs) THEN
+      MSIRBuilder.EmitLoadBlock (lhsPtr, Expr.TypeOf (p.lhs));
+    END;
+  END BarrierAfterCopy;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
   BEGIN

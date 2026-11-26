@@ -2597,10 +2597,25 @@ PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
           END;
         END;
         blk := MSIRBuilder.CurrentBlock ();
-        MSIRBuilder.EmitMemcpyDyn (
-          MSIR.BuildGepByte (blk, "", flat,
-            MSIR.BuildIMul (blk, "", MSIR.ConstInt (intT, i), elemBytes)),
-          dataI, elemBytes);
+        VAR dstI := MSIR.BuildGepByte (blk, "", flat,
+                      MSIR.BuildIMul (blk, "", MSIR.ConstInt (intT, i),
+                                      elemBytes));
+            arg  := p.args^[MIN (i, LAST (p.args^))];
+        BEGIN
+          MSIRBuilder.EmitMemcpyDyn (dstI, dataI, elemBytes);
+          (* The block read barrier on the element's copy where the front
+             end decides (#1388): its leaf elements, elemBytes apart in all
+             (packBits each). *)
+          IF packBits MOD Target.Byte = 0 AND packBits > 0
+             AND Expr.CopyNeedsBarrier (arg) THEN
+            blk := MSIRBuilder.CurrentBlock ();
+            MSIRBuilder.EmitLoadBlock (
+              dstI, Type.Base (deepest),
+              MSIR.BuildIDiv (blk, "", elemBytes,
+                MSIR.ConstInt (intT, packBits DIV Target.Byte)),
+              packBits DIV Target.Byte);
+          END;
+        END;
       END;
     END;
 
@@ -2843,6 +2858,15 @@ BEGIN
         BEGIN
           IF src = NIL THEN RETURN NIL END;
           MSIRBuilder.EmitMemcpy (elemAddr, src, eltBytes);
+          (* The block read barrier on the element's copy where the front
+             end decides (#1388), as Compile's. *)
+          VAR arg := p.args^[MIN (i, LAST (p.args^))];
+          BEGIN
+            IF NOT OpenArrayType.Is (Expr.TypeOf (arg))
+               AND Expr.CopyNeedsBarrier (arg) THEN
+              MSIRBuilder.EmitLoadBlock (elemAddr, Expr.TypeOf (arg));
+            END;
+          END;
         END;
       ELSE
         IF p.args = NIL OR i > LAST (p.args^) THEN

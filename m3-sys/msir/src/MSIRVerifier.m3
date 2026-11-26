@@ -429,6 +429,19 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         IF MSIR.InsnOperandCount(i) # 1 THEN
           Err(c, "gc.dirty requires exactly one operand");
         END;
+    | MSIR.Op.GcLoadBlock =>
+        (* block read barrier: the copy's destination (ptr) and the
+           element count (integer), with a non-empty map *)
+        IF MSIR.InsnOperandCount(i) # 2 THEN
+          Err(c, "gc.load_block requires two operands");
+        ELSIF NOT MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, 0)))
+                    IN SET OF MSIR.TypeKind {MSIR.TypeKind.Ptr,
+                                             MSIR.TypeKind.GcRef} THEN
+          Err(c, "gc.load_block: destination must be a ptr or gc_ref");
+        ELSIF MSIR.InsnBlockMap(i) = NIL
+              OR NUMBER(MSIR.InsnBlockMap(i)^) = 0 THEN
+          Err(c, "gc.load_block: empty gc map");
+        END;
     | MSIR.Op.GcStore =>
         CheckGcStore(c, i);
     | MSIR.Op.Call, MSIR.Op.Invoke =>
@@ -811,6 +824,19 @@ PROCEDURE AuditReadBarriers(m: MSIR.Module): REF ARRAY OF TEXT =
                    AND NOT LocalProvenance(MSIR.InsnOperand(i, 0)) THEN
                   all.addhi(pn & ": block " & MSIR.BlockLabel(b)
                             & ": plain load of gc_ref from non-local address, no front-end decision ("
+                            & MSIR.ValueName(res) & ")");
+                END;
+                (* (3) plain load of a struct or array holding gc_refs (a
+                   block copy, #1388) from a non-local address with no
+                   front-end decision: neither MSIRBuilder.LoadBlock's
+                   barriered copy nor its recorded "no barrier". *)
+                IF MSIR.InsnOp(i) = MSIR.Op.Load AND res # NIL
+                   AND MSIR.Kind(MSIR.ValueType(res)) # MSIR.TypeKind.GcRef
+                   AND MSIR.HoldsGcRef(MSIR.ValueType(res))
+                   AND NOT MSIR.InsnUnbarriered(i)
+                   AND NOT LocalProvenance(MSIR.InsnOperand(i, 0)) THEN
+                  all.addhi(pn & ": block " & MSIR.BlockLabel(b)
+                            & ": plain load of an aggregate holding gc_refs from non-local address, no front-end decision ("
                             & MSIR.ValueName(res) & ")");
                 END;
                 (* (2) gc_ref operand defined by a plain non-ref load *)

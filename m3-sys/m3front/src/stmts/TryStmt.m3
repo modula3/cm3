@@ -725,6 +725,15 @@ PROCEDURE CompileMSIR (p: P) =
               END;
             END;
             MSIR.BuildStore(entry, argVal, varAddr);
+            (* The argument comes from the activation in the heap: a record
+               or array holding traced references takes the block read
+               barrier on the handler's copy (#1388), as Compile's does. *)
+            VAR argT := Exceptionz.ArgType(h.tags.obj);
+            BEGIN
+              IF Type.IsStructured(argT) THEN
+                MSIRBuilder.EmitLoadBlock(varAddr, argT);
+              END;
+            END;
           END;
         END;
         Variable.ScheduleTrace(h.var);

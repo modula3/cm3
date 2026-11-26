@@ -110,10 +110,12 @@ PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
     EXCEPT ELSE END;
   END NoteSkipped;
 
-PROCEDURE UsedBarriers (m: MSIR.Module;  VAR loads, stores, typecases: BOOLEAN) =
+PROCEDURE UsedBarriers (m: MSIR.Module;
+                        VAR loads, stores, typecases, loadBlocks: BOOLEAN) =
   (* Does m contain a traced load (read barrier: CheckLoadTracedRef), a
-     barriered store or dirty (write barrier: CheckStoreTraced), or a
-     TYPECASE (ScanTypecase)? *)
+     barriered store or dirty (write barrier: CheckStoreTraced), a
+     TYPECASE (ScanTypecase), or a block read barrier
+     (CheckLoadTracedBlock)? *)
   VAR p: MSIR.Proc;  b: MSIR.Block;  i: MSIR.Insn;
   BEGIN
     FOR pi := 0 TO MSIR.ModuleProcCount(m) - 1 DO
@@ -125,6 +127,7 @@ PROCEDURE UsedBarriers (m: MSIR.Module;  VAR loads, stores, typecases: BOOLEAN) 
           CASE MSIR.InsnOp(i) OF
           | MSIR.Op.GcLoad   => loads := TRUE;
           | MSIR.Op.GcDirty  => stores := TRUE;
+          | MSIR.Op.GcLoadBlock => loadBlocks := TRUE;
           | MSIR.Op.GcStore  =>
               IF MSIR.InsnOperandCount(i) = 3 THEN stores := TRUE END;
           | MSIR.Op.Typecase => typecases := TRUE;
@@ -145,10 +148,14 @@ PROCEDURE EndUnit() =
        Only the hooks the unit's code calls: looking a hook up declares it,
        which records an import of it in the unit's link information, as the
        C walk does only where it emits a call. *)
-    VAR loads, stores, typecases := FALSE;
+    VAR loads, stores, typecases, loadBlocks := FALSE;
         gcLoad, gcStore, scanTC: MSIR.Proc := NIL;
     BEGIN
-      UsedBarriers (curModule, loads, stores, typecases);
+      UsedBarriers (curModule, loads, stores, typecases, loadBlocks);
+      IF loadBlocks THEN
+        MSIR.SetModuleLoadBlockHook(curModule,
+          MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedBlock));
+      END;
       IF loads THEN
         gcLoad := MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef);
       END;

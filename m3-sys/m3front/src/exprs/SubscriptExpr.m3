@@ -935,6 +935,12 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
       RETURN MSIRBuilder.LoadTracedRef (addr, ty,
                Expr.LoadNeedsBarrier (ElementStorage (p), p.type));
     END;
+    (* A record or array element holding traced references, from storage
+       outside the frame: the block read barrier on its copy (#1388). *)
+    IF Type.IsStructured (p.type) THEN
+      RETURN MSIRBuilder.LoadBlock (addr, ty, p.type,
+                                    Expr.CopyNeedsBarrier (p));
+    END;
     blk := MSIRBuilder.CurrentBlock ();
     (* When the array's actual element storage width differs from the natural
        expression type, load at the storage width and cast:

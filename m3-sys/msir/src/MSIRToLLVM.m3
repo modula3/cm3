@@ -127,6 +127,8 @@ VAR
   tcN:           INTEGER     := 0;   (* module-level counter for TYPECASE tables *)
   curEmitModule: MSIR.Module := NIL;
   pendingTC:     RefSeq.T    := NIL;   (* TCEntry list, built during EmitInsn *)
+  pendingBlockMaps: RefSeq.T := NIL;   (* gc.load_block maps (GcMapBytes),
+                                          @__m3_blockmap.<index> *)
 
 (*------------------------------------------------------ auxiliary naming *)
 
@@ -1110,6 +1112,31 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
            before an aggregate copy (memcpy / array store) writes traced refs
            into it.  Same fast-path as GcStore's barrier, no store follows. *)
         EmitGcWriteBarrier(wr, LLOpValStr(MSIR.InsnOperand(i, 0)), locIdx);
+
+    | MSIR.Op.GcLoadBlock =>
+        (* ops[0]=dst, ops[1]=n: the block read barrier after a copy (D30,
+           #1388).  The element's gc map is a module constant, emitted
+           with the module's other pending tables. *)
+        VAR k: INTEGER;  dbg := "";  ip := "i" & Fmt.Int(Target.Integer.size);
+        BEGIN
+          IF pendingBlockMaps = NIL THEN
+            pendingBlockMaps := NEW(RefSeq.T).init();
+          END;
+          k := pendingBlockMaps.size();
+          pendingBlockMaps.addhi(MSIR.InsnBlockMap(i));
+          IF dbgEnabled AND locIdx >= 0 THEN
+            dbg := ", !dbg !" & Fmt.Int(locIdx);
+          END;
+          Wr.PutText(wr, "  call void @"
+                         & LLHookName(MSIR.ModuleGCLoadBlockBarrier(curEmitModule),
+                                      "RTHooks__CheckLoadTracedBlock")
+                         & "(ptr ");
+          LLOpVal(wr, MSIR.InsnOperand(i, 0));
+          Wr.PutText(wr, ", ptr @__m3_blockmap." & Fmt.Int(k) & ", ");
+          LLTypedVal(wr, MSIR.InsnOperand(i, 1));
+          Wr.PutText(wr, ", " & ip & " " & Fmt.Int(MSIR.InsnBlockStride(i))
+                         & ")" & dbg & "\n");
+        END;
 
     | MSIR.Op.GcStore =>
         (* ops[0]=value, ops[1]=slot, ops[2]=container (optional).
@@ -5203,7 +5230,7 @@ PROCEDURE ProcHasGcOp(p: MSIR.Proc): BOOLEAN =
           VAR op := MSIR.InsnOp(MSIR.BlockInsn(b, ii));
           BEGIN
             IF op = MSIR.Op.GcLoad OR op = MSIR.Op.GcStore
-               OR op = MSIR.Op.GcDirty THEN
+               OR op = MSIR.Op.GcDirty OR op = MSIR.Op.GcLoadBlock THEN
               RETURN TRUE;
             END;
           END;
@@ -5252,6 +5279,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     auxN          := 0;
     tcN           := 0;
     pendingTC     := NIL;
+    pendingBlockMaps := NIL;
     needsEH       := ModuleHasEH(m);
     needsGC       := ModuleHasGcOps(m);
     Wr.PutText(wr, "; ModuleID = '" & MSIR.ModuleName(m) & "'\n");
@@ -5489,6 +5517,33 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
       END;
       pendingTC := NIL;
       END; (* VAR tcHook *)
+    END;
+
+    (* gc.load_block: the element maps, and the hook unless this module
+       defines it (RTCollector). *)
+    IF pendingBlockMaps # NIL AND pendingBlockMaps.size() > 0 THEN
+      VAR hook := MSIR.ModuleGCLoadBlockBarrier(m);
+          ip := "i" & Fmt.Int(Target.Integer.size);
+          map: MSIR.GcMapBytes;
+      BEGIN
+        Wr.PutText(wr, "\n; gc.load_block maps\n");
+        IF hook = NIL OR NOT IsModuleProc(m, hook) THEN
+          Wr.PutText(wr, "declare void @"
+                         & LLHookName(hook, "RTHooks__CheckLoadTracedBlock")
+                         & "(ptr, ptr, " & ip & ", " & ip & ")\n");
+        END;
+        FOR k := 0 TO pendingBlockMaps.size() - 1 DO
+          map := NARROW(pendingBlockMaps.get(k), MSIR.GcMapBytes);
+          Wr.PutText(wr, "@__m3_blockmap." & Fmt.Int(k)
+                         & " = private unnamed_addr constant ["
+                         & Fmt.Int(NUMBER(map^)) & " x i8] c\"");
+          FOR j := 0 TO LAST(map^) DO
+            Wr.PutText(wr, "\\" & Fmt.Pad(Fmt.Unsigned(map[j], 16), 2, '0'));
+          END;
+          Wr.PutText(wr, "\"\n");
+        END;
+        pendingBlockMaps := NIL;
+      END;
     END;
 
     (* DWARF debug metadata section — emitted last so all forward !dbg

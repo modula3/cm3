@@ -6,7 +6,7 @@ IMPORT Error;
 IMPORT RunTyme, Procedure, M3FP, CaptureAnalysis, M3RT;
 IMPORT PackedType, TInt;
 IMPORT Scanner;
-IMPORT RefType, Exceptionz, Host, M3CG, Expr;
+IMPORT RefType, Exceptionz, Host, M3CG, Expr, TipeMap, OpenArrayType;
 
 CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives headroom *)
 (* Initial sizes of the module-wide maps, which grow on demand: a module has
@@ -526,6 +526,38 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
     END;
     RETURN NIL;
   END LookupVarRaw;
+
+PROCEDURE LoadBlock(addr: MSIR.Value;  ty: MSIR.T;  t: Type.T;
+                    barrier: BOOLEAN): MSIR.Value =
+  VAR info: Type.Info;  tmp: MSIR.Value;
+  BEGIN
+    IF curBlock = NIL OR abandoned THEN RETURN NIL END;
+    (* An open array's value is its dope, not its elements: no block. *)
+    IF barrier AND NOT OpenArrayType.Is(t) THEN
+      EVAL Type.CheckInfo(t, info);
+      IF info.size > 0 AND info.size MOD Target.Byte = 0
+         AND BlockMapFor(t) # NIL THEN
+        tmp := MSIR.BuildAlloca(curBlock, "", ty);
+        EmitMemcpy(tmp, addr, info.size DIV Target.Byte);
+        EmitLoadBlock(tmp, t);
+        RETURN MSIR.BuildLoad(curBlock, "", ty, tmp);
+      END;
+    END;
+    (* No barrier, as the front end decided: a load that records it. *)
+    IF MSIR.HoldsGcRef(ty) THEN
+      RETURN MSIR.BuildUnbarrieredLoad(curBlock, "", ty, addr);
+    END;
+    RETURN MSIR.BuildLoad(curBlock, "", ty, addr);
+  END LoadBlock;
+
+PROCEDURE LoadCopied(addr: MSIR.Value;  ty: MSIR.T): MSIR.Value =
+  BEGIN
+    IF curBlock = NIL OR abandoned THEN RETURN NIL END;
+    IF MSIR.HoldsGcRef(ty) THEN
+      RETURN MSIR.BuildUnbarrieredLoad(curBlock, "", ty, addr);
+    END;
+    RETURN MSIR.BuildLoad(curBlock, "", ty, addr);
+  END LoadCopied;
 
 PROCEDURE LoadTracedRef(addr: MSIR.Value;  refT: MSIR.T;
                         barrier: BOOLEAN): MSIR.Value =
@@ -1740,6 +1772,7 @@ PROCEDURE BeginModule() =
     procContextDepth := 0;
     constArraySeq    := 0;
     memcpyProc       := NIL;
+    blockMaps        := NIL;
     memcmpProc       := NIL;
     memsetProc       := NIL;
     MSIRType.Reset();
@@ -1761,6 +1794,42 @@ PROCEDURE GetMemcpyProc(): MSIR.Proc =
     END;
     RETURN memcpyProc;
   END GetMemcpyProc;
+
+TYPE BlockMap = REF RECORD
+    uid : INTEGER;
+    map : MSIR.GcMapBytes;  (* NIL: no traced references *)
+    next: BlockMap;
+  END;
+
+VAR blockMaps: BlockMap := NIL;  (* the unit's element maps, by type *)
+
+PROCEDURE BlockMapFor(t: Type.T): MSIR.GcMapBytes =
+  (* The garbage collector's map of type t (refs only), as RunTyme makes for
+     the C payload's block barrier. *)
+  VAR uid := Type.GlobalUID(t);  m := blockMaps;
+  BEGIN
+    WHILE m # NIL DO
+      IF m.uid = uid THEN RETURN m.map END;
+      m := m.next;
+    END;
+    TipeMap.Start();
+    Type.GenMap(t, 0, -1, refs_only := TRUE);
+    m := NEW(BlockMap, uid := uid, map := TipeMap.FinishBytes(),
+             next := blockMaps);
+    blockMaps := m;
+    RETURN m.map;
+  END BlockMapFor;
+
+PROCEDURE EmitLoadBlock(dst: MSIR.Value;  t: Type.T;
+                        n: MSIR.Value := NIL;  stride: INTEGER := 0) =
+  VAR map: MSIR.GcMapBytes;
+  BEGIN
+    IF curBlock = NIL OR abandoned OR dst = NIL THEN RETURN END;
+    IF NOT Host.doIncGC THEN RETURN END;
+    map := BlockMapFor(t);
+    IF map = NIL THEN RETURN END;
+    MSIR.BuildGcLoadBlock(curBlock, dst, n, map, stride);
+  END EmitLoadBlock;
 
 PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER) =
   BEGIN
@@ -1874,7 +1943,7 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
     IF MSIR.OpenArrayRank (rhsT) = 1 AND
        MSIR.Equal (MSIR.FixedArrayElt (eltT), MSIR.OpenArrayElt (rhsT)) THEN
       VAR tPtr := MSIR.RetypeValue (srcPtr, MSIR.TPtr (eltT));
-          arr  := MSIR.BuildLoad (curBlock, "", eltT, tPtr);
+          arr  := LoadCopied (tPtr, eltT);
       BEGIN
         MSIR.BuildStore (curBlock, arr, lhsPtr);
       END;
@@ -1882,6 +1951,10 @@ PROCEDURE OpenArrayToFixedStore (lhsPtr, rhsVal: MSIR.Value;
       EVAL Type.CheckInfo (lhsType, info);
       EmitMemcpy (lhsPtr, srcPtr, info.size DIV Target.Char.size);
     END;
+    (* The elements came from the open array's storage, outside the frame
+       but for a VALUE formal's copy: the block read barrier (#1388).  On
+       frame storage it is only a needless call. *)
+    EmitLoadBlock (lhsPtr, lhsType);
     RETURN TRUE;
   END OpenArrayToFixedStore;
 

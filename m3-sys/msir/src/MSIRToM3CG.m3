@@ -9,6 +9,7 @@ CONST
   (* Ops whose M3CG lowering is direct: one or a few M3CG ops each. *)
   Direct = SET OF Op {
     Op.Alloca, Op.Load, Op.Store, Op.GcLoad, Op.GcStore, Op.GcDirty,
+    Op.GcLoadBlock,
     Op.FieldAddr,
     Op.IAdd, Op.ISub, Op.IMul, Op.IDiv, Op.IMod, Op.IUDiv, Op.IURem,
     Op.IAnd, Op.IOr, Op.IXor, Op.IShl, Op.ILShr, Op.IAShr, Op.IRotL, Op.IRotR,
@@ -578,6 +579,7 @@ PROCEDURE ID (t: TEXT): M3ID.T =
 CONST
   Supported = SET OF Op {
     Op.Alloca, Op.Load, Op.Store, Op.GcLoad, Op.GcStore, Op.GcDirty,
+    Op.GcLoadBlock,
     Op.FieldAddr,
     Op.IAdd, Op.ISub, Op.IMul, Op.IDiv, Op.IMod, Op.IUDiv, Op.IURem,
     Op.IAnd, Op.IOr, Op.IXor, Op.IShl, Op.ILShr, Op.IAShr, Op.IRotL, Op.IRotR,
@@ -3146,6 +3148,49 @@ PROCEDURE WriteBarrier (container: MSIR.Value) =
     cg.set_label (skip);
   END WriteBarrier;
 
+(* The block read barrier after a copy (gc.load_block, #1388):
+   RTHooks.CheckLoadTracedBlock (dst, map, n, stride), the element's gc map
+   in the constant segment. *)
+PROCEDURE BlockReadBarrier (i: MSIR.Insn) =
+  CONST Fallback = "RTHooks__CheckLoadTracedBlock";
+  VAR
+    hook := MSIR.ModuleGCLoadBlockBarrier (mod);
+    off  := Bytes (MSIR.InsnBlockMap (i));
+    q: M3CG.Proc;  r: REFANY;
+  BEGIN
+    IF hook # NIL THEN
+      q := ProcFor (hook);
+    ELSIF procs.get (Fallback, r) THEN
+      q := NARROW (r, ProcRef).p;
+    ELSE
+      q := cg.import_procedure (ID (Fallback), 4, M3CG.Type.Void,
+                                Target.DefaultCall);
+      EVAL cg.declare_param (ID ("dst"), Target.Address.bytes,
+                             Target.Address.bytes, Addr, 0, FALSE, FALSE,
+                             M3CG.Maybe);
+      EVAL cg.declare_param (ID ("map"), Target.Address.bytes,
+                             Target.Address.bytes, Addr, 0, FALSE, FALSE,
+                             M3CG.Maybe);
+      EVAL cg.declare_param (ID ("n"), Target.Integer.bytes,
+                             Target.Integer.bytes, Int64, 0, FALSE, FALSE,
+                             M3CG.Maybe);
+      EVAL cg.declare_param (ID ("stride"), Target.Integer.bytes,
+                             Target.Integer.bytes, Int64, 0, FALSE, FALSE,
+                             M3CG.Maybe);
+      EVAL procs.put (Fallback, NEW (ProcRef, p := q));
+    END;
+    cg.start_call_direct (q, 0, M3CG.Type.Void);
+    Push (MSIR.InsnOperand (i, 0));
+    cg.pop_param (Addr);
+    cg.load_address (cseg.var, off);
+    cg.pop_param (Addr);
+    Push (MSIR.InsnOperand (i, 1));
+    cg.pop_param (Int64);
+    PushInt (MSIR.InsnBlockStride (i));
+    cg.pop_param (Int64);
+    cg.call_direct (q, M3CG.Type.Void);
+  END BlockReadBarrier;
+
 (* The CM3 read barrier on a loaded reference v. *)
 PROCEDURE ReadBarrier (v: MSIR.Value) =
   VAR skip := cg.next_label ();
@@ -3295,6 +3340,8 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         END;
     | Op.GcDirty =>
         WriteBarrier (MSIR.InsnOperand (i, 0));
+    | Op.GcLoadBlock =>
+        BlockReadBarrier (i);
 
     | Op.FieldAddr =>
         VAR t := MSIR.ValueType (MSIR.InsnOperand (i, 0));

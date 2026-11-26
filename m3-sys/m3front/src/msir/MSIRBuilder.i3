@@ -40,6 +40,20 @@ PROCEDURE BeginProc(name: TEXT;
    Returns NIL if not bound; callers should treat NIL as Abandon. *)
 PROCEDURE LookupVar(v: Variable.T): MSIR.Value;
 
+(* Load the record or array value of MSIR type ty (Modula-3 type t) stored at
+   addr, as the front end decided (Expr.CopyNeedsBarrier, #1388): with the
+   barrier, the block is copied into a frame temporary, gc.load_block is
+   applied to the temporary, and the value is loaded from it, so whatever
+   consumes the value holds only barriered references; without, a plain
+   load.  Decides nothing itself. *)
+PROCEDURE LoadBlock(addr: MSIR.Value;  ty: MSIR.T;  t: Type.T;
+                    barrier: BOOLEAN): MSIR.Value;
+
+(* Load the aggregate of MSIR type ty at addr for a copy whose block read
+   barrier the caller applies to the destination after the store
+   (EmitLoadBlock): a load that records the front end's decision. *)
+PROCEDURE LoadCopied(addr: MSIR.Value;  ty: MSIR.T): MSIR.Value;
+
 (* Load the traced reference of MSIR type refT (a gc_ref) stored at addr, in
    the current block, as the front end decided (D30: Expr.LoadNeedsBarrier):
    gc.load if barrier, else a plain load that records the decision
@@ -316,6 +330,13 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
 
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
+
+(* The read barrier on a block copy (#1388): after a copy whose source needs
+   it (Expr.CopyNeedsBarrier, the front end's decision), gc.load_block on
+   the destination 'dst' for 'n' values of type 't' (n = NIL: one),
+   'stride' bytes apart.  No-op when 't' holds no traced references. *)
+PROCEDURE EmitLoadBlock(dst: MSIR.Value;  t: Type.T;
+                        n: MSIR.Value := NIL;  stride: INTEGER := 0);
 
 (* Emit memset(dst, 0, byteCount) in the current block. *)
 PROCEDURE EmitZeroBytes(dst: MSIR.Value;  byteCount: INTEGER);

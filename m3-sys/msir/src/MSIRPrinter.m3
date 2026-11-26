@@ -206,6 +206,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.GcLoad             => RETURN "gc.load";
     | MSIR.Op.GcStore            => RETURN "gc.store";
     | MSIR.Op.GcDirty            => RETURN "gc.dirty";
+    | MSIR.Op.GcLoadBlock        => RETURN "gc.load_block";
     | MSIR.Op.FieldAddr          => RETURN "field_addr";
     | MSIR.Op.IAdd               => RETURN "iadd";
     | MSIR.Op.ISub               => RETURN "isub";
@@ -408,6 +409,20 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
     | MSIR.Op.GcDirty =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
+    | MSIR.Op.GcLoadBlock =>
+        (* gc.load_block %dst, %n, stride S, map [b0 b1 ...] *)
+        Wr.PutText(wr, " ");
+        NameRef(wr, MSIR.InsnOperand(i, 0));
+        Wr.PutText(wr, ", ");
+        NameRef(wr, MSIR.InsnOperand(i, 1));
+        Wr.PutText(wr, ", stride " & Fmt.Int(MSIR.InsnBlockStride(i)) & ", map [");
+        VAR map := MSIR.InsnBlockMap(i); BEGIN
+          FOR k := 0 TO LAST(map^) DO
+            IF k > 0 THEN Wr.PutText(wr, " ") END;
+            Wr.PutText(wr, Fmt.Int(map[k]));
+          END;
+        END;
+        Wr.PutText(wr, "]");
     | MSIR.Op.GcStore =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
