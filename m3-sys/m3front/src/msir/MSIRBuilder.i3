@@ -332,6 +332,10 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
    current line if ref is NIL. *)
 PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER);
 
+(* range_check v, lo, hi (D32), at the current line. *)
+PROCEDURE EmitRangeCheck(v, lo, hi: MSIR.Value;  unsigned: BOOLEAN;
+                         errCode: INTEGER);
+
 (* Dynamic variant: byteCount is a runtime MSIR.Value (i64). *)
 PROCEDURE EmitMemcpyDyn(dst, src, byteCount: MSIR.Value);
 

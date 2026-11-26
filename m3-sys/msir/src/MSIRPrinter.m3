@@ -549,6 +549,8 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 1));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 2));
+        IF MSIR.InsnCheckUnsigned(i) THEN Wr.PutText(wr, ", unsigned") END;
+        Wr.PutText(wr, ", code " & Fmt.Int(MSIR.InsnCheckCode(i)));
     | MSIR.Op.Convert =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));

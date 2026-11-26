@@ -1,13 +1,17 @@
 MODULE MSIRChecks;
 
-IMPORT MSIR, Fmt, Target;
+IMPORT MSIR, Fmt, Target, Word;
 FROM MSIR IMPORT Op;
+
+CONST
+  LtPred = ARRAY BOOLEAN OF MSIR.CmpPred {MSIR.CmpPred.Slt, MSIR.CmpPred.Ult};
+  GtPred = ARRAY BOOLEAN OF MSIR.CmpPred {MSIR.CmpPred.Sgt, MSIR.CmpPred.Ugt};
 
 VAR seq := 0;  (* for unique block labels *)
 
 PROCEDURE IsCheck (op: Op): BOOLEAN =
   BEGIN
-    RETURN op = Op.NilCheck;
+    RETURN op IN SET OF Op {Op.NilCheck, Op.RangeCheck};
   END IsCheck;
 
 PROCEDURE HasCheck (b: MSIR.Block): BOOLEAN =
@@ -28,6 +32,29 @@ PROCEDURE NewBlk (p: MSIR.Proc;  like: MSIR.Block;  tag: TEXT): MSIR.Block =
     RETURN b;
   END NewBlk;
 
+(* Is bound c the extreme (lowest if lo, else highest) of the w-bit
+   integers, so that comparing against it can never fail?  A non-constant
+   bound, or one represented otherwise, just costs a compare. *)
+PROCEDURE Extreme (c: MSIR.Value;  lo, unsigned: BOOLEAN;  w: INTEGER): BOOLEAN =
+  VAR x, e: INTEGER;
+  BEGIN
+    IF MSIR.GetValueKind (c) # MSIR.ValueKind.ConstInt
+       OR w <= 0 OR w > BITSIZE (INTEGER) THEN RETURN FALSE END;
+    x := MSIR.GetIntVal (c);
+    IF unsigned THEN
+      IF lo THEN e := 0
+      ELSIF w = BITSIZE (INTEGER) THEN e := -1
+      ELSE e := Word.Minus (Word.LeftShift (1, w), 1)
+      END;
+    ELSIF w = BITSIZE (INTEGER) THEN
+      IF lo THEN e := FIRST (INTEGER) ELSE e := LAST (INTEGER) END;
+    ELSE
+      e := Word.LeftShift (1, w - 1);
+      IF lo THEN e := -e ELSE e := e - 1 END;
+    END;
+    RETURN x = e;
+  END Extreme;
+
 (* The condition under which check i fails, built in block b. *)
 PROCEDURE FailCond (b: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
   VAR v := MSIR.InsnOperand (i, 0);
@@ -36,6 +63,27 @@ PROCEDURE FailCond (b: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
     | Op.NilCheck =>
         RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Eq, v,
                                MSIR.ConstNil (MSIR.ValueType (v)));
+    | Op.RangeCheck =>
+        VAR
+          lo := MSIR.InsnOperand (i, 1);
+          hi := MSIR.InsnOperand (i, 2);
+          u  := MSIR.InsnCheckUnsigned (i);
+          w  := MSIR.BitWidth (MSIR.ValueType (v));
+          below, above: MSIR.Value := NIL;
+        BEGIN
+          IF NOT Extreme (lo, TRUE, u, w) THEN
+            below := MSIR.BuildICmp (b, "", LtPred[u], v, lo);
+          END;
+          IF NOT Extreme (hi, FALSE, u, w) THEN
+            above := MSIR.BuildICmp (b, "", GtPred[u], v, hi);
+          END;
+          IF below = NIL AND above = NIL THEN
+            RETURN MSIR.ConstInt (MSIR.TI1 (), 0);
+          ELSIF below = NIL THEN RETURN above
+          ELSIF above = NIL THEN RETURN below
+          ELSE RETURN MSIR.BuildIOr (b, "", below, above)
+          END;
+        END;
     ELSE <* ASSERT FALSE *>
     END;
   END FailCond;

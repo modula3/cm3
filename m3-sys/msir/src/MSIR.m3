@@ -608,6 +608,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   srcLine:   INTEGER     := 0;                 (* source line when emitted; 0 = unknown *)
   unbarriered: BOOLEAN := FALSE;  (* Load: see BuildUnbarrieredLoad *)
   checkCode:   INTEGER := 0;      (* check ops: M3CG.RuntimeError code *)
+  checkUnsigned: BOOLEAN := FALSE; (* range_check: unsigned compare *)
   blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
   blockStride: INTEGER := 0;      (* GcLoadBlock: element stride, bytes *)
   exc:       ExcDesc     := NIL;               (* Raise *)
@@ -672,6 +673,8 @@ PROCEDURE HoldsGcRef(t: T): BOOLEAN =
 
 PROCEDURE InsnCheckCode(i: Insn): INTEGER =
   BEGIN RETURN i.checkCode END InsnCheckCode;
+PROCEDURE InsnCheckUnsigned(i: Insn): BOOLEAN =
+  BEGIN RETURN i.checkUnsigned END InsnCheckUnsigned;
 PROCEDURE InsnBlockMap(i: Insn): GcMapBytes =
   BEGIN RETURN i.blockMap END InsnBlockMap;
 PROCEDURE InsnBlockStride(i: Insn): INTEGER =
@@ -2823,13 +2826,13 @@ PROCEDURE BuildNilCheck(b: Block;  ref: Value;  code, line: INTEGER) =
   END BuildNilCheck;
 
 PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value;
-                          code, line: INTEGER) =
+                          code, line: INTEGER;  unsigned := FALSE) =
   VAR
     i := NEW(Insn);
     ops := NEW(REF ARRAY OF Value, 3);
   BEGIN
     i.op := Op.RangeCheck;
-    i.checkCode := code;  i.srcLine := line;
+    i.checkCode := code;  i.srcLine := line;  i.checkUnsigned := unsigned;
     ops[0] := value;  ops[1] := lo;  ops[2] := hi;
     i.operands := ops;
     addInsn(b, i);

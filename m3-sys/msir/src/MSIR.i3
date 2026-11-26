@@ -284,6 +284,7 @@ PROCEDURE HoldsGcRef(t: T): BOOLEAN;
 (* TRUE iff t is a gc_ref, or a struct or fixed array with one inside. *)
 
 PROCEDURE InsnCheckCode(i: Insn): INTEGER;
+PROCEDURE InsnCheckUnsigned(i: Insn): BOOLEAN;  (* range_check *)
 (* nil_check, range_check, subscript_check: the M3CG.RuntimeError code
    reported when the check fails (D32); InsnSrcLine is its line. *)
 
@@ -1075,10 +1076,12 @@ PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
 (* `nil_check ref` — raises if ref is nil. *)
 PROCEDURE BuildNilCheck(b: Block;  ref: Value;  code, line: INTEGER);
 
-(* `range_check value, lo, hi` — raises if value not in [lo..hi].
-   lo and hi are typically constants but may be any Value. *)
+(* `range_check value, lo, hi` — faults if value not in [lo..hi],
+   compared unsigned if `unsigned`.  lo and hi have value's type and are
+   typically constants; a one-sided check passes the type's extreme for
+   the other bound, which the expansion omits. *)
 PROCEDURE BuildRangeCheck(b: Block;  value, lo, hi: Value;
-                          code, line: INTEGER);
+                          code, line: INTEGER;  unsigned := FALSE);
 
 (*--------------------------------------------- Conversion / set builders *)
 

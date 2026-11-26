@@ -1415,6 +1415,15 @@ PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER) =
     MSIR.BuildNilCheck(CurrentBlock(), ref, errCode, line);
   END EmitNilCheck;
 
+PROCEDURE EmitRangeCheck(v, lo, hi: MSIR.Value;  unsigned: BOOLEAN;
+                         errCode: INTEGER) =
+  VAR f: TEXT;  line: INTEGER;
+  BEGIN
+    IF NOT InProc() OR v = NIL THEN RETURN END;
+    Scanner.Here(f, line);
+    MSIR.BuildRangeCheck(CurrentBlock(), v, lo, hi, errCode, line, unsigned);
+  END EmitRangeCheck;
+
 PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
   VAR
     reportProc := HookProc(RunTyme.Hook.Abort);  (* RTHooks__ReportFault *)

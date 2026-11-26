@@ -1,7 +1,7 @@
 MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
-IMPORT RunTyme, Error, Fmt, Host;
+IMPORT RunTyme, Error, Fmt, Host, MSIRChecks;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -129,11 +129,11 @@ PROCEDURE UsedBarriers (m: MSIR.Module;
           | MSIR.Op.GcLoad   => loads := TRUE;
           | MSIR.Op.GcDirty  => stores := TRUE;
           | MSIR.Op.GcLoadBlock => loadBlocks := TRUE;
-          | MSIR.Op.NilCheck => checks := TRUE;
           | MSIR.Op.GcStore  =>
               IF MSIR.InsnOperandCount(i) = 3 THEN stores := TRUE END;
           | MSIR.Op.Typecase => typecases := TRUE;
           ELSE
+            IF MSIRChecks.IsCheck(MSIR.InsnOp(i)) THEN checks := TRUE END;
           END;
         END;
       END;

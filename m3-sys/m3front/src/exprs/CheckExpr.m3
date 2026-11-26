@@ -9,7 +9,7 @@
 MODULE CheckExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, IntegerExpr, EnumExpr, Host;
-IMPORT Target, TInt, Error, LInt;
+IMPORT Target, TInt, Error, LInt, Word;
 IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
 
 TYPE
@@ -229,27 +229,31 @@ PROCEDURE EmitBoundsMSIR (v: MSIR.Value;  READONLY min, max: Target.Int;
 PROCEDURE Guard (v: MSIR.Value;  READONLY min, max: Target.Int;
                  doLo, doHi: BOOLEAN;  err: CG.RuntimeError;
                  unsigned: BOOLEAN) =
+  (* One range_check; a side not checked gets the type's extreme, which
+     the check's expansion omits. *)
   VAR
-    vt  := MSIR.ValueType (v);
-    bI  : INTEGER;
-    ltPred, gtPred: MSIR.CmpPred;
-    cmp : MSIR.Value;
+    vt := MSIR.ValueType (v);
+    w  := MSIR.BitWidth (vt);
+    loI, hiI: INTEGER;
   BEGIN
-    IF unsigned THEN
-      ltPred := MSIR.CmpPred.Ult;  gtPred := MSIR.CmpPred.Ugt;
-    ELSE
-      ltPred := MSIR.CmpPred.Slt;  gtPred := MSIR.CmpPred.Sgt;
+    doLo := doLo AND TInt.ToInt (min, loI);
+    doHi := doHi AND TInt.ToInt (max, hiI);
+    IF NOT (doLo OR doHi) THEN RETURN END;
+    IF NOT doLo THEN
+      IF unsigned THEN loI := 0
+      ELSIF w >= BITSIZE (INTEGER) THEN loI := FIRST (INTEGER)
+      ELSE loI := -Word.LeftShift (1, w - 1)
+      END;
     END;
-    IF doLo AND TInt.ToInt (min, bI) THEN
-      cmp := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", ltPred,
-                             v, MSIR.ConstInt (vt, bI));        (* v < min *)
-      MSIRBuilder.EmitReportFault (cmp, ORD (err));
+    IF NOT doHi THEN
+      IF w >= BITSIZE (INTEGER) THEN
+        IF unsigned THEN hiI := -1 ELSE hiI := LAST (INTEGER) END;
+      ELSIF unsigned THEN hiI := Word.LeftShift (1, w) - 1
+      ELSE hiI := Word.LeftShift (1, w - 1) - 1
+      END;
     END;
-    IF doHi AND TInt.ToInt (max, bI) THEN
-      cmp := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", gtPred,
-                             v, MSIR.ConstInt (vt, bI));        (* v > max *)
-      MSIRBuilder.EmitReportFault (cmp, ORD (err));
-    END;
+    MSIRBuilder.EmitRangeCheck (v, MSIR.ConstInt (vt, loI),
+                                MSIR.ConstInt (vt, hiI), unsigned, ORD (err));
   END Guard;
 
 PROCEDURE Checkable (v: MSIR.Value): BOOLEAN =
