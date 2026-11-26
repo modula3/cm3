@@ -68,6 +68,15 @@ PROCEDURE LoadNeedsBarrier (container: T;  loaded: Type.T): BOOLEAN;
    constant.  'container' = NIL means heap storage (a dereference or an
    object field). *)
 
+PROCEDURE CopyNeedsBarrier (src: T): BOOLEAN;
+(* PRE: src is checked.  TRUE iff a block copy of the record or array value
+   'src' must be followed by the read barrier on the references it copied
+   (RunTyme.EmitCopy): the copy loads each of them, and 'src' may be
+   global, heap or indirect storage.  FALSE when 'src' holds no traced
+   references, when incremental collection is off, or when 'src' is a
+   constant or in a procedure's frame, which refers only to black objects
+   because every reference that enters a frame has had its barrier. *)
+
 PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 

@@ -144,13 +144,13 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
       IF Target.DefaultCall.args_left_to_right THEN
         CG.Push (tmp);
-        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type) END;
+        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type, barrier := Expr.CopyNeedsBarrier (arg)) END;
         CG.Pop_param (CG.Type.Addr);
         PassLocation ();
       ELSE
         PassLocation ();
         CG.Push (tmp);
-        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type) END;
+        IF (arg_type # CG.Type.Addr) THEN Formal.GenCopy (expr_type, barrier := Expr.CopyNeedsBarrier (arg)) END;
         CG.Pop_param (CG.Type.Addr);
       END;
       LoadSelf (t);

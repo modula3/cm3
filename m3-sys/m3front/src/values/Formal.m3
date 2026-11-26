@@ -11,7 +11,7 @@ MODULE Formal;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Error, Expr, ProcType;
 IMPORT KeywordExpr, OpenArrayType, RefType, CheckExpr, PackedType;
 IMPORT ArrayType, ArrayExpr, SetType, Host, NarrowExpr, M3Buf, Tracer;
-IMPORT Module, Variable, Procedure, UserProc, Target, M3RT;
+IMPORT Module, Variable, Procedure, UserProc, Target, M3RT, RunTyme;
 IMPORT RTIO, RTParams;
 
 VAR debug := FALSE;
@@ -1095,7 +1095,9 @@ PROCEDURE GenStruct
                 CG.Load_addr_of (actTempVar, 0, formRepTypeInfo.alignment);
                 Expr.Compile (actExpr);
                 RedepthArray (formVal.repType, actRepType, 0);
-                CG.Copy (formRepTypeInfo.size, overlap := FALSE);
+                RunTyme.EmitCopy (formVal.repType, formRepTypeInfo.size,
+                                  overlap := FALSE,
+                                  barrier := Expr.CopyNeedsBarrier (actExpr));
                 CG.Load_addr_of (actTempVar, 0, formRepTypeInfo.alignment);
                 CG.Pop_param (CG.Type.Addr);
 
@@ -1106,7 +1108,8 @@ PROCEDURE GenStruct
                         gives static size for the copy (none if empty). *)
                   <* ASSERT formVal.tempCGVal = NIL *>
                   Expr.Compile (actExpr);
-                  RedepthArray (formVal.repType, actRepType, actStaticSize);
+                  RedepthArray (formVal.repType, actRepType, actStaticSize,
+                                barrier := Expr.CopyNeedsBarrier (actExpr));
                   CG.Pop_param (CG.Type.Addr);
                 ELSE (* No static size available. *)
                   <* ASSERT formVal.tempCGVal # NIL *>
@@ -1120,12 +1123,14 @@ PROCEDURE GenStruct
     END;
   END GenStruct;
 
-PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL) =
+PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL;
+                        barrier := FALSE) =
 (* PRE: Address of actual is pushed on CG stack. *)
 (* Change TOS array from actType's open depth to formType's open depth, while
    preserving shape and elements.  Generate any necessary RT length checks.
    If eltsCopySize > 0, copy the elements into a new temporary with static
-   size eltsCopySize.  Otherwise, make no copy of elements. *)
+   size eltsCopySize.  Otherwise, make no copy of elements.  'barrier' asks
+   for the read barrier on the references the copy loads. *)
 
   VAR formDepth, actDepth, eltsAlign: INTEGER;
   VAR actInnerType, formInnerType, indexType, eltType: Type.T;
@@ -1150,6 +1155,22 @@ PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL) =
       CG.Push (actVal);
       IF actDepth > 0 THEN CG.Open_elt_ptr (actTypeInfo.alignment) END;
       CG.Copy (eltsCopySize, overlap := FALSE);
+      IF barrier THEN
+        CG.Load_addr_of (eltsTempVar, 0, eltsAlign);
+        IF actDepth = 0 THEN
+          RunTyme.EmitCheckLoadTracedBlock (actType);
+        ELSE
+          VAR eltPack := OpenArrayType.EltPack (actType);  n: CG.Val;
+          BEGIN
+            CG.Load_intt (eltsCopySize DIV eltPack);
+            n := CG.Pop ();
+            RunTyme.EmitCheckLoadTracedBlock
+              (OpenArrayType.NonopenEltType (actType), n,
+               eltPack DIV Target.Byte);
+            CG.Free (n);
+          END;
+        END;
+      END;
     END;
 
     IF eltsCopySize > 0 OR formDepth > actDepth THEN (* New dope needed. *)
@@ -1235,9 +1256,10 @@ PROCEDURE RedepthArray (formType, actType: Type.T; eltsCopySize: CARDINAL) =
   END RedepthArray;
 
 (*EXPORTED*)
-PROCEDURE GenCopy (type: Type.T) =
+PROCEDURE GenCopy (type: Type.T;  barrier := FALSE) =
   (* PRE: Tos is addr of a variable of type 'type'. *)
   (* POST: TOS replaced by addr of a local copy thereof. *) 
+  (* 'barrier' asks for the read barrier on the references the copy loads. *)
   VAR info: Type.Info;  copyVar: CG.Var;  id: CG.TypeUID;
   BEGIN
     EVAL Type.CheckInfo (type, info);
@@ -1248,7 +1270,7 @@ PROCEDURE GenCopy (type: Type.T) =
                                up_level := FALSE, f := CG.Never);
       CG.Load_addr_of (copyVar, 0, info.alignment);
       CG.Swap ();
-      CG.Copy (info.size, overlap := FALSE);
+      RunTyme.EmitCopy (type, info.size, overlap := FALSE, barrier := barrier);
     ELSE
       copyVar := CG.Declare_local (M3ID.NoID, info.size, info.alignment,
                                info.mem_type, id, in_memory := TRUE,
