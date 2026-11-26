@@ -556,6 +556,7 @@ p_test ("p3", "p307", "Subset comparisons of multi-word sets (C back end operand
 p_test ("p3", "p308", "LOOPHOLE between REAL and a 32-bit packed subrange")
 p_test ("p3", "p320", "Results of nested procedures passed to READONLY formals")
 p_test ("p3", "p319", "Constant arrays of multi-word sets, read by subscript")
+p_test ("p3", "p325", "<*DEBUG*> pragmas print their messages when their condition holds")
 p_test ("p3", "p322", "Block copies of records and arrays of traced references during an incremental collection")
 p_test ("p3", "p321", "Set constructors of one word with non-constant ranges")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")

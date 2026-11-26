@@ -6,6 +6,7 @@ MODULE DebugStmt;
 IMPORT CG, Expr, Token, Scanner, Stmt, StmtRep, Error, M3RT;
 IMPORT Host, EnumExpr, Type, Bool, Target, TInt, ErrType;
 IMPORT Textt, Procedure, NarrowExpr, Module, AssignStmt, RunTyme;
+IMPORT MSIR, MSIRBuilder;
 
 TYPE
   P = Stmt.T OBJECT
@@ -15,6 +16,7 @@ TYPE
       OVERRIDES
         check       := Check;
         compile     := Compile;
+        compileMSIR := CompileMSIRStmt;
         outcomes    := GetOutcome;
       END;
 
@@ -189,6 +191,87 @@ PROCEDURE EmitDebug (p: P) =
     Procedure.EmitCall (proc);
     CG.Free_temp (msgs);
   END EmitDebug;
+
+PROCEDURE CompileMSIRStmt (p: P) =
+  (* MSIR analogue of Compile: with Host.doDebugs, call RTHooks.DebugMsg
+     (module, line, msgs) when the condition holds (B36). *)
+  VAR
+    v: Expr.T;  i: Target.Int;  u: Type.T;
+    cond, c1: MSIR.Value;  thenB, contB: MSIR.Block;
+  BEGIN
+    IF NOT Host.doDebugs OR NOT MSIRBuilder.InProc () THEN RETURN END;
+    IF p.cond = NIL THEN EmitDebugMSIR (p);  RETURN END;
+    v := Expr.ConstValue (p.cond);
+    IF v = NIL THEN
+      cond := Expr.CompileMSIR (p.cond);
+      IF cond = NIL THEN RETURN END;
+      c1 := MSIR.BuildICmp (MSIRBuilder.CurrentBlock (), "", MSIR.CmpPred.Ne,
+                            cond, MSIR.ConstInt (MSIR.ValueType (cond), 0));
+      thenB := MSIRBuilder.NewBlock ("debug.then");
+      contB := MSIRBuilder.NewBlock ("debug.cont");
+      MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), c1,
+                        thenB, ARRAY OF MSIR.Value{},
+                        contB, ARRAY OF MSIR.Value{});
+      MSIRBuilder.SetCurrentBlock (thenB);
+      EmitDebugMSIR (p);
+      IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
+        MSIR.BuildBr (MSIRBuilder.CurrentBlock (), contB, ARRAY OF MSIR.Value{});
+      END;
+      MSIRBuilder.SetCurrentBlock (contB);
+    ELSIF EnumExpr.Split (v, i, u) AND TInt.EQ (i, TInt.Zero) THEN
+      (* DEBUG (FALSE) *)
+    ELSE
+      EmitDebugMSIR (p);
+    END;
+  END CompileMSIRStmt;
+
+PROCEDURE EmitDebugMSIR (p: P) =
+  (* As EmitDebug: the messages as an open array in the frame (dope at
+     M3RT.OA_elt_ptr/OA_size_0, elements from OA_size_1), passed by
+     reference to RTHooks.DebugMsg with the module and line. *)
+  VAR
+    f: TEXT;  line: INTEGER;
+    ptrT  := MSIR.TPtr (MSIR.TVoid ());
+    intT  := MSIR.TI (Target.Integer.size);
+    eltB  := M3RT.OA_size_1 DIV Target.Byte;
+    aB    := Target.Address.size DIV Target.Byte;
+    vals  := NEW (REF ARRAY OF MSIR.Value, p.n_msgs);
+    flds  := NEW (REF ARRAY OF MSIR.Field, 2 + p.n_msgs);
+    msgs, modRef: MSIR.Value;  b: MSIR.Block;
+    proc  := MSIRBuilder.HookProc (RunTyme.Hook.DebugMsg);
+  BEGIN
+    IF proc = NIL THEN
+      MSIRBuilder.Abandon ("DEBUG: RTHooks.DebugMsg unavailable");  RETURN;
+    END;
+    Scanner.Here (f, line);
+    FOR k := 0 TO p.n_msgs - 1 DO
+      vals[k] := Expr.CompileMSIR (p.msgs[k]);
+      IF vals[k] = NIL THEN RETURN END;
+    END;
+    flds[0] := MSIR.Field {name := "", type := ptrT};
+    flds[1] := MSIR.Field {name := "", type := intT};
+    FOR k := 0 TO p.n_msgs - 1 DO
+      flds[2 + k] := MSIR.Field {name := "", type := MSIR.ValueType (vals[k])};
+    END;
+    b := MSIRBuilder.CurrentBlock ();
+    msgs := MSIR.BuildAlloca (b, "", MSIR.TStruct ("__debug_msgs", flds^));
+    MSIR.BuildStore (b, MSIRBuilder.BuildPtrByteOff (b, "", msgs, eltB),
+                     MSIRBuilder.BuildPtrByteOff (
+                       b, "", msgs, M3RT.OA_elt_ptr DIV Target.Byte));
+    MSIR.BuildStore (b, MSIR.ConstInt (intT, p.n_msgs),
+                     MSIRBuilder.BuildPtrByteOff (
+                       b, "", msgs, M3RT.OA_size_0 DIV Target.Byte));
+    FOR k := 0 TO p.n_msgs - 1 DO
+      MSIR.BuildStore (b, vals[k],
+                       MSIRBuilder.BuildPtrByteOff (b, "", msgs, eltB + k * aB));
+    END;
+    modRef := MSIRBuilder.CurrentModuleInfoRef ();
+    IF modRef = NIL THEN modRef := MSIR.ConstNil (ptrT) END;
+    EVAL MSIRBuilder.EmitCall ("", proc,
+                               ARRAY OF MSIR.Value {modRef,
+                                                    MSIR.ConstInt (intT, line),
+                                                    msgs});
+  END EmitDebugMSIR;
 
 PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   BEGIN
