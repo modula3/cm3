@@ -2115,6 +2115,27 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     calls stay as loads and indirect calls.  Each conversion keeps the
     MSIR→M3CG ladder and the IR fixpoint green.
 
+- **D32. Runtime checks are typed instructions that may fault** (Tony,
+  2026-11-27; the first conversion under D31).
+  - **Ops.**  `nil_check v`, `range_check v, lo, hi` (signed or unsigned by
+    the value's type), `subscript_check i, n` (unsigned `i < n`), each with
+    its fault code (`M3CG.RuntimeError`) and the source line; `fault code`,
+    a terminator, for an error the front end knows is inevitable; and
+    `shape_check a, b` for open-array shapes.  ASSERT stays a conditional
+    call to `AssertFailed` for now; NARROW's check belongs to the `Narrow`
+    op.
+  - **Not terminators.**  A check is an ordinary instruction in its block:
+    the IR stays compact and a later pass sees the check as a unit (to
+    remove or hoist redundant checks), which is why checks are ops at all.
+  - **Lowering.**  One shared pass, `MSIRChecks.Expand`, run first by both
+    lowerings, turns each check back into a compare, a branch to a fault
+    block calling `RTHooks.ReportFault (module, line*32 + code)` and the
+    rest of the block in a continuation; the new blocks keep the original
+    block's EH scope, so inside a TRY the EH lowering (MSIREH, or
+    MSIRToM3CG's own) makes the fault call an invoke as for any call.
+  - **Order.**  nil, then range, subscript, fault and shape; each step keeps
+    the MSIR ladder and the IR fixpoint green.
+
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
   `Swap.Int32 = BITS 32 FOR [-2^31 .. 2^31-1]`: MSIR widens the subrange
