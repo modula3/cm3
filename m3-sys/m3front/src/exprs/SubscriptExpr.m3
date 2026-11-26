@@ -536,9 +536,8 @@ PROCEDURE CheckIndexMSIR (idx, oa: MSIR.Value) =
       RETURN;
     END;
     i := MSIRBuilder.CoerceToMSIR (blk, idx, MSIR.ValueType (len));
-    MSIRBuilder.EmitReportFault (
-      MSIR.BuildICmp (blk, "", MSIR.CmpPred.Uge, i, len),
-      ORD (CG.RuntimeError.SubscriptOutOfRange));
+    MSIRBuilder.EmitSubscriptCheck (i, len,
+                                    ORD (CG.RuntimeError.SubscriptOutOfRange));
   END CheckIndexMSIR;
 
 PROCEDURE LValueMSIR (p: P;  VAR container: MSIR.Value): MSIR.Value =

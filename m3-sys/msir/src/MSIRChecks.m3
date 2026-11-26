@@ -11,7 +11,7 @@ VAR seq := 0;  (* for unique block labels *)
 
 PROCEDURE IsCheck (op: Op): BOOLEAN =
   BEGIN
-    RETURN op IN SET OF Op {Op.NilCheck, Op.RangeCheck};
+    RETURN op IN SET OF Op {Op.NilCheck, Op.RangeCheck, Op.SubscriptCheck};
   END IsCheck;
 
 PROCEDURE HasCheck (b: MSIR.Block): BOOLEAN =
@@ -63,6 +63,9 @@ PROCEDURE FailCond (b: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
     | Op.NilCheck =>
         RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Eq, v,
                                MSIR.ConstNil (MSIR.ValueType (v)));
+    | Op.SubscriptCheck =>
+        RETURN MSIR.BuildICmp (b, "", MSIR.CmpPred.Uge, v,
+                               MSIR.InsnOperand (i, 1));
     | Op.RangeCheck =>
         VAR
           lo := MSIR.InsnOperand (i, 1);

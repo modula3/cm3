@@ -438,6 +438,21 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
                                              MSIR.TypeKind.GcRef} THEN
           Err(c, "nil_check: operand must be a ptr or gc_ref");
         END;
+    | MSIR.Op.SubscriptCheck =>
+        (* D32: index and bound, integers *)
+        IF MSIR.InsnOperandCount(i) # 2 THEN
+          Err(c, "subscript_check requires exactly two operands");
+        ELSE
+          FOR k := 0 TO 1 DO
+            IF NOT MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, k)))
+                     IN SET OF MSIR.TypeKind {MSIR.TypeKind.I1 ..
+                                              MSIR.TypeKind.I64,
+                                              MSIR.TypeKind.W8 ..
+                                              MSIR.TypeKind.W64} THEN
+              Err(c, "subscript_check: operands must be integers");
+            END;
+          END;
+        END;
     | MSIR.Op.RangeCheck =>
         (* D32: value, lo, hi, all integers *)
         IF MSIR.InsnOperandCount(i) # 3 THEN

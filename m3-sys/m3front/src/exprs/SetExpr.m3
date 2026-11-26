@@ -1153,15 +1153,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
             VAR iT := MSIR.TI (Target.Integer.size);
                 e  := MSIRBuilder.SetIndex (blk, elt, 0);
             BEGIN
-              MSIRBuilder.EmitReportFault (
-                MSIR.BuildICmp (blk, "", MSIR.CmpPred.Slt, e,
-                                MSIR.ConstInt (iT, p.minI)),
-                ORD (CG.RuntimeError.ValueOutOfRange));
-              blk := MSIRBuilder.CurrentBlock ();
-              MSIRBuilder.EmitReportFault (
-                MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt, e,
-                                MSIR.ConstInt (iT, p.maxI)),
-                ORD (CG.RuntimeError.ValueOutOfRange));
+              MSIRBuilder.EmitRangeCheck (e, MSIR.ConstInt (iT, p.minI),
+                                          MSIR.ConstInt (iT, p.maxI), FALSE,
+                                          ORD (CG.RuntimeError.ValueOutOfRange));
               blk := MSIRBuilder.CurrentBlock ();
               IF minOrd # 0 THEN
                 e := MSIR.BuildISub (blk, "", e, MSIR.ConstInt (iT, minOrd));
@@ -1179,17 +1173,9 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
              otherwise it is a checked ValueOutOfRange error (the C backend
              checks this — e.g. BigSet{0, LAST(BigRng)+1}, where the element is
              a computed value not folded at compile time). *)
-          VAR loF := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Slt, elt,
-                       MSIR.ConstInt (ti, p.minI));
-          BEGIN
-            MSIRBuilder.EmitReportFault (loF, ORD (CG.RuntimeError.ValueOutOfRange));
-          END;
-          blk := MSIRBuilder.CurrentBlock ();
-          VAR hiF := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt, elt,
-                       MSIR.ConstInt (ti, p.maxI));
-          BEGIN
-            MSIRBuilder.EmitReportFault (hiF, ORD (CG.RuntimeError.ValueOutOfRange));
-          END;
+          MSIRBuilder.EmitRangeCheck (elt, MSIR.ConstInt (ti, p.minI),
+                                      MSIR.ConstInt (ti, p.maxI), FALSE,
+                                      ORD (CG.RuntimeError.ValueOutOfRange));
           blk := MSIRBuilder.CurrentBlock ();
           IF minOrd # 0 THEN
             elt := MSIR.BuildISub (blk, "", elt,

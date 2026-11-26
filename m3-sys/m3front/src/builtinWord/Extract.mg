@@ -126,11 +126,11 @@ PROCEDURE CheckBitsMSIR (VAR i, n: MSIR.Value;  ie, ne: Expr.T): BOOLEAN =
     IF n = NIL THEN RETURN FALSE END;
     IF Host.doRangeChk THEN
       blk := MSIRBuilder.CurrentBlock ();
-      MSIRBuilder.EmitReportFault (
-        MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt,
-          MSIR.BuildIAdd (blk, "", MSIRBuilder.CoerceToMSIR (blk, i, intT),
-                                   MSIRBuilder.CoerceToMSIR (blk, n, intT)),
-          MSIR.ConstInt (intT, Word_types[rep].size)),
+      MSIRBuilder.EmitRangeCheck (
+        MSIR.BuildIAdd (blk, "", MSIRBuilder.CoerceToMSIR (blk, i, intT),
+                                 MSIRBuilder.CoerceToMSIR (blk, n, intT)),
+        MSIR.ConstInt (intT, FIRST (INTEGER)),
+        MSIR.ConstInt (intT, Word_types[rep].size), FALSE,
         ORD (CG.RuntimeError.ValueOutOfRange));
     END;
     RETURN TRUE;

@@ -1069,7 +1069,8 @@ PROCEDURE BuildOpenArrayElemAddr(b: Block;  name: TEXT;
 PROCEDURE BuildSubarray(b: Block;  name: TEXT;
                         oa: Value;  lo, count: Value): Value;
 
-(* `subscript_check idx, bound` — raises if idx not in [0, bound). *)
+(* `subscript_check idx, bound` — faults unless idx < bound, compared
+   unsigned (so a negative idx faults too); idx and bound have one type. *)
 PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
                               code, line: INTEGER);
 

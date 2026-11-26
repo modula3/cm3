@@ -504,10 +504,9 @@ PROCEDURE CheckRangeMSIR (base: Expr.T;  array: Type.T;
       nVal := MSIR.ConstInt (intT, i_n + 1);
     END;
     blk := MSIRBuilder.CurrentBlock ();
-    MSIRBuilder.EmitReportFault (
-      MSIR.BuildICmp (blk, "", MSIR.CmpPred.Sgt,
-                      MSIR.BuildIAdd (blk, "", startVal, lenVal), nVal),
-      ORD (CG.RuntimeError.ValueOutOfRange));
+    MSIRBuilder.EmitRangeCheck (MSIR.BuildIAdd (blk, "", startVal, lenVal),
+                                MSIR.ConstInt (intT, FIRST (INTEGER)), nVal,
+                                FALSE, ORD (CG.RuntimeError.ValueOutOfRange));
   END CheckRangeMSIR;
 
 PROCEDURE LValueMSIR (ce: CallExpr.T;  VAR container: MSIR.Value): MSIR.Value =

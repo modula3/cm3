@@ -202,12 +202,9 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
     END;
   END Bounder;
 
-(* MSIR: forward through the range-check wrapper. The runtime check
-   itself (range_check op) can be added in a later refinement. *)
-(* Shared MSIR range-check emitter.  Emits a ReportFault guard for the lower
-   and/or upper bound of an already-compiled integer value v of expr e.  Picks
-   signed vs unsigned comparison from e's declared type signedness; advances the
-   current block per EmitReportFault (so CurrentBlock is re-read each time). *)
+(* Shared MSIR range-check emitter.  Emits a range_check (D32) of the lower
+   and/or upper bound of an already-compiled integer value v of expr e,
+   signed or unsigned by e's declared type. *)
 PROCEDURE DoCheckMSIR (v: MSIR.Value;  e: Expr.T;
                        READONLY min, max: Target.Int;
                        doLo, doHi: BOOLEAN;  err: CG.RuntimeError) =

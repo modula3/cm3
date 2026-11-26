@@ -1415,6 +1415,14 @@ PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER) =
     MSIR.BuildNilCheck(CurrentBlock(), ref, errCode, line);
   END EmitNilCheck;
 
+PROCEDURE EmitSubscriptCheck(idx, bound: MSIR.Value;  errCode: INTEGER) =
+  VAR f: TEXT;  line: INTEGER;
+  BEGIN
+    IF NOT InProc() OR idx = NIL THEN RETURN END;
+    Scanner.Here(f, line);
+    MSIR.BuildSubscriptCheck(CurrentBlock(), idx, bound, errCode, line);
+  END EmitSubscriptCheck;
+
 PROCEDURE EmitRangeCheck(v, lo, hi: MSIR.Value;  unsigned: BOOLEAN;
                          errCode: INTEGER) =
   VAR f: TEXT;  line: INTEGER;
