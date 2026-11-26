@@ -710,8 +710,7 @@ PROCEDURE EmitRTCheckMSIR (tlhs: Type.T;  rhsExpr: Expr.T;
         CASE ProcRTCheckKind (rhsExpr) OF
         | RTCheckKind.Fail =>
             (* Assigning a statically nested procedure faults (2.3.1). *)
-            MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                         ORD (CG.RuntimeError.NarrowFailed));
+            MSIRBuilder.EmitFault (ORD (CG.RuntimeError.NarrowFailed));
         | RTCheckKind.Conditional =>
             (* A procedure variable that might hold a nested procedure: the
                runtime closure-marker test is not yet emitted. *)

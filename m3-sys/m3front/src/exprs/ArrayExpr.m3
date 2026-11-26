@@ -2444,8 +2444,7 @@ PROCEDURE CheckUseFailureMSIR (top: T): BOOLEAN =
   BEGIN
     IF top.state >= StateTyp.Checked
        AND AssignStmt.DoGenRTAbort (top.RTErrorCode) THEN
-      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (top.RTErrorCode));
+      MSIRBuilder.EmitFault (ORD (top.RTErrorCode));
       RETURN FALSE;
     END;
     RETURN TRUE;
@@ -2566,11 +2565,8 @@ PROCEDURE DynOpenConstructorMSIR (p: T;  innerT: Type.T;
               dims[k] := szK;
             ELSE
               blk := MSIRBuilder.CurrentBlock ();
-              VAR bad := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, szK, dims[k]);
-              BEGIN
-                MSIRBuilder.EmitReportFault
-                  (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
-              END;
+              MSIRBuilder.EmitShapeCheck
+                (szK, dims[k], ORD (CG.RuntimeError.IncompatibleArrayShape));
             END;
           END;
         END;

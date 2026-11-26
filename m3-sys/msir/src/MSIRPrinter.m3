@@ -256,6 +256,8 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.SubscriptCheck     => RETURN "subscript_check";
     | MSIR.Op.NilCheck           => RETURN "nil_check";
     | MSIR.Op.RangeCheck         => RETURN "range_check";
+    | MSIR.Op.Fault              => RETURN "fault";
+    | MSIR.Op.ShapeCheck         => RETURN "shape_check";
     | MSIR.Op.Convert            => RETURN "convert";
     | MSIR.Op.SIToFP             => RETURN "sitofp";
     | MSIR.Op.FPToSI             => RETURN "fptosi";
@@ -533,12 +535,14 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         NameRef(wr, MSIR.InsnOperand(i, 1));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 2));
-    | MSIR.Op.SubscriptCheck =>
+    | MSIR.Op.SubscriptCheck, MSIR.Op.ShapeCheck =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, ", ");
         NameRef(wr, MSIR.InsnOperand(i, 1));
         Wr.PutText(wr, ", code " & Fmt.Int(MSIR.InsnCheckCode(i)));
+    | MSIR.Op.Fault =>
+        Wr.PutText(wr, " code " & Fmt.Int(MSIR.InsnCheckCode(i)));
     | MSIR.Op.NilCheck =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));

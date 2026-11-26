@@ -797,8 +797,7 @@ PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
    fold sites that bypass it (QualifyExpr's Rec{...}.X, p268). *)
   BEGIN
     IF p.checked AND AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
-      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (p.RTErrorCode));
+      MSIRBuilder.EmitFault (ORD (p.RTErrorCode));
       RETURN FALSE;
     END;
     RETURN TRUE;

@@ -2813,6 +2813,27 @@ PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
     addInsn(b, i);
   END BuildSubscriptCheck;
 
+PROCEDURE BuildShapeCheck(b: Block;  n, m: Value;  code, line: INTEGER) =
+  VAR
+    i := NEW(Insn);
+    ops := NEW(REF ARRAY OF Value, 2);
+  BEGIN
+    i.op := Op.ShapeCheck;
+    i.checkCode := code;  i.srcLine := line;
+    ops[0] := n;  ops[1] := m;
+    i.operands := ops;
+    addInsn(b, i);
+  END BuildShapeCheck;
+
+PROCEDURE BuildFault(b: Block;  code, line: INTEGER) =
+  VAR i := NEW(Insn);
+  BEGIN
+    i.op := Op.Fault;
+    i.checkCode := code;  i.srcLine := line;
+    i.operands := NEW(REF ARRAY OF Value, 0);
+    addInsn(b, i);
+  END BuildFault;
+
 PROCEDURE BuildNilCheck(b: Block;  ref: Value;  code, line: INTEGER) =
   VAR
     i := NEW(Insn);
@@ -2977,7 +2998,7 @@ PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
     IF n = 0 THEN RETURN FALSE END;
     ri := BlockInsn(b, n-1);
     CASE ri.op OF
-    | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable,
+    | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable, Op.Fault,
       Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally, Op.Typecase,
       Op.Resume, Op.Invoke, Op.InvokeIndirect =>
         RETURN TRUE;

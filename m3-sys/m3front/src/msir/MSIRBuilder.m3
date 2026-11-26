@@ -1415,6 +1415,22 @@ PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER) =
     MSIR.BuildNilCheck(CurrentBlock(), ref, errCode, line);
   END EmitNilCheck;
 
+PROCEDURE EmitShapeCheck(n, m: MSIR.Value;  errCode: INTEGER) =
+  VAR f: TEXT;  line: INTEGER;
+  BEGIN
+    IF NOT InProc() OR n = NIL OR m = NIL THEN RETURN END;
+    Scanner.Here(f, line);
+    MSIR.BuildShapeCheck(CurrentBlock(), n, m, errCode, line);
+  END EmitShapeCheck;
+
+PROCEDURE EmitFault(errCode: INTEGER) =
+  VAR f: TEXT;  line: INTEGER;
+  BEGIN
+    IF NOT InProc() THEN RETURN END;
+    Scanner.Here(f, line);
+    MSIR.BuildFault(CurrentBlock(), errCode, line);
+  END EmitFault;
+
 PROCEDURE EmitSubscriptCheck(idx, bound: MSIR.Value;  errCode: INTEGER) =
   VAR f: TEXT;  line: INTEGER;
   BEGIN

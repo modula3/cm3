@@ -1417,7 +1417,7 @@ PROCEDURE OpenActualToFixedRefMSIR (form: T;  lval: MSIR.Value): MSIR.Value =
   VAR
     formInfo : Info;
     formT, lvalT, dopeT : MSIR.T;
-    dope, cnt, wantN, bad : MSIR.Value;
+    dope, cnt, wantN : MSIR.Value;
     rank : INTEGER;
     blk  : MSIR.Block;
     intT := MSIR.TI (Target.Integer.size);
@@ -1458,9 +1458,8 @@ PROCEDURE OpenActualToFixedRefMSIR (form: T;  lval: MSIR.Value): MSIR.Value =
         blk   := MSIRBuilder.CurrentBlock ();
         cnt   := MSIR.BuildOpenArraySize (blk, "", dope, k);
         wantN := MSIR.ConstInt (intT, ni);
-        bad   := MSIR.BuildICmp (blk, "", MSIR.CmpPred.Ne, cnt, wantN);
-        MSIRBuilder.EmitReportFault
-          (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
+        MSIRBuilder.EmitShapeCheck
+          (cnt, wantN, ORD (CG.RuntimeError.IncompatibleArrayShape));
         mt3 := eltT3;
       END;
     END;
@@ -1615,12 +1614,10 @@ PROCEDURE EmitArgMSIR (formalValue: Value.T;  actual: Expr.T): MSIR.Value =
                 intT   := MSIR.TI (Target.Integer.size);
                 cnt    := MSIR.BuildOpenArraySize (chkBlk, "", actVal, 0);
                 wantN  := MSIR.ConstInt (intT, MSIR.FixedArrayLen (formT));
-                bad    := MSIR.BuildICmp (chkBlk, "", MSIR.CmpPred.Ne, cnt, wantN);
             BEGIN
-              MSIRBuilder.EmitReportFault
-                (bad, ORD (CG.RuntimeError.IncompatibleArrayShape));
+              MSIRBuilder.EmitShapeCheck
+                (cnt, wantN, ORD (CG.RuntimeError.IncompatibleArrayShape));
             END;
-            (* EmitReportFault branches; continue in the fresh current block. *)
             VAR blk2 := MSIRBuilder.CurrentBlock ();
                 dPtr := MSIRBuilder.OpenArrayDataPtr (blk2, actVal);
                 tPtr := MSIR.RetypeValue (dPtr, MSIR.TPtr (formT));

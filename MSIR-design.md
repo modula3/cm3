@@ -2117,11 +2117,15 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
 
 - **D32. Runtime checks are typed instructions that may fault** (Tony,
   2026-11-27; the first conversion under D31).
-  - **Ops.**  `nil_check v`, `range_check v, lo, hi` (signed or unsigned by
-    the value's type), `subscript_check i, n` (unsigned `i < n`), each with
-    its fault code (`M3CG.RuntimeError`) and the source line; `fault code`,
-    a terminator, for an error the front end knows is inevitable; and
-    `shape_check a, b` for open-array shapes.  ASSERT stays a conditional
+  - **Ops.**  `nil_check v`, `range_check v, lo, hi` (an explicit
+    `unsigned` flag: the value's MSIR type is often i64 when the Modula-3
+    range is unsigned; a one-sided check passes the type's extreme as the
+    other bound, and the expansion omits that compare), `subscript_check
+    i, n` (unsigned `i < n`) and `shape_check n, m` (two dimension counts
+    must be equal; per dimension, since a fixed formal has no array value
+    to compare), each with its fault code (`M3CG.RuntimeError`) and the
+    source line; and `fault code`, a terminator, for an error the front end
+    knows is inevitable.  ASSERT stays a conditional
     call to `AssertFailed` for now; NARROW's check belongs to the `Narrow`
     op.
   - **Not terminators.**  A check is an ordinary instruction in its block:
@@ -2135,6 +2139,14 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     MSIRToM3CG's own) makes the fault call an invoke as for any call.
   - **Order.**  nil, then range, subscript, fault and shape; each step keeps
     the MSIR ladder and the IR fixpoint green.
+  - **Status (2026-11-27).**  All five ops are in, and every open-coded
+    fault in the front end is now a check op except NARROW's and ASSERT's
+    (as above).  MSIR m3tests unchanged at each step.  Testing them inside
+    TRY found two C-backend bugs on master, which the MSIR lowerings
+    already got right: a failed check in a TRY body with no call escaped
+    its handler (M3C's catch re-threw; #1401, m3test p328), and
+    Word.Extract/Insert of the full word width shifted by the width
+    (m3test p329).
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with

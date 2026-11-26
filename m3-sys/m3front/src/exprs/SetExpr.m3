@@ -1002,8 +1002,7 @@ PROCEDURE CheckUseFailureMSIR (p: P): BOOLEAN =
    statically detected runtime error faults unconditionally. *)
   BEGIN
     IF p.checked AND AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN
-      MSIRBuilder.EmitReportFault (MSIR.ConstInt (MSIR.TI1 (), 1),
-                                   ORD (p.RTErrorCode));
+      MSIRBuilder.EmitFault (ORD (p.RTErrorCode));
       RETURN FALSE;
     END;
     RETURN TRUE;

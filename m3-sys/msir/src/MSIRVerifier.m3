@@ -32,7 +32,7 @@ PROCEDURE IsTerminator(op: MSIR.Op): BOOLEAN =
   BEGIN
     CASE op OF
     | MSIR.Op.Br, MSIR.Op.CondBr, MSIR.Op.Ret, MSIR.Op.Unreachable,
-      MSIR.Op.UnwindTo, MSIR.Op.RetThroughEnvelope, MSIR.Op.EndFinally,
+      MSIR.Op.Fault, MSIR.Op.UnwindTo, MSIR.Op.RetThroughEnvelope, MSIR.Op.EndFinally,
       MSIR.Op.Raise, MSIR.Op.Typecase,
       MSIR.Op.Invoke, MSIR.Op.InvokeIndirect, MSIR.Op.Resume => RETURN TRUE;
     ELSE RETURN FALSE
@@ -438,10 +438,14 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
                                              MSIR.TypeKind.GcRef} THEN
           Err(c, "nil_check: operand must be a ptr or gc_ref");
         END;
-    | MSIR.Op.SubscriptCheck =>
-        (* D32: index and bound, integers *)
+    | MSIR.Op.Fault =>
+        IF MSIR.InsnOperandCount(i) # 0 THEN
+          Err(c, "fault takes no operands");
+        END;
+    | MSIR.Op.SubscriptCheck, MSIR.Op.ShapeCheck =>
+        (* D32: index and bound, or two counts; integers *)
         IF MSIR.InsnOperandCount(i) # 2 THEN
-          Err(c, "subscript_check requires exactly two operands");
+          Err(c, "subscript_check/shape_check requires exactly two operands");
         ELSE
           FOR k := 0 TO 1 DO
             IF NOT MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, k)))
@@ -449,7 +453,7 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
                                               MSIR.TypeKind.I64,
                                               MSIR.TypeKind.W8 ..
                                               MSIR.TypeKind.W64} THEN
-              Err(c, "subscript_check: operands must be integers");
+              Err(c, "subscript_check/shape_check: operands must be integers");
             END;
           END;
         END;

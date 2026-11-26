@@ -332,6 +332,14 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
    current line if ref is NIL. *)
 PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER);
 
+(* shape_check n, m (D32): fault with errCode unless the dimension counts
+   n and m are equal, at the current line. *)
+PROCEDURE EmitShapeCheck(n, m: MSIR.Value;  errCode: INTEGER);
+
+(* fault (D32): the runtime error errCode, known to be inevitable, at the
+   current line.  Ends the current block. *)
+PROCEDURE EmitFault(errCode: INTEGER);
+
 (* subscript_check idx, bound (D32): fault with errCode unless
    idx < bound, unsigned, at the current line. *)
 PROCEDURE EmitSubscriptCheck(idx, bound: MSIR.Value;  errCode: INTEGER);

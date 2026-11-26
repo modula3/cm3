@@ -753,6 +753,8 @@ TYPE Op = {
   ArrayElemAddr,
   (* runtime checks *)
   SubscriptCheck, NilCheck, RangeCheck,
+  Fault,        (* a runtime error known to be inevitable (terminator) *)
+  ShapeCheck,   (* two array dimension counts must be equal *)
   (* type conversion / casting *)
   Convert,
   SIToFP,     (* signed integer → float *)
@@ -1073,6 +1075,14 @@ PROCEDURE BuildSubarray(b: Block;  name: TEXT;
    unsigned (so a negative idx faults too); idx and bound have one type. *)
 PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
                               code, line: INTEGER);
+
+(* `shape_check n, m` — faults unless dimension counts n and m (one
+   integer type) are equal, as when an open array meets a fixed one. *)
+PROCEDURE BuildShapeCheck(b: Block;  n, m: Value;  code, line: INTEGER);
+
+(* `fault code` — the runtime error code (M3CG.RuntimeError) at line,
+   statically inevitable; terminates b. *)
+PROCEDURE BuildFault(b: Block;  code, line: INTEGER);
 
 (* `nil_check ref` — raises if ref is nil. *)
 PROCEDURE BuildNilCheck(b: Block;  ref: Value;  code, line: INTEGER);
