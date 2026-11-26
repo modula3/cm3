@@ -2067,6 +2067,20 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `gc_flags` come from the front end (`MSIR.SetModuleGcFlags`, as
     `Module.m3` sets them for C) instead of a constant 3, so `-NoIncGC`
     stays honest.  p318 under MSIR: 8 `gc.load`s, as C's 8 barrier calls.
+  - **Block copies (2026-11-26).**  #1385 exempted loads from a frame's
+    records and arrays on the assumption that the frame is black, but a
+    block copy (`local := heapRef^`, a VALUE record, a returned record)
+    brought references to gray objects into the frame with no barrier: the
+    stage-2 crash on msir.  The fix (master #1388, Tony's choice over
+    restoring barriers on loads from local aggregates) barriers the copy:
+    `RTHooks.CheckLoadTracedBlock (dst, map, n, stride)` after the copy, on
+    the destination, decided by `Expr.CopyNeedsBarrier`.  MSIR carries it
+    as `gc.load_block` (D31): `MSIRBuilder.LoadBlock` copies a record or
+    array read from outside the frame into a temporary, barriers it there
+    and loads from it; direct copies get `gc.load_block` after the copy.
+    `AuditReadBarriers` also reports an aggregate holding gc_refs loaded
+    from non-local storage with no decision (`load unbarriered` records
+    one).  m3test p322.
 
 - **D31. A runtime interaction is an MSIR op when the IR needs its meaning;
   otherwise it is a plain call** (Tony, 2026-11-26).
