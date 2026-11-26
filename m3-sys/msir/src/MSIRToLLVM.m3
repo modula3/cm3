@@ -1946,6 +1946,17 @@ PROCEDURE CollectExterns(m: MSIR.Module;  externs: RefSeq.T) =
     FOR gi := 0 TO MSIR.ModuleGlobalInitCount(m) - 1 DO
       ScanConstForExterns(m, externs, MSIR.ModuleGlobalInitValue(m, gi));
     END;
+    (* (d) Constant arrays (the "CONST array globals"): their elements can be
+           external procs, e.g. CONST Inhale = ARRAY OF Inhale_t
+           {M3CG_BinRd.Inhale, M3CG_Rd.Inhale} (m3cgcat, B42). *)
+    FOR ci := 0 TO MSIR.ModuleConstArrayCount(m) - 1 DO
+      VAR ca := MSIR.ModuleConstArray(m, ci);
+      BEGIN
+        FOR ei := 0 TO MSIR.ConstArrayEltCount(ca) - 1 DO
+          ScanConstForExterns(m, externs, MSIR.ConstArrayElt(ca, ei));
+        END;
+      END;
+    END;
   END CollectExterns;
 
 (*-------------------------------------------------- proc signature emit *)
