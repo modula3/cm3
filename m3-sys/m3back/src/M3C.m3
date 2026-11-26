@@ -82,6 +82,9 @@ T = M3CG_DoNothing.T OBJECT
         stack  : RefSeq.T := NIL;
         params : RefSeq.T := NIL;
         try_handler_stack: RefSeq.T := NIL; (* stack of LabelRef for nested TRY blocks *)
+        try_pad_stack: RefSeq.T := NIL; (* per ended TRY awaiting its landing_pad: the
+                                           label its catch jumps to if M3C names it, else NIL *)
+        try_pad_count := 0;
         op_index := 0;
 
         unit_name := "L_";
@@ -8095,12 +8098,27 @@ PROCEDURE end_try (self : T) =
     END;
     <*ASSERT self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0*>
     r := NARROW(self.try_handler_stack.remhi(), LabelRef);
+    IF self.try_pad_stack = NIL THEN
+      self.try_pad_stack := NEW(RefSeq.T).init();
+    END;
     IF r^ = FIRST(Label) THEN
-      (* No invoke_direct seen — try body had no calls; use a re-throw catch *)
-      print(self, "} catch (...) { throw; }\n");
+      (* No invoke seen, but the body can still raise: a runtime check
+         (nil, range, subscript, ...) calls the module's _CRASH, which
+         raises RuntimeError.E.  The handler label is not known until the
+         landing pad, so jump to a label of our own that landing_pad
+         defines there.  End_try, the handler's Set_label and Landing_pad
+         come in that order, nested LIFO, for every TRY, TRY FINALLY and
+         LOCK. *)
+      WITH name = "L_try_pad_" & Fmt.Int(self.try_pad_count) DO
+        INC(self.try_pad_count);
+        print(self, "} catch (_M3Exc& _m3exc) { _m3_caught = _m3exc.act; goto "
+                  & name & "; }\n");
+        self.try_pad_stack.addhi(name);
+      END;
     ELSE
       print(self, "} catch (_M3Exc& _m3exc) { _m3_caught = _m3exc.act; goto L" 
                 & LabelToHex(r^) & "; }\n");
+      self.try_pad_stack.addhi(NIL);
     END;
   END end_try;
 
@@ -8141,6 +8159,10 @@ PROCEDURE end_try (self : T) =
     (* The catch block in end_try already stored the activation in the
        procedure's local _m3_caught (declared by begin_procedure).
        Push it onto the expression stack so Store_addr(info) can save it. *)
+    <*ASSERT self.try_pad_stack # NIL AND self.try_pad_stack.size() > 0*>
+    WITH name = self.try_pad_stack.remhi() DO
+      IF name # NIL THEN print(self, NARROW(name, TEXT) & ":;\n") END;
+    END;
     push(self, CGType.Addr, CTextToExpr("_m3_caught"));
   END landing_pad;
 
