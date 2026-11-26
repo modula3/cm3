@@ -35,9 +35,11 @@ jobs:
     - name: Install prerequisites
       run: |
         sudo apt-get update --quiet
-        sudo apt-get install --quiet --assume-yes g++-multilib
-        sudo apt-get install --quiet --assume-yes g++-multilib-i686-linux-gnu
-        sudo apt-get install --quiet --assume-yes ninja-build binutils-gold
+        sudo apt-get install --quiet --assume-yes \
+          libunwind-dev \
+          g++-multilib \
+          g++-multilib-i686-linux-gnu \
+          ninja-build binutils-gold
 
     - name: Define install location
       run: |
