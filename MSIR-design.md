@@ -2068,6 +2068,39 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `Module.m3` sets them for C) instead of a constant 3, so `-NoIncGC`
     stays honest.  p318 under MSIR: 8 `gc.load`s, as C's 8 barrier calls.
 
+- **D31. A runtime interaction is an MSIR op when the IR needs its meaning;
+  otherwise it is a plain call** (Tony, 2026-11-26).
+  - **Today it depends on history, not on a rule.**
+    - Dedicated ops, with the RTHooks procedure bound per module and expanded
+      by the lowerings: the GC barriers (`gc.load`, `gc.store`, `gc.dirty`;
+      `gc.load_block` for block copies, #1388), TYPECASE (`ScanTypecase`),
+      and the EH machinery (`ResumeRaiseEx`, `PushEFrame`/`PopEFrame` behind
+      the EH ops; the TEXT literal hooks behind literal method tables).
+    - Plain calls built in the front end (`MSIRBuilder.HookProc` +
+      `EmitCall`): NEW (`New.m3`), ISTYPE/NARROW of object and opaque types
+      (`CheckIsType`), RAISE (`RaiseEx`, and `NewTracedRef` for an
+      aggregate argument), `Concat`, `AssertFailed`, every runtime-check
+      fault (`ReportFault`), and the VALUE open-array copy
+      (`NewTracedArray`).
+    - Ops declared but never built by the front end: `New`, `OpenArrayNew`,
+      `Narrow`, `Istype`, `Raise`, `Dispatch`, `NilCheck`, `RangeCheck`,
+      `SubscriptCheck`.  MSIRToLLVM implements none of them; MSIRToM3CG
+      only some.
+  - **Rule.**  An op when the operation carries meaning the verifier, an
+    optimiser or a lowering needs to see: GC barriers; allocation (escape
+    analysis, statepoint and root placement); type tests and NARROW
+    (devirtualisation, check removal); RAISE (the EH lowering); the runtime
+    checks (redundant-check removal); method dispatch.  A plain call for an
+    ordinary library function with no meaning to the IR: `Concat`, the TEXT
+    literal methods.  `ReportFault` and `AssertFailed` are then only what
+    the check ops lower to.  An op the front end will not build is deleted,
+    not left declared.
+  - **Plan.**  After `gc.load_block`: the front end builds `New`/
+    `OpenArrayNew`, `Narrow`/`Istype`, `Raise` and the check ops, and both
+    lowerings implement them; `Dispatch` likewise, or is deleted if method
+    calls stay as loads and indirect calls.  Each conversion keeps the
+    MSIR→M3CG ladder and the IR fixpoint green.
+
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
   `Swap.Int32 = BITS 32 FOR [-2^31 .. 2^31-1]`: MSIR widens the subrange
