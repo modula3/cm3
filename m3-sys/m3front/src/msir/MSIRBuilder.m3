@@ -450,6 +450,29 @@ PROCEDURE LookupVarRaw(v: Variable.T): MSIR.Value =
                                    Expr.VarLoadNeedsBarrier(v));
             END;
           END;
+          (* A WITH alias of a packed element (WITH d = a[i], a: ARRAY OF
+             BITS 8 FOR BOOLEAN): the address's element type is the storage
+             (i8), narrower or wider than the alias type's (i1).  Load at
+             the storage width and fit to the alias's value type (B47). *)
+          VAR pt := MSIR.ValueType(varMap[i].val);
+              st := varMap[i].storageType;
+              et: MSIR.T := NIL;
+          BEGIN
+            IF MSIR.Kind(pt) = MSIR.TypeKind.Ptr THEN et := MSIR.EltType(pt) END;
+            IF et # NIL AND st # NIL
+               AND MSIR.Kind(et) >= MSIR.TypeKind.I1
+               AND MSIR.Kind(et) <= MSIR.TypeKind.W64
+               AND MSIR.Kind(st) >= MSIR.TypeKind.I1
+               AND MSIR.Kind(st) <= MSIR.TypeKind.W64
+               AND MSIR.BitWidth(et) # MSIR.BitWidth(st) THEN
+              VAR raw := MSIR.BuildLoad(curBlock, "", et, varMap[i].val);
+                  tgt := varMap[i].wideType;
+              BEGIN
+                IF tgt = NIL THEN tgt := st END;
+                RETURN CoerceToMSIR(curBlock, raw, tgt);
+              END;
+            END;
+          END;
           VAR loaded := MSIR.BuildLoad(curBlock, "", varMap[i].storageType, varMap[i].val);
           BEGIN
             IF NOT MSIR.Equal(varMap[i].storageType, varMap[i].wideType) THEN

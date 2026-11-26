@@ -1306,7 +1306,17 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
                            MSIR.BuildGepByte (loopBodBlk, "", pA, byteOff));
               eB      := MSIR.BuildLoad (loopBodBlk, "", eltMsir,
                            MSIR.BuildGepByte (loopBodBlk, "", pB, byteOff));
-              bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq, eA, eB);
+              IF eltK IN SET OF MSIR.TypeKind {MSIR.TypeKind.F32,
+                                               MSIR.TypeKind.F64,
+                                               MSIR.TypeKind.F128} THEN
+                (* As CompileTest: a float element compares as a float
+                   (B40: icmp on doubles). *)
+                bodCond := MSIR.BuildFCmp (loopBodBlk, "", MSIR.FCmpPred.OEq,
+                                           eA, eB);
+              ELSE
+                bodCond := MSIR.BuildICmp (loopBodBlk, "", MSIR.CmpPred.Eq,
+                                           eA, eB);
+              END;
             END;
           END;
           IF bodCond = NIL THEN
