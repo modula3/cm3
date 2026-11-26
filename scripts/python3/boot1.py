@@ -3,7 +3,7 @@
 # usage: ./boot1.py target
 #
 # This produces an archive that can be copied to the target,
-# extract, run make, producing a cm3.
+# extract, run make, producing a cm3. TODO: m3core and libm3 also.
 #
 # Copy that into place and proceed with boot2.py or boot2min.py.
 #

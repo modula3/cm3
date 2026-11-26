@@ -12,8 +12,15 @@ import tempfile
 import shutil
 import time
 
+orig_cwd = os.getcwd()
+my_dir = os.path.dirname(os.path.abspath(__file__))
+print("cd " + my_dir)
+os.chdir(my_dir)
 false = False
 true = True
+env_OS = getenv("OS")
+argv = sys.argv
+PyFlags = ""
 
 class Tee:
     def __init__(self, a, b = None):
@@ -34,7 +41,9 @@ class Tee:
 
 LowercaseArgv = map(lambda a: a.lower(), sys.argv)
 
-sys.stdout = Tee(sys.stdout, open(sys.argv[0] + ".log", "a"))
+log = os.path.basename(my_dir + "/" + sys.argv[0] + ".log")
+print("logging to " + log)
+sys.stdout = Tee(sys.stdout, open(log, "a"))
 
 # Workaround regression in m3-sys/m3cc/src/m3makefile.
 os.environ["INSTALL_CM3_IN_BIN"] = "yes"
@@ -70,8 +79,6 @@ def IsInterix():
 
 def Cygwin():
     return Posix() and os.uname()[0].lower().startswith("cygwin")
-
-env_OS = getenv("OS")
 
 DevNull = "/dev/null"
 
@@ -355,16 +362,20 @@ CM3_FLAGS = ""
 for a in _PossibleCm3Flags:
     if a in sys.argv:
         CM3_FLAGS = CM3_FLAGS + " -" + a
+        PyFlags += " " + a
 
 for a in sys.argv:
     if a.startswith("@M3"):
         CM3_FLAGS = CM3_FLAGS + " " + a
+        PyFlags += " " + a
 
-def PassThroughDefines():
+def PassThroughDefines(argv = sys.argv):
     result = " "
-    for a in sys.argv:
+    global PyFlags
+    for a in argv:
         if a.startswith("-D"):
             result = result + " " + a
+            PyFlags += " " + a
     return result
 
 CM3_FLAGS += PassThroughDefines()
@@ -603,6 +614,7 @@ for a in sys.argv:
     if Target:
         break
 Target = Target or getenv("CM3_TARGET") or Host
+PyFlags += " " + Target
 
 #-----------------------------------------------------------------------------
 #
@@ -1024,7 +1036,7 @@ def _MakeZip(a):
 
 #-----------------------------------------------------------------------------
 
-def _SqueezeSpaces(a):
+def SqueezeSpaces(a):
     # squeeze runs of spaces and spaces at ends
     a = re.sub("  +", " ", a)
     a = re.sub(" +$", "", a)
@@ -1232,6 +1244,9 @@ GenericCommand:
             or (arg.lower() in _AllTargets)
             or (arg in _PossiblePylibFlags)
             or (arg.startswith("@M3"))
+            or arg == "pass1"
+            or arg == "pass2"
+            or arg == "skip_runtime"
             ):
             continue
         if arg.startswith("-"):
@@ -1508,16 +1523,16 @@ def ShipFront():
                          os.path.join(InstallRoot, "bin"))
 
 #-----------------------------------------------------------------------------
+# Shipping cm3 and cm3cg sometimes skip doing anything. Workaround that here.
 
 def ShipCompiler():
     return ShipFront()
 
 #-----------------------------------------------------------------------------
+# Shipping cm3 and cm3cg sometimes skip doing anything. Workaround that here.
 
 def CopyCompiler(From, To):
-    #
     # copy cm3, cm3cg, mklib, mips-tfile from one installroot/bin to another
-    #
     _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
     return True
 
@@ -2282,6 +2297,20 @@ def MakeDebianPackage(input, prefix):
     print(command)
     os.system(command)
     RestoreSkel(prefix)
+
+#-----------------------------------------------------------------------------
+
+pyexe = ""
+if not Posix() and env_OS == "Windows_NT":
+    pyexe = (SearchPath("python.exe") or SearchPath("python3.exe") or SearchPath("py.exe") or SearchPath("python2.exe")) + " "
+
+# "PassThroughArgv" means the bulk of the command line is passed through.
+def PyRun(command):
+    first, sep, rest = command.partition(" ")
+    command = my_dir + "/" + first + ".py" + sep + rest
+    command = SqueezeSpaces(pyexe + command + " " + PyFlags)
+    print("'" + command + "'")
+    os.system(command) and sys.exit("ERROR: " + command)
 
 #-----------------------------------------------------------------------------
 
