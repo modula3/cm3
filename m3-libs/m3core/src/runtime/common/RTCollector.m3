@@ -859,6 +859,7 @@ PROCEDURE CollectSomeInStateZero () =
        generation. *)
 
     mover := NEW (Mover);  (* get one in the new space *)
+    blockChecker := NEW (BlockChecker);
 
     (* VAR/READONLY and WITH allow programmers to generate interior pointers
        to heap objects that are not true traced references.  These interior
@@ -2283,7 +2284,9 @@ PROCEDURE CheckLoadTracedBlock (dst, map: ADDRESS;  n, stride: INTEGER) =
 
 TYPE BlockChecker = RTHeapMap.Visitor OBJECT OVERRIDES apply := CheckBlockRef END;
 
-VAR blockChecker := NEW (BlockChecker);  (* LL >= RTOS.LockHeap *)
+VAR blockChecker: BlockChecker := NIL;
+(* LL >= RTOS.LockHeap.  Allocated at each flip, with mover: a collection
+   in progress means there is one. *)
 
 PROCEDURE CheckBlockRef (<*UNUSED*> self: BlockChecker;  cp: ADDRESS) =
   (* LL >= RTOS.LockHeap *)
