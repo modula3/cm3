@@ -562,6 +562,7 @@ p_test ("p3", "p312", "Object type methods as procedure values, including an opa
 p_test ("p3", "p313", "<*TRACE*> on formals, locals, WITH and FOR variables")
 p_test ("p3", "p315", "Packed array elements of 1..7 bits through a non-constant subscript")
 p_test ("p3", "p321", "Set constructors of one word with non-constant ranges")
+p_test ("p3", "p324", "ROUND of constants breaks ties to even, whatever compiler built the compiler")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p302", "Address of a global at an offset, compared directly")
 p_test ("p2", "p299", "Initial values of packed fields, arrays and object fields")
