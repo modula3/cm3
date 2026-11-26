@@ -45,7 +45,7 @@ PROCEDURE OpenArrayByVALUE (formal: Value.T;  VAR refType: Type.T): BOOLEAN;
 PROCEDURE EmitDeclaration (formal: Value.T;  types_only, param: BOOLEAN);
 (* Only for a formal of a procedure type or an imported procedure. *)
 
-PROCEDURE GenCopy (t: Type.T);
+PROCEDURE GenCopy (t: Type.T;  barrier := FALSE);
 (* Load the address of a temporary that holds the value of type 't'
    that is currently on top of the stack. *)
 

@@ -89,6 +89,8 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
     info: Type.Info;
     p := RunTyme.LookUpProc (RunTyme.Hook.RaiseEx);
     tmp: CG.Val;
+    handler, handlerBody: CG.Label;
+    handlerInfo: CG.Var;
   BEGIN
     Value.Declare (t);
     <*ASSERT t.offset # 0*>
@@ -140,6 +142,13 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       arg_type := info.stk_type;
       Expr.Prep (arg);
       AssignStmt.EmitRTCheck (t.tipe, arg);
+      IF (arg_type # CG.Type.Addr) AND Expr.CopyNeedsBarrier (arg) THEN
+        (* Copy the argument now, with the read barrier on the references
+           the copy loads: the barrier is a call, so it cannot come among
+           the raise call's parameters. *)
+        Formal.GenCopy (expr_type, barrier := TRUE);
+        arg_type := CG.Type.Addr;  (* copied *)
+      END;
       tmp := CG.Pop ();
       CG.Start_call_indirect (CG.Type.Void, Target.DefaultCall);
       IF Target.DefaultCall.args_left_to_right THEN
@@ -157,7 +166,15 @@ PROCEDURE EmitRaise (v: Value.T;  arg: Expr.T) =
       CG.Add_offset (M3RT.ED_SIZE);
       CG.Boost_addr_alignment (Target.Address.align);
       CG.Load_indirect (CG.Type.Addr, 0, Target.Address.size, CG.ProcAlign ());
-      CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);
+      (* Inside a TRY, the raise must be an invoke of the handler, as any
+         other call is (Procedure.EmitCall, UserProc): with ex_stack, a
+         TRY whose body has no invoke gets no handler. *)
+      IF Marker.NextHandler (handler, handlerBody, handlerInfo) THEN
+        CG.Invoke_indirect (CG.Type.Void, Target.DefaultCall, handler);
+        Marker.Invoked ();
+      ELSE
+        CG.Gen_Call_indirect (CG.Type.Void, Target.DefaultCall);
+      END;
       EVAL Marker.EmitExceptionTest (Procedure.Signature (p), need_value := FALSE);
       CG.Free (tmp);
     END;

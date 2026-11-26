@@ -50,7 +50,9 @@ REVEAL
     inFrame      (): BOOLEAN                       := NotInFrame
     (* ^TRUE iff the designator's storage is in a procedure's frame (a local
        variable, or a field or fixed-array element of one), so a reference
-       loaded from it is one the mutator already holds. *)
+       loaded from it is one the mutator already holds: every reference
+       enters a frame through a barrier, a single load's or, for a record
+       or array, a block copy's (Expr.CopyNeedsBarrier). *)
   END;
 
 TYPE Ta   = M3.Expr OBJECT a: M3.Expr     OVERRIDES isEqual := EqCheckA  END;
