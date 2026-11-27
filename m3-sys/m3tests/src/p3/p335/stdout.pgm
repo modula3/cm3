@@ -1,0 +1,15 @@
+global RL TRUE
+global RX TRUE
+global RI TRUE
+global array RL TRUE
+global array RL TRUE
+global array RL TRUE
+heap RX TRUE
+local RL TRUE
+local RX TRUE
+local RI TRUE
+local array RL TRUE
+local array RL TRUE
+local array RL TRUE
+up-level RL TRUE
+up-level RX TRUE

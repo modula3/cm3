@@ -2263,6 +2263,7 @@ TYPE Var_t = M3CG.Var OBJECT
     exported := FALSE;
     global := FALSE;
     byte_size := -1; (* esp. for structs *)
+    alignment := 0; (* in bytes, from declare_local; 0 if not given *)
     up_level := FALSE; (* local accessed from nested function *)
     is_static_link := FALSE; (* micro optimization -- uplevel but accessed directly *)
     next_in_block: Var_t := NIL;
@@ -2494,6 +2495,17 @@ CONST Prefix = ARRAY OF TEXT {
 "#ifdef __SUNPRO_C",
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
+"#endif",
+
+(* M3_ALIGNED(n) declares a variable or field n-byte aligned (Var_Align). *)
+"#if defined(_MSC_VER)",
+"#define M3_ALIGNED(n) __declspec(align(n))",
+"#elif defined(__GNUC__) || defined(__clang__)",
+"#define M3_ALIGNED(n) __attribute__((aligned(n)))",
+"#elif defined(__cplusplus) && __cplusplus >= 201103L",
+"#define M3_ALIGNED(n) alignas(n)",
+"#else",
+"#define M3_ALIGNED(n) /* alignment not expressible */",
 "#endif",
 
 "#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
@@ -5383,9 +5395,22 @@ BEGIN
     RETURN NameT(var.name);
 END Var_Name;
 
+PROCEDURE Var_Align(var: Var_t): TEXT =
+(* The front end may align a local more strictly than C would: a record
+   with a LONGREAL field is 8-aligned on 32-bit targets, but the i386
+   System V ABI aligns doubles in structures to 4 bytes, and M3C's struct
+   for the record only pads the field offsets.  Ask for the alignment the
+   front end assumed. *)
+BEGIN
+    IF var.alignment > Target.Integer.bytes THEN
+        RETURN "M3_ALIGNED(" & IntToDec(var.alignment) & ") ";
+    END;
+    RETURN "";
+END Var_Align;
+
 PROCEDURE Var_Declare(var: Var_t): TEXT =
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
+    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & Var_Align(var) & var.Type() & " " & var.Name();
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
@@ -5395,8 +5420,9 @@ BEGIN
     <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
     IF PassStructsByValue AND var.cgtype = CGType.Struct AND var.up_level THEN
         struct := "*";
+        RETURN var.InFrameType() & struct & var.InFrameName();
     END;
-    RETURN var.InFrameType() & struct & var.InFrameName();
+    RETURN Var_Align(var) & var.InFrameType() & struct & var.InFrameName();
 END Var_InFrameDeclare;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
@@ -5429,7 +5455,7 @@ PROCEDURE declare_local(
     self: T;
     name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     cgtype: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
@@ -5449,7 +5475,8 @@ BEGIN
     ReplaceName (self, name);
     ReplaceName (self, typename);
     var := NEW(Var_t, self := self, cgtype := cgtype, name := name, up_level := up_level,
-               byte_size := byte_size, typeid := typeid, proc := self.current_proc).Init();
+               byte_size := byte_size, alignment := alignment, typeid := typeid,
+               proc := self.current_proc).Init();
 
     <* ASSERT self.current_proc # NIL *>
     <* ASSERT self.current_proc.locals # NIL *>
