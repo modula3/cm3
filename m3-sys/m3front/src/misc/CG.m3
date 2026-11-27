@@ -1215,8 +1215,15 @@ END;
       AND (s >= Target.Byte) 
       AND (FindInitType (s DIV Target.Byte, init_pc, itype))
       AND (TargetMap.CG_Size[itype] = s) THEN
-      (* simple, aligned integer initialization *)
-      cg.init_int (o DIV Target.Byte, value, itype);
+      (* simple, aligned integer initialization.  A value too wide for
+         its field, from a constant whose use is a run-time error (p268),
+         keeps its low-order bytes, as a bit field's value does below. *)
+      IF TInt.Extend (value, s DIV Target.Byte, tmp)
+        OR TWord.Truncate (value, s DIV Target.Byte, tmp) THEN
+        cg.init_int (o DIV Target.Byte, value, itype);
+      ELSE
+        cg.init_int (o DIV Target.Byte, tmp, itype);
+      END;
     ELSIF TWord.Insert (init_bits, value, bit_offset, s, tmp) THEN
       init_bits := tmp;
     ELSE
