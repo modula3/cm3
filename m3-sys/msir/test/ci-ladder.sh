@@ -126,8 +126,11 @@ log "m3tests under the stage-2 cm3 (MSIRObj)"
 RES=$ROOT/m3-sys/m3tests/m3tests-results.xml
 if [ -f "$RES" ]; then
   head -c 2000 "$RES" | grep -m1 -oE '<testsuite[^>]*>' || true
-  errs=$(grep -m1 -oE '<testsuite[^>]*errors="[0-9]+"' "$RES" | grep -oE '[0-9]+"$' | tr -d '"' || true)
-  [ "${errs:-1}" = 0 ] || fail "m3tests: ${errs:-unknown} errors"
+  # As master's CI does: fail on a test that fails and is not listed in
+  # known-failures/<TARGET>-msir, or on a listed test that now passes.
+  python3 "$ROOT/m3-sys/m3tests/check-results.py" "$RES" \
+    "$ROOT/m3-sys/m3tests/known-failures/$CM3_TARGET-msir" \
+    || fail "m3tests: failures that are not known (see above)"
 else
   fail "m3tests: no results file"
 fi
