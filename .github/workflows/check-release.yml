@@ -40,6 +40,9 @@ jobs:
       CM3DIST: cm3-dist-AMD64_LINUX-${{ github.event.inputs.tag }}.tar.xz
     steps:
     - run: |
+        # The C backend's ex_stack links libunwind.
+        sudo apt-get update --quiet
+        sudo apt-get install --quiet --assume-yes libunwind-dev
         mkdir ../build ../dist
         curl --location --silent "${CM3RELEASE}/${CM3DIST}" | tar Jxf - --directory=../dist --strip-components=1
         cd ../build
