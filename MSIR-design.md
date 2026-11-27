@@ -38,7 +38,7 @@ the rationale in the commit.
 | **Latest validation (2026-07-24)** | *Not reproducible from a clean build (see above).* **m3tests 292/292, 0 errors**, both with the C-backend driver and with the MSIR-built stage-2 driver, under live incremental + generational GC. Three-stage bootstrap reaches a fixpoint (see *Validation Ladder* below). Supersedes the 2026-07-14 "26 errors" figures in the rows below. Last run of the `msir` branch HEAD (`b28fd265c3`). |
 | **Platform coverage**           | **CI on all three `ex_stack` targets, all green (2026-11-20).** The x86_64 code-generation bugs found on the way are fixed (see *CI results on the x86_64 targets*). |
 | **Front end decoupled from M3CG** | **Not started; plan agreed (D25).** MSIR emission runs inside the M3CG pass's driver and relies on its link-information side effects (see O17). Needed before proposing for master. |
-| **Code review and documentation** | **Planned (Tony, 2026-11-27).** After the D31 conversions (Dispatch is the last): review every MSIR module (`m3-sys/msir/src`, `m3front/src/msir`) and give each a high-level overview at the head of its interface (its role, its place in the pipeline front end → MSIR → MSIRChecks → MSIREH → MSIRToLLVM or MSIRToM3CG, its main structures and passes, the decisions it implements) and a map of its implementation; MSIRToLLVM and MSIRToM3CG need it most.  Consider renaming MSIRChecks, which now also expands type tests, NEW and RAISE.  Then consider what the rest of the front end needs documented, but only once its old M3CG paths have been excised (D25), so the documentation describes the MSIR-only front end. |
+| **Code review and documentation** | **Planned (Tony, 2026-11-27).** After the D31 conversions (Dispatch is the last): review every MSIR module (`m3-sys/msir/src`, `m3front/src/msir`) and give each a high-level overview at the head of its interface (its role, its place in the pipeline front end → MSIR → MSIRRuntime → MSIREH → MSIRToLLVM or MSIRToM3CG, its main structures and passes, the decisions it implements) and a map of its implementation; MSIRToLLVM and MSIRToM3CG need it most.  Consider renaming MSIRRuntime, which now also expands type tests, NEW and RAISE.  Then consider what the rest of the front end needs documented, but only once its old M3CG paths have been excised (D25), so the documentation describes the MSIR-only front end. |
 | **Merge from master (2026-11)** | **Merged and pushed** (`593cb56d0c`, then `15ab336899` for #1251, #1253, #1254). See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Done (2026-11-23).** MSIRObj and MSIRAsm are in `m3tests/src/m3makefile`'s `-O3` clause, as master's llvm backends are (`a03e61e15b`), so the LLVM ladder's m3tests run optimised. The first run failed only p280, which found B32; with B32 fixed all 304 pass. |
 | **EXTENDED on AMD64_LINUX**     | **Failing (2026-11-19).** fp128 comparisons, negation and constants fixed (`544b07b7c9`), but the MSIR-built stage-2 compiler still differs from stage 1 in three files and p113/p118/p123/p131 fail: probably fp128 arithmetic in the compiler's own constant folding. Original note: **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
@@ -1277,6 +1277,42 @@ data layout can follow the installed LLVM.
 
 ---
 
+### O20. The role of m3middle once MSIR is the middle IR.
+
+**Open (Tony, 2026-11-27); recorded, not acted on.**  Should msir become
+the new m3middle?  Probably not: m3middle holds two different things, and
+only one overlaps with msir.
+
+- **Facts and arithmetic every stage shares** (keep in m3middle):
+  `Target`/`TargetMap`/`TargetT` (sizes, alignments, calling conventions,
+  the per-platform facts), `TInt`/`TWord`/`TFloat`/`TCardinal` (target-width
+  arithmetic for constant folding), `M3RT` (the runtime's layouts), and
+  `M3ID`, `M3FP`, `M3Buf`, `M3File`, `M3Process`, `M3Timers`.  The front
+  end, both MSIR lowerings and every backend use them; msir itself imports
+  `Target` and `M3RT` (the D32-D36 expansions read `M3RT`).  This is the
+  foundation msir sits on.
+- **The M3CG IR and its tooling** (about 10,000 lines: `M3CG`/`M3CG_Ops`,
+  `M3CG_Check`, the text and binary readers and writers, the `Tee`,
+  `MultiPass`, `DoNothing` and `AssertFalse` adapters).  This was the
+  middle IR, and msir replaces it in that role.  Once the front end emits
+  only MSIR (D25, O17), M3CG survives as the interface between
+  `MSIRToM3CG` and the existing backends (M3C, the x86 integrated backend,
+  m3cc), for as long as they exist.
+
+Likely shape after D25: m3middle = target facts, runtime layouts, target
+arithmetic, and M3CG as a backend interface; msir = the IR, its verifier,
+printer, shared lowering passes (MSIRRuntime, MSIREH) and lowerings;
+m3front produces MSIR.  Two decisions along the way:
+
+1. **Where `MSIRToM3CG` lives.**  It is the bridge to the M3CG backends.
+   A small package of its own would keep msir free of M3CG, so the
+   dependency goes cleanly if M3CG is ever retired (if every backend
+   consumes MSIR directly: LLVM does, C and x86 would need MSIR-native
+   backends; a separate, much later decision).
+2. **Whether `Target` sheds its M3CG vocabulary** (`CGType`, the
+   `cg_type` fields), leaving the target facts backend-neutral.  Worth
+   doing when M3CG becomes backend-only, not before.
+
 ## Cross-references
 
 - `MSIR.md` — strategic narrative.
@@ -2132,7 +2168,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   - **Not terminators.**  A check is an ordinary instruction in its block:
     the IR stays compact and a later pass sees the check as a unit (to
     remove or hoist redundant checks), which is why checks are ops at all.
-  - **Lowering.**  One shared pass, `MSIRChecks.Expand`, run first by both
+  - **Lowering.**  One shared pass, `MSIRRuntime.Expand`, run first by both
     lowerings, turns each check back into a compare, a branch to a fault
     block calling `RTHooks.ReportFault (module, line*32 + code)` and the
     rest of the block in a continuation; the new blocks keep the original
@@ -2160,7 +2196,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `subtype` for an object or opaque type (the typecode first, then
     `RTHooks.CheckIsType`, the module's type-test hook), and `null` for
     NULL (only NIL; no typecell).  NIL is of every reference type.
-  - **Lowering.**  MSIRChecks.Expand expands both, before EH lowering, into
+  - **Lowering.**  MSIRRuntime.Expand expands both, before EH lowering, into
     the code the C backend emits for NARROW (Narrow.EmitCore); the answer
     goes through one i1 slot at the head of the entry, as the lowerings
     take no block arguments.  ISTYPE of an object now also tries the
@@ -2177,13 +2213,13 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     type's MSIR type.  The typecell's initProc applies defaults, as in the
     C backend; NEW's keyword fields are ordinary stores after the op.  The
     declared-but-unused `new`/`openarray.new` builders are replaced.
-  - **Lowering.**  MSIRChecks.Expand calls the allocator (`RTHooks.New*`);
+  - **Lowering.**  MSIRRuntime.Expand calls the allocator (`RTHooks.New*`);
     for `openarray.new` it fills an open-array shape (M3RT.OA_*) in an
     alloca at the head of the entry, where the front end had put it in the
     current block.
-  - **Runtime hooks.**  The procedures MSIRChecks expands into (ReportFault,
+  - **Runtime hooks.**  The procedures MSIRRuntime expands into (ReportFault,
     CheckIsType, the six allocators) are one table, `MSIR.RtHook`, bound per
-    module: MSIRChecks.Hooks says which a module needs, and MSIREmit binds
+    module: MSIRRuntime.Hooks says which a module needs, and MSIREmit binds
     each to its RunTyme hook.  This replaces a setter per hook.
   - **Not yet ops.**  The VALUE open-array copy (`NewTracedArray`, in
     Formal) and RAISE's boxed argument (`NewTracedRef`) still call the
@@ -2199,7 +2235,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     the typecell of a REF to its type, since only the front end can name
     that typecell.  The op was declared, with MSIREH's case and the
     verifier's argument check, but never built.
-  - **Lowering.**  MSIRChecks.Expand lowers it to `RTHooks.RaiseEx (exc,
+  - **Lowering.**  MSIRRuntime.Expand lowers it to `RTHooks.RaiseEx (exc,
     arg, module, line)` and `unreachable`; inside a TRY the EH lowering
     makes the call an invoke.  The argument word is as before: a scalar
     converted to an address, a wide set by the address of a copy (in an
@@ -2227,7 +2263,7 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     `new` result, a sealed type), a pass replaces the lookup by the
     procedure and the call becomes direct.  The declared `Dispatch` op,
     its verifier check and `ObjectMethodIndex` are deleted.
-  - **Lowering.**  MSIRChecks.Expand emits the loads QualifyExpr and
+  - **Lowering.**  MSIRRuntime.Expand emits the loads QualifyExpr and
     EmitMethodCall used to emit.  LOCK's acquire and release are method
     lookups too.
 
