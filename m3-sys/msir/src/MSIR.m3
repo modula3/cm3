@@ -2644,14 +2644,22 @@ PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
     RETURN i.result;
   END BuildInvokeIndirect;
 
-PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value) =
+PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg, boxCell: Value;
+                     line: INTEGER) =
   VAR i := NEW(Insn);
   BEGIN
     i.op := Op.Raise;
     i.exc := exc;
-    IF arg # NIL THEN
+    i.srcLine := line;
+    IF arg = NIL THEN
+      <* ASSERT boxCell = NIL *>
+      i.operands := NEW(REF ARRAY OF Value, 0);
+    ELSIF boxCell = NIL THEN
       i.operands := NEW(REF ARRAY OF Value, 1);
       i.operands[0] := arg;
+    ELSE
+      i.operands := NEW(REF ARRAY OF Value, 2);
+      i.operands[0] := arg;  i.operands[1] := boxCell;
     END;
     addInsn(b, i);
   END BuildRaise;
@@ -3019,7 +3027,7 @@ PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
     IF n = 0 THEN RETURN FALSE END;
     ri := BlockInsn(b, n-1);
     CASE ri.op OF
-    | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable, Op.Fault,
+    | Op.Ret, Op.Br, Op.CondBr, Op.Unreachable, Op.Fault, Op.Raise,
       Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally, Op.Typecase,
       Op.Resume, Op.Invoke, Op.InvokeIndirect =>
         RETURN TRUE;

@@ -2186,7 +2186,28 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     each to its RunTyme hook.  This replaces a setter per hook.
   - **Not yet ops.**  The VALUE open-array copy (`NewTracedArray`, in
     Formal) and RAISE's boxed argument (`NewTracedRef`) still call the
-    allocators directly; they belong with the copy and RAISE conversions.
+    allocators directly; the copy belongs with its own conversion, the
+    box with D35.
+
+- **D35. RAISE is an op** (2026-11-27; the fourth conversion under D31;
+  proposed, for Tony's review).
+  - **Op.**  `raise exc, arg` (terminator) with the source line.  An
+    argument passed by value is the typed value, as the handler receives it
+    (`ToHandler`); one passed by reference (an aggregate, or wider than an
+    address: `Exceptionz.ArgByReference`) is the argument's address plus
+    the typecell of a REF to its type, since only the front end can name
+    that typecell.  The op was declared, with MSIREH's case and the
+    verifier's argument check, but never built.
+  - **Lowering.**  MSIRChecks.Expand lowers it to `RTHooks.RaiseEx (exc,
+    arg, module, line)` and `unreachable`; inside a TRY the EH lowering
+    makes the call an invoke.  The argument word is as before: a scalar
+    converted to an address, a wide set by the address of a copy (in an
+    entry alloca), and a by-reference argument copied to a new heap box
+    (`NewTracedRef`), as the C backend's raiser procedure does, since the
+    frame does not survive the unwinding.  `RaiseEx` joins the RtHook
+    table.
+  - **Use.**  With RAISE visible, a later pass can turn a RAISE whose
+    handler is in the same procedure into a branch.
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with

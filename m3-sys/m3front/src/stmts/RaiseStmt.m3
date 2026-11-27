@@ -10,8 +10,8 @@ MODULE RaiseStmt;
 
 IMPORT M3ID, Expr, Token, Scanner, Stmt, StmtRep, Error, ESet;
 IMPORT Value, Type, Scope, Exceptionz, AssignStmt;
-IMPORT MSIR, MSIRBuilder, RunTyme, CaptureAnalysis;
-IMPORT Target, RefType;
+IMPORT MSIR, MSIRBuilder, CaptureAnalysis;
+IMPORT RefType;
 FROM M3 IMPORT QID;
 
 TYPE
@@ -101,132 +101,66 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (p: P) =
-  (* RAISE E  or  RAISE E(arg)
-     RTHooks__Raise(ex, arg, module, line):
-       ex     = direct pointer to ExceptionDesc { uid, name_ptr, implicit }
-       arg    = argument value cast to ptr (NIL for no-arg exceptions)
-       module = NIL (diagnostics only; skip for now)
-       line   = 0  (diagnostics only; skip for now)
-     RTHooks__Raise never returns — emit unreachable after the call. *)
+  (* RAISE E  or  RAISE E(arg): a `raise` op (D35), which MSIRChecks lowers
+     to RTHooks.RaiseEx (exception, argument word, module, line). *)
   VAR
-    raiseProc : MSIR.Proc;
-    descVal   : MSIR.Value;
-    argVal    : MSIR.Value;
-    ptrT      := MSIR.TPtr(MSIR.TVoid());
-    args      : REF ARRAY OF MSIR.Value;
+    desc     : MSIR.ExcDesc;
+    argVal   : MSIR.Value := NIL;
+    boxCell  : MSIR.Value := NIL;
+    srcFile  : TEXT;
+    srcLine  : INTEGER;
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
     IF p.except = NIL THEN
       MSIRBuilder.Abandon("raise: exception not resolved");
       RETURN;
     END;
-
-    raiseProc := MSIRBuilder.HookProc(RunTyme.Hook.RaiseEx);
-    IF raiseProc = NIL THEN
-      MSIRBuilder.Abandon("raise: RTHooks__Raise not available");
-      RETURN;
-    END;
-
-    (* Exception descriptor pointer. *)
-    descVal := MSIRBuilder.ExcDescValue(p.except);
-    IF descVal = NIL THEN
+    desc := MSIRBuilder.ExcDescFor(p.except);
+    IF desc = NIL THEN
       MSIRBuilder.Abandon("raise: cannot build exception descriptor");
       RETURN;
     END;
 
-    (* Argument: compile if present, else NIL. *)
     IF p.arg # NIL THEN
-      VAR argType  := Exceptionz.ArgType(p.except);
-          argInfo  : Type.Info;
+      VAR argType := Exceptionz.ArgType(p.except);
       BEGIN
-        EVAL Type.CheckInfo(argType, argInfo);
         IF Exceptionz.ArgByReference(argType) THEN
-          (* Aggregate argument (array/struct/large value): must be heap-allocated
-             so the pointer remains valid after the stack frame is unwound by C++.
-             RTExStack.Raise copies the activation record by value but NOT the
-             argument data; a stack alloca becomes a dangling pointer after RAISE.
-             Use NEW(REF argType) → copy → pass heap pointer. *)
-          VAR refT     := RefType.New(Type.StripPacked(argType), TRUE, NIL);
-              b        := MSIRBuilder.CurrentBlock();
-              allocHk  := MSIRBuilder.HookProc(RunTyme.Hook.NewTracedRef);
-              nBytes   := argInfo.size DIV Target.Byte;
-              argAddr  : MSIR.Value;
-              typeCell : MSIR.Value;
-              heapPtr  : MSIR.Value;
+          (* An aggregate goes by its address; the lowering copies it to a
+             heap box of type REF argType (the frame does not survive the
+             unwinding), as the C backend's raiser procedure does. *)
+          VAR refT := RefType.New(Type.StripPacked(argType), TRUE, NIL);
           BEGIN
-            refT     := Type.Check(refT);
-            typeCell := RefType.TypecellMSIR(refT);
-            IF typeCell = NIL OR allocHk = NIL THEN
-              MSIRBuilder.Abandon("raise: cannot heap-alloc aggregate arg");
+            refT := Type.Check(refT);
+            boxCell := RefType.TypecellMSIR(refT);
+            IF boxCell = NIL THEN
+              MSIRBuilder.Abandon("raise: no typecell for the argument's box");
               RETURN;
             END;
-            (* Use LValue of arg to get its address; fall back to value+spill. *)
-            argAddr := Expr.LValueMSIR(p.arg);
-            IF argAddr = NIL THEN
-              argVal := Expr.CompileMSIR(p.arg);
-              IF argVal = NIL THEN RETURN END;
-              b := MSIRBuilder.CurrentBlock();
-              VAR slot := MSIR.BuildAlloca(b, "", MSIR.ValueType(argVal)); BEGIN
-                MSIR.BuildStore(b, argVal, slot);
-                argAddr := slot;
-              END;
-            END;
-            b := MSIRBuilder.CurrentBlock();
-            heapPtr := MSIR.BuildCall(b, "", allocHk,
-                         ARRAY OF MSIR.Value{typeCell});
-            b := MSIRBuilder.CurrentBlock();
-            MSIRBuilder.EmitMemcpy(MSIR.BuildConvert(b, "", heapPtr, ptrT),
-                                   MSIR.BuildConvert(b, "", argAddr, ptrT),
-                                   nBytes);
-            b := MSIRBuilder.CurrentBlock();
-            argVal := MSIR.BuildConvert(b, "", heapPtr, ptrT);
           END;
+          argVal := Expr.LValueMSIR(p.arg);
+          IF argVal = NIL THEN
+            (* not a designator: spill the value *)
+            VAR v := Expr.CompileMSIR(p.arg);  b: MSIR.Block;
+            BEGIN
+              IF v = NIL THEN RETURN END;
+              b := MSIRBuilder.CurrentBlock();
+              argVal := MSIR.BuildAlloca(b, "", MSIR.ValueType(v));
+              MSIR.BuildStore(b, v, argVal);
+            END;
+          END;
+          argVal := MSIR.BuildConvert(MSIRBuilder.CurrentBlock(), "", argVal,
+                                      MSIR.TPtr(MSIR.TVoid()));
         ELSE
           (* As Compile (Exceptionz.EmitRaise -> AssignStmt.EmitRTCheck). *)
           argVal := AssignStmt.EmitRTCheckMSIR(argType, p.arg,
                                                Expr.CompileMSIR(p.arg));
           IF argVal = NIL THEN RETURN END;
-          VAR argT := MSIR.ValueType(argVal); b := MSIRBuilder.CurrentBlock();
-          BEGIN
-            CASE MSIR.Kind(argT) OF
-            | MSIR.TypeKind.IWide =>
-                (* Wide integer: spill to stack, pass address. *)
-                VAR slot := MSIR.BuildAlloca(b, "", argT);
-                BEGIN
-                  MSIR.BuildStore(b, argVal, slot);
-                  argVal := MSIR.BuildConvert(b, "", slot, ptrT);
-                END;
-            ELSE
-              argVal := MSIR.BuildConvert(b, "", argVal, ptrT);
-            END;
-          END;
         END;
       END;
-    ELSE
-      argVal := MSIR.ConstNil(ptrT);
     END;
 
-    args := NEW(REF ARRAY OF MSIR.Value, 4);
-    args[0] := descVal;
-    args[1] := argVal;
-    (* module = &@<curMod>_M3_info (offset 0), line = current source line, so the
-       unhandled-exception backstop can print the "file ... line" diagnostic.
-       Get the module ref via MSIRBuilder (NOT a direct IMPORT MSIREmit here — a
-       direct RaiseStmt->MSIREmit import edge perturbs m3front's module-init order
-       and crashes MSIR emission of the first unit; see CurrentModuleInfoRef). *)
-    args[2] := MSIRBuilder.CurrentModuleInfoRef();
-    IF args[2] = NIL THEN args[2] := MSIR.ConstNil(ptrT) END;
-    VAR srcFile: TEXT;  srcLine: INTEGER;
-    BEGIN
-      Scanner.Here(srcFile, srcLine);
-      args[3] := MSIR.ConstInt(MSIR.TI(64), srcLine);
-    END;
-
-    EVAL MSIRBuilder.EmitCall("", raiseProc, args^);
-    (* RTHooks__Raise never returns normally. *)
-    IF NOT MSIRBuilder.CurrentBlockTerminated() THEN
-      MSIR.BuildUnreachable(MSIRBuilder.CurrentBlock());
-    END;
+    Scanner.Here(srcFile, srcLine);
+    MSIR.BuildRaise(MSIRBuilder.CurrentBlock(), desc, argVal, boxCell, srcLine);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

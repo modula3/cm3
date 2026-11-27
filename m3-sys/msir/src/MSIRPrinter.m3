@@ -526,10 +526,11 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
           THEN Wr.PutText(wr, MSIR.ExcDescName(MSIR.InsnExcDesc(i)));
           ELSE Wr.PutText(wr, "<nil>");
         END;
-        IF nOps > 0 THEN
+        FOR k := 0 TO nOps - 1 DO
           Wr.PutText(wr, ", ");
-          NameRef(wr, MSIR.InsnOperand(i, 0));
+          NameRef(wr, MSIR.InsnOperand(i, k));
         END;
+        Wr.PutText(wr, ", line " & Fmt.Int(MSIR.InsnSrcLine(i)));
     | MSIR.Op.UnwindTo =>
         Wr.PutText(wr, " ");
         BrTargetWithArgs(wr, i, 0);

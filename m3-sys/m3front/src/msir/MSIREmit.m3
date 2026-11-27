@@ -113,6 +113,7 @@ PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
 CONST RtHookOf = ARRAY MSIR.RtHook OF RunTyme.Hook {
   RunTyme.Hook.Abort,            (* ReportFault *)
   RunTyme.Hook.CheckIsType,
+  RunTyme.Hook.RaiseEx,
   RunTyme.Hook.NewTracedRef,  RunTyme.Hook.NewUntracedRef,
   RunTyme.Hook.NewTracedObj,  RunTyme.Hook.NewUntracedObj,
   RunTyme.Hook.NewTracedArray, RunTyme.Hook.NewUntracedArray };

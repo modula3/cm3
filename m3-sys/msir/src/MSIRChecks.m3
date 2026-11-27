@@ -22,7 +22,8 @@ PROCEDURE IsCheck (op: Op): BOOLEAN =
 (* Does Expand replace op? *)
 PROCEDURE Expands (op: Op): BOOLEAN =
   BEGIN
-    RETURN IsCheck (op) OR op IN SET OF Op {Op.Istype, Op.New, Op.OpenArrayNew};
+    RETURN IsCheck (op)
+        OR op IN SET OF Op {Op.Istype, Op.New, Op.OpenArrayNew, Op.Raise};
   END Expands;
 
 CONST AllocHook = ARRAY MSIR.AllocKind OF MSIR.RtHook {
@@ -50,6 +51,11 @@ PROCEDURE Hooks (m: MSIR.Module): SET OF MSIR.RtHook =
             s := s + SET OF MSIR.RtHook {MSIR.RtHook.CheckIsType};
           ELSIF op IN SET OF Op {Op.New, Op.OpenArrayNew} THEN
             s := s + SET OF MSIR.RtHook {AllocHook [MSIR.InsnAllocKind (i)]};
+          ELSIF op = Op.Raise THEN
+            s := s + SET OF MSIR.RtHook {MSIR.RtHook.RaiseEx};
+            IF MSIR.InsnOperandCount (i) = 2 THEN
+              s := s + SET OF MSIR.RtHook {MSIR.RtHook.NewTracedRef};
+            END;
           END;
         END;
       END;
@@ -74,6 +80,52 @@ PROCEDURE EntryAlloca (p: MSIR.Proc;  t: MSIR.T): MSIR.Value =
     FOR j := 0 TO LAST (insns^) DO MSIR.BlockAppendInsn (entry, insns[j]) END;
     RETURN a;
   END EntryAlloca;
+
+(* Raise as i in block b, which it ends: RTHooks.RaiseEx (exc, arg,
+   module, line), with arg the runtime's argument word.  As the C backend:
+   a by-reference argument is copied to a new heap box (Exceptionz's
+   raiser procedure); a wide set goes by the address of a copy. *)
+PROCEDURE Raise (m: MSIR.Module;  p: MSIR.Proc;  b: MSIR.Block;
+                 i: MSIR.Insn) =
+  VAR
+    exc  := MSIR.InsnExcDesc (i);
+    ptrT := MSIR.TPtr (MSIR.TVoid ());
+    intT := MSIR.TI (Target.Integer.size);
+    arg  : MSIR.Value;
+  BEGIN
+    CASE MSIR.InsnOperandCount (i) OF
+    | 0 =>
+        arg := MSIR.ConstNil (ptrT);
+    | 1 =>
+        arg := MSIR.InsnOperand (i, 0);
+        IF MSIR.Kind (MSIR.ValueType (arg)) = MSIR.TypeKind.IWide THEN
+          VAR slot := EntryAlloca (p, MSIR.ValueType (arg));
+          BEGIN
+            MSIR.BuildStore (b, arg, slot);
+            arg := slot;
+          END;
+        END;
+        arg := MSIR.BuildConvert (b, "", arg, ptrT);
+    | 2 =>
+        VAR
+          t   := MSIR.ExcDescArgType (exc);
+          val := MSIR.BuildLoad (b, "", t, MSIR.InsnOperand (i, 0));
+          box := MSIR.BuildCall (b, "", Hook (m, MSIR.RtHook.NewTracedRef),
+                                 ARRAY OF MSIR.Value {MSIR.InsnOperand (i, 1)});
+        BEGIN
+          box := MSIR.BuildConvert (b, "", box, ptrT);
+          MSIR.BuildStore (b, val, box);
+          arg := box;
+        END;
+    ELSE <* ASSERT FALSE *>
+    END;
+    EVAL MSIR.BuildCall (b, "", Hook (m, MSIR.RtHook.RaiseEx),
+           ARRAY OF MSIR.Value {
+             MSIR.ExcDescValue (exc), arg,
+             MSIR.StructFieldRef (MSIR.ModuleInfoName (m), 0, ptrT),
+             MSIR.ConstInt (intT, MSIR.InsnSrcLine (i))});
+    MSIR.BuildUnreachable (b);
+  END Raise;
 
 (* Allocate as i (new or openarray.new) in block b: the allocator's
    result, as i's type. *)
@@ -338,6 +390,8 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                 IF MSIR.InsnOp (i) = Op.Fault THEN
                   (* a terminator: the call and unreachable end the block *)
                   CallHook (m, cur, i);
+                ELSIF MSIR.InsnOp (i) = Op.Raise THEN
+                  Raise (m, p, cur, i);
                 ELSIF MSIR.InsnOp (i) = Op.Istype THEN
                   (* the test's answer replaces i's result *)
                   MSIR.InsnMakeCopy (i, TypeTest (m, p, b, cur, i));

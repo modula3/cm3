@@ -414,7 +414,7 @@ PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
    ReportFault for a failed check, CheckIsType for a subtype test, the
    allocators for new and openarray.new.  MSIRChecks.Hooks says which a
    module needs; the front end binds them to its RTHooks procedures. *)
-TYPE RtHook = {ReportFault, CheckIsType,
+TYPE RtHook = {ReportFault, CheckIsType, RaiseEx,
                NewTracedRef, NewUntracedRef, NewTracedObj, NewUntracedObj,
                NewTracedArray, NewUntracedArray};
 PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc);
@@ -1031,9 +1031,15 @@ PROCEDURE BuildExtractValue(b: Block;  name: TEXT;
    TLandingPad().  Terminator. *)
 PROCEDURE BuildResume(b: Block;  lp: Value);
 
-(* `raise exc, arg` raises the exception exc (terminator).  arg is NIL for
-   an exception without an argument. *)
-PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value);
+(* `raise exc, arg` raises the exception exc at line (terminator, D35).
+   arg is NIL for an exception without an argument.  For an argument
+   passed by value, arg is the value (of ExcDescArgType); for one passed by
+   reference, arg is the argument's address and boxCell the typecell of a
+   REF to the argument's type, for the copy the lowering makes on the
+   heap (the frame does not survive the unwinding).  MSIRChecks expands it
+   into RTHooks.RaiseEx (exc, arg, module, line). *)
+PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg, boxCell: Value;
+                     line: INTEGER);
 PROCEDURE InsnExcDesc(i: Insn): ExcDesc;     (* Raise only *)
 
 (* `unwind_to target(args)` leaves one or more EH scopes for target, in an

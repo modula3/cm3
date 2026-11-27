@@ -406,7 +406,7 @@ PROCEDURE LowerProc (m: MSIR.Module;  p: MSIR.Proc) =
             | Op.EndFinally =>
                 pending.addhi (NEW (Pending, block := cur, scope := sc));
             | Op.Raise =>
-                <* ASSERT FALSE *>  (* not yet produced by the front end *)
+                <* ASSERT FALSE *>  (* MSIRChecks.Expand lowered it (D35) *)
             ELSE
               MSIR.BlockAppendInsn (cur, i);
             END;
