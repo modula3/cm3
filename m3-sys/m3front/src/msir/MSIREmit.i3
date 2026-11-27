@@ -1,10 +1,22 @@
-(* MSIREmit — module/unit-level driver for MSIR emission.
+(* MSIREmit -- the per-unit driver of MSIR emission.
 
-   Bracketed by Module.Compile (the unit-level entry in m3front).
-   Emission is active when the backend mode is MSIRObj or MSIRAsm, or when
-   the compiler runs with @M3m3front-msir (alongside the C backend); IsEnabled
-   checks once.  When inactive, all entry points are no-ops, so a production
-   compiler is unaffected. *)
+   Module.Compile brackets each unit with BeginUnit and EndUnit.  Emission
+   is on when the backend mode is MSIRObj or MSIRAsm, or when the compiler
+   runs with @M3m3front-msir (alongside the C backend); IsEnabled decides
+   once.  When it is off every entry point is a no-op.
+
+   Per-unit state: curModule, from BeginUnit to EndUnit (BeginUnit also
+   resets MSIRBuilder's per-unit maps).  Per-run state: lastModule (taken
+   once by LastModule), llOutPath (set by the driver before BeginUnit),
+   driverLowers, and the names of modules already emitted.
+
+   EndUnit binds the runtime procedures MSIRRuntime.Hooks says the module
+   needs (looking a hook up records an import, as the C walk does where it
+   emits a call), writes <unit>.msir, verifies the module (fatal only in
+   the MSIR modes), and hands it to the driver (driverLowers) or writes its
+   LLVM IR.  It skips the .ll of an interface whose module was already
+   emitted.  Front-end modules may use CurrentModule () to add globals and
+   descriptors, but only MSIRBuilder.EndProc adds procedures. *)
 
 INTERFACE MSIREmit;
 

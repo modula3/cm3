@@ -1,15 +1,35 @@
-(* MSIRBuilder — per-procedure builder state.
+(* MSIRBuilder -- the front end's cursor for building MSIR: the
+   counterpart of the CG interface for the MSIR walk.
 
-   The builder is a singleton; m3front is single-threaded. BeginProc
-   creates an MSIR.Proc and an entry Block; EndProc finalizes the proc
-   and adds it to the current MSIREmit module. If at any point the
-   builder encounters an M3 construct it cannot translate yet, the
-   caller marks the proc unsupported via Abandon; EndProc then drops
-   the proc instead of adding it to the module.
+   Per-procedure state: the current procedure, block and EH scope (D26),
+   and varMap, from each Variable.T to its MSIR slot (an alloca, a
+   parameter, a WITH alias, a bit location or a capture).  BeginProc,
+   BeginModuleInit and the closure-shim builder start it; EndProc ends it.
+   A nested BeginProc, and BeginHelperProc (typecell init procedures), save
+   the outer context (at most MaxNestDepth deep) and their end restores it.
 
-   v0 only carries enough state to emit a proc skeleton (signature,
-   parameters, empty body). Body translation arrives in the next
-   plan step. *)
+   Per-unit state: procMap (Value.T to MSIR.Proc, including stubs for
+   external procedures and hooks), the closure shims, globalMap (module
+   globals, ModuleInfo fields and import-chain variables), the memcpy,
+   memset and memcmp stubs, the GC block maps and the constant-array
+   counter.  BeginModule resets it; MSIREmit.BeginUnit calls BeginModule.
+
+   Procedure, Module and Variable open and close bodies and register slots
+   through it; expression and statement nodes take the current block, make
+   blocks, emit calls and the runtime ops (D32-D36), and read and write
+   variables and bit fields.
+
+   Invariants callers must respect:
+   (a) Take the block from CurrentBlock (), which never returns a
+       terminated block; do not keep a block across a call that may branch.
+   (b) Test InProc () before emitting.  Abandon is final: it marks the
+       module incomplete, which in MSIRObj mode is a compile error.
+   (c) The builder builds IR (D23); front-end policy (barriers, D30; check
+       placement; layout) is the caller's, passed in.  Some decisions still
+       live here (LookupVarRaw's barrier, exception-argument modes, the
+       typecell of a REF); moving them out is part of D25.
+   (d) The builder reads front-end Value and Variable state but never
+       writes it. *)
 
 INTERFACE MSIRBuilder;
 
@@ -179,7 +199,7 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
 
 (* Like EmitCall but dispatches through a runtime function-pointer value.
    fn is the ptr-typed callee value; rtype is the return type (NIL for void).
-   Emits call or invoke depending on current try context. *)
+   Always a call; inside a TRY the EH lowering makes it an invoke. *)
 PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
                             READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
@@ -194,7 +214,7 @@ PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value);
 
 (* Returns a ptr to the current module's descriptor — &@<curMod>_M3_info at
    offset 0.  Callers use this to pass the module to runtime hooks (e.g.
-   RTHooks__Raise) WITHOUT importing MSIREmit directly: a direct client->MSIREmit
+   DebugMsg) WITHOUT importing MSIREmit directly: a direct client->MSIREmit
    import edge perturbs m3front's module-initialization order and corrupts MSIR
    emission of the first compiled unit (observed as an EndProc/BlockInsnCount
    crash on RTHooks.i3).  MSIRBuilder already imports MSIREmit, so routing

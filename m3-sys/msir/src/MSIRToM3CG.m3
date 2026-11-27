@@ -1,3 +1,14 @@
+(* MSIRToM3CG; the interface has the overview.  Sections, in order:
+   fallback reasons (Why, Fail); Lower's shared state; MSIR types to M3CG
+   types and layout; linker names (CSymbol); the Lowerable checks; segment
+   layout (Setup) and emission (GenSeg, the Emit* items); object link
+   procedures; procedure declarations and imports; the unit (Lower);
+   values (temporaries, aggregate copies, bitcasts, odd-width integers,
+   wide-set constants, Push/Def); EH scope state and block placement;
+   ex_frame frames; landing pads, handler dispatch, exits and FINALLY;
+   GenProc and argument passing; instruction helpers (compares, GC
+   barriers, memory ops, returns); GenInsn. *)
+
 MODULE MSIRToM3CG;
 
 IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
@@ -823,7 +834,7 @@ TYPE
                   uids: REF ARRAY OF INTEGER
                 OVERRIDES emit := EmitHandles END;
 
-CONST TEXT_typecode = 1;
+CONST TEXT_typecode = M3RT.TEXT_typecode;
 
 (* Choose the module's symbols and segment offsets. *)
 PROCEDURE Setup (m: MSIR.Module) =
@@ -1057,7 +1068,7 @@ PROCEDURE Setup (m: MSIR.Module) =
     END;
   END Setup;
 
-CONST TK_Obj = 2;  TK_Array = 3;
+CONST TK_Obj = ORD (M3RT.TypeKind.Obj);  TK_Array = ORD (M3RT.TypeKind.Array);
 
 (* A private, untraced global with no place in the module's global struct
    and no backing storage of its own (Formal's constdope_N): it gets space
@@ -1669,7 +1680,7 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
   VAR p: MSIR.Proc;  binderName: TEXT;  modeVar: M3CG.Var;
   BEGIN
     <* ASSERT Target.Integer.size = 64 AND Target.Address.size = 64 *>
-    MSIRRuntime.Expand (m);  (* D32 *)
+    MSIRRuntime.Expand (m);  (* D31-D36; idempotent after Lowerable *)
     Setup (m);
     cg := c;  (* M3CG.T's methods are revealed by M3CG_Ops *)
     procs := NEW (TextRefTbl.Default).init ();
@@ -2133,7 +2144,7 @@ PROCEDURE LabelOf (b: MSIR.Block): M3CG.Label =
 
 (*------------------------------------------------------------ procedures *)
 
-(*------------------------------------------------- EH scopes (ex_stack) *)
+(*---------------------------------------- EH scopes (ex_stack, ex_frame) *)
 
 (* D26 scopes are lowered to CG's ex_stack scheme, as TryStmt.Compile1 and
    TryFinStmt.Compile1 emit it: each protected scope's blocks go between
@@ -3038,7 +3049,7 @@ PROCEDURE GenMemCall (i: MSIR.Insn;  m: Mem) =
   BEGIN
     Push (MSIR.InsnOperand (i, 0));
     IF m = Mem.Zero THEN
-      (* a constant count (the census checks): M3C has no zero_n *)
+      (* a constant count (Lowerable checks): M3C has no zero_n *)
       cg.zero (MSIR.GetIntVal (MSIR.InsnOperand (i, 2)), M3CG.Type.Word8);
     ELSE
       Push (MSIR.InsnOperand (i, 1));
@@ -3142,7 +3153,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         END;
     | Op.OpenArraySize =>
         Push (MSIR.InsnOperand (i, 0));
-        cg.load_indirect (Target.Address.bytes
+        cg.load_indirect (B (M3RT.OA_sizes)
                             + MSIR.GetIntVal (MSIR.InsnOperand (i, 1))
                               * Target.Integer.bytes, Int64, Int64);
         Def (res);
@@ -3152,11 +3163,11 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         VAR oa := MSIR.InsnOperand (i, 0);  t := MSIR.ValueType (oa);
         BEGIN
           Push (oa);
-          cg.load_indirect (0, Addr, Addr);
+          cg.load_indirect (B (M3RT.OA_elt_ptr), Addr, Addr);
           Push (MSIR.InsnOperand (i, 1));
           FOR k := 1 TO MSIR.OpenArrayRank (t) - 1 DO
             Push (oa);
-            cg.load_indirect (Target.Address.bytes + k * Target.Integer.bytes,
+            cg.load_indirect (B (M3RT.OA_sizes) + k * Target.Integer.bytes,
                               Int64, Int64);
             cg.multiply (Int64);
             Push (MSIR.InsnOperand (i, 1 + k));

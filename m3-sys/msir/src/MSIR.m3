@@ -1023,8 +1023,8 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
      (aggregates included, indirect globals via PushPtr/Return), replacing the
      emitter's naive one-Ref-per-scalar scan which missed standalone (indirect)
      globals entirely (Text.fromCharCache: moved TEXT never updated → stale). *)
-  (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
-     fallback hardcoded names in the LLVM emitter. *)
+  (* The runtime procedures, bound by MSIREmit from RunTyme; NIL = not used
+     by the module (both lowerings refuse an unbound one it needs). *)
   rtHooks            : ARRAY RtHook OF Proc;  (* NIL until bound *)
   typeLinks    : REF ARRAY OF TypeLink    := NIL;
   nTypeLinks   : INTEGER                  := 0;
@@ -1470,7 +1470,7 @@ PROCEDURE ModuleTypeDescCount(m: Module): INTEGER      = BEGIN RETURN m.typeDesc
 PROCEDURE ModuleTypeDesc     (m: Module;  i: INTEGER): TypeDesc =
   BEGIN RETURN m.typeDescs.get(i) END ModuleTypeDesc;
 
-TYPE TextLit = REF RECORD  (* populated by MSIREmit.EndUnit from TextExpr *)
+TYPE TextLit = REF RECORD  (* added by TextExpr (ModuleAddTextLit) *)
   chars : TEXT;
   cnt   : INTEGER;
 END;

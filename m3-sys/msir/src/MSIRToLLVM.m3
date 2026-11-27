@@ -1,3 +1,15 @@
+(* MSIRToLLVM; the interface has the overview.  Sections, in order:
+   module state and per-module tables; symbol mangling (LLSymbol); types,
+   alignment, constants and operand printing; the GC read and write
+   barriers (D30); floor DIV and MOD, open-array element addresses; set
+   ops and EmitInsn (one CASE over Op); blocks, extern collection and
+   parameter lists; DWARF debug info; procs, globals and declares; TEXT
+   literals and constant arrays; RT0 field tables, the D24 layout check,
+   typecells and link procedures; type links; full_rev and the module gc
+   map; the binder, ModuleInfo, import chain, proc_info and the
+   constant-global constructor; module-level scans, TYPECASE tables, and
+   the Module driver. *)
+
 MODULE MSIRToLLVM;
 
 IMPORT RTParams;
@@ -12,7 +24,7 @@ CONST
   RH_gray_offset     = M3RT.RH_gray_offset;
 
 (* TEXT is always typecode 1: it is the first type registered at runtime. *)
-CONST TEXT_typecode = 1;
+CONST TEXT_typecode = M3RT.TEXT_typecode;
 
 (*----------------------------------------------------- module-level state *)
 
@@ -4079,9 +4091,22 @@ PROCEDURE IsMethodProcDefined(m: MSIR.Module;  name: TEXT): BOOLEAN =
     RETURN FALSE;
   END IsMethodProcDefined;
 
+(* Declare method procedure mname (if any) unless this module defines it
+   or declared has it already; declared records it. *)
+PROCEDURE DeclareMethod(wr: Wr.T;  m: MSIR.Module;  declared: RefSeq.T;
+                        mname: TEXT) =
+  BEGIN
+    IF mname = NIL OR IsMethodProcDefined(m, mname) THEN RETURN END;
+    FOR di := 0 TO declared.size() - 1 DO
+      IF Text.Equal(NARROW(declared.get(di), TEXT), mname) THEN RETURN END;
+    END;
+    Wr.PutText(wr, "declare void @" & mname & "()\n");
+    declared.addhi(mname);
+  END DeclareMethod;
+
 PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
   (* RT0.TypeKind ordinals: { Unknown=0, Ref=1, Obj=2, Array=3 } *)
-  CONST TK_Ref = 1;  TK_Obj = 2;  TK_Array = 3;
+  CONST TK_Obj = ORD(M3RT.TypeKind.Obj);  TK_Array = ORD(M3RT.TypeKind.Array);
   VAR n := MSIR.ModuleTypeDescCount(m);
       declaredMethods := NEW(RefSeq.T).init();  (* dedup declare void @m() *)
   BEGIN
@@ -4168,21 +4193,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                 lpv := "@" & lpName;
                 (* Pass 1: declare the method procs not defined in this module. *)
                 FOR j := 0 TO nInit - 1 DO
-                  VAR mname := MSIR.TypeDescMethodInitProc(d, j);
-                      already := FALSE;
-                  BEGIN
-                    IF mname # NIL THEN
-                      FOR di := 0 TO declaredMethods.size() - 1 DO
-                        IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
-                          already := TRUE; EXIT
-                        END;
-                      END;
-                      IF NOT IsMethodProcDefined(m, mname) AND NOT already THEN
-                        Wr.PutText(wr, "declare void @" & mname & "()\n");
-                        declaredMethods.addhi(mname);
-                      END;
-                    END;
-                  END;
+                  DeclareMethod(wr, m, declaredMethods, MSIR.TypeDescMethodInitProc(d, j));
                 END;
                 (* Pass 2: the linkProc body. *)
                 Wr.PutText(wr, "define internal void @" & lpName
@@ -4248,21 +4259,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                     lpv := "@" & lpName;
                     (* Pass 1: emit external declares for own methods (module level) *)
                     FOR j := 0 TO nMethods - 1 DO
-                      VAR mname := MSIR.TypeDescMethod(d, j);
-                          alreadyDeclared := FALSE;
-                      BEGIN
-                        IF mname # NIL THEN
-                          FOR di := 0 TO declaredMethods.size() - 1 DO
-                            IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
-                              alreadyDeclared := TRUE; EXIT
-                            END;
-                          END;
-                          IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
-                            Wr.PutText(wr, "declare void @" & mname & "()\n");
-                            declaredMethods.addhi(mname);
-                          END;
-                        END;
-                      END;
+                      DeclareMethod(wr, m, declaredMethods, MSIR.TypeDescMethod(d, j));
                     END;
                     (* Pass 2: emit the linkProc function body *)
                     Wr.PutText(wr, "define internal void @" & lpName
@@ -4290,19 +4287,7 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                   (* Full vtable known: emit as constant defaultMethods. *)
                   dmv := "@" & nm & ".methods";
                   FOR j := 0 TO nMethods - 1 DO
-                    VAR mname := MSIR.TypeDescMethod(d, j);
-                        alreadyDeclared := FALSE;
-                    BEGIN
-                      FOR di := 0 TO declaredMethods.size() - 1 DO
-                        IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
-                          alreadyDeclared := TRUE; EXIT
-                        END;
-                      END;
-                      IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
-                        Wr.PutText(wr, "declare void @" & mname & "()\n");
-                        declaredMethods.addhi(mname);
-                      END;
-                    END;
+                    DeclareMethod(wr, m, declaredMethods, MSIR.TypeDescMethod(d, j));
                   END;
                   Wr.PutText(wr, "@" & nm & ".methods = internal constant ["
                     & Fmt.Int(nMethods) & " x ptr] [");
@@ -5229,7 +5214,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
       END;
     END;
 
-    (* EH — emitted once per module when any proc uses invoke.
+    (* EH: the _M3Exc typeinfo, emitted once per module that has procs.
        @_ZTI6_M3Exc is defined as linkonce_odr so each MSIR-compiled module
        is self-sufficient, avoiding dependence on the private/unexported copy
        in libm3core.dylib when the program links against the shared library. *)
@@ -5334,7 +5319,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
 
     (* internal proc definitions — guard against duplicate symbol names that
        can arise when a hook proc (e.g. RTHooks__CheckLoadTracedRef) is both
-       compiled as a module proc and re-looked-up by EndUnit's HookProc call,
+       compiled as a module proc and bound as the module's runtime hook,
        landing two entries with the same LLSymbol in the proc list. *)
     VAR emittedNames := NEW(RefSeq.T).init();
     BEGIN

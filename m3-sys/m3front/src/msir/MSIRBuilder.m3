@@ -1,3 +1,14 @@
+(* MSIRBuilder; the interface has the overview.  Sections, in order:
+   state and context save/restore; FormalParam and BeginProc; variable
+   access (LookupVar, LoadBlock, LoadTracedRef, LookupVarAddr); varMap
+   registration; procedure lifecycle and the block cursor (EndProc,
+   Abandon, CurrentBlock, helper procedures); EH scopes, goto and return;
+   calls (nested, closures, direct, indirect, CheckCallee); the runtime-op
+   emitters (D32-D36) and ASSERT; method calls; exception descriptors;
+   type links and revelations; HookProc and the procedure registry;
+   BeginModule; libc stubs, block copies and the GC block maps; value and
+   type utilities; globalMap and import chains; module init; bit fields. *)
+
 MODULE MSIRBuilder;
 
 IMPORT MSIR, MSIRType, MSIREmit, MSIRBitLoc;
@@ -14,8 +25,6 @@ CONST MaxVarMap    = 512;  (* EmitInsn alone has ~108 local vars; 512 gives head
 CONST InitProcMap   = 256;
 CONST InitShimMap   = 64;
 CONST InitGlobalMap = 256;
-(* TRY/FINALLY selector codes Sel_Normal/Sel_Exc/Sel_Exit are exported from the
-   MSIRBuilder interface and visible here without redeclaration. *)
 CONST MaxNestDepth  = 16;  (* maximum nesting depth for nested procs *)
 
 (* Each formal maps to a Param SSA value (elemType = NIL).
@@ -137,6 +146,31 @@ PROCEDURE PopBeginContext() =
     END;
   END PopBeginContext;
 
+(* The MSIR parameter for a formal of MSIR type pt.  VAR and READONLY
+   formals are passed by reference (a READONLY one, scalar or not, as the C
+   backend and Formal.EmitArgMSIR pass it, so a READONLY designator
+   aliases its actual, p031); a VALUE open array by the address of its
+   dope.  BeginProc, closure shims and procedure stubs share it, so a
+   definition and its callers agree on the signature. *)
+PROCEDURE FormalParam(READONLY info: Formal.Info;  pt: MSIR.T): MSIR.Param =
+  VAR p: MSIR.Param;
+  BEGIN
+    p.name := "a." & M3ID.ToText(info.name);
+    CASE info.mode OF
+    | Formal.Mode.mVALUE =>
+        p.mode := MSIR.ParamMode.ByValue;
+        IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray
+          THEN p.type := MSIR.TPtr(pt);
+          ELSE p.type := pt;
+        END;
+    | Formal.Mode.mVAR =>
+        p.mode := MSIR.ParamMode.Var;       p.type := MSIR.TPtr(pt);
+    | Formal.Mode.mREADONLY =>
+        p.mode := MSIR.ParamMode.Readonly;  p.type := MSIR.TPtr(pt);
+    END;
+    RETURN p;
+  END FormalParam;
+
 PROCEDURE BeginProc(name: TEXT;
                     formals: Value.T;
                     syms: Scope.T;
@@ -245,27 +279,7 @@ PROCEDURE BeginProc(name: TEXT;
             PopBeginContext();
             RETURN FALSE;
           END;
-          params[i + pBase].name := "a." & M3ID.ToText(info.name);
-          CASE info.mode OF
-          | Formal.Mode.mVALUE =>
-              params[i + pBase].mode := MSIR.ParamMode.ByValue;
-              IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
-                params[i + pBase].type := MSIR.TPtr(pt);
-              ELSE
-                params[i + pBase].type := pt;
-              END;
-          | Formal.Mode.mVAR      => params[i + pBase].mode := MSIR.ParamMode.Var;
-                                     params[i + pBase].type := MSIR.TPtr(pt);
-          | Formal.Mode.mREADONLY =>
-              (* READONLY formals are passed BY REFERENCE (the formal's
-                 indirect=TRUE; the C backend does the same).  Declare every
-                 READONLY param as a pointer — not just aggregates — so a scalar
-                 READONLY designator aliases its actual (p031).  The caller
-                 (Formal.EmitArgMSIR/ReadonlyArgAddrMSIR) passes an address, and
-                 BindFormalMSIR binds it by-ref (loads through the pointer). *)
-              params[i + pBase].mode := MSIR.ParamMode.Readonly;
-              params[i + pBase].type := MSIR.TPtr(pt);
-          END;
+          params[i + pBase] := FormalParam(info, pt);
         END;
         f := f.next;
       END;
@@ -1044,25 +1058,7 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
       VAR pt := MSIRType.Translate(info.type);
       BEGIN
         IF pt = NIL THEN RETURN NIL END;
-        params[1 + i].name := "a." & M3ID.ToText(info.name);
-        CASE info.mode OF
-        | Formal.Mode.mVALUE =>
-            params[1 + i].mode := MSIR.ParamMode.ByValue;
-            IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
-              params[1 + i].type := MSIR.TPtr(pt);
-            ELSE
-              params[1 + i].type := pt;
-            END;
-        | Formal.Mode.mVAR =>
-            params[1 + i].mode := MSIR.ParamMode.Var;
-            params[1 + i].type := MSIR.TPtr(pt);
-        | Formal.Mode.mREADONLY =>
-            (* Every READONLY formal is a pointer, as in BeginProc and at
-               the call (Formal.EmitArgMSIR); a scalar by value here made an
-               imported procedure's signature disagree with its definition. *)
-            params[1 + i].mode := MSIR.ParamMode.Readonly;
-            params[1 + i].type := MSIR.TPtr(pt);
-        END;
+        params[1 + i] := FormalParam(info, pt);
         f := f.next;
       END;
     END;
@@ -1719,24 +1715,7 @@ PROCEDURE LookupOrCreateProc(v: Value.T;  procType: Type.T): MSIR.Proc =
             Abandon("unsupported parameter type in callee");
             RETURN NIL;
           END;
-          params[i].name := "a." & M3ID.ToText(info.name);
-          CASE info.mode OF
-          | Formal.Mode.mVALUE =>
-              params[i].mode := MSIR.ParamMode.ByValue;
-              IF MSIR.Kind(pt) = MSIR.TypeKind.OpenArray THEN
-                params[i].type := MSIR.TPtr(pt);
-              ELSE
-                params[i].type := pt;
-              END;
-          | Formal.Mode.mVAR      => params[i].mode := MSIR.ParamMode.Var;
-                                     params[i].type := MSIR.TPtr(pt);
-          | Formal.Mode.mREADONLY =>
-              (* Every READONLY formal is a pointer, as in BeginProc and at
-                 the call (Formal.EmitArgMSIR); a scalar by value here made an
-                 imported procedure's signature disagree with its definition. *)
-              params[i].mode := MSIR.ParamMode.Readonly;
-              params[i].type := MSIR.TPtr(pt);
-          END;
+          params[i] := FormalParam(info, pt);
         END;
         f := f.next;
       END;

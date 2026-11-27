@@ -1,9 +1,55 @@
-(* Modula-3 Semantic IR — typed-SSA IR sitting between m3front and LLVM.
+(* MSIR -- the Modula-3 Semantic IR: a typed SSA IR between m3front and
+   the code generators.  It keeps the Modula-3 meaning that M3CG and LLVM
+   IR lose: traced versus untraced references, EH scopes, and the runtime
+   interactions (checks, type tests, allocation, RAISE, method lookup) are
+   ops, not code (D20, D31).  Control flow is a flat graph of blocks; the
+   structure is in the ops.  MSIR-design.md records the decisions (D1-D36)
+   and open questions (O1-O21) cited here.
 
-   See repo-root MSIR.md (strategic narrative) and MSIR-design.md
-   (decisions and open questions). This is the v0 skeleton: a minimal
-   in-memory IR sufficient to construct and print small procedures
-   programmatically. Verifier, parser, and LLVM emitter come next. *)
+   Pipeline.  m3front builds one Module per unit as it compiles, through
+   MSIRBuilder (m3front/src/msir), and MSIRVerifier checks it.  Each
+   lowering first runs MSIRRuntime.Expand, which turns the runtime ops into
+   compares, branches, loads and calls of the module's RtHook procedures,
+   and then lowers the module:
+     MSIRToLLVM  MSIREH.LowerModule (EH scopes to invoke/landingpad/resume),
+                 then textual LLVM IR;
+     MSIRToM3CG  its own EH lowering, then M3CG for the existing backends.
+   MSIRPrinter writes the readable form (<unit>.msir).
+
+   Abstractions and invariants.
+   - T: types are structural (Equal); integers of one width are equal
+     whatever their sign.  gc_ref T is a traced reference held in a
+     register, gc_slot T is memory holding one (D5), ptr T is untraced.  A
+     traced load is gc.load, or a plain load recording the front end's
+     decision that it needs no barrier (D30); a traced store is gc.store.
+   - Value: an SSA value: a constant, a procedure or block parameter, an
+     instruction result, or a reference to a global symbol.
+   - Insn: an Op, operands, an optional result and op-specific attributes
+     (see the Insn accessors).  Each carries the source line current when
+     it was built, or the one its builder was given.
+   - Block: a label, typed parameters (no phi nodes), and instructions
+     ending in one terminator.  Each block belongs to one EH scope.
+   - Proc: parameters with modes (VAR and READONLY are ptr, D16), a result,
+     and blocks; the first is the entry, and BuildAlloca puts every alloca
+     there.  It also carries attributes (RAISES set, D10; linkage) and a
+     scope tree.
+   - Scope (D26): Except and Finally scopes protect blocks; Handler and
+     FinallyCode scopes hold their code.  An edge leaving a scope is
+     unwind_to or ret_through_envelope (D8).  invoke, landingpad,
+     extractvalue and resume appear only after MSIREH.
+   - Module: the procs and the unit's runtime data: the RT0 ModuleInfo with
+     its embedded globals, typecells (TypeDesc), type links, revelations,
+     exception descriptors, TEXT literals, constant arrays, import binders,
+     gc maps, debug info, and the table of runtime procedures it calls
+     (RtHook, D34).
+   - Runtime ops (D31-D36): nil_check, range_check, subscript_check,
+     shape_check, fault, istype, narrow, new, openarray.new, raise and
+     method.  They exist so that passes can see their meaning; only
+     MSIRRuntime expands them.
+
+   Sections: types; values; debug types (DWARF only); procedures and
+   attributes; blocks; EH scopes; the module and its runtime data; Insn
+   (Op and accessors); builders by kind; rewriting primitives for passes. *)
 
 INTERFACE MSIR;
 
@@ -395,8 +441,8 @@ PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
 (* A per-exception static descriptor: { uid: i64, name: ptr, implicit: i64 }.
    Created by NewExcDesc; emitted as a module-level internal global.
    uid = M3FP.ToInt(fingerprint of exception global name) — 32-bit hash.
-   The Value returned by ExcDescValue has ptr type and may be passed
-   directly as the 'ex' argument to RTHooks__Raise. *)
+   The Value returned by ExcDescValue has ptr type; MSIRRuntime passes it
+   as RTHooks.RaiseEx's exception argument when it expands raise (D35). *)
 TYPE ExcDesc <: REFANY;
 
 PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL;
@@ -971,7 +1017,7 @@ PROCEDURE BuildInvoke(b: Block;  name: TEXT;  callee: Proc;
 (* `landingpad` begins the exception-handling preamble of an unwind block.
    Must be the first instruction in the block.
    isCleanup = TRUE  → `cleanup` clause (for TRY/FINALLY)
-   isCleanup = FALSE → `catch ptr @_ZTI7_M3Exc` (for TRY/EXCEPT)
+   isCleanup = FALSE → `catch ptr @_ZTI6_M3Exc` (for TRY/EXCEPT)
    Result type: TLandingPad() = { ptr, i32 }. *)
 PROCEDURE BuildLandingPad(b: Block;  name: TEXT;  isCleanup: BOOLEAN): Value;
 

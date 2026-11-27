@@ -1,10 +1,10 @@
-(* MSIR verifier — checks op-level invariants the optimizer assumes.
+(* MSIR verifier -- checks the op-level invariants the passes and
+   lowerings assume (A9 in MSIR-design.md).
 
-   Per A9 in MSIR-design.md. The v0 verifier covers local checks: operand
-   counts, operand types, branch target arity, block terminator placement,
-   typecase exhaustiveness, try envelope shape, ret value type. SSA
-   dominance, cross-envelope control rules, and detailed GC-contract
-   checks come later. *)
+   Local checks: operand counts and types, branch-target arity, one
+   terminator per block, TYPECASE exhaustiveness, EH scope shape (D26),
+   return types, and the forms of the runtime ops (D32-D36).  Not checked:
+   SSA dominance and the GC contract beyond barrier operand forms. *)
 
 INTERFACE MSIRVerifier;
 
