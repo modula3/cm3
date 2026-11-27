@@ -11,7 +11,7 @@ PROCEDURE PosixIsReadable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := Unix.access(fname, Unix.R_OK) = 0;
+    res := Unix.access(fname, 4) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
@@ -23,7 +23,7 @@ PROCEDURE PosixIsWritable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := Unix.access(fname, Unix.W_OK) = 0;
+    res := Unix.access(fname, 2) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;
@@ -35,7 +35,7 @@ PROCEDURE PosixIsExecutable(fn : Pathname.T) : BOOLEAN =
   VAR
     fna := PathRepr.Native(fn);
     fname := M3toC.SharedTtoS(fna);
-    res := Unix.access(fname, Unix.F_OK) = 0;
+    res := Unix.access(fname, 0) = 0;
   BEGIN
     M3toC.FreeSharedS(fna, fname);
     RETURN res;

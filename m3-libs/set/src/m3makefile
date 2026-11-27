@@ -28,4 +28,6 @@ MkSetList("Text", "Text")
 MkSet("Ref", "Refany")
 MkSetList("Ref", "Refany")
 
+build_standalone()
+
 Library("set")

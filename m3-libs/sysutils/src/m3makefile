@@ -101,4 +101,8 @@ end
 
 doPieces(CompDepPieces, M3_VARIANT)
 
+template ("sequence")
+Sequence2 ("Char", "Char")
+
+build_standalone()
 Library("sysutils")

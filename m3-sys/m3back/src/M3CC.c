@@ -2,15 +2,27 @@
 #include "m3core.h"
 #endif
 
+#if __INITIAL_POINTER_SIZE == 64
+typedef INT64 INTEGER;
+typedef UINT64 WORD_T;
+#else
+typedef ptrdiff_t INTEGER;
+typedef size_t WORD_T;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef int BOOL;
+char* __cdecl M3toC__StoT(const char*);
+
+#undef FALSE
+#undef TRUE
+#define BOOL int
 #define FALSE 0
 #define TRUE 1
 
-TEXT
+char*
 __cdecl
 M3CC__IntToText(UINT64 a, WORD_T base, BOOL neg);
 
@@ -30,7 +42,7 @@ int main()
 }
 #endif
 
-TEXT
+char*
 __cdecl
 M3CC__IntToText(UINT64 a, WORD_T base, BOOL neg)
 {
@@ -66,17 +78,17 @@ UINT64 __cdecl M3CC__Abs(INTEGER a)
       return ((UINT64)(-(a + 1))) + 1;
     return (UINT64)a;
 }
-TEXT __cdecl M3CC__IntToDec(INTEGER a)
+char* __cdecl M3CC__IntToDec(INTEGER a)
 {
     return M3CC__IntToText(M3CC__Abs(a), 10, a < 0);
 }
 
-TEXT __cdecl M3CC__IntToHex(INTEGER a)
+char* __cdecl M3CC__IntToHex(INTEGER a)
 {
     return M3CC__IntToText(M3CC__Abs(a), 16, a < 0);
 }
 
-TEXT __cdecl M3CC__UIntToHex(INTEGER a)
+char* __cdecl M3CC__UIntToHex(INTEGER a)
 {
     return M3CC__IntToText((UINT64)(size_t)a, 16, FALSE);
 }

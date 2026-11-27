@@ -1,5 +1,5 @@
-readonly TARGET_ARCH = "I386"
-readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
-readonly WORD_SIZE    = "32BITS"    % { "32BITS" or "64BITS" }
+ TARGET_ARCH = "I386"
+ TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
+ WORD_SIZE    = "32BITS"    % { "32BITS" or "64BITS" }
 m3back_flags = "-march=i686"
 gcc_m3264 = "-m32"

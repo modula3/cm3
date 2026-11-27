@@ -81,9 +81,9 @@ PROCEDURE New (target: Type.T;  traced: BOOLEAN;  brand: Brand.T): Type.T =
 
     IF debug THEN
       RTIO.PutText ("RefType.New:");
-      RTIO.PutRef (p);
+(*       RTIO.PutRef (p); *)
       RTIO.PutText (" target:");
-      RTIO.PutRef (target);
+(*       RTIO.PutRef (target); *)
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;

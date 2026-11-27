@@ -1622,7 +1622,7 @@ PROCEDURE FulfilExecPromise(ep : ExecPromise) : QPromise.ExitCode
         <*ASSERT FALSE*>
       ELSE
         IF ep.timer # NIL THEN
-          ETimer.Append(ep.timer, Time.Now() - start);
+          (*ETimer.Append(ep.timer, Time.Now() - start);*)
         END;
         RETURN exit_code
       END

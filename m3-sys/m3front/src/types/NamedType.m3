@@ -73,9 +73,9 @@ PROCEDURE Parse (): Type.T =
 
     IF debug THEN
       RTIO.PutText ("NamedType.Parse t:");
-      RTIO.PutRef (t);
+(*       RTIO.PutRef (t); *)
       RTIO.PutText (" p:");
-      RTIO.PutRef (p);
+(*       RTIO.PutRef (p); *)
       RTIO.PutText (" ");
       RTIO.PutInt (case);
       RTIO.PutText (" ");

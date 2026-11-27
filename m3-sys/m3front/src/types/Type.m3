@@ -124,7 +124,7 @@ PROCEDURE Parse (): T =
       RTIO.PutText ("Type.Parse ");
       RTIO.PutText (case);
       RTIO.PutText (" ");
-      RTIO.PutRef (t);
+(*       RTIO.PutRef (t); *)
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;

@@ -37,38 +37,38 @@ end
 
 %-------------------------------------------------------------------
 
-readonly TARGET_OS = "NT"
-readonly OS_TYPE = "WIN32"
+ TARGET_OS = "NT"
+ OS_TYPE = "WIN32"
 
 %-------------------------------------------------------------------
 
 if not defined("PROFILING_P")
     if M3_PROFILING
-        readonly PROFILING_P = "p"
+         PROFILING_P = "p"
     else
-        readonly PROFILING_P = ""
+         PROFILING_P = ""
     end
 end
 
 if not defined("BUILD_DIR")
-    readonly BUILD_DIR = TARGET & PROFILING_P
+     BUILD_DIR = TARGET & PROFILING_P
 end
 
 % for bootstrapping from older tools
-readonly NAMING_CONVENTIONS = "2"
+ NAMING_CONVENTIONS = "2"
 
 % "MS" cl
 % "GNU" gcc
 
 if not defined("C_COMPILER")
-    readonly C_COMPILER = "MS"
+     C_COMPILER = "MS"
 end
 
 % "MS" link
 % "GNU" gcc/ld
 
 if not defined("LINKER")
-    readonly LINKER = "MS"
+     LINKER = "MS"
 end
 
 % "MS" Win32 kernel threads
@@ -76,12 +76,12 @@ end
 %
 % This is currently ignored, but a reasonable idea.
 
-readonly THREAD_LIBRARY = "MS"
+ THREAD_LIBRARY = "MS"
 
 % "MS"
 % "X"
 
-readonly WINDOW_LIBRARY = "MS"
+ WINDOW_LIBRARY = "MS"
 
 %-------------------------------------------------------------------
 
@@ -286,55 +286,55 @@ end
 %
 % These are for the .libs that ship with the tools and thus not our choice.
 %
-readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka TARGET_NAMING or OS_TYPE
-readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka TARGET_NAMING or OS_TYPE
-readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
+ LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka TARGET_NAMING or OS_TYPE
+ LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka TARGET_NAMING or OS_TYPE
+ LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
 
 if FALSE % If you want a Unixy file names for Cygwin
 
-readonly TARGET_NAMING = {"WIN32" : "2", "POSIX" : "0" }{OS_TYPE}
+ TARGET_NAMING = {"WIN32" : "2", "POSIX" : "0" }{OS_TYPE}
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
 %  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
 %  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
 
-readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka TARGET_NAMING
-readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka TARGET_NAMING
-readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka TARGET_NAMING
+ LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka TARGET_NAMING
+ LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka TARGET_NAMING
+ Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka TARGET_NAMING
 
 FormatExe = { "WIN32" : "%s.exe", "POSIX" : "%s"      }{OS_TYPE} % aka TARGET_NAMING
-readonly FormatLib = { "WIN32" : "%s.lib", "POSIX" : "lib%s.a" }{OS_TYPE} % aka TARGET_NAMING
-readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka TARGET_NAMING
-% readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
+ FormatLib = { "WIN32" : "%s.lib", "POSIX" : "lib%s.a" }{OS_TYPE} % aka TARGET_NAMING
+ FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka TARGET_NAMING
+%  FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
 
 end
 
-readonly TARGET_NAMING = "2"
+ TARGET_NAMING = "2"
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
 %  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
 %  3=C++ backend with Automake     =>  .o   .i3.io .m3.o     libXX.a
 
-readonly LibOutPrefix = ""
-readonly LibOutSuffix = ".lib"
-readonly Obj          = ".obj"
+ LibOutPrefix = ""
+ LibOutSuffix = ".lib"
+ Obj          = ".obj"
 
 FormatExe = "%s.exe"
-readonly FormatLib = "%s.lib"
-readonly FormatDll = "%s.dll"
-% readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
+ FormatLib = "%s.lib"
+ FormatDll = "%s.dll"
+%  FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
 
 %------------------------------------------------------------------------------
 
-local readonly proc LibOut(a) is
+local  proc LibOut(a) is
     return LibOutPrefix & a & LibOutSuffix
 end
 
 %------------------------------------------------------------------------------
 
-local readonly proc LibIn(a) is
+local  proc LibIn(a) is
     return LibInPrefix & a & LibInSuffix
 end
 
@@ -714,7 +714,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     end
     args += "-Oi"
 
-    local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
+    local  Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source), "-Fo" & object]
     local ret = try_exec("@" & Command)
 
     if not equal(ret, 0) and equal(source, "_m3main.c")
@@ -789,8 +789,8 @@ end
 
 ResponseFileCounter = "0"
 
-readonly proc GetResponseFileName() is
-    local readonly Result = "_m3responsefile" & ResponseFileCounter & ".txt"
+ proc GetResponseFileName() is
+    local  Result = "_m3responsefile" & ResponseFileCounter & ".txt"
     ResponseFileCounter =
         { "0":"1","1":"2","2":"3","3":"4","4":"5",
           "5":"6","6":"7","7":"8","8":"9","9":"0", }{ResponseFileCounter}
@@ -802,8 +802,8 @@ end
 % I couldn't get anything with write to work, nothing would handle
 % plain parameters and lists
 %
-readonly proc WriteResponseFile(File, Divider, Args) is
-    local readonly Temp = arglist("", Args)
+ proc WriteResponseFile(File, Divider, Args) is
+    local  Temp = arglist("", Args)
     if equal(Temp, Args)
         if equal(Divider, " ")
             return Temp
@@ -829,7 +829,7 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
+ proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
     local ret = 0
     %
     % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
@@ -853,7 +853,7 @@ end
 % Modula-3 has fixed sized buffers and fails assertions if we try
 % to give it more than 1k. This is lame.
 %
-readonly proc EscapeList(List) is
+ proc EscapeList(List) is
     local Result = [ ]
     foreach Element in List
         Result += escape(Element)
@@ -863,13 +863,13 @@ end
 
 %------------------------------------------------------------------------------
 
-%readonly proc JoinPath(a, b) is
+% proc JoinPath(a, b) is
 %    if a and b return a & SL & b end
 %    if b return b end
 %    if a return a end
 %end
 
-%readonly proc FileInDirOrParent(a) is
+% proc FileInDirOrParent(a) is
 % a is foo/i386/bar
 % chose it or foo/bar, whichever exists
     %local leaf = GetLastPathElement(a)
@@ -967,15 +967,16 @@ end
 %------------------------------------------------------------------------------
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
+shared = FALSE
     local ret_code = 0
 
-    local readonly lib_file = format(FormatLib, lib)
-    local readonly lib0_file = lib_file & ".sa"
-    local readonly def_file = lib & ".def"
-    local readonly dll_file = format(FormatDll, lib)
-    local readonly manifest_file  = dll_file & ".manifest"
-    local readonly pdb_file = lib & ".pdb"
-    local readonly LibResponseFile = GetResponseFileName()
+    local  lib_file = format(FormatLib, lib)
+    local  lib0_file = lib_file & ".sa"
+    local  def_file = lib & ".def"
+    local  dll_file = format(FormatDll, lib)
+    local  manifest_file  = dll_file & ".manifest"
+    local  pdb_file = lib & ".pdb"
+    local  LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
     local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
     local ShipUconstants = equal (lib, "m3core") and FileExists("Uconstants" & Obj)
@@ -993,11 +994,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         UseWinConstants = ""
     end
 
-    if shared
+    if FALSE % shared
         LinkResponseFile = GetResponseFileName()
     end
 
-    local readonly Outputs = [
+    local  Outputs = [
         lib_file,
         lib0_file,
         dll_file,
@@ -1017,7 +1018,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     % mklib is transitioning away: write the .def file elsewhere
     % if dynamic linking is supported
 
-    if shared
+    if FALSE % shared
 
         local m3_lib_flags = [ ]
         if equal(LINKER, "MS")
@@ -1114,14 +1115,14 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib(lib, shared) is
-    local readonly lib_file = format(FormatLib, lib)
-    local readonly lib0_file = lib_file & ".sa"
+    local  lib_file = format(FormatLib, lib)
+    local  lib0_file = lib_file & ".sa"
     local def_file  = lib & ".def"
-    local readonly dll_file = format(FormatDll, lib)
+    local  dll_file = format(FormatDll, lib)
     local manifest_file  = dll_file & ".manifest"
     local pdb_file  = lib & ".pdb"
 
-    local readonly Outputs = [
+    local  Outputs = [
         lib_file,
         lib0_file,
         dll_file,
@@ -1133,7 +1134,7 @@ proc skip_lib(lib, shared) is
     % make sure files get cleaned up
     deriveds("", Outputs)
 
-    if shared
+    if FALSE % shared
         % would have built an import library & DLL
         BindExport(dll_file)
         DeleteFile(manifest_file)
@@ -1255,12 +1256,12 @@ end
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
     local ret_code = 0
-    local readonly pgm_file = format(FormatExe, prog)
-    local readonly manifest_file = pgm_file & ".manifest"
-    local readonly pdb_file = prog & ".pdb"
-    local readonly LinkResponseFile = GetResponseFileName()
+    local  pgm_file = format(FormatExe, prog)
+    local  manifest_file = pgm_file & ".manifest"
+    local  pdb_file = prog & ".pdb"
+    local  LinkResponseFile = GetResponseFileName()
 
-    local readonly Outputs = [
+    local  Outputs = [
         pgm_file,
         manifest_file,
         pdb_file,
