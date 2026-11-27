@@ -396,6 +396,7 @@ PROCEDURE CompileMSIR (p: P) =
     varAddr  : MSIR.Value;
     narrowed : MSIR.Value;
     mt       : MSIR.T;
+    foundForSure := FALSE;  (* a case so far matches every value, as in Compile *)
   BEGIN
     IF NOT MSIRBuilder.InProc () THEN RETURN END;
     Type.Compile (Type.Base (Expr.TypeOf (p.expr)));  (* as Compile *)
@@ -450,12 +451,18 @@ PROCEDURE CompileMSIR (p: P) =
     (* Emit the typecase terminator on the current block. *)
     MSIR.BuildTypecase (MSIRBuilder.CurrentBlock (), refVal, clauses);
 
-    (* Compile each case body. *)
+    (* Compile each case body.  The warnings for cases and an ELSE that
+       cannot be reached are those Compile gives, in the same order, so the
+       compiler's output does not depend on the path (c017). *)
     cIdx := 0;
     c := p.cases;
     WHILE c # NIL DO
       (* cBlk is the block for this case — all tags in a case share one block. *)
       MSIRBuilder.SetCurrentBlock (clauses[cIdx].block);
+      IF foundForSure THEN
+        Scanner.offset := c.origin;
+        Error.Warn (1, "unreachable case");
+      END;
 
       (* Bind the narrowed variable if present. *)
       IF c.scope # NIL THEN
@@ -476,6 +483,14 @@ PROCEDURE CompileMSIR (p: P) =
                       ARRAY OF MSIR.Value {});
       END;
 
+      IF NOT foundForSure THEN
+        VAR u := Expr.TypeOf (p.expr); BEGIN
+          FOR k := 0 TO c.nTags - 1 DO
+            IF Type.IsSubtype (u, c.tags[k]) THEN foundForSure := TRUE; EXIT END;
+          END;
+        END;
+      END;
+
       INC (cIdx, c.nTags);
       c := c.next;
     END;
@@ -483,6 +498,10 @@ PROCEDURE CompileMSIR (p: P) =
     (* Compile the ELSE body. *)
     MSIRBuilder.SetCurrentBlock (elseBlk);
     IF p.hasElse THEN
+      IF foundForSure THEN
+        Scanner.offset := p.elseOrigin;
+        Error.Warn (1, "unreachable ELSE in TYPECASE");
+      END;
       Stmt.CompileMSIR (p.elseBody);
     END;
     IF NOT MSIRBuilder.CurrentBlockTerminated () THEN
