@@ -68,7 +68,7 @@ PROCEDURE DoCompile (e: Expr.T;  unit: INTEGER) =
     IF TypeExpr.Split (e, t) THEN
       Type.Compile (t);
       EVAL Type.CheckInfo (t, info);
-      <* ASSERT info.size > 0 *>
+      <* ASSERT info.size >= 0 *>  (* RECORD END has size 0 (c120) *)
       CG.Load_intt ((info.size + unit - 1) DIV unit);
       RETURN;
     END;

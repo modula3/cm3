@@ -100,6 +100,8 @@ proc configure_c_compiler() is
   SYSTEM_CC = SYSTEM_CC & " -Werror"
   SYSTEM_CC = SYSTEM_CC & " -Wno-return-type"
   SYSTEM_CC = SYSTEM_CC & " -Wno-missing-braces"
+  % A procedure that only calls itself is legal Modula-3 (c136).
+  SYSTEM_CC = SYSTEM_CC & " -Wno-infinite-recursion"
   %SYSTEM_CC = SYSTEM_CC & " -Wextra"
   %SYSTEM_CC = SYSTEM_CC & " -Wno-missing-field-initializers"
   %SYSTEM_CC = SYSTEM_CC & " -Wno-unused-parameter"
