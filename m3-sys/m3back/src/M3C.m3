@@ -2508,6 +2508,17 @@ CONST Prefix = ARRAY OF TEXT {
 "#define M3_ALIGNED(n) /* alignment not expressible */",
 "#endif",
 
+(* Modula-3 rounds the result of each floating-point operation to its type:
+   the C compiler must not contract a*b+c into a fused multiply-add, which
+   clang does by default where the target has one, as on ARM64 (p126). *)
+"#if defined(__clang__)",
+"#pragma clang fp contract(off)",
+"#elif defined(__GNUC__)",
+"#pragma GCC optimize (\"fp-contract=off\")",
+"#elif defined(_MSC_VER)",
+"#pragma fp_contract (off)",
+"#endif",
+
 "#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
 "#define m3_ne(T, x, y) (((T)(x)) != ((T)(y)))",
 "#define m3_gt(T, x, y) (((T)(x)) > ((T)(y)))",
