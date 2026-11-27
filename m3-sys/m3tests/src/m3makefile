@@ -569,6 +569,7 @@ p_test ("p3", "p328", "a failed runtime check in a TRY body with no call is caug
 p_test ("p3", "p329", "Word.Extract and Word.Insert of the full word width")
 p_test ("p3", "p330", "NARROW (x, NULL) checks that x is NIL")
 p_test ("p3", "p331", "signed packed array elements at a run-time subscript")
+p_test ("p3", "p334", "a record with packed fields keeps a larger field alignment (EXTENDED)")
 p_test ("p3", "p323", "RAISE of a record argument inside a TRY with no other call")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p302", "Address of a global at an offset, compared directly")
