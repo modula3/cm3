@@ -22,8 +22,12 @@ VAR
   heap := NEW (REF R);
 
 PROCEDURE Show (name: TEXT;  READONLY r: R) =
-  VAR aligned := Word.Mod (LOOPHOLE (ADR (r.g), Word.T),
-                           BYTESIZE (EXTENDED)) = 0;
+  (* Only an EXTENDED wider than LONGREAL (128 bits, on AMD64_LINUX) is
+     aligned to its size.  Where EXTENDED is a LONGREAL, its alignment is
+     the target's: 4 bytes in records on I386_LINUX. *)
+  VAR aligned := BYTESIZE (EXTENDED) <= BYTESIZE (LONGREAL)
+                 OR Word.Mod (LOOPHOLE (ADR (r.g), Word.T),
+                              BYTESIZE (EXTENDED)) = 0;
   BEGIN
     IO.Put (name & ": " & Fmt.Char (r.a) & " " & Fmt.Int (r.h) & " "
             & Fmt.LongReal (FLOAT (r.g, LONGREAL)) & " " & Fmt.Int (r.i)
