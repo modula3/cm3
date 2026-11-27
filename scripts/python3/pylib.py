@@ -351,7 +351,8 @@ def TargetOnlyHasCBackend(a):
 
 _PossibleCm3Flags = ["boot", "keep", "override", "commands", "verbose", "why", "debug", "trace"]
 _SkipGccFlags = ["nogcc", "skipgcc", "omitgcc"]
-_PossiblePylibFlags = ["noclean", "nocleangcc", "c", "C", "+c", "+C"] + _SkipGccFlags + _PossibleCm3Flags
+_PossiblePylibFlags = _SkipGccFlags + _PossibleCm3Flags + [
+    "noclean", "nocleangcc", "c", "C", "+c", "+C", "pass1", "pass2", "skip_runtime"]
 
 skipgcc = False
 for a in _SkipGccFlags:
@@ -622,9 +623,11 @@ PyFlags += " " + Target
 # But it does not work yet and that is ok.
 # It probably does not work because cm3 does not implement it.
 #
-_CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
+CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
+if CBackend:
+    PyFlags += " " + "c"
 
-#if _CBackend:
+#if CBackend:
 #    CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
 
 #-----------------------------------------------------------------------------
@@ -632,7 +635,7 @@ _CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBacke
 # GCC_BACKEND if not CBackend.
 #
 
-GCC_BACKEND = not _CBackend
+GCC_BACKEND = not CBackend
 
 #-----------------------------------------------------------------------------
 #
@@ -1244,9 +1247,6 @@ GenericCommand:
             or (arg.lower() in _AllTargets)
             or (arg in _PossiblePylibFlags)
             or (arg.startswith("@M3"))
-            or arg == "pass1"
-            or arg == "pass2"
-            or arg == "skip_runtime"
             ):
             continue
         if arg.startswith("-"):

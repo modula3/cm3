@@ -1,0 +1,7 @@
+"../Main.m3", line 9: warning: Open array passed by value. (x)
+"../Main.m3", line 11: warning: exception is never raised: <ANY>
+"../Main.m3", line 13: warning: exception is never raised: <ANY>
+"../Main.m3", line 18: warning: exception is never raised: <ANY>
+"../Main.m3", line 23: warning: exception is never raised: <ANY>
+"../Main.m3", line 26: warning: Open array passed by value. (a)
+6 warnings encountered

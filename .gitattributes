@@ -1,0 +1,8 @@
+# Line endings.  Text files are stored with LF in the repository, whatever
+# platform or editor made the change; git converts on checkout as each
+# user's settings ask.  Binary files are detected and left alone.
+* text=auto
+
+# Windows command scripts must keep CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf

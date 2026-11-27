@@ -1,0 +1,3 @@
+"../Main.m3", line 41: warning: TYPECASE statement may not handle all cases
+"../Main.m3", line 27: warning: unreachable ELSE in TYPECASE
+2 warnings encountered

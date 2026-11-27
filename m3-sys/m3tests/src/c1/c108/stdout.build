@@ -1,0 +1,4 @@
+"../Main.m3", line 9: CM3 restriction: default method must be a compile-time constant (m)
+"../Main.m3", line 10: CM3 restriction: default method must be a compile-time constant (n)
+2 errors encountered
+Fatal Error: package build failed

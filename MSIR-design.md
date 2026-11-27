@@ -1374,6 +1374,34 @@ I386_LINUX, through MSIRToLLVM takes these steps, in order:
 Steps 1-3 come out of the 32-bit review for free.  Steps 4-7 start only
 when a 32-bit LLVM target becomes a goal.
 
+### O22. The unwinder, once the LLVM path no longer needs C++.
+
+**Recorded (Tony, 2026-11-27).**  MSIRToLLVM's exceptions use the C++
+personality (`__gxx_personality_v0`) and libstdc++/libc++ (`__cxa_throw`).
+The aim is for the LLVM path not to depend on C or C++ at all.  Two
+separate pieces of the platform are involved:
+
+- *Raising and catching* needs only the Itanium unwind ABI
+  (`_Unwind_RaiseException`, `_Unwind_GetLanguageSpecificData`, ...) and a
+  personality routine.  A Modula-3 personality (`__m3_personality_v0`,
+  reading the LSDA tables LLVM already emits) can be written in Modula-3
+  against that ABI, which every target already provides: libgcc_s on Linux
+  and the BSDs, libSystem on Darwin.
+- *Walking frames* (`unw_*`: step a frame, read its SP, IP and saved
+  registers) is libunwind's API, in libSystem on Darwin and in libunwind on
+  Linux (#1418 made it a dependency of AMD64_LINUX's C backend, deliberately).
+  Today it serves only stack dumps, but precise GC roots need it: walking
+  the stack, finding each return address's stack map, and reading the
+  traced slots relative to that frame's SP.  `_Unwind_Backtrace` gives the
+  IP and CFA but not the registers, so it would constrain the stack maps.
+
+So keep libunwind and build the precise-roots work on `unw_*`.  One
+caution: AMD64_LINUX links nongnu libunwind (`-lunwind`), which also
+exports the `_Unwind_*` symbols libstdc++ takes from libgcc_s.  Two
+unwinders in one process work today but are a known source of subtle bugs;
+when the C++-free personality lands, choose a single unwinder deliberately
+(LLVM's libunwind provides both APIs from one library, as Darwin's does).
+
 ## Cross-references
 
 - `MSIR.md` — strategic narrative.

@@ -1,0 +1,11 @@
+range caught
+subscript caught
+nil caught
+finally ran
+caught after finally
+caught out of LOCK
+mutex released
+inner caught
+outer caught
+module body caught
+8 faults caught

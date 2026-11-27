@@ -1,0 +1,3 @@
+# I386_LINUX, gcc backend (m3cc): not yet examined (32-bit review)
+p040 p047 p172 p173 p185 p207 p306 p308 p324
+p313 p331  # as on AMD64_LINUX-gcc

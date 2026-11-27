@@ -1,0 +1,12 @@
+Extract(16_FF, 0, W) = 16_ff
+Extract(-1, 0, W) = 16_ffffffff
+Insert(16_FF, 16_5A, 0, W) = 16_5a
+Extract(16_FF, W, 0) = 16_0
+Insert(16_FF, 16_5A, W, 0) = 16_ff
+Extract(-1, W-4, 4) = 16_f
+Insert(0, 16_5A, W-4, 4) = 16_a0000000
+Extract(16_FF, 4, 8) = 16_f
+Insert(16_FF, 16_5A, 4, 8) = 16_5af
+Long.Extract(16_FF, 0, 64) = 16_ff
+Long.Insert(16_FF, 16_5A, 0, 64) = 16_5a
+Long.Insert(16_FF, 16_5A, 64, 0) = 16_ff

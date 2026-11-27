@@ -6,16 +6,23 @@ SYSTEM_CXXC = "g++ -g -m64 -fPIC" % C++ compiler
 
 readonly SYSTEM_ASM = "as --64" % Assembler
 
-% Enable C++ zero-cost exception handling (ex_stack).
-% Comment out to revert to the native GCC backend (mode "3").
-% Requires libunwind-dev: apt-get install libunwind-dev
-%M3_USE_STACK_WALKER = TRUE
+% C++ zero-cost exception handling (ex_stack) with the C backend, which
+% concierge.py uses by default, and with MSIR's LLVM lowering (MSIRObj,
+% MSIRAsm), which supports only ex_stack; the gcc, llvm and integrated
+% backends use ex_frame.  cm3.cfg sets M3_BACKEND_MODE before including
+% this file.  Requires libunwind-dev: apt-get install libunwind-dev
+if defined("M3_BACKEND_MODE")
+  if equal(M3_BACKEND_MODE, "C") or equal(M3_BACKEND_MODE, "MSIRObj") or equal(M3_BACKEND_MODE, "MSIRAsm")
+    M3_USE_STACK_WALKER = TRUE
+  end
+end
 
 % ex_stack requires the C backend and g++ with -x c++.
 % M3_BACKEND_MODE must be set before includes so cm3cfg.common's
 % "if not defined" guard fires correctly.
 if defined("M3_USE_STACK_WALKER")
-  M3_BACKEND_MODE = "C"
+  % A stack walker asked for without a backend means the C backend.
+  if not defined("M3_BACKEND_MODE") M3_BACKEND_MODE = "C" end
   % Link through g++ so libstdc++ (__cxa_throw, __gxx_personality_v0, ...)
   % is pulled in.  Linux.common builds SYSTEM_LD from SYSTEM_CXXXC, which
   % otherwise defaults to SYSTEM_CC (gcc) as it stands at include time.
@@ -31,7 +38,10 @@ SYSTEM_LIBS{"LIBC"} += [ "-lquadmath" ]
 if defined("M3_USE_STACK_WALKER")
   % RTStackC.c and M3C.m3-generated files use C++ EH (catch/_M3Exc/throw),
   % so SYSTEM_CC must invoke the C++ compiler with -x c++.
-  SYSTEM_CC = "g++ -g -m64 -fPIC -x c++"
+  % -Wno-return-type as on Darwin: a function that ends in a TRY whose
+  % handlers all RETURN is complete, but g++ cannot see that through the
+  % C++ try/catch M3C emits.
+  SYSTEM_CC = "g++ -g -m64 -fPIC -x c++ -Wno-return-type"
   SYSTEM_LIBS{"UNWIND"} = [ "-lunwind-x86_64", "-lunwind" ]
 end
 

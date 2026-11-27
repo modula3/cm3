@@ -82,6 +82,9 @@ T = M3CG_DoNothing.T OBJECT
         stack  : RefSeq.T := NIL;
         params : RefSeq.T := NIL;
         try_handler_stack: RefSeq.T := NIL; (* stack of LabelRef for nested TRY blocks *)
+        try_pad_stack: RefSeq.T := NIL; (* per ended TRY awaiting its landing_pad: the
+                                           label its catch jumps to if M3C names it, else NIL *)
+        try_pad_count := 0;
         op_index := 0;
 
         unit_name := "L_";
@@ -1001,11 +1004,14 @@ PROCEDURE pointer_define(type: Pointer_t; self: T) =
 VAR x := self;
     target_typename := type.target_typename;
 BEGIN
-    <*ASSERT target_typename # NIL OR type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
     type.target_typename := NIL;
 
-    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.refers_to_typeid = type.typeid THEN
+    (* A reference to itself (TYPE FOO = REF FOO), or one whose target
+       cannot be named because it is part of a cycle of references (TYPE
+       R2 = REF REF R2, c126): canBeDefined leaves refers_to_type NIL.  A
+       C void* serves, as M3C casts references where it uses them. *)
+    IF type.refers_to_typeid = type.typeid
+       OR (target_typename = NIL AND type.refers_to_type = NIL) THEN
       print(x, "typedef void* " & type.text & ";\n");
       RETURN;
     END;
@@ -1630,6 +1636,24 @@ OVERRIDES
   define := ProcType_define;
 END;
 
+PROCEDURE ProcType_selfRef(type: ProcType_t; self: T; i: INTEGER): BOOLEAN =
+(* Whether parameter or result i is the procedure type itself, directly or
+   by name, as in TYPE T = PROCEDURE (t: T) (p201).  The C typedef emitted
+   for a procedure type names none of its parameters, so such a reference
+   need not, and cannot, be defined first. *)
+VAR typename: Typename_t;
+BEGIN
+  IF type.types [i] = type THEN RETURN TRUE END;
+  IF type.typeids # NIL AND type.typeids [i] = type.typeid THEN RETURN TRUE END;
+  IF type.typenames [i] # M3ID.NoID THEN
+    typename := GetTypename (self, type.typenames [i]);
+    IF typename # NIL AND typename.refers_to_typeid = type.typeid THEN
+      RETURN TRUE;
+    END;
+  END;
+  RETURN FALSE;
+END ProcType_selfRef;
+
 PROCEDURE ProcType_canBeDefined(type: ProcType_t; self: T): BOOLEAN =
 VAR typename: Typename_t;
 BEGIN
@@ -1638,57 +1662,61 @@ BEGIN
   END;
 
   FOR i := 0 TO NUMBER(type.types^) - 1 DO
-    IF type.typenames [i] # M3ID.NoID THEN
-      typename := GetTypename (self, type.typenames [i]);
-      IF typename = NIL THEN
+    IF ProcType_selfRef (type, self, i) THEN
+      (* skip: see ProcType_selfRef *)
+    ELSE
+      IF type.typenames [i] # M3ID.NoID THEN
+        typename := GetTypename (self, type.typenames [i]);
+        IF typename = NIL THEN
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 1deferred due to " & NameT (type.typenames [i]));
+          END;
+          RETURN FALSE;
+        ELSE
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 2ok with " & NameT (typename.name));
+          END;
+        END;
+        IF NOT typename.IsForwardDeclared() AND
+           NOT typename.CanBeDefined(self) AND
+           NOT typename.IsDefined() THEN
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 3deferred due to " & NameT (typename.name));
+          END;
+          RETURN FALSE;
+        ELSE
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 4ok with " & NameT (typename.name));
+          END;
+        END;
+      END;
+
+      (* i = 0 for return type, which can be void *)
+      IF i # 0 AND type.types [i] = NIL AND (type.typeids [i] = -1 OR type.typeids [i] = 0) THEN
         IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 1deferred due to " & NameT (type.typenames [i]));
+          self.comment(Type_Fmt (type) & " 10deferred due to " & TypeIDToText (type.typeids [i]));
         END;
         RETURN FALSE;
-      ELSE
-        IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 2ok with " & NameT (typename.name));
-        END;
       END;
-      IF NOT typename.IsForwardDeclared() AND
-         NOT typename.CanBeDefined(self) AND
-         NOT typename.IsDefined() THEN
+
+      IF type.types [i] = NIL AND type.typeids [i] # -1 AND type.typeids [i] # 0 THEN
+        type.types [i] := TypeidToType_Get (self, type.typeids [i]);
+      END;
+
+      (* i = 0 for return type, which can be void *)
+      IF i # 0 AND type.types [i] = NIL THEN
         IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 3deferred due to " & NameT (typename.name));
+          self.comment(Type_Fmt (type) & " 5deferred due to " & Type_Fmt (type.types [i]) & " " & TypeIDToText (type.typeids [i]));
         END;
         RETURN FALSE;
-      ELSE
+      END;
+
+      IF type.types [i] # NIL AND NOT type.types [i].IsDefined() THEN
         IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 4ok with " & NameT (typename.name));
+          self.comment(Type_Fmt (type) & " 7deferred due to " & Type_Fmt (type.types [i]));
         END;
+        RETURN FALSE;
       END;
-    END;
-
-    (* i = 0 for return type, which can be void *)
-    IF i # 0 AND type.types [i] = NIL AND (type.typeids [i] = -1 OR type.typeids [i] = 0) THEN
-      IF debug_types THEN
-        self.comment(Type_Fmt (type) & " 10deferred due to " & TypeIDToText (type.typeids [i]));
-      END;
-      RETURN FALSE;
-    END;
-
-    IF type.types [i] = NIL AND type.typeids [i] # -1 AND type.typeids [i] # 0 THEN
-      type.types [i] := TypeidToType_Get (self, type.typeids [i]);
-    END;
-
-    (* i = 0 for return type, which can be void *)
-    IF i # 0 AND type.types [i] = NIL THEN
-      IF debug_types THEN
-        self.comment(Type_Fmt (type) & " 5deferred due to " & Type_Fmt (type.types [i]) & " " & TypeIDToText (type.typeids [i]));
-      END;
-      RETURN FALSE;
-    END;
-
-    IF type.types [i] # NIL AND NOT type.types [i].IsDefined() THEN
-      IF debug_types THEN
-        self.comment(Type_Fmt (type) & " 7deferred due to " & Type_Fmt (type.types [i]));
-      END;
-      RETURN FALSE;
     END;
   END;
 
@@ -1710,11 +1738,15 @@ BEGIN
   (* Define all dependent typenames and types. *)
 
   FOR i := 0 TO NUMBER(procType.types^) - 1 DO
-    IF procType.types [i] # NIL THEN
-      procType.types [i].Define (self);
-    END;
-    IF procType.typenames [i] # M3ID.NoID THEN
-      GetTypename (self, procType.typenames [i]).Define (self);
+    IF ProcType_selfRef (procType, self, i) THEN
+      (* skip: see ProcType_selfRef *)
+    ELSE
+      IF procType.types [i] # NIL THEN
+        procType.types [i].Define (self);
+      END;
+      IF procType.typenames [i] # M3ID.NoID THEN
+        GetTypename (self, procType.typenames [i]).Define (self);
+      END;
     END;
   END;
 
@@ -1742,8 +1774,10 @@ BEGIN
       id := procType.typenames [i];
       IF id # M3ID.NoID THEN
         text := NameT (id);
-      ELSE
+      ELSIF procType.types [i] # NIL THEN
         text := procType.types [i].text;
+      ELSE (* a reference to itself: see ProcType_selfRef *)
+        text := procType.text;
       END;
       print (self, text);
       IF i # NUMBER (procType.types^) - 1 THEN
@@ -2229,6 +2263,7 @@ TYPE Var_t = M3CG.Var OBJECT
     exported := FALSE;
     global := FALSE;
     byte_size := -1; (* esp. for structs *)
+    alignment := 0; (* in bytes, from declare_local; 0 if not given *)
     up_level := FALSE; (* local accessed from nested function *)
     is_static_link := FALSE; (* micro optimization -- uplevel but accessed directly *)
     next_in_block: Var_t := NIL;
@@ -2460,6 +2495,28 @@ CONST Prefix = ARRAY OF TEXT {
 "#ifdef __SUNPRO_C",
 (*"#pragma error_messages(off, E_INIT_DOES_NOT_FIT)",*)
 "#pragma error_messages(off, E_STATEMENT_NOT_REACHED)",
+"#endif",
+
+(* M3_ALIGNED(n) declares a variable or field n-byte aligned (Var_Align). *)
+"#if defined(_MSC_VER)",
+"#define M3_ALIGNED(n) __declspec(align(n))",
+"#elif defined(__GNUC__) || defined(__clang__)",
+"#define M3_ALIGNED(n) __attribute__((aligned(n)))",
+"#elif defined(__cplusplus) && __cplusplus >= 201103L",
+"#define M3_ALIGNED(n) alignas(n)",
+"#else",
+"#define M3_ALIGNED(n) /* alignment not expressible */",
+"#endif",
+
+(* Modula-3 rounds the result of each floating-point operation to its type:
+   the C compiler must not contract a*b+c into a fused multiply-add, which
+   clang does by default where the target has one, as on ARM64 (p126). *)
+"#if defined(__clang__)",
+"#pragma clang fp contract(off)",
+"#elif defined(__GNUC__)",
+"#pragma GCC optimize (\"fp-contract=off\")",
+"#elif defined(_MSC_VER)",
+"#pragma fp_contract (off)",
 "#endif",
 
 "#define m3_eq(T, x, y) (((T)(x)) == ((T)(y)))",
@@ -4086,7 +4143,10 @@ BEGIN
 END Locals_declare_segment;
 
 PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; const: BOOLEAN): M3CG.Var =
-VAR var := NEW (Var_t, self := self, name := name, typeid := typeid, const := const).Init();
+(* A segment is a block of memory: without cgtype := Struct, it would be
+   Word8 by default, and load would read a one-byte value at offset 0 as
+   the whole segment (p109). *)
+VAR var := NEW (Var_t, self := self, cgtype := CGType.Struct, name := name, typeid := typeid, const := const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
     length := 0;
@@ -4931,10 +4991,17 @@ BEGIN
 END HelperFunctions_rotate_right;
 
 PROCEDURE HelperFunctions_extract(self: HelperFunctions_t; type: IType; sign_extend: BOOLEAN) =
-CONST text = "#define m3_extract(T, value, offset, count) ((((T)(value))>>((WORD_T)(offset)))&~(((~(T)0))<<((WORD_T)(count))))";
+(* A count of the full width (Word.Extract (x, 0, BITSIZE (x))) or an offset
+   of it (count 0) must not become a shift by the width, which C leaves
+   undefined (and hardware takes modulo the width, making the mask 0).  T is
+   unsigned and at most 64 bits wide; the function evaluates each argument
+   once. *)
+CONST text = ARRAY OF TEXT {
+"static UINT64 __stdcall m3_extract_bits(UINT64 v,WORD_T offset,WORD_T count){return count?(v>>offset)&((~(UINT64)0)>>(64-count)):0;}",
+"#define m3_extract(T, value, offset, count) ((T)m3_extract_bits((UINT64)(T)(value),(WORD_T)(offset),(WORD_T)(count)))" };
 CONST text_sign_extend = "#define m3_sign_extend_T(T) static T __stdcall m3_sign_extend_##T(T value,WORD_T count){return(value|((value&(((T)-1)<<(count-1)))?(((T)-1)<<(count-1)):0));}";
 BEGIN
-    HelperFunctions_helper_with_boolean(self, self.data.extract, text);
+    HelperFunctions_helper_with_boolean_and_array(self, self.data.extract, text);
     IF sign_extend THEN
         HelperFunctions_helper_with_type(self, "sign_extend", type, self.data.sign_extend, text_sign_extend);
     END;
@@ -4951,7 +5018,10 @@ BEGIN
 END HelperFunctions_extract_mn;
 
 PROCEDURE HelperFunctions_insert(self: HelperFunctions_t; type: IType) =
-CONST text = "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){T mask=(~((~(T)0)<<count))<<offset;return(((y<<offset)&mask)|(x&~mask));}";
+(* As m3_extract: no shift by the full width, for count = BITSIZE (T) or
+   offset = BITSIZE (T) (count 0); the mask is built unsigned, since T may
+   be signed. *)
+CONST text = "#define m3_insert_T(T) static T __stdcall m3_insert_##T(T x,T y,WORD_T offset,WORD_T count){UINT64 mask;if(!count)return x;mask=((~(UINT64)0)>>(64-count))<<offset;return(T)((((UINT64)y<<offset)&mask)|((UINT64)x&~mask));}";
 BEGIN
     HelperFunctions_helper_with_type(self, "insert", type, self.data.insert, text);
 END HelperFunctions_insert;
@@ -5371,9 +5441,22 @@ BEGIN
     RETURN NameT(var.name);
 END Var_Name;
 
+PROCEDURE Var_Align(var: Var_t): TEXT =
+(* The front end may align a local more strictly than C would: a record
+   with a LONGREAL field is 8-aligned on 32-bit targets, but the i386
+   System V ABI aligns doubles in structures to 4 bytes, and M3C's struct
+   for the record only pads the field offsets.  Ask for the alignment the
+   front end assumed. *)
+BEGIN
+    IF var.alignment > Target.Integer.bytes THEN
+        RETURN "M3_ALIGNED(" & IntToDec(var.alignment) & ") ";
+    END;
+    RETURN "";
+END Var_Align;
+
 PROCEDURE Var_Declare(var: Var_t): TEXT =
 BEGIN
-    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & var.Type() & " " & var.Name();
+    RETURN ARRAY BOOLEAN OF TEXT{"", "static "}[var.global AND NOT var.exported] & Var_Align(var) & var.Type() & " " & var.Name();
 END Var_Declare;
 
 PROCEDURE Var_InFrameDeclare(var: Var_t): TEXT =
@@ -5383,8 +5466,9 @@ BEGIN
     <* ASSERT NOT (var.global OR var.exported) *> (* only locals/params for now *)
     IF PassStructsByValue AND var.cgtype = CGType.Struct AND var.up_level THEN
         struct := "*";
+        RETURN var.InFrameType() & struct & var.InFrameName();
     END;
-    RETURN var.InFrameType() & struct & var.InFrameName();
+    RETURN Var_Align(var) & var.InFrameType() & struct & var.InFrameName();
 END Var_InFrameDeclare;
 
 PROCEDURE Param_Type(var: Var_t): TEXT =
@@ -5417,7 +5501,7 @@ PROCEDURE declare_local(
     self: T;
     name: Name;
     byte_size: ByteSize;
-    <*UNUSED*>alignment: Alignment;
+    alignment: Alignment;
     cgtype: CGType;
     typeid: TypeUID;
     up_level: BOOLEAN;
@@ -5437,7 +5521,8 @@ BEGIN
     ReplaceName (self, name);
     ReplaceName (self, typename);
     var := NEW(Var_t, self := self, cgtype := cgtype, name := name, up_level := up_level,
-               byte_size := byte_size, typeid := typeid, proc := self.current_proc).Init();
+               byte_size := byte_size, alignment := alignment, typeid := typeid,
+               proc := self.current_proc).Init();
 
     <* ASSERT self.current_proc # NIL *>
     <* ASSERT self.current_proc.locals # NIL *>
@@ -6839,7 +6924,7 @@ END load_host_integer;
 PROCEDURE load_target_integer(self: T; type: IType; READONLY readonly_i: Target.Int) =
 (* push; s0.type := i *)
 VAR i := readonly_i;
-    expr := CTextToExpr(self.TIntLiteral(type, i));
+    expr: Expr_t;
     size := cgtypeSizeBytes[type];
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
@@ -6848,12 +6933,15 @@ BEGIN
       self.comment("load_integer");
     END;
     <* ASSERT signed OR unsigned *>
+    (* The value's bits are what matter: a word may come as the negative
+       integer with the same bits, such as -8 for the mask 16_FF..F8 (p280).
+       Use the value those bits have in the type. *)
+    IF unsigned THEN TIntN.ZeroExtend(i, size)
+    ELSE TIntN.SignExtend(i, size) END;
+    expr := CTextToExpr(self.TIntLiteral(type, i));
     expr.minmax_valid[Min] := TRUE;
     expr.minmax_valid[Max] := TRUE;
     expr.cgtype := type;
-    IF cgtypeIsUnsignedInt[type] THEN TIntN.ZeroExtend(i, size)
-    ELSIF cgtypeIsSignedInt[type] THEN TIntN.SignExtend(i, size) END;
-    <* ASSERT readonly_i = i *>
     expr.minmax[Min] := i;
     expr.minmax[Max] := i;
     expr := cast(expr, type);
@@ -7427,7 +7515,14 @@ BEGIN
       self.comment("extract_n");
     END;
     load_host_integer(self, Target.Word.cg_type, count);
-    self.extract(type, sign_extend);
+    self.extract(type, FALSE);
+    IF sign_extend THEN
+      (* As extract_mn: the count is a constant, so sign-extend after the
+         extract (extract itself handles only a zero-extending one).  A
+         signed packed element read through a variable subscript gets here. *)
+      load_host_integer(self, Target.Word.cg_type, count);
+      do_sign_extend(self, type);
+    END;
 END extract_n;
 
 PROCEDURE do_sign_extend(self: T; type: IType) =
@@ -8130,12 +8225,27 @@ PROCEDURE end_try (self : T) =
     END;
     <*ASSERT self.try_handler_stack # NIL AND self.try_handler_stack.size() > 0*>
     r := NARROW(self.try_handler_stack.remhi(), LabelRef);
+    IF self.try_pad_stack = NIL THEN
+      self.try_pad_stack := NEW(RefSeq.T).init();
+    END;
     IF r^ = FIRST(Label) THEN
-      (* No invoke_direct seen — try body had no calls; use a re-throw catch *)
-      print(self, "} catch (...) { throw; }\n");
+      (* No invoke seen, but the body can still raise: a runtime check
+         (nil, range, subscript, ...) calls the module's _CRASH, which
+         raises RuntimeError.E.  The handler label is not known until the
+         landing pad, so jump to a label of our own that landing_pad
+         defines there.  End_try, the handler's Set_label and Landing_pad
+         come in that order, nested LIFO, for every TRY, TRY FINALLY and
+         LOCK. *)
+      WITH name = "L_try_pad_" & Fmt.Int(self.try_pad_count) DO
+        INC(self.try_pad_count);
+        print(self, "} catch (_M3Exc& _m3exc) { _m3_caught = _m3exc.act; goto "
+                  & name & "; }\n");
+        self.try_pad_stack.addhi(name);
+      END;
     ELSE
       print(self, "} catch (_M3Exc& _m3exc) { _m3_caught = _m3exc.act; goto L" 
                 & LabelToHex(r^) & "; }\n");
+      self.try_pad_stack.addhi(NIL);
     END;
   END end_try;
 
@@ -8176,6 +8286,10 @@ PROCEDURE end_try (self : T) =
     (* The catch block in end_try already stored the activation in the
        procedure's local _m3_caught (declared by begin_procedure).
        Push it onto the expression stack so Store_addr(info) can save it. *)
+    <*ASSERT self.try_pad_stack # NIL AND self.try_pad_stack.size() > 0*>
+    WITH name = self.try_pad_stack.remhi() DO
+      IF name # NIL THEN print(self, NARROW(name, TEXT) & ":;\n") END;
+    END;
     push(self, CGType.Addr, CTextToExpr("_m3_caught"));
   END landing_pad;
 

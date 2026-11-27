@@ -1,0 +1,11 @@
+"../Main.m3", line 13: warning: not used (c)
+"../Main.m3", line 16: warning: exception is never raised: Main.E1
+"../Main.m3", line 20: warning: not used (d)
+"../Main.m3", line 35: warning: exception is never raised: <ANY>
+"../Main.m3", line 45: warning: not used (h)
+"../Main.m3", line 49: warning: not used (i)
+"../Main.m3", line 62: warning: exception is never raised: Main.E2
+"../Main.m3", line 39: warning: exception is never raised: <ANY>
+"../Main.m3", line 84: warning: potentially unhandled exception: <ANY>
+"../Main.m3", line 38: warning: not used (F2)
+10 warnings encountered

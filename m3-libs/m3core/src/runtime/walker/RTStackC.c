@@ -178,40 +178,6 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller->lock != FrameLock) abort();
 }
 
-/*---------------------------------------------------------------------------*/
-/* PROCEDURE Unwind (READONLY f: Frame);
-   Restore the machine state back to the frame "f".  All callee-saved
-   registers must be restored to the state they were in when frame "f"
-   made its last call. */
-
-void RTStack__Unwind (Frame *target)
-{
-  int res;
-
-  if (!target->cursor)           abort();
-  if (target->lock != FrameLock) abort();
-
-  /* Set IP to the landing pad computed by RTEHScan.ScanEHTable. */
-  unw_set_reg(target->cursor, UNW_REG_IP, target->landingPad);
-
-  /* Pass the exception object pointer in EH data register 0. */
-  unw_set_reg(target->cursor,
-              __builtin_eh_return_data_regno(EHObjRegNo),
-              target->exceptionRef);
-
-  /* Pass the tTypeIndex (exception selector) in EH data register 1. */
-  unw_set_reg(target->cursor,
-              __builtin_eh_return_data_regno(EHTypeRegNo),
-              target->tTypeIndex);
-
-  res = unw_resume(target->cursor);
-  /* unw_resume only returns on error. */
-  if (res < 0) {
-    printf("RTStack__Unwind - unw_resume error\n");
-    abort();
-  }
-}
-
 /*
 //a test of generating a backtrace with libunwind.
 //

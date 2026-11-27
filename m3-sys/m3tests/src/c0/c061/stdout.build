@@ -1,0 +1,5 @@
+"../M.m3", line 11: warning: exception is never raised: <ANY>
+"../M.m3", line 19: warning: exception is never raised: <ANY>
+"../M.m3", line 27: warning: exception is never raised: <ANY>
+"../M.m3", line 35: warning: exception is never raised: <ANY>
+4 warnings encountered

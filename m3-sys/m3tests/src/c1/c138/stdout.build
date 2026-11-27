@@ -1,0 +1,8 @@
+"../Main.m3", line 43: warning: not used (i)
+"../Main.m3", line 44: warning: not used (i)
+"../Main.m3", line 45: warning: exception is never raised: Main.E2
+"../Main.m3", line 45: warning: not used (i)
+"../Main.m3", line 2: warning: not used (RT0)
+"../Main.m3", line 8: warning: not used (NL)
+"../Main.m3", line 43: warning: unreachable statement
+7 warnings encountered

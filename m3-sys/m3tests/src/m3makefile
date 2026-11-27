@@ -561,17 +561,26 @@ p_test ("p3", "p326", "A nested procedure value captures variables only it uses,
 p_test ("p3", "p325", "<*DEBUG*> pragmas print their messages when their condition holds")
 p_test ("p3", "p332", "negative values stored into signed packed fields and elements")
 p_test ("p3", "p333", "unreachable statements after RETURN, RAISE and a failing check")
+p_test ("p3", "p316", "Empty array constructor of open arrays passed as an open array")
+p_test ("p3", "p309", "Exception arguments of type REAL and LONGREAL")
+p_test ("p3", "p310", "Packed designators: base evaluated once by assignment, INC, DEC, WITH")
+p_test ("p3", "p311", "Procedures in inner blocks of a nested procedure use outer variables")
+p_test ("p3", "p312", "Object type methods as procedure values, including an opaque supertype")
+p_test ("p3", "p313", "<*TRACE*> on formals, locals, WITH and FOR variables")
+p_test ("p3", "p314", "WITH over packed fields and elements not starting on a byte")
+p_test ("p3", "p315", "Packed array elements of 1..7 bits through a non-constant subscript")
 p_test ("p3", "p322", "Block copies of records and arrays of traced references during an incremental collection")
 p_test ("p3", "p321", "Set constructors of one word with non-constant ranges")
+p_test ("p3", "p324", "ROUND of constants breaks ties to even, whatever compiler built the compiler")
+p_test ("p3", "p328", "a failed runtime check in a TRY body with no call is caught")
+p_test ("p3", "p329", "Word.Extract and Word.Insert of the full word width")
+p_test ("p3", "p330", "NARROW (x, NULL) checks that x is NIL")
+p_test ("p3", "p331", "signed packed array elements at a run-time subscript")
+p_test ("p3", "p334", "a record with packed fields keeps a larger field alignment (EXTENDED)")
+p_test ("p3", "p335", "variables of a record type are aligned as the front end laid it out")
+p_test ("p3", "p323", "RAISE of a record argument inside a TRY with no other call")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p317", "LOOPHOLE of a record value to a scalar after a check")
-p_test ("p3", "p316", "Empty array constructor of open arrays passed as an open array")
-p_test ("p3", "p315", "Packed array elements of 1..7 bits through a non-constant subscript")
-p_test ("p3", "p313", "<*TRACE*> on formals, locals, WITH and FOR variables")
-p_test ("p3", "p312", "Object type methods as procedure values, including an opaque supertype")
-p_test ("p3", "p311", "Procedures in inner blocks of a nested procedure use outer variables")
-p_test ("p3", "p310", "Packed designators: base evaluated once by assignment, INC, DEC, WITH")
-p_test ("p3", "p309", "Exception arguments of type REAL and LONGREAL")
 p_test ("p3", "p304", "Exception scopes: RETURN, EXIT and exceptions through FINALLY, ELSE, LOCK")
 p_test ("p3", "p303", "Block-local initialization in nested procedures and loops")
 p_test ("p3", "p302", "Address of a global at an offset, compared directly")
@@ -972,15 +981,14 @@ x_test ("x0", "x001", "Wr.PutChar (Rd.GetChar) loop")
 
 %------------------------------------------------------------------- ctests ---
 %  CODE tests: tiny modules where the code output by the compiler
-%     is what's of interest.
-%
-% -- only wizards should bother to run the ctests, to tell if they
-%     work, you must manually examine the code that's produced
+%     is what's of interest.  Every run compiles them and checks that the
+%     compiler accepts each as before (its expected stdout.build and
+%     stderr.build); whether the code produced is right still needs
+%     examining by hand.
 %
 
 proc c_test (group, uid, comment) is
-  if defined ("_all") return end
-  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
+  run_test ("_ctests", group, uid, comment, "", cm3opts & " -DNORUN -skiplink", runopts, "probeForTargetSpecificFiles")
 end
 
 c_test ("c1", "c144", "qid")

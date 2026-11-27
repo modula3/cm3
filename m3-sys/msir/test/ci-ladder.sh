@@ -4,10 +4,8 @@
 # Starts from an installed cm3 (e.g. a bootstrap release) at $CM3_INSTALL
 # with $CM3_INSTALL/bin on PATH.  Run from the repository root.
 #
-#   Stage 1  C backend: concierge full-upgrade (base set).  On AMD64_LINUX,
-#            ex_stack is off in the shipped config, so this is done twice:
-#            once with ex_frame, then again with M3_USE_STACK_WALKER on
-#            (the two-phase ex_stack transition; see CLAUDE.md).
+#   Stage 1  C backend: concierge full-upgrade (base set), with ex_stack
+#            on every target (AMD64_LINUX since #1418).
 #   Stage 2  Switch the installed config to MSIRObj.  The stage-1 cm3
 #            rebuilds the compiler packages through MSIR -> LLVM and the
 #            result is installed: a cm3 whose own code is all MSIR.
@@ -101,17 +99,11 @@ EOF
 }
 
 log "Stage 1: C backend"
-case $CM3_TARGET in
-  AMD64_LINUX)
-    set_cfg "$SRC_CFG" C 0
-    scripts/concierge.py full-upgrade --backend c base
-    log "Stage 1b: enable ex_stack (AMD64_LINUX two-phase transition)"
-    set_cfg "$SRC_CFG" C 1
-    scripts/concierge.py full-upgrade --backend c base ;;
-  *)
-    set_cfg "$SRC_CFG" C 1
-    scripts/concierge.py full-upgrade --backend c base ;;
-esac
+# AMD64_LINUX now turns ex_stack on for the C backend itself (#1418), and
+# the d5.12.0 bootstrap already has ex_stack, so one full-upgrade suffices
+# on every target.
+set_cfg "$SRC_CFG" C 1
+scripts/concierge.py full-upgrade --backend c base
 cm3 -version 2>&1 | sed -n 1,3p   # not head: an early close makes cm3 fail with EPIPE
 
 log "Stage 2: stage-1 cm3 builds the compiler through MSIR"

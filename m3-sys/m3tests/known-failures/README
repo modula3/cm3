@@ -1,0 +1,5 @@
+Tests known to fail, one file per CI job: <TARGET>-<backend>.  A job
+with no file is expected to pass every test.  CI runs
+../check-results.py after m3tests and fails the job if a test fails
+that is not listed, or if a listed test passes.  When you fix a test,
+remove it from the list in the same change.

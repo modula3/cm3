@@ -6,7 +6,7 @@
 
 UNSAFE MODULE Main64 EXPORTS Main;
 
-FROM Test IMPORT checkI,checkR,checkL,checkN,done;
+FROM Test IMPORT check,checkI,checkR,checkL,checkN,done;
 
 TYPE
   Int32 = [0..16_7FFFFFFF];
@@ -30,13 +30,9 @@ PROCEDURE Test() =
     checkI (BITSIZE(ADDRESS), 64);
     checkI (BITSIZE(int32), 32);
     checkI (BITSIZE(LONGREAL), 64);
-    (* EXTENDED is 128 bits where the C toolchain has _Float128
-       (e.g. AMD64_LINUX) but equals LONGREAL (64 bits) on targets whose
-       toolchain lacks it (Darwin: Apple clang).  Both satisfy the language
-       requirement that EXTENDED have at least LONGREAL's precision. *)
-    IF BITSIZE(EXTENDED) # 128 THEN
-      checkI (BITSIZE(EXTENDED), BITSIZE(LONGREAL));
-    END;
+    (* EXTENDED is 128 bits on AMD64_LINUX, and 64 bits (a LONGREAL) on
+       Darwin and Windows, whose C compilers have no 128-bit float. *)
+    check (BITSIZE(EXTENDED) = 128 OR BITSIZE(EXTENDED) = 64);
     checkI (BITSIZE(LONGINT), BITSIZE(INTEGER));
 
     (* REAL *)

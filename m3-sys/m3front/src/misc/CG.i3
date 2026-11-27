@@ -608,6 +608,16 @@ PROCEDURE Check_eq (t: IType;  code: RuntimeError);
 PROCEDURE Check_byte_aligned ();
 (* IF unaligned(s0.A) THEN abort(RuntimeError.UnalignedAddress); *)
 
+PROCEDURE Split_bit_address (VAR static_bits: INTEGER;
+                             VAR base_align: Alignment): BOOLEAN;
+(* s0.A may be a bit address, e.g. of a packed field or element.  If it can
+   be unaligned, make s0.A its base (without its static offset and dynamic
+   bits), set static_bits to the static offset and base_align to the base's
+   alignment and, when s0.A has dynamic bits, push them (s0.I) above the base
+   and return TRUE.  Otherwise do what Check_byte_aligned does, set
+   static_bits to 0 and base_align to s0.A's alignment, and return FALSE.
+   The address s0.A was is the base + static_bits (+ s0.I) bits. *)
+
 (*---------------------------------------------------- address arithmetic ---*)
 
 PROCEDURE Add_offset (i: INTEGER);
