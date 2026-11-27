@@ -2277,6 +2277,16 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   - **Lowering.**  MSIRRuntime.Expand emits the loads QualifyExpr and
     EmitMethodCall used to emit.  LOCK's acquire and release are method
     lookups too.
+  - **The run-time-offset form** arises when a client is compiled before
+    the module revealing its opaque supertype: the front end records a
+    "wish", and the driver recompiles the client once the revealer has
+    supplied the sizes ("new opaque info -> recompiling").  So a finished
+    build normally keeps only the static form, though the dynamic form is
+    generated and lowered on the first pass.  Its expansion was checked by
+    fault injection (2026-11-27): a local build forcing the run-time offset
+    for every method call ran a program of overriding, inherited,
+    opaque-subtype and NIL methods, LOCK and FINALLY with the same output
+    as C mode.
 
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
