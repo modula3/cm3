@@ -2,6 +2,6 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
  
-interface ("Main")
-implementation ("Main")
+interface ("M")
+implementation ("M")
 include ("../../Test.common") 

@@ -2,7 +2,7 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-MODULE Main;
+MODULE M;
 
 PROCEDURE p (e := E.b) RAISES ANY =
 BEGIN
@@ -37,6 +37,6 @@ CASE e OF
 END s;
 
 BEGIN
-END Main.
+END M.
 
 

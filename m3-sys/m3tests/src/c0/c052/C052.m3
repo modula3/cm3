@@ -4,11 +4,11 @@
  
 (* Test: type identification *)
 
-MODULE Test EXPORTS Foo, Bar;
+MODULE C052 EXPORTS Foo, Bar;
 
 REVEAL Private = BRANDED "Bar" OBJECT
                    y: INTEGER;
                  END;	
 
 BEGIN
-END Test. 
+END C052. 

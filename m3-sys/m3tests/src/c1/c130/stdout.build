@@ -1,0 +1,6 @@
+"../BuffOWr.m3", line 41: warning: potentially unhandled exception: OWr.Closed
+"../BuffOWr.m3", line 55: warning: potentially unhandled exception: OWr.Closed
+2 warnings encountered
+"../OWr.m3", line 11: cannot dereference a non-REF value
+1 error encountered
+Fatal Error: package build failed

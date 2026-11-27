@@ -1,0 +1,7 @@
+"../Main.m3", line 21: warning: exception is never raised: Main.e1
+"../Main.m3", line 22: warning: exception is never raised: Main.e2
+"../Main.m3", line 29: warning: exception is never raised: <ANY>
+"../Main.m3", line 36: warning: exception is never raised: Main.e1
+"../Main.m3", line 37: warning: exception is never raised: Main.e2
+"../Main.m3", line 44: warning: exception is never raised: <ANY>
+6 warnings encountered

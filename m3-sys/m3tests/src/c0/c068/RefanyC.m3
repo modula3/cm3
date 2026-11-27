@@ -2,10 +2,16 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-INTERFACE Main;
+MODULE RefanyC;
 
-<*EXTERNAL*> VAR external_var_i: [7..7];
+PROCEDURE Compare (a, b: T): INTEGER =
+(*  VAR t : T; *)
+  BEGIN
+    EVAL a;
+    EVAL b;
+(*    NEW (t); *)
+    RETURN 0;
+  END Compare;
 
-
-
-END Main.
+BEGIN
+END RefanyC.

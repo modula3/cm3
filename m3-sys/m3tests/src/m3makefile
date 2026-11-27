@@ -968,15 +968,14 @@ x_test ("x0", "x001", "Wr.PutChar (Rd.GetChar) loop")
 
 %------------------------------------------------------------------- ctests ---
 %  CODE tests: tiny modules where the code output by the compiler
-%     is what's of interest.
-%
-% -- only wizards should bother to run the ctests, to tell if they
-%     work, you must manually examine the code that's produced
+%     is what's of interest.  Every run compiles them and checks that the
+%     compiler accepts each as before (its expected stdout.build and
+%     stderr.build); whether the code produced is right still needs
+%     examining by hand.
 %
 
 proc c_test (group, uid, comment) is
-  if defined ("_all") return end
-  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
+  run_test ("_ctests", group, uid, comment, "", cm3opts & " -DNORUN -skiplink", runopts, "probeForTargetSpecificFiles")
 end
 
 c_test ("c1", "c144", "qid")

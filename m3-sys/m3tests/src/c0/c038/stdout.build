@@ -1,0 +1,4 @@
+"../Main.m3", line 9: warning: Open array passed by value. (a)
+"../Main.m3", line 10: warning: Open array passed by value. (b)
+"../Main.m3", line 15: warning: exception is never raised: <ANY>
+3 warnings encountered

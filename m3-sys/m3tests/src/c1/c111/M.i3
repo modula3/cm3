@@ -2,4 +2,10 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-MODULE IntList = List (Int) END IntList.
+INTERFACE M;
+
+<*EXTERNAL*> VAR external_var_i: [7..7];
+
+
+
+END M.
