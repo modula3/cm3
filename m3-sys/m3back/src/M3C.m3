@@ -4079,7 +4079,10 @@ BEGIN
 END Locals_declare_segment;
 
 PROCEDURE declare_segment(self: T; name: Name; typeid: TypeUID; const: BOOLEAN): M3CG.Var =
-VAR var := NEW (Var_t, self := self, name := name, typeid := typeid, const := const).Init();
+(* A segment is a block of memory: without cgtype := Struct, it would be
+   Word8 by default, and load would read a one-byte value at offset 0 as
+   the whole segment (p109). *)
+VAR var := NEW (Var_t, self := self, cgtype := CGType.Struct, name := name, typeid := typeid, const := const).Init();
     fixed_name := var.name;
     text: TEXT := NIL;
     length := 0;
