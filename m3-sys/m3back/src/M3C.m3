@@ -1633,6 +1633,24 @@ OVERRIDES
   define := ProcType_define;
 END;
 
+PROCEDURE ProcType_selfRef(type: ProcType_t; self: T; i: INTEGER): BOOLEAN =
+(* Whether parameter or result i is the procedure type itself, directly or
+   by name, as in TYPE T = PROCEDURE (t: T) (p201).  The C typedef emitted
+   for a procedure type names none of its parameters, so such a reference
+   need not, and cannot, be defined first. *)
+VAR typename: Typename_t;
+BEGIN
+  IF type.types [i] = type THEN RETURN TRUE END;
+  IF type.typeids # NIL AND type.typeids [i] = type.typeid THEN RETURN TRUE END;
+  IF type.typenames [i] # M3ID.NoID THEN
+    typename := GetTypename (self, type.typenames [i]);
+    IF typename # NIL AND typename.refers_to_typeid = type.typeid THEN
+      RETURN TRUE;
+    END;
+  END;
+  RETURN FALSE;
+END ProcType_selfRef;
+
 PROCEDURE ProcType_canBeDefined(type: ProcType_t; self: T): BOOLEAN =
 VAR typename: Typename_t;
 BEGIN
@@ -1641,57 +1659,61 @@ BEGIN
   END;
 
   FOR i := 0 TO NUMBER(type.types^) - 1 DO
-    IF type.typenames [i] # M3ID.NoID THEN
-      typename := GetTypename (self, type.typenames [i]);
-      IF typename = NIL THEN
+    IF ProcType_selfRef (type, self, i) THEN
+      (* skip: see ProcType_selfRef *)
+    ELSE
+      IF type.typenames [i] # M3ID.NoID THEN
+        typename := GetTypename (self, type.typenames [i]);
+        IF typename = NIL THEN
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 1deferred due to " & NameT (type.typenames [i]));
+          END;
+          RETURN FALSE;
+        ELSE
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 2ok with " & NameT (typename.name));
+          END;
+        END;
+        IF NOT typename.IsForwardDeclared() AND
+           NOT typename.CanBeDefined(self) AND
+           NOT typename.IsDefined() THEN
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 3deferred due to " & NameT (typename.name));
+          END;
+          RETURN FALSE;
+        ELSE
+          IF debug_types THEN
+            self.comment(Type_Fmt (type) & " 4ok with " & NameT (typename.name));
+          END;
+        END;
+      END;
+
+      (* i = 0 for return type, which can be void *)
+      IF i # 0 AND type.types [i] = NIL AND (type.typeids [i] = -1 OR type.typeids [i] = 0) THEN
         IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 1deferred due to " & NameT (type.typenames [i]));
+          self.comment(Type_Fmt (type) & " 10deferred due to " & TypeIDToText (type.typeids [i]));
         END;
         RETURN FALSE;
-      ELSE
-        IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 2ok with " & NameT (typename.name));
-        END;
       END;
-      IF NOT typename.IsForwardDeclared() AND
-         NOT typename.CanBeDefined(self) AND
-         NOT typename.IsDefined() THEN
+
+      IF type.types [i] = NIL AND type.typeids [i] # -1 AND type.typeids [i] # 0 THEN
+        type.types [i] := TypeidToType_Get (self, type.typeids [i]);
+      END;
+
+      (* i = 0 for return type, which can be void *)
+      IF i # 0 AND type.types [i] = NIL THEN
         IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 3deferred due to " & NameT (typename.name));
+          self.comment(Type_Fmt (type) & " 5deferred due to " & Type_Fmt (type.types [i]) & " " & TypeIDToText (type.typeids [i]));
         END;
         RETURN FALSE;
-      ELSE
+      END;
+
+      IF type.types [i] # NIL AND NOT type.types [i].IsDefined() THEN
         IF debug_types THEN
-          self.comment(Type_Fmt (type) & " 4ok with " & NameT (typename.name));
+          self.comment(Type_Fmt (type) & " 7deferred due to " & Type_Fmt (type.types [i]));
         END;
+        RETURN FALSE;
       END;
-    END;
-
-    (* i = 0 for return type, which can be void *)
-    IF i # 0 AND type.types [i] = NIL AND (type.typeids [i] = -1 OR type.typeids [i] = 0) THEN
-      IF debug_types THEN
-        self.comment(Type_Fmt (type) & " 10deferred due to " & TypeIDToText (type.typeids [i]));
-      END;
-      RETURN FALSE;
-    END;
-
-    IF type.types [i] = NIL AND type.typeids [i] # -1 AND type.typeids [i] # 0 THEN
-      type.types [i] := TypeidToType_Get (self, type.typeids [i]);
-    END;
-
-    (* i = 0 for return type, which can be void *)
-    IF i # 0 AND type.types [i] = NIL THEN
-      IF debug_types THEN
-        self.comment(Type_Fmt (type) & " 5deferred due to " & Type_Fmt (type.types [i]) & " " & TypeIDToText (type.typeids [i]));
-      END;
-      RETURN FALSE;
-    END;
-
-    IF type.types [i] # NIL AND NOT type.types [i].IsDefined() THEN
-      IF debug_types THEN
-        self.comment(Type_Fmt (type) & " 7deferred due to " & Type_Fmt (type.types [i]));
-      END;
-      RETURN FALSE;
     END;
   END;
 
@@ -1713,11 +1735,15 @@ BEGIN
   (* Define all dependent typenames and types. *)
 
   FOR i := 0 TO NUMBER(procType.types^) - 1 DO
-    IF procType.types [i] # NIL THEN
-      procType.types [i].Define (self);
-    END;
-    IF procType.typenames [i] # M3ID.NoID THEN
-      GetTypename (self, procType.typenames [i]).Define (self);
+    IF ProcType_selfRef (procType, self, i) THEN
+      (* skip: see ProcType_selfRef *)
+    ELSE
+      IF procType.types [i] # NIL THEN
+        procType.types [i].Define (self);
+      END;
+      IF procType.typenames [i] # M3ID.NoID THEN
+        GetTypename (self, procType.typenames [i]).Define (self);
+      END;
     END;
   END;
 
@@ -1745,8 +1771,10 @@ BEGIN
       id := procType.typenames [i];
       IF id # M3ID.NoID THEN
         text := NameT (id);
-      ELSE
+      ELSIF procType.types [i] # NIL THEN
         text := procType.types [i].text;
+      ELSE (* a reference to itself: see ProcType_selfRef *)
+        text := procType.text;
       END;
       print (self, text);
       IF i # NUMBER (procType.types^) - 1 THEN
