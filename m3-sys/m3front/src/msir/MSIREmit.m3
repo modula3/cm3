@@ -1,7 +1,7 @@
 MODULE MSIREmit;
 
 IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
-IMPORT RunTyme, Error, Fmt, Host, MSIRChecks;
+IMPORT RunTyme, Error, Fmt, Host, MSIRRuntime;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -116,35 +116,13 @@ CONST RtHookOf = ARRAY MSIR.RtHook OF RunTyme.Hook {
   RunTyme.Hook.RaiseEx,
   RunTyme.Hook.NewTracedRef,  RunTyme.Hook.NewUntracedRef,
   RunTyme.Hook.NewTracedObj,  RunTyme.Hook.NewUntracedObj,
-  RunTyme.Hook.NewTracedArray, RunTyme.Hook.NewUntracedArray };
-
-PROCEDURE UsedBarriers (m: MSIR.Module;
-                        VAR loads, stores, typecases, loadBlocks: BOOLEAN) =
-  (* Does m contain a traced load (read barrier: CheckLoadTracedRef), a
-     barriered store or dirty (write barrier: CheckStoreTraced), a
-     TYPECASE (ScanTypecase), or a block read barrier
-     (CheckLoadTracedBlock)? *)
-  VAR p: MSIR.Proc;  b: MSIR.Block;  i: MSIR.Insn;
-  BEGIN
-    FOR pi := 0 TO MSIR.ModuleProcCount(m) - 1 DO
-      p := MSIR.ModuleProc(m, pi);
-      FOR bi := 0 TO MSIR.ProcBlockCount(p) - 1 DO
-        b := MSIR.ProcBlock(p, bi);
-        FOR ii := 0 TO MSIR.BlockInsnCount(b) - 1 DO
-          i := MSIR.BlockInsn(b, ii);
-          CASE MSIR.InsnOp(i) OF
-          | MSIR.Op.GcLoad   => loads := TRUE;
-          | MSIR.Op.GcDirty  => stores := TRUE;
-          | MSIR.Op.GcLoadBlock => loadBlocks := TRUE;
-          | MSIR.Op.GcStore  =>
-              IF MSIR.InsnOperandCount(i) = 3 THEN stores := TRUE END;
-          | MSIR.Op.Typecase => typecases := TRUE;
-          ELSE
-          END;
-        END;
-      END;
-    END;
-  END UsedBarriers;
+  RunTyme.Hook.NewTracedArray, RunTyme.Hook.NewUntracedArray,
+  RunTyme.Hook.CheckLoadTracedRef, RunTyme.Hook.CheckStoreTraced,
+  RunTyme.Hook.CheckLoadTracedBlock, RunTyme.Hook.ScanTypecase,
+  RunTyme.Hook.ResumeRaiseEx, RunTyme.Hook.PushEFrame, RunTyme.Hook.PopEFrame,
+  RunTyme.Hook.TextLitInfo, RunTyme.Hook.TextLitGetChar,
+  RunTyme.Hook.TextLitGetWideChar, RunTyme.Hook.TextLitGetChars,
+  RunTyme.Hook.TextLitGetWideChars };
 
 PROCEDURE EndUnit() =
   VAR wr: Wr.T;  path: TEXT;  errs: REF ARRAY OF TEXT;
@@ -156,69 +134,12 @@ PROCEDURE EndUnit() =
        Only the hooks the unit's code calls: looking a hook up declares it,
        which records an import of it in the unit's link information, as the
        C walk does only where it emits a call. *)
-    VAR loads, stores, typecases, loadBlocks := FALSE;
-        gcLoad, gcStore, scanTC: MSIR.Proc := NIL;
+    VAR need := MSIRRuntime.Hooks(curModule);
     BEGIN
-      UsedBarriers (curModule, loads, stores, typecases, loadBlocks);
-      (* the runtime procedures MSIRChecks expands ops into (D32-D34) *)
-      VAR need := MSIRChecks.Hooks(curModule);
-      BEGIN
-        FOR h := FIRST(MSIR.RtHook) TO LAST(MSIR.RtHook) DO
-          IF h IN need THEN
-            MSIR.SetModuleRtHook(curModule, h, MSIRBuilder.HookProc(RtHookOf[h]));
-          END;
+      FOR h := FIRST(MSIR.RtHook) TO LAST(MSIR.RtHook) DO
+        IF h IN need THEN
+          MSIR.SetModuleRtHook(curModule, h, MSIRBuilder.HookProc(RtHookOf[h]));
         END;
-      END;
-      IF loadBlocks THEN
-        MSIR.SetModuleLoadBlockHook(curModule,
-          MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedBlock));
-      END;
-      IF loads THEN
-        gcLoad := MSIRBuilder.HookProc(RunTyme.Hook.CheckLoadTracedRef);
-      END;
-      IF stores THEN
-        gcStore := MSIRBuilder.HookProc(RunTyme.Hook.CheckStoreTraced);
-      END;
-      IF typecases THEN
-        scanTC := MSIRBuilder.HookProc(RunTyme.Hook.ScanTypecase);
-      END;
-      MSIR.SetModuleHooks(curModule, gcLoad, gcStore, scanTC);
-    END;
-    (* The EH lowerings (MSIREH, MSIRToM3CG) re-raise through
-       RTHooks.ResumeRaiseEx only in a procedure that MSIR.ProcMayReraise:
-       import it for those, as C does. *)
-    VAR scoped, checked, reraises := FALSE;  p: MSIR.Proc;
-    BEGIN
-      FOR i := 0 TO MSIR.ModuleProcCount(curModule) - 1 DO
-        p := MSIR.ModuleProc(curModule, i);
-        IF MSIR.ProcScopeCount(p) > 1 THEN scoped := TRUE END;
-        IF MSIR.ProcChecksRaises(p) THEN checked := TRUE END;
-        IF MSIR.ProcMayReraise(p) THEN reraises := TRUE END;
-      END;
-      IF reraises THEN
-        MSIR.SetModuleResumeRaise(curModule,
-          MSIRBuilder.HookProc(RunTyme.Hook.ResumeRaiseEx));
-      END;
-      IF (scoped OR checked) AND NOT Target.Has_stack_walker THEN
-        (* setjmp frames, and the frames that enforce RAISES clauses, for
-           lowering to M3CG's ex_frame scheme *)
-        MSIR.SetModuleFrameHooks(curModule,
-          MSIRBuilder.HookProc(RunTyme.Hook.PushEFrame),
-          MSIRBuilder.HookProc(RunTyme.Hook.PopEFrame));
-      END;
-    END;
-    (* Register the five TextLiteral vtable method procs so MSIRToLLVM can
-       use the correct RTHooks__TextLit* names derived from m3front's view
-       of RTHooks rather than hardcoding them in the lowering pass. *)
-    IF MSIR.ModuleTextLitCount(curModule) > 0 THEN
-      VAR tlhooks: ARRAY [0..4] OF MSIR.Proc;
-      BEGIN
-        tlhooks[0] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitInfo);
-        tlhooks[1] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetChar);
-        tlhooks[2] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetWideChar);
-        tlhooks[3] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetChars);
-        tlhooks[4] := MSIRBuilder.HookProc(RunTyme.Hook.TextLitGetWideChars);
-        MSIR.ModuleSetTextLitHooks(curModule, tlhooks);
       END;
     END;
 

@@ -101,12 +101,11 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
   END GetOutcome;
 
 PROCEDURE CompileMSIR (p: P) =
-  (* RAISE E  or  RAISE E(arg): a `raise` op (D35), which MSIRChecks lowers
+  (* RAISE E  or  RAISE E(arg): a `raise` op (D35), which MSIRRuntime lowers
      to RTHooks.RaiseEx (exception, argument word, module, line). *)
   VAR
     desc     : MSIR.ExcDesc;
     argVal   : MSIR.Value := NIL;
-    boxCell  : MSIR.Value := NIL;
     srcFile  : TEXT;
     srcLine  : INTEGER;
   BEGIN
@@ -126,15 +125,20 @@ PROCEDURE CompileMSIR (p: P) =
       BEGIN
         IF Exceptionz.ArgByReference(argType) THEN
           (* An aggregate goes by its address; the lowering copies it to a
-             heap box of type REF argType (the frame does not survive the
-             unwinding), as the C backend's raiser procedure does. *)
-          VAR refT := RefType.New(Type.StripPacked(argType), TRUE, NIL);
-          BEGIN
-            refT := Type.Check(refT);
-            boxCell := RefType.TypecellMSIR(refT);
-            IF boxCell = NIL THEN
-              MSIRBuilder.Abandon("raise: no typecell for the argument's box");
-              RETURN;
+             heap box of type REF argType, whose typecell the exception
+             records (the frame does not survive the unwinding), as the C
+             backend's raiser procedure does. *)
+          IF MSIR.ExcDescBoxCell(desc) = NIL THEN
+            VAR refT := RefType.New(Type.StripPacked(argType), TRUE, NIL);
+                cell : MSIR.Value;
+            BEGIN
+              refT := Type.Check(refT);
+              cell := RefType.TypecellMSIR(refT);
+              IF cell = NIL THEN
+                MSIRBuilder.Abandon("raise: no typecell for the argument's box");
+                RETURN;
+              END;
+              MSIR.SetExcDescBoxCell(desc, cell);
             END;
           END;
           argVal := Expr.LValueMSIR(p.arg);
@@ -160,7 +164,7 @@ PROCEDURE CompileMSIR (p: P) =
     END;
 
     Scanner.Here(srcFile, srcLine);
-    MSIR.BuildRaise(MSIRBuilder.CurrentBlock(), desc, argVal, boxCell, srcLine);
+    MSIR.BuildRaise(MSIRBuilder.CurrentBlock(), desc, argVal, srcLine);
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =

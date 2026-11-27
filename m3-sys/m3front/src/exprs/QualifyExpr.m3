@@ -1003,7 +1003,7 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
     IF base >= 0 THEN
       result := MSIRBuilder.EmitMethodCall ("", obj,
                   (base + m.offset) DIV Target.Address.size, rtype, explicit^,
-                  M3ID.ToText (m.name));
+                  M3ID.ToText (m.name), Type.GlobalUID (p.objType));
       RETURN TRUE;
     END;
 
@@ -1019,7 +1019,7 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
     VAR all := NEW (REF ARRAY OF MSIR.Value, 1 + NUMBER (explicit^));
     BEGIN
       fn := MSIR.BuildMethod (b, "", obj, tc, m.offset DIV Target.Char.size,
-                              M3ID.ToText (m.name));
+                              M3ID.ToText (m.name), Type.GlobalUID (p.objType));
       all[0] := obj;
       SUBARRAY (all^, 1, NUMBER (explicit^)) := explicit^;
       (* The suite holds plain procedure pointers: no closure check. *)

@@ -225,9 +225,10 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value;
-                          selector: TEXT := NIL): MSIR.Value;
+                          selector: TEXT := NIL;  uid := 0): MSIR.Value;
 (* rtype is the (by-value) return type; the result — large or small — is
-   returned by value.  The lookup is a `method` op (D36) naming selector. *)
+   returned by value.  The lookup is a `method` op (D36) naming selector,
+   with uid the GlobalUID of obj's static type. *)
 
 (* Like EmitCallIndirect but emits a runtime CL_marker check so the call
    works whether fn is a plain function pointer or a fat-pointer closure.
@@ -333,10 +334,10 @@ PROCEDURE EmitMemcpy(dst, src: MSIR.Value; byteCount: INTEGER);
    current line if ref is NIL. *)
 PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER);
 
-(* narrow v, cell (D33): fault with errCode at the current line unless the
-   reference v passes the type test. *)
+(* narrow v, cell (D33): v at type t, faulting with errCode at the current
+   line unless the reference v passes the type test. *)
 PROCEDURE EmitNarrow(v, cell: MSIR.Value;  test: MSIR.TypeTest;
-                     uid, errCode: INTEGER);
+                     uid, errCode: INTEGER;  t: MSIR.T): MSIR.Value;
 
 (* shape_check n, m (D32): fault with errCode unless the dimension counts
    n and m are equal, at the current line. *)

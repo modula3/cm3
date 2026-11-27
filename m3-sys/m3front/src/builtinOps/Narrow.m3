@@ -219,23 +219,19 @@ PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
     END;
     IF Type.IsEqual (tlhs, Null.T, NIL) THEN
       (* only NIL narrows to NULL *)
-      MSIRBuilder.EmitNarrow (refVal, NIL, MSIR.TypeTest.Null,
-                              Type.GlobalUID (tlhs),
-                              ORD (CG.RuntimeError.NarrowFailed));
-    ELSE
-      VAR t := Type.Base (tlhs);  cell: MSIR.Value;  test: MSIR.TypeTest;
-      BEGIN
-        IF NOT TypeTestArgs (t, cell, test) THEN RETURN NIL END;
-        MSIRBuilder.EmitNarrow (refVal, cell, test, Type.GlobalUID (t),
-                                ORD (CG.RuntimeError.NarrowFailed));
-      END;
+      RETURN MSIRBuilder.EmitNarrow (refVal, NIL, MSIR.TypeTest.Null,
+                                     Type.GlobalUID (tlhs),
+                                     ORD (CG.RuntimeError.NarrowFailed),
+                                     MSIRType.Translate (tlhs));
     END;
-    (* Retype refVal to the destination type so assignment type-checks pass. *)
-    VAR lhsT := MSIRType.Translate (tlhs);
+    VAR t := Type.Base (tlhs);  cell: MSIR.Value;  test: MSIR.TypeTest;
     BEGIN
-      IF lhsT # NIL THEN RETURN MSIR.RetypeValue (refVal, lhsT) END;
+      IF NOT TypeTestArgs (t, cell, test) THEN RETURN NIL END;
+      (* the narrowed value has the destination type (D33) *)
+      RETURN MSIRBuilder.EmitNarrow (refVal, cell, test, Type.GlobalUID (t),
+                                     ORD (CG.RuntimeError.NarrowFailed),
+                                     MSIRType.Translate (tlhs));
     END;
-    RETURN refVal;
   END EmitMSIR;
 
 PROCEDURE CompileMSIR (ce: CallExpr.T): MSIR.Value =

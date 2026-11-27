@@ -470,6 +470,7 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         IF MSIR.InsnSelector(i) # NIL THEN
           Wr.PutText(wr, ", ." & MSIR.InsnSelector(i));
         END;
+        Wr.PutText(wr, ", uid 0x" & Fmt.Unsigned(MSIR.InsnTypeUid(i)));
         IF res # NIL THEN
           Wr.PutText(wr, " -> ");
           Type(wr, MSIR.ValueType(res));

@@ -391,36 +391,22 @@ PROCEDURE SetModuleTarget(m: Module;  triple, datalayout: TEXT);
 PROCEDURE ModuleTriple(m: Module): TEXT;
 PROCEDURE ModuleDataLayout(m: Module): TEXT;
 
-(* Register the RunTyme hook procs used by the GC barriers and typecase.
-   Called from MSIREmit after RunTyme lookup.  Pass NIL to use the fallback
-   hardcoded symbol names in the LLVM emitter. *)
-PROCEDURE SetModuleHooks(m: Module;
-                          gcLoad, gcStore, scanTypecase: Proc);
-PROCEDURE ModuleGCLoadBarrier  (m: Module): Proc;
-(* The runtime's re-raise hook (RTHooks.ResumeRaiseEx), for EH lowering. *)
-PROCEDURE SetModuleResumeRaise(m: Module;  p: Proc);
-PROCEDURE ModuleResumeRaise   (m: Module): Proc;
-
-(* The runtime's handler-frame hooks (RTHooks.PushEFrame, PopEFrame), for
-   lowering EH scopes to setjmp frames on targets without ex_stack. *)
-PROCEDURE SetModuleFrameHooks(m: Module;  push, pop: Proc);
-PROCEDURE ModulePushEFrame   (m: Module): Proc;
-PROCEDURE ModulePopEFrame    (m: Module): Proc;
-PROCEDURE ModuleGCStoreBarrier (m: Module): Proc;
-(* The runtime's block read barrier (RTHooks.CheckLoadTracedBlock), for
-   gc.load_block. *)
-(* The runtime procedures that MSIRChecks expands ops into (D32-D34):
-   ReportFault for a failed check, CheckIsType for a subtype test, the
-   allocators for new and openarray.new.  MSIRChecks.Hooks says which a
-   module needs; the front end binds them to its RTHooks procedures. *)
+(* Every runtime (RTHooks) procedure the lowered module calls, bound per
+   module (D34): the check fault (ReportFault, D32), type tests (D33), RAISE
+   (D35), the allocators (D34), the GC barriers (D30), TYPECASE, the EH
+   lowerings' re-raise and ex_frame hooks, and the TEXT literal methods.
+   MSIRRuntime.Hooks says which a module needs; the front end binds each to
+   its RTHooks procedure, so the names come from the compiler's view of
+   RTHooks.  A NIL hook is one the module does not use. *)
 TYPE RtHook = {ReportFault, CheckIsType, RaiseEx,
                NewTracedRef, NewUntracedRef, NewTracedObj, NewUntracedObj,
-               NewTracedArray, NewUntracedArray};
+               NewTracedArray, NewUntracedArray,
+               CheckLoadTracedRef, CheckStoreTraced, CheckLoadTracedBlock,
+               ScanTypecase, ResumeRaiseEx, PushEFrame, PopEFrame,
+               TextLitInfo, TextLitGetChar, TextLitGetWideChar,
+               TextLitGetChars, TextLitGetWideChars};
 PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc);
 PROCEDURE ModuleRtHook(m: Module;  h: RtHook): Proc;
-PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc);
-PROCEDURE ModuleGCLoadBlockBarrier (m: Module): Proc;
-PROCEDURE ModuleScanTypecase   (m: Module): Proc;
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
 PROCEDURE ModuleImportCount(m: Module): INTEGER;
 PROCEDURE ModuleImport(m: Module;  i: INTEGER): TEXT;
@@ -444,6 +430,11 @@ PROCEDURE ExcDescArgType (d: ExcDesc): T;    (* the argument's type; NIL if none
    the activation's argument word (the front end's convention). *)
 PROCEDURE ExcDescArgByRef (d: ExcDesc): BOOLEAN;
 PROCEDURE SetExcDescArg (d: ExcDesc;  argType: T;  argByRef: BOOLEAN);
+(* For an argument passed by reference: the typecell of a REF to the
+   argument's type, for the heap box a RAISE copies it into (D35).  Set by
+   the front end when it first raises the exception in a module. *)
+PROCEDURE SetExcDescBoxCell (d: ExcDesc;  cell: Value);
+PROCEDURE ExcDescBoxCell (d: ExcDesc): Value;
 PROCEDURE ExcDescName (d: ExcDesc): TEXT;    (* LLVM global symbol *)
 PROCEDURE ExcDescUID  (d: ExcDesc): INTEGER;
 PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT; (* qualified name, e.g. "Main.a"; NIL if none *)
@@ -611,15 +602,7 @@ PROCEDURE ModuleTextLitCount(m: Module): INTEGER;
 PROCEDURE ModuleTextLitChars(m: Module;  uid: INTEGER): TEXT;
 PROCEDURE ModuleTextLitCnt  (m: Module;  uid: INTEGER): INTEGER;
 
-(* TextLiteral vtable method hook procs — the five RTHooks__TextLit* procs.
-   Populated by MSIREmit.EndUnit via MSIRBuilder.HookProc + RunTyme.LookUpProc
-   so that names come from the compiler's view of RTHooks rather than being
-   hardcoded in the LLVM emitter.  NIL elements mean not yet registered. *)
-PROCEDURE ModuleSetTextLitHooks(m: Module;
-                                 READONLY hooks: ARRAY [0..4] OF Proc);
-PROCEDURE ModuleGetTextLitHook (m: Module;  i: INTEGER): Proc;
-(* indices: 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
-            3=TextLitGetChars 4=TextLitGetWideChars *)
+
 
 (* Build a getelementptr computing the TEXT reference:
    ptr to offset 8 of @textlit_<uid> (past the GC header to the vtable field).
@@ -973,26 +956,28 @@ PROCEDURE InsnAllocKind(i: Insn): AllocKind;
    offset is cell's OTC_methodOffset plus off, for a method declared under
    an opaque supertype, whose offset is known only at run time.  The result
    is a ptr; the call is an ordinary call_indirect with obj first.  selector
-   names the method, for reading the IR.  MSIRChecks expands it into the
+   names the method, for reading the IR; uid is the GlobalUID of obj's
+   static type, for analyses (the possible targets are its subtypes'
+   overrides).  MSIRRuntime expands it into the
    loads; a pass that knows obj's exact type can replace it by the
    procedure (devirtualisation). *)
 PROCEDURE BuildMethod(b: Block;  name: TEXT;  obj, holder: Value;
-                      off: INTEGER;  selector: TEXT): Value;
+                      off: INTEGER;  selector: TEXT;  uid: INTEGER): Value;
 PROCEDURE InsnMethodOffset(i: Insn): INTEGER;
 
 (* Type tests (D33).  `istype v, cell` is TRUE if the reference v is of
-   the type whose typecell is cell; `narrow v, cell` faults with code
-   (NarrowFailed) at line unless it is.  NIL is of every reference type.
+   the type whose typecell is cell; `narrow v, cell` is v at type t, and
+   faults with code (NarrowFailed) at line unless v is of the type.  NIL is of every reference type.
    Exact: a REF type, tested by its typecode (a tagged v has REFANY's).
    Subtype: an object or opaque type, tested by the typecode first, then by
    RTHooks.CheckIsType (the module's type-test hook).  Null: the type NULL,
    only NIL; cell is NIL.  uid is the type's Type.GlobalUID, for reading
-   the IR.  MSIRChecks expands both before lowering. *)
+   the IR.  MSIRRuntime expands both before lowering. *)
 TYPE TypeTest = {Exact, Subtype, Null};
 PROCEDURE BuildIstype(b: Block;  name: TEXT;  v, cell: Value;
                       test: TypeTest;  uid: INTEGER): Value;
-PROCEDURE BuildNarrow(b: Block;  v, cell: Value;  test: TypeTest;
-                      uid, code, line: INTEGER);
+PROCEDURE BuildNarrow(b: Block;  name: TEXT;  v, cell: Value;
+                      test: TypeTest;  uid, code, line: INTEGER;  t: T): Value;
 PROCEDURE InsnTypeTest(i: Insn): TypeTest;
 PROCEDURE InsnTypeUid(i: Insn): INTEGER;
 
@@ -1042,12 +1027,11 @@ PROCEDURE BuildResume(b: Block;  lp: Value);
 (* `raise exc, arg` raises the exception exc at line (terminator, D35).
    arg is NIL for an exception without an argument.  For an argument
    passed by value, arg is the value (of ExcDescArgType); for one passed by
-   reference, arg is the argument's address and boxCell the typecell of a
-   REF to the argument's type, for the copy the lowering makes on the
-   heap (the frame does not survive the unwinding).  MSIRChecks expands it
-   into RTHooks.RaiseEx (exc, arg, module, line). *)
-PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg, boxCell: Value;
-                     line: INTEGER);
+   reference, arg is the argument's address, and the lowering copies it to
+   a heap box of the type ExcDescBoxCell names (the frame does not survive
+   the unwinding).  MSIRRuntime expands it into RTHooks.RaiseEx (exc, arg,
+   module, line). *)
+PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value;  line: INTEGER);
 PROCEDURE InsnExcDesc(i: Insn): ExcDesc;     (* Raise only *)
 
 (* `unwind_to target(args)` leaves one or more EH scopes for target, in an

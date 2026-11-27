@@ -745,10 +745,14 @@ PROCEDURE CheckBlockScope(c: Ctx;  b: MSIR.Block) =
                        & ": the exception takes no argument");
             END;
           ELSIF MSIR.ExcDescArgByRef(exc) THEN
-            (* the argument's address and the box's typecell (D35) *)
-            IF MSIR.InsnOperandCount(i) # 2 THEN
+            (* the argument's address; the box's typecell is the
+               exception's (D35) *)
+            IF MSIR.InsnOperandCount(i) # 1 THEN
               Err(c, "raise " & MSIR.ExcDescName(exc)
-                       & ": a by-reference argument needs its address and box typecell");
+                       & ": argument does not match the exception");
+            ELSIF MSIR.ExcDescBoxCell(exc) = NIL THEN
+              Err(c, "raise " & MSIR.ExcDescName(exc)
+                       & ": no box typecell for the by-reference argument");
             ELSIF MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, 0))) # MSIR.TypeKind.Ptr THEN
               Err(c, "raise " & MSIR.ExcDescName(exc)
                        & ": a by-reference argument is passed by its address");

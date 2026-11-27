@@ -121,7 +121,7 @@ CONST NoArgs = ARRAY OF MSIR.Value {};
 (* Re-raise the activation saved in actSlot: invoked to the enclosing landing
    pad u in this frame, or called (propagating to the caller) if none. *)
 PROCEDURE Reraise (b: MSIR.Block;  act: MSIR.Value;  u: MSIR.Block) =
-  VAR hook := MSIR.ModuleResumeRaise (mod);  c: MSIR.Block;
+  VAR hook := MSIR.ModuleRtHook(mod, MSIR.RtHook.ResumeRaiseEx);  c: MSIR.Block;
   BEGIN
     <* ASSERT hook # NIL *>
     IF u # NIL THEN
@@ -406,7 +406,7 @@ PROCEDURE LowerProc (m: MSIR.Module;  p: MSIR.Proc) =
             | Op.EndFinally =>
                 pending.addhi (NEW (Pending, block := cur, scope := sc));
             | Op.Raise =>
-                <* ASSERT FALSE *>  (* MSIRChecks.Expand lowered it (D35) *)
+                <* ASSERT FALSE *>  (* MSIRRuntime.Expand lowered it (D35) *)
             ELSE
               MSIR.BlockAppendInsn (cur, i);
             END;

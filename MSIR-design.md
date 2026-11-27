@@ -2186,10 +2186,12 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     (#1402, m3test p329).
 
 - **D33. ISTYPE and NARROW are type-test ops** (2026-11-27; the second
-  conversion under D31; proposed, for Tony's review).
+  conversion under D31; reviewed by Tony 2026-11-27).
   - **Ops.**  `istype v, cell` (an i1) and `narrow v, cell` (a check op
-    with no result: it faults with NarrowFailed unless the test passes; the
-    front end then retypes v, as before).  The typecell is an operand, as a
+    whose result is v at the destination type, faulting with NarrowFailed
+    unless the test passes; review: the result states the narrowed type in
+    the IR, for devirtualisation, where the front end used to retype v
+    itself).  The typecell is an operand, as a
     TYPECASE clause's type is part of that op, and the type's GlobalUID
     goes with it for reading the IR and for analysis.  Three kinds:
     `exact` for a REF type (its typecode; a tagged reference has REFANY's),
@@ -2200,46 +2202,53 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     the code the C backend emits for NARROW (Narrow.EmitCore); the answer
     goes through one i1 slot at the head of the entry, as the lowerings
     take no block arguments.  ISTYPE of an object now also tries the
-    typecode before calling the runtime, as NARROW always did.
+    typecode before calling the runtime, as NARROW always did (kept on
+    review: same answers, one expansion).
   - **Note.**  Neither front end checks `NARROW (x, NULL)` (NULL counts as
-    untraced in Narrow.Emit), so a non-NIL x passes; the null kind is
-    there for when that is fixed on master.
+    untraced in Narrow.Emit), so a non-NIL x passes; to be fixed on master
+    (agreed on review), which the null kind then serves.
 
 - **D34. Allocation is an op** (2026-11-27; the third conversion under
-  D31; proposed, for Tony's review).
+  D31; reviewed by Tony 2026-11-27).
   - **Ops.**  `new cell` (a REF to a fixed type, or an object) and
     `openarray.new cell, n0, n1, ...` (a REF to an open array), traced or
     untraced, with the type's GlobalUID; the result has the Modula-3
     type's MSIR type.  The typecell's initProc applies defaults, as in the
-    C backend; NEW's keyword fields are ordinary stores after the op.  The
+    C backend; NEW's keyword fields are ordinary stores after the op (kept
+    on review: an analysis follows the new object's uses anyway).  The
     declared-but-unused `new`/`openarray.new` builders are replaced.
   - **Lowering.**  MSIRRuntime.Expand calls the allocator (`RTHooks.New*`);
     for `openarray.new` it fills an open-array shape (M3RT.OA_*) in an
     alloca at the head of the entry, where the front end had put it in the
     current block.
-  - **Runtime hooks.**  The procedures MSIRRuntime expands into (ReportFault,
-    CheckIsType, the six allocators) are one table, `MSIR.RtHook`, bound per
-    module: MSIRRuntime.Hooks says which a module needs, and MSIREmit binds
-    each to its RunTyme hook.  This replaces a setter per hook.
-  - **Not yet ops.**  The VALUE open-array copy (`NewTracedArray`, in
-    Formal) and RAISE's boxed argument (`NewTracedRef`) still call the
-    allocators directly; the copy belongs with its own conversion, the
-    box with D35.
+  - **Runtime hooks.**  Every runtime procedure a lowered module calls is
+    one table, `MSIR.RtHook`, bound per module: the ones MSIRRuntime expands
+    ops into (ReportFault, CheckIsType, RaiseEx, the six allocators) and,
+    on review, the ones the lowerings call themselves (the GC barriers,
+    ScanTypecase, ResumeRaiseEx, PushEFrame/PopEFrame, the TEXT literal
+    methods).  `MSIRRuntime.Hooks` says which a module needs and MSIREmit
+    binds each to its RunTyme hook; the thirteen per-hook setters and
+    getters are gone.
+  - **VALUE open arrays.**  On review, the copy of an open array passed by
+    VALUE is an `openarray.new` of the actual's shape and a block copy, so
+    every heap allocation is an op.
 
 - **D35. RAISE is an op** (2026-11-27; the fourth conversion under D31;
-  proposed, for Tony's review).
+  reviewed by Tony 2026-11-27).
   - **Op.**  `raise exc, arg` (terminator) with the source line.  An
     argument passed by value is the typed value, as the handler receives it
     (`ToHandler`); one passed by reference (an aggregate, or wider than an
-    address: `Exceptionz.ArgByReference`) is the argument's address plus
-    the typecell of a REF to its type, since only the front end can name
-    that typecell.  The op was declared, with MSIREH's case and the
+    address: `Exceptionz.ArgByReference`) is the argument's address.  The
+    typecell of a REF to the argument's type, for its heap box, is on the
+    exception descriptor (`ExcDescBoxCell`, set by RaiseStmt the first time
+    it raises the exception in a module; on review, rather than an operand
+    of every raise), since only the front end can name it.  The op was declared, with MSIREH's case and the
     verifier's argument check, but never built.
   - **Lowering.**  MSIRRuntime.Expand lowers it to `RTHooks.RaiseEx (exc,
     arg, module, line)` and `unreachable`; inside a TRY the EH lowering
     makes the call an invoke.  The argument word is as before: a scalar
-    converted to an address, a wide set by the address of a copy (in an
-    entry alloca), and a by-reference argument copied to a new heap box
+    converted to an address, and a by-reference argument (wide sets
+    included: they are wider than an address) copied to a new heap box
     (`NewTracedRef`), as the C backend's raiser procedure does, since the
     frame does not survive the unwinding.  `RaiseEx` joins the RtHook
     table.
@@ -2247,12 +2256,14 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     handler is in the same procedure into a branch.
 
 - **D36. Method lookup is an op; the call stays `call_indirect`** (Tony,
-  2026-11-27; the last conversion under D31).
+  2026-11-27; the last conversion under D31; reviewed).
   - **Op.**  `method obj, +off, .name` is the procedure in obj's method
     suite at byte offset off (the suite pointer is obj's first word), a
     ptr; `method obj, cell, +off` adds the holder's `OTC_methodOffset`, for
     a method under an opaque supertype whose offset is known only at run
-    time.  The name is for reading the IR.  The call is the ordinary
+    time.  The name is for reading the IR; on review the op also carries
+    the GlobalUID of obj's static type, which a class-hierarchy analysis
+    needs (the possible targets are its subtypes' overrides).  The call is the ordinary
     `call_indirect` with obj first, so argument modes, invoke inside TRY
     and results stay in the one call path.
   - **Why not a full `dispatch`.**  Lookup and call in one op would make

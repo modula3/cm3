@@ -1,4 +1,4 @@
-MODULE MSIRChecks;
+MODULE MSIRRuntime;
 
 IMPORT MSIR, Fmt, Target, Word, M3RT;
 FROM MSIR IMPORT Op;
@@ -54,12 +54,44 @@ PROCEDURE Hooks (m: MSIR.Module): SET OF MSIR.RtHook =
             s := s + SET OF MSIR.RtHook {AllocHook [MSIR.InsnAllocKind (i)]};
           ELSIF op = Op.Raise THEN
             s := s + SET OF MSIR.RtHook {MSIR.RtHook.RaiseEx};
-            IF MSIR.InsnOperandCount (i) = 2 THEN
+            IF MSIR.InsnOperandCount (i) = 1
+               AND MSIR.ExcDescArgByRef (MSIR.InsnExcDesc (i)) THEN
               s := s + SET OF MSIR.RtHook {MSIR.RtHook.NewTracedRef};
             END;
           END;
+          (* the ops the lowerings expand themselves *)
+          CASE op OF
+          | Op.GcLoad =>
+              s := s + SET OF MSIR.RtHook {MSIR.RtHook.CheckLoadTracedRef};
+          | Op.GcDirty =>
+              s := s + SET OF MSIR.RtHook {MSIR.RtHook.CheckStoreTraced};
+          | Op.GcStore =>
+              IF MSIR.InsnOperandCount (i) = 3 THEN  (* barriered *)
+                s := s + SET OF MSIR.RtHook {MSIR.RtHook.CheckStoreTraced};
+              END;
+          | Op.GcLoadBlock =>
+              s := s + SET OF MSIR.RtHook {MSIR.RtHook.CheckLoadTracedBlock};
+          | Op.Typecase =>
+              s := s + SET OF MSIR.RtHook {MSIR.RtHook.ScanTypecase};
+          ELSE
+          END;
         END;
       END;
+      (* The EH lowerings (MSIREH, MSIRToM3CG) re-raise through
+         ResumeRaiseEx only in a procedure that may re-raise; ex_frame
+         targets need the frame hooks for any EH scope or RAISES check. *)
+      IF MSIR.ProcMayReraise (p) THEN
+        s := s + SET OF MSIR.RtHook {MSIR.RtHook.ResumeRaiseEx};
+      END;
+      IF (MSIR.ProcScopeCount (p) > 1 OR MSIR.ProcChecksRaises (p))
+         AND NOT Target.Has_stack_walker THEN
+        s := s + SET OF MSIR.RtHook {MSIR.RtHook.PushEFrame,
+                                     MSIR.RtHook.PopEFrame};
+      END;
+    END;
+    IF MSIR.ModuleTextLitCount (m) > 0 THEN
+      s := s + SET OF MSIR.RtHook {MSIR.RtHook.TextLitInfo ..
+                                   MSIR.RtHook.TextLitGetWideChars};
     END;
     RETURN s;
   END Hooks;
@@ -114,41 +146,33 @@ PROCEDURE Method (b: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
 
 (* Raise as i in block b, which it ends: RTHooks.RaiseEx (exc, arg,
    module, line), with arg the runtime's argument word.  As the C backend:
-   a by-reference argument is copied to a new heap box (Exceptionz's
-   raiser procedure); a wide set goes by the address of a copy. *)
-PROCEDURE Raise (m: MSIR.Module;  p: MSIR.Proc;  b: MSIR.Block;
-                 i: MSIR.Insn) =
+   a by-reference argument (an aggregate, or wider than an address,
+   wide sets included) is copied to a new heap box (Exceptionz's raiser
+   procedure); any other is converted to an address. *)
+PROCEDURE Raise (m: MSIR.Module;  b: MSIR.Block;  i: MSIR.Insn) =
   VAR
     exc  := MSIR.InsnExcDesc (i);
     ptrT := MSIR.TPtr (MSIR.TVoid ());
     intT := MSIR.TI (Target.Integer.size);
     arg  : MSIR.Value;
   BEGIN
-    CASE MSIR.InsnOperandCount (i) OF
-    | 0 =>
-        arg := MSIR.ConstNil (ptrT);
-    | 1 =>
-        arg := MSIR.InsnOperand (i, 0);
-        IF MSIR.Kind (MSIR.ValueType (arg)) = MSIR.TypeKind.IWide THEN
-          VAR slot := EntryAlloca (p, MSIR.ValueType (arg));
-          BEGIN
-            MSIR.BuildStore (b, arg, slot);
-            arg := slot;
-          END;
-        END;
-        arg := MSIR.BuildConvert (b, "", arg, ptrT);
-    | 2 =>
-        VAR
-          t   := MSIR.ExcDescArgType (exc);
-          val := MSIR.BuildLoad (b, "", t, MSIR.InsnOperand (i, 0));
-          box := MSIR.BuildCall (b, "", Hook (m, MSIR.RtHook.NewTracedRef),
-                                 ARRAY OF MSIR.Value {MSIR.InsnOperand (i, 1)});
-        BEGIN
-          box := MSIR.BuildConvert (b, "", box, ptrT);
-          MSIR.BuildStore (b, val, box);
-          arg := box;
-        END;
-    ELSE <* ASSERT FALSE *>
+    IF MSIR.InsnOperandCount (i) = 0 THEN
+      arg := MSIR.ConstNil (ptrT);
+    ELSIF MSIR.ExcDescArgByRef (exc) THEN
+      VAR
+        t   := MSIR.ExcDescArgType (exc);
+        val := MSIR.BuildLoad (b, "", t, MSIR.InsnOperand (i, 0));
+        box := MSIR.BuildCall (b, "", Hook (m, MSIR.RtHook.NewTracedRef),
+                               ARRAY OF MSIR.Value {MSIR.ExcDescBoxCell (exc)});
+      BEGIN
+        box := MSIR.BuildConvert (b, "", box, ptrT);
+        MSIR.BuildStore (b, val, box);
+        arg := box;
+      END;
+    ELSE
+      <* ASSERT MSIR.Kind (MSIR.ValueType (MSIR.InsnOperand (i, 0)))
+                # MSIR.TypeKind.IWide *>  (* wider than an address: by reference *)
+      arg := MSIR.BuildConvert (b, "", MSIR.InsnOperand (i, 0), ptrT);
     END;
     EVAL MSIR.BuildCall (b, "", Hook (m, MSIR.RtHook.RaiseEx),
            ARRAY OF MSIR.Value {
@@ -422,7 +446,7 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                   (* a terminator: the call and unreachable end the block *)
                   CallHook (m, cur, i);
                 ELSIF MSIR.InsnOp (i) = Op.Raise THEN
-                  Raise (m, p, cur, i);
+                  Raise (m, cur, i);
                 ELSIF MSIR.InsnOp (i) = Op.Istype THEN
                   (* the test's answer replaces i's result *)
                   MSIR.InsnMakeCopy (i, TypeTest (m, p, b, cur, i));
@@ -443,6 +467,13 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                                       cont,  ARRAY OF MSIR.Value {});
                     CallHook (m, fault, i);
                     cur := cont;
+                    IF MSIR.InsnOp (i) = Op.Narrow THEN
+                      (* the narrowed value: v, at the result's type *)
+                      MSIR.InsnMakeCopy (i,
+                        MSIR.BuildConvert (cur, "", MSIR.InsnOperand (i, 0),
+                                           MSIR.ValueType (MSIR.InsnResult (i))));
+                      MSIR.BlockAppendInsn (cur, i);
+                    END;
                   END;
                 ELSE
                   MSIR.BlockAppendInsn (cur, i);
@@ -464,4 +495,4 @@ PROCEDURE Expand (m: MSIR.Module) =
   END Expand;
 
 BEGIN
-END MSIRChecks.
+END MSIRRuntime.

@@ -412,11 +412,11 @@ PROCEDURE CompileMSIR (p: P) =
      continues what entered it. *)
   BEGIN
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
-    EmitFinallyMSIR(p.body, p.finally, NIL, 0);
+    EmitFinallyMSIR(p.body, p.finally, NIL, 0, 0);
   END CompileMSIR;
 
 PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
-                           midx: INTEGER) =
+                           midx, objUid: INTEGER) =
   VAR
     outer := MSIRBuilder.CurrentScope();
     merge := MSIRBuilder.NewBlock("fin.done");
@@ -449,7 +449,8 @@ PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
     MSIRBuilder.SetCurrentBlock(fin);
     IF obj # NIL THEN
       EVAL MSIRBuilder.EmitMethodCall("", obj, midx, MSIR.TVoid(),
-                                      ARRAY OF MSIR.Value{}, "release");
+                                      ARRAY OF MSIR.Value{}, "release",
+                                      objUid);
     ELSE
       Stmt.CompileMSIR(finally);  (* NIL for an empty FINALLY *)
     END;

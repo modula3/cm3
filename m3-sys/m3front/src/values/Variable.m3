@@ -1390,43 +1390,18 @@ PROCEDURE StoreInitMSIR (t: T;  addr, initVal: MSIR.Value) =
 (* EXPORTED *)
 PROCEDURE CopyOpenArrayMSIR (ref: Type.T;  READONLY dims: ARRAY OF MSIR.Value;
                              src, bytes: MSIR.Value): MSIR.Value =
+  (* As CopyOpenArray: an `openarray.new` (D34) of the actual's shape, then
+     a copy of its elements. *)
   VAR
-    ptrT   := MSIR.TPtr (MSIR.TVoid ());
-    intT   := MSIR.TI (Target.Integer.size);
-    shapeB := M3RT.OA_sizes DIV Target.Byte;
-    ipB    := Target.Integer.size DIV Target.Byte;
-    depth  := NUMBER (dims);
-    flds   := NEW (REF ARRAY OF MSIR.Field, depth + 2);
-    b      : MSIR.Block;
-    cell, sizes, res, dope, data: MSIR.Value;
-    proc   : MSIR.Proc;
+    ptrT := MSIR.TPtr (MSIR.TVoid ());
+    b    : MSIR.Block;
+    cell, dope, data: MSIR.Value;
   BEGIN
     cell := MSIRBuilder.TypeLinkValueForRefArray (ref);
     IF cell = NIL THEN RETURN NIL END;
-    proc := MSIRBuilder.HookProc (RunTyme.Hook.NewTracedArray);
-    IF proc = NIL THEN
-      MSIRBuilder.Abandon ("VALUE open array: AllocateOpenArray missing");
-      RETURN NIL;
-    END;
-    (* As CopyOpenArray: a 1-D open array of the shape, { &dims, depth, dims } *)
-    flds[0] := MSIR.Field {name := "", type := ptrT};
-    FOR k := 1 TO depth + 1 DO flds[k] := MSIR.Field {name := "", type := intT} END;
+    dope := MSIR.BuildOpenArrayNew (MSIRBuilder.CurrentBlock (), "", cell,
+                                    TRUE, Type.GlobalUID (ref), dims, ptrT);
     b := MSIRBuilder.CurrentBlock ();
-    sizes := MSIR.BuildAlloca (b, "", MSIR.TStruct ("__oa_shape", flds^));
-    MSIR.BuildStore (b, MSIRBuilder.BuildPtrByteOff (b, "", sizes, shapeB + ipB),
-                     MSIRBuilder.BuildPtrByteOff (b, "", sizes, 0));
-    MSIR.BuildStore (b, MSIR.ConstInt (intT, depth),
-                     MSIRBuilder.BuildPtrByteOff (b, "", sizes, shapeB));
-    FOR k := 0 TO depth - 1 DO
-      MSIR.BuildStore (b, dims[k],
-        MSIRBuilder.BuildPtrByteOff (b, "", sizes, shapeB + ipB * (k + 1)));
-    END;
-    (* allocate the storage *)
-    res := MSIRBuilder.EmitCall ("", proc, ARRAY OF MSIR.Value {cell, sizes});
-    IF res = NIL THEN RETURN NIL END;
-    (* copy the elements *)
-    b := MSIRBuilder.CurrentBlock ();
-    dope := MSIR.BuildConvert (b, "", res, ptrT);
     data := MSIR.BuildLoad (b, "", ptrT, MSIRBuilder.BuildPtrByteOff (b, "", dope, 0));
     MSIRBuilder.EmitMemcpyDyn (data, src, bytes);
     RETURN dope;

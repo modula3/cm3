@@ -2,7 +2,7 @@ MODULE MSIRToLLVM;
 
 IMPORT RTParams;
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT Target, TFloat, M3RT, Process, MSIREH, MSIRChecks;
+IMPORT Target, TFloat, M3RT, Process, MSIREH, MSIRRuntime;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (* RT0.RefHeaderBits bit-field offsets come from M3RT (D24). *)
@@ -218,7 +218,7 @@ PROCEDURE NewAux(): TEXT =
   BEGIN INC(auxN); RETURN "%__ll" & Fmt.Int(auxN) END NewAux;
 
 (* Return the LLVM symbol name for a module hook proc.
-   If the proc was set via MSIR.SetModuleHooks (from RunTyme lookup in
+   If the proc was bound via MSIR.SetModuleRtHook (from RunTyme lookup in
    MSIREmit), use LLSymbol so the name comes from the actual interface.
    Falls back to the hardcoded name only when the proc is NIL. *)
 PROCEDURE LLHookName(p: MSIR.Proc;  fallback: TEXT): TEXT =
@@ -718,7 +718,7 @@ PROCEDURE EmitGcReadBarrier(wr: Wr.T;  refName: TEXT;  locIdx: INTEGER := -1) =
     (* slow path *)
     Wr.PutText(wr, "gc.slow." & n & ":\n");
     Wr.PutText(wr, "  call void @"
-                   & LLHookName(MSIR.ModuleGCLoadBarrier(curEmitModule),
+                   & LLHookName(MSIR.ModuleRtHook(curEmitModule, MSIR.RtHook.CheckLoadTracedRef),
                                  "RTHooks__CheckLoadTracedRef")
                    & "(ptr " & refName & ")" & dbg & "\n");
     Wr.PutText(wr, "  br label %gc.skip." & n & "\n");
@@ -769,7 +769,7 @@ PROCEDURE EmitGcWriteBarrier(wr: Wr.T;  containerName: TEXT;  locIdx: INTEGER :=
                    & ", label %gc.wskip." & n & ", label %gc.wslow." & n & "\n");
     Wr.PutText(wr, "gc.wslow." & n & ":\n");
     Wr.PutText(wr, "  call void @"
-                   & LLHookName(MSIR.ModuleGCStoreBarrier(curEmitModule),
+                   & LLHookName(MSIR.ModuleRtHook(curEmitModule, MSIR.RtHook.CheckStoreTraced),
                                  "RTHooks__CheckStoreTraced")
                    & "(ptr " & containerName & ")" & dbg & "\n");
     Wr.PutText(wr, "  br label %gc.wskip." & n & "\n");
@@ -1153,7 +1153,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
             dbg := ", !dbg !" & Fmt.Int(locIdx);
           END;
           Wr.PutText(wr, "  call void @"
-                         & LLHookName(MSIR.ModuleGCLoadBlockBarrier(curEmitModule),
+                         & LLHookName(MSIR.ModuleRtHook(curEmitModule, MSIR.RtHook.CheckLoadTracedBlock),
                                       "RTHooks__CheckLoadTracedBlock")
                          & "(ptr ");
           LLOpVal(wr, MSIR.InsnOperand(i, 0));
@@ -1796,7 +1796,7 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
 
           (* Call ScanTypecase(ref, table) → index via registered hook proc. *)
           Wr.PutText(wr, "  " & idxName & " = call i64 @"
-                         & LLHookName(MSIR.ModuleScanTypecase(curEmitModule),
+                         & LLHookName(MSIR.ModuleRtHook(curEmitModule, MSIR.RtHook.ScanTypecase),
                                        "RTHooks__ScanTypecase")
                          & "(ptr ");
           LLOpVal(wr, refV);
@@ -3723,7 +3723,7 @@ PROCEDURE EmitTextLiterals(wr: Wr.T;  m: MSIR.Module) =
 
     Wr.PutText(wr, "@textlit_methods = internal constant [5 x ptr] [\n");
     FOR i := 0 TO 4 DO
-      VAR p    := MSIR.ModuleGetTextLitHook(m, i);
+      VAR p    := MSIR.ModuleRtHook(m, VAL(ORD(MSIR.RtHook.TextLitInfo) + i, MSIR.RtHook));
           name : TEXT;
       BEGIN
         IF p = NIL
@@ -5311,7 +5311,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     IF NOT rtLayoutChecked THEN CheckRTLayouts (); rtLayoutChecked := TRUE END;
     (* Check ops (D32) to compares and fault calls, then EH scopes (D26) to
        the invoke / landing-pad form emitted below. *)
-    MSIRChecks.Expand (m);
+    MSIRRuntime.Expand (m);
     MSIREH.LowerModule (m);
     curEmitModule := m;
     auxN          := 0;
@@ -5407,8 +5407,8 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
        redefinition, so skip the declare when the barrier is a module proc
        (e.g. RTCollector.m3 defines CheckLoadTracedRef itself). *)
     IF needsGC THEN
-      VAR barrierLoad  := MSIR.ModuleGCLoadBarrier(m);
-          barrierStore := MSIR.ModuleGCStoreBarrier(m);
+      VAR barrierLoad  := MSIR.ModuleRtHook(m, MSIR.RtHook.CheckLoadTracedRef);
+          barrierStore := MSIR.ModuleRtHook(m, MSIR.RtHook.CheckStoreTraced);
       BEGIN
         IF barrierLoad = NIL OR NOT IsModuleProc(m, barrierLoad) THEN
           Wr.PutText(wr, "declare void @"
@@ -5438,7 +5438,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     (* collect extern callees and TextLiteral vtable method procs *)
     CollectExterns(m, externs);
     FOR i := 0 TO 4 DO
-      VAR p := MSIR.ModuleGetTextLitHook(m, i); BEGIN
+      VAR p := MSIR.ModuleRtHook(m, VAL(ORD(MSIR.RtHook.TextLitInfo) + i, MSIR.RtHook)); BEGIN
         IF p # NIL AND NOT ProcSeen(externs, p) THEN
           externs.addhi(p);
         END;
@@ -5539,7 +5539,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
        ScanTypecase lazily fills the defn pointer so these must be global
        (not constant).  TypecaseCell = { ptr defn, i64 uid } (16 bytes). *)
     IF pendingTC # NIL AND pendingTC.size() > 0 THEN
-      VAR tcHook := MSIR.ModuleScanTypecase(m); BEGIN
+      VAR tcHook := MSIR.ModuleRtHook(m, MSIR.RtHook.ScanTypecase); BEGIN
       Wr.PutText(wr, "\n; TYPECASE type tables ("
                      & LLHookName(tcHook, "RTHooks__ScanTypecase")
                      & ")\n");
@@ -5560,7 +5560,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     (* gc.load_block: the element maps, and the hook unless this module
        defines it (RTCollector). *)
     IF pendingBlockMaps # NIL AND pendingBlockMaps.size() > 0 THEN
-      VAR hook := MSIR.ModuleGCLoadBlockBarrier(m);
+      VAR hook := MSIR.ModuleRtHook(m, MSIR.RtHook.CheckLoadTracedBlock);
           ip := "i" & Fmt.Int(Target.Integer.size);
           map: MSIR.GcMapBytes;
       BEGIN

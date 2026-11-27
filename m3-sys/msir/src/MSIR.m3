@@ -589,7 +589,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   checkCode:   INTEGER := 0;      (* check ops: M3CG.RuntimeError code *)
   checkUnsigned: BOOLEAN := FALSE; (* range_check: unsigned compare *)
   typeTest:    TypeTest := TypeTest.Exact; (* istype, narrow *)
-  typeUid:     INTEGER := 0;                (* istype, narrow, new *)
+  typeUid:     INTEGER := 0;                (* istype, narrow, new, method *)
   methodOff:   INTEGER := 0;                (* method: suite byte offset *)
   allocKind:   AllocKind := AllocKind.TracedRef; (* new, openarray.new *)
   blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
@@ -666,11 +666,11 @@ PROCEDURE InsnMethodOffset(i: Insn): INTEGER =
   BEGIN RETURN i.methodOff END InsnMethodOffset;
 
 PROCEDURE BuildMethod(b: Block;  name: TEXT;  obj, holder: Value;
-                      off: INTEGER;  selector: TEXT): Value =
+                      off: INTEGER;  selector: TEXT;  uid: INTEGER): Value =
   VAR i := NEW(Insn);  ops: REF ARRAY OF Value;
   BEGIN
     i.op := Op.Method;
-    i.methodOff := off;  i.selector := selector;
+    i.methodOff := off;  i.selector := selector;  i.typeUid := uid;
     IF holder = NIL THEN
       ops := NEW(REF ARRAY OF Value, 1);
     ELSE
@@ -1125,17 +1125,7 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
      globals entirely (Text.fromCharCache: moved TEXT never updated → stale). *)
   (* Hook proc stubs set by MSIREmit via RunTyme lookup.  NIL = use
      fallback hardcoded names in the LLVM emitter. *)
-  gcLoadBarrierProc  : Proc := NIL;   (* RTHooks__CheckLoadTracedRef *)
-  resumeRaiseProc : Proc := NIL;   (* RTHooks.ResumeRaiseEx, for EH lowering *)
-  pushEFrameProc  : Proc := NIL;   (* RTHooks.PushEFrame, for ex_frame lowering *)
-  popEFrameProc   : Proc := NIL;   (* RTHooks.PopEFrame *)
-  gcStoreBarrierProc : Proc := NIL;   (* RTHooks__CheckStoreTraced   *)
-  gcLoadBlockProc    : Proc := NIL;   (* RTHooks__CheckLoadTracedBlock *)
-  rtHooks            : ARRAY RtHook OF Proc;  (* D32-D34; NIL until bound *)
-  scanTypecaseProc   : Proc := NIL;   (* RTHooks__ScanTypecase       *)
-  textLitHooks : ARRAY [0..4] OF Proc;
-  (* 0=TextLitInfo 1=TextLitGetChar 2=TextLitGetWideChar
-     3=TextLitGetChars 4=TextLitGetWideChars — NIL = not yet registered *)
+  rtHooks            : ARRAY RtHook OF Proc;  (* NIL until bound *)
   typeLinks    : REF ARRAY OF TypeLink    := NIL;
   nTypeLinks   : INTEGER                  := 0;
   revelations  : REF ARRAY OF Revelation := NIL;
@@ -1393,6 +1383,7 @@ REVEAL ExcDesc = BRANDED "MSIR.ExcDesc" REF RECORD
   ptrVal  : Value := NIL;  (* cached ptr value *)
   argType : T := NIL;      (* the argument's type; NIL if none *)
   argByRef: BOOLEAN := FALSE;
+  boxCell:  Value := NIL;     (* by reference: the box's typecell (D35) *)
 END;
 
 PROCEDURE NewExcDesc(name: TEXT;  uid: INTEGER;  display: TEXT := NIL;
@@ -1419,6 +1410,10 @@ PROCEDURE ExcDescDisplay (d: ExcDesc): TEXT = BEGIN RETURN d.display END ExcDesc
 PROCEDURE ExcDescValue(d: ExcDesc): Value   = BEGIN RETURN d.ptrVal END ExcDescValue;
 PROCEDURE ExcDescArgType(d: ExcDesc): T     = BEGIN RETURN d.argType END ExcDescArgType;
 PROCEDURE ExcDescArgByRef(d: ExcDesc): BOOLEAN = BEGIN RETURN d.argByRef END ExcDescArgByRef;
+PROCEDURE SetExcDescBoxCell(d: ExcDesc;  cell: Value) =
+  BEGIN d.boxCell := cell END SetExcDescBoxCell;
+PROCEDURE ExcDescBoxCell(d: ExcDesc): Value =
+  BEGIN RETURN d.boxCell END ExcDescBoxCell;
 PROCEDURE SetExcDescArg(d: ExcDesc;  argType: T;  argByRef: BOOLEAN) =
   BEGIN
     d.argType := argType;
@@ -1620,11 +1615,6 @@ PROCEDURE ModuleTextLitChars(m: Module;  i: INTEGER): TEXT =
 PROCEDURE ModuleTextLitCnt(m: Module;  i: INTEGER): INTEGER =
   BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).cnt END ModuleTextLitCnt;
 
-PROCEDURE ModuleSetTextLitHooks(m: Module;
-                                 READONLY hooks: ARRAY [0..4] OF Proc) =
-  BEGIN m.textLitHooks := hooks END ModuleSetTextLitHooks;
-PROCEDURE ModuleGetTextLitHook(m: Module;  i: INTEGER): Proc =
-  BEGIN RETURN m.textLitHooks[i] END ModuleGetTextLitHook;
 
 PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
   (* Kept for API compat; callers should prefer ConstTextLit directly. *)
@@ -1774,37 +1764,10 @@ PROCEDURE ModuleDataLayout(m: Module): TEXT =
 
   BEGIN RETURN m.datalayout END ModuleDataLayout;
 
-PROCEDURE SetModuleHooks(m: Module;
-                          gcLoad, gcStore, scanTypecase: Proc) =
-  BEGIN
-    m.gcLoadBarrierProc  := gcLoad;
-    m.gcStoreBarrierProc := gcStore;
-    m.scanTypecaseProc   := scanTypecase;
-  END SetModuleHooks;
-PROCEDURE SetModuleResumeRaise(m: Module;  p: Proc) =
-  BEGIN m.resumeRaiseProc := p END SetModuleResumeRaise;
-PROCEDURE ModuleResumeRaise(m: Module): Proc =
-  BEGIN RETURN m.resumeRaiseProc END ModuleResumeRaise;
-PROCEDURE SetModuleFrameHooks(m: Module;  push, pop: Proc) =
-  BEGIN m.pushEFrameProc := push;  m.popEFrameProc := pop END SetModuleFrameHooks;
-PROCEDURE ModulePushEFrame(m: Module): Proc =
-  BEGIN RETURN m.pushEFrameProc END ModulePushEFrame;
-PROCEDURE ModulePopEFrame(m: Module): Proc =
-  BEGIN RETURN m.popEFrameProc END ModulePopEFrame;
-PROCEDURE ModuleGCLoadBarrier (m: Module): Proc =
-  BEGIN RETURN m.gcLoadBarrierProc  END ModuleGCLoadBarrier;
-PROCEDURE ModuleGCStoreBarrier(m: Module): Proc =
-  BEGIN RETURN m.gcStoreBarrierProc END ModuleGCStoreBarrier;
 PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc) =
   BEGIN m.rtHooks[h] := p END SetModuleRtHook;
 PROCEDURE ModuleRtHook(m: Module;  h: RtHook): Proc =
   BEGIN RETURN m.rtHooks[h] END ModuleRtHook;
-PROCEDURE SetModuleLoadBlockHook(m: Module;  p: Proc) =
-  BEGIN m.gcLoadBlockProc := p END SetModuleLoadBlockHook;
-PROCEDURE ModuleGCLoadBlockBarrier(m: Module): Proc =
-  BEGIN RETURN m.gcLoadBlockProc END ModuleGCLoadBlockBarrier;
-PROCEDURE ModuleScanTypecase  (m: Module): Proc =
-  BEGIN RETURN m.scanTypecaseProc   END ModuleScanTypecase;
 
 PROCEDURE ModuleAddImport(m: Module;  name: TEXT) =
   BEGIN m.imports.addhi(name) END ModuleAddImport;
@@ -2445,15 +2408,17 @@ PROCEDURE BuildIstype(b: Block;  name: TEXT;  v, cell: Value;
     RETURN i.result;
   END BuildIstype;
 
-PROCEDURE BuildNarrow(b: Block;  v, cell: Value;  test: TypeTest;
-                      uid, code, line: INTEGER) =
+PROCEDURE BuildNarrow(b: Block;  name: TEXT;  v, cell: Value;
+                      test: TypeTest;  uid, code, line: INTEGER;  t: T): Value =
   VAR i := NEW(Insn);
   BEGIN
     i.op := Op.Narrow;
     i.typeTest := test;  i.typeUid := uid;
     i.checkCode := code;  i.srcLine := line;
     i.operands := TypeTestOperands(v, cell, test);
+    i.result := makeResult(b, t, name, i);
     addInsn(b, i);
+    RETURN i.result;
   END BuildNarrow;
 
 PROCEDURE BuildTypecase(b: Block;  value: Value;
@@ -2601,22 +2566,17 @@ PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
     RETURN i.result;
   END BuildInvokeIndirect;
 
-PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg, boxCell: Value;
-                     line: INTEGER) =
+PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value;  line: INTEGER) =
   VAR i := NEW(Insn);
   BEGIN
     i.op := Op.Raise;
     i.exc := exc;
     i.srcLine := line;
     IF arg = NIL THEN
-      <* ASSERT boxCell = NIL *>
       i.operands := NEW(REF ARRAY OF Value, 0);
-    ELSIF boxCell = NIL THEN
+    ELSE
       i.operands := NEW(REF ARRAY OF Value, 1);
       i.operands[0] := arg;
-    ELSE
-      i.operands := NEW(REF ARRAY OF Value, 2);
-      i.operands[0] := arg;  i.operands[1] := boxCell;
     END;
     addInsn(b, i);
   END BuildRaise;

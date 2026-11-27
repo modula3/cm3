@@ -1416,12 +1416,14 @@ PROCEDURE EmitNilCheck(ref: MSIR.Value;  errCode: INTEGER) =
   END EmitNilCheck;
 
 PROCEDURE EmitNarrow(v, cell: MSIR.Value;  test: MSIR.TypeTest;
-                     uid, errCode: INTEGER) =
+                     uid, errCode: INTEGER;  t: MSIR.T): MSIR.Value =
   VAR f: TEXT;  line: INTEGER;
   BEGIN
-    IF NOT InProc() OR v = NIL THEN RETURN END;
+    IF NOT InProc() OR v = NIL THEN RETURN v END;
+    IF t = NIL THEN t := MSIR.ValueType(v) END;
     Scanner.Here(f, line);
-    MSIR.BuildNarrow(CurrentBlock(), v, cell, test, uid, errCode, line);
+    RETURN MSIR.BuildNarrow(CurrentBlock(), "", v, cell, test, uid, errCode,
+                            line, t);
   END EmitNarrow;
 
 PROCEDURE EmitShapeCheck(n, m: MSIR.Value;  errCode: INTEGER) =
@@ -1547,14 +1549,14 @@ PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value) =
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
                           READONLY args: ARRAY OF MSIR.Value;
-                          selector: TEXT := NIL): MSIR.Value =
+                          selector: TEXT := NIL;  uid := 0): MSIR.Value =
   VAR
     fn      : MSIR.Value;
     allArgs := NEW(REF ARRAY OF MSIR.Value, 1 + NUMBER(args));
   BEGIN
     (* The method in slot midx of obj's suite (D36). *)
     fn := MSIR.BuildMethod(CurrentBlock(), "", obj, NIL,
-                           midx * Target.Address.bytes, selector);
+                           midx * Target.Address.bytes, selector, uid);
     (* obj (self) first, then the explicit args.  The result, large or
        small, is returned by value. *)
     allArgs[0] := obj;

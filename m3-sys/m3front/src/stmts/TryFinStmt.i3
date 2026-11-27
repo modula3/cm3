@@ -13,9 +13,10 @@ IMPORT Stmt, MSIR;
 PROCEDURE Parse (body: Stmt.T; ): Stmt.T;
 
 PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
-                           midx: INTEGER);
+                           midx, objUid: INTEGER);
 (* MSIR for TRY body FINALLY ... END as EH scopes (D26).  The FINALLY code
-   is a call of method slot midx of obj (LOCK's release) if obj # NIL, else
-   'finally' (NIL when empty). *)
+   is a call of method slot midx of obj (LOCK's release; objUid is obj's
+   static type's GlobalUID) if obj # NIL, else 'finally' (NIL when
+   empty). *)
 
 END TryFinStmt.

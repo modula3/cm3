@@ -1,6 +1,6 @@
 MODULE MSIRToM3CG;
 
-IMPORT MSIR, MSIRPrinter, MSIRChecks, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
+IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
        Text, Word, Wr, Thread;
 
 FROM MSIR IMPORT Op, TypeKind, ValueKind;
@@ -695,7 +695,7 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
           Fail (w, "ordered icmp on a multi-word set");
         END;
     | Op.Typecase =>
-        IF MSIR.ModuleScanTypecase (mod) = NIL THEN
+        IF MSIR.ModuleRtHook(mod, MSIR.RtHook.ScanTypecase) = NIL THEN
           Fail (w, "typecase without the ScanTypecase hook");
         END;
     | Op.Alloca =>
@@ -776,10 +776,10 @@ PROCEDURE CheckScopes (w: Why;  m: MSIR.Module;  p: MSIR.Proc) =
   VAR s: MSIR.Scope;  h: MSIR.Handler;  b: MSIR.Block;  i: MSIR.Insn;
   BEGIN
     IF NOT Target.Has_stack_walker
-       AND (MSIR.ModulePushEFrame (m) = NIL OR MSIR.ModulePopEFrame (m) = NIL) THEN
+       AND (MSIR.ModuleRtHook(m, MSIR.RtHook.PushEFrame) = NIL OR MSIR.ModuleRtHook(m, MSIR.RtHook.PopEFrame) = NIL) THEN
       Fail (w, "EH scopes (ex_frame): no frame hooks");
     END;
-    IF MSIR.ProcMayReraise (p) AND MSIR.ModuleResumeRaise (m) = NIL THEN
+    IF MSIR.ProcMayReraise (p) AND MSIR.ModuleRtHook(m, MSIR.RtHook.ResumeRaiseEx) = NIL THEN
       Fail (w, "EH scopes: no re-raise hook");
     END;
     FOR k := 0 TO MSIR.ProcScopeCount (p) - 1 DO
@@ -817,7 +817,7 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
   VAR w := NEW (Why, wr := why, mod := MSIR.ModuleName (m));
       p: MSIR.Proc;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
-    MSIRChecks.Expand (m);  (* D32: the check ops are lowered as code *)
+    MSIRRuntime.Expand (m);  (* D32: the check ops are lowered as code *)
     Setup (m);
     IF MSIR.ModuleIncomplete (m) # NIL THEN
       Fail (w, "incomplete: " & MSIR.ModuleIncomplete (m));
@@ -879,8 +879,8 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       IF MSIR.ProcBlockCount (p) > 0 THEN
         IF MSIR.ProcScopeCount (p) > 1 THEN CheckScopes (w, m, p) END;
         IF MSIR.ProcChecksRaises (p) AND NOT Target.Has_stack_walker
-           AND (MSIR.ModulePushEFrame (m) = NIL
-                OR MSIR.ModulePopEFrame (m) = NIL) THEN
+           AND (MSIR.ModuleRtHook(m, MSIR.RtHook.PushEFrame) = NIL
+                OR MSIR.ModuleRtHook(m, MSIR.RtHook.PopEFrame) = NIL) THEN
           Fail (w, "RAISES check (ex_frame): no frame hooks");
         END;
         CheckProcSig (w, p);
@@ -1623,7 +1623,7 @@ PROCEDURE EmitTextMethods (it: TextMethodsItem) =
   BEGIN
     FOR i := 0 TO 4 DO
       cg.init_proc (it.off + i * Target.Address.bytes,
-                    ProcFor (MSIR.ModuleGetTextLitHook (mod, i)));
+                    ProcFor (MSIR.ModuleRtHook(mod, VAL(ORD(MSIR.RtHook.TextLitInfo) + i, MSIR.RtHook))));
     END;
   END EmitTextMethods;
 
@@ -1847,7 +1847,7 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
   VAR p: MSIR.Proc;  binderName: TEXT;  modeVar: M3CG.Var;
   BEGIN
     <* ASSERT Target.Integer.size = 64 AND Target.Address.size = 64 *>
-    MSIRChecks.Expand (m);  (* D32 *)
+    MSIRRuntime.Expand (m);  (* D32 *)
     Setup (m);
     cg := c;  (* M3CG.T's methods are revealed by M3CG_Ops *)
     procs := NEW (TextRefTbl.Default).init ();
@@ -1925,12 +1925,12 @@ PROCEDURE ImportCallees (p: MSIR.Proc) =
   VAR b: MSIR.Block;  i: MSIR.Insn;  v: MSIR.Value;
   BEGIN
     IF MSIR.ProcMayReraise (p) THEN
-      EVAL ProcFor (MSIR.ModuleResumeRaise (mod));
+      EVAL ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.ResumeRaiseEx));
     END;
     IF exFrame
        AND (MSIR.ProcScopeCount (p) > 1 OR MSIR.ProcChecksRaises (p)) THEN
-      EVAL ProcFor (MSIR.ModulePushEFrame (mod));
-      EVAL ProcFor (MSIR.ModulePopEFrame (mod));
+      EVAL ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.PushEFrame));
+      EVAL ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.PopEFrame));
     END;
     FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
       b := MSIR.ProcBlock (p, bi);
@@ -1940,7 +1940,7 @@ PROCEDURE ImportCallees (p: MSIR.Proc) =
           EVAL ProcFor (MSIR.InsnCallee (i));
         END;
         IF MSIR.InsnOp (i) = Op.Typecase THEN
-          EVAL ProcFor (MSIR.ModuleScanTypecase (mod));
+          EVAL ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.ScanTypecase));
         END;
         FOR k := 0 TO MSIR.InsnOperandCount (i) - 1 DO
           v := MSIR.InsnOperand (i, k);
@@ -2675,7 +2675,7 @@ PROCEDURE AllocJmpbufs () =
    a raise comes back from setjmp to e's pad. *)
 PROCEDURE LinkFrame (e: EHScope) =
   VAR class: M3RT.HandlerClass;  hasElse := FALSE;
-      q := ProcFor (MSIR.ModulePushEFrame (mod));
+      q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.PushEFrame));
   BEGIN
     IF MSIR.ScopeKindOf (e.s) = MSIR.ScopeKind.Finally THEN
       class := M3RT.HandlerClass.Finally;
@@ -2723,7 +2723,7 @@ PROCEDURE PopFrames (from, stop: MSIR.Scope) =
       x := MSIR.ScopeParent (x);
     END;
     IF outer = NIL THEN RETURN END;
-    q := ProcFor (MSIR.ModulePopEFrame (mod));
+    q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.PopEFrame));
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     cg.load (outer.frame, B (M3RT.EF_next), Addr, Addr);
     cg.pop_param (Addr);
@@ -2735,7 +2735,7 @@ PROCEDURE PopFrames (from, stop: MSIR.Scope) =
    the frame points at the clause's uids.  An exception that reaches the
    frame and is not in the list is reported as blocked by the runtime. *)
 PROCEDURE PushRaisesFrame (p: MSIR.Proc) =
-  VAR q := ProcFor (MSIR.ModulePushEFrame (mod));
+  VAR q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.PushEFrame));
       class := M3RT.HandlerClass.Raises;  size := M3RT.EF3_SIZE;
   BEGIN
     IF MSIR.ProcRaisesCount (p) = 0 THEN
@@ -2762,7 +2762,7 @@ PROCEDURE PopRaisesFrame () =
   VAR q: M3CG.Proc;
   BEGIN
     IF raisesFrame = NIL THEN RETURN END;
-    q := ProcFor (MSIR.ModulePopEFrame (mod));
+    q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.PopEFrame));
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     cg.load (raisesFrame, B (M3RT.EF_next), Addr, Addr);
     cg.pop_param (Addr);
@@ -2852,7 +2852,7 @@ PROCEDURE PushArgWord (e: EHScope) =
 (* Re-raise the activation of e through the runtime's hook; an invoke if
    the code is itself protected. *)
 PROCEDURE Reraise (e: EHScope) =
-  VAR q := ProcFor (MSIR.ModuleResumeRaise (mod));
+  VAR q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.ResumeRaiseEx));
   BEGIN
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     cg.load (e.act, 0, Addr, Addr);
@@ -3145,7 +3145,7 @@ PROCEDURE WriteBarrier (container: MSIR.Value) =
     PushInt (Word.Shift (1, M3RT.RH_dirty_offset));
     cg.and (Int64);
     cg.if_true (Int64, skip, M3CG.Likely);
-    HookCall (MSIR.ModuleGCStoreBarrier (mod), "RTHooks__CheckStoreTraced",
+    HookCall (MSIR.ModuleRtHook(mod, MSIR.RtHook.CheckStoreTraced), "RTHooks__CheckStoreTraced",
               container);
     cg.set_label (skip);
   END WriteBarrier;
@@ -3156,7 +3156,7 @@ PROCEDURE WriteBarrier (container: MSIR.Value) =
 PROCEDURE BlockReadBarrier (i: MSIR.Insn) =
   CONST Fallback = "RTHooks__CheckLoadTracedBlock";
   VAR
-    hook := MSIR.ModuleGCLoadBlockBarrier (mod);
+    hook := MSIR.ModuleRtHook(mod, MSIR.RtHook.CheckLoadTracedBlock);
     off  := Bytes (MSIR.InsnBlockMap (i));
     q: M3CG.Proc;  r: REFANY;
   BEGIN
@@ -3209,7 +3209,7 @@ PROCEDURE ReadBarrier (v: MSIR.Value) =
     PushInt (Word.Shift (1, M3RT.RH_gray_offset));
     cg.and (Int64);
     cg.if_false (Int64, skip, M3CG.Likely);
-    HookCall (MSIR.ModuleGCLoadBarrier (mod), "RTHooks__CheckLoadTracedRef", v);
+    HookCall (MSIR.ModuleRtHook(mod, MSIR.RtHook.CheckLoadTracedRef), "RTHooks__CheckLoadTracedRef", v);
     cg.set_label (skip);
   END ReadBarrier;
 
@@ -3586,7 +3586,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.Typecase =>
         (* idx := ScanTypecase (ref, table); jump to clause idx, the last
            (ELSE) clause by default. *)
-        VAR q := ProcFor (MSIR.ModuleScanTypecase (mod));
+        VAR q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.ScanTypecase));
             n := MSIR.InsnTypecaseClauseCount (i);
             idx := cg.declare_temp (8, 8, Int64, FALSE);
         BEGIN

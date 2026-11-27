@@ -210,10 +210,12 @@ PROCEDURE CompileMSIR (p: P) =
     IF mu = NIL THEN RETURN END;
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu, M3RT.MUTEX_acquire DIV Target.Address.pack,
-           MSIR.TVoid(), ARRAY OF MSIR.Value{}, "acquire");
+           MSIR.TVoid(), ARRAY OF MSIR.Value{}, "acquire",
+           Type.GlobalUID(Expr.TypeOf(p.mutex)));
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
     TryFinStmt.EmitFinallyMSIR(p.body, NIL, mu,
-                               M3RT.MUTEX_release DIV Target.Address.pack);
+                               M3RT.MUTEX_release DIV Target.Address.pack,
+                               Type.GlobalUID(Expr.TypeOf(p.mutex)));
   END CompileMSIR;
 
 PROCEDURE Capture (p: P;  ca: CaptureAnalysis.T) =
