@@ -96,6 +96,26 @@ PROCEDURE Hooks (m: MSIR.Module): SET OF MSIR.RtHook =
     RETURN s;
   END Hooks;
 
+CONST HookName = ARRAY MSIR.RtHook OF TEXT {
+  "ReportFault", "CheckIsType", "RaiseEx",
+  "NewTracedRef", "NewUntracedRef", "NewTracedObj", "NewUntracedObj",
+  "NewTracedArray", "NewUntracedArray",
+  "CheckLoadTracedRef", "CheckStoreTraced", "CheckLoadTracedBlock",
+  "ScanTypecase", "ResumeRaiseEx", "PushEFrame", "PopEFrame",
+  "TextLitInfo", "TextLitGetChar", "TextLitGetWideChar",
+  "TextLitGetChars", "TextLitGetWideChars" };
+
+PROCEDURE Unbound (m: MSIR.Module): TEXT =
+  VAR need := Hooks (m);
+  BEGIN
+    FOR h := FIRST (MSIR.RtHook) TO LAST (MSIR.RtHook) DO
+      IF h IN need AND MSIR.ModuleRtHook (m, h) = NIL THEN
+        RETURN "RTHooks." & HookName[h];
+      END;
+    END;
+    RETURN NIL;
+  END Unbound;
+
 PROCEDURE Hook (m: MSIR.Module;  h: MSIR.RtHook): MSIR.Proc =
   VAR p := MSIR.ModuleRtHook (m, h);
   BEGIN

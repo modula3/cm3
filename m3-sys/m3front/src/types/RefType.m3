@@ -460,10 +460,8 @@ PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
     entry := MSIR.NewBlock ("entry", ARRAY OF MSIR.BlockParam{});
     MSIR.ProcAddBlock (proc, entry);
 
-    VAR savedProc  := MSIRBuilder.CurrentProc ();
-        savedBlock := MSIRBuilder.CurrentBlock ();
     BEGIN
-      MSIRBuilder.BeginHelperProc (proc, entry);
+      MSIRBuilder.BeginHelperProc (proc, entry);  (* saves the caller's context *)
       objParam := MSIR.ProcParam (proc, 0);
 
       (* The referent is zeroed by the allocator; for an open array,
@@ -472,9 +470,6 @@ PROCEDURE GenInitProcMSIR (t: Type.T;  desc: MSIR.TypeDesc) =
 
       MSIR.BuildRet (MSIRBuilder.CurrentBlock (), NIL);
       MSIRBuilder.EndHelperProc ();
-      IF savedProc # NIL THEN
-        MSIRBuilder.BeginHelperProc (savedProc, savedBlock);
-      END;
     END;
     MSIR.ModuleAddProc (m, proc);
   END GenInitProcMSIR;

@@ -852,11 +852,8 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
     entry := MSIR.NewBlock ("entry", ARRAY OF MSIR.BlockParam{});
     MSIR.ProcAddBlock (proc, entry);
 
-    (* Save the current proc/block context, then switch to the helper proc.
-       Multiple object types may call GenInitProcMSIR in sequence; each call
-       must restore the prior (usually NIL) context on exit. *)
-    VAR savedProc  := MSIRBuilder.CurrentProc ();
-        savedBlock := MSIRBuilder.CurrentBlock ();
+    (* The helper gets a context of its own; EndHelperProc restores the
+       caller's (usually none). *)
     BEGIN
       MSIRBuilder.BeginHelperProc (proc, entry);
       objParam := MSIR.ProcParam (proc, 0);
@@ -884,10 +881,7 @@ PROCEDURE GenInitProcMSIR (p: P;  desc: MSIR.TypeDesc) =
       RecordType.InitFieldsMSIR (p.fields, fieldBase, 0, zeroed := TRUE);
 
       MSIR.BuildRet (MSIRBuilder.CurrentBlock (), NIL);
-      MSIRBuilder.EndHelperProc ();  (* sets curProc=NIL, curBlock=NIL *)
-      IF savedProc # NIL THEN
-        MSIRBuilder.BeginHelperProc (savedProc, savedBlock);
-      END;
+      MSIRBuilder.EndHelperProc ();
     END;
     MSIR.ModuleAddProc (m, proc);
   END GenInitProcMSIR;

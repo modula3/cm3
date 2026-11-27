@@ -694,10 +694,6 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
                      MSIR.CmpPred.Eq, MSIR.CmpPred.Ne } THEN
           Fail (w, "ordered icmp on a multi-word set");
         END;
-    | Op.Typecase =>
-        IF MSIR.ModuleRtHook(mod, MSIR.RtHook.ScanTypecase) = NIL THEN
-          Fail (w, "typecase without the ScanTypecase hook");
-        END;
     | Op.Alloca =>
         IF Size (MSIR.InsnTargetType (i), a) < 0 THEN
           Fail (w, "alloca of unsized type");
@@ -775,13 +771,6 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
 PROCEDURE CheckScopes (w: Why;  m: MSIR.Module;  p: MSIR.Proc) =
   VAR s: MSIR.Scope;  h: MSIR.Handler;  b: MSIR.Block;  i: MSIR.Insn;
   BEGIN
-    IF NOT Target.Has_stack_walker
-       AND (MSIR.ModuleRtHook(m, MSIR.RtHook.PushEFrame) = NIL OR MSIR.ModuleRtHook(m, MSIR.RtHook.PopEFrame) = NIL) THEN
-      Fail (w, "EH scopes (ex_frame): no frame hooks");
-    END;
-    IF MSIR.ProcMayReraise (p) AND MSIR.ModuleRtHook(m, MSIR.RtHook.ResumeRaiseEx) = NIL THEN
-      Fail (w, "EH scopes: no re-raise hook");
-    END;
     FOR k := 0 TO MSIR.ProcScopeCount (p) - 1 DO
       s := MSIR.ProcScopeAt (p, k);
       IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Except THEN
@@ -817,7 +806,18 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
   VAR w := NEW (Why, wr := why, mod := MSIR.ModuleName (m));
       p: MSIR.Proc;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
-    MSIRRuntime.Expand (m);  (* D32: the check ops are lowered as code *)
+    (* Only 64-bit targets (Lower asserts it), and every runtime procedure
+       the module needs bound; checked before Expand, which removes the
+       runtime ops Hooks looks for. *)
+    IF Target.Integer.size # 64 OR Target.Address.size # 64 THEN
+      Fail (w, "not a 64-bit target");
+      RETURN FALSE;
+    END;
+    VAR u := MSIRRuntime.Unbound (m);
+    BEGIN
+      IF u # NIL THEN Fail (w, "runtime hook not bound: " & u);  RETURN FALSE END;
+    END;
+    MSIRRuntime.Expand (m);  (* D31-D36: the runtime ops become code *)
     Setup (m);
     IF MSIR.ModuleIncomplete (m) # NIL THEN
       Fail (w, "incomplete: " & MSIR.ModuleIncomplete (m));
@@ -878,11 +878,6 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
       p := MSIR.ModuleProc (m, pi);
       IF MSIR.ProcBlockCount (p) > 0 THEN
         IF MSIR.ProcScopeCount (p) > 1 THEN CheckScopes (w, m, p) END;
-        IF MSIR.ProcChecksRaises (p) AND NOT Target.Has_stack_walker
-           AND (MSIR.ModuleRtHook(m, MSIR.RtHook.PushEFrame) = NIL
-                OR MSIR.ModuleRtHook(m, MSIR.RtHook.PopEFrame) = NIL) THEN
-          Fail (w, "RAISES check (ex_frame): no frame hooks");
-        END;
         CheckProcSig (w, p);
         FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
           b := MSIR.ProcBlock (p, bi);
@@ -3109,21 +3104,10 @@ PROCEDURE FCmpOp (p: MSIR.FCmpPred): M3CG.CompareOp =
     END;
   END FCmpOp;
 
-PROCEDURE HookCall (hook: MSIR.Proc;  fallback: TEXT;  arg: MSIR.Value) =
-  VAR q: M3CG.Proc;  r: REFANY;
+(* A call of runtime hook h (bound: Lowerable checked) with one address. *)
+PROCEDURE HookCall (h: MSIR.RtHook;  arg: MSIR.Value) =
+  VAR q := ProcFor (MSIR.ModuleRtHook (mod, h));
   BEGIN
-    IF hook # NIL THEN
-      q := ProcFor (hook);
-    ELSIF procs.get (fallback, r) THEN
-      q := NARROW (r, ProcRef).p;
-    ELSE
-      q := cg.import_procedure (ID (fallback), 1, M3CG.Type.Void,
-                                Target.DefaultCall);
-      EVAL cg.declare_param (ID ("r"), Target.Address.bytes,
-                             Target.Address.bytes, Addr, 0, FALSE, FALSE,
-                             M3CG.Maybe);
-      EVAL procs.put (fallback, NEW (ProcRef, p := q));
-    END;
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     Push (arg);
     cg.pop_param (Addr);
@@ -3145,8 +3129,7 @@ PROCEDURE WriteBarrier (container: MSIR.Value) =
     PushInt (Word.Shift (1, M3RT.RH_dirty_offset));
     cg.and (Int64);
     cg.if_true (Int64, skip, M3CG.Likely);
-    HookCall (MSIR.ModuleRtHook(mod, MSIR.RtHook.CheckStoreTraced), "RTHooks__CheckStoreTraced",
-              container);
+    HookCall (MSIR.RtHook.CheckStoreTraced, container);
     cg.set_label (skip);
   END WriteBarrier;
 
@@ -3154,33 +3137,10 @@ PROCEDURE WriteBarrier (container: MSIR.Value) =
    RTHooks.CheckLoadTracedBlock (dst, map, n, stride), the element's gc map
    in the constant segment. *)
 PROCEDURE BlockReadBarrier (i: MSIR.Insn) =
-  CONST Fallback = "RTHooks__CheckLoadTracedBlock";
   VAR
-    hook := MSIR.ModuleRtHook(mod, MSIR.RtHook.CheckLoadTracedBlock);
-    off  := Bytes (MSIR.InsnBlockMap (i));
-    q: M3CG.Proc;  r: REFANY;
+    q   := ProcFor (MSIR.ModuleRtHook (mod, MSIR.RtHook.CheckLoadTracedBlock));
+    off := Bytes (MSIR.InsnBlockMap (i));
   BEGIN
-    IF hook # NIL THEN
-      q := ProcFor (hook);
-    ELSIF procs.get (Fallback, r) THEN
-      q := NARROW (r, ProcRef).p;
-    ELSE
-      q := cg.import_procedure (ID (Fallback), 4, M3CG.Type.Void,
-                                Target.DefaultCall);
-      EVAL cg.declare_param (ID ("dst"), Target.Address.bytes,
-                             Target.Address.bytes, Addr, 0, FALSE, FALSE,
-                             M3CG.Maybe);
-      EVAL cg.declare_param (ID ("map"), Target.Address.bytes,
-                             Target.Address.bytes, Addr, 0, FALSE, FALSE,
-                             M3CG.Maybe);
-      EVAL cg.declare_param (ID ("n"), Target.Integer.bytes,
-                             Target.Integer.bytes, Int64, 0, FALSE, FALSE,
-                             M3CG.Maybe);
-      EVAL cg.declare_param (ID ("stride"), Target.Integer.bytes,
-                             Target.Integer.bytes, Int64, 0, FALSE, FALSE,
-                             M3CG.Maybe);
-      EVAL procs.put (Fallback, NEW (ProcRef, p := q));
-    END;
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     Push (MSIR.InsnOperand (i, 0));
     cg.pop_param (Addr);
@@ -3209,7 +3169,7 @@ PROCEDURE ReadBarrier (v: MSIR.Value) =
     PushInt (Word.Shift (1, M3RT.RH_gray_offset));
     cg.and (Int64);
     cg.if_false (Int64, skip, M3CG.Likely);
-    HookCall (MSIR.ModuleRtHook(mod, MSIR.RtHook.CheckLoadTracedRef), "RTHooks__CheckLoadTracedRef", v);
+    HookCall (MSIR.RtHook.CheckLoadTracedRef, v);
     cg.set_label (skip);
   END ReadBarrier;
 

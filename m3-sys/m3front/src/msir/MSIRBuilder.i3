@@ -99,8 +99,10 @@ PROCEDURE EndProc();
 (* Mark the in-progress proc unsupported. EndProc will drop it. *)
 PROCEDURE Abandon(reason: TEXT);
 
-(* Lightweight proc context for generated helper procs (e.g. object type init).
-   Sets curProc and curBlock so Expr.CompileMSIR works; restores on End.
+(* A context for a generated helper proc (a typecell's init proc), so
+   Expr.CompileMSIR works inside it.  BeginHelperProc saves the whole
+   current context (proc, block, EH scope, abandoned flag, variable map) and
+   starts a fresh one in p at entry; EndHelperProc restores the saved one.
    The proc and entry block must be pre-built with the raw MSIR API. *)
 PROCEDURE BeginHelperProc(p: MSIR.Proc;  entry: MSIR.Block);
 PROCEDURE EndHelperProc();

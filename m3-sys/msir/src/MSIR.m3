@@ -1816,7 +1816,8 @@ PROCEDURE makeResult(b: Block;  type: T;  name: TEXT;  i: Insn): Value =
 
 PROCEDURE addInsn(b: Block;  i: Insn) =
   BEGIN
-    i.srcLine := currentSrcLine;
+    (* the current line, unless the builder gave one (check ops, raise) *)
+    IF i.srcLine = 0 THEN i.srcLine := currentSrcLine END;
     i.block := b;
     b.insns.addhi(i);
   END addInsn;

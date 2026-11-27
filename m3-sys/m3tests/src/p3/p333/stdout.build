@@ -1,0 +1,6 @@
+"../Main.m3", line 24: warning: Ordinal value not assignable at runtime (out of range) (2.3.1).
+"../Main.m3", line 5: warning: not used (Fmt)
+"../Main.m3", line 21: warning: not used (S)
+"../Main.m3", line 13: warning: unreachable statement
+"../Main.m3", line 19: warning: unreachable statement
+5 warnings encountered

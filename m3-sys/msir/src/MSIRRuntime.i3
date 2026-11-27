@@ -23,6 +23,11 @@ PROCEDURE Hooks (m: MSIR.Module): SET OF MSIR.RtHook;
    TEXT literals.  The front end binds each with MSIR.SetModuleRtHook
    before lowering. *)
 
+PROCEDURE Unbound (m: MSIR.Module): TEXT;
+(* The name of a runtime procedure in Hooks (m) that the front end has not
+   bound, or NIL if all are.  Each lowering checks this first, before
+   Expand: a module with an unbound hook cannot be lowered. *)
+
 PROCEDURE Expand (m: MSIR.Module);
 (* Replace each check op in m (nil_check, range_check, subscript_check, shape_check, fault, narrow; istype, D33; new and openarray.new, D34; raise, D35; method, D36) by a compare and a branch to a
    fault block that calls RTHooks.ReportFault (module, line * 32 + code)
