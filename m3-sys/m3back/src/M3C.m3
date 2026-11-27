@@ -7405,7 +7405,14 @@ BEGIN
       self.comment("extract_n");
     END;
     load_host_integer(self, Target.Word.cg_type, count);
-    self.extract(type, sign_extend);
+    self.extract(type, FALSE);
+    IF sign_extend THEN
+      (* As extract_mn: the count is a constant, so sign-extend after the
+         extract (extract itself handles only a zero-extending one).  A
+         signed packed element read through a variable subscript gets here. *)
+      load_host_integer(self, Target.Word.cg_type, count);
+      do_sign_extend(self, type);
+    END;
 END extract_n;
 
 PROCEDURE do_sign_extend(self: T; type: IType) =
