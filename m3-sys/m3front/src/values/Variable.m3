@@ -457,14 +457,14 @@ PROCEDURE RegisterExternMSIR (t: T) =
              t.offset.  Register with needsLoad so LookupVar* loads through it.
              (Without this, indirect imported globals were dropped entirely,
              producing "unbound variable reference".) *)
-          MSIRBuilder.GlobalMapAddImport(t, m, binderName, byteOff,
+          MSIRBuilder.GlobalMapAddImport(t, binderName, byteOff,
                                          MSIR.TPtr(MSIR.TVoid()),
                                          needsLoad := TRUE, dataType := mt);
         ELSE
           (* Pass the actual MSIR type (not ptr(void)) so LookupVar returns a
              correctly-typed value for traced references (gc_ref @T) rather than
              a raw ptr that causes a type mismatch at every RETURN site. *)
-          MSIRBuilder.GlobalMapAddImport(t, m, binderName, byteOff, mt);
+          MSIRBuilder.GlobalMapAddImport(t, binderName, byteOff, mt);
         END;
       END;
       RETURN;

@@ -354,21 +354,15 @@ PROCEDURE LLType(wr: Wr.T;  t: MSIR.T) =
           Wr.PutText(wr, ", i" & Fmt.Int(Target.Integer.size));
         END;
         Wr.PutText(wr, " }");
-    | MSIR.TypeKind.HeapArray =>
-        Wr.PutText(wr, "ptr");  (* opaque heap-array dope pointer *)
     | MSIR.TypeKind.FixedArray =>
         Wr.PutText(wr, "[");
         Wr.PutText(wr, Fmt.Int(MSIR.FixedArrayLen(t)));
         Wr.PutText(wr, " x ");
         LLType(wr, MSIR.FixedArrayElt(t));
         Wr.PutText(wr, "]");
-    | MSIR.TypeKind.Subrange =>
-        LLType(wr, MSIR.SubrangeParent(t));
     | MSIR.TypeKind.Enum =>
         Wr.PutText(wr, "i");
         Wr.PutText(wr, Fmt.Int(MSIR.BitWidth(t)));
-    | MSIR.TypeKind.ProcType =>
-        Wr.PutText(wr, "ptr");  (* function pointer *)
     ELSE
         Wr.PutText(wr, "ptr");  (* fallback *)
     END;
@@ -415,7 +409,6 @@ PROCEDURE NaturalAlign(t: MSIR.T): INTEGER =
         END;
         RETURN a;
     | MSIR.TypeKind.FixedArray => RETURN NaturalAlign(MSIR.FixedArrayElt(t));
-    | MSIR.TypeKind.Subrange   => RETURN NaturalAlign(MSIR.SubrangeParent(t));
     | MSIR.TypeKind.I1         => RETURN 1;
     | MSIR.TypeKind.F32        => RETURN 4;
     | MSIR.TypeKind.F64        => RETURN 8;
@@ -652,18 +645,6 @@ PROCEDURE LLTypedVal(wr: Wr.T;  v: MSIR.Value) =
     Wr.PutText(wr, " ");
     LLOpVal(wr, v);
   END LLTypedVal;
-
-(*-------------------------------------------- struct field index lookup *)
-
-PROCEDURE FieldIndex(structType: MSIR.T;  name: TEXT): INTEGER =
-  BEGIN
-    FOR i := 0 TO MSIR.StructFieldCount(structType) - 1 DO
-      IF Text.Equal(MSIR.StructField(structType, i).name, name) THEN
-        RETURN i;
-      END;
-    END;
-    RETURN -1;
-  END FieldIndex;
 
 (*-------------------------------------------- GC read-barrier emission *)
 
@@ -1560,29 +1541,6 @@ PROCEDURE EmitInsn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, "  resume ");
         LLTypedVal(wr, MSIR.InsnOperand(i, 0));
         Wr.PutText(wr, "\n");
-
-    | MSIR.Op.FieldAddr =>
-        VAR
-          objV    := MSIR.InsnOperand(i, 0);
-          objT    := MSIR.ValueType(objV);
-          fname   := MSIR.InsnSelector(i);
-          structT : MSIR.T;
-          idx     : INTEGER;
-        BEGIN
-          IF MSIR.Kind(objT) = MSIR.TypeKind.Ptr  OR
-             MSIR.Kind(objT) = MSIR.TypeKind.GcRef THEN
-            structT := MSIR.EltType(objT);
-          ELSE
-            structT := objT;
-          END;
-          idx := FieldIndex(structT, fname);
-          Wr.PutText(wr, "  " & MSIR.ValueName(res));
-          Wr.PutText(wr, " = getelementptr inbounds ");
-          LLType(wr, structT);
-          Wr.PutText(wr, ", ptr ");
-          LLOpVal(wr, objV);
-          Wr.PutText(wr, ", i32 0, i32 " & Fmt.Int(idx) & "\n");
-        END;
 
     | MSIR.Op.ArrayElemAddr =>
         VAR
@@ -3507,29 +3465,6 @@ PROCEDURE EmitDebugMetadata(wr: Wr.T) =
     Wr.PutText(wr, "!llvm.dbg.cu = !{!2}\n");
   END EmitDebugMetadata;
 
-(*------------------------------------------------------- proc emission *)
-
-PROCEDURE HasInvoke(p: MSIR.Proc): BOOLEAN =
-  VAR nb := MSIR.ProcBlockCount(p);
-  BEGIN
-    FOR bi := 0 TO nb - 1 DO
-      VAR
-        b  := MSIR.ProcBlock(p, bi);
-        ni := MSIR.BlockInsnCount(b);
-      BEGIN
-        FOR ii := 0 TO ni - 1 DO
-          CASE MSIR.InsnOp(MSIR.BlockInsn(b, ii)) OF
-          | MSIR.Op.Invoke, MSIR.Op.InvokeIndirect,
-            MSIR.Op.LandingPad, MSIR.Op.Resume =>
-              RETURN TRUE;
-          ELSE
-          END;
-        END;
-      END;
-    END;
-    RETURN FALSE;
-  END HasInvoke;
-
 (* TRUE if p is the current module's body, which its binder calls. *)
 PROCEDURE IsModuleBody(p: MSIR.Proc): BOOLEAN =
   VAR mn: TEXT;  sym := LLSymbol(p);
@@ -3695,16 +3630,6 @@ PROCEDURE EmitDeclare(wr: Wr.T;  p: MSIR.Proc) =
     EmitParamTypeList(wr, p);
     Wr.PutText(wr, "\n");
   END EmitDeclare;
-
-PROCEDURE EmitDeclareFromSeq(wr: Wr.T;  seq: RefSeq.T;  i: INTEGER) =
-  (* Wrapper that isolates the implicit NARROW (REFANY → MSIR.Proc) from RefSeq.get
-     into its own procedure.  Two NARROWs in the same LLVM function produce duplicate
-     %narrow.chk SSA names; moving one to a callee avoids the collision until the
-     permanent fix (unique names in Narrow.m3) is compiled into cm3. *)
-  VAR p: MSIR.Proc := seq.get(i);
-  BEGIN
-    EmitDeclare(wr, p);
-  END EmitDeclareFromSeq;
 
 (*----------------------------------------------- TypeCell / ObjectTypeCell emission *)
 
@@ -4304,70 +4229,6 @@ PROCEDURE EmitTypeCells(wr: Wr.T;  m: MSIR.Module;  externs: RefSeq.T) =
                 END;
                 Wr.PutText(wr, "  ret void\n}\n");
                 (* defaultMethods (dmv) stays null. *)
-              END;
-            ELSIF nMethods > 0 AND MSIR.TypeDescDynamicMethOff(d) THEN
-              (* Dynamic linkProc mode: method names at LOCAL indices (0..nLocal-1),
-                 supertype method count unknown at compile time.  Emit a linkProc
-                 that reads OTC_methodOffset from the TypeCell at runtime (set by
-                 RTLinker from the parent's methodSize) and stores each own method
-                 at the absolute slot = OTC_methodOffset/sizeof_ptr + localIndex. *)
-              VAR lpName := nm & ".linkproc";
-                  AP := Target.Address.bytes;
-              BEGIN
-                lpv := "@" & lpName;
-                FOR j := 0 TO nMethods - 1 DO
-                  VAR mname := MSIR.TypeDescMethod(d, j);
-                      alreadyDeclared := FALSE;
-                  BEGIN
-                    IF mname # NIL THEN
-                      FOR di := 0 TO declaredMethods.size() - 1 DO
-                        IF Text.Equal(NARROW(declaredMethods.get(di), TEXT), mname) THEN
-                          alreadyDeclared := TRUE; EXIT
-                        END;
-                      END;
-                      IF NOT IsMethodProcDefined(m, mname) AND NOT alreadyDeclared THEN
-                        Wr.PutText(wr, "declare void @" & mname & "()\n");
-                        declaredMethods.addhi(mname);
-                      END;
-                    END;
-                  END;
-                END;
-                Wr.PutText(wr, "define internal void @" & lpName
-                               & "(ptr %tp) personality ptr @__gxx_personality_v0 {\n");
-                Wr.PutText(wr, "entry:\n");
-                (* Read OTC_defaultMethods from the TypeCell *)
-                Wr.PutText(wr, "  %dm.ptr = getelementptr inbounds i8, ptr %tp, i64 "
-                               & Fmt.Int(OTC_defaultMethods_BYTES) & "\n");
-                Wr.PutText(wr, "  %dm = load ptr, ptr %dm.ptr\n");
-                (* Read OTC_methodOffset from the TypeCell (set by RTLinker) *)
-                Wr.PutText(wr, "  %methoff.ptr = getelementptr inbounds i8, ptr %tp, i64 "
-                               & Fmt.Int(M3RT.OTC_methodOffset DIV Target.Char.size) & "\n");
-                Wr.PutText(wr, "  %methoff = load i64, ptr %methoff.ptr\n");
-                FOR j := 0 TO nMethods - 1 DO
-                  VAR mname := MSIR.TypeDescMethod(d, j);
-                  BEGIN
-                    IF mname # NIL THEN
-                      (* absolute slot = methoff / AP + j *)
-                      Wr.PutText(wr, "  %slot.abs." & Fmt.Int(j)
-                                     & " = sdiv i64 %methoff, " & Fmt.Int(AP) & "\n");
-                      IF j > 0 THEN
-                        Wr.PutText(wr, "  %slot.off." & Fmt.Int(j)
-                                       & " = add i64 %slot.abs." & Fmt.Int(j)
-                                       & ", " & Fmt.Int(j) & "\n");
-                        Wr.PutText(wr, "  %slot." & Fmt.Int(j)
-                                       & " = getelementptr ptr, ptr %dm, i64 %slot.off."
-                                       & Fmt.Int(j) & "\n");
-                      ELSE
-                        Wr.PutText(wr, "  %slot." & Fmt.Int(j)
-                                       & " = getelementptr ptr, ptr %dm, i64 %slot.abs."
-                                       & Fmt.Int(j) & "\n");
-                      END;
-                      Wr.PutText(wr, "  store ptr @" & mname & ", ptr %slot."
-                                     & Fmt.Int(j) & "\n");
-                    END;
-                  END;
-                END;
-                Wr.PutText(wr, "  ret void\n}\n");
               END;
             ELSIF nMethods > 0 THEN
               (* Detect whether any slot is NIL (= inherited slot unknown at
@@ -5461,7 +5322,7 @@ PROCEDURE Module(wr: Wr.T;  m: MSIR.Module;  forRuntime: BOOLEAN := FALSE) =
     IF externs.size() > 0 THEN
       Wr.PutText(wr, "\n");
       FOR i := 0 TO externs.size() - 1 DO
-        EmitDeclareFromSeq(wr, externs, i);
+        EmitDeclare(wr, NARROW(externs.get(i), MSIR.Proc));
       END;
     END;
 

@@ -123,17 +123,6 @@ PROCEDURE Hook (m: MSIR.Module;  h: MSIR.RtHook): MSIR.Proc =
     RETURN p;
   END Hook;
 
-(* A new alloca of type t at the head of p's entry block. *)
-PROCEDURE EntryAlloca (p: MSIR.Proc;  t: MSIR.T): MSIR.Value =
-  VAR
-    entry := MSIR.ProcEntry (p);
-    insns := MSIR.BlockTakeInsns (entry);
-    a := MSIR.BuildAlloca (entry, "", t);
-  BEGIN
-    FOR j := 0 TO LAST (insns^) DO MSIR.BlockAppendInsn (entry, insns[j]) END;
-    RETURN a;
-  END EntryAlloca;
-
 (* The procedure that method i looks up, in block b: the suite pointer is
    the object's first word; the slot is at the op's offset, plus the
    holder's OTC_methodOffset if it has one (QualifyExpr's code before). *)
@@ -204,7 +193,7 @@ PROCEDURE Raise (m: MSIR.Module;  b: MSIR.Block;  i: MSIR.Insn) =
 
 (* Allocate as i (new or openarray.new) in block b: the allocator's
    result, as i's type. *)
-PROCEDURE Allocate (m: MSIR.Module;  p: MSIR.Proc;  b: MSIR.Block;
+PROCEDURE Allocate (m: MSIR.Module;  b: MSIR.Block;
                     i: MSIR.Insn): MSIR.Value =
   VAR
     cell := MSIR.InsnOperand (i, 0);
@@ -230,7 +219,8 @@ PROCEDURE Allocate (m: MSIR.Module;  p: MSIR.Proc;  b: MSIR.Block;
         FOR k := 0 TO ndims - 1 DO
           flds[2 + k] := MSIR.Field {name := "", type := intT};
         END;
-        shape := EntryAlloca (p, MSIR.TStruct ("__oa_shape", flds^));
+        (* BuildAlloca places every alloca at the head of the entry *)
+        shape := MSIR.BuildAlloca (b, "", MSIR.TStruct ("__oa_shape", flds^));
         MSIR.BuildStore (b, MSIR.BuildPtrAdd (b, "", shape, shapeB + ipB),
                          MSIR.BuildPtrAdd (b, "", shape, 0));
         MSIR.BuildStore (b, MSIR.ConstInt (intT, ndims),
@@ -450,7 +440,7 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
   BEGIN
     slot := NIL;
     IF NeedsSlot (p) THEN
-      slot := EntryAlloca (p, MSIR.TI1 ());
+      slot := MSIR.BuildAlloca (MSIR.ProcEntry (p), "", MSIR.TI1 ());
     END;
     (* New continuation blocks are appended and examined in turn. *)
     WHILE k < MSIR.ProcBlockCount (p) DO
@@ -475,7 +465,7 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                   MSIR.InsnMakeCopy (i, Method (cur, i));
                   MSIR.BlockAppendInsn (cur, i);
                 ELSIF MSIR.InsnOp (i) IN SET OF Op {Op.New, Op.OpenArrayNew} THEN
-                  MSIR.InsnMakeCopy (i, Allocate (m, p, cur, i));
+                  MSIR.InsnMakeCopy (i, Allocate (m, cur, i));
                   MSIR.BlockAppendInsn (cur, i);
                 ELSIF IsCheck (MSIR.InsnOp (i)) THEN
                   VAR fail  := FailCond (m, p, b, cur, i);

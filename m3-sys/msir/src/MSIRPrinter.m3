@@ -44,37 +44,14 @@ PROCEDURE Type(wr: Wr.T;  t: MSIR.T) =
         Wr.PutText(wr, Fmt.Int(MSIR.OpenArrayRank(t)));
         Wr.PutText(wr, "> ");
         Type(wr, MSIR.OpenArrayElt(t));
-    | MSIR.TypeKind.HeapArray =>
-        Wr.PutText(wr, "heap_array<");
-        Wr.PutText(wr, Fmt.Int(MSIR.HeapArrayRank(t)));
-        Wr.PutText(wr, "> ");
-        Type(wr, MSIR.HeapArrayElt(t));
     | MSIR.TypeKind.FixedArray =>
         Wr.PutText(wr, "[");
         Wr.PutText(wr, Fmt.Int(MSIR.FixedArrayLen(t)));
         Wr.PutText(wr, "]");
         Type(wr, MSIR.FixedArrayElt(t));
-    | MSIR.TypeKind.Subrange =>
-        Wr.PutText(wr, "subrange<");
-        Type(wr, MSIR.SubrangeParent(t));
-        Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.Int(MSIR.SubrangeLo(t)));
-        Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.Int(MSIR.SubrangeHi(t)));
-        Wr.PutText(wr, ">");
-    | MSIR.TypeKind.Set =>
-        Wr.PutText(wr, "set<");
-        Type(wr, MSIR.SetElt(t));
-        Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.Int(MSIR.SetLo(t)));
-        Wr.PutText(wr, ", ");
-        Wr.PutText(wr, Fmt.Int(MSIR.SetHi(t)));
-        Wr.PutText(wr, ">");
     | MSIR.TypeKind.Enum =>
         Wr.PutText(wr, "enum ");
         Wr.PutText(wr, MSIR.StructName(t));
-    | MSIR.TypeKind.ProcType =>
-        Wr.PutText(wr, "proc(...)");          (* v0: terse *)
     END;
   END Type;
 
@@ -207,7 +184,6 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.GcStore            => RETURN "gc.store";
     | MSIR.Op.GcDirty            => RETURN "gc.dirty";
     | MSIR.Op.GcLoadBlock        => RETURN "gc.load_block";
-    | MSIR.Op.FieldAddr          => RETURN "field_addr";
     | MSIR.Op.IAdd               => RETURN "iadd";
     | MSIR.Op.ISub               => RETURN "isub";
     | MSIR.Op.IMul               => RETURN "imul";
@@ -252,7 +228,6 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.Resume             => RETURN "resume";
     | MSIR.Op.OpenArraySize      => RETURN "openarray.size";
     | MSIR.Op.OpenArrayElemAddr  => RETURN "openarray.elem_addr";
-    | MSIR.Op.Subarray           => RETURN "subarray";
     | MSIR.Op.SubscriptCheck     => RETURN "subscript_check";
     | MSIR.Op.NilCheck           => RETURN "nil_check";
     | MSIR.Op.RangeCheck         => RETURN "range_check";
@@ -278,7 +253,6 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.SetSingleton       => RETURN "set_singleton";
     | MSIR.Op.SetRange           => RETURN "set_range";
     | MSIR.Op.OpenArrayNew       => RETURN "openarray.new";
-    | MSIR.Op.OpenArrayDeref     => RETURN "openarray.deref";
     | MSIR.Op.ArrayElemAddr      => RETURN "array.elem_addr";
     | MSIR.Op.PtrAdd             => RETURN "ptr.add";
     | MSIR.Op.GepByte            => RETURN "gep.byte";
@@ -435,11 +409,6 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
           NameRef(wr, MSIR.InsnOperand(i, 2));
           Wr.PutText(wr, "]");
         END;
-    | MSIR.Op.FieldAddr =>
-        Wr.PutText(wr, " ");
-        NameRef(wr, MSIR.InsnOperand(i, 0));
-        Wr.PutText(wr, ", .");
-        Wr.PutText(wr, MSIR.InsnSelector(i));
     | MSIR.Op.ArrayElemAddr =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
@@ -554,13 +523,6 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, ", ");
           NameRef(wr, MSIR.InsnOperand(i, k));
         END;
-    | MSIR.Op.Subarray =>
-        Wr.PutText(wr, " ");
-        NameRef(wr, MSIR.InsnOperand(i, 0));
-        Wr.PutText(wr, ", ");
-        NameRef(wr, MSIR.InsnOperand(i, 1));
-        Wr.PutText(wr, ", ");
-        NameRef(wr, MSIR.InsnOperand(i, 2));
     | MSIR.Op.SubscriptCheck, MSIR.Op.ShapeCheck =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
@@ -607,9 +569,6 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, ", ");
           NameRef(wr, MSIR.InsnOperand(i, k));
         END;
-    | MSIR.Op.OpenArrayDeref =>
-        Wr.PutText(wr, " ");
-        NameRef(wr, MSIR.InsnOperand(i, 0));
     | MSIR.Op.LandingPad =>
         IF MSIR.InsnIsCleanup(i) THEN
           Wr.PutText(wr, " cleanup");
@@ -864,21 +823,12 @@ PROCEDURE Proc(wr: Wr.T;  p: MSIR.Proc) =
 
 PROCEDURE Module(wr: Wr.T;  m: MSIR.Module) =
   VAR
-    nImp    := MSIR.ModuleImportCount(m);
     nGlobal := MSIR.ModuleGlobalCount(m);
     nProc   := MSIR.ModuleProcCount(m);
   BEGIN
     Wr.PutText(wr, "module ");
     Wr.PutText(wr, MSIR.ModuleName(m));
     Wr.PutText(wr, "\n");
-    IF nImp > 0 THEN
-      Wr.PutText(wr, "  imports {");
-      FOR i := 0 TO nImp - 1 DO
-        IF i > 0 THEN Wr.PutText(wr, ", ") END;
-        Wr.PutText(wr, MSIR.ModuleImport(m, i));
-      END;
-      Wr.PutText(wr, "}\n");
-    END;
     Wr.PutText(wr, "\n");
     FOR i := 0 TO nGlobal - 1 DO
       VAR g := MSIR.ModuleGlobal(m, i);

@@ -149,7 +149,6 @@ PROCEDURE BeginProc(name: TEXT;
     nCaptures:     INTEGER := 0;
     f:             Value.T;
     resultT:       MSIR.T;
-    isNested:      BOOLEAN;
     pBase:         INTEGER;  (* param index offset for formals = nCaptures *)
     caps:          REF ARRAY OF CaptureAnalysis.Capture;
     reuseProc:     MSIR.Proc;
@@ -158,7 +157,6 @@ PROCEDURE BeginProc(name: TEXT;
     (* Push current state if we're already inside a proc (nested proc). *)
     IF curProc # NIL THEN
       IF procContextDepth >= MaxNestDepth THEN
-        MSIREmit.NoteSkipped(name, "nesting too deep");
         RETURN FALSE;
       END;
       WITH ctx = procContextStack[procContextDepth] DO
@@ -185,7 +183,6 @@ PROCEDURE BeginProc(name: TEXT;
 
     resultT := MSIRType.TranslateResult(result);
     IF resultT = NIL THEN
-      MSIREmit.NoteSkipped(name, "unsupported result type");
       PopBeginContext();
       RETURN FALSE;
     END;
@@ -199,7 +196,6 @@ PROCEDURE BeginProc(name: TEXT;
        aggregate type from TranslateResult above; there is no hidden result
        param, so a proc's params are just [captures…, formals…]. *)
 
-    isNested  := procContextDepth > 0;
     IF captures = NIL THEN caps := NIL
     ELSE caps := CaptureAnalysis.GetCaptures(captures)
     END;
@@ -246,7 +242,6 @@ PROCEDURE BeginProc(name: TEXT;
         VAR pt := MSIRType.Translate(info.type);
         BEGIN
           IF pt = NIL THEN
-            MSIREmit.NoteSkipped(name, "unsupported formal type");
             PopBeginContext();
             RETURN FALSE;
           END;
@@ -694,28 +689,6 @@ PROCEDURE AddLocal(v: Variable.T): BOOLEAN =
     RETURN Variable.AddLocalMSIR(v, CurrentBlock());
   END AddLocal;
 
-PROCEDURE RegisterLoopVar(v: Variable.T;  paramVal: MSIR.Value) =
-  (* Register a FOR loop variable as an SSA block-parameter value.
-     No alloca needed: the loop variable is read-only (M3 spec forbids
-     assignments to it in the body) and not addressable.
-     VarMapAdd with storageType = NIL causes LookupVar to return paramVal
-     directly, as for by-value formal parameters. *)
-  BEGIN
-    IF VarMapContains(v) THEN RETURN END;
-    IF varMapN >= MaxVarMap THEN
-      Abandon("RegisterLoopVar: overflow — increase MaxVarMap");
-      RETURN;
-    END;
-    varMap[varMapN].key         := v;
-    varMap[varMapN].isBitField  := FALSE;  (* slot reused: clear stale flag *)
-    varMap[varMapN].val         := paramVal;
-    varMap[varMapN].storageType := NIL;   (* return paramVal directly *)
-    varMap[varMapN].wideType    := NIL;
-    varMap[varMapN].signedWiden := FALSE;
-    varMap[varMapN].container   := NIL;
-    INC(varMapN);
-  END RegisterLoopVar;
-
 PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
                       container: MSIR.Value := NIL) =
   (* WITH designator: addr is already a pointer to the target; no alloca widening. *)
@@ -832,7 +805,6 @@ PROCEDURE Abandon(reason: TEXT) =
         THEN pname := MSIR.ProcName(curProc)
         ELSE pname := "<no-proc>"
       END;
-      MSIREmit.NoteSkipped(pname, "msir-abandon: " & reason);
       (* In MSIRObj/MSIRAsm mode the MSIR lowering IS the object code, so an
          abandon mid-procedure leaves truncated/malformed IR (its symptom is the
          verifier's "empty block").  There is no C fallback, so fail the build
@@ -1378,8 +1350,6 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
                    READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   VAR
     b:       MSIR.Block;
-    unwind:  MSIR.Block;
-    normalB: MSIR.Block;
     result:  MSIR.Value;
   BEGIN
     b      := CurrentBlock();   (* advance past any dead-terminator block *)
@@ -1391,8 +1361,6 @@ PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
                             READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
   VAR
     b:       MSIR.Block;
-    unwind:  MSIR.Block;
-    normalB: MSIR.Block;
     result:  MSIR.Value;
   BEGIN
     CheckCallee(fn);
@@ -1470,36 +1438,6 @@ PROCEDURE EmitRangeCheck(v, lo, hi: MSIR.Value;  unsigned: BOOLEAN;
     Scanner.Here(f, line);
     MSIR.BuildRangeCheck(CurrentBlock(), v, lo, hi, errCode, line, unsigned);
   END EmitRangeCheck;
-
-PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER) =
-  VAR
-    reportProc := HookProc(RunTyme.Hook.Abort);  (* RTHooks__ReportFault *)
-    faultBlk, contBlk: MSIR.Block;
-    f: TEXT;  line: INTEGER;
-    ptrT  := MSIR.TPtr(MSIR.TVoid());
-    args  : ARRAY [0..1] OF MSIR.Value;
-  BEGIN
-    IF NOT InProc() OR faultCond = NIL THEN RETURN END;
-    IF reportProc = NIL THEN
-      Abandon("check: RTHooks__ReportFault hook unavailable");  RETURN;
-    END;
-    Scanner.Here(f, line);
-    faultBlk := NewBlock("check.fault");
-    contBlk  := NewBlock("check.cont");
-    MSIR.BuildCondBr(CurrentBlock(), faultCond,
-                     faultBlk, ARRAY OF MSIR.Value{},
-                     contBlk,  ARRAY OF MSIR.Value{});
-    curBlock := faultBlk;
-    (* info = line*32 + ORD(code); module = &@<curMod>_{M3,I3}_info (offset 0). *)
-    args[0] := MSIR.StructFieldRef(
-                 MSIR.ModuleInfoName(MSIREmit.CurrentModule()), 0, ptrT);
-    args[1] := MSIR.ConstInt(MSIR.TI(Target.Integer.size), line * 32 + errCode);
-    EVAL EmitCall("", reportProc, args);
-    IF NOT CurrentBlockTerminated() THEN
-      MSIR.BuildUnreachable(CurrentBlock());
-    END;
-    curBlock := contBlk;
-  END EmitReportFault;
 
 PROCEDURE WidenCallResult(v: MSIR.Value;  resultType: Type.T): MSIR.Value =
   BEGIN
@@ -2144,7 +2082,7 @@ PROCEDURE ImportChainAddr(binderName: TEXT;  varByteOff: INTEGER): MSIR.Value =
     RETURN MSIR.BuildPtrAdd(CurrentBlock(), "", impPtr, varByteOff);
   END ImportChainAddr;
 
-PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
+PROCEDURE GlobalMapAddImport(v: Variable.T;
                               ownerBinder: TEXT;  varByteOff: INTEGER;
                               varMSIRType: MSIR.T;
                               needsLoad: BOOLEAN := FALSE;

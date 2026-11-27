@@ -1,6 +1,6 @@
 MODULE MSIREmit;
 
-IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRToM3CG, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
+IMPORT MSIR, MSIRPrinter, MSIRVerifier, MSIRToLLVM, MSIRBuilder, M3ID, RTParams, Target, Text, FileWr, Stdio, Wr, Thread, OSError;
 IMPORT RunTyme, Error, Fmt, Host, MSIRRuntime;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
@@ -100,16 +100,6 @@ PROCEDURE AddProc(p: MSIR.Proc) =
     MSIR.ModuleAddProc(curModule, p);
   END AddProc;
 
-PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT) =
-  VAR wr: Wr.T;
-  BEGIN
-    TRY wr := FileWr.OpenAppend("/tmp/msir-debug.txt"); EXCEPT ELSE RETURN END;
-    TRY
-      Wr.PutText(wr, procName & ": " & reason & "\n");
-      Wr.Close(wr);
-    EXCEPT ELSE END;
-  END NoteSkipped;
-
 CONST RtHookOf = ARRAY MSIR.RtHook OF RunTyme.Hook {
   RunTyme.Hook.Abort,            (* ReportFault *)
   RunTyme.Hook.CheckIsType,
@@ -165,12 +155,6 @@ PROCEDURE EndUnit() =
           TRY Wr.Flush(Stdio.stderr) EXCEPT ELSE END;
         END;
       END;
-    END;
-    IF RTParams.IsPresent("msircensus") THEN
-      (* D25 spike: which procedures an MSIR -> M3CG lowering could take
-         today.  Informational; run with @M3msircensus, grep 'msir-census:'. *)
-      MSIRToM3CG.Census(Stdio.stderr, curModule);
-      TRY Wr.Flush(Stdio.stderr) EXCEPT ELSE END;
     END;
     errs := MSIRVerifier.VerifyModule(curModule);
     IF errs # NIL THEN
@@ -242,9 +226,6 @@ PROCEDURE EndUnit() =
     curModule  := NIL;
     llOutPath  := NIL;
   END EndUnit;
-
-PROCEDURE ModuleEmitted(name: TEXT): BOOLEAN =
-  BEGIN RETURN ModuleAlreadyEmitted(name) END ModuleEmitted;
 
 PROCEDURE ModuleAlreadyEmitted(name: TEXT): BOOLEAN =
   BEGIN

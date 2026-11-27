@@ -183,19 +183,11 @@ PROCEDURE EmitCall(name: TEXT;  callee: MSIR.Proc;
 PROCEDURE EmitCallIndirect(name: TEXT;  fn: MSIR.Value;  rtype: MSIR.T;
                             READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
 
-(* Emit a runtime-fault guard.  When faultCond (an i1 value) is TRUE, branches
-   to a fault block that calls RTHooks__ReportFault(@<curMod>_M3_info,
-   line*32 + errCode) — which never returns — and continues in a fresh block
-   otherwise.  errCode is ORD of an M3CG.RuntimeError / RuntimeError.T (< 32).
-   Mirrors the C backend's <module>_CRASH(info) wrapper.  No-op outside a proc
-   or if faultCond is NIL.  The ReportFault call routes through EmitCall, so it
-   correctly invokes to the enclosing TRY's unwind block when inside one. *)
-PROCEDURE EmitReportFault(faultCond: MSIR.Value;  errCode: INTEGER);
 
-(* Like EmitReportFault but for <*ASSERT expr*> with a message: when faultCond is
-   TRUE, calls RTHooks__AssertFailed(@<curMod>_M3_info, line, msgVal) — which
-   raises RuntimeError.AssertFailed carrying msgVal as info0 so the backstop
-   prints `<*ASSERT*> failed: <msg>` (ReportFault only yields the generic
+(* For <*ASSERT expr*> with a message: when faultCond is TRUE, calls
+   RTHooks__AssertFailed(@<curMod>_M3_info, line, msgVal), which raises
+   RuntimeError.AssertFailed carrying msgVal as info0 so the backstop prints
+   `<*ASSERT*> failed: <msg>` (a `fault` only yields the generic
    `<*ASSERT*> failed.`).  msgVal is the already-compiled TEXT message value.
    No-op outside a proc or if faultCond/msgVal is NIL. *)
 PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value);
@@ -454,10 +446,6 @@ PROCEDURE UniqueLocalName(rawName: TEXT): TEXT;
    MSIR.BlockParamValue(blk, 0). *)
 PROCEDURE NewBlockWithParam(label: TEXT;  paramName: TEXT;  paramType: MSIR.T): MSIR.Block;
 
-(* Register a loop-variable as a block-parameter SSA value (no alloca).
-   LookupVar(v) returns paramVal directly; LookupVarAddr abandons (loop
-   variables are read-only and non-addressable). *)
-PROCEDURE RegisterLoopVar(v: Variable.T;  paramVal: MSIR.Value);
 
 PROCEDURE GlobalMapAdd(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module);
 
@@ -475,7 +463,7 @@ PROCEDURE GlobalMapAddStruct(v: Variable.T;  g: MSIR.Global;  m: MSIR.Module;
    varByteOff bytes to reach the variable's storage in the imported module's
    interface struct.  varMSIRType is the MSIR element type of the stored value
    (use TPtr(TVoid()) for traced GcRef types). *)
-PROCEDURE GlobalMapAddImport(v: Variable.T;  m: MSIR.Module;
+PROCEDURE GlobalMapAddImport(v: Variable.T;
                               ownerBinder: TEXT;  varByteOff: INTEGER;
                               varMSIRType: MSIR.T;
                               needsLoad: BOOLEAN := FALSE;

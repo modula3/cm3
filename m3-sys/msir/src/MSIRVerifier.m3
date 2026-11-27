@@ -1,6 +1,6 @@
 MODULE MSIRVerifier;
 
-IMPORT MSIR, RefSeq, Fmt, Text;
+IMPORT MSIR, RefSeq, Fmt;
 
 TYPE Ctx = REF RECORD
   errors: RefSeq.T;        (* of TEXT *)
@@ -314,41 +314,6 @@ PROCEDURE CheckConvert(c: Ctx;  i: MSIR.Insn) =
     END;
   END CheckConvert;
 
-PROCEDURE CheckFieldAddr(c: Ctx;  i: MSIR.Insn) =
-  VAR
-    objT, innerT : MSIR.T;
-    fname        : TEXT;
-    res          := MSIR.InsnResult(i);
-    found        : BOOLEAN;
-  BEGIN
-    IF MSIR.InsnOperandCount(i) # 1 THEN Err(c, "field_addr expects 1 operand"); RETURN END;
-    objT := MSIR.ValueType(MSIR.InsnOperand(i, 0));
-    CASE MSIR.Kind(objT) OF
-    | MSIR.TypeKind.Ptr, MSIR.TypeKind.GcRef, MSIR.TypeKind.GcSlot =>
-        innerT := MSIR.EltType(objT);
-    ELSE Err(c, "field_addr: object must be ptr or gc_ref"); RETURN;
-    END;
-    fname := MSIR.InsnSelector(i);
-    CASE MSIR.Kind(innerT) OF
-    | MSIR.TypeKind.Struct =>
-        found := FALSE;
-        FOR k := 0 TO MSIR.StructFieldCount(innerT) - 1 DO
-          IF Text.Equal(MSIR.StructField(innerT, k).name, fname) THEN found := TRUE END;
-        END;
-        IF NOT found THEN Err(c, "field_addr: field '" & fname & "' not found") END;
-    | MSIR.TypeKind.Object =>
-        IF MSIR.ObjectFieldIndex(innerT, fname) < 0 THEN
-          Err(c, "field_addr: field '" & fname & "' not found in '"
-               & MSIR.ObjectName(innerT) & "'");
-        END;
-    ELSE Err(c, "field_addr: inner type must be Struct or Object");
-    END;
-    IF res = NIL THEN Err(c, "field_addr must have a result"); RETURN END;
-    IF MSIR.Kind(MSIR.ValueType(res)) # MSIR.TypeKind.Ptr THEN
-      Err(c, "field_addr result must be ptr type");
-    END;
-  END CheckFieldAddr;
-
 PROCEDURE CheckArrayElemAddr(c: Ctx;  i: MSIR.Insn) =
   VAR
     arrT  : MSIR.T;
@@ -526,8 +491,6 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
       MSIR.Op.ZExt,   MSIR.Op.SExt, MSIR.Op.Trunc,
       MSIR.Op.FPFloor, MSIR.Op.FPCeil, MSIR.Op.FPRound, MSIR.Op.FPAbs =>
         (* Cast/rounding ops: one operand, typed result. No further v0 checks. *)
-    | MSIR.Op.FieldAddr =>
-        CheckFieldAddr(c, i);
     | MSIR.Op.ArrayElemAddr =>
         CheckArrayElemAddr(c, i);
     ELSE

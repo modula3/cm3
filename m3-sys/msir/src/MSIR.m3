@@ -12,14 +12,10 @@ REVEAL T = BRANDED "MSIR.T" REF RECORD
   elt:        T           := NIL;      (* Ptr / GcRef / GcSlot / OpenArray *)
   structName: TEXT        := NIL;
   fields:     REF ARRAY OF Field := NIL;
-  procParams: REF ARRAY OF T      := NIL;
-  procResult: T           := NIL;
   objSuper:         T                  := NIL;   (* Object: super; NIL if root *)
-  objMethods:       REF ARRAY OF Method := NIL;
-  objDescriptorSym: TEXT                := NIL;
   openArrayRank:    INTEGER             := 0;    (* OpenArray *)
   arrayLen:         INTEGER              := 0;    (* FixedArray length *)
-  subrLo, subrHi:   INTEGER              := 0;    (* Subrange / Set bounds *)
+  arrayLo:          INTEGER              := 0;    (* FixedArray: the index's lower bound *)
   typeUID:          INTEGER              := 0;    (* CM3 GlobalUID fingerprint; 0 = unset *)
   align:            INTEGER              := 0;    (* M3's alignment in bits; 0 = unstated *)
   labels:           REF ARRAY OF TEXT   := NIL;  (* Enum label names, index = ordinal *)
@@ -102,34 +98,17 @@ PROCEDURE TStruct(name: TEXT;  READONLY fields: ARRAY OF Field): T =
     RETURN t;
   END TStruct;
 
-PROCEDURE TProc(READONLY params: ARRAY OF T;  result: T): T =
-  VAR
-    t := NewType(TypeKind.ProcType);
-    ps := NEW(REF ARRAY OF T, NUMBER(params));
-  BEGIN
-    FOR i := FIRST(params) TO LAST(params) DO ps[i] := params[i] END;
-    t.procParams := ps;
-    t.procResult := result;
-    RETURN t;
-  END TProc;
-
 PROCEDURE TObject(name: TEXT;
                   super: T;
-                  READONLY fields:  ARRAY OF Field;
-                  READONLY methods: ARRAY OF Method;
-                  descriptorSym: TEXT): T =
+                  READONLY fields:  ARRAY OF Field): T =
   VAR
     t  := NewType(TypeKind.Object);
     fs := NEW(REF ARRAY OF Field,  NUMBER(fields));
-    ms := NEW(REF ARRAY OF Method, NUMBER(methods));
   BEGIN
     t.structName       := name;
     t.objSuper         := super;
-    t.objDescriptorSym := descriptorSym;
     FOR i := FIRST(fields)  TO LAST(fields)  DO fs[i] := fields[i]  END;
-    FOR i := FIRST(methods) TO LAST(methods) DO ms[i] := methods[i] END;
     t.fields     := fs;
-    t.objMethods := ms;
     RETURN t;
   END TObject;
 
@@ -142,15 +121,6 @@ PROCEDURE TOpenArray(rank: INTEGER;  elt: T): T =
     RETURN t;
   END TOpenArray;
 
-PROCEDURE THeapArray(rank: INTEGER;  elt: T): T =
-  VAR t := NewType(TypeKind.HeapArray);
-  BEGIN
-    <* ASSERT rank >= 1, "THeapArray: rank must be >= 1" *>
-    t.openArrayRank := rank;
-    t.elt           := elt;
-    RETURN t;
-  END THeapArray;
-
 PROCEDURE TFixedArray(len: INTEGER;  elt: T): T =
   VAR t := NewType(TypeKind.FixedArray);
   BEGIN
@@ -159,15 +129,6 @@ PROCEDURE TFixedArray(len: INTEGER;  elt: T): T =
     t.elt      := elt;
     RETURN t;
   END TFixedArray;
-
-PROCEDURE TSubrange(parent: T;  lo, hi: INTEGER): T =
-  VAR t := NewType(TypeKind.Subrange);
-  BEGIN
-    t.elt := parent;
-    t.subrLo := lo;
-    t.subrHi := hi;
-    RETURN t;
-  END TSubrange;
 
 PROCEDURE TLandingPad(): T =
   VAR t := NewType(TypeKind.Struct);
@@ -179,15 +140,6 @@ PROCEDURE TLandingPad(): T =
     t.fields     := fs;
     RETURN t;
   END TLandingPad;
-
-PROCEDURE TSet(elt: T;  lo, hi: INTEGER): T =
-  VAR t := NewType(TypeKind.Set);
-  BEGIN
-    t.elt := elt;
-    t.subrLo := lo;
-    t.subrHi := hi;
-    RETURN t;
-  END TSet;
 
 PROCEDURE Kind(t: T): TypeKind = BEGIN RETURN t.kind END Kind;
 
@@ -231,25 +183,12 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
         RETURN TRUE;
     | TypeKind.Object =>
         RETURN Text.Equal(a.structName, b.structName);
-    | TypeKind.OpenArray, TypeKind.HeapArray =>
+    | TypeKind.OpenArray =>
         IF a.openArrayRank # b.openArrayRank THEN RETURN FALSE END;
         RETURN Equal(a.elt, b.elt);
     | TypeKind.FixedArray =>
         IF a.arrayLen # b.arrayLen THEN RETURN FALSE END;
         RETURN Equal(a.elt, b.elt);
-    | TypeKind.Subrange, TypeKind.Set =>
-        IF a.subrLo # b.subrLo OR a.subrHi # b.subrHi THEN RETURN FALSE END;
-        RETURN Equal(a.elt, b.elt);
-    | TypeKind.ProcType =>
-        IF NUMBER(a.procParams^) # NUMBER(b.procParams^) THEN
-          RETURN FALSE
-        END;
-        FOR i := 0 TO LAST(a.procParams^) DO
-          IF NOT Equal(a.procParams[i], b.procParams[i]) THEN
-            RETURN FALSE
-          END;
-        END;
-        RETURN Equal(a.procResult, b.procResult);
     ELSE
         RETURN a.bits = b.bits;
     END;
@@ -317,50 +256,12 @@ PROCEDURE ObjectFieldCount(t: T): INTEGER =
   END ObjectFieldCount;
 PROCEDURE ObjectField(t: T;  i: INTEGER): Field =
   BEGIN RETURN t.fields[i] END ObjectField;
-PROCEDURE ObjectMethodCount(t: T): INTEGER =
-  BEGIN
-    IF t.objMethods = NIL THEN RETURN 0 END;
-    RETURN NUMBER(t.objMethods^);
-  END ObjectMethodCount;
-PROCEDURE ObjectMethod(t: T;  i: INTEGER): Method =
-  BEGIN RETURN t.objMethods[i] END ObjectMethod;
-PROCEDURE ObjectDescriptorSym(t: T): TEXT =
-  BEGIN RETURN t.objDescriptorSym END ObjectDescriptorSym;
-
 PROCEDURE OpenArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END OpenArrayRank;
 PROCEDURE OpenArrayElt(t: T): T        = BEGIN RETURN t.elt           END OpenArrayElt;
-PROCEDURE HeapArrayRank(t: T): INTEGER = BEGIN RETURN t.openArrayRank END HeapArrayRank;
-PROCEDURE HeapArrayElt(t: T): T        = BEGIN RETURN t.elt           END HeapArrayElt;
 PROCEDURE FixedArrayLen(t: T): INTEGER = BEGIN RETURN t.arrayLen      END FixedArrayLen;
 PROCEDURE FixedArrayElt(t: T): T       = BEGIN RETURN t.elt           END FixedArrayElt;
-PROCEDURE FixedArrayLo(t: T): INTEGER  = BEGIN RETURN t.subrLo        END FixedArrayLo;
-PROCEDURE SetFixedArrayLo(t: T; lo: INTEGER) = BEGIN t.subrLo := lo   END SetFixedArrayLo;
-
-PROCEDURE SubrangeParent(t: T): T   = BEGIN RETURN t.elt    END SubrangeParent;
-PROCEDURE SubrangeLo(t: T): INTEGER = BEGIN RETURN t.subrLo END SubrangeLo;
-PROCEDURE SubrangeHi(t: T): INTEGER = BEGIN RETURN t.subrHi END SubrangeHi;
-PROCEDURE SetElt(t: T): T           = BEGIN RETURN t.elt    END SetElt;
-PROCEDURE SetLo(t: T): INTEGER      = BEGIN RETURN t.subrLo END SetLo;
-PROCEDURE SetHi(t: T): INTEGER      = BEGIN RETURN t.subrHi END SetHi;
-
-(* Look up a method by selector, walking the super chain. *)
-
-PROCEDURE ObjectFieldIndex(t: T;  name: TEXT): INTEGER =
-  VAR cur := t;  base := 0;
-  BEGIN
-    WHILE cur # NIL DO
-      IF cur.fields # NIL THEN
-        FOR i := 0 TO LAST(cur.fields^) DO
-          IF Text.Equal(cur.fields[i].name, name) THEN
-            RETURN base + i;
-          END;
-        END;
-        INC(base, NUMBER(cur.fields^));
-      END;
-      cur := cur.objSuper;
-    END;
-    RETURN -1;
-  END ObjectFieldIndex;
+PROCEDURE FixedArrayLo(t: T): INTEGER  = BEGIN RETURN t.arrayLo       END FixedArrayLo;
+PROCEDURE SetFixedArrayLo(t: T; lo: INTEGER) = BEGIN t.arrayLo := lo  END SetFixedArrayLo;
 
 (*----------------------------------------------------------------- Values *)
 
@@ -574,7 +475,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   br1Args:   REF ARRAY OF Value := NIL;
   callee:    Proc  := NIL;
   targetType: T    := NIL;        (* Alloca, New, Narrow, Istype, Convert *)
-  selector:   TEXT := NIL;        (* Dispatch method name; FieldAddr field name *)
+  selector:   TEXT := NIL;        (* method: the method's name *)
   typecaseClauses: REF ARRAY OF TypecaseClause := NIL;
   extractIdx: INTEGER := 0;       (* ExtractValue: field index *)
   isCleanup:  BOOLEAN := FALSE;   (* LandingPad: cleanup vs. catch *)
@@ -1100,7 +1001,6 @@ REVEAL Module = BRANDED "MSIR.Module" REF RECORD
   datalayout:  TEXT := NIL;
   srcFile:     TEXT := NIL;  (* source file, for RT0.ModuleInfo.file *)
   incomplete:  TEXT := NIL;  (* see ModuleSetIncomplete *)
-  imports:    RefSeq.T;                            (* elements: TEXT *)
   procs:      RefSeq.T;                            (* elements: Proc *)
   globals:    RefSeq.T;                            (* elements: Global *)
   globalInits: RefSeq.T;                           (* elements: GlobalInit —
@@ -1329,23 +1229,6 @@ PROCEDURE ModuleConstArrayCount(m: Module): INTEGER =
 PROCEDURE ModuleConstArray(m: Module; i: INTEGER): ConstArray =
   BEGIN RETURN m.constArrays.get(i) END ModuleConstArray;
 
-PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
-                             byteAlign: INTEGER): INTEGER =
-  VAR off: INTEGER;
-  BEGIN
-    (* Initialise on first call: start right after MI_SIZE *)
-    IF m.nextGlobalOff = 0 THEN
-      m.nextGlobalOff := M3RT.MI_SIZE DIV Target.Char.size;
-    END;
-    (* Round up to alignment *)
-    off := m.nextGlobalOff;
-    IF byteAlign > 1 THEN
-      off := (off + byteAlign - 1) - ((off + byteAlign - 1) MOD byteAlign);
-    END;
-    m.nextGlobalOff := off + byteSize;
-    RETURN off;
-  END ModuleAllocGlobal;
-
 PROCEDURE ModuleNoteGlobal(m: Module;  endByteOff: INTEGER) =
 (* Record that a user global extends to endByteOff (= byteOffset + byteSize) in
    the module struct, growing the struct to contain it.  Used when globals are
@@ -1440,7 +1323,6 @@ REVEAL TypeDesc = BRANDED "MSIR.TypeDesc" REF RECORD
   parentUID     : INTEGER;  (* OBJ: parent fingerprint *)
   methods       : REF ARRAY OF TEXT;  (* OBJ: vtable function names *)
   methodBytes   : INTEGER;  (* OBJ: vtable byte size; -1 = derive from methods *)
-  dynamicMethOff: BOOLEAN  := FALSE;  (* OBJ: method names at LOCAL indices; linkProc reads OTC_methodOffset at runtime *)
   useLinkProc   : BOOLEAN  := FALSE;  (* OBJ: emit defaultMethods=NIL + a C-GenLinkProc-style
                                          linkProc from methodInits (handles overrides of
                                          inherited methods; RTLinker copies parent first) *)
@@ -1512,11 +1394,6 @@ PROCEDURE TypeDescMethodCount(d: TypeDesc): INTEGER =
   END TypeDescMethodCount;
 PROCEDURE TypeDescMethod(d: TypeDesc; i: INTEGER): TEXT =
   BEGIN RETURN d.methods[i] END TypeDescMethod;
-
-PROCEDURE TypeDescDynamicMethOff(d: TypeDesc): BOOLEAN =
-  BEGIN RETURN d.dynamicMethOff END TypeDescDynamicMethOff;
-PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN) =
-  BEGIN d.dynamicMethOff := b END SetTypeDescDynamicMethOff;
 
 PROCEDURE TypeDescSetArrayInfo(d: TypeDesc; nDimensions, elementSize: INTEGER) =
   BEGIN d.nDimensions := nDimensions;  d.elementSize := elementSize END TypeDescSetArrayInfo;
@@ -1616,13 +1493,6 @@ PROCEDURE ModuleTextLitCnt(m: Module;  i: INTEGER): INTEGER =
   BEGIN RETURN NARROW(m.textLiterals.get(i), TextLit).cnt END ModuleTextLitCnt;
 
 
-PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value =
-  (* Kept for API compat; callers should prefer ConstTextLit directly. *)
-  <*UNUSED*> VAR dummy := b;
-  BEGIN
-    RETURN ConstTextLit(uid, NIL, 0);
-  END BuildTextLiteralRef;
-
 (*---------------------------------------------- type links (cell_ptrs) *)
 
 REVEAL TypeLink = BRANDED "MSIR.TypeLink" REF RECORD
@@ -1718,7 +1588,6 @@ PROCEDURE NewModule(name: TEXT): Module =
   VAR m := NEW(Module);
   BEGIN
     m.name          := name;
-    m.imports       := NEW(RefSeq.T).init();
     m.procs         := NEW(RefSeq.T).init();
     m.globals       := NEW(RefSeq.T).init();
     m.globalInits   := NEW(RefSeq.T).init();
@@ -1769,12 +1638,6 @@ PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc) =
 PROCEDURE ModuleRtHook(m: Module;  h: RtHook): Proc =
   BEGIN RETURN m.rtHooks[h] END ModuleRtHook;
 
-PROCEDURE ModuleAddImport(m: Module;  name: TEXT) =
-  BEGIN m.imports.addhi(name) END ModuleAddImport;
-PROCEDURE ModuleImportCount(m: Module): INTEGER =
-  BEGIN RETURN m.imports.size() END ModuleImportCount;
-PROCEDURE ModuleImport(m: Module; i: INTEGER): TEXT =
-  BEGIN RETURN m.imports.get(i) END ModuleImport;
 PROCEDURE ModuleAddProc(m: Module;  p: Proc) =
   BEGIN m.procs.addhi(p) END ModuleAddProc;
 PROCEDURE ModuleProcCount(m: Module): INTEGER =
@@ -2294,51 +2157,6 @@ PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
     addInsn(b, i);
   END BuildGcStore;
 
-PROCEDURE objectOrStruct(t: T): T =
-  (* Strip a single layer of GcRef/Ptr/GcSlot to expose the underlying
-     Object or Struct type for field lookup. *)
-  BEGIN
-    CASE Kind(t) OF
-    | TypeKind.GcRef, TypeKind.Ptr, TypeKind.GcSlot => RETURN EltType(t);
-    ELSE RETURN t
-    END;
-  END objectOrStruct;
-
-PROCEDURE fieldType(objT: T;  name: TEXT): T =
-  VAR cur := objT;
-  BEGIN
-    WHILE cur # NIL DO
-      IF cur.fields # NIL THEN
-        FOR i := 0 TO LAST(cur.fields^) DO
-          IF Text.Equal(cur.fields[i].name, name) THEN
-            RETURN cur.fields[i].type;
-          END;
-        END;
-      END;
-      IF Kind(cur) = TypeKind.Object THEN cur := cur.objSuper
-                                     ELSE cur := NIL END;
-    END;
-    RETURN NIL;
-  END fieldType;
-
-PROCEDURE BuildFieldAddr(b: Block;  name: TEXT;
-                         obj: Value;  fieldName: TEXT): Value =
-  VAR
-    i := NEW(Insn);
-    ops := NEW(REF ARRAY OF Value, 1);
-    objT := objectOrStruct(obj.type);
-    ftype := fieldType(objT, fieldName);
-  BEGIN
-    <* ASSERT ftype # NIL, "BuildFieldAddr: field not found" *>
-    i.op := Op.FieldAddr;
-    i.selector := fieldName;
-    ops[0] := obj;
-    i.operands := ops;
-    i.result := makeResult(b, TPtr(ftype), name, i);
-    addInsn(b, i);
-    RETURN i.result;
-  END BuildFieldAddr;
-
 PROCEDURE BuildArrayElemAddr(b: Block;  name: TEXT;
                              arr: Value;  idx: Value): Value =
   VAR
@@ -2545,28 +2363,6 @@ PROCEDURE BuildCallIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
     RETURN i.result;
   END BuildCallIndirect;
 
-PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
-                               READONLY args: ARRAY OF Value;
-                               normalBlock: Block;  unwindBlock: Block): Value =
-  VAR
-    i    := NEW(Insn);
-    nOps := 1 + NUMBER(args);
-    ops  := NEW(REF ARRAY OF Value, nOps);
-  BEGIN
-    i.op       := Op.InvokeIndirect;
-    ops[0]     := fn;
-    FOR k := 0 TO NUMBER(args) - 1 DO ops[1 + k] := args[k] END;
-    i.operands   := ops;
-    i.targetType  := rtype;
-    i.br0Tgt     := normalBlock;
-    i.br1Tgt     := unwindBlock;
-    IF rtype # NIL AND Kind(rtype) # TypeKind.Void THEN
-      i.result := makeResult(b, rtype, name, i);
-    END;
-    addInsn(b, i);
-    RETURN i.result;
-  END BuildInvokeIndirect;
-
 PROCEDURE BuildRaise(b: Block;  exc: ExcDesc;  arg: Value;  line: INTEGER) =
   VAR i := NEW(Insn);
   BEGIN
@@ -2725,24 +2521,6 @@ PROCEDURE BuildOpenArrayElemAddr(b: Block;  name: TEXT;
     RETURN i.result;
   END BuildOpenArrayElemAddr;
 
-PROCEDURE BuildSubarray(b: Block;  name: TEXT;
-                        oa: Value;  lo, count: Value): Value =
-  VAR
-    i := NEW(Insn);
-    ops := NEW(REF ARRAY OF Value, 3);
-  BEGIN
-    <* ASSERT Kind(oa.type) = TypeKind.OpenArray,
-       "BuildSubarray: operand must be openarray" *>
-    <* ASSERT oa.type.openArrayRank = 1,
-       "BuildSubarray: M3 SUBARRAY is 1D only" *>
-    i.op := Op.Subarray;
-    ops[0] := oa;  ops[1] := lo;  ops[2] := count;
-    i.operands := ops;
-    i.result := makeResult(b, oa.type, name, i);   (* same openarray<1> elt *)
-    addInsn(b, i);
-    RETURN i.result;
-  END BuildSubarray;
-
 PROCEDURE BuildSubscriptCheck(b: Block;  idx, bound: Value;
                               code, line: INTEGER) =
   VAR
@@ -2836,11 +2614,11 @@ PROCEDURE buildSetBin(b: Block;  op: Op;  name: TEXT;  x, y: Value): Value =
     RETURN i.result;
   END buildSetBin;
 
-(* A set's representation: a set type, or the integer iN m3front uses. *)
+(* A set's representation: the integer iN m3front uses. *)
 PROCEDURE IsSetRep(t: T): BOOLEAN =
   BEGIN
     RETURN t # NIL AND t.kind IN SET OF TypeKind {
-             TypeKind.Set, TypeKind.IWide, TypeKind.I8, TypeKind.I16,
+             TypeKind.IWide, TypeKind.I8, TypeKind.I16,
              TypeKind.I32, TypeKind.I64 };
   END IsSetRep;
 
@@ -2918,26 +2696,6 @@ PROCEDURE BuildOpenArrayNew(b: Block;  name: TEXT;  cell: Value;
     addInsn(b, i);
     RETURN i.result;
   END BuildOpenArrayNew;
-
-PROCEDURE BuildOpenArrayDeref(b: Block;  name: TEXT;  ref: Value): Value =
-  VAR
-    i := NEW(Insn);
-    ops := NEW(REF ARRAY OF Value, 1);
-    refT := ref.type;  heapT: T;  resultT: T;
-  BEGIN
-    <* ASSERT Kind(refT) = TypeKind.GcRef,
-       "BuildOpenArrayDeref: operand must be gc_ref" *>
-    heapT := EltType(refT);
-    <* ASSERT Kind(heapT) = TypeKind.HeapArray,
-       "BuildOpenArrayDeref: operand must be gc_ref to a heap array" *>
-    resultT := TOpenArray(heapT.openArrayRank, heapT.elt);
-    i.op := Op.OpenArrayDeref;
-    ops[0] := ref;
-    i.operands := ops;
-    i.result := makeResult(b, resultT, name, i);
-    addInsn(b, i);
-    RETURN i.result;
-  END BuildOpenArrayDeref;
 
 PROCEDURE BlockIsTerminated(b: Block): BOOLEAN =
   VAR n := BlockInsnCount(b);  ri: Insn;

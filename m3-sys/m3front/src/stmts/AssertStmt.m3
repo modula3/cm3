@@ -157,15 +157,24 @@ PROCEDURE GetOutcome (<*UNUSED*> p: P): Stmt.Outcomes =
 PROCEDURE DoFaultMSIR (p: P;  faultCond: MSIR.Value) =
 (* When faultCond is TRUE, fail the assertion.  With a message, call
    RTHooks__AssertFailed(module, line, msg) so the backstop prints
-   `<*ASSERT*> failed: <msg>` (mirrors the CG path's Crash); otherwise fall back
-   to ReportFault which yields the generic `<*ASSERT*> failed.`. *)
+   `<*ASSERT*> failed: <msg>` (mirrors the CG path's Crash); otherwise a
+   `fault` with AssertFailed, which yields the generic `<*ASSERT*> failed.`. *)
   VAR msgVal: MSIR.Value := NIL;
   BEGIN
     IF p.msg # NIL THEN msgVal := Expr.CompileMSIR (p.msg) END;
     IF msgVal # NIL THEN
       MSIRBuilder.EmitAssertFail (faultCond, msgVal);
     ELSE
-      MSIRBuilder.EmitReportFault (faultCond, ORD (CG.RuntimeError.AssertFailed));
+      (* no message: the AssertFailed fault (D32) on the failing branch *)
+      VAR fail := MSIRBuilder.NewBlock ("assert.fail");
+          ok   := MSIRBuilder.NewBlock ("assert.ok");
+      BEGIN
+        MSIR.BuildCondBr (MSIRBuilder.CurrentBlock (), faultCond,
+                          fail, ARRAY OF MSIR.Value {}, ok, ARRAY OF MSIR.Value {});
+        MSIRBuilder.SetCurrentBlock (fail);
+        MSIRBuilder.EmitFault (ORD (CG.RuntimeError.AssertFailed));
+        MSIRBuilder.SetCurrentBlock (ok);
+      END;
     END;
   END DoFaultMSIR;
 

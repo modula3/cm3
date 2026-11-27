@@ -6,44 +6,10 @@ IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Targe
 FROM MSIR IMPORT Op, TypeKind, ValueKind;
 
 CONST
-  (* Ops whose M3CG lowering is direct: one or a few M3CG ops each. *)
-  Direct = SET OF Op {
-    Op.Alloca, Op.Load, Op.Store, Op.GcLoad, Op.GcStore, Op.GcDirty,
-    Op.GcLoadBlock,
-    Op.FieldAddr,
-    Op.IAdd, Op.ISub, Op.IMul, Op.IDiv, Op.IMod, Op.IUDiv, Op.IURem,
-    Op.IAnd, Op.IOr, Op.IXor, Op.IShl, Op.ILShr, Op.IAShr, Op.IRotL, Op.IRotR,
-    Op.Select,
-    Op.FAdd, Op.FSub, Op.FMul, Op.FDiv, Op.FNeg, Op.FPAbs,
-    Op.FPFloor, Op.FPCeil, Op.FPRound, Op.Typecase,
-    Op.SetUnion, Op.SetIntersect, Op.SetDifference, Op.SetSymDifference,
-    Op.SetMember, Op.SetSingleton, Op.SetRange,
-    Op.ICmp, Op.FCmp,
-    Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
-    Op.Call, Op.CallIndirect,
-    Op.Convert, Op.SIToFP, Op.FPToSI, Op.FPExt, Op.FPTrunc,
-    Op.ZExt, Op.SExt, Op.Trunc,
-    Op.PtrAdd, Op.GepByte, Op.ArrayElemAddr,
-    Op.SubscriptCheck, Op.NilCheck, Op.RangeCheck,
-    Op.OpenArraySize, Op.OpenArrayElemAddr,
-    Op.AtomicFence, Op.AtomicLoad, Op.AtomicStore, Op.AtomicRMW,
-    Op.AtomicCmpXchg };
-
-  EH = SET OF Op {
-    Op.Invoke, Op.InvokeIndirect, Op.LandingPad, Op.ExtractValue,
-    Op.Resume, Op.Raise, Op.UnwindTo, Op.RetThroughEnvelope, Op.EndFinally,
-    Op.HandlerActivation };
-
-  (* Kinds that are not a single M3CG stack value. *)
-  Aggregate = SET OF TypeKind {
-    TypeKind.IWide, TypeKind.Struct, TypeKind.Object, TypeKind.OpenArray,
-    TypeKind.HeapArray, TypeKind.FixedArray, TypeKind.Set };
-
   KindText = ARRAY TypeKind OF TEXT {
     "void", "i1", "i8", "i16", "i32", "i64", "iwide", "w8", "w16", "w32",
     "w64", "f32", "f64", "f128", "ptr", "gcref", "gcslot", "struct", "object",
-    "openarray", "heaparray", "fixedarray", "subrange", "set", "enum",
-    "proctype" };
+    "openarray", "fixedarray", "enum" };
 
 TYPE
   Features = REF RECORD
@@ -59,116 +25,11 @@ PROCEDURE Note (f: Features;  what: TEXT) =
     IF f.n < NUMBER (f.list) THEN f.list[f.n] := what;  INC (f.n) END;
   END Note;
 
-PROCEDURE NoteType (f: Features;  prefix: TEXT;  t: MSIR.T) =
-  VAR k: TypeKind;
-  BEGIN
-    IF t = NIL THEN RETURN END;
-    k := MSIR.Kind (t);
-    IF k IN Aggregate THEN Note (f, prefix & KindText[k]) END;
-  END NoteType;
-
 PROCEDURE HasPrefix (t, p: TEXT): BOOLEAN =
   BEGIN
     RETURN Text.Length (t) >= Text.Length (p)
        AND Text.Equal (Text.Sub (t, 0, Text.Length (p)), p);
   END HasPrefix;
-
-PROCEDURE HasSuffix (t, s: TEXT): BOOLEAN =
-  VAR n := Text.Length (t);  k := Text.Length (s);
-  BEGIN
-    RETURN n >= k AND Text.Equal (Text.Sub (t, n - k), s);
-  END HasSuffix;
-
-PROCEDURE NoteValue (f: Features;  ownInfo: TEXT;  v: MSIR.Value) =
-  VAR name: TEXT;
-  BEGIN
-    IF v = NIL THEN RETURN END;
-    name := MSIR.ValueName (v);
-    CASE MSIR.GetValueKind (v) OF
-    | ValueKind.ConstTextLit => Note (f, "textlit");
-    | ValueKind.ConstStruct, ValueKind.ConstAggArray => Note (f, "const-agg");
-    | ValueKind.GlobalRef => Note (f, "global-standalone");
-    | ValueKind.StructFieldRef =>
-        IF NOT Text.Equal (name, ownInfo) THEN Note (f, "global-imported") END;
-    | ValueKind.InsnResult =>
-        IF MSIR.ValueDefInsn (v) = NIL AND name # NIL
-           AND HasPrefix (name, "@") THEN
-          IF HasPrefix (name, "@tc_") THEN Note (f, "sym-typecell")
-          ELSIF HasPrefix (name, "@constarray") THEN Note (f, "sym-constarray")
-          ELSIF HasPrefix (name, "@textlit") THEN Note (f, "sym-textlit")
-          ELSIF HasSuffix (name, "_info") THEN Note (f, "sym-modinfo")
-          ELSE Note (f, "sym-other")
-          END;
-        END;
-    ELSE
-    END;
-  END NoteValue;
-
-PROCEDURE NoteInsn (f: Features;  ownInfo: TEXT;  i: MSIR.Insn) =
-  VAR op := MSIR.InsnOp (i);
-  BEGIN
-    IF op IN EH THEN
-      Note (f, "eh")
-    ELSIF NOT op IN Direct THEN
-      Note (f, "op:" & MSIRPrinter.OpText (op))
-    END;
-    IF MSIR.InsnResult (i) # NIL THEN
-      NoteType (f, "ssa:", MSIR.ValueType (MSIR.InsnResult (i)));
-    END;
-    FOR k := 0 TO MSIR.InsnOperandCount (i) - 1 DO
-      NoteValue (f, ownInfo, MSIR.InsnOperand (i, k));
-    END;
-    IF op = Op.Br OR op = Op.CondBr THEN
-      FOR k := 0 TO ORD (op = Op.CondBr) DO
-        FOR j := 0 TO MSIR.InsnBrArgCount (i, k) - 1 DO
-          NoteValue (f, ownInfo, MSIR.InsnBrArg (i, k, j));
-        END;
-      END;
-    END;
-  END NoteInsn;
-
-PROCEDURE Census (wr: Wr.T;  m: MSIR.Module) =
-  VAR
-    mod     := MSIR.ModuleName (m);
-    ownInfo := "@" & MSIR.ModuleInfoName (m);
-    p       : MSIR.Proc;
-    b       : MSIR.Block;
-    f       : Features;
-    line    : TEXT;
-  BEGIN
-    FOR pi := 0 TO MSIR.ModuleProcCount (m) - 1 DO
-      p := MSIR.ModuleProc (m, pi);
-      IF MSIR.ProcBlockCount (p) > 0 THEN  (* skip bodyless declarations *)
-        f := NEW (Features);
-        IF MSIR.ProcScopeCount (p) > 1 THEN Note (f, "eh-scope") END;
-        NoteType (f, "result:", MSIR.ProcResultType (p));
-        FOR k := 0 TO MSIR.ProcParamCount (p) - 1 DO
-          NoteType (f, "param:", MSIR.ValueType (MSIR.ProcParam (p, k)));
-        END;
-        FOR bi := 0 TO MSIR.ProcBlockCount (p) - 1 DO
-          b := MSIR.ProcBlock (p, bi);
-          FOR k := 0 TO MSIR.BlockParamCount (b) - 1 DO
-            NoteType (f, "blockparam:",
-                      MSIR.ValueType (MSIR.BlockParamValue (b, k)));
-          END;
-          FOR ii := 0 TO MSIR.BlockInsnCount (b) - 1 DO
-            NoteInsn (f, ownInfo, MSIR.BlockInsn (b, ii));
-          END;
-        END;
-        line := "msir-census: " & mod & " " & MSIR.ProcName (p);
-        IF f.n = 0 THEN
-          line := line & " ok";
-        ELSE
-          line := line & " blk";
-          FOR k := 0 TO f.n - 1 DO line := line & " " & f.list[k] END;
-        END;
-        TRY
-          Wr.PutText (wr, line & "\n");
-        EXCEPT Wr.Failure, Thread.Alerted =>
-        END;
-      END;
-    END;
-  END Census;
 
 
 (*=================================================================== Lower *)
@@ -238,17 +99,8 @@ PROCEDURE Fail (w: Why;  what: TEXT) =
 
 (*------------------------------------------------------------------ types *)
 
-PROCEDURE Base (t: MSIR.T): MSIR.T =
-  BEGIN
-    WHILE t # NIL AND MSIR.Kind (t) = TypeKind.Subrange DO
-      t := MSIR.SubrangeParent (t);
-    END;
-    RETURN t;
-  END Base;
-
 PROCEDURE IsInt (t: MSIR.T): BOOLEAN =
   BEGIN
-    t := Base (t);
     RETURN t # NIL AND (MSIR.Kind (t) IN SET OF TypeKind {
              TypeKind.I1, TypeKind.I8, TypeKind.I16, TypeKind.I32,
              TypeKind.I64, TypeKind.W8, TypeKind.W16, TypeKind.W32,
@@ -261,29 +113,24 @@ PROCEDURE IsInt (t: MSIR.T): BOOLEAN =
    so it is not loaded or stored directly. *)
 PROCEDURE IsOddInt (t: MSIR.T): BOOLEAN =
   BEGIN
-    t := Base (t);
     RETURN t # NIL AND MSIR.Kind (t) = TypeKind.IWide
        AND MSIR.BitWidth (t) < 64;
   END IsOddInt;
 
 PROCEDURE IsPtr (t: MSIR.T): BOOLEAN =
   BEGIN
-    t := Base (t);
     RETURN t # NIL AND MSIR.Kind (t) IN SET OF TypeKind {
-             TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot, TypeKind.ProcType,
-             TypeKind.Object, TypeKind.HeapArray };
+             TypeKind.Ptr, TypeKind.GcRef, TypeKind.GcSlot, TypeKind.Object };
   END IsPtr;
 
 PROCEDURE IsFloat (t: MSIR.T): BOOLEAN =
   BEGIN
-    t := Base (t);
     RETURN t # NIL AND MSIR.IsFloat (MSIR.Kind (t));
   END IsFloat;
 
 (* Aggregates live in memory; their SSA values are addresses of temps. *)
 PROCEDURE IsAgg (t: MSIR.T): BOOLEAN =
   BEGIN
-    t := Base (t);
     RETURN t # NIL AND (MSIR.Kind (t) IN SET OF TypeKind {
              TypeKind.Struct, TypeKind.FixedArray, TypeKind.OpenArray }
              OR IsWideSet (t));
@@ -294,14 +141,13 @@ PROCEDURE IsAgg (t: MSIR.T): BOOLEAN =
    word-aligned as CG lays sets out, operated on by M3CG's set_* ops. *)
 PROCEDURE IsWideSet (t: MSIR.T): BOOLEAN =
   BEGIN
-    t := Base (t);
     RETURN t # NIL AND MSIR.Kind (t) = TypeKind.IWide
        AND MSIR.BitWidth (t) > 64;
   END IsWideSet;
 
 PROCEDURE SetBytes (t: MSIR.T): INTEGER =
   BEGIN
-    RETURN RoundUp (MSIR.BitWidth (Base (t)), 64) DIV 8;
+    RETURN RoundUp (MSIR.BitWidth (t), 64) DIV 8;
   END SetBytes;
 
 PROCEDURE IsValue (t: MSIR.T): BOOLEAN =
@@ -318,7 +164,6 @@ PROCEDURE IsScalar (t: MSIR.T): BOOLEAN =
 (* Bit width of an integer type; i1 is 1. *)
 PROCEDURE IntBits (t: MSIR.T): INTEGER =
   BEGIN
-    t := Base (t);
     IF MSIR.Kind (t) = TypeKind.Enum OR IsOddInt (t) THEN
       RETURN MSIR.BitWidth (t);
     END;
@@ -334,7 +179,7 @@ PROCEDURE IntBits (t: MSIR.T): INTEGER =
 (* The width of a float type, in bits. *)
 PROCEDURE FloatBits (t: MSIR.T): INTEGER =
   BEGIN
-    CASE MSIR.Kind (Base (t)) OF
+    CASE MSIR.Kind (t) OF
     | TypeKind.F32 => RETURN 32;
     | TypeKind.F64 => RETURN 64;
     ELSE RETURN Target.Extended.size;
@@ -343,7 +188,7 @@ PROCEDURE FloatBits (t: MSIR.T): INTEGER =
 
 PROCEDURE RType (t: MSIR.T): M3CG.RType =
   BEGIN
-    CASE MSIR.Kind (Base (t)) OF
+    CASE MSIR.Kind (t) OF
     | TypeKind.F32 => RETURN M3CG.Type.Reel;
     | TypeKind.F64 => RETURN M3CG.Type.LReel;
     ELSE RETURN M3CG.Type.XReel;
@@ -422,7 +267,6 @@ PROCEDURE B (bits: INTEGER): INTEGER =
 PROCEDURE FieldOffset (t: MSIR.T;  i: INTEGER): INTEGER =
   VAR off := 0;  a, sz: INTEGER;
   BEGIN
-    t := Base (t);
     FOR k := 0 TO i DO
       sz := Size (MSIR.StructField (t, k).type, a);
       off := RoundUp (off, a);
@@ -443,7 +287,6 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
   BEGIN
     align := 1;
     IF t = NIL THEN RETURN -1 END;
-    t := Base (t);
     IF IsPtr (t) THEN align := Target.Address.bytes; RETURN align END;
     IF IsFloat (t) THEN
       CASE MSIR.Kind (t) OF
@@ -580,7 +423,6 @@ CONST
   Supported = SET OF Op {
     Op.Alloca, Op.Load, Op.Store, Op.GcLoad, Op.GcStore, Op.GcDirty,
     Op.GcLoadBlock,
-    Op.FieldAddr,
     Op.IAdd, Op.ISub, Op.IMul, Op.IDiv, Op.IMod, Op.IUDiv, Op.IURem,
     Op.IAnd, Op.IOr, Op.IXor, Op.IShl, Op.ILShr, Op.IAShr, Op.IRotL, Op.IRotR,
     Op.Select,
@@ -601,7 +443,7 @@ PROCEDURE CheckSigType (w: Why;  what: TEXT;  t: MSIR.T) =
   BEGIN
     IF t = NIL OR MSIR.Kind (t) = TypeKind.Void THEN RETURN END;
     IF NOT IsValue (t) THEN
-      Fail (w, what & " " & KindText[MSIR.Kind (Base (t))]);
+      Fail (w, what & " " & KindText[MSIR.Kind (t)]);
     END;
   END CheckSigType;
 
@@ -645,7 +487,7 @@ PROCEDURE CheckValue (w: Why;  v: MSIR.Value) =
         IF NOT IsInitConst (v) THEN Fail (w, "constant aggregate") END;
     END;
     IF NOT IsValue (MSIR.ValueType (v)) THEN
-      Fail (w, "value " & KindText[MSIR.Kind (Base (MSIR.ValueType (v)))]);
+      Fail (w, "value " & KindText[MSIR.Kind (MSIR.ValueType (v))]);
     END;
   END CheckValue;
 
@@ -664,7 +506,7 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
                Op.SetUnion, Op.SetIntersect, Op.SetDifference,
                Op.SetSymDifference, Op.SetSingleton, Op.SetRange }) THEN
         Fail (w, MSIRPrinter.OpText (op) & " result "
-                   & KindText[MSIR.Kind (Base (t))]);
+                   & KindText[MSIR.Kind (t)]);
       END;
     END;
     FOR k := 0 TO MSIR.InsnOperandCount (i) - 1 DO
@@ -715,15 +557,9 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
           CheckProcSig (w, MSIR.InsnCallee (i));
         END;
     | Op.CallIndirect => CheckSigType (w, "result", MSIR.InsnTargetType (i));
-    | Op.FieldAddr =>
-        t := MSIR.ValueType (MSIR.InsnOperand (i, 0));
-        IF IsPtr (t) THEN t := MSIR.EltType (Base (t)) END;
-        IF t = NIL OR MSIR.Kind (t) # TypeKind.Struct THEN
-          Fail (w, "field_addr on non-record");
-        END;
     | Op.ArrayElemAddr =>
         t := MSIR.ValueType (MSIR.InsnOperand (i, 0));
-        IF IsPtr (t) THEN t := MSIR.EltType (Base (t)) END;
+        IF IsPtr (t) THEN t := MSIR.EltType (t) END;
         IF t = NIL OR MSIR.Kind (t) # TypeKind.FixedArray
            OR Size (MSIR.FixedArrayElt (t), a) < 0 THEN
           Fail (w, "array.elem_addr on unsized array");
@@ -1423,7 +1259,6 @@ PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
         EVAL syms.get ("textlit_" & Fmt.Int (MSIR.GetTextLitUID (v)), r);
         InitPtr (off, NARROW (r, Loc).s, NARROW (r, Loc).off + Target.Address.bytes);
     | ValueKind.ConstStruct =>
-        t := Base (t);
         FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
           VAR fld := MSIR.StructField (t, i);
           BEGIN
@@ -1432,7 +1267,7 @@ PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
           END;
         END;
     | ValueKind.ConstAggArray =>
-        VAR elt := MSIR.FixedArrayElt (Base (t));  a: INTEGER;
+        VAR elt := MSIR.FixedArrayElt (t);  a: INTEGER;
             sz := Size (elt, a);
         BEGIN
           FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
@@ -1644,7 +1479,7 @@ PROCEDURE EmitConstArray (it: ConstArrayItem) =
 
 (*------------------------------------------------------------ link procs *)
 
-TYPE LinkMode = {None, Inits, Dynamic, Slots, Table};
+TYPE LinkMode = {None, Inits, Slots, Table};
 
 (* How an object typecell's methods reach its method suite, as in
    MSIRToLLVM.EmitTypeCells. *)
@@ -1655,8 +1490,6 @@ PROCEDURE MethodMode (d: MSIR.TypeDesc): LinkMode =
       RETURN LinkMode.Inits;
     ELSIF n = 0 THEN
       RETURN LinkMode.None;
-    ELSIF MSIR.TypeDescDynamicMethOff (d) THEN
-      RETURN LinkMode.Dynamic;
     END;
     FOR j := 0 TO n - 1 DO
       IF MSIR.TypeDescMethod (d, j) = NIL THEN RETURN LinkMode.Slots END;
@@ -1676,8 +1509,7 @@ PROCEDURE GenLinkProcs () =
           VAR d := it.d;  mode := LinkMode.None;  q: M3CG.Proc;  tp: M3CG.Var;
           BEGIN
             IF MSIR.TypeDescKind (d) = TK_Obj THEN mode := MethodMode (d) END;
-            IF mode IN SET OF LinkMode {LinkMode.Inits, LinkMode.Dynamic,
-                                        LinkMode.Slots} THEN
+            IF mode IN SET OF LinkMode {LinkMode.Inits, LinkMode.Slots} THEN
               q := cg.declare_procedure (
                      ID (MinusToM (MSIR.TypeDescName (d)) & "_linkproc"), 1,
                      M3CG.Type.Void, 0, Target.DefaultCall, FALSE, NIL);
@@ -1711,17 +1543,12 @@ PROCEDURE GenLinkProcs () =
                       END;
                     END;
                   END;
-              | LinkMode.Dynamic, LinkMode.Slots =>
+              | LinkMode.Slots =>
                   FOR j := 0 TO MSIR.TypeDescMethodCount (d) - 1 DO
                     VAR mname := MSIR.TypeDescMethod (d, j);
                     BEGIN
                       IF mname # NIL THEN
                         PushMethods (tp);
-                        IF mode = LinkMode.Dynamic THEN
-                          cg.load (tp, 0, Addr, Addr);
-                          cg.load_indirect (B (M3RT.OTC_methodOffset), Int64, Int64);
-                          cg.index_address (Int64, 1);
-                        END;
                         cg.add_offset (j * ptr);
                         cg.load_procedure (ProcByName (mname));
                         cg.store_indirect (0, Addr, Addr);
@@ -2058,7 +1885,6 @@ PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
     CASE MSIR.GetValueKind (v) OF
     | ValueKind.ConstNil =>
     | ValueKind.ConstStruct =>
-        t := Base (t);
         FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
           VAR fld := MSIR.StructField (t, i);
           BEGIN
@@ -2067,7 +1893,7 @@ PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
           END;
         END;
     | ValueKind.ConstAggArray =>
-        VAR elt := MSIR.FixedArrayElt (Base (t));  a: INTEGER;
+        VAR elt := MSIR.FixedArrayElt (t);  a: INTEGER;
             sz := Size (elt, a);
         BEGIN
           FOR i := 0 TO MSIR.GetConstStructFieldCount (v) - 1 DO
@@ -3305,23 +3131,10 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.GcLoadBlock =>
         BlockReadBarrier (i);
 
-    | Op.FieldAddr =>
-        VAR t := MSIR.ValueType (MSIR.InsnOperand (i, 0));
-            fname := MSIR.InsnSelector (i);  f: MSIR.Field;  off := 0;
-        BEGIN
-          IF IsPtr (t) THEN t := MSIR.EltType (Base (t)) END;
-          FOR k := 0 TO MSIR.StructFieldCount (t) - 1 DO
-            f := MSIR.StructField (t, k);
-            IF Text.Equal (f.name, fname) THEN off := FieldOffset (t, k);  EXIT END;
-          END;
-          Push (MSIR.InsnOperand (i, 0));
-          IF off # 0 THEN cg.add_offset (off) END;
-          Def (res);
-        END;
     | Op.ArrayElemAddr =>
         VAR t := MSIR.ValueType (MSIR.InsnOperand (i, 0));
         BEGIN
-          IF IsPtr (t) THEN t := MSIR.EltType (Base (t)) END;
+          IF IsPtr (t) THEN t := MSIR.EltType (t) END;
           Push (MSIR.InsnOperand (i, 0));
           Push (MSIR.InsnOperand (i, 1));
           cg.index_address (Int64, Size (MSIR.FixedArrayElt (t), a));
@@ -3336,7 +3149,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
     | Op.OpenArrayElemAddr =>
         (* data + ((i0*n1 + i1)*n2 + ...) * sizeof(elt), over the row-major
            data the open-array dope describes *)
-        VAR oa := MSIR.InsnOperand (i, 0);  t := Base (MSIR.ValueType (oa));
+        VAR oa := MSIR.InsnOperand (i, 0);  t := MSIR.ValueType (oa);
         BEGIN
           Push (oa);
           cg.load_indirect (0, Addr, Addr);

@@ -1,18 +1,9 @@
-(* MSIRToM3CG -- lowering MSIR to M3CG (D25 step 4).
-
-   Spike stage (D25 step 2): only a census.  For each procedure of a module,
-   Census reports whether a straightforward lowering of its body to M3CG
-   could handle it, and if not, which features block it. *)
+(* MSIRToM3CG -- lowering MSIR to M3CG (D25 step 4); see the overview in
+   MSIR-design.md until this interface gets its own (planned). *)
 
 INTERFACE MSIRToM3CG;
 
 IMPORT MSIR, M3CG, Wr;
-
-(* Write one line per procedure of m to wr:
-     msir-census: <module> <proc> ok
-     msir-census: <module> <proc> blk <feature> <feature> ...
-   Features are deduplicated per procedure. *)
-PROCEDURE Census (wr: Wr.T;  m: MSIR.Module);
 
 (* TRUE if Lower can take every part of m.  If FALSE, the caller compiles the
    unit through the front end's own M3CG stream instead (per-module

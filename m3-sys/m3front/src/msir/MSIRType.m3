@@ -275,7 +275,7 @@ PROCEDURE TranslateObject(t: Type.T;  name: TEXT): MSIR.T =
         IF objName = NIL THEN objName := "" END;
         result := MSIR.TObject(
                     objName,
-                    superM, msirFs^, ARRAY OF MSIR.Method{}, "");
+                    superM, msirFs^);
         IF selfIdx >= 0 THEN
           cache[selfIdx].val := result;  (* update sentinel with real type *)
         END;

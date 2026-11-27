@@ -2280,8 +2280,8 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     declared-but-unused `new`/`openarray.new` builders are replaced.
   - **Lowering.**  MSIRRuntime.Expand calls the allocator (`RTHooks.New*`);
     for `openarray.new` it fills an open-array shape (M3RT.OA_*) in an
-    alloca at the head of the entry, where the front end had put it in the
-    current block.
+    alloca (BuildAlloca puts every alloca at the head of the entry block,
+    as it did for the front end's shape before).
   - **Runtime hooks.**  Every runtime procedure a lowered module calls is
     one table, `MSIR.RtHook`, bound per module: the ones MSIRRuntime expands
     ops into (ReportFault, CheckIsType, RaiseEx, the six allocators) and,

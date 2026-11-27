@@ -29,9 +29,6 @@ PROCEDURE AddProc(p: MSIR.Proc);
    mangled binder name, e.g. "Fmt_M3" or "IO_M3". *)
 PROCEDURE RegisterImport(binder: TEXT);
 
-(* Record that a proc was skipped (BeginProc returned FALSE or Abandon
-   was called). Appended as a comment in the MSIR output. *)
-PROCEDURE NoteSkipped(procName: TEXT;  reason: TEXT);
 
 (* Override the output path for the .ll file.  Used by the MSIRObj/MSIRAsm
    backend modes in Builder.m3 to redirect LLVM IR output to the path that
@@ -55,10 +52,5 @@ PROCEDURE SetDriverLowers(on: BOOLEAN);
    by the cm3 driver to lower the unit through MSIR -> M3CG (D25). *)
 PROCEDURE LastModule(): MSIR.Module;
 
-(* Return TRUE if a MODULE (non-interface) with this name has already been
-   emitted to a .ll file this run.  Used by DeclareGlobalsMSIR to decide
-   whether an exported interface variable should be owned by the
-   implementation module or accessed via the import chain. *)
-PROCEDURE ModuleEmitted(name: TEXT): BOOLEAN;
 
 END MSIREmit.

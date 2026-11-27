@@ -25,12 +25,8 @@ TYPE TypeKind = {
   Struct,
   Object,                             (* class type with super, methods, descriptor *)
   OpenArray,                          (* fat pointer: { data, sizes... } *)
-  HeapArray,                          (* REF ARRAY OF T: heap dope-prefix struct *)
   FixedArray,                         (* ARRAY [lo..hi] OF T: contiguous storage *)
-  Subrange,                           (* parent type T constrained to [lo..hi] *)
-  Set,                                (* set with element type and domain [lo..hi] *)
-  Enum,                               (* enumeration type: integer storage + label names for DWARF *)
-  ProcType
+  Enum                                (* enumeration type: integer storage + label names for DWARF *)
 };
 
 TYPE Field  = RECORD name: TEXT;  type: T;  offset: INTEGER := 0  END;
@@ -39,7 +35,6 @@ TYPE Field  = RECORD name: TEXT;  type: T;  offset: INTEGER := 0  END;
                                                 as computed by M3 record layout.
                                                 Used by MSIRToLLVM for DWARF
                                                 DW_AT_data_member_location. *)
-TYPE Method = RECORD name: TEXT;  procType: T  END;
 
 PROCEDURE TVoid(): T;
 PROCEDURE TI1(): T;
@@ -50,17 +45,13 @@ PROCEDURE TPtr(elt: T): T;
 PROCEDURE TGcRef(elt: T): T;
 PROCEDURE TGcSlot(elt: T): T;
 PROCEDURE TStruct(name: TEXT;  READONLY fields: ARRAY OF Field): T;
-PROCEDURE TProc(READONLY params: ARRAY OF T;  result: T): T;
 PROCEDURE TObject(name: TEXT;
                   super: T;                      (* NIL for root *)
-                  READONLY fields:  ARRAY OF Field;
-                  READONLY methods: ARRAY OF Method;
-                  descriptorSym: TEXT): T;
+                  READONLY fields:  ARRAY OF Field): T;
+(* An object's data fields; methods are reached through `method` (D36),
+   which needs no method records on the type. *)
 PROCEDURE TOpenArray(rank: INTEGER;  elt: T): T;
-PROCEDURE THeapArray(rank: INTEGER;  elt: T): T;
 PROCEDURE TFixedArray(len: INTEGER;  elt: T): T;
-PROCEDURE TSubrange(parent: T;  lo, hi: INTEGER): T;
-PROCEDURE TSet(elt: T;  lo, hi: INTEGER): T;
 PROCEDURE TEnum(name: TEXT;  bits: INTEGER;  READONLY labels: ARRAY OF TEXT): T;
 (* Enum: lowers to iN in LLVM IR; carries label names for DW_TAG_enumeration_type. *)
 
@@ -94,29 +85,17 @@ PROCEDURE ObjectName(t: T): TEXT;
 PROCEDURE ObjectSuper(t: T): T;       (* NIL if root *)
 PROCEDURE ObjectFieldCount(t: T): INTEGER;
 PROCEDURE ObjectField(t: T;  i: INTEGER): Field;
-PROCEDURE ObjectMethodCount(t: T): INTEGER;
-PROCEDURE ObjectMethod(t: T;  i: INTEGER): Method;
-PROCEDURE ObjectFieldIndex(t: T;  name: TEXT): INTEGER;       (* -1 if not found *)
-PROCEDURE ObjectDescriptorSym(t: T): TEXT;
 
 PROCEDURE OpenArrayRank(t: T): INTEGER;
 PROCEDURE OpenArrayElt(t: T): T;
 
-PROCEDURE HeapArrayRank(t: T): INTEGER;
-PROCEDURE HeapArrayElt(t: T): T;
 
 PROCEDURE FixedArrayLen(t: T): INTEGER;
 PROCEDURE FixedArrayElt(t: T): T;
 PROCEDURE FixedArrayLo(t: T): INTEGER;       (* lower bound of index type; 0 if zero-based *)
 PROCEDURE SetFixedArrayLo(t: T; lo: INTEGER);
 
-PROCEDURE SubrangeParent(t: T): T;
-PROCEDURE SubrangeLo(t: T): INTEGER;
-PROCEDURE SubrangeHi(t: T): INTEGER;
 
-PROCEDURE SetElt(t: T): T;
-PROCEDURE SetLo(t: T): INTEGER;
-PROCEDURE SetHi(t: T): INTEGER;
 
 (*----------------------------------------------------------------- Values *)
 
@@ -407,9 +386,6 @@ TYPE RtHook = {ReportFault, CheckIsType, RaiseEx,
                TextLitGetChars, TextLitGetWideChars};
 PROCEDURE SetModuleRtHook(m: Module;  h: RtHook;  p: Proc);
 PROCEDURE ModuleRtHook(m: Module;  h: RtHook): Proc;
-PROCEDURE ModuleAddImport(m: Module;  name: TEXT);
-PROCEDURE ModuleImportCount(m: Module): INTEGER;
-PROCEDURE ModuleImport(m: Module;  i: INTEGER): TEXT;
 PROCEDURE ModuleAddProc(m: Module;  p: Proc);
 PROCEDURE ModuleProcCount(m: Module): INTEGER;
 PROCEDURE ModuleProc(m: Module;  i: INTEGER): Proc;
@@ -482,8 +458,6 @@ PROCEDURE SetTypeDescInitProc (d: TypeDesc; procName: TEXT); (* OBJ: field-defau
 PROCEDURE TypeDescInitProcName(d: TypeDesc): TEXT;           (* NIL if none *)
 PROCEDURE TypeDescUserName    (d: TypeDesc): TEXT;       (* user-visible name or NIL *)
 PROCEDURE TypeDescMethodBytes (d: TypeDesc): INTEGER; (* OBJ: vtable byte size *)
-PROCEDURE TypeDescDynamicMethOff(d: TypeDesc): BOOLEAN;
-PROCEDURE SetTypeDescDynamicMethOff(d: TypeDesc; b: BOOLEAN);
 PROCEDURE TypeDescMethodCount (d: TypeDesc): INTEGER;
 PROCEDURE TypeDescMethod      (d: TypeDesc;  i: INTEGER): TEXT;
 (* C-GenLinkProc-style method initialisers: one per method (own or override)
@@ -604,10 +578,6 @@ PROCEDURE ModuleTextLitCnt  (m: Module;  uid: INTEGER): INTEGER;
 
 
 
-(* Build a getelementptr computing the TEXT reference:
-   ptr to offset 8 of @textlit_<uid> (past the GC header to the vtable field).
-   uid comes from TextExpr.SetUID via TextExpr.CompileMSIR. *)
-PROCEDURE BuildTextLiteralRef(b: Block;  uid: INTEGER): Value;
 
 (*----------------------------------------------- import binders *)
 
@@ -660,12 +630,6 @@ PROCEDURE ModuleGlobalInitValue(m: Module;  i: INTEGER): Value;
    MSIRToLLVM checks its field table against M3RT's MI_* offsets (D24). *)
 CONST MI_nFields = 13;
 
-(* Allocate space for a struct-embedded global in the module's @Mod_M3_info
-   struct.  Returns the byte offset allocated; advances the internal cursor.
-   byteSize is the size in bytes; byteAlign is the required byte alignment.
-   User globals follow the M3RT.MI_SIZE header. *)
-PROCEDURE ModuleAllocGlobal(m: Module;  byteSize: INTEGER;
-                             byteAlign: INTEGER): INTEGER;
 (* Record that a user global extends to endByteOff in the module struct (used
    when placing globals at the front-end's canonical Variable offset rather than
    MSIR's dense packing, so cross-module importers agree). *)
@@ -709,7 +673,7 @@ TYPE Op = {
   (* memory *)
   Alloca,    (* static-count stack alloc: alloca T, i64 N    *)
   AllocaDyn, (* dynamic-count stack alloc: alloca i8, i64 %n — byteCount is operand 0 *)
-  Load, Store, GcLoad, GcStore, GcDirty, GcLoadBlock, FieldAddr,
+  Load, Store, GcLoad, GcStore, GcDirty, GcLoadBlock,
   (* integer arithmetic *)
   IAdd, ISub, IMul, IDiv, IMod,
   IUDiv, IURem,                          (* unsigned divide / remainder *)
@@ -735,8 +699,8 @@ TYPE Op = {
   ExtractValue, (* extract field from a struct aggregate by index *)
   Resume,       (* LLVM resume — re-throw after landingpad (terminator) *)
   (* open arrays *)
-  OpenArraySize, OpenArrayElemAddr, Subarray,
-  OpenArrayNew, OpenArrayDeref,
+  OpenArraySize, OpenArrayElemAddr,
+  OpenArrayNew,
   (* fixed arrays *)
   ArrayElemAddr,
   (* runtime checks *)
@@ -807,7 +771,7 @@ PROCEDURE InsnBrArgCount(i: Insn;  k: INTEGER): INTEGER;
 PROCEDURE InsnBrArg(i: Insn;  k, j: INTEGER): Value;
 PROCEDURE InsnCallee(i: Insn): Proc;         (* Call only *)
 PROCEDURE InsnTargetType(i: Insn): T;        (* Alloca, New, Narrow, Istype, AtomicLoad/RMW/CmpXchg *)
-PROCEDURE InsnSelector(i: Insn): TEXT;       (* Dispatch: method name; FieldAddr: field name *)
+PROCEDURE InsnSelector(i: Insn): TEXT;       (* method: the method's name *)
 PROCEDURE InsnExtractIdx(i: Insn): INTEGER;  (* ExtractValue: field index *)
 PROCEDURE InsnIsCleanup(i: Insn): BOOLEAN;   (* LandingPad: TRUE=cleanup, FALSE=catch *)
 PROCEDURE InsnMemOrder(i: Insn): MemOrder;   (* Atomic ops *)
@@ -928,10 +892,6 @@ PROCEDURE BuildGcLoadBlock(b: Block;  dst: Value;  n: Value;
 PROCEDURE BuildGcStore(b: Block;  slot: Value;  value: Value;
                         container: Value := NIL);
 
-PROCEDURE BuildFieldAddr(b: Block;  name: TEXT;
-                         obj: Value;  fieldName: TEXT): Value;
-                                             (* obj: gc_ref Object | gc_ref Struct |
-                                                ptr Struct; result: ptr fieldType *)
 
 (* `array.elem_addr arr, idx` — pointer arithmetic on a fixed array.
    arr must be ptr FixedArray (i.e. an alloca or by-ref).
@@ -1088,11 +1048,6 @@ PROCEDURE BuildOpenArrayElemAddr(b: Block;  name: TEXT;
                                  oa: Value;
                                  READONLY indices: ARRAY OF Value): Value;
 
-(* `subarray oa, lo, count` — 1D only. Result: openarray<1> elt.
-   Bounds check must be emitted separately if needed; this op is pure
-   arithmetic + struct construction. *)
-PROCEDURE BuildSubarray(b: Block;  name: TEXT;
-                        oa: Value;  lo, count: Value): Value;
 
 (* `subscript_check idx, bound` — faults unless idx < bound, compared
    unsigned (so a negative idx faults too); idx and bound have one type. *)
@@ -1160,10 +1115,6 @@ PROCEDURE BuildGepByte(b: Block;  name: TEXT;  base, offset: Value): Value;
 PROCEDURE BuildCallIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
                              READONLY args: ARRAY OF Value): Value;
 
-(* Invoke through a function-pointer value, with EH normal/unwind targets. *)
-PROCEDURE BuildInvokeIndirect(b: Block;  name: TEXT;  fn: Value;  rtype: T;
-                               READONLY args: ARRAY OF Value;
-                               normalBlock: Block;  unwindBlock: Block): Value;
 
 (*------------------------------------------------- heap-array builders *)
 
@@ -1176,8 +1127,5 @@ PROCEDURE BuildOpenArrayNew(b: Block;  name: TEXT;  cell: Value;
                             traced: BOOLEAN;  uid: INTEGER;
                             READONLY sizes: ARRAY OF Value;  t: T): Value;
 
-(* `openarray.deref` extracts the fat-pointer view from a heap-array ref.
-   Input: gc_ref HeapArray<rank, elt>.  Output: openarray<rank> elt. *)
-PROCEDURE BuildOpenArrayDeref(b: Block;  name: TEXT;  ref: Value): Value;
 
 END MSIR.
