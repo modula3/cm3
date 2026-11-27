@@ -344,27 +344,6 @@ PROCEDURE SetLo(t: T): INTEGER      = BEGIN RETURN t.subrLo END SetLo;
 PROCEDURE SetHi(t: T): INTEGER      = BEGIN RETURN t.subrHi END SetHi;
 
 (* Look up a method by selector, walking the super chain. *)
-PROCEDURE ObjectMethodIndex(t: T;  selector: TEXT): INTEGER =
-  VAR cur := t;  base := 0;
-  BEGIN
-    (* Walk to root to compute total slot offset, then look in this type's
-       own methods first. For v0 we use simple unification: each type's
-       methods are appended; selector resolution scans in declaration order
-       through the chain root→leaf, returning the first match. *)
-    (* Simpler: just scan local methods, then super. Caller can rewalk. *)
-    WHILE cur # NIL DO
-      IF cur.objMethods # NIL THEN
-        FOR i := 0 TO LAST(cur.objMethods^) DO
-          IF Text.Equal(cur.objMethods[i].name, selector) THEN
-            RETURN base + i;
-          END;
-        END;
-        INC(base, NUMBER(cur.objMethods^));
-      END;
-      cur := cur.objSuper;
-    END;
-    RETURN -1;
-  END ObjectMethodIndex;
 
 PROCEDURE ObjectFieldIndex(t: T;  name: TEXT): INTEGER =
   VAR cur := t;  base := 0;
@@ -611,6 +590,7 @@ REVEAL Insn = BRANDED "MSIR.Insn" REF RECORD
   checkUnsigned: BOOLEAN := FALSE; (* range_check: unsigned compare *)
   typeTest:    TypeTest := TypeTest.Exact; (* istype, narrow *)
   typeUid:     INTEGER := 0;                (* istype, narrow, new *)
+  methodOff:   INTEGER := 0;                (* method: suite byte offset *)
   allocKind:   AllocKind := AllocKind.TracedRef; (* new, openarray.new *)
   blockMap:    GcMapBytes := NIL; (* GcLoadBlock: element gc map *)
   blockStride: INTEGER := 0;      (* GcLoadBlock: element stride, bytes *)
@@ -682,6 +662,27 @@ PROCEDURE InsnTypeTest(i: Insn): TypeTest =
   BEGIN RETURN i.typeTest END InsnTypeTest;
 PROCEDURE InsnTypeUid(i: Insn): INTEGER =
   BEGIN RETURN i.typeUid END InsnTypeUid;
+PROCEDURE InsnMethodOffset(i: Insn): INTEGER =
+  BEGIN RETURN i.methodOff END InsnMethodOffset;
+
+PROCEDURE BuildMethod(b: Block;  name: TEXT;  obj, holder: Value;
+                      off: INTEGER;  selector: TEXT): Value =
+  VAR i := NEW(Insn);  ops: REF ARRAY OF Value;
+  BEGIN
+    i.op := Op.Method;
+    i.methodOff := off;  i.selector := selector;
+    IF holder = NIL THEN
+      ops := NEW(REF ARRAY OF Value, 1);
+    ELSE
+      ops := NEW(REF ARRAY OF Value, 2);  ops[1] := holder;
+    END;
+    ops[0] := obj;
+    i.operands := ops;
+    i.result := makeResult(b, TPtr(TVoid()), name, i);
+    addInsn(b, i);
+    RETURN i.result;
+  END BuildMethod;
+
 PROCEDURE InsnAllocKind(i: Insn): AllocKind =
   BEGIN RETURN i.allocKind END InsnAllocKind;
 PROCEDURE InsnBlockMap(i: Insn): GcMapBytes =
@@ -2417,50 +2418,6 @@ PROCEDURE BuildNew(b: Block;  name: TEXT;  cell: Value;  kind: AllocKind;
     RETURN i.result;
   END BuildNew;
 
-PROCEDURE BuildDispatch(b: Block;  name: TEXT;
-                        obj: Value;  methodName: TEXT;
-                        READONLY args: ARRAY OF Value): Value =
-  VAR
-    i := NEW(Insn);
-    objT := objectOrStruct(obj.type);
-    midx: INTEGER;
-    cur: T;
-    methodSig: T := NIL;
-    resultT: T := NIL;
-    nArgs := NUMBER(args);
-    ops := NEW(REF ARRAY OF Value, 1 + nArgs);
-  BEGIN
-    <* ASSERT Kind(objT) = TypeKind.Object,
-       "BuildDispatch: object operand must be Object-typed" *>
-    midx := ObjectMethodIndex(objT, methodName);
-    <* ASSERT midx >= 0, "BuildDispatch: method not found in type chain" *>
-    (* find the actual method record in the chain to get its signature *)
-    cur := objT;
-    WHILE cur # NIL AND methodSig = NIL DO
-      IF cur.objMethods # NIL THEN
-        FOR k := 0 TO LAST(cur.objMethods^) DO
-          IF Text.Equal(cur.objMethods[k].name, methodName) THEN
-            methodSig := cur.objMethods[k].procType;
-            EXIT;
-          END;
-        END;
-      END;
-      cur := cur.objSuper;
-    END;
-    <* ASSERT methodSig # NIL *>
-    resultT := methodSig.procResult;
-
-    i.op := Op.Dispatch;
-    i.selector := methodName;
-    ops[0] := obj;
-    FOR k := 0 TO nArgs - 1 DO ops[1 + k] := args[k] END;
-    i.operands := ops;
-    IF Kind(resultT) # TypeKind.Void THEN
-      i.result := makeResult(b, resultT, name, i);
-    END;
-    addInsn(b, i);
-    RETURN i.result;
-  END BuildDispatch;
 
 PROCEDURE TypeTestOperands(v, cell: Value;  test: TypeTest): REF ARRAY OF Value =
   VAR ops: REF ARRAY OF Value;

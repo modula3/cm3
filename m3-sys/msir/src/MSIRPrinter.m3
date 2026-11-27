@@ -242,7 +242,7 @@ PROCEDURE OpText(op: MSIR.Op): TEXT =
     | MSIR.Op.Call               => RETURN "call";
     | MSIR.Op.Invoke             => RETURN "invoke";
     | MSIR.Op.New                => RETURN "new";
-    | MSIR.Op.Dispatch           => RETURN "dispatch";
+    | MSIR.Op.Method             => RETURN "method";
     | MSIR.Op.Narrow             => RETURN "narrow";
     | MSIR.Op.Istype             => RETURN "istype";
     | MSIR.Op.Typecase           => RETURN "typecase";
@@ -459,14 +459,16 @@ PROCEDURE Insn(wr: Wr.T;  i: MSIR.Insn) =
         Wr.PutText(wr, ", uid 0x" & Fmt.Unsigned(MSIR.InsnTypeUid(i)));
         Wr.PutText(wr, " -> ");
         Type(wr, MSIR.ValueType(res));
-    | MSIR.Op.Dispatch =>
+    | MSIR.Op.Method =>
         Wr.PutText(wr, " ");
         NameRef(wr, MSIR.InsnOperand(i, 0));
-        Wr.PutText(wr, ", .");
-        Wr.PutText(wr, MSIR.InsnSelector(i));
-        FOR k := 1 TO nOps - 1 DO
+        IF nOps > 1 THEN
           Wr.PutText(wr, ", ");
-          NameRef(wr, MSIR.InsnOperand(i, k));
+          NameRef(wr, MSIR.InsnOperand(i, 1));
+        END;
+        Wr.PutText(wr, ", +" & Fmt.Int(MSIR.InsnMethodOffset(i)));
+        IF MSIR.InsnSelector(i) # NIL THEN
+          Wr.PutText(wr, ", ." & MSIR.InsnSelector(i));
         END;
         IF res # NIL THEN
           Wr.PutText(wr, " -> ");

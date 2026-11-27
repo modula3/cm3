@@ -13,7 +13,7 @@ PROCEDURE Hooks (m: MSIR.Module): SET OF MSIR.RtHook;
    each with MSIR.SetModuleRtHook before lowering. *)
 
 PROCEDURE Expand (m: MSIR.Module);
-(* Replace each check op in m (nil_check, range_check, subscript_check, shape_check, fault, narrow; istype, D33; new and openarray.new, D34; raise, D35) by a compare and a branch to a
+(* Replace each check op in m (nil_check, range_check, subscript_check, shape_check, fault, narrow; istype, D33; new and openarray.new, D34; raise, D35; method, D36) by a compare and a branch to a
    fault block that calls RTHooks.ReportFault (module, line * 32 + code)
    and does not return; the rest of the check's block continues in a new
    block.  New blocks keep the original block's EH scope, so a fault inside

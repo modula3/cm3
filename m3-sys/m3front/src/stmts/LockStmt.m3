@@ -210,7 +210,7 @@ PROCEDURE CompileMSIR (p: P) =
     IF mu = NIL THEN RETURN END;
     EVAL MSIRBuilder.EmitMethodCall(
            "", mu, M3RT.MUTEX_acquire DIV Target.Address.pack,
-           MSIR.TVoid(), ARRAY OF MSIR.Value{});
+           MSIR.TVoid(), ARRAY OF MSIR.Value{}, "acquire");
     IF NOT MSIRBuilder.InProc() THEN RETURN END;
     TryFinStmt.EmitFinallyMSIR(p.body, NIL, mu,
                                M3RT.MUTEX_release DIV Target.Address.pack);

@@ -23,7 +23,8 @@ PROCEDURE IsCheck (op: Op): BOOLEAN =
 PROCEDURE Expands (op: Op): BOOLEAN =
   BEGIN
     RETURN IsCheck (op)
-        OR op IN SET OF Op {Op.Istype, Op.New, Op.OpenArrayNew, Op.Raise};
+        OR op IN SET OF Op {Op.Istype, Op.New, Op.OpenArrayNew, Op.Raise,
+                            Op.Method};
   END Expands;
 
 CONST AllocHook = ARRAY MSIR.AllocKind OF MSIR.RtHook {
@@ -80,6 +81,36 @@ PROCEDURE EntryAlloca (p: MSIR.Proc;  t: MSIR.T): MSIR.Value =
     FOR j := 0 TO LAST (insns^) DO MSIR.BlockAppendInsn (entry, insns[j]) END;
     RETURN a;
   END EntryAlloca;
+
+(* The procedure that method i looks up, in block b: the suite pointer is
+   the object's first word; the slot is at the op's offset, plus the
+   holder's OTC_methodOffset if it has one (QualifyExpr's code before). *)
+PROCEDURE Method (b: MSIR.Block;  i: MSIR.Insn): MSIR.Value =
+  VAR
+    ptrT  := MSIR.TPtr (MSIR.TVoid ());
+    intT  := MSIR.TI (Target.Integer.size);
+    off   := MSIR.InsnMethodOffset (i);
+    suite := MSIR.BuildLoad (b, "", ptrT,
+               MSIR.BuildConvert (b, "", MSIR.InsnOperand (i, 0),
+                                  MSIR.TPtr (ptrT)));
+    slot  : MSIR.Value;
+  BEGIN
+    IF MSIR.InsnOperandCount (i) = 2 THEN
+      VAR cell := MSIR.InsnOperand (i, 1);
+          base := MSIR.BuildLoad (b, "", intT,
+                    MSIR.BuildPtrAdd (b, "", cell,
+                                      M3RT.OTC_methodOffset DIV Target.Byte));
+      BEGIN
+        slot := MSIR.BuildGepByte (b, "", suite,
+                  MSIR.BuildIAdd (b, "", base, MSIR.ConstInt (intT, off)));
+      END;
+    ELSIF off = 0 THEN
+      slot := suite;
+    ELSE
+      slot := MSIR.BuildPtrAdd (b, "", suite, off);
+    END;
+    RETURN MSIR.BuildLoad (b, "", ptrT, slot);
+  END Method;
 
 (* Raise as i in block b, which it ends: RTHooks.RaiseEx (exc, arg,
    module, line), with arg the runtime's argument word.  As the C backend:
@@ -395,6 +426,9 @@ PROCEDURE ExpandProc (m: MSIR.Module;  p: MSIR.Proc) =
                 ELSIF MSIR.InsnOp (i) = Op.Istype THEN
                   (* the test's answer replaces i's result *)
                   MSIR.InsnMakeCopy (i, TypeTest (m, p, b, cur, i));
+                  MSIR.BlockAppendInsn (cur, i);
+                ELSIF MSIR.InsnOp (i) = Op.Method THEN
+                  MSIR.InsnMakeCopy (i, Method (cur, i));
                   MSIR.BlockAppendInsn (cur, i);
                 ELSIF MSIR.InsnOp (i) IN SET OF Op {Op.New, Op.OpenArrayNew} THEN
                   MSIR.InsnMakeCopy (i, Allocate (m, p, cur, i));

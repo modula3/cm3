@@ -96,7 +96,6 @@ PROCEDURE ObjectFieldCount(t: T): INTEGER;
 PROCEDURE ObjectField(t: T;  i: INTEGER): Field;
 PROCEDURE ObjectMethodCount(t: T): INTEGER;
 PROCEDURE ObjectMethod(t: T;  i: INTEGER): Method;
-PROCEDURE ObjectMethodIndex(t: T;  selector: TEXT): INTEGER;  (* -1 if not found *)
 PROCEDURE ObjectFieldIndex(t: T;  name: TEXT): INTEGER;       (* -1 if not found *)
 PROCEDURE ObjectDescriptorSym(t: T): TEXT;
 
@@ -746,7 +745,7 @@ TYPE Op = {
   (* call / alloc *)
   Call, Invoke, New,
   (* M3 object/RTTI intrinsics *)
-  Dispatch, Narrow, Istype, Typecase,
+  Method, Narrow, Istype, Typecase,
   (* exception *)
   Raise,
   LandingPad,   (* LLVM landingpad instruction; cleanup or catch _ZTI6_M3Exc *)
@@ -968,9 +967,18 @@ PROCEDURE BuildNew(b: Block;  name: TEXT;  cell: Value;  kind: AllocKind;
                    uid: INTEGER;  t: T): Value;
 PROCEDURE InsnAllocKind(i: Insn): AllocKind;
 
-PROCEDURE BuildDispatch(b: Block;  name: TEXT;
-                        obj: Value;  methodName: TEXT;
-                        READONLY args: ARRAY OF Value): Value;
+(* `method obj, +off` (D36) is the procedure in the method suite of the
+   object obj at byte offset off: the method-suite pointer is obj's first
+   word.  With a holder typecell (`method obj, cell, +off`), the suite
+   offset is cell's OTC_methodOffset plus off, for a method declared under
+   an opaque supertype, whose offset is known only at run time.  The result
+   is a ptr; the call is an ordinary call_indirect with obj first.  selector
+   names the method, for reading the IR.  MSIRChecks expands it into the
+   loads; a pass that knows obj's exact type can replace it by the
+   procedure (devirtualisation). *)
+PROCEDURE BuildMethod(b: Block;  name: TEXT;  obj, holder: Value;
+                      off: INTEGER;  selector: TEXT): Value;
+PROCEDURE InsnMethodOffset(i: Insn): INTEGER;
 
 (* Type tests (D33).  `istype v, cell` is TRUE if the reference v is of
    the type whose typecell is cell; `narrow v, cell` faults with code

@@ -20,7 +20,7 @@ CONST
     Op.SetMember, Op.SetSingleton, Op.SetRange,
     Op.ICmp, Op.FCmp,
     Op.Br, Op.CondBr, Op.Ret, Op.Unreachable,
-    Op.Call, Op.CallIndirect, Op.Dispatch,
+    Op.Call, Op.CallIndirect,
     Op.Convert, Op.SIToFP, Op.FPToSI, Op.FPExt, Op.FPTrunc,
     Op.ZExt, Op.SExt, Op.Trunc,
     Op.PtrAdd, Op.GepByte, Op.ArrayElemAddr,

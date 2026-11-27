@@ -449,7 +449,7 @@ PROCEDURE EmitFinallyMSIR (body, finally: Stmt.T;  obj: MSIR.Value;
     MSIRBuilder.SetCurrentBlock(fin);
     IF obj # NIL THEN
       EVAL MSIRBuilder.EmitMethodCall("", obj, midx, MSIR.TVoid(),
-                                      ARRAY OF MSIR.Value{});
+                                      ARRAY OF MSIR.Value{}, "release");
     ELSE
       Stmt.CompileMSIR(finally);  (* NIL for an empty FINALLY *)
     END;

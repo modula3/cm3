@@ -965,8 +965,6 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
     p        : P;
     m        : Method.Info;
     rtype    : MSIR.T;
-    ptrT     := MSIR.TPtr (MSIR.TVoid ());
-    intT     := MSIR.TI (Target.Integer.size);
     b        : MSIR.Block;
     obj, tc, fn : MSIR.Value;
     explicit : REF ARRAY OF MSIR.Value;
@@ -1004,7 +1002,8 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
 
     IF base >= 0 THEN
       result := MSIRBuilder.EmitMethodCall ("", obj,
-                  (base + m.offset) DIV Target.Address.size, rtype, explicit^);
+                  (base + m.offset) DIV Target.Address.size, rtype, explicit^,
+                  M3ID.ToText (m.name));
       RETURN TRUE;
     END;
 
@@ -1017,17 +1016,10 @@ PROCEDURE CompileMethodCallMSIR (e: Expr.T;  args: ArgsMSIR;
       RETURN TRUE;
     END;
     b  := MSIRBuilder.CurrentBlock ();
-    VAR
-      off := MSIR.BuildIAdd (b, "",
-               MSIR.BuildLoad (b, "", intT,
-                 MSIRBuilder.BuildPtrByteOff (b, "", tc,
-                   M3RT.OTC_methodOffset DIV Target.Char.size)),
-               MSIR.ConstInt (intT, m.offset DIV Target.Char.size));
-      suite := MSIR.BuildLoad (b, "", ptrT,
-                 MSIR.BuildConvert (b, "", obj, MSIR.TPtr (ptrT)));
-      all   := NEW (REF ARRAY OF MSIR.Value, 1 + NUMBER (explicit^));
+    VAR all := NEW (REF ARRAY OF MSIR.Value, 1 + NUMBER (explicit^));
     BEGIN
-      fn := MSIR.BuildLoad (b, "", ptrT, MSIR.BuildGepByte (b, "", suite, off));
+      fn := MSIR.BuildMethod (b, "", obj, tc, m.offset DIV Target.Char.size,
+                              M3ID.ToText (m.name));
       all[0] := obj;
       SUBARRAY (all^, 1, NUMBER (explicit^)) := explicit^;
       (* The suite holds plain procedure pointers: no closure check. *)

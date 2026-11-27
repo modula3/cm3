@@ -2210,6 +2210,27 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   - **Use.**  With RAISE visible, a later pass can turn a RAISE whose
     handler is in the same procedure into a branch.
 
+- **D36. Method lookup is an op; the call stays `call_indirect`** (Tony,
+  2026-11-27; the last conversion under D31).
+  - **Op.**  `method obj, +off, .name` is the procedure in obj's method
+    suite at byte offset off (the suite pointer is obj's first word), a
+    ptr; `method obj, cell, +off` adds the holder's `OTC_methodOffset`, for
+    a method under an opaque supertype whose offset is known only at run
+    time.  The name is for reading the IR.  The call is the ordinary
+    `call_indirect` with obj first, so argument modes, invoke inside TRY
+    and results stay in the one call path.
+  - **Why not a full `dispatch`.**  Lookup and call in one op would make
+    both lowerings reproduce everything `call_indirect` does, and the
+    declared `dispatch` found methods by name through MSIR object types,
+    which cannot see a method offset fixed only at run time.  The lookup
+    op is what devirtualisation needs: where obj's exact type is known (a
+    `new` result, a sealed type), a pass replaces the lookup by the
+    procedure and the call becomes direct.  The declared `Dispatch` op,
+    its verifier check and `ObjectMethodIndex` are deleted.
+  - **Lowering.**  MSIRChecks.Expand emits the loads QualifyExpr and
+    EmitMethodCall used to emit.  LOCK's acquire and release are method
+    lookups too.
+
 **Progress (2026-11-22, evening): PickleStubs' fallback; a LOOPHOLE bug on master.**
 - PickleStubs' fallback (below) was `LOOPHOLE (x: REAL, Swap.Int32)`, with
   `Swap.Int32 = BITS 32 FOR [-2^31 .. 2^31-1]`: MSIR widens the subrange

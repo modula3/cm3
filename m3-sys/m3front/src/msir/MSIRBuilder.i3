@@ -224,9 +224,10 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
    Prepends obj as the first argument. *)
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
-                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value;
+                          READONLY args: ARRAY OF MSIR.Value;
+                          selector: TEXT := NIL): MSIR.Value;
 (* rtype is the (by-value) return type; the result — large or small — is
-   returned by value. *)
+   returned by value.  The lookup is a `method` op (D36) naming selector. *)
 
 (* Like EmitCallIndirect but emits a runtime CL_marker check so the call
    works whether fn is a plain function pointer or a fat-pointer closure.

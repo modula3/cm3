@@ -1546,49 +1546,22 @@ PROCEDURE EmitAssertFail(faultCond: MSIR.Value;  msgVal: MSIR.Value) =
 
 PROCEDURE EmitMethodCall(name: TEXT;  obj: MSIR.Value;  midx: INTEGER;
                           rtype: MSIR.T;
-                          READONLY args: ARRAY OF MSIR.Value): MSIR.Value =
+                          READONLY args: ARRAY OF MSIR.Value;
+                          selector: TEXT := NIL): MSIR.Value =
   VAR
-    ptrT    := MSIR.TPtr(MSIR.TVoid());
-    b       : MSIR.Block;
-    suite   : MSIR.Value;
-    slotPtr : MSIR.Value;
     fn      : MSIR.Value;
-    allArgs : REF ARRAY OF MSIR.Value;
-    nArgs   := NUMBER(args);
-    unwind  : MSIR.Block;
-    normalB : MSIR.Block;
-    result  : MSIR.Value;
+    allArgs := NEW(REF ARRAY OF MSIR.Value, 1 + NUMBER(args));
   BEGIN
-    b := CurrentBlock();   (* advance past any dead-terminator block *)
-
-    (* 1. Load vtable pointer (first word of object).
-       Cast obj to ptr(ptr void) so the load element type matches ptrT. *)
-    VAR objAsPtr := MSIR.BuildConvert(b, "", obj, MSIR.TPtr(ptrT));
-    BEGIN
-      suite := MSIR.BuildLoad(b, "", ptrT, objAsPtr);
-    END;
-
-    (* 2. Advance to the method slot (idx * sizeof(ptr) bytes). *)
-    IF midx = 0 THEN
-      slotPtr := suite;
-    ELSE
-      slotPtr := MSIR.BuildPtrAdd(b, "", suite,
-                                  midx * Target.Address.bytes);
-    END;
-
-    (* 3. Load function pointer from the slot. *)
-    fn := MSIR.BuildLoad(b, "", ptrT, slotPtr);
-
-    (* 4. Build argument list: obj (self) first, then explicit args.  The result
-       — large or small — is returned by value. *)
-    allArgs := NEW(REF ARRAY OF MSIR.Value, 1 + nArgs);
+    (* The method in slot midx of obj's suite (D36). *)
+    fn := MSIR.BuildMethod(CurrentBlock(), "", obj, NIL,
+                           midx * Target.Address.bytes, selector);
+    (* obj (self) first, then the explicit args.  The result, large or
+       small, is returned by value. *)
     allArgs[0] := obj;
-    FOR k := 0 TO nArgs - 1 DO allArgs[1 + k] := args[k] END;
-
-    (* 5. Indirect call, after the check Gen_Call_indirect makes. *)
+    FOR k := 0 TO LAST(args) DO allArgs[1 + k] := args[k] END;
+    (* Indirect call, after the check Gen_Call_indirect makes. *)
     CheckCallee(fn);
-    result := MSIR.BuildCallIndirect(CurrentBlock(), name, fn, rtype, allArgs^);
-    RETURN result;
+    RETURN MSIR.BuildCallIndirect(CurrentBlock(), name, fn, rtype, allArgs^);
   END EmitMethodCall;
 
 PROCEDURE ExcDescValue (v: Value.T): MSIR.Value =

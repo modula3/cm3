@@ -201,26 +201,6 @@ PROCEDURE CheckCall(c: Ctx;  i: MSIR.Insn) =
     END;
   END CheckCall;
 
-PROCEDURE CheckDispatch(c: Ctx;  i: MSIR.Insn) =
-  VAR
-    obj := MSIR.InsnOperand(i, 0);
-    objT := MSIR.ValueType(obj);
-    selector := MSIR.InsnSelector(i);
-    eltT: MSIR.T;
-  BEGIN
-    IF MSIR.Kind(objT) = MSIR.TypeKind.GcRef THEN
-      eltT := MSIR.EltType(objT);
-    ELSE
-      eltT := objT;
-    END;
-    IF MSIR.Kind(eltT) # MSIR.TypeKind.Object THEN
-      Err(c, "dispatch operand must be Object-typed"); RETURN;
-    END;
-    IF MSIR.ObjectMethodIndex(eltT, selector) < 0 THEN
-      Err(c, "dispatch selector '" & selector
-           & "' not found in type '" & MSIR.ObjectName(eltT) & "'");
-    END;
-  END CheckDispatch;
 
 PROCEDURE CheckTypecase(c: Ctx;  i: MSIR.Insn) =
   VAR
@@ -510,8 +490,15 @@ PROCEDURE CheckInsn(c: Ctx;  i: MSIR.Insn;  resultT: MSIR.T) =
         CheckGcStore(c, i);
     | MSIR.Op.Call, MSIR.Op.Invoke =>
         CheckCall(c, i);
-    | MSIR.Op.Dispatch =>
-        CheckDispatch(c, i);
+    | MSIR.Op.Method =>
+        (* D36: the object, and the holder's typecell if opaque *)
+        IF MSIR.InsnOperandCount(i) < 1 OR MSIR.InsnOperandCount(i) > 2 THEN
+          Err(c, "method: wrong operand count");
+        ELSIF NOT MSIR.Kind(MSIR.ValueType(MSIR.InsnOperand(i, 0)))
+                    IN SET OF MSIR.TypeKind {MSIR.TypeKind.Ptr,
+                                             MSIR.TypeKind.GcRef} THEN
+          Err(c, "method: the object must be a ptr or gc_ref");
+        END;
     | MSIR.Op.Typecase =>
         CheckTypecase(c, i);
     | MSIR.Op.Ret =>
