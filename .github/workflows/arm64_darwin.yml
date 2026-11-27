@@ -74,3 +74,8 @@ jobs:
         path: m3-sys/m3tests/m3tests-results.xml
         reporter: java-junit
 
+    - name: Check m3tests against known failures
+      if: ${{ !cancelled() }}
+      run: |
+        python3 m3-sys/m3tests/check-results.py m3-sys/m3tests/m3tests-results.xml "m3-sys/m3tests/known-failures/${CM3_TARGET}-${{ matrix.backend }}"
+
