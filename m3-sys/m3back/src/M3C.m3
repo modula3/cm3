@@ -6817,7 +6817,7 @@ END load_host_integer;
 PROCEDURE load_target_integer(self: T; type: IType; READONLY readonly_i: Target.Int) =
 (* push; s0.type := i *)
 VAR i := readonly_i;
-    expr := CTextToExpr(self.TIntLiteral(type, i));
+    expr: Expr_t;
     size := cgtypeSizeBytes[type];
     signed   := cgtypeIsSignedInt[type];
     unsigned := cgtypeIsUnsignedInt[type];
@@ -6826,12 +6826,15 @@ BEGIN
       self.comment("load_integer");
     END;
     <* ASSERT signed OR unsigned *>
+    (* The value's bits are what matter: a word may come as the negative
+       integer with the same bits, such as -8 for the mask 16_FF..F8 (p280).
+       Use the value those bits have in the type. *)
+    IF unsigned THEN TIntN.ZeroExtend(i, size)
+    ELSE TIntN.SignExtend(i, size) END;
+    expr := CTextToExpr(self.TIntLiteral(type, i));
     expr.minmax_valid[Min] := TRUE;
     expr.minmax_valid[Max] := TRUE;
     expr.cgtype := type;
-    IF cgtypeIsUnsignedInt[type] THEN TIntN.ZeroExtend(i, size)
-    ELSIF cgtypeIsSignedInt[type] THEN TIntN.SignExtend(i, size) END;
-    <* ASSERT readonly_i = i *>
     expr.minmax[Min] := i;
     expr.minmax[Max] := i;
     expr := cast(expr, type);
