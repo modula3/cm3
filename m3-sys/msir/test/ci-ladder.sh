@@ -108,6 +108,10 @@ cm3 -version 2>&1 | sed -n 1,3p   # not head: an early close makes cm3 fail with
 
 log "Stage 2: stage-1 cm3 builds the compiler through MSIR"
 set_cfg "$INST_CFG" MSIRObj 1
+# cm3.cfg, written by concierge, sets the mode before the target config is
+# read; AMD64_LINUX turns ex_stack on from it (#1418) and has no mode line of
+# its own for set_cfg to rewrite.
+set_cfg "$CM3_INSTALL/bin/cm3.cfg" MSIRObj 1
 build_through_msir "$WORK/ir-1"
 install_cm3
 
