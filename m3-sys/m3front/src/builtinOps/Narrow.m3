@@ -105,7 +105,11 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
 
     (* CT test for the no-check cases... *)
     IF Type.IsSubtype (trhs, tlhs) THEN RETURN NIL; END;
-    IF (NOT is_object) AND (NOT lhs_info.isTraced) THEN RETURN NIL; END;
+    IF (NOT is_object) AND (NOT lhs_info.isTraced)
+      AND NOT Type.IsEqual (tlhs, Null.T, NIL) THEN
+      (* no typecode to test; but NULL (untraced too) is checked below *)
+      RETURN NIL;
+    END;
 
     (* capture the right-hand side *)
     ref := CG.Pop ();
