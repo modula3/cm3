@@ -214,7 +214,9 @@ PROCEDURE EmitMSIR (refVal: MSIR.Value;  tlhs, trhs: Type.T): MSIR.Value =
   BEGIN
     EVAL Type.CheckInfo (tlhs, lhs_info);
     IF Type.IsSubtype (trhs, tlhs) THEN RETURN refVal END;
-    IF (NOT ObjectType.Is (tlhs)) AND (NOT lhs_info.isTraced) THEN
+    IF (NOT ObjectType.Is (tlhs)) AND (NOT lhs_info.isTraced)
+      AND NOT Type.IsEqual (tlhs, Null.T, NIL) THEN
+      (* no typecode to test; but NULL (untraced too) is checked below *)
       RETURN refVal;
     END;
     IF Type.IsEqual (tlhs, Null.T, NIL) THEN

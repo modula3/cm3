@@ -2205,8 +2205,8 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
     typecode before calling the runtime, as NARROW always did (kept on
     review: same answers, one expansion).
   - **Note.**  Neither front end checks `NARROW (x, NULL)` (NULL counts as
-    untraced in Narrow.Emit), so a non-NIL x passes; to be fixed on master
-    (agreed on review), which the null kind then serves.
+    untraced in Narrow.Emit), so a non-NIL x passed.  Fixed on master
+    (m3test p330) and in Narrow.EmitMSIR, which uses the null kind.
 
 - **D34. Allocation is an op** (2026-11-27; the third conversion under
   D31; reviewed by Tony 2026-11-27).
