@@ -624,6 +624,8 @@ PyFlags += " " + Target
 # It probably does not work because cm3 does not implement it.
 #
 CBackend = "c" in LowercaseArgv or "+c" in LowercaseArgv or TargetOnlyHasCBackend(Target)
+if CBackend:
+    PyFlags += " " + "c"
 
 #if CBackend:
 #    CM3_FLAGS = CM3_FLAGS + " -DM3_BACKEND_MODE=C"
