@@ -496,13 +496,13 @@ PROCEDURE CompileHandler1 (h: Handler;  info: CG.Var;
 
 PROCEDURE Compile2 (p: P): Stmt.Outcomes =
   VAR
-    oc: Stmt.Outcomes;
+    oc, exits: Stmt.Outcomes;
     h: Handler;
     l: CG.Label;
     frame, eset: CG.Var;
     eoffset: INTEGER;
   BEGIN
-    l := CG.Next_label (3);
+    l := CG.Next_label (4);
     CG.Set_label (l, barrier := TRUE);
 
     (* declare and initialize the info record *)
@@ -538,9 +538,11 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
       CG.Jump (l+2);
     END;
 
+    exits := Stmt.Outcomes {};
     IF (p.hasElse) THEN
       (* EXITs and RETURNs from the body are caught by the ELSE clause *)
-      oc := oc - Stmt.Outcomes {Stmt.Outcome.Returns, Stmt.Outcome.Exits};
+      exits := oc * Stmt.Outcomes {Stmt.Outcome.Returns, Stmt.Outcome.Exits};
+      oc := oc - exits;
     END;
 
     (* set the "Compiler.ThisException()" globals *)
@@ -550,6 +552,27 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     CG.Set_label (l+1, barrier := TRUE);
     Scanner.offset := p.h_origin;
     CG.Gen_location (p.h_origin);
+
+    (* An EXIT or RETURN from the body arrives here with a marker, not an
+       exception, in the frame: Exit_exception for an EXIT, NIL for a
+       RETURN (see Marker.EmitExit2 and EmitReturn2).  Send it straight to
+       the ELSE clause: the handler tests below would dereference it.  As
+       for ex_stack in Compile1 (p305). *)
+    IF (p.handles # NIL) THEN
+      IF (Stmt.Outcome.Exits IN exits) THEN
+        CG.Load_int (Target.Integer.cg_type, frame,
+                     M3RT.EF1_info + M3RT.EA_exception);
+        CG.Load_intt (Marker.Exit_exception);
+        CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, l+3, CG.Maybe);
+      END;
+      IF (Stmt.Outcome.Returns IN exits) THEN
+        CG.Load_int (Target.Integer.cg_type, frame,
+                     M3RT.EF1_info + M3RT.EA_exception);
+        CG.Load_intt (0);
+        CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, l+3, CG.Maybe);
+      END;
+    END;
+
     h := p.handles;
     WHILE (h # NIL) DO
       oc := oc + CompileHandler2 (h, frame, l+2,
@@ -558,6 +581,7 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     END;
 
     IF (p.hasElse) THEN
+      CG.Set_label (l+3);
       oc := oc + Stmt.Compile (p.elseBody);
     END;
 
