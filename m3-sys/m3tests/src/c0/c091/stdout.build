@@ -1,0 +1,11 @@
+"../Main.m3", line 15: warning: <*UNUSED*> symbol used (a)
+"../Main.m3", line 12: warning: not used (b)
+"../Main.m3", line 33: warning: <*OBSOLETE*> symbol used (BarO)
+"../Main.m3", line 34: warning: <*UNUSED*> symbol used (BarU)
+"../Main.m3", line 36: warning: <*OBSOLETE*> symbol used (vO)
+"../Main.m3", line 37: warning: <*UNUSED*> symbol used (vU)
+"../Main.m3", line 39: warning: <*OBSOLETE*> symbol used (Foo)
+"../Main.m3", line 23: warning: not used (BarM)
+"../Main.m3", line 29: warning: not used (vM)
+"../Main.m3", line 39: warning: <*OBSOLETE*> symbol used (Foo)
+10 warnings encountered

@@ -2,4 +2,7 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-INTERFACE IntList   = List (Int) END IntList.
+MODULE M;
+
+BEGIN
+END M.

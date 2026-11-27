@@ -2,7 +2,4 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-MODULE Main;
-
-BEGIN
-END Main.
+MODULE CIntList = CList (Int) END CIntList.

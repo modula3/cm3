@@ -4,5 +4,5 @@
  
 interface ("Bar")
 interface ("Foo")
-implementation ("Test")
+implementation ("C052")
 include ("../../Test.common") 

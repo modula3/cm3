@@ -2,7 +2,7 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-GENERIC INTERFACE List (Elt);
+GENERIC INTERFACE CList (Elt);
 
 
 TYPE
@@ -18,6 +18,6 @@ PROCEDURE Length (t: T): CARDINAL;
 PROCEDURE Copy (t: T): T;
 PROCEDURE Map (f: Closure; t: T) RAISES ANY;
 
-END List.
+END CList.
 
 

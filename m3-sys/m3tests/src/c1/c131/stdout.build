@@ -1,0 +1,4 @@
+"../Main.m3", line 39: ".." not allowed in open array constructor (2.6.8).
+"../Main.m3", line 39: ".." not allowed in open array constructor (2.6.8).
+2 errors encountered
+Fatal Error: package build failed

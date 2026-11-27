@@ -1,0 +1,7 @@
+"../Temp.i3", line 24: CM3 restriction: scalars in packed fields cannot cross boundaries (2.2.5). (f)
+1 error encountered
+"../Temp.m3", line 1: imported interface contains errors (Temp)
+1 error encountered
+"../Main.m3", line 8: imported interface contains errors (Temp)
+1 error encountered
+Fatal Error: package build failed

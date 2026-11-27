@@ -1,0 +1,4 @@
+"../Main.m3", line 33: warning: file name (Main.m3) doesn't match module name (foo)
+"../Main.m3", line 16: warning: exception is never raised: <ANY>
+"../Main.m3", line 30: warning: potentially unhandled exception: <ANY>
+3 warnings encountered

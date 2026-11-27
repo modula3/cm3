@@ -95,6 +95,16 @@ readonly proc RunTest () is
     runopts = ""
   end
   %write ("runopts = " & runopts & EOL)
+  if defined ("NORUN")
+    % The c tests: compile everything, into a library rather than a
+    % program, since they are fragments (some have no Main, some only
+    % interfaces, some programs never end, e.g. c018's loops).  c_test
+    % passes -skiplink, so the library is not archived either.
+    if not M3TestsRoot
+      library("ctest")
+    end
+    return
+  end
   if not M3TestsRoot
     program("pgm")
     local f = program_name ("pgm")

@@ -2,7 +2,7 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-INTERFACE Main;
+INTERFACE M;
 
 TYPE
   E = {a, b, c};
@@ -12,5 +12,5 @@ PROCEDURE q (e := E.b) RAISES ANY;
 PROCEDURE r (e : E := E.c) RAISES ANY;
 PROCEDURE s (e : E := E.c) RAISES ANY;
 
-END Main.
+END M.
 

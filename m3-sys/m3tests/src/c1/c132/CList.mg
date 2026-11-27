@@ -2,7 +2,7 @@
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
  
-GENERIC MODULE List (Elt);
+GENERIC MODULE CList (Elt);
 
 PROCEDURE Push (VAR t: T; x: Elt.T) =
   BEGIN
@@ -47,6 +47,6 @@ PROCEDURE Map (f: Closure; t: T) RAISES ANY =
   END Map;
 
 BEGIN
-END List.
+END CList.
 
 

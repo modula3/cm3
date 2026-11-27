@@ -9,7 +9,7 @@
 (*      modified on Fri Sep 29 15:49:09 1989 by kalsow         *)
 (*      modified on Sun May  7 15:35:59 1989 by stolfi         *)
 
-INTERFACE Refany;
+INTERFACE RefanyC;
 
 (* Some standard operations on REFANY.
 
@@ -41,6 +41,6 @@ PROCEDURE Eq (a, b: T): BOOLEAN;
 PROCEDURE Hash (a: T): INTEGER;
 (* returns a suitable hash value *)
 
-END Refany.
+END RefanyC.
   
 
