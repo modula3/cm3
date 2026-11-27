@@ -1004,11 +1004,14 @@ PROCEDURE pointer_define(type: Pointer_t; self: T) =
 VAR x := self;
     target_typename := type.target_typename;
 BEGIN
-    <*ASSERT target_typename # NIL OR type.refers_to_type # NIL *> (* canBeDefined should have already set refers_to_type *)
     type.target_typename := NIL;
 
-    (* We have recursive types TYPE FOO = UNTRACED REF FOO. Typos actually. *)
-    IF type.refers_to_typeid = type.typeid THEN
+    (* A reference to itself (TYPE FOO = REF FOO), or one whose target
+       cannot be named because it is part of a cycle of references (TYPE
+       R2 = REF REF R2, c126): canBeDefined leaves refers_to_type NIL.  A
+       C void* serves, as M3C casts references where it uses them. *)
+    IF type.refers_to_typeid = type.typeid
+       OR (target_typename = NIL AND type.refers_to_type = NIL) THEN
       print(x, "typedef void* " & type.text & ";\n");
       RETURN;
     END;
