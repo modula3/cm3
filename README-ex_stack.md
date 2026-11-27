@@ -430,11 +430,13 @@ The completed work:
 1. Added `struct _M3Exc { void* act; }` (outside `extern "C"`) and
    `RTStack__ThrowM3Exc` (after the closing `extern "C"` brace) to
    `src/runtime/AMD64_LINUX/RTStackC.c`
-2. In `m3-sys/cminstall/src/config/AMD64_LINUX`: enabled
-   `M3_USE_STACK_WALKER = TRUE`, added a guard that sets
-   `M3_BACKEND_MODE = "C"` before the includes, and a post-include
-   guard that overrides `SYSTEM_CC` to `g++ -x c++` and sets
-   `SYSTEM_LIBS{"UNWIND"}`
+2. In `m3-sys/cminstall/src/config/AMD64_LINUX`: set
+   `M3_USE_STACK_WALKER = TRUE` when `M3_BACKEND_MODE` is `"C"` (the
+   gcc, llvm and integrated backends keep `ex_frame`), link through g++
+   (`SYSTEM_CXXXC`), and add a post-include guard that overrides
+   `SYSTEM_CC` to `g++ -x c++` and sets `SYSTEM_LIBS{"UNWIND"}`.  The
+   switch was first committed commented out; it has been on for the C
+   backend since 2026-11.
 
 **Prerequisite:** `libunwind-dev` must be installed:
 
