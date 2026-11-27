@@ -6,7 +6,7 @@
 
 UNSAFE MODULE Main64 EXPORTS Main;
 
-FROM Test IMPORT checkI,checkR,checkL,checkN,done;
+FROM Test IMPORT check,checkI,checkR,checkL,checkN,done;
 
 TYPE
   Int32 = [0..16_7FFFFFFF];
@@ -30,7 +30,9 @@ PROCEDURE Test() =
     checkI (BITSIZE(ADDRESS), 64);
     checkI (BITSIZE(int32), 32);
     checkI (BITSIZE(LONGREAL), 64);
-    checkI (BITSIZE(EXTENDED), 128);
+    (* EXTENDED is 128 bits on AMD64_LINUX, and 64 bits (a LONGREAL) on
+       Darwin and Windows, whose C compilers have no 128-bit float. *)
+    check (BITSIZE(EXTENDED) = 128 OR BITSIZE(EXTENDED) = 64);
     checkI (BITSIZE(LONGINT), BITSIZE(INTEGER));
 
     (* REAL *)
