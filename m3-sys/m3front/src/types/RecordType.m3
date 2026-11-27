@@ -274,7 +274,9 @@ PROCEDURE RecAlignWithPackedElements
              TO LAST (Target.Alignments) DO
       trialAlign := Target.Alignments[a];
       IF trialAlign >= Target.Word.align THEN (* Already know this one works. *)
-        recAlign := Target.Word.align; 
+        (* but keep a larger alignment a field needs (EXTENDED is 128-bit
+           aligned on AMD64_LINUX) *)
+        recAlign := MAX (recAlign, Target.Word.align);
         RETURN
       END; 
       IF trialAlign >= recAlign THEN
