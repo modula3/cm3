@@ -294,6 +294,14 @@ PROCEDURE EmitChecksMSIR (v: MSIR.Value;  e: Expr.T;
       END;
     END;
     IF doLo OR doHi THEN
+      (* EmitChecks' warnings for a value statically out of range, under
+         the same conditions, so the output does not depend on the path
+         (p333). *)
+      IF doLo AND NOT doHi AND TInt.LT (maxE, min) THEN
+        Error.Warn (2, "Value out of range--low.");
+      ELSIF doHi AND NOT doLo AND TInt.LT (max, minE) THEN
+        Error.Warn (2, "Value out of range--high.");
+      END;
       DoCheckMSIR (v, e, min, max, doLo, doHi, err);
     END;
     RETURN v;

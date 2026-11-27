@@ -3,4 +3,5 @@
 "../Main.m3", line 21: warning: not used (S)
 "../Main.m3", line 13: warning: unreachable statement
 "../Main.m3", line 19: warning: unreachable statement
-5 warnings encountered
+"../Main.m3", line 24: warning: Value out of range--high.
+6 warnings encountered
