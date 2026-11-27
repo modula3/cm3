@@ -1,0 +1,6 @@
+NIL ok
+REF faults: An explicit or implicit NARROW() operation failed.
+TEXT faults: An explicit or implicit NARROW() operation failed.
+untraced NIL ok
+untraced faults
+OK
