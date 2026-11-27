@@ -17,22 +17,22 @@ concurrency:
 
 jobs:
   AMD64_DARWIN:
-    uses: modula3/cm3/.github/workflows/amd64_darwin.yml@master
+    uses: ./.github/workflows/amd64_darwin.yml
 
   ARM64_DARWIN:
-    uses: modula3/cm3/.github/workflows/arm64_darwin.yml@master
+    uses: ./.github/workflows/arm64_darwin.yml
 
   AMD64_LINUX:
-    uses: modula3/cm3/.github/workflows/amd64_linux.yml@master
+    uses: ./.github/workflows/amd64_linux.yml
 
   AMD64_MINGW:
-    uses: modula3/cm3/.github/workflows/amd64_mingw.yml@master
+    uses: ./.github/workflows/amd64_mingw.yml
 
   AMD64_NT:
-    uses: modula3/cm3/.github/workflows/amd64_nt.yml@master
+    uses: ./.github/workflows/amd64_nt.yml
 
   I386_LINUX:
-    uses: modula3/cm3/.github/workflows/i386_linux.yml@master
+    uses: ./.github/workflows/i386_linux.yml
 
   I386_NT:
-    uses: modula3/cm3/.github/workflows/i386_nt.yml@master
+    uses: ./.github/workflows/i386_nt.yml
