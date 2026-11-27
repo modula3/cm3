@@ -961,6 +961,12 @@ PROCEDURE CompileMSIR (p: P) =
       VAR slotT := MSIR.ValueType (lhsPtr);
           eltT  := MSIR.EltType (slotT);
       BEGIN
+        (* A gc_slot T holds a gc_ref T, not a T: NIL stored into a traced
+           field must stay a reference (c064: x.y := NIL, y a REF INTEGER,
+           became "store i64 null"). *)
+        IF MSIR.Kind (slotT) = MSIR.TypeKind.GcSlot THEN
+          eltT := MSIR.TGcRef (eltT);
+        END;
         IF MSIR.Kind (eltT) # MSIR.TypeKind.Void AND
            NOT MSIR.Equal (eltT, MSIR.ValueType (rhsVal)) THEN
           rhsVal := MSIR.RetypeValue (rhsVal, eltT);
