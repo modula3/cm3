@@ -39,7 +39,7 @@ the rationale in the commit.
 | **Platform coverage**           | **CI on all three `ex_stack` targets, all green (2026-11-20).** The x86_64 code-generation bugs found on the way are fixed (see *CI results on the x86_64 targets*). |
 | **Front end decoupled from M3CG** | **Not started; plan agreed (D25).** MSIR emission runs inside the M3CG pass's driver and relies on its link-information side effects (see O17). Needed before proposing for master. |
 | **Code review and documentation** | **Planned (Tony, 2026-11-27).** After the D31 conversions (Dispatch is the last): review every MSIR module (`m3-sys/msir/src`, `m3front/src/msir`) and give each a high-level overview at the head of its interface (its role, its place in the pipeline front end → MSIR → MSIRRuntime → MSIREH → MSIRToLLVM or MSIRToM3CG, its main structures and passes, the decisions it implements) and a map of its implementation; MSIRToLLVM and MSIRToM3CG need it most.  Consider renaming MSIRRuntime, which now also expands type tests, NEW and RAISE.  Then consider what the rest of the front end needs documented, but only once its old M3CG paths have been excised (D25), so the documentation describes the MSIR-only front end. |
-| **32-bit and ex_frame review** | **Planned (Tony, 2026-11-27); before D25.**  Development has targeted the three 64-bit `ex_stack` targets only.  The LLVM path needs `ex_stack`, so today 32-bit never reaches MSIR, but D25 makes MSIR the front end's only output: every target master's CI builds (I386_LINUX, I386_NT, AMD64_NT, AMD64_MINGW) would go through `MSIRToM3CG`, with `ex_frame` on the Windows and 32-bit targets.  Steps: (1) decide which targets MSIR must support at D25 (expected: all of master's CI targets through MSIRToM3CG; LLVM only on `ex_stack` targets); (2) audit `m3-sys/msir` and `m3front/src/msir` for 64-bit assumptions (hard-coded `i64`, `Address.size = 64`, 8-byte pointer alignment, 64-bit set indices and debug types; the 2026-11-27 module review found several, and `MSIRToM3CG.Lower` asserts a 64-bit target), making each use `Target`/`M3RT` or be explicitly LLVM-only; (3) add a 32-bit C-mode target (I386_LINUX through `MSIRToM3CG`) to the MSIR ladder, non-gating at first, since running it is what will find the bugs that matter. |
+| **32-bit and ex_frame review** | **Planned (Tony, 2026-11-27); before D25.**  Development has targeted the three 64-bit `ex_stack` targets only.  The LLVM path needs `ex_stack`, so today 32-bit never reaches MSIR, but D25 makes MSIR the front end's only output: every target master's CI builds (I386_LINUX, I386_NT, AMD64_NT, AMD64_MINGW) would go through `MSIRToM3CG`, with `ex_frame` on the Windows and 32-bit targets.  Steps: (1) decide which targets MSIR must support at D25 (expected: all of master's CI targets through MSIRToM3CG; LLVM only on `ex_stack` targets); (2) audit `m3-sys/msir` and `m3front/src/msir` for 64-bit assumptions (hard-coded `i64`, `Address.size = 64`, 8-byte pointer alignment, 64-bit set indices and debug types; the 2026-11-27 module review found several, and `MSIRToM3CG.Lower` asserts a 64-bit target), making each use `Target`/`M3RT` or be explicitly LLVM-only; (3) add a 32-bit C-mode target (I386_LINUX through `MSIRToM3CG`) to the MSIR ladder, non-gating at first, since running it is what will find the bugs that matter.  32-bit through MSIRToLLVM is not a D25 goal; O21 lists what it would take. |
 | **Merge from master (2026-11)** | **Merged and pushed** (`593cb56d0c`, then `15ab336899` for #1251, #1253, #1254). See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Done (2026-11-23).** MSIRObj and MSIRAsm are in `m3tests/src/m3makefile`'s `-O3` clause, as master's llvm backends are (`a03e61e15b`), so the LLVM ladder's m3tests run optimised. The first run failed only p280, which found B32; with B32 fixed all 304 pass. |
 | **EXTENDED on AMD64_LINUX**     | **Failing (2026-11-19).** fp128 comparisons, negation and constants fixed (`544b07b7c9`), but the MSIR-built stage-2 compiler still differs from stage 1 in three files and p113/p118/p123/p131 fail: probably fp128 arithmetic in the compiler's own constant folding. Original note: **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
@@ -1313,6 +1313,66 @@ m3front produces MSIR.  Two decisions along the way:
 2. **Whether `Target` sheds its M3CG vocabulary** (`CGType`, the
    `cg_type` fields), leaving the target facts backend-neutral.  Worth
    doing when M3CG becomes backend-only, not before.
+
+### O21. MSIRToLLVM on 32-bit targets.
+
+**Open (Tony, 2026-11-27).**  At D25, 32-bit targets reach code through
+`MSIRToM3CG` and the C backend; LLVM stays on the 64-bit `ex_stack` targets
+(ARM64_DARWIN, AMD64_DARWIN, AMD64_LINUX).  Nobody needs LLVM code on a
+32-bit target yet (master's own llvm CI job is AMD64_LINUX only).  But the
+path to it should stay open, so the 32-bit review (Status table) makes the
+shared pieces target-parametric now.  Getting a first 32-bit target,
+I386_LINUX, through MSIRToLLVM takes these steps, in order:
+
+1. **MSIR emission free of 64-bit assumptions** (shared with the
+   MSIRToM3CG work, so done by the 32-bit review).  `m3front/src/msir`
+   (MSIRType, MSIRBuilder, the CompileMSIR methods) and `m3-sys/msir` take
+   every width from `Target` and every layout from `M3RT`: no `TI (64)`
+   for INTEGER or ADDRESS, no 8-byte constants for word or pointer sizes.
+   LONGINT stays i64 while INTEGER becomes i32, so the two must be
+   distinct throughout (arithmetic, conversions, constant folding, sets
+   and subranges based on LONGINT).
+2. **A target description per target** (O19).  The LLVM triple and data
+   layout come from the target (its config or a table keyed by
+   `Target.System_name`), not from hard-coded strings.  The data layout
+   must agree with `Target`'s sizes and alignments, notably LONGREAL's
+   4-byte alignment on i386 Linux; CheckRTLayouts (D24) checks the RT0
+   tables against M3RT and must pass on the new target.
+3. **MSIRToLLVM itself target-parametric** (the 2026-11-27 review, its
+   F15 and others).  The open-array dope is `{ ptr, iN x rank }` with
+   N = `Target.Integer.size`.  Method offsets and other RT0 fields take
+   their LLVM type from RTFieldLLType, not `i64`.  Atomic alignment comes
+   from `Target.Address.align`, set indices from `Target.Integer.size`,
+   and debug-info basic-type sizes (BBits) from `Target`.  Steps 1-3
+   are mechanical and can be checked on a 64-bit host by
+   cross-compiling to I386_LINUX and reading the `.ll`.
+4. **Exception handling on the target: the real work.**  MSIRToLLVM
+   lowers EH only to C++ zero-cost unwinding (MSIREH: `invoke`,
+   `landingpad` and `resume` with `__gxx_personality_v0` and `_M3Exc`).
+   LLVM supports that on i386 and ARM32 Linux, but cm3's runtime support
+   for `ex_stack` exists only on the three 64-bit targets.  Two routes:
+   (a) port `ex_stack` to I386_LINUX: an `RTStackC` for it over
+   libunwind, `RTExStack`, `HAS_STACK_WALKER` in m3core's runtime
+   m3makefile, `M3_USE_STACK_WALKER` in the I386_LINUX config, and the
+   C++ typeinfo for `_M3Exc` on i386 (Itanium ABI, as on AMD64); or
+   (b) a setjmp-based (`ex_frame`) lowering in MSIREH for LLVM, like
+   MSIRToM3CG's.  (a) is the natural route on Linux: it also gives the C
+   backend zero-cost EH there.  Windows (I386_NT, and AMD64_NT too) needs
+   MSVC-style EH (`__CxxFrameHandler3` and funclets), a different
+   lowering from MSIREH's, and is a separate project.
+5. **Calling convention and ABI.**  Struct arguments and results
+   (`sret`, byval) as the C backend passes them on i386 Linux, so
+   LLVM-built and C-built units link together; LONGINT and LONGREAL
+   arguments in pairs of words; any target-specific `cc`.
+6. **Configuration.**  An I386_LINUX config with `M3_BACKEND_MODE =
+   "MSIRObj"` (and MSIRAsm), `llc` for the i386 triple, and the link
+   flags for libunwind.
+7. **Validation.**  The MSIR ladder (three-stage bootstrap, m3tests, IR
+   fixpoint) on I386_LINUX in MSIRObj mode, in an i386 container or
+   cross-built from AMD64_LINUX, non-gating until it is green.
+
+Steps 1-3 come out of the 32-bit review for free.  Steps 4-7 start only
+when a 32-bit LLVM target becomes a goal.
 
 ## Cross-references
 
