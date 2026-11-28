@@ -1,3 +1,9 @@
-implementation("Main")
+% The 32-bit variant has no BITS 32 FOR [0 .. 16_FFFFFFFF] (an empty type
+% where INTEGER has 32 bits); its output is the same.
+if equal(WORD_SIZE, "64BITS")
+  implementation("Main")
+else
+  implementation("Main32")
+end
 build_standalone()
 include ("../../Test.common")

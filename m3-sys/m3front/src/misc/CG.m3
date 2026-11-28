@@ -1561,6 +1561,7 @@ PROCEDURE Load
         IF (s = best_size) AND (talign = 0) THEN
           (* this is a simple partial word load *)
           SimpleLoad (v, o, best_type, base_align, addr_align);
+          Restack (best_type, t);
         ELSE
           (* unaligned, partial load *)
           cg.load (v, AsBytes (o - talign), best_type, StackType[t]);
@@ -1604,6 +1605,23 @@ PROCEDURE Load
       ForceStacked ();  (* to connect the error message to the bad code *)
     END;
   END Load;
+
+PROCEDURE Restack (from: MType;  to: Type) =
+(* s0 was loaded as a "from", and so has stack type StackType[from]; give
+   it StackType[to] when that differs.  It does where INTEGER is narrower
+   than LONGINT (a 32-bit target) and a LONGINT subrange is stored in no
+   more bits than an INTEGER: the partial-word load is at the narrower
+   type, but the value is a LONGINT. *)
+  VAR fs := StackType[from];  ts := StackType[to];
+  BEGIN
+    IF fs = ts THEN RETURN END;
+    ForceStacked ();
+    cg.loophole (fs, ts);  (* sign-extends *)
+    IF NOT Target.SignedType[from] THEN
+      cg.extract_mn (ts, FALSE, 0, TargetMap.CG_Size[from]);
+    END;
+    WITH x = stack [SCheck (1, "Restack")] DO x.type := ts END;
+  END Restack;
 
 PROCEDURE SimpleLoad
   (v: Var;  o: Offset;  t: Type;  base_align, addr_align: Alignment) =
@@ -1996,6 +2014,7 @@ x3 := stack[SCheck(1,"Load_indirect-x3")];
           IF (oddStaticBitCt = 0) AND (x.bits = NIL) THEN
             (* A fetch_align'ed load. *)
             LoadIndirectSimple (x, fetch_type, addr_align);
+            Restack (fetch_type, t);
             (* x.kind IN {Direct, Stacked} *)
             IF (s # fetch_size) THEN (* NOT all of fetch_size to be loaded. *)
               ForceStacked ();
@@ -2015,6 +2034,7 @@ x5 := stack[SCheck(1,"Load_indirect-x5")];
             LoadIndirectSimple (x, fetch_type, addr_align);
 x6 := stack[SCheck(1,"Load_indirect-x6")];
             ForceStacked ();
+            Restack (fetch_type, t);
 x7 := stack[SCheck(1,"Load_indirect-x7")];
             IF Target.endian = Target.Endian.Little
             THEN cg.extract_mn (StackType[t], Target.SignedType[t],

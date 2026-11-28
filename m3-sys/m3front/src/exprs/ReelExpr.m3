@@ -178,7 +178,7 @@ PROCEDURE Floor (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
   VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Floor (x), res) THEN RETURN FALSE END;
+    IF NOT TFloat.Floor (x, res) THEN RETURN FALSE END;
     IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
     IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
@@ -189,7 +189,7 @@ PROCEDURE Ceiling (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
   VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Ceiling (x), res) THEN RETURN FALSE END;
+    IF NOT TFloat.Ceiling (x, res) THEN RETURN FALSE END;
     IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
     IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
@@ -200,7 +200,7 @@ PROCEDURE Trunc (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
   VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Trunc (x), res) THEN RETURN FALSE END;
+    IF NOT TFloat.Trunc (x, res) THEN RETURN FALSE END;
     IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
     IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
@@ -211,15 +211,21 @@ PROCEDURE Round (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
   VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Round (x), res) THEN RETURN FALSE END;
+    IF NOT TFloat.Round (x, res) THEN RETURN FALSE END;
     IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
     IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
     RETURN TRUE;
   END Round;
 
+PROCEDURE IsConst (a: Expr.T): BOOLEAN =
+  VAR x: Target.Float;
+  BEGIN
+    RETURN Split (a, x);
+  END IsConst;
+
 PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR i: INTEGER;  x, res: Target.Float;  new_pre: Target.Precision;
+  VAR i: Target.Int;  it: Type.T;  x, res: Target.Float;  new_pre: Target.Precision;
   BEGIN
     IF    (t = Reel.T)  THEN new_pre := Target.Precision.Short;
     ELSIF (t = LReel.T) THEN new_pre := Target.Precision.Long;
@@ -228,7 +234,7 @@ PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
 
     IF Split (a, x) THEN
       IF NOT TFloat.FloatF (x, new_pre, res) THEN RETURN FALSE END;
-    ELSIF IntegerExpr.ToInt (a, i) THEN
+    ELSIF IntegerExpr.Split (a, i, it) THEN
       IF NOT TFloat.FloatI (i, new_pre, res) THEN RETURN FALSE END;
     ELSE
       RETURN FALSE;

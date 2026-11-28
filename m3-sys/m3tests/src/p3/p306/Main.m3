@@ -19,7 +19,10 @@ VAR
 BEGIN
   FOR i := FIRST (r) TO LAST (r) DO IO.Put (Fmt.Int (ROUND (r[i])) & " ") END;
   IO.Put ("\n");
-  FOR i := FIRST (l) TO LAST (l) DO IO.Put (Fmt.Int (ROUND (l[i])) & " ") END;
+  (* LONGINT: these exceed a 32-bit INTEGER, where ROUND (l[i]) overflows *)
+  FOR i := FIRST (l) TO LAST (l) DO
+    IO.Put (Fmt.LongInt (ROUND (l[i], LONGINT)) & " ")
+  END;
   IO.Put ("\n");
   FOR i := FIRST (e) TO LAST (e) DO IO.Put (Fmt.Int (ROUND (e[i])) & " ") END;
   IO.Put ("\n");
