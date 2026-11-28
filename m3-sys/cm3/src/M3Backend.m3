@@ -12,7 +12,7 @@ IMPORT M3C;
 IMPORT LLGen; (* Could be a dummy.  See the m3makefile. *) 
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
 IMPORT M3CG_BinWr, M3CG_Ops, M3CG_Tee, M3CG_Wr, M3CG_MultiPass, M3ID;
-IMPORT MSIR, MSIREmit, MSIRToM3CG, RTParams, Stdio;
+IMPORT MSIR, MSIREmit, MSIRToM3CG, RTParams, Stdio, FileWr, OSError;
 IMPORT Target; 
 
 VAR
@@ -27,7 +27,8 @@ VAR
      the front end's M3CG stream is recorded, and Close either lowers the
      unit's MSIR module into the C backend or replays the recording
      (per-module fallback).  @M3msircgverbose reports each unit's outcome
-     on stderr. *)
+     on stderr; @M3msircgverbose=FILE appends it to FILE instead, which
+     leaves stderr, and so a test's expected output, as without it. *)
   msir_rec : M3CG_MultiPass.T := NIL;
   msir_c   : M3CG.T           := NIL;
   (* @M3m3cgtext: also write the stream the C backend sees, as text, to
@@ -144,13 +145,28 @@ PROCEDURE TextUtils_Find (t, sub: TEXT): BOOLEAN =
     RETURN FALSE;
   END TextUtils_Find;
 
+(* Where @M3msircgverbose reports: NIL without it, stderr, or the file
+   @M3msircgverbose=FILE names, opened to append. *)
+PROCEDURE VerboseWr (): Wr.T =
+  VAR file: TEXT;
+  BEGIN
+    IF NOT RTParams.IsPresent ("msircgverbose") THEN RETURN NIL END;
+    file := RTParams.Value ("msircgverbose");
+    IF file = NIL OR Text.Equal (file, "") THEN RETURN Stdio.stderr END;
+    TRY
+      RETURN FileWr.OpenAppend (file);
+    EXCEPT OSError.E =>
+      RETURN Stdio.stderr;
+    END;
+  END VerboseWr;
+
 (* EXPORTED: *)
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
   VAR m: MSIR.Module;  index: INTEGER;  why: Wr.T := NIL;
   BEGIN
     IF msir_rec # NIL THEN
       m := MSIREmit.LastModule ();
-      IF RTParams.IsPresent ("msircgverbose") THEN why := Stdio.stderr END;
+      why := VerboseWr ();
       IF m # NIL AND Skipped (MSIR.ModuleName (m)) THEN m := NIL END;
       IF m # NIL AND MSIRToM3CG.Lowerable (m, why) THEN
         IF text_wr # NIL THEN
@@ -165,6 +181,9 @@ PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
       END;
       msir_rec := NIL;
       msir_c := NIL;
+      IF why # NIL AND why # Stdio.stderr THEN
+        TRY Wr.Close (why) EXCEPT Wr.Failure, Thread.Alerted => END;
+      END;
     END;
     Utils.CloseWriter (text_wr, text_name);
     text_wr := NIL;
