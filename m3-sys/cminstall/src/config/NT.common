@@ -1012,8 +1012,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     DeleteFiles(Outputs)
     deriveds("", Outputs)
 
-    % build a static library and .def
-    % The static library here is historical and unused.
+    % Write .def.
     % mklib is transitioning away: write the .def file elsewhere
     % if dynamic linking is supported
 
@@ -1036,8 +1035,8 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                     options,
                     objects,
                 ]))
-        if not equal(ret_code, 0) or not FileExists(lib_file)
-            error("library creation failed" & EOL)
+        if not equal(ret_code, 0)
+            error(".def creation failed" & EOL)
             if not equal(ret_code, 0)
                 return ret_code
             end
