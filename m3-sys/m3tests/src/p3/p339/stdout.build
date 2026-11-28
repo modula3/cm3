@@ -1,0 +1,3 @@
+"../Main.m3", line 12: warning: integer overflow in a constant expression: the result wraps around
+"../Main.m3", line 14: warning: integer overflow in a constant expression: the result wraps around
+2 warnings encountered

@@ -1,0 +1,30 @@
+constant INTEGER DIV: pass
+constant INTEGER MOD: pass
+constant LONGINT DIV: pass
+constant LONGINT MOD: pass
+INTEGER FIRST, -1 DIV: pass
+INTEGER FIRST, -1 MOD: pass
+INTEGER FIRST+1, -1 DIV: pass
+INTEGER FIRST+1, -1 MOD: pass
+INTEGER LAST, -1 DIV: pass
+INTEGER LAST, -1 MOD: pass
+INTEGER -7, -1 DIV: pass
+INTEGER -7, -1 MOD: pass
+INTEGER 7, -2 DIV: pass
+INTEGER 7, -2 MOD: pass
+INTEGER -7, 2 DIV: pass
+INTEGER -7, 2 MOD: pass
+INTEGER FIRST, 1 DIV: pass
+INTEGER FIRST, 1 MOD: pass
+INTEGER FIRST, -2 DIV: pass
+INTEGER FIRST, -2 MOD: pass
+LONGINT FIRST, -1 DIV: pass
+LONGINT FIRST, -1 MOD: pass
+LONGINT FIRST+1, -1 DIV: pass
+LONGINT FIRST+1, -1 MOD: pass
+LONGINT -7, -1 DIV: pass
+LONGINT -7, -1 MOD: pass
+LONGINT 7, -2 DIV: pass
+LONGINT 7, -2 MOD: pass
+subrange DIV: pass
+subrange MOD: pass

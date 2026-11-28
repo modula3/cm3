@@ -154,7 +154,10 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
         IF (e2 = NIL) THEN e2 := p.b; END;
         Expr.Compile (e1);
         Expr.Compile (e2);
-        CG.Mod (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+        IF DivExpr.MayOverflow (e1, e2, cg_type)
+          THEN DivExpr.CompileWrapped (cg_type, Expr.GetSign (e1), div := FALSE);
+          ELSE CG.Mod (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+        END;
       END;
     ELSE
       (* floating point: x MOD y == x - y * FLOOR (x / y)  *)
