@@ -85,8 +85,11 @@ PROCEDURE SetBehavior(<*UNUSED*> f: Flag; <*UNUSED*> b: Behavior) =
     <*ASSERT FALSE, "FloatMode.SetBehavior not implemented" *>
   END SetBehavior;
 
-PROCEDURE GetBehavior(<*UNUSED*> f: Flag): Behavior =
+PROCEDURE GetBehavior(f: Flag): Behavior =
   BEGIN
+    IF f = Flag.IntOverflow THEN
+      RETURN Behavior.Ignore;  (* wraps; see FloatMode.i3 *)
+    END;
     <*ASSERT FALSE, "FloatMode.GetBehavior not implemented" *>
   END GetBehavior;
 
