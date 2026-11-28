@@ -30,8 +30,14 @@ PROCEDURE Crash () =
     IF WinBase.IsDebuggerPresent () # 0 THEN
       WinBase.DebugBreak ();
     END;
-    RTThread.SuspendOthers ();
+    (* Dump the stack before suspending the other threads: DumpStack's
+       first call allocates RTProcedure's tables, and a thread that has
+       stopped the others must not call malloc (RTHeapRep.worldStoppedBy;
+       a stopped thread may hold the C heap's lock), so the dump after
+       SuspendOthers aborted with a second runtime error.  The dump walks
+       only this thread's frames, so it needs nothing stopped. *)
     RTMachInfo.DumpStack (LOOPHOLE (Crash, ADDRESS), fp);
+    RTThread.SuspendOthers ();
     RTSignal.RestoreHandlers (); (* so we really do crash... *)
     Exit (-1);
   END Crash;
