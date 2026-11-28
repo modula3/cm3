@@ -128,6 +128,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.class := Class.cINT;
     END;
     p.type := ta;
+    IF IntegerExpr.Overflows (IntegerExpr.Op.Subtract, p.a, p.b) THEN
+      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
+    END;
   END Check;
 
 PROCEDURE Prep (p: P) =
