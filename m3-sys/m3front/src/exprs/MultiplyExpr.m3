@@ -9,7 +9,7 @@
 MODULE MultiplyExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, EReel, Target;
-IMPORT SetExpr, IntegerExpr, ReelExpr, LReel, SetType, ErrType;
+IMPORT SetExpr, IntegerExpr, ReelExpr, LReel, SetType, ErrType, Error;
 
 CONST
   cINT   = 0;
@@ -97,6 +97,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.class := cINT;
     END;
     p.type := ta;
+    IF IntegerExpr.Overflows (IntegerExpr.Op.Multiply, p.a, p.b) THEN
+      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
+    END;
   END Check;
 
 PROCEDURE Prep (p: P) =

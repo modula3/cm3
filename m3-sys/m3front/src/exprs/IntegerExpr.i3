@@ -15,6 +15,13 @@ PROCEDURE New  (type: Type.T;  READONLY value: Target.Int): Expr.T;
 
 PROCEDURE Split (e: Expr.T;  VAR v: Target.Int;  VAR t: Type.T): BOOLEAN;
 
+TYPE Op = {Add, Subtract, Multiply, Negate};
+
+PROCEDURE Overflows (op: Op;  a, b: Expr.T): BOOLEAN;
+(* TRUE if a and b (b is ignored for Negate) are integer constants and op
+   on them overflows their type, so that the constant fold (Add, Subtract,
+   Multiply, Negate) wraps around. *)
+
 PROCEDURE Compare  (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN;
 PROCEDURE Add      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;

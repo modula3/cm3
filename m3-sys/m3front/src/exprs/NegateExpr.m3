@@ -9,7 +9,7 @@
 MODULE NegateExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
-IMPORT IntegerExpr, ReelExpr;
+IMPORT IntegerExpr, ReelExpr, Error;
 
 TYPE
   P = ExprRep.Ta BRANDED "NegateExpr.P" OBJECT
@@ -70,6 +70,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       t := Expr.BadOperands ("unary \'-\'", t);
     END;
     p.type := t;
+    IF IntegerExpr.Overflows (IntegerExpr.Op.Negate, p.a, NIL) THEN
+      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
+    END;
   END Check;
 
 PROCEDURE Prep (p: P) =
