@@ -4,9 +4,15 @@ name: integration
 
 # Pushes run only on master: a branch with an open PR is tested by its
 # pull_request run, and a push run of the same code doubled the load.
+# Changes only to documentation (Markdown anywhere, or docs/) build nothing,
+# so they do not run CI: no build reads them.
 on:
-  pull_request: {branches: master}
-  push: {branches: master}
+  pull_request:
+    branches: master
+    paths-ignore: ['**.md', 'docs/**']
+  push:
+    branches: master
+    paths-ignore: ['**.md', 'docs/**']
 
 # One queue per branch or PR (it was one for the whole repository, so any
 # push cancelled every pending run elsewhere).  A newer push supersedes a
