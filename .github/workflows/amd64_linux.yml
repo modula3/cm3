@@ -53,7 +53,7 @@ jobs:
         echo "${CM3_INSTALL}/bin" >> $GITHUB_PATH
 
     - name: Fetch sources
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Build everything
       run: |
