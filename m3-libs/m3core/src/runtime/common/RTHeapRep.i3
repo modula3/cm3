@@ -230,6 +230,14 @@ TYPE
 (* Flush cached thread state, on GC flip and thread death *)
 PROCEDURE FlushThreadState (VAR thread: ThreadState);
 
+VAR worldStoppedBy: UNTRACED REF ThreadState := NIL;
+(* While RTThread.SuspendOthers has the other threads stopped, the heap
+   state of the thread that stopped them; otherwise NIL.  Set and cleared
+   by the preemptive thread packages, only while the others are stopped.
+   That thread must not call malloc or free (untraced NEW or DISPOSE)
+   until it resumes them, since a stopped thread may hold the C heap's
+   lock; the untraced allocator checks this and aborts. *)
+
 (* RegisterFinalCleanup is available for low-level cleanup by the thread
    package.  If "r" is registered for cleanup, then just before "r" is
    freed, the cleanup procedure "p" is called.  This procedure is allowed
@@ -268,7 +276,12 @@ TYPE
 PROCEDURE RegisterMonitor (cl: MonitorClosure);
 (* Before each collection, the collector calls all registered 'before'
    procedures; after each collection, the collector calls all registered
-   'after' procedures. *)
+   'after' procedures.
+
+   The 'before' procedures run while all other threads are suspended, and
+   a suspended thread may hold any lock, including the C heap's.  So a
+   'before' procedure must not call malloc or free (no untraced NEW or
+   DISPOSE) and must not acquire a mutex that another thread could hold. *)
 
 PROCEDURE UnregisterMonitor (cl: MonitorClosure);
 (* removes m's procedures from the registered set. *)
@@ -293,7 +306,10 @@ TYPE
 PROCEDURE VisitAllRefs (proc: RefVisitor);
 (* Visit all the traced references in the heap, and call proc.visit for
    each one of them.  Garbage collection is disabled during that visit and
-   you should refrain from allocating memory in proc. *)
+   you should refrain from allocating memory in proc.  The other threads
+   are suspended during the visit, so proc must not call malloc or free
+   (no untraced NEW or DISPOSE) or acquire a mutex another thread could
+   hold: the suspended thread may be holding it. *)
 
 (****** INITIALIZATION ******)
 
