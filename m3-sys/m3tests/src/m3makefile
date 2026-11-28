@@ -604,6 +604,7 @@ p_test ("p3", "p334", "a record with packed fields keeps a larger field alignmen
 p_test ("p3", "p335", "variables of a record type are aligned as the front end laid it out")
 p_test ("p3", "p338", "-OverflowChk: INTEGER and LONGINT arithmetic aborts exactly on overflow")
 p_test ("p3", "p339", "FIRST DIV -1 wraps around and FIRST MOD -1 is 0, with no trap")
+p_test ("p3", "p337", "FLOOR, CEILING, ROUND, TRUNC to LONGINT and FLOAT of LONGINT, beyond 32 bits")
 p_test ("p3", "p323", "RAISE of a record argument inside a TRY with no other call")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p302", "Address of a global at an offset, compared directly")

@@ -2532,7 +2532,10 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
     discard(t, 1);
   END domaxmin;
 
-PROCEDURE fltoint (t: T; mode: FlToInt; <*UNUSED*>type: Type) =
+PROCEDURE fltoint (t: T; mode: FlToInt; type: Type) =
+  (* A LONGINT result (Int64, Word64) is stored with the 64-bit FISTP; it
+     used to be stored with the 32-bit one whatever the type, leaving an
+     Int32 where an Int64 was wanted. *)
   VAR status: x86Var;
       statusop, newstat: Operand;
       statreg: Regno;
@@ -2566,9 +2569,13 @@ PROCEDURE fltoint (t: T; mode: FlToInt; <*UNUSED*>type: Type) =
     t.cg.memFOp(FOp.fLDCW, newstat.mvar);
 
     discard(t, 1);
-    pushnew(t, Type.Int32, Force.mem);
-
-    t.cg.memFOp(FOp.fISTP, t.vstack[pos(t, 0, "fltoint")].mvar);
+    IF TypeIs64(type) THEN
+      pushnew(t, Type.Int64, Force.mem);
+      t.cg.memFOp(FOp.fISTP64, t.vstack[pos(t, 0, "fltoint")].mvar);
+    ELSE
+      pushnew(t, Type.Int32, Force.mem);
+      t.cg.memFOp(FOp.fISTP, t.vstack[pos(t, 0, "fltoint")].mvar);
+    END;
 
     t.cg.noargOp(Op.oWAIT);
     t.cg.noargFOp(FOp.fNCLEX);
@@ -2590,7 +2597,12 @@ PROCEDURE inttoflt (t: T) =
         find(t, stack0, Force.mem);
       END;
 
-      t.cg.memFOp(FOp.fILD, stop0.mvar);
+      IF TypeIs64(stop0.optype) THEN
+        (* a LONGINT, in two words: the 64-bit FILD *)
+        t.cg.memFOp(FOp.fILD64, stop0.mvar);
+      ELSE
+        t.cg.memFOp(FOp.fILD, stop0.mvar);
+      END;
       IF stop0.mvar.var.stack_temp THEN
         t.parent.free_temp(stop0.mvar.var);
       END;
