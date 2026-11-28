@@ -3,7 +3,7 @@ p137 p172 p185 p306  # x87 floating point, as I386_LINUX-gcc
 p217 p218 p219 p220 p221 p222 p223  # .M3SHIP tests: Windows installs pgm.exe and pgm.pdb; needs Windows expected files
 p227 p228 p229  # unexpected build output, probably cl warnings; unexamined
 p159 p207 p283 p329 p331  # unexamined
-r001 r002  # see below
-# r001 (an unhandled exception) and r002 (a stack overflow) end without
-# the expected report; not yet examined.  (r003-r010 ended with a second
-# error from the crash path's stack dump, fixed in #1443.)
+r002  # see below
+# r002 (a stack overflow) ends without the expected report; not yet
+# examined.  (r001 and r003-r010 ended with a second error from the crash
+# path's stack dump, fixed in #1443.)
