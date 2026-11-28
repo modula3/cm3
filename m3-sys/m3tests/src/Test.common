@@ -16,7 +16,9 @@ readonly proc NormalizeString (String) is
   % And *.build says "aborted", in some fashion.
   % Remove these.
   %
-  local StackTraceMarker = "\nStack trace:\n   FP         PC      Procedure\n---------  ---------  -------------------------------\n 0x"
+  % (Without the first frame's " 0x": RTIO.PutAddr pads to 9 columns, so
+  % a 9-character address such as 0x10ffbfc has no leading space.)
+  local StackTraceMarker = "\nStack trace:\n   FP         PC      Procedure\n---------  ---------  -------------------------------\n"
   local StackTracePosition = pos (String, StackTraceMarker)
   if not equal (StackTracePosition, "-1")
     String = sub (String, 0, StackTracePosition) & "\n"
