@@ -1353,6 +1353,11 @@ class UpgradeCommand(ConciergeCommand):
         else:
             self._doCandIntegrated()
 
+        # _doGcc and _doLLVM may leave cm3.cfg without M3_BACKEND_MODE
+        # (_resetCfg); write it with the backend's mode, so that the install,
+        # and m3tests run with it, use that backend rather than the default.
+        self._write_cfg()
+
     def _doGcc(self):
         "Do the gcc backend"
 
@@ -1505,20 +1510,8 @@ class UpgradeCommand(ConciergeCommand):
             self._ship_front()
 
     def _resetCfg(self):
-        "reset the cm3.cfg file"
-        backend = ''
-        cross_compile = ''
-        if self.config() == "I386_LINUX":
-            cross_compile = 'SYSTEM_CC = SYSTEM_CC & " -I/usr/i686-linux-gnu/include"\n'
-
-        self.install("bin/cm3.cfg").write_text(
-            f"""{backend}if not defined("SL") SL = "/" end
-if not defined("HOST") HOST = "{self.config()}" end
-if not defined("TARGET") TARGET = HOST end
-INSTALL_ROOT = (path() & SL & "..")
-include(path() & SL & "config" & SL & TARGET)
-{cross_compile}"""
-        )
+        "reset the cm3.cfg file, with no M3_BACKEND_MODE (see _write_cfg)"
+        self._write_cfg(with_backend=False)
 
 
     def _clean(self):
@@ -1593,18 +1586,28 @@ include(path() & SL & "config" & SL & TARGET)
             self.cp(config, dst)
 
         # Write new cm3.cfg
+        self._write_cfg()
+
+    def _write_cfg(self, with_backend=True):
+        """Write cm3.cfg, setting M3_BACKEND_MODE for the current backend.
+
+        Without the backend (_resetCfg), the mode passed to cm3 as
+        -DM3_BACKEND_MODE=... during a build is not overridden; but an
+        install whose cm3.cfg has no mode falls back to cm3cfg.common's
+        default, "3", the gcc backend.  So the gcc and llvm upgrades write
+        it again, with the mode, when they finish."""
         if self.no_action():
             return
 
         backend = ''
-        if self.use_c_backend():
+        if with_backend and self.use_c_backend():
             #backend = 'readonly M3_BACKEND_MODE = "C"\n'
             backend = ' M3_BACKEND_MODE = "C"\n'
 
-        if self.use_gcc_backend():
+        if with_backend and self.use_gcc_backend():
             backend = ' M3_BACKEND_MODE = "ExternalAssembly"\n'
 
-        if self.use_llvm_backend():
+        if with_backend and self.use_llvm_backend():
             backend = ' M3_BACKEND_MODE = "StAloneLlvmObj"\n'
 
         cross_compile = ''
