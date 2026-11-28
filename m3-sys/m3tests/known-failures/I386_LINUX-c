@@ -1,3 +1,2 @@
-# I386_LINUX, C backend.
-# p040: Convert's LONGREAL formatting differs in the last digit (to examine).
-p040
+# I386_LINUX, C backend: no known failures.
+# (Kept, listing none, as a place for any; a missing file means the same.)
