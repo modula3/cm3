@@ -268,7 +268,12 @@ TYPE
 PROCEDURE RegisterMonitor (cl: MonitorClosure);
 (* Before each collection, the collector calls all registered 'before'
    procedures; after each collection, the collector calls all registered
-   'after' procedures. *)
+   'after' procedures.
+
+   The 'before' procedures run while all other threads are suspended, and
+   a suspended thread may hold any lock, including the C heap's.  So a
+   'before' procedure must not call malloc or free (no untraced NEW or
+   DISPOSE) and must not acquire a mutex that another thread could hold. *)
 
 PROCEDURE UnregisterMonitor (cl: MonitorClosure);
 (* removes m's procedures from the registered set. *)
@@ -293,7 +298,10 @@ TYPE
 PROCEDURE VisitAllRefs (proc: RefVisitor);
 (* Visit all the traced references in the heap, and call proc.visit for
    each one of them.  Garbage collection is disabled during that visit and
-   you should refrain from allocating memory in proc. *)
+   you should refrain from allocating memory in proc.  The other threads
+   are suspended during the visit, so proc must not call malloc or free
+   (no untraced NEW or DISPOSE) or acquire a mutex another thread could
+   hold: the suspended thread may be holding it. *)
 
 (****** INITIALIZATION ******)
 
