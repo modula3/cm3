@@ -18,7 +18,7 @@ INTERFACE TFloat;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Float, Precision;
+FROM Target IMPORT Float, Precision, Int;
 
 CONST
   ZeroR = Float { Precision.Short,    0, 0.0x0 };
@@ -61,19 +61,24 @@ PROCEDURE LE (READONLY a, b: Float): BOOLEAN;
 PROCEDURE FloatF (READONLY a: Float;  p: Precision;  VAR f: Float): BOOLEAN;
 (* returns 'FLOAT (a, p)' unless there's an overflow *)
 
-PROCEDURE FloatI (READONLY i: INTEGER;  p: Precision;  VAR f: Float): BOOLEAN;
+(* The integers below are target integers, whatever the host's INTEGER: a
+   compiler hosted on a 32-bit machine still folds LONGINT exactly.  Each
+   returns FALSE if the result is outside LONGINT's range (or a is not a
+   number). *)
+
+PROCEDURE FloatI (READONLY i: Int;  p: Precision;  VAR f: Float): BOOLEAN;
 (* returns 'FLOAT (i, p)' unless there's an overflow *)
 
-PROCEDURE Trunc (READONLY a: Float): INTEGER;
+PROCEDURE Trunc   (READONLY a: Float;  VAR r: Int): BOOLEAN;
 (* returns 'TRUNC(a)' *)
 
-PROCEDURE Round (READONLY a: Float): INTEGER;
-(* returns 'ROUND(a)' *)
+PROCEDURE Round   (READONLY a: Float;  VAR r: Int): BOOLEAN;
+(* returns 'ROUND(a)'; ties go to the even neighbour (FloatMode.RoundDefault) *)
 
-PROCEDURE Floor (READONLY a: Float): INTEGER;
-(* returns 'FLOOR(a)' unless there's an overflow *)
+PROCEDURE Floor   (READONLY a: Float;  VAR r: Int): BOOLEAN;
+(* returns 'FLOOR(a)' *)
 
-PROCEDURE Ceiling (READONLY a: Float): INTEGER;
+PROCEDURE Ceiling (READONLY a: Float;  VAR r: Int): BOOLEAN;
 (* returns 'CEILING(a)' *)
 
 PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER;

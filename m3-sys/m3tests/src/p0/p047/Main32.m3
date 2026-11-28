@@ -55,16 +55,14 @@ PROCEDURE Test() =
     l1 := LOOPHOLE(l,LONGREAL);
     checkL(1.234D0,l1);
 
-    (* EXTENDED *)
-(* these fail with 128 bit extended except on windows where extended is still
-   longreal    
+    (* EXTENDED: the same size as LONGREAL on every 32-bit target (only
+       AMD64_LINUX has a 128-bit EXTENDED), so the LOOPHOLEs are exact. *)
     l1 := 1.234D0;
     e1 := LOOPHOLE(l1,EXTENDED);
     checkX(1.234X0,e1);
 
     l1 := LOOPHOLE(e1,LONGREAL);
     checkL(1.234D0,l1);
-*)
     (* ADDRESS *)
 
     a := LOOPHOLE(i,ADDRESS);

@@ -1,3 +1,7 @@
-# AMD64_LINUX, llvm backend
-p313  # unexamined
-p331  # signed packed element at a run-time subscript: M3C fixed in #1405, llvm not
+# AMD64_LINUX, llvm backend (StAloneLlvmObj).  Until #1425 this job ran its
+# m3tests with the gcc backend; these are the llvm backend's own failures.
+c028  # type minimization of REF/RECORD; unexamined
+c126  # a reference in a cycle of references: fixed for M3C in #1408
+p280  # an unsigned constant given as a negative integer: fixed for M3C in #1411
+p306  # ROUND breaks ties to even; unexamined
+p329  # Word.Extract/Insert of the full word width: fixed for M3C in #1402

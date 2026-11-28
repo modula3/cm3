@@ -20,6 +20,13 @@ PROCEDURE Crash ();
 PROCEDURE GetMemory (size: INTEGER): ADDRESS;
 (* Return the address of "size" bytes of unused storage *)
 
+<* EXTERNAL "RTOS__FreeMemory" *>
+PROCEDURE FreeMemory (addr: ADDRESS;  size: INTEGER);
+(* Return to the system the "size" bytes at "addr", which a single call
+   GetMemory(size) returned.  It takes no lock that another thread could
+   hold, so the collector may call it with the other threads suspended.
+   Where GetMemory uses sbrk, the storage is not returned. *)
+
 <* EXTERNAL "RTOS__Cygwin"*>
 PROCEDURE Cygwin (): BOOLEAN;
 

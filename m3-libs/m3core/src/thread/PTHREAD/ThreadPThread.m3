@@ -918,6 +918,7 @@ PROCEDURE SuspendOthers () =
     StopWorld();
     <*ASSERT NOT suspended*>
     suspended := TRUE;
+    RTHeapRep.worldStoppedBy := MyHeapState();
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
@@ -925,6 +926,7 @@ PROCEDURE ResumeOthers () =
   BEGIN
     <*ASSERT suspended*>
     suspended := FALSE;
+    RTHeapRep.worldStoppedBy := NIL;
     StartWorld();
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;

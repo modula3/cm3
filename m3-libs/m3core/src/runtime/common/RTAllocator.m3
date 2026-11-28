@@ -14,7 +14,7 @@
 UNSAFE MODULE RTAllocator
 EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTMisc, RTOS, RTType, Scheduler, RTThread;
+IMPORT Cstdlib, RT0, RTIO, RTMisc, RTOS, RTType, Scheduler, RTThread;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
 
@@ -157,6 +157,7 @@ PROCEDURE AllocateUntracedOpenArray (defn : ADDRESS;
 PROCEDURE DisposeUntracedRef (VAR a: ADDRESS) =
   BEGIN
     IF a # NIL THEN
+      NoCHeapWhileStopped();
       Scheduler.DisableSwitching();
       Cstdlib.free(a);
       a := NIL;
@@ -169,6 +170,7 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
   BEGIN
     IF a # NIL THEN
       p := a - MAX(BYTESIZE(Header), RTType.Get(TYPECODE (a)).dataAlignment);
+      NoCHeapWhileStopped();
       Scheduler.DisableSwitching();
       Cstdlib.free(p);
       Scheduler.EnableSwitching();
@@ -177,6 +179,25 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
   END DisposeUntracedObj;
 
 (*-------------------------------------------------------------- internal ---*)
+
+PROCEDURE NoCHeapWhileStopped () =
+  (* A thread that has stopped the others must not call malloc or free:
+     a stopped thread may hold the C heap's lock, and the call would
+     deadlock, intermittently.  See RTHeapRep.worldStoppedBy.
+
+     This is not an <*ASSERT*>: raising allocates, which can come straight
+     back here (e.g. via GrowHeap), and the usual crash path runs exit
+     routines and finishes the collection.  Report and abort instead. *)
+  BEGIN
+    IF worldStoppedBy # NIL AND worldStoppedBy = RTThread.MyHeapState () THEN
+      worldStoppedBy := NIL;
+      RTIO.PutText ("\n*** runtime error: malloc or free while the other");
+      RTIO.PutText (" threads are suspended\n***    (a suspended thread may");
+      RTIO.PutText (" hold the C heap's lock; see RTHeapRep.worldStoppedBy)\n");
+      RTIO.Flush ();
+      Cstdlib.abort ();
+    END;
+  END NoCHeapWhileStopped;
 
 PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
   BEGIN
@@ -240,6 +261,7 @@ PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Ref) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
+    NoCHeapWhileStopped();
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, dataSize);
     Scheduler.EnableSwitching();
@@ -259,6 +281,7 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Obj) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
+    NoCHeapWhileStopped();
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
@@ -315,6 +338,7 @@ PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
     END;
     dataSize := ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s);
 
+    NoCHeapWhileStopped();
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, dataSize);
     Scheduler.EnableSwitching();
@@ -440,6 +464,7 @@ PROCEDURE ExpandCnts (tc: RT0.Typecode) =
        while we're updating them... *)
 
     IF (old_cnts # NIL) THEN
+      NoCHeapWhileStopped();
       Cstdlib.free (old_cnts);
       Cstdlib.free (old_sizes);
     END;
@@ -448,6 +473,7 @@ PROCEDURE ExpandCnts (tc: RT0.Typecode) =
 PROCEDURE Malloc (size: INTEGER): ADDRESS =
   VAR res: ADDRESS;
   BEGIN
+    NoCHeapWhileStopped();
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();

@@ -6541,6 +6541,7 @@ m3_post_options (PCSTR* /*pfilename*/)
   flag_reorder_blocks_and_partition = false;    /* breaks our exception handling? */
   flag_strict_aliasing = false;                 /* ? */
   flag_strict_overflow = false;                 /* ? */
+  flag_wrapv = true;                            /* Modula-3 integer overflow wraps (FloatMode.i3) */
   flag_exceptions = true;                       /* enable exceptions */
   flag_non_call_exceptions = true;              /* ? */
   //flag_delete_dead_exceptions = true;         /* not in this version */

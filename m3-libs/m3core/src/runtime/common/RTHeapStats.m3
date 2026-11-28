@@ -87,15 +87,28 @@ PROCEDURE ReportReachable () =
     (* freeze the world *)
     RTCollector.Disable ();
     RTOS.LockHeap (); (* freeze the heap *)
-    RTThread.SuspendOthers ();
 
-    (* allocate space for the stats *)
+    (* Allocate space for the stats before stopping the other threads: the
+       untraced NEWs and DISPOSEs call calloc and free, and a thread stopped
+       inside malloc holds malloc's lock.  With the heap locked and the
+       collector disabled the heap cannot change under us, so the map,
+       allocated last, still covers [p0 .. p1) below. *)
     outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
     innerVisitor := NEW (RTHeapMap.Visitor, apply := InnerVisit);
     rootVisitor  := NEW (RTHeapMap.Visitor, apply := VisitRoot);
+    last_alloc   := LOOPHOLE (NEW (REF INTEGER), ADDRESS);
     visit_stack  := NEW (UNTRACED REF VisitStack);
     map := NEW (UNTRACED REF ARRAY OF Word.T,
                  (RTHeapRep.p1 - RTHeapRep.p0) * MapWordsPerHeapPage);
+
+    (* DumpStack maps PCs to procedures, and the first FromPC call builds
+       the procedure table with calloc; build it now. *)
+    VAR proc: RTProcedure.Proc;  file, name: RTProcedureSRC.Name;
+    BEGIN
+      RTProcedureSRC.FromPC (NIL, proc, file, name);
+    END;
+
+    RTThread.SuspendOthers ();
 
     (* capture the heap limits *)
     heap_min  := LOOPHOLE (RTHeapRep.p0 * RTHeapRep.BytesPerPage, ADDRESS);
@@ -111,9 +124,6 @@ PROCEDURE ReportReachable () =
     PutText (".");
     PutInt ((heap_max - heap_min) * 10 DIV MByte MOD 10);
     PutText (" Mbytes\n");
-
-    (* find the edge of the new space *)
-    last_alloc := LOOPHOLE (NEW (REF INTEGER), ADDRESS);
 
     (* capture the thread info *)
     GetThreads ();
@@ -143,9 +153,9 @@ PROCEDURE ReportReachable () =
     RTIO.Flush ();
 
     (* thaw the world *)
+    RTThread.ResumeOthers ();
     DISPOSE (visit_stack);
     DISPOSE (map);
-    RTThread.ResumeOthers ();
     RTOS.UnlockHeap (); (* unfreeze the heap *)
     RTCollector.Enable ();
   END ReportReachable;
@@ -190,6 +200,17 @@ PROCEDURE Visit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
     END;
   END Visit;
 
+(* TRUE if the object header at "h" is on an allocated page of the current
+   space, so that reading it is safe and it may be an object.  The range
+   [heap_min .. heap_max) is not enough: it spans everything from the first
+   heap page to the last, including the gaps between separately mapped heap
+   chunks, which may be unmapped. *)
+PROCEDURE InHeap (h: ADDRESS): BOOLEAN =
+  VAR page := RTHeapRep.AddressToPage (h);
+  BEGIN
+    RETURN page # NIL AND page.desc.space = RTHeapRep.Space.Current;
+  END InHeap;
+
 PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
   CONST Mask = ADRSIZE (RT0.RefHeader) - 1; (* assume it's 2^k-1 for some k *)
   VAR ptr : UNTRACED REF ADDRESS := loc;
@@ -199,7 +220,8 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
   BEGIN
     header := ref - ADRSIZE (RT0.RefHeader);
     IF (heap_min <= ref) AND (ref < heap_max)
-      AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0) THEN
+      AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0)
+      AND InHeap (header) THEN
       typecode := RT0.GetTypecode (header);
       IF (0 < typecode) AND (typecode < n_types) AND
          (typecode # RT0.TextLitTypecode) THEN
@@ -231,7 +253,7 @@ PROCEDURE TypeName (ref: ADDRESS): TEXT =
   BEGIN
     header := ref - ADRSIZE (RT0.RefHeader);
     IF (Word.And (LOOPHOLE (header, INTEGER), Mask) = 0) (* => aligned *)
-      AND (heap_min <= ref) AND (ref < heap_max) THEN
+      AND (heap_min <= ref) AND (ref < heap_max) AND InHeap (header) THEN
       typecode := RT0.GetTypecode (header);
       IF (0 < typecode) AND (typecode <= n_types) THEN
         RETURN RTTypeSRC.TypecodeName (typecode);

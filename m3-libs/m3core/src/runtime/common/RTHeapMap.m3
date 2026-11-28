@@ -75,8 +75,7 @@ VAR
   n_modules: CARDINAL := 0;
   global_map: ModuleMap := NIL;
 
-PROCEDURE WalkGlobals (v: Visitor) =
-  VAR m: RT0.ModulePtr;
+PROCEDURE PrepareGlobals () =
   BEGIN
     WITH n = RTModule.Count() DO
       IF n # n_modules THEN
@@ -85,6 +84,12 @@ PROCEDURE WalkGlobals (v: Visitor) =
       END;
     END;
     IF (global_map = NIL) THEN BuildGlobalMap () END;
+  END PrepareGlobals;
+
+PROCEDURE WalkGlobals (v: Visitor) =
+  VAR m: RT0.ModulePtr;
+  BEGIN
+    PrepareGlobals ();
     FOR i := 0 TO LAST (global_map^) DO
       m := global_map[i];
       IF DEBUG THEN

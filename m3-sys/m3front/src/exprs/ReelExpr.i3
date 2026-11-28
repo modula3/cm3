@@ -28,4 +28,7 @@ PROCEDURE Trunc    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Round    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Float    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
 
+PROCEDURE IsConst  (a: Expr.T): BOOLEAN;
+(* TRUE if a is a floating-point literal (a folded constant). *)
+
 END ReelExpr.
