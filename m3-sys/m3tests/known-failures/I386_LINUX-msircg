@@ -1,4 +1,2 @@
-# I386_LINUX through MSIRToM3CG (ex_frame), the msir workflow's m3cg job.
-# The tests I386_LINUX's C backend also fails (I386_LINUX-c), less the
-# three MSIR passes there (p172 p173 p185).
-p040 p047 p137 p207 p306 p308 p324
+# I386_LINUX through MSIRToM3CG: no known failures.
+# (Kept, listing none, as a place for any; a missing file means the same.)
