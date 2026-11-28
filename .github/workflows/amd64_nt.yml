@@ -49,7 +49,7 @@ jobs:
         mkdir ..\build ..\install
         cd ..\install
         wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
-        7z x -o.. "${{ inputs.bootstrap }}"
+        tar xf "${{ inputs.bootstrap }}" -C ..
         cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
         cmake --build ..\build --config Release
         cmake --install ..\build --config Release

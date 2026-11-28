@@ -65,7 +65,7 @@ jobs:
     - run: |
         mkdir ../build
         wget --quiet "${CM3RELEASE}/${CM3DIST}"
-        7z x -o.. "${CM3DIST}"
+        tar xf "${CM3DIST}" -C ..
         cd ../build
         cmake -S ../cm3/bootstrap -B . -DCMAKE_INSTALL_PREFIX=../cm3/install -DCMAKE_LIBRARY_PATH=/mingw64/x86_64-w64-mingw32/lib
         ../cm3/scripts/concierge.py install --prefix ../install
