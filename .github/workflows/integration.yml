@@ -4,15 +4,9 @@ name: integration
 
 # Pushes run only on master: a branch with an open PR is tested by its
 # pull_request run, and a push run of the same code doubled the load.
-# Changes only to documentation (Markdown anywhere, or docs/) build nothing,
-# so they do not run CI: no build reads them.
 on:
-  pull_request:
-    branches: master
-    paths-ignore: ['**.md', 'docs/**']
-  push:
-    branches: master
-    paths-ignore: ['**.md', 'docs/**']
+  pull_request: {branches: master}
+  push: {branches: master}
 
 # One queue per branch or PR (it was one for the whole repository, so any
 # push cancelled every pending run elsewhere).  A newer push supersedes a
@@ -22,23 +16,88 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
+  # A change only to documentation (Markdown anywhere, or docs/) builds
+  # nothing, since no build reads those files, so the target jobs are
+  # skipped for it.  They are skipped by a condition rather than by a
+  # paths filter on the trigger, so that "CI result" below still reports.
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+    - uses: actions/checkout@v4
+      with: {fetch-depth: 0}
+    - id: diff
+      env:
+        BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: |
+        if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+          echo "no base to compare with: building"
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        git diff --name-only "$BASE...$HEAD" > changed.txt
+        cat changed.txt
+        if grep -v -E '\.md$|^docs/' changed.txt | grep -q .; then
+          echo "code=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "documentation only: the target jobs are skipped"
+          echo "code=false" >> "$GITHUB_OUTPUT"
+        fi
+
   AMD64_DARWIN:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/amd64_darwin.yml
 
   ARM64_DARWIN:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/arm64_darwin.yml
 
   AMD64_LINUX:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/amd64_linux.yml
 
   AMD64_MINGW:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/amd64_mingw.yml
 
   AMD64_NT:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/amd64_nt.yml
 
   I386_LINUX:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/i386_linux.yml
 
   I386_NT:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: ./.github/workflows/i386_nt.yml
+
+  # The one check for branch protection to require: it fails if any of the
+  # Linux or Darwin jobs failed or was cancelled, and passes when they
+  # passed or were skipped (a documentation-only change).  The Windows jobs
+  # are not among its needs, so they stay advisory (#1287).
+  result:
+    name: CI result
+    if: always()
+    needs: [changes, AMD64_DARWIN, ARM64_DARWIN, AMD64_LINUX, I386_LINUX]
+    runs-on: ubuntu-latest
+    steps:
+    - env:
+        RESULTS: ${{ toJSON(needs.*.result) }}
+        BAD: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      run: |
+        echo "results: $RESULTS"
+        if [ "$BAD" = true ]; then
+          echo "a Linux or Darwin job failed or was cancelled"
+          exit 1
+        fi
