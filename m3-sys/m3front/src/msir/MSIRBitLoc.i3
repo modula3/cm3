@@ -32,6 +32,11 @@ TYPE
     readOnly : BOOLEAN   := FALSE;
       (* base is a copy of a value with no address (e.g. a function result),
          so writes would be lost *)
+    view     : MSIR.Value := NIL;
+      (* a WITH alias that a nested procedure captures (B50): a two-word
+         slot holding base and idx, whose address is passed as the capture.
+         The nested procedure rebinds the alias from it, with the static
+         fields above. *)
   END;
 
 END MSIRBitLoc.

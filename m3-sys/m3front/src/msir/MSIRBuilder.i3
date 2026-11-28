@@ -106,7 +106,11 @@ PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
    evaluated once at WITH entry.  LookupVar(v) reads through ExtractBitLoc;
    LookupVarAddr(v) returns NIL; BitLocOfVar gives the location for writes.
    Matches the C backend's by-reference alias (writes reach the field). *)
-PROCEDURE BindVarBitField(v: Variable.T; READONLY loc: MSIRBitLoc.T);
+PROCEDURE BindVarBitField(v: Variable.T; READONLY loc: MSIRBitLoc.T;
+                          captured := FALSE);
+(* Bind the WITH alias v to the bit location loc.  If captured (a nested
+   procedure uses v), also store loc's base and idx in a view slot, whose
+   address the nested procedure receives as v's capture (B50). *)
 PROCEDURE IsBitFieldVar(v: Variable.T): BOOLEAN;
 PROCEDURE BitLocOfVar(v: Variable.T; VAR loc: MSIRBitLoc.T): BOOLEAN;
 (* TRUE, with v's location in loc, if v is bound by BindVarBitField. *)

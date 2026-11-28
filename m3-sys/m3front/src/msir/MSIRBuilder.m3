@@ -251,12 +251,16 @@ PROCEDURE BeginProc(name: TEXT;
         VAR v:  Variable.T := caps[i].var;
             vt: Type.T;  vg, vi, vlhs: BOOLEAN;
             mt: MSIR.T;
+            bfStat: MSIRBitLoc.T;
         BEGIN
           Variable.Split(v, vt, vg, vi, vlhs);
           mt := MSIRType.Translate(vt);
           params[i].name := "__cap_" & Fmt.Int(i);
           params[i].mode := MSIR.ParamMode.ByValue;
-          IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
+          IF CapturedBitLoc(v, bfStat) THEN
+            (* a bit-field WITH alias: the address of its view slot (B50) *)
+            params[i].type := MSIR.TPtr(MSIR.TVoid());
+          ELSIF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
             (* By-value scalar capture: use ZType (computation width), not MType.
                The value passed in is always ZType (LookupVar widens; the outer
                var's own slot is ZType), so the param, the closure-env spill
@@ -360,10 +364,13 @@ PROCEDURE BeginProc(name: TEXT;
           VAR v:  Variable.T := caps[i].var;
               vt: Type.T;  vg, vi, vlhs: BOOLEAN;
               mt: MSIR.T;
+              bfStat: MSIRBitLoc.T;
           BEGIN
             Variable.Split(v, vt, vg, vi, vlhs);
             mt := MSIRType.Translate(vt);
-            IF mt # NIL AND varMapN < MaxVarMap THEN
+            IF CapturedBitLoc(v, bfStat) THEN
+              BindCapturedBitField(v, MSIR.ProcParam(curProc, i), bfStat);
+            ELSIF mt # NIL AND varMapN < MaxVarMap THEN
               varMap[varMapN].key := v;
               varMap[varMapN].isBitField := FALSE;  (* slot reused: clear stale flag *)
               varMap[varMapN].val := MSIR.ProcParam(curProc, i);
@@ -721,22 +728,116 @@ PROCEDURE BindVarAddr(v: Variable.T; addr: MSIR.Value; elemType: MSIR.T;
     INC(varMapN);
   END BindVarAddr;
 
-PROCEDURE BindVarBitField(v: Variable.T;  READONLY loc: MSIRBitLoc.T) =
+(* Captured bit-field aliases (B50).  A WITH alias of a designator with no
+   byte address is a bit location (base, bitOff, width, type, and for a
+   packed array element idx and containerBits).  When a nested procedure
+   captures it, the enclosing procedure stores the run-time parts, base and
+   idx, in a two-word view slot and passes the slot's address as the
+   capture; the nested procedure loads them and rebinds the alias with the
+   static parts, which it finds here: it may be compiled when the enclosing
+   procedure's context has already gone (see BeginProc). *)
+VAR
+  capturedBF  : REF ARRAY OF RECORD v: Variable.T;  loc: MSIRBitLoc.T END;
+  capturedBFN : INTEGER := 0;
+
+PROCEDURE NoteCapturedBitField(v: Variable.T;  READONLY loc: MSIRBitLoc.T) =
+  BEGIN
+    IF capturedBF = NIL THEN
+      capturedBF := NEW(REF ARRAY OF RECORD v: Variable.T;  loc: MSIRBitLoc.T END, 8);
+    ELSIF capturedBFN >= NUMBER(capturedBF^) THEN
+      VAR n := NEW(REF ARRAY OF RECORD v: Variable.T;  loc: MSIRBitLoc.T END,
+                   2 * capturedBFN);
+      BEGIN
+        SUBARRAY(n^, 0, capturedBFN) := capturedBF^;
+        capturedBF := n;
+      END;
+    END;
+    capturedBF[capturedBFN].v   := v;
+    capturedBF[capturedBFN].loc := loc;
+    INC(capturedBFN);
+  END NoteCapturedBitField;
+
+PROCEDURE CapturedBitLoc(v: Variable.T;  VAR loc: MSIRBitLoc.T): BOOLEAN =
+  (* TRUE if v is a bit-field alias that nested procedures capture through
+     a view; loc gets its static parts. *)
+  BEGIN
+    FOR i := capturedBFN - 1 TO 0 BY -1 DO
+      IF capturedBF[i].v = v THEN loc := capturedBF[i].loc;  RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END CapturedBitLoc;
+
+PROCEDURE BitFieldView(v: Variable.T): MSIR.Value =
+  (* The view slot of v in the current procedure, if v is a captured
+     bit-field alias here; NIL otherwise. *)
+  BEGIN
+    FOR i := 0 TO varMapN - 1 DO
+      IF varMap[i].key = v THEN
+        IF varMap[i].isBitField THEN RETURN varMap[i].bfLoc.view END;
+        RETURN NIL;
+      END;
+    END;
+    RETURN NIL;
+  END BitFieldView;
+
+PROCEDURE BindVarBitField(v: Variable.T;  READONLY loc: MSIRBitLoc.T;
+                          captured := FALSE) =
+  VAR l := loc;
   BEGIN
     IF varMapN >= MaxVarMap THEN
       Abandon("too many variables in proc");
       RETURN;
     END;
+    IF captured AND l.view = NIL THEN
+      VAR b    := CurrentBlock();
+          ptrT := MSIR.TPtr(MSIR.TVoid());
+          view := MSIR.BuildAlloca(b, "", TFixedArrayI(2, ptrT));
+      BEGIN
+        MSIR.BuildStore(b, l.base, MSIR.BuildPtrAdd(b, "", view, 0));
+        IF l.idx # NIL THEN
+          MSIR.BuildStore(b, l.idx,
+            MSIR.BuildPtrAdd(b, "", view, Target.Address.bytes));
+        END;
+        l.view := view;
+        NoteCapturedBitField(v, l);
+      END;
+    END;
     varMap[varMapN].key         := v;
-    varMap[varMapN].val         := loc.base;
+    varMap[varMapN].val         := l.base;
     varMap[varMapN].storageType := NIL;
     varMap[varMapN].wideType    := NIL;
     varMap[varMapN].signedWiden := FALSE;
     varMap[varMapN].container   := NIL;
     varMap[varMapN].isBitField  := TRUE;
-    varMap[varMapN].bfLoc       := loc;
+    varMap[varMapN].bfLoc       := l;
     INC(varMapN);
   END BindVarBitField;
+
+PROCEDURE BindCapturedBitField(v: Variable.T;  view: MSIR.Value;
+                               READONLY stat: MSIRBitLoc.T) =
+  (* In a nested procedure's prologue: rebind the captured bit-field alias v
+     from the view slot its caller passed (B50). *)
+  VAR l := stat;  b := CurrentBlock();
+  BEGIN
+    l.view := view;
+    l.base := LoadAs(b, MSIR.ValueType(stat.base),
+                     MSIR.BuildPtrAdd(b, "", view, 0));
+    IF stat.idx # NIL THEN
+      l.idx := LoadAs(b, MSIR.ValueType(stat.idx),
+                      MSIR.BuildPtrAdd(b, "", view, Target.Address.bytes));
+    END;
+    BindVarBitField(v, l);
+  END BindCapturedBitField;
+
+PROCEDURE LoadAs(b: MSIR.Block;  t: MSIR.T;  addr: MSIR.Value): MSIR.Value =
+  (* A traced reference in a view slot is reloaded without a barrier, as a
+     traced value held on the stack is. *)
+  BEGIN
+    IF MSIR.Kind(t) = MSIR.TypeKind.GcRef THEN
+      RETURN MSIR.BuildUnbarrieredLoad(b, "", t, addr);
+    END;
+    RETURN MSIR.BuildLoad(b, "", t, addr);
+  END LoadAs;
 
 PROCEDURE IsBitFieldVar(v: Variable.T): BOOLEAN =
   BEGIN
@@ -990,6 +1091,7 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
     v       : Variable.T;
     vt      : Type.T;  vg, vi, vlhs: BOOLEAN;
     mt      : MSIR.T;
+    bfStat  : MSIRBitLoc.T;
   BEGIN
     IF caps = NIL THEN nCaps := 0 ELSE nCaps := NUMBER(caps^) END;
     allArgs := NEW(REF ARRAY OF MSIR.Value, nCaps + NUMBER(args));
@@ -997,7 +1099,9 @@ PROCEDURE EmitNestedCall(name: TEXT;  callee: MSIR.Proc;
       v := caps[i].var;
       Variable.Split(v, vt, vg, vi, vlhs);
       mt := MSIRType.Translate(vt);
-      IF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
+      IF CapturedBitLoc(v, bfStat) THEN
+        allArgs[i] := BitFieldView(v);   (* the alias's view slot (B50) *)
+      ELSIF NOT caps[i].written AND mt # NIL AND IsScalarType(mt) THEN
         allArgs[i] := LookupVar(v);   (* pass the current value *)
       ELSE
         allArgs[i] := LookupVarAddr(v);  (* pass the alloca address *)
@@ -1104,12 +1208,15 @@ PROCEDURE GetOrCreateClosureShim(v: Value.T;  nested: MSIR.Proc;
           mt   : MSIR.T;
           slot : MSIR.Value;
           ptr  : MSIR.Value;
+          bfStat: MSIRBitLoc.T;
       BEGIN
         Variable.Split(v_k, vt, vg, vi, vlhs);
         mt   := MSIRType.Translate(vt);
         slot := MSIR.BuildPtrAdd(CurrentBlock(), "", envP, k * AP);
         ptr  := MSIR.BuildLoad(CurrentBlock(), "", ptrT, slot);
-        IF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
+        IF CapturedBitLoc(v_k, bfStat) THEN
+          capArgs[k] := ptr;   (* the alias's view slot (B50) *)
+        ELSIF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
           (* Reload the by-value scalar capture at ZType to match the env slot
              and the nested proc's (now ZType) capture param (p048). *)
           capArgs[k] := MSIR.BuildLoad(CurrentBlock(), "", MSIRType.ComputeType(vt), ptr);
@@ -1200,10 +1307,17 @@ PROCEDURE BuildClosureValue(v: Value.T; procType: Type.T;
             vt      : Type.T;  vg, vi, vlhs: BOOLEAN;
             mt      : MSIR.T;
             capAddr : MSIR.Value;
+            bfStat  : MSIRBitLoc.T;
         BEGIN
           Variable.Split(capVar, vt, vg, vi, vlhs);
           mt := MSIRType.Translate(vt);
-          IF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
+          IF CapturedBitLoc(capVar, bfStat) THEN
+            capAddr := BitFieldView(capVar);   (* the alias's view slot (B50) *)
+            IF capAddr = NIL THEN
+              Abandon("BuildClosureValue: bit-field alias has no view");
+              RETURN NIL;
+            END;
+          ELSIF NOT caps[k].written AND mt # NIL AND IsScalarType(mt) THEN
             (* Scalar read-only capture: no alloca exists for it (it was passed
                by value).  Spill the current value to a fresh stack slot so the
                closure env can hold a stable pointer.  The shim will reload the

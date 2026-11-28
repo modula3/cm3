@@ -220,7 +220,10 @@ PROCEDURE CompileMSIR (p: P) =
            InsertBitLoc, matching the C backend (writes reach the field).
            Fixes RTCollector.RebuildFreelist's `WITH space = page.desc.space`. *)
         IF Expr.BitLocMSIR (p.expr, bfLoc) THEN
-          MSIRBuilder.BindVarBitField (p.var, bfLoc);
+          (* A nested procedure that uses the alias receives it through a
+             view of its base and index (B50). *)
+          MSIRBuilder.BindVarBitField (p.var, bfLoc,
+                                       captured := Variable.IsUpLevel (p.var));
         ELSIF MSIRBuilder.IsAbandoned () THEN
           RETURN;
         ELSE
