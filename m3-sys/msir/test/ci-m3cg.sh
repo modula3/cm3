@@ -3,7 +3,7 @@
 # a 32-bit target, with ex_frame exceptions.  Run from the repository root
 # with the bootstrap release's cm3 on PATH and CM3_TARGET set.
 #
-#   Build    concierge upgrade with the C backend.
+#   Build    concierge upgrade with the C backend, and tcp (for p204).
 #   Tests    m3tests with every cm3 run through the MSIR front end and
 #            MSIRToM3CG (@M3m3front-msir @M3msircg); a unit MSIRToM3CG cannot
 #            lower falls back to the C walk, and is counted.
@@ -19,6 +19,8 @@ mkdir -p "$WORK/bin"
 
 log "Build: concierge upgrade (C backend)"
 scripts/concierge.py upgrade --backend c || { fail "upgrade failed"; exit 1; }
+# m3tests' p204 imports tcp, which upgrade does not build
+scripts/concierge.py buildship tcp || { fail "tcp failed"; exit 1; }
 REAL=$(command -v cm3)
 
 # A cm3 that compiles through MSIRToM3CG and collects the per-unit
