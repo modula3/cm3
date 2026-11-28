@@ -18,7 +18,7 @@ on:
         type: string
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ${{ inputs.os }}
     timeout-minutes: 60
 
