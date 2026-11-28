@@ -1729,8 +1729,27 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  type_multiple_of_32: ZType;  ty
 
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
+    NarrowForStore(u, type_multiple_of_32, type);
     u.vstack.pop(MVar {var := v, mvar_offset := o, mvar_type := type});
   END store;
+
+PROCEDURE NarrowForStore (u: U;  stack_type: ZType;  mem_type: MType) =
+  (* A 64-bit integer stored into 4 bytes or fewer -- a LONGINT subrange
+     that fits in 16 bits, say -- keeps only its low word: narrow s0 to 32
+     bits, freeing the high word's register, with doloophole, as the M3CG
+     loophole operation does for VAL (l, INTEGER).  (Not the language's
+     LOOPHOLE, which requires equal sizes.)  The range check, if any, has
+     been done.  pop and the indirect stores handle only operands as wide
+     as their memory. *)
+  BEGIN
+    IF TypeIs64(stack_type) AND NOT Target.FloatType[stack_type]
+      AND CG_Bytes[mem_type] <= 4 THEN
+      IF TypeIsSigned(stack_type)
+        THEN u.vstack.doloophole(stack_type, Type.Int32);
+        ELSE u.vstack.doloophole(stack_type, Type.Word32);
+      END;
+    END;
+  END NarrowForStore;
 
 PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
 (* push; s0.A := ADR(v) + o *)
@@ -1819,6 +1838,7 @@ PROCEDURE store_indirect (u: U;  o: ByteOffset;  type_multiple_of_32: ZType;  ty
 
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
+    NarrowForStore(u, type_multiple_of_32, type);
     u.vstack.unlock();
     WITH (* stack0 = u.vstack.pos(0, "store_indirect"), *)
          stack1 = u.vstack.pos(1, "store_indirect") DO

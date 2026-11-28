@@ -167,7 +167,8 @@ TYPE FOp = { fCOM, fCOMP, fCOMPP, fDECSTP, fINCSTP, fFREE,
              fNCLEX, fABS,
              fCHS, fNSTSWAX, fILD, fISTP, fLDCW, fSTCW,
              fLD, fSTP, fADDP, fSUBP, fSUBPR, fMUL, fDIV,
-             fNOP };
+             fNOP,
+             fILD64, fISTP64 };  (* FILD m64int, FISTP m64int: LONGINT *)
 
 CONST fopcode = ARRAY FOp OF FOpCode
   { FOpCode { "FCOM",    -1,    -1,    0, 16_D8, 16_D0, 0,  0,  2, 0, FALSE },
@@ -191,7 +192,9 @@ CONST fopcode = ARRAY FOp OF FOpCode
     FOpCode { "FSUBR",   16_D8, 16_DC, 5, 16_DE, 16_E0, -1, 0,  2, 1, TRUE  },
     FOpCode { "FMUL",    16_D8, 16_DC, 1, 16_DE, 16_C8, -1, 0,  2, 1, TRUE  },
     FOpCode { "FDIV",    16_D8, 16_DC, 6, 16_DE, 16_F8, -1, 0,  2, 1, TRUE  },
-    FOpCode { "FNOP",    -1,    -1,    0, -1,    -1,    0,  0,  0, 0, FALSE }};
+    FOpCode { "FNOP",    -1,    -1,    0, -1,    -1,    0,  0,  0, 0, FALSE },
+    FOpCode { "FILD",    16_DF, -1,    5, -1,    -1,    1,  1,  0, 0, FALSE },
+    FOpCode { "FISTP",   16_DF, -1,    7, -1,    -1,    -1, -1, 1, 1, FALSE }};
 
 TYPE
   FImOp = RECORD

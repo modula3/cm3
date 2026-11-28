@@ -452,12 +452,41 @@ PROCEDURE subtract_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Opera
     t.binOp(Op.oSBB, destA[1], srcA[1]);
   END subtract_double;
 
+(* A 64-bit compare leaves flags for the caller's one conditional jump or
+   setcc, which may be signed (L, LE, G, GE) or unsigned (B, BE, A, AE):
+   callers use either on the same operands (check_range's "0 <= x <= b"
+   is an unsigned compare of a signed value).  When the high words differ
+   their CMP decides, under either kind of condition.  When they are equal
+   the low words decide, but as unsigned numbers: their CMP's CF and ZF are
+   right, while SF and OF compare them as signed, so a signed condition was
+   wrong whenever exactly one low word had its top bit set (e.g. 2^31 <= 1000
+   was TRUE).  rebuild_compare_flags makes SF and OF agree with CF, so the
+   flags are right for both kinds of condition. *)
+
+PROCEDURE rebuild_compare_flags(t: T; end_label: Label) =
+  (* After the low words' CMP: if they were equal, the flags (ZF=1, CF=SF=
+     OF=0) are already right.  Otherwise set CF=SF=1 for below, CF=SF=0 for
+     above, with ZF=OF=0, through EAX, which PUSH and POP, which do not
+     touch the flags, preserve:
+       SBB EAX,EAX   -1 if below, else 0
+       OR  EAX,1     -1 or 1
+       ADD EAX,EAX   -2: CF=1 SF=1; 2: CF=0 SF=0; ZF=0 OF=0 in both *)
+  BEGIN
+    t.brOp(Cond.E, end_label);
+    t.pushOp(t.reg[EAX]);
+    t.binOp(Op.oSBB, t.reg[EAX], t.reg[EAX]);
+    t.immOp(Op.oOR, t.reg[EAX], TOne);
+    t.binOp(Op.oADD, t.reg[EAX], t.reg[EAX]);
+    t.popOp(t.reg[EAX]);
+  END rebuild_compare_flags;
+
 PROCEDURE compare_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
   VAR end_label := t.reserve_labels(1, TRUE);
   BEGIN
     t.immOp(Op.oCMP, destA[1], immA[1]);
     t.brOp(Cond.NE, end_label);
     t.immOp(Op.oCMP, destA[0], immA[0]);
+    rebuild_compare_flags(t, end_label);
     t.set_label(end_label);
   END compare_double_immediate;
 
@@ -467,6 +496,7 @@ PROCEDURE compare_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operan
     t.binOp(Op.oCMP, destA[1], srcA[1]);
     t.brOp(Cond.NE, end_label);
     t.binOp(Op.oCMP, destA[0], srcA[0]);
+    rebuild_compare_flags(t, end_label);
     t.set_label(end_label);
   END compare_double;
 
