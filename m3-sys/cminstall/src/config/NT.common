@@ -1035,8 +1035,8 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                     options,
                     objects,
                 ]))
-        if not equal(ret_code, 0) or not FileExists(lib_file)
-            error("library creation failed" & EOL)
+        if not equal(ret_code, 0)
+            error(".def creation failed" & EOL)
             if not equal(ret_code, 0)
                 return ret_code
             end

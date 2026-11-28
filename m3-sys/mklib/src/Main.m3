@@ -15,14 +15,9 @@ TYPE
   UINT32 = Ctypes.unsigned_int;
 
 CONST
-  (* TODO keep everything in memory *)
-  MaxKeeper    = TextLiteral.MaxBytes;  (* max file size we'll hold in memory *)
-  MaxTotalKeep = MaxKeeper;             (* max total file space we'll hold in memory *)
   ArchiveMagic = "!<arch>\n";
   EndHeader    = "`\n";
   PadChar      = '\n';
-
-  (* TODO Remove these when m3core updated *)
   IMAGE_FILE_MACHINE_I386      = 16_014c;
   IMAGE_FILE_MACHINE_R3000     = 16_0162;
   IMAGE_FILE_MACHINE_R4000     = 16_0166;
@@ -83,7 +78,6 @@ TYPE
 VAR
   trimUnderscore := FALSE;
   Machine := 0;
-  lib_wr      : Wr.T       := NIL;
   lib_name    : TEXT       := NIL;
   lib_time    : Time.T     := 0.0d0;
   def_name    : TEXT       := NIL;
@@ -100,6 +94,7 @@ VAR
   verbose := FALSE;
   cleanSymbols := TRUE;
   ignoreTexts : TextSeq.T := NIL;
+  def_wr: Wr.T := NIL;
 
 PROCEDURE IsFloatingPointConstant(sym: TEXT; len: INTEGER): BOOLEAN =
 BEGIN
@@ -160,7 +155,7 @@ PROCEDURE DoIt () =
     ParseCommandLine ();
     CheckLibName ();
     ScanFiles ();
-    (*WriteLib ();*)
+    WriteLib ();
     WriteDef ();
   END DoIt;
 
@@ -343,12 +338,8 @@ PROCEDURE ScanFile (f: FileDesc) =
 
     ScanExports (f);
 
-    (* should we keep the in-memory copy of the file? *)
-    IF (f.size > MaxKeeper) OR (keep_size > MaxTotalKeep) THEN
-      f.contents := NIL;
-    ELSE
-      INC (keep_size, f.size);
-    END;
+    (* drop in-memory copy of the file *)
+    f.contents := NIL;
   END ScanFile;
 
 (*----------------------------------------------- Windows Object Files ---*)
@@ -509,34 +500,6 @@ PROCEDURE WriteLib () =
   BEGIN
     AssignFileOffsets ();
     SortExports ();
-
-    (* open the output file *)
-    TRY
-      lib_wr := FileWr.Open (lib_name);
-    EXCEPT OSError.E =>
-      Die ("unable to open \"", lib_name, "\" for writing.");
-    END;
-    lib_time := Time.Now ();
-
-    (* write the archive... *)
-    TRY
-      Wr.PutText (lib_wr, ArchiveMagic);
-      DumpExports1 ();
-      DumpExports2 ();
-      DumpLongNames ();
-      DumpFiles ();
-    EXCEPT
-    | Wr.Failure =>
-        Die ("I/O failure while writing \"", lib_name, "\".");
-    | Thread.Alerted =>
-        Die ("interrupted while writing \"", lib_name, "\".");
-    END;
-
-    TRY
-      Wr.Close (lib_wr);
-    EXCEPT Wr.Failure, Thread.Alerted =>
-      Die ("mklib.WriteLib unable to close \"", lib_name, "\".");
-    END;
   END WriteLib;
 
 PROCEDURE AssignFileOffsets () =
@@ -590,188 +553,10 @@ PROCEDURE CmpExport (a, b: INTEGER): [-1..+1] =
     RETURN Text.Compare (export_vec [a].symbol, export_vec[b].symbol);
   END CmpExport;
 
-PROCEDURE DumpExports1 ()
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len, odd: INTEGER;  e: ExportDesc;
-  BEGIN
-    IF (n_exports <= 0) THEN RETURN; END;
-    len := 4 * (n_exports + 1) + export_len;
-    odd := export_len MOD 2;
-    WriteHeader ("/", "0", lib_time, len);
-    WriteBE4 (n_exports);
-    FOR i := 0 TO n_exports-1 DO
-      e := export_vec [export_map [i]];
-      WriteBE4 (e.file.offset);
-    END;
-    FOR i := 0 TO n_exports-1 DO
-      e := export_vec [export_map [i]];
-      Wr.PutText (lib_wr, e.symbol);
-      Wr.PutChar (lib_wr, '\000');
-    END;
-    IF (odd # 0) THEN Wr.PutChar (lib_wr, PadChar); END;
-  END DumpExports1;
-
-PROCEDURE WriteBE4 (n: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  (* write the little-endian 4-byte value 'n' *)
-  BEGIN
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 24), 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 16), 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 8), 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (n, 16_ff), CHAR));
-  END WriteBE4;
-
-PROCEDURE DumpExports2 ()
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len, odd: INTEGER;  e: ExportDesc;  f := files;
-  BEGIN
-    IF (n_exports <= 0) THEN RETURN; END;
-    len := 4 * (n_files + 2) + 2 * (n_exports) + export_len;
-    odd := export_len MOD 2;
-    WriteHeader ("/", "0", lib_time, len);
-    WriteLE4 (n_files);
-    FOR i := 0 TO n_files-1 DO
-      WriteLE4 (f.offset);
-      f := f.next;
-    END;
-    WriteLE4 (n_exports);
-    FOR i := 0 TO n_exports-1 DO
-      e := export_vec [export_map [i]];
-      WriteLE2 (e.file.index);
-    END;
-    FOR i := 0 TO n_exports-1 DO
-      e := export_vec [export_map [i]];
-      Wr.PutText (lib_wr, e.symbol);
-      Wr.PutChar (lib_wr, '\000');
-    END;
-    IF (odd # 0) THEN Wr.PutChar (lib_wr, PadChar); END;
-  END DumpExports2;
-
-PROCEDURE WriteLE4 (n: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  (* write the little-endian 4-byte value 'n' *)
-  BEGIN
-    Wr.PutChar (lib_wr, VAL (Word.And (n, 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 8), 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 16), 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 24), 16_ff), CHAR));
-  END WriteLE4;
-
-PROCEDURE WriteLE2 (n: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  (* write the little-endian 2-byte value 'n' *)
-  BEGIN
-    Wr.PutChar (lib_wr, VAL (Word.And (n, 16_ff), CHAR));
-    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 8), 16_ff), CHAR));
-  END WriteLE2;
-
-PROCEDURE DumpLongNames ()
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len, odd: INTEGER;
-  BEGIN
-    IF (long_nms = NIL) THEN RETURN; END;
-    len := Wr.Index (long_nms);
-    odd := len MOD 2;
-    WriteHeader ("//", "0", lib_time, len);
-    Wr.PutText (lib_wr, TextWr.ToText (long_nms));
-    IF (odd # 0) THEN Wr.PutChar (lib_wr, PadChar); END;
-  END DumpLongNames;
-
-PROCEDURE DumpFiles ()
-  RAISES {Wr.Failure, Thread.Alerted} =
-  (* dump the "real" files *)
-  VAR f := files;
-  BEGIN
-    WHILE (f # NIL) DO
-      DumpFile (f);
-      f := f.next;
-    END;
-  END DumpFiles;
-
-PROCEDURE DumpFile (f: FileDesc)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR ptr: UNTRACED REF ARRAY [0..MaxKeeper+1] OF CHAR;
-  BEGIN
-    <*ASSERT BYTESIZE (File.Byte) = BYTESIZE (CHAR) *>
-    WriteHeader (f.tag, "100666", f.time, f.size);
-    IF (f.contents # NIL) THEN
-      ptr := ADR (f.contents [0]);
-      Wr.PutString (lib_wr, SUBARRAY (ptr^, 0, f.size));
-    ELSE
-      CopyFile (f);
-    END;
-    IF (f.size MOD 2 # 0) THEN
-      Wr.PutChar (lib_wr, PadChar);
-    END;
-  END DumpFile;
-
-PROCEDURE CopyFile (f: FileDesc)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR
-    rd  := OpenRd (f.name);
-    sz  : CARDINAL := 0;
-    len : CARDINAL;
-    buf : ARRAY [0..1024 * 8 - 1] OF CHAR;
-  BEGIN
-    TRY
-      LOOP
-        len := Rd.GetSub (rd, buf);  INC (sz, len);
-        IF (len <= 0) THEN EXIT; END;
-        Wr.PutString (lib_wr, SUBARRAY (buf, 0, len));
-      END;
-    EXCEPT Rd.Failure =>
-      Die ("I/O failure while reading \"", f.name, "\".");
-    END;
-    IF (sz # f.size) THEN
-      Die ("file \"", f.name, "\" changed size while building!");
-    END;
-  END CopyFile;
-
-PROCEDURE WriteHeader (nm: TEXT;  mode: TEXT;  time: Time.T;  size: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  TYPE HdrChars = ARRAY [0..BYTESIZE(Header)-1] OF CHAR;
-  VAR hdr: Header;
-  BEGIN
-    StuffT (hdr.Name,      nm);
-    StuffI (hdr.Date,      ROUND (time - CoffTime.EpochAdjust));
-    StuffT (hdr.UserID,    "");
-    StuffT (hdr.GroupID,   "");
-    StuffT (hdr.Mode,      mode);
-    StuffI (hdr.Size,      size);
-    StuffT (hdr.EndHeader, EndHeader);
-
-    Wr.PutString (lib_wr, LOOPHOLE (hdr, HdrChars));
-  END WriteHeader;
-
-PROCEDURE StuffI (VAR b: ARRAY OF UINT8;  n: INTEGER) =
-  <*FATAL Convert.Failed*>
-  VAR
-    buf : ARRAY [0..BITSIZE(INTEGER)] OF CHAR;
-    len := Convert.FromInt (buf, n);
-  BEGIN
-    FOR i := 0 TO MIN (len - 1, LAST (b)) DO
-      b[i] := ORD (buf[i]);
-    END;
-    FOR i := len TO LAST (b) DO
-      b[i] := ORD (' ');
-    END;
-  END StuffI;
-
-PROCEDURE StuffT (VAR b: ARRAY OF UINT8;  txt: TEXT) =
-  VAR len := Text.Length (txt);
-  BEGIN
-    FOR i := 0 TO MIN (len - 1, LAST (b)) DO
-      b[i] := ORD (Text.GetChar (txt, i));
-    END;
-    FOR i := len TO LAST (b) DO
-      b[i] := ORD (' ');
-    END;
-  END StuffT;
-
 (*--------------------------------------------------------- DEF writer ---*)
 
 PROCEDURE WriteDef () =
-  VAR def_wr: Wr.T;  e: ExportDesc;  sym: TEXT;
+  VAR e: ExportDesc;  sym: TEXT;
   BEGIN
     (* open the output file *)
     TRY
@@ -935,11 +720,11 @@ PROCEDURE Die (a, b, c, d, e: TEXT := NIL) =
     IF (d # NIL) THEN IO.Put (d); END;
     IF (e # NIL) THEN IO.Put (e); END;
     IO.Put (Wr.EOL);
-    IF (lib_wr # NIL) THEN
-      (* try to clean up by blowing away the bad output *)
-      TRY Wr.Close (lib_wr); EXCEPT Wr.Failure, Thread.Alerted => END;
-      TRY FS.DeleteFile (lib_name); EXCEPT OSError.E => END;
-      lib_wr := NIL;
+    IF (def_wr # NIL) THEN
+      (* try to clean up bad output *)
+      TRY Wr.Close (def_wr); EXCEPT Wr.Failure, Thread.Alerted => END;
+      TRY FS.DeleteFile (def_name); EXCEPT OSError.E => END;
+      def_wr := NIL;
     END;
     Process.Exit (1);
   END Die;
