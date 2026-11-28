@@ -52,7 +52,7 @@ jobs:
         mkdir ../build ../install
         cd ../install
         wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
-        7z x -o.. "${{ inputs.bootstrap }}"
+        tar xf "${{ inputs.bootstrap }}" -C ..
         cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}" -DCMAKE_LIBRARY_PATH="${CMAKE_LIBRARY_PATH}"
         cmake --build ../build
         cmake --install ../build
