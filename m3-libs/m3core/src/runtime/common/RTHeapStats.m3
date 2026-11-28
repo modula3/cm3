@@ -200,6 +200,17 @@ PROCEDURE Visit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
     END;
   END Visit;
 
+(* TRUE if the object header at "h" is on an allocated page of the current
+   space, so that reading it is safe and it may be an object.  The range
+   [heap_min .. heap_max) is not enough: it spans everything from the first
+   heap page to the last, including the gaps between separately mapped heap
+   chunks, which may be unmapped. *)
+PROCEDURE InHeap (h: ADDRESS): BOOLEAN =
+  VAR page := RTHeapRep.AddressToPage (h);
+  BEGIN
+    RETURN page # NIL AND page.desc.space = RTHeapRep.Space.Current;
+  END InHeap;
+
 PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
   CONST Mask = ADRSIZE (RT0.RefHeader) - 1; (* assume it's 2^k-1 for some k *)
   VAR ptr : UNTRACED REF ADDRESS := loc;
@@ -209,7 +220,8 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
   BEGIN
     header := ref - ADRSIZE (RT0.RefHeader);
     IF (heap_min <= ref) AND (ref < heap_max)
-      AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0) THEN
+      AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0)
+      AND InHeap (header) THEN
       typecode := RT0.GetTypecode (header);
       IF (0 < typecode) AND (typecode < n_types) AND
          (typecode # RT0.TextLitTypecode) THEN
@@ -241,7 +253,7 @@ PROCEDURE TypeName (ref: ADDRESS): TEXT =
   BEGIN
     header := ref - ADRSIZE (RT0.RefHeader);
     IF (Word.And (LOOPHOLE (header, INTEGER), Mask) = 0) (* => aligned *)
-      AND (heap_min <= ref) AND (ref < heap_max) THEN
+      AND (heap_min <= ref) AND (ref < heap_max) AND InHeap (header) THEN
       typecode := RT0.GetTypecode (header);
       IF (0 < typecode) AND (typecode <= n_types) THEN
         RETURN RTTypeSRC.TypecodeName (typecode);
