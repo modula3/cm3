@@ -1128,7 +1128,8 @@ PROCEDURE BuildConvert(b: Block;  name: TEXT;
 
 (* Set intrinsics (D19).  m3front uses them for sets wider than a word,
    whose type is an integer iN (bit i is element FIRST + i).  An element
-   operand is an i64 bit index, already biased by FIRST and checked by the
+   operand is a bit index of the target's INTEGER width (Target.Integer.size,
+   as M3CG's set operations take), already biased by FIRST and checked by the
    front end: 0 <= i < N.  A set_range is empty when lo > hi; otherwise
    0 <= lo <= hi < N. *)
 PROCEDURE BuildSetUnion     (b: Block;  name: TEXT;  x, y: Value): Value;

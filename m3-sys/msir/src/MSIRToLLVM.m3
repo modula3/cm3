@@ -965,18 +965,20 @@ PROCEDURE EmitBinop(wr: Wr.T;  llop: TEXT;  res, a, b: MSIR.Value) =
     Wr.PutText(wr, "\n");
   END EmitBinop;
 
-(* The i64 element index v of a set intrinsic, as an operand of the set's
-   integer type t (name.suffix if it needs a conversion). *)
+(* The element index v of a set intrinsic (an INTEGER-width bit index), as
+   an operand of the set's integer type t (name.suffix if it needs a
+   conversion). *)
 PROCEDURE SetIndex(wr: Wr.T;  v: MSIR.Value;  t: MSIR.T;
                    name, suffix: TEXT): TEXT =
-  VAR n := MSIR.BitWidth(t);  tmp := name & suffix;  op: TEXT;
+  VAR n := MSIR.BitWidth(t);  k := MSIR.BitWidth(MSIR.ValueType(v));
+      tmp := name & suffix;  op: TEXT;
   BEGIN
-    IF n = 64 THEN
+    IF n = k THEN
       VAR w := TextWr.New();
       BEGIN LLOpVal(w, v);  RETURN TextWr.ToText(w) END;
     END;
-    IF n > 64 THEN op := "zext" ELSE op := "trunc" END;
-    Wr.PutText(wr, "  " & tmp & " = " & op & " i64 ");
+    IF n > k THEN op := "zext" ELSE op := "trunc" END;
+    Wr.PutText(wr, "  " & tmp & " = " & op & " i" & Fmt.Int(k) & " ");
     LLOpVal(wr, v);
     Wr.PutText(wr, " to ");
     LLType(wr, t);
@@ -1035,7 +1037,9 @@ PROCEDURE EmitSetOp(wr: Wr.T;  i: MSIR.Insn) =
           Wr.PutText(wr, "  " & r & ".l = shl " & ts & " -1, " & lo & "\n");
           Wr.PutText(wr, "  " & r & ".m = and " & ts & " " & r & ".u, "
                          & r & ".l\n");
-          Wr.PutText(wr, "  " & r & ".e = icmp sgt i64 "
+          Wr.PutText(wr, "  " & r & ".e = icmp sgt i"
+                         & Fmt.Int(MSIR.BitWidth(
+                             MSIR.ValueType(MSIR.InsnOperand(i,0)))) & " "
                          & V(MSIR.InsnOperand(i,0)) & ", "
                          & V(MSIR.InsnOperand(i,1)) & "\n");
           Wr.PutText(wr, "  " & r & " = select i1 " & r & ".e, " & ts & " 0, "

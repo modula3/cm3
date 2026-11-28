@@ -18,12 +18,19 @@ PROCEDURE TranslateResult(t: Type.T): MSIR.T;
 
 PROCEDURE ComputeType(t: Type.T): MSIR.T;
 (* The ZType (computation width) of t: the width at which values of t live in
-   registers, as opposed to Translate's MType (memory/storage width).  For any
-   ordinal this is the machine INTEGER width (i64), matching the CG stack model
-   where ordinals are computed at machine width and only trimmed in memory.
+   registers, as opposed to Translate's MType (memory/storage width).  For an
+   ordinal this is ZWidth(t): the machine INTEGER width, or the LONGINT width
+   for a LONGINT-based type, matching the CG stack model where ordinals are
+   computed at stack width and only trimmed in memory.
    For non-ordinals it equals Translate(t).  Used so that every ordinal VALUE
    produced by a memory read (deref/field/subscript/global) or literal is
    uniform machine width, eliminating per-operation operand-width coercions. *)
+
+PROCEDURE ZWidth(t: Type.T): INTEGER;
+(* The computation width, in bits, of the ordinal type t: Target.Longint.size
+   if t is LONGINT-based (LONGINT, its subranges, packed or named forms),
+   Target.Integer.size otherwise.  As CG's StackType, which computes types
+   wider than INTEGER at Target.Longint.cg_type. *)
 
 PROCEDURE DbgType(t: Type.T): MSIR.DbgT;
 (* t as a debugger should show it (MSIR.DbgT): its name, enumeration

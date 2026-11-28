@@ -2242,11 +2242,12 @@ PROCEDURE VarMapAdd(v: Variable.T;  val: MSIR.Value;  storageType: MSIR.T) =
           lo, hi: Target.Int;
       BEGIN
         Variable.Split(v, vType, vg, vi, vlhs);
-        (* Widen all ordinal types to word size — including Enums.
-           TryStmt's exception value binding uses CoerceToMSIR to ZExt
-           the TEnum value to the wide alloca, so ORD(n) works correctly. *)
+        (* Widen all ordinal types to their computation width (ZWidth) —
+           including Enums.  TryStmt's exception value binding uses
+           CoerceToMSIR to ZExt the TEnum value to the wide alloca, so ORD(n)
+           works correctly. *)
         IF Type.IsOrdinal(vType) THEN
-          wideType := MSIR.TI(Target.Integer.size);
+          wideType := MSIR.TI(MSIRType.ZWidth(vType));
           (* SExt if lower bound is negative (signed subrange), ZExt otherwise.
              BOOLEAN: lo=0 → ZExt ✓.  Short=[-30..-12]: lo<0 → SExt ✓. *)
           signedWiden := Type.GetBounds(vType, lo, hi) AND TInt.LT(lo, TInt.Zero);

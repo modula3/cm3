@@ -1,6 +1,6 @@
 MODULE MSIRVerifier;
 
-IMPORT MSIR, RefSeq, Fmt;
+IMPORT MSIR, RefSeq, Fmt, Target;
 
 TYPE Ctx = REF RECORD
   errors: RefSeq.T;        (* of TEXT *)
@@ -97,7 +97,7 @@ PROCEDURE CheckBinaryArith(c: Ctx;  i: MSIR.Insn) =
     END;
   END CheckBinaryArith;
 
-(* Operands k.. of a set intrinsic are i64 bit indices (D19). *)
+(* Operands k.. of a set intrinsic are INTEGER-width bit indices (D19). *)
 PROCEDURE CheckSetIndices(c: Ctx;  i: MSIR.Insn;  from, n: INTEGER) =
   BEGIN
     IF MSIR.InsnOperandCount(i) # from + n THEN
@@ -105,8 +105,9 @@ PROCEDURE CheckSetIndices(c: Ctx;  i: MSIR.Insn;  from, n: INTEGER) =
       RETURN;
     END;
     FOR k := from TO from + n - 1 DO
-      IF MSIR.BitWidth(MSIR.ValueType(MSIR.InsnOperand(i, k))) # 64 THEN
-        Err(c, "set op: element index must be i64");
+      IF MSIR.BitWidth(MSIR.ValueType(MSIR.InsnOperand(i, k)))
+           # Target.Integer.size THEN
+        Err(c, "set op: element index must be INTEGER width");
       END;
     END;
   END CheckSetIndices;
