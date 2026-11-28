@@ -26,8 +26,7 @@ M3_PARALLEL_BACK = 1
 % libunwind is always available in libSystem.B.dylib on macOS — no extra link flags needed.
 SYSTEM_LIBS{"UNWIND"} = []
 
-% Homebrew.
-SYSTEM_LIBS{"ODBC"} = ["-L/opt/homebrew/lib", "-liodbc", "-liodbcinst"]
+% X11 from XQuartz.  (ODBC is configured in Darwin.common, if installed.)
 SYSTEM_LIBS{"X11"} = ["-L/opt/X11/lib", "-lXft", "-lfontconfig", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lXpm", "-lX11" ]
 SYSTEM_LIBS{"OPENGL"} = [ "-Wl,-dylib_file," & LIBGL_DYLIB & ":" & LIBGL_DYLIB,
                           "-L/opt/X11/lib", "-lGLU", "-lGL", "-lXext" ]

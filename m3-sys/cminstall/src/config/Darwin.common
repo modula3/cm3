@@ -169,6 +169,24 @@ proc internal_configure_system_lib(name, known, args) is
   %error("2:" & name)
 end
 
+% ODBC is iODBC. macOS stopped shipping it, so use it only if a package
+% manager installed it (Homebrew on Apple silicon or Intel, or MacPorts).
+% Looking for the library file is cheap, unlike a test link, which would run
+% on every cm3 invocation.  Without ODBC, m3-db/odbc builds nothing and
+% m3-db/db uses its ODBC stub.
+
+proc configure_odbc() is
+  if SYSTEM_LIBS contains "ODBC"
+    return
+  end
+  foreach dir in [ "/opt/homebrew/lib", "/usr/local/lib", "/opt/local/lib" ]
+    if FileExists(dir & "/libiodbc.dylib")
+      SYSTEM_LIBS{"ODBC"} = [ "-L" & dir, "-liodbc", "-liodbcinst" ]
+      return
+    end
+  end
+end
+
 proc configure_system_libs() is
 
   % X11 is no longer provided by Apple.
@@ -176,12 +194,9 @@ proc configure_system_libs() is
   % OpenGL is similarly affected?
   % see http://xquartz.macosforge.org.
 
-  if not equal(TARGET, "ARM64_DARWIN")
+  configure_odbc()
 
-    internal_configure_system_lib(
-      "ODBC",
-      not equal(TARGET, "PPC64_DARWIN"),
-      ["-liodbc", "-liodbcinst"])
+  if not equal(TARGET, "ARM64_DARWIN")
 
     internal_configure_system_lib(
       "X11",
