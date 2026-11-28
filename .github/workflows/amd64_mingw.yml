@@ -39,7 +39,6 @@ jobs:
           mingw-w64-x86_64-ninja
           mingw-w64-x86_64-toolchain
           p7zip
-          wget
 
     - name: Define install location
       run: |
@@ -51,7 +50,7 @@ jobs:
       run: |
         mkdir ../build ../install
         cd ../install
-        wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
+        curl -fLO "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
         cmake -S ../bootstrap -B ../build -G Ninja -DCMAKE_INSTALL_PREFIX="${CM3_INSTALL}" -DCMAKE_LIBRARY_PATH="${CMAKE_LIBRARY_PATH}"
         cmake --build ../build
