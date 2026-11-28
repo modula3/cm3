@@ -29,39 +29,36 @@ jobs:
       CM3_TARGET: AMD64_NT
 
     steps:
-    - name: Install command-line tools
-      run: |
-        choco install wget
-
     - name: Setup SDK environment
       uses: egor-tensin/vs-shell@v2
       with:
         arch: x64
 
     - name: Define install location
-      run: |
-        echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
+      shell: pwsh
+      run: "CM3_INSTALL=%CD%/../install/cm3" >> $env:GITHUB_ENV
 
     - name: Install bootstrap release
+      shell: pwsh
       run: |
-        mkdir ..\build ..\install
-        cd ..\install
-        wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
+        mkdir ../build
+        mkdir ../install
+        cd ../install
+        curl -fLO "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
-        cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
-        cmake --build ..\build --config Release
-        cmake --install ..\build --config Release
-        echo %CM3_INSTALL%\bin>>%GITHUB_PATH%
+        rm "${{ inputs.bootstrap }}"
+        cmake -S ../bootstrap -B ../build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
+        cmake --build ../build --config Release
+        cmake --install ../build --config Release
+        "$env:CM3_INSTALL/bin" >> $env:GITHUB_PATH
 
     - name: Fetch sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Build everything
-      run: |
-        python3 scripts\concierge.py full-upgrade all -caltech-other -caltech-parser -m3-scheme
+      run: python3 scripts/concierge.py full-upgrade all -caltech-other -caltech-parser -m3-scheme
 
     - name: Run compiler validation suite
       continue-on-error: true
-      run: |
-        cm3 -DHTML
-      working-directory: m3-sys\m3tests
+      run: cm3 -DHTML
+      working-directory: m3-sys/m3tests
