@@ -1,0 +1,5 @@
+% -OverflowChk: INTEGER and LONGINT arithmetic aborts on overflow.
+M3_OPTIONS += "-OverflowChk"
+implementation("Main")
+build_standalone()
+include ("../../Test.common")

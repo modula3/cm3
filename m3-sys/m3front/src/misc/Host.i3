@@ -51,6 +51,8 @@ VAR (* misc. options *)
 VAR (* runtime checks *)
   doNarrowChk : BOOLEAN := TRUE;
   doRangeChk  : BOOLEAN := TRUE;
+  doOverflowChk : BOOLEAN := FALSE;
+  (* INTEGER and LONGINT arithmetic aborts on overflow; see OverflowChk *)
   doReturnChk : BOOLEAN := TRUE;
   doCaseChk   : BOOLEAN := TRUE;
   doTCaseChk  : BOOLEAN := TRUE;

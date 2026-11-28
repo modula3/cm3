@@ -571,6 +571,7 @@ p_test ("p3", "p330", "NARROW (x, NULL) checks that x is NIL")
 p_test ("p3", "p331", "signed packed array elements at a run-time subscript")
 p_test ("p3", "p334", "a record with packed fields keeps a larger field alignment (EXTENDED)")
 p_test ("p3", "p335", "variables of a record type are aligned as the front end laid it out")
+p_test ("p3", "p338", "-OverflowChk: INTEGER and LONGINT arithmetic aborts exactly on overflow")
 p_test ("p3", "p323", "RAISE of a record argument inside a TRY with no other call")
 p_test ("p3", "p318", "Loads of traced references from each kind of storage during an incremental collection")
 p_test ("p3", "p302", "Address of a global at an offset, compared directly")
@@ -891,6 +892,7 @@ readonly proc e_test (group, uid, comment) is
   run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
+e_test ("e0", "e042", "-OverflowChk: integer overflow in a constant expression is an error")
 e_test ("e0", "e041", "Illegal mutually recursive revealed opaque types in separate units")
 e_test ("e0", "e040", "Bad SUBARRAY actuals")
 e_test ("e0", "e035", "illegal recursive declaration")

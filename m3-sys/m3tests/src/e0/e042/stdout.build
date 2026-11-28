@@ -1,0 +1,6 @@
+"../Main.m3", line 8: integer overflow in a constant expression
+"../Main.m3", line 9: integer overflow in a constant expression
+"../Main.m3", line 10: integer overflow in a constant expression
+"../Main.m3", line 11: integer overflow in a constant expression
+4 errors encountered
+Fatal Error: package build failed

@@ -9,7 +9,8 @@
 MODULE NegateExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
-IMPORT IntegerExpr, ReelExpr, Error;
+IMPORT IntegerExpr, ReelExpr;
+IMPORT Host, OverflowChk;
 
 TYPE
   P = ExprRep.Ta BRANDED "NegateExpr.P" OBJECT
@@ -70,9 +71,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       t := Expr.BadOperands ("unary \'-\'", t);
     END;
     p.type := t;
-    IF IntegerExpr.Overflows (IntegerExpr.Op.Negate, p.a, NIL) THEN
-      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
-    END;
+    IntegerExpr.CheckOverflow (IntegerExpr.Op.Negate, p.a, NIL);
   END Check;
 
 PROCEDURE Prep (p: P) =
@@ -85,12 +84,16 @@ PROCEDURE Prep (p: P) =
   END Prep;
 
 PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
-  VAR e := p.folded;
+  VAR e := p.folded;  t: CG.Type;
   BEGIN
     <* ASSERT NOT StaticOnly *>
     IF (e = NIL) THEN
       Expr.Compile (p.a);
-      CG.Negate (Type.CGType (p.type));
+      t := Type.CGType (p.type);
+      IF Host.doOverflowChk AND OverflowChk.Signed (t)
+        THEN OverflowChk.Negate (t);
+        ELSE CG.Negate (t);
+      END;
     ELSE
       Expr.Compile (e); (* e is folded p, not p.a, thus already negated. *)
     END;

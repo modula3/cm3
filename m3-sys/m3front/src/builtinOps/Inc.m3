@@ -9,7 +9,7 @@
 MODULE Inc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Dec, Target, TInt;
-IMPORT IntegerExpr, Host, Int, LInt;
+IMPORT IntegerExpr, Host, Int, LInt, OverflowChk;
 
 VAR Z: CallExpr.MethodList;
 
@@ -68,6 +68,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     IF (info.stk_type = CG.Type.Addr)
       THEN CG.Index_bytes (Target.Byte);  check := 0;
+    ELSIF Host.doOverflowChk
+      THEN OverflowChk.Add (cg_type);
       ELSE CG.Add (cg_type);
     END;
 
