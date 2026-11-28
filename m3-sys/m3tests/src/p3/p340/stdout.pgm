@@ -1,0 +1,19 @@
+b > 1000 (const): pass
+b > k (var): pass
+NOT b <= k: pass
+0 <= b (const): pass
+z < b (var): pass
+b # 0: pass
+m < -1 (const): pass
+NOT m < a: pass
+a < m: pass
+a <= k: pass
+MAX (b, k) = b: pass
+MIN (b, k) = k: pass
+MIN (a, m) = a: pass
+Long.LT (k, b): pass
+Long.GT (b, k): pass
+Long.LT (b, a): pass
+b not in [0..1000]: pass
+k in [0..1000]: pass
+a not in [0..1000]: pass
