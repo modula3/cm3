@@ -28,8 +28,15 @@ PROCEDURE WalkMap (a, map: ADDRESS;  v: Visitor);
    whose layout is given by the garbage collector's map 'map', call
    'v(x)'. *)
 
+PROCEDURE PrepareGlobals ();
+(* Bring the map of the modules' globals up to date, allocating as needed.
+   Call it before stopping the other threads: a thread stopped inside
+   malloc holds malloc's lock, so the collector must not allocate or free
+   while they are stopped. *)
+
 PROCEDURE WalkGlobals (v: Visitor);
-(* For each traced reference at address 'x' in a global var, call 'v(x)'. *)
+(* For each traced reference at address 'x' in a global var, call 'v(x)'.
+   Allocates only if the map is out of date (see PrepareGlobals). *)
 
 PROCEDURE WalkModuleGlobals (v: Visitor;  m: CARDINAL);
 (* For each traced reference at address 'x' in a global variable of

@@ -757,6 +757,11 @@ VAR
 
 PROCEDURE CollectSomeInStateZero () =
   BEGIN
+    (* Build the map of the globals before stopping the other threads:
+       building it calls calloc and free, and a thread stopped inside
+       malloc holds malloc's lock, so doing it after would deadlock (p006,
+       intermittently, on the first collection). *)
+    RTHeapMap.PrepareGlobals ();
     RTThread.SuspendOthers ();
 
     <* ASSERT disableCount + disableMotionCount = 0 *>
