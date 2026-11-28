@@ -11,6 +11,7 @@ MODULE AddExpr;
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT SetType, Addr, Module, Error, Target, ErrType, TInt;
 IMPORT AddressExpr, SetExpr, IntegerExpr, ReelExpr;
+IMPORT Host, OverflowChk;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET };
@@ -108,9 +109,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     END;
     p.type := ta;
     p.repType := ta;
-    IF IntegerExpr.Overflows (IntegerExpr.Op.Add, p.a, p.b) THEN
-      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
-    END;
+    IntegerExpr.CheckOverflow (IntegerExpr.Op.Add, p.a, p.b);
   END Check;
 
 PROCEDURE Prep (p: P) =
@@ -154,11 +153,17 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     | Class.cINT =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);
-        CG.Add (Target.Integer.cg_type);
+        IF Host.doOverflowChk
+          THEN OverflowChk.Add (Target.Integer.cg_type);
+          ELSE CG.Add (Target.Integer.cg_type);
+        END;
     | Class.cLINT =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);
-        CG.Add (Target.Longint.cg_type);
+        IF Host.doOverflowChk
+          THEN OverflowChk.Add (Target.Longint.cg_type);
+          ELSE CG.Add (Target.Longint.cg_type);
+        END;
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);

@@ -11,6 +11,7 @@ MODULE SubtractExpr;
 IMPORT CG, Expr, ExprRep, Type, Error, LInt, Int, Reel, EnumType;
 IMPORT SetType, Addr, Module, AddressExpr, Target, EnumExpr;
 IMPORT IntegerExpr, ReelExpr, SetExpr, LReel, EReel, TInt, ErrType;
+IMPORT Host, OverflowChk;
 
 TYPE
   Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET, cENUM };
@@ -128,9 +129,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.class := Class.cINT;
     END;
     p.type := ta;
-    IF IntegerExpr.Overflows (IntegerExpr.Op.Subtract, p.a, p.b) THEN
-      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
-    END;
+    IntegerExpr.CheckOverflow (IntegerExpr.Op.Subtract, p.a, p.b);
   END Check;
 
 PROCEDURE Prep (p: P) =
@@ -160,11 +159,17 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
     | Class.cINT, Class.cENUM =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);
-        CG.Subtract (Target.Integer.cg_type);
+        IF Host.doOverflowChk AND (p.class = Class.cINT)
+          THEN OverflowChk.Subtract (Target.Integer.cg_type);
+          ELSE CG.Subtract (Target.Integer.cg_type);
+        END;
     | Class.cLINT =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);
-        CG.Subtract (Target.Longint.cg_type);
+        IF Host.doOverflowChk
+          THEN OverflowChk.Subtract (Target.Longint.cg_type);
+          ELSE CG.Subtract (Target.Longint.cg_type);
+        END;
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);

@@ -31,6 +31,7 @@ PROCEDURE Initialize (READONLY options: ARRAY OF TEXT): BOOLEAN =
     clean_jumps          := TRUE;
     doNarrowChk          := TRUE;
     doRangeChk           := TRUE;
+    doOverflowChk        := FALSE;
     doReturnChk          := TRUE;
     doCaseChk            := TRUE;
     doTCaseChk           := TRUE;
@@ -85,6 +86,10 @@ PROCEDURE ProcessArg (t: TEXT): BOOLEAN =
       doNarrowChk := FALSE;
     ELSIF (Text.Equal (t, "-NoRangeChk")) THEN
       doRangeChk := FALSE;
+    ELSIF (Text.Equal (t, "-OverflowChk")) THEN
+      doOverflowChk := TRUE;
+    ELSIF (Text.Equal (t, "-NoOverflowChk")) THEN
+      doOverflowChk := FALSE;
     ELSIF (Text.Equal (t, "-NoReturnChk")) THEN
       doReturnChk := FALSE;
     ELSIF (Text.Equal (t, "-NoCaseChk")) THEN
@@ -99,6 +104,7 @@ PROCEDURE ProcessArg (t: TEXT): BOOLEAN =
       doAsserts   := FALSE;
       doNarrowChk := FALSE;
       doRangeChk  := FALSE;
+      doOverflowChk := FALSE;
       doReturnChk := FALSE;
       doCaseChk   := FALSE;
       doTCaseChk  := FALSE;

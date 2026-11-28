@@ -1,0 +1,4 @@
+% -OverflowChk: integer overflow in a constant expression is an error.
+M3_OPTIONS += "-OverflowChk"
+implementation ("Main")
+include ("../../Test.common")

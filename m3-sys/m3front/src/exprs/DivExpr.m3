@@ -10,6 +10,7 @@ MODULE DivExpr;
 
 IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, TInt, Target;
 IMPORT TargetMap;
+IMPORT Host, OverflowChk;
 
 TYPE
   P = ExprRep.Tab BRANDED "DivExpr.P" OBJECT
@@ -107,7 +108,11 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
       IF (e2 = NIL) THEN e2 := p.b; END;
       Expr.Compile (e1);
       Expr.Compile (e2);
-      CG.Div (Type.CGType (p.type), Expr.GetSign (e1), Expr.GetSign (e2));
+      cg_type := Type.CGType (p.type);
+      IF Host.doOverflowChk AND OverflowChk.Signed (cg_type)
+        THEN OverflowChk.Div (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+        ELSE CG.Div (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+      END;
     END;
   END Compile;
 

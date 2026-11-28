@@ -10,6 +10,7 @@ MODULE Abs;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error;
 IMPORT Target, TInt, Int, LInt, Reel, LReel, EReel, IntegerExpr, ReelExpr;
+IMPORT Host, OverflowChk;
 
 VAR Z: CallExpr.MethodList;
 
@@ -31,10 +32,14 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
-  VAR e := ce.args[0];
+  VAR e := ce.args[0];  t: CG.Type;
   BEGIN
     Expr.Compile (e);
-    CG.Abs (Type.CGType (Expr.TypeOf (e)));
+    t := Type.CGType (Expr.TypeOf (e));
+    IF Host.doOverflowChk AND OverflowChk.Signed (t)
+      THEN OverflowChk.Abs (t);
+      ELSE CG.Abs (t);
+    END;
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

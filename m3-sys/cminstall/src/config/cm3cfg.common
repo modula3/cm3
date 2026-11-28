@@ -557,6 +557,14 @@ if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs" ]
 end
 
+% -DM3_OVERFLOW_CHECKS on the command line, or M3_OVERFLOW_CHECKS = TRUE
+% in cm3.cfg: INTEGER and LONGINT arithmetic aborts with a runtime error
+% when it overflows, instead of wrapping around.  (For one package, put
+% M3_OPTIONS += "-OverflowChk" in its m3makefile.)
+if defined ("M3_OVERFLOW_CHECKS")
+  M3_FRONT_FLAGS += ["-OverflowChk"]
+end
+
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
 

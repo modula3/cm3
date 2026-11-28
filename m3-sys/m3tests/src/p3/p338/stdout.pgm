@@ -1,0 +1,76 @@
+INTEGER LAST + 1: pass
+INTEGER FIRST + -1: pass
+INTEGER (H+1) + (H+1): pass
+INTEGER LAST + FIRST: pass
+INTEGER H + (H+1): pass
+INTEGER FIRST - 1: pass
+INTEGER LAST - -1: pass
+INTEGER 0 - FIRST: pass
+INTEGER -1 - FIRST: pass
+INTEGER 0 - LAST: pass
+INTEGER LAST * 2: pass
+INTEGER FIRST * -1: pass
+INTEGER -1 * FIRST: pass
+INTEGER (H+1) * 2: pass
+INTEGER 2 * (H+1): pass
+INTEGER (T+1) * 3: pass
+INTEGER LAST * LAST: pass
+INTEGER FIRST * FIRST: pass
+INTEGER (FIRST DIV 2) * -2: pass
+INTEGER FIRST * 1: pass
+INTEGER -1 * LAST: pass
+INTEGER H * 2: pass
+INTEGER T * 3: pass
+INTEGER (FIRST DIV 2) * 2: pass
+INTEGER 0 * FIRST: pass
+INTEGER FIRST * 0: pass
+INTEGER FIRST DIV -1: pass
+INTEGER FIRST DIV 1: pass
+INTEGER LAST DIV -1: pass
+INTEGER -FIRST: pass
+INTEGER -LAST: pass
+INTEGER ABS (FIRST): pass
+INTEGER ABS (FIRST + 1): pass
+INTEGER INC (LAST): pass
+INTEGER DEC (FIRST): pass
+INTEGER INC (FIRST, -1): pass
+INTEGER INC (LAST, -1): pass
+LONGINT LAST + 1: pass
+LONGINT FIRST + -1: pass
+LONGINT (H+1) + (H+1): pass
+LONGINT LAST + FIRST: pass
+LONGINT H + (H+1): pass
+LONGINT FIRST - 1: pass
+LONGINT LAST - -1: pass
+LONGINT 0 - FIRST: pass
+LONGINT -1 - FIRST: pass
+LONGINT 0 - LAST: pass
+LONGINT LAST * 2: pass
+LONGINT FIRST * -1: pass
+LONGINT -1 * FIRST: pass
+LONGINT (H+1) * 2: pass
+LONGINT 2 * (H+1): pass
+LONGINT (T+1) * 3: pass
+LONGINT LAST * LAST: pass
+LONGINT FIRST * FIRST: pass
+LONGINT (FIRST DIV 2) * -2: pass
+LONGINT FIRST * 1: pass
+LONGINT -1 * LAST: pass
+LONGINT H * 2: pass
+LONGINT T * 3: pass
+LONGINT (FIRST DIV 2) * 2: pass
+LONGINT 0 * FIRST: pass
+LONGINT FIRST * 0: pass
+LONGINT FIRST DIV -1: pass
+LONGINT FIRST DIV 1: pass
+LONGINT LAST DIV -1: pass
+LONGINT -FIRST: pass
+LONGINT -LAST: pass
+LONGINT ABS (FIRST): pass
+LONGINT ABS (FIRST + 1): pass
+LONGINT INC (LAST): pass
+LONGINT DEC (FIRST): pass
+LONGINT INC (FIRST, -1): pass
+LONGINT INC (LAST, -1): pass
+Word.Plus (LAST, 1): pass
+Word.Times (LAST, 2): pass

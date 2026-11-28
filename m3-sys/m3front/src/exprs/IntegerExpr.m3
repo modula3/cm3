@@ -10,6 +10,7 @@ MODULE IntegerExpr;
 (* INTEGER and LONGINT *Literals* only. *)
 
 IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Error, M3Buf, Target, TInt, TWord;
+IMPORT Host;
 
 TYPE
   P = Expr.T BRANDED "IntegerExpr.T" OBJECT
@@ -204,6 +205,17 @@ PROCEDURE Overflows (op: Op;  a, b: Expr.T): BOOLEAN =
     IF op # Op.Negate THEN b := Expr.ConstValue (b) END;
     RETURN Arith (op, a, b, c, overflow) AND overflow;
   END Overflows;
+
+PROCEDURE CheckOverflow (op: Op;  a, b: Expr.T) =
+  BEGIN
+    IF NOT Overflows (op, a, b) THEN
+      (* fine *)
+    ELSIF Host.doOverflowChk THEN
+      Error.Msg ("integer overflow in a constant expression");
+    ELSE
+      Error.Warn (2, "integer overflow in a constant expression: the result wraps around");
+    END;
+  END CheckOverflow;
 
 PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, min, max, res: Target.Int;  t: Type.T;
