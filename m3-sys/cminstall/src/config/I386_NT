@@ -6,7 +6,7 @@
 % uses the integrated backend, Win32 threads, Win32 gui, Microsoft C library.
 %-------------------------------------------------------------------
 
-readonly TARGET = "I386_NT" % code generation target
+ TARGET = "I386_NT" % code generation target
 
 %-------------------------------------------------------------------
 

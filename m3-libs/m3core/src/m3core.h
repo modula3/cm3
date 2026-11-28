@@ -839,10 +839,6 @@ TEXT
 __cdecl
 M3toC__CopyStoT(const char*);
 
-TEXT
-__cdecl
-M3toC__StoT(const char*);
-
 /* This MUST match DatePosix.i3.T.
  * The fields are ordered by size and alphabetically.
  */

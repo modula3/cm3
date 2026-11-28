@@ -51,6 +51,8 @@ module ("WebFile")
 
 implementation ("Main")
 
+c_source ("Cm3Link")
+
 build_standalone () %-- we don't want to depend on the shared libraries...
 
 % Some platforms do not allow overwriting binaries that are currently

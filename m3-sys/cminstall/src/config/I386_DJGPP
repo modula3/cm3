@@ -97,6 +97,7 @@ proc skip_lib(lib, shared) is
 end
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
+shared = FALSE
   lib = "lib" & lib & ".a"
   deriveds ("", [lib])
   exec("ar", "cr", lib, arglist("@", objects))

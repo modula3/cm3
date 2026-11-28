@@ -11,9 +11,9 @@
 
 %-------------------------------------------------- compilation environment ---
 
-readonly TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
-readonly TARGET_ARCH = "I386"
-readonly WORD_SIZE = "32BITS"       % { "32BITS" or "64BITS" }
+TARGET_ENDIAN = "LITTLE"   % { "BIG" OR "LITTLE" }
+TARGET_ARCH = "I386"
+WORD_SIZE = "32BITS"       % { "32BITS" or "64BITS" }
 
 include("NT.common")
 
