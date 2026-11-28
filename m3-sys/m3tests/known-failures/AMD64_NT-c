@@ -1,0 +1,12 @@
+# AMD64_NT, C backend.
+p217 p218 p219 p220 p221 p222 p223  # .M3SHIP tests: Windows installs pgm.exe and pgm.pdb; needs Windows expected files
+p227 p228 p229  # unexpected build output, probably cl warnings; unexamined
+c027 c136  # unexpected build output: cl warns (C4717?) on the deliberate infinite recursion
+e030 e041  # build output differs in a way fc does not show (whitespace?); unexamined
+p269  # unexamined
+r001 r003 r004 r005 r006 r007 r008 r009 r010  # see below
+# r001, r003-r010 end in a runtime error whose report never appears: the
+# process dies with 0xE06D7363, an uncaught C++ exception.  AMD64_NT uses
+# ex_stack (C++ throw) but has no stack walker (HAS_STACK_WALKER in
+# m3core's runtime m3makefile), so an unhandled exception is thrown with
+# no handler and terminates the process before RTProcess.Crash reports it.

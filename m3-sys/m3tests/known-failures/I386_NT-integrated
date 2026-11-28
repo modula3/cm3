@@ -1,0 +1,9 @@
+# I386_NT, integrated x86 backend.
+p137 p172 p185 p306  # x87 floating point, as I386_LINUX-gcc
+p217 p218 p219 p220 p221 p222 p223  # .M3SHIP tests: Windows installs pgm.exe and pgm.pdb; needs Windows expected files
+p227 p228 p229  # unexpected build output, probably cl warnings; unexamined
+p159 p207 p283 p329 p331  # unexamined
+r001 r002 r003 r004 r005 r006 r007 r008 r009 r010  # see below
+# r001-r010 end in a runtime error, whose report is missing from stderr.
+# Not yet examined on I386_NT, which uses ex_frame; AMD64_NT's cause (an
+# uncaught C++ exception under ex_stack) cannot be the whole story here.
