@@ -209,7 +209,9 @@ END DisableVM;
    the first page available in desc, and it must be in [p0 ..  p1) if there
    are allocated pages. *)
 
-VAR desc: UNTRACED REF ARRAY OF BITS 8 FOR [-1..1];
+TYPE DescArray = UNTRACED REF ARRAY OF BITS 8 FOR [-1..1];
+
+VAR desc: DescArray;
     (* < 0 => unallocated
        = 0 => first page in a block
        > 0 => continued page in a block *)
@@ -2652,6 +2654,37 @@ VAR
   heap_stats := FALSE;
   total_heap := 0;
 
+(* NewDesc allocates a side array of "n" entries straight from the OS,
+   bypassing the C heap.  GrowHeap can run while the other threads are
+   suspended: copying survivors in CollectSomeInStateZero can call
+   AllocCopy -> FindFreePages -> GrowHeap.  A suspended thread may hold
+   the C heap lock, so calloc or free here would deadlock the collector
+   (seen on I386_NT: a worker stopped inside free() under system(), the
+   collector blocked in calloc from GrowHeap).
+
+   The memory is laid out as an untraced open array: a dope vector
+   {elements, count} followed by the elements.  Superseded arrays are not
+   returned to the OS (GetMemory has no inverse on every platform); since
+   the heap grows by at least MinNewFactor each time, the total retained
+   is a small multiple of the final array, which holds one byte per page. *)
+
+TYPE
+  DescDope = RECORD
+    elts: ADDRESS;
+    n   : INTEGER;
+  END;
+
+PROCEDURE NewDesc (n: CARDINAL): DescArray =
+  VAR mem := RTOS.GetMemory(BYTESIZE(DescDope) + n);
+  BEGIN
+    IF mem = NIL OR mem = LOOPHOLE(-1, ADDRESS) THEN RETURN NIL; END;
+    WITH dope = LOOPHOLE(mem, UNTRACED REF DescDope) DO
+      dope.elts := mem + ADRSIZE(DescDope);
+      dope.n := n;
+    END;
+    RETURN LOOPHOLE(mem, DescArray);
+  END NewDesc;
+
 PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
   VAR
     newChunk    : ADDRESS;
@@ -2728,8 +2761,8 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
     (* extend the side arrays if necessary *)
     newSideSpan := newP1 - newP0;
     IF desc = NIL OR newSideSpan # NUMBER(desc^) THEN
-      WITH newDesc = NEW(UNTRACED REF ARRAY OF BITS 8 FOR [-1..1],
-                         newSideSpan) DO
+      WITH newDesc = NewDesc(newSideSpan) DO
+        IF newDesc = NIL THEN RETURN FALSE; END;
         IF desc # NIL THEN
           FOR i := FIRST(desc^) TO LAST(desc^) DO
             newDesc[i + p0 - newP0] := desc[i];
@@ -2740,7 +2773,7 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
           FOR i := lastNewPage + 1 TO p0 - 1 DO
             newDesc[i - newP0] := -1;	 (* Space.Unallocated *)
           END;
-          DISPOSE(desc);
+          (* The old array is not returned; see NewDesc. *)
         END;
         desc := newDesc;
       END;
