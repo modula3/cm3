@@ -424,6 +424,14 @@ PROCEDURE DeclareGlobalMSIR (t: T;  weak: BOOLEAN := FALSE) =
             t.initDone := TRUE;
             t.msirInitDone := TRUE;
           END;
+        ELSIF t.initStatic THEN
+          (* A static initializer with no MSIR image (a LONGINT constant
+             beyond a 32-bit host's INTEGER, say): nothing else stores it
+             (UserInit skips static inits), so the global would silently
+             stay zero.  Leave the unit to the C walk, as for a constant. *)
+          MSIR.ModuleSetIncomplete (m, "no MSIR image of initializer of "
+                                         & Value.GlobalName (t, dots := TRUE,
+                                                             with_module := TRUE));
         END;
       END;
     END;

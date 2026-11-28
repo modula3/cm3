@@ -1200,6 +1200,17 @@ PROCEDURE MaskToHostInt (READONLY mask: Target.Int;  VAR v: INTEGER): BOOLEAN =
   VAR lo, hi: Target.Int;  loI, hiI: INTEGER;
   BEGIN
     IF TInt.ToInt (mask, v) THEN RETURN TRUE END;
+    IF Grain = BITSIZE (INTEGER) THEN
+      (* A word as wide as the host's INTEGER (a 32-bit target on a
+         32-bit host): its bit pattern as a signed host INTEGER, the top bit
+         the sign (0x80000000 as -2^31). *)
+      IF NOT TWord.Extract (mask, 0, Grain - 1, lo) THEN RETURN FALSE END;
+      IF NOT TInt.ToInt (lo, loI) THEN RETURN FALSE END;
+      IF NOT TWord.Extract (mask, Grain - 1, 1, hi) THEN RETURN FALSE END;
+      IF NOT TInt.ToInt (hi, hiI) THEN RETURN FALSE END;
+      IF hiI # 0 THEN v := FIRST (INTEGER) + loI ELSE v := loI END;
+      RETURN TRUE;
+    END;
     IF NOT TWord.Extract (mask, 0, 32, lo) THEN RETURN FALSE END;
     IF NOT TWord.Extract (mask, 32, 32, hi) THEN RETURN FALSE END;
     IF NOT TInt.ToInt (lo, loI) THEN RETURN FALSE END;
