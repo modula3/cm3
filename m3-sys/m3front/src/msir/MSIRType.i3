@@ -26,6 +26,10 @@ PROCEDURE ComputeType(t: Type.T): MSIR.T;
    produced by a memory read (deref/field/subscript/global) or literal is
    uniform machine width, eliminating per-operation operand-width coercions. *)
 
+PROCEDURE SetT(size: INTEGER): MSIR.T;
+(* The MSIR type of a set of "size" bits: an integer, MSIR.TWideSet if it
+   is wider than the target's word (a multi-word set), else MSIR.TI. *)
+
 PROCEDURE ZWidth(t: Type.T): INTEGER;
 (* The computation width, in bits, of the ordinal type t: Target.Longint.size
    if t is LONGINT-based (LONGINT, its subranges, packed or named forms),

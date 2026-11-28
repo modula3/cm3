@@ -48,6 +48,14 @@ PROCEDURE TI(bits: INTEGER): T =
     RETURN t;
   END TI;
 
+PROCEDURE TWideSet(bits: INTEGER): T =
+  VAR t := NEW(T);
+  BEGIN
+    t.kind := TypeKind.IWide;
+    t.bits := bits;
+    RETURN t;
+  END TWideSet;
+
 PROCEDURE TW(bits: INTEGER): T =
   VAR t := NEW(T);
   BEGIN

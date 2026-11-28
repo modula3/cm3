@@ -117,8 +117,11 @@ PROCEDURE CoerceWordOperands (b: MSIR.Block;  W: INTEGER;  wt: MSIR.T;
       ELSE            x := MSIR.BuildZExt  (b, "", x, wt) END;
     END;
     IF nb > 0 AND nb # W THEN
+      (* n is a signed INTEGER count (widened for Long.Rotate on a 32-bit
+         target); zero extension happens to give the same rotation mod 64,
+         but sign extension keeps its value. *)
       IF nb > W THEN n := MSIR.BuildTrunc (b, "", n, wt)
-      ELSE            n := MSIR.BuildZExt  (b, "", n, wt) END;
+      ELSE            n := MSIR.BuildSExt  (b, "", n, wt) END;
     END;
   END CoerceWordOperands;
 

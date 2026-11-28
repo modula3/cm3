@@ -99,6 +99,7 @@ T = M3CG_DoNothing.T OBJECT
         RTStack_ThrowM3Exc_id := M3ID.NoID;
         alloca_id := M3ID.NoID;
         setjmp_id := M3ID.NoID;
+        memcmp_id := M3ID.NoID;
         jmpbuf_size_id := M3ID.NoID;
         done_include_setjmp_h := FALSE;
 
@@ -2434,6 +2435,8 @@ VAR name := proc.name;
                                AND parameter_count = 3;
     is_setjmp := is_common_not_void AND parameter_count = 1 AND name = self.setjmp_id;
     is_alloca := is_common_not_void AND parameter_count = 1 AND name = self.alloca_id;
+    (* m3_memcmp: the preamble declares it, with C's types *)
+    is_memcmp := is_common_not_void AND parameter_count = 3 AND name = self.memcmp_id;
 BEGIN
     (* Omit a few prototypes that the frontend might have slightly wrong,
        e.g. alloca(unsigned int vs. unsigned long vs. unsigned long long)
@@ -2442,7 +2445,7 @@ BEGIN
        setjmp must be referenced "inline", cannot be delegated to a C helper (except for a macro).
     *)
     proc.is_setjmp := is_setjmp;
-    proc.omit_prototype := is_setjmp OR is_alloca;
+    proc.omit_prototype := is_setjmp OR is_alloca OR is_memcmp;
                            (* TODO
                            - add CGType.Jmpbuf
                            - #include <setjmp.h> if there are any
@@ -3187,6 +3190,7 @@ BEGIN
     self.static_link_id := M3ID.Add("_static_link");
     self.alloca_id := M3ID.Add("alloca");
     self.setjmp_id := M3ID.Add("m3_setjmp");
+    self.memcmp_id := M3ID.Add("m3_memcmp");
     self.RTHooks_ReportFault_id := M3ID.Add("RTHooks__ReportFault");
     self.RTHooks_Raise_id := M3ID.Add("RTHooks__Raise");
     self.RTException_Raise_id := M3ID.Add("RTException__Raise");

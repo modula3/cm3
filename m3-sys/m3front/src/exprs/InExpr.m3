@@ -10,7 +10,7 @@ MODULE InExpr;
 
 IMPORT CG, Expr, ExprRep, Error, Type, SetType, Bool, SetExpr;
 IMPORT Target, TInt, Value;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   P = ExprRep.Tab BRANDED "InExpr.P" OBJECT
@@ -193,7 +193,7 @@ PROCEDURE CompileMSIRRaw (p: P): MSIR.Value =
       maxOrd := maxI;
     END;
 
-    ti  := MSIR.TI (info.size);
+    ti  := MSIRType.SetT (info.size);
     blk := MSIRBuilder.CurrentBlock ();
     setVal := Expr.CompileMSIR (p.b);
     IF setVal = NIL THEN RETURN NIL END;

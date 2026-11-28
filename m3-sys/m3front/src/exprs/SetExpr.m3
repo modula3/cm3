@@ -14,7 +14,7 @@ IMPORT Text, Fmt, CaptureAnalysis;
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
 IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module, Word;
-IMPORT MSIR, MSIRBuilder;
+IMPORT MSIR, MSIRBuilder, MSIRType;
 
 TYPE
   Node = REF RECORD
@@ -1033,7 +1033,7 @@ PROCEDURE CompileMSIR (p: P): MSIR.Value =
     IF info.size <= Target.Word.size THEN
       Type.Compile (p.tipe);  (* as Compile's CompileSmall *)
     END;
-    ti     := MSIR.TI (info.size);
+    ti     := MSIRType.SetT (info.size);
     (* MSIR compilation skips Prep, so BuildMap may not have been called yet.
        Populate p.tree (constant ranges) and p.others (runtime elements) here. *)
     IF NOT p.mapped THEN EVAL BuildMap (p, p) END;
@@ -1224,7 +1224,7 @@ PROCEDURE GenLiteralMSIR (p: P;  <*UNUSED*> ft: MSIR.T): MSIR.Value =
     IF p.nOthers > 0 THEN RETURN NIL END;
     (* A statically out-of-range element is a checked RT error, not a literal. *)
     IF AssignStmt.DoGenRTAbort (p.RTErrorCode) THEN RETURN NIL END;
-    ti := MSIR.TI (info.size);
+    ti := MSIRType.SetT (info.size);
     IF info.size <= Target.Word.size THEN
       (* Single word: accumulate the biased bit mask (mirrors CompileMSIR). *)
       VAR n := p.tree;  cur := TInt.Zero;  tmp: Target.Int;  v: INTEGER;

@@ -130,8 +130,11 @@ PROCEDURE ShiftMSIR (ce: CallExpr.T): MSIR.Value =
       ELSE x := MSIR.BuildZExt (b, "", x, wt) END;
     END;
     IF nb > 0 AND nb # W THEN
+      (* n is a signed INTEGER count: sign-extend it to a LONGINT's width
+         (Long.Shift on a 32-bit target), or a negative count would become
+         a huge positive one. *)
       IF nb > W THEN n := MSIR.BuildTrunc (b, "", n, wt)
-      ELSE n := MSIR.BuildZExt (b, "", n, wt) END;
+      ELSE n := MSIR.BuildSExt (b, "", n, wt) END;
     END;
     xt     := MSIR.ValueType (x);
     nt     := MSIR.ValueType (n);

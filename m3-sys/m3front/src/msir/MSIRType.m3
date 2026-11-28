@@ -145,7 +145,7 @@ PROCEDURE Translate(t: Type.T): MSIR.T =
     | Type.Class.Set =>
         (* All set sizes map to iN — LLVM supports arbitrary-width integers. *)
         IF info.size > 0 THEN
-          RETURN MSIR.TI (info.size);
+          RETURN SetT (info.size);
         END;
         RETURN NIL;
 
@@ -524,6 +524,12 @@ PROCEDURE ComputeType(t: Type.T): MSIR.T =
     IF Type.IsOrdinal(t) THEN RETURN MSIR.TI(ZWidth(t)) END;
     RETURN Translate(t);
   END ComputeType;
+
+PROCEDURE SetT(size: INTEGER): MSIR.T =
+  BEGIN
+    IF size > Target.Word.size THEN RETURN MSIR.TWideSet(size) END;
+    RETURN MSIR.TI(size);
+  END SetT;
 
 PROCEDURE ZWidth(t: Type.T): INTEGER =
   BEGIN

@@ -1653,9 +1653,16 @@ PROCEDURE ProcFor (p: MSIR.Proc): M3CG.Proc =
   END ProcFor;
 
 PROCEDURE ImportProc (sym: TEXT;  p: MSIR.Proc): M3CG.Proc =
-  VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;
+  VAR n := MSIR.ProcParamCount (p);  q: M3CG.Proc;  name := sym;
   BEGIN
-    q := cg.import_procedure (ID (sym), n + ORD (HasAggResult (p)),
+    (* The C library's memcmp, which m3front uses to compare blocks, is
+       called as M3C's m3_memcmp: M3C's preamble declares it with C's
+       types, where a prototype from M3CG's (ADDRESS, INTEGER) conflicts
+       with the builtin memcmp. *)
+    IF Text.Equal (sym, "memcmp") AND MSIR.ProcBlockCount (p) = 0 THEN
+      name := "m3_memcmp";
+    END;
+    q := cg.import_procedure (ID (name), n + ORD (HasAggResult (p)),
                               RetType (MSIR.ProcResultType (p)),
                               Target.DefaultCall);
     EVAL DeclareParams (p);

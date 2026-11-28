@@ -537,7 +537,7 @@ PROCEDURE AddLocalMSIR (t: T;  b: MSIR.Block;  force: BOOLEAN := FALSE): BOOLEAN
        signedWiden from the M3 type, and LookupVar widens each read. *)
     allocType := mt;
     IF Type.IsOrdinal (t.type) AND NOT t.need_addr THEN
-      allocType := MSIR.TI (Target.Integer.size);
+      allocType := MSIR.TI (MSIRType.ZWidth (t.type));  (* LONGINT: its width *)
       mt := allocType;  (* keep mt in sync — init code uses mt for ConstInt/ConstZero *)
     END;
     slotAddr := MSIR.BuildAlloca(b,
@@ -659,7 +659,7 @@ PROCEDURE BindFormalMSIR (t: T;  p: MSIR.Proc;  b: MSIR.Block) =
               storeVal  := paramVal;
           BEGIN
             IF Type.IsOrdinal (t.type) THEN
-              allocType := MSIR.TI (Target.Integer.size);
+              allocType := MSIR.TI (MSIRType.ZWidth (t.type));
               (* BOOLEAN has MSIR type TI1 (no W1 kind), so CoerceToMSIR would
                  use SExt and turn TRUE (i1=1) into -1.  Instead, derive the
                  extension direction from the M3 type bounds: non-negative lo

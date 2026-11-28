@@ -85,6 +85,11 @@ TYPE Field  = RECORD name: TEXT;  type: T;  offset: INTEGER := 0  END;
 PROCEDURE TVoid(): T;
 PROCEDURE TI1(): T;
 PROCEDURE TI(bits: INTEGER): T;       (* bits in {8,16,32,64} or any multiple of 8 > 64 (IWide) *)
+PROCEDURE TWideSet(bits: INTEGER): T;
+(* A set wider than the target's word, as an integer of kind IWide even
+   where bits is 64 (a 32-bit target), so that it is never taken for a
+   scalar i64: front end and back ends treat IWide wider than a word as a
+   multi-word set (D19). *)
 PROCEDURE TW(bits: INTEGER): T;
 PROCEDURE TF(bits: INTEGER): T;       (* bits in {32,64,128} *)
 PROCEDURE TPtr(elt: T): T;
