@@ -56,7 +56,7 @@ This documentation dates from earlier releases. A new site is being built: see [
 
 ## Contributing
 
-Report bugs and propose changes through [issues](https://github.com/modula3/cm3/issues) and [pull requests](https://github.com/modula3/cm3/pulls). To run the compiler test suite after building:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to send a change and what we ask of it. Report bugs and propose changes through [issues](https://github.com/modula3/cm3/issues) and [pull requests](https://github.com/modula3/cm3/pulls). To run the compiler test suite after building:
 
 ```sh
 cd m3-sys/m3tests && cm3 -DHTML
