@@ -80,11 +80,11 @@ jobs:
     - uses: egor-tensin/vs-shell@v2
       with: {arch: x64}
     - run: |
-        mkdir ..\build
+        mkdir "../build"
         wget --quiet "${{ env.CM3RELEASE }}/${{ env.CM3DIST }}"
         7z x -o.. "${{ env.CM3DIST }}"
-        cd ..\build
-        python3 ..\cm3\scripts\concierge.py install --prefix ..\install
+        cd ../build
+        python3 ../cm3/scripts/concierge.py install --prefix ../install
       shell: cmd
 
   I386_NT:
@@ -96,9 +96,9 @@ jobs:
     - uses: egor-tensin/vs-shell@v2
       with: {arch: x86}
     - run: |
-        mkdir ..\build
+        mkdir "../build"
         wget --quiet "${{ env.CM3RELEASE }}/${{ env.CM3DIST }}"
         7z x -o.. "${{ env.CM3DIST }}"
-        cd ..\build
-        python3 ..\cm3\scripts\concierge.py install --prefix ..\install --target I386_NT
+        cd ../build
+        python3 ../cm3/scripts/concierge.py install --prefix ../install --target I386_NT
       shell: cmd

@@ -42,36 +42,36 @@ jobs:
 
     - name: Define install location
       run: |
-        echo CM3_INSTALL=%CD%\..\install\cm3>>%GITHUB_ENV%
+        echo CM3_INSTALL=%CD%/../install/cm3>>%GITHUB_ENV%
 
     - name: Install bootstrap release
       run: |
-        mkdir ..\build ..\install
-        cd ..\install
+        mkdir "../build" "../install"
+        cd ../install
         wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
-        cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
-        cmake --build ..\build --config Release
-        cmake --install ..\build --config Release
-        echo %CM3_INSTALL%\bin>>%GITHUB_PATH%
+        cmake -S ../bootstrap -B ../build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
+        cmake --build ../build --config Release
+        cmake --install ../build --config Release
+        echo %CM3_INSTALL%/bin>>%GITHUB_PATH%
 
     - name: Fetch sources
       uses: actions/checkout@v4
 
     - name: Build everything
       run: |
-        python3 scripts\ci-watchdog.py -- python3 scripts\concierge.py full-upgrade all -caltech-other -caltech-parser -m3-scheme
+        python3 scripts/ci-watchdog.py -- python3 scripts/concierge.py full-upgrade all -caltech-other -caltech-parser -m3-scheme
 
     - name: Run compiler validation suite
       continue-on-error: true
       run: |
-        python3 ..\..\scripts\ci-watchdog.py --dumps ..\..\dumps -- cm3 -DHTML
-      working-directory: m3-sys\m3tests
+        python3 ../../scripts/ci-watchdog.py --dumps ../../dumps -- cm3 -DHTML
+      working-directory: m3-sys/m3tests
 
     - name: Check m3tests against known failures
       if: ${{ !cancelled() }}
       run: |
-        python3 m3-sys\m3tests\check-results.py m3-sys\m3tests\m3tests-results.xml m3-sys\m3tests\known-failures\%CM3_TARGET%-c
+        python3 m3-sys/m3tests/check-results.py m3-sys/m3tests/m3tests-results.xml m3-sys/m3tests/known-failures/%CM3_TARGET%-c
 
     - name: Upload dumps of a hung cm3
       if: always()
