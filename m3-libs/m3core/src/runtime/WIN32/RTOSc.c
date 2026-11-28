@@ -84,6 +84,15 @@ ADDRESS __cdecl RTOS__GetMemory(INTEGER isize)
 
 #endif
 
+/* The inverse of the VirtualAlloc variants of RTOS__GetMemory above.
+   VirtualFree is a system call: no lock a suspended thread could hold. */
+void __cdecl RTOS__FreeMemory(ADDRESS addr, INTEGER isize)
+{
+    Scheduler__DisableSwitching ();
+    VirtualFree(addr, 0, MEM_RELEASE);
+    Scheduler__EnableSwitching ();
+}
+
 #endif
 
 #ifdef __cplusplus

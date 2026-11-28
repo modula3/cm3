@@ -22,14 +22,7 @@ BOOLEAN __cdecl RTOS__Cygwin(void)
 #define MAP_ANON MAP_ANONYMOUS
 #endif
 
-ADDRESS
-__cdecl
-RTOS__GetMemory(INTEGER isize)
-{
-    WORD_T const size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
-    void* p;
-    Scheduler__DisableSwitching ();
-    // TODO autoconf/make HAVE_MMAP
+// TODO autoconf/make HAVE_MMAP
 #if defined(ULTRIX)                           || \
     defined(ultrix)                           || \
     defined(__ultrix)                         || \
@@ -40,6 +33,17 @@ RTOS__GetMemory(INTEGER isize)
     /* IBMRT     */                              \
     /* IRIX5     */                              \
     /* SPARC SunOS 4.x */
+#define M3_GETMEMORY_SBRK 1
+#endif
+
+ADDRESS
+__cdecl
+RTOS__GetMemory(INTEGER isize)
+{
+    WORD_T const size = (WORD_T)isize; // Modula-3 lacks unsigned types, pass as signed and cast.
+    void* p;
+    Scheduler__DisableSwitching ();
+#ifdef M3_GETMEMORY_SBRK
     // This is the historic implementation, kept only for systems without
     // mmap(MAP_ANON).  Nowhere else: sbrk moves the same program break as
     // malloc, which serializes its own calls under its arena lock but not
@@ -65,6 +69,18 @@ RTOS__GetMemory(INTEGER isize)
 #endif
     Scheduler__EnableSwitching ();
     return (ADDRESS)p;
+}
+
+void
+__cdecl
+RTOS__FreeMemory(ADDRESS addr, INTEGER isize)
+{
+#ifndef M3_GETMEMORY_SBRK
+    // munmap is a system call: no lock a suspended thread could hold.
+    Scheduler__DisableSwitching ();
+    munmap(addr, (WORD_T)isize);
+    Scheduler__EnableSwitching ();
+#endif
 }
 
 #endif

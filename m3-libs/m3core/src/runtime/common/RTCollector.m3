@@ -2663,10 +2663,8 @@ VAR
    collector blocked in calloc from GrowHeap).
 
    The memory is laid out as an untraced open array: a dope vector
-   {elements, count} followed by the elements.  Superseded arrays are not
-   returned to the OS (GetMemory has no inverse on every platform); since
-   the heap grows by at least MinNewFactor each time, the total retained
-   is a small multiple of the final array, which holds one byte per page. *)
+   {elements, count} followed by the elements.  FreeDesc returns a
+   superseded array to the OS, also without the C heap. *)
 
 TYPE
   DescDope = RECORD
@@ -2684,6 +2682,11 @@ PROCEDURE NewDesc (n: CARDINAL): DescArray =
     END;
     RETURN LOOPHOLE(mem, DescArray);
   END NewDesc;
+
+PROCEDURE FreeDesc (d: DescArray) =
+  BEGIN
+    RTOS.FreeMemory(LOOPHOLE(d, ADDRESS), BYTESIZE(DescDope) + NUMBER(d^));
+  END FreeDesc;
 
 PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
   VAR
@@ -2773,7 +2776,7 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
           FOR i := lastNewPage + 1 TO p0 - 1 DO
             newDesc[i - newP0] := -1;	 (* Space.Unallocated *)
           END;
-          (* The old array is not returned; see NewDesc. *)
+          FreeDesc(desc);
         END;
         desc := newDesc;
       END;
