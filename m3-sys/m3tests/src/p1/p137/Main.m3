@@ -34,7 +34,11 @@ BEGIN
   Test.checkN(J, LAST(LONGINT));
   Test.checkN(16_8000000000000000L, FIRST(LONGINT));
 
-  i := ((-(8_20000000000 - 1)) - 1);
+  (* -(2^31 - 1) - 1, FIRST(INTEGER) on a 32-bit target, written without
+     overflow: 8_20000000000 is a bit pattern, 16_80000000 = -2^31 there,
+     so the classic -(8_20000000000 - 1) - 1 overflows twice (into C's
+     undefined signed overflow, which gcc warns about). *)
+  i := -8_17777777777 - 1;
   I := -8_20000000000L;
   IF I32 THEN
     Test.checkI (i, FIRST(INTEGER));

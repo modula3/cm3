@@ -9,7 +9,7 @@
 MODULE Ceiling;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Int, LInt;
-IMPORT Reel, LReel, EReel, Error, ReelExpr, TypeExpr;
+IMPORT Reel, LReel, EReel, Error, ReelExpr, TypeExpr, Text;
 
 VAR Z: CallExpr.MethodList;
 
@@ -49,7 +49,30 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;
     END;
 
     ce.type := t;
+    WarnOutOfRange (name, ce.args[0], t);
   END DoCheck;
+
+(* A constant argument whose result does not fit the result type t: the
+   call is not folded, and its value at run time is an integer overflow
+   (FloatMode.IntOverflow), which the language leaves to the
+   implementation.  ROUND (1.0D18) is an example on a 32-bit target, where
+   ROUND (1.0D18, LONGINT) is portable. *)
+PROCEDURE WarnOutOfRange (name: TEXT;  arg: Expr.T;  t: Type.T) =
+  VAR c := Expr.ConstValue (arg);  x: Expr.T;  ok: BOOLEAN;
+  BEGIN
+    IF (c = NIL) OR NOT ReelExpr.IsConst (c) THEN RETURN END;
+    IF    Text.Equal (name, "FLOOR")   THEN ok := ReelExpr.Floor (c, t, x);
+    ELSIF Text.Equal (name, "CEILING") THEN ok := ReelExpr.Ceiling (c, t, x);
+    ELSIF Text.Equal (name, "TRUNC")   THEN ok := ReelExpr.Trunc (c, t, x);
+    ELSE                                    ok := ReelExpr.Round (c, t, x);
+    END;
+    IF NOT ok THEN
+      IF t = LInt.T
+        THEN Error.Warn (2, name & ": constant result out of range for LONGINT");
+        ELSE Error.Warn (2, name & ": constant result out of range for INTEGER");
+      END;
+    END;
+  END WarnOutOfRange;
 
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN

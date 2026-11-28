@@ -8,7 +8,7 @@
 
 UNSAFE MODULE TFloat;
 
-IMPORT Convert, TargetMap;
+IMPORT Convert, TargetMap, TInt, TWord;
 FROM Target IMPORT Float, Precision;
 
 PROCEDURE New (READONLY chars: ARRAY OF CHAR;  pre: Precision;
@@ -113,63 +113,122 @@ PROCEDURE FloatF (READONLY a: Float;  p: Precision;  VAR f: Float): BOOLEAN =
     RETURN Normalize (f);
   END FloatF;
 
-PROCEDURE FloatI (READONLY i: INTEGER;  p: Precision;  VAR f: Float): BOOLEAN =
+
+
+
+
+
+(*------------------------------------------- results as target integers ---*)
+
+(* No LONGINT here: every back end compiles m3middle, and not all of them
+   have full LONGINT arithmetic (I386_NT's integrated back end).  Integers
+   up to 2^64 are taken apart into 16-bit pieces, each of which fits any
+   host's INTEGER; dividing by a power of two and subtracting a multiple of
+   one are exact in floating point. *)
+
+CONST
+  P16 = 65536.0x0;               (* 2^16 *)
+  TwoTo63 = 9223372036854775808.0x0;  (* exact in any float format *)
+
+PROCEDURE Ext (READONLY a: Float): EXTENDED =
   BEGIN
+    CASE a.pre OF
+    | Precision.Short    => RETURN FLOAT (ToReal (a), EXTENDED);
+    | Precision.Long     => RETURN FLOAT (ToLongreal (a), EXTENDED);
+    | Precision.Extended => RETURN ToExtended (a);
+    END;
+  END Ext;
+
+(* For 0 <= y < 2^64: r := FLOOR (y), frac := y - FLOOR (y), odd := r is
+   odd. *)
+PROCEDURE PosFloor (y: EXTENDED;  VAR r: TInt.Int;
+                    VAR frac: EXTENDED;  VAR odd: BOOLEAN) =
+  VAR scale := P16 * P16 * P16;  q: INTEGER;  t: TInt.Int;
+  BEGIN
+    r := TInt.Zero;
+    FOR k := 3 TO 0 BY -1 DO
+      q := FLOOR (y / scale);                       (* 0 <= q < 2^16 *)
+      y := y - FLOAT (q, EXTENDED) * scale;
+      EVAL TInt.FromInt (q, t);
+      TWord.Shift (r, 16, r);
+      EVAL TInt.Add (r, t, r);
+      IF k = 0 THEN odd := (q MOD 2 # 0) END;
+      scale := scale / P16;
+    END;
+    frac := y;
+  END PosFloor;
+
+(* FLOOR (x) for -2^63 <= x < 2^63, which LONGINT holds. *)
+PROCEDURE FloorX (x: EXTENDED;  VAR r: TInt.Int): BOOLEAN =
+  VAR frac: EXTENDED;  odd: BOOLEAN;
+  BEGIN
+    IF NOT (-TwoTo63 <= x AND x < TwoTo63) THEN RETURN FALSE END;
+    IF x >= 0.0x0 THEN
+      PosFloor (x, r, frac, odd);
+    ELSE
+      PosFloor (-x, r, frac, odd);
+      EVAL TInt.Subtract (TInt.Zero, r, r);
+      IF frac # 0.0x0 THEN EVAL TInt.Subtract (r, TInt.One, r) END;
+    END;
+    RETURN TRUE;
+  END FloorX;
+
+PROCEDURE FloatI (READONLY i: TInt.Int;  p: Precision;  VAR f: Float): BOOLEAN =
+  VAR n := i;  neg := TInt.LT (i, TInt.Zero);  piece: TInt.Int;  q: INTEGER;
+      x := 0.0x0;
+  BEGIN
+    IF neg THEN EVAL TInt.Subtract (TInt.Zero, i, n) END;   (* |i| *)
+    FOR k := 8 TO LAST (n) DO
+      IF n[k] # 0 THEN RETURN FALSE END;                     (* beyond 2^64 *)
+    END;
+    (* the pieces exactly, then one rounding, in the last addition *)
+    FOR k := 3 TO 0 BY -1 DO
+      EVAL TWord.Extract (n, 16 * k, 16, piece);
+      EVAL TInt.ToInt (piece, q);
+      x := x * P16 + FLOAT (q, EXTENDED);
+    END;
+    IF neg THEN x := -x END;
     f.pre      := p;
     f.exponent := 0;
-    f.fraction := FLOAT (i, EXTENDED);
+    f.fraction := x;
     RETURN Normalize (f);
   END FloatI;
 
-PROCEDURE Trunc (READONLY a: Float): INTEGER =
+PROCEDURE Floor (READONLY a: Float;  VAR r: TInt.Int): BOOLEAN =
   BEGIN
-    CASE a.pre OF
-    | Precision.Short    => RETURN TRUNC (ToReal (a));
-    | Precision.Long     => RETURN TRUNC (ToLongreal (a));
-    | Precision.Extended => RETURN TRUNC (ToExtended (a));
-    END;
+    RETURN FloorX (Ext (a), r);
+  END Floor;
+
+PROCEDURE Ceiling (READONLY a: Float;  VAR r: TInt.Int): BOOLEAN =
+  VAR f: TInt.Int;
+  BEGIN
+    (* -FLOOR (-x); the negation of -2^63 fits a target integer *)
+    RETURN FloorX (-Ext (a), f) AND TInt.Subtract (TInt.Zero, f, r);
+  END Ceiling;
+
+PROCEDURE Trunc (READONLY a: Float;  VAR r: TInt.Int): BOOLEAN =
+  BEGIN
+    IF Ext (a) < 0.0x0 THEN RETURN Ceiling (a, r) END;
+    RETURN Floor (a, r);
   END Trunc;
 
-PROCEDURE Round (READONLY a: Float): INTEGER =
+PROCEDURE Round (READONLY a: Float;  VAR r: TInt.Int): BOOLEAN =
   (* Ties go to the even neighbour, as FloatMode.RoundDefault
      (NearestElseEven) says, whatever ROUND does in the compiler that
      compiled this module: before #1281 the C back end took them away from
-     zero, so a compiler it built folded ROUND (2.5) to 3. *)
-  VAR x, y, d: EXTENDED;  f, g: INTEGER;
+     zero, so a compiler it built folded ROUND (2.5) to 3.  The magnitude
+     is rounded, and its fraction is exact, so a tie is detected exactly. *)
+  VAR x := Ext (a);  y := ABS (x);  g: TInt.Int;  d: EXTENDED;  odd: BOOLEAN;
   BEGIN
-    CASE a.pre OF
-    | Precision.Short    => x := FLOAT (ToReal (a), EXTENDED);
-    | Precision.Long     => x := FLOAT (ToLongreal (a), EXTENDED);
-    | Precision.Extended => x := ToExtended (a);
+    IF NOT (y < TwoTo63) THEN RETURN FALSE END;
+    PosFloor (y, g, d, odd);
+    IF d > 0.5x0 OR (d = 0.5x0 AND odd) THEN
+      IF NOT TInt.Add (g, TInt.One, g) THEN RETURN FALSE END;
     END;
-    f := FLOOR (x);
-    IF FLOAT (f, EXTENDED) = x THEN RETURN f END;  (* integral *)
-    (* Round the magnitude: for y >= 0, y - FLOOR (y) is exact (Sterbenz),
-       so a tie is detected exactly. *)
-    y := ABS (x);
-    g := FLOOR (y);
-    d := y - FLOAT (g, EXTENDED);
-    IF d > 0.5x0 OR (d = 0.5x0 AND g MOD 2 # 0) THEN INC (g) END;
-    IF x < 0.0x0 THEN RETURN -g ELSE RETURN g END;
+    IF x < 0.0x0 THEN RETURN TInt.Subtract (TInt.Zero, g, r) END;
+    r := g;
+    RETURN TRUE;
   END Round;
-
-PROCEDURE Floor (READONLY a: Float): INTEGER =
-  BEGIN
-    CASE a.pre OF
-    | Precision.Short    => RETURN FLOOR (ToReal (a));
-    | Precision.Long     => RETURN FLOOR (ToLongreal (a));
-    | Precision.Extended => RETURN FLOOR (ToExtended (a));
-    END;
-  END Floor;
-
-PROCEDURE Ceiling (READONLY a: Float): INTEGER =
-  BEGIN
-    CASE a.pre OF
-    | Precision.Short    => RETURN CEILING (ToReal (a));
-    | Precision.Long     => RETURN CEILING (ToLongreal (a));
-    | Precision.Extended => RETURN CEILING (ToExtended (a));
-    END;
-  END Ceiling;
 
 PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER =
   <*FATAL Convert.Failed *>
