@@ -31,7 +31,6 @@ jobs:
     steps:
     - name: Install command-line tools
       run: |
-        choco install wget
         rem procdump lets ci-watchdog.py dump a hung cm3; the build runs without it.
         choco install procdump || echo procdump not installed
 
@@ -48,7 +47,7 @@ jobs:
       run: |
         mkdir ..\build ..\install
         cd ..\install
-        wget --quiet "${{ inputs.release }}/${{ inputs.bootstrap }}"
+        curl -fLO "${{ inputs.release }}/${{ inputs.bootstrap }}"
         7z x -o.. "${{ inputs.bootstrap }}"
         cmake -S ..\bootstrap -B ..\build -DCMAKE_INSTALL_PREFIX=%CM3_INSTALL% -A x64
         cmake --build ..\build --config Release
