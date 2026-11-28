@@ -230,6 +230,14 @@ TYPE
 (* Flush cached thread state, on GC flip and thread death *)
 PROCEDURE FlushThreadState (VAR thread: ThreadState);
 
+VAR worldStoppedBy: UNTRACED REF ThreadState := NIL;
+(* While RTThread.SuspendOthers has the other threads stopped, the heap
+   state of the thread that stopped them; otherwise NIL.  Set and cleared
+   by the preemptive thread packages, only while the others are stopped.
+   That thread must not call malloc or free (untraced NEW or DISPOSE)
+   until it resumes them, since a stopped thread may hold the C heap's
+   lock; the untraced allocator checks this and aborts. *)
+
 (* RegisterFinalCleanup is available for low-level cleanup by the thread
    package.  If "r" is registered for cleanup, then just before "r" is
    freed, the cleanup procedure "p" is called.  This procedure is allowed
