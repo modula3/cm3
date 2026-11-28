@@ -88,11 +88,9 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
 PROCEDURE GenLiteralMSIR (p: P;  ft: MSIR.T): MSIR.Value =
 (* Pure constant for a static/global initializer, honouring the field MSIR
    type ft (may be narrower than the ZType). *)
-  VAR intV: INTEGER;
   BEGIN
-    IF NOT TInt.ToInt (p.value, intV) THEN RETURN NIL END;
     IF ft = NIL THEN ft := MSIR.TI (Target.Integer.size) END;
-    RETURN MSIR.ConstInt (ft, intV);
+    RETURN MSIR.ConstIntT (ft, p.value);
   END GenLiteralMSIR;
 
 PROCEDURE CompileMSIR (p: P): MSIR.Value =

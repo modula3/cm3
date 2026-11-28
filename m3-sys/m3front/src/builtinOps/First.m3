@@ -141,7 +141,6 @@ PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
     t, index, elt  : Type.T;
     min, max       : Target.Int;
     mt             : MSIR.T;
-    n              : INTEGER;
     info           : Type.Info;
   BEGIN
     IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
@@ -166,10 +165,7 @@ PROCEDURE FirstMSIR (ce: CallExpr.T): MSIR.Value =
     IF NOT Type.GetBounds (t, min, max) THEN
       MSIRBuilder.Abandon ("FIRST: cannot get bounds");  RETURN NIL
     END;
-    IF NOT TInt.ToInt (min, n) THEN
-      MSIRBuilder.Abandon ("FIRST: bound out of range");  RETURN NIL
-    END;
-    RETURN MSIR.ConstInt (mt, n);
+    RETURN MSIR.ConstIntT (mt, min);
   END FirstMSIR;
 
 PROCEDURE Initialize () =

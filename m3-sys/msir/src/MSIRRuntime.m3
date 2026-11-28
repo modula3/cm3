@@ -260,6 +260,7 @@ PROCEDURE Extreme (c: MSIR.Value;  lo, unsigned: BOOLEAN;  w: INTEGER): BOOLEAN 
   VAR x, e: INTEGER;
   BEGIN
     IF MSIR.GetValueKind (c) # MSIR.ValueKind.ConstInt
+       OR NOT MSIR.IntValFits (c)
        OR w <= 0 OR w > BITSIZE (INTEGER) THEN RETURN FALSE END;
     x := MSIR.GetIntVal (c);
     IF unsigned THEN

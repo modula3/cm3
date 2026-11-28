@@ -3058,7 +3058,7 @@ PROCEDURE ConstEltMSIR (elt: Expr.T;  eltMsir: MSIR.T): MSIR.Value =
        produces TI(64) for literals even when the element type is narrower). *)
     IF MSIR.GetValueKind (v) = MSIR.ValueKind.ConstInt AND
        NOT MSIR.Equal (MSIR.ValueType (v), eltMsir) THEN
-      v := MSIR.ConstInt (eltMsir, MSIR.GetIntVal (v));
+      v := MSIR.ConstIntT (eltMsir, MSIR.GetTIntVal (v));
     END;
     CASE MSIR.GetValueKind (v) OF
     | MSIR.ValueKind.ConstInt, MSIR.ValueKind.ConstFloat,

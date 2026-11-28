@@ -2,7 +2,7 @@
 
 MODULE MSIR;
 
-IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT, TextIntTbl;
+IMPORT RefSeq, Fmt, Text, Target, TFloat, M3RT, TextIntTbl, TInt;
 
 (*------------------------------------------------------------------- Types *)
 
@@ -277,7 +277,9 @@ REVEAL Value = BRANDED "MSIR.Value" REF RECORD
   type:        T          := NIL;
   name:        TEXT       := NIL;
   vKind:       ValueKind;
-  intVal:      INTEGER    := 0;
+  intVal:      INTEGER    := 0;      (* ConstInt: tVal, if intFits *)
+  tVal:        Target.Int := TInt.Zero;  (* ConstInt: the value *)
+  intFits:     BOOLEAN    := TRUE;
   floatVal:    Target.Float;           (* ConstFloat *)
   proc:        Proc       := NIL;     (* Param, ConstProc *)
   paramIdx:    INTEGER    := -1;
@@ -298,9 +300,22 @@ PROCEDURE ConstInt(t: T;  v: INTEGER): Value =
     val.type   := t;
     val.vKind  := ValueKind.ConstInt;
     val.intVal := v;
+    EVAL TInt.FromInt(v, val.tVal);
     val.name   := Fmt.Int(v);
     RETURN val;
   END ConstInt;
+
+PROCEDURE ConstIntT(t: T;  READONLY v: Target.Int): Value =
+  VAR
+    val := NEW(Value);
+  BEGIN
+    val.type    := t;
+    val.vKind   := ValueKind.ConstInt;
+    val.tVal    := v;
+    val.intFits := TInt.ToInt(v, val.intVal);
+    val.name    := TInt.ToText(v);
+    RETURN val;
+  END ConstIntT;
 
 PROCEDURE ConstBool(v: BOOLEAN): Value =
   BEGIN
@@ -384,6 +399,8 @@ PROCEDURE RetypeValue(v: Value;  t: T): Value =
     w.name        := v.name;
     w.vKind       := v.vKind;
     w.intVal      := v.intVal;
+    w.tVal        := v.tVal;
+    w.intFits     := v.intFits;
     (* floatVal intentionally omitted: RetypeValue is never called on ConstFloat values *)
     w.proc        := v.proc;
     w.paramIdx    := v.paramIdx;
@@ -464,7 +481,15 @@ PROCEDURE ValueType(v: Value): T = BEGIN RETURN v.type END ValueType;
 PROCEDURE ValueName(v: Value): TEXT = BEGIN RETURN v.name END ValueName;
 
 PROCEDURE GetValueKind(v: Value): ValueKind = BEGIN RETURN v.vKind END GetValueKind;
-PROCEDURE GetIntVal(v: Value): INTEGER = BEGIN RETURN v.intVal END GetIntVal;
+PROCEDURE GetIntVal(v: Value): INTEGER =
+  BEGIN
+    <* ASSERT v.intFits *>
+    RETURN v.intVal;
+  END GetIntVal;
+
+PROCEDURE GetTIntVal(v: Value): Target.Int = BEGIN RETURN v.tVal END GetTIntVal;
+
+PROCEDURE IntValFits(v: Value): BOOLEAN = BEGIN RETURN v.intFits END IntValFits;
 
 (*------------------------------------------------------------------- Insn *)
 

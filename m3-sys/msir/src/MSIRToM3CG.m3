@@ -11,7 +11,7 @@
 
 MODULE MSIRToM3CG;
 
-IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TargetMap, TInt, TextRefTbl, Fmt,
+IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TargetMap, TInt, TWord, TextRefTbl, Fmt,
        Text, Word, Wr, Thread;
 
 FROM MSIR IMPORT Op, TypeKind, ValueKind;
@@ -603,8 +603,7 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
         IF MemOp (MSIR.InsnCallee (i)) = Mem.Zero THEN
           VAR c := MSIR.InsnOperand (i, 1);
           BEGIN
-            IF MSIR.GetValueKind (c) # ValueKind.ConstInt
-               OR MSIR.GetIntVal (c) # 0 THEN
+            IF NOT IsZeroConst (c) THEN
               Fail (w, "memset with a non-zero fill");
             END;
             c := MSIR.InsnOperand (i, 2);
@@ -1181,11 +1180,20 @@ PROCEDURE GenSeg (s: Seg) =
 PROCEDURE InitInt (off, v: INTEGER;  t: M3CG.Type) =
   VAR i: Target.Int;
   BEGIN
-    IF v = 0 THEN RETURN END;
-    v := FitInt (v, t);
     EVAL TInt.FromInt (v, i);
-    cg.init_int (off, i, t);
+    InitIntT (off, i, t);
   END InitInt;
+
+(* Initialise the integer of memory type t at off to v, sign-extended from
+   t's width if t is a signed type narrower than 64 bits (a uid, or a set
+   word, given as an unsigned value). *)
+PROCEDURE InitIntT (off: INTEGER;  READONLY v: Target.Int;  t: M3CG.Type) =
+  VAR i := v;
+  BEGIN
+    IF TInt.EQ (i, TInt.Zero) THEN RETURN END;
+    FitIntT (i, t);
+    cg.init_int (off, i, t);
+  END InitIntT;
 
 PROCEDURE InitPtr (off: INTEGER;  s: Seg;  target: INTEGER) =
   BEGIN
@@ -1298,15 +1306,13 @@ PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
     | ValueKind.ConstInt =>
         IF IsWideSet (t) THEN
           FOR k := 0 TO SetBytes (t) DIV Target.Integer.bytes - 1 DO
-            IF WideWord (MSIR.GetIntVal (v), k) # 0 THEN
-              InitInt (off + k * Target.Integer.bytes,
-                       WideWord (MSIR.GetIntVal (v), k), Int);
-            END;
+            InitIntT (off + k * Target.Integer.bytes,
+                      WideWord (MSIR.GetTIntVal (v), k), Int);
           END;
         ELSIF IsPtr (t) THEN
-          InitInt (off, MSIR.GetIntVal (v), Addr);
+          InitIntT (off, MSIR.GetTIntVal (v), Addr);
         ELSE
-          InitInt (off, CanonInt (MSIR.GetIntVal (v), IntBits (t)), MType (t));
+          InitIntT (off, Canon_T (MSIR.GetTIntVal (v), IntBits (t)), MType (t));
         END;
     | ValueKind.ConstFloat =>
         MSIR.GetFloatVal (v, f);
@@ -1966,7 +1972,7 @@ PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
           END;
         END;
     ELSE
-      IF MSIR.GetValueKind (v) = ValueKind.ConstInt AND MSIR.GetIntVal (v) = 0 THEN
+      IF IsZeroConst (v) THEN
         RETURN;  (* already zeroed *)
       END;
       Push (addr);
@@ -2047,21 +2053,49 @@ PROCEDURE PushInt (v: INTEGER;  t := M3CG.Type.Void) =
   VAR i: Target.Int;
   BEGIN
     IF t = M3CG.Type.Void THEN t := Int END;
-    EVAL TInt.FromInt (FitInt (v, t), i);
-    cg.load_integer (t, i);
+    EVAL TInt.FromInt (v, i);
+    PushIntT (i, t);
   END PushInt;
 
-(* v as a value of the integer memory or stack type t: sign-extended from
-   t's width if t is a signed type narrower than the host's INTEGER (a uid
-   or a 32-bit set word given as an unsigned host value). *)
-PROCEDURE FitInt (v: INTEGER;  t: M3CG.Type): INTEGER =
+PROCEDURE PushIntT (READONLY v: Target.Int;  t: M3CG.IType) =
+  VAR i := v;
   BEGIN
-    IF t IN SET OF M3CG.Type {M3CG.Type.Int8, M3CG.Type.Int16, M3CG.Type.Int32}
-       AND TargetMap.CG_Size[t] < BITSIZE (INTEGER) THEN
-      RETURN CanonInt (v, TargetMap.CG_Size[t]);
+    FitIntT (i, t);
+    cg.load_integer (t, i);
+  END PushIntT;
+
+(* v as a value of the integer memory or stack type t: sign-extended from
+   t's width if t is a signed type narrower than 64 bits (a uid or a 32-bit
+   set word given as an unsigned value). *)
+PROCEDURE FitIntT (VAR v: Target.Int;  t: M3CG.Type) =
+  BEGIN
+    IF t IN SET OF M3CG.Type {M3CG.Type.Int8, M3CG.Type.Int16, M3CG.Type.Int32} THEN
+      v := Canon_T (v, TargetMap.CG_Size[t]);
     END;
-    RETURN v;
-  END FitInt;
+  END FitIntT;
+
+(* v sign-extended from its low "bits" bits (i1: 0 or 1), as Canon does on
+   the stack. *)
+PROCEDURE Canon_T (READONLY v: Target.Int;  bits: INTEGER): Target.Int =
+  VAR r, sign, p: Target.Int;
+  BEGIN
+    IF bits = 1 THEN TWord.And (v, TInt.One, r);  RETURN r END;
+    IF bits = 64 THEN EVAL TInt.Extend (v, 8, r);  RETURN r END;
+    IF bits > 64 THEN RETURN v END;
+    EVAL TWord.Extract (v, 0, bits, r);
+    EVAL TWord.Extract (v, bits - 1, 1, sign);
+    IF NOT TInt.EQ (sign, TInt.Zero) THEN
+      TWord.Shift (TInt.One, bits, p);
+      EVAL TInt.Subtract (r, p, r);
+    END;
+    RETURN r;
+  END Canon_T;
+
+PROCEDURE IsZeroConst (v: MSIR.Value): BOOLEAN =
+  BEGIN
+    RETURN MSIR.GetValueKind (v) = ValueKind.ConstInt
+       AND TInt.EQ (MSIR.GetTIntVal (v), TInt.Zero);
+  END IsZeroConst;
 
 (* Sign-extend the integer on the stack from its width in t. *)
 PROCEDURE Canon (t: MSIR.T) =
@@ -2126,36 +2160,26 @@ PROCEDURE Mask (t: MSIR.T) =
     IF bits < StackBits (t) THEN cg.extract_mn (StackZ (t), FALSE, 0, bits) END;
   END Mask;
 
-PROCEDURE CanonInt (v, bits: INTEGER): INTEGER =
-  BEGIN
-    IF bits = 1 THEN RETURN Word.And (v, 1) END;
-    IF bits >= 64 THEN RETURN v END;
-    v := Word.And (v, Word.Minus (Word.Shift (1, bits), 1));
-    IF Word.And (v, Word.Shift (1, bits - 1)) # 0 THEN
-      v := Word.Or (v, Word.Not (Word.Minus (Word.Shift (1, bits), 1)));
-    END;
-    RETURN v;
-  END CanonInt;
 
 (* A multi-word set constant: the integer v of type iN, i.e. v in the low
    word and its sign in the others (m3front uses 0 and -1). *)
-PROCEDURE WideWord (v, k: INTEGER): INTEGER =
-  VAR wb := Target.Integer.size;
+PROCEDURE WideWord (READONLY v: Target.Int;  k: INTEGER): Target.Int =
+  VAR wb := Target.Integer.size;  r: Target.Int;
   BEGIN
-    IF wb < BITSIZE (INTEGER) AND k * wb < BITSIZE (INTEGER) THEN
-      RETURN CanonInt (Word.Extract (v, k * wb, wb), wb);
+    IF (k + 1) * wb <= 64 THEN
+      EVAL TWord.Extract (v, k * wb, wb, r);
+      RETURN Canon_T (r, wb);
     END;
-    IF k = 0 THEN RETURN v END;
-    IF v < 0 THEN RETURN -1 END;
-    RETURN 0;
+    IF TInt.LT (v, TInt.Zero) THEN RETURN TInt.MOne END;
+    RETURN TInt.Zero;
   END WideWord;
 
 (* Push the address of a fresh temporary holding the constant v of type t. *)
-PROCEDURE PushWideConst (v: INTEGER;  t: MSIR.T) =
+PROCEDURE PushWideConst (READONLY v: Target.Int;  t: MSIR.T) =
   VAR tmp := AggTemp (t);
   BEGIN
     FOR k := 0 TO SetBytes (t) DIV Target.Integer.bytes - 1 DO
-      PushInt (WideWord (v, k));
+      PushIntT (WideWord (v, k), Int);
       cg.store (tmp, k * Target.Integer.bytes, Int, Int);
     END;
     cg.load_address (tmp, 0);
@@ -2173,13 +2197,13 @@ PROCEDURE Push (v: MSIR.Value) =
     CASE MSIR.GetValueKind (v) OF
     | ValueKind.ConstInt =>
         IF IsWideSet (t) THEN
-          PushWideConst (MSIR.GetIntVal (v), t);
+          PushWideConst (MSIR.GetTIntVal (v), t);
         ELSIF IsPtr (t) THEN
-          IF MSIR.GetIntVal (v) = 0 THEN cg.load_nil ()
-          ELSE PushInt (MSIR.GetIntVal (v));  cg.loophole (Int, Addr)
+          IF IsZeroConst (v) THEN cg.load_nil ()
+          ELSE PushIntT (MSIR.GetTIntVal (v), Int);  cg.loophole (Int, Addr)
           END;
         ELSE
-          PushInt (CanonInt (MSIR.GetIntVal (v), IntBits (t)), StackZ (t));
+          PushIntT (Canon_T (MSIR.GetTIntVal (v), IntBits (t)), StackZ (t));
         END;
     | ValueKind.ConstFloat =>
         MSIR.GetFloatVal (v, f);

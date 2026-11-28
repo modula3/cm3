@@ -112,7 +112,6 @@ PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
     t, index, elt  : Type.T;
     min, max       : Target.Int;
     mt             : MSIR.T;
-    n              : INTEGER;
     oa             : MSIR.Value;
     sz             : MSIR.Value;
     one            : MSIR.Value;
@@ -149,10 +148,7 @@ PROCEDURE LastMSIR (ce: CallExpr.T): MSIR.Value =
     IF NOT Type.GetBounds (t, min, max) THEN
       MSIRBuilder.Abandon ("LAST: cannot get bounds");  RETURN NIL
     END;
-    IF NOT TInt.ToInt (max, n) THEN
-      MSIRBuilder.Abandon ("LAST: bound out of range");  RETURN NIL
-    END;
-    RETURN MSIR.ConstInt (mt, n);
+    RETURN MSIR.ConstIntT (mt, max);
   END LastMSIR;
 
 PROCEDURE Initialize () =

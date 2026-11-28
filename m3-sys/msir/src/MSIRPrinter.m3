@@ -1,6 +1,6 @@
 MODULE MSIRPrinter;
 
-IMPORT MSIR, Wr, Fmt, Thread, Text;
+IMPORT MSIR, Wr, Fmt, Thread, Text, TInt;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
@@ -81,7 +81,7 @@ PROCEDURE Value(wr: Wr.T;  v: MSIR.Value) =
     | MSIR.ValueKind.ConstInt =>
         Type(wr, MSIR.ValueType(v));
         Wr.PutText(wr, " ");
-        Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
+        Wr.PutText(wr, TInt.ToText(MSIR.GetTIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
         Type(wr, MSIR.ValueType(v));
         Wr.PutText(wr, " ");
@@ -120,7 +120,7 @@ PROCEDURE NameRef(wr: Wr.T;  v: MSIR.Value) =
     IF v = NIL THEN Wr.PutText(wr, "<nil-value>"); RETURN END;
     CASE MSIR.GetValueKind(v) OF
     | MSIR.ValueKind.ConstInt =>
-        Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
+        Wr.PutText(wr, TInt.ToText(MSIR.GetTIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
         Wr.PutText(wr, MSIR.ValueName(v));
     | MSIR.ValueKind.ConstNil =>

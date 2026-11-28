@@ -2083,13 +2083,8 @@ PROCEDURE CoerceToMSIR(blk: MSIR.Block;  v: MSIR.Value;  rt: MSIR.T): MSIR.Value
   END CoerceToMSIR;
 
 PROCEDURE ConstInt(t: MSIR.T;  READONLY v: Target.Int): MSIR.Value =
-  VAR x: INTEGER;
   BEGIN
-    IF NOT TInt.ToInt(v, x) THEN
-      Abandon("ConstInt: value out of range for host INTEGER");
-      RETURN NIL;
-    END;
-    RETURN MSIR.ConstInt(t, x);
+    RETURN MSIR.ConstIntT(t, v);  (* exact, whatever the host's INTEGER *)
   END ConstInt;
 
 PROCEDURE BuildPtrByteOff(b: MSIR.Block;  name: TEXT;  base: MSIR.Value;  off: INTEGER): MSIR.Value =

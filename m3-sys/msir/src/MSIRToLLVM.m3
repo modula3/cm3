@@ -14,7 +14,7 @@ MODULE MSIRToLLVM;
 
 IMPORT RTParams;
 IMPORT MSIR, Wr, Fmt, Thread, Text, RefSeq, TextWr, Word;
-IMPORT Target, TFloat, M3RT, Process, MSIREH, MSIRRuntime, MSIRPrinter;
+IMPORT Target, TFloat, TInt, M3RT, Process, MSIREH, MSIRRuntime, MSIRPrinter;
 <*FATAL Thread.Alerted, Wr.Failure*>
 
 (* RT0.RefHeaderBits bit-field offsets come from M3RT (D24). *)
@@ -546,7 +546,7 @@ PROCEDURE LLOpVal(wr: Wr.T;  v: MSIR.Value) =
     IF v = NIL THEN Wr.PutText(wr, "undef"); RETURN END;
     CASE MSIR.GetValueKind(v) OF
     | MSIR.ValueKind.ConstInt =>
-        Wr.PutText(wr, Fmt.Int(MSIR.GetIntVal(v)));
+        Wr.PutText(wr, TInt.ToText(MSIR.GetTIntVal(v)));
     | MSIR.ValueKind.ConstFloat =>
         EmitFloatDecimal(wr, v);
     | MSIR.ValueKind.ConstNil =>

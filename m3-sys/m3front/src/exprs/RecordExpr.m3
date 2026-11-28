@@ -910,6 +910,7 @@ PROCEDURE TryPackedRecordConstMSIR(p: P;  msirT: MSIR.T;
           IF fv = NIL THEN RETURN FALSE END;
           CASE MSIR.GetValueKind(fv) OF
           | MSIR.ValueKind.ConstInt =>
+              IF NOT MSIR.IntValFits(fv) THEN RETURN FALSE END;
               MSIRBuilder.PackConstBits(byteVals, fieldInfo.offset, fti.size,
                                         MSIR.GetIntVal(fv));
           | MSIR.ValueKind.ConstAggArray, MSIR.ValueKind.ConstStruct =>

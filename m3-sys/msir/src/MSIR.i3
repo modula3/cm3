@@ -156,6 +156,11 @@ TYPE ValueKind = {ConstInt, ConstFloat, ConstNil, ConstProc, ConstTextLit, Const
                   StructFieldRef (* GEP into module's @Mod_M3_info struct *) };
 
 PROCEDURE ConstInt(t: T;  v: INTEGER): Value;
+PROCEDURE ConstIntT(t: T;  READONLY v: Target.Int): Value;
+(* An integer constant's value is a Target.Int, as M3CG's load_integer and
+   init_int take it, so a constant wider than the host's INTEGER (a LONGINT
+   on a 32-bit host) is exact.  ConstInt is the shorthand for a value that
+   fits a host INTEGER. *)
 PROCEDURE ConstFloat(t: T;  READONLY v: Target.Float): Value;
 PROCEDURE GetFloatVal(v: Value;  VAR f: Target.Float);  (* ConstFloat only *)
 PROCEDURE ConstBool(v: BOOLEAN): Value;
@@ -194,6 +199,10 @@ PROCEDURE ValueType(v: Value): T;
 PROCEDURE ValueName(v: Value): TEXT;  (* SSA name, e.g. "%5" or "a" *)
 PROCEDURE GetValueKind(v: Value): ValueKind;
 PROCEDURE GetIntVal(v: Value): INTEGER;            (* for ConstInt only *)
+(* The value as a host INTEGER; it must fit (IntValFits).  For a constant
+   that may be wider, GetTIntVal. *)
+PROCEDURE GetTIntVal(v: Value): Target.Int;        (* for ConstInt only *)
+PROCEDURE IntValFits(v: Value): BOOLEAN;           (* fits a host INTEGER *)
 
 (*------------------------------------------------------- Parameters / modes *)
 
