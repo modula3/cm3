@@ -55,11 +55,8 @@ TYPE
   FileDesc = REF RECORD
     next     : FileDesc := NIL;
     name     : TEXT     := NIL;   (* full file name *)
-    tag      : TEXT     := NIL;   (* short name that fits in a header *)
     size     : INTEGER  := 0;
-    time     : Time.T   := 0.0d0;
     contents : FileBuf  := NIL;
-    index    : INTEGER  := 0;     (* ordinal index of file in the global list *)
     offset   : INTEGER  := 0;     (* final offset of the file in the lib *)
   END;
 
@@ -305,7 +302,6 @@ PROCEDURE ScanFile (f: FileDesc) =
     TRY
       file   := FS.OpenFileReadonly (f.name);
       stat   := file.status ();
-      f.time := stat.modificationTime;
       f.size := VAL(stat.size, INTEGER);
       IF (stat.type # RegularFile.FileType) THEN
         Die ("\"", f.name, "\" is not a regular file.");
@@ -322,13 +318,11 @@ PROCEDURE ScanFile (f: FileDesc) =
 
     (* make sure the name fits... *)
     IF Text.Length (f.name) + 1 <= NUMBER (hdr.Name) THEN
-      f.tag := f.name & "/";
     ELSE
       IF (long_nms = NIL) THEN long_nms := TextWr.New (); END;
       VAR offs := Wr.Index (long_nms); <*FATAL Wr.Failure, Thread.Alerted*> BEGIN
         Wr.PutText (long_nms, f.name);
         Wr.PutChar (long_nms, '\000');
-        f.tag := "/" & Fmt.Int (offs);
       END;
     END;
 
@@ -500,7 +494,7 @@ PROCEDURE WriteLib () =
 
 PROCEDURE AssignFileOffsets () =
   CONST Hdr = BYTESIZE (Header);
-  VAR f := files;  offs := 0;  index := 1;
+  VAR f := files;  offs := 0;
   BEGIN
     INC (offs, Text.Length (ArchiveMagic));
 
@@ -508,9 +502,7 @@ PROCEDURE AssignFileOffsets () =
       (* export table 1 *)
       INC (offs, Hdr + 4 * (n_exports + 1) + export_len);
       IF (offs MOD 2 # 0) THEN INC (offs); END;
-    END;
 
-    IF (n_exports > 0) THEN
       (* export table 2 *)
       INC (offs, Hdr + 4 * (n_files + 2) + 2 * n_exports + export_len);
       IF (offs MOD 2 # 0) THEN INC (offs); END;
@@ -524,7 +516,6 @@ PROCEDURE AssignFileOffsets () =
 
     (* record the final offset for each "real" file *)
     WHILE (f # NIL) DO
-      f.index  := index;  INC (index);
       f.offset := offs;   INC (offs, Hdr + f.size);
       IF (offs MOD 2 # 0) THEN INC (offs); END;
       f := f.next;
