@@ -6,9 +6,9 @@
 UNSAFE MODULE Main;
 
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
-IMPORT Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
+IMPORT File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, Params, Pathname;
-IMPORT ASCII, Ctypes, TextLiteral, WinNT;
+IMPORT ASCII, Ctypes, WinNT;
 
 TYPE
   UINT8 = Ctypes.unsigned_char;
@@ -16,8 +16,6 @@ TYPE
 
 CONST
   ArchiveMagic = "!<arch>\n";
-  EndHeader    = "`\n";
-  PadChar      = '\n';
   IMAGE_FILE_MACHINE_I386      = 16_014c;
   IMAGE_FILE_MACHINE_R3000     = 16_0162;
   IMAGE_FILE_MACHINE_R4000     = 16_0166;
@@ -79,9 +77,7 @@ VAR
   trimUnderscore := FALSE;
   Machine := 0;
   lib_name    : TEXT       := NIL;
-  lib_time    : Time.T     := 0.0d0;
   def_name    : TEXT       := NIL;
-  keep_size   : CARDINAL   := 0;
   n_files     : CARDINAL   := 0;
   files       : FileDesc   := NIL;
   n_exports   : CARDINAL   := 0;
@@ -357,25 +353,25 @@ TYPE
     file      : FileDesc;
     base      : ADDRESS;
     limit     : ADDRESS;
-    hdr       : WinNT.PIMAGE_FILE_HEADER;
     symtab    : WinNT.PIMAGE_SYMBOL;
     stringtab : ADDRESS;
   END;
 
 PROCEDURE ScanExports (f: FileDesc) =
   VAR o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL;
+    obj_hdr : WinNT.PIMAGE_FILE_HEADER;
   BEGIN
     o.file  := f;
     o.base  := ADR (f.contents[0]);           (* pin the contents so the collector*)
     o.limit := o.base + ADRSIZE (f.contents^);(* doesn't start moving them around *)
-    o.hdr   := o.base;
+    obj_hdr := o.base;
 
-    IF HandleArchitecture(o.hdr.Machine) = FALSE THEN
+    IF HandleArchitecture(obj_hdr.Machine) = FALSE THEN
       Die ("not an object file \"", f.name, Wr.EOL);
       RETURN;
     END;
 
-    IF Word.And (o.hdr.Characteristics, BadObjFlags) # 0 THEN
+    IF Word.And (obj_hdr.Characteristics, BadObjFlags) # 0 THEN
       (* this object contains stuff we don't understand *)
       Warn ("object file \"", f.name, "\" contains unhandled features.",
             Wr.EOL, "  Its exported symbols will be ignored.");
@@ -383,13 +379,13 @@ PROCEDURE ScanExports (f: FileDesc) =
     END;
 
     (* locate the symbol table *)
-    o.symtab := o.base + o.hdr.PointerToSymbolTable;
+    o.symtab := o.base + obj_hdr.PointerToSymbolTable;
     IF (o.symtab < o.base) OR (o.limit <= o.symtab) THEN
       Die ("cannot find symbol table in object file \"", f.name, "\".");
     END;
 
     (* locate the string table *)
-    o.stringtab := o.symtab + o.hdr.NumberOfSymbols * WinNT.IMAGE_SIZEOF_SYMBOL;
+    o.stringtab := o.symtab + obj_hdr.NumberOfSymbols * WinNT.IMAGE_SIZEOF_SYMBOL;
     IF (o.symtab < o.base) OR (o.limit <= o.symtab) THEN
       Die ("cannot find string table in object file \"", f.name, "\".");
     END;
