@@ -3,7 +3,7 @@ p217 p218 p219 p220 p221 p222 p223  # .M3SHIP tests: Windows installs pgm.exe an
 p227 p228 p229  # unexpected build output, probably cl warnings; unexamined
 c027  # unexpected build output: cl warns (C4717?) on the deliberate infinite recursion
 e030 e041  # build output differs in a way fc does not show (whitespace?); unexamined
-r001 r002 r003 r004 r005 r006 r007 r008 r009 r010  # see below
-# r001-r010 end in a runtime error, whose report is missing from stderr.
-# Not yet examined on I386_NT, which uses ex_frame; AMD64_NT's cause (an
-# uncaught C++ exception under ex_stack) cannot be the whole story here.
+r001 r002  # see below
+# r001 (an unhandled exception) and r002 (a stack overflow) end without
+# the expected report; not yet examined.  (r003-r010 ended with a second
+# error from the crash path's stack dump, fixed in #1443.)
