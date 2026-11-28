@@ -468,7 +468,17 @@ proc GetM3Back() is
     m3back = INSTALL_ROOT & "/bin/"
   end end
   
-  m3back = "@" & m3back & "cm3cg " & GetM3BackFlags()
+  % Modula-3 rounds the result of each floating-point operation to its
+  % type, so cm3cg must not contract a*b+c into a fused multiply-add, which
+  % GCC does by default for a front end other than ISO C, on targets with
+  % FMA instructions such as PPC (M3C's output says the same with a pragma,
+  % #1414).  ARM_DARWIN's cm3cg is Apple's GCC 4.2, which has no
+  % -ffp-contract and no contraction.
+  local contract = " -ffp-contract=off "
+  if equal(TARGET, "ARM_DARWIN")
+    contract = " "
+  end
+  m3back = "@" & m3back & "cm3cg" & contract & GetM3BackFlags()
   return m3back
 end
 
