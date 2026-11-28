@@ -7022,12 +7022,43 @@ END CastAndDeref;
 PROCEDURE op1(self: T; type: CGType; name, op: TEXT) =
 (* unary operation *)
 VAR s0 := cast(get(self, 0), type);
+    expr: Expr_t;
 BEGIN
     <* ASSERT type # CGType.Void *>
     self.comment(name);
     pop(self, 1);
-    push(self, type, cast(NEW(Expr_t, left := s0, c_unop_text := op), type));
+    IF Wraps(type, op) THEN
+        (* -x as 0 - x in the unsigned type (see Wraps); not unary minus on
+           an unsigned operand, which MSVC warns about (C4146) *)
+        expr := NEW(Expr_t, left := cast(CTextToExpr("0"), Unsigned(type)),
+                    right := cast(s0, Unsigned(type)), c_binop_text := "-");
+    ELSE
+        expr := NEW(Expr_t, left := s0, c_unop_text := op);
+    END;
+    push(self, type, cast(expr, type));
 END op1;
+
+(* Modula-3 integer arithmetic wraps around on overflow (FloatMode leaves
+   IntOverflow to the implementation, and CM3 ignores it), but C's signed
+   overflow is undefined, which an optimizer may exploit and gcc warns
+   about when it folds constants (p137 on a 32-bit target).  So signed +,
+   -, * and negation are done in the unsigned type of the same width,
+   where C defines the wraparound, and the result cast back: the same
+   machine code.  Arithmetic types are 32 or 64 bits, so the unsigned
+   operands are not promoted to int. *)
+PROCEDURE Wraps(type: CGType; op: TEXT): BOOLEAN =
+BEGIN
+    RETURN cgtypeIsSignedInt[type]
+       AND (Text.Equal(op, "+") OR Text.Equal(op, "-") OR Text.Equal(op, "*"));
+END Wraps;
+
+PROCEDURE Unsigned(type: CGType): CGType =
+(* the unsigned type of the signed integer type's width: each signed type
+   follows its unsigned twin in CGType *)
+BEGIN
+    <* ASSERT cgtypeIsSignedInt[type] *>
+    RETURN VAL(ORD(type) - 1, CGType);
+END Unsigned;
 
 TYPE TIntOp2_t = PROCEDURE (READONLY a, b: Target.Int; VAR i: Target.Int): BOOLEAN;
 TYPE TFloatOp2_t = PROCEDURE (READONLY a, b: Target.Float; VAR f: Target.Float): BOOLEAN;
@@ -7060,7 +7091,12 @@ BEGIN
     <* ASSERT type # CGType.Void *>
     self.comment(name);
     pop(self, 2);
-    expr := NEW(Expr_t, left := s1, right := s0, c_binop_text := op);
+    IF Wraps(type, op) THEN
+        expr := NEW(Expr_t, left := cast(s1, Unsigned(type)),
+                    right := cast(s0, Unsigned(type)), c_binop_text := op);
+    ELSE
+        expr := NEW(Expr_t, left := s1, right := s0, c_binop_text := op);
+    END;
     expr := cast(expr, type);
     expr.minmax_valid := minMaxPossiblyValidForType[type];
     expr.minmax := typeMinMax[type];

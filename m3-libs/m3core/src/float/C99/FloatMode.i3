@@ -101,6 +101,13 @@ TYPE Behavior = {Trap, SetFlag, Ignore};
 \end{quote}
 *)
 
+(* In CM3, an integer overflow ("IntOverflow") is ignored: "GetBehavior"
+   returns "Ignore", and the result is the two's-complement wraparound of
+   the exact result, its low "BITSIZE (INTEGER)" or "BITSIZE (LONGINT)"
+   bits, as "Word" and "Long" compute modulo the word size.  Programs
+   that intend modular arithmetic should still say so with "Word" or
+   "Long". *)
+
 PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure};
 (* Set the behavior of the current thread for the flag "f" to be "b",
    or raise "Failure" if this cannot be done. *)
