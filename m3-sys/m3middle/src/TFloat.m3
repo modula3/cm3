@@ -8,7 +8,7 @@
 
 UNSAFE MODULE TFloat;
 
-IMPORT Convert, TargetMap, TInt, Long;
+IMPORT Convert, TargetMap, TInt, TWord;
 FROM Target IMPORT Float, Precision;
 
 PROCEDURE New (READONLY chars: ARRAY OF CHAR;  pre: Precision;
@@ -120,7 +120,15 @@ PROCEDURE FloatF (READONLY a: Float;  p: Precision;  VAR f: Float): BOOLEAN =
 
 (*------------------------------------------- results as target integers ---*)
 
-CONST TwoTo63 = 9223372036854775808.0x0;  (* exact in any float format *)
+(* No LONGINT here: every back end compiles m3middle, and not all of them
+   have full LONGINT arithmetic (I386_NT's integrated back end).  Integers
+   up to 2^64 are taken apart into 16-bit pieces, each of which fits any
+   host's INTEGER; dividing by a power of two and subtracting a multiple of
+   one are exact in floating point. *)
+
+CONST
+  P16 = 65536.0x0;               (* 2^16 *)
+  TwoTo63 = 9223372036854775808.0x0;  (* exact in any float format *)
 
 PROCEDURE Ext (READONLY a: Float): EXTENDED =
   BEGIN
@@ -131,49 +139,58 @@ PROCEDURE Ext (READONLY a: Float): EXTENDED =
     END;
   END Ext;
 
-(* r := v, a host LONGINT, as a target integer. *)
-PROCEDURE FromLong (v: LONGINT;  VAR r: TInt.Int) =
-  VAR neg := v < 0L;
+(* For 0 <= y < 2^64: r := FLOOR (y), frac := y - FLOOR (y), odd := r is
+   odd. *)
+PROCEDURE PosFloor (y: EXTENDED;  VAR r: TInt.Int;
+                    VAR frac: EXTENDED;  VAR odd: BOOLEAN) =
+  VAR scale := P16 * P16 * P16;  q: INTEGER;  t: TInt.Int;
   BEGIN
-    FOR i := 0 TO 7 DO
-      r[i] := VAL (Long.And (v, 16_FFL), INTEGER);
-      v := Long.Shift (v, -8);
+    r := TInt.Zero;
+    FOR k := 3 TO 0 BY -1 DO
+      q := FLOOR (y / scale);                       (* 0 <= q < 2^16 *)
+      y := y - FLOAT (q, EXTENDED) * scale;
+      EVAL TInt.FromInt (q, t);
+      TWord.Shift (r, 16, r);
+      EVAL TInt.Add (r, t, r);
+      IF k = 0 THEN odd := (q MOD 2 # 0) END;
+      scale := scale / P16;
     END;
-    FOR i := 8 TO LAST (r) DO
-      IF neg THEN r[i] := 16_FF ELSE r[i] := 0 END;
-    END;
-  END FromLong;
+    frac := y;
+  END PosFloor;
 
 (* FLOOR (x) for -2^63 <= x < 2^63, which LONGINT holds. *)
 PROCEDURE FloorX (x: EXTENDED;  VAR r: TInt.Int): BOOLEAN =
+  VAR frac: EXTENDED;  odd: BOOLEAN;
   BEGIN
     IF NOT (-TwoTo63 <= x AND x < TwoTo63) THEN RETURN FALSE END;
-    FromLong (FLOOR (x, LONGINT), r);
+    IF x >= 0.0x0 THEN
+      PosFloor (x, r, frac, odd);
+    ELSE
+      PosFloor (-x, r, frac, odd);
+      EVAL TInt.Subtract (TInt.Zero, r, r);
+      IF frac # 0.0x0 THEN EVAL TInt.Subtract (r, TInt.One, r) END;
+    END;
     RETURN TRUE;
   END FloorX;
 
-(* v := r, a target integer, as a host LONGINT; FALSE if it does not fit. *)
-PROCEDURE ToLong (READONLY r: TInt.Int;  VAR v: LONGINT): BOOLEAN =
-  VAR sign := 0;
-  BEGIN
-    IF r[7] >= 16_80 THEN sign := 16_FF END;
-    FOR i := 8 TO LAST (r) DO
-      IF r[i] # sign THEN RETURN FALSE END;
-    END;
-    v := 0L;
-    FOR i := 7 TO 0 BY -1 DO
-      v := Long.Or (Long.Shift (v, 8), VAL (r[i], LONGINT));
-    END;
-    RETURN TRUE;
-  END ToLong;
-
 PROCEDURE FloatI (READONLY i: TInt.Int;  p: Precision;  VAR f: Float): BOOLEAN =
-  VAR v: LONGINT;
+  VAR n := i;  neg := TInt.LT (i, TInt.Zero);  piece: TInt.Int;  q: INTEGER;
+      x := 0.0x0;
   BEGIN
-    IF NOT ToLong (i, v) THEN RETURN FALSE END;
+    IF neg THEN EVAL TInt.Subtract (TInt.Zero, i, n) END;   (* |i| *)
+    FOR k := 8 TO LAST (n) DO
+      IF n[k] # 0 THEN RETURN FALSE END;                     (* beyond 2^64 *)
+    END;
+    (* the pieces exactly, then one rounding, in the last addition *)
+    FOR k := 3 TO 0 BY -1 DO
+      EVAL TWord.Extract (n, 16 * k, 16, piece);
+      EVAL TInt.ToInt (piece, q);
+      x := x * P16 + FLOAT (q, EXTENDED);
+    END;
+    IF neg THEN x := -x END;
     f.pre      := p;
     f.exponent := 0;
-    f.fraction := FLOAT (v, EXTENDED);
+    f.fraction := x;
     RETURN Normalize (f);
   END FloatI;
 
@@ -199,13 +216,12 @@ PROCEDURE Round (READONLY a: Float;  VAR r: TInt.Int): BOOLEAN =
   (* Ties go to the even neighbour, as FloatMode.RoundDefault
      (NearestElseEven) says, whatever ROUND does in the compiler that
      compiled this module: before #1281 the C back end took them away from
-     zero, so a compiler it built folded ROUND (2.5) to 3.  For y >= 0,
-     y - FLOOR (y) is exact (Sterbenz), so a tie is detected exactly. *)
+     zero, so a compiler it built folded ROUND (2.5) to 3.  The magnitude
+     is rounded, and its fraction is exact, so a tie is detected exactly. *)
   VAR x := Ext (a);  y := ABS (x);  g: TInt.Int;  d: EXTENDED;  odd: BOOLEAN;
   BEGIN
-    IF NOT FloorX (y, g) THEN RETURN FALSE END;
-    d := y - FLOAT (FLOOR (y, LONGINT), EXTENDED);
-    odd := Long.And (FLOOR (y, LONGINT), 1L) # 0L;
+    IF NOT (y < TwoTo63) THEN RETURN FALSE END;
+    PosFloor (y, g, d, odd);
     IF d > 0.5x0 OR (d = 0.5x0 AND odd) THEN
       IF NOT TInt.Add (g, TInt.One, g) THEN RETURN FALSE END;
     END;
