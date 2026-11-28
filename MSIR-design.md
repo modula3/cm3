@@ -39,7 +39,7 @@ the rationale in the commit.
 | **Platform coverage**           | **CI on all three `ex_stack` targets, all green (2026-11-20).** The x86_64 code-generation bugs found on the way are fixed (see *CI results on the x86_64 targets*). |
 | **Front end decoupled from M3CG** | **Not started; plan agreed (D25).** MSIR emission runs inside the M3CG pass's driver and relies on its link-information side effects (see O17). Needed before proposing for master. |
 | **Code review and documentation** | **Done for the MSIR modules (2026-11-27); the front end waits for D25.**  Four reviews (MSIRToLLVM, MSIRToM3CG, MSIR, MSIRBuilder/MSIREmit) led to: a bug batch (`4a1fc240e0`: packed one-byte stores unmasked, code after RETURN/RAISE failing verification, helper-procedure context, source lines, unbound runtime hooks, MSIRToM3CG on 32-bit, proc_info symbols, unlowered ops; m3tests p332, p333); the D31 deletions (`aa912bbb1c`, 884 lines); and runtime constants from M3RT, shared helpers (DeclareMethod, FormalParam), stale comments, and an overview at the head of each module's interface with a section map in the large implementations.  MSIRChecks became MSIRRuntime.  Deferred, recorded here: (1) the EH exit logic MSIREH and MSIRToM3CG duplicate (scope queries, selector codes, the Finally exit walk) could be one shared module; (2) MSIRToM3CG recognises block copies and zeroing by the callee's name (memcpy, memmove, memset), a contract with MSIRBuilder a structural op would state; (3) MSIRToLLVM's DWARF type dedup can merge unrelated types by name and field count, and silently caps large types; (4) the RT0 padding walk is written three times in MSIRToLLVM; (5) verifier gaps (IUDiv, IURem, the rotates, Select, CallIndirect, the atomics, the open-array ops) and printer gaps (invoke targets, atomic orderings, alloca counts); (6) ProcSetNoReturn and ProcSetCallingConvention are set by nothing and lowered by nothing (A7); (7) 64-bit assumptions, left to the 32-bit review below; (8) MSIRBuilder's front-end decisions (D23), left to D25.  Then consider what the rest of the front end needs documented, once its old M3CG paths have been excised (D25), so the documentation describes the MSIR-only front end. |
-| **32-bit and ex_frame review** | **Planned (Tony, 2026-11-27); before D25.**  Development has targeted the three 64-bit `ex_stack` targets only.  The LLVM path needs `ex_stack`, so today 32-bit never reaches MSIR, but D25 makes MSIR the front end's only output: every target master's CI builds (I386_LINUX, I386_NT, AMD64_NT, AMD64_MINGW) would go through `MSIRToM3CG`, with `ex_frame` on the Windows and 32-bit targets.  Steps: (1) decide which targets MSIR must support at D25 (expected: all of master's CI targets through MSIRToM3CG; LLVM only on `ex_stack` targets); (2) audit `m3-sys/msir` and `m3front/src/msir` for 64-bit assumptions (hard-coded `i64`, `Address.size = 64`, 8-byte pointer alignment, 64-bit set indices and debug types; the 2026-11-27 module review found several, and `MSIRToM3CG.Lower` asserts a 64-bit target), making each use `Target`/`M3RT` or be explicitly LLVM-only; (3) add a 32-bit C-mode target (I386_LINUX through `MSIRToM3CG`) to the MSIR ladder, non-gating at first, since running it is what will find the bugs that matter.  32-bit through MSIRToLLVM is not a D25 goal; O21 lists what it would take. |
+| **32-bit and ex_frame review** | **In progress (2026-11-28): I386_LINUX through MSIRToM3CG passes every test C mode does** (471/478, the 7 failures shared with C mode, which fails 3 more); ex_frame through MSIRToM3CG passes 478/478 on ARM64_DARWIN.  See the 2026-11-28 progress entry.  Remaining: the ladder target (step 3).  **Planned (Tony, 2026-11-27); before D25.**  Development has targeted the three 64-bit `ex_stack` targets only.  The LLVM path needs `ex_stack`, so today 32-bit never reaches MSIR, but D25 makes MSIR the front end's only output: every target master's CI builds (I386_LINUX, I386_NT, AMD64_NT, AMD64_MINGW) would go through `MSIRToM3CG`, with `ex_frame` on the Windows and 32-bit targets.  Steps: (1) decide which targets MSIR must support at D25 (expected: all of master's CI targets through MSIRToM3CG; LLVM only on `ex_stack` targets); (2) audit `m3-sys/msir` and `m3front/src/msir` for 64-bit assumptions (hard-coded `i64`, `Address.size = 64`, 8-byte pointer alignment, 64-bit set indices and debug types; the 2026-11-27 module review found several, and `MSIRToM3CG.Lower` asserts a 64-bit target), making each use `Target`/`M3RT` or be explicitly LLVM-only; (3) add a 32-bit C-mode target (I386_LINUX through `MSIRToM3CG`) to the MSIR ladder, non-gating at first, since running it is what will find the bugs that matter.  32-bit through MSIRToLLVM is not a D25 goal; O21 lists what it would take. |
 | **Merge from master (2026-11)** | **Merged and pushed** (`593cb56d0c`, then `15ab336899` for #1251, #1253, #1254). See *Merge from master (2026-11)* below. |
 | **Optimised m3tests**           | **Done (2026-11-23).** MSIRObj and MSIRAsm are in `m3tests/src/m3makefile`'s `-O3` clause, as master's llvm backends are (`a03e61e15b`), so the LLVM ladder's m3tests run optimised. The first run failed only p280, which found B32; with B32 fixed all 304 pass. |
 | **EXTENDED on AMD64_LINUX**     | **Failing (2026-11-19).** fp128 comparisons, negation and constants fixed (`544b07b7c9`), but the MSIR-built stage-2 compiler still differs from stage 1 in three files and p113/p118/p123/p131 fail: probably fp128 arithmetic in the compiler's own constant folding. Original note: **Unvalidated.** MSIR lowers EXTENDED to `fp128` there. Peter needed parameter-alignment (`99e4d7c0ca`) and pickle (`cf2fa27f90`) fixes for the 128-bit change, so the first AMD64_LINUX ladder run should include an EXTENDED test. Revisit when #1249 (upgrade across extended128) and #1251 (`_Float128` with older g++, cross-host size) merge. |
@@ -2427,6 +2427,45 @@ main findings spot-checked.  Decisions (Tony, 2026-11-19):
   on ARM64_DARWIN.
 - Next: the same `.m3x`/`.msir` parity check over the std packages; the
   MSIR -> M3CG ladder on an `ex_frame` target; then D25 step 6.
+
+**Progress (2026-11-28): 32-bit targets through MSIRToM3CG.**
+
+The 32-bit review's audit found 72 places assuming 64 bits, 49 of them in
+MSIRToM3CG.  Fixed, in order:
+
+- Two width rules that only coincide on 64-bit targets: a set intrinsic's
+  element index is a `Target.Integer.size` bit index (the verifier and
+  MSIRToLLVM assumed i64), and LONGINT computes at `Target.Longint.size`
+  (`MSIRType.ZWidth`; `ComputeType`, the variable map and the local and
+  formal slots widened it to INTEGER).
+- MSIRToM3CG computes at CG's stack widths (`StackZ`/`StackW`, mirroring
+  `CG.Init`'s StackType): INTEGER-or-narrower at `Target.Integer.cg_type`,
+  wider at Int64.  Runtime and static-data fields typed INTEGER by M3RT use
+  the target's INTEGER; alignments come from `Target`; index, count and
+  shift operands are pushed at INTEGER (`PushAs`).  The two "not a 64-bit
+  target" guards are gone.
+- Front-end bugs the 32-bit run exposed: `Word`/`Long.Shift` and `Rotate`
+  zero-extended their INTEGER count to a LONGINT's width (p292); a set wider
+  than a word but exactly 64 bits was typed `i64`, so `SetExpr`'s multi-word
+  path and `IsWideSet` disagreed (now `MSIR.TWideSet`, kind IWide; p319);
+  memcmp is called as M3C's `m3_memcmp`, whose preamble prototype has C's
+  types (p034, p280).
+- A static global initializer with no MSIR image was silently dropped
+  (the global stayed zero); the module now falls back, as a constant did.
+- MSIR's integer constants are `Target.Int`, as M3CG's are
+  (`MSIR.ConstIntT`, `GetTIntVal`).  As host INTEGERs they could not hold a
+  LONGINT beyond 32 bits on a 32-bit host (the I386_LINUX compiler is itself
+  32-bit), and those units fell back.
+
+Testing: an I386_LINUX container on magpie (`g++-multilib-i686-linux-gnu`,
+the d5.12.0 bootstrap) runs m3tests through `@M3m3front-msir @M3msircg`
+with ex_frame.  C mode fails 10 (p040 p047 p137 p172 p173 p185 p207 p306
+p308 p324); MSIRToM3CG fails 7, all among those.  On ARM64_DARWIN the same
+compiler passes 478/478 through MSIRToM3CG with ex_stack and with ex_frame,
+every unit lowered.
+
+Limitation: on a 32-bit target an odd-width packed LONGINT field of 33-63
+bits is an IWide, which MSIRToM3CG takes for a multi-word set.
 
 **Progress (2026-11-26): std-package parity; two step 6 blockers; eleven
 MSIR bugs.**  Each of the 155 std packages that a C build ships (beyond the
