@@ -909,6 +909,7 @@ end
 proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, LinkResponseFile) is
     return try_exec(
         "@link.exe",
+        "-nologo",  % no banner, and no echo of the response file
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -1048,7 +1049,8 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     % build static library without mklib
 
     delete_file (lib_file)
-    exec("link /lib /out:" & lib_file, arglist("@", [options, objects]))
+    % "@" and /nologo: no echo of the command, and no banner
+    exec("@link /lib /nologo /out:" & lib_file, arglist("@", [options, objects]))
 
     if not shared
         return 0
@@ -1192,6 +1194,7 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, LinkRes
 
     return try_exec(
         "@link",
+        "-nologo",  % no banner, and no echo of the response file
         WriteResponseFile(
             LinkResponseFile,
             " ",

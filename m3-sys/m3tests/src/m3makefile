@@ -181,6 +181,32 @@ proc FileExists(x) is
     return not stale(x, x)
 end
 
+% cl.exe echoes the name of every source file it compiles, and -nologo
+% does not stop it, so on Windows drop those lines from the build output:
+% a line with no space that ends in ".c" or ".cpp".  The file is rewritten
+% only if it has such a line (split drops empty lines).
+proc IsCompilerEcho (Line) is
+  if tcontains (Line, " ") return FALSE end
+  local L = Line & "|"
+  return tcontains (L, ".cpp|") or tcontains (L, ".c|")
+end
+
+proc StripCompilerEcho (Path) is
+  if not FileExists (Path) return end
+  local Out = ""
+  local Found = FALSE
+  foreach Line in split (fs_contents (Path), "\n")
+    if IsCompilerEcho (Line)
+      Found = TRUE
+    else
+      Out = Out & Line & "\n"
+    end
+  end
+  if Found
+    fs_putfile (Path, Out)
+  end
+end
+
 proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFile) is
   local ExpectedPath = dir & "/" & file
   local OutputPath = dir & "/" & BUILD_DIR & "/" & file
@@ -211,8 +237,10 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFi
     write(ComparisonLogData)
   end
 
-  local OutputContents = fs_contents (OutputPath)
-  local ExpectedContents = fs_contents (ExpectedPath)
+  % Outputs are normalized to LF line ends (NormalizeString), but a
+  % Windows checkout can give the expected files CRLF (git's autocrlf).
+  local OutputContents = del_chars (fs_contents (OutputPath), "\r")
+  local ExpectedContents = del_chars (fs_contents (ExpectedPath), "\r")
 
   if not empty (ignoreLinesWith)
     local ocLines = split (OutputContents, "\n")
@@ -445,6 +473,9 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
 
     NormalizeFile (dir & "/" & BUILD_DIR & "/stdout.build")
     NormalizeFile (dir & "/" & BUILD_DIR & "/stderr.build")
+    if equal (OS_TYPE, "WIN32")
+      StripCompilerEcho (dir & "/" & BUILD_DIR & "/stdout.build")
+    end
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build", [ ], [ ], probeForTargetSpecificFiles)

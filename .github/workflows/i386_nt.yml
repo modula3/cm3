@@ -73,6 +73,11 @@ jobs:
         python3 ..\..\scripts\ci-watchdog.py --dumps ..\..\dumps -- cm3 -DHTML
       working-directory: m3-sys\m3tests
 
+    - name: Check m3tests against known failures
+      if: ${{ !cancelled() }}
+      run: |
+        python3 m3-sys\m3tests\check-results.py m3-sys\m3tests\m3tests-results.xml m3-sys\m3tests\known-failures\%CM3_TARGET%-${{ matrix.backend }}
+
     - name: Upload dumps of a hung cm3
       if: always()
       uses: actions/upload-artifact@v4

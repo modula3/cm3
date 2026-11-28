@@ -1,0 +1,6 @@
+# I386_NT, integrated x86 backend: x87 floating point, as I386_LINUX-gcc.
+p137 p172 p185 p306
+p159  # unexamined
+r001 r002 r003 r004 r005 r006 r007 r008 r009 r010  # see below
+# r001-r010 end in a runtime error, whose report is missing from stderr,
+# as on AMD64_NT; not yet examined on I386_NT, which uses ex_frame.

@@ -1,0 +1,4 @@
+# I386_NT, C backend.
+r001 r002 r003 r004 r005 r006 r007 r008 r009 r010  # see below
+# r001-r010 end in a runtime error, whose report is missing from stderr,
+# as on AMD64_NT; not yet examined on I386_NT, which uses ex_frame.
