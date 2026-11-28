@@ -26,6 +26,9 @@ PROCEDURE CheckOverflow (op: Op;  a, b: Expr.T);
 (* If Overflows (op, a, b), report it: an error with Host.doOverflowChk,
    otherwise a warning. *)
 
+PROCEDURE IsMinusOne (e: Expr.T): BOOLEAN;
+(* TRUE if e is the integer constant -1. *)
+
 PROCEDURE Compare  (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN;
 PROCEDURE Add      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;

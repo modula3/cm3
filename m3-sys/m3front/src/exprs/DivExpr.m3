@@ -73,6 +73,10 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       p.type := Expr.BadOperands ("DIV", ta, tb);
     END;
     p.repType := p.type;
+    IF IntegerExpr.IsMinusOne (p.b) THEN
+      (* x DIV -1 = -x *)
+      IntegerExpr.CheckOverflow (IntegerExpr.Op.Negate, p.a, NIL);
+    END;
   END Check;
 
 PROCEDURE Prep (p: P) =
@@ -109,9 +113,14 @@ PROCEDURE Compile (p: P; StaticOnly: BOOLEAN) =
       Expr.Compile (e1);
       Expr.Compile (e2);
       cg_type := Type.CGType (p.type);
-      IF Host.doOverflowChk AND OverflowChk.Signed (cg_type)
-        THEN OverflowChk.Div (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
-        ELSE CG.Div (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+      IF Host.doOverflowChk AND OverflowChk.Signed (cg_type) THEN
+        (* FIRST DIV -1 aborts *)
+        OverflowChk.Div (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+      ELSIF MayOverflow (e1, e2, cg_type) THEN
+        (* FIRST DIV -1 wraps around *)
+        CompileWrapped (cg_type, Expr.GetSign (e1), div := TRUE);
+      ELSE
+        CG.Div (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
       END;
     END;
   END Compile;
@@ -129,6 +138,45 @@ PROCEDURE Fold (p: P): Expr.T =
 VAR(*CONST*)
   powers    : ARRAY [0..63] OF Target.Int;
   max_power := 0;
+
+PROCEDURE MayOverflow (a, b: Expr.T;  t: CG.Type): BOOLEAN =
+  VAR first, amin, amax, bmin, bmax: Target.Int;
+  BEGIN
+    IF    t = Target.Integer.cg_type THEN first := Target.Integer.min;
+    ELSIF t = Target.Longint.cg_type THEN first := Target.Longint.min;
+    ELSE  RETURN FALSE;
+    END;
+    Expr.GetBounds (a, amin, amax);
+    Expr.GetBounds (b, bmin, bmax);
+    RETURN TInt.LE (amin, first)
+       AND TInt.LE (bmin, TInt.MOne) AND TInt.LE (TInt.MOne, bmax);
+  END MayOverflow;
+
+PROCEDURE CompileWrapped (t: CG.IType;  sa: CG.Sign;  div: BOOLEAN) =
+  (* With m := ORD (b = -1), divide by b + 2*m, which is 1 when b = -1:
+     a MOD 1 = 0 is then right, and a DIV 1 = a needs negating, wrapping
+     around, which is (q XOR -m) + m.  No jumps, so this is safe in the
+     middle of an expression. *)
+  VAR b, m: CG.Val;
+  BEGIN
+    b := CG.Pop_temp ();
+    CG.Push (b);
+    CG.Load_integer (t, TInt.MOne);
+    CG.Compare (t, CG.Cmp.EQ);
+    IF t # Target.Integer.cg_type THEN
+      CG.Loophole (Target.Integer.cg_type, t);
+    END;
+    m := CG.Pop_temp ();
+    CG.Push (b);  CG.Push (m);  CG.Add (t);  CG.Push (m);  CG.Add (t);
+    IF div THEN
+      CG.Div (t, sa, CG.Sign.Unknown);
+      CG.Push (m);  CG.Negate (t);  CG.Xor (t);
+      CG.Push (m);  CG.Add (t);
+    ELSE
+      CG.Mod (t, sa, CG.Sign.Unknown);
+    END;
+    CG.Free (b);  CG.Free (m);
+  END CompileWrapped;
 
 PROCEDURE SmallPowerOfTwo (READONLY x: Target.Int;  VAR log: INTEGER): BOOLEAN=
   VAR lo, hi, mid: INTEGER;

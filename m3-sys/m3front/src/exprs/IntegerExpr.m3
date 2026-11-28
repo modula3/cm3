@@ -118,6 +118,13 @@ PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN Arith (Op.Multiply, a, b, c, overflow);
   END Multiply;
 
+PROCEDURE IsMinusOne (e: Expr.T): BOOLEAN =
+  VAR x: Target.Int;  t: Type.T;
+  BEGIN
+    e := Expr.ConstValue (e);
+    RETURN (e # NIL) AND Split (e, x, t) AND TInt.EQ (x, TInt.MOne);
+  END IsMinusOne;
+
 PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, y, min, max, res: Target.Int;  t: Type.T;
   BEGIN
@@ -125,6 +132,10 @@ PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF TInt.EQ (y, TInt.Zero) THEN
       Error.Msg ("attempt to DIV by 0");
       RETURN FALSE;
+    END;
+    IF TInt.EQ (y, TInt.MOne) THEN
+      (* x DIV -1 = -x, which wraps around for FIRST, as at run time *)
+      RETURN Negate (a, c);
     END;
     IF NOT TInt.Div (x, y, res) THEN RETURN FALSE END;
     IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
@@ -140,6 +151,10 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF TInt.EQ (y, TInt.Zero) THEN
       Error.Msg ("attempt to MOD by 0");
       RETURN FALSE;
+    END;
+    IF TInt.EQ (y, TInt.MOne) THEN
+      c := New (t, TInt.Zero);  (* even for FIRST, whose DIV -1 overflows *)
+      RETURN TRUE;
     END;
     IF NOT TInt.Mod (x, y, res) THEN RETURN FALSE END;
     IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
