@@ -11,7 +11,7 @@
 
 MODULE MSIRToM3CG;
 
-IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TInt, TextRefTbl, Fmt,
+IMPORT MSIR, MSIRPrinter, MSIRRuntime, M3CG, M3CG_Ops, M3ID, RefSeq, M3RT, Target, TargetMap, TInt, TextRefTbl, Fmt,
        Text, Word, Wr, Thread;
 
 FROM MSIR IMPORT Op, TypeKind, ValueKind;
@@ -52,9 +52,10 @@ PROCEDURE HasPrefix (t, p: TEXT): BOOLEAN =
      records;
    - one constant segment: procedure names, the RT0.ProcInfo table, the
      source file name and the global GC map.
-   SSA values live in locals.  Integers are held as 64-bit values,
-   sign-extended from their MSIR width (i1 as 0/1), so every operation is
-   computed at 64 bits and re-canonicalised. *)
+   SSA values live in locals.  Integers are held at CG's stack width
+   (StackZ: Target.Integer.cg_type, or Int64 for a type wider than
+   INTEGER), sign-extended from their MSIR width (i1 as 0/1), so every
+   operation is computed at that width and re-canonicalised. *)
 
 TYPE
   Loc = REF RECORD off: INTEGER;  s: Seg END;
@@ -81,6 +82,7 @@ VAR
   blocks    : TextRefTbl.T;   (* block label -> LabelRef, per procedure *)
   binder    : M3CG.Proc;
   curLine   : INTEGER;
+  Int, Wrd  : M3CG.IType;     (* Target.Integer.cg_type, Target.Word.cg_type *)
 
 CONST
   Int64 = M3CG.Type.Int64;
@@ -123,9 +125,12 @@ PROCEDURE IsInt (t: MSIR.T): BOOLEAN =
    M3CG stack and takes LLVM's size in a struct, but has no memory type,
    so it is not loaded or stored directly. *)
 PROCEDURE IsOddInt (t: MSIR.T): BOOLEAN =
+  (* Wider than a word, an IWide is a multi-word set (IsWideSet); on a
+     32-bit target that includes i33..i63, so an odd-width packed LONGINT
+     field there is not supported. *)
   BEGIN
     RETURN t # NIL AND MSIR.Kind (t) = TypeKind.IWide
-       AND MSIR.BitWidth (t) < 64;
+       AND MSIR.BitWidth (t) < 64 AND MSIR.BitWidth (t) <= Target.Word.size;
   END IsOddInt;
 
 PROCEDURE IsPtr (t: MSIR.T): BOOLEAN =
@@ -148,17 +153,17 @@ PROCEDURE IsAgg (t: MSIR.T): BOOLEAN =
   END IsAgg;
 
 (* A set wider than a word: m3front types it as an integer iN and works on
-   it with the set intrinsics (D19).  Here it is an aggregate of N/64 words,
+   it with the set intrinsics (D19).  Here it is an aggregate of words,
    word-aligned as CG lays sets out, operated on by M3CG's set_* ops. *)
 PROCEDURE IsWideSet (t: MSIR.T): BOOLEAN =
   BEGIN
     RETURN t # NIL AND MSIR.Kind (t) = TypeKind.IWide
-       AND MSIR.BitWidth (t) > 64;
+       AND MSIR.BitWidth (t) > Target.Word.size;
   END IsWideSet;
 
 PROCEDURE SetBytes (t: MSIR.T): INTEGER =
   BEGIN
-    RETURN RoundUp (MSIR.BitWidth (t), 64) DIV 8;
+    RETURN RoundUp (MSIR.BitWidth (t), Target.Word.size) DIV Target.Byte;
   END SetBytes;
 
 PROCEDURE IsValue (t: MSIR.T): BOOLEAN =
@@ -211,8 +216,47 @@ PROCEDURE ZType (t: MSIR.T): M3CG.ZType =
   BEGIN
     IF IsFloat (t) THEN RETURN RType (t) END;
     IF IsPtr (t) THEN RETURN Addr END;
-    RETURN Int64;
+    RETURN StackZ (t);
   END ZType;
+
+(* CG's StackType (CG.Init): an integer no wider than INTEGER is computed
+   at Target.Integer.cg_type, a wider one (LONGINT on a 32-bit target) at
+   Int64; StackW is the unsigned type of the same width, and StackBits the
+   width.  On a 64-bit target every integer is computed at 64 bits. *)
+PROCEDURE StackZ (t: MSIR.T): M3CG.IType =
+  BEGIN
+    IF IntBits (t) > Target.Integer.size THEN RETURN Int64 END;
+    RETURN Target.Integer.cg_type;
+  END StackZ;
+
+PROCEDURE StackW (t: MSIR.T): M3CG.IType =
+  BEGIN
+    IF IntBits (t) > Target.Integer.size THEN RETURN Word64 END;
+    RETURN Target.Word.cg_type;
+  END StackW;
+
+PROCEDURE StackBits (t: MSIR.T): INTEGER =
+  BEGIN
+    IF IntBits (t) > Target.Integer.size THEN RETURN 64 END;
+    RETURN Target.Integer.size;
+  END StackBits;
+
+(* Convert the integer on the stack, held at StackZ (from), to StackZ (to):
+   M3CG's loophole between integer types of different widths is a C cast,
+   sign-extending or truncating, as CG's VAL between INTEGER and LONGINT. *)
+PROCEDURE Restack (from, to: MSIR.T) =
+  BEGIN
+    IF StackZ (from) # StackZ (to) THEN cg.loophole (StackZ (from), StackZ (to)) END;
+  END Restack;
+
+(* Push the integer v at the stack type z (for an index, count or shift
+   amount, which M3CG takes at Target.Integer.cg_type). *)
+PROCEDURE PushAs (v: MSIR.Value;  z: M3CG.IType) =
+  VAR t := MSIR.ValueType (v);
+  BEGIN
+    Push (v);
+    IF IsInt (t) AND StackZ (t) # z THEN cg.loophole (StackZ (t), z) END;
+  END PushAs;
 
 (* The memory type for loading or storing a value of type t.  Integers load
    signed, so the stack holds them sign-extended. *)
@@ -301,13 +345,13 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
     IF IsPtr (t) THEN align := Target.Address.bytes; RETURN align END;
     IF IsFloat (t) THEN
       CASE MSIR.Kind (t) OF
-      | TypeKind.F32 => align := 4;
-      | TypeKind.F64 => align := 8;
-      ELSE align := 16;
+      | TypeKind.F32 => align := 4;  RETURN 4;
+      | TypeKind.F64 => align := Target.Longreal.align DIV Target.Byte;
+                        RETURN 8;
+      ELSE align := 16;  RETURN 16;
       END;
-      RETURN align;
     END;
-    IF IsWideSet (t) THEN align := 8;  RETURN SetBytes (t) END;
+    IF IsWideSet (t) THEN align := Target.Word.bytes;  RETURN SetBytes (t) END;
     IF IsOddInt (t) THEN
       (* LLVM's allocation size: the next power-of-two number of bytes *)
       align := 1;
@@ -315,6 +359,10 @@ PROCEDURE Size (t: MSIR.T;  VAR align: INTEGER): INTEGER =
       RETURN align;
     END;
     IF IsInt (t) THEN
+      IF IntBits (t) = 64 THEN
+        align := Target.Longint.align DIV Target.Byte;  (* 4 on I386 *)
+        RETURN 8;
+      END;
       align := MAX (1, IntBits (t) DIV 8);
       RETURN align;
     END;
@@ -576,7 +624,10 @@ PROCEDURE CheckInsn (w: Why;  i: MSIR.Insn) =
           Fail (w, "array.elem_addr on unsized array");
         END;
     | Op.IRotL, Op.IRotR =>
-        IF IntBits (MSIR.ValueType (res)) # 64 THEN Fail (w, "narrow rotate") END;
+        VAR rt := MSIR.ValueType (res);
+        BEGIN
+          IF IntBits (rt) # StackBits (rt) THEN Fail (w, "narrow rotate") END;
+        END;
     | Op.FCmp =>
         IF NOT MSIR.InsnFCmpPred (i) IN SET OF MSIR.FCmpPred {
                  MSIR.FCmpPred.OEq, MSIR.FCmpPred.OLt, MSIR.FCmpPred.OLe,
@@ -653,13 +704,8 @@ PROCEDURE Lowerable (m: MSIR.Module;  why: Wr.T := NIL): BOOLEAN =
   VAR w := NEW (Why, wr := why, mod := MSIR.ModuleName (m));
       p: MSIR.Proc;  b: MSIR.Block;  v: MSIR.Value;
   BEGIN
-    (* Only 64-bit targets (Lower asserts it), and every runtime procedure
-       the module needs bound; checked before Expand, which removes the
-       runtime ops Hooks looks for. *)
-    IF Target.Integer.size # 64 OR Target.Address.size # 64 THEN
-      Fail (w, "not a 64-bit target");
-      RETURN FALSE;
-    END;
+    (* Every runtime procedure the module needs bound; checked before
+       Expand, which removes the runtime ops Hooks looks for. *)
     VAR u := MSIRRuntime.Unbound (m);
     BEGIN
       IF u # NIL THEN Fail (w, "runtime hook not bound: " & u);  RETURN FALSE END;
@@ -1136,6 +1182,7 @@ PROCEDURE InitInt (off, v: INTEGER;  t: M3CG.Type) =
   VAR i: Target.Int;
   BEGIN
     IF v = 0 THEN RETURN END;
+    v := FitInt (v, t);
     EVAL TInt.FromInt (v, i);
     cg.init_int (off, i, t);
   END InitInt;
@@ -1207,7 +1254,7 @@ PROCEDURE EmitModuleInfo (it: ModuleInfoItem) =
       END;
     END;
     cg.init_proc (it.off + B (M3RT.MI_binder), binder);
-    InitInt (it.off + B (M3RT.MI_gc_flags), MSIR.ModuleGcFlags (mod), Int64);
+    InitInt (it.off + B (M3RT.MI_gc_flags), MSIR.ModuleGcFlags (mod), Int);
   END EmitModuleInfo;
 
 TYPE GInit = RECORD off: INTEGER;  v: MSIR.Value END;
@@ -1250,9 +1297,10 @@ PROCEDURE InitConst (off: INTEGER;  v: MSIR.Value;  t: MSIR.T) =
     CASE MSIR.GetValueKind (v) OF
     | ValueKind.ConstInt =>
         IF IsWideSet (t) THEN
-          FOR k := 0 TO SetBytes (t) DIV 8 - 1 DO
+          FOR k := 0 TO SetBytes (t) DIV Target.Integer.bytes - 1 DO
             IF WideWord (MSIR.GetIntVal (v), k) # 0 THEN
-              InitInt (off + k * 8, WideWord (MSIR.GetIntVal (v), k), Int64);
+              InitInt (off + k * Target.Integer.bytes,
+                       WideWord (MSIR.GetIntVal (v), k), Int);
             END;
           END;
         ELSIF IsPtr (t) THEN
@@ -1333,7 +1381,7 @@ PROCEDURE EmitImports (it: ImportsItem) =
 PROCEDURE EmitTypecell (it: TypecellItem) =
   VAR d := it.d;  o := it.off;  ipName := MSIR.TypeDescInitProcName (d);
   BEGIN
-    InitInt (o + B (M3RT.TC_selfID), MSIR.TypeDescUID (d), Int64);
+    InitInt (o + B (M3RT.TC_selfID), MSIR.TypeDescUID (d), Int);
     FOR i := 0 TO 7 DO
       InitInt (o + B (M3RT.TC_fp) + i, MSIR.TypeDescFPByte (d, i),
                M3CG.Type.Word8);
@@ -1343,7 +1391,7 @@ PROCEDURE EmitTypecell (it: TypecellItem) =
     InitInt (o + B (M3RT.TC_kind), MSIR.TypeDescKind (d), M3CG.Type.Word8);
     InitInt (o + B (M3RT.TC_dataAlignment), MSIR.TypeDescAlign (d),
              M3CG.Type.Word8);
-    InitInt (o + B (M3RT.TC_dataSize), MSIR.TypeDescSize (d), Int64);
+    InitInt (o + B (M3RT.TC_dataSize), MSIR.TypeDescSize (d), Int);
     InitPtr (o + B (M3RT.TC_type_map), cseg, it.typeMap);
     InitPtr (o + B (M3RT.TC_gc_map), cseg, it.gcMap);
     InitPtr (o + B (M3RT.TC_type_desc), cseg, it.desc);
@@ -1355,15 +1403,15 @@ PROCEDURE EmitTypecell (it: TypecellItem) =
     InitPtr (o + B (M3RT.TC_next), dseg, it.next);
     CASE MSIR.TypeDescKind (d) OF
     | TK_Obj =>
-        InitInt (o + B (M3RT.OTC_parentID), MSIR.TypeDescParentUID (d), Int64);
+        InitInt (o + B (M3RT.OTC_parentID), MSIR.TypeDescParentUID (d), Int);
         IF it.linkProc # NIL THEN
           cg.init_proc (o + B (M3RT.OTC_linkProc), it.linkProc);
         END;
-        InitInt (o + B (M3RT.OTC_methodSize), MSIR.TypeDescMethodBytes (d), Int64);
+        InitInt (o + B (M3RT.OTC_methodSize), MSIR.TypeDescMethodBytes (d), Int);
         InitPtr (o + B (M3RT.OTC_defaultMethods), cseg, it.methods);
     | TK_Array =>
-        InitInt (o + B (M3RT.ATC_nDimensions), MSIR.TypeDescNDimensions (d), Int64);
-        InitInt (o + B (M3RT.ATC_elementSize), MSIR.TypeDescElementSize (d), Int64);
+        InitInt (o + B (M3RT.ATC_nDimensions), MSIR.TypeDescNDimensions (d), Int);
+        InitInt (o + B (M3RT.ATC_elementSize), MSIR.TypeDescElementSize (d), Int);
     ELSE
     END;
   END EmitTypecell;
@@ -1373,7 +1421,7 @@ PROCEDURE EmitTypecell (it: TypecellItem) =
 PROCEDURE EmitBrand (it: BrandItem) =
   VAR cb: INTEGER;  chars := MSIR.TypeDescBrand (it.d, cb);
   BEGIN
-    InitInt (it.off, NUMBER (chars^), Int64);
+    InitInt (it.off, NUMBER (chars^), Int);
     FOR i := 0 TO LAST (chars^) DO
       InitInt (it.off + Target.Integer.bytes + i, chars[i], M3CG.Type.Word8);
     END;
@@ -1393,7 +1441,7 @@ PROCEDURE EmitTypecase (it: TypecaseItem) =
     FOR k := 0 TO MSIR.InsnTypecaseClauseCount (it.insn) - 1 DO
       VAR uid := MSIR.InsnTypecaseClause (it.insn, k).uid;
       BEGIN
-        IF uid # 0 THEN InitInt (it.off + k * 2 * ptr + ptr, uid, Int64) END;
+        IF uid # 0 THEN InitInt (it.off + k * 2 * ptr + ptr, uid, Int) END;
       END;
     END;
   END EmitTypecase;
@@ -1401,7 +1449,7 @@ PROCEDURE EmitTypecase (it: TypecaseItem) =
 PROCEDURE EmitHandles (it: HandlesItem) =
   BEGIN
     FOR k := 0 TO LAST (it.uids^) DO
-      InitInt (it.off + k * Target.Integer.bytes, it.uids[k], Int64);
+      InitInt (it.off + k * Target.Integer.bytes, it.uids[k], Int);
     END;
   END EmitHandles;
 
@@ -1438,7 +1486,7 @@ PROCEDURE TypecaseOff (i: MSIR.Insn): INTEGER =
 PROCEDURE EmitTypeLink (it: TypeLinkItem) =
   BEGIN
     InitPtr (it.off, dseg, it.prev);
-    InitInt (it.off + Target.Address.bytes, MSIR.TypeLinkUID (it.tl), Int64);
+    InitInt (it.off + Target.Address.bytes, MSIR.TypeLinkUID (it.tl), Int);
   END EmitTypeLink;
 
 PROCEDURE EmitRevs (it: RevItem) =
@@ -1447,8 +1495,8 @@ PROCEDURE EmitRevs (it: RevItem) =
     FOR i := 0 TO MSIR.ModuleRevelationCount (mod) - 1 DO
       VAR r := MSIR.ModuleRevelation (mod, i);
       BEGIN
-        InitInt (off + B (M3RT.RV_lhs_id), MSIR.RevelationLhsUID (r), Int64);
-        InitInt (off + B (M3RT.RV_rhs_id), MSIR.RevelationRhsUID (r), Int64);
+        InitInt (off + B (M3RT.RV_lhs_id), MSIR.RevelationLhsUID (r), Int);
+        InitInt (off + B (M3RT.RV_rhs_id), MSIR.RevelationRhsUID (r), Int);
         INC (off, B (M3RT.RV_SIZE));
       END;
     END;
@@ -1456,7 +1504,7 @@ PROCEDURE EmitRevs (it: RevItem) =
 
 PROCEDURE EmitExc (it: ExcItem) =
   BEGIN
-    InitInt (it.off + B (M3RT.ED_uid), MSIR.ExcDescUID (it.d), Int64);
+    InitInt (it.off + B (M3RT.ED_uid), MSIR.ExcDescUID (it.d), Int);
     InitPtr (it.off + B (M3RT.ED_name), cseg, it.name);
   END EmitExc;
 
@@ -1473,9 +1521,9 @@ PROCEDURE EmitTextLit (it: TextLitItem) =
       chars := MSIR.ModuleTextLitChars (mod, it.uid);
       cnt := MSIR.ModuleTextLitCnt (mod, it.uid);
   BEGIN
-    InitInt (it.off, Word.Shift (TEXT_typecode, M3RT.RH_typecode_offset), Int64);
+    InitInt (it.off, Word.Shift (TEXT_typecode, M3RT.RH_typecode_offset), Int);
     InitPtr (it.off + ptr, cseg, it.methods);
-    InitInt (it.off + 2 * ptr, cnt, Int64);
+    InitInt (it.off + 2 * ptr, cnt, Int);
     EmitChars (NEW (CharsItem, off := it.off + 3 * ptr, chars := chars));
   END EmitTextLit;
 
@@ -1545,8 +1593,8 @@ PROCEDURE GenLinkProcs () =
                                  MSIR.TypeDescMethodInitDeclUID (d, j)), r);
                           cg.load_address (NARROW (r, Loc).s.var, NARROW (r, Loc).off);
                           cg.load_indirect (0, Addr, Addr);
-                          cg.load_indirect (B (M3RT.OTC_methodOffset), Int64, Int64);
-                          cg.index_address (Int64, 1);
+                          cg.load_indirect (B (M3RT.OTC_methodOffset), Int, Int);
+                          cg.index_address (Int, 1);
                           cg.add_offset (off);
                         END;
                         cg.load_procedure (ProcByName (mname));
@@ -1645,7 +1693,7 @@ PROCEDURE ImportBinder (sym: TEXT): M3CG.Proc =
     IF procs.get (sym, r) THEN RETURN NARROW (r, ProcRef).p END;
     q := cg.import_procedure (ID (sym), 1, Addr, Target.DefaultCall);
     EVAL cg.declare_param (ID ("mode"), Target.Integer.bytes,
-                           Target.Integer.bytes, Int64, 0, FALSE, FALSE,
+                           Target.Integer.bytes, Int, 0, FALSE, FALSE,
                            M3CG.Maybe);
     EVAL procs.put (sym, NEW (ProcRef, p := q));
     RETURN q;
@@ -1679,7 +1727,7 @@ PROCEDURE BodyProc (): MSIR.Proc =
 PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
   VAR p: MSIR.Proc;  binderName: TEXT;  modeVar: M3CG.Var;
   BEGIN
-    <* ASSERT Target.Integer.size = 64 AND Target.Address.size = 64 *>
+    Int := Target.Integer.cg_type;  Wrd := Target.Word.cg_type;
     MSIRRuntime.Expand (m);  (* D31-D36; idempotent after Lowerable *)
     Setup (m);
     cg := c;  (* M3CG.T's methods are revealed by M3CG_Ops *)
@@ -1723,7 +1771,7 @@ PROCEDURE Lower (m: MSIR.Module;  c: M3CG.T) =
     binder := cg.declare_procedure (ID (binderName), 1, Addr, 0,
                                     Target.DefaultCall, TRUE, NIL);
     modeVar := cg.declare_param (ID ("mode"), Target.Integer.bytes,
-                                 Target.Integer.bytes, Int64, 0, FALSE, FALSE,
+                                 Target.Integer.bytes, Int, 0, FALSE, FALSE,
                                  M3CG.Always);
     EVAL procs.put (binderName, NEW (ProcRef, p := binder));
 
@@ -1819,8 +1867,8 @@ PROCEDURE GenBinder (modeVar: M3CG.Var) =
     cg.begin_procedure (binder);
     IF body # NIL THEN
       done := cg.next_label ();
-      cg.load (modeVar, 0, Int64, Int64);
-      cg.if_false (Int64, done, M3CG.Maybe);
+      cg.load (modeVar, 0, Int, Int);
+      cg.if_false (Int, done, M3CG.Maybe);
       q := ProcFor (body);
       cg.start_call_direct (q, 0, M3CG.Type.Void);
       cg.call_direct (q, M3CG.Type.Void);
@@ -1837,9 +1885,8 @@ PROCEDURE TempFor (t: MSIR.T): M3CG.Var =
   VAR z := ZType (t);  sz: INTEGER;
   BEGIN
     CASE z OF
-    | M3CG.Type.Reel => sz := 4;
     | M3CG.Type.XReel => sz := 16;
-    ELSE sz := 8;
+    ELSE sz := TargetMap.CG_Bytes[z];
     END;
     RETURN cg.declare_local (M3ID.NoID, sz, sz, z, 0, FALSE, FALSE,
                              M3CG.Maybe);
@@ -1923,48 +1970,100 @@ PROCEDURE StoreConstAt (addr: MSIR.Value;  off: INTEGER;  v: MSIR.Value;
   END StoreConstAt;
 
 (* Reinterpret the address on the stack as the float t (32 or 64 bits): its
-   low bits, as MSIRToLLVM's ptrtoint to i<bits> then bitcast. *)
+   low bits, zero-extended if the address is narrower, as MSIRToLLVM's
+   ptrtoint to i<bits> then bitcast. *)
 PROCEDURE AddrToFloat (t: MSIR.T) =
+  VAR fz := FloatInt (t);
   BEGIN
-    cg.loophole (Addr, Int64);
-    IF FloatBits (t) = 32 THEN
-      cg.loophole (Int64, M3CG.Type.Int32);
-      cg.loophole (M3CG.Type.Int32, RType (t));
+    IF FloatBits (t) = Target.Address.size THEN
+      cg.loophole (Addr, fz);
+    ELSIF FloatBits (t) < Target.Address.size THEN
+      cg.loophole (Addr, Int64);
+      cg.loophole (Int64, fz);
     ELSE
-      cg.loophole (Int64, RType (t));
+      cg.loophole (Addr, Wrd);
+      cg.loophole (Wrd, fz);
     END;
+    cg.loophole (fz, RType (t));
   END AddrToFloat;
+
+(* The integer type of a float's size (Reel/Int32, LReel/Int64). *)
+PROCEDURE FloatInt (t: MSIR.T): M3CG.IType =
+  BEGIN
+    IF FloatBits (t) = 32 THEN RETURN M3CG.Type.Int32 END;
+    RETURN Int64;
+  END FloatInt;
 
 (* Reinterpret the float t on the stack as an address: its bits,
    zero-extended to a word, as MSIRToLLVM's bitcast to i<bits> then
    inttoptr. *)
 PROCEDURE FloatToAddr (t: MSIR.T) =
+  VAR fz := FloatInt (t);
   BEGIN
-    IF FloatBits (t) = 32 THEN
-      cg.loophole (RType (t), M3CG.Type.Int32);
-      cg.loophole (M3CG.Type.Int32, Int64);
-      cg.extract_mn (Int64, FALSE, 0, 32);
+    cg.loophole (RType (t), fz);
+    IF FloatBits (t) < Target.Address.size THEN
+      cg.loophole (fz, Int64);
+      cg.extract_mn (Int64, FALSE, 0, FloatBits (t));
+      cg.loophole (Int64, Addr);
+    ELSIF FloatBits (t) > Target.Address.size THEN
+      cg.loophole (fz, Int);          (* truncate to the address width *)
+      cg.loophole (Int, Addr);
     ELSE
-      cg.loophole (RType (t), Int64);
+      cg.loophole (fz, Addr);
     END;
-    cg.loophole (Int64, Addr);
   END FloatToAddr;
 
-PROCEDURE PushInt (v: INTEGER;  t: M3CG.IType := Int64) =
+(* The integer on the stack, of type it, as an address: truncated to the
+   address width if wider, as MSIRToLLVM's inttoptr. *)
+PROCEDURE IntToAddr (it: MSIR.T) =
+  BEGIN
+    IF StackZ (it) # Int THEN cg.loophole (StackZ (it), Int) END;
+    cg.loophole (Int, Addr);
+  END IntToAddr;
+
+(* The address on the stack as the integer type it: zero-extended if it is
+   wider than an address (ptrtoint), then canonicalised. *)
+PROCEDURE AddrToInt (it: MSIR.T) =
+  BEGIN
+    IF StackBits (it) = Target.Address.size THEN
+      cg.loophole (Addr, StackZ (it));
+    ELSE
+      cg.loophole (Addr, Wrd);
+      cg.loophole (Wrd, StackZ (it));
+    END;
+    Canon (it);
+  END AddrToInt;
+
+(* Push the constant v at the integer type t (by default the target's
+   INTEGER), sign-extended from t's width. *)
+PROCEDURE PushInt (v: INTEGER;  t := M3CG.Type.Void) =
   VAR i: Target.Int;
   BEGIN
-    EVAL TInt.FromInt (v, i);
+    IF t = M3CG.Type.Void THEN t := Int END;
+    EVAL TInt.FromInt (FitInt (v, t), i);
     cg.load_integer (t, i);
   END PushInt;
 
+(* v as a value of the integer memory or stack type t: sign-extended from
+   t's width if t is a signed type narrower than the host's INTEGER (a uid
+   or a 32-bit set word given as an unsigned host value). *)
+PROCEDURE FitInt (v: INTEGER;  t: M3CG.Type): INTEGER =
+  BEGIN
+    IF t IN SET OF M3CG.Type {M3CG.Type.Int8, M3CG.Type.Int16, M3CG.Type.Int32}
+       AND TargetMap.CG_Size[t] < BITSIZE (INTEGER) THEN
+      RETURN CanonInt (v, TargetMap.CG_Size[t]);
+    END;
+    RETURN v;
+  END FitInt;
+
 (* Sign-extend the integer on the stack from its width in t. *)
 PROCEDURE Canon (t: MSIR.T) =
-  VAR bits := IntBits (t);
+  VAR bits := IntBits (t);  z := StackZ (t);
   BEGIN
     IF bits = 1 THEN
-      PushInt (1);  cg.and (Int64);
-    ELSIF bits < 64 THEN
-      cg.extract_mn (Int64, TRUE, 0, bits);
+      PushInt (1, z);  cg.and (z);
+    ELSIF bits < StackBits (t) THEN
+      cg.extract_mn (z, TRUE, 0, bits);
     END;
   END Canon;
 
@@ -1989,12 +2088,12 @@ PROCEDURE LoadOddInt (addr: MSIR.Value;  t: MSIR.T) =
   BEGIN
     FOR k := 0 TO n - 1 DO
       Push (addr);
-      cg.load_indirect (k, M3CG.Type.Word8, Int64);
+      cg.load_indirect (k, M3CG.Type.Word8, StackZ (t));
       IF OddIntShift (k, n) # 0 THEN
         PushInt (OddIntShift (k, n));
-        cg.shift_left (Word64);
+        cg.shift_left (StackW (t));
       END;
-      IF k > 0 THEN cg.or (Int64) END;
+      IF k > 0 THEN cg.or (StackZ (t)) END;
     END;
     Canon (t);
   END LoadOddInt;
@@ -2007,9 +2106,9 @@ PROCEDURE StoreOddInt (val: MSIR.Value;  t: MSIR.T;  addr: MSIR.Value) =
       Push (val);
       IF OddIntShift (k, n) # 0 THEN
         PushInt (OddIntShift (k, n));
-        cg.shift_right (Word64);
+        cg.shift_right (StackW (t));
       END;
-      cg.store_indirect (k, Int64, M3CG.Type.Word8);
+      cg.store_indirect (k, StackZ (t), M3CG.Type.Word8);
     END;
   END StoreOddInt;
 
@@ -2017,7 +2116,7 @@ PROCEDURE StoreOddInt (val: MSIR.Value;  t: MSIR.T;  addr: MSIR.Value) =
 PROCEDURE Mask (t: MSIR.T) =
   VAR bits := IntBits (t);
   BEGIN
-    IF bits < 64 THEN cg.extract_mn (Int64, FALSE, 0, bits) END;
+    IF bits < StackBits (t) THEN cg.extract_mn (StackZ (t), FALSE, 0, bits) END;
   END Mask;
 
 PROCEDURE CanonInt (v, bits: INTEGER): INTEGER =
@@ -2034,7 +2133,11 @@ PROCEDURE CanonInt (v, bits: INTEGER): INTEGER =
 (* A multi-word set constant: the integer v of type iN, i.e. v in the low
    word and its sign in the others (m3front uses 0 and -1). *)
 PROCEDURE WideWord (v, k: INTEGER): INTEGER =
+  VAR wb := Target.Integer.size;
   BEGIN
+    IF wb < BITSIZE (INTEGER) AND k * wb < BITSIZE (INTEGER) THEN
+      RETURN CanonInt (Word.Extract (v, k * wb, wb), wb);
+    END;
     IF k = 0 THEN RETURN v END;
     IF v < 0 THEN RETURN -1 END;
     RETURN 0;
@@ -2044,9 +2147,9 @@ PROCEDURE WideWord (v, k: INTEGER): INTEGER =
 PROCEDURE PushWideConst (v: INTEGER;  t: MSIR.T) =
   VAR tmp := AggTemp (t);
   BEGIN
-    FOR k := 0 TO SetBytes (t) DIV 8 - 1 DO
+    FOR k := 0 TO SetBytes (t) DIV Target.Integer.bytes - 1 DO
       PushInt (WideWord (v, k));
-      cg.store (tmp, k * 8, Int64, Int64);
+      cg.store (tmp, k * Target.Integer.bytes, Int, Int);
     END;
     cg.load_address (tmp, 0);
   END PushWideConst;
@@ -2066,10 +2169,10 @@ PROCEDURE Push (v: MSIR.Value) =
           PushWideConst (MSIR.GetIntVal (v), t);
         ELSIF IsPtr (t) THEN
           IF MSIR.GetIntVal (v) = 0 THEN cg.load_nil ()
-          ELSE PushInt (MSIR.GetIntVal (v));  cg.loophole (Int64, Addr)
+          ELSE PushInt (MSIR.GetIntVal (v));  cg.loophole (Int, Addr)
           END;
         ELSE
-          PushInt (CanonInt (MSIR.GetIntVal (v), IntBits (t)));
+          PushInt (CanonInt (MSIR.GetIntVal (v), IntBits (t)), StackZ (t));
         END;
     | ValueKind.ConstFloat =>
         MSIR.GetFloatVal (v, f);
@@ -2343,7 +2446,7 @@ PROCEDURE SetupScopes (p: MSIR.Proc): BOOLEAN =
       END;
       IF MSIR.ScopeKindOf (s) = MSIR.ScopeKind.Finally THEN
         e.sel := cg.declare_local (M3ID.NoID, Target.Integer.bytes,
-                                   Target.Integer.bytes, Int64, 0, TRUE,
+                                   Target.Integer.bytes, Int, 0, TRUE,
                                    FALSE, M3CG.Never);
         e.targets := NEW (RefSeq.T).init ();
       END;
@@ -2444,7 +2547,7 @@ PROCEDURE DeclareFrameImports () =
     IF setjmpProc # NIL THEN RETURN END;
     DeclareAllocaImport ();
     setjmpProc := cg.import_procedure (ID (Target.Setjmp),
-                                       1 + ORD (Target.Sigsetjmp), Int64,
+                                       1 + ORD (Target.Sigsetjmp), Int,
                                        Target.DefaultCall);
     EVAL cg.declare_param (ID ("jmpbuf"), Target.Address.bytes,
                            Target.Address.bytes, Addr, 0, FALSE, FALSE,
@@ -2454,7 +2557,7 @@ PROCEDURE DeclareFrameImports () =
                              FALSE, FALSE, M3CG.Always);
     END;
     jmpbufSize := cg.import_global (ID ("m3_jmpbuf_size"), Target.Word.bytes,
-                                    Target.Word.bytes, Word64, 0,
+                                    Target.Word.bytes, Wrd, 0,
                                     ID ("const_INTEGER"));
   END DeclareFrameImports;
 
@@ -2466,7 +2569,7 @@ PROCEDURE DeclareAllocaImport () =
     allocaProc := cg.import_procedure (ID ("alloca"), 1, Addr,
                                        Target.DefaultCall);
     EVAL cg.declare_param (M3ID.NoID, Target.Word.bytes, Target.Word.bytes,
-                           Word64, 0, FALSE, FALSE, M3CG.Always);
+                           Wrd, 0, FALSE, FALSE, M3CG.Always);
   END DeclareAllocaImport;
 
 (* TRUE if some procedure of m allocates on the stack a byte count known
@@ -2495,8 +2598,8 @@ PROCEDURE AllocJmpbufs () =
     FOR k := 0 TO LAST (eh^) DO
       IF eh[k].frame # NIL THEN
         cg.start_call_direct (allocaProc, 0, Addr);
-        cg.load (jmpbufSize, 0, Word64, Word64);
-        cg.pop_param (Word64);
+        cg.load (jmpbufSize, 0, Wrd, Wrd);
+        cg.pop_param (Wrd);
         cg.call_direct (allocaProc, Addr);
         cg.store (eh[k].jbuf, 0, Addr, Addr);
       END;
@@ -2526,22 +2629,22 @@ PROCEDURE LinkFrame (e: EHScope) =
       END;
     END;
     PushInt (ORD (class));
-    cg.store (e.frame, B (M3RT.EF_class), Int64, Int64);
+    cg.store (e.frame, B (M3RT.EF_class), Int, Int);
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     cg.load_address (e.frame, 0);
     cg.pop_param (Addr);
     cg.call_direct (q, M3CG.Type.Void);
     cg.load (e.jbuf, 0, Addr, Addr);
     cg.store (e.frame, B (M3RT.EF1_jmpbuf), Addr, Addr);
-    cg.start_call_direct (setjmpProc, 0, Int64);
+    cg.start_call_direct (setjmpProc, 0, Int);
     cg.load (e.jbuf, 0, Addr, Addr);
     cg.pop_param (Addr);
     IF Target.Sigsetjmp THEN
       PushInt (0, M3CG.Type.Int32);
       cg.pop_param (M3CG.Type.Int32);
     END;
-    cg.call_direct (setjmpProc, Int64);
-    cg.if_true (Int64, e.pad, M3CG.Never);
+    cg.call_direct (setjmpProc, Int);
+    cg.if_true (Int, e.pad, M3CG.Never);
   END LinkFrame;
 
 (* Leaving scope 'from' for scope 'stop' (NIL: the procedure): unlink the
@@ -2581,7 +2684,7 @@ PROCEDURE PushRaisesFrame (p: MSIR.Proc) =
       cg.store (raisesFrame, B (M3RT.EF3_raises), Addr, Addr);
     END;
     PushInt (ORD (class));
-    cg.store (raisesFrame, B (M3RT.EF_class), Int64, Int64);
+    cg.store (raisesFrame, B (M3RT.EF_class), Int, Int);
     cg.start_call_direct (q, 0, M3CG.Type.Void);
     cg.load_address (raisesFrame, 0);
     cg.pop_param (Addr);
@@ -2638,9 +2741,9 @@ PROCEDURE Dispatch (e: EHScope) =
       skip := cg.next_label ();
       cg.load (e.act, 0, Addr, Addr);
       cg.load_indirect (B (M3RT.EA_exception), Addr, Addr);
-      cg.load_indirect (0, Int64, Int64);
+      cg.load_indirect (0, Int, Int);
       PushInt (MSIR.ExcDescUID (h.exc));
-      cg.if_compare (Int64, M3CG.CompareOp.NE, skip, M3CG.Maybe);
+      cg.if_compare (Int, M3CG.CompareOp.NE, skip, M3CG.Maybe);
       ToHandler (e, h);
       cg.set_label (skip);
     END;
@@ -2696,7 +2799,7 @@ PROCEDURE Reraise (e: EHScope) =
 PROCEDURE SetSel (e: EHScope;  code: INTEGER) =
   BEGIN
     PushInt (code);
-    cg.store (e.sel, 0, Int64, Int64);
+    cg.store (e.sel, 0, Int, Int);
   END SetSel;
 
 (* Leave scopes from 'from': for a branch to target (with the arguments of
@@ -2786,9 +2889,9 @@ PROCEDURE EndFinally (code: MSIR.Scope) =
 (* Go to 'skip' unless e's selector is code. *)
 PROCEDURE TestSel (e: EHScope;  code: INTEGER;  skip: M3CG.Label) =
   BEGIN
-    cg.load (e.sel, 0, Int64, Int64);
+    cg.load (e.sel, 0, Int, Int);
     PushInt (code);
-    cg.if_compare (Int64, M3CG.CompareOp.NE, skip, M3CG.Maybe);
+    cg.if_compare (Int, M3CG.CompareOp.NE, skip, M3CG.Maybe);
   END TestSel;
 
 (* A call: an invoke naming the landing pad if the code is protected. *)
@@ -2955,7 +3058,7 @@ PROCEDURE HookCall (h: MSIR.RtHook;  arg: MSIR.Value) =
 PROCEDURE PushHeader (v: MSIR.Value) =
   BEGIN
     Push (v);
-    cg.load_indirect (-Target.Address.bytes, Int64, Int64);
+    cg.load_indirect (-Target.Address.bytes, Int, Int);
   END PushHeader;
 
 (* The CM3 write barrier: call CheckStoreTraced unless already dirty. *)
@@ -2964,8 +3067,8 @@ PROCEDURE WriteBarrier (container: MSIR.Value) =
   BEGIN
     PushHeader (container);
     PushInt (Word.Shift (1, M3RT.RH_dirty_offset));
-    cg.and (Int64);
-    cg.if_true (Int64, skip, M3CG.Likely);
+    cg.and (Int);
+    cg.if_true (Int, skip, M3CG.Likely);
     HookCall (MSIR.RtHook.CheckStoreTraced, container);
     cg.set_label (skip);
   END WriteBarrier;
@@ -2983,10 +3086,10 @@ PROCEDURE BlockReadBarrier (i: MSIR.Insn) =
     cg.pop_param (Addr);
     cg.load_address (cseg.var, off);
     cg.pop_param (Addr);
-    Push (MSIR.InsnOperand (i, 1));
-    cg.pop_param (Int64);
+    PushAs (MSIR.InsnOperand (i, 1), Int);
+    cg.pop_param (Int);
     PushInt (MSIR.InsnBlockStride (i));
-    cg.pop_param (Int64);
+    cg.pop_param (Int);
     cg.call_direct (q, M3CG.Type.Void);
   END BlockReadBarrier;
 
@@ -2998,14 +3101,14 @@ PROCEDURE ReadBarrier (v: MSIR.Value) =
     cg.load_nil ();
     cg.if_compare (Addr, M3CG.CompareOp.EQ, skip, M3CG.Maybe);
     Push (v);
-    cg.loophole (Addr, Int64);
+    cg.loophole (Addr, Int);
     PushInt (1);
-    cg.and (Int64);
-    cg.if_true (Int64, skip, M3CG.Never);
+    cg.and (Int);
+    cg.if_true (Int, skip, M3CG.Never);
     PushHeader (v);
     PushInt (Word.Shift (1, M3RT.RH_gray_offset));
-    cg.and (Int64);
-    cg.if_false (Int64, skip, M3CG.Likely);
+    cg.and (Int);
+    cg.if_false (Int, skip, M3CG.Likely);
     HookCall (MSIR.RtHook.CheckLoadTracedRef, v);
     cg.set_label (skip);
   END ReadBarrier;
@@ -3053,8 +3156,8 @@ PROCEDURE GenMemCall (i: MSIR.Insn;  m: Mem) =
       cg.zero (MSIR.GetIntVal (MSIR.InsnOperand (i, 2)), M3CG.Type.Word8);
     ELSE
       Push (MSIR.InsnOperand (i, 1));
-      Push (MSIR.InsnOperand (i, 2));
-      cg.copy_n (Int64, M3CG.Type.Word8, m = Mem.Move);
+      PushAs (MSIR.InsnOperand (i, 2), Int);
+      cg.copy_n (Int, M3CG.Type.Word8, m = Mem.Move);
     END;
     IF res # NIL THEN
       Push (MSIR.InsnOperand (i, 0));
@@ -3091,9 +3194,9 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
            the memory lives until the procedure returns, and the
            conservative stack scan sees any traced references in it. *)
         cg.start_call_direct (allocaProc, 0, Addr);
-        Push (MSIR.InsnOperand (i, 0));
-        cg.loophole (Int64, Word64);
-        cg.pop_param (Word64);
+        PushAs (MSIR.InsnOperand (i, 0), Int);
+        cg.loophole (Int, Wrd);
+        cg.pop_param (Wrd);
         cg.call_direct (allocaProc, Addr);
         Def (res);
 
@@ -3147,15 +3250,15 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         BEGIN
           IF IsPtr (t) THEN t := MSIR.EltType (t) END;
           Push (MSIR.InsnOperand (i, 0));
-          Push (MSIR.InsnOperand (i, 1));
-          cg.index_address (Int64, Size (MSIR.FixedArrayElt (t), a));
+          PushAs (MSIR.InsnOperand (i, 1), Int);
+          cg.index_address (Int, Size (MSIR.FixedArrayElt (t), a));
           Def (res);
         END;
     | Op.OpenArraySize =>
         Push (MSIR.InsnOperand (i, 0));
         cg.load_indirect (B (M3RT.OA_sizes)
                             + MSIR.GetIntVal (MSIR.InsnOperand (i, 1))
-                              * Target.Integer.bytes, Int64, Int64);
+                              * Target.Integer.bytes, Int, Int);
         Def (res);
     | Op.OpenArrayElemAddr =>
         (* data + ((i0*n1 + i1)*n2 + ...) * sizeof(elt), over the row-major
@@ -3164,16 +3267,16 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         BEGIN
           Push (oa);
           cg.load_indirect (B (M3RT.OA_elt_ptr), Addr, Addr);
-          Push (MSIR.InsnOperand (i, 1));
+          PushAs (MSIR.InsnOperand (i, 1), Int);
           FOR k := 1 TO MSIR.OpenArrayRank (t) - 1 DO
             Push (oa);
             cg.load_indirect (B (M3RT.OA_sizes) + k * Target.Integer.bytes,
-                              Int64, Int64);
-            cg.multiply (Int64);
-            Push (MSIR.InsnOperand (i, 1 + k));
-            cg.add (Int64);
+                              Int, Int);
+            cg.multiply (Int);
+            PushAs (MSIR.InsnOperand (i, 1 + k), Int);
+            cg.add (Int);
           END;
-          cg.index_address (Int64, Size (MSIR.OpenArrayElt (t), a));
+          cg.index_address (Int, Size (MSIR.OpenArrayElt (t), a));
           Def (res);
         END;
     | Op.PtrAdd =>
@@ -3184,39 +3287,42 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         Def (res);
     | Op.GepByte =>
         Push (MSIR.InsnOperand (i, 0));
-        Push (MSIR.InsnOperand (i, 1));
-        cg.index_address (Int64, 1);
+        PushAs (MSIR.InsnOperand (i, 1), Int);
+        cg.index_address (Int, 1);
         Def (res);
 
-    | Op.IAdd => Binop (i);  cg.add (Int64);  Canon (rt);  Def (res);
-    | Op.ISub => Binop (i);  cg.subtract (Int64);  Canon (rt);  Def (res);
-    | Op.IMul => Binop (i);  cg.multiply (Int64);  Canon (rt);  Def (res);
+    | Op.IAdd => Binop (i);  cg.add (StackZ (rt));  Canon (rt);  Def (res);
+    | Op.ISub => Binop (i);  cg.subtract (StackZ (rt));  Canon (rt);  Def (res);
+    | Op.IMul => Binop (i);  cg.multiply (StackZ (rt));  Canon (rt);  Def (res);
     | Op.IDiv =>
         Binop (i);
-        cg.div (Int64, M3CG.Sign.Unknown, M3CG.Sign.Unknown);
+        cg.div (StackZ (rt), M3CG.Sign.Unknown, M3CG.Sign.Unknown);
         Canon (rt);  Def (res);
     | Op.IMod =>
         Binop (i);
-        cg.mod (Int64, M3CG.Sign.Unknown, M3CG.Sign.Unknown);
+        cg.mod (StackZ (rt), M3CG.Sign.Unknown, M3CG.Sign.Unknown);
         Canon (rt);  Def (res);
     | Op.IUDiv, Op.IURem =>
         Push (MSIR.InsnOperand (i, 0));  Mask (rt);
         Push (MSIR.InsnOperand (i, 1));  Mask (rt);
         IF op = Op.IUDiv
-          THEN cg.div (Word64, M3CG.Sign.Positive, M3CG.Sign.Positive);
-          ELSE cg.mod (Word64, M3CG.Sign.Positive, M3CG.Sign.Positive);
+          THEN cg.div (StackW (rt), M3CG.Sign.Positive, M3CG.Sign.Positive);
+          ELSE cg.mod (StackW (rt), M3CG.Sign.Positive, M3CG.Sign.Positive);
         END;
         Canon (rt);  Def (res);
-    | Op.IAnd => Binop (i);  cg.and (Int64);  Def (res);
-    | Op.IOr => Binop (i);  cg.or (Int64);  Def (res);
-    | Op.IXor => Binop (i);  cg.xor (Int64);  Def (res);
+    | Op.IAnd => Binop (i);  cg.and (StackZ (rt));  Def (res);
+    | Op.IOr => Binop (i);  cg.or (StackZ (rt));  Def (res);
+    | Op.IXor => Binop (i);  cg.xor (StackZ (rt));  Def (res);
+    (* M3CG's shift and rotate counts are INTEGERs *)
     | Op.IShl =>
-        Binop (i);  cg.shift_left (Word64);  Canon (rt);  Def (res);
+        Push (MSIR.InsnOperand (i, 0));
+        PushAs (MSIR.InsnOperand (i, 1), Int);
+        cg.shift_left (StackW (rt));  Canon (rt);  Def (res);
     | Op.ILShr =>
         Push (MSIR.InsnOperand (i, 0));
         Mask (rt);
-        Push (MSIR.InsnOperand (i, 1));
-        cg.shift_right (Word64);
+        PushAs (MSIR.InsnOperand (i, 1), Int);
+        cg.shift_right (StackW (rt));
         Canon (rt);  Def (res);
     | Op.IAShr =>
         (* x < 0: NOT (NOT x >> n); else x >> n.  The value is sign-extended,
@@ -3224,38 +3330,42 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         VAR neg := cg.next_label ();  done := cg.next_label ();
         BEGIN
           Push (MSIR.InsnOperand (i, 0));
-          PushInt (0);
-          cg.if_compare (Int64, M3CG.CompareOp.LT, neg, M3CG.Maybe);
+          PushInt (0, StackZ (rt));
+          cg.if_compare (StackZ (rt), M3CG.CompareOp.LT, neg, M3CG.Maybe);
           Push (MSIR.InsnOperand (i, 0));
-          Push (MSIR.InsnOperand (i, 1));
-          cg.shift_right (Word64);
+          PushAs (MSIR.InsnOperand (i, 1), Int);
+          cg.shift_right (StackW (rt));
           Def (res);
           cg.jump (done);
           cg.set_label (neg);
           Push (MSIR.InsnOperand (i, 0));
-          cg.not (Int64);
-          Push (MSIR.InsnOperand (i, 1));
-          cg.shift_right (Word64);
-          cg.not (Int64);
+          cg.not (StackZ (rt));
+          PushAs (MSIR.InsnOperand (i, 1), Int);
+          cg.shift_right (StackW (rt));
+          cg.not (StackZ (rt));
           Def (res);
           cg.set_label (done);
         END;
     | Op.IRotL =>
         (* Word.Rotate's signed count, as the CG path uses: rotate_left's
            count is a word, so a negative constant count is a huge
-           unsigned one, which M3C's C rejects.  Rotations are mod 64. *)
-        Binop (i);  cg.rotate (Word64);  Def (res);
+           unsigned one, which M3C's C rejects.  Rotations are mod the stack
+           width, which Lowerable makes the value's width. *)
+        Push (MSIR.InsnOperand (i, 0));
+        PushAs (MSIR.InsnOperand (i, 1), Int);
+        cg.rotate (StackW (rt));  Def (res);
     | Op.IRotR =>
         Push (MSIR.InsnOperand (i, 0));
-        Push (MSIR.InsnOperand (i, 1));
-        cg.negate (Int64);
-        cg.rotate (Word64);
+        PushAs (MSIR.InsnOperand (i, 1), Int);
+        cg.negate (Int);
+        cg.rotate (StackW (rt));
         Def (res);
     | Op.Select =>
         VAR else := cg.next_label ();  done := cg.next_label ();
         BEGIN
           Push (MSIR.InsnOperand (i, 0));
-          cg.if_false (Int64, else, M3CG.Maybe);
+          cg.if_false (StackZ (MSIR.ValueType (MSIR.InsnOperand (i, 0))),
+                       else, M3CG.Maybe);
           Push (MSIR.InsnOperand (i, 1));  Def (res);
           cg.jump (done);
           cg.set_label (else);
@@ -3280,7 +3390,7 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
       IF IsWideSet (MSIR.ValueType (MSIR.InsnOperand (i, 0))) THEN
         Binop (i);
         cg.set_compare (SetBytes (MSIR.ValueType (MSIR.InsnOperand (i, 0))),
-                        CmpOp (MSIR.InsnCmpPred (i)), Int64);
+                        CmpOp (MSIR.InsnCmpPred (i)), StackZ (rt));
         Def (res);
       ELSE
         VAR pred := MSIR.InsnCmpPred (i);
@@ -3294,20 +3404,20 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
             z := Addr;
             Binop (i);
           ELSIF unsigned THEN
-            z := Word64;
+            z := StackW (t);
             Push (MSIR.InsnOperand (i, 0));  Mask (t);
             Push (MSIR.InsnOperand (i, 1));  Mask (t);
           ELSE
-            z := Int64;
+            z := StackZ (t);
             Binop (i);
           END;
-          cg.compare (z, Int64, CmpOp (pred));
+          cg.compare (z, StackZ (rt), CmpOp (pred));
           Def (res);
         END;
       END;
     | Op.FCmp =>
         Binop (i);
-        cg.compare (RType (MSIR.ValueType (MSIR.InsnOperand (i, 0))), Int64,
+        cg.compare (RType (MSIR.ValueType (MSIR.InsnOperand (i, 0))), StackZ (rt),
                     FCmpOp (MSIR.InsnFCmpPred (i)));
         Def (res);
 
@@ -3328,20 +3438,20 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
         END;
     | Op.SetMember =>
         Binop (i);
-        cg.set_member (SetBytes (MSIR.ValueType (MSIR.InsnOperand (i, 0))), Int64);
+        cg.set_member (SetBytes (MSIR.ValueType (MSIR.InsnOperand (i, 0))), Int);
         Def (res);
     | Op.SetSingleton, Op.SetRange =>
         VAR n := SetBytes (rt);  var := Loc0 (res).var;
         BEGIN
           cg.load_address (var, 0);
-          cg.zero (n DIV 8, Int64);
+          cg.zero (n DIV Target.Integer.bytes, Int);
           cg.load_address (var, 0);
           Push (MSIR.InsnOperand (i, 0));
           IF op = Op.SetSingleton THEN
-            cg.set_singleton (n, Int64);
+            cg.set_singleton (n, Int);
           ELSE
             Push (MSIR.InsnOperand (i, 1));
-            cg.set_range (n, Int64);
+            cg.set_range (n, Int);
           END;
         END;
 
@@ -3356,7 +3466,8 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
             edge := cg.next_label ();
         BEGIN
           Push (MSIR.InsnOperand (i, 0));
-          cg.if_false (Int64, edge, M3CG.Maybe);
+          cg.if_false (StackZ (MSIR.ValueType (MSIR.InsnOperand (i, 0))),
+                       edge, M3CG.Maybe);
           PassArgs (i, 0, t);
           cg.jump (LabelOf (t));
           cg.set_label (edge);
@@ -3372,19 +3483,20 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
            (ELSE) clause by default. *)
         VAR q := ProcFor (MSIR.ModuleRtHook(mod, MSIR.RtHook.ScanTypecase));
             n := MSIR.InsnTypecaseClauseCount (i);
-            idx := cg.declare_temp (8, 8, Int64, FALSE);
+            idx := cg.declare_temp (Target.Integer.bytes, Target.Integer.bytes,
+                                    Int, FALSE);
         BEGIN
-          cg.start_call_direct (q, 0, Int64);
+          cg.start_call_direct (q, 0, Int);
           Push (MSIR.InsnOperand (i, 0));
           cg.pop_param (Addr);
           cg.load_address (dseg.var, TypecaseOff (i));
           cg.pop_param (Addr);
-          CallDirect (q, Int64);
-          cg.store (idx, 0, Int64, Int64);
+          CallDirect (q, Int);
+          cg.store (idx, 0, Int, Int);
           FOR k := 0 TO n - 2 DO
-            cg.load (idx, 0, Int64, Int64);
+            cg.load (idx, 0, Int, Int);
             PushInt (k);
-            cg.if_compare (Int64, M3CG.CompareOp.EQ,
+            cg.if_compare (Int, M3CG.CompareOp.EQ,
                            LabelOf (MSIR.InsnTypecaseClause (i, k).block),
                            M3CG.Maybe);
           END;
@@ -3468,47 +3580,49 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           ELSIF IsFloat (st) AND IsPtr (dt) THEN
             FloatToAddr (st);
           ELSIF IsPtr (st) THEN
-            cg.loophole (Addr, Int64);  Canon (dt);
+            AddrToInt (dt);
           ELSIF IsPtr (dt) THEN
-            cg.loophole (Int64, Addr);
+            IntToAddr (st);
           ELSIF IsFloat (st) AND IsFloat (dt) THEN
             IF RType (st) # RType (dt) THEN cg.cvt_float (RType (st), RType (dt)) END;
           ELSIF IsFloat (st) THEN
             (* bitcast: reinterpret as the integer of the float's size, then
-               widen to the stack's Int64, zero-extending if the result is
-               wider than the float *)
-            IF FloatBits (st) = 32 THEN
-              cg.loophole (RType (st), M3CG.Type.Int32);
-              cg.loophole (M3CG.Type.Int32, Int64);
-              IF IntBits (dt) > 32 THEN cg.extract_mn (Int64, FALSE, 0, 32) END;
-            ELSE
-              cg.loophole (RType (st), Int64);
+               resize to the result's stack type, zero-extending if the
+               result is wider than the float *)
+            cg.loophole (RType (st), FloatInt (st));
+            IF StackZ (dt) # FloatInt (st) THEN
+              cg.loophole (FloatInt (st), StackZ (dt));
+              IF IntBits (dt) > FloatBits (st) THEN
+                cg.extract_mn (StackZ (dt), FALSE, 0, FloatBits (st));
+              END;
             END;
             Canon (dt);
           ELSIF IsFloat (dt) THEN
             (* an integer narrower than the float is zero-extended to it; a
-               wider one is truncated (by the Int64 -> Int32 loophole) *)
+               wider one is truncated (by the loophole to the float's size) *)
             IF IntBits (st) < FloatBits (dt) THEN Mask (st) END;
-            IF FloatBits (dt) = 32 THEN
-              cg.loophole (Int64, M3CG.Type.Int32);
-              cg.loophole (M3CG.Type.Int32, RType (dt));
-            ELSE
-              cg.loophole (Int64, RType (dt));
+            IF StackZ (st) # FloatInt (dt) THEN
+              cg.loophole (StackZ (st), FloatInt (dt));
+              IF IntBits (st) < FloatBits (dt) AND StackBits (st) < FloatBits (dt) THEN
+                cg.extract_mn (FloatInt (dt), FALSE, 0, StackBits (st));
+              END;
             END;
-          ELSIF IntBits (dt) < IntBits (st) THEN
-            Canon (dt);
+            cg.loophole (FloatInt (dt), RType (dt));
+          ELSE
+            Restack (st, dt);
+            IF IntBits (dt) < IntBits (st) THEN Canon (dt) END;
           END;
           Def (res);
         END;
     | Op.SIToFP =>
         Push (MSIR.InsnOperand (i, 0));
-        cg.cvt_float (Int64, RType (rt));
+        cg.cvt_float (StackZ (MSIR.ValueType (MSIR.InsnOperand (i, 0))), RType (rt));
         Def (res);
     | Op.FPToSI =>
         VAR src := MSIR.InsnOperand (i, 0);
         BEGIN
           Push (src);
-          cg.cvt_int (RType (MSIR.ValueType (src)), Int64, M3CG.ConvertOp.Trunc);
+          cg.cvt_int (RType (MSIR.ValueType (src)), StackZ (rt), M3CG.ConvertOp.Trunc);
           Canon (rt);
           Def (res);
         END;
@@ -3520,21 +3634,28 @@ PROCEDURE GenInsn (i: MSIR.Insn) =
           Def (res);
         END;
     | Op.ZExt =>
-        VAR src := MSIR.InsnOperand (i, 0);
+        VAR src := MSIR.InsnOperand (i, 0);  st := MSIR.ValueType (src);
         BEGIN
           Push (src);
-          Mask (MSIR.ValueType (src));
+          IF StackZ (st) = StackZ (rt) THEN
+            Mask (st);
+          ELSE
+            Restack (st, rt);
+            cg.extract_mn (StackZ (rt), FALSE, 0, IntBits (st));
+          END;
           Def (res);
         END;
     | Op.SExt =>
-        VAR src := MSIR.InsnOperand (i, 0);
+        VAR src := MSIR.InsnOperand (i, 0);  st := MSIR.ValueType (src);
         BEGIN
           Push (src);
-          IF IntBits (MSIR.ValueType (src)) = 1 THEN cg.negate (Int64) END;
+          IF IntBits (st) = 1 THEN cg.negate (StackZ (st)) END;
+          Restack (st, rt);
           Def (res);
         END;
     | Op.Trunc =>
         Push (MSIR.InsnOperand (i, 0));
+        Restack (MSIR.ValueType (MSIR.InsnOperand (i, 0)), rt);
         Canon (rt);
         Def (res);
     ELSE

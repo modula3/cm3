@@ -2407,7 +2407,7 @@ PROCEDURE ExtractBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
       maskVal  : INTEGER := 1;
       extracted: MSIR.Value;
     BEGIN
-      IF bitWidth >= BITSIZE (INTEGER) THEN
+      IF bitWidth >= wordBits THEN
         maskVal := -1;
       ELSE
         FOR i := 1 TO bitWidth DO maskVal := maskVal * 2 END;
@@ -2568,8 +2568,10 @@ PROCEDURE InsertBitField (base: MSIR.Value;  bitOff, bitWidth: INTEGER;
     (* Wide field: > 16 bits (> 2 bytes).  Decompose into 8-bit chunks, each
        injected by a recursive single/two-byte InsertBitField call. *)
     IF bitInByte + bitWidth > 16 THEN
-      VAR intT     := MSIR.TI (Target.Integer.size);
-          rhsBits  := MSIR.BitWidth (MSIR.ValueType (rhs));
+      VAR rhsBits  := MSIR.BitWidth (MSIR.ValueType (rhs));
+          (* at least INTEGER width; a LONGINT field wider than INTEGER (on
+             a 32-bit target) keeps its width, not truncated *)
+          intT     := MSIR.TI (MAX (Target.Integer.size, rhsBits));
           rhsNat   : MSIR.Value;
           bitsLeft := bitWidth;
           boff     := bitOff;

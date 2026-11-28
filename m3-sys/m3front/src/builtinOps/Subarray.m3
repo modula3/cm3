@@ -482,7 +482,7 @@ PROCEDURE CheckRangeMSIR (base: Expr.T;  array: Type.T;
   VAR intT := MSIR.TI (Target.Integer.size);
       blk  := MSIRBuilder.CurrentBlock ();
       index, element: Type.T;
-      n, min, max: Target.Int;  i_n: INTEGER;
+      n, min, max: Target.Int;  i_n, minInt: INTEGER;
       nVal: MSIR.Value;
   BEGIN
     IF NOT Host.doRangeChk THEN RETURN END;
@@ -504,8 +504,9 @@ PROCEDURE CheckRangeMSIR (base: Expr.T;  array: Type.T;
       nVal := MSIR.ConstInt (intT, i_n + 1);
     END;
     blk := MSIRBuilder.CurrentBlock ();
+    EVAL TInt.ToInt (Target.Integer.min, minInt);  (* the target's, not the host's *)
     MSIRBuilder.EmitRangeCheck (MSIR.BuildIAdd (blk, "", startVal, lenVal),
-                                MSIR.ConstInt (intT, FIRST (INTEGER)), nVal,
+                                MSIR.ConstInt (intT, minInt), nVal,
                                 FALSE, ORD (CG.RuntimeError.ValueOutOfRange));
   END CheckRangeMSIR;
 
