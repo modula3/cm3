@@ -4,4 +4,5 @@ c028  # type minimization of REF/RECORD; unexamined
 c126  # a reference in a cycle of references: fixed for M3C in #1408
 p280  # an unsigned constant given as a negative integer: fixed for M3C in #1411
 p306  # ROUND breaks ties to even; unexamined
+p337  # ROUND (2147483648.5D0, LONGINT) rounds the tie away from zero, as p306
 p329  # Word.Extract/Insert of the full word width: fixed for M3C in #1402
